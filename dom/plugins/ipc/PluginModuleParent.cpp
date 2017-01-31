@@ -98,7 +98,8 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
                               dom::ContentParent* aContentParent,
                               bool aForceBridgeNow,
                               nsresult* rv,
-                              uint32_t* runID)
+                              uint32_t* runID,
+                              ipc::Endpoint<PPluginModuleParent>* aEndpoint)
 {
     PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
     if (NS_WARN_IF(!rv) || NS_WARN_IF(!runID)) {
@@ -130,7 +131,24 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         // We'll handle the bridging asynchronously
         return true;
     }
-    *rv = PPluginModule::Bridge(aContentParent, chromeParent);
+
+    ipc::Endpoint<PPluginModuleParent> parent;
+    ipc::Endpoint<PPluginModuleChild> child;
+
+    *rv = PPluginModule::CreateEndpoints(aContentParent->OtherPid(),
+                                         chromeParent->OtherPid(),
+                                         &parent, &child);
+    if (NS_FAILED(*rv)) {
+        return true;
+    }
+
+    *aEndpoint = Move(parent);
+
+    if (!chromeParent->SendInitPluginModuleChild(Move(child))) {
+        *rv = NS_ERROR_BRIDGE_OPEN_CHILD;
+        return true;
+    }
+
     return true;
 }
 
@@ -416,11 +434,13 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
     nsresult rv;
     uint32_t runID;
+    Endpoint<PPluginModuleParent> endpoint;
     TimeStamp sendLoadPluginStart = TimeStamp::Now();
-    if (!cp->SendLoadPlugin(aPluginId, &rv, &runID) ||
+    if (!cp->SendLoadPlugin(aPluginId, &rv, &runID, &endpoint) ||
         NS_FAILED(rv)) {
         return nullptr;
     }
+    Initialize(Move(endpoint));
     TimeStamp sendLoadPluginEnd = TimeStamp::Now();
 
     PluginModuleContentParent* parent = mapping->GetModule();
@@ -449,19 +469,16 @@ PluginModuleContentParent::AssociatePluginId(uint32_t aPluginId,
     MOZ_ASSERT(mapping);
 }
 
-/* static */ PluginModuleContentParent*
-PluginModuleContentParent::Initialize(mozilla::ipc::Transport* aTransport,
-                                      base::ProcessId aOtherPid)
+/* static */ void
+PluginModuleContentParent::Initialize(Endpoint<PPluginModuleParent>&& aEndpoint)
 {
     nsAutoPtr<PluginModuleMapping> moduleMapping(
-        PluginModuleMapping::Resolve(aOtherPid));
+        PluginModuleMapping::Resolve(aEndpoint.OtherPid()));
     MOZ_ASSERT(moduleMapping);
     PluginModuleContentParent* parent = moduleMapping->GetModule();
     MOZ_ASSERT(parent);
 
-    DebugOnly<bool> ok = parent->Open(aTransport, aOtherPid,
-                                      XRE_GetIOMessageLoop(),
-                                      mozilla::ipc::ParentSide);
+    DebugOnly<bool> ok = aEndpoint.Bind(parent);
     MOZ_ASSERT(ok);
 
     moduleMapping->SetChannelOpened();
@@ -477,13 +494,14 @@ PluginModuleContentParent::Initialize(mozilla::ipc::Transport* aTransport,
     // needed later, so since this function is returning successfully we
     // forget it here.
     moduleMapping.forget();
-    return parent;
 }
 
 /* static */ void
 PluginModuleContentParent::OnLoadPluginResult(const uint32_t& aPluginId,
-                                              const bool& aResult)
+                                              const bool& aResult,
+                                              Endpoint<PPluginModuleParent>&& aEndpoint)
 {
+    Initialize(Move(aEndpoint));
     nsAutoPtr<PluginModuleMapping> moduleMapping(
         PluginModuleMapping::FindModuleByPluginId(aPluginId));
     MOZ_ASSERT(moduleMapping);

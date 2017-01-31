@@ -796,10 +796,14 @@ ContentParent::RecvCreateGMPService()
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv, uint32_t* aRunID)
+ContentParent::RecvLoadPlugin(const uint32_t& aPluginId,
+                              nsresult* aRv,
+                              uint32_t* aRunID,
+                              Endpoint<PPluginModuleParent>* aEndpoint)
 {
   *aRv = NS_OK;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID)) {
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID,
+                                     aEndpoint)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -826,15 +830,17 @@ ContentParent::RecvRemovePermission(const IPC::Principal& aPrincipal,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
+ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId,
+                                       nsresult* aRv,
+                                       Endpoint<PPluginModuleParent>* aEndpoint)
 {
   *aRv = NS_OK;
   // We don't need to get the run ID for the plugin, since we already got it
   // in the first call to SetupBridge in RecvLoadPlugin, so we pass in a dummy
   // pointer and just throw it away.
   uint32_t dummy = 0;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy)) {
-    return IPC_FAIL_NO_REASON(this);
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy, aEndpoint)) {
+    return IPC_FAIL(this, "SetupBridge failed");
   }
   return IPC_OK();
 }

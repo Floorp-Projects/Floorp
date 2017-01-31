@@ -3020,6 +3020,19 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   }
 }
 
+WritingMode
+nsFrame::GetWritingModeDeferringToRootElem() const
+{
+  Element* rootElem = PresContext()->Document()->GetRootElement();
+  if (rootElem) {
+    nsIFrame* primaryFrame = rootElem->GetPrimaryFrame();
+    if (primaryFrame) {
+      return primaryFrame->GetWritingMode();
+    }
+  }
+  return nsIFrame::GetWritingMode();
+}
+
 nsresult
 nsFrame::HandleEvent(nsPresContext* aPresContext, 
                      WidgetGUIEvent* aEvent,
