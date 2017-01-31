@@ -281,7 +281,7 @@ class XDRState : public XDRCoderBase
     bool codeChars(const JS::Latin1Char* chars, size_t nchars);
     bool codeChars(char16_t* chars, size_t nchars);
 
-    bool codeFunction(JS::MutableHandleFunction objp);
+    bool codeFunction(JS::MutableHandleFunction objp, HandleScriptSource sourceObject = nullptr);
     bool codeScript(MutableHandleScript scriptp);
     bool codeConstValue(MutableHandleValue vp);
 };

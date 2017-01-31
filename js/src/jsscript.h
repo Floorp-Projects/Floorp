@@ -432,6 +432,11 @@ class ScriptSource
     // memory management.
     const char* introductionType_;
 
+    // The bytecode cache encoder is used to encode only the content of function
+    // which are delazified.  If this value is not nullptr, then each delazified
+    // function should be recorded before their first execution.
+    UniquePtr<XDRIncrementalEncoder> xdrEncoder_;
+
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
     // possible to get source at all.
@@ -453,6 +458,7 @@ class ScriptSource
         parameterListEnd_(0),
         introducerFilename_(nullptr),
         introductionType_(nullptr),
+        xdrEncoder_(nullptr),
         sourceRetrievable_(false),
         hasIntroductionOffset_(false)
     {
@@ -579,6 +585,29 @@ class ScriptSource
     uint32_t parameterListEnd() const {
         return parameterListEnd_;
     }
+
+    // Return wether an XDR encoder is present or not.
+    bool hasEncoder() const { return bool(xdrEncoder_); }
+
+    // Create a new XDR encoder, and encode the top-level JSScript. The result
+    // of the encoding would be available in the |buffer| provided as argument,
+    // as soon as |xdrFinalize| is called and all xdr function calls returned
+    // successfully.
+    bool xdrEncodeTopLevel(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, HandleScript script);
+
+    // Encode a delazified JSFunction.  In case of errors, the XDR encoder is
+    // freed and the |buffer| provided as argument to |xdrEncodeTopLevel| is
+    // considered undefined.
+    //
+    // The |sourceObject| argument is the object holding the current
+    // ScriptSource.
+    bool xdrEncodeFunction(ExclusiveContext* cx, HandleFunction fun,
+                           HandleScriptSource sourceObject);
+
+    // Linearize the encoded content in the |buffer| provided as argument to
+    // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
+    // |buffer| is considered undefined.
+    bool xdrFinalizeEncoder();
 };
 
 class ScriptSourceHolder
