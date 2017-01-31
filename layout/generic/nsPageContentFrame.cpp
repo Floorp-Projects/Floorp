@@ -111,7 +111,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
 nsIAtom*
 nsPageContentFrame::GetType() const
 {
-  return nsGkAtoms::pageContentFrame; 
+  return nsGkAtoms::pageContentFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP

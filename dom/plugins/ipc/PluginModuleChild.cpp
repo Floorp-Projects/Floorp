@@ -97,17 +97,11 @@ static GetKeyStatePtr sGetKeyStatePtrStub = nullptr;
 #endif
 
 /* static */
-PluginModuleChild*
-PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherPid)
+bool
+PluginModuleChild::CreateForContentProcess(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
     auto* child = new PluginModuleChild(false);
-
-    if (!child->InitForContent(aOtherPid, XRE_GetIOMessageLoop(), aTransport)) {
-        return nullptr;
-    }
-
-    return child;
+    return child->InitForContent(Move(aEndpoint));
 }
 
 PluginModuleChild::PluginModuleChild(bool aIsChrome)
@@ -168,10 +162,8 @@ PluginModuleChild::GetChrome()
     return gChromeInstance;
 }
 
-bool
-PluginModuleChild::CommonInit(base::ProcessId aParentPid,
-                              MessageLoop* aIOLoop,
-                              IPC::Channel* aChannel)
+void
+PluginModuleChild::CommonInit()
 {
     PLUGIN_LOG_DEBUG_METHOD;
 
@@ -181,23 +173,17 @@ PluginModuleChild::CommonInit(base::ProcessId aParentPid,
     // Bug 1090573 - Don't do this for connections to content processes.
     GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 
-    if (!Open(aChannel, aParentPid, aIOLoop)) {
-        return false;
-    }
-
     memset((void*) &mFunctions, 0, sizeof(mFunctions));
     mFunctions.size = sizeof(mFunctions);
     mFunctions.version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
-
-    return true;
 }
 
 bool
-PluginModuleChild::InitForContent(base::ProcessId aParentPid,
-                                  MessageLoop* aIOLoop,
-                                  IPC::Channel* aChannel)
+PluginModuleChild::InitForContent(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
-    if (!CommonInit(aParentPid, aIOLoop, aChannel)) {
+    CommonInit();
+
+    if (!aEndpoint.Bind(this)) {
         return false;
     }
 
@@ -277,7 +263,9 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
     }
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
-    if (!CommonInit(aParentPid, aIOLoop, aChannel)) {
+    CommonInit();
+
+    if (!Open(aChannel, aParentPid, aIOLoop)) {
         return false;
     }
 
@@ -722,11 +710,13 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
 #endif
 }
 
-PPluginModuleChild*
-PluginModuleChild::AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherPid)
+mozilla::ipc::IPCResult
+PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
-    return PluginModuleChild::CreateForContentProcess(aTransport, aOtherPid);
+    if (!CreateForContentProcess(Move(aEndpoint))) {
+        return IPC_FAIL(this, "CreateForContentProcess failed");
+    }
+    return IPC_OK();
 }
 
 PCrashReporterChild*
