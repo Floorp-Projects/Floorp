@@ -53,10 +53,11 @@ CSRCS = \
 
 MIDL_GENERATED_FILES = \
   dlldata.c \
+  $(MIDL_ENUMS:%.idl=%.h) \
   $(MIDL_INTERFACES:%.idl=%_p.c) \
   $(MIDL_INTERFACES:%.idl=%_i.c) \
   $(MIDL_INTERFACES:%.idl=%.h) \
-  $(MIDL_ENUMS:%.idl=%.h) \
+  $(MIDL_LIBRARIES:%.idl=%.tlb) \
   $(NULL)
 
 # We want to generate a .tlb from MIDL_LIBRARIES, but midl also generates
