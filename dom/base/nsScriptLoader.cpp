@@ -65,6 +65,17 @@ using namespace mozilla::dom;
 using JS::SourceBufferHolder;
 
 static LazyLogModule gCspPRLog("CSP");
+static LazyLogModule gScriptLoaderLog("ScriptLoader");
+
+#define LOG_VERBOSE(args)                                                     \
+  MOZ_LOG(gScriptLoaderLog, mozilla::LogLevel::Verbose, args)
+#define LOG(args)                                                             \
+  MOZ_LOG(gScriptLoaderLog, mozilla::LogLevel::Debug, args)
+#define LOG_WARN(args)                                                        \
+  MOZ_LOG(gScriptLoaderLog, mozilla::LogLevel::Warning, args)
+#define LOG_ERROR(args)                                                       \
+  MOZ_LOG(gScriptLoaderLog, mozilla::LogLevel::Error, args)
+
 
 void
 ImplCycleCollectionUnlink(nsScriptLoadRequestList& aField);
