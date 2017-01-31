@@ -8,7 +8,7 @@
 == vertical-table-colspan-1.html vertical-table-colspan-1.html
 == vertical-table-colspan-2.html vertical-table-colspan-2.html
 == vertical-table-specified-width-1.html vertical-table-specified-width-1.html
-asserts(1) == vertical-table-specified-width-2.html vertical-table-specified-width-2.html
+asserts(1-2) == vertical-table-specified-width-2.html vertical-table-specified-width-2.html
 == vertical-border-collapse-1.html vertical-border-collapse-1.html
 == vertical-border-collapse-2.html vertical-border-collapse-2.html
 

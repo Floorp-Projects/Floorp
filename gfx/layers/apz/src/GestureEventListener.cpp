@@ -8,6 +8,7 @@
 #include <math.h>                       // for fabsf
 #include <stddef.h>                     // for size_t
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "InputBlockState.h"            // for TouchBlockState
 #include "base/task.h"                  // for CancelableTask, etc
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/SizePrintfMacros.h"   // for PRIuSIZE

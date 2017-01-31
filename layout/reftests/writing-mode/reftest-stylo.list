@@ -16,8 +16,8 @@ fails == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-rep
 # == 1090159-1.html 1090159-1.html
 # == 1090168-1.html 1090168-1.html
 # == 1090168-1.html 1090168-1.html
-fails == 1090168-2.html 1090168-2.html
-fails == 1090168-3.html 1090168-3.html
+fails asserts-if(stylo,1) == 1090168-2.html 1090168-2.html # bug 1324700
+fails asserts-if(stylo,1) == 1090168-3.html 1090168-3.html # bug 1324700
 # == 1091058-1.html 1091058-1.html
 fails == 1094434-1.html 1094434-1.html
 fails == 1094434-2.html 1094434-2.html
@@ -69,7 +69,7 @@ fails == ua-style-sheet-size-2.html ua-style-sheet-size-2.html
 # == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1.html
 # == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
 # == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
-fails == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html
+fails asserts-if(stylo,6) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html # bug 1324671
 # fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1.html
 
 # HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-default-horizontal-tb-ltr.html

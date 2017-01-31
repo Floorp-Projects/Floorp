@@ -34,12 +34,12 @@ fails == scoped-style-dynamic-001.html scoped-style-dynamic-001.html
 fails == scoped-style-dynamic-002.html scoped-style-dynamic-002.html
 fails == scoped-style-dynamic-003.html scoped-style-dynamic-003.html
 fails == scoped-style-dynamic-004.html scoped-style-dynamic-004.html
-== scoped-style-dynamic-005.html scoped-style-dynamic-005.html
-fails == scoped-style-dynamic-006.html scoped-style-dynamic-006.html
+asserts-if(stylo,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005.html # bug 1335340
+fails asserts-if(stylo,1) == scoped-style-dynamic-006.html scoped-style-dynamic-006.html # bug 1335340
 fails == scoped-style-dynamic-007.html scoped-style-dynamic-007.html
 fails == scoped-style-dynamic-008.html scoped-style-dynamic-008.html
-fails == scoped-style-dynamic-009.html scoped-style-dynamic-009.html
-== scoped-style-dynamic-010.html scoped-style-dynamic-010.html
+fails asserts-if(stylo,1) == scoped-style-dynamic-009.html scoped-style-dynamic-009.html # bug 1335340
+asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010.html # bug 1335340
 fails == scoped-style-dynamic-011.html scoped-style-dynamic-011.html
 == scoped-style-dynamic-012.svg scoped-style-dynamic-012.svg
 == scoped-style-dynamic-013.svg scoped-style-dynamic-013.svg

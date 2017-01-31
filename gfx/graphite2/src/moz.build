@@ -23,7 +23,6 @@ else:
 
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
 UNIFIED_SOURCES += [
-    'Bidi.cpp',
     'CachedFace.cpp',
     'CmapCache.cpp',
     'Code.cpp',

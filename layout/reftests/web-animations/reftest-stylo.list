@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 test-pref(dom.animations-api.core.enabled,true) == 1246046-1.html 1246046-1.html
 test-pref(dom.animations-api.core.enabled,true) == 1267937-1.html 1267937-1.html
-fails test-pref(dom.animations-api.core.enabled,true) == 1298742-1.html 1298742-1.html
+fails test-pref(dom.animations-api.core.enabled,true) asserts-if(stylo,8) == 1298742-1.html 1298742-1.html # bug 1335342
 fails test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-transform-none-animation-before-appending-element.html
 # test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe.html stacking-context-opacity-changing-keyframe.html
 # test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe-in-delay.html stacking-context-opacity-changing-keyframe-in-delay.html
