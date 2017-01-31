@@ -1912,6 +1912,64 @@ ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     info->numScripts++;
 }
 
+bool
+ScriptSource::xdrEncodeTopLevel(ExclusiveContext* cx, JS::TranscodeBuffer& buffer,
+                                HandleScript script)
+{
+    xdrEncoder_ = js::MakeUnique<XDRIncrementalEncoder>(cx, buffer, buffer.length());
+    if (!xdrEncoder_) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    MOZ_ASSERT(hasEncoder());
+    auto failureCase = mozilla::MakeScopeExit([&] {
+        xdrEncoder_.reset(nullptr);
+    });
+
+    if (!xdrEncoder_->init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    RootedScript s(cx, script);
+    if (!xdrEncoder_->codeScript(&s))
+        return false;
+
+    failureCase.release();
+    return true;
+}
+
+bool
+ScriptSource::xdrEncodeFunction(ExclusiveContext* cx, HandleFunction fun, HandleScriptSource sourceObject)
+{
+    MOZ_ASSERT(sourceObject->source() == this);
+    MOZ_ASSERT(hasEncoder());
+    auto failureCase = mozilla::MakeScopeExit([&] {
+        xdrEncoder_.reset(nullptr);
+    });
+
+    RootedFunction f(cx, fun);
+    if (!xdrEncoder_->codeFunction(&f, sourceObject))
+        return false;
+
+    failureCase.release();
+    return true;
+}
+
+bool
+ScriptSource::xdrFinalizeEncoder()
+{
+    MOZ_ASSERT(hasEncoder());
+    auto cleanup = mozilla::MakeScopeExit([&] {
+        xdrEncoder_.reset(nullptr);
+    });
+
+    if (!xdrEncoder_->linearize())
+        return false;
+    return true;
+}
+
 template<XDRMode mode>
 bool
 ScriptSource::performXDR(XDRState<mode>* xdr)
