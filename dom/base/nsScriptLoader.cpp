@@ -2884,8 +2884,8 @@ nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
   *aConsumedLength = aDataLength;
 
   // Decoder has already been initialized. -- trying to decode all loaded bytes.
-  nsresult rv = TryDecodeRawData(aData, aDataLength,
-                                 /* aEndOfStream = */ false);
+  nsresult rv = DecodeRawData(aData, aDataLength,
+                              /* aEndOfStream = */ false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If SRI is required for this load, appending new bytes to the hash.
@@ -2897,9 +2897,9 @@ nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
 }
 
 nsresult
-nsScriptLoadHandler::TryDecodeRawData(const uint8_t* aData,
-                                      uint32_t aDataLength,
-                                      bool aEndOfStream)
+nsScriptLoadHandler::DecodeRawData(const uint8_t* aData,
+                                   uint32_t aDataLength,
+                                   bool aEndOfStream)
 {
   int32_t srcLen = aDataLength;
   const char* src = reinterpret_cast<const char *>(aData);
@@ -3027,8 +3027,8 @@ nsScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     DebugOnly<bool> encoderSet =
       EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
     MOZ_ASSERT(encoderSet);
-    DebugOnly<nsresult> rv = TryDecodeRawData(aData, aDataLength,
-                                              /* aEndOfStream = */ true);
+    DebugOnly<nsresult> rv = DecodeRawData(aData, aDataLength,
+                                           /* aEndOfStream = */ true);
 
     // If SRI is required for this load, appending new bytes to the hash.
     if (mSRIDataVerifier && NS_SUCCEEDED(mSRIStatus)) {
