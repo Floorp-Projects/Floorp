@@ -699,7 +699,7 @@ nsGlobalWindow::RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest)
   AssertIsOnMainThread();
 
   if (aRequest->HasTimeout()) {
-    mTimeoutManager->ClearTimeout(aRequest->Handle(),
+    mTimeoutManager->ClearTimeout(aRequest->GetTimeoutHandle(),
                                   Timeout::Reason::eIdleCallbackTimeout);
   }
 

@@ -45,6 +45,13 @@ IdleRequest::SetTimeoutHandle(int32_t aHandle)
   mTimeoutHandle = Some(aHandle);
 }
 
+uint32_t
+IdleRequest::GetTimeoutHandle() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mTimeoutHandle.isSome());
+  return mTimeoutHandle.value();
+}
+
 nsresult
 IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
                      DOMHighResTimeStamp aDeadline,
