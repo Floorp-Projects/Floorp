@@ -81,6 +81,24 @@ function SwatchBasedEditorTooltip(document, stylesheet, useInline) {
 
 SwatchBasedEditorTooltip.prototype = {
   /**
+   * Reports if the tooltip is currently shown
+   *
+   * @return {Boolean} True if the tooltip is displayed.
+   */
+  isVisible: function () {
+    return this.tooltip.isVisible();
+  },
+
+  /**
+   * Reports if the tooltip is currently editing the targeted value
+   *
+   * @return {Boolean} True if the tooltip is editing.
+   */
+  isEditing: function () {
+    return this.isVisible();
+  },
+
+  /**
    * Show the editor tooltip for the currently active swatch.
    *
    * @return {Promise} a promise that resolves once the editor tooltip is displayed, or

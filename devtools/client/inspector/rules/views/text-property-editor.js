@@ -375,7 +375,7 @@ TextPropertyEditor.prototype = {
       for (let span of this._colorSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
-        this.ruleView.tooltips.colorPicker.addSwatch(span, {
+        this.ruleView.tooltips.getTooltip("colorPicker").addSwatch(span, {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
@@ -395,7 +395,7 @@ TextPropertyEditor.prototype = {
       for (let span of this._bezierSwatchSpans) {
         // Adding this swatch to the list of swatches our colorpicker
         // knows about
-        this.ruleView.tooltips.cubicBezier.addSwatch(span, {
+        this.ruleView.tooltips.getTooltip("cubicBezier").addSwatch(span, {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
@@ -412,7 +412,7 @@ TextPropertyEditor.prototype = {
       if (span) {
         parserOptions.filterSwatch = true;
 
-        this.ruleView.tooltips.filterEditor.addSwatch(span, {
+        this.ruleView.tooltips.getTooltip("filterEditor").addSwatch(span, {
           onShow: this._onStartEditing,
           onPreview: this._onSwatchPreview,
           onCommit: this._onSwatchCommit,
@@ -742,7 +742,7 @@ TextPropertyEditor.prototype = {
   remove: function (direction) {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (let span of this._colorSwatchSpans) {
-        this.ruleView.tooltips.colorPicker.removeSwatch(span);
+        this.ruleView.tooltips.getTooltip("colorPicker").removeSwatch(span);
         span.off("unit-change", this._onSwatchCommit);
       }
     }
