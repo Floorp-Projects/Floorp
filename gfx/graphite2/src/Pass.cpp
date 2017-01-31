@@ -523,7 +523,7 @@ void Pass::findNDoRule(Slot * & slot, Machine &m, FiniteStateMachine & fsm) cons
                 if (r != re)
                 {
                     const int adv = doAction(r->rule->action, slot, m);
-                    dumpRuleEventOutput(fsm, m, *r->rule, slot);
+                    dumpRuleEventOutput(fsm, *r->rule, slot);
                     if (r->rule->action->deletes()) fsm.slots.collectGarbage(slot);
                     adjustSlot(adv, slot, fsm.slots);
                     *fsm.dbgout << "cursor" << objectid(dslot(&fsm.slots.segment, slot))
@@ -579,7 +579,7 @@ void Pass::dumpRuleEventConsidered(const FiniteStateMachine & fsm, const RuleEnt
 }
 
 
-void Pass::dumpRuleEventOutput(const FiniteStateMachine & fsm, Machine & m, const Rule & r, Slot * const last_slot) const
+void Pass::dumpRuleEventOutput(const FiniteStateMachine & fsm, const Rule & r, Slot * const last_slot) const
 {
     *fsm.dbgout     << json::item << json::flat << json::object
                         << "id"     << &r - m_rules
@@ -597,7 +597,7 @@ void Pass::dumpRuleEventOutput(const FiniteStateMachine & fsm, Machine & m, cons
                     << json::close // close "input"
                     << "slots"  << json::array;
     const Position rsb_prepos = last_slot ? last_slot->origin() : fsm.slots.segment.advance();
-    fsm.slots.segment.positionSlots(0, 0, 0, m.slotMap().dir());
+    fsm.slots.segment.positionSlots(0, 0, 0, fsm.slots.segment.currdir());
 
     for(Slot * slot = output_slot(fsm.slots, 0); slot != last_slot; slot = slot->next())
         *fsm.dbgout     << dslot(&fsm.slots.segment, slot);
@@ -879,8 +879,11 @@ bool Pass::collisionKern(Segment *seg, int dir, json * const dbgout) const
         const SlotCollision * c = seg->collisionInfo(s);
         const Rect &bbox = seg->theGlyphBBoxTemporary(s->gid());
         float y = s->origin().y + c->shift().y;
-        ymax = max(y + bbox.tr.y, ymax);
-        ymin = min(y + bbox.bl.y, ymin);
+        if (!(c->flags() & SlotCollision::COLL_ISSPACE))
+        {
+            ymax = max(y + bbox.tr.y, ymax);
+            ymin = min(y + bbox.bl.y, ymin);
+        }
         if (start && (c->flags() & (SlotCollision::COLL_KERN | SlotCollision::COLL_FIX))
                         == (SlotCollision::COLL_KERN | SlotCollision::COLL_FIX))
             resolveKern(seg, s, start, dir, ymin, ymax, dbgout);
@@ -962,8 +965,8 @@ bool Pass::resolveCollisions(Segment *seg, Slot *slotFix, Slot *start,
     {
         SlotCollision *cNbor = seg->collisionInfo(nbor);
         bool sameCluster = nbor->isChildOf(base);
-        if (nbor != slotFix         // don't process if this is the slot of interest
-                      && !(cNbor->flags() & SlotCollision::COLL_IGNORE)    // don't process if ignoring
+        if (nbor != slotFix         						// don't process if this is the slot of interest
+                      && !(cNbor->ignore())    				// don't process if ignoring
                       && (nbor == base || sameCluster       // process if in the same cluster as slotFix
                             || !inKernCluster(seg, nbor)    // or this cluster is not to be kerned
                             || (rtl ^ ignoreForKern))       // or it comes before(ltr) or after(rtl)
@@ -1052,7 +1055,7 @@ float Pass::resolveKern(Segment *seg, Slot *slotFix, GR_MAYBE_UNUSED Slot *start
             return 0.;
         const Rect &bb = seg->theGlyphBBoxTemporary(nbor->gid());
         SlotCollision *cNbor = seg->collisionInfo(nbor);
-        if (bb.bl.y == 0.f && bb.tr.y == 0.f)
+        if ((bb.bl.y == 0.f && bb.tr.y == 0.f) || (cNbor->flags() & SlotCollision::COLL_ISSPACE))
         {
             if (m_kernColls == InWord)
                 break;
@@ -1066,7 +1069,7 @@ float Pass::resolveKern(Segment *seg, Slot *slotFix, GR_MAYBE_UNUSED Slot *start
             float y = nbor->origin().y + cNbor->shift().y;
             ymax = max(y + bb.tr.y, ymax);
             ymin = min(y + bb.bl.y, ymin);
-            if (nbor != slotFix && !(cNbor->flags() & SlotCollision::COLL_IGNORE))
+            if (nbor != slotFix && !cNbor->ignore())
             {
                 seenEnd = true;
                 if (!isInit)
@@ -1089,7 +1092,7 @@ float Pass::resolveKern(Segment *seg, Slot *slotFix, GR_MAYBE_UNUSED Slot *start
     }
     if (collides)
     {
-        Position mv = coll.resolve(seg, slotFix, dir, cFix->margin(), dbgout);
+        Position mv = coll.resolve(seg, slotFix, dir, dbgout);
         coll.shift(mv, dir);
         Position delta = slotFix->advancePos() + mv - cFix->shift();
         slotFix->advance(delta);

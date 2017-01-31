@@ -384,9 +384,12 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi
             if (dbgout)
             {
                 *dbgout << json::item << json::object
+//							<< "pindex" << i   // for debugging
                             << "id"     << -1
+                            << "slotsdir" << (seg->currdir() ? "rtl" : "ltr")
+                            << "passdir" << (m_dir & 1 ? "rtl" : "ltr")
                             << "slots"  << json::array;
-                seg->positionSlots(0, 0, 0, m_dir);
+                seg->positionSlots(0, 0, 0, seg->currdir());
                 for(Slot * s = seg->first(); s; s = s->next())
                     *dbgout     << dslot(seg, s);
                 *dbgout         << json::close
@@ -408,9 +411,12 @@ bool Silf::runGraphite(Segment *seg, uint8 firstPass, uint8 lastPass, int dobidi
         if (dbgout)
         {
             *dbgout << json::item << json::object
+//						<< "pindex" << i   // for debugging
                         << "id"     << i+1
+                        << "slotsdir" << (seg->currdir() ? "rtl" : "ltr")
+                        << "passdir" << ((m_dir & 1) ^ m_passes[i].reverseDir() ? "rtl" : "ltr")
                         << "slots"  << json::array;
-            seg->positionSlots(0, 0, 0, m_dir);
+            seg->positionSlots(0, 0, 0, seg->currdir());
             for(Slot * s = seg->first(); s; s = s->next())
                 *dbgout     << dslot(seg, s);
             *dbgout         << json::close;

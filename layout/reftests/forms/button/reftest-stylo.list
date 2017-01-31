@@ -39,4 +39,4 @@ fails == disabled-6.html disabled-6.html
 # == width-auto-size-rtl.html width-auto-size-rtl.html
 # == width-exact-fit-rtl.html width-exact-fit-rtl.html
 fails == display-grid-flex-columnset.html display-grid-flex-columnset.html
-== 1317351.html 1317351.html
+asserts-if(stylo,1) == 1317351.html 1317351.html # bug 1324671

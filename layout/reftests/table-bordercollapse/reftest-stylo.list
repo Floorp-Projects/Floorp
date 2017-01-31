@@ -16,9 +16,9 @@
 == bc_dyn_cg1.html bc_dyn_cg1.html
 == bc_dyn_cg2.html bc_dyn_cg2.html
 == bc_dyn_cg3.html bc_dyn_cg3.html
-fails == bc_dyn_table1.html bc_dyn_table1.html
-fails == bc_dyn_table2.html bc_dyn_table2.html
-fails == bc_dyn_table3.html bc_dyn_table3.html
+fails asserts-if(stylo,2) == bc_dyn_table1.html bc_dyn_table1.html # bug 1324661
+fails asserts-if(stylo,2) == bc_dyn_table2.html bc_dyn_table2.html # bug 1324661
+fails asserts-if(stylo,2) == bc_dyn_table3.html bc_dyn_table3.html # bug 1324661
 == bc_borderoffset1.html bc_borderoffset1.html
 == bc_borderoffset2.html bc_borderoffset2.html
 == frame_above_rules_all.html frame_above_rules_all.html
