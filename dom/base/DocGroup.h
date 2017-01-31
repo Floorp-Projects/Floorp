@@ -7,13 +7,12 @@
 #ifndef DocGroup_h
 #define DocGroup_h
 
-#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
@@ -43,7 +42,7 @@ public:
   typedef nsTArray<nsIDocument*>::iterator Iterator;
   friend class TabGroup;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup, override)
 
   // Returns NS_ERROR_FAILURE and sets |aString| to an empty string if the TLD
   // service isn't available. Returns NS_OK on success, but may still set
@@ -77,10 +76,10 @@ public:
 
   virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
 
-  virtual AbstractThread*
-  AbstractMainThreadFor(TaskCategory aCategory) override;
-
 private:
+  virtual AbstractThread*
+  AbstractMainThreadForImpl(TaskCategory aCategory) override;
+
   DocGroup(TabGroup* aTabGroup, const nsACString& aKey);
   ~DocGroup();
 

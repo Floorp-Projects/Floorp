@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/Dispatcher.h"
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Move.h"
@@ -12,38 +12,6 @@
 #include "nsQueryObject.h"
 
 using namespace mozilla;
-
-nsresult
-DispatcherTrait::Dispatch(const char* aName,
-                          TaskCategory aCategory,
-                          already_AddRefed<nsIRunnable>&& aRunnable)
-{
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
-  if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
-  } else {
-    return NS_DispatchToMainThread(runnable.forget());
-  }
-}
-
-nsIEventTarget*
-DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
-{
-  nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
-  return main;
-}
-
-AbstractThread*
-DispatcherTrait::AbstractMainThreadFor(TaskCategory aCategory)
-{
-  // Return non DocGroup version by default.
-  return AbstractThread::MainThread();
-}
 
 namespace {
 
@@ -53,13 +21,13 @@ namespace {
 
 class DispatcherEventTarget final : public nsIEventTarget
 {
-  RefPtr<dom::Dispatcher> mDispatcher;
+  RefPtr<Dispatcher> mDispatcher;
   TaskCategory mCategory;
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DISPATCHEREVENTTARGET_IID)
 
-  DispatcherEventTarget(dom::Dispatcher* aDispatcher, TaskCategory aCategory)
+  DispatcherEventTarget(Dispatcher* aDispatcher, TaskCategory aCategory)
    : mDispatcher(aDispatcher)
    , mCategory(aCategory)
   {}
@@ -67,10 +35,10 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
 
-  dom::Dispatcher* Dispatcher() const { return mDispatcher; }
+  Dispatcher* Dispatcher() const { return mDispatcher; }
 
 private:
-  virtual ~DispatcherEventTarget() {}
+  ~DispatcherEventTarget() {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DispatcherEventTarget, NS_DISPATCHEREVENTTARGET_IID)
@@ -105,6 +73,13 @@ DispatcherEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 {
   *aIsOnCurrentThread = NS_IsMainThread();
   return NS_OK;
+}
+
+AbstractThread*
+Dispatcher::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  return AbstractMainThreadForImpl(aCategory);
 }
 
 already_AddRefed<nsIEventTarget>

@@ -7,14 +7,13 @@
 #ifndef TabGroup_h
 #define TabGroup_h
 
-#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
@@ -57,7 +56,7 @@ public:
 
   friend class DocGroup;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TabGroup, override)
 
   static TabGroup*
   GetChromeTabGroup();
@@ -122,10 +121,10 @@ public:
 
   TabGroup* AsTabGroup() override { return this; }
 
-  virtual AbstractThread*
-  AbstractMainThreadFor(TaskCategory aCategory) override;
-
 private:
+  virtual AbstractThread*
+  AbstractMainThreadForImpl(TaskCategory aCategory) override;
+
   void EnsureThrottledEventQueues();
 
   ~TabGroup();
