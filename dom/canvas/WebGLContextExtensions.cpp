@@ -40,6 +40,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
         WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
         WEBGL_EXTENSION_IDENTIFIER(EXT_disjoint_timer_query)
+        WEBGL_EXTENSION_IDENTIFIER(MOZ_debug_get)
         WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
         WEBGL_EXTENSION_IDENTIFIER(OES_standard_derivatives)
         WEBGL_EXTENSION_IDENTIFIER(OES_texture_float)
@@ -90,6 +91,8 @@ bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
 
     if (allowPrivilegedExts) {
         switch (ext) {
+        case WebGLExtensionID::MOZ_debug_get:
+            return true;
         case WebGLExtensionID::WEBGL_debug_renderer_info:
             return true;
         case WebGLExtensionID::WEBGL_debug_shaders:
@@ -375,6 +378,11 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
         break;
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
         obj = new WebGLExtensionTextureFilterAnisotropic(this);
+        break;
+
+    // MOZ_
+    case WebGLExtensionID::MOZ_debug_get:
+        obj = new WebGLExtensionDebugGet(this);
         break;
 
     // OES_
