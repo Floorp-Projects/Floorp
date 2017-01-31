@@ -102,14 +102,17 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
 {
   nsRect dirty;
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
+  nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
     dirty = savedOutOfFlowData->mDirtyRect;
-    clipState.SetClipForContainingBlockDescendants(
-      &savedOutOfFlowData->mContainingBlockClip);
-    clipState.SetScrollClipForContainingBlockDescendants(
-      savedOutOfFlowData->mContainingBlockScrollClip);
+    clipState.SetClipChainForContainingBlockDescendants(
+      savedOutOfFlowData->mContainingBlockClipChain);
+    clipState.ClipContainingBlockDescendantsExtra(
+      dirty + aBuilder->ToReferenceFrame(aFrame), nullptr);
+    asrSetter.SetCurrentActiveScrolledRoot(
+      savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
   nsDisplayList list;
   aFrame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);

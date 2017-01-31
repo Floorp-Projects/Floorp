@@ -53,7 +53,6 @@ class nsCaret;
 
 namespace mozilla {
 class FrameLayerBuilder;
-class DisplayItemScrollClip;
 namespace layers {
 class Layer;
 class ImageLayer;
@@ -281,7 +280,6 @@ public:
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
   typedef mozilla::DisplayListClipState DisplayListClipState;
-  typedef mozilla::DisplayItemScrollClip DisplayItemScrollClip;
   typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
   typedef nsIWidget::ThemeGeometry ThemeGeometry;
   typedef mozilla::layers::Layer Layer;
@@ -761,19 +759,12 @@ public:
   const DisplayItemClipChain* CopyWholeChain(const DisplayItemClipChain* aClipChain);
 
   /**
-   * Allocate a new DisplayItemClip in the arena. Will be cleaned up
-   * automatically when the arena goes away.
+   * Only used for containerful root scrolling. This is a workaround.
    */
-  const DisplayItemClip* AllocateDisplayItemClip(const DisplayItemClip& aOriginal);
-
-  /**
-   * Allocate a new DisplayItemScrollClip in the arena. Will be cleaned up
-   * automatically when the arena goes away.
-   */
-  DisplayItemScrollClip* AllocateDisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                                                 nsIScrollableFrame* aScrollableFrame,
-                                                 const DisplayItemClip* aClip,
-                                                 bool aIsAsyncScrollable);
+  void SetActiveScrolledRootForRootScrollframe(const ActiveScrolledRoot* aASR)
+  { mActiveScrolledRootForRootScrollframe = aASR; }
+  const ActiveScrolledRoot* ActiveScrolledRootForRootScrollframe() const
+  { return mActiveScrolledRootForRootScrollframe; }
 
   /**
    * Transfer off main thread animations to the layer.  May be called
@@ -979,6 +970,7 @@ public:
     explicit AutoCurrentActiveScrolledRootSetter(nsDisplayListBuilder* aBuilder)
       : mBuilder(aBuilder)
       , mSavedActiveScrolledRoot(aBuilder->mCurrentActiveScrolledRoot)
+      , mContentClipASR(aBuilder->ClipState().GetContentClipASR())
       , mDescendantsStartIndex(aBuilder->mActiveScrolledRoots.Length())
       , mUsed(false)
     {
@@ -992,9 +984,38 @@ public:
     void SetCurrentActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot)
     {
       MOZ_ASSERT(!mUsed);
+
+      // Set the builder's mCurrentActiveScrolledRoot.
       mBuilder->mCurrentActiveScrolledRoot = aActiveScrolledRoot;
+
+      // We also need to adjust the builder's mCurrentContainerASR.
+      // mCurrentContainerASR needs to be an ASR that all the container's
+      // contents have finite bounds with respect to. If aActiveScrolledRoot
+      // is an ancestor ASR of mCurrentContainerASR, that means we need to
+      // set mCurrentContainerASR to aActiveScrolledRoot, because otherwise
+      // the items that will be created with aActiveScrolledRoot wouldn't
+      // have finite bounds with respect to mCurrentContainerASR. There's one
+      // exception, in the case where there's a content clip on the builder
+      // that is scrolled by a descendant ASR of aActiveScrolledRoot. This
+      // content clip will clip all items that are created while this
+      // AutoCurrentActiveScrolledRootSetter exists. This means that the items
+      // created during our lifetime will have finite bounds with respect to
+      // the content clip's ASR, even if the items' actual ASR is an ancestor
+      // of that. And it also means that mCurrentContainerASR only needs to be
+      // set to the content clip's ASR and not all the way to aActiveScrolledRoot.
+      // This case is tested by fixed-pos-scrolled-clip-opacity-layerize.html
+      // and fixed-pos-scrolled-clip-opacity-inside-layerize.html.
+
+      // finiteBoundsASR is the leafmost ASR that all items created during
+      // object's lifetime have finite bounds with respect to.
+      const ActiveScrolledRoot* finiteBoundsASR = ActiveScrolledRoot::PickDescendant(
+        mContentClipASR, aActiveScrolledRoot);
+
+      // mCurrentContainerASR is adjusted so that it's still an ancestor of
+      // finiteBoundsASR.
       mBuilder->mCurrentContainerASR = ActiveScrolledRoot::PickAncestor(
-        mBuilder->mCurrentContainerASR, aActiveScrolledRoot);
+        mBuilder->mCurrentContainerASR, finiteBoundsASR);
+
       mUsed = true;
     }
 
@@ -1011,8 +1032,29 @@ public:
 
   private:
     nsDisplayListBuilder* mBuilder;
+    /**
+     * The builder's mCurrentActiveScrolledRoot at construction time which
+     * needs to be restored at destruction time.
+     */
     const ActiveScrolledRoot* mSavedActiveScrolledRoot;
+    /**
+     * If there's a content clip on the builder at construction time, then
+     * mContentClipASR is that content clip's ASR, otherwise null. The
+     * assumption is that the content clip doesn't get relaxed while this
+     * object is on the stack.
+     */
+    const ActiveScrolledRoot* mContentClipASR;
+    /**
+     * InsertScrollFrame needs to mutate existing ASRs (those that were
+     * created while this object was on the stack), and mDescendantsStartIndex
+     * makes it easier to skip ASRs that were created in the past.
+     */
     size_t mDescendantsStartIndex;
+    /**
+     * Flag to make sure that only one of SetCurrentActiveScrolledRoot /
+     * EnterScrollFrame / InsertScrollFrame is called per instance of this
+     * class.
+     */
     bool mUsed;
   };
 
@@ -1031,7 +1073,9 @@ public:
       : mBuilder(aBuilder)
       , mSavedContainerASR(aBuilder->mCurrentContainerASR)
     {
-      mBuilder->mCurrentContainerASR = mBuilder->mCurrentActiveScrolledRoot;
+      mBuilder->mCurrentContainerASR = ActiveScrolledRoot::PickDescendant(
+        mBuilder->ClipState().GetContentClipASR(),
+        mBuilder->mCurrentActiveScrolledRoot);
     }
 
     const ActiveScrolledRoot* GetContainerASR()
@@ -1166,15 +1210,15 @@ public:
   void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
 
   struct OutOfFlowDisplayData {
-    OutOfFlowDisplayData(const DisplayItemClip* aContainingBlockClip,
-                         const DisplayItemScrollClip* aContainingBlockScrollClip,
+    OutOfFlowDisplayData(const DisplayItemClipChain* aContainingBlockClipChain,
+                         const ActiveScrolledRoot* aContainingBlockActiveScrolledRoot,
                          const nsRect &aDirtyRect)
-      : mContainingBlockClip(aContainingBlockClip ? *aContainingBlockClip : DisplayItemClip())
-      , mContainingBlockScrollClip(aContainingBlockScrollClip)
+      : mContainingBlockClipChain(aContainingBlockClipChain)
+      , mContainingBlockActiveScrolledRoot(aContainingBlockActiveScrolledRoot)
       , mDirtyRect(aDirtyRect)
     {}
-    DisplayItemClip mContainingBlockClip;
-    const DisplayItemScrollClip* mContainingBlockScrollClip;
+    const DisplayItemClipChain* mContainingBlockClipChain;
+    const ActiveScrolledRoot* mContainingBlockActiveScrolledRoot;
     nsRect mDirtyRect;
   };
 
@@ -1188,6 +1232,12 @@ public:
 
   nsPresContext* CurrentPresContext() {
     return CurrentPresShellState()->mPresShell->GetPresContext();
+  }
+
+  OutOfFlowDisplayData* GetCurrentFixedBackgroundDisplayData()
+  {
+    auto& displayData = CurrentPresShellState()->mFixedBackgroundDisplayData;
+    return displayData ? displayData.ptr() : nullptr;
   }
 
   /**
@@ -1319,6 +1369,12 @@ public:
     mBuildingInvisibleItems = aBuildingInvisibleItems;
   }
 
+  /**
+   * This is a convenience function to ease the transition until AGRs and ASRs
+   * are unified.
+   */
+  AnimatedGeometryRoot* AnimatedGeometryRootForASR(const ActiveScrolledRoot* aASR);
+
   bool HitTestShouldStopAtFirstOpaque() const {
     return mHitTestShouldStopAtFirstOpaque;
   }
@@ -1347,11 +1403,11 @@ private:
   friend class nsDisplayFixedPosition;
   AnimatedGeometryRoot* FindAnimatedGeometryRootFor(nsDisplayItem* aItem);
 
-  AnimatedGeometryRoot* WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
-                                        AnimatedGeometryRoot* aParent = nullptr);
-
   friend class nsDisplayItem;
   AnimatedGeometryRoot* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
+
+  AnimatedGeometryRoot* WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
+                                        AnimatedGeometryRoot* aParent = nullptr);
 
   nsDataHashtable<nsPtrHashKey<nsIFrame>, AnimatedGeometryRoot*> mFrameToAnimatedGeometryRootMap;
 
@@ -1366,6 +1422,7 @@ private:
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
     nsRect        mCaretRect;
+    mozilla::Maybe<OutOfFlowDisplayData> mFixedBackgroundDisplayData;
     uint32_t      mFirstFrameMarkedForDisplay;
     bool          mIsBackgroundOnly;
     // This is a per-document flag turning off event handling for all content
@@ -1438,10 +1495,9 @@ private:
   // This is a pointer and not a real nsDisplayList value because the
   // nsDisplayList class is defined below this class, so we can't use it here.
   nsDisplayList*                 mScrollInfoItemsForHoisting;
-  nsTArray<DisplayItemScrollClip*> mScrollClipsToDestroy;
-  nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   nsTArray<ActiveScrolledRoot*>  mActiveScrolledRoots;
   nsTArray<DisplayItemClipChain*> mClipChainsToDestroy;
+  const ActiveScrolledRoot*      mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode       mMode;
   ViewID                         mCurrentScrollParentId;
   ViewID                         mCurrentScrollbarTarget;
@@ -1518,7 +1574,6 @@ class nsDisplayItem : public nsDisplayItemLink {
 public:
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::DisplayItemClip DisplayItemClip;
-  typedef mozilla::DisplayItemScrollClip DisplayItemScrollClip;
   typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
   typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -1532,15 +1587,16 @@ public:
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                const DisplayItemScrollClip* aScrollClip);
+                const ActiveScrolledRoot* aActiveScrolledRoot);
   /**
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
    */
   explicit nsDisplayItem(nsIFrame* aFrame)
     : mFrame(aFrame)
+    , mClipChain(nullptr)
     , mClip(nullptr)
-    , mScrollClip(nullptr)
+    , mActiveScrolledRoot(nullptr)
     , mReferenceFrame(nullptr)
     , mAnimatedGeometryRoot(nullptr)
     , mForceNotVisible(false)
@@ -1959,7 +2015,7 @@ public:
    */
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
-                            const DisplayItemClip* aClip) {
+                            const DisplayItemClipChain* aClip) {
     NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity not supported on this type");
   }
   /**
@@ -2042,28 +2098,20 @@ public:
   {
     return mClip ? *mClip : DisplayItemClip::NoClip();
   }
-  void SetClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip)
-  {
-    if (!aClip.HasClip()) {
-      mClip = nullptr;
-      return;
-    }
-    mClip = aBuilder->AllocateDisplayItemClip(aClip);
-  }
+  void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClipChain* aOther);
 
-  void IntersectClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip)
-  {
-    if (mClip) {
-      DisplayItemClip temp = *mClip;
-      temp.IntersectWith(aClip);
-      SetClip(aBuilder, temp);
-    } else {
-      SetClip(aBuilder, aClip);
-    }
-  }
+  void SetActiveScrolledRoot(const ActiveScrolledRoot* aActiveScrolledRoot) { mActiveScrolledRoot = aActiveScrolledRoot; }
+  const ActiveScrolledRoot* GetActiveScrolledRoot() const { return mActiveScrolledRoot; }
 
-  void SetScrollClip(const DisplayItemScrollClip* aScrollClip) { mScrollClip = aScrollClip; }
-  const DisplayItemScrollClip* ScrollClip() const { return mScrollClip; }
+  virtual void SetClipChain(const DisplayItemClipChain* aClipChain);
+  const DisplayItemClipChain* GetClipChain() const { return mClipChain; }
+
+  /**
+   * Intersect all clips in our clip chain up to (and including) aASR and set
+   * set the intersection as this item's clip.
+   */
+  void FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
+                         const ActiveScrolledRoot* aASR);
 
   bool BackfaceIsHidden() {
     return mFrame->BackfaceIsHidden();
@@ -2075,8 +2123,9 @@ protected:
   nsDisplayItem() { mAbove = nullptr; }
 
   nsIFrame* mFrame;
+  const DisplayItemClipChain* mClipChain;
   const DisplayItemClip* mClip;
-  const DisplayItemScrollClip* mScrollClip;
+  const ActiveScrolledRoot* mActiveScrolledRoot;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
   struct AnimatedGeometryRoot* mAnimatedGeometryRoot;
@@ -2113,7 +2162,7 @@ protected:
  */
 class nsDisplayList {
 public:
-  typedef mozilla::DisplayItemScrollClip DisplayItemScrollClip;
+  typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::PaintedLayer PaintedLayer;
@@ -2351,18 +2400,20 @@ public:
    * The result is not cached.
    */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
+
   /**
-   * Return the union of the scroll clipped bounds of all children. To get the
-   * scroll clipped bounds of a child item, we start with the item's clipped
-   * bounds and walk its scroll clip chain up to (but not including)
-   * aIncludeScrollClipsUpTo, and take each scroll clip into account. For
-   * scroll clips from async scrollable frames we assume that the item can move
-   * anywhere inside that scroll frame.
-   * In other words, the return value from this method includes all pixels that
-   * could potentially be covered by items in this list under async scrolling.
+   * Get this list's bounds, respecting clips relative to aASR. The result is
+   * the union of each item's clipped bounds with respect to aASR. That means
+   * that if an item can move asynchronously with an ASR that is a descendant
+   * of aASR, then the clipped bounds with respect to aASR will be the clip of
+   * that item for aASR, because the item can move anywhere inside that clip.
+   * If there is an item in this list which is not bounded with respect to
+   * aASR (i.e. which does not have "finite bounds" with respect to aASR),
+   * then this method trigger an assertion failure.
    */
-  nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const;
+  nsRect GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
+                                          const ActiveScrolledRoot* aASR) const;
+
   /**
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
@@ -3171,7 +3222,7 @@ public:
 
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
-                            const DisplayItemClip* aClip) override;
+                            const DisplayItemClipChain* aClip) override;
   virtual bool CanApplyOpacity() const override;
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
@@ -3280,13 +3331,11 @@ public:
   
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
-                            const DisplayItemClip* aClip) override
+                            const DisplayItemClipChain* aClip) override
   {
     NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
     mOpacity = aOpacity;
-    if (aClip) {
-      IntersectClip(aBuilder, *aClip);
-    }
+    IntersectClip(aBuilder, aClip);
   }
   virtual bool CanApplyOpacity() const override
   {
@@ -3433,7 +3482,7 @@ public:
 
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
-                            const DisplayItemClip* aClip) override
+                            const DisplayItemClipChain* aClip) override
   {
     NS_ASSERTION(CanApplyOpacity(), "ApplyOpacity should be allowed");
   }
@@ -3517,7 +3566,7 @@ public:
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList,
-                    const DisplayItemScrollClip* aScrollClip);
+                    const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
@@ -3532,7 +3581,7 @@ public:
    */
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
-    mBounds = mList.GetScrollClippedBoundsUpTo(aBuilder, mScrollClip);
+    mBounds = mList.GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot);
     // The display list may contain content that's visible outside the visible
     // rect (i.e. the current dirty rect) passed in when the item was created.
     // This happens when the dirty rect has been restricted to the visual
@@ -3676,7 +3725,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 public:
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
-                   const DisplayItemScrollClip* aScrollClip,
+                   const ActiveScrolledRoot* aActiveScrolledRoot,
                    bool aForEventsAndPluginsOnly);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
@@ -3708,7 +3757,7 @@ public:
   }
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
-                            const DisplayItemClip* aClip) override;
+                            const DisplayItemClipChain* aClip) override;
   virtual bool CanApplyOpacity() const override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
@@ -3726,7 +3775,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
 public:
   nsDisplayBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                         nsDisplayList* aList, uint8_t aBlendMode,
-                        const DisplayItemScrollClip* aScrollClip,
+                        const ActiveScrolledRoot* aActiveScrolledRoot,
                         uint32_t aIndex = 0);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayBlendMode();
@@ -3768,11 +3817,13 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
     static nsDisplayBlendContainer*
     CreateForMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsDisplayList* aList, const DisplayItemScrollClip* aScrollClip);
+                          nsDisplayList* aList,
+                          const ActiveScrolledRoot* aActiveScrolledRoot);
 
     static nsDisplayBlendContainer*
     CreateForBackgroundBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                                 nsDisplayList* aList, const DisplayItemScrollClip* aScrollClip);
+                                 nsDisplayList* aList,
+                                 const ActiveScrolledRoot* aActiveScrolledRoot);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
@@ -3797,7 +3848,7 @@ public:
 private:
     nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             nsDisplayList* aList,
-                            const DisplayItemScrollClip* aScrollClip,
+                            const ActiveScrolledRoot* aActiveScrolledRoot,
                             bool aIsForBackground);
 
     // Used to distinguish containers created at building stacking
@@ -3835,7 +3886,9 @@ public:
    * scrollable content this scrollbar is for.
    */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList, uint32_t aFlags = 0,
+                    nsDisplayList* aList,
+                    const ActiveScrolledRoot* aActiveScrolledRoot,
+                    uint32_t aFlags = 0,
                     ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
                     float aScrollbarThumbRatio = 0.0f,
                     bool aForceActive = true);
@@ -3932,7 +3985,8 @@ public:
 class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsDisplayList* aList);
+                          nsDisplayList* aList,
+                          const ActiveScrolledRoot* aActiveScrolledRoot);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayStickyPosition();
 #endif
@@ -3953,7 +4007,8 @@ public:
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsDisplayList* aList);
+                         nsDisplayList* aList,
+                         const ActiveScrolledRoot* aActiveScrolledRoot);
 
   static nsDisplayFixedPosition* CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
                                                           nsIFrame* aFrame,
@@ -4094,7 +4149,7 @@ class nsDisplaySVGEffects: public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity,
-                      const DisplayItemScrollClip* aScrollClip);
+                      const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -4137,7 +4192,7 @@ public:
 
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, bool aHandleOpacity,
-                const DisplayItemScrollClip* aScrollClip);
+                const ActiveScrolledRoot* aActiveScrolledRoot);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMask();
 #endif
