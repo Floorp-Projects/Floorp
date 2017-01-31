@@ -36,6 +36,8 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.global = aGlobal;
   this.closedWithEnter = false;
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
+  this._uaBackgroundColor = null;
+  this._uaColor = null;
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
@@ -91,7 +93,9 @@ this.SelectContentHelper.prototype = {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       direction: getComputedStyles(this.element).direction,
-      isOpenedViaTouch: this.isOpenedViaTouch
+      isOpenedViaTouch: this.isOpenedViaTouch,
+      uaBackgroundColor: this.uaBackgroundColor,
+      uaColor: this.uaColor,
     });
     gOpen = true;
   },
@@ -110,7 +114,35 @@ this.SelectContentHelper.prototype = {
     this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
+      uaBackgroundColor: this.uaBackgroundColor,
+      uaColor: this.uaColor,
     });
+  },
+
+  // Determine user agent background-color and color.
+  // This is used to skip applying the custom color if it matches
+  // the user agent values.
+  _calculateUAColors() {
+    let dummy = this.element.ownerDocument.createElement("option");
+    dummy.style.color = "-moz-comboboxtext";
+    dummy.style.backgroundColor = "-moz-combobox";
+    let dummyCS = this.element.ownerGlobal.getComputedStyle(dummy);
+    this._uaBackgroundColor = dummyCS.backgroundColor;
+    this._uaColor = dummyCS.color;
+  },
+
+  get uaBackgroundColor() {
+    if (!this._uaBackgroundColor) {
+      this._calculateUAColors();
+    }
+    return this._uaBackgroundColor;
+  },
+
+  get uaColor() {
+    if (!this._uaColor) {
+      this._calculateUAColors();
+    }
+    return this._uaColor;
   },
 
   dispatchMouseEvent(win, target, eventName) {
