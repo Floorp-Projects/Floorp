@@ -44,6 +44,7 @@
 
   <hbox align="start">
     <button id="removeSelected" label="&removeSelected.label;" accesskey="&removeSelected.accesskey;"/>
+    <button id="removeAll" label="&removeAll.label;" accesskey="&removeAll.accesskey;"/>
   </hbox>
 
   <vbox align="end">

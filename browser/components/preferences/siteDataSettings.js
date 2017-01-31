@@ -40,23 +40,25 @@ let gSiteDataSettings = {
       let sortCol = document.getElementById("hostCol");
       this._sortSites(this._sites, sortCol);
       this._buildSitesList(this._sites);
-      this._updateButtonsState();
       Services.obs.notifyObservers(null, "sitedata-settings-init", null);
     });
 
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
-    setEventListener("searchBox", "command", this.onCommandSearch);
     setEventListener("cancel", "command", this.close);
     setEventListener("save", "command", this.saveChanges);
-    setEventListener("removeSelected", "command", this.removeSelected);
+    setEventListener("searchBox", "command", this.onCommandSearch);
+    setEventListener("removeAll", "command", this.onClickRemoveAll);
+    setEventListener("removeSelected", "command", this.onClickRemoveSelected);
   },
 
   _updateButtonsState() {
     let items = this._list.getElementsByTagName("richlistitem");
-    let removeBtn = document.getElementById("removeSelected");
-    removeBtn.disabled = !(items.length > 0);
+    let removeSelectedBtn = document.getElementById("removeSelected");
+    let removeAllBtn = document.getElementById("removeAll");
+    removeSelectedBtn.disabled = items.length == 0;
+    removeAllBtn.disabled = removeSelectedBtn.disabled;
   },
 
   /**
@@ -136,30 +138,22 @@ let gSiteDataSettings = {
       item.setAttribute("usage", prefStrBundle.getFormattedString("siteUsage", size));
       this._list.appendChild(item);
     }
+    this._updateButtonsState();
   },
 
-  onClickTreeCol(e) {
-    this._sortSites(this._sites, e.target);
-    this._buildSitesList(this._sites);
-  },
-
-  onCommandSearch() {
-    this._buildSitesList(this._sites);
-  },
-
-  removeSelected() {
-    let selected = this._list.selectedItem;
-    if (selected) {
-      let origin = selected.getAttribute("data-origin");
+  _removeSiteItems(items) {
+    for (let i = items.length - 1; i >= 0; --i) {
+      let item = items[i];
+      let origin = item.getAttribute("data-origin");
       for (let site of this._sites) {
         if (site.uri.spec === origin) {
           site.userAction = "remove";
           break;
         }
       }
-      this._list.removeChild(selected);
-      this._updateButtonsState();
+      item.remove();
     }
+    this._updateButtonsState();
   },
 
   saveChanges() {
@@ -235,5 +229,28 @@ let gSiteDataSettings = {
 
   close() {
     window.close();
+  },
+
+  onClickTreeCol(e) {
+    this._sortSites(this._sites, e.target);
+    this._buildSitesList(this._sites);
+  },
+
+  onCommandSearch() {
+    this._buildSitesList(this._sites);
+  },
+
+  onClickRemoveSelected() {
+    let selected = this._list.selectedItem;
+    if (selected) {
+      this._removeSiteItems([selected]);
+    }
+  },
+
+  onClickRemoveAll() {
+    let siteItems = this._list.getElementsByTagName("richlistitem");
+    if (siteItems.length > 0) {
+      this._removeSiteItems(siteItems);
+    }
   }
 };
