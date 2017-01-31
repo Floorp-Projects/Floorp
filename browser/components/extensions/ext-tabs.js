@@ -33,7 +33,7 @@ function getSender(extension, target, sender) {
     tabId = sender.tabId;
     delete sender.tabId;
   } else if (target instanceof Ci.nsIDOMXULElement) {
-    tabId = getBrowserInfo(target).tabId;
+    tabId = tabTracker.getBrowserData(target).tabId;
   }
 
   if (tabId) {
@@ -48,7 +48,6 @@ function getSender(extension, target, sender) {
 global.tabGetSender = getSender;
 
 /* eslint-disable mozilla/balanced-listeners */
-
 extensions.on("page-shutdown", (type, context) => {
   if (context.viewType == "tab") {
     if (context.extension.id !== context.xulBrowser.contentPrincipal.addonId) {
@@ -65,16 +64,6 @@ extensions.on("page-shutdown", (type, context) => {
       }
     }
   }
-});
-
-extensions.on("fill-browser-data", (type, browser, data) => {
-  let tabId, windowId;
-  if (browser) {
-    ({tabId, windowId} = getBrowserInfo(browser));
-  }
-
-  data.tabId = tabId || -1;
-  data.windowId = windowId || -1;
 });
 /* eslint-enable mozilla/balanced-listeners */
 
