@@ -95,53 +95,6 @@ TabContext.prototype = {
   },
 };
 
-function getBrowserInfo(browser) {
-  if (!browser.ownerGlobal.gBrowser) {
-    // When we're loaded into a <browser> inside about:addons, we need to go up
-    // one more level.
-    browser = browser.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDocShell)
-                     .chromeEventHandler;
-
-    if (!browser) {
-      return {};
-    }
-  }
-
-  let result = {};
-
-  let window = browser.ownerGlobal;
-  if (window.gBrowser) {
-    let tab = window.gBrowser.getTabForBrowser(browser);
-    if (tab) {
-      result.tabId = tabTracker.getId(tab);
-    }
-
-    result.windowId = windowTracker.getId(window);
-  }
-
-  return result;
-}
-global.getBrowserInfo = getBrowserInfo;
-
-// Sends the tab and windowId upon request. This is primarily used to support
-// the synchronous `browser.extension.getViews` API.
-let onGetTabAndWindowId = {
-  receiveMessage({name, target, sync}) {
-    let result = getBrowserInfo(target);
-
-    if (result.tabId) {
-      if (sync) {
-        return result;
-      }
-      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
-    }
-  },
-};
-/* eslint-disable mozilla/balanced-listeners */
-Services.mm.addMessageListener("Extension:GetTabAndWindowId", onGetTabAndWindowId);
-/* eslint-enable mozilla/balanced-listeners */
-
 
 class WindowTracker extends WindowTrackerBase {
   addProgressListener(window, listener) {
@@ -378,17 +331,33 @@ class TabTracker extends TabTrackerBase {
     }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 
-  getBrowserId(browser) {
+  getBrowserData(browser) {
+    if (browser.ownerGlobal.location.href === "about:addons") {
+      // When we're loaded into a <browser> inside about:addons, we need to go up
+      // one more level.
+      browser = browser.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell)
+                       .chromeEventHandler;
+    }
+
+    let result = {
+      tabId: -1,
+      windowId: -1,
+    };
+
     let {gBrowser} = browser.ownerGlobal;
     // Some non-browser windows have gBrowser but not
     // getTabForBrowser!
     if (gBrowser && gBrowser.getTabForBrowser) {
+      result.windowId = windowTracker.getId(browser.ownerGlobal);
+
       let tab = gBrowser.getTabForBrowser(browser);
       if (tab) {
-        return this.getId(tab);
+        result.tabId = this.getId(tab);
       }
     }
-    return -1;
+
+    return result;
   }
 
   get activeTab() {

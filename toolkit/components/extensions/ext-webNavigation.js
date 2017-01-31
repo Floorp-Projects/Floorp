@@ -122,7 +122,7 @@ function WebNavigationEventManager(context, eventName) {
       }
 
       // Fills in tabId typically.
-      extensions.emit("fill-browser-data", data.browser, data2);
+      Object.assign(data2, tabTracker.getBrowserData(data.browser));
       if (data2.tabId < 0) {
         return;
       }
