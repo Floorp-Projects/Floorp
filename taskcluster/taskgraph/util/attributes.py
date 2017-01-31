@@ -2,6 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+INTEGRATION_PROJECTS = set([
+    'mozilla-inbound',
+    'autoland',
+])
+
+RELEASE_PROJECTS = set([
+    'mozilla-central',
+    'mozilla-aurora',
+    'mozilla-beta',
+    'mozilla-release',
+])
+
 
 def attrmatch(attributes, **kwargs):
     """Determine whether the given set of task attributes matches.  The
@@ -24,3 +36,18 @@ def attrmatch(attributes, **kwargs):
         elif kwval != attributes[kwkey]:
             return False
     return True
+
+
+def match_run_on_projects(project, run_on_projects):
+    """Determine whether the given project is included in the `run-on-projects`
+    parameter, applying expansions for things like "integration" mentioned in
+    the attribute documentation."""
+    if 'all' in run_on_projects:
+        return True
+    if 'integration' in run_on_projects:
+        if project in INTEGRATION_PROJECTS:
+            return True
+    if 'release' in run_on_projects:
+        if project in RELEASE_PROJECTS:
+            return True
+    return project in run_on_projects

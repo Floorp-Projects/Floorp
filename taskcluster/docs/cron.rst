@@ -4,6 +4,16 @@ Periodic Taskgraphs
 The cron functionality allows in-tree scheduling of task graphs that run
 periodically, instead of on a push.
 
+Cron.yml
+--------
+
+In the root of the Gecko directory, you will find `.cron.yml`.  This defines
+the periodic tasks ("cron jobs") run for Gecko.  Each specifies a name, what to
+do, and some parameters to determine when the cron job should occur.
+
+See ``taskcluster/taskgraph/cron/schema.py`` for details on the format and
+meaning of this file.
+
 How It Works
 ------------
 
