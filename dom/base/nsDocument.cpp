@@ -1336,7 +1336,7 @@ nsIDocument::nsIDocument()
     mEverInForeground(false),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
-    mStyleBackendType(mozilla::StyleBackendType::Gecko),
+    mStyleBackendType(StyleBackendType::None),
 #ifdef MOZILLA_INTERNAL_API
     mVisibilityState(dom::VisibilityState::Hidden),
 #else
@@ -12928,7 +12928,7 @@ nsIDocument::ReportHasScrollLinkedEffect()
 void
 nsIDocument::UpdateStyleBackendType()
 {
-  MOZ_ASSERT(mStyleBackendType == StyleBackendType(0),
+  MOZ_ASSERT(mStyleBackendType == StyleBackendType::None,
              "no need to call UpdateStyleBackendType now");
 
   // Assume Gecko by default.

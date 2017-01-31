@@ -46,7 +46,7 @@ function test3() {
   ifr.contentDocument.getElementsByTagName("input")[0].focus();
   is(firstDoc.activeElement, firstDoc.body,
      "Active element should be body by default! (3)");
-  ifr.parentNode.removeChild(ifr);
+  ifr.remove();
   is(firstDoc.activeElement, firstDoc.body,
      "Active element should be body by default! (4)");
   SimpleTest.finish();

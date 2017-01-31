@@ -1049,7 +1049,7 @@ fails == 424766-1.html 424766-1.html
 fails == 425972-2.html 425972-2.html
 # == 425972-1.html 425972-1.html
 fails == 426629-1.html 426629-1.html
-fails asserts(3) == 427017-1.xhtml 427017-1.xhtml
+asserts(3) == 427017-1.xhtml 427017-1.xhtml
 == 427129-scrollframe.html 427129-scrollframe.html
 == 427129-table.html 427129-table.html
 == 427129-image.html 427129-image.html
@@ -1554,7 +1554,7 @@ fails needs-focus == 568441.html 568441.html
 == 571281-1b.html 571281-1b.html
 == 571281-1c.html 571281-1c.html
 fails == 571347-1a.html 571347-1a.html
-fails == 571347-1b.html 571347-1b.html
+# == 571347-1b.html 571347-1b.html
 # == 571347-2a.html 571347-2a.html
 # == 571347-2b.html 571347-2b.html
 fails == 571347-2c.html 571347-2c.html
@@ -1872,7 +1872,7 @@ fails == 1121748-2.html 1121748-2.html
 == 1127107-1a-nowrap.html 1127107-1a-nowrap.html
 == 1127107-1b-pre.html 1127107-1b-pre.html
 == 1127107-2-capitalize.html 1127107-2-capitalize.html
-fails == 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
+# == 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
 == 1128354-1.html 1128354-1.html
 # == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
 # == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
@@ -1929,7 +1929,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh.html 1133905-6-vh.html
 # == 1133905-6-vh-rtl.html 1133905-6-vh-rtl.html
 == 1150021-1.xul 1150021-1.xul
 fails == 1151145-1.html 1151145-1.html
-== 1151306-1.html 1151306-1.html
+# == 1151306-1.html 1151306-1.html
 == 1153845-1.html 1153845-1.html
 fails == 1155828-1.html 1155828-1.html
 == 1156129-1.html 1156129-1.html

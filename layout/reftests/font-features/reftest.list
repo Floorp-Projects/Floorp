@@ -87,12 +87,12 @@ HTTP(..) == spacelookups.html spacelookups-ref.html
 # tests whether word cache is in use by testing for ignored space kerns
 HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
-random-if(!winWidget&&!cocoaWidget) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
+random-if(!winWidget&&!cocoaWidget) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering

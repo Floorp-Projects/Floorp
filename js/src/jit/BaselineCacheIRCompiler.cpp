@@ -38,6 +38,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
                                        Register scratch, LiveGeneralRegisterSet saveRegs);
 
     MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
+    MOZ_MUST_USE bool emitAddAndStoreSlotShared(bool isFixed);
 
   public:
     friend class AutoStubFrame;
@@ -770,6 +771,88 @@ BaselineCacheIRCompiler::emitStoreDynamicSlot()
 }
 
 bool
+BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
+{
+    ObjOperandId objId = reader.objOperandId();
+    Address offsetAddr = stubAddress(reader.stubOffset());
+
+    // Allocate the fixed registers first. These need to be fixed for
+    // callTypeUpdateIC.
+    AutoStubFrame stubFrame(*this);
+    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+
+    Register obj = allocator.useRegister(masm, objId);
+    bool changeGroup = reader.readBool();
+    Address newGroupAddr = stubAddress(reader.stubOffset());
+    Address newShapeAddr = stubAddress(reader.stubOffset());
+
+    LiveGeneralRegisterSet saveRegs;
+    saveRegs.add(obj);
+    saveRegs.add(val);
+    if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+        return false;
+
+    if (changeGroup) {
+        // Changing object's group from a partially to fully initialized group,
+        // per the acquired properties analysis. Only change the group if the
+        // old group still has a newScript. This only applies to PlainObjects.
+        Label noGroupChange;
+        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+        masm.branchPtr(Assembler::Equal,
+                       Address(scratch, ObjectGroup::offsetOfAddendum()),
+                       ImmWord(0),
+                       &noGroupChange);
+
+        // Reload the new group from the cache.
+        masm.loadPtr(newGroupAddr, scratch);
+
+        Address groupAddr(obj, JSObject::offsetOfGroup());
+        EmitPreBarrier(masm, groupAddr, MIRType::ObjectGroup);
+        masm.storePtr(scratch, groupAddr);
+
+        masm.bind(&noGroupChange);
+    }
+
+    // Update the object's shape.
+    Address shapeAddr(obj, ShapedObject::offsetOfShape());
+    masm.loadPtr(newShapeAddr, scratch);
+    EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
+    masm.storePtr(scratch, shapeAddr);
+
+    // Perform the store. No pre-barrier required since this is a new
+    // initialization.
+    masm.load32(offsetAddr, scratch);
+    if (isFixed) {
+        BaseIndex slot(obj, scratch, TimesOne);
+        masm.storeValue(val, slot);
+    } else {
+        // To avoid running out of registers on x86, use ICStubReg as scratch.
+        // We don't need it anymore.
+        Register slots = ICStubReg;
+        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), slots);
+        BaseIndex slot(slots, scratch, TimesOne);
+        masm.storeValue(val, slot);
+    }
+
+    if (cx_->gc.nursery.exists())
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitAddAndStoreFixedSlot()
+{
+    return emitAddAndStoreSlotShared(true);
+}
+
+bool
+BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot()
+{
+    return emitAddAndStoreSlotShared(false);
+}
+
+bool
 BaselineCacheIRCompiler::emitStoreUnboxedProperty()
 {
     ObjOperandId objId = reader.objOperandId();
@@ -1006,6 +1089,36 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     masm.callJit(scratch);
 
     stubFrame.leave(masm, true);
+    return true;
+}
+
+typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
+static const VMFunction SetArrayLengthInfo =
+    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
+
+bool
+BaselineCacheIRCompiler::emitCallSetArrayLength()
+{
+    AutoStubFrame stubFrame(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    bool strict = reader.readBool();
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(obj);
+
+    if (!callVM(masm, SetArrayLengthInfo))
+        return false;
+
+    stubFrame.leave(masm);
     return true;
 }
 

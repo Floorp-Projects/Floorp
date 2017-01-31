@@ -193,7 +193,7 @@ function insertBefore(newChild, existing) {
   existing.parentNode.insertBefore(newChild, existing);
 }
 function removeNode(child) {
-  child.parentNode.removeChild(child);
+  child.remove();
 }
 
 insertAfter(t1, div);

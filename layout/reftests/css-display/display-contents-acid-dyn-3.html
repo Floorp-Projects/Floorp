@@ -29,7 +29,7 @@ function runTest(iframe) {
     var elm = e[i];
     if (win.getComputedStyle(elm).display == 'contents') {
       contents.push([ elm, elm.nextSibling, elm.parentNode ]);
-      elm.parentNode.removeChild(elm);
+      elm.remove();
     }
   }
   doc.body.offsetHeight;

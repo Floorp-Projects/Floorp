@@ -43,7 +43,7 @@ addLoadEvent(function() {
   dispatchEvent(t);
   is(triggerCount, 2, "Dispatched twice");
 
-  t.parentNode.removeChild(t);
+  t.remove();
   dispatchEvent(t);
   is(triggerCount, 2, "Listener should be gone now");
 

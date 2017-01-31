@@ -532,11 +532,24 @@ class Arena
                   "Arena::auxNextLink packing assumes that ArenaShift has "
                   "enough bits to cover allocKind and hasDelayedMarking.");
 
-    /*
-     * If non-null, points to an ArenaCellSet that represents the set of cells
-     * in this arena that are in the nursery's store buffer.
-     */
-    ArenaCellSet* bufferedCells;
+  private:
+    union {
+        /*
+         * For arenas in zones other than the atoms zone, if non-null, points
+         * to an ArenaCellSet that represents the set of cells in this arena
+         * that are in the nursery's store buffer.
+         */
+        ArenaCellSet* bufferedCells_;
+
+        /*
+         * For arenas in the atoms zone, the starting index into zone atom
+         * marking bitmaps (see AtomMarking.h) of the things in this zone.
+         * Atoms never refer to nursery things, so no store buffer index is
+         * needed.
+         */
+        size_t atomBitmapStart_;
+    };
+  public:
 
     /*
      * The size of data should be |ArenaSize - offsetof(data)|, but the offset
@@ -558,6 +571,8 @@ class Arena
         last->initAsEmpty();
     }
 
+    // Initialize an arena to its unallocated state. For arenas that were
+    // previously allocated for some zone, use release() instead.
     void setAsNotAllocated() {
         firstFreeSpan.initAsEmpty();
         zone = nullptr;
@@ -566,8 +581,11 @@ class Arena
         allocatedDuringIncremental = 0;
         markOverflow = 0;
         auxNextLink = 0;
-        bufferedCells = nullptr;
+        bufferedCells_ = nullptr;
     }
+
+    // Return an allocated arena to its unallocated state.
+    inline void release();
 
     uintptr_t address() const {
         checkAddress();
@@ -600,8 +618,9 @@ class Arena
     size_t getThingSize() const { return thingSize(getAllocKind()); }
     size_t getThingsPerArena() const { return thingsPerArena(getAllocKind()); }
     size_t getThingsSpan() const { return getThingsPerArena() * getThingSize(); }
+    size_t getFirstThingOffset() const { return firstThingOffset(getAllocKind()); }
 
-    uintptr_t thingsStart() const { return address() + firstThingOffset(getAllocKind()); }
+    uintptr_t thingsStart() const { return address() + getFirstThingOffset(); }
     uintptr_t thingsEnd() const { return address() + ArenaSize; }
 
     bool isEmpty() const {
@@ -685,16 +704,15 @@ class Arena
         auxNextLink = 0;
     }
 
+    inline ArenaCellSet*& bufferedCells();
+    inline size_t& atomBitmapStart();
+
     template <typename T>
     size_t finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize);
 
     static void staticAsserts();
 
     void unmarkAll();
-
-    static size_t offsetOfBufferedCells() {
-        return offsetof(Arena, bufferedCells);
-    }
 };
 
 static_assert(ArenaZoneOffset == offsetof(Arena, zone),

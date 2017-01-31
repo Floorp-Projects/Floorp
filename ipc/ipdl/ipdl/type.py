@@ -439,11 +439,6 @@ def iteractortypes(t, visited=None):
             for actor in iteractortypes(c, visited):
                 yield actor
 
-def hasactor(type):
-    """Return true iff |type| is an actor or has one buried within."""
-    for _ in iteractortypes(type): return True
-    return False
-
 def hasshmem(type):
     """Return true iff |type| is shmem or has it buried within."""
     class found: pass
@@ -451,17 +446,6 @@ def hasshmem(type):
         def visitShmemType(self, s):  raise found()
     try:
         type.accept(findShmem())
-    except found:
-        return True
-    return False
-
-def hasfd(type):
-    """Return true iff |type| is fd or has it buried within."""
-    class found: pass
-    class findFD(TypeVisitor):
-        def visitFDType(self, s):  raise found()
-    try:
-        type.accept(findFD())
     except found:
         return True
     return False

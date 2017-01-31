@@ -10,6 +10,7 @@ module.exports = {
     ok: false,
     SpecialPowers: false,
     SimpleTest: false,
+    registerCleanupFunction: false,
   },
   rules: {
     "spaced-comment": 2,

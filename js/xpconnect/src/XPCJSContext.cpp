@@ -2370,6 +2370,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         KIND_HEAP, rtStats.runtime.atomsTable,
         "The atoms table.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/atoms-mark-bitmaps"),
+        KIND_HEAP, rtStats.runtime.atomsMarkBitmaps,
+        "Mark bitmaps for atoms held by each zone.");
+
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/contexts"),
         KIND_HEAP, rtStats.runtime.contexts,
         "JSContext objects and structures that belong to them.");

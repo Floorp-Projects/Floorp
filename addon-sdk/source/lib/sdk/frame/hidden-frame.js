@@ -108,7 +108,7 @@ function removeHiddenFrame(frame) {
   cache.delete(frame);
   emit(frame, "unload")
   let element = frame.element
-  if (element) element.parentNode.removeChild(element)
+  if (element) element.remove()
 }
 exports.remove = removeHiddenFrame;
 

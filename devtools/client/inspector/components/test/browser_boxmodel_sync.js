@@ -17,7 +17,7 @@ add_task(function* () {
   yield selectNode("p", inspector);
 
   info("Modify padding-bottom in box model view");
-  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-bottom > span");
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
   let editor = view.doc.querySelector(".styleinspector-propertyeditor");
 

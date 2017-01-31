@@ -5,10 +5,10 @@
 <script>
 function boom() {
   var e = document.getElementById('inline1');
-  e.parentNode.removeChild(e);
+  e.remove();
   
   e = document.getElementById('inline2');
-  e.parentNode.removeChild(e);
+  e.remove();
   var x = document.body.offsetHeight;
 }
 </script>

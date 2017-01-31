@@ -72,7 +72,7 @@ function done() {
   // continuing. (Bug 874843)
   for (var p of [ "p1", "p2" ]) {
     p = document.getElementById(p);
-    p.parentNode.removeChild(p);
+    p.remove();
     p = null;
   }
   SimpleTest.waitForFocus(window.opener.childDone, window);

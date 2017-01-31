@@ -30,7 +30,7 @@ add_task(function* () {
 
 function* testClickingOutsideEditor(view) {
   info("Test that clicking outside the editor blurs it");
-  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -50,16 +50,16 @@ function* testClickingOutsideEditor(view) {
 
 function* testClickingBelowContainer(view) {
   info("Test that clicking below the box-model container blurs it");
-  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
-  info("Test that clicking below the boxmodel-container blurs the opened editor");
+  info("Test that clicking below the old-boxmodel-container blurs the opened editor");
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
   let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   let onBlur = once(editor, "blur");
-  let container = view.doc.querySelector("#boxmodel-container");
+  let container = view.doc.querySelector("#old-boxmodel-container");
   // Using getBoxQuads here because getBoundingClientRect (and therefore synthesizeMouse)
   // use an erroneous height of ~50px for the boxmodel-container.
   let bounds = container.getBoxQuads({relativeTo: view.doc})[0].bounds;

@@ -65,7 +65,8 @@ add_task(function* () {
   yield onComputedViewReady;
 
   info("Testing the box-model region");
-  let margin = inspector.panelDoc.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let margin = inspector.panelDoc.querySelector(
+    ".old-boxmodel-margin.old-boxmodel-top > span");
   EventUtils.synthesizeMouseAtCenter(margin, {}, inspector.panelWin);
   yield checkTextBox(inspector.panelDoc.activeElement, toolbox);
 });

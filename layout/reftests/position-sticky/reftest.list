@@ -39,13 +39,13 @@ fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
 == overconstrained-3.html overconstrained-3-ref.html
 == inline-1.html inline-1-ref.html
 == inline-2.html inline-2-ref.html
-fuzzy-if(OSX==1006||OSX==1007,64,100) fuzzy-if(OSX>=1008,99,210) == inline-3.html inline-3-ref.html
+fuzzy-if(OSX,99,210) == inline-3.html inline-3-ref.html
 skip-if(!asyncPan) == inline-4.html inline-4-ref.html
 fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
 fuzzy-if(skiaContent,1,22) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) fuzzy-if(Android,8,1533) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy-if(Android,8,630) fuzzy-if(OSX>=1008,1,11) fuzzy-if(skiaContent,1,220) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy-if(Android,8,630) fuzzy-if(OSX,1,11) fuzzy-if(skiaContent,1,220) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,140,140) == inner-table-1.html inner-table-1-ref.html

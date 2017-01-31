@@ -20,7 +20,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Sprintf.h"
 #include "PseudoStack.h"
-#include "GeckoSampler.h"
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -65,14 +64,15 @@ public:
 #endif
 
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
+Sampler* gSampler;
+
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
 // it as the flag itself.
 bool stack_key_initialized;
 
-mozilla::TimeStamp   sLastTracerEvent; // is raced on
+static mozilla::TimeStamp   sLastTracerEvent; // is raced on
 mozilla::TimeStamp   sStartTime;
 int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
@@ -100,114 +100,12 @@ static int sUnwindInterval;   /* in milliseconds */
 static int sUnwindStackScan;  /* max # of dubious frames allowed */
 static int sProfileEntries;   /* how many entries do we store? */
 
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-mozilla::UniquePtr< ::Mutex> Sampler::sRegisteredThreadsMutex;
-
-GeckoSampler* Sampler::sActiveSampler;
-
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
                                                             sInterposeObserver;
 
 // The name that identifies the gecko thread for calls to
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
-
-void Sampler::Startup() {
-  sRegisteredThreads = new std::vector<ThreadInfo*>();
-  sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
-
-  // We could create the sLUL object and read unwind info into it at
-  // this point.  That would match the lifetime implied by destruction
-  // of it in Sampler::Shutdown just below.  However, that gives a big
-  // delay on startup, even if no profiling is actually to be done.
-  // So, instead, sLUL is created on demand at the first call to
-  // Sampler::Start.
-}
-
-void Sampler::Shutdown() {
-  while (sRegisteredThreads->size() > 0) {
-    delete sRegisteredThreads->back();
-    sRegisteredThreads->pop_back();
-  }
-
-  sRegisteredThreadsMutex = nullptr;
-  delete sRegisteredThreads;
-
-  // UnregisterThread can be called after shutdown in XPCShell. Thus
-  // we need to point to null to ignore such a call after shutdown.
-  sRegisteredThreadsMutex = nullptr;
-  sRegisteredThreads = nullptr;
-
-#if defined(USE_LUL_STACKWALK)
-  // Delete the sLUL object, if it actually got created.
-  if (sLUL) {
-    delete sLUL;
-    sLUL = nullptr;
-  }
-#endif
-}
-
-bool
-Sampler::RegisterCurrentThread(const char* aName,
-                               PseudoStack* aPseudoStack,
-                               bool aIsMainThread, void* stackTop)
-{
-  if (!sRegisteredThreadsMutex)
-    return false;
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      // Thread already registered. This means the first unregister will be
-      // too early.
-      ASSERT(false);
-      return false;
-    }
-  }
-
-  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
-    aIsMainThread, aPseudoStack, stackTop);
-
-  if (sActiveSampler) {
-    sActiveSampler->RegisterThread(info);
-  }
-
-  sRegisteredThreads->push_back(info);
-
-  return true;
-}
-
-void
-Sampler::UnregisterCurrentThread()
-{
-  if (!sRegisteredThreadsMutex)
-    return;
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      if (profiler_is_active()) {
-        // We still want to show the results of this thread if you
-        // save the profile shortly after a thread is terminated.
-        // For now we will defer the delete to profile stop.
-        info->SetPendingDelete();
-        break;
-      } else {
-        delete info;
-        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-        break;
-      }
-    }
-  }
-}
 
 StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
                                              bool aIsMainThread,
@@ -505,6 +403,8 @@ profiler_log(const char* fmt, va_list args)
 void
 profiler_init(void* stackTop)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   sInitCount++;
 
   if (stack_key_initialized)
@@ -515,7 +415,7 @@ profiler_init(void* stackTop)
 #endif
 
   LOG("BEGIN profiler_init");
-  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
+  if (!tlsPseudoStack.init()) {
     LOG("Failed to init.");
     return;
   }
@@ -581,20 +481,21 @@ profiler_init(void* stackTop)
 void
 profiler_shutdown()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   sInitCount--;
 
   if (sInitCount > 0)
     return;
 
   // Save the profile on shutdown if requested.
-  GeckoSampler *t = tlsTicker.get();
-  if (t) {
+  if (gSampler) {
     const char *val = getenv("MOZ_PROFILER_SHUTDOWN");
     if (val) {
       std::ofstream stream;
       stream.open(val);
       if (stream.is_open()) {
-        t->ToStreamAsJSON(stream);
+        gSampler->ToStreamAsJSON(stream);
         stream.close();
       }
     }
@@ -618,48 +519,52 @@ profiler_shutdown()
 mozilla::UniquePtr<char[]>
 profiler_get_profile(double aSinceTime)
 {
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
     return nullptr;
   }
 
-  return t->ToJSON(aSinceTime);
+  return gSampler->ToJSON(aSinceTime);
 }
 
 JSObject*
 profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 {
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
     return nullptr;
   }
 
-  return t->ToJSObject(aCx, aSinceTime);
+  return gSampler->ToJSObject(aCx, aSinceTime);
 }
 
 void
 profiler_get_profile_jsobject_async(double aSinceTime,
                                     mozilla::dom::Promise* aPromise)
 {
-  GeckoSampler *t = tlsTicker.get();
-  if (NS_WARN_IF(!t)) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!gSampler)) {
     return;
   }
 
-  t->ToJSObjectAsync(aSinceTime, aPromise);
+  gSampler->ToJSObjectAsync(aSinceTime, aPromise);
 }
 
 void
 profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-    GeckoSampler *t = tlsTicker.get();
-    if (NS_WARN_IF(!t)) {
+    if (NS_WARN_IF(!gSampler)) {
       return;
     }
 
-    t->ToFileAsync(filename, aSinceTime);
+    gSampler->ToFileAsync(filename, aSinceTime);
   }));
 }
 
@@ -669,26 +574,28 @@ profiler_get_start_params(int* aEntrySize,
                           mozilla::Vector<const char*>* aFilters,
                           mozilla::Vector<const char*>* aFeatures)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   if (NS_WARN_IF(!aEntrySize) || NS_WARN_IF(!aInterval) ||
       NS_WARN_IF(!aFilters) || NS_WARN_IF(!aFeatures)) {
     return;
   }
 
-  GeckoSampler *t = tlsTicker.get();
-  if (NS_WARN_IF(!t)) {
+  if (NS_WARN_IF(!gSampler)) {
     return;
   }
 
-  *aEntrySize = t->EntrySize();
-  *aInterval = t->interval();
+  *aEntrySize = gSampler->EntrySize();
+  *aInterval = gSampler->interval();
 
-  const ThreadNameFilterList& threadNameFilterList = t->ThreadNameFilters();
+  const ThreadNameFilterList& threadNameFilterList =
+    gSampler->ThreadNameFilters();
   MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilterList.length()));
   for (uint32_t i = 0; i < threadNameFilterList.length(); ++i) {
     (*aFilters)[i] = threadNameFilterList[i].c_str();
   }
 
-  const FeatureList& featureList = t->Features();
+  const FeatureList& featureList = gSampler->Features();
   MOZ_ALWAYS_TRUE(aFeatures->resize(featureList.length()));
   for (size_t i = 0; i < featureList.length(); ++i) {
     (*aFeatures)[i] = featureList[i].c_str();
@@ -698,6 +605,8 @@ profiler_get_start_params(int* aEntrySize,
 void
 profiler_get_gatherer(nsISupports** aRetVal)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   if (!aRetVal) {
     return;
   }
@@ -707,27 +616,27 @@ profiler_get_gatherer(nsISupports** aRetVal)
     return;
   }
 
-  GeckoSampler *t = tlsTicker.get();
-  if (NS_WARN_IF(!t)) {
+  if (NS_WARN_IF(!gSampler)) {
     *aRetVal = nullptr;
     return;
   }
 
-  t->GetGatherer(aRetVal);
+  gSampler->GetGatherer(aRetVal);
 }
 
 void
 profiler_save_profile_to_file(const char* aFilename)
 {
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
     return;
   }
 
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    t->ToStreamAsJSON(stream);
+    gSampler->ToStreamAsJSON(stream);
     stream.close();
     LOGF("Saved to %s", aFilename);
   } else {
@@ -790,14 +699,16 @@ profiler_get_buffer_info_helper(uint32_t *aCurrentPosition,
   // This function is called by profiler_get_buffer_info(), which has already
   // zeroed the outparams.
 
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   if (!stack_key_initialized)
     return;
 
-  GeckoSampler *t = tlsTicker.get();
-  if (!t)
+  if (!gSampler) {
     return;
+  }
 
-  t->GetBufferInfo(aCurrentPosition, aTotalSize, aGeneration);
+  gSampler->GetBufferInfo(aCurrentPosition, aTotalSize, aGeneration);
 }
 
 // Values are only honored on the first start
@@ -807,6 +718,8 @@ profiler_start(int aProfileEntries, double aInterval,
                const char** aThreadNameFilters, uint32_t aFilterCount)
 
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG("BEGIN profiler_start");
 
   if (!stack_key_initialized)
@@ -824,17 +737,15 @@ profiler_start(int aProfileEntries, double aInterval,
   // Reset the current state if the profiler is running
   profiler_stop();
 
-  GeckoSampler* t;
-  t = new GeckoSampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
-                      aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                      aFeatures, aFeatureCount,
-                      aThreadNameFilters, aFilterCount);
+  gSampler =
+    new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
+                aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
+                aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
 
-  tlsTicker.set(t);
-  t->Start();
-  if (t->ProfileJS() || t->InPrivacyMode()) {
-    MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-    const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
+  gSampler->Start();
+  if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
+    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    const std::vector<ThreadInfo*>& threads = gSampler->GetRegisteredThreads();
 
     for (uint32_t i = 0; i < threads.size(); i++) {
       ThreadInfo* info = threads[i];
@@ -846,17 +757,17 @@ profiler_start(int aProfileEntries, double aInterval,
         continue;
       }
       thread_profile->GetPseudoStack()->reinitializeOnResume();
-      if (t->ProfileJS()) {
+      if (gSampler->ProfileJS()) {
         thread_profile->GetPseudoStack()->enableJSSampling();
       }
-      if (t->InPrivacyMode()) {
+      if (gSampler->InPrivacyMode()) {
         thread_profile->GetPseudoStack()->mPrivacyMode = true;
       }
     }
   }
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  if (t->ProfileJava()) {
+  if (gSampler->ProfileJava()) {
     int javaInterval = aInterval;
     // Java sampling doesn't accuratly keep up with 1ms sampling
     if (javaInterval < 10) {
@@ -866,7 +777,7 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 #endif
 
-  if (t->AddMainThreadIO()) {
+  if (gSampler->AddMainThreadIO()) {
     if (!sInterposeObserver) {
       // Lazily create IO interposer observer
       sInterposeObserver = new mozilla::ProfilerIOInterposeObserver();
@@ -876,10 +787,10 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 
   sIsProfiling = true;
-  sIsGPUProfiling = t->ProfileGPU();
-  sIsLayersDump = t->LayersDump();
-  sIsDisplayListDump = t->DisplayListDump();
-  sIsRestyleProfiling = t->ProfileRestyle();
+  sIsGPUProfiling = gSampler->ProfileGPU();
+  sIsLayersDump = gSampler->LayersDump();
+  sIsDisplayListDump = gSampler->DisplayListDump();
+  sIsRestyleProfiling = gSampler->ProfileRestyle();
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -909,22 +820,23 @@ profiler_start(int aProfileEntries, double aInterval,
 void
 profiler_stop()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG("BEGIN profiler_stop");
 
   if (!stack_key_initialized)
     return;
 
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
+  if (!gSampler) {
     LOG("END   profiler_stop-early");
     return;
   }
 
-  bool disableJS = t->ProfileJS();
+  bool disableJS = gSampler->ProfileJS();
 
-  t->Stop();
-  delete t;
-  tlsTicker.set(nullptr);
+  gSampler->Stop();
+  delete gSampler;
+  gSampler = nullptr;
 
   if (disableJS) {
     PseudoStack *stack = tlsPseudoStack.get();
@@ -954,22 +866,29 @@ profiler_stop()
 bool
 profiler_is_paused()
 {
-  if (Sampler::GetActiveSampler()) {
-    return Sampler::GetActiveSampler()->IsPaused();
-  } else {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
     return false;
   }
+
+  return gSampler->IsPaused();
 }
 
 void
 profiler_pause()
 {
-  if (Sampler::GetActiveSampler()) {
-    Sampler::GetActiveSampler()->SetPaused(true);
-    if (Sampler::CanNotifyObservers()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os)
-        os->NotifyObservers(nullptr, "profiler-paused", nullptr);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
+    return;
+  }
+
+  gSampler->SetPaused(true);
+  if (Sampler::CanNotifyObservers()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "profiler-paused", nullptr);
     }
   }
 }
@@ -977,12 +896,17 @@ profiler_pause()
 void
 profiler_resume()
 {
-  if (Sampler::GetActiveSampler()) {
-    Sampler::GetActiveSampler()->SetPaused(false);
-    if (Sampler::CanNotifyObservers()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os)
-        os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
+    return;
+  }
+
+  gSampler->SetPaused(false);
+  if (Sampler::CanNotifyObservers()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
     }
   }
 }
@@ -1169,6 +1093,8 @@ profiler_in_privacy_mode()
 UniqueProfilerBacktrace
 profiler_get_backtrace()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   if (!stack_key_initialized)
     return nullptr;
 
@@ -1182,12 +1108,12 @@ profiler_get_backtrace()
     return nullptr;
   }
 
-  GeckoSampler* t = tlsTicker.get();
-  if (!t) {
+  if (!gSampler) {
     return nullptr;
   }
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(t->GetBacktrace()));
+  return UniqueProfilerBacktrace(
+    new ProfilerBacktrace(gSampler->GetBacktrace()));
 }
 
 void

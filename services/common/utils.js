@@ -132,20 +132,6 @@ this.CommonUtils = {
   },
 
   /**
-   * Spin the event loop and return once the next tick is executed.
-   *
-   * This is an evil function and should not be used in production code. It
-   * exists in this module for ease-of-use.
-   */
-  waitForNextTick: function waitForNextTick() {
-    let cb = Async.makeSyncCallback();
-    this.nextTick(cb);
-    Async.waitForSyncCallback(cb);
-
-
-  },
-
-  /**
    * Return a timer that is scheduled to call the callback after waiting the
    * provided time or as soon as possible. The timer will be set as a property
    * of the provided object with the given timer name.

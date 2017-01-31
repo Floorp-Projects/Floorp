@@ -54,7 +54,7 @@ function createProxyTest(html, callback) {
           if (isDone)
             return;
           isDone = true;
-          element.parentNode.removeChild(element);
+          element.remove();
           done();
         }
       };

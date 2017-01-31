@@ -29,6 +29,7 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundChildImpl;
+class PrincipalInfo;
 }
 
 namespace camera {
@@ -194,7 +195,7 @@ public:
                             const char* unique_idUTF8,
                             const unsigned int unique_idUTF8Length,
                             int& capture_id,
-                            const nsACString& aOrigin);
+                            const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
   int GetCaptureCapability(CaptureEngine aCapEngine,
                            const char* unique_idUTF8,
                            const unsigned int capability_number,

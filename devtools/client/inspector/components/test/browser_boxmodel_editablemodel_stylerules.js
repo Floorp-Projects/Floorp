@@ -31,7 +31,7 @@ function* testUnits(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-top > span");
+  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -68,7 +68,7 @@ function* testValueComesFromStyleRule(inspector, view, testActor) {
      "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
-  let span = view.doc.querySelector(".boxmodel-border.boxmodel-bottom > span");
+  let span = view.doc.querySelector(".old-boxmodel-border.old-boxmodel-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -97,7 +97,7 @@ function* testShorthandsAreParsed(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div3", inspector);
 
-  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-right > span");
+  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);

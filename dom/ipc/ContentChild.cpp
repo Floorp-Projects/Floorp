@@ -223,6 +223,7 @@ using namespace mozilla::system;
 using namespace mozilla::widget;
 
 namespace mozilla {
+
 namespace dom {
 
 // IPC sender for remote GC/CC logging.
@@ -1353,7 +1354,20 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
       // didn't intend it.
       MOZ_RELEASE_ASSERT(brokerFd >= 0);
     }
-    sandboxEnabled = SetContentProcessSandbox(brokerFd);
+    // Allow user overrides of seccomp-bpf syscall filtering
+    std::vector<int> syscallWhitelist;
+    nsAdoptingCString extraSyscalls =
+      Preferences::GetCString("security.sandbox.content.syscall_whitelist");
+    if (extraSyscalls) {
+      for (const nsCSubstring& callNrString : extraSyscalls.Split(',')) {
+        nsresult rv;
+        int callNr = PromiseFlatCString(callNrString).ToInteger(&rv);
+        if (NS_SUCCEEDED(rv)) {
+          syscallWhitelist.push_back(callNr);
+        }
+      }
+    }
+    sandboxEnabled = SetContentProcessSandbox(brokerFd, syscallWhitelist);
   }
 #elif defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();

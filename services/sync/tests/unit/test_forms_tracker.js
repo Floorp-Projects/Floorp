@@ -20,7 +20,7 @@ function run_test() {
     engine._store.create({name, value});
   }
   function removeEntry(name, value) {
-    guid = engine._findDupe({name, value});
+    let guid = engine._findDupe({name, value});
     engine._store.remove({id: guid});
   }
 

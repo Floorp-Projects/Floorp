@@ -26,10 +26,12 @@ class Element;
 class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
+struct Keyframe;
 } // namespace mozilla
 class nsIDocument;
 class nsStyleContext;
 class nsPresContext;
+struct nsTimingFunction;
 struct TreeMatchContext;
 
 namespace mozilla {
@@ -179,11 +181,17 @@ public:
     RawServoDeclarationBlock* aDeclarations,
     const ServoComputedValues* aPreviousStyle);
 
+  bool FillKeyframesForName(const nsString& aName,
+                            const nsTimingFunction& aTimingFunction,
+                            const ServoComputedValues* aComputedValues,
+                            nsTArray<Keyframe>& aKeyframes);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,
-                                              CSSPseudoElementType aPseudoType);
+                                              CSSPseudoElementType aPseudoType,
+                                              dom::Element* aElementForAnimation);
 
   already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
                                               nsStyleContext* aParentContext,

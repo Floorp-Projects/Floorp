@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'testGCChunkPool.cpp',
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
+    'testGCGrayMarking.cpp',
     'testGCHeapPostBarriers.cpp',
     'testGCHooks.cpp',
     'testGCMarking.cpp',

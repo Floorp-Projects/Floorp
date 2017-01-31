@@ -8,6 +8,8 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OfflineAppCacheHelper",
                                   "resource:///modules/offlineAppCache.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource://gre/modules/ContextualIdentityService.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "SiteDataManager"
@@ -29,6 +31,7 @@ this.SiteDataManager = {
   //   - quotaUsage: the usage of indexedDB and localStorage.
   //   - appCacheList: an array of app cache; instances of nsIApplicationCache
   //   - diskCacheList: an array. Each element is object holding metadata of http cache:
+  //       - uri: the uri of that http cache
   //       - dataSize: that http cache size
   //       - idEnhance: the id extension of that http cache
   _sites: new Map(),
@@ -53,7 +56,7 @@ this.SiteDataManager = {
       status = Services.perms.testExactPermissionFromPrincipal(perm.principal, "persistent-storage");
       if (status === Ci.nsIPermissionManager.ALLOW_ACTION ||
           status === Ci.nsIPermissionManager.DENY_ACTION) {
-        this._sites.set(perm.principal.origin, {
+        this._sites.set(perm.principal.URI.spec, {
           perm,
           status,
           quotaUsage: 0,
@@ -125,6 +128,7 @@ this.SiteDataManager = {
             for (let site of sites.values()) {
               if (site.perm.matchesURI(uri, true)) {
                 site.diskCacheList.push({
+                  uri,
                   dataSize,
                   idEnhance
                 });
@@ -161,25 +165,6 @@ this.SiteDataManager = {
                   });
   },
 
-  _removePermission(site) {
-    Services.perms.removePermission(site.perm);
-  },
-
-  _removeQuotaUsage(site) {
-    this._qms.clearStoragesForPrincipal(site.perm.principal, null, true);
-  },
-
-  removeAll() {
-    for (let site of this._sites.values()) {
-      this._removePermission(site);
-      this._removeQuotaUsage(site);
-    }
-    Services.cache2.clear();
-    Services.cookies.removeAll();
-    OfflineAppCacheHelper.clear();
-    this.updateSites();
-  },
-
   getSites() {
     return Promise.all([this._updateQuotaPromise, this._updateDiskCachePromise])
                   .then(() => {
@@ -201,5 +186,70 @@ this.SiteDataManager = {
                     }
                     return list;
                   });
+  },
+
+  _removePermission(site) {
+    Services.perms.removePermission(site.perm);
+  },
+
+  _removeQuotaUsage(site) {
+    this._qms.clearStoragesForPrincipal(site.perm.principal, null, true);
+  },
+
+  _removeDiskCache(site) {
+    for (let cache of site.diskCacheList) {
+      this._diskCache.asyncDoomURI(cache.uri, cache.idEnhance, null);
+    }
+  },
+
+  _removeAppCache(site) {
+    for (let cache of site.appCacheList) {
+      cache.discard();
+    }
+  },
+
+  _removeCookie(site) {
+    let host = site.perm.principal.URI.host;
+    let e = Services.cookies.getCookiesFromHost(host, {});
+    while (e.hasMoreElements()) {
+      let cookie = e.getNext();
+      if (cookie instanceof Components.interfaces.nsICookie) {
+        if (this.isPrivateCookie(cookie)) {
+          continue;
+        }
+        Services.cookies.remove(
+          cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+      }
+    }
+  },
+
+  remove(uris) {
+    for (let uri of uris) {
+      let site = this._sites.get(uri.spec);
+      if (site) {
+        this._removePermission(site);
+        this._removeQuotaUsage(site);
+        this._removeDiskCache(site);
+        this._removeAppCache(site);
+        this._removeCookie(site);
+      }
+    }
+    this.updateSites();
+  },
+
+  removeAll() {
+    for (let site of this._sites.values()) {
+      this._removePermission(site);
+      this._removeQuotaUsage(site);
+    }
+    Services.cache2.clear();
+    Services.cookies.removeAll();
+    OfflineAppCacheHelper.clear();
+    this.updateSites();
+  },
+
+  isPrivateCookie(cookie) {
+    let { userContextId } = cookie.originAttributes;
+    return userContextId && !ContextualIdentityService.getIdentityFromId(userContextId).public;
   }
 };
