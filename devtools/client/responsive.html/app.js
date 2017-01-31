@@ -12,7 +12,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
   updateDeviceDisplayed,
-  updateDeviceModalOpen,
+  updateDeviceModal,
   updatePreferredDevices,
 } = require("./actions/devices");
 const { changeNetworkThrottling } = require("./actions/network-throttling");
@@ -48,12 +48,12 @@ let App = createClass({
     window.postMessage({ type: "browser-mounted" }, "*");
   },
 
-  onChangeDevice(id, device) {
+  onChangeDevice(id, device, deviceType) {
     window.postMessage({
       type: "change-device",
       device,
     }, "*");
-    this.props.dispatch(changeDevice(id, device.name));
+    this.props.dispatch(changeDevice(id, device.name, deviceType));
     this.props.dispatch(changeTouchSimulation(device.touch));
     this.props.dispatch(changePixelRatio(id, device.pixelRatio));
   },
@@ -125,8 +125,8 @@ let App = createClass({
     this.props.dispatch(updateDeviceDisplayed(device, deviceType, displayed));
   },
 
-  onUpdateDeviceModalOpen(isOpen) {
-    this.props.dispatch(updateDeviceModalOpen(isOpen));
+  onUpdateDeviceModal(isOpen, modalOpenedFromViewport) {
+    this.props.dispatch(updateDeviceModal(isOpen, modalOpenedFromViewport));
   },
 
   render() {
@@ -154,7 +154,7 @@ let App = createClass({
       onRotateViewport,
       onScreenshot,
       onUpdateDeviceDisplayed,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this;
 
     let selectedDevice = "";
@@ -163,6 +163,11 @@ let App = createClass({
     if (viewports.length) {
       selectedDevice = viewports[0].device;
       selectedPixelRatio = viewports[0].pixelRatio;
+    }
+
+    let deviceAdderViewportTemplate = {};
+    if (devices.modalOpenedFromViewport !== null) {
+      deviceAdderViewportTemplate = viewports[devices.modalOpenedFromViewport];
     }
 
     return dom.div(
@@ -194,13 +199,14 @@ let App = createClass({
         onRemoveDevice,
         onRotateViewport,
         onResizeViewport,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       }),
       DeviceModal({
+        deviceAdderViewportTemplate,
         devices,
         onDeviceListUpdate,
         onUpdateDeviceDisplayed,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       })
     );
   },

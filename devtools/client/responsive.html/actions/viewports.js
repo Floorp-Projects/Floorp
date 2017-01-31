@@ -27,11 +27,12 @@ module.exports = {
   /**
    * Change the viewport device.
    */
-  changeDevice(id, device) {
+  changeDevice(id, device, deviceType) {
     return {
       type: CHANGE_DEVICE,
       id,
       device,
+      deviceType,
     };
   },
 

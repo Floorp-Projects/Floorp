@@ -11,7 +11,7 @@ const {
   LOAD_DEVICE_LIST_ERROR,
   LOAD_DEVICE_LIST_END,
   UPDATE_DEVICE_DISPLAYED,
-  UPDATE_DEVICE_MODAL_OPEN,
+  UPDATE_DEVICE_MODAL,
 } = require("./index");
 
 const { getDevices } = require("devtools/client/shared/devices");
@@ -97,7 +97,7 @@ module.exports = {
 
   loadDevices() {
     return function* (dispatch, getState) {
-      yield dispatch({ type: LOAD_DEVICE_LIST_START });
+      dispatch({ type: LOAD_DEVICE_LIST_START });
       let preferredDevices = loadPreferredDevices();
       let devices;
 
@@ -124,14 +124,18 @@ module.exports = {
           dispatch(module.exports.addDevice(newDevice, type));
         }
       }
+
+      dispatch(module.exports.addDeviceType("custom"));
+
       dispatch({ type: LOAD_DEVICE_LIST_END });
     };
   },
 
-  updateDeviceModalOpen(isOpen) {
+  updateDeviceModal(isOpen, modalOpenedFromViewport = null) {
     return {
-      type: UPDATE_DEVICE_MODAL_OPEN,
+      type: UPDATE_DEVICE_MODAL,
       isOpen,
+      modalOpenedFromViewport,
     };
   },
 

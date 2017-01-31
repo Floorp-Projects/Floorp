@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'browser.js',
+    'device-adder.js',
     'device-modal.js',
     'device-selector.js',
     'dpr-selector.js',

@@ -71,7 +71,7 @@ createEnum([
   // Update the device display state in the device selector.
   "UPDATE_DEVICE_DISPLAYED",
 
-  // Update the device modal open state.
-  "UPDATE_DEVICE_MODAL_OPEN",
+  // Update the device modal state.
+  "UPDATE_DEVICE_MODAL",
 
 ], module.exports);

@@ -33,7 +33,7 @@ module.exports = createClass({
     onRemoveDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
+    onUpdateDeviceModal: PropTypes.func.isRequired,
   },
 
   getInitialState() {
@@ -135,7 +135,7 @@ module.exports = createClass({
       onContentResize,
       onResizeViewport,
       onRotateViewport,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
@@ -154,11 +154,11 @@ module.exports = createClass({
       },
       ViewportToolbar({
         devices,
-        selectedDevice: viewport.device,
+        viewport,
         onChangeDevice,
         onResizeViewport,
         onRotateViewport,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       }),
       dom.div(
         {
