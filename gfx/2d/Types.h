@@ -29,7 +29,8 @@ enum class SurfaceType : int8_t {
   DUAL_DT, /* Snapshot of a dual drawtarget */
   D2D1_1_IMAGE, /* A D2D 1.1 ID2D1Image SourceSurface */
   RECORDING, /* Surface used for recording */
-  TILED /* Surface from a tiled DrawTarget */
+  TILED, /* Surface from a tiled DrawTarget */
+  DATA_SHARED, /* Data surface using shared memory */
 };
 
 enum class SurfaceFormat : int8_t {

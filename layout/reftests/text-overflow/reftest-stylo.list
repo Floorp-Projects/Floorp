@@ -6,7 +6,7 @@ fails HTTP(..) == marker-string.html marker-string.html
 # == bidi-simple.html bidi-simple.html
 fails == bidi-simple-scrolled.html bidi-simple-scrolled.html
 fails == scroll-rounding.html scroll-rounding.html
-fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonymous-block.html anonymous-block.html
+fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) asserts-if(stylo,4) HTTP(..) == anonymous-block.html anonymous-block.html # bug 1324671
 fails HTTP(..) == false-marker-overlap.html false-marker-overlap.html
 fails HTTP(..) == visibility-hidden.html visibility-hidden.html
 # == block-padding.html block-padding.html

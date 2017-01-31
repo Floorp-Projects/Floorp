@@ -980,7 +980,7 @@ TabParent::GetTopLevelDocAccessible() const
   const ManagedContainer<PDocAccessibleParent>& docs = ManagedPDocAccessibleParent();
   for (auto iter = docs.ConstIter(); !iter.Done(); iter.Next()) {
     auto doc = static_cast<a11y::DocAccessibleParent*>(iter.Get()->GetKey());
-    if (!doc->ParentDoc()) {
+    if (doc->IsTopLevel()) {
       return doc;
     }
   }

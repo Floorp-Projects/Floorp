@@ -186,8 +186,8 @@ load 400190.html
 skip-if(stylo) load 400223-1.html # bug 1323652
 load 400232-1.html
 load 400244-1.html
-asserts-if(stylo,2) load 400768-1.xhtml # bug 1324669
-asserts-if(stylo,2) load 400768-2.xhtml # bug 1324669
+load 400768-1.xhtml
+load 400768-2.xhtml
 load 401042-1.xhtml
 load 402380-1.html
 load 402380-2.html
@@ -242,7 +242,7 @@ load 416165.html
 load 416264-1.html
 load 416476-1.html
 load 417109-1.xhtml
-asserts-if(stylo,2) load 417848-1.xhtml # bug 1324669
+load 417848-1.xhtml
 load 417902-1.html
 load 417902-2.html
 load 418532-1.html
@@ -282,7 +282,7 @@ load 436822-1.html
 load 436823.html
 load 436969-1.html
 skip-if(stylo) load 437156-1.html # bug 1323652
-asserts-if(stylo,2) load 437565-1.xhtml # bug 1324669
+load 437565-1.xhtml
 load 437565-2.xhtml
 load 437565-3.xhtml
 load 438259-1.html
@@ -424,7 +424,7 @@ load 586806-3.html
 load 586973-1.html
 load 589002-1.html
 load 590404.html
-asserts-if(stylo,2) load 591141.html # bug 1324669
+load 591141.html
 load 592118.html
 load 594808-1.html
 asserts-if(stylo,4) load 595435-1.xhtml # bug 1324640
@@ -439,7 +439,7 @@ load 604843.html
 load 605340.html
 load 606642.xhtml
 load 613455-1.svg
-asserts-if(stylo,2) load 613629-1.xhtml # bug 1324669
+load 613629-1.xhtml
 load 616052-1.html
 load 619021.html
 load 621424-1.html
@@ -465,7 +465,7 @@ load 679933-1.html
 load 681489-1.html
 load 682649-1.html
 load 683702-1.xhtml
-asserts-if(stylo,2) load 683712.html # bug 1324669
+load 683712.html
 load 688996-1.html
 load 688996-2.html
 load 691210.html
@@ -552,7 +552,7 @@ load 893523.html
 asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
 asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
-asserts-if(stylo,2) load 915475.xhtml # bug 1324669
+load 915475.xhtml
 load 927558.html
 load 943509-1.html
 asserts(2-8) asserts-if(stylo,0) load 944909-1.html
@@ -572,8 +572,8 @@ asserts(1-2) asserts-if(stylo,0) load 1015563-1.html
 asserts(1-2) asserts-if(stylo,0) load 1015563-2.html
 asserts(0-300) load 1015844.html # bug 574889
 pref(font.size.inflation.minTwips,200) load 1032450.html
-asserts-if(stylo,0-3) load 1032613-1.svg # bug 1324669
-asserts-if(stylo,2-6) load 1032613-2.html # bug 1324669
+load 1032613-1.svg
+load 1032613-2.html
 load 1037903.html
 asserts-if(stylo,1) load 1039454-1.html # bug 1324647
 load 1042489.html
