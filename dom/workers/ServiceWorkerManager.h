@@ -188,7 +188,7 @@ public:
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 
-  ServiceWorkerRegistrationInfo*
+  already_AddRefed<ServiceWorkerRegistrationInfo>
   CreateNewRegistration(const nsCString& aScope, nsIPrincipal* aPrincipal);
 
   void
