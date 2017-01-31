@@ -59,7 +59,9 @@ Zones::Exclusion & Zones::Exclusion::operator += (Exclusion const & rhs) {
 inline
 uint8 Zones::Exclusion::outcode(float val) const {
     float p = val;
-    return ((p >= xm) << 1) | (p < x);
+    //float d = std::numeric_limits<float>::epsilon();
+    float d = 0.;
+    return ((p - xm >= d) << 1) | (x - p > d);
 }
 
 void Zones::exclude_with_margins(float xmin, float xmax, int axis) {
@@ -74,6 +76,9 @@ namespace
 inline
 bool separated(float a, float b) {
     return a != b;
+    //int exp;
+    //float res = frexpf(fabs(a - b), &exp);
+    //return (*(unsigned int *)(&res) > 4);
     //return std::fabs(a-b) > std::numeric_limits<float>::epsilon(); // std::epsilon may not work. but 0.5 fails exising 64 bit tests
     //return std::fabs(a-b) > 0.5f;
 }
