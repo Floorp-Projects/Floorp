@@ -352,7 +352,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         script = scriptp.get();
         MOZ_ASSERT(script->functionNonDelazifying() == fun);
 
-        if (!fun && script->treatAsRunOnce()) {
+        if (!fun && script->treatAsRunOnce() && script->hasRunOnce()) {
             // This is a toplevel or eval script that's runOnce.  We want to
             // make sure that we're not XDR-saving an object we emitted for
             // JSOP_OBJECT that then got modified.  So throw if we're not

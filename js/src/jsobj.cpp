@@ -1341,8 +1341,6 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
 
     ExclusiveContext* cx = xdr->cx();
     assertSameCompartment(cx, obj);
-    MOZ_ASSERT_IF(mode == XDR_ENCODE && obj->isSingleton(),
-                  cx->compartment()->behaviors().getSingletonsAsTemplates());
 
     // Distinguish between objects and array classes.
     uint32_t isArray = 0;

@@ -51,17 +51,78 @@ class XDRBuffer {
         return ptr;
     }
 
+    size_t cursor() const {
+        return cursor_;
+    }
+
   private:
     ExclusiveContext* const context_;
     JS::TranscodeBuffer& buffer_;
     size_t cursor_;
 };
 
+class XDRCoderBase;
+class XDRIncrementalEncoder;
+
+// An AutoXDRTree is used to identify section encoded by an XDRIncrementalEncoder.
+//
+// Its primary goal is to identify functions, such that we can first encode them
+// as LazyScript, and later replaced by them by their corresponding bytecode
+// once delazified.
+//
+// As a convenience, this is also used to identify the top-level of the content
+// encoded by an XDRIncrementalEncoder.
+//
+// Sections can be encoded any number of times in an XDRIncrementalEncoder, and
+// the latest encoded version would replace all the previous one.
+class MOZ_RAII AutoXDRTree
+{
+  public:
+    // For a JSFunction, a tree key is defined as being:
+    //     script()->begin << 32 | script()->end
+    //
+    // Based on the invariant that |begin <= end|, we can make special
+    // keys, such as the top-level script.
+    using Key = uint64_t;
+
+    AutoXDRTree(XDRCoderBase* xdr, Key key);
+    ~AutoXDRTree();
+
+    // Indicate the lack of a key for the current tree.
+    static constexpr Key noKey = 0;
+
+    // Used to end the slices when there is no children.
+    static constexpr Key noSubTree = Key(1) << 32;
+
+    // Used as the root key of the tree in the hash map.
+    static constexpr Key topLevel = Key(2) << 32;
+
+  private:
+    friend class XDRIncrementalEncoder;
+
+    Key key_;
+    AutoXDRTree* parent_;
+    XDRCoderBase* xdr_;
+};
+
+class XDRCoderBase
+{
+  protected:
+    XDRCoderBase() {}
+
+  public:
+    virtual AutoXDRTree::Key getTopLevelTreeKey() const { return AutoXDRTree::noKey; }
+    virtual AutoXDRTree::Key getTreeKey(JSFunction* fun) const { return AutoXDRTree::noKey; }
+    virtual void createOrReplaceSubTree(AutoXDRTree* child) {};
+    virtual void endSubTree() {};
+};
+
 /*
  * XDR serialization state.  All data is encoded in little endian.
  */
 template <XDRMode mode>
-class XDRState {
+class XDRState : public XDRCoderBase
+{
   public:
     XDRBuffer buf;
   private:
@@ -228,7 +289,8 @@ class XDRState {
 using XDREncoder = XDRState<XDR_ENCODE>;
 using XDRDecoder = XDRState<XDR_DECODE>;
 
-class XDROffThreadDecoder : public XDRDecoder {
+class XDROffThreadDecoder : public XDRDecoder
+{
     const ReadOnlyCompileOptions* options_;
     ScriptSourceObject** sourceObjectOut_;
     LifoAlloc& alloc_;
@@ -268,6 +330,98 @@ class XDROffThreadDecoder : public XDRDecoder {
     ScriptSourceObject** scriptSourceObjectOut() override {
         return sourceObjectOut_;
     }
+};
+
+class XDRIncrementalEncoder : public XDREncoder
+{
+    // The incremental encoder encodes the content of scripts and functions in
+    // the XDRBuffer. It can be used to encode multiple times the same AutoXDRTree,
+    // and uses its key to identify which part to replace.
+    //
+    // Internally, this encoder keeps a tree representation of the scopes. Each
+    // node is composed of a vector of slices which are interleaved by child
+    // nodes.
+    //
+    // A slice corresponds to an index and a length within the content of the
+    // slices_ buffer. The index is updated when a slice is created, and the
+    // length is updated when the slice is ended, either by creating a new scope
+    // child, or by closing the scope and going back to the parent.
+    //
+    //                  +---+---+---+
+    //        begin     |   |   |   |
+    //        length    |   |   |   |
+    //        child     | . | . | . |
+    //                  +-|-+-|-+---+
+    //                    |   |
+    //          +---------+   +---------+
+    //          |                       |
+    //          v                       v
+    //      +---+---+                 +---+
+    //      |   |   |                 |   |
+    //      |   |   |                 |   |
+    //      | . | . |                 | . |
+    //      +-|-+---+                 +---+
+    //        |
+    //        |
+    //        |
+    //        v
+    //      +---+
+    //      |   |
+    //      |   |
+    //      | . |
+    //      +---+
+    //
+    //
+    // The tree key is used to identify the child nodes, and to make them
+    // easily replaceable.
+    //
+    // The tree is rooted at the |topLevel| key.
+    //
+
+    struct Slice {
+        size_t sliceBegin;
+        size_t sliceLength;
+        AutoXDRTree::Key child;
+    };
+
+    using SlicesNode = Vector<Slice, 1, SystemAllocPolicy>;
+    using SlicesTree = HashMap<AutoXDRTree::Key, SlicesNode, DefaultHasher<AutoXDRTree::Key>,
+                               SystemAllocPolicy>;
+
+    // Last opened XDR-tree on the stack.
+    AutoXDRTree* scope_;
+    // Node corresponding to the opened scope.
+    SlicesNode* node_;
+    // Tree of slices.
+    SlicesTree tree_;
+    JS::TranscodeBuffer slices_;
+    JS::TranscodeBuffer& buffer_;
+    bool oom_;
+
+  public:
+    XDRIncrementalEncoder(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
+      : XDREncoder(cx, slices_, 0),
+        scope_(nullptr),
+        node_(nullptr),
+        buffer_(buffer),
+        oom_(false)
+    {
+        MOZ_ASSERT(buffer.length() == cursor, "NYI");
+    }
+
+    virtual ~XDRIncrementalEncoder() {}
+
+    AutoXDRTree::Key getTopLevelTreeKey() const override;
+    AutoXDRTree::Key getTreeKey(JSFunction* fun) const override;
+
+    MOZ_MUST_USE bool init();
+
+    void createOrReplaceSubTree(AutoXDRTree* child) override;
+    void endSubTree() override;
+
+    // In the current XDRBuffer, move replaceable-parts to form a linear
+    // sequence of bytes.
+    MOZ_MUST_USE bool linearize();
 };
 
 } /* namespace js */
