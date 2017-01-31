@@ -2,6 +2,24 @@ MOZ_AUTOMATION_BUILD_SYMBOLS=0
 MOZ_AUTOMATION_PACKAGE_TESTS=0
 MOZ_AUTOMATION_L10N_CHECK=0
 
+# The toolchain installed on our OSX 10.7 build machines is too old to support
+# MachO LC_DATA_IN_CODE load command, which newer LLVM generates, so we need to
+# use a newer toolchain that we build.
+#
+# Unfortunately setting $PATH is not enough, because the build system hardcodes
+# the default values for some of the build tools, which we also need to
+# override below.  The default value for host ar and host ranlib is also
+# hardcoded so we need to override those separately.
+CCTOOLS_DIR="$topsrcdir/cctools/bin"
+export PATH="$CCTOOLS_DIR:$PATH"
+export AR="$CCTOOLS_DIR/ar"
+export HOST_AR="$CCTOOLS_DIR/ar"
+export RANLIB="$CCTOOLS_DIR/ranlib"
+export HOST_RANLIB="$CCTOOLS_DIR/ranlib"
+export LIPO="$CCTOOLS_DIR/lipo"
+export OTOOL="$CCTOOLS_DIR/otool"
+export STRIP="$CCTOOLS_DIR/strip"
+
 . $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-debug
