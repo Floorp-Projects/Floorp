@@ -412,8 +412,9 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd, bo
     Position currpos(0., 0.);
     float clusterMin = 0.;
     Rect bbox;
+    bool reorder = (currdir() != isRtl);
 
-    if (currdir() != isRtl)
+    if (reorder)
     {
         Slot *temp;
         reverseSlots();
@@ -443,6 +444,8 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd, bo
                 currpos = s->finalise(this, font, currpos, bbox, 0, clusterMin = currpos.x, isRtl, isFinal);
         }
     }
+    if (reorder)
+        reverseSlots();
     return currpos;
 }
 
