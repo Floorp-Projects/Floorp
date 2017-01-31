@@ -411,10 +411,10 @@ public:
    * Handle the completion of a stream.  This is called by the
    * nsScriptLoadHandler object which observes the IncrementalStreamLoader
    * loading the script. The streamed content is expected to be stored on the
-   * aContext argument.
+   * aRequest argument.
    */
   nsresult OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                            nsISupports* aContext,
+                            nsScriptLoadRequest* aRequest,
                             nsresult aChannelStatus,
                             nsresult aSRIStatus,
                             mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier);
