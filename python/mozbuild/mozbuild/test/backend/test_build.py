@@ -152,7 +152,7 @@ class TestBuild(unittest.TestCase):
         # of the difference in type.
         result = {
             p: f.open().read().decode('utf-8')
-            for p, f in FileFinder(mozpath.join(config.topobjdir, 'dist'), find_executables=False)
+            for p, f in FileFinder(mozpath.join(config.topobjdir, 'dist'))
         }
         self.assertTrue(len(result))
         self.assertEqual(result, {

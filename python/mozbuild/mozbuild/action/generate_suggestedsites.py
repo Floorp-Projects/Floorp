@@ -102,7 +102,7 @@ def main(args):
             if not opts.resources:
                 continue
             resources = os.path.abspath(opts.resources)
-            finder = FileFinder(resources, find_executables=False)
+            finder = FileFinder(resources)
             matches = [p for p, _ in finder.find(drawables_template.format(name=name))]
             if not matches:
                 raise Exception("Could not find drawable in '{resources}' for '{name}'"

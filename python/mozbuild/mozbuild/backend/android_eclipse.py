@@ -247,7 +247,7 @@ class AndroidEclipseBackend(CommonBackend):
         defines['MOZ_ANDROID_MIN_SDK_VERSION'] = self.environment.defines['MOZ_ANDROID_MIN_SDK_VERSION']
 
         copier = FileCopier()
-        finder = FileFinder(template_directory, find_executables=False)
+        finder = FileFinder(template_directory)
         for input_filename, f in itertools.chain(finder.find('**'), finder.find('.**')):
             if input_filename == 'AndroidManifest.xml' and not data.is_library:
                 # Main projects supply their own manifests.

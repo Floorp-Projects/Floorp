@@ -47,7 +47,7 @@ class UnpackFinder(BaseFinder):
         if isinstance(source, BaseFinder):
             self._finder = source
         else:
-            self._finder = FileFinder(source, find_executables=False)
+            self._finder = FileFinder(source)
         self.base = self._finder.base
         self.files = FileRegistry()
         self.kind = 'flat'

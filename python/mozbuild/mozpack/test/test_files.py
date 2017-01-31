@@ -924,13 +924,13 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
 
     def test_file_finder(self):
         self.prepare_match_test(with_dotfiles=True)
-        self.finder = FileFinder(self.tmpdir, find_executables=False)
+        self.finder = FileFinder(self.tmpdir)
         self.do_match_test()
         self.do_finder_test(self.finder)
 
     def test_get(self):
         self.prepare_match_test()
-        finder = FileFinder(self.tmpdir, find_executables=False)
+        finder = FileFinder(self.tmpdir)
 
         self.assertIsNone(finder.get('does-not-exist'))
         res = finder.get('bar')
@@ -946,7 +946,7 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         # Present to ensure prefix matching doesn't exclude.
         self.add('foo/quxz')
 
-        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux'], find_executables=False)
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux'])
 
         self.do_check('**', ['bar', 'foo/bar', 'foo/baz', 'foo/quxz', 'fooz'])
         self.do_check('foo/*', ['foo/bar', 'foo/baz', 'foo/quxz'])
@@ -964,7 +964,7 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         # Be sure prefix match doesn't get ignored.
         self.add('barz')
 
-        self.finder = FileFinder(self.tmpdir, ignore=['foo/bar', 'bar'], find_executables=False)
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/bar', 'bar'])
         self.do_check('**', ['barz', 'foo/baz', 'foo/qux/1', 'foo/qux/2/test',
             'foo/qux/2/test2', 'foo/qux/bar'])
         self.do_check('foo/**', ['foo/baz', 'foo/qux/1', 'foo/qux/2/test',
@@ -976,14 +976,14 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
 
         self.add('foo/quxz')
 
-        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux/*'], find_executables=False)
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux/*'])
         self.do_check('**', ['foo/bar', 'foo/baz', 'foo/quxz', 'bar'])
         self.do_check('foo/**', ['foo/bar', 'foo/baz', 'foo/quxz'])
 
     def test_dotfiles(self):
         """Finder can find files beginning with . is configured."""
         self.prepare_match_test(with_dotfiles=True)
-        self.finder = FileFinder(self.tmpdir, find_dotfiles=True, find_executables=False)
+        self.finder = FileFinder(self.tmpdir, find_dotfiles=True)
         self.do_check('**', ['bar', 'foo/.foo', 'foo/.bar/foo',
             'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
             'foo/qux/2/test', 'foo/qux/2/test2'])
@@ -991,7 +991,7 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
     def test_dotfiles_plus_ignore(self):
         self.prepare_match_test(with_dotfiles=True)
         self.finder = FileFinder(self.tmpdir, find_dotfiles=True,
-                                 ignore=['foo/.bar/**'], find_executables=False)
+                                 ignore=['foo/.bar/**'])
         self.do_check('foo/**', ['foo/.foo', 'foo/bar', 'foo/baz',
             'foo/qux/1', 'foo/qux/bar', 'foo/qux/2/test', 'foo/qux/2/test2'])
 
@@ -1060,8 +1060,8 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
         open(self.tmppath('a/foo/qux/hoge'), 'wb').write('hoge')
         open(self.tmppath('a/foo/qux/bar'), 'wb').write('not the right content')
         self.finder = ComposedFinder({
-            '': FileFinder(self.tmppath('a'), find_executables=False),
-            'foo/qux': FileFinder(self.tmppath('b'), find_executables=False),
+            '': FileFinder(self.tmppath('a')),
+            'foo/qux': FileFinder(self.tmppath('b')),
         })
         self.do_match_test()
 

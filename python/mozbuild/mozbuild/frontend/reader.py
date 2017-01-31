@@ -942,8 +942,7 @@ class BuildReader(object):
             'obj*',
         }
 
-        finder = FileFinder(self.config.topsrcdir, find_executables=False,
-            ignore=ignore)
+        finder = FileFinder(self.config.topsrcdir, ignore=ignore)
 
         # The root doesn't get picked up by FileFinder.
         yield 'moz.build'
