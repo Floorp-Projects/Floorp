@@ -282,7 +282,7 @@ var snapshotFormatters = {
       delete data.info;
     }
 
-    if (AppConstants.NIGHTLY_BUILD) {
+    if (AppConstants.NIGHTLY_BUILD || AppConstants.MOZ_DEV_EDITION) {
       let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIDOMWindowUtils);
       let gpuProcessPid = windowUtils.gpuProcessPid;
