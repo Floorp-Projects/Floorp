@@ -690,8 +690,6 @@ var TelemetryStorageImpl = {
    * @return {promise<object>} Promise that is resolved with the ping data.
    */
   loadArchivedPing: Task.async(function*(id) {
-    this._log.trace("loadArchivedPing - id: " + id);
-
     const data = this._archivedPings.get(id);
     if (!data) {
       this._log.trace("loadArchivedPing - no ping with id: " + id);
@@ -1733,7 +1731,6 @@ var TelemetryStorageImpl = {
   }),
 
   isDeletionPing(aPingId) {
-    this._log.trace("isDeletionPing - id: " + aPingId);
     let pingInfo = this._pendingPings.get(aPingId);
     if (!pingInfo) {
       return false;
