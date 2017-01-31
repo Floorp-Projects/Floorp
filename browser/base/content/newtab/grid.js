@@ -19,6 +19,7 @@ var gGrid = {
    * The DOM node of the grid.
    */
   _node: null,
+  _gridDefaultContent: null,
   get node() { return this._node; },
 
   /**
@@ -49,6 +50,7 @@ var gGrid = {
    */
   init: function Grid_init() {
     this._node = document.getElementById("newtab-grid");
+    this._gridDefaultContent = this._node.lastChild;
     this._createSiteFragment();
 
     gLinks.populateCache(() => {
@@ -147,7 +149,9 @@ var gGrid = {
     }
 
     this._cells = cells;
-    this._node.innerHTML = "";
+    while (this._gridDefaultContent.nextSibling) {
+      this._gridDefaultContent.nextSibling.remove();
+    }
     this._node.appendChild(fragment);
   },
 
