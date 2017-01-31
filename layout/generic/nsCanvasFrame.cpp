@@ -477,10 +477,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       return;
     }
 
-    const DisplayItemScrollClip* scrollClip =
-      aBuilder->ClipState().GetCurrentInnermostScrollClip();
+    const ActiveScrolledRoot* asr =
+      aBuilder->CurrentActiveScrolledRoot();
 
     bool needBlendContainer = false;
+    nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
 
     // Create separate items for each background layer.
     const nsStyleImageLayers& layers = bg->mImage;
@@ -493,34 +494,62 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
 
       nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+
+      const ActiveScrolledRoot* thisItemASR = asr;
+      nsDisplayList thisItemList;
       nsDisplayBackgroundImage::InitData bgData =
         nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg,
                                               nsDisplayBackgroundImage::LayerizeFixed::ALWAYS_LAYERIZE_FIXED_BACKGROUND);
 
-      nsDisplayList thisItemList;
       if (bgData.shouldFixToViewport) {
-        nsDisplayCanvasBackgroundImage* bgItem =
-          new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
+
+        auto* displayData = aBuilder->GetCurrentFixedBackgroundDisplayData();
+        nsDisplayListBuilder::AutoBuildingDisplayList
+          buildingDisplayList(aBuilder, this, aBuilder->GetDirtyRect(), false);
+
+        DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+        nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
+        if (displayData) {
+          nsRect dirtyRect = displayData->mDirtyRect + GetOffsetTo(PresContext()->GetPresShell()->GetRootFrame());
+          buildingDisplayList.SetDirtyRect(dirtyRect);
+          clipState.SetClipChainForContainingBlockDescendants(
+            displayData->mContainingBlockClipChain);
+          asrSetter.SetCurrentActiveScrolledRoot(
+            displayData->mContainingBlockActiveScrolledRoot);
+          thisItemASR = displayData->mContainingBlockActiveScrolledRoot;
+        }
+        nsDisplayCanvasBackgroundImage* bgItem = nullptr;
+        {
+          DisplayListClipState::AutoSaveRestore bgImageClip(aBuilder);
+          bgImageClip.Clear();
+          bgItem = new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
+        }
         thisItemList.AppendNewToTop(
           nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
+
       } else {
         thisItemList.AppendNewToTop(new (aBuilder) nsDisplayCanvasBackgroundImage(bgData));
       }
 
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
+        DisplayListClipState::AutoSaveRestore blendClip(aBuilder);
+        blendClip.ClearUpToASR(thisItemASR);
         thisItemList.AppendNewToTop(
           new (aBuilder) nsDisplayBlendMode(aBuilder, this, &thisItemList,
                                             layers.mLayers[i].mBlendMode,
-                                            scrollClip, i + 1));
+                                            thisItemASR, i + 1));
       }
       aLists.BorderBackground()->AppendToTop(&thisItemList);
     }
 
     if (needBlendContainer) {
+      const ActiveScrolledRoot* containerASR = contASRTracker.GetContainerASR();
+      DisplayListClipState::AutoSaveRestore blendContainerClip(aBuilder);
+      blendContainerClip.ClearUpToASR(containerASR);
       aLists.BorderBackground()->AppendNewToTop(
         nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, this,
                                                               aLists.BorderBackground(),
-                                                              scrollClip));
+                                                              containerASR));
     }
   }
 
