@@ -14,6 +14,7 @@ from distutils import dir_util
 from devicemanager import DeviceManager, DMError
 from mozprocess import ProcessHandler
 import mozfile
+import version_codes
 
 
 class DeviceManagerADB(DeviceManager):
@@ -34,6 +35,7 @@ class DeviceManagerADB(DeviceManager):
     _packageName = None
     _tempDir = None
     _adb_version = None
+    _sdk_version = None
     connected = False
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
@@ -448,15 +450,31 @@ class DeviceManagerADB(DeviceManager):
         return outputFile
 
     def killProcess(self, appname, sig=None):
+        shell_args = ["shell"]
+        if self._sdk_version >= version_codes.N:
+            # Bug 1334613 - force use of root
+            if self._haveRootShell is None and self._haveSu is None:
+                self._checkForRoot()
+            if not self._haveRootShell and not self._haveSu:
+                raise DMError(
+                    "killProcess '%s' requested to run as root but root "
+                    "is not available on this device. Root your device or "
+                    "refactor the test/harness to not require root." %
+                    appname)
+            if not self._haveRootShell:
+                shell_args.extend(["su", self._suModifier])
+
         procs = self.getProcessList()
         for (pid, name, user) in procs:
             if name == appname:
-                args = ["shell", "kill"]
+                args = list(shell_args)
+                args.append("kill")
                 if sig:
                     args.append("-%d" % sig)
                 args.append(str(pid))
                 p = self._runCmd(args, timeout=self.short_timeout)
-                if p.returncode != 0:
+                if p.returncode != 0 and len(p.output) > 0 and \
+                   'No such process' not in p.output[0]:
                     raise DMError("Error killing process "
                                   "'%s': %s" % (appname, p.output))
 
@@ -738,10 +756,14 @@ class DeviceManagerADB(DeviceManager):
                 raise DMError("invalid adb path, or adb not executable: %s" % self._adbPath)
 
         try:
-            proc = self._runCmd(["version"], timeout=self.short_timeout)
             re_version = re.compile(r'Android Debug Bridge version (.*)')
+            proc = self._runCmd(["version"], timeout=self.short_timeout)
             self._adb_version = re_version.match(proc.output[0]).group(1)
             self._logger.info("Detected adb %s", self._adb_version)
+            proc = self._runCmd(["shell", "getprop", "ro.build.version.sdk"],
+                                timeout=self.short_timeout)
+            self._sdk_version = int(proc.output[0])
+            self._logger.info("Detected Android sdk %s", self._sdk_version)
         except os.error as err:
             raise DMError(
                 "unable to execute ADB (%s): ensure Android SDK is installed "
