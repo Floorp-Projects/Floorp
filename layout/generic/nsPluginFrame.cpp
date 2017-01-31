@@ -54,7 +54,6 @@
 #include "gfxWindowsSurface.h"
 #endif
 
-#include "DisplayItemScrollClip.h"
 #include "Layers.h"
 #include "ReadbackLayer.h"
 #include "ImageContainer.h"
@@ -1010,10 +1009,8 @@ GetClippedBoundsIncludingAllScrollClips(nsDisplayItem* aItem,
                                         nsDisplayListBuilder* aBuilder)
 {
   nsRect r = aItem->GetClippedBounds(aBuilder);
-  for (auto* sc = aItem->ScrollClip(); sc; sc = sc->mParent) {
-    if (sc->mClip) {
-      r = sc->mClip->ApplyNonRoundedIntersection(r);
-    }
+  for (auto* sc = aItem->GetClipChain(); sc; sc = sc->mParent) {
+    r = sc->mClip.ApplyNonRoundedIntersection(r);
   }
   return r;
 }

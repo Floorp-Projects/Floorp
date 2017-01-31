@@ -4857,8 +4857,8 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
 
           DisplayItemClip newClip;
           newClip.SetTo(textRect);
-          newClip.IntersectWith(i->GetClip());
-          i->SetClip(aBuilder, newClip);
+          DisplayItemClipChain newClipChain = { newClip, i->GetActiveScrolledRoot(), nullptr };
+          i->IntersectClip(aBuilder, &newClipChain);
           itemToInsert = i;
         }
       }
