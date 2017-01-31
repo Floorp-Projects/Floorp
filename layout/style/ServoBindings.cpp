@@ -1211,6 +1211,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                      const uint8_t* aMediaString,
                      uint32_t aMediaStringLength)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURLString, "Invalid URLs shouldn't be loaded!");
