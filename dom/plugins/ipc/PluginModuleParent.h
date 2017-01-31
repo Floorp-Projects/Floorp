@@ -379,10 +379,10 @@ class PluginModuleContentParent : public PluginModuleParent
 
     static PluginLibrary* LoadModule(uint32_t aPluginId, nsPluginTag* aPluginTag);
 
-    static PluginModuleContentParent* Initialize(mozilla::ipc::Transport* aTransport,
-                                                 base::ProcessId aOtherProcess);
+    static void OnLoadPluginResult(const uint32_t& aPluginId,
+                                   const bool& aResult,
+                                   Endpoint<PPluginModuleParent>&& aEndpoint);
 
-    static void OnLoadPluginResult(const uint32_t& aPluginId, const bool& aResult);
     static void AssociatePluginId(uint32_t aPluginId, base::ProcessId aProcessId);
 
     virtual ~PluginModuleContentParent();
@@ -392,6 +392,8 @@ class PluginModuleContentParent : public PluginModuleParent
 #endif
 
   private:
+    static void Initialize(Endpoint<PPluginModuleParent>&& aEndpoint);
+
     virtual bool ShouldContinueFromReplyTimeout() override;
     virtual void OnExitedSyncSend() override;
 

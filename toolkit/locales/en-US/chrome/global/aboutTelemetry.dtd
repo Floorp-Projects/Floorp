@@ -157,11 +157,11 @@ Ping
 ">
 
 <!ENTITY aboutTelemetry.fetchSymbols "
-  Fetch function names for hang stacks
+  Fetch function names for stacks
 ">
 
 <!ENTITY aboutTelemetry.hideSymbols "
-  Show raw data from hangs
+  Show raw stack data
 ">
 
 <!ENTITY aboutTelemetry.filterText "
