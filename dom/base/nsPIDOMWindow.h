@@ -12,8 +12,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "mozilla/dom/Dispatcher.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/TaskCategory.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
 
@@ -29,6 +29,7 @@ class nsICSSDeclaration;
 class nsIDocShell;
 class nsIDocShellLoadInfo;
 class nsIDocument;
+class nsIEventTarget;
 class nsIIdleObserver;
 class nsIPrincipal;
 class nsIScriptTimeoutHandler;
