@@ -439,14 +439,8 @@ Section "-Application" APP_IDX
     ${If} $R0 == "true"
     ; Only proceed if we have HKLM write access
     ${AndIf} $TmpVal == "HKLM"
-      ; On Windows < XP SP3 we do not install the maintenance service.
-      ${If} ${IsWinXP}
-      ${AndIf} ${AtMostServicePack} 2
-        StrCpy $InstallMaintenanceService "0"
-      ${Else}
-        ; The user is an admin, so we should default to installing the service.
-        StrCpy $InstallMaintenanceService "1"
-      ${EndIf}
+      ; The user is an admin, so we should default to installing the service.
+      StrCpy $InstallMaintenanceService "1"
     ${Else}
       ; The user is not admin, so we can't install the service.
       StrCpy $InstallMaintenanceService "0"
@@ -954,12 +948,6 @@ Function preComponents
   Pop $R9
   ${If} $R9 == 1
     ; The service already exists so don't show this page.
-    Abort
-  ${EndIf}
-
-  ; On Windows < XP SP3 we do not install the maintenance service.
-  ${If} ${IsWinXP}
-  ${AndIf} ${AtMostServicePack} 2
     Abort
   ${EndIf}
 
