@@ -51,7 +51,7 @@
 ^media/webrtc/trunk/.*
 ^memory/jemalloc/src/.*
 ^mfbt/decimal/.*
-^mfbt/double-conversion/.*
+^mfbt/double-conversion/source/.*
 ^mfbt/lz4.*
 ^mobile/android/thirdparty/.*
 ^modules/brotli/.*

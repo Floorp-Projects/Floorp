@@ -1,8 +1,8 @@
 1e7bf0c636b8cca54dd83456a0f8fa219343e2a1 Bug 608195 - part 2 - extend ToPrecision to tell use whether exponential notation was used
-diff --git a/mfbt/double-conversion/double-conversion.cc b/mfbt/double-conversion/double-conversion.cc
+diff --git a/mfbt/double-conversion/source/double-conversion.cc b/mfbt/double-conversion/source/double-conversion.cc
 index febba6c..394b6a0 100644
---- a/mfbt/double-conversion/double-conversion.cc
-+++ b/mfbt/double-conversion/double-conversion.cc
+--- a/mfbt/double-conversion/source/double-conversion.cc
++++ b/mfbt/double-conversion/source/double-conversion.cc
 @@ -283,7 +283,9 @@ bool DoubleToStringConverter::ToExponential(
  
  bool DoubleToStringConverter::ToPrecision(double value,
@@ -21,10 +21,10 @@ index febba6c..394b6a0 100644
      CreateExponentialRepresentation(decimal_rep,
                                      precision,
                                      exponent,
-diff --git a/mfbt/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion.h
+diff --git a/mfbt/double-conversion/source/double-conversion.h b/mfbt/double-conversion/source/double-conversion.h
 index 0900ba0..957575c 100644
---- a/mfbt/double-conversion/double-conversion.h
-+++ b/mfbt/double-conversion/double-conversion.h
+--- a/mfbt/double-conversion/source/double-conversion.h
++++ b/mfbt/double-conversion/source/double-conversion.h
 @@ -270,6 +270,7 @@ class DoubleToStringConverter {
    // exponent character, the exponent's sign, and at most 3 exponent digits).
    MFBT_API bool ToPrecision(double value,

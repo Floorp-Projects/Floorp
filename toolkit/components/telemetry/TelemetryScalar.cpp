@@ -31,6 +31,7 @@ using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::ScalarActionType;
+using mozilla::Telemetry::ScalarVariant;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -114,43 +115,49 @@ IsValidEnumId(mozilla::Telemetry::ScalarID aID)
 }
 
 /**
- * The following helpers are used to get a nsIVariant from a uint32_t,
- * nsAString or bool data.
+ * Convert a nsIVariant to a mozilla::Variant, which is used for
+ * accumulating child process scalars.
  */
-nsresult
-GetVariant(uint32_t aValue, nsCOMPtr<nsIVariant>& aResult)
+ScalarResult
+GetVariantFromIVariant(nsIVariant* aInput, uint32_t aScalarKind,
+                       mozilla::Maybe<ScalarVariant>& aOutput)
 {
-  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsUint32(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
+  switch (aScalarKind) {
+    case nsITelemetry::SCALAR_COUNT:
+      {
+        uint32_t val = 0;
+        nsresult rv = aInput->GetAsUint32(&val);
+        if (NS_FAILED(rv)) {
+          return ScalarResult::CannotUnpackVariant;
+        }
+        aOutput = mozilla::Some(mozilla::AsVariant(val));
+        break;
+      }
+    case nsITelemetry::SCALAR_STRING:
+      {
+        nsString val;
+        nsresult rv = aInput->GetAsAString(val);
+        if (NS_FAILED(rv)) {
+          return ScalarResult::CannotUnpackVariant;
+        }
+        aOutput = mozilla::Some(mozilla::AsVariant(val));
+        break;
+      }
+    case nsITelemetry::SCALAR_BOOLEAN:
+      {
+        bool val = false;
+        nsresult rv = aInput->GetAsBool(&val);
+        if (NS_FAILED(rv)) {
+          return ScalarResult::CannotUnpackVariant;
+        }
+        aOutput = mozilla::Some(mozilla::AsVariant(val));
+        break;
+      }
+    default:
+      MOZ_ASSERT(false, "Unknown scalar kind.");
+      return ScalarResult::UnknownScalar;
   }
-  aResult = outVar.forget();
-  return NS_OK;
-}
-
-nsresult
-GetVariant(const nsAString& aValue, nsCOMPtr<nsIVariant>& aResult)
-{
-  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsAString(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aResult = outVar.forget();
-  return NS_OK;
-}
-
-nsresult
-GetVariant(bool aValue, nsCOMPtr<nsIVariant>& aResult)
-{
-  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsBool(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aResult = outVar.forget();
-  return NS_OK;
+  return ScalarResult::Ok;
 }
 
 // Implements the methods for ScalarInfo.
@@ -307,7 +314,13 @@ ScalarUnsigned::SetMaximum(uint32_t aValue)
 nsresult
 ScalarUnsigned::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
-  return GetVariant(mStorage, aResult);
+  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
+  nsresult rv = outVar->SetAsUint32(mStorage);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aResult = outVar.forget();
+  return NS_OK;
 }
 
 size_t
@@ -402,7 +415,13 @@ ScalarString::SetValue(const nsAString& aValue)
 nsresult
 ScalarString::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
-  return GetVariant(mStorage, aResult);
+  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
+  nsresult rv = outVar->SetAsAString(mStorage);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aResult = outVar.forget();
+  return NS_OK;
 }
 
 size_t
@@ -470,7 +489,13 @@ ScalarBoolean::SetValue(bool aValue)
 nsresult
 ScalarBoolean::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
-  return GetVariant(mStorage, aResult);
+  nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
+  nsresult rv = outVar->SetAsBool(mStorage);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aResult = outVar.forget();
+  return NS_OK;
 }
 
 size_t
@@ -1046,7 +1071,14 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     const ScalarInfo &info = gScalars[static_cast<uint32_t>(id)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(id, info.kind, aType, aValue);
+    // Convert the nsIVariant to a Variant.
+    mozilla::Maybe<ScalarVariant> variantValue;
+    sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
+    if (sr != ScalarResult::Ok) {
+      MOZ_ASSERT(false, "Unable to convert nsIVariant to mozilla::Variant.");
+      return sr;
+    }
+    TelemetryIPCAccumulator::RecordChildScalarAction(id, aType, variantValue.ref());
     return ScalarResult::Ok;
   }
 
@@ -1180,7 +1212,14 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     const ScalarInfo &info = gScalars[static_cast<uint32_t>(id)];
-    TelemetryIPCAccumulator::RecordChildKeyedScalarAction(id, aKey, info.kind, aType, aValue);
+    // Convert the nsIVariant to a Variant.
+    mozilla::Maybe<ScalarVariant> variantValue;
+    sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
+    if (sr != ScalarResult::Ok) {
+      MOZ_ASSERT(false, "Unable to convert nsIVariant to mozilla::Variant.");
+      return sr;
+    }
+    TelemetryIPCAccumulator::RecordChildKeyedScalarAction(id, aKey, aType, variantValue.ref());
     return ScalarResult::Ok;
   }
 
@@ -1362,14 +1401,8 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(aId, info.kind, ScalarActionType::eAdd,
-                                                     scalarValue);
+    TelemetryIPCAccumulator::RecordChildScalarAction(aId, ScalarActionType::eAdd,
+                                                     ScalarVariant(aValue));
     return;
   }
 
@@ -1402,14 +1435,8 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(
-      aId, aKey, info.kind, ScalarActionType::eAdd, scalarValue);
+      aId, aKey, ScalarActionType::eAdd, ScalarVariant(aValue));
     return;
   }
 
@@ -1512,14 +1539,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(aId, info.kind, ScalarActionType::eSet,
-                                                     scalarValue);
+    TelemetryIPCAccumulator::RecordChildScalarAction(aId, ScalarActionType::eSet,
+                                                     ScalarVariant(aValue));
     return;
   }
 
@@ -1550,14 +1571,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(aId, info.kind, ScalarActionType::eSet,
-                                                     scalarValue);
+    TelemetryIPCAccumulator::RecordChildScalarAction(aId, ScalarActionType::eSet,
+                                                     ScalarVariant(nsString(aValue)));
     return;
   }
 
@@ -1588,14 +1603,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(aId, info.kind, ScalarActionType::eSet,
-                                                     scalarValue);
+    TelemetryIPCAccumulator::RecordChildScalarAction(aId, ScalarActionType::eSet,
+                                                     ScalarVariant(aValue));
     return;
   }
 
@@ -1628,14 +1637,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(
-      aId, aKey, info.kind, ScalarActionType::eSet, scalarValue);
+      aId, aKey, ScalarActionType::eSet, ScalarVariant(aValue));
     return;
   }
 
@@ -1668,14 +1671,8 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(
-      aId, aKey, info.kind, ScalarActionType::eSet, scalarValue);
+      aId, aKey, ScalarActionType::eSet, ScalarVariant(aValue));
     return;
   }
 
@@ -1778,14 +1775,8 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
-    TelemetryIPCAccumulator::RecordChildScalarAction(aId, info.kind, ScalarActionType::eSetMaximum,
-                                                     scalarValue);
+    TelemetryIPCAccumulator::RecordChildScalarAction(aId, ScalarActionType::eSetMaximum,
+                                                     ScalarVariant(aValue));
     return;
   }
 
@@ -1818,14 +1809,8 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
 
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
-    nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = GetVariant(aValue, scalarValue);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    const ScalarInfo &info = gScalars[static_cast<uint32_t>(aId)];
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(
-      aId, aKey, info.kind, ScalarActionType::eSetMaximum, scalarValue);
+      aId, aKey, ScalarActionType::eSetMaximum, ScalarVariant(aValue));
     return;
   }
 
@@ -2143,17 +2128,54 @@ TelemetryScalar::UpdateChildData(GeckoProcessType aProcessType,
       continue;
     }
 
+    if (upd.mData.isNothing()) {
+      MOZ_ASSERT(false, "There is no data in the ScalarActionType.");
+      continue;
+    }
+
+    // Get the type of this scalar from the scalar ID. We already checked
+    // for its validity a few lines above.
+    const uint32_t scalarType = gScalars[static_cast<uint32_t>(upd.mId)].kind;
+
+    // Extract the data from the mozilla::Variant.
     switch (upd.mActionType)
     {
       case ScalarActionType::eSet:
-        scalar->SetValue(upd.mData);
-        break;
+        {
+          switch (scalarType)
+          {
+            case nsITelemetry::SCALAR_COUNT:
+              scalar->SetValue(upd.mData->as<uint32_t>());
+              break;
+            case nsITelemetry::SCALAR_BOOLEAN:
+              scalar->SetValue(upd.mData->as<bool>());
+              break;
+            case nsITelemetry::SCALAR_STRING:
+              scalar->SetValue(upd.mData->as<nsString>());
+              break;
+          }
+          break;
+        }
       case ScalarActionType::eAdd:
-        scalar->AddValue(upd.mData);
-        break;
+        {
+          if (scalarType != nsITelemetry::SCALAR_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support adding uint32_t.
+          scalar->AddValue(upd.mData->as<uint32_t>());
+          break;
+        }
       case ScalarActionType::eSetMaximum:
-        scalar->SetMaximum(upd.mData);
-        break;
+        {
+          if (scalarType != nsITelemetry::SCALAR_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support SetMaximum on uint32_t.
+          scalar->SetMaximum(upd.mData->as<uint32_t>());
+          break;
+        }
       default:
         NS_WARNING("Unsupported action coming from scalar child updates.");
     }
@@ -2192,17 +2214,53 @@ TelemetryScalar::UpdateChildKeyedData(GeckoProcessType aProcessType,
       continue;
     }
 
+    if (upd.mData.isNothing()) {
+      MOZ_ASSERT(false, "There is no data in the KeyedScalarAction.");
+      continue;
+    }
+
+    // Get the type of this scalar from the scalar ID. We already checked
+    // for its validity a few lines above.
+    const uint32_t scalarType = gScalars[static_cast<uint32_t>(upd.mId)].kind;
+
+    // Extract the data from the mozilla::Variant.
     switch (upd.mActionType)
     {
       case ScalarActionType::eSet:
-        scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData);
-        break;
+        {
+          switch (scalarType)
+          {
+            case nsITelemetry::SCALAR_COUNT:
+              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+              break;
+            case nsITelemetry::SCALAR_BOOLEAN:
+              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<bool>());
+              break;
+            default:
+              NS_WARNING("Unsupported type coming from scalar child updates.");
+          }
+          break;
+        }
       case ScalarActionType::eAdd:
-        scalar->AddValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData);
-        break;
+        {
+          if (scalarType != nsITelemetry::SCALAR_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support adding on uint32_t.
+          scalar->AddValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+          break;
+        }
       case ScalarActionType::eSetMaximum:
-        scalar->SetMaximum(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData);
-        break;
+        {
+          if (scalarType != nsITelemetry::SCALAR_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support SetMaximum on uint32_t.
+          scalar->SetMaximum(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+          break;
+        }
       default:
         NS_WARNING("Unsupported action coming from keyed scalar child updates.");
     }
