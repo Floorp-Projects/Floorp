@@ -841,7 +841,7 @@ class FileFinder(BaseFinder):
     '''
     Helper to get appropriate BaseFile instances from the file system.
     '''
-    def __init__(self, base, find_executables=True, ignore=(),
+    def __init__(self, base, ignore=(),
                  find_dotfiles=False, **kargs):
         '''
         Create a FileFinder for files under the given base directory.
@@ -856,6 +856,8 @@ class FileFinder(BaseFinder):
         to a directory, all files under that directory will be ignored. If
         an entry corresponds to a file, that particular file will be ignored.
         '''
+        assert 'find_executables' in kargs
+        find_executables = kargs.pop('find_executables')
         BaseFinder.__init__(self, base, **kargs)
         self.find_dotfiles = find_dotfiles
         self.find_executables = find_executables

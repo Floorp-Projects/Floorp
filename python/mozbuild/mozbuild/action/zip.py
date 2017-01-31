@@ -28,7 +28,7 @@ def main(args):
     jarrer = Jarrer(optimize=False)
 
     with errors.accumulate():
-        finder = FileFinder(args.C)
+        finder = FileFinder(args.C, find_executables=False)
         for path in args.input:
             for p, f in finder.find(path):
                 jarrer.add(p, f)
