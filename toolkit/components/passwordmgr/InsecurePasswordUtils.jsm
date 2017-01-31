@@ -22,6 +22,21 @@ XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", () => {
   return this.devtools.require("devtools/server/actors/utils/webconsole-utils").WebConsoleUtils;
 });
 
+/*
+ * A module that provides utility functions for form security.
+ *
+ * Note:
+ *  This module uses isSecureContextIfOpenerIgnored instead of isSecureContext.
+ *
+ *  We don't want to expose JavaScript APIs in a non-Secure Context even if
+ *  the context is only insecure because the windows has an insecure opener.
+ *  Doing so prevents sites from implementing postMessage workarounds to enable
+ *  an insecure opener to gain access to Secure Context-only APIs. However,
+ *  in the case of form fields such as password fields we don't need to worry
+ *  about whether the opener is secure or not. In fact to flag a password
+ *  field as insecure in such circumstances would unnecessarily confuse our
+ *  users.
+ */
 this.InsecurePasswordUtils = {
   _formRootsWarned: new WeakMap(),
   _sendWebConsoleMessage(messageTag, domDoc) {
@@ -75,14 +90,7 @@ this.InsecurePasswordUtils = {
    * @return {boolean} whether the form is secure
    */
   isFormSecure(aForm) {
-    // We don't want to expose JavaScript APIs in a non-Secure Context even if
-    // the context is only insecure because the windows has an insecure opener.
-    // Doing so prevents sites from implementing postMessage workarounds to enable
-    // an insecure opener to gain access to Secure Context-only APIs. However,
-    // in the case of form fields such as password fields we don't need to worry
-    // about whether the opener is secure or not. In fact to flag a password
-    // field as insecure in such circumstances would unnecessarily confuse our
-    // users. Hence we use isSecureContextIfOpenerIgnored here.
+    // Ignores window.opener, see top level documentation.
     let isSafePage = aForm.ownerDocument.defaultView.isSecureContextIfOpenerIgnored;
     let { isFormSubmitSecure, isFormSubmitHTTP } = this._checkFormSecurity(aForm);
 
@@ -101,7 +109,8 @@ this.InsecurePasswordUtils = {
     }
 
     let domDoc = aForm.ownerDocument;
-    let isSafePage = domDoc.defaultView.isSecureContext;
+    // Ignores window.opener, see top level documentation.
+    let isSafePage = domDoc.defaultView.isSecureContextIfOpenerIgnored;
 
     let { isFormSubmitHTTP, isFormSubmitSecure } = this._checkFormSecurity(aForm);
 
