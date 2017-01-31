@@ -234,7 +234,7 @@ if (AppConstants.platform != "android") {
         // reupload everything.
         const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
         const uuid = uuidgen.generateUUID().toString();
-        data = {uuid};
+        data = {uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID};
       }
       return data;
     }),
@@ -242,6 +242,53 @@ if (AppConstants.platform != "android") {
     getSalts: Task.async(function* () {
       const cryptoKeyRecord = yield this.getKeyRingRecord();
       return cryptoKeyRecord && cryptoKeyRecord.salts;
+    }),
+
+    /**
+     * Used for testing with a known salt.
+     */
+    _setSalt: Task.async(function* (extensionId, salt) {
+      const cryptoKeyRecord = yield this.getKeyRingRecord();
+      cryptoKeyRecord.salts = cryptoKeyRecord.salts || {};
+      cryptoKeyRecord.salts[extensionId] = salt;
+      this.upsert(cryptoKeyRecord);
+    }),
+
+    /**
+     * Hash an extension ID for a given user so that an attacker can't
+     * identify the extensions a user has installed.
+     *
+     * The extension ID is assumed to be a string (i.e. series of
+     * code points), and its UTF8 encoding is prefixed with the salt
+     * for that collection and hashed.
+     *
+     * The returned hash must conform to the syntax for Kinto
+     * identifiers, which (as of this writing) must match
+     * [a-zA-Z0-9][a-zA-Z0-9_-]*. We thus encode the hash using
+     * "base64-url" without padding (so that we don't get any equals
+     * signs (=)). For fear that a hash could start with a hyphen
+     * (-) or an underscore (_), prefix it with "ext-".
+     *
+     * @param {string} extensionId The extension ID to obfuscate.
+     * @returns {Promise<bytestring>} A collection ID suitable for use to sync to.
+     */
+    extensionIdToCollectionId: Task.async(function* (extensionId) {
+      const salts = yield this.getSalts();
+      const saltBase64 = salts && salts[extensionId];
+      if (!saltBase64) {
+        // This should never happen; salts should be populated before
+        // we need them by ensureCanSync.
+        throw new Error(`no salt available for ${extensionId}; how did this happen?`);
+      }
+
+      const hasher = Cc["@mozilla.org/security/hash;1"]
+          .createInstance(Ci.nsICryptoHash);
+      hasher.init(hasher.SHA256);
+
+      const salt = atob(saltBase64);
+      const message = `${salt}\x00${CommonUtils.encodeUTF8(extensionId)}`;
+      const hash = CryptoUtils.digestBytes(message, hasher);
+      return `ext-${CommonUtils.encodeBase64URL(hash, false)}`;
     }),
 
     /**
@@ -374,28 +421,6 @@ const openCollection = Task.async(function* (extension, context) {
 });
 
 /**
- * Hash an extension ID for a given user so that an attacker can't
- * identify the extensions a user has installed.
- *
- * @param {User} user
- *               The user for whom to choose a collection to sync
- *               an extension to.
- * @param {string} extensionId The extension ID to obfuscate.
- * @returns {string} A collection ID suitable for use to sync to.
- */
-function extensionIdToCollectionId(user, extensionId) {
-  const userFingerprint = CryptoUtils.hkdf(user.uid, undefined,
-                                           "identity.mozilla.com/picl/v1/chrome.storage.sync.collectionIds", 2 * 32);
-  let data = new TextEncoder().encode(userFingerprint + extensionId);
-  let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-  hasher.init(hasher.SHA256);
-  hasher.update(data, data.length);
-
-  return CommonUtils.bytesAsHex(hasher.finish(false));
-}
-
-/**
  * Verify that we were built on not-Android. Call this as a sanity
  * check before using cryptoCollection.
  */
@@ -442,7 +467,7 @@ this.ExtensionStorageSync = {
       log.info("User was not signed into FxA; cannot sync");
       throw new Error("Not signed in to FxA");
     }
-    const collectionId = extensionIdToCollectionId(signedInUser, extension.id);
+    const collectionId = yield cryptoCollection.extensionIdToCollectionId(extension.id);
     let syncResults;
     try {
       syncResults = yield this._syncCollection(collection, {
