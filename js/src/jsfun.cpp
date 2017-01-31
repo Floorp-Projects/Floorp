@@ -603,6 +603,10 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
                       fun->environment() == nullptr);
     }
 
+    // Everything added below can substituted by the non-lazy-script version of
+    // this function later.
+    js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
+
     if (!xdr->codeUint32(&firstword))
         return false;
 
