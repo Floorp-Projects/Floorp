@@ -6,14 +6,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
                                   "resource:///modules/E10SUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
+
+/* globals TabBase, WindowBase, TabTrackerBase, WindowTrackerBase, TabManagerBase, WindowManagerBase */
+Cu.import("resource://gre/modules/ExtensionTabs.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
@@ -28,9 +29,14 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 var {
   DefaultWeakMap,
-  promiseEvent,
+  ExtensionError,
   SingletonEventManager,
+  defineLazyGetter,
+  promiseEvent,
 } = ExtensionUtils;
+
+let tabTracker;
+let windowTracker;
 
 // This file provides some useful code for the |tabs| and |windows|
 // modules. All of the code is installed on |global|, which is a scope
@@ -556,8 +562,8 @@ global.TabContext = function TabContext(getDefaults, extension) {
   this.tabData = new WeakMap();
   this.lastLocation = new WeakMap();
 
-  AllWindowEvents.addListener("progress", this);
-  AllWindowEvents.addListener("TabSelect", this);
+  windowTracker.addListener("progress", this);
+  windowTracker.addListener("TabSelect", this);
 
   EventEmitter.decorate(this);
 };
@@ -604,133 +610,8 @@ TabContext.prototype = {
   },
 
   shutdown() {
-    AllWindowEvents.removeListener("progress", this);
-    AllWindowEvents.removeListener("TabSelect", this);
-  },
-};
-
-// Manages tab mappings and permissions for a specific extension.
-function ExtensionTabManager(extension) {
-  this.extension = extension;
-
-  // A mapping of tab objects to the inner window ID the extension currently has
-  // the active tab permission for. The active permission for a given tab is
-  // valid only for the inner window that was active when the permission was
-  // granted. If the tab navigates, the inner window ID changes, and the
-  // permission automatically becomes stale.
-  //
-  // WeakMap[tab => inner-window-id<int>]
-  this.hasTabPermissionFor = new WeakMap();
-}
-
-ExtensionTabManager.prototype = {
-  addActiveTabPermission(tab = TabManager.activeTab) {
-    if (this.extension.hasPermission("activeTab")) {
-      // Note that, unlike Chrome, we don't currently clear this permission with
-      // the tab navigates. If the inner window is revived from BFCache before
-      // we've granted this permission to a new inner window, the extension
-      // maintains its permissions for it.
-      this.hasTabPermissionFor.set(tab, tab.linkedBrowser.innerWindowID);
-    }
-  },
-
-  revokeActiveTabPermission(tab = TabManager.activeTab) {
-    this.hasTabPermissionFor.delete(tab);
-  },
-
-  // Returns true if the extension has the "activeTab" permission for this tab.
-  // This is somewhat more permissive than the generic "tabs" permission, as
-  // checked by |hasTabPermission|, in that it also allows programmatic script
-  // injection without an explicit host permission.
-  hasActiveTabPermission(tab) {
-    // This check is redundant with addTabPermission, but cheap.
-    if (this.extension.hasPermission("activeTab")) {
-      return (this.hasTabPermissionFor.has(tab) &&
-              this.hasTabPermissionFor.get(tab) === tab.linkedBrowser.innerWindowID);
-    }
-    return false;
-  },
-
-  hasTabPermission(tab) {
-    return this.extension.hasPermission("tabs") || this.hasActiveTabPermission(tab);
-  },
-
-  convert(tab) {
-    let window = tab.ownerGlobal;
-    let browser = tab.linkedBrowser;
-
-    let mutedInfo = {muted: tab.muted};
-    if (tab.muteReason === null) {
-      mutedInfo.reason = "user";
-    } else if (tab.muteReason) {
-      mutedInfo.reason = "extension";
-      mutedInfo.extensionId = tab.muteReason;
-    }
-
-    let result = {
-      id: TabManager.getId(tab),
-      index: tab._tPos,
-      windowId: WindowManager.getId(window),
-      selected: tab.selected,
-      highlighted: tab.selected,
-      active: tab.selected,
-      pinned: tab.pinned,
-      status: TabManager.getStatus(tab),
-      incognito: WindowManager.isBrowserPrivate(browser),
-      width: browser.frameLoader.lazyWidth || browser.clientWidth,
-      height: browser.frameLoader.lazyHeight || browser.clientHeight,
-      audible: tab.soundPlaying,
-      mutedInfo,
-    };
-    if (this.extension.hasPermission("cookies")) {
-      result.cookieStoreId = getCookieStoreIdForTab(result, tab);
-    }
-
-    if (this.hasTabPermission(tab)) {
-      result.url = browser.currentURI.spec;
-      let title = browser.contentTitle || tab.label;
-      if (title) {
-        result.title = title;
-      }
-      let icon = window.gBrowser.getIcon(tab);
-      if (icon) {
-        result.favIconUrl = icon;
-      }
-    }
-
-    return result;
-  },
-
-  // Converts tabs returned from SessionStore.getClosedTabData and
-  // SessionStore.getClosedWindowData into API tab objects
-  convertFromSessionStoreClosedData(tab, window) {
-    let result = {
-      sessionId: String(tab.closedId),
-      index: tab.pos ? tab.pos : 0,
-      windowId: WindowManager.getId(window),
-      selected: false,
-      highlighted: false,
-      active: false,
-      pinned: false,
-      incognito: Boolean(tab.state && tab.state.isPrivate),
-    };
-
-    if (this.hasTabPermission(tab)) {
-      let entries = tab.state ? tab.state.entries : tab.entries;
-      result.url = entries[0].url;
-      result.title = entries[0].title;
-      if (tab.image) {
-        result.favIconUrl = tab.image;
-      }
-    }
-
-    return result;
-  },
-
-  getTabs(window) {
-    return Array.from(window.gBrowser.tabs)
-                .filter(tab => !tab.closing)
-                .map(tab => this.convert(tab));
+    windowTracker.removeListener("progress", this);
+    windowTracker.removeListener("TabSelect", this);
   },
 };
 
@@ -753,10 +634,10 @@ function getBrowserInfo(browser) {
   if (window.gBrowser) {
     let tab = window.gBrowser.getTabForBrowser(browser);
     if (tab) {
-      result.tabId = TabManager.getId(tab);
+      result.tabId = tabTracker.getId(tab);
     }
 
-    result.windowId = WindowManager.getId(window);
+    result.windowId = windowTracker.getId(window);
   }
 
   return result;
@@ -782,80 +663,243 @@ Services.mm.addMessageListener("Extension:GetTabAndWindowId", onGetTabAndWindowI
 /* eslint-enable mozilla/balanced-listeners */
 
 
-// Manages global mappings between XUL tabs and extension tab IDs.
-global.TabManager = {
-  _tabs: new WeakMap(),
-  _nextId: 1,
-  _initialized: false,
+class WindowTracker extends WindowTrackerBase {
+  addProgressListener(window, listener) {
+    window.gBrowser.addTabsProgressListener(listener);
+  }
 
-  // We begin listening for TabOpen and TabClose events once we've started
-  // assigning IDs to tabs, so that we can remap the IDs of tabs which are moved
-  // between windows.
-  initListener() {
-    if (this._initialized) {
+  removeProgressListener(window, listener) {
+    window.gBrowser.removeTabsProgressListener(listener);
+  }
+}
+
+global.WindowEventManager = class extends SingletonEventManager {
+  constructor(context, name, event, listener) {
+    super(context, name, fire => {
+      let listener2 = listener.bind(null, fire);
+
+      windowTracker.addListener(event, listener2);
+      return () => {
+        windowTracker.removeListener(event, listener2);
+      };
+    });
+  }
+};
+
+class TabTracker extends TabTrackerBase {
+  constructor() {
+    super();
+
+    this._tabs = new WeakMap();
+    this._tabIds = new Map();
+    this._nextId = 1;
+
+    this._handleTabDestroyed = this._handleTabDestroyed.bind(this);
+  }
+
+  init() {
+    if (this.initialized) {
       return;
     }
+    this.initialized = true;
 
-    AllWindowEvents.addListener("TabOpen", this);
-    AllWindowEvents.addListener("TabClose", this);
-    WindowListManager.addOpenListener(this.handleWindowOpen.bind(this));
+    this.adoptedTabs = new WeakMap();
 
-    this._initialized = true;
-  },
+    this._handleWindowOpen = this._handleWindowOpen.bind(this);
+    this._handleWindowClose = this._handleWindowClose.bind(this);
 
-  handleEvent(event) {
-    if (event.type == "TabOpen") {
-      let {adoptedTab} = event.detail;
-      if (adoptedTab) {
-        // This tab is being created to adopt a tab from a different window.
-        // Copy the ID from the old tab to the new.
-        let tab = event.target;
-        this._tabs.set(tab, this.getId(adoptedTab));
+    windowTracker.addListener("TabClose", this);
+    windowTracker.addListener("TabOpen", this);
+    windowTracker.addOpenListener(this._handleWindowOpen);
+    windowTracker.addCloseListener(this._handleWindowClose);
 
-        tab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
-          windowId: WindowManager.getId(tab.ownerGlobal),
-        });
-      }
-    } else if (event.type == "TabClose") {
-      let {adoptedBy} = event.detail;
-      if (adoptedBy) {
-        // This tab is being closed because it was adopted by a new window.
-        // Copy its ID to the new tab, in case it was created as the first tab
-        // of a new window, and did not have an `adoptedTab` detail when it was
-        // opened.
-        this._tabs.set(adoptedBy, this.getId(event.target));
-
-        adoptedBy.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
-          windowId: WindowManager.getId(adoptedBy),
-        });
-      }
-    }
-  },
-
-  handleWindowOpen(window) {
-    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
-      // If the first window argument is a XUL element, it means the
-      // window is about to adopt a tab from another window to replace its
-      // initial tab.
-      let adoptedTab = window.arguments[0];
-
-      this._tabs.set(window.gBrowser.tabs[0], this.getId(adoptedTab));
-    }
-  },
+    /* eslint-disable mozilla/balanced-listeners */
+    this.on("tab-detached", this._handleTabDestroyed);
+    this.on("tab-removed", this._handleTabDestroyed);
+    /* eslint-enable mozilla/balanced-listeners */
+  }
 
   getId(tab) {
     if (this._tabs.has(tab)) {
       return this._tabs.get(tab);
     }
-    this.initListener();
+
+    this.init();
 
     let id = this._nextId++;
-    this._tabs.set(tab, id);
+    this.setId(tab, id);
     return id;
-  },
+  }
+
+  setId(tab, id) {
+    this._tabs.set(tab, id);
+    this._tabIds.set(id, tab);
+  }
+
+  _handleTabDestroyed(event, {tab}) {
+    let id = this._tabs.get(tab);
+    if (id) {
+      this._tabs.delete(tab);
+      if (this._tabIds.get(id) === tab) {
+        this._tabIds.delete(id);
+      }
+    }
+  }
+
+  /**
+   * Returns the XUL <tab> element associated with the given tab ID. If no tab
+   * with the given ID exists, and no default value is provided, an error is
+   * raised, belonging to the scope of the given context.
+   *
+   * @param {integer} tabId
+   *        The ID of the tab to retrieve.
+   * @param {*} default_
+   *        The value to return if no tab exists with the given ID.
+   * @returns {Element<tab>}
+   *        A XUL <tab> element.
+   */
+  getTab(tabId, default_ = undefined) {
+    let tab = this._tabIds.get(tabId);
+    if (tab) {
+      return tab;
+    }
+    if (default_ !== undefined) {
+      return default_;
+    }
+    throw new ExtensionError(`Invalid tab ID: ${tabId}`);
+  }
+
+  handleEvent(event) {
+    let tab = event.target;
+
+    switch (event.type) {
+      case "TabOpen":
+        let {adoptedTab} = event.detail;
+        if (adoptedTab) {
+          this.adoptedTabs.set(adoptedTab, event.target);
+
+          // This tab is being created to adopt a tab from a different window.
+          // Copy the ID from the old tab to the new.
+          this.setId(tab, this.getId(adoptedTab));
+
+          adoptedTab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
+            windowId: windowTracker.getId(tab.ownerGlobal),
+          });
+        }
+
+        // We need to delay sending this event until the next tick, since the
+        // tab does not have its final index when the TabOpen event is dispatched.
+        Promise.resolve().then(() => {
+          if (event.detail.adoptedTab) {
+            this.emitAttached(event.originalTarget);
+          } else {
+            this.emitCreated(event.originalTarget);
+          }
+        });
+        break;
+
+      case "TabClose":
+        let {adoptedBy} = event.detail;
+        if (adoptedBy) {
+          // This tab is being closed because it was adopted by a new window.
+          // Copy its ID to the new tab, in case it was created as the first tab
+          // of a new window, and did not have an `adoptedTab` detail when it was
+          // opened.
+          this.setId(adoptedBy, this.getId(tab));
+
+          this.emitDetached(tab, adoptedBy);
+        } else {
+          this.emitRemoved(tab, false);
+        }
+        break;
+    }
+  }
+
+  _handleWindowOpen(window) {
+    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
+      // If the first window argument is a XUL element, it means the
+      // window is about to adopt a tab from another window to replace its
+      // initial tab.
+      //
+      // Note that this event handler depends on running before the
+      // delayed startup code in browser.js, which is currently triggered
+      // by the first MozAfterPaint event. That code handles finally
+      // adopting the tab, and clears it from the arguments list in the
+      // process, so if we run later than it, we're too late.
+      let tab = window.arguments[0];
+      let adoptedBy = window.gBrowser.tabs[0];
+
+      this.adoptedTabs.set(tab, adoptedBy);
+      this.setId(adoptedBy, this.getId(tab));
+
+      // We need to be sure to fire this event after the onDetached event
+      // for the original tab.
+      let listener = (event, details) => {
+        if (details.tab === tab) {
+          this.off("tab-detached", listener);
+
+          Promise.resolve().then(() => {
+            this.emitAttached(details.adoptedBy);
+          });
+        }
+      };
+
+      this.on("tab-detached", listener);
+    } else {
+      for (let tab of window.gBrowser.tabs) {
+        this.emitCreated(tab);
+      }
+    }
+  }
+
+  _handleWindowClose(window) {
+    for (let tab of window.gBrowser.tabs) {
+      if (this.adoptedTabs.has(tab)) {
+        this.emitDetached(tab, this.adoptedTabs.get(tab));
+      } else {
+        this.emitRemoved(tab, true);
+      }
+    }
+  }
+
+  emitAttached(tab) {
+    let newWindowId = windowTracker.getId(tab.ownerGlobal);
+    let tabId = this.getId(tab);
+
+    this.emit("tab-attached", {tab, tabId, newWindowId, newPosition: tab._tPos});
+  }
+
+  emitDetached(tab, adoptedBy) {
+    let oldWindowId = windowTracker.getId(tab.ownerGlobal);
+    let tabId = this.getId(tab);
+
+    this.emit("tab-detached", {tab, adoptedBy, tabId, oldWindowId, oldPosition: tab._tPos});
+  }
+
+  emitCreated(tab) {
+    this.emit("tab-created", {tab});
+  }
+
+  emitRemoved(tab, isWindowClosing) {
+    let windowId = windowTracker.getId(tab.ownerGlobal);
+    let tabId = this.getId(tab);
+
+    // When addons run in-process, `window.close()` is synchronous. Most other
+    // addon-invoked calls are asynchronous since they go through a proxy
+    // context via the message manager. This includes event registrations such
+    // as `tabs.onRemoved.addListener`.
+    //
+    // So, even if `window.close()` were to be called (in-process) after calling
+    // `tabs.onRemoved.addListener`, then the tab would be closed before the
+    // event listener is registered. To make sure that the event listener is
+    // notified, we dispatch `tabs.onRemoved` asynchronously.
+    Services.tm.mainThread.dispatch(() => {
+      this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  }
 
   getBrowserId(browser) {
-    let gBrowser = browser.ownerGlobal.gBrowser;
+    let {gBrowser} = browser.ownerGlobal;
     // Some non-browser windows have gBrowser but not
     // getTabForBrowser!
     if (gBrowser && gBrowser.getTabForBrowser) {
@@ -865,107 +909,125 @@ global.TabManager = {
       }
     }
     return -1;
-  },
-
-  /**
-   * Returns the XUL <tab> element associated with the given tab ID. If no tab
-   * with the given ID exists, and no default value is provided, an error is
-   * raised, belonging to the scope of the given context.
-   *
-   * @param {integer} tabId
-   *        The ID of the tab to retrieve.
-   * @param {ExtensionContext} context
-   *        The context of the caller.
-   *        This value may be omitted if `default_` is not `undefined`.
-   * @param {*} default_
-   *        The value to return if no tab exists with the given ID.
-   * @returns {Element<tab>}
-   *        A XUL <tab> element.
-   */
-  getTab(tabId, context, default_ = undefined) {
-    // FIXME: Speed this up without leaking memory somehow.
-    for (let window of WindowListManager.browserWindows()) {
-      if (!window.gBrowser) {
-        continue;
-      }
-      for (let tab of window.gBrowser.tabs) {
-        if (this.getId(tab) == tabId) {
-          return tab;
-        }
-      }
-    }
-    if (default_ !== undefined) {
-      return default_;
-    }
-    throw new context.cloneScope.Error(`Invalid tab ID: ${tabId}`);
-  },
+  }
 
   get activeTab() {
-    let window = WindowManager.topWindow;
+    let window = windowTracker.topWindow;
     if (window && window.gBrowser) {
       return window.gBrowser.selectedTab;
     }
     return null;
-  },
-
-  getStatus(tab) {
-    return tab.getAttribute("busy") == "true" ? "loading" : "complete";
-  },
-
-  convert(extension, tab) {
-    return TabManager.for(extension).convert(tab);
-  },
-};
-
-// WeakMap[Extension -> ExtensionTabManager]
-let tabManagers = new WeakMap();
-
-// Returns the extension-specific tab manager for the given extension, or
-// creates one if it doesn't already exist.
-TabManager.for = function(extension) {
-  if (!tabManagers.has(extension)) {
-    tabManagers.set(extension, new ExtensionTabManager(extension));
   }
-  return tabManagers.get(extension);
-};
-
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("shutdown", (type, extension) => {
-  tabManagers.delete(extension);
-});
-/* eslint-enable mozilla/balanced-listeners */
-
-function memoize(fn) {
-  let weakMap = new DefaultWeakMap(fn);
-  return weakMap.get.bind(weakMap);
 }
 
-// Manages mapping between XUL windows and extension window IDs.
-global.WindowManager = {
-  // Note: These must match the values in windows.json.
-  WINDOW_ID_NONE: -1,
-  WINDOW_ID_CURRENT: -2,
+windowTracker = new WindowTracker();
+tabTracker = new TabTracker();
 
-  get topWindow() {
-    return Services.wm.getMostRecentWindow("navigator:browser");
-  },
+Object.assign(global, {tabTracker, windowTracker});
 
-  windowType(window) {
-    // TODO: Make this work.
+class Tab extends TabBase {
+  get _favIconUrl() {
+    return this.window.gBrowser.getIcon(this.tab);
+  }
 
-    let {chromeFlags} = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell)
-                              .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIXULWindow);
+  get audible() {
+    return this.tab.soundPlaying;
+  }
 
-    if (chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG) {
-      return "popup";
+  get browser() {
+    return this.tab.linkedBrowser;
+  }
+
+  get cookieStoreId() {
+    return getCookieStoreIdForTab(this, this.tab);
+  }
+
+  get height() {
+    return this.browser.clientHeight;
+  }
+
+  get index() {
+    return this.tab._tPos;
+  }
+
+  get innerWindowID() {
+    return this.browser.innerWindowID;
+  }
+
+  get mutedInfo() {
+    let tab = this.tab;
+
+    let mutedInfo = {muted: tab.muted};
+    if (tab.muteReason === null) {
+      mutedInfo.reason = "user";
+    } else if (tab.muteReason) {
+      mutedInfo.reason = "extension";
+      mutedInfo.extensionId = tab.muteReason;
     }
 
-    return "normal";
-  },
+    return mutedInfo;
+  }
 
-  updateGeometry(window, options) {
+  get pinned() {
+    return this.tab.pinned;
+  }
+
+  get active() {
+    return this.tab.selected;
+  }
+
+  get selected() {
+    return this.tab.selected;
+  }
+
+  get status() {
+    if (this.tab.getAttribute("busy") === "true") {
+      return "loading";
+    }
+    return "complete";
+  }
+
+  get width() {
+    return this.browser.clientWidth;
+  }
+
+  get window() {
+    return this.tab.ownerGlobal;
+  }
+
+  get windowId() {
+    return windowTracker.getId(this.window);
+  }
+
+  static convertFromSessionStoreClosedData(extension, tab, window = null) {
+    let result = {
+      sessionId: String(tab.closedId),
+      index: tab.pos ? tab.pos : 0,
+      windowId: window && windowTracker.getId(window),
+      selected: false,
+      highlighted: false,
+      active: false,
+      pinned: false,
+      incognito: Boolean(tab.state && tab.state.isPrivate),
+    };
+
+    if (extension.tabManager.hasTabPermission(tab)) {
+      let entries = tab.state ? tab.state.entries : tab.entries;
+      result.url = entries[0].url;
+      result.title = entries[0].title;
+      if (tab.image) {
+        result.favIconUrl = tab.image;
+      }
+    }
+
+    return result;
+  }
+}
+
+class Window extends WindowBase {
+  updateGeometry(options) {
+    let {window} = this;
+
     if (options.left !== null || options.top !== null) {
       let left = options.left !== null ? options.left : window.screenX;
       let top = options.top !== null ? options.top : window.screenY;
@@ -977,33 +1039,41 @@ global.WindowManager = {
       let height = options.height !== null ? options.height : window.outerHeight;
       window.resizeTo(width, height);
     }
-  },
+  }
 
-  isBrowserPrivate: memoize(browser => {
-    return PrivateBrowsingUtils.isBrowserPrivate(browser);
-  }),
+  get focused() {
+    return this.window.document.hasFocus();
+  }
 
-  getId: memoize(window => {
-    if (window instanceof Ci.nsIInterfaceRequestor) {
-      return window.getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-    }
-    return null;
-  }),
+  get top() {
+    return this.window.screenY;
+  }
 
-  getWindow(id, context) {
-    if (id == this.WINDOW_ID_CURRENT) {
-      return currentWindow(context);
-    }
+  get left() {
+    return this.window.screenX;
+  }
 
-    for (let window of WindowListManager.browserWindows(true)) {
-      if (this.getId(window) == id) {
-        return window;
-      }
-    }
-    return null;
-  },
+  get width() {
+    return this.window.outerWidth;
+  }
 
-  getState(window) {
+  get height() {
+    return this.window.outerHeight;
+  }
+
+  get incognito() {
+    return PrivateBrowsingUtils.isWindowPrivate(this.window);
+  }
+
+  get alwaysOnTop() {
+    return this.xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ;
+  }
+
+  get isLastFocused() {
+    return this.window === windowTracker.topWindow;
+  }
+
+  static getState(window) {
     const STATES = {
       [window.STATE_MAXIMIZED]: "maximized",
       [window.STATE_MINIMIZED]: "minimized",
@@ -1014,10 +1084,15 @@ global.WindowManager = {
       state = "fullscreen";
     }
     return state;
-  },
+  }
 
-  setState(window, state) {
-    if (state != "fullscreen" && window.fullScreen) {
+  get state() {
+    return Window.getState(this.window);
+  }
+
+  set state(state) {
+    let {window} = this;
+    if (state !== "fullscreen" && window.fullScreen) {
       window.fullScreen = false;
     }
 
@@ -1036,10 +1111,10 @@ global.WindowManager = {
         // than to the "normal" state, so it may need to be called anywhere from
         // zero to two times.
         window.restore();
-        if (window.windowState != window.STATE_NORMAL) {
+        if (window.windowState !== window.STATE_NORMAL) {
           window.restore();
         }
-        if (window.windowState != window.STATE_NORMAL) {
+        if (window.windowState !== window.STATE_NORMAL) {
           // And on OS-X, where normal vs. maximized is basically a heuristic,
           // we need to cheat.
           window.sizeToContent();
@@ -1053,244 +1128,84 @@ global.WindowManager = {
       default:
         throw new Error(`Unexpected window state: ${state}`);
     }
-  },
+  }
 
-  convert(extension, window, getInfo) {
-    let xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell)
-                          .treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIXULWindow);
+  * getTabs() {
+    let {tabManager} = this.extension;
 
-    let result = {
-      id: this.getId(window),
-      focused: window.document.hasFocus(),
-      top: window.screenY,
-      left: window.screenX,
-      width: window.outerWidth,
-      height: window.outerHeight,
-      incognito: PrivateBrowsingUtils.isWindowPrivate(window),
-      type: this.windowType(window),
-      state: this.getState(window),
-      alwaysOnTop: xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ,
-    };
-
-    if (getInfo && getInfo.populate) {
-      result.tabs = TabManager.for(extension).getTabs(window);
+    for (let tab of this.window.gBrowser.tabs) {
+      yield tabManager.getWrapper(tab);
     }
+  }
 
-    return result;
-  },
-
-  // Converts windows returned from SessionStore.getClosedWindowData
-  // into API window objects
-  convertFromSessionStoreClosedData(window, extension) {
+  static convertFromSessionStoreClosedData(extension, window) {
     let result = {
       sessionId: String(window.closedId),
       focused: false,
       incognito: false,
       type: "normal", // this is always "normal" for a closed window
+      // Surely this does not actually work?
       state: this.getState(window),
       alwaysOnTop: false,
     };
 
     if (window.tabs.length) {
-      result.tabs = [];
-      window.tabs.forEach((tab, index) => {
-        result.tabs.push(TabManager.for(extension).convertFromSessionStoreClosedData(tab, window, index));
+      result.tabs = window.tabs.map(tab => {
+        return Tab.convertFromSessionStoreClosedData(extension, tab);
       });
     }
 
     return result;
-  },
-};
-
-// Manages listeners for window opening and closing. A window is
-// considered open when the "load" event fires on it. A window is
-// closed when a "domwindowclosed" notification fires for it.
-global.WindowListManager = {
-  _openListeners: new Set(),
-  _closeListeners: new Set(),
-
-  // Returns an iterator for all browser windows. Unless |includeIncomplete| is
-  // true, only fully-loaded windows are returned.
-  * browserWindows(includeIncomplete = false) {
-    // The window type parameter is only available once the window's document
-    // element has been created. This means that, when looking for incomplete
-    // browser windows, we need to ignore the type entirely for windows which
-    // haven't finished loading, since we would otherwise skip browser windows
-    // in their early loading stages.
-    // This is particularly important given that the "domwindowcreated" event
-    // fires for browser windows when they're in that in-between state, and just
-    // before we register our own "domwindowcreated" listener.
-
-    let e = Services.wm.getEnumerator("");
-    while (e.hasMoreElements()) {
-      let window = e.getNext();
-
-      let ok = includeIncomplete;
-      if (window.document.readyState == "complete") {
-        ok = window.document.documentElement.getAttribute("windowtype") == "navigator:browser";
-      }
-
-      if (ok) {
-        yield window;
-      }
-    }
-  },
-
-  addOpenListener(listener) {
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
-      Services.ww.registerNotification(this);
-    }
-    this._openListeners.add(listener);
-
-    for (let window of this.browserWindows(true)) {
-      if (window.document.readyState != "complete") {
-        window.addEventListener("load", this);
-      }
-    }
-  },
-
-  removeOpenListener(listener) {
-    this._openListeners.delete(listener);
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
-      Services.ww.unregisterNotification(this);
-    }
-  },
-
-  addCloseListener(listener) {
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
-      Services.ww.registerNotification(this);
-    }
-    this._closeListeners.add(listener);
-  },
-
-  removeCloseListener(listener) {
-    this._closeListeners.delete(listener);
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
-      Services.ww.unregisterNotification(this);
-    }
-  },
-
-  handleEvent(event) {
-    event.currentTarget.removeEventListener(event.type, this);
-    let window = event.target.defaultView;
-    if (window.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
-      return;
-    }
-
-    for (let listener of this._openListeners) {
-      listener(window);
-    }
-  },
-
-  observe(window, topic, data) {
-    if (topic == "domwindowclosed") {
-      if (window.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
-        return;
-      }
-
-      window.removeEventListener("load", this);
-      for (let listener of this._closeListeners) {
-        listener(window);
-      }
-    } else {
-      window.addEventListener("load", this);
-    }
-  },
-};
-
-// Provides a facility to listen for DOM events across all XUL windows.
-global.AllWindowEvents = {
-  _listeners: new Map(),
-
-  // If |type| is a normal event type, invoke |listener| each time
-  // that event fires in any open window. If |type| is "progress", add
-  // a web progress listener that covers all open windows.
-  addListener(type, listener) {
-    if (type == "domwindowopened") {
-      return WindowListManager.addOpenListener(listener);
-    } else if (type == "domwindowclosed") {
-      return WindowListManager.addCloseListener(listener);
-    }
-
-    if (this._listeners.size == 0) {
-      WindowListManager.addOpenListener(this.openListener);
-    }
-
-    if (!this._listeners.has(type)) {
-      this._listeners.set(type, new Set());
-    }
-    let list = this._listeners.get(type);
-    list.add(listener);
-
-    // Register listener on all existing windows.
-    for (let window of WindowListManager.browserWindows()) {
-      this.addWindowListener(window, type, listener);
-    }
-  },
-
-  removeListener(eventType, listener) {
-    if (eventType == "domwindowopened") {
-      return WindowListManager.removeOpenListener(listener);
-    } else if (eventType == "domwindowclosed") {
-      return WindowListManager.removeCloseListener(listener);
-    }
-
-    let listeners = this._listeners.get(eventType);
-    listeners.delete(listener);
-    if (listeners.size == 0) {
-      this._listeners.delete(eventType);
-      if (this._listeners.size == 0) {
-        WindowListManager.removeOpenListener(this.openListener);
-      }
-    }
-
-    // Unregister listener from all existing windows.
-    let useCapture = eventType === "focus" || eventType === "blur";
-    for (let window of WindowListManager.browserWindows()) {
-      if (eventType == "progress") {
-        window.gBrowser.removeTabsProgressListener(listener);
-      } else {
-        window.removeEventListener(eventType, listener, useCapture);
-      }
-    }
-  },
-
-  /* eslint-disable mozilla/balanced-listeners */
-  addWindowListener(window, eventType, listener) {
-    let useCapture = eventType === "focus" || eventType === "blur";
-
-    if (eventType == "progress") {
-      window.gBrowser.addTabsProgressListener(listener);
-    } else {
-      window.addEventListener(eventType, listener, useCapture);
-    }
-  },
-  /* eslint-enable mozilla/balanced-listeners */
-
-  // Runs whenever the "load" event fires for a new window.
-  openListener(window) {
-    for (let [eventType, listeners] of AllWindowEvents._listeners) {
-      for (let listener of listeners) {
-        this.addWindowListener(window, eventType, listener);
-      }
-    }
-  },
-};
-
-AllWindowEvents.openListener = AllWindowEvents.openListener.bind(AllWindowEvents);
-
-// Subclass of SingletonEventManager where we just need to call
-// add/removeEventListener on each XUL window.
-global.WindowEventManager = class extends SingletonEventManager {
-  constructor(context, name, event, listener) {
-    super(context, name, fire => {
-      let listener2 = (...args) => listener(fire, ...args);
-      AllWindowEvents.addListener(event, listener2);
-      return () => {
-        AllWindowEvents.removeListener(event, listener2);
-      };
-    });
   }
-};
+}
+
+Object.assign(global, {Tab, Window});
+
+class TabManager extends TabManagerBase {
+  get(tabId, default_ = undefined) {
+    let tab = tabTracker.getTab(tabId, default_);
+
+    if (tab) {
+      return this.getWrapper(tab);
+    }
+    return default_;
+  }
+
+  addActiveTabPermission(tab = tabTracker.activeTab) {
+    return super.addActiveTabPermission(tab);
+  }
+
+  revokeActiveTabPermission(tab = tabTracker.activeTab) {
+    return super.revokeActiveTabPermission(tab);
+  }
+
+  wrapTab(tab) {
+    return new Tab(this.extension, tab, tabTracker.getId(tab));
+  }
+}
+
+class WindowManager extends WindowManagerBase {
+  get(windowId, context) {
+    let window = windowTracker.getWindow(windowId, context);
+
+    return this.getWrapper(window);
+  }
+
+  * getAll() {
+    for (let window of windowTracker.browserWindows()) {
+      yield this.getWrapper(window);
+    }
+  }
+
+  wrapWindow(window) {
+    return new Window(this.extension, window, windowTracker.getId(window));
+  }
+}
+
+
+extensions.on("startup", (type, extension) => { // eslint-disable-line mozilla/balanced-listeners
+  defineLazyGetter(extension, "tabManager",
+                   () => new TabManager(extension));
+  defineLazyGetter(extension, "windowManager",
+                   () => new WindowManager(extension));
+});

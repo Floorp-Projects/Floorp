@@ -22,16 +22,19 @@ function onXULFrameLoaderCreated({target}) {
 
 extensions.registerSchemaAPI("windows", "addon_parent", context => {
   let {extension} = context;
+
+  const {windowManager} = extension;
+
   return {
     windows: {
       onCreated:
       new WindowEventManager(context, "windows.onCreated", "domwindowopened", (fire, window) => {
-        fire.async(WindowManager.convert(extension, window));
+        fire.async(windowManager.convert(window));
       }).api(),
 
       onRemoved:
       new WindowEventManager(context, "windows.onRemoved", "domwindowclosed", (fire, window) => {
-        fire.async(WindowManager.getId(window));
+        fire.async(windowTracker.getId(window));
       }).api(),
 
       onFocusChanged: new SingletonEventManager(context, "windows.onFocusChanged", fire => {
@@ -43,42 +46,42 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           // event when switching focus between two Firefox windows.
           Promise.resolve().then(() => {
             let window = Services.focus.activeWindow;
-            let windowId = window ? WindowManager.getId(window) : WindowManager.WINDOW_ID_NONE;
+            let windowId = window ? windowTracker.getId(window) : Window.WINDOW_ID_NONE;
             if (windowId !== lastOnFocusChangedWindowId) {
               fire.async(windowId);
               lastOnFocusChangedWindowId = windowId;
             }
           });
         };
-        AllWindowEvents.addListener("focus", listener);
-        AllWindowEvents.addListener("blur", listener);
+        windowTracker.addListener("focus", listener);
+        windowTracker.addListener("blur", listener);
         return () => {
-          AllWindowEvents.removeListener("focus", listener);
-          AllWindowEvents.removeListener("blur", listener);
+          windowTracker.removeListener("focus", listener);
+          windowTracker.removeListener("blur", listener);
         };
       }).api(),
 
       get: function(windowId, getInfo) {
-        let window = WindowManager.getWindow(windowId, context);
+        let window = windowTracker.getWindow(windowId, context);
         if (!window) {
           return Promise.reject({message: `Invalid window ID: ${windowId}`});
         }
-        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
+        return Promise.resolve(windowManager.convert(window, getInfo));
       },
 
       getCurrent: function(getInfo) {
-        let window = currentWindow(context);
-        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
+        let window = context.currentWindow || windowTracker.topWindow;
+        return Promise.resolve(windowManager.convert(window, getInfo));
       },
 
       getLastFocused: function(getInfo) {
-        let window = WindowManager.topWindow;
-        return Promise.resolve(WindowManager.convert(extension, window, getInfo));
+        let window = windowTracker.topWindow;
+        return Promise.resolve(windowManager.convert(window, getInfo));
       },
 
       getAll: function(getInfo) {
-        let windows = Array.from(WindowListManager.browserWindows(),
-                                 window => WindowManager.convert(extension, window, getInfo));
+        let windows = Array.from(windowManager.getAll(), win => win.convert(getInfo));
+
         return Promise.resolve(windows);
       },
 
@@ -110,7 +113,7 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
             return Promise.reject({message: "`tabId` may not be used in conjunction with `allowScriptsToClose`"});
           }
 
-          let tab = TabManager.getTab(createData.tabId, context);
+          let tab = tabTracker.getTab(createData.tabId);
 
           // Private browsing tabs can only be moved to private browsing
           // windows.
@@ -160,7 +163,8 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         let window = Services.ww.openWindow(null, "chrome://browser/content/browser.xul", "_blank",
                                             features.join(","), args);
 
-        WindowManager.updateGeometry(window, createData);
+        let win = windowManager.getWrapper(window);
+        win.updateGeometry(createData);
 
         // TODO: focused, type
 
@@ -174,7 +178,7 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         }).then(() => {
           // Some states only work after delayed-startup-finished
           if (["minimized", "fullscreen", "docked"].includes(createData.state)) {
-            WindowManager.setState(window, createData.state);
+            win.state = createData.state;
           }
           if (allowScriptsToClose) {
             for (let {linkedBrowser} of window.gBrowser.tabs) {
@@ -183,7 +187,7 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
                                              "XULFrameLoaderCreated", onXULFrameLoaderCreated);
             }
           }
-          return WindowManager.convert(extension, window, {populate: true});
+          return win.convert({populate: true});
         });
       },
 
@@ -195,37 +199,37 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
           }
         }
 
-        let window = WindowManager.getWindow(windowId, context);
+        let win = windowManager.get(windowId, context);
         if (updateInfo.focused) {
-          Services.focus.activeWindow = window;
+          Services.focus.activeWindow = win.window;
         }
 
         if (updateInfo.state !== null) {
-          WindowManager.setState(window, updateInfo.state);
+          win.state = updateInfo.state;
         }
 
         if (updateInfo.drawAttention) {
           // Bug 1257497 - Firefox can't cancel attention actions.
-          window.getAttention();
+          win.window.getAttention();
         }
 
-        WindowManager.updateGeometry(window, updateInfo);
+        win.updateGeometry(updateInfo);
 
         // TODO: All the other properties, focused=false...
 
-        return Promise.resolve(WindowManager.convert(extension, window));
+        return Promise.resolve(win.convert());
       },
 
       remove: function(windowId) {
-        let window = WindowManager.getWindow(windowId, context);
+        let window = windowTracker.getWindow(windowId, context);
         window.close();
 
         return new Promise(resolve => {
           let listener = () => {
-            AllWindowEvents.removeListener("domwindowclosed", listener);
+            windowTracker.removeListener("domwindowclosed", listener);
             resolve();
           };
-          AllWindowEvents.addListener("domwindowclosed", listener);
+          windowTracker.addListener("domwindowclosed", listener);
         });
       },
     },

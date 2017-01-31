@@ -90,10 +90,10 @@ add_task(function* () {
 
   yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
-  let {Management: {global: {WindowManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-  let winId1 = WindowManager.getId(win1);
-  let winId2 = WindowManager.getId(win2);
+  let winId1 = windowTracker.getId(win1);
+  let winId2 = windowTracker.getId(win2);
 
   function* checkWindow(kind, winId, name) {
     extension.sendMessage(kind + "-check-current1");

@@ -191,8 +191,8 @@ ProxyMessenger = {
     // tabs.sendMessage / tabs.connect
     if (tabId) {
       // `tabId` being set implies that the tabs API is supported, so we don't
-      // need to check whether `TabManager` exists.
-      let tab = apiManager.global.TabManager.getTab(tabId, null, null);
+      // need to check whether `tabTracker` exists.
+      let tab = apiManager.global.tabTracker.getTab(tabId, null);
       return tab && tab.linkedBrowser.messageManager;
     }
 
@@ -354,12 +354,19 @@ class ExtensionPageContextParent extends ProxyContextParent {
     return this.xulBrowser.ownerGlobal;
   }
 
-  get windowId() {
-    if (!apiManager.global.WindowManager || this.viewType == "background") {
-      return;
+  get currentWindow() {
+    if (this.viewType !== "background") {
+      return this.xulWindow;
     }
-    // viewType popup or tab:
-    return apiManager.global.WindowManager.getId(this.xulWindow);
+  }
+
+  get windowId() {
+    let {currentWindow} = this;
+    let {windowTracker} = apiManager.global;
+
+    if (currentWindow && windowTracker) {
+      return windowTracker.getId(currentWindow);
+    }
   }
 
   get tabId() {
