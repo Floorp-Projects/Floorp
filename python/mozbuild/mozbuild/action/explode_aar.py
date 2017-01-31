@@ -34,7 +34,7 @@ def explode(aar, destdir):
     os.rename(mozpath.join(destdir, 'classes.jar'), classes_jar)
 
     # Embedded JAR libraries are optional.
-    finder = FileFinder(mozpath.join(destdir, 'libs'), find_executables=False)
+    finder = FileFinder(mozpath.join(destdir, 'libs'))
     for p, _ in finder.find('*.jar'):
         jar = mozpath.join(finder.base, name + '-' + p)
         os.rename(mozpath.join(finder.base, p), jar)

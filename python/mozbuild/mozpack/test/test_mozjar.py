@@ -245,7 +245,7 @@ class TestJar(unittest.TestCase):
     def test_add_from_finder(self):
         s = MockDest()
         with JarWriter(fileobj=s, optimize=self.optimize) as jar:
-            finder = FileFinder(test_data_path, find_executables=False)
+            finder = FileFinder(test_data_path)
             for p, f in finder.find('test_data'):
                 jar.add('test_data', f)
 
