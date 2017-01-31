@@ -2998,8 +2998,8 @@ StringObject::assignInitialShape(ExclusiveContext* cx, Handle<StringObject*> obj
 {
     MOZ_ASSERT(obj->empty());
 
-    return obj->addDataProperty(cx, cx->names().length, LENGTH_SLOT,
-                                JSPROP_PERMANENT | JSPROP_READONLY);
+    return NativeObject::addDataProperty(cx, obj, cx->names().length, LENGTH_SLOT,
+                                         JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject*
