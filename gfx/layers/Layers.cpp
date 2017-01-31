@@ -913,7 +913,7 @@ Layer::ApplyPendingUpdatesForThisTransaction()
   if (mPendingTransform && *mPendingTransform != mSimpleAttrs.Transform()) {
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PendingUpdatesForThisTransaction", this));
     mSimpleAttrs.SetTransform(*mPendingTransform);
-    Mutated();
+    MutatedSimple();
   }
   mPendingTransform = nullptr;
 

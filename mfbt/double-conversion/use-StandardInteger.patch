@@ -1,10 +1,14 @@
-diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
-index cd3e330..bdc7d4b 100644
---- a/mfbt/double-conversion/utils.h
-+++ b/mfbt/double-conversion/utils.h
-@@ -74,23 +74,7 @@
+diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
+--- a/mfbt/double-conversion/source/utils.h
++++ b/mfbt/double-conversion/source/utils.h
+@@ -93,34 +93,18 @@ inline void abort_noreturn() { abort(); 
  #endif
  
+ #if defined(__GNUC__)
+ #define DOUBLE_CONVERSION_UNUSED __attribute__((unused))
+ #else
+ #define DOUBLE_CONVERSION_UNUSED
+ #endif
  
 -#if defined(_WIN32) && !defined(__MINGW32__)
 -
@@ -20,10 +24,15 @@ index cd3e330..bdc7d4b 100644
 -
 -#else
 -
--#include <stdint.h>
--
+ #include <stdint.h>
+ 
 -#endif
-+#include <stdint.h>
+-
+ typedef uint16_t uc16;
  
  // The following macro works on both 32 and 64-bit platforms.
  // Usage: instead of writing 0x1234567890123456
+ //      write UINT64_2PART_C(0x12345678,90123456);
+ #define UINT64_2PART_C(a, b) (((static_cast<uint64_t>(a) << 32) + 0x##b##u))
+ 
+ 

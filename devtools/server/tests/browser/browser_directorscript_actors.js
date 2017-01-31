@@ -53,7 +53,7 @@ function* testDirectorScriptMessagePort(directorManager) {
       exports.attach = function ({port}) {
         port.onmessage = function (evt) {
           // echo messages
-          evt.source.postMessage(evt.data);
+          evt.target.postMessage(evt.data);
         };
       };
     }).toString() + ")();",

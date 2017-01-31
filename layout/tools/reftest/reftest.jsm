@@ -664,7 +664,6 @@ function BuildConditionSandbox(aURL) {
 
     sandbox.gpuProcess = gfxInfo.usingGPUProcess;
     sandbox.azureCairo = canvasBackend == "cairo";
-    sandbox.azureQuartz = canvasBackend == "quartz";
     sandbox.azureSkia = canvasBackend == "skia";
     sandbox.skiaContent = contentBackend == "skia";
     sandbox.azureSkiaGL = canvasAccelerated; // FIXME: assumes GL right now

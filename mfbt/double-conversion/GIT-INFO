@@ -1,0 +1,9 @@
+commit d8d4e668ee1e6e10b728f0671a89b07d7c4d45be
+Merge: 79fb300 48b5e70
+Author: Florian Loitsch <florian@loitsch.com>
+Date:   Wed Nov 23 19:14:38 2016 +0100
+
+    Merge pull request #39 from uburuntu/master
+    
+    Some small fixes: compilation, null ptr derefence and const qualifiers
+

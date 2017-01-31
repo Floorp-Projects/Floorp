@@ -487,7 +487,7 @@ GetNextNonLoopEntryPc(jsbytecode* pc)
 }
 
 static bool
-HasLiveIteratorAtStackDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
+HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
 {
     if (!script->hasTrynotes())
         return false;
@@ -501,14 +501,37 @@ HasLiveIteratorAtStackDepth(JSScript* script, jsbytecode* pc, uint32_t stackDept
         if (pcOffset >= tn->start + tn->length)
             continue;
 
-        // For-in loops have only the iterator on stack.
-        if (tn->kind == JSTRY_FOR_IN && stackDepth == tn->stackDepth)
-            return true;
+        switch (tn->kind) {
+          case JSTRY_FOR_IN:
+            // For-in loops have only the iterator on stack.
+            if (stackDepth == tn->stackDepth)
+                return true;
+            break;
 
-        // For-of loops have both the iterator and the result object on
-        // stack. The iterator is below the result object.
-        if (tn->kind == JSTRY_FOR_OF && stackDepth == tn->stackDepth - 1)
-            return true;
+          case JSTRY_FOR_OF:
+            // For-of loops have both the iterator and the result object on
+            // stack. The iterator is below the result object.
+            if (stackDepth == tn->stackDepth - 1)
+                return true;
+            break;
+
+          case JSTRY_ITERCLOSE:
+            // Code that need to call IteratorClose have the iterator on the
+            // stack.
+            if (stackDepth == tn->stackDepth)
+                return true;
+            break;
+
+          case JSTRY_DESTRUCTURING_ITERCLOSE:
+            // Destructuring code that need to call IteratorClose have both
+            // the iterator and the "done" value on the stack.
+            if (stackDepth == tn->stackDepth || stackDepth == tn->stackDepth - 1)
+                return true;
+            break;
+
+          default:
+            break;
+        }
     }
 
     return false;
@@ -943,7 +966,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             // iterators, however, so read them out. They will be closed by
             // HandleExceptionBaseline.
             MOZ_ASSERT(cx->compartment()->isDebuggee());
-            if (iter.moreFrames() || HasLiveIteratorAtStackDepth(script, pc, i + 1)) {
+            if (iter.moreFrames() || HasLiveStackValueAtDepth(script, pc, i + 1)) {
                 v = iter.read();
             } else {
                 iter.skip();

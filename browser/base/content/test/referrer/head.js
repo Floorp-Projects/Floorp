@@ -203,9 +203,10 @@ function referrerTestCaseLoaded(aTestNumber, aParams) {
             "?scheme=" + escape(test.toScheme) +
             "&policy=" + escape(test.policy || "") +
             "&rel=" + escape(test.rel || "");
-  var browser = gTestWindow.gBrowser;
-  browser.selectedTab = browser.addTab(url, aParams);
-  return BrowserTestUtils.browserLoaded(browser.selectedBrowser);
+  let browser = gTestWindow.gBrowser;
+  return BrowserTestUtils.openNewForegroundTab(browser, () => {
+    browser.selectedTab = browser.addTab(url, aParams);
+  });
 }
 
 /**
