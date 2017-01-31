@@ -945,7 +945,13 @@ Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen)
   auto base =
     reinterpret_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
 
+  size_t oldLength = base->Length();
+
   base->EnsureLengthAtLeast(aLen);
+
+  for (size_t i = oldLength; i < aLen; ++i) {
+    (*base)[i].SetInitialValues();
+  }
 }
 
 Keyframe*
