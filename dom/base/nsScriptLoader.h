@@ -74,6 +74,7 @@ public:
                       const mozilla::dom::SRIMetadata &aIntegrity)
     : mKind(aKind),
       mElement(aElement),
+      mScriptFromHead(false),
       mProgress(Progress::Loading),
       mIsInline(true),
       mHasSourceMapURL(false),
@@ -167,6 +168,7 @@ public:
 
   const nsScriptKind mKind;
   nsCOMPtr<nsIScriptElement> mElement;
+  bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
@@ -519,7 +521,7 @@ private:
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(nsScriptLoadRequest *aRequest, bool aScriptFromHead);
+  nsresult StartLoad(nsScriptLoadRequest *aRequest);
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
