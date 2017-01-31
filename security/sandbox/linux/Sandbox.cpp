@@ -30,7 +30,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <vector>
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SandboxInfo.h"
