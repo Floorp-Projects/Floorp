@@ -102,8 +102,25 @@ let apiManager = new class extends SchemaAPIManager {
       this.loadScript(value);
     }
 
+    /* eslint-disable mozilla/balanced-listeners */
+    Services.mm.addMessageListener("Extension:GetTabAndWindowId", this);
+    /* eslint-enable mozilla/balanced-listeners */
+
     this.initialized = promise;
     return this.initialized;
+  }
+
+  receiveMessage({name, target, sync}) {
+    if (name === "Extension:GetTabAndWindowId") {
+      let result = this.global.tabTracker.getBrowserData(target);
+
+      if (result.tabId) {
+        if (sync) {
+          return result;
+        }
+        target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
+      }
+    }
   }
 
   registerSchemaAPI(namespace, envType, getAPI) {
@@ -245,10 +262,8 @@ GlobalManager = {
     if (viewType) {
       let data = {viewType};
 
-      let {getBrowserInfo} = apiManager.global;
-      if (getBrowserInfo) {
-        Object.assign(data, getBrowserInfo(browser), additionalData);
-      }
+      let {tabTracker} = apiManager.global;
+      Object.assign(data, tabTracker.getBrowserData(browser), additionalData);
 
       browser.messageManager.sendAsyncMessage("Extension:InitExtensionView",
                                               data);
@@ -370,13 +385,11 @@ class ExtensionPageContextParent extends ProxyContextParent {
   }
 
   get tabId() {
-    let {getBrowserInfo} = apiManager.global;
-
-    if (getBrowserInfo) {
-      // This is currently only available on desktop Firefox.
-      return getBrowserInfo(this.xulBrowser).tabId;
+    let {tabTracker} = apiManager.global;
+    let data = tabTracker.getBrowserData(this.xulBrowser);
+    if (data.tabId >= 0) {
+      return data.tabId;
     }
-    return undefined;
   }
 
   onBrowserChange(browser) {
