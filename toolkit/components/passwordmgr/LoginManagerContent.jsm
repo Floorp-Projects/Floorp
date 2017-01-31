@@ -1319,8 +1319,7 @@ UserAutoCompleteResult.prototype = {
     }
 
     if (this._showInsecureFieldWarning && index === 0) {
-      return this._stringBundle.GetStringFromName("insecureFieldWarningDescription") + " " +
-        this._stringBundle.GetStringFromName("insecureFieldWarningLearnMore");
+      return this._stringBundle.GetStringFromName("insecureFieldWarningDescription");
     }
 
     let that = this;
