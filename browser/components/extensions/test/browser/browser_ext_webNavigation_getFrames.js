@@ -5,14 +5,14 @@
 add_task(function* testWebNavigationGetNonExistentTab() {
   let extension = ExtensionTestUtils.loadExtension({
     background: async function() {
-      // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
+      // There is no "tabId = 0" because the id assigned by tabTracker (defined in ext-utils.js)
       // starts from 1.
       await browser.test.assertRejects(
         browser.webNavigation.getAllFrames({tabId: 0}),
         "Invalid tab ID: 0",
         "getAllFrames rejected Promise should pass the expected error");
 
-      // There is no "tabId = 0" because the id assigned by TabManager (defined in ext-utils.js)
+      // There is no "tabId = 0" because the id assigned by tabTracker (defined in ext-utils.js)
       // starts from 1, processId is currently marked as optional and it is ignored.
       await browser.test.assertRejects(
         browser.webNavigation.getFrame({tabId: 0, frameId: 15, processId: 20}),
