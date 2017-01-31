@@ -10,10 +10,12 @@
 #include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "WebMDemuxer.h"
+#include "gfxPrefs.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/gfx/gfxVars.h"
 
 #ifndef MOZ_WIDGET_ANDROID
 #include "WebMSample.h"
@@ -136,7 +138,8 @@ void
 Benchmark::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
+  gfxVars::Initialize();
+  gfxPrefs::GetSingleton();
   MediaPrefs::GetSingleton();
 }
 
