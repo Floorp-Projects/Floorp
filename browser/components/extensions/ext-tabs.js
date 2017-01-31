@@ -93,7 +93,7 @@ let tabListener = {
 
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     if (webProgress.isTopLevel) {
-      let gBrowser = browser.ownerGlobal.gBrowser;
+      let {gBrowser} = browser.ownerGlobal;
       let tab = gBrowser.getTabForBrowser(browser);
 
       // Now we are certain that the first page in the tab was loaded.
@@ -121,7 +121,8 @@ let tabListener = {
     let deferred = this.tabReadyPromises.get(tab);
     if (!deferred) {
       deferred = PromiseUtils.defer();
-      if (!this.initializingTabs.has(tab) && tab.linkedBrowser.innerWindowID) {
+      if (!this.initializingTabs.has(tab) && (tab.linkedBrowser.innerWindowID ||
+                                              tab.linkedBrowser.currentURI.spec === "about:blank")) {
         deferred.resolve(tab);
       } else {
         this.initTabReady();
@@ -142,6 +143,19 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
       return tabTracker.getTab(tabId);
     }
     return tabTracker.activeTab;
+  }
+
+  async function promiseTabWhenReady(tabId) {
+    let tab;
+    if (tabId !== null) {
+      tab = tabManager.get(tabId);
+    } else {
+      tab = tabManager.getWrapper(tabTracker.activeTab);
+    }
+
+    await tabListener.awaitTabReady(tab.tab);
+
+    return tab;
   }
 
   let self = {
@@ -444,7 +458,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             window.gBrowser.pinTab(tab);
           }
 
-          if (createProperties.url && !createProperties.url.startsWith("about:")) {
+          if (createProperties.url && createProperties.url !== window.BROWSER_NEW_TAB_URL) {
             // We can't wait for a location change event for about:newtab,
             // since it may be pre-rendered, in which case its initial
             // location change event has already fired.
@@ -597,83 +611,22 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         });
       },
 
-      // Used to executeScript, insertCSS and removeCSS.
-      _execute: function(tabId, details, kind, method) {
-        let tab = getTabOrActive(tabId);
+      async executeScript(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
 
-        let options = {
-          js: [],
-          css: [],
-          remove_css: method == "removeCSS",
-        };
-
-        // We require a `code` or a `file` property, but we can't accept both.
-        if ((details.code === null) == (details.file === null)) {
-          return Promise.reject({message: `${method} requires either a 'code' or a 'file' property, but not both`});
-        }
-
-        if (details.frameId !== null && details.allFrames) {
-          return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
-        }
-
-        if (tabManager.hasActiveTabPermission(tab)) {
-          // If we have the "activeTab" permission for this tab, ignore
-          // the host whitelist.
-          options.matchesHost = ["<all_urls>"];
-        } else {
-          options.matchesHost = extension.whiteListedHosts.serialize();
-        }
-
-        if (details.code !== null) {
-          options[kind + "Code"] = details.code;
-        }
-        if (details.file !== null) {
-          let url = context.uri.resolve(details.file);
-          if (!extension.isExtensionURL(url)) {
-            return Promise.reject({message: "Files to be injected must be within the extension"});
-          }
-          options[kind].push(url);
-        }
-        if (details.allFrames) {
-          options.all_frames = details.allFrames;
-        }
-        if (details.frameId !== null) {
-          options.frame_id = details.frameId;
-        }
-        if (details.matchAboutBlank) {
-          options.match_about_blank = details.matchAboutBlank;
-        }
-        if (details.runAt !== null) {
-          options.run_at = details.runAt;
-        } else {
-          options.run_at = "document_idle";
-        }
-        if (details.cssOrigin !== null) {
-          options.css_origin = details.cssOrigin;
-        } else {
-          options.css_origin = "author";
-        }
-
-        return tabListener.awaitTabReady(tab).then(() => {
-          let browser = tab.linkedBrowser;
-          let recipient = {
-            innerWindowID: browser.innerWindowID,
-          };
-
-          return context.sendMessage(browser.messageManager, "Extension:Execute", {options}, {recipient});
-        });
+        return tab.executeScript(context, details);
       },
 
-      executeScript: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "js", "executeScript");
+      async insertCSS(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
+
+        return tab.insertCSS(context, details);
       },
 
-      insertCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css", "insertCSS").then(() => {});
-      },
+      async removeCSS(tabId, details) {
+        let tab = await promiseTabWhenReady(tabId);
 
-      removeCSS: function(tabId, details) {
-        return self.tabs._execute(tabId, details, "css", "removeCSS").then(() => {});
+        return tab.removeCSS(context, details);
       },
 
       async move(tabIds, moveProperties) {

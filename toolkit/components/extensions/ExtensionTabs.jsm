@@ -141,6 +141,80 @@ class TabBase {
 
     return result;
   }
+
+  _execute(context, details, kind, method) {
+    let options = {
+      js: [],
+      css: [],
+      remove_css: method == "removeCSS",
+    };
+
+    // We require a `code` or a `file` property, but we can't accept both.
+    if ((details.code === null) == (details.file === null)) {
+      return Promise.reject({message: `${method} requires either a 'code' or a 'file' property, but not both`});
+    }
+
+    if (details.frameId !== null && details.allFrames) {
+      return Promise.reject({message: `'frameId' and 'allFrames' are mutually exclusive`});
+    }
+
+    if (this.hasActiveTabPermission) {
+      // If we have the "activeTab" permission for this tab, ignore
+      // the host whitelist.
+      options.matchesHost = ["<all_urls>"];
+    } else {
+      options.matchesHost = this.extension.whiteListedHosts.serialize();
+    }
+
+    if (details.code !== null) {
+      options[`${kind}Code`] = details.code;
+    }
+    if (details.file !== null) {
+      let url = context.uri.resolve(details.file);
+      if (!this.extension.isExtensionURL(url)) {
+        return Promise.reject({message: "Files to be injected must be within the extension"});
+      }
+      options[kind].push(url);
+    }
+    if (details.allFrames) {
+      options.all_frames = details.allFrames;
+    }
+    if (details.frameId !== null) {
+      options.frame_id = details.frameId;
+    }
+    if (details.matchAboutBlank) {
+      options.match_about_blank = details.matchAboutBlank;
+    }
+    if (details.runAt !== null) {
+      options.run_at = details.runAt;
+    } else {
+      options.run_at = "document_idle";
+    }
+    if (details.cssOrigin !== null) {
+      options.css_origin = details.cssOrigin;
+    } else {
+      options.css_origin = "author";
+    }
+
+    let {browser} = this;
+    let recipient = {
+      innerWindowID: browser.innerWindowID,
+    };
+
+    return context.sendMessage(browser.messageManager, "Extension:Execute", {options}, {recipient});
+  }
+
+  executeScript(context, details) {
+    return this._execute(context, details, "js", "executeScript");
+  }
+
+  insertCSS(context, details) {
+    return this._execute(context, details, "css", "insertCSS").then(() => {});
+  }
+
+  removeCSS(context, details) {
+    return this._execute(context, details, "css", "removeCSS").then(() => {});
+  }
 }
 
 // Note: These must match the values in windows.json.
