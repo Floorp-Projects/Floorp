@@ -4598,7 +4598,7 @@ CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue);
  * the Promise was created.
  */
 extern JS_PUBLIC_API(bool)
-ResolvePromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue resolutionValue);
+ResolvePromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue resolutionValue);
 
 /**
  * Rejects the given `promise` with the given `rejectionValue`.
@@ -4607,7 +4607,7 @@ ResolvePromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue resoluti
  * the Promise was created.
  */
 extern JS_PUBLIC_API(bool)
-RejectPromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue rejectionValue);
+RejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue rejectionValue);
 
 /**
  * Calls the current compartment's original Promise.prototype.then on the
