@@ -110,7 +110,7 @@ interface CanvasRenderingContext2D {
   [Throws, ChromeOnly]
   void drawWindow(Window window, double x, double y, double w, double h,
                   DOMString bgColor, optional unsigned long flags = 0);
-  [Throws, ChromeOnly]
+  [Throws, ChromeOnly, NeedsCallerType]
   void asyncDrawXULElement(XULElement elem, double x, double y, double w,
                            double h, DOMString bgColor,
                            optional unsigned long flags = 0);
