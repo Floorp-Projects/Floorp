@@ -70,5 +70,11 @@ DocGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
   return mTabGroup->AbstractMainThreadFor(aCategory);
 }
 
+bool*
+DocGroup::GetValidAccessPtr()
+{
+  return mTabGroup->GetValidAccessPtr();
+}
+
 }
 }

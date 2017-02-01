@@ -68,6 +68,26 @@ class ValidatingDispatcher : public Dispatcher
 public:
   ValidatingDispatcher();
 
+  class MOZ_STACK_CLASS AutoProcessEvent final {
+  public:
+    AutoProcessEvent();
+    ~AutoProcessEvent();
+
+  private:
+    ValidatingDispatcher* mPrevRunningDispatcher;
+  };
+
+  // Ensure that it's valid to access the TabGroup at this time.
+  void ValidateAccess() const
+  {
+    MOZ_ASSERT(!sRunningDispatcher || mAccessValid);
+  }
+
+  class Runnable;
+  friend class Runnable;
+
+  bool* GetValidAccessPtr() { return &mAccessValid; }
+
   nsresult Dispatch(const char* aName,
                     TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable) override;
@@ -87,8 +107,21 @@ protected:
   // function returns |dispatcher|.
   static ValidatingDispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
 
+  nsresult LabeledDispatch(const char* aName,
+                           TaskCategory aCategory,
+                           already_AddRefed<nsIRunnable>&& aRunnable);
+
   void CreateEventTargets(bool aNeedValidation);
   void Shutdown();
+
+  enum ValidationType {
+    StartValidation,
+    EndValidation,
+  };
+  void SetValidatingAccess(ValidationType aType);
+
+  static ValidatingDispatcher* sRunningDispatcher;
+  bool mAccessValid;
 
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
