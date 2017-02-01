@@ -64,7 +64,7 @@ def get_disk_io_counters():
     try:
         io_counters = psutil.disk_io_counters()
     except RuntimeError:
-        io_counters = []
+        io_counters = PsutilStub().disk_io_counters()
 
     return io_counters
 
