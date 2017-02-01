@@ -351,6 +351,7 @@ JSRuntime::setActiveContext(JSContext* cx)
 {
     MOZ_ASSERT_IF(cx, isCooperatingContext(cx));
     MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+    MOZ_RELEASE_ASSERT(gc.canChangeActiveContext(cx));
 
     activeContext_ = cx;
 }

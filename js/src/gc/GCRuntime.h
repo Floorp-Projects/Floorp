@@ -631,6 +631,8 @@ class GCRuntime
     void startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget);
     void debugGCSlice(SliceBudget& budget);
 
+    bool canChangeActiveContext(JSContext* cx);
+
     void triggerFullGCForAtoms() {
         MOZ_ASSERT(fullGCForAtomsRequested_);
         fullGCForAtomsRequested_ = false;
