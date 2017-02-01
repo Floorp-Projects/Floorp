@@ -84,6 +84,7 @@ class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
 class ColorLayer;
+class CompositorBridgeChild;
 class TextLayer;
 class CanvasLayer;
 class BorderLayer;
@@ -698,6 +699,8 @@ public:
   }
 
   virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) {}
+
+  virtual CompositorBridgeChild* GetCompositorBridgeChild() { return nullptr; }
 
 protected:
   RefPtr<Layer> mRoot;
