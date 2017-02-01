@@ -13,7 +13,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 // globals Services
 Cu.import("resource://gre/modules/Services.jsm");
-// globals Messaging
+// globals EventDispatcher
 Cu.import("resource://gre/modules/Messaging.jsm");
 
 function log(str) {
@@ -301,7 +301,7 @@ ChromecastRemoteDisplayDevice.prototype = {
       Services.obs.addObserver(this, TOPIC_PRESENTATION_VIEW_READY, true);
 
       // Launch Chromecast service in Android.
-      Messaging.sendRequestForResult({
+      EventDispatcher.instance.sendRequestForResult({
         type: TOPIC_ANDROID_CAST_DEVICE_START,
         id:   this.id
       }).then(result => {
@@ -323,7 +323,7 @@ ChromecastRemoteDisplayDevice.prototype = {
 
   disconnect: function CRDD_disconnect() {
     // Disconnect from Chromecast.
-    Messaging.sendRequestForResult({
+    EventDispatcher.instance.sendRequestForResult({
       type: TOPIC_ANDROID_CAST_DEVICE_STOP,
       id:   this.id
     });
@@ -410,7 +410,7 @@ AndroidCastDeviceProvider.prototype = {
     }
 
     // Sync all device already found by Android.
-    Messaging.sendRequest({ type: TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE });
+    EventDispatcher.instance.sendRequest({ type: TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE });
     // Observer registration
     Services.obs.addObserver(this, TOPIC_ANDROID_CAST_DEVICE_ADDED, false);
     Services.obs.addObserver(this, TOPIC_ANDROID_CAST_DEVICE_CHANGED, false);

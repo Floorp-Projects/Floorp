@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
   let BrowserApp = chromeWin.BrowserApp;
 
   function get_last_visited(prePath) {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "History:GetPrePathLastVisitedTimeMilliseconds",
       prePath: prePath,
     });
