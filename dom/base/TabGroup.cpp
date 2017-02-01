@@ -28,17 +28,7 @@ TabGroup::TabGroup(bool aIsChrome)
  , mThrottledQueuesInitialized(false)
  , mIsChrome(aIsChrome)
 {
-  for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
-    TaskCategory category = static_cast<TaskCategory>(i);
-    if (aIsChrome) {
-      // The chrome TabGroup dispatches directly to the main thread. This means
-      // that we don't have to worry about cyclical references when cleaning up
-      // the chrome TabGroup.
-      mEventTargets[i] = do_GetMainThread();
-    } else {
-      mEventTargets[i] = CreateEventTargetFor(category);
-    }
-  }
+  CreateEventTargets(/* aNeedValidation = */ !aIsChrome);
 
   // Do not throttle runnables from chrome windows.  In theory we should
   // not have abuse issues from these windows and many browser chrome
@@ -113,7 +103,8 @@ TabGroup::GetFromWindowActor(mozIDOMWindowProxy* aWindow)
 
   // We have an event target. We assume the IPC code created it via
   // TabGroup::CreateEventTarget.
-  RefPtr<Dispatcher> dispatcher = Dispatcher::FromEventTarget(target);
+  RefPtr<ValidatingDispatcher> dispatcher =
+    ValidatingDispatcher::FromEventTarget(target);
   MOZ_RELEASE_ASSERT(dispatcher);
   auto tabGroup = dispatcher->AsTabGroup();
   MOZ_RELEASE_ASSERT(tabGroup);
@@ -176,15 +167,7 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
   // out after the last window leaves.
   if (!mIsChrome && mWindows.IsEmpty()) {
     mLastWindowLeft = true;
-
-    // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To
-    // avoid leaks, we need to break the chain somewhere. We shouldn't be using
-    // the ThrottledEventQueue for this TabGroup when no windows belong to it,
-    // so it's safe to null out the queue here.
-    for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
-      mEventTargets[i] = nullptr;
-      mAbstractThreads[i] = nullptr;
-    }
+    Shutdown();
   }
 }
 
@@ -247,48 +230,18 @@ TabGroup::HashEntry::HashEntry(const nsACString* aKey)
   : nsCStringHashKey(aKey), mDocGroup(nullptr)
 {}
 
-nsresult
-TabGroup::Dispatch(const char* aName,
-                   TaskCategory aCategory,
-                   already_AddRefed<nsIRunnable>&& aRunnable)
-{
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
-  if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
-  } else {
-    return NS_DispatchToMainThread(runnable.forget());
-  }
-}
-
 nsIEventTarget*
 TabGroup::EventTargetFor(TaskCategory aCategory) const
 {
-  MOZ_ASSERT(aCategory != TaskCategory::Count);
   if (aCategory == TaskCategory::Worker || aCategory == TaskCategory::Timer) {
     MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || mIsChrome);
   }
-
-  if (NS_WARN_IF(mLastWindowLeft)) {
-    // Once we've disconnected everything, we still allow people to
-    // dispatch. We'll just go directly to the main thread.
-    nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
-    return main;
-  }
-
-  return mEventTargets[size_t(aCategory)];
+  return ValidatingDispatcher::EventTargetFor(aCategory);
 }
 
 AbstractThread*
 TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCategory != TaskCategory::Count);
-
   // The mEventTargets of the chrome TabGroup are all set to do_GetMainThread().
   // We could just return AbstractThread::MainThread() without a wrapper.
   // Once we've disconnected everything, we still allow people to dispatch.
@@ -297,14 +250,8 @@ TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
     return AbstractThread::MainThread();
   }
 
-  if (!mAbstractThreads[size_t(aCategory)]) {
-    mAbstractThreads[size_t(aCategory)] =
-      AbstractThread::CreateEventTargetWrapper(mEventTargets[size_t(aCategory)],
-                                               /* aDrainDirectTasks = */ true);
-  }
-
-  return mAbstractThreads[size_t(aCategory)];
+  return ValidatingDispatcher::AbstractMainThreadForImpl(aCategory);
 }
 
-}
-}
+} // namespace dom
+} // namespace mozilla

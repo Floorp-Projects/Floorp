@@ -9,6 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TaskCategory.h"
+#include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 
 class nsIEventTarget;
@@ -30,7 +31,8 @@ class TabGroup;
 // only functionality offered by a Dispatcher is the ability to dispatch
 // runnables to the group. TabGroup, DocGroup, and SystemGroup are the concrete
 // implementations of Dispatcher.
-class Dispatcher {
+class Dispatcher
+{
 public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
@@ -51,10 +53,31 @@ public:
   // requested type.
   virtual dom::TabGroup* AsTabGroup() { return nullptr; }
 
+  static nsresult UnlabeledDispatch(const char* aName,
+                                    TaskCategory aCategory,
+                                    already_AddRefed<nsIRunnable>&& aRunnable);
+
 protected:
   // Implementations are guaranteed that this method is called on the main
   // thread.
   virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) = 0;
+};
+
+class ValidatingDispatcher : public Dispatcher
+{
+public:
+  ValidatingDispatcher();
+
+  nsresult Dispatch(const char* aName,
+                    TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable) override;
+
+  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+
+protected:
+  // Implementations are guaranteed that this method is called on the main
+  // thread.
+  AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) override;
 
   // Helper method to create an event target specific to a particular TaskCategory.
   virtual already_AddRefed<nsIEventTarget>
@@ -62,7 +85,13 @@ protected:
 
   // Given an event target returned by |dispatcher->CreateEventTargetFor|, this
   // function returns |dispatcher|.
-  static Dispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
+  static ValidatingDispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
+
+  void CreateEventTargets(bool aNeedValidation);
+  void Shutdown();
+
+  nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
+  RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
 
 } // namespace mozilla

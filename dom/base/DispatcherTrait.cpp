@@ -7,6 +7,7 @@
 #include "mozilla/dom/DispatcherTrait.h"
 
 #include "mozilla/AbstractThread.h"
+#include "mozilla/Dispatcher.h"
 #include "nsINamed.h"
 
 using namespace mozilla;
@@ -17,17 +18,7 @@ DispatcherTrait::Dispatch(const char* aName,
                           TaskCategory aCategory,
                           already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
-  if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
-  } else {
-    return NS_DispatchToMainThread(runnable.forget());
-  }
+  return Dispatcher::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 nsIEventTarget*
