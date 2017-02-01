@@ -11,10 +11,13 @@ addMessageListener("file.open", function (stem) {
       file.append(stem);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
     }
-    sendAsyncMessage("file.opened", {
-      fullPath: file.path,
-      leafName: file.leafName,
-      domFile: File.createFromNsIFile(file),
+
+    File.createFromNsIFile(file).then(function(domFile) {
+      sendAsyncMessage("file.opened", {
+        fullPath: file.path,
+        leafName: file.leafName,
+        domFile,
+      });
     });
   } catch(e) {
     sendAsyncMessage("fail", e.toString());
