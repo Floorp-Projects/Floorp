@@ -16,6 +16,11 @@
 #include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
+class mozIDOMWindowProxy;
+class nsIDocShellTreeItem;
+class nsIDocument;
+class nsPIDOMWindowOuter;
+
 namespace mozilla {
 class AbstractThread;
 class ThrottledEventQueue;
@@ -38,7 +43,7 @@ namespace dom {
 
 class DocGroup;
 
-class TabGroup final : public Dispatcher
+class TabGroup final : public ValidatingDispatcher
 {
 private:
   class HashEntry : public nsCStringHashKey
@@ -110,20 +115,15 @@ public:
 
   nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
 
-  // This method is always safe to call off the main thread.
-  virtual nsresult Dispatch(const char* aName,
-                            TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
-
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
-
-  TabGroup* AsTabGroup() override { return this; }
+  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
 
 private:
   virtual AbstractThread*
   AbstractMainThreadForImpl(TaskCategory aCategory) override;
+
+  TabGroup* AsTabGroup() override { return this; }
 
   void EnsureThrottledEventQueues();
 
@@ -137,8 +137,6 @@ private:
   // Main thread only
   DocGroupMap mDocGroups;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
-  nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
-  RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
 
 } // namespace dom
