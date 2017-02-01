@@ -32,6 +32,18 @@ class SETA(object):
         # cached push_ids that failed to retrieve datetime for
         self.failed_json_push_calls = []
 
+    def _get_task_string(self, task_tuple):
+        # convert task tuple to single task string, so the task label sent in can match
+        # remove any empty parts of the tuple
+        task_tuple = [x for x in task_tuple if len(x) != 0]
+
+        if len(task_tuple) == 0:
+            return ''
+        if len(task_tuple) != 3:
+            return ' '.join(task_tuple)
+
+        return 'test-%s/%s-%s' % (task_tuple[0], task_tuple[1], task_tuple[2])
+
     def query_low_value_tasks(self, project):
         # Request the set of low value tasks from the SETA service.  Low value tasks will be
         # optimized out of the task graph.
@@ -47,12 +59,17 @@ class SETA(object):
                              args=(url, ),
                              kwargs={'timeout': 5, 'headers': headers})
             task_list = json.loads(response.content).get('jobtypes', '')
-            if len(task_list) > 0:
-                low_value_tasks = task_list.values()[0]
 
-            # Bug 1315145, disable SETA for tier-1 platforms until backfill is implemented.
-            low_value_tasks = [x for x in low_value_tasks if x.find('debug') == -1]
-            low_value_tasks = [x for x in low_value_tasks if x.find('asan') == -1]
+            if type(task_list) == dict and len(task_list) > 0:
+                if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
+                    low_value_tasks = task_list.values()[0]
+                    # bb job types return a list instead of a single string,
+                    # convert to a single string to match tc tasks format
+                    if type(low_value_tasks[0]) == list:
+                        low_value_tasks = [self._get_task_string(x) for x in low_value_tasks]
+
+            # ensure no build tasks slipped in, we never want to optimize out those
+            low_value_tasks = [x for x in low_value_tasks if 'build' not in x.lower()]
 
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
