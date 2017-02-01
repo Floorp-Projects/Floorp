@@ -46,7 +46,7 @@ add_task(function* () {
   // Inject the mock highlighter in the rule-view
   view.selectorHighlighter = HighlighterFront;
 
-  let icon = getRuleViewSelectorHighlighterIcon(view, "body");
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, "body");
 
   info("Checking that the HighlighterFront's show/hide methods are called");
 
@@ -60,7 +60,7 @@ add_task(function* () {
 
   info("Checking that the right NodeFront reference and options are passed");
   yield selectNode("p", inspector);
-  icon = getRuleViewSelectorHighlighterIcon(view, "p");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "p");
 
   yield clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "P",
@@ -69,7 +69,7 @@ add_task(function* () {
     "The right selector option is passed to the highlighter (1)");
 
   yield selectNode("body", inspector);
-  icon = getRuleViewSelectorHighlighterIcon(view, "body");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "body");
   yield clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "BODY",
     "The right NodeFront is passed to the highlighter (2)");
