@@ -442,14 +442,14 @@ class SymbolTable:
         self.scopes = [ { } ]   # stack({})
         self.currentScope = self.scopes[0]
 
-    def enterScope(self, node):
+    def enterScope(self):
         assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
 
         self.scopes.append({ })
         self.currentScope = self.scopes[-1]
 
-    def exitScope(self, node):
+    def exitScope(self):
         symtab = self.scopes.pop()
         assert self.currentScope is symtab
 
@@ -687,7 +687,7 @@ class GatherDecls(TcheckVisitor):
 
         stype = sd.decl.type
 
-        self.symtab.enterScope(sd)
+        self.symtab.enterScope()
         sd.visited = True
 
         for f in sd.fields:
@@ -704,7 +704,7 @@ class GatherDecls(TcheckVisitor):
                 fullname=None)
             stype.fields.append(f.decl.type)
 
-        self.symtab.exitScope(sd)
+        self.symtab.exitScope()
 
     def visitUnionDecl(self, ud):
         utype = ud.decl.type
@@ -743,7 +743,7 @@ class GatherDecls(TcheckVisitor):
 
     def visitProtocol(self, p):
         # protocol scope
-        self.symtab.enterScope(p)
+        self.symtab.enterScope()
 
         seenmgrs = set()
         for mgr in p.managers:
@@ -795,7 +795,7 @@ class GatherDecls(TcheckVisitor):
         # IPDL spec, and we'd like to catch those before C++ compilers
         # are allowed to obfuscate the error
 
-        self.symtab.exitScope(p)
+        self.symtab.exitScope()
 
 
     def visitManager(self, mgr):
@@ -868,7 +868,7 @@ class GatherDecls(TcheckVisitor):
 
 
         # enter message scope
-        self.symtab.enterScope(md)
+        self.symtab.enterScope()
 
         msgtype = MessageType(md.nested, md.prio, md.sendSemantics, md.direction,
                               ctor=isctor, dtor=isdtor, cdtype=cdtype,
@@ -901,7 +901,7 @@ class GatherDecls(TcheckVisitor):
             msgtype.returns.append(pdecl.type)
             md.outParams[i] = pdecl
 
-        self.symtab.exitScope(md)
+        self.symtab.exitScope()
 
         md.decl = self.declare(
             loc=loc,
