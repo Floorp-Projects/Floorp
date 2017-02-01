@@ -320,6 +320,13 @@ public class GeckoView extends LayerView
         }
     }
 
+    /**
+    * Reload the current URI.
+    */
+    public void reload() {
+        eventDispatcher.dispatch("GeckoView:Reload", null);
+    }
+
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
         mInputConnectionListener = icl;
     }
