@@ -57,7 +57,7 @@ fails == linear-zero-length-1a.html linear-zero-length-1a.html
 fails == linear-zero-length-1b.html linear-zero-length-1b.html
 fails == linear-zero-length-1c.html linear-zero-length-1c.html
 == nostops.html nostops.html
-fails == onestop.html onestop.html
+# == onestop.html onestop.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1a.html radial-1a.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1b.html radial-1b.html
 fails == radial-1c.html radial-1c.html
