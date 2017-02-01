@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Changed
+- Now uses about:blank as the new tab document; this was previously disabled due to [bug 1333736](https://bugzilla.mozilla.org/show_bug.cgi?id=1333736) in Marionette
+
 ## 0.14.0 (2017-01-31)
 
 ### Changed
