@@ -258,13 +258,14 @@ Site.prototype = {
         link.type == "history" &&
         link.baseDomain) {
       let placeholder = this._querySelector(".newtab-thumbnail.placeholder");
-      let hue = 0;
+      let charCodeSum = 0;
       for (let c of link.baseDomain) {
-        hue += c.charCodeAt(0);
+        charCodeSum += c.charCodeAt(0);
       }
-      hue %= 256;
-      placeholder.style.backgroundColor = "hsl(" + hue + ",50%,60%)";
-      placeholder.textContent = link.baseDomain.substr(0,1);
+      const COLORS = 16;
+      let hue = Math.round((charCodeSum % COLORS) / COLORS * 360);
+      placeholder.style.backgroundColor = "hsl(" + hue + ",80%,40%)";
+      placeholder.textContent = link.baseDomain.substr(0,1).toUpperCase();
     }
 
     if (link.enhancedImageURI) {
