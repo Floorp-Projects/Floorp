@@ -48,12 +48,7 @@ function testSteps()
 
   let fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  let domFile;
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
-  fileReader.readAsArrayBuffer(domFile);
+  fileReader.readAsArrayBuffer(File.createFromNsIFile(file));
 
   yield undefined;
 
@@ -87,11 +82,7 @@ function testSteps()
 
   fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
-  fileReader.readAsArrayBuffer(domFile);
+  fileReader.readAsArrayBuffer(File.createFromNsIFile(file));
 
   yield undefined;
 
@@ -117,11 +108,7 @@ function testSteps()
 
   fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
-  fileReader.readAsArrayBuffer(domFile);
+  fileReader.readAsArrayBuffer(File.createFromNsIFile(file));
 
   yield undefined;
 

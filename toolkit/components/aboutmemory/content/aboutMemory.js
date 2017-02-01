@@ -622,9 +622,7 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
 
     // If it doesn't have a .gz suffix, read it as a (legacy) ungzipped file.
     if (!aFilename.endsWith(".gz")) {
-      File.createFromFileName(aFilename).then(file => {
-        reader.readAsText(file);
-      });
+      reader.readAsText(File.createFromFileName(aFilename));
       return;
     }
 

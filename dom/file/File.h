@@ -43,7 +43,6 @@ struct FilePropertyBag;
 class BlobImpl;
 class File;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrUSVString;
-class Promise;
 
 class Blob : public nsIDOMBlob
            , public nsIXHRSendable
@@ -205,14 +204,14 @@ public:
               ErrorResult& aRv);
 
   // ChromeOnly
-  static already_AddRefed<Promise>
+  static already_AddRefed<File>
   CreateFromFileName(const GlobalObject& aGlobal,
                      const nsAString& aData,
                      const ChromeFilePropertyBag& aBag,
                      ErrorResult& aRv);
 
   // ChromeOnly
-  static already_AddRefed<Promise>
+  static already_AddRefed<File>
   CreateFromNsIFile(const GlobalObject& aGlobal,
                     nsIFile* aData,
                     const ChromeFilePropertyBag& aBag,
