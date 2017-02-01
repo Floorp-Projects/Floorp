@@ -441,6 +441,11 @@ class WasmFunctionCallObject : public EnvironmentObject
 
     static WasmFunctionCallObject* createHollowForDebug(JSContext* cx,
                                                         Handle<WasmFunctionScope*> scope);
+    WasmFunctionScope& scope() const {
+        Value v = getReservedSlot(SCOPE_SLOT);
+        MOZ_ASSERT(v.isPrivateGCThing());
+        return *static_cast<WasmFunctionScope*>(v.toGCThing());
+    }
 };
 
 class LexicalEnvironmentObject : public EnvironmentObject

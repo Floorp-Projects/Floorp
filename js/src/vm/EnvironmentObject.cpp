@@ -1284,8 +1284,10 @@ EnvironmentIter::settle()
 
     // Check if we have left the extent of the initial frame after we've
     // settled on a static scope.
-    if (frame_ && (frame_.isWasmDebugFrame() ||
-                   (!si_ || si_.scope() == frame_.script()->enclosingScope())))
+    if (frame_ &&
+        (!si_ ||
+         (frame_.hasScript() && si_.scope() == frame_.script()->enclosingScope()) ||
+         (frame_.isWasmDebugFrame() && !si_.scope()->is<WasmFunctionScope>())))
     {
         frame_ = NullFramePtr();
     }
@@ -1638,6 +1640,35 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return true;
         }
 
+        if (env->is<WasmFunctionCallObject>()) {
+            if (maybeLiveEnv) {
+                RootedScope scope(cx, getEnvironmentScope(*env));
+                uint32_t index = 0;
+                for (BindingIter bi(scope); bi; bi++) {
+                    if (JSID_IS_ATOM(id, bi.name()))
+                        break;
+                    MOZ_ASSERT(!bi.isLast());
+                    index++;
+                }
+
+                AbstractFramePtr frame = maybeLiveEnv->frame();
+                MOZ_ASSERT(frame.isWasmDebugFrame());
+                wasm::DebugFrame* wasmFrame = frame.asWasmDebugFrame();
+                if (action == GET) {
+                    if (!wasmFrame->getLocal(index, vp)) {
+                        ReportOutOfMemory(cx);
+                        return false;
+                    }
+                    *accessResult = ACCESS_UNALIASED;
+                } else { // if (action == SET)
+                    // TODO
+                }
+            } else {
+                *accessResult = ACCESS_LOST;
+            }
+            return true;
+        }
+
         /* The rest of the internal scopes do not have unaliased vars. */
         MOZ_ASSERT(!IsSyntacticEnvironment(env) ||
                    env->is<WithEnvironmentObject>());
@@ -1672,6 +1703,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             return &env.as<LexicalEnvironmentObject>().scope();
         if (env.is<VarEnvironmentObject>())
             return &env.as<VarEnvironmentObject>().scope();
+        if (env.is<WasmFunctionCallObject>())
+            return &env.as<WasmFunctionCallObject>().scope();
         return nullptr;
     }
 
