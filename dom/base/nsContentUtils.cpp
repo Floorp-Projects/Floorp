@@ -6160,7 +6160,9 @@ nsresult
 nsContentTypeParser::GetType(nsAString& aResult) const
 {
   nsresult rv = GetParameter(nullptr, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   nsContentUtils::ASCIIToLower(aResult);
   return NS_OK;
 }
