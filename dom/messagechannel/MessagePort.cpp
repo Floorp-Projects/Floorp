@@ -63,7 +63,14 @@ public:
   NS_IMETHOD
   Run() override
   {
-    MOZ_ASSERT(mPort);
+    NS_ASSERT_OWNINGTHREAD(Runnable);
+
+    // The port can be cycle collected while this runnable is pending in
+    // the event queue.
+    if (!mPort) {
+      return NS_OK;
+    }
+
     MOZ_ASSERT(mPort->mPostMessageRunnable == this);
 
     nsresult rv = DispatchMessage();
@@ -81,6 +88,8 @@ public:
   nsresult
   Cancel() override
   {
+    NS_ASSERT_OWNINGTHREAD(Runnable);
+
     mPort = nullptr;
     mData = nullptr;
     return NS_OK;
@@ -90,6 +99,8 @@ private:
   nsresult
   DispatchMessage() const
   {
+    NS_ASSERT_OWNINGTHREAD(Runnable);
+
     nsCOMPtr<nsIGlobalObject> globalObject = mPort->GetParentObject();
 
     AutoJSAPI jsapi;
