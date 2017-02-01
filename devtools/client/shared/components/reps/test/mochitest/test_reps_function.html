@@ -17,8 +17,8 @@ Test Func rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { Func } = browserRequire("devtools/client/shared/components/reps/function");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, Func } = REPS;
 
   const componentUnderTest = Func;
 

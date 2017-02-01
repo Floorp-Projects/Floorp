@@ -165,6 +165,7 @@ define(function (require, exports, module) {
     NaNRep,
     Null,
     Number,
+    Obj,
     ObjectWithText,
     ObjectWithURL,
     PromiseRep,

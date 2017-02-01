@@ -18,9 +18,8 @@ Test fallback for rep rendering when a rep fails to render.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { ArrayRep } = browserRequire("devtools/client/shared/components/reps/array");
-    let { RegExp } = browserRequire("devtools/client/shared/components/reps/regexp");
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, ArrayRep, RegExp } = REPS;
 
     // Force the RegExp rep to crash by creating RegExp grip that throws when accessing
     // the displayString property
