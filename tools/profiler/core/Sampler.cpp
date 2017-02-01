@@ -1295,10 +1295,8 @@ Sampler::InplaceTick(TickSample* sample)
 
   currThreadProfile.addTag(ProfileEntry('T', currThreadProfile.ThreadId()));
 
-  if (sample) {
-    mozilla::TimeDuration delta = sample->timestamp - sStartTime;
-    currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
-  }
+  mozilla::TimeDuration delta = sample->timestamp - sStartTime;
+  currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
 
   PseudoStack* stack = currThreadProfile.GetPseudoStack();
 
@@ -1324,18 +1322,18 @@ Sampler::InplaceTick(TickSample* sample)
     }
   }
 
-  if (sample && currThreadProfile.GetThreadResponsiveness()->HasData()) {
+  if (currThreadProfile.GetThreadResponsiveness()->HasData()) {
     mozilla::TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
     currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
-  if (sample && sample->rssMemory != 0) {
+  if (sample->rssMemory != 0) {
     currThreadProfile.addTag(ProfileEntry('R', static_cast<double>(sample->rssMemory)));
   }
 
   // ussMemory is equal to 0 when we are not recording.
-  if (sample && sample->ussMemory != 0) {
+  if (sample->ussMemory != 0) {
     currThreadProfile.addTag(ProfileEntry('U', static_cast<double>(sample->ussMemory)));
   }
 
