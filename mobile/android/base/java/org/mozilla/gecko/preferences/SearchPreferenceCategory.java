@@ -9,9 +9,6 @@ import android.preference.Preference;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
@@ -43,7 +40,7 @@ public class SearchPreferenceCategory extends CustomListCategory implements Bund
 
         // Register for SearchEngines messages and request list of search engines from Gecko.
         EventDispatcher.getInstance().registerUiThreadListener(this, "SearchEngines:Data");
-        GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+        EventDispatcher.getInstance().dispatch("SearchEngines:GetVisible", null);
     }
 
     @Override
@@ -120,14 +117,9 @@ public class SearchPreferenceCategory extends CustomListCategory implements Bund
      * @param event The type of event to send.
      * @param engine The engine to which the event relates.
      */
-    private void sendGeckoEngineEvent(String event, String engineName) {
-        JSONObject json = new JSONObject();
-        try {
-            json.put("engine", engineName);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSONException creating search engine configuration change message for Gecko.", e);
-            return;
-        }
-        GeckoAppShell.notifyObservers(event, json.toString());
+    private void sendGeckoEngineEvent(final String event, final String engineName) {
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putString("engine", engineName);
+        EventDispatcher.getInstance().dispatch(event, data);
     }
 }
