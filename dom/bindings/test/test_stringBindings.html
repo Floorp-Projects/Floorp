@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1334537
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1334537</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1334537 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function go() {
+    // Need a new global that will pick up our pref.
+    var ifr = document.createElement("iframe");
+    document.body.appendChild(ifr);
+
+    var t = new ifr.contentWindow.TestFunctions();
+    var testString = "abcdefghijklmnopqrstuvwxyz";
+    const substringLength = 10;
+    var shortTestString = testString.substring(0, substringLength);
+
+    t.setStringData(testString);
+    // Note: we want to do all our gets before we start running code we don't
+    // control inside the test harness, if we really want to exercise the string
+    // cache in controlled ways.
+
+    var asShortDOMString = t.getStringDataAsDOMString(substringLength);
+    var asFullDOMString = t.getStringDataAsDOMString();
+    var asShortAString = t.getStringDataAsAString(substringLength);
+    var asAString = t.getStringDataAsAString();
+
+    is(asShortAString, shortTestString, "Short DOMString should be short");
+    is(asFullDOMString, testString, "Full DOMString should be test string");
+    is(asShortAString, shortTestString, "Short AString should be short");
+    is(asAString, testString, "Full AString should be test string");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(function() {
+    SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]},
+                              go);
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1334537">Mozilla Bug 1334537</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
