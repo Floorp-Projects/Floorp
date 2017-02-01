@@ -89,8 +89,7 @@ class TestMozbuildReading(unittest.TestCase):
         all_paths = self._mozbuilds(reader)
         _, contexts = reader.read_relevant_mozbuilds(all_paths)
 
-        finder = FileFinder(config.topsrcdir, find_executables=False,
-                            ignore=['obj*'])
+        finder = FileFinder(config.topsrcdir, ignore=['obj*'])
 
         def pattern_exists(pat):
             return [p for p in finder.find(pat)] != []

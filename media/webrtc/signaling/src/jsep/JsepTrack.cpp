@@ -52,7 +52,9 @@ JsepTrack::EnsureNoDuplicatePayloadTypes(
   for (JsepCodecDescription* codec : *codecs) {
     // We assume there are no dupes in negotiated codecs; unnegotiated codecs
     // need to change if there is a clash.
-    if (!codec->mEnabled) {
+    if (!codec->mEnabled ||
+        // We only support one datachannel per m-section
+        !codec->mName.compare("webrtc-datachannel")) {
       continue;
     }
 

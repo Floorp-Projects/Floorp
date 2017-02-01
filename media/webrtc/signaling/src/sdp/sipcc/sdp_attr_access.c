@@ -776,6 +776,8 @@ static boolean sdp_attr_is_simple_u32(sdp_attr_e attr_type) {
     if ((attr_type != SDP_ATTR_EECID) &&
         (attr_type != SDP_ATTR_PTIME) &&
         (attr_type != SDP_ATTR_MAXPTIME) &&
+        (attr_type != SDP_ATTR_SCTPPORT) &&
+        (attr_type != SDP_ATTR_MAXMESSAGESIZE) &&
         (attr_type != SDP_ATTR_T38_VERSION) &&
         (attr_type != SDP_ATTR_T38_MAXBITRATE) &&
         (attr_type != SDP_ATTR_T38_MAXBUFFER) &&

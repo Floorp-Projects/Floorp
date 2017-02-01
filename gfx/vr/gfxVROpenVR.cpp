@@ -627,11 +627,11 @@ VRSystemManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aContr
 void
 VRSystemManagerOpenVR::ScanForControllers()
 {
-  if (!mOpenVRInstalled) {
+  // mVRSystem is available after VRDisplay is created
+  // at GetHMDs().
+  if (!mVRSystem) {
     return;
   }
-
-  MOZ_ASSERT(mVRSystem);
 
   vr::TrackedDeviceIndex_t trackedIndexArray[vr::k_unMaxTrackedDeviceCount];
   uint32_t newControllerCount = 0;

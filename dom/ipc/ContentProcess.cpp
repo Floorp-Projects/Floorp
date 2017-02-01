@@ -8,10 +8,6 @@
 
 #include "ContentProcess.h"
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-#include "mozilla/WindowsVersion.h"
-#endif
-
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 #include <stdlib.h>
 #endif
@@ -33,9 +29,8 @@ static bool
 IsSandboxTempDirRequired()
 {
   // On Windows, a sandbox-writable temp directory is only used
-  // for Vista or later with sandbox pref level >= 1.
-  return (IsVistaOrLater() &&
-    (Preferences::GetInt("security.sandbox.content.level") >= 1));
+  // when sandbox pref level >= 1.
+  return Preferences::GetInt("security.sandbox.content.level") >= 1;
 }
 
 static void

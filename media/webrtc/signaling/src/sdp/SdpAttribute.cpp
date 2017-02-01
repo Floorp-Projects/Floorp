@@ -1039,13 +1039,13 @@ SdpRidAttributeList::Rid::Serialize(std::ostream& os) const
 bool
 SdpRidAttributeList::Rid::HasFormat(const std::string& format) const
 {
+  if (formats.empty()) {
+    return true;
+  }
+
   uint16_t formatAsInt;
   if (!SdpHelper::GetPtAsInt(format, &formatAsInt)) {
     return false;
-  }
-
-  if (formats.empty()) {
-    return true;
   }
 
   return (std::find(formats.begin(), formats.end(), formatAsInt) !=
@@ -1495,6 +1495,10 @@ SdpAttribute::IsAllowedAtMediaLevel(AttributeType type)
       return true;
     case kSsrcGroupAttribute:
       return true;
+    case kSctpPortAttribute:
+      return true;
+    case kMaxMessageSizeAttribute:
+      return true;
   }
   MOZ_CRASH("Unknown attribute type");
 }
@@ -1581,6 +1585,10 @@ SdpAttribute::IsAllowedAtSessionLevel(AttributeType type)
       return false;
     case kSsrcGroupAttribute:
       return false;
+    case kSctpPortAttribute:
+      return false;
+    case kMaxMessageSizeAttribute:
+      return false;
   }
   MOZ_CRASH("Unknown attribute type");
 }
@@ -1665,6 +1673,10 @@ SdpAttribute::GetAttributeTypeString(AttributeType type)
       return "ssrc";
     case kSsrcGroupAttribute:
       return "ssrc-group";
+    case kSctpPortAttribute:
+      return "sctp-port";
+    case kMaxMessageSizeAttribute:
+      return "max-message-size";
     case kDirectionAttribute:
       MOZ_CRASH("kDirectionAttribute not valid here");
   }

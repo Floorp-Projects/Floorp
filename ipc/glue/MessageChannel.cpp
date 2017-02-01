@@ -17,10 +17,12 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
+#include <math.h>
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -127,6 +129,10 @@ namespace mozilla {
 namespace ipc {
 
 static const uint32_t kMinTelemetryMessageSize = 8192;
+
+// Note: we round the time we spend waiting for a response to the nearest
+// millisecond. So a min value of 1 ms actually captures from 500us and above.
+static const uint32_t kMinTelemetrySyncIPCLatencyMs = 1;
 
 const int32_t MessageChannel::kNoTimeout = INT32_MIN;
 
@@ -1072,6 +1078,7 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
+    mozilla::TimeStamp start = TimeStamp::Now();
     if (aMsg->size() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
                               nsDependentCString(aMsg->name()), aMsg->size());
@@ -1253,7 +1260,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         return false;
     }
 
-    IPC_LOG("Got reply: seqno=%d, xid=%d", seqno, transaction);
+    uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
+    IPC_LOG("Got reply: seqno=%d, xid=%d, msgName=%s, latency=%ums",
+            seqno, transaction, msgName, latencyMs);
 
     nsAutoPtr<Message> reply = transact.GetReply();
 
@@ -1268,6 +1277,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     if (aReply->size() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_REPLY_SIZE,
                               nsDependentCString(msgName), aReply->size());
+    }
+
+    if (latencyMs >= kMinTelemetrySyncIPCLatencyMs) {
+      Telemetry::Accumulate(Telemetry::IPC_SYNC_LATENCY_MS,
+                            nsDependentCString(msgName), latencyMs);
     }
     return true;
 }

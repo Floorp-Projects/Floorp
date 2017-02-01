@@ -1598,6 +1598,19 @@ int32_t sdp_get_media_sctp_port(sdp_t *sdp_p, uint16_t level)
     return mca_p->sctpport;
 }
 
+sdp_sctp_media_fmt_type_e sdp_get_media_sctp_fmt(sdp_t *sdp_p, uint16_t level)
+{
+    sdp_mca_t  *mca_p;
+
+    mca_p = sdp_find_media_level(sdp_p, level);
+    if (!mca_p) {
+        sdp_p->conf_p->num_invalid_param++;
+        return -1;
+    }
+
+    return mca_p->sctp_fmt;
+}
+
 /* Function:    sdp_set_media_transport
  * Description: Sets the value of the transport type parameter for the m=
  *              media token line.

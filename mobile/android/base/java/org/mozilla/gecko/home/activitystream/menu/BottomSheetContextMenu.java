@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.home.activitystream.menu;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.view.LayoutInflater;
@@ -35,6 +37,9 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 
     private final NavigationView navigationView;
 
+    final View content;
+    final View activityView;
+
     public BottomSheetContextMenu(final Context context,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
@@ -50,10 +55,13 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
 
-        final LayoutInflater inflater = LayoutInflater.from(context);
-        final View content = inflater.inflate(R.layout.activity_stream_contextmenu_bottomsheet, null);
+        // The View encompassing the activity area
+        this.activityView = ((Activity) context).findViewById(android.R.id.content);
 
         bottomSheetDialog = new BottomSheetDialog(context);
+        final LayoutInflater inflater = LayoutInflater.from(context);
+        this.content = inflater.inflate(R.layout.activity_stream_contextmenu_bottomsheet, (ViewGroup) activityView, false);
+
         bottomSheetDialog.setContentView(content);
 
         ((TextView) content.findViewById(R.id.title)).setText(item.getTitle());
@@ -95,6 +103,19 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 
     @Override
     public void show() {
+        // Try to use a 16:9 "keyline", i.e. we leave a 16:9 window of activity content visible
+        // above the menu. We only do this in portrait mode - in landscape mode, 16:9 is likely
+        // to be similar to the size of the display, so we'd only show very little, or even none of,
+        // the menu.
+        // Note that newer versions of the support library (possibly 25+) will do this automatically,
+        // so we can remove that code then.
+        if (activityView.getHeight() > activityView.getWidth()) {
+            final int peekHeight = activityView.getHeight() - (activityView.getWidth() * 9 / 16);
+
+            BottomSheetBehavior<View> bsBehaviour = BottomSheetBehavior.from((View) content.getParent());
+            bsBehaviour.setPeekHeight(peekHeight);
+        }
+
         bottomSheetDialog.show();
     }
 

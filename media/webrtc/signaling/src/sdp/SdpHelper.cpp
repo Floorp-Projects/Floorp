@@ -168,7 +168,7 @@ SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection)
       msection->AddCodec("120", "VP8", 90000, 1);
       break;
     case SdpMediaSection::kApplication:
-      msection->AddDataChannel("5000", "rejected", 0);
+      msection->AddDataChannel("rejected", 0, 0);
       break;
     default:
       // We need to have something here to fit the grammar, this seems safe
@@ -688,8 +688,9 @@ SdpHelper::HasRtcp(SdpMediaSection::Protocol proto) const
     case SdpMediaSection::kPstn:
     case SdpMediaSection::kUdpTlsUdptl:
     case SdpMediaSection::kSctp:
-    case SdpMediaSection::kSctpDtls:
     case SdpMediaSection::kDtlsSctp:
+    case SdpMediaSection::kUdpDtlsSctp:
+    case SdpMediaSection::kTcpDtlsSctp:
       return false;
   }
   MOZ_CRASH("Unknown protocol, probably corruption.");
@@ -700,6 +701,8 @@ SdpHelper::GetProtocolForMediaType(SdpMediaSection::MediaType type)
 {
   if (type == SdpMediaSection::kApplication) {
     return SdpMediaSection::kDtlsSctp;
+    // TODO switch to offer the new SCTP SDP (Bug 1335206)
+    //return SdpMediaSection::kUdpDtlsSctp;
   }
 
   return SdpMediaSection::kUdpTlsRtpSavpf;

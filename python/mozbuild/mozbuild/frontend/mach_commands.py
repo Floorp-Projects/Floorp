@@ -192,7 +192,7 @@ class MozbuildFileCommands(MachCommandBase):
 
         # We need two finders because the reader's finder operates on
         # absolute paths.
-        finder = FileFinder(self.topsrcdir, find_executables=False)
+        finder = FileFinder(self.topsrcdir)
         if repo:
             reader_finder = MercurialRevisionFinder(repo, rev=rev,
                                                     recognize_repo_paths=True)

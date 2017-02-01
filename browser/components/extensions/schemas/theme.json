@@ -17,6 +17,10 @@
               "headerURL": {
                 "type": "string",
                 "optional": true
+              },
+              "theme_frame": {
+                "type": "string",
+                "optional": true
               }
             }
           },
@@ -26,6 +30,20 @@
             "properties": {
               "accentcolor": {
                 "type": "string",
+                "optional": true
+              },
+              "frame": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "optional": true
+              },
+              "tab_text": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
                 "optional": true
               },
               "textcolor": {
