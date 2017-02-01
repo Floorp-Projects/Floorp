@@ -2000,7 +2000,7 @@ public:
    * a mouse-click or key press), unless this check has been disabled by
    * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
    */
-  static bool IsRequestFullScreenAllowed();
+  static bool IsRequestFullScreenAllowed(mozilla::dom::CallerType aCallerType);
 
   /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments
