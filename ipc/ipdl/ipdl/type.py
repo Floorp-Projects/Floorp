@@ -445,9 +445,9 @@ class SymbolTable:
     def enterScope(self, node):
         assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
+        assert not hasattr(node, 'symtab')
 
-        if not hasattr(node, 'symtab'):
-            node.symtab = { }
+        node.symtab = { }
 
         self.scopes.append(node.symtab)
         self.currentScope = self.scopes[-1]
