@@ -8,7 +8,8 @@
 
 callback PromiseReturner = Promise<any>();
 
-[Pref="dom.expose_test_interfaces"]
+[Pref="dom.expose_test_interfaces",
+ Constructor]
 interface TestFunctions {
   [Throws]
   static void throwUncatchableException();
@@ -20,4 +21,21 @@ interface TestFunctions {
   // Returns whatever Promise the given PromiseReturner returned.
   [Throws]
   static Promise<any> passThroughCallbackPromise(PromiseReturner callback);
+
+  // Some basic tests for string binding round-tripping behavior.
+  void setStringData(DOMString arg);
+
+  // Get the string data, using an nsAString argument on the C++ side.
+  // This will just use Assign/operator=, whatever that does.
+  DOMString getStringDataAsAString();
+
+  // Get the string data, but only "length" chars of it, using an
+  // nsAString argument on the C++ side.  This will always copy on the
+  // C++ side.
+  DOMString getStringDataAsAString(unsigned long length);
+
+  // Get the string data, but only "length" chars of it, using a
+  // DOMString argument on the C++ side and trying to hand it
+  // stringbuffers.  If length not passed, use our full length.
+  DOMString getStringDataAsDOMString(optional unsigned long length);
 };
