@@ -43,9 +43,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -2589,52 +2587,48 @@ public abstract class GeckoApp
         }
 
         // Give Gecko a chance to handle the back press first, then fallback to the Java UI.
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("Browser:OnBackPressed", null) {
+        getAppEventDispatcher().dispatch("Browser:OnBackPressed", null, new EventCallback() {
             @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
-                if (!nativeJSObject.getBoolean("handled")) {
+            public void sendSuccess(final Object response) {
+                if (!((GeckoBundle) response).getBoolean("handled")) {
                     // Default behavior is Gecko didn't prevent.
                     onDefault();
                 }
             }
 
             @Override
-            public void onError(NativeJSObject error) {
+            public void sendError(final Object error) {
                 // Default behavior is Gecko didn't prevent, via failure.
                 onDefault();
             }
 
-            // Return from Gecko thread, then back-press through the Java UI.
             private void onDefault() {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (tab.doBack()) {
-                            return;
-                        }
+                ThreadUtils.assertOnUiThread();
 
-                        if (tab.isExternal()) {
-                            onDone();
-                            Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
-                            if (nextSelectedTab != null) {
-                                int nextSelectedTabId = nextSelectedTab.getId();
-                                GeckoAppShell.notifyObservers("Tab:KeepZombified", Integer.toString(nextSelectedTabId));
-                            }
-                            tabs.closeTab(tab);
-                            return;
-                        }
+                if (tab.doBack()) {
+                    return;
+                }
 
-                        final int parentId = tab.getParentId();
-                        final Tab parent = tabs.getTab(parentId);
-                        if (parent != null) {
-                            // The back button should always return to the parent (not a sibling).
-                            tabs.closeTab(tab, parent);
-                            return;
-                        }
-
-                        onDone();
+                if (tab.isExternal()) {
+                    onDone();
+                    Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
+                    if (nextSelectedTab != null) {
+                        int nextSelectedTabId = nextSelectedTab.getId();
+                        GeckoAppShell.notifyObservers("Tab:KeepZombified", Integer.toString(nextSelectedTabId));
                     }
-                });
+                    tabs.closeTab(tab);
+                    return;
+                }
+
+                final int parentId = tab.getParentId();
+                final Tab parent = tabs.getTab(parentId);
+                if (parent != null) {
+                    // The back button should always return to the parent (not a sibling).
+                    tabs.closeTab(tab, parent);
+                    return;
+                }
+
+                onDone();
             }
         });
     }
