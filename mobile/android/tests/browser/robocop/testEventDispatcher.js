@@ -16,7 +16,6 @@ function get_test_message() {
     intArray: [2, 3],
     double: 0.5,
     doubleArray: [1.5, 2.5],
-    null: null,
     string: "foo",
     nullString: null,
     emptyString: "",
@@ -31,6 +30,11 @@ function get_test_message() {
     nullDoubleArray: null,
     nullStringArray: null,
     mixedArray: [1, 1.5],
+    byte: 1,
+    short: 1,
+    float: 0.5,
+    long: 1.0,
+    char: "f",
   };
 
   // Make a copy
@@ -68,21 +72,51 @@ function dispatch_test_message(scope, type) {
   get_dispatcher(scope).dispatch(type, data);
 }
 
-function send_message_for_response(scope, type, response) {
+function send_message_for_response(scope, type, mode, key) {
   get_dispatcher(scope).sendRequestForResult({
     type: type,
-    response: response,
-  }).then(result => do_check_eq(result, response),
-          error => do_check_eq(error, response));
+    mode: mode,
+    key: key,
+  }).then(result => {
+    do_check_eq(mode, "success");
+    check_response(key, result);
+  }, error => {
+    do_check_eq(mode, "error");
+    check_response(key, error);
+  });
 }
 
-function dispatch_message_for_response(scope, type, response) {
+function dispatch_message_for_response(scope, type, mode, key) {
+  // Gecko thread callbacks should be synchronous.
+  let sync = (type === "Robocop:TestGeckoResponse");
+  let dispatching = true;
+
   get_dispatcher(scope).dispatch(type, {
-    response: response,
+    mode: mode,
+    key: key,
   }, {
-    onSuccess: result => do_check_eq(result, response),
-    onError: error => do_check_eq(error, response),
+    onSuccess: result => {
+      do_check_eq(mode, "success");
+      check_response(key, result);
+      sync && do_check_eq(dispatching, true);
+    },
+    onError: error => {
+      do_check_eq(mode, "error");
+      check_response(key, error);
+      sync && do_check_eq(dispatching, true);
+    },
   });
+
+  dispatching = false;
+}
+
+function check_response(key, response) {
+  let expected = get_test_message()[key];
+  if (expected !== null && typeof expected === "object") {
+    listener._checkObject(response);
+  } else {
+    do_check_eq(response, expected);
+  }
 }
 
 let listener = {
@@ -156,10 +190,10 @@ let callbackListener = {
     do_check_eq(event, this._type);
     this._callCount++;
 
-    if (data.response == "success") {
-      callback.onSuccess(data.response);
-    } else if (data.response == "error") {
-      callback.onError(data.response);
+    if (data.mode == "success") {
+      callback.onSuccess(get_test_message()[data.key]);
+    } else if (data.mode == "error") {
+      callback.onError(get_test_message()[data.key]);
     } else {
       ok(false, "Response type should be valid: " + data.response);
     }
@@ -177,13 +211,12 @@ function register_js_events(scope, type, callbackType) {
   get_dispatcher(scope).registerListener(callbackListener, callbackType);
 }
 
-function unregister_js_events(scope, type, callbackType) {
+function unregister_js_events(scope, type, callbackType, count) {
   get_dispatcher(scope).unregisterListener(listener, type);
   get_dispatcher(scope).unregisterListener(callbackListener, callbackType);
 
-  // Listeners should have been called 6 times total.
-  do_check_eq(listener._callCount, 2);
-  do_check_eq(callbackListener._callCount, 4);
+  // Listeners should have been called `count` times total.
+  do_check_eq(listener._callCount + callbackListener._callCount, count);
 }
 
 function finish_test() {
