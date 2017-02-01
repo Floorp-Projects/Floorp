@@ -229,11 +229,18 @@ class XPCStringConvert
     struct ZoneStringCache
     {
         // mString owns mBuffer.  mString is a JS thing, so it can only die
-        // during GC.  We clear mString and mBuffer during GC.  As long as
-        // the above holds, mBuffer should not be a dangling pointer, so
+        // during GC, though it can drop its ref to the buffer if it gets
+        // flattened and wasn't null-terminated.  We clear mString and mBuffer
+        // during GC and in our finalizer (to catch the flatterning case).  As
+        // long as the above holds, mBuffer should not be a dangling pointer, so
         // using this as a cache key should be safe.
-        void* mBuffer;
-        JSString* mString;
+        //
+        // We also need to include the string's length in the cache key, because
+        // now that we allow non-null-terminated buffers we can have two strings
+        // with the same mBuffer but different lengths.
+        void* mBuffer = nullptr;
+        uint32_t mLength = 0;
+        JSString* mString = nullptr;
     };
 
 public:
@@ -252,7 +259,7 @@ public:
     {
         JS::Zone* zone = js::GetContextZone(cx);
         ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
-        if (cache && buf == cache->mBuffer) {
+        if (cache && buf == cache->mBuffer && length == cache->mLength) {
             MOZ_ASSERT(JS::GetStringZone(cache->mString) == zone);
             JS::MarkStringAsLive(zone, cache->mString);
             rval.setString(cache->mString);
@@ -272,6 +279,7 @@ public:
             JS_SetZoneUserData(zone, cache);
         }
         cache->mBuffer = buf;
+        cache->mLength = length;
         cache->mString = str;
         *sharedBuffer = true;
         return true;
