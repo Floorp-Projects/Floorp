@@ -528,12 +528,20 @@ With this information, it type checks the AST.'''
 
 
 class TcheckVisitor(Visitor):
-    def __init__(self, symtab, errors):
-        self.symtab = symtab
+    def __init__(self, errors):
         self.errors = errors
 
     def error(self, loc, fmt, *args):
         self.errors.append(errormsg(loc, fmt, *args))
+
+class GatherDecls(TcheckVisitor):
+    def __init__(self, builtinUsing, errors):
+        TcheckVisitor.__init__(self, errors)
+
+        # |self.symtab| is the symbol table for the translation unit
+        # currently being visited
+        self.symtab = None
+        self.builtinUsing = builtinUsing
 
     def declare(self, loc, type, shortname=None, fullname=None, progname=None):
         d = Decl(loc)
@@ -543,13 +551,6 @@ class TcheckVisitor(Visitor):
         d.fullname = fullname
         self.symtab.declare(d)
         return d
-
-class GatherDecls(TcheckVisitor):
-    def __init__(self, builtinUsing, errors):
-        # |self.symtab| is the symbol table for the translation unit
-        # currently being visited
-        TcheckVisitor.__init__(self, None, errors)
-        self.builtinUsing = builtinUsing
 
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
@@ -998,8 +999,7 @@ def fullyDefined(t, exploring=None):
 
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
-        # don't need the symbol table, we just want the error reporting
-        TcheckVisitor.__init__(self, None, errors)
+        TcheckVisitor.__init__(self, errors)
         self.visited = set()
         self.ptype = None
 
