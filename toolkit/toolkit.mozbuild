@@ -176,7 +176,6 @@ if CONFIG['ENABLE_TESTS']:
         '/testing/tools/minidumpwriter',
         '/testing/tools/screenshot',
         '/testing/profiles',
-        '/testing/mozbase',
         '/testing/modules',
         '/testing/runtimes',
         '/testing/web-platform',
