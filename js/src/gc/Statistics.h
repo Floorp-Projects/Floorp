@@ -7,7 +7,6 @@
 #ifndef gc_Statistics_h
 #define gc_Statistics_h
 
-#include "mozilla/Array.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
@@ -29,9 +28,7 @@ class GCParallelTask;
 namespace gcstats {
 
 enum Phase : uint8_t {
-    PHASE_FIRST,
-
-    PHASE_MUTATOR = PHASE_FIRST,
+    PHASE_MUTATOR,
     PHASE_GC_BEGIN,
     PHASE_WAIT_BACKGROUND_THREAD,
     PHASE_MARK_DISCARD_CODE,
@@ -173,12 +170,6 @@ const char* ExplainInvocationKind(JSGCInvocationKind gckind);
  */
 struct Statistics
 {
-    template <typename T, size_t Length>
-    using Array = mozilla::Array<T, Length>;
-
-    template <typename IndexType, IndexType SizeAsEnumValue, typename ValueType>
-    using EnumeratedArray = mozilla::EnumeratedArray<IndexType, SizeAsEnumValue, ValueType>;
-
     using TimeDuration = mozilla::TimeDuration;
     using TimeStamp = mozilla::TimeStamp;
 
@@ -200,16 +191,12 @@ struct Statistics
     static const size_t NumTimingArrays = MaxMultiparentPhases + 1;
 
     /* Create a convenient type for referring to tables of phase times. */
-    using PhaseTimeTable =
-        Array<EnumeratedArray<Phase, PHASE_LIMIT, TimeDuration>, NumTimingArrays>;
+    using PhaseTimeTable = TimeDuration[NumTimingArrays][PHASE_LIMIT];
 
     static MOZ_MUST_USE bool initialize();
 
     explicit Statistics(JSRuntime* rt);
     ~Statistics();
-
-    Statistics(const Statistics&) = delete;
-    Statistics& operator=(const Statistics&) = delete;
 
     void beginPhase(Phase phase);
     void endPhase(Phase phase);
@@ -303,7 +290,10 @@ struct Statistics
             resetReason(gc::AbortReason::None),
             start(start),
             startFaults(startFaults)
-        {}
+        {
+            for (auto i : mozilla::IntegerRange(NumTimingArrays))
+                mozilla::PodArrayZero(phaseTimes[i]);
+        }
 
         SliceBudget budget;
         JS::gcreason::Reason reason;
@@ -347,7 +337,7 @@ struct Statistics
     SliceDataVector slices;
 
     /* Most recent time when the given phase started. */
-    EnumeratedArray<Phase, PHASE_LIMIT, TimeStamp> phaseStartTimes;
+    TimeStamp phaseStartTimes[PHASE_LIMIT];
 
     /* Bookkeeping for GC timings when timingMutator is true */
     TimeStamp timedGCStart;
@@ -360,7 +350,7 @@ struct Statistics
     PhaseTimeTable phaseTotals;
 
     /* Number of events of this type for this GC. */
-    EnumeratedArray<Stat, STAT_LIMIT, unsigned int> counts;
+    unsigned int counts[STAT_LIMIT];
 
     /* Allocated space before the GC started. */
     size_t preBytes;
@@ -369,7 +359,7 @@ struct Statistics
     mutable TimeDuration maxPauseInInterval;
 
     /* Phases that are currently on stack. */
-    Array<Phase, MAX_NESTING> phaseNesting;
+    Phase phaseNesting[MAX_NESTING];
     size_t phaseNestingDepth;
     size_t activeDagSlot;
 
@@ -380,7 +370,7 @@ struct Statistics
      * suspensions by suspending multiple stacks with a PHASE_SUSPENSION in
      * between).
      */
-    Array<Phase, MAX_NESTING * 3> suspendedPhases;
+    Phase suspendedPhases[MAX_NESTING * 3];
     size_t suspended;
 
     /* Sweep times for SCCs of compartments. */
@@ -407,7 +397,8 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
         KeyCount
     };
 
-    using ProfileDurations = EnumeratedArray<ProfileKey, ProfileKey::KeyCount, TimeDuration>;
+    using ProfileDurations =
+        mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount, TimeDuration>;
 
     TimeDuration profileThreshold_;
     bool enableProfiling_;
@@ -423,16 +414,16 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void sccDurations(TimeDuration* total, TimeDuration* maxPause);
     void printStats();
 
-    UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
+    UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable phaseTimes) const;
 
     UniqueChars formatDetailedDescription();
     UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable& phaseTimes);
+    UniqueChars formatDetailedPhaseTimes(const PhaseTimeTable phaseTimes);
     UniqueChars formatDetailedTotals();
 
     UniqueChars formatJsonDescription(uint64_t timestamp);
     UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes);
+    UniqueChars formatJsonPhaseTimes(const PhaseTimeTable phaseTimes);
 
     double computeMMU(TimeDuration resolution) const;
 
