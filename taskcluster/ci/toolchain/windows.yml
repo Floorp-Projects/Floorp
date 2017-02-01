@@ -16,8 +16,7 @@ win32-clang-cl/opt:
     run:
         using: toolchain-script
         script: build-clang32-windows.sh
-    when:
-        files-changed:
+        resources:
             - 'build/build-clang/**'
 
 win64-clang-cl/opt:
@@ -34,8 +33,7 @@ win64-clang-cl/opt:
     run:
         using: toolchain-script
         script: build-clang64-windows.sh
-    when:
-        files-changed:
+        resources:
             - 'build/build-clang/**'
 
 win32-clang-tidy/opt:
@@ -55,8 +53,7 @@ win32-clang-tidy/opt:
     run:
         using: toolchain-script
         script: build-clang-tidy32-windows.sh
-    when:
-        files-changed:
+        resources:
             - 'build/build-clang/**'
 
 win64-clang-tidy/opt:
@@ -76,6 +73,5 @@ win64-clang-tidy/opt:
     run:
         using: toolchain-script
         script: build-clang-tidy64-windows.sh
-    when:
-        files-changed:
+        resources:
             - 'build/build-clang/**'

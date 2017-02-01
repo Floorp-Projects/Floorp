@@ -80,13 +80,19 @@ class TransformTask(base.Task):
         self.dependencies = task['dependencies']
         self.when = task['when']
         super(TransformTask, self).__init__(kind, task['label'],
-                                            task['attributes'], task['task'])
+                                            task['attributes'], task['task'],
+                                            index_paths=task.get('index-paths'))
 
     def get_dependencies(self, taskgraph):
         return [(label, name) for name, label in self.dependencies.items()]
 
     def optimize(self, params):
-        if 'files-changed' in self.when:
+        if self.index_paths:
+            optimized, taskId = super(TransformTask, self).optimize(params)
+            if optimized:
+                return optimized, taskId
+
+        elif 'files-changed' in self.when:
             changed = files_changed.check(
                 params, self.when['files-changed'])
             if not changed:

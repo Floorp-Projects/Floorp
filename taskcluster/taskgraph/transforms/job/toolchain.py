@@ -7,7 +7,9 @@ Support for running toolchain-building jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Schema, Required, Any
+import os
+
+from voluptuous import Schema, Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
@@ -15,6 +17,11 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_support_vcs_checkout,
 )
+from taskgraph.util.hash import hash_paths
+
+
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..', '..'))
+TOOLCHAIN_INDEX = 'gecko.cache.level-{level}.toolchains.v1.{name}.{digest}'
 
 toolchain_run_schema = Schema({
     Required('using'): 'toolchain-script',
@@ -29,15 +36,37 @@ toolchain_run_schema = Schema({
         'public',
         'internal',
     ),
+
+    # Paths/patterns pointing to files that influence the outcome of a
+    # toolchain build.
+    Optional('resources'): [basestring],
 })
 
 
-def add_files_changed(run, taskdesc):
-    files = taskdesc.setdefault('when', {}).setdefault('files-changed', [])
+def add_index_paths(config, run, taskdesc):
+    files = list(run.get('resources', []))
     # This file
     files.append('taskcluster/taskgraph/transforms/job/toolchain.py')
     # The script
     files.append('taskcluster/scripts/misc/{}'.format(run['script']))
+
+    label = taskdesc['label']
+    subs = {
+        'name': label.replace('toolchain-', '').split('/')[0],
+        'digest': hash_paths(GECKO, files),
+    }
+
+    index_paths = taskdesc.setdefault('index-paths', [])
+
+    # We'll try to find a cached version of the toolchain at levels above
+    # and including the current level, starting at the highest level.
+    for level in reversed(range(int(config.params['level']), 4)):
+        subs['level'] = level
+        index_paths.append(TOOLCHAIN_INDEX.format(**subs))
+
+    # ... and cache at the lowest level.
+    taskdesc.setdefault('routes', []).append(
+        'index.{}'.format(TOOLCHAIN_INDEX.format(**subs)))
 
 
 @run_job_using("docker-worker", "toolchain-script", schema=toolchain_run_schema)
@@ -97,7 +126,7 @@ def docker_worker_toolchain(config, job, taskdesc):
             run['script'])
     ]
 
-    add_files_changed(run, taskdesc)
+    add_index_paths(config, run, taskdesc)
 
 
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
@@ -146,4 +175,4 @@ def windows_toolchain(config, job, taskdesc):
         r'{} -c ./build/src/taskcluster/scripts/misc/{}'.format(bash, run['script'])
     ]
 
-    add_files_changed(run, taskdesc)
+    add_index_paths(config, run, taskdesc)
