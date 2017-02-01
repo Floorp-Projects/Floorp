@@ -210,7 +210,7 @@ ProxyMessenger = {
       // `tabId` being set implies that the tabs API is supported, so we don't
       // need to check whether `tabTracker` exists.
       let tab = apiManager.global.tabTracker.getTab(tabId, null);
-      return tab && tab.linkedBrowser.messageManager;
+      return tab && (tab.linkedBrowser || tab.browser).messageManager;
     }
 
     // runtime.sendMessage / runtime.connect
