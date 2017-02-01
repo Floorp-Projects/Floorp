@@ -56,6 +56,7 @@ private:
   };
 
   typedef nsTHashtable<HashEntry> DocGroupMap;
+
 public:
   typedef DocGroupMap::Iterator Iterator;
 

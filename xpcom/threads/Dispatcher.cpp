@@ -6,6 +6,7 @@
 
 #include "mozilla/Dispatcher.h"
 
+#include "jsfriendapi.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Move.h"
 #include "nsINamed.h"
@@ -14,6 +15,21 @@
 #include "nsThreadUtils.h"
 
 using namespace mozilla;
+
+class ValidatingDispatcher::Runnable final : public mozilla::Runnable
+{
+public:
+  Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
+           ValidatingDispatcher* aDispatcher);
+
+  NS_DECL_NSIRUNNABLE
+
+private:
+  nsCOMPtr<nsIRunnable> mRunnable;
+  RefPtr<ValidatingDispatcher> mDispatcher;
+};
+
+/* DispatcherEventTarget */
 
 namespace {
 
@@ -102,7 +118,10 @@ Dispatcher::UnlabeledDispatch(const char* aName,
   }
 }
 
+ValidatingDispatcher* ValidatingDispatcher::sRunningDispatcher;
+
 ValidatingDispatcher::ValidatingDispatcher()
+ : mAccessValid(false)
 {
 }
 
@@ -111,7 +130,7 @@ ValidatingDispatcher::Dispatch(const char* aName,
                                TaskCategory aCategory,
                                already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return UnlabeledDispatch(aName, aCategory, Move(aRunnable));
+  return LabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 nsIEventTarget*
@@ -181,4 +200,71 @@ ValidatingDispatcher::FromEventTarget(nsIEventTarget* aEventTarget)
     return nullptr;
   }
   return target->Dispatcher();
+}
+
+nsresult
+ValidatingDispatcher::LabeledDispatch(const char* aName,
+                                      TaskCategory aCategory,
+                                      already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  if (XRE_IsContentProcess()) {
+    runnable = new Runnable(runnable.forget(), this);
+  }
+  return UnlabeledDispatch(aName, aCategory, runnable.forget());
+}
+
+void
+ValidatingDispatcher::SetValidatingAccess(ValidationType aType)
+{
+  sRunningDispatcher = aType == StartValidation ? this : nullptr;
+  mAccessValid = aType == StartValidation;
+
+  dom::AutoJSAPI jsapi;
+  jsapi.Init();
+  js::EnableAccessValidation(jsapi.cx(), !!sRunningDispatcher);
+}
+
+ValidatingDispatcher::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
+                                         ValidatingDispatcher* aDispatcher)
+ : mRunnable(Move(aRunnable)),
+   mDispatcher(aDispatcher)
+{
+}
+
+NS_IMETHODIMP
+ValidatingDispatcher::Runnable::Run()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  mDispatcher->SetValidatingAccess(StartValidation);
+
+  nsresult result = mRunnable->Run();
+
+  // The runnable's destructor can have side effects, so try to execute it in
+  // the scope of the TabGroup.
+  mRunnable = nullptr;
+
+  mDispatcher->SetValidatingAccess(EndValidation);
+  return result;
+}
+
+ValidatingDispatcher::AutoProcessEvent::AutoProcessEvent()
+ : mPrevRunningDispatcher(ValidatingDispatcher::sRunningDispatcher)
+{
+  ValidatingDispatcher* prev = sRunningDispatcher;
+  if (prev) {
+    MOZ_ASSERT(prev->mAccessValid);
+    prev->SetValidatingAccess(EndValidation);
+  }
+}
+
+ValidatingDispatcher::AutoProcessEvent::~AutoProcessEvent()
+{
+  MOZ_ASSERT(!sRunningDispatcher);
+
+  ValidatingDispatcher* prev = mPrevRunningDispatcher;
+  if (prev) {
+    prev->SetValidatingAccess(StartValidation);
+  }
 }

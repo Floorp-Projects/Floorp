@@ -3148,6 +3148,17 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
+  // Ask the JS engine to assert that it's valid to access our DocGroup whenever
+  // it runs JS code for this compartment. We skip the check if this window is
+  // for chrome JS or an add-on.
+  nsCOMPtr<nsIPrincipal> principal = mDoc->NodePrincipal();
+  nsString addonId;
+  principal->GetAddonId(addonId);
+  if (GetDocGroup() && !nsContentUtils::IsSystemPrincipal(principal) && addonId.IsEmpty()) {
+    js::SetCompartmentValidAccessPtr(cx, newInnerGlobal,
+                                     newInnerWindow->GetDocGroup()->GetValidAccessPtr());
+  }
+
   nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT, GetWrapperPreserveColor());
   kungFuDeathGrip->DidInitializeContext();
 

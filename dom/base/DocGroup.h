@@ -12,6 +12,7 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 
@@ -33,8 +34,6 @@ namespace dom {
 // TabGroup is a collection of DocGroups. A TabGroup typically will contain
 // (through its DocGroups) the documents from one or more tabs related by
 // window.opener. A DocGroup is a member of exactly one TabGroup.
-
-class TabGroup;
 
 class DocGroup final : public Dispatcher
 {
@@ -75,6 +74,17 @@ public:
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+
+  // Ensure that it's valid to access the DocGroup at this time.
+  void ValidateAccess() const
+  {
+    mTabGroup->ValidateAccess();
+  }
+
+  // Return a pointer that can be continually checked to see if access to this
+  // DocGroup is valid. This pointer should live at least as long as the
+  // DocGroup.
+  bool* GetValidAccessPtr();
 
 private:
   virtual AbstractThread*
