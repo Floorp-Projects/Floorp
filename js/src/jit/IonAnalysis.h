@@ -85,13 +85,13 @@ MOZ_MUST_USE bool
 BuildPhiReverseMapping(MIRGraph& graph);
 
 void
-AssertBasicGraphCoherency(MIRGraph& graph, bool force = false);
+AssertBasicGraphCoherency(MIRGraph& graph);
 
 void
-AssertGraphCoherency(MIRGraph& graph, bool force = false);
+AssertGraphCoherency(MIRGraph& graph);
 
 void
-AssertExtendedGraphCoherency(MIRGraph& graph, bool underValueNumberer = false, bool force = false);
+AssertExtendedGraphCoherency(MIRGraph& graph, bool underValueNumberer = false);
 
 MOZ_MUST_USE bool
 EliminateRedundantChecks(MIRGraph& graph);

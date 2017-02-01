@@ -6423,11 +6423,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         jit::JitOptions.ionInterruptWithoutSignals = !!value;
         break;
-#ifdef DEBUG
-      case JSJITCOMPILER_FULL_DEBUG_CHECKS:
-        jit::JitOptions.fullDebugChecks = !!value;
-        break;
-#endif
       default:
         break;
     }
@@ -6475,11 +6470,6 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* 
       case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
         *valueOut = jit::JitOptions.ionInterruptWithoutSignals ? 1 : 0;
         break;
-#ifdef DEBUG
-      case JSJITCOMPILER_FULL_DEBUG_CHECKS:
-        *valueOut = jit::JitOptions.fullDebugChecks ? 1 : 0;
-        break;
-#endif
       default:
         return false;
     }
