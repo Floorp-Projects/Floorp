@@ -1860,6 +1860,14 @@ auto GeckoBundle::UnboxInteger(mozilla::jni::Object::Param a0) -> int32_t
     return mozilla::jni::Method<UnboxInteger_t>::Call(GeckoBundle::Context(), nullptr, a0);
 }
 
+constexpr char GeckoBundle::UnboxString_t::name[];
+constexpr char GeckoBundle::UnboxString_t::signature[];
+
+auto GeckoBundle::UnboxString(mozilla::jni::Object::Param a0) -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<UnboxString_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
 constexpr char GeckoBundle::Values_t::name[];
 constexpr char GeckoBundle::Values_t::signature[];
 
