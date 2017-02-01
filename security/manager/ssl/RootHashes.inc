@@ -13,7 +13,7 @@ struct CertAuthorityHash {
  const int32_t binNumber;
 };
 
-static const struct CertAuthorityHash ROOT_TABLE[] = {
+static constexpr struct CertAuthorityHash ROOT_TABLE[] = {
   {
     /* Entrust_Root_Certification_Authority___EC1 */
     { 0x02, 0xED, 0x0E, 0xB2, 0x8C, 0x14, 0xDA, 0x45, 0x16, 0x5C, 0x56, 0x67, 0x91, 0x70, 0x0D, 0x64,
