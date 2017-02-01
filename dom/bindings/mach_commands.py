@@ -14,6 +14,7 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase
+from mozbuild.util import mkdir
 
 def get_test_parser():
     import runtests
@@ -37,6 +38,10 @@ class WebIDLProvider(MachCommandBase):
     def webidl_test(self, **kwargs):
         sys.path.insert(0, os.path.join(self.topsrcdir, 'other-licenses',
                         'ply'))
+
+        # Ensure the topobjdir exists. On a Taskcluster test run there won't be
+        # an objdir yet.
+        mkdir(self.topobjdir)
 
         # Make sure we drop our cached grammar bits in the objdir, not
         # wherever we happen to be running from.

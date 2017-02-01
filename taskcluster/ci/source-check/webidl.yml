@@ -1,0 +1,24 @@
+webidl-test/opt:
+    description: WebIDL parser tests
+    treeherder:
+        symbol: Wp
+        kind: test
+        tier: 1
+        platform: lint/opt
+    worker-type: aws-provisioner-v1/b2gtest
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: webidl-parser-test --verbose
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - 'dom/bindings/parser/runtests.py'
+            - 'dom/bindings/parser/WebIDL.py'
+            - 'dom/bindings/parser/tests/**'
+            - 'other-licenses/ply/**'
