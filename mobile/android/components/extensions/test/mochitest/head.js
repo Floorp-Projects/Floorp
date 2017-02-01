@@ -6,6 +6,22 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/PageActions.jsm");
 
+{
+  let chromeScript = SpecialPowers.loadChromeScript(
+    SimpleTest.getTestFileURL("chrome_cleanup_script.js"));
+
+  SimpleTest.registerCleanupFunction(async () => {
+    chromeScript.sendAsyncMessage("check-cleanup");
+
+    let results = await chromeScript.promiseOneMessage("cleanup-results");
+    chromeScript.destroy();
+
+    if (results.extraWindows.length || results.extraTabs.length) {
+      ok(false, `Test left extra windows or tabs: ${JSON.stringify(results)}\n`);
+    }
+  });
+}
+
 function isPageActionShown(uuid) {
   return PageActions.isShown(uuid);
 }
