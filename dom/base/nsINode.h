@@ -1882,19 +1882,23 @@ public:
 
   void GetBoxQuads(const BoxQuadOptions& aOptions,
                    nsTArray<RefPtr<DOMQuad> >& aResult,
-                   mozilla::ErrorResult& aRv);
+                   CallerType aCallerType,
+                   ErrorResult& aRv);
 
   already_AddRefed<DOMQuad> ConvertQuadFromNode(DOMQuad& aQuad,
                                                 const TextOrElementOrDocument& aFrom,
                                                 const ConvertCoordinateOptions& aOptions,
+                                                CallerType aCallerType,
                                                 ErrorResult& aRv);
   already_AddRefed<DOMQuad> ConvertRectFromNode(DOMRectReadOnly& aRect,
                                                 const TextOrElementOrDocument& aFrom,
                                                 const ConvertCoordinateOptions& aOptions,
+                                                CallerType aCallerType,
                                                 ErrorResult& aRv);
   already_AddRefed<DOMPoint> ConvertPointFromNode(const DOMPointInit& aPoint,
                                                   const TextOrElementOrDocument& aFrom,
                                                   const ConvertCoordinateOptions& aOptions,
+                                                  CallerType aCallerType,
                                                   ErrorResult& aRv);
 
 protected:
