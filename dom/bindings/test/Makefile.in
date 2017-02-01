@@ -15,7 +15,3 @@ CPPSRCS += $(addprefix ../,$(test_sources))
 include $(topsrcdir)/config/rules.mk
 
 endif
-
-check::
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) $(srcdir)/../parser/runtests.py
