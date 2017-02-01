@@ -21,7 +21,7 @@ function FileComponent() {
 }
 FileComponent.prototype =
 {
-  doTest: function() {
+  doTest: function(cb) {
     // throw if anything goes wrong
 
     // find the current directory path
@@ -31,51 +31,55 @@ FileComponent.prototype =
     file.append("xpcshell.ini");
 
     // should be able to construct a file
-    var f1 = File.createFromFileName(file.path);
-    // and with nsIFiles
-    var f2 = File.createFromNsIFile(file);
+    var f1, f2;
+    Promise.all([
+      File.createFromFileName(file.path).then(f => { f1 = f; }),
+      File.createFromNsIFile(file).then(f => { f2 = f; }),
+    ])
+    .then(() => {
+      // do some tests
+      do_check_true(f1 instanceof File, "Should be a DOM File");
+      do_check_true(f2 instanceof File, "Should be a DOM File");
 
-    // do some tests
-    do_check_true(f1 instanceof File, "Should be a DOM File");
-    do_check_true(f2 instanceof File, "Should be a DOM File");
+      do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
+      do_check_true(f2.name == "xpcshell.ini", "Should be the right file");
 
-    do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
-    do_check_true(f2.name == "xpcshell.ini", "Should be the right file");
+      do_check_true(f1.type == "", "Should be the right type");
+      do_check_true(f2.type == "", "Should be the right type");
+    })
+    .then(() => {
+      var threw = false;
+      try {
+        // Needs a ctor argument
+        var f7 = new File();
+      } catch (e) {
+        threw = true;
+      }
+      do_check_true(threw, "No ctor arguments should throw");
 
-    do_check_true(f1.type == "", "Should be the right type");
-    do_check_true(f2.type == "", "Should be the right type");
+      var threw = false;
+      try {
+        // Needs a valid ctor argument
+        var f7 = new File(Date(132131532));
+      } catch (e) {
+        threw = true;
+      }
+      do_check_true(threw, "Passing a random object should fail");
 
-    var threw = false;
-    try {
-      // Needs a ctor argument
-      var f7 = new File();
-    } catch (e) {
-      threw = true;
-    }
-    do_check_true(threw, "No ctor arguments should throw");
-
-    var threw = false;
-    try {
-      // Needs a valid ctor argument
-      var f7 = new File(Date(132131532));
-    } catch (e) {
-      threw = true;
-    }
-    do_check_true(threw, "Passing a random object should fail");
-
-    var threw = false
-    try {
       // Directories fail
       var dir = Components.classes["@mozilla.org/file/directory_service;1"]
                           .getService(Ci.nsIProperties)
                           .get("CurWorkD", Ci.nsIFile);
-      var f7 = File.createFromNsIFile(dir)
-    } catch (e) {
-      threw = true;
-    }
-    do_check_true(threw, "Can't create a File object for a directory");
-
-    return true;
+      return File.createFromNsIFile(dir)
+    })
+    .then(() => {
+      do_check_true(false, "Can't create a File object for a directory");
+    }, () => {
+      do_check_true(true, "Can't create a File object for a directory");
+    })
+    .then(() => {
+      cb(true);
+    });
   },
 
   // nsIClassInfo + information for XPCOM registration code in XPCOMUtils.jsm
