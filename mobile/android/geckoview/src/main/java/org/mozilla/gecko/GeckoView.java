@@ -374,29 +374,13 @@ public class GeckoView extends LayerView
      * various GeckoViewChrome callback actions.
      */
     public class PromptResult {
-        private final int RESULT_OK = 0;
-        private final int RESULT_CANCEL = 1;
-
-        private final JSONObject mMessage;
-
-        public PromptResult(JSONObject message) {
-            mMessage = message;
-        }
-
-        private JSONObject makeResult(int resultCode) {
-            JSONObject result = new JSONObject();
-            try {
-                result.put("button", resultCode);
-            } catch (JSONException ex) { }
-            return result;
+        public PromptResult() {
         }
 
         /**
         * Handle a confirmation response from the user.
         */
         public void confirm() {
-            JSONObject result = makeResult(RESULT_OK);
-            EventDispatcher.sendResponse(mMessage, result);
         }
 
         /**
@@ -404,19 +388,12 @@ public class GeckoView extends LayerView
         * @param value String value to return to the browser context.
         */
         public void confirmWithValue(String value) {
-            JSONObject result = makeResult(RESULT_OK);
-            try {
-                result.put("textbox0", value);
-            } catch (JSONException ex) { }
-            EventDispatcher.sendResponse(mMessage, result);
         }
 
         /**
         * Handle a cancellation response from the user.
         */
         public void cancel() {
-            JSONObject result = makeResult(RESULT_CANCEL);
-            EventDispatcher.sendResponse(mMessage, result);
         }
     }
 

@@ -42,7 +42,6 @@ UNIFIED_SOURCES += [
     'EventDispatcher.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
-    'NativeJSContainer.cpp',
     'nsAndroidProtocolHandler.cpp',
     'nsAppShell.cpp',
     'nsClipboard.cpp',
