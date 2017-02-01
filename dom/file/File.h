@@ -207,14 +207,14 @@ public:
   // ChromeOnly
   static already_AddRefed<Promise>
   CreateFromFileName(const GlobalObject& aGlobal,
-                     const nsAString& aFilePath,
+                     const nsAString& aData,
                      const ChromeFilePropertyBag& aBag,
                      ErrorResult& aRv);
 
   // ChromeOnly
   static already_AddRefed<Promise>
   CreateFromNsIFile(const GlobalObject& aGlobal,
-                    nsIFile* aFile,
+                    nsIFile* aData,
                     const ChromeFilePropertyBag& aBag,
                     ErrorResult& aRv);
 

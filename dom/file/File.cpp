@@ -36,7 +36,6 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/FileBinding.h"
-#include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
@@ -590,14 +589,34 @@ File::CreateFromNsIFile(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<Promise> promise =
-    FileCreatorHelper::CreateFile(aGlobal, aData, aBag, true, aRv);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+
+  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
+  impl->InitializeChromeFile(window, aData, aBag, true, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(impl->IsFile());
+
+  if (aBag.mLastModified.WasPassed()) {
+    impl->SetLastModified(aBag.mLastModified.Value());
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
+  promise->MaybeResolve(domFile);
+
   return promise.forget();
 }
 
 /* static */ already_AddRefed<Promise>
 File::CreateFromFileName(const GlobalObject& aGlobal,
-                         const nsAString& aPath,
+                         const nsAString& aData,
                          const ChromeFilePropertyBag& aBag,
                          ErrorResult& aRv)
 {
@@ -606,14 +625,28 @@ File::CreateFromFileName(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsIFile> file;
-  aRv = NS_NewLocalFile(aPath, false, getter_AddRefs(file));
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+
+  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
+  impl->InitializeChromeFile(window, aData, aBag, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(impl->IsFile());
+
+  if (aBag.mLastModified.WasPassed()) {
+    impl->SetLastModified(aBag.mLastModified.Value());
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<Promise> promise =
-    FileCreatorHelper::CreateFile(aGlobal, file, aBag, false, aRv);
+  RefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
+  promise->MaybeResolve(domFile);
+
   return promise.forget();
 }
 

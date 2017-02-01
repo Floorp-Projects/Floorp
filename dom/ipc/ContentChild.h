@@ -49,7 +49,6 @@ class PStorageChild;
 class ClonedMessageData;
 class TabChild;
 class GetFilesHelperChild;
-class FileCreatorHelper;
 
 class ContentChild final : public PContentChild
                          , public nsIWindowProvider
@@ -589,10 +588,6 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvBlobURLUnregistration(const nsCString& aURI) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvFileCreationResponse(const nsID& aUUID,
-                           const FileCreationResult& aResult) override;
-
   mozilla::ipc::IPCResult
   RecvRequestMemoryReport(
           const uint32_t& generation,
@@ -633,14 +628,6 @@ public:
   static void FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
                                              const char* const aErrorMsg,
                                              base::ProcessId aOtherPid);
-
-  // This method is used by FileCreatorHelper for the creation of a BlobImpl.
-  void
-  FileCreationRequest(nsID& aUUID, FileCreatorHelper* aHelper,
-                      const nsAString& aFullPath, const nsAString& aType,
-                      const nsAString& aName,
-                      const Optional<int64_t>& aLastModified,
-                      bool aIsFromNsIFile);
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
@@ -705,10 +692,6 @@ private:
   // This GetFilesHelperChild objects are removed when RecvGetFilesResponse is
   // received.
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelperChild> mGetFilesPendingRequests;
-
-  // Hashtable to keep track of the pending file creation.
-  // These items are removed when RecvFileCreationResponse is received.
-  nsRefPtrHashtable<nsIDHashKey, FileCreatorHelper> mFileCreationPending;
 
   bool mShuttingDown;
 
