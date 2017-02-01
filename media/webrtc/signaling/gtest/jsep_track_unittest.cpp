@@ -75,9 +75,9 @@ class JsepTrackTest : public ::testing::Test
 
       results.push_back(
           new JsepApplicationCodecDescription(
-            "5000",
             "webrtc-datachannel",
-            16
+            256,
+            5999
             ));
 
       // if we're doing something with red, it needs
@@ -310,7 +310,9 @@ class JsepTrackTest : public ::testing::Test
                            const JsepCodecDescription& b) const
     {
       ASSERT_EQ(a.mType, b.mType);
-      ASSERT_EQ(a.mDefaultPt, b.mDefaultPt);
+      if (a.mType != SdpMediaSection::kApplication) {
+        ASSERT_EQ(a.mDefaultPt, b.mDefaultPt);
+      }
       ASSERT_EQ(a.mName, b.mName);
       ASSERT_EQ(a.mClock, b.mClock);
       ASSERT_EQ(a.mChannels, b.mChannels);
@@ -1093,6 +1095,82 @@ TEST_F(JsepTrackTest, VideoOffSendrecvAnsSendonly)
   OfferAnswer();
   CheckOffEncodingCount(0);
   CheckAnsEncodingCount(1);
+}
+
+TEST_F(JsepTrackTest, DataChannelDraft05)
+{
+  Init(SdpMediaSection::kApplication);
+  OfferAnswer();
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
+  ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctp-port"));
+  ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
+}
+
+TEST_F(JsepTrackTest, DataChannelDraft05AnswerWithDifferentPort)
+{
+  mOffCodecs.values = MakeCodecs(false, false, false);
+  mAnsCodecs.values = MakeCodecs(false, false, false);
+
+  mOffCodecs.values.pop_back();
+  mOffCodecs.values.push_back(
+          new JsepApplicationCodecDescription(
+            "webrtc-datachannel",
+            256,
+            4555
+            ));
+
+  InitTracks(SdpMediaSection::kApplication);
+  InitSdp(SdpMediaSection::kApplication);
+  OfferAnswer();
+
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=sctpmap:4555 webrtc-datachannel 256"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
+  ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctp-port"));
+  ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
+}
+
+TEST_F(JsepTrackTest, DataChannelDraft21)
+{
+  mOffCodecs.values = MakeCodecs(false, false, false);
+  mAnsCodecs.values = MakeCodecs(false, false, false);
+  InitTracks(SdpMediaSection::kApplication);
+
+  mOffer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
+  mOffer->AddMediaSection(
+      SdpMediaSection::kApplication,
+      SdpDirectionAttribute::kInactive,
+      0,
+      SdpMediaSection::kUdpDtlsSctp,
+      sdp::kIPv4,
+      "0.0.0.0");
+  mAnswer.reset(new SipccSdp(SdpOrigin("", 0, 0, sdp::kIPv4, "")));
+  mAnswer->AddMediaSection(
+      SdpMediaSection::kApplication,
+      SdpDirectionAttribute::kInactive,
+      0,
+      SdpMediaSection::kUdpDtlsSctp,
+      sdp::kIPv4,
+      "0.0.0.0");
+
+  OfferAnswer();
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=sctp-port:5999"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=sctp-port:5999"));
+  ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctpmap"));
+  ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctpmap"));
 }
 
 static JsepTrack::JsConstraints

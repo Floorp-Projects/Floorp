@@ -841,7 +841,7 @@ class FileFinder(BaseFinder):
     '''
     Helper to get appropriate BaseFile instances from the file system.
     '''
-    def __init__(self, base, find_executables=True, ignore=(),
+    def __init__(self, base, find_executables=False, ignore=(),
                  find_dotfiles=False, **kargs):
         '''
         Create a FileFinder for files under the given base directory.

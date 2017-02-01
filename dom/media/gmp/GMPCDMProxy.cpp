@@ -762,7 +762,7 @@ GMPCDMProxy::DecryptJob::PostResult(DecryptStatus aResult,
             aDecryptedData.Elements(),
             std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
   } else if (aResult == NoKeyErr) {
-    NS_WARNING("CDM returned NoKeyErr");
+    EME_LOG("CDM returned NoKeyErr");
     // We still have the encrypted sample, so we can re-enqueue it to be
     // decrypted again once the key is usable again.
   } else {

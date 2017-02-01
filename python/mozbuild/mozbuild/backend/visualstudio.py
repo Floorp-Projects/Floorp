@@ -190,8 +190,7 @@ class VisualStudioBackend(CommonBackend):
             sources = set(os.path.join('$(TopSrcDir)', path, s) for s in sources)
             sources = set(os.path.normpath(s) for s in sources)
 
-            finder = FileFinder(os.path.join(self.environment.topsrcdir, path),
-                find_executables=False)
+            finder = FileFinder(os.path.join(self.environment.topsrcdir, path))
 
             headers = [t[0] for t in finder.find('*.h')]
             headers = [os.path.normpath(os.path.join('$(TopSrcDir)',

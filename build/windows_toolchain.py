@@ -150,16 +150,14 @@ def resolve_files():
     vs_path, sdk_path = find_vs_paths()
 
     for entry in VS_PATTERNS:
-        finder = FileFinder(vs_path, find_executables=False,
-                            ignore=entry.get('ignore', []))
+        finder = FileFinder(vs_path, ignore=entry.get('ignore', []))
         for p, f in finder.find(entry['pattern']):
             assert p.startswith(('VC/', 'DIA SDK/'))
 
             yield p.encode('utf-8'), f
 
     for entry in SDK_PATTERNS:
-        finder = FileFinder(sdk_path, find_executables=False,
-                            ignore=entry.get('ignore', []))
+        finder = FileFinder(sdk_path, ignore=entry.get('ignore', []))
         for p, f in finder.find(entry['pattern']):
             relpath = 'SDK/%s' % p
 

@@ -46,7 +46,9 @@ function isTopLevelFrame({frameId, parentFrameId}) {
 }
 
 function fillTransitionProperties(eventName, src, dst) {
-  if (eventName == "onCommitted" || eventName == "onHistoryStateUpdated") {
+  if (eventName == "onCommitted" ||
+      eventName == "onHistoryStateUpdated" ||
+      eventName == "onReferenceFragmentUpdated") {
     let frameTransitionData = src.frameTransitionData || {};
     let tabTransitionData = src.tabTransitionData || {};
 

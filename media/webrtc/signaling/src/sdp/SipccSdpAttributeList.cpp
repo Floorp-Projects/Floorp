@@ -133,6 +133,10 @@ SipccSdpAttributeList::LoadSimpleNumbers(sdp_t* sdp, uint16_t level,
                    errorHolder);
   LoadSimpleNumber(sdp, level, SDP_ATTR_MAXPTIME,
                    SdpAttribute::kMaxptimeAttribute, errorHolder);
+  LoadSimpleNumber(sdp, level, SDP_ATTR_SCTPPORT,
+                   SdpAttribute::kSctpPortAttribute, errorHolder);
+  LoadSimpleNumber(sdp, level, SDP_ATTR_MAXMESSAGESIZE,
+                   SdpAttribute::kMaxMessageSizeAttribute, errorHolder);
 }
 
 void
@@ -1051,9 +1055,7 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
   } else {
     sdp_media_e mtype = sdp_get_media_type(sdp, level);
     if (mtype == SDP_MEDIA_APPLICATION) {
-      if (!LoadSctpmap(sdp, level, errorHolder)) {
-        return false;
-      }
+      LoadSctpmap(sdp, level, errorHolder);
     } else {
       if (!LoadRtpmap(sdp, level, errorHolder)) {
         return false;
@@ -1372,6 +1374,17 @@ SipccSdpAttributeList::GetSctpmap() const
   }
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kSctpmapAttribute);
   return *static_cast<const SdpSctpmapAttributeList*>(attr);
+}
+
+uint32_t
+SipccSdpAttributeList::GetSctpPort() const
+{
+  if (!HasAttribute(SdpAttribute::kSctpPortAttribute)) {
+    MOZ_CRASH();
+  }
+
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kSctpPortAttribute);
+  return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
 const SdpSetupAttribute&
