@@ -33,6 +33,10 @@
     _(ParserCompileLazy)                              \
     _(ParserCompileScript)                            \
     _(ParserCompileModule)                            \
+    _(DecodeScript)                                   \
+    _(DecodeFunction)                                 \
+    _(EncodeScript)                                   \
+    _(EncodeFunction)                                 \
     _(Scripts)                                        \
     _(VM)                                             \
     _(CompressSource)                                 \

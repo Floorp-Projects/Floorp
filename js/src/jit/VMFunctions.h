@@ -226,11 +226,13 @@ struct VMFunction
         return count;
     }
 
+    constexpr
     VMFunction(void* wrapped, const char* name, uint32_t explicitArgs, uint32_t argumentProperties,
                uint32_t argumentPassedInFloatRegs, uint64_t argRootTypes,
                DataType outParam, RootType outParamRootType, DataType returnType,
                uint32_t extraValuesToPop = 0, MaybeTailCall expectTailCall = NonTailCall)
-      : wrapped(wrapped),
+      : next(nullptr),
+        wrapped(wrapped),
         name_(name),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
@@ -241,15 +243,26 @@ struct VMFunction
         outParamRootType(outParamRootType),
         extraValuesToPop(extraValuesToPop),
         expectTailCall(expectTailCall)
+    { }
+
+    VMFunction(const VMFunction& o)
+      : next(nullptr),
+        wrapped(o.wrapped),
+        name_(o.name_),
+        explicitArgs(o.explicitArgs),
+        argumentProperties(o.argumentProperties),
+        argumentPassedInFloatRegs(o.argumentPassedInFloatRegs),
+        outParam(o.outParam),
+        returnType(o.returnType),
+        argumentRootTypes(o.argumentRootTypes),
+        outParamRootType(o.outParamRootType),
+        extraValuesToPop(o.extraValuesToPop),
+        expectTailCall(o.expectTailCall)
     {
         // Check for valid failure/return type.
         MOZ_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
         MOZ_ASSERT(returnType == Type_Bool ||
                    returnType == Type_Object);
-    }
-
-    VMFunction(const VMFunction& o) {
-        *this = o;
         addToFunctions();
     }
 

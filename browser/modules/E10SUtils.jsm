@@ -159,10 +159,12 @@ this.E10SUtils = {
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
-    // If we are in a fresh process, and it wouldn't be content visible to
-    // change processes, we want to load into a new process so that we can throw
+    // If we are in a Large-Allocation process, and it wouldn't be content visible
+    // to change processes, we want to load into a new process so that we can throw
     // this one out.
-    if (aDocShell.inFreshProcess && aDocShell.isOnlyToplevelInTabGroup) {
+    if (aDocShell.inLargeAllocProcess &&
+        !aDocShell.awaitingLargeAlloc &&
+        aDocShell.isOnlyToplevelInTabGroup) {
       return false;
     }
 
@@ -170,7 +172,7 @@ this.E10SUtils = {
     return this.shouldLoadURIInThisProcess(aURI);
   },
 
-  redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aFreshProcess) {
+  redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aFreshProcess, aFlags) {
     // Retarget the load to the correct process
     let messageManager = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
@@ -179,7 +181,7 @@ this.E10SUtils = {
     messageManager.sendAsyncMessage("Browser:LoadURI", {
       loadOptions: {
         uri: aURI.spec,
-        flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+        flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrer: aReferrer ? aReferrer.spec : null,
         triggeringPrincipal: aTriggeringPrincipal
                              ? Utils.serializePrincipal(aTriggeringPrincipal)

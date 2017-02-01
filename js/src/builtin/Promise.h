@@ -66,10 +66,12 @@ class PromiseObject : public NativeObject
         return getFixedSlot(PromiseSlot_ReactionsOrResult);
     }
 
-    MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
-    MOZ_MUST_USE bool reject(JSContext* cx, HandleValue rejectionValue);
+    static MOZ_MUST_USE bool resolve(JSContext* cx, Handle<PromiseObject*> promise,
+                                     HandleValue resolutionValue);
+    static MOZ_MUST_USE bool reject(JSContext* cx, Handle<PromiseObject*> promise,
+                                    HandleValue rejectionValue);
 
-    void onSettled(JSContext* cx);
+    static void onSettled(JSContext* cx, Handle<PromiseObject*> promise);
 
     double allocationTime() { return getFixedSlot(PromiseSlot_AllocationTime).toNumber(); }
     double resolutionTime() { return getFixedSlot(PromiseSlot_ResolutionTime).toNumber(); }

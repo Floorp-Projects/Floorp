@@ -237,7 +237,7 @@ class ModuleObject : public NativeObject
 #ifdef DEBUG
     static bool IsFrozen(JSContext* cx, HandleModuleObject self);
 #endif
-    void fixEnvironmentsAfterCompartmentMerge(JSContext* cx);
+    void fixEnvironmentsAfterCompartmentMerge();
 
     JSScript* script() const;
     Scope* enclosingScope() const;

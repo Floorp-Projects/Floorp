@@ -65,7 +65,8 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
   bool reloadInFreshProcess(in nsIDocShell aDocShell,
                             in nsIURI aURI,
                             in nsIURI aReferrer,
-                            in nsIPrincipal aTriggeringPrincipal);
+                            in nsIPrincipal aTriggeringPrincipal,
+                            in uint32_t aLoadFlags);
 
   /**
    * Tell the browser to start prerendering the given document. This prerendering
