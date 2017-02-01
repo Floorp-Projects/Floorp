@@ -16,17 +16,7 @@ SystemGroup::Dispatch(const char* aName,
                       TaskCategory aCategory,
                       already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
-  if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
-  } else {
-    return NS_DispatchToMainThread(runnable.forget());
-  }
+  return Dispatcher::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 /* static */ nsIEventTarget*
@@ -35,4 +25,3 @@ SystemGroup::EventTargetFor(TaskCategory aCategory)
   nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
   return main;
 }
-
