@@ -155,16 +155,16 @@ skip-if(!winWidget) pref(webgl.disable-angle,true) == webgl-color-test.html?nati
 == clip-multiple-move-2.html clip-multiple-move-2.html
 
 # Bug 815648
-fails == stroketext-shadow.html stroketext-shadow.html
+fails asserts-if(stylo,1) == stroketext-shadow.html stroketext-shadow.html # bug 1324700
 
 # focus rings
-pref(canvas.focusring.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded.html
-pref(canvas.customfocusring.enabled,true) skip-if(Android||cocoaWidget||winWidget) fuzzy-if(gtkWidget,64,410) needs-focus == drawCustomFocusRing.html drawCustomFocusRing.html
+pref(canvas.focusring.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) asserts-if(stylo,6) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded.html # bug 1324671
+pref(canvas.customfocusring.enabled,true) skip-if(Android||cocoaWidget||winWidget) fuzzy-if(gtkWidget,64,410) asserts-if(stylo,6) needs-focus == drawCustomFocusRing.html drawCustomFocusRing.html # bug 1324671
 
 # Check that captureStream() displays in a local video element
 == capturestream.html capturestream.html
 
-fails == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds.html
+fails asserts-if(stylo,1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds.html # bug 1324700
 
 # Canvas Filter Reftests
 include filters/reftest-stylo.list

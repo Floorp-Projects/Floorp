@@ -31,7 +31,7 @@ from .context import Context
 from mozpack.files import FileFinder
 
 
-default_finder = FileFinder('/', find_executables=False)
+default_finder = FileFinder('/')
 
 
 def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),

@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript">
+
+var target = document.createElement("div");
+target.foo = 'bar';
+var observer = new IntersectionObserver(function () { });
+observer.observe(target);
+observer.unobserve(target);
+observer = null;
+target = null;
+
+</script>
+</head>
+</html>

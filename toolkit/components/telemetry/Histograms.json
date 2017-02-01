@@ -5173,6 +5173,83 @@
     "releaseChannelCollection": "opt-out",
     "description": "Indicates we showed a 'would you like to undo this automatic migration?' notification bar. The bucket indicates which nth day we're on (1st/2nd/3rd, by default - 0 would be indicative the pref didn't get set which shouldn't happen). After 3 days on which the notification gets shown, it will get disabled and never shown again."
   },
+  "FX_STARTUP_MIGRATION_UNDO_BOOKMARKS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' bookmarks import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_LOGINS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' login (password) import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_VISITS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' history import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_BOOKMARKS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of bookmarks, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_LOGINS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of logins, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_VISITS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of visits (history), in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_TOTAL_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the entirety of the startup undo, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
@@ -10238,6 +10315,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
+  "IPC_SYNC_LATENCY_MS": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "bug_numbers": [1333489],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 10,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
+  },
   "MESSAGE_MANAGER_MESSAGE_SIZE2": {
     "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
     "bug_numbers": [1260908],
@@ -10644,5 +10731,29 @@
     "n_buckets": 10,
     "bug_numbers": [1331804],
     "description": "The time a given main thread runnable took to run (in milliseconds). The key comes from the runnables nsINamed::name value."
+  },
+  "MOZ_BLOB_IN_XHR": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "bug_numbers": [1335365],
+    "releaseChannelCollection": "opt-out",
+    "description": "XMLHttpRequest.responseType set to moz-blob"
+  },
+  "MOZ_CHUNKED_TEXT_IN_XHR": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "bug_numbers": [1335365],
+    "releaseChannelCollection": "opt-out",
+    "description": "XMLHttpRequest.responseType set to moz-chunked-text"
+  },
+  "MOZ_CHUNKED_ARRAYBUFFER_IN_XHR": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "boolean",
+    "bug_numbers": [1335365],
+    "releaseChannelCollection": "opt-out",
+    "description": "XMLHttpRequest.responseType set to moz-chunked-arraybuffer"
   }
 }

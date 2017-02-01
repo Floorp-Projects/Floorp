@@ -7,22 +7,12 @@
 #define TelemetryIPCAccumulator_h__
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "TelemetryComms.h"
 
 class nsIRunnable;
 class nsITimer;
 class nsAString;
 class nsCString;
-class nsIVariant;
-
-namespace mozilla {
-namespace Telemetry {
-
-enum ID : uint32_t;
-enum class ScalarID : uint32_t;
-enum class ScalarActionType : uint32_t;
-
-} // Telemetry
-} // mozilla
 
 namespace TelemetryIPCAccumulator {
 
@@ -32,12 +22,13 @@ void AccumulateChildKeyedHistogram(mozilla::Telemetry::ID aId, const nsCString& 
                                    uint32_t aSample);
 
 // Scalar accumulation functions.
-void RecordChildScalarAction(mozilla::Telemetry::ScalarID aId, uint32_t aKind,
-                             mozilla::Telemetry::ScalarActionType aAction, nsIVariant* aValue);
+void RecordChildScalarAction(mozilla::Telemetry::ScalarID aId,
+                             mozilla::Telemetry::ScalarActionType aAction,
+                             const mozilla::Telemetry::ScalarVariant& aValue);
 
 void RecordChildKeyedScalarAction(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
-                                  uint32_t aKind, mozilla::Telemetry::ScalarActionType aAction,
-                                  nsIVariant* aValue);
+                                  mozilla::Telemetry::ScalarActionType aAction,
+                                  const mozilla::Telemetry::ScalarVariant& aValue);
 
 void IPCTimerFired(nsITimer* aTimer, void* aClosure);
 void DeInitializeGlobalState();

@@ -1587,10 +1587,12 @@ SyncEngine.prototype = {
           out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
           ok = true;
         } catch (ex) {
-          if (Async.isShutdownException(ex)) {
+          this._log.warn("Error creating record", ex);
+          ++counts.failed;
+          if (Async.isShutdownException(ex) || !this.allowSkippedRecord) {
+            Observers.notify("weave:engine:sync:uploaded", counts, this.name);
             throw ex;
           }
-          this._log.warn("Error creating record", ex);
         }
         if (ok) {
           let { enqueued, error } = postQueue.enqueue(out);

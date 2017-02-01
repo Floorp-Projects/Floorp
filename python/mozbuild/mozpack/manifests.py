@@ -361,7 +361,7 @@ class InstallManifest(object):
 
             if install_type in (self.PATTERN_SYMLINK, self.PATTERN_COPY):
                 _, base, pattern, dest = entry
-                finder = FileFinder(base, find_executables=False)
+                finder = FileFinder(base)
                 paths = [f[0] for f in finder.find(pattern)]
 
                 if install_type == self.PATTERN_SYMLINK:

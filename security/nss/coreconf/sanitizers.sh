@@ -2,14 +2,18 @@
 # This file is used by build.sh to setup sanitizers.
 
 sanitizer_flags=""
+sanitizers=()
 
-# This tracks what sanitizers are enabled, and their options.
-declare -A sanitizers
+# This tracks what sanitizers are enabled so they don't get enabled twice.  This
+# means that doing things that enable the same sanitizer twice (such as enabling
+# both --asan and --fuzz) is order-dependent: only the first is used.
 enable_sanitizer()
 {
     local san="$1"
-    [ -n "${sanitizers[$san]}" ] && return
-    sanitizers[$san]="${2:-1}"
+    for i in "${sanitizers[@]}"; do
+        [ "$san" = "$i" ] && return
+    done
+    sanitizers+=("$san")
 
     if [ -z "$sanitizer_flags" ]; then
         gyp_params+=(-Dno_zdefs=1)

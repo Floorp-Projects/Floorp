@@ -20,8 +20,6 @@
 
 using namespace std;
 
-std::string FakeDecryptor::sNodeId;
-
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
 extern GMPPlatformAPI* g_platform_api; // Defined in gmp-fake.cpp
 
@@ -476,45 +474,6 @@ public:
   string mRecordId;
 };
 
-static void
-RecvGMPRecordIterator(GMPRecordIterator* aRecordIterator,
-                      void* aUserArg,
-                      GMPErr aStatus)
-{
-  FakeDecryptor* decryptor = reinterpret_cast<FakeDecryptor*>(aUserArg);
-  decryptor->ProcessRecordNames(aRecordIterator, aStatus);
-}
-
-void
-FakeDecryptor::ProcessRecordNames(GMPRecordIterator* aRecordIterator,
-                                  GMPErr aStatus)
-{
-  if (sInstance != this) {
-    FakeDecryptor::Message("Error aUserArg was not passed through GetRecordIterator");
-    return;
-  }
-  if (GMP_FAILED(aStatus)) {
-    FakeDecryptor::Message("Error GetRecordIterator failed");
-    return;
-  }
-  std::string response("record-names ");
-  bool first = true;
-  const char* name = nullptr;
-  uint32_t len = 0;
-  while (GMP_SUCCEEDED(aRecordIterator->GetName(&name, &len))) {
-    std::string s(name, name+len);
-    if (!first) {
-      response += ",";
-    } else {
-      first = false;
-    }
-    response += s;
-    aRecordIterator->NextRecord();
-  }
-  aRecordIterator->Close();
-  FakeDecryptor::Message(response);
-}
-
 enum ShutdownMode {
   ShutdownNormal,
   ShutdownTimeout,
@@ -560,9 +519,5 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
     ReadRecord("shutdown-token", new ReportReadRecordContinuation("shutdown-token"));
   } else if (task == "test-op-apis") {
     mozilla::gmptest::TestOuputProtectionAPIs();
-  } else if (task == "retrieve-record-names") {
-    GMPEnumRecordNames(&RecvGMPRecordIterator, this);
-  } else if (task == "retrieve-node-id") {
-    Message("node-id " + sNodeId);
   }
 }

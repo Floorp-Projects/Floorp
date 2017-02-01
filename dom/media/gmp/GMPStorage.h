@@ -25,7 +25,6 @@ public:
                       nsTArray<uint8_t>& aOutBytes) = 0;
   virtual GMPErr Write(const nsCString& aRecordName,
                        const nsTArray<uint8_t>& aBytes) = 0;
-  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) const = 0;
   virtual void Close(const nsCString& aRecordName) = 0;
 protected:
   virtual ~GMPStorage() {}

@@ -50,7 +50,6 @@
 #include "ImageRegion.h"
 
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxFont.h"
 #include "gfxBlur.h"
@@ -5611,69 +5610,72 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect dstWriteRect = srcReadRect;
   dstWriteRect.MoveBy(-aX, -aY);
 
-  JS::AutoCheckCannotGC nogc;
-  bool isShared;
-  uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
-  MOZ_ASSERT(!isShared);        // Should not happen, data was created above
+  {
+    JS::AutoCheckCannotGC nogc;
+    bool isShared;
+    uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
+    MOZ_ASSERT(!isShared);        // Should not happen, data was created above
 
-  uint8_t* src;
-  uint32_t srcStride;
-  if (readback) {
-    srcStride = rawData.mStride;
-    src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
-  } else {
-    src = data;
-    srcStride = aWidth * 4;
-  }
+    uint8_t* src;
+    uint32_t srcStride;
+    if (readback) {
+      srcStride = rawData.mStride;
+      src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
+    } else {
+      src = data;
+      srcStride = aWidth * 4;
+    }
 
-  uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
+    uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
-  if (mOpaque) {
-    for (int32_t j = 0; j < dstWriteRect.height; ++j) {
-      for (int32_t i = 0; i < dstWriteRect.width; ++i) {
-        // XXX Is there some useful swizzle MMX we can use here?
+    if (mOpaque) {
+      for (int32_t j = 0; j < dstWriteRect.height; ++j) {
+        for (int32_t i = 0; i < dstWriteRect.width; ++i) {
+          // XXX Is there some useful swizzle MMX we can use here?
 #if MOZ_LITTLE_ENDIAN
-        uint8_t b = *src++;
-        uint8_t g = *src++;
-        uint8_t r = *src++;
-        src++;
+          uint8_t b = *src++;
+          uint8_t g = *src++;
+          uint8_t r = *src++;
+          src++;
 #else
-        src++;
-        uint8_t r = *src++;
-        uint8_t g = *src++;
-        uint8_t b = *src++;
+          src++;
+          uint8_t r = *src++;
+          uint8_t g = *src++;
+          uint8_t b = *src++;
 #endif
-        *dst++ = r;
-        *dst++ = g;
-        *dst++ = b;
-        *dst++ = 255;
+          *dst++ = r;
+          *dst++ = g;
+          *dst++ = b;
+          *dst++ = 255;
+        }
+        src += srcStride - (dstWriteRect.width * 4);
+        dst += (aWidth * 4) - (dstWriteRect.width * 4);
       }
-      src += srcStride - (dstWriteRect.width * 4);
-      dst += (aWidth * 4) - (dstWriteRect.width * 4);
-    }
-  } else
-  for (int32_t j = 0; j < dstWriteRect.height; ++j) {
-    for (int32_t i = 0; i < dstWriteRect.width; ++i) {
-      // XXX Is there some useful swizzle MMX we can use here?
+    } else {
+      for (int32_t j = 0; j < dstWriteRect.height; ++j) {
+        for (int32_t i = 0; i < dstWriteRect.width; ++i) {
+          // XXX Is there some useful swizzle MMX we can use here?
 #if MOZ_LITTLE_ENDIAN
-      uint8_t b = *src++;
-      uint8_t g = *src++;
-      uint8_t r = *src++;
-      uint8_t a = *src++;
+          uint8_t b = *src++;
+          uint8_t g = *src++;
+          uint8_t r = *src++;
+          uint8_t a = *src++;
 #else
-      uint8_t a = *src++;
-      uint8_t r = *src++;
-      uint8_t g = *src++;
-      uint8_t b = *src++;
+          uint8_t a = *src++;
+          uint8_t r = *src++;
+          uint8_t g = *src++;
+          uint8_t b = *src++;
 #endif
-      // Convert to non-premultiplied color
-      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + r];
-      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + g];
-      *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + b];
-      *dst++ = a;
+          // Convert to non-premultiplied color
+          *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + r];
+          *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + g];
+          *dst++ = gfxUtils::sUnpremultiplyTable[a * 256 + b];
+          *dst++ = a;
+        }
+        src += srcStride - (dstWriteRect.width * 4);
+        dst += (aWidth * 4) - (dstWriteRect.width * 4);
+      }
     }
-    src += srcStride - (dstWriteRect.width * 4);
-    dst += (aWidth * 4) - (dstWriteRect.width * 4);
   }
 
   if (readback) {
@@ -5810,17 +5812,26 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
 
   uint32_t copyWidth = dirtyRect.Width();
   uint32_t copyHeight = dirtyRect.Height();
-  RefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfx::IntSize(copyWidth, copyHeight),
-                                                          SurfaceFormat::A8R8G8B8_UINT32,
-                                                          false);
-  if (!imgsurf || imgsurf->CairoStatus()) {
+  RefPtr<DataSourceSurface> sourceSurface =
+    gfx::Factory::CreateDataSourceSurface(gfx::IntSize(copyWidth, copyHeight),
+                                          SurfaceFormat::B8G8R8A8,
+                                          false);
+  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+  // covers the details of how to run into it, but the full detailed
+  // investigation hasn't been done to determine the underlying cause.  We
+  // will just handle the failure to allocate the surface to avoid a crash.
+  if (!sourceSurface) {
     return NS_ERROR_FAILURE;
   }
 
+  uint8_t *dstLine = sourceSurface->GetData();
+  if (!dstLine) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  int32_t dstStride = sourceSurface->Stride();
+
   uint32_t copyX = dirtyRect.x - aX;
   uint32_t copyY = dirtyRect.y - aY;
-  //uint8_t *src = aArray->Data();
-  uint8_t *dst = imgsurf->Data();
   uint8_t* srcLine = aArray->Data() + copyY * (aW * 4) + copyX * 4;
   // For opaque canvases, we must still premultiply the RGB components, but write the alpha as opaque.
   uint8_t alphaMask = mOpaque ? 255 : 0;
@@ -5832,6 +5843,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
 #endif
   for (uint32_t j = 0; j < copyHeight; j++) {
     uint8_t *src = srcLine;
+    uint8_t *dst = dstLine;
     for (uint32_t i = 0; i < copyWidth; i++) {
       uint8_t r = *src++;
       uint8_t g = *src++;
@@ -5852,6 +5864,10 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
 #endif
     }
     srcLine += aW * 4;
+    // Note that dstLine + dstStride might not be the same as "dst" here,
+    // depending the width we asked for and the width the underlying machinery
+    // decided to actually allocate (e.g. to give each row nice alignment).
+    dstLine += dstStride;
   }
 
   // The canvas spec says that the current path, transformation matrix, shadow attributes,
@@ -5861,17 +5877,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
   EnsureTarget(&putRect);
 
   if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<SourceSurface> sourceSurface =
-    mTarget->CreateSourceSurfaceFromData(imgsurf->Data(), IntSize(copyWidth, copyHeight), imgsurf->Stride(), SurfaceFormat::B8G8R8A8);
-
-  // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
-  // covers the details of how to run into it, but the full detailed
-  // investigation hasn't been done to determine the underlying cause.  We
-  // will just handle the failure to allocate the surface to avoid a crash.
-  if (!sourceSurface) {
     return NS_ERROR_FAILURE;
   }
 
