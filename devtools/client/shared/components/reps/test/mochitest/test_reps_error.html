@@ -19,9 +19,8 @@ Test Error rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { ErrorRep } = browserRequire("devtools/client/shared/components/reps/error");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, ErrorRep } = REPS;
 
   try {
     // Test errors with different properties

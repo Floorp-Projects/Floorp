@@ -20,9 +20,8 @@ Test ArrayRep rep
 /* import-globals-from head.js */
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { ArrayRep } = browserRequire("devtools/client/shared/components/reps/array");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, ArrayRep } = REPS;
 
   let componentUnderTest = ArrayRep;
   const maxLength = {

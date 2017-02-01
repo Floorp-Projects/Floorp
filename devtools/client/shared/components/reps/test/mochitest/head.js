@@ -13,6 +13,7 @@ var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var flags = require("devtools/shared/flags");
 var { Task } = require("devtools/shared/task");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 flags.testing = true;
 var { require: browserRequire } = BrowserLoader({
