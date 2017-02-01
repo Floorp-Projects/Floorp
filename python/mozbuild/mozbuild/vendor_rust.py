@@ -19,7 +19,6 @@ import sys
 class VendorRust(MozbuildObject):
     def get_cargo_path(self):
         try:
-            # If the build isn't --enable-rust then CARGO won't be set.
             return self.substs['CARGO']
         except (BuildEnvironmentNotFoundException, KeyError):
             # Default if this tree isn't configured.
