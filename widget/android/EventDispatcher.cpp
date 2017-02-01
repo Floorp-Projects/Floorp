@@ -720,17 +720,26 @@ EventDispatcher::DispatchOnGecko(ListenersList* list, const nsAString& aEvent,
 }
 
 NS_IMETHODIMP
-EventDispatcher::Dispatch(const nsAString& aEvent, JS::HandleValue aData,
+EventDispatcher::Dispatch(JS::HandleValue aEvent, JS::HandleValue aData,
                           nsIAndroidEventCallback* aCallback, JSContext* aCx)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
+    if (!aEvent.isString()) {
+        NS_WARNING("Invalid event name");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsAutoJSString event;
+    NS_ENSURE_TRUE(CheckJS(aCx, event.init(aCx, aEvent.toString())),
+                   NS_ERROR_OUT_OF_MEMORY);
+
     // Don't need to lock here because we're on the main thread, and we can't
     // race against Register/UnregisterListener.
 
-    ListenersList* list = mListenersMap.Get(aEvent);
+    ListenersList* list = mListenersMap.Get(event);
     if (list) {
-        return DispatchOnGecko(list, aEvent, aData, aCallback);
+        return DispatchOnGecko(list, event, aData, aCallback);
     }
 
     if (!mDispatcher) {
@@ -738,7 +747,7 @@ EventDispatcher::Dispatch(const nsAString& aEvent, JS::HandleValue aData,
     }
 
     jni::Object::LocalRef data(jni::GetGeckoThreadEnv());
-    nsresult rv = BoxData(aEvent, aCx, aData, data, /* ObjectOnly */ true);
+    nsresult rv = BoxData(event, aCx, aData, data, /* ObjectOnly */ true);
     NS_ENSURE_SUCCESS(rv, JS_IsExceptionPending(aCx) ? NS_OK : rv);
 
     dom::AutoNoJSAPI nojsapi;
@@ -753,7 +762,7 @@ EventDispatcher::Dispatch(const nsAString& aEvent, JS::HandleValue aData,
                         aCallback, mDOMWindow));
     }
 
-    mDispatcher->DispatchToThreads(aEvent, data, callback);
+    mDispatcher->DispatchToThreads(event, data, callback);
     return NS_OK;
 }
 
