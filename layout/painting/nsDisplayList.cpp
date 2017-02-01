@@ -422,7 +422,7 @@ static void
 SetAnimatable(nsCSSPropertyID aProperty,
               const StyleAnimationValue& aAnimationValue,
               nsIFrame* aFrame,
-              const TransformReferenceBox& aRefBox,
+              TransformReferenceBox& aRefBox,
               layers::Animatable& aAnimatable)
 {
   MOZ_ASSERT(aFrame);
@@ -440,11 +440,10 @@ SetAnimatable(nsCSSPropertyID aProperty,
       aAnimatable = InfallibleTArray<TransformFunction>();
       nsCSSValueSharedList* list =
         aAnimationValue.GetCSSValueSharedListValue();
-      TransformReferenceBox refBox(aFrame);
       AddTransformFunctions(list->mHead,
                             aFrame->StyleContext(),
                             aFrame->PresContext(),
-                            refBox,
+                            aRefBox,
                             aAnimatable.get_ArrayOfTransformFunction());
       break;
     }
@@ -456,7 +455,7 @@ SetAnimatable(nsCSSPropertyID aProperty,
 static void
 SetBaseAnimationStyle(nsCSSPropertyID aProperty,
                       nsIFrame* aFrame,
-                      const TransformReferenceBox& aRefBox,
+                      TransformReferenceBox& aRefBox,
                       layers::Animatable& aBaseStyle)
 {
   MOZ_ASSERT(aFrame);
