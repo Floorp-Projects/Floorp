@@ -155,7 +155,7 @@ static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
-bool TabChild::sWasFreshProcess = false;
+bool TabChild::sInLargeAllocProcess = false;
 
 TabChildBase::TabChildBase()
   : mTabChildGlobal(nullptr)
@@ -381,7 +381,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
-  , mIsFreshProcess(false)
+  , mAwaitingLA(false)
   , mSkipKeyPress(false)
   , mLayerObserverEpoch(0)
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
@@ -3100,11 +3100,25 @@ TabChild::RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvSetFreshProcess()
+TabChild::RecvSetIsLargeAllocation(const bool& aIsLA, const bool& aNewProcess)
 {
-  MOZ_ASSERT(!sWasFreshProcess, "Can only be a fresh process once!");
-  mIsFreshProcess = true;
+  mAwaitingLA = aIsLA;
+  sInLargeAllocProcess = aIsLA && aNewProcess;
   return IPC_OK();
+}
+
+bool
+TabChild::IsAwaitingLargeAlloc()
+{
+  return mAwaitingLA;
+}
+
+bool
+TabChild::TakeAwaitingLargeAlloc()
+{
+  bool awaiting = mAwaitingLA;
+  mAwaitingLA = false;
+  return awaiting;
 }
 
 mozilla::plugins::PPluginWidgetChild*

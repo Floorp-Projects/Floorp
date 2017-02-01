@@ -51,7 +51,7 @@ const FP_PREAMBLE = "struct CertAuthorityHash {\n" +
 " const uint8_t hash[HASH_LEN];\n" +
 " const int32_t binNumber;\n" +
 "};\n\n" +
-"static const struct CertAuthorityHash ROOT_TABLE[] = {\n";
+"static constexpr struct CertAuthorityHash ROOT_TABLE[] = {\n";
 
 const FP_POSTAMBLE = "};\n";
 

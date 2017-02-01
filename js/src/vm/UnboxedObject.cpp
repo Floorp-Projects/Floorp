@@ -389,14 +389,14 @@ PropagatePropertyTypes(JSContext* cx, jsid id, ObjectGroup* oldGroup, ObjectGrou
 static PlainObject*
 MakeReplacementTemplateObject(JSContext* cx, HandleObjectGroup group, const UnboxedLayout &layout)
 {
-    PlainObject* obj = NewObjectWithGroup<PlainObject>(cx, group, layout.getAllocKind(),
-                                                       TenuredObject);
+    Rooted<PlainObject*> obj(cx, NewObjectWithGroup<PlainObject>(cx, group, layout.getAllocKind(),
+                                                                 TenuredObject));
     if (!obj)
         return nullptr;
 
     for (size_t i = 0; i < layout.properties().length(); i++) {
         const UnboxedLayout::Property& property = layout.properties()[i];
-        if (!obj->addDataProperty(cx, NameToId(property.name), i, JSPROP_ENUMERATE))
+        if (!NativeObject::addDataProperty(cx, obj, NameToId(property.name), i, JSPROP_ENUMERATE))
             return nullptr;
         MOZ_ASSERT(obj->slotSpan() == i + 1);
         MOZ_ASSERT(!obj->inDictionaryMode());
