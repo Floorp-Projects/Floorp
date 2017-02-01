@@ -94,7 +94,8 @@ module.exports = envConfig => {
         "AppConstants": "{ DEBUG: true, DEBUG_JS_MODULES: true }",
         "loader": `{
                       lazyRequireGetter: () => {},
-                      lazyGetter: () => {}
+                      lazyGetter: () => {},
+                      lazyImporter: () => {}
                     }`,
         "dump": "console.log",
       })
