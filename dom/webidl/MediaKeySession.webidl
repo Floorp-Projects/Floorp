@@ -16,7 +16,6 @@ interface MediaKeySession : EventTarget {
   readonly attribute MediaKeyError? error;
 
   // session properties
-  readonly attribute DOMString keySystem;
   readonly attribute DOMString sessionId;
 
   readonly attribute unrestricted double expiration;
