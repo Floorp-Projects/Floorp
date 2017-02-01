@@ -118,7 +118,6 @@ gfxContext::~gfxContext()
       mStateStack[i].drawTarget->PopClip();
     }
   }
-  mDT->Flush();
   MOZ_COUNT_DTOR(gfxContext);
 }
 
