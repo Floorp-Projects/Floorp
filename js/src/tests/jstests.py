@@ -105,6 +105,10 @@ def parse_args():
                         help='Get tests from the given file.')
     input_og.add_option('-x', '--exclude-file', action='append',
                         help='Exclude tests from the given file.')
+    input_og.add_option('--include', action='append', dest='requested_paths', default=[],
+                        help='Include the given test file or directory.')
+    input_og.add_option('--exclude', action='append', dest='excluded_paths', default=[],
+                        help='Exclude the given test file or directory.')
     input_og.add_option('-d', '--exclude-random', dest='random',
                         action='store_false',
                         help='Exclude tests marked as "random."')
@@ -160,7 +164,7 @@ def parse_args():
 
     # Acquire the JS shell given on the command line.
     options.js_shell = None
-    requested_paths = set()
+    requested_paths = set(options.requested_paths)
     if len(args) > 0:
         options.js_shell = abspath(args[0])
         requested_paths |= set(args[1:])
@@ -209,9 +213,10 @@ def parse_args():
             requested_paths |= set(
                 [line.strip() for line in open(test_file).readlines()])
 
+    excluded_paths = set(options.excluded_paths)
+
     # If files with lists of tests to exclude were specified, add them to the
     # excluded tests set.
-    excluded_paths = set()
     if options.exclude_file:
         for filename in options.exclude_file:
             try:
