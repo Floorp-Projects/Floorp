@@ -2903,7 +2903,10 @@ pref("dom.ipc.processCount", 1);
 pref("svg.disabled", false);
 
 // Override default dom.ipc.processCount for some remote content process types.
-pref("dom.ipc.processCount.webLargeAllocation", 2);
+pref("dom.ipc.processCount.webLargeAllocation", 10);
+
+// Enable the Large-Allocation header
+pref("dom.largeAllocationHeader.enabled", true);
 
 // Pref to control whether we use separate content processes for top-level load
 // of file:// URIs.

@@ -295,45 +295,88 @@ SharedSurface_D3D11Interop::Create(DXInterop2Device* interop,
         return nullptr;
     }
 
-    GLuint rbGL = 0;
-    gl->fGenRenderbuffers(1, &rbGL);
-    const auto lockHandle = interop->RegisterObject(texD3D, rbGL, LOCAL_GL_RENDERBUFFER,
+    GLuint interopRB = 0;
+    gl->fGenRenderbuffers(1, &interopRB);
+    const auto lockHandle = interop->RegisterObject(texD3D, interopRB,
+                                                    LOCAL_GL_RENDERBUFFER,
                                                     LOCAL_WGL_ACCESS_WRITE_DISCARD_NV);
     if (!lockHandle) {
         NS_WARNING("Failed to register D3D object with WGL.");
-        gl->fDeleteRenderbuffers(1, &rbGL);
+        gl->fDeleteRenderbuffers(1, &interopRB);
         return nullptr;
     }
 
     ////
 
+    GLuint prodTex = 0;
+    GLuint interopFB = 0;
+    {
+        GLint samples = 0;
+        {
+            const ScopedBindRenderbuffer bindRB(gl, interopRB);
+            gl->fGetRenderbufferParameteriv(LOCAL_GL_RENDERBUFFER,
+                                            LOCAL_GL_RENDERBUFFER_SAMPLES, &samples);
+        }
+        if (samples > 0) { // Intel
+            // Intel's dx_interop GL-side textures have SAMPLES=1, likely because that's
+            // what the D3DTextures technically have. However, SAMPLES=1 is very different
+            // from SAMPLES=0 in GL.
+            // For more, see https://bugzilla.mozilla.org/show_bug.cgi?id=1325835
+
+            // Our ShSurf tex or rb must be single-sampled.
+            gl->fGenTextures(1, &prodTex);
+            const ScopedBindTexture bindTex(gl, prodTex);
+            gl->TexParams_SetClampNoMips();
+
+            const GLenum format = (hasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB);
+            const ScopedBindPBO nullPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER);
+            gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, format, size.width, size.height, 0,
+                            format, LOCAL_GL_UNSIGNED_BYTE, nullptr);
+
+            gl->fGenFramebuffers(1, &interopFB);
+            ScopedBindFramebuffer bindFB(gl, interopFB);
+            gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                                         LOCAL_GL_RENDERBUFFER, interopRB);
+            MOZ_ASSERT(gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+                       LOCAL_GL_FRAMEBUFFER_COMPLETE);
+        }
+    }
+
+    ////
+
     typedef SharedSurface_D3D11Interop ptrT;
-    UniquePtr<ptrT> ret ( new ptrT(gl, size, hasAlpha, rbGL, interop, lockHandle,
-                                   texD3D, dxgiHandle) );
+    UniquePtr<ptrT> ret ( new ptrT(gl, size, hasAlpha, prodTex, interopFB, interopRB,
+                                   interop, lockHandle, texD3D, dxgiHandle) );
     return Move(ret);
 }
 
 SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(GLContext* gl,
                                                        const gfx::IntSize& size,
-                                                       bool hasAlpha, GLuint rbGL,
+                                                       bool hasAlpha, GLuint prodTex,
+                                                       GLuint interopFB, GLuint interopRB,
                                                        DXInterop2Device* interop,
                                                        HANDLE lockHandle,
                                                        ID3D11Texture2D* texD3D,
                                                        HANDLE dxgiHandle)
     : SharedSurface(SharedSurfaceType::DXGLInterop2,
-                    AttachmentType::GLRenderbuffer,
+                    prodTex ? AttachmentType::GLTexture
+                            : AttachmentType::GLRenderbuffer,
                     gl,
                     size,
                     hasAlpha,
                     true)
-    , mProdRB(rbGL)
+    , mProdTex(prodTex)
+    , mInteropFB(interopFB)
+    , mInteropRB(interopRB)
     , mInterop(interop)
     , mLockHandle(lockHandle)
     , mTexD3D(texD3D)
     , mDXGIHandle(dxgiHandle)
     , mNeedsFinish(gfxPrefs::WebGLDXGLNeedsFinish())
     , mLockedForGL(false)
-{ }
+{
+    MOZ_ASSERT(bool(mProdTex) == bool(mInteropFB));
+}
 
 SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 {
@@ -346,7 +389,9 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
         NS_WARNING("Failed to release mLockHandle, possibly leaking it.");
     }
 
-    mGL->fDeleteRenderbuffers(1, &mProdRB);
+    mGL->fDeleteTextures(1, &mProdTex);
+    mGL->fDeleteFramebuffers(1, &mInteropFB);
+    mGL->fDeleteRenderbuffers(1, &mInteropRB);
 }
 
 void
@@ -364,6 +409,11 @@ void
 SharedSurface_D3D11Interop::ProducerReleaseImpl()
 {
     MOZ_ASSERT(mLockedForGL);
+
+    if (mProdTex) {
+        mGL->BlitHelper()->DrawBlitTextureToFramebuffer(mProdTex, mInteropFB, mSize,
+                                                        mSize);
+    }
 
     if (mNeedsFinish) {
         mGL->fFinish();

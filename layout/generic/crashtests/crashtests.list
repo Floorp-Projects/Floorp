@@ -458,7 +458,7 @@ load 655462-1.html
 load 656130-1.html
 load 656130-2.html
 load 660416.html
-asserts-if(stylo,2) load 665853.html # bug 1324634
+load 665853.html
 load 667025.html
 skip-if(stylo) load 673770.html # bug 1323652
 load 679933-1.html
@@ -575,9 +575,9 @@ pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html
 load 1037903.html
-asserts-if(stylo,1) load 1039454-1.html # bug 1324647
+load 1039454-1.html
 load 1042489.html
-asserts-if(stylo,1) load 1054010-1.html # bug 1324647
+load 1054010-1.html
 load 1058954-1.html
 load 1134531.html
 load 1134667.html
@@ -585,7 +585,7 @@ load 1137723-1.html
 load 1137723-2.html
 load 1140268-1.html
 load 1145768.html
-asserts-if(stylo,1) load 1146103.html # bug 1324647
+load 1146103.html
 load 1146107.html
 load 1146114.html
 asserts(0-20) load 1153478.html # bug 1144852

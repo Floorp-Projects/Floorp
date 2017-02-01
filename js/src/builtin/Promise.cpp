@@ -580,7 +580,7 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
 
     // Now that everything else is done, do the things the debugger needs.
     // Step 7 of RejectPromise implemented in onSettled.
-    promise->onSettled(cx);
+    PromiseObject::onSettled(cx, promise);
 
     // Step 7 of FulfillPromise.
     // Step 8 of RejectPromise.
@@ -2578,14 +2578,14 @@ PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> v
     return true;
 }
 
-bool
-PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
+/* static */ bool
+PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise, HandleValue resolutionValue)
 {
-    MOZ_ASSERT(!PromiseHasAnyFlag(*this, PROMISE_FLAG_ASYNC));
-    if (state() != JS::PromiseState::Pending)
+    MOZ_ASSERT(!PromiseHasAnyFlag(*promise, PROMISE_FLAG_ASYNC));
+    if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    RootedObject resolveFun(cx, GetResolveFunctionFromPromise(this));
+    RootedObject resolveFun(cx, GetResolveFunctionFromPromise(promise));
     RootedValue funVal(cx, ObjectValue(*resolveFun));
 
     // For xray'd Promises, the resolve fun may have been created in another
@@ -2601,14 +2601,14 @@ PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
     return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
-bool
-PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
+/* static */ bool
+PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue rejectionValue)
 {
-    MOZ_ASSERT(!PromiseHasAnyFlag(*this, PROMISE_FLAG_ASYNC));
-    if (state() != JS::PromiseState::Pending)
+    MOZ_ASSERT(!PromiseHasAnyFlag(*promise, PROMISE_FLAG_ASYNC));
+    if (promise->state() != JS::PromiseState::Pending)
         return true;
 
-    RootedValue funVal(cx, this->getFixedSlot(PromiseSlot_RejectFunction));
+    RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
     MOZ_ASSERT(IsCallable(funVal));
 
     FixedInvokeArgs<1> args(cx);
@@ -2618,10 +2618,9 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
     return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
-void
-PromiseObject::onSettled(JSContext* cx)
+/* static */ void
+PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
 {
-    Rooted<PromiseObject*> promise(cx, this);
     RootedObject stack(cx);
     if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
         if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames()))) {
