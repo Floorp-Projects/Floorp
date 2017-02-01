@@ -5368,7 +5368,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
                          DrawSurfaceOptions(gfx::SamplingFilter::POINT),
                          DrawOptions(GlobalAlpha(), UsedOperation(),
                                      AntialiasMode::NONE));
-    mTarget->Flush();
   } else {
     mTarget->SetTransform(matrix);
   }
