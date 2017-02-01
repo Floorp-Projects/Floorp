@@ -310,9 +310,6 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
 
   // Note: Remaining steps of generateRequest method continue in CDM.
 
-  Telemetry::Accumulate(Telemetry::VIDEO_CDM_GENERATE_REQUEST_CALLED,
-                        ToCDMTypeTelemetryEnum(mKeySystem));
-
   // Convert initData to hex for easier logging.
   // Note: CreateSession() Move()s the data out of the array, so we have
   // to copy it here.
