@@ -728,7 +728,7 @@ interface WebGLRenderingContext {
                                  ArrayBufferView data);
 
     // readPixels has WebGL2 overloads.
-    [Throws]
+    [Throws, NeedsCallerType]
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, ArrayBufferView? pixels);
 
