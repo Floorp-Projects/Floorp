@@ -2075,6 +2075,22 @@ nsContentUtils::CanCallerAccess(nsPIDOMWindowInner* aWindow)
   return CanCallerAccess(SubjectPrincipal(), scriptObject->GetPrincipal());
 }
 
+// static
+bool
+nsContentUtils::CallerHasPermission(JSContext* aCx, const nsAString& aPerm)
+{
+  // Chrome gets access by default.
+  if (IsSystemCaller(aCx)) {
+    return true;
+  }
+
+  JSCompartment* c = js::GetContextCompartment(aCx);
+  nsIPrincipal* p = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+
+  // Otherwise, only allow if caller is an addon with the permission.
+  return BasePrincipal::Cast(p)->AddonHasPermission(aPerm);
+}
+
 //static
 bool
 nsContentUtils::InProlog(nsINode *aNode)
