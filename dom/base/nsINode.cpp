@@ -106,6 +106,7 @@
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"
 #include "mozilla/dom/NodeBinding.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/dom/AccessibleNode.h"
@@ -719,9 +720,11 @@ nsINode::GetBaseURI(nsAString &aURI) const
 }
 
 void
-nsINode::GetBaseURIFromJS(nsAString& aURI, ErrorResult& aRv) const
+nsINode::GetBaseURIFromJS(nsAString& aURI,
+                          CallerType aCallerType,
+                          ErrorResult& aRv) const
 {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI(nsContentUtils::IsCallerChrome());
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI(aCallerType == CallerType::System);
   nsAutoCString spec;
   if (baseURI) {
     nsresult res = baseURI->GetSpec(spec);
@@ -2944,7 +2947,7 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   bool hasHadScriptHandlingObject = false;
   if (!OwnerDoc()->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
       !hasHadScriptHandlingObject &&
-      !nsContentUtils::IsCallerChrome()) {
+      !nsContentUtils::IsSystemCaller(aCx)) {
     Throw(aCx, NS_ERROR_UNEXPECTED);
     return nullptr;
   }
