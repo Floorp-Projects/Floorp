@@ -682,10 +682,13 @@ static void rgb_to_a8(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph, cons
 
     for (U16CPU y = 0; y < glyph.fHeight; y++) {
         for (U16CPU i = 0; i < width; i++) {
-            U8CPU r = *(src++);
-            U8CPU g = *(src++);
-            U8CPU b = *(src++);
-            dst[i] = sk_apply_lut_if<APPLY_PREBLEND>((r + g + b) / 3, table8);
+            U8CPU g = src[1];
+            src += 3;
+
+            // Ignore the R, B channels. It looks the closest to what
+            // D2D with grayscale AA has. But there's no way
+            // to just get a grayscale AA alpha texture from a glyph run.
+            dst[i] = sk_apply_lut_if<APPLY_PREBLEND>(g, table8);
         }
         dst = (uint8_t*)((char*)dst + dstRB);
     }
