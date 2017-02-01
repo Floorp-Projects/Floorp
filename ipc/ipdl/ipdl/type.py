@@ -492,13 +492,11 @@ class SymbolTable:
 
 
 class TypeCheck:
-    '''This pass sets the .type attribute of every AST node.  For some
-nodes, the type is meaningless and it is set to "VOID."  This pass
-also sets the .decl attribute of AST nodes for which that is relevant;
+    '''This pass sets the .decl attribute of AST nodes for which that is relevant;
 a decl says where, with what type, and under what name(s) a node was
 declared.
 
-With this information, it finally type checks the AST.'''
+With this information, it type checks the AST.'''
 
     def __init__(self):
         # NB: no IPDL compile will EVER print a warning.  A program has
@@ -634,9 +632,6 @@ class GatherDecls(TcheckVisitor):
         if tu.protocol:
             # grab symbols in the protocol itself
             p.accept(self)
-
-
-        tu.type = VOID
 
         self.symtab = savedSymtab
 
