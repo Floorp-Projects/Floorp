@@ -186,11 +186,6 @@ $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): instal
 .PHONY: install-tests
 install-tests: install-test-files
 
-# We no longer run "make install-tests" directly before running tests, but we still
-# want to depend on things like config.status, hence this target.
-.PHONY: run-tests-deps
-run-tests-deps: $(install_manifest_depends)
-
 # Force --no-remove, because $objdir/_tests is handled by multiple manifests.
 .PHONY: install-test-files
 install-test-files:
