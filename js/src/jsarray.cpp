@@ -2663,7 +2663,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
          * path may validly *not* throw -- if all the elements being moved are
          * holes.)
          */
-        if (obj->is<ArrayObject>()) {
+        if (obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
             Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
             if (arr->lengthIsWritable()) {
                 DenseElementResult result =
