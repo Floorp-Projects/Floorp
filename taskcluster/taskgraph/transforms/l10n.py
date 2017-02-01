@@ -12,9 +12,11 @@ import copy
 from mozbuild.chunkify import chunkify
 from taskgraph.transforms.base import (
     TransformSequence,
-    resolve_keyed_by,
+)
+from taskgraph.util.schema import (
+    validate_schema,
     optionally_keyed_by,
-    validate_schema
+    resolve_keyed_by,
 )
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from voluptuous import (
