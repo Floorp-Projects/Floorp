@@ -11,7 +11,6 @@ import os
 import mozpack.path as mozpath
 
 from mozbuild.backend.base import BuildBackend
-from mozbuild.backend.test_manifest import TestManifestBackend
 
 from mozbuild.frontend.context import (
     Context,
@@ -32,7 +31,6 @@ from mozbuild.frontend.data import (
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     SharedLibrary,
-    TestManifest,
     TestWebIDLFile,
     UnifiedSources,
     XPIDLFile,
@@ -44,8 +42,6 @@ from mozbuild.jar import (
 )
 from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
-
-from collections import defaultdict
 
 from mozbuild.util import group_unified_files
 
@@ -184,17 +180,10 @@ class CommonBackend(BuildBackend):
         self._configs = set()
         self._ipdl_sources = set()
 
-        # Temporarily compose a partial TestManifestBackend, soon test manifest
-        # processing will no longer be part of the build and this will be removed.
-        self._test_backend = TestManifestBackend(self.environment)
-
     def consume_object(self, obj):
         self._configs.add(obj.config)
 
-        if isinstance(obj, TestManifest):
-            self._test_backend.consume_object(obj)
-
-        elif isinstance(obj, XPIDLFile):
+        if isinstance(obj, XPIDLFile):
             # TODO bug 1240134 tracks not processing XPIDL files during
             # artifact builds.
             self._idl_manager.register_idl(obj)
@@ -326,9 +315,6 @@ class CommonBackend(BuildBackend):
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
-
-        # Write out a machine-readable file describing every test.
-        self._test_backend.consume_finished()
 
         # Write out a machine-readable file describing binaries.
         topobjdir = self.environment.topobjdir
