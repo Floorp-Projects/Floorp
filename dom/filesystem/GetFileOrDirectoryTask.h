@@ -54,8 +54,8 @@ private:
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
 
-  // Whether we get a directory.
-  bool mIsDirectory;
+  RefPtr<File> mResultFile;
+  RefPtr<Directory> mResultDirectory;
 };
 
 class GetFileOrDirectoryTaskParent final : public FileSystemTaskParentBase

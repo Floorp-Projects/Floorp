@@ -122,8 +122,11 @@ GetFilesTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue
 
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemFileResponse& data = r.data()[i];
-    mTargetData[i].mRealPath = data.realPath();
-    mTargetData[i].mDOMPath = data.domPath();
+    RefPtr<BlobImpl> blobImpl =
+      static_cast<BlobChild*>(data.blobChild())->GetBlobImpl();
+    MOZ_ASSERT(blobImpl);
+
+    mTargetData[i] = File::Create(mFileSystem->GetParentObject(), blobImpl);
   }
 }
 
@@ -142,48 +145,7 @@ GetFilesTaskChild::HandlerCallback()
     return;
   }
 
-  size_t count = mTargetData.Length();
-
-  Sequence<RefPtr<File>> listing;
-
-  if (!listing.SetLength(count, mozilla::fallible_t())) {
-    mPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    mPromise = nullptr;
-    return;
-  }
-
-  for (unsigned i = 0; i < count; i++) {
-    nsCOMPtr<nsIFile> path;
-    nsresult rv = NS_NewLocalFile(mTargetData[i].mRealPath, true,
-                                  getter_AddRefs(path));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-      mPromise = nullptr;
-      return;
-    }
-
-#ifdef DEBUG
-    nsCOMPtr<nsIFile> rootPath;
-    rv = NS_NewLocalFile(mFileSystem->LocalOrDeviceStorageRootPath(), false,
-                         getter_AddRefs(rootPath));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-      mPromise = nullptr;
-      return;
-    }
-
-    MOZ_ASSERT(FileSystemUtils::IsDescendantPath(rootPath, path));
-#endif
-
-    RefPtr<File> file =
-      File::CreateFromFile(mFileSystem->GetParentObject(), path);
-    MOZ_ASSERT(file);
-    file->SetPath(mTargetData[i].mDOMPath);
-
-    listing[i] = file;
-  }
-
-  mPromise->MaybeResolve(listing);
+  mPromise->MaybeResolve(mTargetData);
   mPromise = nullptr;
 }
 
@@ -239,17 +201,17 @@ GetFilesTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
   InfallibleTArray<PBlobParent*> blobs;
 
   FallibleTArray<FileSystemFileResponse> inputs;
-  if (!inputs.SetLength(mTargetPathArray.Length(), mozilla::fallible_t())) {
+  if (!inputs.SetLength(mTargetBlobImplArray.Length(), mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     FileSystemFilesResponse response;
     return response;
   }
 
-  for (unsigned i = 0; i < mTargetPathArray.Length(); i++) {
-    FileSystemFileResponse fileData;
-    fileData.realPath() = mTargetPathArray[i].mRealPath;
-    fileData.domPath() = mTargetPathArray[i].mDomPath;
-    inputs[i] = fileData;
+  for (unsigned i = 0; i < mTargetBlobImplArray.Length(); i++) {
+    BlobParent* blobParent =
+      BlobParent::GetOrCreate(mRequestParent->Manager(),
+                              mTargetBlobImplArray[i]);
+    inputs[i] = FileSystemFileResponse(blobParent, nullptr);
   }
 
   FileSystemFilesResponse response;
