@@ -22,6 +22,7 @@ from .util import (
 )
 from ..create import create_task
 from taskgraph.util.attributes import match_run_on_projects
+from taskgraph.util.schema import resolve_keyed_by
 
 # Functions to handle each `job.type` in `.cron.yml`.  These are called with
 # the contents of the `job` property from `.cron.yml` and should return a
@@ -43,11 +44,18 @@ def get_session():
     return _session
 
 
-def load_jobs():
+def load_jobs(params):
     with open(os.path.join(GECKO, '.cron.yml'), 'rb') as f:
         cron_yml = yaml.load(f)
     schema.validate(cron_yml)
-    return {j['name']: j for j in cron_yml['jobs']}
+
+    # resolve keyed_by fields in each job
+    jobs = cron_yml['jobs']
+    for job in jobs:
+        resolve_keyed_by(job, 'when', 'Cron job ' + job['name'],
+                         project=params['project'])
+
+    return {j['name']: j for j in jobs}
 
 
 def should_run(job, params):
@@ -82,7 +90,8 @@ def run_job(job_name, job, params):
         # would leave other jobs un-run.  NOTE: we could report job failure to
         # a responsible person here via tc-notify
         traceback.print_exc()
-        logger.error("cron job {} run failed; continuing to next job".format(params['job_name']))
+        logger.error("cron job {} run failed; continuing to next job".format(
+            params['job_name']))
 
 
 def calculate_time(options):
@@ -91,14 +100,16 @@ def calculate_time(options):
         # the current time
         if 'CRON_TIME' in os.environ:
             logger.warning("setting params['time'] based on $CRON_TIME")
-            time = datetime.datetime.utcfromtimestamp(int(os.environ['CRON_TIME']))
+            time = datetime.datetime.utcfromtimestamp(
+                int(os.environ['CRON_TIME']))
         else:
             logger.warning("using current time for params['time']; try setting $CRON_TIME "
                            "to a timestamp")
             time = datetime.datetime.utcnow()
     else:
         # fetch this task from the queue
-        res = get_session().get('http://taskcluster/queue/v1/task/' + os.environ['TASK_ID'])
+        res = get_session().get(
+            'http://taskcluster/queue/v1/task/' + os.environ['TASK_ID'])
         if res.status_code != 200:
             try:
                 logger.error(res.json()['message'])
@@ -145,7 +156,7 @@ def taskgraph_cron(options):
         'time': calculate_time(options),
     }
 
-    jobs = load_jobs()
+    jobs = load_jobs(params)
 
     if options['force_run']:
         job_name = options['force_run']
