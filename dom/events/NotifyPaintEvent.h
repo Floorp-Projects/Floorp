@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsPresContext.h"
@@ -51,21 +52,21 @@ public:
     return NotifyPaintEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
-  already_AddRefed<DOMRectList> ClientRects();
+  already_AddRefed<DOMRectList> ClientRects(SystemCallerGuarantee aGuarantee);
 
-  already_AddRefed<DOMRect> BoundingClientRect();
+  already_AddRefed<DOMRect> BoundingClientRect(SystemCallerGuarantee aGuarantee);
 
-  already_AddRefed<PaintRequestList> PaintRequests();
+  already_AddRefed<PaintRequestList> PaintRequests(SystemCallerGuarantee);
 
-  uint64_t TransactionId();
+  uint64_t TransactionId(SystemCallerGuarantee);
 
-  DOMHighResTimeStamp PaintTimeStamp();
+  DOMHighResTimeStamp PaintTimeStamp(SystemCallerGuarantee);
 
 protected:
   ~NotifyPaintEvent() {}
 
 private:
-  nsRegion GetRegion();
+  nsRegion GetRegion(SystemCallerGuarantee);
 
   nsTArray<nsInvalidateRequestList::Request> mInvalidateRequests;
   uint64_t mTransactionId;
