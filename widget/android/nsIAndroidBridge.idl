@@ -51,7 +51,7 @@ interface nsIAndroidEventListener : nsISupports
 interface nsIAndroidEventDispatcher : nsISupports
 {
   [implicit_jscontext]
-  void dispatch(in AString event,
+  void dispatch(in jsval event,
                 [optional] in jsval data,
                 [optional] in nsIAndroidEventCallback callback);
   [implicit_jscontext]
