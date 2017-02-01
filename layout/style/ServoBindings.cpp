@@ -171,12 +171,6 @@ Gecko_ElementState(RawGeckoElementBorrowed aElement)
 }
 
 bool
-Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed aElement)
-{
-  return aElement->IsHTMLElement() && aElement->OwnerDoc()->IsHTMLDocument();
-}
-
-bool
 Gecko_IsLink(RawGeckoElementBorrowed aElement)
 {
   return nsCSSRuleProcessor::IsLink(aElement);
