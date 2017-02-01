@@ -7,9 +7,7 @@ addMessageListener("file.create", function (message) {
              .get("TmpD", Components.interfaces.nsIFile);
   file.append("foo.txt");
   file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
-  File.createFromNsIFile(file).then(function(domFile) {
-    sendAsyncMessage("file.created", domFile);
-  });
+  sendAsyncMessage("file.created", File.createFromNsIFile(file));
 });
 
 addMessageListener("file.remove", function (message) {

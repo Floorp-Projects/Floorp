@@ -142,13 +142,29 @@ FilePicker.prototype = {
 
   // We don't support directory selection yet.
   get domFileOrDirectory() {
-    return this._domFile;
+    let f = this.file;
+    if (!f) {
+        return null;
+    }
+
+    let win = this._domWin;
+    if (win) {
+      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      return utils.wrapDOMFile(f);
+    }
+
+    return File.createFromNsIFile(f);
   },
 
   get domFileOrDirectoryEnumerator() {
     let win = this._domWin;
-    return this.getEnumerator([this._domFile], function(file) {
-      return file;
+    return this.getEnumerator([this.file], function(file) {
+      if (win) {
+        let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        return utils.wrapDOMFile(file);
+      }
+
+      return File.createFromNsIFile(file);
     });
   },
 
@@ -228,29 +244,9 @@ FilePicker.prototype = {
       this._filePath = file || null;
       this._promptActive = false;
 
-      if (!file) {
-        return null;
-      }
-
-      if (this._domWin) {
-        return this._domWin.File.createFromNsIFile(file).then(domFile => {
-          return domFile;
-        }, () => {
-          return null;
-        });
-      }
-
-      return File.createFromNsIFile(file).then(domFile => {
-        return domFile;
-        }, () => {
-          return null;
-      });
-    }).then(domFile => {
-      this._domFile = domFile;
-
       if (this._callback) {
-        this._callback.done(this._domFile ?
-          Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
+        this._callback.done(this._filePath ?
+            Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
       }
       delete this._callback;
     });

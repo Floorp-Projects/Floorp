@@ -6,7 +6,7 @@ Components.utils.importGlobalProperties(['File']);
 
 const Ci = Components.interfaces;
 
-add_task(function*() {
+function run_test() {
   // throw if anything goes wrong
 
   // find the current directory path
@@ -16,9 +16,9 @@ add_task(function*() {
   file.append("xpcshell.ini");
 
   // should be able to construct a file
-  var f1 = yield File.createFromFileName(file.path);
+  var f1 = File.createFromFileName(file.path);
   // and with nsIFiles
-  var f2 = yield File.createFromNsIFile(file);
+  var f2 = File.createFromNsIFile(file);
 
   // do some tests
   do_check_true(f1 instanceof File, "Should be a DOM File");
@@ -54,9 +54,9 @@ add_task(function*() {
     var dir = Components.classes["@mozilla.org/file/directory_service;1"]
                         .getService(Ci.nsIProperties)
                         .get("CurWorkD", Ci.nsIFile);
-    var f7 = yield File.createFromNsIFile(dir)
+    var f7 = File.createFromNsIFile(dir)
   } catch (e) {
     threw = true;
   }
   do_check_true(threw, "Can't create a File object for a directory");
-});
+}

@@ -13,17 +13,14 @@ function createFileWithData(message) {
   outStream.write(message, message.length);
   outStream.close();
 
-  return File.createFromNsIFile(testFile);
+  var domFile = File.createFromNsIFile(testFile);
+  return domFile;
 }
 
 addMessageListener("file.open", function (message) {
-  createFileWithData(message).then(function(file) {
-    sendAsyncMessage("file.opened", file);
-  });
+  sendAsyncMessage("file.opened", createFileWithData(message));
 });
 
 addMessageListener("file.modify", function (message) {
-  createFileWithData(message).then(function(file) {
-    sendAsyncMessage("file.modified", file);
-  });
+  sendAsyncMessage("file.modified", createFileWithData(message));
 });

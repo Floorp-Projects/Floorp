@@ -91,8 +91,15 @@ this.PropertyListUtils = Object.freeze({
     // We guarantee not to throw directly for any other exceptions, and always
     // call aCallback.
     Services.tm.mainThread.dispatch(function() {
-      let self = this;
-      function readDOMFile(aFile) {
+      let file = aFile;
+      try {
+        if (file instanceof Ci.nsILocalFile) {
+          if (!file.exists())
+            throw new Error("The file pointed by aFile does not exist");
+
+          file = File.createFromNsIFile(file);
+        }
+
         let fileReader = new FileReader();
         let onLoadEnd = function() {
           let root = null;
@@ -101,27 +108,13 @@ this.PropertyListUtils = Object.freeze({
             if (fileReader.readyState != fileReader.DONE)
               throw new Error("Could not read file contents: " + fileReader.error);
 
-            root = self._readFromArrayBufferSync(fileReader.result);
+            root = this._readFromArrayBufferSync(fileReader.result);
           } finally {
             aCallback(root);
           }
-        }
+        }.bind(this);
         fileReader.addEventListener("loadend", onLoadEnd);
-        fileReader.readAsArrayBuffer(aFile);
-      }
-
-      try {
-        if (aFile instanceof Ci.nsILocalFile) {
-          if (!aFile.exists()) {
-            throw new Error("The file pointed by aFile does not exist");
-          }
-
-          File.createFromNsIFile(aFile).then(function(aFile) {
-            readDOMFile(aFile);
-          });
-          return;
-        }
-        readDOMFile(aFile);
+        fileReader.readAsArrayBuffer(file);
       } catch (ex) {
         aCallback(null);
         throw ex;
