@@ -293,9 +293,18 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
 
     if (loadInfo) {
         if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
-          MOZ_ALWAYS_TRUE(loadInfo->GetSandboxedLoadingPrincipal(aPrincipal));
-          MOZ_ASSERT(*aPrincipal);
-          return NS_OK;
+            RefPtr<nsNullPrincipal> prin;
+            if (loadInfo->LoadingPrincipal()) {
+              prin =
+                nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
+            } else {
+              OriginAttributes attrs;
+              loadInfo->GetOriginAttributes(&attrs);
+              attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
+              prin = nsNullPrincipal::Create(attrs);
+            }
+            prin.forget(aPrincipal);
+            return NS_OK;
         }
 
         bool forceInherit = loadInfo->GetForceInheritPrincipal();
