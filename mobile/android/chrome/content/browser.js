@@ -6107,11 +6107,13 @@ var SearchEngines = {
   PREF_SEARCH_ACTIVITY_ENGINE_KEY: "search.engines.defaultname",
 
   init: function init() {
-    Services.obs.addObserver(this, "SearchEngines:Add", false);
-    Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
-    Services.obs.addObserver(this, "SearchEngines:Remove", false);
-    Services.obs.addObserver(this, "SearchEngines:RestoreDefaults", false);
-    Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
+    GlobalEventDispatcher.registerListener(this, [
+      "SearchEngines:Add",
+      "SearchEngines:GetVisible",
+      "SearchEngines:Remove",
+      "SearchEngines:RestoreDefaults",
+      "SearchEngines:SetDefault",
+    ]);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
   },
 
@@ -6168,16 +6170,15 @@ var SearchEngines = {
   },
 
   // Helper method to extract the engine name from a JSON. Simplifies the observe function.
-  _extractEngineFromJSON: function _extractEngineFromJSON(aData) {
-    let data = JSON.parse(aData);
+  _extractEngineFromJSON: function _extractEngineFromJSON(data) {
     return Services.search.getEngineByName(data.engine);
   },
 
-  observe: function observe(aSubject, aTopic, aData) {
+  onEvent: function (event, data, callback) {
     let engine;
-    switch(aTopic) {
+    switch (event) {
       case "SearchEngines:Add":
-        this.displaySearchEnginesList(aData);
+        this.displaySearchEnginesList(data);
         break;
       case "SearchEngines:GetVisible":
         Services.search.init(this._handleSearchEnginesGetVisible.bind(this));
@@ -6185,7 +6186,7 @@ var SearchEngines = {
       case "SearchEngines:Remove":
         // Make sure the engine isn't hidden before removing it, to make sure it's
         // visible if the user later re-adds it (works around bug 341833)
-        engine = this._extractEngineFromJSON(aData);
+        engine = this._extractEngineFromJSON(data);
         engine.hidden = false;
         Services.search.removeEngine(engine);
         break;
@@ -6194,11 +6195,19 @@ var SearchEngines = {
         Services.search.restoreDefaultEngines();
         break;
       case "SearchEngines:SetDefault":
-        engine = this._extractEngineFromJSON(aData);
+        engine = this._extractEngineFromJSON(data);
         // Move the new default search engine to the top of the search engine list.
         Services.search.moveEngine(engine, 0);
         Services.search.defaultEngine = engine;
         break;
+      default:
+        dump("Unexpected message type observed: " + event);
+        break;
+    }
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
       case "browser-search-engine-modified":
         if (aData == "engine-default") {
           this._setSearchActivityDefaultPref(aSubject.QueryInterface(Ci.nsISearchEngine));
@@ -6220,8 +6229,7 @@ var SearchEngines = {
   },
 
   // Display context menu listing names of the search engines available to be added.
-  displaySearchEnginesList: function displaySearchEnginesList(aData) {
-    let data = JSON.parse(aData);
+  displaySearchEnginesList: function displaySearchEnginesList(data) {
     let tab = BrowserApp.getTabForId(data.tabId);
 
     if (!tab)
