@@ -4,14 +4,19 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Test that the selector highlighter is shown when clicking on a selector icon
-// for the 'element {}' rule
+// Test that the selector highlighter is correctly shown when clicking on a
+// inherited element
 
 // Note that in this test, we mock the highlighter front, merely testing the
 // behavior of the style-inspector UI for now
 
 const TEST_URI = `
-<p>Testing the selector highlighter for the 'element {}' rule</p>
+<div style="cursor:pointer">
+  A
+  <div style="cursor:pointer">
+    B<a>Cursor</a>
+  </div>
+</div>
 `;
 
 add_task(function* () {
@@ -38,16 +43,21 @@ add_task(function* () {
   view.selectorHighlighter = HighlighterFront;
 
   info("Checking that the right NodeFront reference and options are passed");
-  yield selectNode("p", inspector);
+  yield selectNode("a", inspector);
+
   let icon = yield getRuleViewSelectorHighlighterIcon(view, "element");
-
   yield clickSelectorIcon(icon, view);
-  is(HighlighterFront.nodeFront.tagName, "P",
-     "The right NodeFront is passed to the highlighter (1)");
-  is(HighlighterFront.options.selector, "body > p:nth-child(1)",
+  is(HighlighterFront.options.selector, 
+     "body > div:nth-child(1) > div:nth-child(1) > a:nth-child(1)",
      "The right selector option is passed to the highlighter (1)");
-  ok(HighlighterFront.isShown, "The toggle event says the highlighter is visible");
 
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "element", 1);
   yield clickSelectorIcon(icon, view);
-  ok(!HighlighterFront.isShown, "The toggle event says the highlighter is not visible");
+  is(HighlighterFront.options.selector, "body > div:nth-child(1) > div:nth-child(1)",
+     "The right selector option is passed to the highlighter (1)");
+
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "element", 2);
+  yield clickSelectorIcon(icon, view);
+  is(HighlighterFront.options.selector, "body > div:nth-child(1)",
+     "The right selector option is passed to the highlighter (1)");
 });

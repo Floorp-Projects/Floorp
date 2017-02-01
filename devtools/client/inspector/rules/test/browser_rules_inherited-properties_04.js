@@ -20,6 +20,7 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("a", inspector);
+  yield getRuleViewSelectorHighlighterIcon(view, "element", 2);
   yield elementStyleInherit(inspector, view);
 });
 
