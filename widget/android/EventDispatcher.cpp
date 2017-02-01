@@ -753,7 +753,7 @@ EventDispatcher::Dispatch(const nsAString& aEvent, JS::HandleValue aData,
                         aCallback, mDOMWindow));
     }
 
-    mDispatcher->DispatchToThreads(aEvent, /* js */ nullptr, data, callback);
+    mDispatcher->DispatchToThreads(aEvent, data, callback);
     return NS_OK;
 }
 
