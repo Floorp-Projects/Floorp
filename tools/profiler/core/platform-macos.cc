@@ -47,7 +47,7 @@ using mozilla::TimeDuration;
 // that only supports a single Sampler
 struct SamplerRegistry {
   static void AddActiveSampler(Sampler *sampler) {
-    ASSERT(!SamplerRegistry::sampler);
+    MOZ_ASSERT(!SamplerRegistry::sampler);
     SamplerRegistry::sampler = sampler;
   }
   static void RemoveActiveSampler(Sampler *sampler) {
@@ -138,7 +138,7 @@ public:
 
     thread->mThread = pthread_self();
     SetThreadName();
-    ASSERT(thread->mThread != kNoThread);
+    MOZ_ASSERT(thread->mThread != kNoThread);
     thread->Run();
     return NULL;
   }
@@ -146,7 +146,7 @@ public:
   void Start() {
     pthread_attr_t* attr_ptr = NULL;
     pthread_create(&mThread, attr_ptr, ThreadEntry, this);
-    ASSERT(mThread != kNoThread);
+    MOZ_ASSERT(mThread != kNoThread);
   }
 
   void Join() {
@@ -289,13 +289,13 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
-  ASSERT(!IsActive());
+  MOZ_ASSERT(!IsActive());
   SetActive(true);
   SamplerThread::AddActiveSampler(this);
 }
 
 void Sampler::Stop() {
-  ASSERT(IsActive());
+  MOZ_ASSERT(IsActive());
   SetActive(false);
   SamplerThread::RemoveActiveSampler(this);
 }
