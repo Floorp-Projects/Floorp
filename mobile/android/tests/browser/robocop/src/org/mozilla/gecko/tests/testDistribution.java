@@ -284,7 +284,7 @@ public class testDistribution extends ContentProviderTest {
     // Initialize the distribution from the mock package.
     private Distribution initDistribution(String aPackagePath) {
         // Call Distribution.init with the mock package.
-        Actions.EventExpecter distributionSetExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
+        Actions.EventExpecter distributionSetExpecter = mActions.expectGlobalEvent(Actions.EventType.GECKO, "Distribution:Set:OK");
         Distribution dist = Distribution.init(mActivity, aPackagePath, "prefs-" + System.currentTimeMillis());
         distributionSetExpecter.blockForEvent();
         distributionSetExpecter.unregisterListener();
@@ -366,7 +366,7 @@ public class testDistribution extends ContentProviderTest {
     private void checkSearchPlugin() {
         Actions.RepeatedEventExpecter eventExpecter =
                 mActions.expectGlobalEvent(Actions.EventType.UI, "SearchEngines:Data");
-        mActions.sendGeckoEvent("SearchEngines:GetVisible", null);
+        mActions.sendGlobalEvent("SearchEngines:GetVisible", null);
 
         final GeckoBundle data = eventExpecter.blockForBundle();
         eventExpecter.unregisterListener();
