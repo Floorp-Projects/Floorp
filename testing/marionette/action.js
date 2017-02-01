@@ -425,7 +425,7 @@ action.InputState = {};
 /**
  * Input state associated with a keyboard-type device.
  */
-action.InputState.Key = class extends InputState {
+action.InputState.Key = class Key extends InputState {
   constructor() {
     super();
     this.pressed = new Set();
@@ -498,7 +498,7 @@ action.InputState.Key = class extends InputState {
 /**
  * Input state not associated with a specific physical device.
  */
-action.InputState.Null = class extends InputState {
+action.InputState.Null = class Null extends InputState {
   constructor() {
     super();
     this.type = "none";
@@ -513,7 +513,7 @@ action.InputState.Null = class extends InputState {
  * @param {boolean} primary
  *     Whether the pointing device is primary.
  */
-action.InputState.Pointer = class extends InputState {
+action.InputState.Pointer = class Pointer extends InputState {
   constructor(subtype, primary) {
     super();
     this.pressed = new Set();
