@@ -21,6 +21,11 @@ interface nsIDOMHTMLInputElement;
 interface nsIFormFillController : nsISupports
 {
   /*
+   * The input element the form fill controller is currently bound to.
+   */
+  readonly attribute nsIDOMHTMLInputElement focusedInput;
+
+  /*
    * Start controlling form fill behavior for the given browser
    *
    * @param docShell - The docShell to attach to

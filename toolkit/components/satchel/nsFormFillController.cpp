@@ -315,6 +315,12 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormFillController::GetFocusedInput(nsIDOMHTMLInputElement **aInput) {
+  *aInput = mFocusedInput;
+  NS_IF_ADDREF(*aInput);
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteInput
