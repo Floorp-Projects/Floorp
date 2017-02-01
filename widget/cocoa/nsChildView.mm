@@ -3650,24 +3650,24 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)viewWillStartLiveResize
 {
-  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-
-  if (!observerService) {
-    return;
+  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
+  if (windowWidget) {
+    windowWidget->NotifyLiveResizeStarted();
   }
-
-  observerService->NotifyObservers(nullptr, "live-resize-start", nullptr);
 }
 
 - (void)viewDidEndLiveResize
 {
-  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-
-  if (!observerService) {
-    return;
+  // mGeckoChild may legitimately be null here. It should also have been null
+  // in viewWillStartLiveResize, so there's no problem. However if we run into
+  // cases where the windowWidget was non-null in viewWillStartLiveResize but
+  // is null here, that might be problematic because we might get stuck with
+  // a content process that has the displayport suppressed. If that scenario
+  // arises (I'm not sure that it does) we will need to handle it gracefully.
+  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
+  if (windowWidget) {
+    windowWidget->NotifyLiveResizeStopped();
   }
-
-  observerService->NotifyObservers(nullptr, "live-resize-end", nullptr);
 }
 
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType
