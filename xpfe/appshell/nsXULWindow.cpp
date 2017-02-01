@@ -344,6 +344,17 @@ nsXULWindow::GetPrimaryTabParent(nsITabParent** aTab)
   return NS_OK;
 }
 
+nsTArray<RefPtr<mozilla::LiveResizeListener>>
+nsXULWindow::GetLiveResizeListeners()
+{
+  nsTArray<RefPtr<mozilla::LiveResizeListener>> listeners;
+  if (mPrimaryTabParent) {
+    TabParent* parent = static_cast<TabParent*>(mPrimaryTabParent.get());
+    listeners.AppendElement(parent);
+  }
+  return listeners;
+}
+
 NS_IMETHODIMP nsXULWindow::AddChildWindow(nsIXULWindow *aChild)
 {
   // we're not really keeping track of this right now
