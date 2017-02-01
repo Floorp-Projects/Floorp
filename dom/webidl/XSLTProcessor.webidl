@@ -104,6 +104,6 @@ interface XSLTProcessor {
     * Flags for this processor. Defaults to 0. See individual flags above
     * for documentation for effect of reset()
     */
-    [ChromeOnly]
+    [ChromeOnly, NeedsCallerType]
     attribute unsigned long flags;
 };

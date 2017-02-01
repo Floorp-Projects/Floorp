@@ -14,10 +14,4 @@ interface nsIXSLTProcessorPrivate : nsISupports
    * Defaults to off and is *not* reset by calls to reset()
    */
   const unsigned long DISABLE_ALL_LOADS = 1;
-
-  /**
-   * Flags for this processor. Defaults to 0. See individual flags above
-   * for documentation for effect of reset()
-   */
-  attribute unsigned long flags;
 };
