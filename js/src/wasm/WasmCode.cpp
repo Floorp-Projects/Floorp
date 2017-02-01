@@ -36,6 +36,7 @@
 #include "wasm/WasmBinaryToText.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSerialize.h"
+#include "wasm/WasmValidate.h"
 
 #include "jsobjinlines.h"
 
@@ -469,7 +470,8 @@ Metadata::serializedSize() const
 uint8_t*
 Metadata::serialize(uint8_t* cursor) const
 {
-    MOZ_ASSERT(!debugEnabled && debugTrapFarJumpOffsets.empty());
+    MOZ_ASSERT(!debugEnabled && debugTrapFarJumpOffsets.empty() &&
+               debugFuncArgTypes.empty() && debugFuncToCodeRange.empty());
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
@@ -508,6 +510,8 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = filename.deserialize(cursor));
     debugEnabled = false;
     debugTrapFarJumpOffsets.clear();
+    debugFuncToCodeRange.clear();
+    debugFuncArgTypes.clear();
     return cursor;
 }
 
@@ -667,16 +671,6 @@ Code::lookupRange(void* pc) const
         return nullptr;
 
     return &metadata_->codeRanges[match];
-}
-
-const CodeRange*
-Code::lookupRangeByFuncIndexSlow(uint32_t funcIndex) const
-{
-    for (const CodeRange& r : metadata_->codeRanges) {
-        if (r.kind() == CodeRange::Function && r.funcIndex() == funcIndex)
-            return &r;
-    }
-    return nullptr;
 }
 
 struct MemoryAccessOffset
@@ -886,8 +880,8 @@ bool
 Code::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
     MOZ_ASSERT(metadata_->debugEnabled);
-    const CodeRange* codeRange = lookupRangeByFuncIndexSlow(funcIndex);
-    MOZ_ASSERT(codeRange && codeRange->isFunction());
+    const CodeRange& codeRange = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
+    MOZ_ASSERT(codeRange.isFunction());
 
     if (!stepModeCounters_.initialized() && !stepModeCounters_.init()) {
         ReportOutOfMemory(cx);
@@ -905,15 +899,15 @@ Code::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
         return false;
     }
 
-    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange->begin(),
-                             codeRange->end() - codeRange->begin());
+    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange.begin(),
+                             codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::incrementStepModeCount");
 
     for (const CallSite& callSite : metadata_->callSites) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
-        if (codeRange->begin() <= offset && offset <= codeRange->end())
+        if (codeRange.begin() <= offset && offset <= codeRange.end())
             toggleDebugTrap(offset, true);
     }
     return true;
@@ -923,8 +917,8 @@ bool
 Code::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
     MOZ_ASSERT(metadata_->debugEnabled);
-    const CodeRange* codeRange = lookupRangeByFuncIndexSlow(funcIndex);
-    MOZ_ASSERT(codeRange && codeRange->isFunction());
+    const CodeRange& codeRange = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
+    MOZ_ASSERT(codeRange.isFunction());
 
     MOZ_ASSERT(stepModeCounters_.initialized() && !stepModeCounters_.empty());
     StepModeCounters::Ptr p = stepModeCounters_.lookup(funcIndex);
@@ -934,15 +928,15 @@ Code::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 
     stepModeCounters_.remove(p);
 
-    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange->begin(),
-                             codeRange->end() - codeRange->begin());
+    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange.begin(),
+                             codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::decrementStepModeCount");
 
     for (const CallSite& callSite : metadata_->callSites) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
-        if (codeRange->begin() <= offset && offset <= codeRange->end()) {
+        if (codeRange.begin() <= offset && offset <= codeRange.end()) {
             bool enabled = breakpointSites_.initialized() && breakpointSites_.has(offset);
             toggleDebugTrap(offset, enabled);
         }
@@ -1177,6 +1171,26 @@ Code::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
             continue;
         toggleDebugTrap(callSite.returnAddressOffset(), stillEnabled);
     }
+}
+
+bool
+Code::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength)
+{
+    MOZ_ASSERT(metadata_->debugEnabled);
+
+    const ValTypeVector& args = metadata_->debugFuncArgTypes[funcIndex];
+    *argsLength = args.length();
+    if (!locals->appendAll(args))
+        return false;
+
+    // Decode local var types from wasm binary function body.
+    const CodeRange& range = metadata_->codeRanges[metadata_->debugFuncToCodeRange[funcIndex]];
+    // In wasm, the Code points to the function start via funcLineOrBytecode.
+    MOZ_ASSERT(!metadata_->isAsmJS() && maybeBytecode_);
+    size_t offsetInModule = range.funcLineOrBytecode();
+    Decoder d(maybeBytecode_->begin() + offsetInModule,  maybeBytecode_->end(),
+              offsetInModule, /* error = */ nullptr);
+    return DecodeLocalEntries(d, metadata_->kind, locals);
 }
 
 void
