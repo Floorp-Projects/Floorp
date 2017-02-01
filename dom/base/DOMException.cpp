@@ -82,7 +82,7 @@ enum DOM4ErrorTypeCodeMap {
 #define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},
 #define DOM_MSG_DEF(val, message) {(val), NS_ERROR_GET_CODE(val), #val, message},
 
-static const struct ResultStruct
+static constexpr struct ResultStruct
 {
   nsresult mNSResult;
   uint16_t mCode;

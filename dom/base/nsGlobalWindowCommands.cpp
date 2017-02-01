@@ -42,72 +42,72 @@
 
 using namespace mozilla;
 
-const char * const sSelectAllString = "cmd_selectAll";
-const char * const sSelectNoneString = "cmd_selectNone";
-const char * const sCopyImageLocationString = "cmd_copyImageLocation";
-const char * const sCopyImageContentsString = "cmd_copyImageContents";
-const char * const sCopyImageString = "cmd_copyImage";
+constexpr const char * sSelectAllString = "cmd_selectAll";
+constexpr const char * sSelectNoneString = "cmd_selectNone";
+constexpr const char * sCopyImageLocationString = "cmd_copyImageLocation";
+constexpr const char * sCopyImageContentsString = "cmd_copyImageContents";
+constexpr const char * sCopyImageString = "cmd_copyImage";
 
-const char * const sScrollTopString = "cmd_scrollTop";
-const char * const sScrollBottomString = "cmd_scrollBottom";
-const char * const sScrollPageUpString = "cmd_scrollPageUp";
-const char * const sScrollPageDownString = "cmd_scrollPageDown";
-const char * const sScrollLineUpString = "cmd_scrollLineUp";
-const char * const sScrollLineDownString = "cmd_scrollLineDown";
-const char * const sScrollLeftString = "cmd_scrollLeft";
-const char * const sScrollRightString = "cmd_scrollRight";
-const char * const sMoveTopString = "cmd_moveTop";
-const char * const sMoveBottomString = "cmd_moveBottom";
-const char * const sMovePageUpString = "cmd_movePageUp";
-const char * const sMovePageDownString = "cmd_movePageDown";
-const char * const sLinePreviousString = "cmd_linePrevious";
-const char * const sLineNextString = "cmd_lineNext";
-const char * const sCharPreviousString = "cmd_charPrevious";
-const char * const sCharNextString = "cmd_charNext";
+constexpr const char * sScrollTopString = "cmd_scrollTop";
+constexpr const char * sScrollBottomString = "cmd_scrollBottom";
+constexpr const char * sScrollPageUpString = "cmd_scrollPageUp";
+constexpr const char * sScrollPageDownString = "cmd_scrollPageDown";
+constexpr const char * sScrollLineUpString = "cmd_scrollLineUp";
+constexpr const char * sScrollLineDownString = "cmd_scrollLineDown";
+constexpr const char * sScrollLeftString = "cmd_scrollLeft";
+constexpr const char * sScrollRightString = "cmd_scrollRight";
+constexpr const char * sMoveTopString = "cmd_moveTop";
+constexpr const char * sMoveBottomString = "cmd_moveBottom";
+constexpr const char * sMovePageUpString = "cmd_movePageUp";
+constexpr const char * sMovePageDownString = "cmd_movePageDown";
+constexpr const char * sLinePreviousString = "cmd_linePrevious";
+constexpr const char * sLineNextString = "cmd_lineNext";
+constexpr const char * sCharPreviousString = "cmd_charPrevious";
+constexpr const char * sCharNextString = "cmd_charNext";
 
 // These are so the browser can use editor navigation key bindings
 // helps with accessibility (boolean pref accessibility.browsewithcaret)
 
-const char * const sSelectCharPreviousString = "cmd_selectCharPrevious";
-const char * const sSelectCharNextString = "cmd_selectCharNext";
+constexpr const char * sSelectCharPreviousString = "cmd_selectCharPrevious";
+constexpr const char * sSelectCharNextString = "cmd_selectCharNext";
 
-const char * const sWordPreviousString = "cmd_wordPrevious";
-const char * const sWordNextString = "cmd_wordNext";
-const char * const sSelectWordPreviousString = "cmd_selectWordPrevious";
-const char * const sSelectWordNextString = "cmd_selectWordNext";
+constexpr const char * sWordPreviousString = "cmd_wordPrevious";
+constexpr const char * sWordNextString = "cmd_wordNext";
+constexpr const char * sSelectWordPreviousString = "cmd_selectWordPrevious";
+constexpr const char * sSelectWordNextString = "cmd_selectWordNext";
 
-const char * const sBeginLineString = "cmd_beginLine";
-const char * const sEndLineString = "cmd_endLine";
-const char * const sSelectBeginLineString = "cmd_selectBeginLine";
-const char * const sSelectEndLineString = "cmd_selectEndLine";
+constexpr const char * sBeginLineString = "cmd_beginLine";
+constexpr const char * sEndLineString = "cmd_endLine";
+constexpr const char * sSelectBeginLineString = "cmd_selectBeginLine";
+constexpr const char * sSelectEndLineString = "cmd_selectEndLine";
 
-const char * const sSelectLinePreviousString = "cmd_selectLinePrevious";
-const char * const sSelectLineNextString = "cmd_selectLineNext";
+constexpr const char * sSelectLinePreviousString = "cmd_selectLinePrevious";
+constexpr const char * sSelectLineNextString = "cmd_selectLineNext";
 
-const char * const sSelectPageUpString = "cmd_selectPageUp";
-const char * const sSelectPageDownString = "cmd_selectPageDown";
+constexpr const char * sSelectPageUpString = "cmd_selectPageUp";
+constexpr const char * sSelectPageDownString = "cmd_selectPageDown";
 
-const char * const sSelectTopString = "cmd_selectTop";
-const char * const sSelectBottomString = "cmd_selectBottom";
+constexpr const char * sSelectTopString = "cmd_selectTop";
+constexpr const char * sSelectBottomString = "cmd_selectBottom";
 
 // Physical-direction movement and selection commands
-const char * const sMoveLeftString = "cmd_moveLeft";
-const char * const sMoveRightString = "cmd_moveRight";
-const char * const sMoveUpString = "cmd_moveUp";
-const char * const sMoveDownString = "cmd_moveDown";
-const char * const sMoveLeft2String = "cmd_moveLeft2";
-const char * const sMoveRight2String = "cmd_moveRight2";
-const char * const sMoveUp2String = "cmd_moveUp2";
-const char * const sMoveDown2String = "cmd_moveDown2";
+constexpr const char * sMoveLeftString = "cmd_moveLeft";
+constexpr const char * sMoveRightString = "cmd_moveRight";
+constexpr const char * sMoveUpString = "cmd_moveUp";
+constexpr const char * sMoveDownString = "cmd_moveDown";
+constexpr const char * sMoveLeft2String = "cmd_moveLeft2";
+constexpr const char * sMoveRight2String = "cmd_moveRight2";
+constexpr const char * sMoveUp2String = "cmd_moveUp2";
+constexpr const char * sMoveDown2String = "cmd_moveDown2";
 
-const char * const sSelectLeftString = "cmd_selectLeft";
-const char * const sSelectRightString = "cmd_selectRight";
-const char * const sSelectUpString = "cmd_selectUp";
-const char * const sSelectDownString = "cmd_selectDown";
-const char * const sSelectLeft2String = "cmd_selectLeft2";
-const char * const sSelectRight2String = "cmd_selectRight2";
-const char * const sSelectUp2String = "cmd_selectUp2";
-const char * const sSelectDown2String = "cmd_selectDown2";
+constexpr const char * sSelectLeftString = "cmd_selectLeft";
+constexpr const char * sSelectRightString = "cmd_selectRight";
+constexpr const char * sSelectUpString = "cmd_selectUp";
+constexpr const char * sSelectDownString = "cmd_selectDown";
+constexpr const char * sSelectLeft2String = "cmd_selectLeft2";
+constexpr const char * sSelectRight2String = "cmd_selectRight2";
+constexpr const char * sSelectUp2String = "cmd_selectUp2";
+constexpr const char * sSelectDown2String = "cmd_selectDown2";
 
 #if 0
 #pragma mark -
@@ -269,7 +269,7 @@ IsCaretOnInWindow(nsPIDOMWindowOuter* aWindow, nsISelectionController* aSelCont)
   return caretOn;
 }
 
-static const struct BrowseCommand {
+static constexpr struct BrowseCommand {
   const char *reverse, *forward;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
   nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);

@@ -9709,9 +9709,40 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   TabChild* tabChild = TabChild::GetFrom(outer->AsOuter());
   NS_ENSURE_TRUE(tabChild, false);
 
-  if (tabChild->TakeIsFreshProcess())  {
-    NS_WARNING("Already in a fresh process, ignoring Large-Allocation header!");
+  if (tabChild->TakeAwaitingLargeAlloc())  {
+    NS_WARNING("In a Large-Allocation TabChild, ignoring Large-Allocation header!");
     outer->SetLargeAllocStatus(LargeAllocStatus::SUCCESS);
+    return false;
+  }
+
+  // On Win32 systems, we want to behave differently, so set the isWin32 bool to
+  // be true iff we are on win32.
+#if defined(XP_WIN) && defined(_X86_)
+  const bool isWin32 = true;
+#else
+  const bool isWin32 = false;
+#endif
+
+  static bool sLargeAllocForceEnable = false;
+  static bool sCachedLargeAllocForceEnable = false;
+  if (!sCachedLargeAllocForceEnable) {
+    sCachedLargeAllocForceEnable = true;
+    mozilla::Preferences::AddBoolVarCache(&sLargeAllocForceEnable,
+                                          "dom.largeAllocation.forceEnable");
+  }
+
+  // We want to enable the large allocation header on 32-bit windows machines,
+  // and disable it on other machines, while still printing diagnostic messages.
+  // dom.largeAllocation.forceEnable can allow you to enable the process
+  // switching behavior of the Large-Allocation header on non 32-bit windows
+  // machines.
+  bool largeAllocEnabled = isWin32 || sLargeAllocForceEnable;
+  if (!largeAllocEnabled) {
+    NS_WARNING("dom.largeAllocation.forceEnable not set - "
+               "ignoring otherwise successful Large-Allocation header.");
+    // On platforms which aren't WIN32, we don't activate the largeAllocation
+    // header, instead we simply emit diagnostics into the console.
+    outer->SetLargeAllocStatus(LargeAllocStatus::NON_WIN32);
     return false;
   }
 
@@ -9738,10 +9769,25 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
 
+  // Get the channel's load flags, and use them to generate nsIWebNavigation
+  // load flags. We want to make sure to propagate the refresh and cache busting
+  // flags.
+  nsLoadFlags channelLoadFlags;
+  aChannel->GetLoadFlags(&channelLoadFlags);
+
+  uint32_t webnavLoadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
+  if (channelLoadFlags & nsIRequest::LOAD_BYPASS_CACHE) {
+    webnavLoadFlags |= nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE;
+    webnavLoadFlags |= nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
+  } else if (channelLoadFlags & nsIRequest::VALIDATE_ALWAYS) {
+    webnavLoadFlags |= nsIWebNavigation::LOAD_FLAGS_IS_REFRESH;
+  }
+
   // Actually perform the cross process load
   bool reloadSucceeded = false;
   rv = wbc3->ReloadInFreshProcess(docShell, uri, referrer,
-                                  triggeringPrincipal, &reloadSucceeded);
+                                  triggeringPrincipal, webnavLoadFlags,
+                                  &reloadSucceeded);
   NS_ENSURE_SUCCESS(rv, false);
 
   return reloadSucceeded;

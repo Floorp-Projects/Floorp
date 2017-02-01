@@ -170,6 +170,7 @@ struct ShellAsyncTasks
 enum class ScriptKind
 {
     Script,
+    DecodeScript,
     Module
 };
 
@@ -204,14 +205,32 @@ class OffThreadState {
         return true;
     }
 
+    bool startIfIdle(JSContext* cx, ScriptKind kind,
+                     JS::TranscodeBuffer&& newXdr)
+    {
+        AutoLockMonitor alm(monitor);
+        if (state != IDLE)
+            return false;
+
+        MOZ_ASSERT(!token);
+
+        xdr = mozilla::Move(newXdr);
+
+        scriptKind = kind;
+        state = COMPILING;
+        return true;
+    }
+
     void abandon(JSContext* cx) {
         AutoLockMonitor alm(monitor);
         MOZ_ASSERT(state == COMPILING);
         MOZ_ASSERT(!token);
-        MOZ_ASSERT(source);
+        MOZ_ASSERT(source || !xdr.empty());
 
-        js_free(source);
+        if (source)
+            js_free(source);
         source = nullptr;
+        xdr.clearAndFree();
 
         state = IDLE;
     }
@@ -220,7 +239,7 @@ class OffThreadState {
         AutoLockMonitor alm(monitor);
         MOZ_ASSERT(state == COMPILING);
         MOZ_ASSERT(!token);
-        MOZ_ASSERT(source);
+        MOZ_ASSERT(source || !xdr.empty());
         MOZ_ASSERT(newToken);
 
         token = newToken;
@@ -238,9 +257,11 @@ class OffThreadState {
                 alm.wait();
         }
 
-        MOZ_ASSERT(source);
-        js_free(source);
+        MOZ_ASSERT(source || !xdr.empty());
+        if (source)
+            js_free(source);
         source = nullptr;
+        xdr.clearAndFree();
 
         MOZ_ASSERT(token);
         void* holdToken = token;
@@ -249,12 +270,15 @@ class OffThreadState {
         return holdToken;
     }
 
+    JS::TranscodeBuffer& xdrBuffer() { return xdr; }
+
   private:
     Monitor monitor;
     ScriptKind scriptKind;
     State state;
     void* token;
     char16_t* source;
+    JS::TranscodeBuffer xdr;
 };
 
 #ifdef SINGLESTEP_PROFILING
@@ -1563,6 +1587,14 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
         return false;
+      case JS::TranscodeResult_Failure_WrongCompileOption:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Compile options differs from Compile options of the encoding");
+        return false;
+      case JS::TranscodeResult_Failure_NotInterpretedFun:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Only interepreted functions are supported by XDR");
+        return false;
 
       case JS::TranscodeResult_Throw:
         MOZ_ASSERT(cx->isExceptionPending());
@@ -1604,6 +1636,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     bool catchTermination = false;
     bool loadBytecode = false;
     bool saveBytecode = false;
+    bool saveIncrementalBytecode = false;
     bool assertEqBytecode = false;
     RootedObject callerGlobal(cx, cx->global());
 
@@ -1667,6 +1700,11 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         if (!v.isUndefined())
             saveBytecode = ToBoolean(v);
 
+        if (!JS_GetProperty(cx, opts, "saveIncrementalBytecode", &v))
+            return false;
+        if (!v.isUndefined())
+            saveIncrementalBytecode = ToBoolean(v);
+
         if (!JS_GetProperty(cx, opts, "assertEqBytecode", &v))
             return false;
         if (!v.isUndefined())
@@ -1674,10 +1712,15 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
 
         // We cannot load or save the bytecode if we have no object where the
         // bytecode cache is stored.
-        if (loadBytecode || saveBytecode) {
+        if (loadBytecode || saveBytecode || saveIncrementalBytecode) {
             if (!cacheEntry) {
                 JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
                                           "evaluate");
+                return false;
+            }
+            if (saveIncrementalBytecode && saveBytecode) {
+                JS_ReportErrorASCII(cx, "saveIncrementalBytecode and saveBytecode cannot be used"
+                                    " at the same time.");
                 return false;
             }
         }
@@ -1757,6 +1800,15 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
+
+        // If we want to save the bytecode incrementally, then we should
+        // register ahead the fact that every JSFunction which is being
+        // delazified should be encoded at the end of the delazification.
+        if (saveIncrementalBytecode) {
+            if (!StartIncrementalEncoding(cx, saveBuffer, script))
+                return false;
+        }
+
         if (!JS_ExecuteScript(cx, script, args.rval())) {
             if (catchTermination && !JS_IsExceptionPending(cx)) {
                 JSAutoCompartment ac1(cx, callerGlobal);
@@ -1769,14 +1821,22 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
+        // Encode the bytecode after the execution of the script.
         if (saveBytecode) {
             JS::TranscodeResult rv = JS::EncodeScript(cx, saveBuffer, script);
             if (!ConvertTranscodeResultToJSException(cx, rv))
                 return false;
         }
+
+        // Serialize the encoded bytecode, recorded before the execution, into a
+        // buffer which can be deserialized linearly.
+        if (saveIncrementalBytecode) {
+            if (!FinishIncrementalEncoding(cx, script))
+                return false;
+        }
     }
 
-    if (saveBytecode) {
+    if (saveBytecode || saveIncrementalBytecode) {
         // If we are both loading and saving, we assert that we are going to
         // replace the current bytecode by the same stream of bytes.
         if (loadBytecode && assertEqBytecode) {
@@ -4373,6 +4433,109 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
+{
+    if (!CanUseExtraThreads()) {
+        JS_ReportErrorASCII(cx, "Can't use offThreadDecodeScript with --no-threads");
+        return false;
+    }
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "offThreadDecodeScript", "0", "s");
+        return false;
+    }
+    if (!args[0].isObject() || !CacheEntry_isCacheEntry(&args[0].toObject())) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected cache entry, got %s", typeName);
+        return false;
+    }
+    RootedObject cacheEntry(cx, &args[0].toObject());
+
+    JSAutoByteString fileNameBytes;
+    CompileOptions options(cx);
+    options.setIntroductionType("js shell offThreadDecodeScript")
+           .setFileAndLine("<string>", 1);
+
+    if (args.length() >= 2) {
+        if (args[1].isPrimitive()) {
+            JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                      "evaluate");
+            return false;
+        }
+
+        RootedObject opts(cx, &args[1].toObject());
+        if (!ParseCompileOptions(cx, options, opts, fileNameBytes))
+            return false;
+    }
+
+    // These option settings must override whatever the caller requested.
+    options.setIsRunOnce(true)
+           .setSourceIsLazy(false);
+
+    // We assume the caller wants caching if at all possible, ignoring
+    // heuristics that make sense for a real browser.
+    options.forceAsync = true;
+
+    JS::TranscodeBuffer loadBuffer;
+    uint32_t loadLength = 0;
+    uint8_t* loadData = nullptr;
+    loadData = CacheEntry_getBytecode(cacheEntry, &loadLength);
+    if (!loadData)
+        return false;
+    if (!loadBuffer.append(loadData, loadLength)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!JS::CanCompileOffThread(cx, options, loadLength)) {
+        JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
+        return false;
+    }
+
+    ShellContext* sc = GetShellContext(cx);
+    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::DecodeScript, mozilla::Move(loadBuffer))) {
+        JS_ReportErrorASCII(cx, "called offThreadDecodeScript without calling "
+                            "runOffThreadDecodedScript to receive prior off-thread compilation");
+        return false;
+    }
+
+    if (!JS::DecodeOffThreadScript(cx, options, sc->offThreadState.xdrBuffer(), 0,
+                                   OffThreadCompileScriptCallback, sc))
+    {
+        sc->offThreadState.abandon(cx);
+        return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (OffThreadParsingMustWaitForGC(cx))
+        gc::FinishGC(cx);
+
+    ShellContext* sc = GetShellContext(cx);
+    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::DecodeScript);
+    if (!token) {
+        JS_ReportErrorASCII(cx, "called runOffThreadDecodedScript when no compilation is pending");
+        return false;
+    }
+
+    RootedScript script(cx, JS::FinishOffThreadScriptDecoder(cx, token));
+    if (!script)
+        return false;
+
+    return JS_ExecuteScript(cx, script, args.rval());
+}
+
 struct MOZ_RAII FreeOnReturn
 {
     JSContext* cx;
@@ -5952,6 +6115,19 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "finishOffThreadModule()",
 "  Wait for off-thread compilation to complete. If an error occurred,\n"
 "  throw the appropriate exception; otherwise, return the module object"),
+
+    JS_FN_HELP("offThreadDecodeScript", OffThreadDecodeScript, 1, 0,
+"offThreadDecodeScript(cacheEntry[, options])",
+"  Decode |code| on a helper thread. To wait for the compilation to finish\n"
+"  and run the code, call |runOffThreadScript|. If present, |options| may\n"
+"  have properties saying how the code should be compiled.\n"
+"  (see also offThreadCompileScript)\n"),
+
+    JS_FN_HELP("runOffThreadDecodedScript", runOffThreadDecodedScript, 0, 0,
+"runOffThreadDecodedScript()",
+"  Wait for off-thread decoding to complete. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, run the script and return\n"
+"  its value."),
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",

@@ -955,6 +955,7 @@ GLBlitHelper::DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
     }
 
     ScopedGLDrawState autoStates(mGL);
+    const ScopedBindFramebuffer bindFB(mGL);
     if (internalFBs) {
         mGL->Screen()->BindFB_Internal(destFB);
     } else {
@@ -973,6 +974,7 @@ GLBlitHelper::DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
         return;
     }
 
+    const ScopedBindTexture bindTex(mGL, srcTex, srcTarget);
     mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 }
 

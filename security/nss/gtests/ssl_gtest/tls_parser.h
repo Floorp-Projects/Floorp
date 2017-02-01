@@ -30,6 +30,7 @@ const uint8_t kTlsHandshakeHelloRetryRequest = 6;
 const uint8_t kTlsHandshakeEncryptedExtensions = 8;
 const uint8_t kTlsHandshakeCertificate = 11;
 const uint8_t kTlsHandshakeServerKeyExchange = 12;
+const uint8_t kTlsHandshakeCertificateRequest = 13;
 const uint8_t kTlsHandshakeCertificateVerify = 15;
 const uint8_t kTlsHandshakeClientKeyExchange = 16;
 const uint8_t kTlsHandshakeFinished = 20;

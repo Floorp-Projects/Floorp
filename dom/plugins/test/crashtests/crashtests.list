@@ -11,4 +11,4 @@ load 570884.html
 skip-if(!haveTestPlugin||http.platform!="X11") load 598862.html
 skip-if(Android) load 626602-1.html # bug 908363
 load 752340.html
-asserts-if(stylo,1) load 843086.xhtml # bug 1324647
+load 843086.xhtml

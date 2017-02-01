@@ -1831,7 +1831,7 @@ tls13_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
                                    &certRequest->signatureSchemes,
                                    &certRequest->signatureSchemeCount,
                                    &b, &length);
-    if (rv != SECSuccess) {
+    if (rv != SECSuccess || certRequest->signatureSchemeCount == 0) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CERT_REQUEST,
                     decode_error);
         goto loser;

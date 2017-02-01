@@ -419,6 +419,7 @@ NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(nsIDocShell* aDocShell,
                                                        nsIURI* aURI,
                                                        nsIURI* aReferrer,
                                                        nsIPrincipal* aTriggeringPrincipal,
+                                                       uint32_t aLoadFlags,
                                                        bool* aRetVal)
 {
   NS_WARNING("Cannot reload in fresh process from a nsContentTreeOwner!");

@@ -3130,7 +3130,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, InHandling inHandling,
     RootedObject proto(context);
     if (generatorKind == StarGenerator) {
         // If we are off the main thread, the generator meta-objects have
-        // already been created by js::StartOffThreadParseScript, so cx will not
+        // already been created by js::StartOffThreadParseTask, so cx will not
         // be necessary.
         JSContext* cx = context->maybeJSContext();
         proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());

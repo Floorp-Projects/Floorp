@@ -161,9 +161,15 @@
       'dependencies': [
         'nssfuzz-certDN',
         'nssfuzz-hash',
-        'nssfuzz-mpi',
         'nssfuzz-pkcs8',
         'nssfuzz-quickder',
+      ],
+      'conditions': [
+        ['OS=="linux"', {
+          'dependencies': [
+            'nssfuzz-mpi',
+          ],
+        }],
       ],
     }
   ],
