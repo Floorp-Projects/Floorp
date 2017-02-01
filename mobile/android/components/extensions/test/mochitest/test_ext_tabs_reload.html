@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs reload Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* () {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    files: {
+      "tab.js": function() {
+        browser.runtime.sendMessage("tab-loaded");
+      },
+      "tab.html":
+        `<head>
+          <meta charset="utf-8">
+          <script src="tab.js"><\/script>
+        </head>`,
+    },
+
+    async background() {
+      let tabLoadedCount = 0;
+
+      let tab = await browser.tabs.create({url: "tab.html", active: true});
+
+      browser.runtime.onMessage.addListener(msg => {
+        if (msg == "tab-loaded") {
+          tabLoadedCount++;
+
+          if (tabLoadedCount == 1) {
+            // Reload the tab once passing no arguments.
+            return browser.tabs.reload();
+          }
+
+          if (tabLoadedCount == 2) {
+            // Reload the tab again with explicit arguments.
+            return browser.tabs.reload(tab.id, {
+              bypassCache: false,
+            });
+          }
+
+          if (tabLoadedCount == 3) {
+            browser.test.notifyPass("tabs.reload");
+          }
+        }
+      });
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("tabs.reload");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
