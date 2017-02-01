@@ -165,7 +165,7 @@ static void* setup_atfork() {
 
 struct SamplerRegistry {
   static void AddActiveSampler(Sampler *sampler) {
-    ASSERT(!SamplerRegistry::sampler);
+    MOZ_ASSERT(!SamplerRegistry::sampler);
     SamplerRegistry::sampler = sampler;
   }
   static void RemoveActiveSampler(Sampler *sampler) {

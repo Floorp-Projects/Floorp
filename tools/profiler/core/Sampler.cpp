@@ -329,7 +329,7 @@ Sampler::RegisterCurrentThread(const char* aName,
     if (info->ThreadId() == id && !info->IsPendingDelete()) {
       // Thread already registered. This means the first unregister will be
       // too early.
-      ASSERT(false);
+      MOZ_ASSERT(false);
       return false;
     }
   }

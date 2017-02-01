@@ -840,7 +840,7 @@ profiler_stop()
 
   if (disableJS) {
     PseudoStack *stack = tlsPseudoStack.get();
-    ASSERT(stack != nullptr);
+    MOZ_ASSERT(stack != nullptr);
     stack->disableJSSampling();
   }
 
