@@ -46,6 +46,8 @@ const uint32_t kParamLen = 32;
 const uint32_t kPublicKeyLen = 65;
 const uint32_t kWrappedKeyBufLen = 256;
 const uint32_t kWrappingKeyByteLen = 128/8;
+const uint32_t kSaltByteLen = 64/8;
+const uint32_t kVersion1KeyHandleLen = 162;
 NS_NAMED_LITERAL_STRING(kEcAlgorithm, WEBCRYPTO_NAMED_CURVE_P256);
 
 const PRTime kOneDay = PRTime(PR_USEC_PER_SEC)
@@ -54,6 +56,10 @@ const PRTime kOneDay = PRTime(PR_USEC_PER_SEC)
                      * PRTime(24); // hours
 const PRTime kExpirationSlack = kOneDay; // Pre-date for clock skew
 const PRTime kExpirationLife = kOneDay;
+
+enum SoftTokenHandle {
+  Version1 = 0,
+};
 
 static mozilla::LazyLogModule gNSSTokenLog("webauth_u2f");
 
@@ -380,17 +386,48 @@ nsNSSU2FToken::Init()
 }
 
 // Convert a Private Key object into an opaque key handle, using AES Key Wrap
-// and aWrappingKey to convert aPrivKey.
+// with the long-lived aPersistentKey mixed with aAppParam to convert aPrivKey.
+// The key handle's format is version || saltLen || salt || wrappedPrivateKey
 static UniqueSECItem
 KeyHandleFromPrivateKey(const UniquePK11SlotInfo& aSlot,
-                        const UniquePK11SymKey& aWrappingKey,
+                        const UniquePK11SymKey& aPersistentKey,
+                        uint8_t* aAppParam, uint32_t aAppParamLen,
                         const UniqueSECKEYPrivateKey& aPrivKey,
                         const nsNSSShutDownPreventionLock&)
 {
   MOZ_ASSERT(aSlot);
-  MOZ_ASSERT(aWrappingKey);
+  MOZ_ASSERT(aPersistentKey);
+  MOZ_ASSERT(aAppParam);
   MOZ_ASSERT(aPrivKey);
-  if (!aSlot || !aWrappingKey || !aPrivKey) {
+  if (!aSlot || !aPersistentKey || !aPrivKey || !aAppParam) {
+    return nullptr;
+  }
+
+  // Generate a random salt
+  uint8_t saltParam[kSaltByteLen];
+  SECStatus srv = PK11_GenerateRandomOnSlot(aSlot.get(), saltParam,
+                                            sizeof(saltParam));
+  if (srv != SECSuccess) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
+            ("Failed to generate a salt, NSS error #%d", PORT_GetError()));
+    return nullptr;
+  }
+
+  // Prepare the HKDF (https://tools.ietf.org/html/rfc5869)
+  CK_NSS_HKDFParams hkdfParams = { true, saltParam, sizeof(saltParam),
+                                   true, aAppParam, aAppParamLen };
+  SECItem kdfParams = { siBuffer, (unsigned char*)&hkdfParams,
+                        sizeof(hkdfParams) };
+
+  // Derive a wrapping key from aPersistentKey, the salt, and the aAppParam.
+  // CKM_AES_KEY_GEN and CKA_WRAP are key type and usage attributes of the
+  // derived symmetric key and don't matter because we ignore them anyway.
+  UniquePK11SymKey wrapKey(PK11_Derive(aPersistentKey.get(), CKM_NSS_HKDF_SHA256,
+                                      &kdfParams, CKM_AES_KEY_GEN, CKA_WRAP,
+                                      kWrappingKeyByteLen));
+  if (!wrapKey.get()) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
+            ("Failed to derive a wrapping key, NSS error #%d", PORT_GetError()));
     return nullptr;
   }
 
@@ -398,46 +435,112 @@ KeyHandleFromPrivateKey(const UniquePK11SlotInfo& aSlot,
                                              /* no buffer */ nullptr,
                                              kWrappedKeyBufLen));
   if (!wrappedKey) {
-      MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
-              ("Failed to allocate memory, NSS error #%d", PORT_GetError()));
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Failed to allocate memory"));
     return nullptr;
   }
 
   UniqueSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
                                        /* default IV */ nullptr ));
 
-  SECStatus srv = PK11_WrapPrivKey(aSlot.get(), aWrappingKey.get(),
-                                   aPrivKey.get(), CKM_NSS_AES_KEY_WRAP_PAD,
-                                   param.get(), wrappedKey.get(),
-                                   /* wincx */ nullptr);
+  srv = PK11_WrapPrivKey(aSlot.get(), wrapKey.get(), aPrivKey.get(),
+                         CKM_NSS_AES_KEY_WRAP_PAD, param.get(), wrappedKey.get(),
+                         /* wincx */ nullptr);
   if (srv != SECSuccess) {
-      MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
-              ("Failed to wrap U2F key, NSS error #%d", PORT_GetError()));
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
+            ("Failed to wrap U2F key, NSS error #%d", PORT_GetError()));
     return nullptr;
   }
 
-  return wrappedKey;
+  // Concatenate the salt and the wrapped Private Key together
+  mozilla::dom::CryptoBuffer keyHandleBuf;
+  if (!keyHandleBuf.SetCapacity(wrappedKey.get()->len + sizeof(saltParam) + 2,
+                                 mozilla::fallible)) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Failed to allocate memory"));
+    return nullptr;
+  }
+
+  // It's OK to ignore the return values here because we're writing into
+  // pre-allocated space
+  keyHandleBuf.AppendElement(SoftTokenHandle::Version1, mozilla::fallible);
+  keyHandleBuf.AppendElement(sizeof(saltParam), mozilla::fallible);
+  keyHandleBuf.AppendElements(saltParam, sizeof(saltParam), mozilla::fallible);
+  keyHandleBuf.AppendSECItem(wrappedKey.get());
+
+  UniqueSECItem keyHandle(SECITEM_AllocItem(nullptr, nullptr, 0));
+  if (!keyHandle) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Failed to allocate memory"));
+    return nullptr;
+  }
+
+  if (!keyHandleBuf.ToSECItem(/* default arena */ nullptr, keyHandle.get())) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Failed to allocate memory"));
+    return nullptr;
+  }
+  return keyHandle;
 }
 
 // Convert an opaque key handle aKeyHandle back into a Private Key object, using
-// aWrappingKey and the AES Key Wrap algorithm.
+// the long-lived aPersistentKey mixed with aAppParam and the AES Key Wrap
+// algorithm.
 static UniqueSECKEYPrivateKey
 PrivateKeyFromKeyHandle(const UniquePK11SlotInfo& aSlot,
-                        const UniquePK11SymKey& aWrappingKey,
+                        const UniquePK11SymKey& aPersistentKey,
                         uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
+                        uint8_t* aAppParam, uint32_t aAppParamLen,
                         const nsNSSShutDownPreventionLock&)
 {
   MOZ_ASSERT(aSlot);
-  MOZ_ASSERT(aWrappingKey);
+  MOZ_ASSERT(aPersistentKey);
   MOZ_ASSERT(aKeyHandle);
-  if (!aSlot || !aWrappingKey || !aKeyHandle) {
+  MOZ_ASSERT(aAppParam);
+  MOZ_ASSERT(aAppParamLen == SHA256_LENGTH);
+  if (!aSlot || !aPersistentKey || !aKeyHandle || !aAppParam ||
+      aAppParamLen != SHA256_LENGTH) {
     return nullptr;
   }
 
-  ScopedAutoSECItem pubKey(kPublicKeyLen);
+  // As we only support one key format ourselves (right now), fail early if
+  // we aren't that length
+  if (aKeyHandleLen != kVersion1KeyHandleLen) {
+    return nullptr;
+  }
 
-  ScopedAutoSECItem keyHandleItem(aKeyHandleLen);
-  memcpy(keyHandleItem.data, aKeyHandle, keyHandleItem.len);
+  if (aKeyHandle[0] != SoftTokenHandle::Version1) {
+    // Unrecognized version
+    return nullptr;
+  }
+
+  uint8_t saltLen = aKeyHandle[1];
+  uint8_t* saltPtr = aKeyHandle + 2;
+  if (saltLen != kSaltByteLen) {
+    return nullptr;
+  }
+
+  // Prepare the HKDF (https://tools.ietf.org/html/rfc5869)
+  CK_NSS_HKDFParams hkdfParams = { true, saltPtr, saltLen,
+                                   true, aAppParam, aAppParamLen };
+  SECItem kdfParams = { siBuffer, (unsigned char*)&hkdfParams,
+                        sizeof(hkdfParams) };
+
+  // Derive a wrapping key from aPersistentKey, the salt, and the aAppParam.
+  // CKM_AES_KEY_GEN and CKA_WRAP are key type and usage attributes of the
+  // derived symmetric key and don't matter because we ignore them anyway.
+  UniquePK11SymKey wrapKey(PK11_Derive(aPersistentKey.get(), CKM_NSS_HKDF_SHA256,
+                                       &kdfParams, CKM_AES_KEY_GEN, CKA_WRAP,
+                                       kWrappingKeyByteLen));
+  if (!wrapKey.get()) {
+    MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
+            ("Failed to derive a wrapping key, NSS error #%d", PORT_GetError()));
+    return nullptr;
+  }
+
+  uint8_t wrappedLen = aKeyHandleLen - saltLen - 2;
+  uint8_t* wrappedPtr = aKeyHandle + saltLen + 2;
+
+  ScopedAutoSECItem wrappedKeyItem(wrappedLen);
+  memcpy(wrappedKeyItem.data, wrappedPtr, wrappedKeyItem.len);
+
+  ScopedAutoSECItem pubKey(kPublicKeyLen);
 
   UniqueSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
                                        /* default IV */ nullptr ));
@@ -446,8 +549,8 @@ PrivateKeyFromKeyHandle(const UniquePK11SlotInfo& aSlot,
   int usageCount = 1;
 
   UniqueSECKEYPrivateKey unwrappedKey(
-    PK11_UnwrapPrivKey(aSlot.get(), aWrappingKey.get(), CKM_NSS_AES_KEY_WRAP_PAD,
-                       param.get(), &keyHandleItem,
+    PK11_UnwrapPrivKey(aSlot.get(), wrapKey.get(), CKM_NSS_AES_KEY_WRAP_PAD,
+                       param.get(), &wrappedKeyItem,
                        /* no nickname */ nullptr,
                        /* discard pubkey */ &pubKey,
                        /* not permanent */ false,
@@ -477,9 +580,11 @@ nsNSSU2FToken::IsCompatibleVersion(const nsAString& aVersion, bool* aResult)
 // IsRegistered determines if the provided key handle is usable by this token.
 NS_IMETHODIMP
 nsNSSU2FToken::IsRegistered(uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
+                            uint8_t* aAppParam, uint32_t aAppParamLen,
                             bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aKeyHandle);
+  NS_ENSURE_ARG_POINTER(aAppParam);
   NS_ENSURE_ARG_POINTER(aResult);
 
   if (!NS_IsMainThread()) {
@@ -504,6 +609,8 @@ nsNSSU2FToken::IsRegistered(uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
   UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
                                                            aKeyHandle,
                                                            aKeyHandleLen,
+                                                           aAppParam,
+                                                           aAppParamLen,
                                                            locker);
   *aResult = (privKey.get() != nullptr);
   return NS_OK;
@@ -583,6 +690,8 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
 
   // The key handle will be the result of keywrap(privKey, key=mWrappingKey)
   UniqueSECItem keyHandleItem = KeyHandleFromPrivateKey(slot, mWrappingKey,
+                                                        aApplication,
+                                                        aApplicationLen,
                                                         privKey, locker);
   if (!keyHandleItem.get()) {
     return NS_ERROR_FAILURE;
@@ -695,6 +804,8 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
                                                            aKeyHandle,
                                                            aKeyHandleLen,
+                                                           aApplication,
+                                                           aApplicationLen,
                                                            locker);
   if (!privKey.get()) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Couldn't get the priv key!"));
