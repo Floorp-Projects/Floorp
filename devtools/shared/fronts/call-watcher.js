@@ -55,9 +55,6 @@ CallWatcherFront.SETTER_FUNCTION = 2;
 CallWatcherFront.KNOWN_METHODS = {};
 
 CallWatcherFront.KNOWN_METHODS.CanvasRenderingContext2D = {
-  asyncDrawXULElement: {
-    enums: new Set([6]),
-  },
   drawWindow: {
     enums: new Set([6])
   },
