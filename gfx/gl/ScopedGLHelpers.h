@@ -362,6 +362,22 @@ protected:
     void UnwrapImpl();
 };
 
+struct ScopedBindPBO final
+    : public ScopedGLWrapper<ScopedPackState>
+{
+    friend struct ScopedGLWrapper<ScopedPackState>;
+
+protected:
+    const GLenum mTarget;
+    const GLuint mPBO;
+
+public:
+    ScopedBindPBO(GLContext* gl, GLenum target);
+
+protected:
+    void UnwrapImpl();
+};
+
 } /* namespace gl */
 } /* namespace mozilla */
 

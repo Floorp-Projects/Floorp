@@ -321,6 +321,20 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
         break;
 #ifdef USE_TURN
       case RELAYED:
+        // record stats back to the ice ctx on destruction
+        if (cand->u.relayed.turn) {
+          nr_ice_accumulate_count(&(cand->ctx->stats.turn_401s), cand->u.relayed.turn->cnt_401s);
+          nr_ice_accumulate_count(&(cand->ctx->stats.turn_403s), cand->u.relayed.turn->cnt_403s);
+          nr_ice_accumulate_count(&(cand->ctx->stats.turn_438s), cand->u.relayed.turn->cnt_438s);
+
+          nr_turn_stun_ctx* stun_ctx;
+          stun_ctx = STAILQ_FIRST(&cand->u.relayed.turn->stun_ctxs);
+          while (stun_ctx) {
+            nr_ice_accumulate_count(&(cand->ctx->stats.stun_retransmits), stun_ctx->stun->retransmit_ct);
+
+            stun_ctx = STAILQ_NEXT(stun_ctx, entry);
+          }
+        }
         if (cand->u.relayed.turn_handle)
           nr_ice_socket_deregister(cand->isock, cand->u.relayed.turn_handle);
         if (cand->u.relayed.srvflx_candidate)

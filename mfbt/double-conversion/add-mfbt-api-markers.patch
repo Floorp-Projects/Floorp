@@ -1,7 +1,7 @@
-diff --git a/mfbt/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion.h
+diff --git a/mfbt/double-conversion/source/double-conversion.h b/mfbt/double-conversion/source/double-conversion.h
 index f98edae..c62b16b 100644
---- a/mfbt/double-conversion/double-conversion.h
-+++ b/mfbt/double-conversion/double-conversion.h
+--- a/mfbt/double-conversion/source/double-conversion.h
++++ b/mfbt/double-conversion/source/double-conversion.h
 @@ -28,6 +28,7 @@
  #ifndef DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
  #define DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_

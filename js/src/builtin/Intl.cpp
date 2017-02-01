@@ -3503,7 +3503,6 @@ js::GlobalObject::addPluralRulesConstructor(JSContext* cx, HandleObject intl)
         const HeapSlot& slot = global->getReservedSlotRef(PLURAL_RULES_PROTO);
         if (!slot.isUndefined()) {
             MOZ_ASSERT(slot.isObject());
-            MOZ_ASSERT(slot.toObject().is<PluralRulesObject>());
             JS_ReportErrorASCII(cx,
                                 "the PluralRules constructor can't be added "
                                 "multiple times in the same global");

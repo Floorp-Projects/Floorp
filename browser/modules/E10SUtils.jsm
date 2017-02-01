@@ -71,9 +71,11 @@ this.E10SUtils = {
       return aPreferredRemoteType;
     }
 
-    // We need data: URIs to load in any remote process, because some of our
-    // tests rely on this.
-    if (aURL.startsWith("data:")) {
+    // We need data: URI's to load in a remote process, because some of our
+    // tests rely on this. For blob: URI's, load them in their originating
+    // process unless it is non-remote. In that case, favor a remote (sandboxed)
+    // process with fewer privileges to limit exposure.
+    if (aURL.startsWith("data:") || aURL.startsWith("blob:")) {
       return aPreferredRemoteType == NOT_REMOTE ? DEFAULT_REMOTE_TYPE
                                                 : aPreferredRemoteType;
     }
@@ -157,10 +159,12 @@ this.E10SUtils = {
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
-    // If we are in a fresh process, and it wouldn't be content visible to
-    // change processes, we want to load into a new process so that we can throw
+    // If we are in a Large-Allocation process, and it wouldn't be content visible
+    // to change processes, we want to load into a new process so that we can throw
     // this one out.
-    if (aDocShell.inFreshProcess && aDocShell.isOnlyToplevelInTabGroup) {
+    if (aDocShell.inLargeAllocProcess &&
+        !aDocShell.awaitingLargeAlloc &&
+        aDocShell.isOnlyToplevelInTabGroup) {
       return false;
     }
 
@@ -168,7 +172,7 @@ this.E10SUtils = {
     return this.shouldLoadURIInThisProcess(aURI);
   },
 
-  redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aFreshProcess) {
+  redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aFreshProcess, aFlags) {
     // Retarget the load to the correct process
     let messageManager = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
@@ -177,7 +181,7 @@ this.E10SUtils = {
     messageManager.sendAsyncMessage("Browser:LoadURI", {
       loadOptions: {
         uri: aURI.spec,
-        flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+        flags: aFlags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrer: aReferrer ? aReferrer.spec : null,
         triggeringPrincipal: aTriggeringPrincipal
                              ? Utils.serializePrincipal(aTriggeringPrincipal)

@@ -6,20 +6,16 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 plugin_file_names = Test.plugin SecondTest.plugin ThirdTest.plugin npswftest.plugin
-addon_file_name = testaddon_$(TARGET_XPCOM_ABI).xpi
 else
 plugin_file_names = $(DLL_PREFIX)nptest$(DLL_SUFFIX) $(DLL_PREFIX)npsecondtest$(DLL_SUFFIX) $(DLL_PREFIX)npthirdtest$(DLL_SUFFIX) $(DLL_PREFIX)npswftest$(DLL_SUFFIX)
-addon_file_name = testaddon.xpi
 endif
 
 # This is so hacky. Waiting on bug 988938.
 testdir = $(topobjdir)/_tests/xpcshell/dom/plugins/test/unit/
-addonpath = $(testdir)/$(addon_file_name)
+addonpath = $(testdir)/testaddon.xpi
 
-ifdef COMPILE_ENVIRONMENT
 libs::
 	$(NSINSTALL) -D $(testdir)
 	rm -f $(addonpath)
 	cd $(srcdir) && zip -rD $(addonpath) install.rdf
 	cd $(DIST) && zip -rD $(addonpath) $(foreach name,$(plugin_file_names),plugins/$(name))
-endif

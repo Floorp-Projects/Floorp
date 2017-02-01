@@ -29,7 +29,7 @@ struct nsMyTrustedEVInfo
   const char* oid_name; // Set this to null to signal an invalid structure,
                   // (We can't have an empty list, so we'll use a dummy entry)
   SECOidTag oid_tag;
-  const unsigned char ev_root_sha256_fingerprint[SHA256_LENGTH];
+  unsigned char ev_root_sha256_fingerprint[SHA256_LENGTH];
   const char* issuer_base64;
   const char* serial_base64;
 };

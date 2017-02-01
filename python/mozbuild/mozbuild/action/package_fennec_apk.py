@@ -54,12 +54,12 @@ def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
         jarrer.add(path, file, compress=compress)
 
     for features_dir in features_dirs:
-        finder = FileFinder(features_dir, find_executables=False)
+        finder = FileFinder(features_dir)
         for p, f in finder.find('**'):
             add(mozpath.join('assets', 'features', p), f, False)
 
     for assets_dir in assets_dirs:
-        finder = FileFinder(assets_dir, find_executables=False)
+        finder = FileFinder(assets_dir)
         for p, f in finder.find('**'):
             compress = None  # Take default from Jarrer.
             if p.endswith('.so'):
@@ -91,7 +91,7 @@ def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
             add(mozpath.join('assets', p), f, compress=compress)
 
     for lib_dir in lib_dirs:
-        finder = FileFinder(lib_dir, find_executables=False)
+        finder = FileFinder(lib_dir)
         for p, f in finder.find('**'):
             add(mozpath.join('lib', p), f)
 

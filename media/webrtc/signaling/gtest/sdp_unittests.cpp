@@ -1579,7 +1579,7 @@ class NewSdpTest : public ::testing::Test,
                       const std::string& search_pt,
                       const SdpSctpmapAttributeList& sctpmaps) const {
       ASSERT_TRUE(sctpmaps.HasEntry(search_pt));
-      auto attr = sctpmaps.GetEntry(search_pt);
+      auto attr = sctpmaps.GetFirstEntry();
       ASSERT_EQ(expected_pt, search_pt);
       ASSERT_EQ(expected_pt, attr.pt);
       ASSERT_EQ(name, attr.name);
@@ -3233,7 +3233,7 @@ TEST_P(NewSdpTest, CheckSctpmap) {
               sctpmap);
 }
 
-const std::string kNewSctpmapOfferDraft07 =
+const std::string kNewSctpportOfferDraft21 =
 "v=0" CRLF
 "o=Mozilla-SIPUA-35.0a1 27987 0 IN IP4 0.0.0.0" CRLF
 "s=SIP Call" CRLF
@@ -3241,14 +3241,14 @@ const std::string kNewSctpmapOfferDraft07 =
 "a=ice-ufrag:8a39d2ae" CRLF
 "a=ice-pwd:601d53aba51a318351b3ecf5ee00048f" CRLF
 "a=fingerprint:sha-256 30:FF:8E:2B:AC:9D:ED:70:18:10:67:C8:AE:9E:68:F3:86:53:51:B0:AC:31:B7:BE:6D:CF:A4:2E:D3:6E:B4:28" CRLF
-"m=application 9 DTLS/SCTP webrtc-datachannel" CRLF
+"m=application 9 UDP/DTLS/SCTP webrtc-datachannel" CRLF
 "c=IN IP4 0.0.0.0" CRLF
-"a=fmtp:webrtc-datachannel max-message-size=100000" CRLF
-"a=sctp-port 5000" CRLF
+"a=sctp-port:5000" CRLF
+"a=max-message-size:10000" CRLF
 "a=setup:actpass" CRLF;
 
-TEST_P(NewSdpTest, NewSctpmapSdpParse) {
-  ParseSdp(kNewSctpmapOfferDraft07, false);
+TEST_P(NewSdpTest, NewSctpportSdpParse) {
+  ParseSdp(kNewSctpportOfferDraft21, false);
 }
 
 INSTANTIATE_TEST_CASE_P(RoundTripSerialize,

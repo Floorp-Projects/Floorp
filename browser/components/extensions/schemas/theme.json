@@ -17,6 +17,10 @@
               "headerURL": {
                 "type": "string",
                 "optional": true
+              },
+              "theme_frame": {
+                "type": "string",
+                "optional": true
               }
             }
           },
@@ -26,6 +30,20 @@
             "properties": {
               "accentcolor": {
                 "type": "string",
+                "optional": true
+              },
+              "frame": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "optional": true
+              },
+              "tab_text": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
                 "optional": true
               },
               "textcolor": {
@@ -44,6 +62,26 @@
             "$ref": "ThemeType"
           }
         }
+      }
+    ]
+  },
+  {
+    "namespace": "theme",
+    "description": "The theme API allows customizing of visual elements of the browser.",
+    "permissions": ["manifest:theme"],
+    "functions": [
+      {
+        "name": "update",
+        "type": "function",
+        "async": true,
+        "description": "Make complete or partial updates to the theme. Resolves when the update has completed.",
+        "parameters": [
+          {
+            "name": "details",
+            "$ref": "manifest.ThemeType",
+            "description": "The properties of the theme to update."
+          }
+        ]
       }
     ]
   }

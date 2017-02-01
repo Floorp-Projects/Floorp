@@ -353,6 +353,16 @@ public:
   virtual bool IsValid() const { return true; }
 
   /**
+   * This function will return true if the surface type matches that of a
+   * DataSourceSurface and if GetDataSurface will return the same object.
+   */
+  bool IsDataSourceSurface() const {
+    SurfaceType type = GetType();
+    return type == SurfaceType::DATA ||
+           type == SurfaceType::DATA_SHARED;
+  }
+
+  /**
    * This function will get a DataSourceSurface for this surface, a
    * DataSourceSurface's data can be accessed directly.
    */
@@ -494,6 +504,24 @@ public:
    * guaranteed to have surface->GetType() == SurfaceType::DATA.
    */
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
+
+  /**
+   * Add the size of the underlying data buffer to the aggregate.
+   */
+  virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                      size_t& aHeapSizeOut,
+                                      size_t& aNonHeapSizeOut) const
+  {
+  }
+
+  /**
+   * Returns whether or not the data was allocated on the heap. This should
+   * be used to determine if the memory needs to be cleared to 0.
+   */
+  virtual bool OnHeap() const
+  {
+    return true;
+  }
 
 protected:
   bool mIsMapped;

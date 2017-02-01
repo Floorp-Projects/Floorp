@@ -43,7 +43,6 @@ private:
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
-  mozilla::ipc::IPCResult RecvSetNodeId(const nsCString& aNodeId) override;
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
 
@@ -75,8 +74,7 @@ private:
 
   MessageLoop* mGMPMessageLoop;
   nsString mPluginPath;
-  nsCString mNodeId;
-  GMPLoader* mGMPLoader;
+  UniquePtr<GMPLoader> mGMPLoader;
 };
 
 } // namespace gmp

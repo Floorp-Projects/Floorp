@@ -278,86 +278,6 @@ GMPStorageChild::RecvWriteComplete(const nsCString& aRecordName,
   return IPC_OK();
 }
 
-GMPErr
-GMPStorageChild::EnumerateRecords(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
-                                  void* aUserArg)
-{
-  MonitorAutoLock lock(mMonitor);
-
-  if (mShutdown) {
-    NS_WARNING("GMPStorage used after it's been shutdown!");
-    return GMPClosedErr;
-  }
-
-  MOZ_ASSERT(aRecvIteratorFunc);
-  mPendingRecordIterators.push(RecordIteratorContext(aRecvIteratorFunc, aUserArg));
-
-  CALL_ON_GMP_THREAD(SendGetRecordNames);
-
-  return GMPNoErr;
-}
-
-class GMPRecordIteratorImpl : public GMPRecordIterator {
-public:
-  explicit GMPRecordIteratorImpl(const InfallibleTArray<nsCString>& aRecordNames)
-    : mRecordNames(aRecordNames)
-    , mIndex(0)
-  {
-    mRecordNames.Sort();
-  }
-
-  GMPErr GetName(const char** aOutName, uint32_t* aOutNameLength) override {
-    if (!aOutName || !aOutNameLength) {
-      return GMPInvalidArgErr;
-    }
-    if (mIndex == mRecordNames.Length()) {
-      return GMPEndOfEnumeration;
-    }
-    *aOutName = mRecordNames[mIndex].get();
-    *aOutNameLength = mRecordNames[mIndex].Length();
-    return GMPNoErr;
-  }
-
-  GMPErr NextRecord() override {
-    if (mIndex < mRecordNames.Length()) {
-      mIndex++;
-    }
-    return (mIndex < mRecordNames.Length()) ? GMPNoErr
-                                            : GMPEndOfEnumeration;
-  }
-
-  void Close() override {
-    delete this;
-  }
-
-private:
-  nsTArray<nsCString> mRecordNames;
-  size_t mIndex;
-};
-
-mozilla::ipc::IPCResult
-GMPStorageChild::RecvRecordNames(InfallibleTArray<nsCString>&& aRecordNames,
-                                 const GMPErr& aStatus)
-{
-  RecordIteratorContext ctx;
-  {
-    MonitorAutoLock lock(mMonitor);
-    if (mShutdown || mPendingRecordIterators.empty()) {
-      return IPC_OK();
-    }
-    ctx = mPendingRecordIterators.front();
-    mPendingRecordIterators.pop();
-  }
-
-  if (GMP_FAILED(aStatus)) {
-    ctx.mFunc(nullptr, ctx.mUserArg, aStatus);
-  } else {
-    ctx.mFunc(new GMPRecordIteratorImpl(aRecordNames), ctx.mUserArg, GMPNoErr);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult
 GMPStorageChild::RecvShutdown()
 {
@@ -366,9 +286,6 @@ GMPStorageChild::RecvShutdown()
   // GMPRecord pointers held by the GMP.
   MonitorAutoLock lock(mMonitor);
   mShutdown = true;
-  while (!mPendingRecordIterators.empty()) {
-    mPendingRecordIterators.pop();
-  }
   return IPC_OK();
 }
 

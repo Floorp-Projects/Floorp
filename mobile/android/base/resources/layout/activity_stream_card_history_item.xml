@@ -21,17 +21,28 @@
         android:orientation="horizontal"
         android:background="?android:attr/selectableItemBackground">
 
-        <org.mozilla.gecko.widget.FaviconView
-            android:id="@+id/icon"
-            android:layout_width="@dimen/favicon_bg"
-            android:layout_height="@dimen/favicon_bg"
-            android:layout_marginLeft="@dimen/activity_stream_base_margin"
-            android:layout_marginStart="@dimen/activity_stream_base_margin"
-            android:layout_marginTop="@dimen/activity_stream_base_margin"
-            android:layout_marginBottom="@dimen/activity_stream_base_margin"
-            android:layout_gravity="center"
-            gecko:enableRoundCorners="false"
-            tools:background="@drawable/favicon_globe" />
+
+        <!-- On some devices, marginBottom is ignored for Views within a RelativeLayout.
+             Wrapping in a FrameLayout appears to be a sufficient workaround for this issue -->
+        <FrameLayout
+            android:id="@+id/icon_wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <org.mozilla.gecko.widget.FaviconView
+                android:id="@+id/icon"
+                android:layout_width="@dimen/favicon_bg"
+                android:layout_height="@dimen/favicon_bg"
+                android:layout_marginLeft="@dimen/activity_stream_base_margin"
+                android:layout_marginStart="@dimen/activity_stream_base_margin"
+                android:layout_marginTop="@dimen/activity_stream_base_margin"
+                android:layout_marginBottom="@dimen/activity_stream_base_margin"
+                android:layout_gravity="center"
+                gecko:enableRoundCorners="false"
+                tools:background="@drawable/favicon_globe" />
+
+        </FrameLayout>
+
 
         <ImageView
             android:id="@+id/menu"
@@ -53,8 +64,8 @@
             tools:text="twitter"
             android:textSize="12sp"
             android:textColor="@color/activity_stream_subtitle"
-            android:layout_toRightOf="@id/icon"
-            android:layout_toEndOf="@id/icon"
+            android:layout_toRightOf="@id/icon_wrapper"
+            android:layout_toEndOf="@id/icon_wrapper"
             android:layout_toLeftOf="@id/menu"
             android:layout_toStartOf="@id/menu"
             android:paddingTop="@dimen/activity_stream_base_margin"
@@ -65,8 +76,8 @@
             android:id="@+id/card_history_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/icon"
-            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/icon_wrapper"
+            android:layout_toRightOf="@id/icon_wrapper"
             android:maxLines="3"
             android:ellipsize="end"
             android:paddingLeft="@dimen/activity_stream_base_margin"
@@ -83,8 +94,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_toRightOf="@id/icon"
-            android:layout_toEndOf="@id/icon"
+            android:layout_toRightOf="@id/icon_wrapper"
+            android:layout_toEndOf="@id/icon_wrapper"
             android:layout_alignParentBottom="true"
             android:paddingLeft="@dimen/activity_stream_base_margin"
             android:paddingStart="@dimen/activity_stream_base_margin"

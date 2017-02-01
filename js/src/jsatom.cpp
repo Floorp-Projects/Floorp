@@ -595,7 +595,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
     uint32_t length = lengthAndEncoding >> 1;
     bool latin1 = lengthAndEncoding & 0x1;
 
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     JSAtom* atom;
     if (latin1) {
         const Latin1Char* chars = nullptr;
@@ -624,7 +624,7 @@ js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp)
              * most allocations here will be bigger than tempLifoAlloc's default
              * chunk size.
              */
-            chars = cx->runtime()->pod_malloc<char16_t>(length);
+            chars = cx->pod_malloc<char16_t>(length);
             if (!chars)
                 return false;
         }
