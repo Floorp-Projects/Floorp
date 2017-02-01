@@ -58,7 +58,6 @@ GetFileOrDirectoryTaskChild::GetFileOrDirectoryTaskChild(FileSystemBase* aFileSy
                                                          bool aDirectoryOnly)
   : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
-  , mIsDirectory(aDirectoryOnly)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
@@ -100,23 +99,26 @@ GetFileOrDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseVal
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
 
-      aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
-      if (NS_WARN_IF(aRv.Failed())) {
-        return;
-      }
+      RefPtr<BlobImpl> blobImpl =
+        static_cast<BlobChild*>(r.blobChild())->GetBlobImpl();
+      MOZ_ASSERT(blobImpl);
 
-      mIsDirectory = false;
+      mResultFile = File::Create(mFileSystem->GetParentObject(), blobImpl);
+      MOZ_ASSERT(mResultFile);
       break;
     }
     case FileSystemResponseValue::TFileSystemDirectoryResponse: {
       FileSystemDirectoryResponse r = aValue;
 
-      aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
+      nsCOMPtr<nsIFile> file;
+      aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(file));
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
 
-      mIsDirectory = true;
+      mResultDirectory = Directory::Create(mFileSystem->GetParentObject(),
+                                           file, mFileSystem);
+      MOZ_ASSERT(mResultDirectory);
       break;
     }
     default: {
@@ -141,20 +143,16 @@ GetFileOrDirectoryTaskChild::HandlerCallback()
     return;
   }
 
-  if (mIsDirectory) {
-    RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
-                                              mTargetPath,
-                                              mFileSystem);
-    MOZ_ASSERT(dir);
-
-    mPromise->MaybeResolve(dir);
+  if (mResultDirectory) {
+    mPromise->MaybeResolve(mResultDirectory);
+    mResultDirectory = nullptr;
     mPromise = nullptr;
     return;
   }
 
-  RefPtr<File> file = File::CreateFromFile(mFileSystem->GetParentObject(),
-                                           mTargetPath);
-  mPromise->MaybeResolve(file);
+  MOZ_ASSERT(mResultFile);
+  mPromise->MaybeResolve(mResultFile);
+  mResultFile = nullptr;
   mPromise = nullptr;
 }
 
@@ -216,7 +214,10 @@ GetFileOrDirectoryTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
     return FileSystemDirectoryResponse(path);
   }
 
-  return FileSystemFileResponse(path, EmptyString());
+  RefPtr<BlobImpl> blobImpl = new BlobImplFile(mTargetPath);
+  BlobParent* blobParent =
+    BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
+  return FileSystemFileResponse(blobParent, nullptr);
 }
 
 nsresult
