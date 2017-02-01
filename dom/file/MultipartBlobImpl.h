@@ -12,6 +12,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/FileBinding.h"
 #include <algorithm>
@@ -63,12 +64,14 @@ public:
   void InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                             const nsAString& aData,
                             const ChromeFilePropertyBag& aBag,
+                            SystemCallerGuarantee aGuarantee,
                             ErrorResult& aRv);
 
   void InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                             nsIFile* aData,
                             const ChromeFilePropertyBag& aBag,
                             bool aIsFromNsIFile,
+                            SystemCallerGuarantee /* unused */,
                             ErrorResult& aRv);
 
   virtual already_AddRefed<BlobImpl>
