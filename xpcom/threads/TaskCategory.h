@@ -30,6 +30,9 @@ enum class TaskCategory {
   // Vsync notifications
   RefreshDriver,
 
+  // GC/CC-related tasks
+  GarbageCollection,
+
   // Most DOM events (postMessage, media, plugins)
   Other,
 
