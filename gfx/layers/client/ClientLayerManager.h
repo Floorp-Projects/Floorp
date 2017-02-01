@@ -159,7 +159,7 @@ public:
 
   CompositorBridgeChild* GetRemoteRenderer();
 
-  CompositorBridgeChild* GetCompositorBridgeChild();
+  virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
 
   // Disable component alpha layers with the software compositor.
   virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }
