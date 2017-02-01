@@ -5316,10 +5316,8 @@ CodeGenerator::generateBody()
                 extendTrackedOptimizationsEntry(iter->mirRaw()->trackedOptimizations());
 
 #ifdef DEBUG
-            if (!counts) {
-                if (JitOptions.fullDebugChecks)
-                    emitDebugResultChecks(*iter);
-            }
+            if (!counts)
+                emitDebugResultChecks(*iter);
 #endif
         }
         if (masm.oom())
