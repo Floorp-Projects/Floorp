@@ -26,6 +26,7 @@ from ..util import (
     simple_diff,
 )
 from ..frontend.data import ContextDerived
+from ..frontend.reader import EmptyConfig
 from .configenvironment import ConfigEnvironment
 from mozbuild.base import ExecutionSummary
 
@@ -41,8 +42,7 @@ class BuildBackend(LoggingMixin):
     __metaclass__ = ABCMeta
 
     def __init__(self, environment):
-        assert isinstance(environment, ConfigEnvironment)
-
+        assert isinstance(environment, (ConfigEnvironment, EmptyConfig))
         self.populate_logger()
 
         self.environment = environment
