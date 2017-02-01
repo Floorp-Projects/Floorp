@@ -607,7 +607,7 @@ class NativeObject : public ShapedObject
     }
 
     bool shadowingShapeChange(ExclusiveContext* cx, const Shape& shape);
-    bool clearFlag(ExclusiveContext* cx, BaseShape::Flag flag);
+    static bool clearFlag(ExclusiveContext* cx, HandleNativeObject obj, BaseShape::Flag flag);
 
     // The maximum number of slots in an object.
     // |MAX_SLOTS_COUNT * sizeof(JS::Value)| shouldn't overflow
@@ -734,10 +734,10 @@ class NativeObject : public ShapedObject
                               bool allowDictionary = true);
 
     /* Add a data property whose id is not yet in this scope. */
-    Shape* addDataProperty(ExclusiveContext* cx,
-                           jsid id_, uint32_t slot, unsigned attrs);
-    Shape* addDataProperty(ExclusiveContext* cx, HandlePropertyName name,
-                           uint32_t slot, unsigned attrs);
+    static Shape* addDataProperty(ExclusiveContext* cx, HandleNativeObject obj,
+                                  jsid id_, uint32_t slot, unsigned attrs);
+    static Shape* addDataProperty(ExclusiveContext* cx, HandleNativeObject obj,
+                                  HandlePropertyName name, uint32_t slot, unsigned attrs);
 
     /* Add or overwrite a property for id in this scope. */
     static Shape*
@@ -757,7 +757,7 @@ class NativeObject : public ShapedObject
                    unsigned attrs, JSGetterOp getter, JSSetterOp setter);
 
     /* Remove the property named by id from this object. */
-    bool removeProperty(ExclusiveContext* cx, jsid id);
+    static bool removeProperty(ExclusiveContext* cx, HandleNativeObject obj, jsid id);
 
     /* Clear the scope, making it empty. */
     static void clear(ExclusiveContext* cx, HandleNativeObject obj);

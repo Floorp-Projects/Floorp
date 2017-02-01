@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
+import org.mozilla.gecko.AppConstants;
+
 public class DownloadContent {
     @IntDef({STATE_NONE, STATE_SCHEDULED, STATE_DOWNLOADED, STATE_FAILED, STATE_UPDATED, STATE_DELETED})
     public @interface State {}
@@ -137,7 +139,7 @@ public class DownloadContent {
      *"Font" or "Hyphenation Dictionary".
      */
     public boolean isKnownContent() {
-        return ((isFont() || isHyphenationDictionary()) && isAssetArchive());
+        return (((isFont() && AppConstants.MOZ_ANDROID_EXCLUDE_FONTS) || (isHyphenationDictionary() && AppConstants.MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)) && isAssetArchive());
     }
 
     public boolean isAssetArchive() {

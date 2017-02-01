@@ -22,7 +22,7 @@ class FilterPath(object):
         if self._finder:
             return self._finder
         self._finder = FileFinder(
-            self.path, find_executables=False, ignore=self.exclude)
+            self.path, ignore=self.exclude)
         return self._finder
 
     @property

@@ -32,6 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1269531
 
   function errorCallback(error) {
     ok(true, "Check for the error callback to be called for insecure requests");
+    is(error.code, error.PERMISSION_DENIED, "Check error code for insecure requests");
     navigator.geolocation.clearWatch(wid);
     SimpleTest.finish();
   }

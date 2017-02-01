@@ -311,8 +311,9 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
                                         eRestyle_CSSAnimations;
 
   // FIXME: stylo only supports Self and Subtree hints now, so we override it
-  // for stylo.
-  if (mPresContext->StyleSet()->IsServo()) {
+  // for stylo if we are not in process of restyling.
+  if (mPresContext->StyleSet()->IsServo() &&
+      !mPresContext->RestyleManager()->AsBase()->IsInStyleRefresh()) {
     hint = eRestyle_Self | eRestyle_Subtree;
   }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);

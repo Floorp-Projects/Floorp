@@ -26,7 +26,6 @@ public:
                    void** aPluginAPI,
                    uint32_t aDecryptorId) override;
   void GMPShutdown() override;
-  void GMPSetNodeId(const char* aNodeId, uint32_t aLength) override;
 
   static bool Supports(int32_t aModuleVersion,
                        int32_t aInterfaceVersion,
@@ -50,9 +49,6 @@ GMPErr GMPCreateRecord(const char* aRecordName,
 GMPErr GMPSetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS);
 
 GMPErr GMPGetCurrentTime(GMPTimestamp* aOutTime);
-
-GMPErr GMPCreateRecordIterator(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
-                               void* aUserArg);
 
 } // namespace mozilla
 

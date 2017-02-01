@@ -19,8 +19,7 @@ BASE_TEST_LIST_PATHSTR = 'checkout/00_test_list.txt'
 GENERATED_PATHSTR = 'generated'
 WEBGL2_TEST_MANGLE = '2_'
 PATH_SEP_MANGLING = '__'
-WEBGL2_SKIP_IF_CONDITION = "(os == 'android' || os == 'linux' || " \
-                           "(os == 'win' && os_version == '5.1'))"
+WEBGL2_SKIP_IF_CONDITION = "(os == 'android' || os == 'linux')"
 
 SUPPORT_DIRS = [
     'checkout',

@@ -14854,8 +14854,22 @@ nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetInFreshProcess(bool* aResult)
+nsDocShell::GetAwaitingLargeAlloc(bool* aResult)
 {
-  *aResult = TabChild::GetWasFreshProcess();
+  MOZ_ASSERT(aResult);
+  nsCOMPtr<nsITabChild> tabChild = GetTabChild();
+  if (!tabChild) {
+    *aResult = false;
+    return NS_OK;
+  }
+  *aResult = static_cast<TabChild*>(tabChild.get())->IsAwaitingLargeAlloc();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetInLargeAllocProcess(bool* aResult)
+{
+  MOZ_ASSERT(aResult);
+  *aResult = TabChild::InLargeAllocProcess();
   return NS_OK;
 }

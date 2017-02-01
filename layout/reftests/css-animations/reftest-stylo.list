@@ -15,9 +15,9 @@ fails == animate-preserves3d.html animate-preserves3d.html
 # test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
 # == no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-opacity-removing-animation-in-delay.html
 == no-stacking-context-transform-removing-animation-in-delay.html no-stacking-context-transform-removing-animation-in-delay.html
-== stacking-context-lose-opacity-1.html stacking-context-lose-opacity-1.html
+# == stacking-context-lose-opacity-1.html stacking-context-lose-opacity-1.html
 fails == stacking-context-lose-transform-none.html stacking-context-lose-transform-none.html
-== stacking-context-opacity-win-in-delay.html stacking-context-opacity-win-in-delay.html
+# == stacking-context-opacity-win-in-delay.html stacking-context-opacity-win-in-delay.html
 == stacking-context-opacity-win-in-delay-on-main-thread.html stacking-context-opacity-win-in-delay-on-main-thread.html
 == stacking-context-opacity-wins-over-transition.html stacking-context-opacity-wins-over-transition.html
 fails == stacking-context-transform-win-in-delay.html stacking-context-transform-win-in-delay.html

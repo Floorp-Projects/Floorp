@@ -201,11 +201,8 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
           }
         });
       } else {
-        // For other chrome windows beside the browser window, only count the window itself.
-        let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils)
-            .outerWindowID;
-        hs.push(winId.toString());
+        // For other chrome windows beside the browser window, only add the window itself.
+        hs.push(getOuterWindowId(win));
       }
     }
 
@@ -219,11 +216,7 @@ Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
     let winEn = Services.wm.getEnumerator(null);
 
     while (winEn.hasMoreElements()) {
-      let foundWin = winEn.getNext();
-      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils)
-          .outerWindowID;
-      hs.push(winId.toString());
+      hs.push(getOuterWindowId(winEn.getNext()));
     }
 
     return hs;
@@ -359,9 +352,8 @@ GeckoDriver.prototype.addFrameCloseListener = function (action) {
  */
 GeckoDriver.prototype.addBrowser = function (win) {
   let bc = new browser.Context(win, this);
-  let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-  winId = winId + ((this.appName == "B2G") ? "-b2g" : "");
+  let winId = getOuterWindowId(win);
+
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
@@ -523,7 +515,7 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
   return [reg, mainContent, this.capabilities.toJSON()];
 };
 
-GeckoDriver.prototype.registerPromise = function() {
+GeckoDriver.prototype.registerPromise = function () {
   const li = "Marionette:register";
 
   return new Promise(resolve => {
@@ -548,7 +540,7 @@ GeckoDriver.prototype.registerPromise = function() {
   });
 };
 
-GeckoDriver.prototype.listeningPromise = function() {
+GeckoDriver.prototype.listeningPromise = function () {
   const li = "Marionette:listenersAttached";
   return new Promise(resolve => {
     let cb = () => {
@@ -560,7 +552,7 @@ GeckoDriver.prototype.listeningPromise = function() {
 };
 
 /** Create a new session. */
-GeckoDriver.prototype.newSession = function*(cmd, resp) {
+GeckoDriver.prototype.newSession = function* (cmd, resp) {
   if (this.sessionId) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
   }
@@ -1199,17 +1191,14 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
  *
  * @param {string} name
  *     Target name or ID of the window to switch to.
+ * @param {boolean=} focus
+ *      A boolean value which determines whether to focus
+ *      the window. Defaults to true.
  */
 GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   let switchTo = cmd.parameters.name;
+  let focus = (cmd.parameters.focus !== undefined) ? cmd.parameters.focus : true;
   let found;
-
-  let getOuterWindowId = function (win) {
-    let rv = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .outerWindowID;
-    return rv;
-  };
 
   let byNameOrId = function (name, outerId, contentWindowId) {
     return switchTo == name ||
@@ -1266,7 +1255,7 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
       this.curBrowser = this.browsers[found.outerId];
 
       if ("tabIndex" in found) {
-        this.curBrowser.switchToTab(found.tabIndex, found.win);
+        this.curBrowser.switchToTab(found.tabIndex, found.win, focus);
       }
     }
   } else {
@@ -2855,4 +2844,21 @@ function copy (obj) {
     return Object.assign({}, obj);
   }
   return obj;
+}
+
+/**
+ * Get the outer window ID for the specified window.
+ *
+ * @param {nsIDOMWindow} win
+ *     Window whose browser we need to access.
+ *
+ * @return {string}
+ *     Returns the unique window ID.
+ */
+function getOuterWindowId(win) {
+  let id = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .outerWindowID;
+
+  return id.toString();
 }

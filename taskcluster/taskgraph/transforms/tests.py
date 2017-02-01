@@ -581,6 +581,15 @@ def remove_linux_pgo_try_talos(config, tests):
 
 
 @transforms.add
+def remove_native_non_try(config, tests):
+    """Remove native-engine jobs if they are not in try branch."""
+    for test in tests:
+        if test['worker-implementation'] != 'native-engine' \
+                or config.params['project'] != 'try':
+            yield test
+
+
+@transforms.add
 def make_task_description(config, tests):
     """Convert *test* descriptions to *task* descriptions (input to
     taskgraph.transforms.task)"""

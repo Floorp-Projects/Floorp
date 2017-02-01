@@ -78,9 +78,8 @@ protected:
                                    override;
     virtual mozilla::ipc::IPCResult RecvAsyncNPP_New(PPluginInstanceChild* aActor) override;
 
-    virtual PPluginModuleChild*
-    AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess) override;
+    virtual mozilla::ipc::IPCResult
+    RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& endpoint) override;
 
     virtual PPluginInstanceChild*
     AllocPPluginInstanceChild(const nsCString& aMimeType,
@@ -150,9 +149,7 @@ public:
     explicit PluginModuleChild(bool aIsChrome);
     virtual ~PluginModuleChild();
 
-    bool CommonInit(base::ProcessId aParentPid,
-                    MessageLoop* aIOLoop,
-                    IPC::Channel* aChannel);
+    void CommonInit();
 
     // aPluginFilename is UTF8, not native-charset!
     bool InitForChrome(const std::string& aPluginFilename,
@@ -160,13 +157,10 @@ public:
                        MessageLoop* aIOLoop,
                        IPC::Channel* aChannel);
 
-    bool InitForContent(base::ProcessId aParentPid,
-                        MessageLoop* aIOLoop,
-                        IPC::Channel* aChannel);
+    bool InitForContent(Endpoint<PPluginModuleChild>&& aEndpoint);
 
-    static PluginModuleChild*
-    CreateForContentProcess(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess);
+    static bool
+    CreateForContentProcess(Endpoint<PPluginModuleChild>&& aEndpoint);
 
     void CleanUp();
 

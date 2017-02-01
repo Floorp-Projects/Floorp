@@ -328,7 +328,7 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             _parse_one(testcase, xul_tester)
 
 def _is_test_file(path_from_root, basename, filename, requested_paths,
-                  excluded_paths):
+                  excluded_files, excluded_dirs):
     # Any file whose basename matches something in this set is ignored.
     EXCLUDED = set(('browser.js', 'shell.js', 'template.js',
                     'user.js', 'sta.js',
@@ -351,17 +351,36 @@ def _is_test_file(path_from_root, basename, filename, requested_paths,
         return False
 
     # Skip excluded tests.
-    if filename in excluded_paths:
+    if filename in excluded_files:
         return False
+    for dir in excluded_dirs:
+        if filename.startswith(dir + '/'):
+            return False
 
     return True
 
 
+def _split_files_and_dirs(location, paths):
+    """Split up a set of paths into files and directories"""
+    files, dirs = set(), set()
+    for path in paths:
+        fullpath = os.path.join(location, path)
+        if path.endswith('/'):
+            dirs.add(path[0:-1])
+        elif os.path.isdir(fullpath):
+            dirs.add(path)
+        elif os.path.exists(fullpath):
+            files.add(path)
+
+    return files, dirs
+
+
 def count_tests(location, requested_paths, excluded_paths):
     count = 0
+    excluded_files, excluded_dirs = _split_files_and_dirs(location, excluded_paths)
     for root, basename in _find_all_js_files(location, location):
         filename = os.path.join(root, basename)
-        if _is_test_file(root, basename, filename, requested_paths, excluded_paths):
+        if _is_test_file(root, basename, filename, requested_paths, excluded_files, excluded_dirs):
             count += 1
     return count
 
@@ -378,10 +397,12 @@ def load_reftests(location, requested_paths, excluded_paths, xul_tester, reldir=
     manifestFile = os.path.join(location, 'jstests.list')
     externalManifestEntries = _parse_external_manifest(manifestFile, '')
 
+    excluded_files, excluded_dirs = _split_files_and_dirs(location, excluded_paths)
+
     for root, basename in _find_all_js_files(location, location):
         # Get the full path and relative location of the file.
         filename = os.path.join(root, basename)
-        if not _is_test_file(root, basename, filename, requested_paths, excluded_paths):
+        if not _is_test_file(root, basename, filename, requested_paths, excluded_files, excluded_dirs):
             continue
 
         # Skip empty files.

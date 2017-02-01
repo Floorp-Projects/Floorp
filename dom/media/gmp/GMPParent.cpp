@@ -177,13 +177,6 @@ GMPParent::LoadProcess()
     }
     LOGD("%s: Opened channel to new child process", __FUNCTION__);
 
-    bool ok = SendSetNodeId(mNodeId);
-    if (!ok) {
-      LOGD("%s: Failed to send node id to child process", __FUNCTION__);
-      return NS_ERROR_FAILURE;
-    }
-    LOGD("%s: Sent node id to child process", __FUNCTION__);
-
 #ifdef XP_WIN
     if (!mLibs.IsEmpty()) {
       bool ok = SendPreloadLibs(mLibs);
@@ -196,8 +189,7 @@ GMPParent::LoadProcess()
 #endif
 
     // Intr call to block initialization on plugin load.
-    ok = CallStartPlugin(mAdapter);
-    if (!ok) {
+    if (!CallStartPlugin(mAdapter)) {
       LOGD("%s: Failed to send start to child process", __FUNCTION__);
       return NS_ERROR_FAILURE;
     }

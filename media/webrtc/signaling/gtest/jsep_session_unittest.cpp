@@ -986,10 +986,10 @@ protected:
       ASSERT_EQ("120", rtpmap->pt);
       ASSERT_EQ("VP8", rtpmap->name);
     } else if (msection->GetMediaType() == SdpMediaSection::kApplication) {
-      ASSERT_EQ("5000", msection->GetFormats()[0]);
-      const SdpSctpmapAttributeList::Sctpmap* sctpmap(msection->FindSctpmap("5000"));
+      ASSERT_EQ("0", msection->GetFormats()[0]);
+      const SdpSctpmapAttributeList::Sctpmap* sctpmap(msection->GetSctpmap());
       ASSERT_TRUE(sctpmap);
-      ASSERT_EQ("5000", sctpmap->pt);
+      ASSERT_EQ("0", sctpmap->pt);
       ASSERT_EQ("rejected", sctpmap->name);
       ASSERT_EQ(0U, sctpmap->streams);
     } else {

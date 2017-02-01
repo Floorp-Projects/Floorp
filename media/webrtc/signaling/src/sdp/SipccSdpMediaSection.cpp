@@ -179,6 +179,12 @@ SipccSdpMediaSection::LoadProtocol(sdp_t* sdp, uint16_t level,
     case SDP_TRANSPORT_DTLSSCTP:
       mProtocol = kDtlsSctp;
       break;
+    case SDP_TRANSPORT_UDPDTLSSCTP:
+      mProtocol = kUdpDtlsSctp;
+      break;
+    case SDP_TRANSPORT_TCPDTLSSCTP:
+      mProtocol = kTcpDtlsSctp;
+      break;
 
     default:
       errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
@@ -196,10 +202,19 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
   sdp_media_e mtype = sdp_get_media_type(sdp, level);
 
   if (mtype == SDP_MEDIA_APPLICATION) {
-    uint32_t ptype = sdp_get_media_sctp_port(sdp, level);
-    std::ostringstream osPayloadType;
-    osPayloadType << ptype;
-    mFormats.push_back(osPayloadType.str());
+    sdp_transport_e ttype = sdp_get_media_transport(sdp, level);
+    if ((ttype == SDP_TRANSPORT_UDPDTLSSCTP) ||
+        (ttype == SDP_TRANSPORT_TCPDTLSSCTP)) {
+      if (sdp_get_media_sctp_fmt(sdp, level) ==
+            SDP_SCTP_MEDIA_FMT_WEBRTC_DATACHANNEL) {
+        mFormats.push_back("webrtc-datachannel");
+      }
+    } else {
+      uint32_t ptype = sdp_get_media_sctp_port(sdp, level);
+      std::ostringstream osPayloadType;
+      osPayloadType << ptype;
+      mFormats.push_back(osPayloadType.str());
+    }
   } else if (mtype == SDP_MEDIA_AUDIO || mtype == SDP_MEDIA_VIDEO) {
     uint16_t count = sdp_get_media_num_payload_types(sdp, level);
     for (uint16_t i = 0; i < count; ++i) {
@@ -382,16 +397,26 @@ SipccSdpMediaSection::ClearCodecs()
 }
 
 void
-SipccSdpMediaSection::AddDataChannel(const std::string& pt,
-                                     const std::string& name, uint16_t streams)
+SipccSdpMediaSection::AddDataChannel(const std::string& name, uint16_t port,
+                                     uint16_t streams)
 {
   // Only one allowed, for now. This may change as the specs (and deployments)
   // evolve.
   mFormats.clear();
-  mFormats.push_back(pt);
-  SdpSctpmapAttributeList* sctpmap = new SdpSctpmapAttributeList();
-  sctpmap->PushEntry(pt, name, streams);
-  mAttributeList.SetAttribute(sctpmap);
+  if ((mProtocol == kUdpDtlsSctp) ||
+      (mProtocol == kTcpDtlsSctp)) {
+    // new data channel format according to draft 21
+    mFormats.push_back(name);
+    mAttributeList.SetAttribute(new SdpNumberAttribute(
+          SdpAttribute::kSctpPortAttribute, port));
+  } else {
+    // old data channels format according to draft 05
+    std::string port_str = std::to_string(port);
+    mFormats.push_back(port_str);
+    SdpSctpmapAttributeList* sctpmap = new SdpSctpmapAttributeList();
+    sctpmap->PushEntry(port_str, name, streams);
+    mAttributeList.SetAttribute(sctpmap);
+  }
 }
 
 void
