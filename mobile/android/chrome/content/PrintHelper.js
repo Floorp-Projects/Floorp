@@ -7,18 +7,12 @@
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
 var PrintHelper = {
-  init: function() {
-    Services.obs.addObserver(this, "Print:PDF", false);
-  },
-
-  observe: function (aSubject, aTopic, aData) {
+  onEvent: function (event, data, callback) {
     let browser = BrowserApp.selectedBrowser;
 
-    switch (aTopic) {
+    switch (event) {
       case "Print:PDF":
-        Messaging.handleRequest(aTopic, aData, (data) => {
-          return this.generatePDF(browser);
-        });
+        callback.onSuccess(this.generatePDF(browser));
         break;
     }
   },

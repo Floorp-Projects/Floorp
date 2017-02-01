@@ -159,7 +159,6 @@ var lazilyLoadedObserverScripts = [
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
   ["Reader", ["Reader:AddToCache", "Reader:RemoveFromCache"], "chrome://browser/content/Reader.js"],
-  ["PrintHelper", ["Print:PDF"], "chrome://browser/content/PrintHelper.js"],
 ];
 
 if (AppConstants.MOZ_WEBRTC) {
@@ -245,6 +244,9 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
   ["PermissionsHelper", GlobalEventDispatcher,
    ["Permissions:Check", "Permissions:Get", "Permissions:Clear"],
    "chrome://browser/content/PermissionsHelper.js"],
+  ["PrintHelper", GlobalEventDispatcher,
+   ["Print:PDF"],
+   "chrome://browser/content/PrintHelper.js"],
 ].forEach(module => {
   let [name, dispatcher, events, script] = module;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -384,6 +386,7 @@ var BrowserApp = {
       "Tab:Selected",
       "Tab:Closed",
       "Browser:LoadManifest",
+      "Session:GetHistory",
       "Session:Reload",
     ]);
 
@@ -406,8 +409,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "keyword-search", false);
     Services.obs.addObserver(this, "Fonts:Reload", false);
     Services.obs.addObserver(this, "Vibration:Request", false);
-
-    Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
     window.addEventListener("fullscreen", function() {
       WindowEventDispatcher.sendRequest({
@@ -1637,6 +1638,11 @@ var BrowserApp = {
         }).catch(err => {
           Cu.reportError("Failed to install " + data.src);
         });
+        break;
+      }
+
+      case "Session:GetHistory": {
+        callback.onSuccess(this.getHistory(data));
         break;
       }
 
@@ -4645,8 +4651,8 @@ var BrowserEventHandler = {
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
 
     // ReaderViews support backPress listeners.
-    Messaging.addListener(() => {
-      return Reader.onBackPress(BrowserApp.selectedTab.id);
+    WindowEventDispatcher.registerListener((event, data, callback) => {
+      callback.onSuccess(Reader.onBackPress(BrowserApp.selectedTab.id));
     }, "Browser:OnBackPressed");
   },
 
