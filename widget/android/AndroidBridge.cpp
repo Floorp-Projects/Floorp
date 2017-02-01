@@ -776,15 +776,13 @@ NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
 
     JS::RootedObject jsonObj(cx, &jsonVal.toObject());
     JS::RootedValue typeVal(cx);
-    nsAutoJSString typeStr;
 
-    if (!JS_GetProperty(cx, jsonObj, "type", &typeVal) ||
-            !typeStr.init(cx, typeVal)) {
+    if (!JS_GetProperty(cx, jsonObj, "type", &typeVal)) {
         JS_ClearPendingException(cx);
         return NS_ERROR_INVALID_ARG;
     }
 
-    return Dispatch(typeStr, jsonVal, /* callback */ nullptr, cx);
+    return Dispatch(typeVal, jsonVal, /* callback */ nullptr, cx);
 }
 
 NS_IMETHODIMP nsAndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
