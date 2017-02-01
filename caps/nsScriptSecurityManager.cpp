@@ -522,19 +522,6 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
         return NS_OK;
     }
 
-    // See if we're attempting to load a file: URI. If so, let a
-    // UniversalXPConnect capability trump the above check.
-    bool isFile = false;
-    bool isRes = false;
-    if (NS_FAILED(aURI->SchemeIs("file", &isFile)) ||
-        NS_FAILED(aURI->SchemeIs("resource", &isRes)))
-        return NS_ERROR_FAILURE;
-    if (isFile || isRes)
-    {
-        if (nsContentUtils::IsCallerChrome())
-            return NS_OK;
-    }
-
     // Report error.
     nsAutoCString spec;
     if (NS_FAILED(aURI->GetAsciiSpec(spec)))
