@@ -23,10 +23,13 @@ interface nsIU2FToken : nsISupports {
    * Return whether the provided KeyHandle belongs to this Token
    *
    * @param keyHandle Key Handle to evaluate.
+   * @param application The FIDO Application data to associate with the key.
    * @return True if the Key Handle is ours.
    */
   void isRegistered([array, size_is(keyHandleLen)] in octet keyHandle,
                     in uint32_t keyHandleLen,
+                    [array, size_is(applicationLen)] in octet application,
+                    in uint32_t applicationLen,
                     [retval] out boolean result);
 
   /**
