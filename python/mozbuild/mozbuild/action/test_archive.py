@@ -470,7 +470,6 @@ def find_files(archive):
         ])
 
         common_kwargs = {
-            'find_executables': False,
             'find_dotfiles': True,
             'ignore': ignore,
         }

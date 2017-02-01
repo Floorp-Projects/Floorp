@@ -171,8 +171,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
         requirements = None
-        if os.path.isdir(dirs['abs_mochitest_dir']):
-            # mochitest is the only thing that needs this
+        if self.test_suite == 'mochitest-media':
+            # mochitest-media is the only thing that needs this
             requirements = os.path.join(dirs['abs_mochitest_dir'],
                         'websocketprocessbridge',
                         'websocketprocessbridge_requirements.txt')

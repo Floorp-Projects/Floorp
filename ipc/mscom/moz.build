@@ -14,14 +14,11 @@ EXPORTS.mozilla.mscom += [
     'Utils.h',
 ]
 
-SOURCES += [
-    'Utils.cpp',
-]
-
 UNIFIED_SOURCES += [
     'EnsureMTA.cpp',
     'MainThreadRuntime.cpp',
     'ProxyStream.cpp',
+    'Utils.cpp',
 ]
 
 if CONFIG['ACCESSIBILITY']:

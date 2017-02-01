@@ -159,24 +159,26 @@ DOMIntersectionObserver::Observe(Element& aTarget)
 void
 DOMIntersectionObserver::Unobserve(Element& aTarget)
 {
-  if (UnlinkTarget(aTarget)) {
-    aTarget.UnregisterIntersectionObserver(this);
+  if (mObservationTargets.Count() == 1) {
+    Disconnect();
+    return;
   }
+
+  mObservationTargets.RemoveEntry(&aTarget);
+  aTarget.UnregisterIntersectionObserver(this);
 }
 
-bool
+void
 DOMIntersectionObserver::UnlinkTarget(Element& aTarget)
 {
     if (!mObservationTargets.Contains(&aTarget)) {
-        return false;
+        return;
     }
 
     mObservationTargets.RemoveEntry(&aTarget);
     if (mObservationTargets.Count() == 0) {
         Disconnect();
-        return false;
     }
-    return true;
 }
 
 void

@@ -81,7 +81,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
                         .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, position)
                         .forHighlightSource(highlight.getSource());
 
-                ActivityStreamContextMenu.show(v.getContext(),
+                ActivityStreamContextMenu.show(itemView.getContext(),
                         menuButton,
                         extras,
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,

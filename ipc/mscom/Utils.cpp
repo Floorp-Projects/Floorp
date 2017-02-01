@@ -4,49 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// We need Windows 7 headers
-#ifdef NTDDI_VERSION
-#undef NTDDI_VERSION
-#endif
-#define NTDDI_VERSION 0x06010000
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0601
-
-#include "DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"
 
+#include <objbase.h>
 #include <objidl.h>
-
-static bool
-IsCurrentThreadMTALegacy()
-{
-  // We don't use RefPtr for token because CoGetContextToken does *not*
-  // increment its refcount!
-  IUnknown* token = nullptr;
-  HRESULT hr =
-    CoGetContextToken(reinterpret_cast<ULONG_PTR*>(&token));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  RefPtr<IComThreadingInfo> threadingInfo;
-  hr = token->QueryInterface(IID_IComThreadingInfo,
-                             getter_AddRefs(threadingInfo));
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  APTTYPE aptType;
-  hr = threadingInfo->GetCurrentApartmentType(&aptType);
-  if (FAILED(hr)) {
-    return false;
-  }
-
-  return aptType == APTTYPE_MTA;
-}
 
 namespace mozilla {
 namespace mscom {
@@ -54,17 +16,9 @@ namespace mscom {
 bool
 IsCurrentThreadMTA()
 {
-  static DynamicallyLinkedFunctionPtr<decltype(&::CoGetApartmentType)>
-    pCoGetApartmentType(L"ole32.dll", "CoGetApartmentType");
-
-  if (!pCoGetApartmentType) {
-    // XP and Vista do not expose the newer API.
-    return IsCurrentThreadMTALegacy();
-  }
-
   APTTYPE aptType;
   APTTYPEQUALIFIER aptTypeQualifier;
-  HRESULT hr = pCoGetApartmentType(&aptType, &aptTypeQualifier);
+  HRESULT hr = CoGetApartmentType(&aptType, &aptTypeQualifier);
   if (FAILED(hr)) {
     return false;
   }

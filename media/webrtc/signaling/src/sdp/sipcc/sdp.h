@@ -190,6 +190,8 @@ typedef enum {
     SDP_TRANSPORT_UDPTLSRTPSAVPF,
     SDP_TRANSPORT_TCPTLSRTPSAVP,
     SDP_TRANSPORT_TCPTLSRTPSAVPF,
+    SDP_TRANSPORT_UDPDTLSSCTP,
+    SDP_TRANSPORT_TCPDTLSSCTP,
     SDP_MAX_TRANSPORT_TYPES,
     SDP_TRANSPORT_UNSUPPORTED,
     SDP_TRANSPORT_INVALID
@@ -492,6 +494,11 @@ typedef enum {
     SDP_MAX_CONNECTION,
     SDP_CONNECTION_UNKNOWN
 } sdp_connection_type_e;
+
+typedef enum {
+    SDP_SCTP_MEDIA_FMT_WEBRTC_DATACHANNEL,
+    SDP_SCTP_MEDIA_FMT_UNKNOWN
+} sdp_sctp_media_fmt_type_e;
 
 /*
  * sdp_srtp_fec_order_t
@@ -987,6 +994,7 @@ typedef struct sdp_mca {
     sdp_port_format_e         port_format;
     int32_t                     port;
     int32_t                     sctpport;
+    sdp_sctp_media_fmt_type_e   sctp_fmt;
     int32_t                     num_ports;
     int32_t                     vpi;
     uint32_t                       vci;  /* VCI needs to be 32-bit */
@@ -1267,6 +1275,7 @@ extern sdp_result_e sdp_set_media_type(sdp_t *sdp_p, uint16_t level,
 extern sdp_result_e sdp_set_media_portnum(sdp_t *sdp_p, uint16_t level,
                                           int32_t portnum, int32_t sctpport);
 extern int32_t sdp_get_media_sctp_port(sdp_t *sdp_p, uint16_t level);
+extern sdp_sctp_media_fmt_type_e sdp_get_media_sctp_fmt(sdp_t *sdp_p, uint16_t level);
 extern sdp_result_e sdp_set_media_transport(sdp_t *sdp_p, uint16_t level,
                                             sdp_transport_e transport);
 extern sdp_result_e sdp_add_media_profile(sdp_t *sdp_p, uint16_t level,

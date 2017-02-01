@@ -44,8 +44,7 @@ def process_manifest(destdir, paths, track=None,
             remove_unaccounted = FileRegistry()
             dummy_file = BaseFile()
 
-            finder = FileFinder(destdir, find_executables=False,
-                                find_dotfiles=True)
+            finder = FileFinder(destdir, find_dotfiles=True)
             for dest in manifest._dests:
                 for p, f in finder.find(dest):
                     remove_unaccounted.add(p, dummy_file)

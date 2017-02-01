@@ -307,7 +307,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     'config',
                     'marionette_requirements.txt')]
 
-        if os.path.isdir(dirs['abs_mochitest_dir']):
+        if self._query_specified_suites('mochitest') is not None:
             # mochitest is the only thing that needs this
             requirements_files.append(
                 os.path.join(dirs['abs_mochitest_dir'],
