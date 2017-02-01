@@ -6404,7 +6404,7 @@ ssl_PickSignatureScheme(sslSocket *ss,
         PRUint32 policy;
 
         if (!ssl_SignatureSchemeValidForKey(!isTLS13 /* allowSha1 */,
-                                            PR_TRUE /* matchGroup */,
+                                            isTLS13 /* matchGroup */,
                                             keyType, group, preferred)) {
             continue;
         }
@@ -6438,6 +6438,33 @@ ssl_PickSignatureScheme(sslSocket *ss,
     return SECFailure;
 }
 
+static SECStatus
+ssl_PickFallbackSignatureScheme(sslSocket *ss, SECKEYPublicKey *pubKey)
+{
+    PRBool isTLS12 = ss->version >= SSL_LIBRARY_VERSION_TLS_1_2;
+
+    switch (SECKEY_GetPublicKeyType(pubKey)) {
+        case rsaKey:
+            if (isTLS12) {
+                ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1;
+            } else {
+                ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1md5;
+            }
+            break;
+        case ecKey:
+            ss->ssl3.hs.signatureScheme = ssl_sig_ecdsa_sha1;
+            break;
+        case dsaKey:
+            ss->ssl3.hs.signatureScheme = ssl_sig_dsa_sha1;
+            break;
+        default:
+            PORT_Assert(0);
+            PORT_SetError(SEC_ERROR_INVALID_KEY);
+            return SECFailure;
+    }
+    return SECSuccess;
+}
+
 /* ssl3_PickServerSignatureScheme selects a signature scheme for signing the
  * handshake.  Most of this is determined by the key pair we are using.
  * Prior to TLS 1.2, the MD5/SHA1 combination is always used. With TLS 1.2, a
@@ -6451,26 +6478,7 @@ ssl3_PickServerSignatureScheme(sslSocket *ss)
     if (!isTLS12 || !ssl3_ExtensionNegotiated(ss, ssl_signature_algorithms_xtn)) {
         /* If the client didn't provide any signature_algorithms extension then
          * we can assume that they support SHA-1: RFC5246, Section 7.4.1.4.1. */
-        switch (SECKEY_GetPublicKeyType(keyPair->pubKey)) {
-            case rsaKey:
-                if (isTLS12) {
-                    ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1;
-                } else {
-                    ss->ssl3.hs.signatureScheme = ssl_sig_rsa_pkcs1_sha1md5;
-                }
-                break;
-            case ecKey:
-                ss->ssl3.hs.signatureScheme = ssl_sig_ecdsa_sha1;
-                break;
-            case dsaKey:
-                ss->ssl3.hs.signatureScheme = ssl_sig_dsa_sha1;
-                break;
-            default:
-                PORT_Assert(0);
-                PORT_SetError(SEC_ERROR_INVALID_KEY);
-                return SECFailure;
-        }
-        return SECSuccess;
+        return ssl_PickFallbackSignatureScheme(ss, keyPair->pubKey);
     }
 
     /* Sets error code, if needed. */
@@ -6488,9 +6496,21 @@ ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
     SECKEYPublicKey *pubKey;
     SECStatus rv;
 
+    PRBool isTLS13 = (PRBool)ss->version >= SSL_LIBRARY_VERSION_TLS_1_3;
     pubKey = CERT_ExtractPublicKey(ss->ssl3.clientCertificate);
     PORT_Assert(pubKey);
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
+
+    if (!isTLS13 && numSchemes == 0) {
+        /* If the server didn't provide any signature algorithms
+         * then let's assume they support SHA-1. */
+        rv = ssl_PickFallbackSignatureScheme(ss, pubKey);
+        SECKEY_DestroyPublicKey(pubKey);
+        return rv;
+    }
+
+    PORT_Assert(schemes && numSchemes > 0);
+
+    if (!isTLS13 &&
         (SECKEY_GetPublicKeyType(pubKey) == rsaKey ||
          SECKEY_GetPublicKeyType(pubKey) == dsaKey) &&
         SECKEY_PublicKeyStrengthInBits(pubKey) <= 1024) {
@@ -7404,7 +7424,7 @@ ssl_ParseSignatureSchemes(const sslSocket *ss, PLArenaPool *arena,
 {
     SECStatus rv;
     SECItem buf;
-    SSLSignatureScheme *schemes;
+    SSLSignatureScheme *schemes = NULL;
     unsigned int numSchemes = 0;
     unsigned int max;
 
@@ -7412,10 +7432,15 @@ ssl_ParseSignatureSchemes(const sslSocket *ss, PLArenaPool *arena,
     if (rv != SECSuccess) {
         return SECFailure;
     }
-    /* An empty or odd-length value is invalid. */
-    if (buf.len == 0 || (buf.len & 1) != 0) {
+    /* An odd-length value is invalid. */
+    if ((buf.len & 1) != 0) {
         ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
+    }
+
+    /* Let the caller decide whether to alert here. */
+    if (buf.len == 0) {
+        goto done;
     }
 
     /* Limit the number of schemes we read. */
@@ -7451,6 +7476,7 @@ ssl_ParseSignatureSchemes(const sslSocket *ss, PLArenaPool *arena,
         schemes = NULL;
     }
 
+done:
     *schemesOut = schemes;
     *numSchemesOut = numSchemes;
     return SECSuccess;
