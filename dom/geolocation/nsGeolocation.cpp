@@ -1235,8 +1235,6 @@ Geolocation::GetCurrentPosition(PositionCallback& aCallback,
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
-
-  return;
 }
 
 nsresult
