@@ -2013,10 +2013,10 @@ public:
 
   /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments is
-   * allowed in the current context. These are only allowed if the user initiated
-   * them (like with a mouse-click or key press).
+   * allowed for the given subject principal. These are only allowed if the user
+   * initiated them (like with a mouse-click or key press).
    */
-  static bool IsCutCopyAllowed();
+  static bool IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal);
 
   /*
    * Returns true if the performance timing APIs are enabled.
