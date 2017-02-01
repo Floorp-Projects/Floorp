@@ -1449,7 +1449,6 @@ ReloadPrefsCallback(const char* pref, void* data)
     bool useBaselineEager = Preferences::GetBool(JS_OPTIONS_DOT_STR
                                                  "baselinejit.unsafe_eager_compilation");
     bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
-    bool fullJitDebugChecks = Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
 
     int32_t baselineThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "baselinejit.threshold", -1);
     int32_t ionThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "ion.threshold", -1);
@@ -1510,9 +1509,6 @@ ReloadPrefsCallback(const char* pref, void* data)
                                   useBaselineEager ? 0 : baselineThreshold);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_WARMUP_TRIGGER,
                                   useIonEager ? 0 : ionThreshold);
-#ifdef DEBUG
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_FULL_DEBUG_CHECKS, fullJitDebugChecks);
-#endif
 }
 
 XPCJSContext::~XPCJSContext()
