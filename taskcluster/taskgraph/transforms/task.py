@@ -14,10 +14,8 @@ import json
 import time
 
 from taskgraph.util.treeherder import split_symbol
-from taskgraph.transforms.base import (
-    validate_schema,
-    TransformSequence
-)
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import validate_schema
 from voluptuous import Schema, Any, Required, Optional, Extra
 
 from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
