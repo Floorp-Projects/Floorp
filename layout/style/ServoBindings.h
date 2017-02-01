@@ -120,7 +120,6 @@ RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed
 
 // Selector Matching.
 uint16_t Gecko_ElementState(RawGeckoElementBorrowed element);
-bool Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed element);
 bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
