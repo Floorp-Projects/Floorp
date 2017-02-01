@@ -14,6 +14,7 @@
 #define NSOBJECTLOADINGCONTENT_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsImageLoadingContent.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
@@ -193,10 +194,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       return GetTypeOfContent(NS_ConvertUTF16toUTF8(aMIMEType));
     }
-    void PlayPlugin(mozilla::ErrorResult& aRv)
-    {
-      aRv = PlayPlugin();
-    }
+    void PlayPlugin(mozilla::dom::SystemCallerGuarantee,
+                    mozilla::ErrorResult& aRv);
     void Reload(bool aClearActivation, mozilla::ErrorResult& aRv)
     {
       aRv = Reload(aClearActivation);
@@ -239,17 +238,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
                     JS::MutableHandle<JS::Value> aRetval,
                     mozilla::ErrorResult& aRv);
 
-    uint32_t GetRunID(mozilla::ErrorResult& aRv)
-    {
-      uint32_t runID;
-      nsresult rv = GetRunID(&runID);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(rv);
-        return 0;
-      }
-
-      return runID;
-    }
+    uint32_t GetRunID(mozilla::dom::SystemCallerGuarantee,
+                      mozilla::ErrorResult& aRv);
 
     bool IsRewrittenYoutubeEmbed() const
     {
