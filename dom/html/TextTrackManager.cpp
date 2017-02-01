@@ -37,6 +37,7 @@ CompareTextTracks::CompareTextTracks(HTMLMediaElement* aMediaElement)
 
 int32_t
 CompareTextTracks::TrackChildPosition(TextTrack* aTextTrack) const {
+  MOZ_DIAGNOSTIC_ASSERT(aTextTrack);
   HTMLTrackElement* trackElement = aTextTrack->GetTrackElement();
   if (!trackElement) {
     return -1;
@@ -56,6 +57,14 @@ CompareTextTracks::Equals(TextTrack* aOne, TextTrack* aTwo) const {
 bool
 CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const
 {
+  // Protect against nullptr TextTrack objects; treat them as
+  // sorting toward the end.
+  if (!aOne) {
+    return false;
+  }
+  if (!aTwo) {
+    return true;
+  }
   TextTrackSource sourceOne = aOne->GetTextTrackSource();
   TextTrackSource sourceTwo = aTwo->GetTextTrackSource();
   if (sourceOne != sourceTwo) {
