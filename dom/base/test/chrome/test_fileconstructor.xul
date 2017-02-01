@@ -42,30 +42,40 @@ file.append("test");
 file.append("chrome");
 file.append("fileconstructor_file.png");
 
-doTest(File.createFromFileName(file.path));
-doTest(File.createFromNsIFile(file));
-function doTest(domfile) {
+File.createFromFileName(file.path).then(function(domFile) {
   ok(domfile instanceof File, "File() should return a File");
   is(domfile.type, "image/png", "File should be a PNG");
   is(domfile.size, 95, "File has size 95 (and more importantly we can read it)");
-}
-
-try {
-  var nonexistentfile = File.createFromFileName("i/sure/hope/this/does/not/exist/anywhere.txt");
+})
+.then(() => {
+  return File.createFromNsIFile(file);
+})
+.then(function(domFile) {
+  ok(domfile instanceof File, "File() should return a File");
+  is(domfile.type, "image/png", "File should be a PNG");
+  is(domfile.size, 95, "File has size 95 (and more importantly we can read it)");
+})
+.then(function() {
+  return File.createFromFileName("i/sure/hope/this/does/not/exist/anywhere.txt");
+})
+.then(function() {
   ok(false, "This should never be reached!");
-} catch (e) {
+}, function() {
   ok(true, "Attempt to construct a non-existent file should fail.");
-}
-
-try {
+}).then(function() {
   var dir = Components.classes["@mozilla.org/file/directory_service;1"]
                       .getService(Components.interfaces.nsIProperties)
                       .get("CurWorkD", Components.interfaces.nsIFile);
-  var dirfile = File.createFromNsIFile(dir);
+  return File.createFromNsIFile(dir);
+}).then(function() {
   ok(false, "This should never be reached!");
-} catch (e) {
+}, function() {
   ok(true, "Attempt to construct a file from a directory should fail.");
-}
+}).then(function() {
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
 ]]>
 </script>
 
