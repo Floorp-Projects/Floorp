@@ -51,6 +51,10 @@ task_description_schema = Schema({
     # automatically
     Optional('routes'): [basestring],
 
+    # The index paths where this task may be cached. Transforms are expected to
+    # fill these automatically when wanted.
+    Optional('index-paths'): [basestring],
+
     # custom scopes for this task; any scopes required for the worker will be
     # added automatically
     Optional('scopes'): [basestring],
@@ -855,6 +859,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
+            'index-paths': task.get('index-paths'),
             'when': task.get('when', {}),
         }
 

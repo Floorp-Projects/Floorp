@@ -9,17 +9,16 @@ linux64-clang/opt:
         platform: toolchains/opt
         symbol: TL(clang)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-clang-linux.sh
-        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
+    run:
+        using: toolchain-script
+        script: build-clang-linux.sh
+        tooltool-downloads: public
+        resources:
             - 'build/build-clang/**'
 
 linux64-clang-tidy/opt:
@@ -32,17 +31,16 @@ linux64-clang-tidy/opt:
         platform: toolchains/opt
         symbol: TL(clang-tidy)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-clang-tidy-linux.sh
-        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
+    run:
+        using: toolchain-script
+        script: build-clang-tidy-linux.sh
+        tooltool-downloads: public
+        resources:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
 
@@ -53,16 +51,15 @@ linux64-gcc/opt:
         platform: toolchains/opt
         symbol: TL(gcc)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-gcc-linux.sh
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
+    run:
+        using: toolchain-script
+        script: build-gcc-linux.sh
+        resources:
             - 'build/unix/build-gcc/**'
 
 linux64-binutils/opt:
@@ -72,16 +69,15 @@ linux64-binutils/opt:
         platform: toolchains/opt
         symbol: TL(binutil)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-binutils-linux.sh
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
+    run:
+        using: toolchain-script
+        script: build-binutils-linux.sh
+        resources:
             - 'build/unix/build-binutils/**'
 
 linux64-cctools-port/opt:
@@ -91,14 +87,14 @@ linux64-cctools-port/opt:
         platform: toolchains/opt
         symbol: TL(cctools)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-cctools-port.sh
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-cctools-port.sh
 
 linux64-hfsplus/opt:
     description: "hfsplus toolchain build"
@@ -107,17 +103,16 @@ linux64-hfsplus/opt:
         platform: toolchains/opt
         symbol: TL(hfs+)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-hfsplus-linux.sh
-        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
+    run:
+        using: toolchain-script
+        script: build-hfsplus-linux.sh
+        tooltool-downloads: public
+        resources:
             - 'build/unix/build-hfsplus/**'
 
 linux64-libdmg/opt:
@@ -127,11 +122,11 @@ linux64-libdmg/opt:
         platform: toolchains/opt
         symbol: TL(libdmg-hfs+)
         tier: 1
-    run:
-        using: toolchain-script
-        script: build-libdmg-hfsplus.sh
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-libdmg-hfsplus.sh
