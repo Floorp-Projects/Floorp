@@ -140,10 +140,8 @@ CreateFileTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aVal
 
   const FileSystemFileResponse& r = aValue.get_FileSystemFileResponse();
 
-  aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  mBlobImpl = static_cast<BlobChild*>(r.blobChild())->GetBlobImpl();
+  MOZ_ASSERT(mBlobImpl);
 }
 
 void
@@ -162,9 +160,10 @@ CreateFileTaskChild::HandlerCallback()
     return;
   }
 
-  RefPtr<File> file = File::CreateFromFile(mFileSystem->GetParentObject(),
-                                           mTargetPath);
+  RefPtr<File> file = File::Create(mFileSystem->GetParentObject(), mBlobImpl);
   mPromise->MaybeResolve(file);
+
+  mBlobImpl = nullptr;
   mPromise = nullptr;
 }
 
@@ -233,13 +232,10 @@ CreateFileTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   AssertIsOnBackgroundThread();
 
-  nsAutoString path;
-  aRv = mTargetPath->GetPath(path);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return FileSystemDirectoryResponse();
-  }
-
-  return FileSystemFileResponse(path, EmptyString());
+  RefPtr<BlobImpl> blobImpl = new BlobImplFile(mTargetPath);
+  BlobParent* blobParent =
+    BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
+  return FileSystemFileResponse(blobParent, nullptr);
 }
 
 nsresult
