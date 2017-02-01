@@ -269,7 +269,7 @@ IsCaretOnInWindow(nsPIDOMWindowOuter* aWindow, nsISelectionController* aSelCont)
   return caretOn;
 }
 
-static const struct BrowseCommand {
+static constexpr struct BrowseCommand {
   const char *reverse, *forward;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
   nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);
