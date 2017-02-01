@@ -499,9 +499,10 @@ File::GetLastModified(ErrorResult& aRv)
 }
 
 void
-File::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv) const
+File::GetMozFullPath(nsAString& aFilename, SystemCallerGuarantee aGuarantee,
+                     ErrorResult& aRv) const
 {
-  mImpl->GetMozFullPath(aFilename, aRv);
+  mImpl->GetMozFullPath(aFilename, aGuarantee, aRv);
 }
 
 void
@@ -580,18 +581,15 @@ File::Constructor(const GlobalObject& aGlobal,
 File::CreateFromNsIFile(const GlobalObject& aGlobal,
                         nsIFile* aData,
                         const ChromeFilePropertyBag& aBag,
+                        SystemCallerGuarantee aGuarantee,
                         ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!nsContentUtils::IsCallerChrome()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
-  impl->InitializeChromeFile(window, aData, aBag, true, aRv);
+  impl->InitializeChromeFile(window, aData, aBag, true, aGuarantee, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -609,17 +607,13 @@ File::CreateFromNsIFile(const GlobalObject& aGlobal,
 File::CreateFromFileName(const GlobalObject& aGlobal,
                          const nsAString& aData,
                          const ChromeFilePropertyBag& aBag,
+                         SystemCallerGuarantee aGuarantee,
                          ErrorResult& aRv)
 {
-  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
-    aRv.ThrowTypeError<MSG_MISSING_ARGUMENTS>(NS_LITERAL_STRING("File"));
-    return nullptr;
-  }
-
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
-  impl->InitializeChromeFile(window, aData, aBag, aRv);
+  impl->InitializeChromeFile(window, aData, aBag, aGuarantee, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -690,26 +684,13 @@ BlobImplBase::SetPath(const nsAString& aPath)
 }
 
 void
-BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv) const
+BlobImplBase::GetMozFullPath(nsAString& aFileName,
+                             SystemCallerGuarantee /* unused */,
+                             ErrorResult& aRv) const
 {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
 
-  aFileName.Truncate();
-
-  if (NS_IsMainThread()) {
-    if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-      GetMozFullPathInternal(aFileName, aRv);
-    }
-
-    return;
-  }
-
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  if (workerPrivate->UsesSystemPrincipal()) {
-    GetMozFullPathInternal(aFileName, aRv);
-  }
+  GetMozFullPathInternal(aFileName, aRv);
 }
 
 void
