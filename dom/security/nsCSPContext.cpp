@@ -1228,6 +1228,10 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
   // iterate through each docShell parent item
   while (NS_SUCCEEDED(treeItem->GetParent(getter_AddRefs(parentTreeItem))) &&
          parentTreeItem != nullptr) {
+    // stop when reaching chrome
+    if (parentTreeItem->ItemType() == nsIDocShellTreeItem::typeChrome) {
+      break;
+    }
 
     nsIDocument* doc = parentTreeItem->GetDocument();
     NS_ASSERTION(doc, "Could not get nsIDocument from nsIDocShellTreeItem in nsCSPContext::PermitsAncestry");
@@ -1236,12 +1240,6 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
     currentURI = doc->GetDocumentURI();
 
     if (currentURI) {
-      // stop when reaching chrome
-      bool isChrome = false;
-      rv = currentURI->SchemeIs("chrome", &isChrome);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (isChrome) { break; }
-
       // delete the userpass from the URI.
       rv = currentURI->CloneIgnoringRef(getter_AddRefs(uriClone));
       NS_ENSURE_SUCCESS(rv, rv);
