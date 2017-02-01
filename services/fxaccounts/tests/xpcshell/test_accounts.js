@@ -26,9 +26,10 @@ Cu.importGlobalProperties(["atob"]);
 var log = Log.repository.getLogger("Services.FxAccounts.test");
 log.level = Log.Level.Debug;
 
-// See verbose logging from FxAccounts.jsm
+// See verbose logging from FxAccounts.jsm and jwcrypto.jsm.
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
+Services.prefs.setCharPref("services.crypto.jwcrypto.log.level", "Debug");
 
 // The oauth server is mocked, but set these prefs to pass param checks
 Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
