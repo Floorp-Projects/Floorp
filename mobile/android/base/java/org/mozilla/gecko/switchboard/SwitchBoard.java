@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ import java.util.zip.CRC32;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.ProxySelector;
 
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -375,7 +379,10 @@ public class SwitchBoard {
      */
     @Nullable private static String readFromUrlGET(URL url) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(url.toURI());
+            connection.setRequestProperty("User-Agent", HardwareUtils.isTablet() ?
+                    AppConstants.USER_AGENT_FENNEC_TABLET :
+                    AppConstants.USER_AGENT_FENNEC_MOBILE);
             connection.setRequestMethod("GET");
             connection.setUseCaches(false);
 
@@ -390,7 +397,7 @@ public class SwitchBoard {
             bufferReader.close();
 
             return resultContent.toString();
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
 
