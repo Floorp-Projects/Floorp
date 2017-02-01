@@ -3435,6 +3435,7 @@ ContentParent::RecvNSSU2FTokenIsCompatibleVersion(const nsString& aVersion,
 
 mozilla::ipc::IPCResult
 ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
+                                           nsTArray<uint8_t>&& aApplication,
                                            bool* aIsValidKeyHandle)
 {
   MOZ_ASSERT(aIsValidKeyHandle);
@@ -3445,6 +3446,7 @@ ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
   }
 
   nsresult rv = nssToken->IsRegistered(aKeyHandle.Elements(), aKeyHandle.Length(),
+                                       aApplication.Elements(), aApplication.Length(),
                                        aIsValidKeyHandle);
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
