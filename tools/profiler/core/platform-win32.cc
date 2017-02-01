@@ -146,7 +146,7 @@ class SamplerThread
       mInstance = new SamplerThread(sampler->interval(), sampler);
       mInstance->Start();
     } else {
-      ASSERT(mInstance->mInterval == sampler->interval());
+      MOZ_ASSERT(mInstance->mInterval == sampler->interval());
     }
   }
 
@@ -306,13 +306,13 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
-  ASSERT(!IsActive());
+  MOZ_ASSERT(!IsActive());
   SetActive(true);
   SamplerThread::StartSampler(this);
 }
 
 void Sampler::Stop() {
-  ASSERT(IsActive());
+  MOZ_ASSERT(IsActive());
   SetActive(false);
   SamplerThread::StopSampler();
 }
