@@ -5,11 +5,10 @@
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
 MIDL_GENERATED_FILES = \
-  IGeckoCustom.h \
-  IGeckoCustom_p.c \
-  IGeckoCustom_i.c \
-  IGeckoCustom.tlb \
-  $(NULL)
+	IGeckoCustom.h \
+	IGeckoCustom_p.c \
+	IGeckoCustom_i.c \
+	$(NULL)
 
 $(MIDL_GENERATED_FILES): done_gen
 
