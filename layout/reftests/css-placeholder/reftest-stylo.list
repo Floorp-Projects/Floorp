@@ -2,7 +2,7 @@
 include input/reftest-stylo.list
 include textarea/reftest-stylo.list
 
-fails == css-restrictions.html css-restrictions.html
-fails == css-simple-styling.html css-simple-styling.html
+fails asserts-if(stylo,4) == css-restrictions.html css-restrictions.html # bug 1324671
+fails asserts-if(stylo,4) == css-simple-styling.html css-simple-styling.html # bug 1324671
 # == css-background.html css-background.html
-fails == ignore-pseudo-class.html ignore-pseudo-class.html
+fails asserts-if(stylo,2) == ignore-pseudo-class.html ignore-pseudo-class.html # bug 1324671
