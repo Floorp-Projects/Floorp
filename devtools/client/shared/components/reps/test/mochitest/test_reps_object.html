@@ -17,9 +17,8 @@ Test Obj rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { Obj } = browserRequire("devtools/client/shared/components/reps/object");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, Obj } = REPS;
 
   const componentUnderTest = Obj;
 
