@@ -432,6 +432,11 @@ class ScriptSource
     // memory management.
     const char* introductionType_;
 
+    // The bytecode cache encoder is used to encode only the content of function
+    // which are delazified.  If this value is not nullptr, then each delazified
+    // function should be recorded before their first execution.
+    UniquePtr<XDRIncrementalEncoder> xdrEncoder_;
+
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
     // possible to get source at all.
@@ -453,6 +458,7 @@ class ScriptSource
         parameterListEnd_(0),
         introducerFilename_(nullptr),
         introductionType_(nullptr),
+        xdrEncoder_(nullptr),
         sourceRetrievable_(false),
         hasIntroductionOffset_(false)
     {
@@ -579,6 +585,29 @@ class ScriptSource
     uint32_t parameterListEnd() const {
         return parameterListEnd_;
     }
+
+    // Return wether an XDR encoder is present or not.
+    bool hasEncoder() const { return bool(xdrEncoder_); }
+
+    // Create a new XDR encoder, and encode the top-level JSScript. The result
+    // of the encoding would be available in the |buffer| provided as argument,
+    // as soon as |xdrFinalize| is called and all xdr function calls returned
+    // successfully.
+    bool xdrEncodeTopLevel(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, HandleScript script);
+
+    // Encode a delazified JSFunction.  In case of errors, the XDR encoder is
+    // freed and the |buffer| provided as argument to |xdrEncodeTopLevel| is
+    // considered undefined.
+    //
+    // The |sourceObject| argument is the object holding the current
+    // ScriptSource.
+    bool xdrEncodeFunction(ExclusiveContext* cx, HandleFunction fun,
+                           HandleScriptSource sourceObject);
+
+    // Linearize the encoded content in the |buffer| provided as argument to
+    // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
+    // |buffer| is considered undefined.
+    bool xdrFinalizeEncoder();
 };
 
 class ScriptSourceHolder
@@ -683,12 +712,12 @@ AsyncKindFromBits(unsigned val) {
  */
 template<XDRMode mode>
 bool
-XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
+XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScriptSource sourceObject,
           HandleFunction fun, MutableHandleScript scriptp);
 
 template<XDRMode mode>
 bool
-XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
+XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScriptSource sourceObject,
               HandleFunction fun, MutableHandle<LazyScript*> lazy);
 
 /*
@@ -796,7 +825,7 @@ class JSScript : public js::gc::TenuredCell
     friend
     bool
     js::XDRScript(js::XDRState<mode>* xdr, js::HandleScope enclosingScope,
-                  js::HandleScript enclosingScript, js::HandleFunction fun,
+                  js::HandleScriptSource sourceObject, js::HandleFunction fun,
                   js::MutableHandleScript scriptp);
 
     friend bool
@@ -1175,11 +1204,11 @@ class JSScript : public js::gc::TenuredCell
         return offsetof(JSScript, funLength_);
     }
 
-    size_t sourceStart() const {
+    uint32_t sourceStart() const {
         return sourceStart_;
     }
 
-    size_t sourceEnd() const {
+    uint32_t sourceEnd() const {
         return sourceEnd_;
     }
 
@@ -2011,11 +2040,11 @@ class LazyScript : public gc::TenuredCell
     // The "script" argument to this function can be null.  If it's non-null,
     // then this LazyScript should be associated with the given JSScript.
     //
-    // The enclosingScript and enclosingScope arguments may be null if the
+    // The sourceObject and enclosingScope arguments may be null if the
     // enclosing function is also lazy.
     static LazyScript* Create(ExclusiveContext* cx, HandleFunction fun,
                               HandleScript script, HandleScope enclosingScope,
-                              HandleScript enclosingScript,
+                              HandleScriptSource sourceObject,
                               uint64_t packedData, uint32_t begin, uint32_t end,
                               uint32_t lineno, uint32_t column);
 

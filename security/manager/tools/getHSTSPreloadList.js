@@ -302,7 +302,7 @@ function output(sortedStatuses, currentList) {
       status.finalIncludeSubdomains = incSubdomainsBool;
     }
 
-    writeTo("\nstatic const char kSTSHostTable[] = {\n", fos);
+    writeTo("\nstatic constexpr char kSTSHostTable[] = {\n", fos);
     var indices = {};
     var currentIndex = 0;
     for (let status of includedStatuses) {
@@ -334,7 +334,7 @@ function output(sortedStatuses, currentList) {
       "  const uint32_t mIncludeSubdomains : 1;\n" +
       "};\n" +
       "\n" +
-      "static const nsSTSPreload kSTSPreloadList[] = {\n";
+      "static constexpr nsSTSPreload kSTSPreloadList[] = {\n";
     const POSTFIX = "};\n";
 
     writeTo(PREFIX, fos);

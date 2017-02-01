@@ -1127,7 +1127,14 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isOnlyToplevelInTabGroup;
 
   /**
-   * Returns `true` if this docshell was created by a Large-Allocation load.
+   * Returns `true` if this docshell is loaded within a Large-Allocation
+   * process.
    */
-  [infallible] readonly attribute boolean inFreshProcess;
+  [infallible] readonly attribute boolean inLargeAllocProcess;
+
+  /**
+   * Returns `true` if this docshell was created due to a Large-Allocation
+   * header, and has not seen the initiating load yet.
+   */
+  [infallible] readonly attribute boolean awaitingLargeAlloc;
 };

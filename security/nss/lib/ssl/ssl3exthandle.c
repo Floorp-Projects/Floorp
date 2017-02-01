@@ -2045,7 +2045,8 @@ ssl3_ServerHandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUi
                                    &xtnData->clientSigSchemes,
                                    &xtnData->numClientSigScheme,
                                    &data->data, &data->len);
-    if (rv != SECSuccess) {
+    if (rv != SECSuccess || xtnData->numClientSigScheme == 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
         return SECFailure;
     }

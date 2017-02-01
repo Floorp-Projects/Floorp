@@ -968,16 +968,15 @@ NativeObject::changeProperty(ExclusiveContext* cx, HandleNativeObject obj, Handl
     return newShape;
 }
 
-bool
-NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
+/* static */ bool
+NativeObject::removeProperty(ExclusiveContext* cx, HandleNativeObject obj, jsid id_)
 {
     RootedId id(cx, id_);
-    RootedNativeObject self(cx, this);
 
     AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry;
     RootedShape shape(cx);
-    if (!Shape::search(cx, lastProperty(), id, keep, shape.address(), &entry))
+    if (!Shape::search(cx, obj->lastProperty(), id, keep, shape.address(), &entry))
         return false;
 
     if (!shape)
@@ -987,10 +986,10 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
      * If shape is not the last property added, or the last property cannot
      * be removed, switch to dictionary mode.
      */
-    if (!self->inDictionaryMode() && (shape != self->lastProperty() || !self->canRemoveLastProperty())) {
-        if (!self->toDictionaryMode(cx))
+    if (!obj->inDictionaryMode() && (shape != obj->lastProperty() || !obj->canRemoveLastProperty())) {
+        if (!obj->toDictionaryMode(cx))
             return false;
-        ShapeTable* table = self->lastProperty()->maybeTable(keep);
+        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
         entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
         shape = entry->shape();
@@ -1004,21 +1003,21 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
      * the object or table, so the remaining removal is infallible.
      */
     RootedShape spare(cx);
-    if (self->inDictionaryMode()) {
+    if (obj->inDictionaryMode()) {
         /* For simplicity, always allocate an accessor shape for now. */
         spare = Allocate<AccessorShape>(cx);
         if (!spare)
             return false;
         new (spare) Shape(shape->base()->unowned(), 0);
-        if (shape == self->lastProperty()) {
+        if (shape == obj->lastProperty()) {
             /*
              * Get an up to date unowned base shape for the new last property
              * when removing the dictionary's last property. Information in
              * base shapes for non-last properties may be out of sync with the
              * object's state.
              */
-            RootedShape previous(cx, self->lastProperty()->parent);
-            StackBaseShape base(self->lastProperty()->base());
+            RootedShape previous(cx, obj->lastProperty()->parent);
+            StackBaseShape base(obj->lastProperty()->base());
             BaseShape* nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return false;
@@ -1028,7 +1027,7 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
 
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
-        self->freeSlot(cx, shape->slot());
+        obj->freeSlot(cx, shape->slot());
         if (cx->isJSContext())
             ++cx->asJSContext()->runtime()->propertyRemovals;
     }
@@ -1038,8 +1037,8 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
      * doubly linked list, hashed by lastProperty()->table. So we can edit the
      * list and hash in place.
      */
-    if (self->inDictionaryMode()) {
-        ShapeTable* table = self->lastProperty()->maybeTable(keep);
+    if (obj->inDictionaryMode()) {
+        ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
 
         if (entry->hadCollision()) {
@@ -1056,23 +1055,23 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
              * checks not to alter significantly the complexity of the
              * delete in debug builds, see bug 534493.
              */
-            Shape* aprop = self->lastProperty();
+            Shape* aprop = obj->lastProperty();
             for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent)
-                MOZ_ASSERT_IF(aprop != shape, self->contains(cx, aprop));
+                MOZ_ASSERT_IF(aprop != shape, obj->contains(cx, aprop));
 #endif
         }
 
         {
             /* Remove shape from its non-circular doubly linked list. */
-            Shape* oldLastProp = self->lastProperty();
-            shape->removeFromDictionary(self);
+            Shape* oldLastProp = obj->lastProperty();
+            shape->removeFromDictionary(obj);
 
             /* Hand off table from the old to new last property. */
-            oldLastProp->handoffTableTo(self->lastProperty());
+            oldLastProp->handoffTableTo(obj->lastProperty());
         }
 
         /* Generate a new shape for the object, infallibly. */
-        JS_ALWAYS_TRUE(self->generateOwnShape(cx, spare));
+        JS_ALWAYS_TRUE(obj->generateOwnShape(cx, spare));
 
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table->capacity();
@@ -1085,11 +1084,11 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
          * lazily make via a later hashify the exact table for the new property
          * lineage.
          */
-        MOZ_ASSERT(shape == self->lastProperty());
-        self->removeLastProperty(cx);
+        MOZ_ASSERT(shape == obj->lastProperty());
+        obj->removeLastProperty(cx);
     }
 
-    self->checkShapeConsistency();
+    obj->checkShapeConsistency();
     return true;
 }
 
@@ -1133,7 +1132,7 @@ NativeObject::rollbackProperties(ExclusiveContext* cx, HandleNativeObject obj, u
             if (slot < slotSpan)
                 break;
         }
-        if (!obj->removeProperty(cx, obj->lastProperty()->propid()))
+        if (!NativeObject::removeProperty(cx, obj, obj->lastProperty()->propid()))
             return false;
     }
 
@@ -1241,21 +1240,20 @@ JSObject::setFlags(ExclusiveContext* cx, HandleObject obj, BaseShape::Flag flags
     return true;
 }
 
-bool
-NativeObject::clearFlag(ExclusiveContext* cx, BaseShape::Flag flag)
+/* static */ bool
+NativeObject::clearFlag(ExclusiveContext* cx, HandleNativeObject obj, BaseShape::Flag flag)
 {
-    MOZ_ASSERT(inDictionaryMode());
+    MOZ_ASSERT(obj->inDictionaryMode());
 
-    RootedNativeObject self(cx, &as<NativeObject>());
-    MOZ_ASSERT(self->lastProperty()->getObjectFlags() & flag);
+    MOZ_ASSERT(obj->lastProperty()->getObjectFlags() & flag);
 
-    StackBaseShape base(self->lastProperty());
+    StackBaseShape base(obj->lastProperty());
     base.flags &= ~flag;
     UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
 
-    self->lastProperty()->base()->adoptUnowned(nbase);
+    obj->lastProperty()->base()->adoptUnowned(nbase);
     return true;
 }
 

@@ -579,8 +579,13 @@ ContentParent::JoinAllSubprocesses()
 ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
                                           ProcessPriority aPriority,
                                           ContentParent* aOpener,
-                                          bool aLargeAllocationProcess)
+                                          bool aLargeAllocationProcess,
+                                          bool* aNew)
 {
+  if (aNew) {
+    *aNew = false;
+  }
+
   if (!sBrowserContentParents) {
     sBrowserContentParents =
       new nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>;
@@ -621,6 +626,9 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
   }
 
   RefPtr<ContentParent> p = new ContentParent(aOpener, contentProcessType);
+  if (aNew) {
+    *aNew = true;
+  }
 
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
@@ -906,6 +914,7 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     openerTabId = TabParent::GetTabIdFrom(docShell);
   }
 
+  bool newProcess = false;
   RefPtr<nsIContentParent> constructorSender;
   if (isInContentProcess) {
     MOZ_ASSERT(aContext.IsMozBrowserElement());
@@ -923,7 +932,7 @@ ContentParent::CreateBrowser(const TabContext& aContext,
 
       constructorSender =
         GetNewOrUsedBrowserProcess(remoteType, initialPriority, nullptr,
-                                   aFreshProcess);
+                                   aFreshProcess, &newProcess);
       if (!constructorSender) {
         return nullptr;
       }
@@ -971,7 +980,10 @@ ContentParent::CreateBrowser(const TabContext& aContext,
       constructorSender->IsForBrowser());
 
     if (aFreshProcess) {
-      Unused << browser->SendSetFreshProcess();
+      // Tell the TabChild object that it was created due to a Large-Allocation
+      // request, and whether or not that Large-Allocation request succeeded at
+      // creating a new content process.
+      Unused << browser->SendSetIsLargeAllocation(true, newProcess);
     }
 
     if (browser) {

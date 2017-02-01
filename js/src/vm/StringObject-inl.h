@@ -15,31 +15,29 @@
 
 namespace js {
 
-inline bool
-StringObject::init(JSContext* cx, HandleString str)
+/* static */ inline bool
+StringObject::init(JSContext* cx, Handle<StringObject*> obj, HandleString str)
 {
-    MOZ_ASSERT(numFixedSlots() == 2);
+    MOZ_ASSERT(obj->numFixedSlots() == 2);
 
-    Rooted<StringObject*> self(cx, this);
-
-    if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, self))
+    if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj))
         return false;
 
-    MOZ_ASSERT(self->lookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
+    MOZ_ASSERT(obj->lookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
 
-    self->setStringThis(str);
+    obj->setStringThis(str);
 
     return true;
 }
 
-inline StringObject*
+/* static */ inline StringObject*
 StringObject::create(JSContext* cx, HandleString str, HandleObject proto, NewObjectKind newKind)
 {
     JSObject* obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
     if (!obj)
         return nullptr;
     Rooted<StringObject*> strobj(cx, &obj->as<StringObject>());
-    if (!strobj->init(cx, str))
+    if (!StringObject::init(cx, strobj, str))
         return nullptr;
     return strobj;
 }

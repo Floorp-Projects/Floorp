@@ -74,6 +74,7 @@ public:
                       const mozilla::dom::SRIMetadata &aIntegrity)
     : mKind(aKind),
       mElement(aElement),
+      mScriptFromHead(false),
       mProgress(Progress::Loading),
       mIsInline(true),
       mHasSourceMapURL(false),
@@ -85,8 +86,7 @@ public:
       mWasCompiledOMT(false),
       mIsTracking(false),
       mOffThreadToken(nullptr),
-      mScriptTextBuf(nullptr),
-      mScriptTextLength(0),
+      mScriptText(),
       mJSVersion(aVersion),
       mLineNo(1),
       mCORSMode(aCORSMode),
@@ -167,6 +167,7 @@ public:
 
   const nsScriptKind mKind;
   nsCOMPtr<nsIScriptElement> mElement;
+  bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
@@ -179,8 +180,9 @@ public:
   bool mIsTracking;       // True if the script comes from a source on our tracking protection list.
   void* mOffThreadToken;  // Off-thread parsing token.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
-  char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
-  size_t mScriptTextLength; // use nsString so we can give ownership to jsapi.
+  // Holds script text for non-inline scripts. Don't use nsString so we can give
+  // ownership to jsapi.
+  mozilla::Vector<char16_t> mScriptText;
   uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
@@ -303,7 +305,7 @@ public:
   }
 
   /**
-   * Process a script element. This will include both loading the 
+   * Process a script element. This will include both loading the
    * source of the element if it is not inline and evaluating
    * the script itself.
    *
@@ -336,7 +338,7 @@ public:
 
   /**
    * Whether the loader is enabled or not.
-   * When disabled, processing of new script elements is disabled. 
+   * When disabled, processing of new script elements is disabled.
    * Any call to ProcessScriptElement() will return false. Note that
    * this DOES NOT disable currently loading or executing scripts.
    */
@@ -408,13 +410,13 @@ public:
   /**
    * Handle the completion of a stream.  This is called by the
    * nsScriptLoadHandler object which observes the IncrementalStreamLoader
-   * loading the script.
+   * loading the script. The streamed content is expected to be stored on the
+   * aRequest argument.
    */
   nsresult OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                            nsISupports* aContext,
+                            nsScriptLoadRequest* aRequest,
                             nsresult aChannelStatus,
                             nsresult aSRIStatus,
-                            mozilla::Vector<char16_t> &aString,
                             mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier);
 
   /**
@@ -519,8 +521,7 @@ private:
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
-                     bool aScriptFromHead);
+  nsresult StartLoad(nsScriptLoadRequest *aRequest);
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
@@ -574,8 +575,7 @@ private:
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                 nsIIncrementalStreamLoader* aLoader,
-                                nsresult aStatus,
-                                mozilla::Vector<char16_t> &aString);
+                                nsresult aStatus);
 
   void AddDeferRequest(nsScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
@@ -673,10 +673,11 @@ private:
   virtual ~nsScriptLoadHandler();
 
   /*
-   * Try to decode some raw data.
+   * Once the charset is found by the EnsureDecoder function, we can
+   * incrementally convert the charset to the one expected by the JS Parser.
    */
-  nsresult TryDecodeRawData(const uint8_t* aData, uint32_t aDataLength,
-                            bool aEndOfStream);
+  nsresult DecodeRawData(const uint8_t* aData, uint32_t aDataLength,
+                         bool aEndOfStream);
 
   /*
    * Discover the charset by looking at the stream data, the script
@@ -690,7 +691,7 @@ private:
   // ScriptLoader which will handle the parsed script.
   RefPtr<nsScriptLoader>        mScriptLoader;
 
-  // The nsScriptLoadRequest for this load.
+  // The nsScriptLoadRequest for this load. Decoded data are accumulated on it.
   RefPtr<nsScriptLoadRequest>   mRequest;
 
   // SRI data verifier.
@@ -701,9 +702,6 @@ private:
 
   // Unicode decoder for charset.
   nsCOMPtr<nsIUnicodeDecoder>   mDecoder;
-
-  // Accumulated decoded char buffer.
-  mozilla::Vector<char16_t>     mBuffer;
 };
 
 class nsAutoScriptLoaderDisabler
