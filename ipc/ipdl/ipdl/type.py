@@ -445,11 +445,8 @@ class SymbolTable:
     def enterScope(self, node):
         assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
-        assert not hasattr(node, 'symtab')
 
-        node.symtab = { }
-
-        self.scopes.append(node.symtab)
+        self.scopes.append({ })
         self.currentScope = self.scopes[-1]
 
     def exitScope(self, node):
@@ -554,11 +551,11 @@ class GatherDecls(TcheckVisitor):
 
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
-        if hasattr(tu, 'symtab'):
+        if hasattr(tu, 'visited'):
             return
-        tu.symtab = SymbolTable(self.errors)
+        tu.visited = True
         savedSymtab = self.symtab
-        self.symtab = tu.symtab
+        self.symtab = SymbolTable(self.errors)
 
         # pretend like the translation unit "using"-ed these for the
         # sake of type checking and C++ code generation
@@ -685,12 +682,13 @@ class GatherDecls(TcheckVisitor):
 
     def visitStructDecl(self, sd):
         # If we've already processed this struct, don't do it again.
-        if hasattr(sd, 'symtab'):
+        if hasattr(sd, 'visited'):
             return
 
         stype = sd.decl.type
 
         self.symtab.enterScope(sd)
+        sd.visited = True
 
         for f in sd.fields:
             ftypedecl = self.symtab.lookup(str(f.typespec))
