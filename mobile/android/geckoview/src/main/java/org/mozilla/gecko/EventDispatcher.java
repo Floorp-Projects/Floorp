@@ -623,7 +623,26 @@ public final class EventDispatcher extends JNIObject {
             this.callback = callback;
         }
 
-        private void makeCallback(final boolean callSuccess, final Object response) {
+        private void makeCallback(final boolean callSuccess, final Object rawResponse) {
+            final Object response;
+            if (rawResponse instanceof Number) {
+                // There is ambiguity because a number can be converted to either int or
+                // double, so e.g. the user can be expecting a double when we give it an
+                // int. To avoid these pitfalls, we disallow all numbers. The workaround
+                // is to wrap the number in a JS object / GeckoBundle, which supports
+                // type coersion for numbers.
+                throw new UnsupportedOperationException(
+                        "Cannot use number as Java callback result");
+            } else if (rawResponse != null && rawResponse.getClass().isArray()) {
+                // Same with arrays.
+                throw new UnsupportedOperationException(
+                        "Cannot use arrays as Java callback result");
+            } else if (rawResponse instanceof Character) {
+                response = rawResponse.toString();
+            } else {
+                response = rawResponse;
+            }
+
             // Call back synchronously if we happen to be on the same thread as the thread
             // making the original request.
             if (ThreadUtils.isOnThread(originalThread)) {

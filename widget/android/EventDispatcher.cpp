@@ -488,12 +488,18 @@ UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
         aOut.setNull();
     } else if (aData.IsInstanceOf<jni::Boolean>()) {
         aOut.setBoolean(java::GeckoBundle::UnboxBoolean(aData));
-    } else if (aData.IsInstanceOf<jni::Integer>()) {
+    } else if (aData.IsInstanceOf<jni::Integer>() ||
+            aData.IsInstanceOf<jni::Byte>() ||
+            aData.IsInstanceOf<jni::Short>()) {
         aOut.setInt32(java::GeckoBundle::UnboxInteger(aData));
-    } else if (aData.IsInstanceOf<jni::Double>()) {
+    } else if (aData.IsInstanceOf<jni::Double>() ||
+            aData.IsInstanceOf<jni::Float>() ||
+            aData.IsInstanceOf<jni::Long>()) {
         aOut.setNumber(java::GeckoBundle::UnboxDouble(aData));
     } else if (aData.IsInstanceOf<jni::String>()) {
         return UnboxString(aCx, aData, aOut);
+    } else if (aData.IsInstanceOf<jni::Character>()) {
+        return UnboxString(aCx, java::GeckoBundle::UnboxString(aData), aOut);
     } else if (aData.IsInstanceOf<java::GeckoBundle>()) {
         return UnboxBundle(aCx, aData, aOut);
 

@@ -5247,7 +5247,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "unboxDouble";
         static constexpr char signature[] =
-                "(Ljava/lang/Double;)D";
+                "(Ljava/lang/Number;)D";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5267,7 +5267,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "unboxInteger";
         static constexpr char signature[] =
-                "(Ljava/lang/Integer;)I";
+                "(Ljava/lang/Number;)I";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -5278,6 +5278,26 @@ public:
     };
 
     static auto UnboxInteger(mozilla::jni::Object::Param) -> int32_t;
+
+    struct UnboxString_t {
+        typedef GeckoBundle Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "unboxString";
+        static constexpr char signature[] =
+                "(Ljava/lang/Object;)Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto UnboxString(mozilla::jni::Object::Param) -> mozilla::jni::String::LocalRef;
 
     struct Values_t {
         typedef GeckoBundle Owner;
