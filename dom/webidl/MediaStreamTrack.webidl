@@ -87,7 +87,7 @@ interface MediaStreamTrack : EventTarget {
     MediaTrackConstraints  getConstraints ();
     MediaTrackSettings     getSettings ();
 
-    [Throws]
+    [Throws, NeedsCallerType]
     Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
 //              attribute EventHandler          onoverconstrained;
 };
