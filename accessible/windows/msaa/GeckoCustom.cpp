@@ -50,3 +50,10 @@ GeckoCustom::get_minimumIncrement(double* aIncrement)
   *aIncrement = mAcc->Step();
   return S_OK;
 }
+
+STDMETHODIMP
+GeckoCustom::get_mozState(uint64_t* aState)
+{
+  *aState = mAcc->State();
+  return S_OK;
+}

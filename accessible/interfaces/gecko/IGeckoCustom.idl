@@ -14,6 +14,7 @@ interface IGeckoCustom : IUnknown
   [propget] HRESULT anchorCount([out, retval] long* aCount);
   [propget] HRESULT DOMNodeID([out, retval] BSTR* aID);
   [propget] HRESULT minimumIncrement([out, retval] double* aIncrement);
+  [propget] HRESULT mozState([out, retval] unsigned __int64* aState);
 }
 
 
