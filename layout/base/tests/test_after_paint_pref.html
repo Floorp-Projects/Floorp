@@ -24,14 +24,19 @@ window.addEventListener("load", step0);
 is(SpecialPowers.getBoolPref("dom.send_after_paint_to_content"), true, "pref defaults to true in mochitest harness");
 
 function print_rect(rect) {
+  if (!rect) {
+    rect = { top: 0, left: 0, width: 0, right: 0 };
+  }
   return "(top=" + rect.top + ",left=" + rect.left + ",width=" + rect.width + ",height=" + rect.height + ")";
 }
 
 function print_event(event) {
   var res = "boundingClientRect=" + print_rect(event.boundingClientRect);
   var rects = event.clientRects;
-  for (var i = 0; i < rects.length; ++i) {
-    res += " clientRects[" + i + "]=" + print_rect(rects[i]);
+  if (rects) {
+    for (var i = 0; i < rects.length; ++i) {
+      res += " clientRects[" + i + "]=" + print_rect(rects[i]);
+    }
   }
   return res;
 }
