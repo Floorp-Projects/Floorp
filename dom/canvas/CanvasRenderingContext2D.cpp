@@ -5375,21 +5375,10 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& aElem,
                                               double aW, double aH,
                                               const nsAString& aBgColor,
                                               uint32_t aFlags,
+                                              SystemCallerGuarantee,
                                               ErrorResult& aError)
 {
-  // We can't allow web apps to call this until we fix at least the
-  // following potential security issues:
-  // -- rendering cross-domain IFRAMEs and then extracting the results
-  // -- rendering the user's theme and then extracting the results
-  // -- rendering native anonymous content (e.g., file input paths;
-  // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerChrome()) {
-    // not permitted to use DrawWindow
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
+  // XXXbz This should go away.  Bug 1334865.
 #if 0
   nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(&elem);
   if (!loaderOwner) {
@@ -5483,7 +5472,11 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
   if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      !nsContentUtils::IsCallerChrome())
+      // We could ask bindings for the caller type, but they already hand us a
+      // JSContext, and we're at least _somewhat_ perf-sensitive (so may not
+      // want to compute the caller type in the common non-write-only case), so
+      // let's just use what we have.
+      !nsContentUtils::IsSystemCaller(aCx))
   {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
