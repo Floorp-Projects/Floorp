@@ -40,7 +40,7 @@
             android:title="@string/contextmenu_copyurl"/>
         <item
             android:id="@+id/pin"
-            android:icon="@drawable/pin"
+            android:icon="@drawable/as_pin"
             android:title="@string/contextmenu_top_sites_pin"/>
         <item
             android:id="@+id/add_homescreen"
