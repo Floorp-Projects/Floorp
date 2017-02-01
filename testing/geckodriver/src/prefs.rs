@@ -30,11 +30,8 @@ lazy_static! {
         // Implicitly accept license
         ("browser.EULA.override", Pref::new(true)),
 
-        // Turn off once Marionette can correctly handle error pages,
-        // and does not hang when about:blank gets loaded twice
-        //
-        // (bug 1145668, 1312674)
-        ("browser.newtabpage.enabled", Pref::new(true)),
+        // use about:blank as new tab page
+        ("browser.newtabpage.enabled", Pref::new(false)),
 
         // Assume the about:newtab pages intro panels have been shown
         // to not depend on which test runs first and happens to open
