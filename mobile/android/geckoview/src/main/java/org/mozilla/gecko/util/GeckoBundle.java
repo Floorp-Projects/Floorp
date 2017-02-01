@@ -355,14 +355,6 @@ public final class GeckoBundle {
     }
 
     /**
-     * @hide
-     * XXX: temporary helper for converting Bundle to GeckoBundle.
-     */
-    public void put(final String key, final Object value) {
-        mMap.put(key, value);
-    }
-
-    /**
      * Map a key to a boolean value.
      *
      * @param key Key to map.

@@ -30,8 +30,7 @@ function get_test_message() {
     nullIntArray: null,
     nullDoubleArray: null,
     nullStringArray: null,
-    // XXX enable when we remove NativeJSObject
-    // mixedArray: [1, 1.5],
+    mixedArray: [1, 1.5],
   };
 
   // Make a copy
@@ -46,11 +45,11 @@ function get_test_message() {
   return outerObject;
 }
 
-function send_test_message(type) {
+function send_test_message(scope, type) {
   let outerObject = get_test_message();
   outerObject.type = type;
 
-  Messaging.sendRequest(outerObject);
+  get_dispatcher(scope).sendRequest(outerObject);
 }
 
 function get_dispatcher(scope) {
@@ -69,8 +68,8 @@ function dispatch_test_message(scope, type) {
   get_dispatcher(scope).dispatch(type, data);
 }
 
-function send_message_for_response(type, response) {
-  Messaging.sendRequestForResult({
+function send_message_for_response(scope, type, response) {
+  get_dispatcher(scope).sendRequestForResult({
     type: type,
     response: response,
   }).then(result => do_check_eq(result, response),
@@ -124,6 +123,10 @@ let listener = {
     do_check_eq(obj.nullIntArray, null);
     do_check_eq(obj.nullDoubleArray, null);
     do_check_eq(obj.nullStringArray, null);
+
+    do_check_eq(obj.mixedArray.length, 2);
+    do_check_eq(obj.mixedArray[0], 1);
+    do_check_eq(obj.mixedArray[1], 1.5);
   },
 
   onEvent: function (event, data, callback) {

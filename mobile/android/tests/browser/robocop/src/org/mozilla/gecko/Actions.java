@@ -57,18 +57,10 @@ public interface Actions {
     }
 
     public enum EventType {
-        JSON,
         GECKO,
         UI,
         BACKGROUND
     }
-
-    /**
-     * Sends an event to Gecko.
-     *
-     * @param geckoEvent The geckoEvent JSONObject's type
-     */
-    void sendGeckoEvent(String geckoEvent, String data);
 
     /**
      * Sends an event to the global EventDispatcher instance.
@@ -119,15 +111,6 @@ public interface Actions {
     void setPref(String pref, Object value, boolean flush);
     PrefWaiter addPrefsObserver(String[] prefNames, PrefHandlerBase handler);
     void removePrefsObserver(PrefWaiter handler);
-
-    /**
-     * Listens for a gecko event to be sent from the Gecko instance.
-     * The returned object can be used to test if the event has been
-     * received. Note that only one event is listened for.
-     *
-     * @param geckoEvent The geckoEvent JSONObject's type
-     */
-    RepeatedEventExpecter expectGeckoEvent(String geckoEvent);
 
     /**
      * Listens for an event on the global EventDispatcher instance.
