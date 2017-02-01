@@ -40,7 +40,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
                 fFail("Should have completed event before timeout");
             }
             try {
-                wait(1000); // Wait for 1 second at a time.
+                wait(100); // Wait for 100ms at a time.
             } catch (final InterruptedException e) {
                 // Attempt waiting again.
             }
@@ -81,7 +81,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         getDispatcher(scope).registerGeckoThreadListener(
                 this, GECKO_EVENT, GECKO_RESPONSE_EVENT);
 
-        testThreadEvents(scope, GECKO_EVENT, GECKO_RESPONSE_EVENT);
+        testThreadEvents(scope, GECKO_EVENT, GECKO_RESPONSE_EVENT, /* wait */ true);
 
         getDispatcher(scope).unregisterGeckoThreadListener(
                 this, GECKO_EVENT, GECKO_RESPONSE_EVENT);
@@ -90,7 +90,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         getDispatcher(scope).registerUiThreadListener(
                 this, UI_EVENT, UI_RESPONSE_EVENT);
 
-        testThreadEvents(scope, UI_EVENT, UI_RESPONSE_EVENT);
+        testThreadEvents(scope, UI_EVENT, UI_RESPONSE_EVENT, /* wait */ true);
 
         getDispatcher(scope).unregisterUiThreadListener(
                 this, UI_EVENT, UI_RESPONSE_EVENT);
@@ -99,7 +99,7 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         getDispatcher(scope).registerBackgroundThreadListener(
                 this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
 
-        testThreadEvents(scope, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
+        testThreadEvents(scope, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT, /* wait */ true);
 
         getDispatcher(scope).unregisterBackgroundThreadListener(
                 this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
@@ -107,44 +107,73 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         // Test Gecko thread events in JS.
         getJS().syncCall("register_js_events", scope, JS_EVENT, JS_RESPONSE_EVENT);
 
-        getJS().syncCall("dispatch_test_message", scope, JS_EVENT);
-        getJS().syncCall("dispatch_message_for_response", scope, JS_RESPONSE_EVENT, "success");
-        getJS().syncCall("dispatch_message_for_response", scope, JS_RESPONSE_EVENT, "error");
+        final int count = testThreadEvents(
+                scope, JS_EVENT, JS_RESPONSE_EVENT, /* wait */ false);
 
-        dispatchMessage(scope, JS_EVENT);
-        dispatchMessageForResponse(scope, JS_RESPONSE_EVENT, "success");
-        dispatchMessageForResponse(scope, JS_RESPONSE_EVENT, "error");
-
-        getJS().syncCall("unregister_js_events", scope, JS_EVENT, JS_RESPONSE_EVENT);
+        getJS().syncCall("unregister_js_events", scope, JS_EVENT, JS_RESPONSE_EVENT, count);
     }
 
-    private void testThreadEvents(final String scope, final String event, final String responseEvent) {
+    private int testThreadResponseEvents(final String method, final String scope,
+                                          final String responseEvent, final String mode,
+                                          final boolean wait) {
+        int count = 0;
+        // Try all the values in the reference bundle as callback values.
+        for (final String key : createBundle().keys()) {
+            if (key.indexOf("Array") >= 0) {
+                // Skip arrays for now because they're complicated to compare.
+                continue;
+            }
+
+            getJS().syncCall(method, scope, responseEvent, mode, key);
+            count++;
+
+            if (wait) {
+                waitForAsyncEvent();
+            }
+        }
+        return count;
+    }
+
+    private int testThreadEvents(final String scope, final String event,
+                                 final String responseEvent, final boolean wait) {
+        int count = 0;
+
         getJS().syncCall("send_test_message", scope, event);
-        waitForAsyncEvent();
+        count++;
 
-        getJS().syncCall("send_message_for_response", scope, responseEvent, "success");
-        waitForAsyncEvent();
+        if (wait) {
+            waitForAsyncEvent();
+        }
 
-        getJS().syncCall("send_message_for_response", scope, responseEvent, "error");
-        waitForAsyncEvent();
+        count += testThreadResponseEvents("send_message_for_response",
+                scope, responseEvent, "success", wait);
+        count += testThreadResponseEvents("send_message_for_response",
+                scope, responseEvent, "error", wait);
 
         getJS().syncCall("dispatch_test_message", scope, event);
-        waitForAsyncEvent();
+        count++;
 
-        getJS().syncCall("dispatch_message_for_response", scope, responseEvent, "success");
-        waitForAsyncEvent();
+        if (wait) {
+            waitForAsyncEvent();
+        }
 
-        getJS().syncCall("dispatch_message_for_response", scope, responseEvent, "error");
-        waitForAsyncEvent();
+        count += testThreadResponseEvents("dispatch_message_for_response",
+                scope, responseEvent, "success", wait);
+
+        count += testThreadResponseEvents("dispatch_message_for_response",
+                scope, responseEvent, "error", wait);
 
         dispatchMessage(scope, event);
-        waitForAsyncEvent();
+        count++;
 
-        dispatchMessageForResponse(scope, responseEvent, "success");
-        waitForAsyncEvent();
+        if (wait) {
+            waitForAsyncEvent();
+        }
 
-        dispatchMessageForResponse(scope, responseEvent, "error");
-        waitForAsyncEvent();
+        count += dispatchMessagesForResponse(scope, responseEvent, "success", wait);
+        count += dispatchMessagesForResponse(scope, responseEvent, "error", wait);
+
+        return count;
     }
 
     @Override
@@ -198,10 +227,13 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
 
         } else if (GECKO_RESPONSE_EVENT.equals(event) || UI_RESPONSE_EVENT.equals(event) ||
                 BACKGROUND_RESPONSE_EVENT.equals(event)) {
-            final String response = message.getString("response");
-            if ("success".equals(response)) {
+            final String mode = message.getString("mode");
+            final String key = message.getString("key");
+            final Object response = getTypedResponse(key);
+
+            if ("success".equals(mode)) {
                 callback.sendSuccess(response);
-            } else if ("error".equals(response)) {
+            } else if ("error".equals(mode)) {
                 callback.sendError(response);
             } else {
                 fFail("Response type should be valid: " + response);
@@ -212,6 +244,22 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         }
 
         notifyAsyncEvent();
+    }
+
+    private Object getTypedResponse(final String key) {
+        final Object response = createBundle().get(key);
+        if ("byte".equals(key)) {
+            return ((Number) response).byteValue();
+        } else if ("short".equals(key)) {
+            return ((Number) response).shortValue();
+        } else if ("float".equals(key)) {
+            return ((Number) response).floatValue();
+        } else if ("long".equals(key)) {
+            return ((Number) response).longValue();
+        } else if ("char".equals(key)) {
+            return ((String) response).charAt(0);
+        }
+        return response;
     }
 
     private void checkBundle(final GeckoBundle bundle) {
@@ -354,6 +402,12 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
 
         bundle.putDoubleArray("mixedArray", new double[] {1.0, 1.5});
 
+        bundle.putInt("byte", 1);
+        bundle.putInt("short", 1);
+        bundle.putDouble("float", 0.5);
+        bundle.putDouble("long", 1.0);
+        bundle.putString("char", "f");
+
         return bundle;
     }
 
@@ -375,10 +429,34 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         getDispatcher(scope).dispatch(type, createBundle());
     }
 
+    private int dispatchMessagesForResponse(final String scope, final String responseEvent,
+                                            final String mode, final boolean wait) {
+        final GeckoBundle refBundle = createBundle();
+        int count = 0;
+        // Try all the values in the reference bundle as callback values.
+        for (final String key : refBundle.keys()) {
+            if (key.indexOf("Array") >= 0 || refBundle.get(key) instanceof Number) {
+                // We don't support numbers and arrays as callback results.
+                // Skip arrays for now because they're complicated to compare.
+                continue;
+            }
+
+            dispatchMessageForResponse(scope, responseEvent, "success", key, refBundle);
+            count++;
+
+            if (wait) {
+                waitForAsyncEvent();
+            }
+        }
+        return count;
+    }
+
     public void dispatchMessageForResponse(final String scope, final String type,
-                                           final String response) {
-        final GeckoBundle bundle = new GeckoBundle(1);
-        bundle.putString("response", response);
+                                           final String mode, final String key,
+                                           final GeckoBundle refBundle) {
+        final GeckoBundle bundle = new GeckoBundle(2);
+        bundle.putString("mode", mode);
+        bundle.putString("key", key);
 
         getDispatcher(scope).dispatch(type, bundle, new EventCallback() {
             @Override
@@ -389,14 +467,16 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
                 // thread, the response thread defaults to the background thread.
                 fAssertTrue("JS success response should be on background thread",
                             ThreadUtils.isOnBackgroundThread());
-                fAssertEquals("JS success response is correct", response, result);
+                fAssertEquals("JS response mode is correct", mode, "success");
+                fAssertEquals("JS success response is correct", refBundle.get(key), result);
             }
 
             @Override
             public void sendError(final Object error) {
                 fAssertTrue("JS error response should be on background thread",
                             ThreadUtils.isOnBackgroundThread());
-                fAssertEquals("JS error response is correct", response, error);
+                fAssertEquals("JS response mode is correct", mode, "error");
+                fAssertEquals("JS error response is correct", refBundle.get(key), error);
             }
         });
     }
