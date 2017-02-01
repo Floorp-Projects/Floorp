@@ -32,7 +32,7 @@ struct CTLogOperatorInfo
   const mozilla::ct::CTLogOperatorId id;
 };
 
-const CTLogInfo kCTLogList[] = {
+constexpr CTLogInfo kCTLogList[] = {
   { "Google 'Pilot' log",
     mozilla::ct::CTLogStatus::Included,
     0, // no disqualification time
@@ -189,7 +189,7 @@ const CTLogInfo kCTLogList[] = {
     91 }
 };
 
-const CTLogOperatorInfo kCTLogOperatorList[] = {
+constexpr CTLogOperatorInfo kCTLogOperatorList[] = {
   { "Google", 0 },
   { "DigiCert", 1 },
   { "Certly", 2 },
