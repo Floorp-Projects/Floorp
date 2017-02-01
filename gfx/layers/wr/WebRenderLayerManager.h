@@ -75,7 +75,7 @@ protected:
 public:
   virtual KnowsCompositor* AsKnowsCompositor() override;
   WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
-  CompositorBridgeChild* GetCompositorBridgeChild();
+  virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
 
   virtual int32_t GetMaxTextureSize() const override;
 
