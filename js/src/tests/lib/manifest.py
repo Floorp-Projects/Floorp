@@ -369,7 +369,7 @@ def _split_files_and_dirs(location, paths):
             dirs.add(path[0:-1])
         elif os.path.isdir(fullpath):
             dirs.add(path)
-        elif os.path.exists(fullpath)
+        elif os.path.exists(fullpath):
             files.add(path)
 
     return files, dirs
