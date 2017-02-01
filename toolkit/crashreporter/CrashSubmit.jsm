@@ -284,25 +284,16 @@ Submitter.prototype = {
       formData.append("Throttleable", "0");
     }
     // add the minidumps
-    let promises = [
-      File.createFromFileName(this.dump.path).then(file => {
-        formData.append("upload_file_minidump", file);
-      })
-    ]
-
+    formData.append("upload_file_minidump", File.createFromFileName(this.dump.path));
     if (this.memory) {
-      promises.push(File.createFromFileName(this.memory.path).then(file => {
-        formData.append("memory_report", file);
-      }));
+      formData.append("memory_report", File.createFromFileName(this.memory.path));
     }
-
     if (this.additionalDumps.length > 0) {
       let names = [];
       for (let i of this.additionalDumps) {
         names.push(i.name);
-        promises.push(File.createFromFileName(i.dump.path).then(file => {
-          formData.append("upload_file_minidump_" + i.name, file);
-        }));
+        formData.append("upload_file_minidump_" + i.name,
+                        File.createFromFileName(i.dump.path));
       }
     }
 
@@ -337,7 +328,7 @@ Submitter.prototype = {
       }
     });
 
-    let p = Promise.all(promises);
+    let p = Promise.resolve();
     let id = this.id;
 
     if (this.recordSubmission) {

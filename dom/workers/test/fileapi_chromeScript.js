@@ -17,26 +17,13 @@ function createFileWithData(fileData) {
   }
   outStream.write(fileData, fileData.length);
   outStream.close();
-
-  return File.createFromNsIFile(testFile).then(function(domFile) {
-    if (willDelete) {
-      testFile.remove(/* recursive: */ false);
-    }
-    return domFile;
-  });
+  var domFile = File.createFromNsIFile(testFile);
+  if (willDelete) {
+    testFile.remove(/* recursive: */ false);
+  }
+  return domFile;
 }
 
 addMessageListener("files.open", function (message) {
-  let promises = [];
-  let list = [];
-
-  for (let fileData of message) {
-    promises.push(createFileWithData(fileData).then(domFile => {
-      list.push(domFile);
-    }));
-  }
-
-  Promise.all(promises).then(() => {
-    sendAsyncMessage("files.opened", list);
-  });
+  sendAsyncMessage("files.opened", message.map(createFileWithData));
 });

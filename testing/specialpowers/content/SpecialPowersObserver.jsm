@@ -253,7 +253,6 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       }
       let createdFiles = this._createdFiles;
       try {
-        let promises = [];
         aMessage.data.forEach(function(request) {
           const filePerms = 0666;
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -269,25 +268,14 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
             outStream.write(request.data, request.data.length);
           }
           outStream.close();
-          promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
-            filePaths.push(file);
-          }));
+          filePaths.push(File.createFromFileName(testFile.path, request.options));
           createdFiles.push(testFile);
         });
-
-        Promise.all(promises).then(function() {
-          aMessage.target
-                  .QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
-                  .messageManager
-                  .sendAsyncMessage("SpecialPowers.FilesCreated", filePaths);
-        }, function(e) {
-          aMessage.target
-                  .QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
-                  .messageManager
-                  .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
-        });
+        aMessage.target
+                .QueryInterface(Ci.nsIFrameLoaderOwner)
+                .frameLoader
+                .messageManager
+                .sendAsyncMessage("SpecialPowers.FilesCreated", filePaths);
       } catch (e) {
           aMessage.target
                   .QueryInterface(Ci.nsIFrameLoaderOwner)

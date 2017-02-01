@@ -10,8 +10,8 @@ function writeFile(text, answer) {
   stream.write(text, text.length);
   stream.close();
 
-  File.createFromNsIFile(tmpFile).then(function(file) {
-    sendAsyncMessage(answer, { file });
+  sendAsyncMessage(answer, {
+    file: File.createFromNsIFile(tmpFile)
   });
 }
 
