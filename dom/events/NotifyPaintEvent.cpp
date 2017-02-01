@@ -43,12 +43,9 @@ NS_IMPL_ADDREF_INHERITED(NotifyPaintEvent, Event)
 NS_IMPL_RELEASE_INHERITED(NotifyPaintEvent, Event)
 
 nsRegion
-NotifyPaintEvent::GetRegion()
+NotifyPaintEvent::GetRegion(SystemCallerGuarantee)
 {
   nsRegion r;
-  if (!nsContentUtils::IsCallerChrome()) {
-    return r;
-  }
   for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
     r.Or(r, mInvalidateRequests[i].mRect);
     r.SimplifyOutward(10);
@@ -57,24 +54,24 @@ NotifyPaintEvent::GetRegion()
 }
 
 already_AddRefed<DOMRect>
-NotifyPaintEvent::BoundingClientRect()
+NotifyPaintEvent::BoundingClientRect(SystemCallerGuarantee aGuarantee)
 {
   RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   if (mPresContext) {
-    rect->SetLayoutRect(GetRegion().GetBounds());
+    rect->SetLayoutRect(GetRegion(aGuarantee).GetBounds());
   }
 
   return rect.forget();
 }
 
 already_AddRefed<DOMRectList>
-NotifyPaintEvent::ClientRects()
+NotifyPaintEvent::ClientRects(SystemCallerGuarantee aGuarantee)
 {
   nsISupports* parent = ToSupports(this);
   RefPtr<DOMRectList> rectList = new DOMRectList(parent);
 
-  nsRegion r = GetRegion();
+  nsRegion r = GetRegion(aGuarantee);
   for (auto iter = r.RectIter(); !iter.Done(); iter.Next()) {
     RefPtr<DOMRect> rect = new DOMRect(parent);
     rect->SetLayoutRect(iter.Get());
@@ -85,17 +82,15 @@ NotifyPaintEvent::ClientRects()
 }
 
 already_AddRefed<PaintRequestList>
-NotifyPaintEvent::PaintRequests()
+NotifyPaintEvent::PaintRequests(SystemCallerGuarantee)
 {
   Event* parent = this;
   RefPtr<PaintRequestList> requests = new PaintRequestList(parent);
 
-  if (nsContentUtils::IsCallerChrome()) {
-    for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
-      RefPtr<PaintRequest> r = new PaintRequest(parent);
-      r->SetRequest(mInvalidateRequests[i]);
-      requests->Append(r);
-    }
+  for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
+    RefPtr<PaintRequest> r = new PaintRequest(parent);
+    r->SetRequest(mInvalidateRequests[i]);
+    requests->Append(r);
   }
 
   return requests.forget();
@@ -138,13 +133,13 @@ NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 }
 
 uint64_t
-NotifyPaintEvent::TransactionId()
+NotifyPaintEvent::TransactionId(SystemCallerGuarantee)
 {
   return mTransactionId;
 }
 
 DOMHighResTimeStamp
-NotifyPaintEvent::PaintTimeStamp()
+NotifyPaintEvent::PaintTimeStamp(SystemCallerGuarantee)
 {
   return mTimeStamp;
 }

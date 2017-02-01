@@ -16,22 +16,22 @@ interface NotifyPaintEvent : Event
    * Get a list of rectangles which are affected. The rectangles are
    * in CSS pixels relative to the viewport origin.
    */
-  [ChromeOnly]
+  [ChromeOnly, NeedsCallerType]
   readonly attribute DOMRectList clientRects;
 
   /**
    * Get the bounding box of the rectangles which are affected. The rectangle
    * is in CSS pixels relative to the viewport origin.
    */
-  [ChromeOnly]
+  [ChromeOnly, NeedsCallerType]
   readonly attribute DOMRect boundingClientRect;
 
-  [ChromeOnly]
+  [ChromeOnly, NeedsCallerType]
   readonly attribute PaintRequestList paintRequests;
 
-  [ChromeOnly]
+  [ChromeOnly, NeedsCallerType]
   readonly attribute unsigned long long transactionId;
 
-  [ChromeOnly]
+  [ChromeOnly, NeedsCallerType]
   readonly attribute DOMHighResTimeStamp paintTimeStamp;
 };
