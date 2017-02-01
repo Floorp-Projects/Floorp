@@ -47,9 +47,11 @@ public final class GeckoBundle {
     @WrapForJNI(calledFrom = "gecko")
     private static boolean unboxBoolean(Boolean b) { return b; }
     @WrapForJNI(calledFrom = "gecko")
-    private static int unboxInteger(Integer i) { return i; }
+    private static int unboxInteger(Number i) { return i.intValue(); }
     @WrapForJNI(calledFrom = "gecko")
-    private static double unboxDouble(Double d) { return d; }
+    private static double unboxDouble(Number d) { return d.doubleValue(); }
+    @WrapForJNI(calledFrom = "gecko")
+    private static String unboxString(Object s) { return s.toString(); }
 
     private SimpleArrayMap<String, Object> mMap;
 
