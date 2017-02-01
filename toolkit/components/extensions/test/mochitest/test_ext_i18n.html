@@ -164,6 +164,11 @@ add_task(function* test_i18n() {
 add_task(function* test_get_accept_languages() {
   function background() {
     function checkResults(source, results, expected) {
+      if (results[0] === "en-us" && expected[0] === "en-US") {
+        // This sometimes winds up with unexpected capitalization in Android tests.
+        expected[0] = expected[0].toLowerCase();
+      }
+
       browser.test.assertEq(
         expected.length,
         results.length,
@@ -178,7 +183,7 @@ add_task(function* test_get_accept_languages() {
 
     let tabId;
 
-    browser.tabs.query({currentWindow: true, active: true}, tabs => {
+    browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
       tabId = tabs[0].id;
       browser.test.sendMessage("ready");
     });
@@ -318,6 +323,11 @@ add_task(function* test_get_ui_language() {
 
 
 add_task(function* test_detect_language() {
+  if (AppConstants.MOZ_BUILD_APP !== "browser") {
+    // This is not supported on Android.
+    return;
+  }
+
   const af_string = " aam skukuza die naam beteken hy wat skoonvee of hy wat alles onderstebo keer wysig " +
     "bosveldkampe boskampe is kleiner afgeleë ruskampe wat oor min fasiliteite beskik daar is geen restaurante " +
     "of winkels nie en slegs oornagbesoekers word toegelaat bateleur";
