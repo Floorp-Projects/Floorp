@@ -130,7 +130,7 @@ load 1167782-1.html
 load 1186768-1.xhtml
 load 1200568-1.html
 load 1206105-1.html
-skip-if(stylo) load 1223688-1.html # bug 1323715
+load 1223688-1.html
 load 1223694-1.html
 load 1226400-1.html
 load 1227501-1.html
