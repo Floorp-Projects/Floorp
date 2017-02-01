@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+
+<body>
+  <video controls id="video"></video>
+  <pre id="test">
+    <script class="testbody" type="text/javascript">
+
+      // Tests that files with a default key and a seperate sample keyids in the
+      // sgpd box play correctly (if the keyid from the sgpd box is not parsed
+      // or assigned to the sample we will wait indefinitely for the default
+      // key).
+
+      SimpleTest.waitForExplicitFinish();
+
+      // Test files for samples encrypted with different media keys.
+      var gEMESampleGoupTests = [
+        {
+          name:"video with 4 keys in sgpd (sbgp in traf sgpd in stbl)",
+          track: {
+            name:"video",
+            type:"video/mp4; codecs=\"avc1.64000d\"",
+            fragments:[ "sample-encrypted-sgpdstbl-sbgptraf.mp4"
+            ]
+          },
+          keys: {
+            // "keyid" : "key"
+            "279926496a7f5d25da69f2b3b2799a7f": "5544694d47473326622665665a396b36",
+            "597669572e55547e656b56586e2f6f68": "7959493a764556786527517849756635",
+            "205b2b293a342f3d3268293e6f6f4e29": "3a4f3674376d6c48675a273464447b40",
+            "32783e367c2e4d4d6b46467b3e6b5478": "3e213f6d45584f51713d534f4b417855",
+          },
+          sessionType:"temporary",
+          sessionCount:1,
+          duration:2,
+        },
+      ],
+      test = gEMESampleGoupTests[0];
+
+      var video = document.getElementById("video");
+      video.addEventListener("encrypted", () => {
+        Log(test.name, "Recieved encrypted event");
+      });
+
+      video.addEventListener("waitingforkey", () => {
+        Log(test.name, "waitingforkey");
+        ok(false, test.name + " Video is waitingforkey, indicating that the samples are not being assigned the correct id from the sgpd box!");
+        SimpleTest.finish();
+      });
+
+      function LoadEME() {
+        var options = [{
+          initDataType: "cenc",
+          videoType: test.track.type,
+        }];
+
+        return navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
+          .then((keySystemAccess) => {
+            return keySystemAccess.createMediaKeys();
+          }, bail("Failed to request key system access."))
+
+          .then((mediaKeys) => {
+            video.setMediaKeys(mediaKeys);
+            var session = mediaKeys.createSession();
+            once(session, "message", (ev) => {
+              is(ev.messageType, "license-request", "Expected a license-request");
+
+              var keys = [];
+              for (var keyid in test.keys) {
+                keys.push({
+                  "kty":"oct",
+                  "kid":HexToBase64(keyid),
+                  "k":HexToBase64(test.keys[keyid])
+                });
+              }
+
+              var license = new TextEncoder().encode(JSON.stringify({
+                "keys": keys,
+                "type": test.sessionType || "temporary"
+              }));
+              session.update(license);
+            });
+            var json = JSON.stringify({
+              "kids":Object.keys(test.keys).map(HexToBase64)
+            });
+
+            var request = new TextEncoder().encode(json);
+            session.generateRequest("keyids", request)
+              .then(e => {
+                Log(test.name, "Request license success");
+              }, reason => {
+                Log("Request license failed! " + reason);
+              });
+          });
+      }
+
+      function DownloadMedia(url, type, mediaSource) {
+        return new Promise((resolve, reject) => {
+          var sourceBuffer = mediaSource.addSourceBuffer(type);
+          fetchWithXHR(url, (response) => {
+            once(sourceBuffer, "updateend", resolve);
+            sourceBuffer.appendBuffer(new Uint8Array(response));
+          });
+        });
+      }
+
+      function LoadMSE() {
+        // Only set the source of the video and download the tracks after we
+        // have set the license keys, so we don't hit the waitingforkey event
+        // unless samples are being incorrectly assigned the default key
+        // (and we can safely fail).
+        LoadEME()
+          .then(() => {
+            var ms = new MediaSource();
+            video.src = URL.createObjectURL(ms);
+
+            once(ms, "sourceopen", () => {
+              Promise.all(test.track.fragments.map(fragment => DownloadMedia(fragment, test.track.type, ms)))
+                .then(() => {
+                  ms.endOfStream();
+                  LoadEME();
+                })
+                .then(() => {
+                  video.play();
+                });
+            });
+
+            video.addEventListener("ended", SimpleTest.finish);
+          });
+      }
+
+      SetupEMEPref(LoadMSE);
+
+  </script>
+  </pre>
+</body>
+
+</html>
