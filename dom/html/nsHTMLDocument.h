@@ -218,10 +218,10 @@ public:
                      mozilla::ErrorResult& rv);
   bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
                    const nsAString& aValue,
-                   mozilla::dom::CallerType aCallerType,
+                   nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& rv);
   bool QueryCommandEnabled(const nsAString& aCommandID,
-                           mozilla::dom::CallerType aCallerType,
+                           nsIPrincipal& aSubjectPrincipal,
                            mozilla::ErrorResult& rv);
   bool QueryCommandIndeterm(const nsAString& aCommandID,
                             mozilla::ErrorResult& rv);
