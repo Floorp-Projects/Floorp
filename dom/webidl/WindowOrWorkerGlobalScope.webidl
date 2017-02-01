@@ -46,7 +46,8 @@ interface WindowOrWorkerGlobalScope {
 
 // https://fetch.spec.whatwg.org/#fetch-method
 partial interface WindowOrWorkerGlobalScope {
-  [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+  [NewObject, NeedsCallerType]
+  Promise<Response> fetch(RequestInfo input, optional RequestInit init);
 };
 
 // https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object

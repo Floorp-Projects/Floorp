@@ -400,9 +400,10 @@ WorkerGlobalScope::GetPerformance()
 
 already_AddRefed<Promise>
 WorkerGlobalScope::Fetch(const RequestOrUSVString& aInput,
-                         const RequestInit& aInit, ErrorResult& aRv)
+                         const RequestInit& aInit,
+                         CallerType aCallerType, ErrorResult& aRv)
 {
-  return FetchRequest(this, aInput, aInit, aRv);
+  return FetchRequest(this, aInput, aInit, aCallerType, aRv);
 }
 
 already_AddRefed<IDBFactory>

@@ -9,6 +9,6 @@
 
 [Pref="dom.worklet.enabled"]
 interface Worklet {
-  [NewObject, Throws]
+  [NewObject, Throws, NeedsCallerType]
   Promise<void> import(USVString moduleURL);
 };
