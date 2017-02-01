@@ -8,6 +8,7 @@
 #define mozilla_dom_XMLDocument_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsDocument.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScriptContext.h"
@@ -57,7 +58,7 @@ public:
 
 
   // WebIDL API
-  bool Load(const nsAString& aUrl, mozilla::ErrorResult& aRv);
+  bool Load(const nsAString& aUrl, CallerType aCallerType, ErrorResult& aRv);
   bool Async() const
   {
     return mAsync;
