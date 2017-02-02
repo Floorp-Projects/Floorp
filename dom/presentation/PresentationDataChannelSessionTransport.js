@@ -78,6 +78,10 @@ PresentationTransportBuilder.prototype = {
 
     this._peerConnection.onnegotiationneeded = () => {
       log("onnegotiationneeded with role " + this._role);
+      if (!this._peerConnection) {
+        log("ignoring negotiationneeded without PeerConnection");
+        return;
+      }
       this._peerConnection.createOffer()
           .then(aOffer => this._peerConnection.setLocalDescription(aOffer))
           .then(() => this._listener
@@ -137,6 +141,8 @@ PresentationTransportBuilder.prototype = {
       // _sessionTransport
       this._sessionTransport = new PresentationTransport();
       this._sessionTransport.init(this._peerConnection, this._dataChannel, this._window);
+      this._peerConnection.onicecandidate = null;
+      this._peerConnection.onnegotiationneeded = null;
       this._peerConnection = this._dataChannel = null;
 
       this._listener.onSessionTransport(this._sessionTransport);
@@ -220,6 +226,10 @@ PresentationTransportBuilder.prototype = {
 
   onIceCandidate: function(aCandidate) {
     log("onIceCandidate: " + aCandidate + " with role " + this._role);
+    if (!this._window || !this._peerConnection) {
+      log("ignoring ICE candidate after connection");
+      return;
+    }
     let candidate = new this._window.RTCIceCandidate(JSON.parse(aCandidate));
     this._peerConnection.addIceCandidate(candidate).catch(e => this._reportError(e));
   },
