@@ -640,7 +640,14 @@ SandboxBroker::ThreadMain(void)
             resp.mError = -errno;
           }
         } else {
-          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+          struct stat sb;
+          // This doesn't need an additional policy check because
+          // MAY_ACCESS is required to even enter this switch statement.
+          if (lstat(pathBuf, &sb) == 0) {
+            resp.mError = -EEXIST;
+          } else {
+            AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
+          }
         }
         break;
 
