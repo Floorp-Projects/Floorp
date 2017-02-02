@@ -92,8 +92,6 @@
 #include <string.h>
 #include <list>
 
-#define SIGNAL_SAVE_PROFILE SIGUSR2
-
 using namespace mozilla;
 
 #if defined(USE_LUL_STACKWALK)
@@ -178,11 +176,6 @@ Sampler *SamplerRegistry::sampler = NULL;
 
 static mozilla::Atomic<ThreadInfo*> sCurrentThreadInfo;
 static sem_t sSignalHandlingDone;
-
-static void ProfilerSaveSignalHandler(int signal, siginfo_t* info, void* context) {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  gSampler->RequestSave();
-}
 
 static void SetSampleContext(TickSample* sample, void* context)
 {
@@ -313,7 +306,6 @@ static void* SignalSender(void* arg) {
   TimeStamp sampleStart = TimeStamp::Now();
   while (SamplerRegistry::sampler->IsActive()) {
 
-    SamplerRegistry::sampler->HandleSaveRequest();
     SamplerRegistry::sampler->DeleteExpiredMarkers();
 
     if (!SamplerRegistry::sampler->IsPaused()) {
@@ -422,16 +414,6 @@ void Sampler::Start() {
     LOG("Error installing signal");
     return;
   }
-
-  // Request save profile signals
-  struct sigaction sa2;
-  sa2.sa_sigaction = ProfilerSaveSignalHandler;
-  sigemptyset(&sa2.sa_mask);
-  sa2.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGNAL_SAVE_PROFILE, &sa2, &old_sigsave_signal_handler_) != 0) {
-    LOG("Error installing start signal");
-    return;
-  }
   LOG("Signal installed");
   signal_handler_installed_ = true;
 
@@ -474,7 +456,6 @@ void Sampler::Stop() {
 
   // Restore old signal handler
   if (signal_handler_installed_) {
-    sigaction(SIGNAL_SAVE_PROFILE, &old_sigsave_signal_handler_, 0);
     sigaction(SIGPROF, &old_sigprof_signal_handler_, 0);
     signal_handler_installed_ = false;
   }
