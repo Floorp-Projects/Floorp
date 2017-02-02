@@ -21,7 +21,6 @@ public:
   void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks);
 
   virtual void EndUnwind();
-  virtual SyncProfile* AsSyncProfile() { return this; }
 
 private:
   friend class ProfilerBacktrace;
