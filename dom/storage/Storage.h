@@ -24,6 +24,7 @@ namespace dom {
 
 class StorageManagerBase;
 class StorageCache;
+class StorageEvent;
 
 class Storage final
   : public nsIDOMStorage
@@ -128,6 +129,28 @@ public:
     MOZ_ASSERT(aOther);
     return mCache == aOther->mCache;
   }
+
+  // aStorage can be null if this method is called by ContentChild.
+  //
+  // aImmediateDispatch is for use by (main-thread) IPC code so that PContent
+  // ordering can be maintained.  Without this, the event would be enqueued and
+  // run in a future turn of the event loop, potentially allowing other PContent
+  // Recv* methods to trigger script that wants to assume our localstorage
+  // changes have already been applied.  This is the case for message manager
+  // messages which are used by ContentTask testing logic and webextensions.
+  static void
+  DispatchStorageEvent(StorageType aStorageType,
+                       const nsAString& aDocumentURI,
+                       const nsAString& aKey,
+                       const nsAString& aOldValue,
+                       const nsAString& aNewValue,
+                       nsIPrincipal* aPrincipal,
+                       bool aIsPrivate,
+                       Storage* aStorage,
+                       bool aImmediateDispatch);
+
+  void
+  ApplyEvent(StorageEvent* aStorageEvent);
 
 protected:
   // The method checks whether the caller can use a storage.

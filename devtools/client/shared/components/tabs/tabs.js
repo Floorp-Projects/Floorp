@@ -349,7 +349,7 @@ define(function (require, exports, module) {
       return (
         DOM.div({ className: ["tabs", this.props.className].join(" ") },
           this.renderMenuItems(),
-          this.renderPanels(),
+          this.renderPanels()
         )
       );
     },

@@ -276,6 +276,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   : mLoadingPrincipal(rhs.mLoadingPrincipal)
   , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
   , mPrincipalToInherit(rhs.mPrincipalToInherit)
+  , mSandboxedLoadingPrincipal(rhs.mSandboxedLoadingPrincipal)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
@@ -306,6 +307,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
 LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsIPrincipal* aPrincipalToInherit,
+                   nsIPrincipal* aSandboxedLoadingPrincipal,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
                    LoadTainting aTainting,
@@ -331,6 +333,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
+  , mSandboxedLoadingPrincipal(aSandboxedLoadingPrincipal)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(aTainting)
@@ -458,6 +461,31 @@ nsIPrincipal*
 LoadInfo::PrincipalToInherit()
 {
   return mPrincipalToInherit;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
+{
+  if (!(mSecurityFlags & nsILoadInfo::SEC_SANDBOXED)) {
+    *aPrincipal = nullptr;
+    return NS_OK;
+  }
+
+  if (!mSandboxedLoadingPrincipal) {
+    if (mLoadingPrincipal) {
+      mSandboxedLoadingPrincipal =
+        nsNullPrincipal::CreateWithInheritedAttributes(mLoadingPrincipal);
+    } else {
+      OriginAttributes attrs(mOriginAttributes);
+      attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
+      mSandboxedLoadingPrincipal = nsNullPrincipal::Create(attrs);
+    }
+  }
+  MOZ_ASSERT(mSandboxedLoadingPrincipal);
+
+  nsCOMPtr<nsIPrincipal> copy(mSandboxedLoadingPrincipal);
+  copy.forget(aPrincipal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
