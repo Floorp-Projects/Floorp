@@ -39,13 +39,13 @@ struct CompileArgs
 {
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
-    bool alwaysBaseline;
+    bool baselineEnabled;
     bool debugEnabled;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),
         scriptedCaller(Move(scriptedCaller)),
-        alwaysBaseline(false),
+        baselineEnabled(false),
         debugEnabled(false)
     {}
 
