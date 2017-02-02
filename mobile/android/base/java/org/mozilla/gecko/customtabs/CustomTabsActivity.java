@@ -35,7 +35,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
     private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
     private static final int NO_COLOR = -1;
-    private Toolbar toolbar;
 
     private ActionBar actionBar;
     private int tabId = -1;
