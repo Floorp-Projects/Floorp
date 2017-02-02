@@ -39,6 +39,8 @@ static const uint32_t kPuppetAxes[] = {
 static const uint32_t kNumPuppetAxis = sizeof(kPuppetAxes) /
                                        sizeof(uint32_t);
 
+static const uint32_t kNumPuppetHaptcs = 1;
+
 VRDisplayPuppet::VRDisplayPuppet()
  : VRDisplayHost(VRDeviceType::Puppet)
  , mIsPresenting(false)
@@ -236,6 +238,7 @@ VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand)
   mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = kNumPuppetButtonMask;
   mControllerInfo.mNumAxes = kNumPuppetAxis;
+  mControllerInfo.mNumHaptics = kNumPuppetHaptcs;
 }
 
 VRControllerPuppet::~VRControllerPuppet()
@@ -416,6 +419,20 @@ VRSystemManagerPuppet::HandlePoseTracking(uint32_t aControllerIdx,
     aController->SetPose(aPose);
     NewPoseState(aControllerIdx, aPose);
   }
+}
+
+void
+VRSystemManagerPuppet::VibrateHaptic(uint32_t aControllerIdx,
+                                     uint32_t aHapticIndex,
+                                     double aIntensity,
+                                     double aDuration,
+                                     uint32_t aPromiseID)
+{
+}
+
+void
+VRSystemManagerPuppet::StopVibrateHaptic(uint32_t aControllerIdx)
+{
 }
 
 void

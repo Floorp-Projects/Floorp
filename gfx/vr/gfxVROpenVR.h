@@ -77,14 +77,29 @@ public:
   uint32_t GetTrackedIndex();
   void SetTrigger(float aValue);
   float GetTrigger();
+  void VibrateHaptic(vr::IVRSystem* aVRSystem,
+                     uint32_t aHapticIndex,
+                     double aIntensity,
+                     double aDuration,
+                     uint32_t aPromiseID);
+  void StopVibrateHaptic();
 
 protected:
   virtual ~VRControllerOpenVR();
 
 private:
+  void UpdateVibrateHaptic(vr::IVRSystem* aVRSystem,
+                           uint32_t aHapticIndex,
+                           double aIntensity,
+                           double aDuration,
+                           uint64_t aVibrateIndex,
+                           uint32_t aPromiseID);
+
   // The index of tracked devices from vr::IVRSystem.
   uint32_t mTrackedIndex;
   float mTrigger;
+  nsCOMPtr<nsIThread> mVibrateThread;
+  bool mIsVibrating;
 };
 
 } // namespace impl
@@ -103,6 +118,12 @@ public:
                               aControllerResult) override;
   virtual void ScanForControllers() override;
   virtual void RemoveControllers() override;
+  virtual void VibrateHaptic(uint32_t aControllerIdx,
+                             uint32_t aHapticIndex,
+                             double aIntensity,
+                             double aDuration,
+                             uint32_t aPromiseID) override;
+  virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
 
 protected:
   VRSystemManagerOpenVR();

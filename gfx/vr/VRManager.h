@@ -49,6 +49,8 @@ public:
   RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
+  void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                     double aIntensity, double aDuration);
 
 protected:
   VRManager();

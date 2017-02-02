@@ -543,6 +543,20 @@ VRSystemManagerOSVR::HandleInput()
 }
 
 void
+VRSystemManagerOSVR::VibrateHaptic(uint32_t aControllerIdx,
+                                   uint32_t aHapticIndex,
+                                   double aIntensity,
+                                   double aDuration,
+                                   uint32_t aPromiseID)
+{
+}
+
+void
+VRSystemManagerOSVR::StopVibrateHaptic(uint32_t aControllerIdx)
+{
+}
+
+void
 VRSystemManagerOSVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aControllerResult)
 {
 }

@@ -54,11 +54,15 @@ parent:
 
   async ControllerListenerAdded();
   async ControllerListenerRemoved();
+  async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                      double aIntensity, double aDuration);
+
   async CreateVRTestSystem();
   async CreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID);
   async CreateVRServiceTestController(nsCString aID, uint32_t aPromiseID);
   async SetDisplayInfoToMockDisplay(uint32_t aDeviceID, VRDisplayInfo aDisplayInfo);
   async SetSensorStateToMockDisplay(uint32_t aDeviceID, VRHMDSensorState aSensorState);
+
   async NewButtonEventToMockController(uint32_t aDeviceID, long aButton,
                                        bool aPressed);
   async NewAxisMoveEventToMockController(uint32_t aDeviceID, long aAxis,
