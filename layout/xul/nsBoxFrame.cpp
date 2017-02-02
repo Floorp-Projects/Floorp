@@ -1344,6 +1344,11 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 #endif
 
+  Maybe<nsDisplayListBuilder::AutoContainerASRTracker> contASRTracker;
+  if (forceLayer) {
+    contASRTracker.emplace(aBuilder);
+  }
+
   BuildDisplayListForChildren(aBuilder, aDirtyRect, destination);
 
   // see if we have to draw a selection frame around this container
@@ -1362,9 +1367,14 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     masterList.AppendToTop(tempLists.PositionedDescendants());
     masterList.AppendToTop(tempLists.Outlines());
 
+    const ActiveScrolledRoot* ownLayerASR = contASRTracker->GetContainerASR();
+
+    DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
+    ownLayerClipState.ClearUpToASR(ownLayerASR);
+
     // Wrap the list to make it its own layer
     aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayOwnLayer(aBuilder, this, &masterList));
+      nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR));
   }
 }
 

@@ -15,6 +15,7 @@ The current data collection possibilities include:
 * :doc:`scalars` allow recording of a single value (string, boolean, a number)
 * :doc:`histograms` can efficiently record multiple data points
 * ``environment`` data records information about the system and settings a session occurs in
+* :doc:`events` can record richer data on individual occurences of specific actions
 * ``TelemetryLog`` allows collecting ordered event entries (note: this does not have supporting analysis tools)
 * :doc:`measuring elapsed time <measuring-time>`
 * :doc:`custom pings <custom-pings>`
@@ -27,8 +28,10 @@ The current data collection possibilities include:
 
    scalars
    histograms
+   events
    measuring-time
    custom-pings
+   *
 
 Browser Usage Telemetry
 ~~~~~~~~~~~~~~~~~~~~~~~

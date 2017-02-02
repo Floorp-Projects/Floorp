@@ -1,7 +1,9 @@
+var InlineSpellChecker;
+
 function test() {
   let tempScope = {};
   Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", tempScope);
-  let InlineSpellChecker = tempScope.InlineSpellChecker;
+  InlineSpellChecker = tempScope.InlineSpellChecker;
 
   ok(InlineSpellChecker, "InlineSpellChecker class exists");
   for (var fname in tests) {

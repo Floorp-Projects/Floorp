@@ -2075,6 +2075,22 @@ nsContentUtils::CanCallerAccess(nsPIDOMWindowInner* aWindow)
   return CanCallerAccess(SubjectPrincipal(), scriptObject->GetPrincipal());
 }
 
+// static
+bool
+nsContentUtils::CallerHasPermission(JSContext* aCx, const nsAString& aPerm)
+{
+  // Chrome gets access by default.
+  if (IsSystemCaller(aCx)) {
+    return true;
+  }
+
+  JSCompartment* c = js::GetContextCompartment(aCx);
+  nsIPrincipal* p = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+
+  // Otherwise, only allow if caller is an addon with the permission.
+  return BasePrincipal::Cast(p)->AddonHasPermission(aPerm);
+}
+
 //static
 bool
 nsContentUtils::InProlog(nsINode *aNode)
@@ -6160,7 +6176,9 @@ nsresult
 nsContentTypeParser::GetType(nsAString& aResult) const
 {
   nsresult rv = GetParameter(nullptr, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   nsContentUtils::ASCIIToLower(aResult);
   return NS_OK;
 }
@@ -6829,23 +6847,23 @@ nsContentUtils::IsFullScreenApiEnabled()
 
 /* static */
 bool
-nsContentUtils::IsRequestFullScreenAllowed()
+nsContentUtils::IsRequestFullScreenAllowed(CallerType aCallerType)
 {
   return !sTrustedFullScreenOnly ||
          EventStateManager::IsHandlingUserInput() ||
-         IsCallerChrome();
+         aCallerType == CallerType::System;
 }
 
 /* static */
 bool
-nsContentUtils::IsCutCopyAllowed()
+nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal)
 {
   if ((!IsCutCopyRestricted() && EventStateManager::IsHandlingUserInput()) ||
-      IsCallerChrome()) {
+      IsSystemPrincipal(aSubjectPrincipal)) {
     return true;
   }
 
-  return BasePrincipal::Cast(SubjectPrincipal())->AddonHasPermission(NS_LITERAL_STRING("clipboardWrite"));
+  return BasePrincipal::Cast(aSubjectPrincipal)->AddonHasPermission(NS_LITERAL_STRING("clipboardWrite"));
 }
 
 /* static */

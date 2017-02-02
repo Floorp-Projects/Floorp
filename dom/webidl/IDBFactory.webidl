@@ -25,17 +25,17 @@ dictionary IDBOpenDBOptions
  */
 [Exposed=(Window,Worker,System)]
 interface IDBFactory {
-  [Throws]
+  [Throws, NeedsCallerType]
   IDBOpenDBRequest
   open(DOMString name,
        [EnforceRange] unsigned long long version);
 
-  [Throws]
+  [Throws, NeedsCallerType]
   IDBOpenDBRequest
   open(DOMString name,
        optional IDBOpenDBOptions options);
 
-  [Throws]
+  [Throws, NeedsCallerType]
   IDBOpenDBRequest
   deleteDatabase(DOMString name,
                  optional IDBOpenDBOptions options);
@@ -45,19 +45,19 @@ interface IDBFactory {
   cmp(any first,
       any second);
 
-  [Throws, ChromeOnly]
+  [Throws, ChromeOnly, NeedsCallerType]
   IDBOpenDBRequest
   openForPrincipal(Principal principal,
                    DOMString name,
                    [EnforceRange] unsigned long long version);
 
-  [Throws, ChromeOnly]
+  [Throws, ChromeOnly, NeedsCallerType]
   IDBOpenDBRequest
   openForPrincipal(Principal principal,
                    DOMString name,
                    optional IDBOpenDBOptions options);
 
-  [Throws, ChromeOnly]
+  [Throws, ChromeOnly, NeedsCallerType]
   IDBOpenDBRequest
   deleteForPrincipal(Principal principal,
                      DOMString name,

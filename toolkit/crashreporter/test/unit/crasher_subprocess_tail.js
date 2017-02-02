@@ -1,3 +1,5 @@
+/* import-globals-from crasher_subprocess_head.js */
+
 // Let the event loop process a bit before crashing.
 if (shouldDelay) {
   let shouldCrashNow = false;

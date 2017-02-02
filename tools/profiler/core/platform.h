@@ -75,14 +75,11 @@ static inline pid_t gettid()
 #include <windows.h>
 #endif
 
-#define ASSERT(a) MOZ_ASSERT(a)
-
 bool profiler_verbose();
 
 #ifdef ANDROID
 # if defined(__arm__) || defined(__thumb__)
 #  define ENABLE_LEAF_DATA
-#  define ENABLE_ARM_LR_SAVING
 # endif
 # define LOG(text) \
     do { if (profiler_verbose()) \
@@ -194,6 +191,8 @@ bool is_native_unwinding_avail();
 // (if used for profiling) the program counter and stack pointer for
 // the thread that created it.
 
+class ThreadInfo;
+
 // TickSample captures the information collected for each sample.
 class TickSample {
  public:
@@ -201,12 +200,10 @@ class TickSample {
       : pc(NULL)
       , sp(NULL)
       , fp(NULL)
-#ifdef ENABLE_ARM_LR_SAVING
       , lr(NULL)
-#endif
       , context(NULL)
       , isSamplingCurrentThread(false)
-      , threadProfile(nullptr)
+      , threadInfo(nullptr)
       , rssMemory(0)
       , ussMemory(0)
   {}
@@ -216,13 +213,11 @@ class TickSample {
   Address pc;  // Instruction pointer.
   Address sp;  // Stack pointer.
   Address fp;  // Frame pointer.
-#ifdef ENABLE_ARM_LR_SAVING
   Address lr;  // ARM link register
-#endif
   void*   context;   // The context from the signal handler, if available. On
                      // Win32 this may contain the windows thread context.
   bool    isSamplingCurrentThread;
-  ThreadProfile* threadProfile;
+  ThreadInfo* threadInfo;
   mozilla::TimeStamp timestamp;
   int64_t rssMemory;
   int64_t ussMemory;
@@ -235,8 +230,6 @@ class ProfileBuffer;
 struct PseudoStack;
 class SpliceableJSONWriter;
 class SyncProfile;
-class ThreadInfo;
-class ThreadProfile;
 
 namespace mozilla {
 class ProfileGatherer;
@@ -268,12 +261,6 @@ public:
 
   // Immediately captures the calling thread's call stack and returns it.
   SyncProfile* GetBacktrace();
-
-  // Request a save from a signal handler. This function must be re-entrant.
-  void RequestSave() { mSaveRequested = true; }
-
-  // Process any outstanding request outside a signal handler.
-  void HandleSaveRequest();
 
   // Delete markers which are no longer part of the profile due to buffer
   // wraparound.
@@ -369,7 +356,7 @@ public:
 
 private:
   // Not implemented on platforms which do not support backtracing
-  void doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample);
+  void doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample);
 
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 
@@ -395,7 +382,6 @@ private:
 #endif
 
   RefPtr<ProfileBuffer> mBuffer;
-  bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mProfileJS;

@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == linear-1a.html linear-1a.html
 fails == linear-1b.html linear-1b.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(azureQuartz,1,11469) fuzzy-if(skiaContent,1,16000) == linear-keywords-1a.html linear-keywords-1a.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(skiaContent,1,16000) == linear-keywords-1a.html linear-keywords-1a.html
 fails == linear-keywords-1b.html linear-keywords-1b.html
 fails == linear-percent.html linear-percent.html
 fails == linear-mix.html linear-mix.html
@@ -50,14 +50,14 @@ fails == linear-vertical-1a.html linear-vertical-1a.html
 fails == linear-vertical-1b.html linear-vertical-1b.html
 fails == linear-vertical-1c.html linear-vertical-1c.html
 fails == linear-vertical-1d.html linear-vertical-1d.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) fuzzy-if(azureQuartz,1,22367) == linear-vertical-1e.html linear-vertical-1e.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL||skiaContent,3,89700) == linear-vertical-1e.html linear-vertical-1e.html
 fails == linear-vertical-subpixel-1.html linear-vertical-subpixel-1.html
 fails == linear-viewport.html linear-viewport.html
 fails == linear-zero-length-1a.html linear-zero-length-1a.html
 fails == linear-zero-length-1b.html linear-zero-length-1b.html
 fails == linear-zero-length-1c.html linear-zero-length-1c.html
 == nostops.html nostops.html
-fails == onestop.html onestop.html
+# == onestop.html onestop.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1a.html radial-1a.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1b.html radial-1b.html
 fails == radial-1c.html radial-1c.html
@@ -117,8 +117,8 @@ fuzzy-if(skiaContent,18,600) == twostops-1g.html twostops-1g.html
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fails == aja-linear-1a.html aja-linear-1a.html
 fails == aja-linear-1b.html aja-linear-1b.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1c.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1d.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1c.html aja-linear-1c.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-1d.html aja-linear-1d.html
 fails == aja-linear-1e.html aja-linear-1e.html
 fails == aja-linear-1f.html aja-linear-1f.html
 fails == aja-linear-1g.html aja-linear-1g.html
@@ -126,8 +126,8 @@ fails == aja-linear-2a.html aja-linear-2a.html
 fails == aja-linear-2b.html aja-linear-2b.html
 == aja-linear-2c.html aja-linear-2c.html
 fails == aja-linear-2d.html aja-linear-2d.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3a.html aja-linear-3a.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3b.html aja-linear-3b.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-3a.html aja-linear-3a.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) == aja-linear-3b.html aja-linear-3b.html
 fails == aja-linear-4a.html aja-linear-4a.html
 fails == aja-linear-4b.html aja-linear-4b.html
 fails == aja-linear-5a.html aja-linear-5a.html

@@ -14,7 +14,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/services-crypto/LogUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "IdentityCryptoService",
@@ -23,15 +23,32 @@ XPCOMUtils.defineLazyServiceGetter(this,
 
 this.EXPORTED_SYMBOLS = ["jwcrypto"];
 
+const PREF_LOG_LEVEL = "services.crypto.jwcrypto.log.level";
+
+XPCOMUtils.defineLazyGetter(this, "log", function() {
+  let log = Log.repository.getLogger("Services.Crypto.jwcrypto");
+  // Default log level is "Error", but consumers can change this with the pref
+  // "services.crypto.jwcrypto.log.level".
+  log.level = Log.Level.Error;
+  let appender = new Log.DumpAppender();
+  log.addAppender(appender);
+  try {
+    let level =
+      Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
+      && Services.prefs.getCharPref(PREF_LOG_LEVEL);
+    log.level = Log.Level[level] || Log.Level.Error;
+  } catch (e) {
+    log.error(e);
+  }
+
+  return log;
+});
+
 const ALGORITHMS = { RS256: "RS256", DS160: "DS160" };
 const DURATION_MS = 1000 * 60 * 2; // 2 minutes default assertion lifetime
 
-function log(...aMessageArgs) {
-  Logger.log.apply(Logger, ["jwcrypto"].concat(aMessageArgs));
-}
-
 function generateKeyPair(aAlgorithmName, aCallback) {
-  log("Generate key pair; alg =", aAlgorithmName);
+  log.debug("Generate key pair; alg = " + aAlgorithmName);
 
   IdentityCryptoService.generateKeyPair(aAlgorithmName, function(rv, aKeyPair) {
     if (!Components.isSuccessCode(rv)) {
@@ -75,10 +92,10 @@ function generateKeyPair(aAlgorithmName, aCallback) {
 function sign(aPayload, aKeypair, aCallback) {
   aKeypair._kp.sign(aPayload, function(rv, signature) {
     if (!Components.isSuccessCode(rv)) {
-      log("ERROR: signer.sign failed");
+      log.error("signer.sign failed");
       return aCallback("Sign failed");
     }
-    log("signer.sign: success");
+    log.debug("signer.sign: success");
     return aCallback(null, signature);
   });
 }
@@ -110,7 +127,7 @@ jwcryptoClass.prototype = {
   },
 
   generateKeyPair(aAlgorithmName, aCallback) {
-    log("generating");
+    log.debug("generating");
     generateKeyPair(aAlgorithmName, aCallback);
   },
 
@@ -163,7 +180,7 @@ jwcryptoClass.prototype = {
     var payloadBytes = IdentityCryptoService.base64UrlEncode(
                           JSON.stringify(payload));
 
-    log("payload bytes", payload, payloadBytes);
+    log.debug("payload", { payload, payloadBytes });
     sign(headerBytes + "." + payloadBytes, aKeyPair, function(err, signature) {
       if (err)
         return aCallback(err);

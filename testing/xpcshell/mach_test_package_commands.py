@@ -61,4 +61,5 @@ class MochitestCommands(object):
              description='Run the xpcshell harness.',
              parser=parser_desktop)
     def xpcshell(self, **kwargs):
+        self.context.activate_mozharness_venv()
         return run_xpcshell(self.context, **kwargs)

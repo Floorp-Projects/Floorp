@@ -3850,26 +3850,14 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
     *aOutIsTransformedFixed = transformedFixed;
   }
 
-  // For background-attachment:fixed backgrounds, we'll limit the area
+  // For background-attachment:fixed backgrounds, we'll override the area
   // where the background can be drawn to the viewport.
   nsRect bgClipRect = aBGClipRect;
 
-  // Compute the anchor point.
-  //
-  // relative to aBorderArea.TopLeft() (which is where the top-left
-  // of aForFrame's border-box will be rendered)
-  nsPoint imageTopLeft;
-  if (NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED == aLayer.mAttachment && !transformedFixed) {
-    if (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW) {
-      // Clip background-attachment:fixed backgrounds to the viewport, if we're
-      // painting to the screen and not transformed. This avoids triggering
-      // tiling in common cases, without affecting output since drawing is
-      // always clipped to the viewport when we draw to the screen. (But it's
-      // not a pure optimization since it can affect the values of pixels at the
-      // edge of the viewport --- whether they're sampled from a putative "next
-      // tile" or not.)
-      bgClipRect.IntersectRect(bgClipRect, positionArea + aBorderArea.TopLeft());
-    }
+  if (NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED == aLayer.mAttachment &&
+      !transformedFixed &&
+      (aFlags & nsCSSRendering::PAINTBG_TO_WINDOW)) {
+    bgClipRect = positionArea + aBorderArea.TopLeft();
   }
 
   int repeatX = aLayer.mRepeat.mXRepeat;
@@ -3891,6 +3879,12 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
 
   state.mImageRenderer.SetPreferredSize(intrinsicSize,
                                         imageSize);
+
+  // Compute the anchor point.
+  //
+  // relative to aBorderArea.TopLeft() (which is where the top-left
+  // of aForFrame's border-box will be rendered)
+  nsPoint imageTopLeft;
 
   // Compute the position of the background now that the background's size is
   // determined.

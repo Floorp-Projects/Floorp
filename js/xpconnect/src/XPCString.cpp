@@ -48,6 +48,7 @@ XPCStringConvert::ClearZoneCache(JS::Zone* zone)
     ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
     if (cache) {
         cache->mBuffer = nullptr;
+        cache->mLength = 0;
         cache->mString = nullptr;
     }
 }
@@ -72,6 +73,7 @@ XPCStringConvert::FinalizeDOMString(JS::Zone* zone, const JSStringFinalizer* fin
     ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
     if (cache && cache->mBuffer == buf) {
         cache->mBuffer = nullptr;
+        cache->mLength = 0;
         cache->mString = nullptr;
     }
 

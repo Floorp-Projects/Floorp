@@ -29,16 +29,12 @@ const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
  */
 function do_promiseTabChangeEvent(tabId, eventType) {
   return new Promise(resolve => {
-    let observer = (subject, topic, data) => {
-      let message = JSON.parse(data);
-
+    EventDispatcher.instance.registerListener(function listener(event, message, callback) {
       if (message.event === eventType && message.tabId === tabId) {
-        Services.obs.removeObserver(observer, TAB_CHANGE_EVENT);
-        resolve(data);
+        EventDispatcher.instance.unregisterListener(listener, TAB_CHANGE_EVENT);
+        resolve();
       }
-    }
-
-    Services.obs.addObserver(observer, TAB_CHANGE_EVENT, false);
+    }, TAB_CHANGE_EVENT);
   });
 }
 

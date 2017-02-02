@@ -11,6 +11,7 @@
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-color: var(--theme-splitter-color);
+  -moz-user-select: none;
 }
 
 #old-boxmodel-container {
@@ -233,7 +234,7 @@
 
 .old-boxmodel-editable {
   border: 1px dashed transparent;
-  -moz-user-select: text;
+  -moz-user-select: none;
 }
 
 .old-boxmodel-editable:hover {

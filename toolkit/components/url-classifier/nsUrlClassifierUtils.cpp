@@ -279,7 +279,9 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
 {
   MutexAutoLock lock(mProviderDictLock);
   nsCString* provider = nullptr;
-  if (mProviderDict.Get(aTableName, &provider)) {
+  if (StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"))) {
+    aProvider = NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME);
+  } else if (mProviderDict.Get(aTableName, &provider)) {
     aProvider = provider ? *provider : EmptyCString();
   } else {
     aProvider = EmptyCString();
@@ -296,7 +298,8 @@ nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
   // Empty provider is filtered as "other"
   if (!NS_LITERAL_CSTRING("mozilla").Equals(aProvider) &&
       !NS_LITERAL_CSTRING("google").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("google4").Equals(aProvider)) {
+      !NS_LITERAL_CSTRING("google4").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
     aProvider.Assign(NS_LITERAL_CSTRING("other"));
   }
 
@@ -449,8 +452,7 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
   }
 
   bool hasUnknownThreatType = false;
-  auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
-  auto negCacheDuration = DurationToMs(r.negative_cache_duration());
+
   for (auto& m : r.matches()) {
     nsCString tableNames;
     nsresult rv = ConvertThreatTypeToListNames(m.threat_type(), tableNames);
@@ -461,10 +463,13 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
     auto& hash = m.threat().hash();
     aCallback->OnCompleteHashFound(nsCString(hash.c_str(), hash.length()),
                                    tableNames,
-                                   minWaitDuration,
-                                   negCacheDuration,
                                    DurationToMs(m.cache_duration()));
   }
+
+  auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
+  auto negCacheDuration = DurationToMs(r.negative_cache_duration());
+
+  aCallback->OnResponseParsed(minWaitDuration, negCacheDuration);
 
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_COMPLETION_ERROR,
                         hasUnknownThreatType ? UNKNOWN_THREAT_TYPE : SUCCESS);

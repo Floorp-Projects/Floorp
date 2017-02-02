@@ -142,6 +142,10 @@ public:
                                      LayoutDeviceIntPoint aPoint,
                                      CSSIntPoint aDefaultPoint);
 
+  static already_AddRefed<Event> Constructor(EventTarget* aEventTarget,
+                                             const nsAString& aType,
+                                             const EventInit& aParam);
+
   static already_AddRefed<Event> Constructor(const GlobalObject& aGlobal,
                                              const nsAString& aType,
                                              const EventInit& aParam,

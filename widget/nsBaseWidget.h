@@ -37,6 +37,8 @@ class gfxContext;
 
 namespace mozilla {
 class CompositorVsyncDispatcher;
+class LiveResizeListener;
+
 #ifdef ACCESSIBILITY
 namespace a11y {
 class Accessible;
@@ -398,6 +400,13 @@ public:
   uint64_t CreateScrollCaptureContainer() override;
 #endif
 
+  // These functions should be called at the start and end of a "live" widget
+  // resize (i.e. when the window contents are repainting during the resize,
+  // such as when the user drags a window border). It will suppress the
+  // displayport during the live resize to avoid unneccessary overpainting.
+  void NotifyLiveResizeStarted();
+  void NotifyLiveResizeStopped();
+
 protected:
   // These are methods for CompositorWidgetWrapper, and should only be
   // accessed from that class. Derived widgets can choose which methods to
@@ -708,6 +717,11 @@ protected:
   };
 
   mozilla::Maybe<InitialZoomConstraints> mInitialZoomConstraints;
+
+  // This points to the resize listeners who have been notified that a live
+  // resize is in progress. This should always be empty when a live-resize is
+  // not in progress.
+  nsTArray<RefPtr<mozilla::LiveResizeListener>> mLiveResizeListeners;
 
 #ifdef DEBUG
 protected:

@@ -37,10 +37,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-extern bool IsCurrentThreadRunningChromeWorker();
-} // namespace workers
-
 static char *sPopupAllowedEvents;
 
 static bool sReturnHighResTimeStamp = false;
@@ -270,16 +266,10 @@ Event::GetType(nsAString& aType)
   return NS_OK;
 }
 
-static EventTarget*
-GetDOMEventTarget(nsIDOMEventTarget* aTarget)
-{
-  return aTarget ? aTarget->GetTargetForDOMEvent() : nullptr;
-}
-
 EventTarget*
 Event::GetTarget() const
 {
-  return GetDOMEventTarget(mEvent->mTarget);
+  return mEvent->GetDOMEventTarget();
 }
 
 NS_IMETHODIMP
@@ -292,7 +282,7 @@ Event::GetTarget(nsIDOMEventTarget** aTarget)
 EventTarget*
 Event::GetCurrentTarget() const
 {
-  return GetDOMEventTarget(mEvent->mCurrentTarget);
+  return mEvent->GetCurrentDOMEventTarget();
 }
 
 NS_IMETHODIMP
@@ -339,11 +329,7 @@ Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 EventTarget*
 Event::GetOriginalTarget() const
 {
-  if (mEvent->mOriginalTarget) {
-    return GetDOMEventTarget(mEvent->mOriginalTarget);
-  }
-
-  return GetTarget();
+  return mEvent->GetOriginalDOMEventTarget();
 }
 
 NS_IMETHODIMP
@@ -377,7 +363,7 @@ bool
 Event::Init(mozilla::dom::EventTarget* aGlobal)
 {
   if (!mIsMainThreadEvent) {
-    return nsContentUtils::ThreadsafeIsCallerChrome();
+    return workers::IsCurrentThreadRunningChromeWorker();
   }
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);
@@ -402,8 +388,17 @@ Event::Constructor(const GlobalObject& aGlobal,
                    ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Event> e = new Event(t, nullptr, nullptr);
-  bool trusted = e->Init(t);
+  return Constructor(t, aType, aParam);
+}
+
+// static
+already_AddRefed<Event>
+Event::Constructor(EventTarget* aEventTarget,
+                   const nsAString& aType,
+                   const EventInit& aParam)
+{
+  RefPtr<Event> e = new Event(aEventTarget, nullptr, nullptr);
+  bool trusted = e->Init(aEventTarget);
   e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
@@ -1207,7 +1202,7 @@ Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 }
 
 NS_IMETHODIMP_(void)
-Event::SetOwner(mozilla::dom::EventTarget* aOwner)
+Event::SetOwner(EventTarget* aOwner)
 {
   mOwner = nullptr;
 

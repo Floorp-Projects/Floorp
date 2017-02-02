@@ -363,6 +363,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     nsLayoutUtils::SetScrollbarThumbLayerization(thumb, thumbGetsLayer);
 
     if (thumbGetsLayer) {
+      nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
       nsDisplayListCollection tempLists;
       nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
 
@@ -377,8 +378,12 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       masterList.AppendToTop(tempLists.Outlines());
 
       // Wrap the list to make it its own layer.
+      const ActiveScrolledRoot* ownLayerASR = contASRTracker.GetContainerASR();
+      DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
+      ownLayerClipState.ClearUpToASR(ownLayerASR);
       aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayOwnLayer(aBuilder, this, &masterList, flags, scrollTargetId,
+        nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
+                          flags, scrollTargetId,
                           GetThumbRatio()));
 
       return;

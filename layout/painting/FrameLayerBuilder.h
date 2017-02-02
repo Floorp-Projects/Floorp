@@ -27,7 +27,8 @@ class nsDisplayItemGeometry;
 class nsDisplayMask;
 
 namespace mozilla {
-class DisplayItemScrollClip;
+struct ActiveScrolledRoot;
+struct DisplayItemClipChain;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -58,8 +59,8 @@ struct ContainerLayerParameters {
     , mYScale(1)
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
-    , mScrollClip(nullptr)
-    , mScrollClipForPerspectiveChild(nullptr)
+    , mScrollMetadataASR(nullptr)
+    , mCompositorASR(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -72,8 +73,8 @@ struct ContainerLayerParameters {
     , mYScale(aYScale)
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
-    , mScrollClip(nullptr)
-    , mScrollClipForPerspectiveChild(nullptr)
+    , mScrollMetadataASR(nullptr)
+    , mCompositorASR(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -89,8 +90,8 @@ struct ContainerLayerParameters {
     , mLayerContentsVisibleRect(nullptr)
     , mOffset(aOffset)
     , mBackgroundColor(aParent.mBackgroundColor)
-    , mScrollClip(aParent.mScrollClip)
-    , mScrollClipForPerspectiveChild(aParent.mScrollClipForPerspectiveChild)
+    , mScrollMetadataASR(aParent.mScrollMetadataASR)
+    , mCompositorASR(aParent.mCompositorASR)
     , mInTransformedSubtree(aParent.mInTransformedSubtree)
     , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
@@ -121,10 +122,8 @@ struct ContainerLayerParameters {
   }
 
   nscolor mBackgroundColor;
-  const DisplayItemScrollClip* mScrollClip;
-
-  // usually nullptr, except when building children of an nsDisplayPerspective
-  const DisplayItemScrollClip* mScrollClipForPerspectiveChild;
+  const ActiveScrolledRoot* mScrollMetadataASR;
+  const ActiveScrolledRoot* mCompositorASR;
 
   bool mInTransformedSubtree;
   bool mInActiveTransformedSubtree;
