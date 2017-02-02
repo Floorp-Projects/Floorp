@@ -9,7 +9,7 @@
 const { DOM: dom, createClass, createFactory, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
-const { getStr } = require("../utils/l10n");
+const { getStr, getFormatStr } = require("../utils/l10n");
 const Types = require("../types");
 const DeviceAdder = createFactory(require("./device-adder"));
 
@@ -151,10 +151,15 @@ module.exports = createClass({
                 type
               ),
               sortedDevices[type].map(device => {
+                let details = getFormatStr(
+                  "responsive.deviceDetails", device.width, device.height,
+                  device.pixelRatio, device.userAgent, device.touch
+                );
                 return dom.label(
                   {
                     className: "device-label",
                     key: device.name,
+                    title: details,
                   },
                   dom.input({
                     className: "device-input-checkbox",
