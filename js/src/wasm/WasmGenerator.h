@@ -20,6 +20,7 @@
 #define wasm_generator_h
 
 #include "jit/MacroAssembler.h"
+#include "wasm/WasmCompile.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmValidate.h"
 
@@ -210,6 +211,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Constant parameters
     Tier                            tier_;
+    CompileMode                     compileMode_;
     UniqueChars*                    error_;
 
     // Data that is moved into the result of finish()
@@ -275,12 +277,15 @@ class MOZ_STACK_CLASS ModuleGenerator
     ~ModuleGenerator();
 
     MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,
+                           CompileMode compileMode = CompileMode::Once,
                            Metadata* maybeAsmJSMetadata = nullptr);
 
     const ModuleEnvironment& env() const { return *env_; }
     ModuleEnvironment& mutableEnv();
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
+    CompileMode mode() const { return compileMode_; }
+    Tier tier() const { return tier_; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Memory:

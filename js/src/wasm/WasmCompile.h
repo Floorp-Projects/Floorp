@@ -41,12 +41,14 @@ struct CompileArgs
     ScriptedCaller scriptedCaller;
     bool baselineEnabled;
     bool debugEnabled;
+    bool ionEnabled;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),
         scriptedCaller(Move(scriptedCaller)),
         baselineEnabled(false),
-        debugEnabled(false)
+        debugEnabled(false),
+        ionEnabled(false)
     {}
 
     // If CompileArgs is constructed without arguments, initFromContext() must
@@ -63,6 +65,30 @@ struct CompileArgs
 
 SharedModule
 Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error);
+
+// Select whether debugging is available based on the available compilers, the
+// configuration options, and the nature of the module.  Note debugging can be
+// unavailable even if selected, if Rabaldr is unavailable or the module is not
+// compilable by Rabaldr.
+
+bool
+GetDebugEnabled(const CompileArgs& args, ModuleKind kind = ModuleKind::Wasm);
+
+// Select the mode for the initial compilation of a module.  The mode is "Tier1"
+// precisely if both compilers are available and we're not debugging, and in
+// that case, we'll compile twice, with the mode set to "Tier2" during the
+// second compilation.  Otherwise, the tier is "Once" and we'll compile once,
+// with the appropriate compiler.
+
+CompileMode
+GetInitialCompileMode(const CompileArgs& args, ModuleKind kind = ModuleKind::Wasm);
+
+// Select the tier for a compilation.  The tier is Tier::Baseline if we're
+// debugging, if Baldr is not available, or if both compilers are are available
+// and the compileMode is Tier1; otherwise the tier is Tier::Ion.
+
+Tier
+GetTier(const CompileArgs& args, CompileMode compileMode, ModuleKind kind = ModuleKind::Wasm);
 
 }  // namespace wasm
 }  // namespace js
