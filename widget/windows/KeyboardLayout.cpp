@@ -2836,7 +2836,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
   // On Metrofox, PeekMessage() sometimes returns WM_NULL even if we specify
   // the message range.  So, if it returns WM_NULL, we should retry to get
   // the following char message it was found above.
-  for (uint32_t i = 0; i < 5; i++) {
+  for (uint32_t i = 0; i < 50; i++) {
     MSG removedMsg, nextKeyMsgInAllWindows;
     bool doCrash = false;
     if (!WinUtils::PeekMessage(&removedMsg, mMsg.hwnd,
@@ -2977,13 +2977,52 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
       MOZ_CRASH("We lost the following char message");
     }
 
-    // Retry for the strange case.
+    // We're still not sure why ::PeekMessage() may return WM_NULL even with
+    // its first message and its last message are same message.  However,
+    // at developing Metrofox, we met this case even with usual keyboard
+    // layouts.  So, it might be possible in desktop application or it really
+    // occurs with some odd keyboard layouts which perhaps hook API.
     if (removedMsg.message == WM_NULL) {
       MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
         ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
          "remove a char message, instead, removed WM_NULL message, ",
          "removedMsg=%s",
          this, ToString(removedMsg).get()));
+      // Check if there is the message which we're trying to remove.
+      MSG newNextKeyMsg;
+      if (!WinUtils::PeekMessage(&newNextKeyMsg, mMsg.hwnd,
+                                 WM_KEYFIRST, WM_KEYLAST,
+                                 PM_NOREMOVE | PM_NOYIELD)) {
+        // If there is no key message, we should mark this keydown as consumed
+        // because the key operation may have already been handled or canceled.
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message because it's gone during removing it from "
+           "the queue, nextKeyMsg=%s",
+           this, ToString(nextKeyMsg).get()));
+        MOZ_ASSERT(!mCharMessageHasGone);
+        mFollowingCharMsgs.Clear();
+        mCharMessageHasGone = true;
+        return false;
+      }
+      if (!IsCharMessage(newNextKeyMsg)) {
+        // If next key message becomes a non-char message, we should mark this
+        // keydown as consumed because the key operation may have already been
+        // handled or canceled.
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message because it's gone during removing it from "
+           "the queue, nextKeyMsg=%s, newNextKeyMsg=%s",
+           this, ToString(nextKeyMsg).get(), ToString(newNextKeyMsg).get()));
+        MOZ_ASSERT(!mCharMessageHasGone);
+        mFollowingCharMsgs.Clear();
+        mCharMessageHasGone = true;
+        return false;
+      }
+      MOZ_LOG(sNativeKeyLogger, LogLevel::Debug,
+        ("%p   NativeKey::GetFollowingCharMessage(), there is the message "
+         "which is being tried to be removed from the queue, trying again...",
+         this));
       continue;
     }
 
