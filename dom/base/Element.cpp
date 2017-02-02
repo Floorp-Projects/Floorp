@@ -602,6 +602,12 @@ Element::ClassList()
 }
 
 void
+Element::GetClassList(nsISupports** aClassList)
+{
+  NS_ADDREF(*aClassList = ClassList());
+}
+
+void
 Element::GetAttributeNames(nsTArray<nsString>& aResult)
 {
   uint32_t count = mAttrsAndChildren.AttrCount();
@@ -615,6 +621,13 @@ already_AddRefed<nsIHTMLCollection>
 Element::GetElementsByTagName(const nsAString& aLocalName)
 {
   return NS_GetContentList(this, kNameSpaceID_Unknown, aLocalName);
+}
+
+void
+Element::GetElementsByTagName(const nsAString& aLocalName,
+                              nsIDOMHTMLCollection** aResult)
+{
+  *aResult = GetElementsByTagName(aLocalName).take();
 }
 
 nsIFrame*
@@ -1403,6 +1416,21 @@ Element::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   return NS_GetContentList(this, nameSpaceId, aLocalName);
 }
 
+nsresult
+Element::GetElementsByTagNameNS(const nsAString& namespaceURI,
+                                const nsAString& localName,
+                                nsIDOMHTMLCollection** aResult)
+{
+  mozilla::ErrorResult rv;
+  nsCOMPtr<nsIHTMLCollection> list =
+    GetElementsByTagNameNS(namespaceURI, localName, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+  list.forget(aResult);
+  return NS_OK;
+}
+
 bool
 Element::HasAttributeNS(const nsAString& aNamespaceURI,
                         const nsAString& aLocalName) const
@@ -1424,6 +1452,15 @@ already_AddRefed<nsIHTMLCollection>
 Element::GetElementsByClassName(const nsAString& aClassNames)
 {
   return nsContentUtils::GetElementsByClassName(this, aClassNames);
+}
+
+nsresult
+Element::GetElementsByClassName(const nsAString& aClassNames,
+                                nsIDOMHTMLCollection** aResult)
+{
+  *aResult =
+    nsContentUtils::GetElementsByClassName(this, aClassNames).take();
+  return NS_OK;
 }
 
 /**
