@@ -56,13 +56,6 @@ NotifyPaintEvent::GetRegion()
   return r;
 }
 
-NS_IMETHODIMP
-NotifyPaintEvent::GetBoundingClientRect(nsIDOMClientRect** aResult)
-{
-  *aResult = BoundingClientRect().take();
-  return NS_OK;
-}
-
 already_AddRefed<DOMRect>
 NotifyPaintEvent::BoundingClientRect()
 {
@@ -73,13 +66,6 @@ NotifyPaintEvent::BoundingClientRect()
   }
 
   return rect.forget();
-}
-
-NS_IMETHODIMP
-NotifyPaintEvent::GetClientRects(nsIDOMClientRectList** aResult)
-{
-  *aResult = ClientRects().take();
-  return NS_OK;
 }
 
 already_AddRefed<DOMRectList>
@@ -96,14 +82,6 @@ NotifyPaintEvent::ClientRects()
   }
 
   return rectList.forget();
-}
-
-NS_IMETHODIMP
-NotifyPaintEvent::GetPaintRequests(nsISupports** aResult)
-{
-  RefPtr<PaintRequestList> requests = PaintRequests();
-  requests.forget(aResult);
-  return NS_OK;
 }
 
 already_AddRefed<PaintRequestList>
@@ -157,13 +135,6 @@ NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
   }
 
   return true;
-}
-
-NS_IMETHODIMP
-NotifyPaintEvent::GetTransactionId(uint64_t* aTransactionId)
-{
-  *aTransactionId = mTransactionId;
-  return NS_OK;
 }
 
 uint64_t
