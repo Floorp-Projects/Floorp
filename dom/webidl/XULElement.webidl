@@ -12,6 +12,9 @@ interface MozXULTemplateBuilder;
 
 [Func="IsChromeOrXBL"]
 interface XULElement : Element {
+  [SetterThrows]
+  attribute DOMString className;
+
   // Layout properties
   [SetterThrows]
   attribute DOMString align;

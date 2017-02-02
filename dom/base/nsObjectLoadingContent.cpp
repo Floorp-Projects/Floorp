@@ -869,23 +869,26 @@ void
 nsObjectLoadingContent::GetNestedParams(nsTArray<MozPluginParameter>& aParams,
                                         bool aIgnoreCodebase)
 {
-  nsCOMPtr<Element> ourElement =
+  nsCOMPtr<nsIDOMElement> domElement =
     do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
 
-  nsCOMPtr<nsIHTMLCollection> allParams;
+  nsCOMPtr<nsIDOMHTMLCollection> allParams;
   NS_NAMED_LITERAL_STRING(xhtml_ns, "http://www.w3.org/1999/xhtml");
-  ErrorResult rv;
-  allParams = ourElement->GetElementsByTagNameNS(xhtml_ns,
-                                                 NS_LITERAL_STRING("param"),
-                                                 rv);
-  if (rv.Failed()) {
-    return;
-  }
-  MOZ_ASSERT(allParams);
+  domElement->GetElementsByTagNameNS(xhtml_ns,
+        NS_LITERAL_STRING("param"), getter_AddRefs(allParams));
 
-  uint32_t numAllParams = allParams->Length();
+  if (!allParams)
+    return;
+
+  uint32_t numAllParams;
+  allParams->GetLength(&numAllParams);
   for (uint32_t i = 0; i < numAllParams; i++) {
-    RefPtr<Element> element = allParams->Item(i);
+    nsCOMPtr<nsIDOMNode> pNode;
+    allParams->Item(i, getter_AddRefs(pNode));
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(pNode);
+
+    if (!element)
+      continue;
 
     nsAutoString name;
     element->GetAttribute(NS_LITERAL_STRING("name"), name);
@@ -893,13 +896,16 @@ nsObjectLoadingContent::GetNestedParams(nsTArray<MozPluginParameter>& aParams,
     if (name.IsEmpty())
       continue;
 
-    nsCOMPtr<nsIContent> parent = element->GetParent();
+    nsCOMPtr<nsIDOMNode> parent;
     nsCOMPtr<nsIDOMHTMLObjectElement> domObject;
     nsCOMPtr<nsIDOMHTMLAppletElement> domApplet;
+    pNode->GetParentNode(getter_AddRefs(parent));
     while (!(domObject || domApplet) && parent) {
       domObject = do_QueryInterface(parent);
       domApplet = do_QueryInterface(parent);
-      parent = parent->GetParent();
+      nsCOMPtr<nsIDOMNode> temp;
+      parent->GetParentNode(getter_AddRefs(temp));
+      parent = temp;
     }
 
     if (domApplet) {
@@ -910,7 +916,8 @@ nsObjectLoadingContent::GetNestedParams(nsTArray<MozPluginParameter>& aParams,
       continue;
     }
 
-    if (parent == ourElement) {
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(domElement);
+    if (parent == domNode) {
       MozPluginParameter param;
       element->GetAttribute(NS_LITERAL_STRING("name"), param.mName);
       element->GetAttribute(NS_LITERAL_STRING("value"), param.mValue);
