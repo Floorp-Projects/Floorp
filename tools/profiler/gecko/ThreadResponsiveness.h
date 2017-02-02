@@ -10,12 +10,12 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
-class ThreadProfile;
+class ThreadInfo;
 class CheckResponsivenessTask;
 
 class ThreadResponsiveness {
 public:
-  explicit ThreadResponsiveness(ThreadProfile *aThreadProfile);
+  explicit ThreadResponsiveness(ThreadInfo* aThreadInfo);
 
   ~ThreadResponsiveness();
 
@@ -29,7 +29,7 @@ public:
     return !mLastTracerTime.IsNull();
   }
 private:
-  ThreadProfile* mThreadProfile;
+  ThreadInfo* mThreadInfo;
   RefPtr<CheckResponsivenessTask> mActiveTracerEvent;
   mozilla::TimeStamp mLastTracerTime;
 };
