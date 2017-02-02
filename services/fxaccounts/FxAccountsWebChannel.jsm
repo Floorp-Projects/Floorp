@@ -34,6 +34,7 @@ const COMMAND_LOGOUT               = "fxaccounts:logout";
 const COMMAND_DELETE               = "fxaccounts:delete";
 const COMMAND_SYNC_PREFERENCES     = "fxaccounts:sync_preferences";
 const COMMAND_CHANGE_PASSWORD      = "fxaccounts:change_password";
+const COMMAND_FXA_STATUS           = "fxaccounts:fxa_status";
 
 const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 
@@ -173,6 +174,22 @@ this.FxAccountsWebChannel.prototype = {
         this._helpers.changePassword(data).catch(error =>
           this._sendError(error, message, sendingContext));
         break;
+      case COMMAND_FXA_STATUS:
+        log.debug("fxa_status received");
+
+        const service = data && data.service;
+        this._helpers.getFxaStatus(service, sendingContext)
+          .then(fxaStatus => {
+            let response = {
+              command,
+              messageId: message.messageId,
+              data: fxaStatus
+            };
+            this._channel.send(response, sendingContext);
+          }).catch(error =>
+            this._sendError(error, message, sendingContext)
+          );
+        break;
       default:
         log.warn("Unrecognized FxAccountsWebChannel command", command);
         break;
@@ -297,13 +314,78 @@ this.FxAccountsWebChannelHelpers.prototype = {
    */
   logout(uid) {
     return fxAccounts.getSignedInUser().then(userData => {
-      if (userData.uid === uid) {
+      if (userData && userData.uid === uid) {
         // true argument is `localOnly`, because server-side stuff
         // has already been taken care of by the content server
         return fxAccounts.signOut(true);
       }
       return null;
     });
+  },
+
+  /**
+   * Check if `sendingContext` is in private browsing mode.
+   */
+  isPrivateBrowsingMode(sendingContext) {
+    if (!sendingContext ||
+        !sendingContext.browser ||
+        !sendingContext.browser.docShell ||
+        sendingContext.browser.docShell.usePrivateBrowsing === undefined) {
+      log.error("Unable to check for private browsing mode, assuming true");
+      return true;
+    }
+
+    const isPrivateBrowsing = sendingContext.browser.docShell.usePrivateBrowsing;
+    log.debug("is private browsing", isPrivateBrowsing);
+    return isPrivateBrowsing;
+  },
+
+  /**
+   * Check whether sending fxa_status data should be allowed.
+   */
+  shouldAllowFxaStatus(service, sendingContext) {
+    // Return user data for any service in non-PB mode. In PB mode,
+    // only return user data if service==="sync".
+    //
+    // This behaviour allows users to click the "Manage Account"
+    // link from about:preferences#sync while in PB mode and things
+    // "just work". While in non-PB mode, users can sign into
+    // Pocket w/o entering their password a 2nd time, while in PB
+    // mode they *will* have to enter their email/password again.
+    //
+    // The difference in behaviour is to try to match user
+    // expectations as to what is and what isn't part of the browser.
+    // Sync is viewed as an integral part of the browser, interacting
+    // with FxA as part of a Sync flow should work all the time. If
+    // Sync is broken in PB mode, users will think Firefox is broken.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1323853
+    log.debug("service", service);
+    return !this.isPrivateBrowsingMode(sendingContext) || service === "sync";
+  },
+
+  /**
+   * Get fxa_status information. Resolves to { signedInUser: <user_data> }.
+   * If returning status information is not allowed or no user is signed into
+   * Sync, `user_data` will be null.
+   */
+  async getFxaStatus(service, sendingContext) {
+    let signedInUser = null;
+
+    if (this.shouldAllowFxaStatus(service, sendingContext)) {
+      const userData = await this._fxAccounts.getSignedInUser();
+      if (userData) {
+        signedInUser = {
+          email: userData.email,
+          sessionToken: userData.sessionToken,
+          uid: userData.uid,
+          verified: userData.verified
+        };
+      }
+    }
+
+    return {
+      signedInUser
+    };
   },
 
   changePassword(credentials) {
