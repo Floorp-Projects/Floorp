@@ -109,10 +109,6 @@ let gWhitelist = [{
     key: "tos",
     type: "double-quote"
   }, {
-    file: "pocket.properties",
-    key: "tos",
-    type: "apostrophe"
-  }, {
     file: "aboutNetworking.dtd",
     key: "aboutNetworking.logTutorial",
     type: "single-quote"
