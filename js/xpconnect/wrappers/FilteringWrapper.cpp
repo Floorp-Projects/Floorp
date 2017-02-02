@@ -196,7 +196,8 @@ FilteringWrapper<Base, Policy>::enter(JSContext* cx, HandleObject wrapper,
                                       bool mayThrow, bool* bp) const
 {
     if (!Policy::check(cx, wrapper, id, act)) {
-        *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act, id);
+        *bp = JS_IsExceptionPending(cx) ?
+            false : Policy::deny(cx, act, id, mayThrow);
         return false;
     }
     *bp = true;
