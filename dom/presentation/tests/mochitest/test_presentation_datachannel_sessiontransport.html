@@ -220,6 +220,7 @@ function finish() {
 
 function error(aError) {
   ok(false, "report Error " + aError.name + ":" + aError.message);
+  gReject();
 }
 
 function runTests() {
