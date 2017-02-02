@@ -100,14 +100,6 @@
 }
 
 /* GRID */
-body.compact #newtab-grid {
-  /* Allow #topsites-heading to use position:absolute such that it doesn't
-     affect how many cells we can fit into the grid. */
-  position: relative;
-  padding-top: 1em;
-  margin-top: -1em;
-}
-
 #topsites-heading {
   color: #7A7A7A;
   font-size: 1em;
@@ -115,9 +107,9 @@ body.compact #newtab-grid {
   /* Position the heading such that it doesn't affect how many cells we
      can fit into the grid. */
   position: absolute;
-  top: 0;
-  /* The horizontal margin aligns the heading with the cells. */
-  margin: 0 10px;
+  /* The top margin moves the heading away from the grid.
+     The horizontal margin aligns the heading with the cells. */
+  margin: -1em 10px 0;
 }
 
 /* CELLS */
