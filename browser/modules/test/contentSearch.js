@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global addMessageListener:false, sendAsyncMessage:false, XPCOMUtils */
+
 const TEST_MSG = "ContentSearchTest";
 const SERVICE_EVENT_TYPE = "ContentSearchService";
 const CLIENT_EVENT_TYPE = "ContentSearchClient";
@@ -38,8 +40,8 @@ addMessageListener(TEST_MSG, msg => {
 
 function waitForLoadAndStopIt(expectedURL, callback) {
   let Ci = Components.interfaces;
-  let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebProgress);
+  let webProgress = content.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                             .getInterface(Ci.nsIWebProgress);
   let listener = {
     onStateChange(webProg, req, flags, status) {
       if (req instanceof Ci.nsIChannel) {
