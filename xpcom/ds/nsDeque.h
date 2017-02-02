@@ -170,25 +170,71 @@ public:
    * Call this method when you want to iterate through all
    * items in the container, passing a functor along
    * to call your code.
+   * If the deque is modified during ForEach, iteration will continue based on
+   * item indices; meaning that front operations may effectively skip over
+   * items or visit some items multiple times.
    *
    * @param   aFunctor object to call for each member
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
 
+  // It is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  // If the deque is modified in other ways, this iterator will stay at the same
+  // index, and will handle past-the-end comparisons, but not dereferencing.
   class ConstIterator
   {
   public:
-    ConstIterator(const nsDeque& aDeque, size_t aIndex) : mDeque(aDeque), mIndex(aIndex) { }
-    ConstIterator& operator++() { ++mIndex; return *this; }
-    bool operator==(const ConstIterator& aOther) const { return mIndex == aOther.mIndex; }
-    bool operator!=(const ConstIterator& aOther) const { return mIndex != aOther.mIndex; }
-    void* operator*() const { return mDeque.ObjectAt(mIndex); }
+    // Special index for the end iterator, to track the possibly-shifting
+    // deque size.
+    static const size_t EndIteratorIndex = size_t(-1);
+
+    ConstIterator(const nsDeque& aDeque, size_t aIndex)
+      : mDeque(aDeque)
+      , mIndex(aIndex)
+    {
+    }
+    ConstIterator& operator++()
+    {
+      // End-iterator shouldn't be modified.
+      MOZ_ASSERT(mIndex != EndIteratorIndex);
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstIterator& aOther) const
+    {
+      return EffectiveIndex() == aOther.EffectiveIndex();
+    }
+    bool operator!=(const ConstIterator& aOther) const
+    {
+      return EffectiveIndex() != aOther.EffectiveIndex();
+    }
+    void* operator*() const
+    {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
   private:
+    // 0 <= index < deque.GetSize() inside the deque, deque.GetSize() otherwise.
+    // Only used when comparing indices, not to actually access items.
+    size_t EffectiveIndex() const
+    {
+      return (mIndex < mDeque.GetSize()) ? mIndex : mDeque.GetSize();
+    }
+
     const nsDeque& mDeque;
-    size_t mIndex;
+    size_t mIndex; // May point outside the deque!
   };
-  ConstIterator begin() const { return ConstIterator(*this, 0); }
-  ConstIterator end() const { return ConstIterator(*this, mSize); }
+  ConstIterator begin() const
+  {
+    return ConstIterator(*this, 0);
+  }
+  ConstIterator end() const
+  {
+    return ConstIterator(*this, ConstIterator::EndIteratorIndex);
+  }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
