@@ -9,6 +9,7 @@
 
 #include <sys/types.h>                  // for int32_t
 #include "APZUtils.h"
+#include "AxisPhysicsMSDModel.h"
 #include "Units.h"
 #include "mozilla/TimeStamp.h"          // for TimeDuration
 #include "nsTArray.h"                   // for nsTArray
@@ -272,22 +273,11 @@ protected:
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
 
-  // mOverscroll is the displacement of an oscillating spring from its resting
-  // state. The resting state moves as the overscroll animation progresses.
+  // The amount by which we are overscrolled; see GetOverscroll().
   ParentLayerCoord mOverscroll;
-  // Used to record the initial overscroll when we start sampling for animation.
-  ParentLayerCoord mFirstOverscrollAnimationSample;
-  // These two variables are used in combination to make sure that
-  // GetOverscroll() never changes sign during animation. This is necessary,
-  // as mOverscroll itself oscillates around zero during animation.
-  // If we're not sampling overscroll animation, mOverscrollScale will be 1.0
-  // and mLastOverscrollPeak will be zero.
-  // If we are animating, after the overscroll reaches its peak,
-  // mOverscrollScale will be 2.0 and mLastOverscrollPeak will store the amount
-  // of overscroll at the last peak of the oscillation. Together, these values
-  // guarantee that the result of GetOverscroll() never changes sign.
-  ParentLayerCoord mLastOverscrollPeak;
-  float mOverscrollScale;
+
+  // The mass-spring-damper model for overscroll physics.
+  AxisPhysicsMSDModel mMSDModel;
 
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,

@@ -53,9 +53,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController),
     mOverscroll(0),
-    mFirstOverscrollAnimationSample(0),
-    mLastOverscrollPeak(0),
-    mOverscrollScale(1.0f)
+    mMSDModel(0.0, 0.0, 0.0, 400.0, 1.2)
 {
 }
 
@@ -206,14 +204,15 @@ bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
 }
 
 ParentLayerCoord Axis::ApplyResistance(ParentLayerCoord aRequestedOverscroll) const {
-  // 'resistanceFactor' is a value between 0 and 1, which:
-  //   - tends to 1 as the existing overscroll tends to 0
+  // 'resistanceFactor' is a value between 0 and 1/16, which:
+  //   - tends to 1/16 as the existing overscroll tends to 0
   //   - tends to 0 as the existing overscroll tends to the composition length
   // The actual overscroll is the requested overscroll multiplied by this
-  // factor; this should prevent overscrolling by more than the composition
-  // length.
-  float resistanceFactor = 1 - fabsf(GetOverscroll()) / GetCompositionLength();
-  return resistanceFactor < 0 ? ParentLayerCoord(0) : aRequestedOverscroll * resistanceFactor;
+  // factor.
+  float resistanceFactor = (1 - fabsf(GetOverscroll()) / GetCompositionLength()) / 16;
+  float result = resistanceFactor < 0 ? ParentLayerCoord(0) : aRequestedOverscroll * resistanceFactor;
+  result = clamped(result, -8.0f, 8.0f);
+  return result;
 }
 
 void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
@@ -250,137 +249,27 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
 }
 
 ParentLayerCoord Axis::GetOverscroll() const {
-  ParentLayerCoord result = (mOverscroll - mLastOverscrollPeak) / mOverscrollScale;
-
-  // Assert that we return overscroll in the correct direction
-#ifdef DEBUG
-  if ((result.value * mFirstOverscrollAnimationSample.value) < 0.0f) {
-    nsPrintfCString message("GetOverscroll() (%f) and first overscroll animation sample (%f) have different signs\n",
-                            result.value, mFirstOverscrollAnimationSample.value);
-    NS_ASSERTION(false, message.get());
-    MOZ_CRASH("GFX: Overscroll issue");
-  }
-#endif
-
-  return result;
+  return mOverscroll;
 }
 
 void Axis::StartOverscrollAnimation(float aVelocity) {
-  // Make sure any state from a previous animation has been cleared.
-  MOZ_ASSERT(mFirstOverscrollAnimationSample == 0 &&
-             mLastOverscrollPeak == 0 &&
-             mOverscrollScale == 1);
-
+  aVelocity = clamped(aVelocity / 2.0f, -20.0f, 20.0f);
   SetVelocity(aVelocity);
+  mMSDModel.SetPosition(mOverscroll);
+  // Convert velocity from ParentLayerCoords/millisecond to ParentLayerCoords/second.
+  mMSDModel.SetVelocity(mVelocity * 1000.0);
 }
 
 void Axis::EndOverscrollAnimation() {
-  ParentLayerCoord overscroll = GetOverscroll();
-  mFirstOverscrollAnimationSample = 0;
-  mLastOverscrollPeak = 0;
-  mOverscrollScale = 1.0f;
-  mOverscroll = overscroll;
-}
-
-void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
-  // Apply spring physics to the overscroll as time goes on.
-  // Note: this method of sampling isn't perfectly smooth, as it assumes
-  // a constant velocity over 'aDelta', instead of an accelerating velocity.
-  // (The way we applying friction to flings has the same issue.)
-  // Hooke's law with damping:
-  //   F = -kx - bv
-  // where
-  //   k is a constant related to the stiffness of the spring
-  //     The larger the constant, the stiffer the spring.
-  //   x is the displacement of the end of the spring from its equilibrium
-  //     In our scenario, it's the amount of overscroll on the axis.
-  //   b is a constant that provides damping (friction)
-  //   v is the velocity of the point at the end of the spring
-  // See http://gafferongames.com/game-physics/spring-physics/
-  const float kSpringStiffness = gfxPrefs::APZOverscrollSpringStiffness();
-  const float kSpringFriction = gfxPrefs::APZOverscrollSpringFriction();
-
-  // Apply spring force.
-  float springForce = -1 * kSpringStiffness * mOverscroll;
-  // Assume unit mass, so force = acceleration.
-  float oldVelocity = mVelocity;
-  mVelocity += springForce * aStepDurationMilliseconds;
-
-  // Apply dampening.
-  mVelocity *= pow(double(1 - kSpringFriction), aStepDurationMilliseconds);
-  AXIS_LOG("%p|%s sampled overscroll animation, leaving velocity at %f\n",
-    mAsyncPanZoomController, Name(), mVelocity);
-
-  // At the peak of each oscillation, record new offset and scaling factors for
-  // overscroll, to ensure that GetOverscroll always returns a value of the
-  // same sign, and that this value is correctly adjusted as the spring is
-  // dampened.
-  // To handle the case where one of the velocity samples is exaclty zero,
-  // consider a sign change to have occurred when the outgoing velocity is zero.
-  bool velocitySignChange = (oldVelocity * mVelocity) < 0 || mVelocity == 0;
-  if (mFirstOverscrollAnimationSample == 0.0f) {
-    mFirstOverscrollAnimationSample = mOverscroll;
-
-    // It's possible to start sampling overscroll with velocity == 0, or
-    // velocity in the opposite direction of overscroll, so make sure we
-    // correctly record the peak in this case.
-    if (mOverscroll != 0 && ((mOverscroll > 0 ? oldVelocity : -oldVelocity) <= 0.0f)) {
-      velocitySignChange = true;
-    }
-  }
-  if (velocitySignChange) {
-    bool oddOscillation = (mOverscroll.value * mFirstOverscrollAnimationSample.value) < 0.0f;
-    mLastOverscrollPeak = oddOscillation ? mOverscroll : -mOverscroll;
-    mOverscrollScale = 2.0f;
-  }
-
-  // Adjust the amount of overscroll based on the velocity.
-  // Note that we allow for oscillations.
-  mOverscroll += (mVelocity * aStepDurationMilliseconds);
-
-  // Our mechanism for translating a set of mOverscroll values that oscillate
-  // around zero to a set of GetOverscroll() values that have the same sign
-  // (so content is always stretched, never compressed) assumes that
-  // mOverscroll does not exceed mLastOverscrollPeak in magnitude. If our
-  // calculations were exact, this would be the case, as a dampened spring
-  // should never attain a displacement greater in magnitude than a previous
-  // peak. In our approximation calculations, however, this may not hold
-  // exactly. To ensure the assumption is not violated, we clamp the magnitude
-  // of mOverscroll.
-  if (mLastOverscrollPeak != 0 && fabs(mOverscroll) > fabs(mLastOverscrollPeak)) {
-    mOverscroll = (mOverscroll >= 0) ? fabs(mLastOverscrollPeak) : -fabs(mLastOverscrollPeak);
-  }
+  mMSDModel.SetPosition(0.0);
+  mMSDModel.SetVelocity(0.0);
 }
 
 bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
-  // Short-circuit early rather than running through all the sampling code.
-  if (mVelocity == 0.0f && mOverscroll == 0.0f) {
-    return false;
-  }
+  mMSDModel.Simulate(aDelta);
+  mOverscroll = mMSDModel.GetPosition();
 
-  // We approximate the curve traced out by the velocity of the spring
-  // over time by breaking up the curve into small segments over which we
-  // consider the velocity to be constant. If the animation is sampled
-  // sufficiently often, then treating |aDelta| as a single segment of this
-  // sort would be fine, but the frequency at which the animation is sampled
-  // can be affected by external factors, and as the segment size grows larger,
-  // the approximation gets worse and the approximated curve can even diverge
-  // (i.e. oscillate forever, with displacements of increasing absolute value)!
-  // To avoid this, we break up |aDelta| into smaller segments of length 1 ms
-  // each, and a segment of any remaining fractional milliseconds.
-  double milliseconds = aDelta.ToMilliseconds();
-  int wholeMilliseconds = (int) aDelta.ToMilliseconds();
-  double fractionalMilliseconds = milliseconds - wholeMilliseconds;
-  for (int i = 0; i < wholeMilliseconds; ++i) {
-    StepOverscrollAnimation(1);
-  }
-  StepOverscrollAnimation(fractionalMilliseconds);
-
-  // If both the velocity and the displacement fall below a threshold, stop
-  // the animation so we don't continue doing tiny oscillations that aren't
-  // noticeable.
-  if (fabs(mOverscroll) < gfxPrefs::APZOverscrollStopDistanceThreshold() &&
-      fabs(mVelocity) < gfxPrefs::APZOverscrollStopVelocityThreshold()) {
+  if (mMSDModel.IsFinished(1.0)) {
     // "Jump" to the at-rest state. The jump shouldn't be noticeable as the
     // velocity and overscroll are already low.
     AXIS_LOG("%p|%s oscillation dropped below threshold, going to rest\n",
