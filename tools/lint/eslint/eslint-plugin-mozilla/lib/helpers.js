@@ -38,6 +38,8 @@ var imports = [
   /^(?:Cu|Components\.utils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/,
 ];
 
+var workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
+
 module.exports = {
   /**
    * Gets the abstract syntax tree (AST) of the JavaScript source code contained
@@ -168,8 +170,40 @@ module.exports = {
    *         The root of the repository.
    *
    * @return {Array}
-   *         An array of variable names defined.
+   *         An array of global variable names defined.
    */
+  convertWorkerExpressionToGlobals: function(node, isGlobal, repository, dirname) {
+    var getGlobalsForFile = require("./globals").getGlobalsForFile;
+
+    if (!modules) {
+      modules = require(path.join(repository, "tools", "lint", "eslint", "modules.json"));
+    }
+
+    let results = [];
+    let expr = node.expression;
+
+    if (node.expression.type === "CallExpression" &&
+        expr.callee &&
+        expr.callee.type === "Identifier" &&
+        expr.callee.name === "importScripts") {
+      for (var arg of expr.arguments) {
+        var match = arg.value.match(workerImportFilenameMatch);
+        if (match) {
+          if (!match[1]) {
+            let filePath = path.resolve(dirname, match[2]);
+            if (fs.existsSync(filePath)) {
+              let additionalGlobals = getGlobalsForFile(filePath);
+              results = results.concat(additionalGlobals);
+            }
+          } else if (match[2] in modules) {
+            results.push(modules[match[2]]);
+          }
+        }
+      }
+    }
+    return results;
+  },
+
   convertExpressionToGlobals: function(node, isGlobal, repository) {
     if (!modules) {
       modules = require(path.join(repository, "tools", "lint", "eslint", "modules.json"));
@@ -458,6 +492,12 @@ module.exports = {
     }
 
     return null;
+  },
+
+  getIsWorker: function(filePath) {
+    let filename = path.basename(this.cleanUpPath(filePath)).toLowerCase();
+
+    return filename.includes("worker");
   },
 
   /**

@@ -10,6 +10,8 @@
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
 
+#define TESTING_TABLE_PROVIDER_NAME "test"
+
 class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
                                    public nsIObserver
 {

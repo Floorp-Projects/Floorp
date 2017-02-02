@@ -12,6 +12,9 @@
  * are identical to their original files.
  */
 
+// Available to the js shell.
+/* global snarf, scriptArgs, quit */
+
 "use strict";
 
 function ast(filename) {

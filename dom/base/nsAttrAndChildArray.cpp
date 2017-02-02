@@ -772,6 +772,11 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
   return NS_OK;
 }
 
+const nsMappedAttributes*
+nsAttrAndChildArray::GetMapped() const
+{
+  return mImpl ? mImpl->mMappedAttrs : nullptr;
+}
 
 bool
 nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
