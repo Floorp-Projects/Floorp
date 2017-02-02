@@ -61,11 +61,11 @@ struct CTLogOperatorInfo
   const mozilla::ct::CTLogOperatorId id;
 };
 
-constexpr CTLogInfo kCTLogList[] = {
+const CTLogInfo kCTLogList[] = {
 $logs
 };
 
-constexpr CTLogOperatorInfo kCTLogOperatorList[] = {
+const CTLogOperatorInfo kCTLogOperatorList[] = {
 $operators
 };
 
