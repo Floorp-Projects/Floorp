@@ -20,6 +20,7 @@
 
 #include "jsprf.h"
 
+#include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -94,6 +95,7 @@ bool
 CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
     baselineEnabled = cx->options().wasmBaseline();
+    ionEnabled = cx->options().ion();
 
     // Debug information such as source view or debug traps will require
     // additional memory and permanently stay in baseline code, so we try to
@@ -103,6 +105,67 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 
     this->scriptedCaller = Move(scriptedCaller);
     return assumptions.initBuildIdFromContext(cx);
+}
+
+static void
+CompilerAvailability(ModuleKind kind, const CompileArgs& args, bool* baselineEnabled,
+                     bool* debugEnabled, bool* ionEnabled)
+{
+    bool baselinePossible = kind == ModuleKind::Wasm && BaselineCanCompile();
+    *baselineEnabled = baselinePossible && args.baselineEnabled;
+    *debugEnabled = baselinePossible && args.debugEnabled;
+    *ionEnabled = args.ionEnabled;
+
+    // Default to Ion if necessary: We will never get to this point on platforms
+    // that don't have Ion at all, so this can happen if the user has disabled
+    // both compilers or if she has disabled Ion but baseline can't compile the
+    // code.
+
+    if (!(*baselineEnabled || *ionEnabled))
+        *ionEnabled = true;
+}
+
+bool
+wasm::GetDebugEnabled(const CompileArgs& args, ModuleKind kind)
+{
+    bool baselineEnabled, debugEnabled, ionEnabled;
+    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
+
+    return debugEnabled;
+}
+
+wasm::CompileMode
+wasm::GetInitialCompileMode(const CompileArgs& args, ModuleKind kind)
+{
+    bool baselineEnabled, debugEnabled, ionEnabled;
+    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
+
+    return (baselineEnabled && ionEnabled && !debugEnabled)
+           ? CompileMode::Tier1
+           : CompileMode::Once;
+}
+
+wasm::Tier
+wasm::GetTier(const CompileArgs& args, CompileMode compileMode, ModuleKind kind)
+{
+    bool baselineEnabled, debugEnabled, ionEnabled;
+    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
+
+    switch (compileMode) {
+      case CompileMode::Tier1:
+        MOZ_ASSERT(baselineEnabled);
+        return Tier::Baseline;
+
+      case CompileMode::Tier2:
+        MOZ_ASSERT(ionEnabled);
+        return Tier::Ion;
+
+      case CompileMode::Once:
+        return (debugEnabled || !ionEnabled) ? Tier::Baseline : Tier::Ion;
+
+      default:
+        MOZ_CRASH("Bad mode");
+    }
 }
 
 SharedModule
@@ -119,8 +182,10 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeModuleEnvironment(d, env.get()))
         return nullptr;
 
+    CompileMode compileMode = GetInitialCompileMode(args);
+
     ModuleGenerator mg(error);
-    if (!mg.init(Move(env), args))
+    if (!mg.init(Move(env), args, compileMode))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))

@@ -1880,7 +1880,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         env->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
 
-        if (!mg_.init(Move(env), args, asmJSMetadata_.get()))
+        if (!mg_.init(Move(env), args, CompileMode::Once, asmJSMetadata_.get()))
             return false;
 
         return true;
