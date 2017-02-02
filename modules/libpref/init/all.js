@@ -472,7 +472,7 @@ pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.simulcast", true);
 pref("media.peerconnection.default_iceservers", "[]");
 pref("media.peerconnection.ice.loopback", false); // Set only for testing in offline environments.
-pref("media.peerconnection.ice.tcp", true);
+pref("media.peerconnection.ice.tcp", false);
 pref("media.peerconnection.ice.tcp_so_sock_count", 0); // Disable SO gathering
 pref("media.peerconnection.ice.link_local", false); // Set only for testing IPV6 in networks that don't assign IPV6 addresses
 pref("media.peerconnection.ice.force_interface", ""); // Limit to only a single interface
