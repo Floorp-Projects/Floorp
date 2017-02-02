@@ -1046,6 +1046,8 @@ class MOZ_RAII InIRGenerator : public IRGenerator
                           HandleObject obj, ObjOperandId objId);
     bool tryAttachNativeIn(HandleId key, ValOperandId keyId,
                            HandleObject obj, ObjOperandId objId);
+    bool tryAttachNativeInDoesNotExist(HandleId key, ValOperandId keyId,
+                                       HandleObject obj, ObjOperandId objId);
 
   public:
     InIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue key, HandleObject obj);

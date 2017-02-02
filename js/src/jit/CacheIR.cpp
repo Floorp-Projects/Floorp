@@ -1617,6 +1617,22 @@ InIRGenerator::tryAttachNativeIn(HandleId key, ValOperandId keyId,
 }
 
 bool
+InIRGenerator::tryAttachNativeInDoesNotExist(HandleId key, ValOperandId keyId,
+                                             HandleObject obj, ObjOperandId objId)
+{
+    if (!CheckHasNoSuchProperty(cx_, obj, key))
+        return false;
+
+    Maybe<ObjOperandId> holderId;
+    emitIdGuard(keyId, key);
+    EmitReadSlotGuard(writer, obj, nullptr, nullptr, objId, &holderId);
+    writer.loadBooleanResult(false);
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
 InIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::In);
@@ -1636,6 +1652,8 @@ InIRGenerator::tryAttachStub()
 
     if (nameOrSymbol) {
         if (tryAttachNativeIn(id, keyId, obj_, objId))
+            return true;
+        if (tryAttachNativeInDoesNotExist(id, keyId, obj_, objId))
             return true;
         return false;
     }
