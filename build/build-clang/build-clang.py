@@ -170,24 +170,6 @@ def svn_update(directory, revision):
     run_in(directory, ["svn", "revert", "-q", "-R", revision])
 
 
-def get_platform():
-    p = platform.system()
-    if p == "Darwin":
-        return "macosx64"
-    elif p == "Linux":
-        if platform.architecture() == "AMD64":
-            return "linux64"
-        else:
-            return "linux32"
-    elif p == "Windows":
-        if platform.architecture() == "AMD64":
-            return "win64"
-        else:
-            return "win32"
-    else:
-        raise NotImplementedError("Not supported platform")
-
-
 def is_darwin():
     return platform.system() == "Darwin"
 
@@ -492,7 +474,7 @@ if __name__ == "__main__":
         checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
     if extra_repo:
         checkout_or_update(extra_repo, extra_source_dir)
-    for p in config.get("patches", {}).get(get_platform(), []):
+    for p in config.get("patches", []):
         patch(p, source_dir)
 
     symlinks = [(source_dir + "/clang",
