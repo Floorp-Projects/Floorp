@@ -31,7 +31,8 @@ let WebCompatReporter = {
   },
 
   init() {
-    Cu.import(TABLISTENER_JSM);
+    let TabListener = Cu.import(TABLISTENER_JSM, {});
+    this.TabListener = TabListener;
 
     let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
       .getService(Ci.nsIStyleSheetService);
@@ -61,7 +62,7 @@ let WebCompatReporter = {
       .getInterface(Ci.nsIDOMWindowUtils)
       .addSheet(this._cachedSheet, this._sheetType);
     // Attach listeners to new window.
-    win._webcompatReporterTabListener = new TabListener(win);
+    win._webcompatReporterTabListener = new this.TabListener(win);
   },
 
   onWindowClosed(win) {
@@ -83,6 +84,7 @@ let WebCompatReporter = {
     }
 
     CustomizableUI.removeListener(this);
+    delete this.TabListener;
     Cu.unload(TABLISTENER_JSM);
   },
 
