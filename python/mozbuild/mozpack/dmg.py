@@ -133,7 +133,7 @@ def create_dmg(source_directory, output_dmg, volume_name, extra_files):
         raise Exception("Don't know how to build a DMG on '%s'" % platform.system())
 
     if is_linux:
-        check_tools('DMG_TOOL', 'GENISOIMAGE', 'MKFSHFS', 'HFS_TOOL')
+        check_tools('DMG_TOOL', 'MKFSHFS', 'HFS_TOOL')
     with mozfile.TemporaryDirectory() as tmpdir:
         stagedir = os.path.join(tmpdir, 'stage')
         os.mkdir(stagedir)
