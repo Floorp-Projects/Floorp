@@ -351,6 +351,9 @@
       function initPageCertError() {
         document.body.className = "certerror";
         document.title = document.getElementById("certErrorPageTitle").textContent;
+        for (let host of document.querySelectorAll(".hostname")) {
+          host.textContent = document.location.hostname;
+        }
 
         setupAdvancedButton(true);
 

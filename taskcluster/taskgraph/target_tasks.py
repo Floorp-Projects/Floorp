@@ -68,7 +68,7 @@ def target_tasks_default(full_task_graph, parameters):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
     def filter(task):
-        run_on_projects = set(t.attributes.get('run_on_projects', []))
+        run_on_projects = set(task.attributes.get('run_on_projects', []))
         if 'all' in run_on_projects:
             return True
         project = parameters['project']

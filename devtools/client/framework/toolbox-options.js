@@ -14,6 +14,8 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
+loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+
 exports.OptionsPanel = OptionsPanel;
 
 function GetPref(name) {
@@ -91,6 +93,7 @@ OptionsPanel.prototype = {
     this.setupToolsList();
     this.setupToolbarButtonsList();
     this.setupThemeList();
+    this.setupNightlyOptions();
     yield this.populatePreferences();
     this.isReady = true;
     this.emit("ready");
@@ -300,6 +303,55 @@ OptionsPanel.prototype = {
     }
 
     this.updateCurrentTheme();
+  },
+
+  /**
+   * Add common preferences enabled only on Nightly.
+   */
+  setupNightlyOptions: function () {
+    let isNightly = system.constants.NIGHTLY_BUILD;
+    if (!isNightly) {
+      return;
+    }
+
+    // Labels for these new buttons are nightly only and mostly intended for working on
+    // devtools. They should not be localized.
+    let prefDefinitions = [{
+      pref: "devtools.webconsole.new-frontend-enabled",
+      label: "Enable new console frontend",
+      id: "devtools-new-webconsole",
+      parentId: "webconsole-options"
+    }, {
+      pref: "devtools.debugger.new-debugger-frontend",
+      label: "Enable new debugger frontend",
+      id: "devtools-new-debugger",
+      parentId: "debugger-options"
+    }];
+
+    let createPreferenceOption = ({pref, label, id}) => {
+      let inputLabel = this.panelDoc.createElement("label");
+      let checkbox = this.panelDoc.createElement("input");
+      checkbox.setAttribute("type", "checkbox");
+      if (GetPref(pref)) {
+        checkbox.setAttribute("checked", "checked");
+      }
+      checkbox.setAttribute("id", id);
+      checkbox.addEventListener("change", e => {
+        SetPref(pref, e.target.checked);
+      });
+
+      let inputSpanLabel = this.panelDoc.createElement("span");
+      inputSpanLabel.textContent = label;
+      inputLabel.appendChild(checkbox);
+      inputLabel.appendChild(inputSpanLabel);
+
+      return inputLabel;
+    };
+
+    for (let prefDefinition of prefDefinitions) {
+      let parent = this.panelDoc.getElementById(prefDefinition.parentId);
+      parent.appendChild(createPreferenceOption(prefDefinition));
+    }
   },
 
   populatePreferences: function () {
