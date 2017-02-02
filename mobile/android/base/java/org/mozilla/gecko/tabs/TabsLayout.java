@@ -24,7 +24,8 @@ public abstract class TabsLayout extends RecyclerView
         implements TabsPanel.TabsLayout,
         Tabs.OnTabsChangedListener,
         RecyclerViewClickSupport.OnItemClickListener,
-        TabsTouchHelperCallback.DismissListener {
+        TabsTouchHelperCallback.DismissListener,
+        TabsTouchHelperCallback.DragListener {
 
     private static final String LOGTAG = "Gecko" + TabsLayout.class.getSimpleName();
 
@@ -148,6 +149,16 @@ public abstract class TabsLayout extends RecyclerView
         Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.OPENED_FROM_TABS_TRAY);
     }
 
+    @Override
+    public void onItemDismiss(View view) {
+        closeTab(view);
+    }
+
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition) {
+        return tabsAdapter.moveTab(fromPosition, toPosition);
+    }
+
     /** Updates the selected position in the list so that it will be scrolled to the right place. */
     protected void updateSelectedPosition() {
         final int selected = getSelectedAdapterPosition();
@@ -197,11 +208,6 @@ public abstract class TabsLayout extends RecyclerView
                 Tabs.getInstance().closeTab(tab, false);
             }
         }
-    }
-
-    @Override
-    public void onItemDismiss(View view) {
-        closeTab(view);
     }
 
     @Override
