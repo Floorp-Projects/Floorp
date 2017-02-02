@@ -510,6 +510,33 @@ promise_test(t => {
 }, 'Transform value for animation with no keyframe at offset 1 and its ' +
    'iterationComposite is accumulate');
 
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t);
+  var lowerAnimation =
+    div.animate({ transform: [ 'translateX(100px)', 'translateX(200px)' ] },
+                100 * MS_PER_SEC);
+  var higherAnimation = div.animate({ transform: 'translateX(300px)' },
+                                    100 * MS_PER_SEC);
+
+  lowerAnimation.timeline = null;
+  // Set current time at 50% duration.
+  lowerAnimation.currentTime = 50 * MS_PER_SEC;
+
+  return waitForPaintsFlushed().then(() => {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(50 * MS_PER_SEC);
+
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    // (150px + 300px) * (50 * MS_PER_SEC / 100 * MS_PER_SEC) = 225px.
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 225, 0)',
+      'Composed transform value should be composed onto the value of ' +
+      'lower-priority animation without timeline');
+  });
+}, 'Transform value for animation with no keyframe at offset 0 at 50% when ' +
+   'composed onto an animation without timeline');
+
 done();
 </script>
 </body>
