@@ -93,4 +93,5 @@ class MochitestCommands(object):
              description='Run the mochitest harness.',
              parser=setup_argument_parser)
     def mochitest(self, **kwargs):
+        self.context.activate_mozharness_venv()
         return run_mochitest(self.context, **kwargs)

@@ -76,6 +76,9 @@ CATEGORIES = {
 }
 
 
+IS_WIN = sys.platform in ('win32', 'cygwin')
+
+
 def ancestors(path, depth=0):
     """Emit the parent directories of a path."""
     count = 1
@@ -86,6 +89,32 @@ def ancestors(path, depth=0):
             break
         path = newpath
         count += 1
+
+
+def activate_mozharness_venv(context):
+    """Activate the mozharness virtualenv in-process."""
+    venv = os.path.join(context.mozharness_workdir,
+                        context.mozharness_config.get('virtualenv_path', 'venv'))
+
+    if not os.path.isdir(venv):
+        print("No mozharness virtualenv detected at '{}'.".format(venv))
+        return 1
+
+    venv_bin = os.path.join(venv, 'Scripts' if IS_WIN else 'bin')
+    activate_path = os.path.join(venv_bin, 'activate_this.py')
+
+    execfile(activate_path, dict(__file__=activate_path))
+
+    if isinstance(os.environ['PATH'], unicode):
+        os.environ['PATH'] = os.environ['PATH'].encode('utf-8')
+
+    # sys.executable is used by mochitest-media to start the websocketprocessbridge,
+    # for some reason it doesn't get set when calling `activate_this.py` so set it
+    # here instead.
+    binary = 'python'
+    if IS_WIN:
+        binary += '.exe'
+    sys.executable = os.path.join(venv_bin, binary)
 
 
 def find_firefox(context):
@@ -175,6 +204,9 @@ def bootstrap(test_package_root):
             config = context.mozharness_config
             if config:
                 return os.path.join(config['base_work_dir'], config['work_dir'])
+
+        if key == 'activate_mozharness_venv':
+            return types.MethodType(activate_mozharness_venv, context)
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context

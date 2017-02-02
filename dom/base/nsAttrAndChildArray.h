@@ -134,6 +134,7 @@ public:
   {
     return MappedAttrCount();
   }
+  const nsMappedAttributes* GetMapped() const;
 
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther) = delete;
