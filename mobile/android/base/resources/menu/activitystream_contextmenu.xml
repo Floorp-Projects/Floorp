@@ -15,7 +15,7 @@
     <group android:id="@+id/group1">
         <item
             android:id="@+id/dismiss"
-            android:icon="@drawable/as_dimiss"
+            android:icon="@drawable/as_dismiss"
             android:title="@string/activity_stream_dismiss"/>
 
         <item
