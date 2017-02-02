@@ -60,7 +60,8 @@ NS_IMPL_ISUPPORTS(GamepadManager, nsIObserver)
 GamepadManager::GamepadManager()
   : mEnabled(false),
     mNonstandardEventsEnabled(false),
-    mShuttingDown(false)
+    mShuttingDown(false),
+    mPromiseID(0)
 {}
 
 nsresult
@@ -667,17 +668,29 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
 
 }
 
-void
+already_AddRefed<Promise>
 GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                              double aIntensity, double aDuration)
+                              double aIntensity, double aDuration,
+                              nsIGlobalObject* aGlobal, ErrorResult& aRv)
 {
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
     uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
+    mVRChannelChild->AddPromise(mPromiseID, promise);
     mVRChannelChild->SendVibrateHaptic(index, aHapticIndex,
-                                       aIntensity, aDuration);
+                                       aIntensity, aDuration,
+                                       mPromiseID);
   } else {
     // TODO: Bug 680289, implement for standard gamepads
   }
+
+  ++mPromiseID;
+  return promise.forget();
 }
 
 //Override nsIIPCBackgroundChildCreateCallback
