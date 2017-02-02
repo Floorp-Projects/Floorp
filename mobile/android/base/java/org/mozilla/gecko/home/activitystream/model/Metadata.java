@@ -23,6 +23,7 @@ public class Metadata {
 
     private String provider;
     private String imageUrl;
+    private int descriptionLength;
 
     private Metadata(String json) {
         if (TextUtils.isEmpty(json)) {
@@ -36,6 +37,7 @@ public class Metadata {
 
             provider = object.optString("provider");
             imageUrl = object.optString("image_url");
+            descriptionLength = object.optInt("description_length");
         } catch (JSONException e) {
             Log.w(LOGTAG, "JSONException while parsing metadata", e);
         }
@@ -59,5 +61,9 @@ public class Metadata {
 
     public String getProvider() {
         return provider;
+    }
+
+    public int getDescriptionLength() {
+        return descriptionLength;
     }
 }
