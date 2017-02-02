@@ -1150,7 +1150,7 @@ class JS_PUBLIC_API(ContextOptions) {
         ion_(true),
         asmJS_(true),
         wasm_(false),
-        wasmAlwaysBaseline_(false),
+        wasmBaseline_(false),
         throwOnAsmJSValidationFailure_(false),
         nativeRegExp_(true),
         unboxedArrays_(false),
@@ -1214,13 +1214,13 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
-    bool wasmAlwaysBaseline() const { return wasmAlwaysBaseline_; }
-    ContextOptions& setWasmAlwaysBaseline(bool flag) {
-        wasmAlwaysBaseline_ = flag;
+    bool wasmBaseline() const { return wasmBaseline_; }
+    ContextOptions& setWasmBaseline(bool flag) {
+        wasmBaseline_ = flag;
         return *this;
     }
-    ContextOptions& toggleWasmAlwaysBaseline() {
-        wasmAlwaysBaseline_ = !wasmAlwaysBaseline_;
+    ContextOptions& toggleWasmBaseline() {
+        wasmBaseline_ = !wasmBaseline_;
         return *this;
     }
 
@@ -1313,7 +1313,7 @@ class JS_PUBLIC_API(ContextOptions) {
     bool ion_ : 1;
     bool asmJS_ : 1;
     bool wasm_ : 1;
-    bool wasmAlwaysBaseline_ : 1;
+    bool wasmBaseline_ : 1;
     bool throwOnAsmJSValidationFailure_ : 1;
     bool nativeRegExp_ : 1;
     bool unboxedArrays_ : 1;

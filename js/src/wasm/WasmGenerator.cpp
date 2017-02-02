@@ -143,7 +143,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     bool canBaseline = BaselineCanCompile();
     bool debugEnabled = args.debugEnabled && canBaseline;
-    tier_ = ((args.alwaysBaseline || debugEnabled) && canBaseline)
+    tier_ = ((args.baselineEnabled || debugEnabled) && canBaseline)
             ? Tier::Baseline
             : Tier::Ion;
 

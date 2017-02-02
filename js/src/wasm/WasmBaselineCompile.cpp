@@ -25,10 +25,6 @@
  * "TODO" indicates an opportunity for a general improvement, with an additional
  * tag to indicate the area of improvement.  Usually has a bug#.
  *
- * Unimplemented functionality:
- *
- *  - Tiered compilation (bug 1277562)
- *
  * There are lots of machine dependencies here but they are pretty well isolated
  * to a segment of the compiler.  Many dependencies will eventually be factored
  * into the MacroAssembler layer and shared with other code generators.
