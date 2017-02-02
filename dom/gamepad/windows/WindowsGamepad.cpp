@@ -503,8 +503,10 @@ WindowsGamepadService::ScanForXInputDevices()
     gamepad.state = state;
     gamepad.id = service->AddGamepad("xinput",
                                      GamepadMappingType::Standard,
+                                     GamepadHand::_empty,
                                      kStandardGamepadButtons,
-                                     kStandardGamepadAxes);
+                                     kStandardGamepadAxes,
+                                     0); // TODO: Bug 680289, implement gamepad haptics for Windows.
     mGamepads.AppendElement(gamepad);
   }
 
@@ -786,8 +788,10 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
 
   gamepad.id = service->AddGamepad(gamepad_id,
                                    GamepadMappingType::_empty,
+                                   GamepadHand::_empty,
                                    gamepad.numButtons,
-                                   gamepad.numAxes);
+                                   gamepad.numAxes,
+                                   0);
   mGamepads.AppendElement(gamepad);
   return true;
 }

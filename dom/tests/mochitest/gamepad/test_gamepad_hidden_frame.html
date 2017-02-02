@@ -34,8 +34,10 @@ function startTest() {
   if (frames_loaded == 2) {
     GamepadService.addGamepad("test gamepad", // id
                               GamepadService.standardMapping,
+                              GamepadService.noHand,
                               4, // buttons
-                              2).then(function(i) {
+                              2,
+                              0).then(function(i) {
                                 index = i;
                                 gamepad_loaded();
                               });
