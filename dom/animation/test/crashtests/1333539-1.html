@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = function(){
+  let body = document.getElementsByTagName("body")[0];
+  let target = document.createElement("div");
+  let anim1 = new Animation();
+  let anim2 = new Animation();
+  let effect = new KeyframeEffect(target, { opacity: [ 0, 1 ] }, 1000);
+  body.appendChild(target);
+  target.appendChild(document.createElement("meter"));
+  anim1.startTime = 88;
+  anim1.timeline = null;
+  anim1.pause();
+  anim1.effect = effect;
+  anim2.effect = effect;
+  anim1.effect = effect;
+
+  Promise.all([anim1.ready, anim2.ready]).then(function() {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+};
+</script>
+</head>
+<body></body>
+</html>
