@@ -38,7 +38,7 @@
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #include "ScriptSettings.h"
-
+#include <unistd.h>
 #include "xpcpublic.h"
 
 #include "jsapi.h"
