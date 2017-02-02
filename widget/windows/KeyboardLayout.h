@@ -513,6 +513,8 @@ private:
     return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
+  bool IsSamePhysicalKeyMessage(const MSG& aKeyOrCharMsg1,
+                                const MSG& aKeyOrCharMsg2) const;
   bool IsFollowedByPrintableCharMessage() const;
   bool IsFollowedByPrintableCharOrSysCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
