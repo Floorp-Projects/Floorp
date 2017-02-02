@@ -321,6 +321,10 @@ TEST_F(SandboxBrokerTest, Mkdir)
   EXPECT_EQ(-EACCES, Mkdir("/tmp/nope", 0600))
     << "Creating dir without MAY_CREATE succeed.";
   EXPECT_EQ(0, rmdir("/tmp/blublu"));
+  EXPECT_EQ(-EEXIST, Mkdir("/proc/self", 0600))
+    << "Creating uncreatable dir that already exists didn't fail correctly.";
+  EXPECT_EQ(-EEXIST, Mkdir("/dev/zero", 0600))
+    << "Creating uncreatable dir over preexisting file didn't fail correctly.";
 
   PrePostTestCleanup();
 }
