@@ -36,6 +36,9 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "vm/MatchPairs.h"
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -491,6 +494,11 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExp");
+#endif
+
+#ifdef MOZ_VTUNE
+    if (IsVTuneProfilingActive())
+        VTuneMarkRegExp(code, match_only);
 #endif
 
     for (size_t i = 0; i < labelPatches.length(); i++) {
