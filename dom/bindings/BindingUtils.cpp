@@ -3618,15 +3618,8 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
     return;
   }
 
-  DeprecationWarning(global, aOperation);
-}
-
-void
-DeprecationWarning(const GlobalObject& aGlobal,
-                   nsIDocument::DeprecatedOperations aOperation)
-{
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
     if (window && window->GetExtantDoc()) {
       window->GetExtantDoc()->WarnOnceAbout(aOperation);
     }
@@ -3634,7 +3627,7 @@ DeprecationWarning(const GlobalObject& aGlobal,
     return;
   }
 
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aGlobal.Context());
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
   if (!workerPrivate) {
     return;
   }
