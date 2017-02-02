@@ -68,11 +68,12 @@ function Toolbar({
     return (
       button({
         id: `requests-menu-filter-${type}-button`,
-        key: type,
         className: classList.join(" "),
-        "data-key": type,
+        key: type,
         onClick: toggleRequestFilterType,
         onKeyDown: toggleRequestFilterType,
+        "aria-pressed": checked,
+        "data-key": type,
       },
         L10N.getStr(`netmonitor.toolbar.filter.${type}`)
       )
