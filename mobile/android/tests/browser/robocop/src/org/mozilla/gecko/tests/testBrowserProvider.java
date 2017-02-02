@@ -16,7 +16,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.SyncStatus;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
-import org.mozilla.gecko.db.URLMetadataTable;
+import org.mozilla.gecko.db.URLImageDataTable;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -198,10 +198,10 @@ public class testBrowserProvider extends ContentProviderTest {
     private ContentValues createUrlMetadataEntry(final String url, final String tileImage, final String tileColor,
                 final String touchIcon) {
         final ContentValues values = new ContentValues();
-        values.put(URLMetadataTable.URL_COLUMN, url);
-        values.put(URLMetadataTable.TILE_IMAGE_URL_COLUMN, tileImage);
-        values.put(URLMetadataTable.TILE_COLOR_COLUMN, tileColor);
-        values.put(URLMetadataTable.TOUCH_ICON_COLUMN, touchIcon);
+        values.put(URLImageDataTable.URL_COLUMN, url);
+        values.put(URLImageDataTable.TILE_IMAGE_URL_COLUMN, tileImage);
+        values.put(URLImageDataTable.TILE_COLOR_COLUMN, tileColor);
+        values.put(URLImageDataTable.TOUCH_ICON_COLUMN, touchIcon);
         return values;
     }
 
@@ -261,8 +261,8 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private Cursor getUrlMetadataByUrl(final String url) throws Exception {
-        return mProvider.query(URLMetadataTable.CONTENT_URI, null,
-                URLMetadataTable.URL_COLUMN + " = ?",
+        return mProvider.query(URLImageDataTable.CONTENT_URI, null,
+                URLImageDataTable.URL_COLUMN + " = ?",
                 new String[] { url },
                 null);
     }
@@ -1535,9 +1535,9 @@ public class testBrowserProvider extends ContentProviderTest {
             final String touchIcon = "http://mozilla.org/touchIcon.png";
 
             // We can only use update since the redirection machinery doesn't exist for insert
-            mProvider.update(URLMetadataTable.CONTENT_URI.buildUpon().appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build(),
+            mProvider.update(URLImageDataTable.CONTENT_URI.buildUpon().appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build(),
                     createUrlMetadataEntry(url1, tileImage, tileColor, touchIcon),
-                    URLMetadataTable.URL_COLUMN + "=?",
+                    URLImageDataTable.URL_COLUMN + "=?",
                     new String[] {url1}
             );
 
@@ -1555,10 +1555,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String touchIcon = "http://hello.org/touchIcon.png";
 
             final Map<String, Object> data = new HashMap<>();
-            data.put(URLMetadataTable.URL_COLUMN, url2);
-            data.put(URLMetadataTable.TILE_IMAGE_URL_COLUMN, tileImage);
-            data.put(URLMetadataTable.TILE_COLOR_COLUMN, tileColor);
-            data.put(URLMetadataTable.TOUCH_ICON_COLUMN, touchIcon);
+            data.put(URLImageDataTable.URL_COLUMN, url2);
+            data.put(URLImageDataTable.TILE_IMAGE_URL_COLUMN, tileImage);
+            data.put(URLImageDataTable.TILE_COLOR_COLUMN, tileColor);
+            data.put(URLImageDataTable.TOUCH_ICON_COLUMN, touchIcon);
 
             BrowserDB.from(getTestProfile()).getURLMetadata().save(mResolver, data);
 
@@ -1586,22 +1586,22 @@ public class testBrowserProvider extends ContentProviderTest {
             // 1: retrieve just touch Icons for URL 1
             results = metadata.getForURLs(mResolver,
                     Collections.singletonList(url1),
-                    Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN));
+                    Collections.singletonList(URLImageDataTable.TOUCH_ICON_COLUMN));
 
             mAsserter.is(results.containsKey(url1), true, "URL 1 not found in results");
 
             urlData = results.get(url1);
-            mAsserter.is(urlData.containsKey(URLMetadataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+            mAsserter.is(urlData.containsKey(URLImageDataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
 
             // 2: retrieve just tile color for URL 2
             results = metadata.getForURLs(mResolver,
                     Collections.singletonList(url2),
-                    Collections.singletonList(URLMetadataTable.TILE_COLOR_COLUMN));
+                    Collections.singletonList(URLImageDataTable.TILE_COLOR_COLUMN));
 
             mAsserter.is(results.containsKey(url2), true, "URL 2 not found in results");
 
             urlData = results.get(url2);
-            mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+            mAsserter.is(urlData.containsKey(URLImageDataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
 
 
             // 3: retrieve all columns for both URLs
@@ -1609,9 +1609,9 @@ public class testBrowserProvider extends ContentProviderTest {
 
             results = metadata.getForURLs(mResolver,
                     urls,
-                    Arrays.asList(URLMetadataTable.TILE_IMAGE_URL_COLUMN,
-                            URLMetadataTable.TILE_COLOR_COLUMN,
-                            URLMetadataTable.TOUCH_ICON_COLUMN
+                    Arrays.asList(URLImageDataTable.TILE_IMAGE_URL_COLUMN,
+                            URLImageDataTable.TILE_COLOR_COLUMN,
+                            URLImageDataTable.TOUCH_ICON_COLUMN
                     ));
 
             mAsserter.is(results.containsKey(url1), true, "URL 1 not found in results");
@@ -1620,9 +1620,9 @@ public class testBrowserProvider extends ContentProviderTest {
 
             for (final String url : urls) {
                 urlData = results.get(url);
-                mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_IMAGE_URL_COLUMN), true, "touchIcon column missing in UrlMetadata results");
-                mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
-                mAsserter.is(urlData.containsKey(URLMetadataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+                mAsserter.is(urlData.containsKey(URLImageDataTable.TILE_IMAGE_URL_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+                mAsserter.is(urlData.containsKey(URLImageDataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+                mAsserter.is(urlData.containsKey(URLImageDataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
             }
         }
     }
