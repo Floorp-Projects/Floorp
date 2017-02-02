@@ -277,6 +277,7 @@ nsHttpChannel::nsHttpChannel()
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
     , mWarningReporter(nullptr)
+    , mIsReadingFromCache(false)
     , mDidReval(false)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -6942,6 +6943,8 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         uint32_t n;
         return input->ReadSegments(NS_DiscardSegment, nullptr, count, &n);
     }
+
+    mIsReadingFromCache = (request == mCachePump);
 
     if (mListener) {
         //
