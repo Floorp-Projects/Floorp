@@ -200,7 +200,7 @@ def escape_whitespace_in_brackets(input_str):
     return result
 
 
-def parse_message(message):
+def find_try_idx(message):
     # shlex used to ensure we split correctly when giving values to argparse.
     parts = shlex.split(escape_whitespace_in_brackets(message))
     try_idx = None
@@ -209,8 +209,11 @@ def parse_message(message):
             try_idx = idx
             break
 
-    if try_idx is None:
-        return None
+    return try_idx, parts
+
+
+def parse_message(message):
+    try_idx, parts = find_try_idx(message)
 
     # Argument parser based on try flag flags
     parser = argparse.ArgumentParser()
@@ -235,6 +238,7 @@ def parse_message(message):
     parser.add_argument('--no-retry', dest='no_retry', action='store_true')
     # In order to run test jobs multiple times
     parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
+    parts = parts[try_idx:] if try_idx is not None else []
     args, _ = parser.parse_known_args(parts[try_idx:])
     return args
 
@@ -284,9 +288,12 @@ class TryOptionSyntax(object):
         self.tag = None
         self.no_retry = False
 
+        try_idx, _ = find_try_idx(message)
+        if try_idx is None:
+            return None
+
         args = parse_message(message)
-        if args is None:
-            return
+        assert args is not None
 
         self.jobs = self.parse_jobs(args.jobs)
         self.build_types = self.parse_build_types(args.build_types)
