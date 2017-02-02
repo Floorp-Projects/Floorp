@@ -59,8 +59,6 @@ public:
  * The deque stores pointers to items.
  */
 
-class nsDequeIterator;
-
 class nsDeque
 {
   typedef mozilla::fallible_t fallible_t;
@@ -155,6 +153,21 @@ public:
    * @param   aFunctor object to call for each member
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
+
+  class ConstIterator
+  {
+  public:
+    ConstIterator(const nsDeque& aDeque, size_t aIndex) : mDeque(aDeque), mIndex(aIndex) { }
+    ConstIterator& operator++() { ++mIndex; return *this; }
+    bool operator==(const ConstIterator& aOther) const { return mIndex == aOther.mIndex; }
+    bool operator!=(const ConstIterator& aOther) const { return mIndex != aOther.mIndex; }
+    void* operator*() const { return mDeque.ObjectAt(mIndex); }
+  private:
+    const nsDeque& mDeque;
+    size_t mIndex;
+  };
+  ConstIterator begin() const { return ConstIterator(*this, 0); }
+  ConstIterator end() const { return ConstIterator(*this, mSize); }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
