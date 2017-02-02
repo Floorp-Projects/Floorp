@@ -25,7 +25,7 @@
 using namespace js;
 
 /* static */ Shape*
-js::ErrorObject::assignInitialShape(ExclusiveContext* cx, Handle<ErrorObject*> obj)
+js::ErrorObject::assignInitialShape(JSContext* cx, Handle<ErrorObject*> obj)
 {
     MOZ_ASSERT(obj->empty());
 
@@ -239,7 +239,7 @@ js::ErrorObject::getStack_impl(JSContext* cx, const CallArgs& args)
     if (!BuildStackString(cx, savedFrameObj, &stackString))
         return false;
 
-    if (cx->stackFormat() == js::StackFormat::V8) {
+    if (cx->runtime()->stackFormat() == js::StackFormat::V8) {
         // When emulating V8 stack frames, we also need to prepend the
         // stringified Error to the stack string.
         HandlePropertyName name = cx->names().ErrorToStringWithTrailingNewline;

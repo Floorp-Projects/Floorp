@@ -423,7 +423,7 @@ const Class ModuleEnvironmentObject::class_ = {
 };
 
 /* static */ ModuleEnvironmentObject*
-ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
+ModuleEnvironmentObject::create(JSContext* cx, HandleModuleObject module)
 {
     RootedScript script(cx, module->script());
     RootedShape shape(cx, script->bodyScope()->as<ModuleScope>().environmentShape());
@@ -3542,7 +3542,7 @@ RemoveReferencedNames(JSContext* cx, HandleScript script, PropertyNameSet& remai
 
           case JSOP_GETALIASEDVAR:
           case JSOP_SETALIASEDVAR:
-            name = EnvironmentCoordinateName(cx->caches.envCoordinateNameCache, script, pc);
+            name = EnvironmentCoordinateName(cx->caches().envCoordinateNameCache, script, pc);
             break;
 
           default:

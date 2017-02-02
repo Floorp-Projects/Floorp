@@ -11,6 +11,8 @@
 #include "jit/SharedICHelpers.h"
 #include "proxy/Proxy.h"
 
+#include "jscntxtinlines.h"
+
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
@@ -148,7 +150,7 @@ BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
 {
     MOZ_ASSERT(inStubFrame_);
 
-    JitCode* code = cx_->jitRuntime()->getVMWrapper(fun);
+    JitCode* code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -753,7 +755,7 @@ BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed)
         masm.storeValue(val, slot);
     }
 
-    if (cx_->gc.nursery.exists())
+    if (cx_->nursery().exists())
         BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
     return true;
 }
@@ -835,7 +837,7 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
         masm.storeValue(val, slot);
     }
 
-    if (cx_->gc.nursery.exists())
+    if (cx_->nursery().exists())
         BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
     return true;
 }

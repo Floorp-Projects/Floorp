@@ -29,7 +29,7 @@ class VerifyPreTracer;
 
 namespace gc {
 
-typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
+typedef Vector<ZoneGroup*, 4, SystemAllocPolicy> ZoneGroupVector;
 using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 
 class AutoMaybeStartBackgroundAllocation;
@@ -77,8 +77,7 @@ class ChunkPool
 class BackgroundAllocTask : public GCParallelTask
 {
     // Guarded by the GC lock.
-    JSRuntime* runtime;
-    ChunkPool& chunkPool_;
+    GCLockData<ChunkPool&> chunkPool_;
 
     const bool enabled_;
 
@@ -96,15 +95,14 @@ class BackgroundDecommitTask : public GCParallelTask
   public:
     using ChunkVector = mozilla::Vector<Chunk*>;
 
-    explicit BackgroundDecommitTask(JSRuntime *rt) : runtime(rt) {}
+    explicit BackgroundDecommitTask(JSRuntime *rt) : GCParallelTask(rt) {}
     void setChunksToScan(ChunkVector &chunks);
 
   protected:
     void run() override;
 
   private:
-    JSRuntime* runtime;
-    ChunkVector toDecommit;
+    UnprotectedData<ChunkVector> toDecommit;
 };
 
 /*
@@ -119,70 +117,74 @@ class GCSchedulingTunables
      * subsequently invoke the standard OOM machinery, independent of available
      * physical memory.
      */
-    size_t gcMaxBytes_;
+    UnprotectedData<size_t> gcMaxBytes_;
+
+    /* Maximum nursery size for each zone group. */
+    UnprotectedData<size_t> gcMaxNurseryBytes_;
 
     /*
      * The base value used to compute zone->trigger.gcBytes(). When
      * usage.gcBytes() surpasses threshold.gcBytes() for a zone, the zone may
      * be scheduled for a GC, depending on the exact circumstances.
      */
-    size_t gcZoneAllocThresholdBase_;
+    UnprotectedData<size_t> gcZoneAllocThresholdBase_;
 
     /* Fraction of threshold.gcBytes() which triggers an incremental GC. */
-    double zoneAllocThresholdFactor_;
+    UnprotectedData<double> zoneAllocThresholdFactor_;
 
     /*
      * Number of bytes to allocate between incremental slices in GCs triggered
      * by the zone allocation threshold.
      */
-    size_t zoneAllocDelayBytes_;
+    UnprotectedData<size_t> zoneAllocDelayBytes_;
 
     /*
      * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
      * tunables that make GC non-deterministic.
      */
-    bool dynamicHeapGrowthEnabled_;
+    UnprotectedData<bool> dynamicHeapGrowthEnabled_;
 
     /*
      * We enter high-frequency mode if we GC a twice within this many
      * microseconds. This value is stored directly in microseconds.
      */
-    uint64_t highFrequencyThresholdUsec_;
+    UnprotectedData<uint64_t> highFrequencyThresholdUsec_;
 
     /*
      * When in the |highFrequencyGC| mode, these parameterize the per-zone
      * "HeapGrowthFactor" computation.
      */
-    uint64_t highFrequencyLowLimitBytes_;
-    uint64_t highFrequencyHighLimitBytes_;
-    double highFrequencyHeapGrowthMax_;
-    double highFrequencyHeapGrowthMin_;
+    UnprotectedData<uint64_t> highFrequencyLowLimitBytes_;
+    UnprotectedData<uint64_t> highFrequencyHighLimitBytes_;
+    UnprotectedData<double> highFrequencyHeapGrowthMax_;
+    UnprotectedData<double> highFrequencyHeapGrowthMin_;
 
     /*
      * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
      * "HeapGrowthFactor".
      */
-    double lowFrequencyHeapGrowth_;
+    UnprotectedData<double> lowFrequencyHeapGrowth_;
 
     /*
      * Doubles the length of IGC slices when in the |highFrequencyGC| mode.
      */
-    bool dynamicMarkSliceEnabled_;
+    UnprotectedData<bool> dynamicMarkSliceEnabled_;
 
     /*
      * Controls whether painting can trigger IGC slices.
      */
-    bool refreshFrameSlicesEnabled_;
+    UnprotectedData<bool> refreshFrameSlicesEnabled_;
 
     /*
      * Controls the number of empty chunks reserved for future allocation.
      */
-    uint32_t minEmptyChunkCount_;
-    uint32_t maxEmptyChunkCount_;
+    UnprotectedData<uint32_t> minEmptyChunkCount_;
+    UnprotectedData<uint32_t> maxEmptyChunkCount_;
 
   public:
     GCSchedulingTunables()
       : gcMaxBytes_(0),
+        gcMaxNurseryBytes_(0),
         gcZoneAllocThresholdBase_(30 * 1024 * 1024),
         zoneAllocThresholdFactor_(0.9),
         zoneAllocDelayBytes_(1024 * 1024),
@@ -200,6 +202,7 @@ class GCSchedulingTunables
     {}
 
     size_t gcMaxBytes() const { return gcMaxBytes_; }
+    size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
     size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
     double zoneAllocThresholdFactor() const { return zoneAllocThresholdFactor_; }
     size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
@@ -523,7 +526,7 @@ class GCSchedulingState
      * growth factor is a measure of how large (as a percentage of the last GC)
      * the heap is allowed to grow before we try to schedule another GC.
      */
-    bool inHighFrequencyGCMode_;
+    UnprotectedData<bool> inHighFrequencyGCMode_;
 
   public:
     GCSchedulingState()
@@ -542,8 +545,8 @@ class GCSchedulingState
 
 template<typename F>
 struct Callback {
-    F op;
-    void* data;
+    UnprotectedData<F> op;
+    UnprotectedData<void*> data;
 
     Callback()
       : op(nullptr), data(nullptr)
@@ -554,7 +557,7 @@ struct Callback {
 };
 
 template<typename F>
-using CallbackVector = Vector<Callback<F>, 4, SystemAllocPolicy>;
+using CallbackVector = UnprotectedData<Vector<Callback<F>, 4, SystemAllocPolicy>>;
 
 template <typename T, typename Iter0, typename Iter1>
 class ChainedIter
@@ -618,11 +621,6 @@ class GCRuntime
     // The return value indicates if we were able to do the GC.
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
     void maybeGC(Zone* zone);
-    void minorGC(JS::gcreason::Reason reason,
-                 gcstats::Phase phase = gcstats::PHASE_MINOR_GC) JS_HAZ_GC_CALL;
-    void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
-        minorGC(reason, gcstats::PHASE_EVICT_NURSERY);
-    }
     // The return value indicates whether a major GC was performed.
     bool gcIfRequested();
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
@@ -708,44 +706,10 @@ class GCRuntime
     }
 
 #ifdef DEBUG
-    bool isAllocAllowed() { return noGCOrAllocationCheck == 0; }
-    void disallowAlloc() { ++noGCOrAllocationCheck; }
-    void allowAlloc() {
-        MOZ_ASSERT(!isAllocAllowed());
-        --noGCOrAllocationCheck;
-    }
-
-    bool isNurseryAllocAllowed() { return noNurseryAllocationCheck == 0; }
-    void disallowNurseryAlloc() { ++noNurseryAllocationCheck; }
-    void allowNurseryAlloc() {
-        MOZ_ASSERT(!isNurseryAllocAllowed());
-        --noNurseryAllocationCheck;
-    }
-
-    bool isStrictProxyCheckingEnabled() { return disableStrictProxyCheckingCount == 0; }
-    void disableStrictProxyChecking() { ++disableStrictProxyCheckingCount; }
-    void enableStrictProxyChecking() {
-        MOZ_ASSERT(disableStrictProxyCheckingCount > 0);
-        --disableStrictProxyCheckingCount;
+    bool currentThreadHasLockedGC() const {
+        return lock.ownedByCurrentThread();
     }
 #endif // DEBUG
-
-    bool isInsideUnsafeRegion() { return inUnsafeRegion != 0; }
-    void enterUnsafeRegion() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        ++inUnsafeRegion;
-    }
-    void leaveUnsafeRegion() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        MOZ_ASSERT(inUnsafeRegion > 0);
-        --inUnsafeRegion;
-    }
-
-    void verifyIsSafeToGC() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        MOZ_DIAGNOSTIC_ASSERT(!isInsideUnsafeRegion(),
-                              "[AutoAssertNoGC] possible GC in GC-unsafe region");
-    }
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
 
@@ -755,12 +719,6 @@ class GCRuntime
     bool isIncrementalGCEnabled() const { return mode == JSGC_MODE_INCREMENTAL && incrementalAllowed; }
     bool isIncrementalGCInProgress() const { return state() != State::NotActive; }
 
-    bool isGenerationalGCEnabled() const { return generationalDisabled == 0; }
-    void disableGenerationalGC();
-    void enableGenerationalGC();
-
-    void disableCompactingGC();
-    void enableCompactingGC();
     bool isCompactingGCEnabled() const;
 
     void setGrayRootsTracer(JSTraceDataOp traceOp, void* data);
@@ -798,7 +756,7 @@ class GCRuntime
     JS::Zone* getCurrentZoneGroup() { return currentZoneGroup; }
     void setFoundBlackGrayEdges(TenuredCell& target) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!foundBlackGrayEdges.append(&target))
+        if (!foundBlackGrayEdges.ref().append(&target))
             oomUnsafe.crash("OOM|small: failed to insert into foundBlackGrayEdges");
     }
 
@@ -815,6 +773,9 @@ class GCRuntime
     bool isIncrementalGc() const { return isIncremental; }
     bool isFullGc() const { return isFull; }
     bool isCompactingGc() const { return isCompacting; }
+
+    bool areGrayBitsValid() const { return grayBitsValid; }
+    void setGrayBitsInvalid() { grayBitsValid = false; }
 
     bool minorGCRequested() const { return minorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
@@ -834,15 +795,15 @@ class GCRuntime
     inline void updateOnFreeArenaAlloc(const ChunkInfo& info);
     inline void updateOnArenaFree(const ChunkInfo& info);
 
-    ChunkPool& fullChunks(const AutoLockGC& lock) { return fullChunks_; }
-    ChunkPool& availableChunks(const AutoLockGC& lock) { return availableChunks_; }
-    ChunkPool& emptyChunks(const AutoLockGC& lock) { return emptyChunks_; }
-    const ChunkPool& fullChunks(const AutoLockGC& lock) const { return fullChunks_; }
-    const ChunkPool& availableChunks(const AutoLockGC& lock) const { return availableChunks_; }
-    const ChunkPool& emptyChunks(const AutoLockGC& lock) const { return emptyChunks_; }
+    ChunkPool& fullChunks(const AutoLockGC& lock) { return fullChunks_.ref(); }
+    ChunkPool& availableChunks(const AutoLockGC& lock) { return availableChunks_.ref(); }
+    ChunkPool& emptyChunks(const AutoLockGC& lock) { return emptyChunks_.ref(); }
+    const ChunkPool& fullChunks(const AutoLockGC& lock) const { return fullChunks_.ref(); }
+    const ChunkPool& availableChunks(const AutoLockGC& lock) const { return availableChunks_.ref(); }
+    const ChunkPool& emptyChunks(const AutoLockGC& lock) const { return emptyChunks_.ref(); }
     typedef ChainedIter<Chunk*, ChunkPool::Iter, ChunkPool::Iter> NonEmptyChunksIter;
     NonEmptyChunksIter allNonEmptyChunks() {
-        return NonEmptyChunksIter(ChunkPool::Iter(availableChunks_), ChunkPool::Iter(fullChunks_));
+        return NonEmptyChunksIter(ChunkPool::Iter(availableChunks_.ref()), ChunkPool::Iter(fullChunks_.ref()));
     }
 
     Chunk* getOrAllocChunk(const AutoLockGC& lock,
@@ -861,12 +822,6 @@ class GCRuntime
     // Free certain LifoAlloc blocks when it is safe to do so.
     void freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo);
     void freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo);
-    void freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo);
-
-    // Queue a thunk to run after the next minor GC.
-    void callAfterMinorGC(void (*thunk)(void* data), void* data) {
-        nursery.queueSweepAction(thunk, data);
-    }
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(Arena* arena, const AutoLockGC& lock);
@@ -881,10 +836,10 @@ class GCRuntime
     JSObject* tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicSlots,
                                   const Class* clasp);
     template <AllowGC allowGC>
-    static JSObject* tryNewTenuredObject(ExclusiveContext* cx, AllocKind kind, size_t thingSize,
+    static JSObject* tryNewTenuredObject(JSContext* cx, AllocKind kind, size_t thingSize,
                                          size_t nDynamicSlots);
     template <typename T, AllowGC allowGC>
-    static T* tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thingSize);
+    static T* tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize);
     static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   private:
@@ -905,12 +860,12 @@ class GCRuntime
     // Allocator internals
     MOZ_MUST_USE bool gcIfNeededPerAllocation(JSContext* cx);
     template <typename T>
-    static void checkIncrementalZoneState(ExclusiveContext* cx, T* t);
-    static TenuredCell* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
+    static void checkIncrementalZoneState(JSContext* cx, T* t);
+    static TenuredCell* refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind,
                                                     size_t thingSize);
     static TenuredCell* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind,
                                                      size_t thingSize);
-    static TenuredCell* refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind);
+    static TenuredCell* refillFreeListOffMainThread(JSContext* cx, AllocKind thingKind);
 
     /*
      * Return the list of chunks that can be released outside the GC lock.
@@ -1018,18 +973,21 @@ class GCRuntime
     void callWeakPointerCompartmentCallbacks(JSCompartment* comp) const;
 
   public:
-    JSRuntime* rt;
+    JSRuntime* const rt;
 
     /* Embedders can use this zone however they wish. */
-    JS::Zone* systemZone;
+    UnprotectedData<JS::Zone*> systemZone;
 
-    /* List of compartments and zones (protected by the GC lock). */
-    ZoneVector zones;
+    // List of all zone groups (protected by the GC lock).
+    UnprotectedData<ZoneGroupVector> groups;
 
-    Nursery nursery;
-    StoreBuffer storeBuffer;
+    // The unique atoms zone, which has no zone group.
+    WriteOnceData<Zone*> atomsZone;
 
-    gcstats::Statistics stats;
+  private:
+    UnprotectedData<gcstats::Statistics> stats_;
+  public:
+    gcstats::Statistics& stats() { return stats_.ref(); }
 
     GCMarker marker;
 
@@ -1051,7 +1009,7 @@ class GCRuntime
     // needed or eventually expired if not re-used. The emptyChunks pool gets
     // refilled from the background allocation task heuristically so that empty
     // chunks should always available for immediate allocation without syscalls.
-    ChunkPool             emptyChunks_;
+    GCLockData<ChunkPool> emptyChunks_;
 
     // Chunks which have had some, but not all, of their arenas allocated live
     // in the available chunk lists. When all available arenas in a chunk have
@@ -1059,15 +1017,15 @@ class GCRuntime
     // to the fullChunks pool. During a GC, if all arenas are free, the chunk
     // is moved back to the emptyChunks pool and scheduled for eventual
     // release.
-    ChunkPool             availableChunks_;
+    UnprotectedData<ChunkPool> availableChunks_;
 
     // When all arenas in a chunk are used, it is moved to the fullChunks pool
     // so as to reduce the cost of operations on the available lists.
-    ChunkPool             fullChunks_;
+    UnprotectedData<ChunkPool> fullChunks_;
 
-    RootedValueMap rootsHash;
+    UnprotectedData<RootedValueMap> rootsHash;
 
-    size_t maxMallocBytes;
+    UnprotectedData<size_t> maxMallocBytes;
 
     // An incrementing id used to assign unique ids to cells that require one.
     mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> nextCellUniqueId_;
@@ -1076,18 +1034,18 @@ class GCRuntime
      * Number of the committed arenas in all GC chunks including empty chunks.
      */
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numArenasFreeCommitted;
-    VerifyPreTracer* verifyPreData;
+    UnprotectedData<VerifyPreTracer*> verifyPreData;
 
   private:
-    bool chunkAllocationSinceLastGC;
-    int64_t lastGCTime;
+    UnprotectedData<bool> chunkAllocationSinceLastGC;
+    UnprotectedData<int64_t> lastGCTime;
 
-    JSGCMode mode;
+    UnprotectedData<JSGCMode> mode;
 
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
 
     /* During shutdown, the GC needs to clean up every possible object. */
-    bool cleanUpEverything;
+    UnprotectedData<bool> cleanUpEverything;
 
     // Gray marking must be done after all black marking is complete. However,
     // we do not have write barriers on XPConnect roots. Therefore, XPConnect
@@ -1100,7 +1058,7 @@ class GCRuntime
         Okay,
         Failed
     };
-    GrayBufferState grayBufferState;
+    UnprotectedData<GrayBufferState> grayBufferState;
     bool hasBufferedGrayRoots() const { return grayBufferState == GrayBufferState::Okay; }
 
     // Clear each zone's gray buffers, but do not change the current state.
@@ -1112,99 +1070,92 @@ class GCRuntime
         resetBufferedGrayRoots();
     }
 
+    /*
+     * The gray bits can become invalid if UnmarkGray overflows the stack. A
+     * full GC will reset this bit, since it fills in all the gray bits.
+     */
+    UnprotectedData<bool> grayBitsValid;
+
     mozilla::Atomic<JS::gcreason::Reason, mozilla::Relaxed> majorGCTriggerReason;
 
-    JS::gcreason::Reason minorGCTriggerReason;
+  public:
+    UnprotectedData<JS::gcreason::Reason> minorGCTriggerReason;
 
+  private:
     /* Perform full GC if rt->keepAtoms() becomes false. */
-    bool fullGCForAtomsRequested_;
+    UnprotectedData<bool> fullGCForAtomsRequested_;
 
     /* Incremented at the start of every minor GC. */
-    uint64_t minorGCNumber;
+    UnprotectedData<uint64_t> minorGCNumber;
 
     /* Incremented at the start of every major GC. */
-    uint64_t majorGCNumber;
+    UnprotectedData<uint64_t> majorGCNumber;
 
     /* The major GC number at which to release observed type information. */
-    uint64_t jitReleaseNumber;
+    UnprotectedData<uint64_t> jitReleaseNumber;
 
     /* Incremented on every GC slice. */
-    uint64_t number;
+    UnprotectedData<uint64_t> number;
 
     /* The number at the time of the most recent GC's first slice. */
-    uint64_t startNumber;
+    UnprotectedData<uint64_t> startNumber;
 
     /* Whether the currently running GC can finish in multiple slices. */
-    bool isIncremental;
+    UnprotectedData<bool> isIncremental;
 
     /* Whether all zones are being collected in first GC slice. */
-    bool isFull;
+    UnprotectedData<bool> isFull;
 
     /* Whether the heap will be compacted at the end of GC. */
-    bool isCompacting;
+    UnprotectedData<bool> isCompacting;
 
     /* The invocation kind of the current GC, taken from the first slice. */
-    JSGCInvocationKind invocationKind;
+    UnprotectedData<JSGCInvocationKind> invocationKind;
 
     /* The initial GC reason, taken from the first slice. */
-    JS::gcreason::Reason initialReason;
-
-#ifdef DEBUG
-    /*
-     * If this is 0, all cross-compartment proxies must be registered in the
-     * wrapper map. This checking must be disabled temporarily while creating
-     * new wrappers. When non-zero, this records the recursion depth of wrapper
-     * creation.
-     */
-    uintptr_t disableStrictProxyCheckingCount;
-#endif
+    UnprotectedData<JS::gcreason::Reason> initialReason;
 
     /*
      * The current incremental GC phase. This is also used internally in
      * non-incremental GC.
      */
-    State incrementalState;
+    UnprotectedData<State> incrementalState;
 
     /* Indicates that the last incremental slice exhausted the mark stack. */
-    bool lastMarkSlice;
+    UnprotectedData<bool> lastMarkSlice;
 
     /* Whether any sweeping will take place in the separate GC helper thread. */
-    bool sweepOnBackgroundThread;
+    UnprotectedData<bool> sweepOnBackgroundThread;
 
     /* Whether observed type information is being released in the current GC. */
-    bool releaseObservedTypes;
+    UnprotectedData<bool> releaseObservedTypes;
 
     /* Whether any black->gray edges were found during marking. */
-    BlackGrayEdgeVector foundBlackGrayEdges;
+    UnprotectedData<BlackGrayEdgeVector> foundBlackGrayEdges;
 
-    /* Singly linekd list of zones to be swept in the background. */
-    ZoneList backgroundSweepZones;
+    /* Singly linked list of zones to be swept in the background. */
+    UnprotectedData<ZoneList> backgroundSweepZones;
 
     /*
      * Free LIFO blocks are transferred to this allocator before being freed on
      * the background GC thread after sweeping.
      */
-    LifoAlloc blocksToFreeAfterSweeping;
+    UnprotectedData<LifoAlloc> blocksToFreeAfterSweeping;
 
-    /*
-     * Free LIFO blocks are transferred to this allocator before being freed
-     * after minor GC.
-     */
-    LifoAlloc blocksToFreeAfterMinorGC;
-
+  private:
     /* Index of current zone group (for stats). */
-    unsigned zoneGroupIndex;
+    UnprotectedData<unsigned> zoneGroupIndex;
 
     /*
      * Incremental sweep state.
      */
-    JS::Zone* zoneGroups;
-    JS::Zone* currentZoneGroup;
-    bool sweepingTypes;
-    unsigned finalizePhase;
-    JS::Zone* sweepZone;
-    AllocKind sweepKind;
-    bool abortSweepAfterCurrentGroup;
+    UnprotectedData<JS::Zone*> zoneGroups;
+    UnprotectedData<JS::Zone*> currentZoneGroup;
+    UnprotectedData<bool> sweepingTypes;
+    UnprotectedData<unsigned> finalizePhase;
+    UnprotectedData<JS::Zone*> sweepZone;
+    UnprotectedData<AllocKind> sweepKind;
+    UnprotectedData<bool> abortSweepAfterCurrentGroup;
 
     /*
      * Concurrent sweep infrastructure.
@@ -1215,17 +1166,17 @@ class GCRuntime
     /*
      * List head of arenas allocated during the sweep phase.
      */
-    Arena* arenasAllocatedDuringSweep;
+    UnprotectedData<Arena*> arenasAllocatedDuringSweep;
 
     /*
      * Incremental compacting state.
      */
-    bool startedCompacting;
-    ZoneList zonesToMaybeCompact;
-    Arena* relocatedArenasToRelease;
+    UnprotectedData<bool> startedCompacting;
+    UnprotectedData<ZoneList> zonesToMaybeCompact;
+    UnprotectedData<Arena*> relocatedArenasToRelease;
 
 #ifdef JS_GC_ZEAL
-    MarkingValidator* markingValidator;
+    UnprotectedData<MarkingValidator*> markingValidator;
 #endif
 
     /*
@@ -1233,34 +1184,23 @@ class GCRuntime
      * frame, rather than at the beginning. In this case, the next slice will be
      * delayed so that we don't get back-to-back slices.
      */
-    bool interFrameGC;
+    UnprotectedData<bool> interFrameGC;
 
     /* Default budget for incremental GC slice. See js/SliceBudget.h. */
-    int64_t defaultTimeBudget_;
+    UnprotectedData<int64_t> defaultTimeBudget_;
 
     /*
      * We disable incremental GC if we encounter a Class with a trace hook
      * that does not implement write barriers.
      */
-    bool incrementalAllowed;
-
-    /*
-     * GGC can be enabled from the command line while testing.
-     */
-    unsigned generationalDisabled;
+    UnprotectedData<bool> incrementalAllowed;
 
     /*
      * Whether compacting GC can is enabled globally.
      */
-    bool compactingEnabled;
+    UnprotectedData<bool> compactingEnabled;
 
-    /*
-     * Some code cannot tolerate compacting GC so it can be disabled temporarily
-     * with AutoDisableCompactingGC which uses this counter.
-     */
-    unsigned compactingDisabledCount;
-
-    bool poked;
+    UnprotectedData<bool> poked;
 
     /*
      * These options control the zealousness of the GC. At every allocation,
@@ -1287,16 +1227,16 @@ class GCRuntime
      * zeal_ value 14 performs periodic shrinking collections.
      */
 #ifdef JS_GC_ZEAL
-    uint32_t zealModeBits;
-    int zealFrequency;
-    int nextScheduled;
-    bool deterministicOnly;
-    int incrementalLimit;
+    UnprotectedData<uint32_t> zealModeBits;
+    UnprotectedData<int> zealFrequency;
+    UnprotectedData<int> nextScheduled;
+    UnprotectedData<bool> deterministicOnly;
+    UnprotectedData<int> incrementalLimit;
 
-    Vector<JSObject*, 0, SystemAllocPolicy> selectedForMarking;
+    UnprotectedData<Vector<JSObject*, 0, SystemAllocPolicy>> selectedForMarking;
 #endif
 
-    bool fullCompartmentChecks;
+    UnprotectedData<bool> fullCompartmentChecks;
 
     Callback<JSGCCallback> gcCallback;
     Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;
@@ -1327,36 +1267,26 @@ class GCRuntime
     Callback<JSTraceDataOp> grayRootTracer;
 
     /* Always preserve JIT code during GCs, for testing. */
-    bool alwaysPreserveCode;
-
-    /*
-     * Some regions of code are hard for the static rooting hazard analysis to
-     * understand. In those cases, we trade the static analysis for a dynamic
-     * analysis. When this is non-zero, we should assert if we trigger, or
-     * might trigger, a GC.
-     */
-    int inUnsafeRegion;
+    UnprotectedData<bool> alwaysPreserveCode;
 
 #ifdef DEBUG
-    size_t noGCOrAllocationCheck;
-    size_t noNurseryAllocationCheck;
-
-    bool arenasEmptyAtShutdown;
+    UnprotectedData<bool> arenasEmptyAtShutdown;
 #endif
 
-    /* Synchronize GC heap access between main thread and GCHelperState. */
+    /* Synchronize GC heap access among GC helper threads and main threads. */
     friend class js::AutoLockGC;
     js::Mutex lock;
 
     BackgroundAllocTask allocTask;
     BackgroundDecommitTask decommitTask;
+
     GCHelperState helperState;
 
     /*
      * During incremental sweeping, this field temporarily holds the arenas of
      * the current AllocKind being swept in order of increasing free space.
      */
-    SortedArenaList incrementalSweepList;
+    UnprotectedData<SortedArenaList> incrementalSweepList;
 
     friend class js::GCHelperState;
     friend class MarkingValidator;

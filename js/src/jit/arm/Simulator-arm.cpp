@@ -4753,7 +4753,7 @@ Simulator::execute()
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
                 // wasm signal handler ran and we have to adjust the pc.
-                JSRuntime::innermostWasmActivation()->setResumePC((void*)get_pc());
+                JSContext::innermostWasmActivation()->setResumePC((void*)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;
             }
@@ -4931,26 +4931,20 @@ Simulator::call(uint8_t* entry, int argument_count, ...)
 Simulator*
 Simulator::Current()
 {
-    return TlsPerThreadData.get()->simulator();
+    return TlsContext.get()->runtime()->unsafeContextFromAnyThread()->simulator();
 }
 
 } // namespace jit
 } // namespace js
 
 js::jit::Simulator*
-JSRuntime::simulator() const
+JSContext::simulator() const
 {
     return simulator_;
 }
 
 uintptr_t*
-JSRuntime::addressOfSimulatorStackLimit()
+JSContext::addressOfSimulatorStackLimit()
 {
     return simulator_->addressOfStackLimit();
-}
-
-js::jit::Simulator*
-js::PerThreadData::simulator() const
-{
-    return runtime_->simulator();
 }

@@ -29,8 +29,6 @@ class CompileRuntime
 
     bool onMainThread();
 
-    js::PerThreadData* mainThread();
-
     // &runtime()->jitTop
     const void* addressOfJitTop();
 

@@ -20,7 +20,7 @@
 namespace js {
 
 inline void
-ArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
+ArrayObject::setLength(JSContext* cx, uint32_t length)
 {
     MOZ_ASSERT(lengthIsWritable());
     MOZ_ASSERT_IF(length != getElementsHeader()->length, !denseElementsAreFrozen());
@@ -34,7 +34,7 @@ ArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
 }
 
 /* static */ inline ArrayObject*
-ArrayObject::createArrayInternal(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+ArrayObject::createArrayInternal(JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
                                  HandleShape shape, HandleObjectGroup group,
                                  AutoSetNewObjectMetadata&)
 {
@@ -76,7 +76,7 @@ ArrayObject::finishCreateArray(ArrayObject* obj, HandleShape shape, AutoSetNewOb
 }
 
 /* static */ inline ArrayObject*
-ArrayObject::createArray(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+ArrayObject::createArray(JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
                          HandleShape shape, HandleObjectGroup group,
                          uint32_t length, AutoSetNewObjectMetadata& metadata)
 {
@@ -93,7 +93,7 @@ ArrayObject::createArray(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHe
 }
 
 /* static */ inline ArrayObject*
-ArrayObject::createCopyOnWriteArray(ExclusiveContext* cx, gc::InitialHeap heap,
+ArrayObject::createCopyOnWriteArray(JSContext* cx, gc::InitialHeap heap,
                                     HandleArrayObject sharedElementsOwner)
 {
     MOZ_ASSERT(sharedElementsOwner->getElementsHeader()->isCopyOnWrite());

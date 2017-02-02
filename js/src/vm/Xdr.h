@@ -17,10 +17,10 @@ namespace js {
 
 class XDRBuffer {
   public:
-    XDRBuffer(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+    XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : context_(cx), buffer_(buffer), cursor_(cursor) { }
 
-    ExclusiveContext* cx() const {
+    JSContext* cx() const {
         return context_;
     }
 
@@ -56,7 +56,7 @@ class XDRBuffer {
     }
 
   private:
-    ExclusiveContext* const context_;
+    JSContext* const context_;
     JS::TranscodeBuffer& buffer_;
     size_t cursor_;
 };
@@ -129,7 +129,7 @@ class XDRState : public XDRCoderBase
     JS::TranscodeResult resultCode_;
 
   public:
-    XDRState(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+    XDRState(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : buf(cx, buffer, cursor),
         resultCode_(JS::TranscodeResult_Ok)
     {
@@ -137,7 +137,7 @@ class XDRState : public XDRCoderBase
 
     virtual ~XDRState() {};
 
-    ExclusiveContext* cx() const {
+    JSContext* cx() const {
         return buf.cx();
     }
     virtual LifoAlloc& lifoAlloc() const;
@@ -152,7 +152,7 @@ class XDRState : public XDRCoderBase
     }
 
     // Record logical failures of XDR.
-    void postProcessContextErrors(ExclusiveContext* cx);
+    void postProcessContextErrors(JSContext* cx);
     JS::TranscodeResult resultCode() const {
         return resultCode_;
     }
@@ -296,7 +296,7 @@ class XDROffThreadDecoder : public XDRDecoder
     LifoAlloc& alloc_;
 
   public:
-    // Note, when providing an ExclusiveContext, where isJSContext is false,
+    // Note, when providing an JSContext, where isJSContext is false,
     // then the initialization of the ScriptSourceObject would remain
     // incomplete. Thus, the sourceObjectOut must be used to finish the
     // initialization with ScriptSourceObject::initFromOptions after the
@@ -304,7 +304,7 @@ class XDROffThreadDecoder : public XDRDecoder
     //
     // When providing a sourceObjectOut pointer, you have to ensure that it is
     // marked by the GC to avoid dangling pointers.
-    XDROffThreadDecoder(ExclusiveContext* cx, LifoAlloc& alloc,
+    XDROffThreadDecoder(JSContext* cx, LifoAlloc& alloc,
                         const ReadOnlyCompileOptions* options,
                         ScriptSourceObject** sourceObjectOut,
                         JS::TranscodeBuffer& buffer, size_t cursor = 0)
@@ -399,7 +399,7 @@ class XDRIncrementalEncoder : public XDREncoder
     bool oom_;
 
   public:
-    XDRIncrementalEncoder(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
+    XDRIncrementalEncoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
       : XDREncoder(cx, slices_, 0),
         scope_(nullptr),
         node_(nullptr),

@@ -86,7 +86,7 @@ Sprinter::realloc_(size_t newSize)
     return true;
 }
 
-Sprinter::Sprinter(ExclusiveContext* cx, bool shouldReportOOM)
+Sprinter::Sprinter(JSContext* cx, bool shouldReportOOM)
   : context(cx),
 #ifdef DEBUG
     initialized(false),
@@ -375,7 +375,7 @@ QuoteString(Sprinter* sp, JSString* str, char16_t quote)
 }
 
 JSString*
-QuoteString(ExclusiveContext* cx, JSString* str, char16_t quote)
+QuoteString(JSContext* cx, JSString* str, char16_t quote)
 {
     Sprinter sprinter(cx);
     if (!sprinter.init())
