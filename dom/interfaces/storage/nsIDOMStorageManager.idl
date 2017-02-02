@@ -20,8 +20,15 @@ interface nsIDOMStorageManager : nsISupports
   /**
    * This starts async preloading of a storage cache for scope
    * defined by the principal.
+   *
+   * Because of how multi-e10s support was implemented in bug 1285898, the
+   * StorageCache instance can no longer use a timer to keep itself alive.  So a
+   * Storage instance is returned if precaching believes the principal may have
+   * localStorage data.  (Previously the StorageCache would be brought into
+   * existence and kept alive by the timer so that it could be returned if a
+   * call to createStorage was made due to a request by the page.)
    */
-  void precacheStorage(in nsIPrincipal aPrincipal);
+  nsIDOMStorage precacheStorage(in nsIPrincipal aPrincipal);
 
   /**
    * Returns instance of DOM storage object for given principal.

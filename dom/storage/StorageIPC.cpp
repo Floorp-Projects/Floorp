@@ -224,6 +224,12 @@ StorageDBChild::RecvObserve(const nsCString& aTopic,
 mozilla::ipc::IPCResult
 StorageDBChild::RecvOriginsHavingData(nsTArray<nsCString>&& aOrigins)
 {
+  // Force population of mOriginsHavingData even if there are no origins so that
+  // ShouldPreloadOrigin does not generate false positives for all origins.
+  if (!aOrigins.Length()) {
+    Unused << OriginsHavingData();
+  }
+
   for (uint32_t i = 0; i < aOrigins.Length(); ++i) {
     OriginsHavingData().PutEntry(aOrigins[i]);
   }

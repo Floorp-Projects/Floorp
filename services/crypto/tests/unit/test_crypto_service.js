@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/services-crypto/LogUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const idService = Cc["@mozilla.org/identity/crypto-service;1"]
                     .getService(Ci.nsIIdentityCryptoService);
@@ -30,13 +30,17 @@ const BASE64_URL_ENCODINGS = [
    "z4DPjM67zrsnIM6_4by2zrQnIOG8gM67z47PgM63zr4sIOG8gM67zrsnIOG8kM-H4b-Wzr3Ov8-CIOG8k869IM68zq3Os86x"],
 ];
 
+let log = Log.repository.getLogger("crypto.service.test");
+(function() {
+  let appender = new Log.DumpAppender();
+  log.level = Log.Level.Debug;
+  log.addAppender(appender);
+  }
+)();
+
 // When the output of an operation is a
 function do_check_eq_or_slightly_less(x, y) {
   do_check_true(x >= y - (3 * 8));
-}
-
-function log(...aMessageArgs) {
-  Logger.log.apply(Logger, ["test"].concat(aMessageArgs));
 }
 
 function test_base64_roundtrip() {
@@ -50,7 +54,7 @@ function test_base64_roundtrip() {
 
 function test_dsa() {
   idService.generateKeyPair(ALG_DSA, function(rv, keyPair) {
-    log("DSA generateKeyPair finished ", rv);
+    log.debug("DSA generateKeyPair finished " + rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
     do_check_eq(keyPair.keyType, ALG_DSA);
@@ -60,9 +64,9 @@ function test_dsa() {
     do_check_eq_or_slightly_less(keyPair.hexDSAPublicValue.length, 1024 / 8 * 2);
     // XXX: test that RSA parameters throw the correct error
 
-    log("about to sign with DSA key");
+    log.debug("about to sign with DSA key");
     keyPair.sign("foo", function(rv2, signature) {
-      log("DSA sign finished ", rv2, signature);
+      log.debug("DSA sign finished " + rv2 + " " + signature);
       do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);
       // TODO: verify the signature with the public key
@@ -73,7 +77,7 @@ function test_dsa() {
 
 function test_rsa() {
   idService.generateKeyPair(ALG_RSA, function(rv, keyPair) {
-    log("RSA generateKeyPair finished ", rv);
+    log.debug("RSA generateKeyPair finished " + rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
     do_check_eq(keyPair.keyType, ALG_RSA);
@@ -81,9 +85,9 @@ function test_rsa() {
                                  2048 / 8);
     do_check_true(keyPair.hexRSAPublicKeyExponent.length > 1);
 
-    log("about to sign with RSA key");
+    log.debug("about to sign with RSA key");
     keyPair.sign("foo", function(rv2, signature) {
-      log("RSA sign finished ", rv2, signature);
+      log.debug("RSA sign finished " + rv2 + " " + signature);
       do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);
       run_next_test();

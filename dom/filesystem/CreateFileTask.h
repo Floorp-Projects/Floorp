@@ -59,6 +59,8 @@ private:
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
 
+  // This is the content of what we want to store. Then, when the File is
+  // created, this will be used to store the new object.
   RefPtr<BlobImpl> mBlobImpl;
 
   // This is going to be the content of the file, received by createFile()

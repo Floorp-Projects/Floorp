@@ -1014,7 +1014,7 @@ fails == 420790-1.xhtml 420790-1.xhtml
 == 421419-1.html 421419-1.html
 == 421436-1a.html 421436-1a.html
 == 421436-1b.html 421436-1b.html
-fails asserts-if(stylo,4) == 421632-1.html 421632-1.html # bug 1335314
+fails asserts-if(stylo,0-4) == 421632-1.html 421632-1.html # bug 1335314
 fails == 421710-1.html 421710-1.html
 fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1.xml
 == 421955-1.html 421955-1.html

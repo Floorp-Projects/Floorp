@@ -157,7 +157,7 @@ module.exports = createClass({
               title: BOXMODEL_L10N.getStr("boxmodel.content"),
             })
           )
-        ),
+        )
       ),
       BoxModelEditable({
         box: "margin",
