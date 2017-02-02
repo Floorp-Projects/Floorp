@@ -598,13 +598,16 @@ void
 RemoteDataDecoder::Shutdown()
 {
   LOG("");
-  MOZ_ASSERT(mJavaDecoder && mJavaCallbacks);
 
-  mJavaDecoder->Release();
-  mJavaDecoder = nullptr;
+  if (mJavaDecoder) {
+    mJavaDecoder->Release();
+    mJavaDecoder = nullptr;
+  }
 
-  JavaCallbacksSupport::GetNative(mJavaCallbacks)->Cancel();
-  mJavaCallbacks = nullptr;
+  if (mJavaCallbacks) {
+    JavaCallbacksSupport::GetNative(mJavaCallbacks)->Cancel();
+    mJavaCallbacks = nullptr;
+  }
 
   mFormat = nullptr;
 }
