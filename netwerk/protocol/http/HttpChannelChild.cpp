@@ -904,14 +904,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   mTransactionTimings.requestStart = timing.requestStart;
   mTransactionTimings.responseStart = timing.responseStart;
   mTransactionTimings.responseEnd = timing.responseEnd;
-
-  // Do not overwrite or adjust the original mAsyncOpenTime by timing.fetchStart
-  // We must use the original child process time in order to account for child
-  // side work and IPC transit overhead.
-  // XXX: This depends on TimeStamp being equivalent across processes.
-  // This is true for modern hardware but for older platforms it is not always
-  // true.
-
+  mAsyncOpenTime = timing.fetchStart;
   mRedirectStartTimeStamp = timing.redirectStart;
   mRedirectEndTimeStamp = timing.redirectEnd;
   mTransferSize = timing.transferSize;
