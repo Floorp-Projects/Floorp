@@ -225,10 +225,20 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
       // should fix it.
       texture = CreateTextureClientForImage(image, GetForwarder());
     }
-    if (!texture || !AddTextureClient(texture)) {
+
+    if (!texture) {
       return false;
     }
 
+    // We check if the texture's allocator is still open, since in between media
+    // decoding a frame and adding it to the compositable, we could have
+    // restarted the GPU process.
+    if (!texture->GetAllocator()->IPCOpen()) {
+      continue;
+    }
+    if (!AddTextureClient(texture)) {
+      return false;
+    }
 
     CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
     t->mTextureClient = texture;
