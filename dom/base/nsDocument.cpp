@@ -3052,6 +3052,11 @@ nsDocument::GetAllowPlugins(bool * aAllowPlugins)
       *aAllowPlugins = !(mSandboxFlags & SANDBOXED_PLUGINS);
   }
 
+  if (*aAllowPlugins) {
+    FlashClassification classification = DocumentFlashClassification();
+    *aAllowPlugins = (classification != FlashClassification::Denied);
+  }
+
   return NS_OK;
 }
 
