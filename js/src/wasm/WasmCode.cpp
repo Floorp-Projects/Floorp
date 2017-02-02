@@ -864,12 +864,14 @@ Code::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lin
 bool
 Code::totalSourceLines(JSContext* cx, uint32_t* count)
 {
+    *count = 0;
+    if (!metadata_->debugEnabled)
+        return true;
+
     if (!ensureSourceMap(cx))
         return false;
 
-    if (!maybeSourceMap_)
-        *count = 0;
-    else
+    if (maybeSourceMap_)
         *count = maybeSourceMap_->totalLines() + experimentalWarningLinesCount;
     return true;
 }

@@ -169,7 +169,7 @@ module.exports = {
     "no-trailing-spaces": "error",
 
     // No using undeclared variables
-    // "no-undef": "error",
+    "no-undef": "error",
 
     // Error on newline where a semicolon is needed
     "no-unexpected-multiline": "error",

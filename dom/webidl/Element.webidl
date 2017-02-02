@@ -260,6 +260,4 @@ partial interface Element {
 partial interface Element {
   [UnsafeInPrerendering, NeedsCallerType]
   void requestPointerLock();
-  [UnsafeInPrerendering, BinaryName="requestPointerLock", Pref="pointer-lock-api.prefixed.enabled", NeedsCallerType]
-  void mozRequestPointerLock();
 };

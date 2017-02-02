@@ -5677,7 +5677,7 @@ struct DebuggerScriptGetLineCountMatcher
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         uint32_t result;
-        if (wasmInstance->instance().code().totalSourceLines(cx_, &result))
+        if (!wasmInstance->instance().code().totalSourceLines(cx_, &result))
             return false;
         totalLines = double(result);
         return true;
