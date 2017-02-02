@@ -112,7 +112,8 @@ nsAboutCacheEntry::NewChannel(nsIURI* uri,
 NS_IMETHODIMP
 nsAboutCacheEntry::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
-    *result = nsIAboutModule::HIDE_FROM_ABOUTABOUT;
+    *result = nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+              nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
     return NS_OK;
 }
 
