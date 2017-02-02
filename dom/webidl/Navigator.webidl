@@ -315,7 +315,8 @@ partial interface Navigator {
 
   // Deprecated. Use mediaDevices.getUserMedia instead.
   [Deprecated="NavigatorGetUserMedia", Throws,
-   Func="Navigator::HasUserMediaSupport", UnsafeInPrerendering]
+   Func="Navigator::HasUserMediaSupport", UnsafeInPrerendering,
+   NeedsCallerType]
   void mozGetUserMedia(MediaStreamConstraints constraints,
                        NavigatorUserMediaSuccessCallback successCallback,
                        NavigatorUserMediaErrorCallback errorCallback);

@@ -11,13 +11,13 @@ import org.mozilla.gecko.Element;
 import org.mozilla.gecko.R;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.GeckoEventListener;
-
-import org.json.JSONObject;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import com.robotium.solo.Condition;
 
-public class testFindInPage extends JavascriptTest implements GeckoEventListener {
+public class testFindInPage extends JavascriptTest implements BundleEventListener {
     private static final int WAIT_FOR_CONDITION_MS = 3000;
 
     protected Element next, close;
@@ -26,24 +26,16 @@ public class testFindInPage extends JavascriptTest implements GeckoEventListener
         super("testFindInPage.js");
     }
 
-    @Override
-    public void handleMessage(String event, final JSONObject message) {
-        if (event.equals("Test:FindInPage")) {
-            try {
-                final String text = message.getString("text");
-                final int nrOfMatches = Integer.parseInt(message.getString("nrOfMatches"));
-                findText(text, nrOfMatches);
-            } catch (Exception e) {
-                fFail("Can't extract find query from JSON");
-            }
-        }
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Test:FindInPage".equals(event)) {
+            final String text = message.getString("text");
+            final int nrOfMatches = message.getInt("nrOfMatches");
+            findText(text, nrOfMatches);
 
-        if (event.equals("Test:CloseFindInPage")) {
-            try {
-                close.click();
-            } catch (Exception e) {
-                fFail("FindInPage prompt not opened");
-            }
+        } else if ("Test:CloseFindInPage".equals(event)) {
+            close.click();
         }
     }
 

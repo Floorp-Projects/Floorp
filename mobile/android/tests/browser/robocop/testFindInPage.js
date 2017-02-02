@@ -37,14 +37,14 @@ function openTabWithUrl(url) {
 function findInPage(browser, text, nrOfMatches) {
   let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
   do_print("Send findInPageMessage: " + text + " nth: " + nrOfMatches);
-  Messaging.sendRequest({ type: "Test:FindInPage", text: text, nrOfMatches: nrOfMatches });
+  EventDispatcher.instance.sendRequest({ type: "Test:FindInPage", text: text, nrOfMatches: nrOfMatches });
   return repaintPromise;
 }
 
 function closeFindInPage(browser) {
   let repaintPromise = promiseBrowserEvent(browser, "MozAfterPaint");
   do_print("Send closeFindInPageMessage");
-  Messaging.sendRequest({ type: "Test:CloseFindInPage" });
+  EventDispatcher.instance.sendRequest({ type: "Test:CloseFindInPage" });
   return repaintPromise;
 }
 

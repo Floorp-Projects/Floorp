@@ -263,7 +263,7 @@ public class BrowserSearch extends HomeFragment
                 getLoaderManager().destroyLoader(LOADER_ID_SUGGESTION);
             }
 
-            GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+            EventDispatcher.getInstance().dispatch("SearchEngines:GetVisible", null);
         }
         super.onHiddenChanged(hidden);
     }
@@ -277,7 +277,7 @@ public class BrowserSearch extends HomeFragment
 
         // Fetch engines if we need to.
         if (mSearchEngines.isEmpty() || !Locale.getDefault().equals(mLastLocale)) {
-            GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+            EventDispatcher.getInstance().dispatch("SearchEngines:GetVisible", null);
         } else {
             updateSearchEngineBar();
         }

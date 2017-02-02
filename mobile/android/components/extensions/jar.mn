@@ -3,4 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 chrome.jar:
+    content/ext-c-tabs.js
     content/ext-pageAction.js
+    content/ext-tabs.js
+    content/ext-utils.js

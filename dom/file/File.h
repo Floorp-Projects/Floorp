@@ -208,6 +208,7 @@ public:
   CreateFromFileName(const GlobalObject& aGlobal,
                      const nsAString& aData,
                      const ChromeFilePropertyBag& aBag,
+                     SystemCallerGuarantee aGuarantee,
                      ErrorResult& aRv);
 
   // ChromeOnly
@@ -215,6 +216,7 @@ public:
   CreateFromNsIFile(const GlobalObject& aGlobal,
                     nsIFile* aData,
                     const ChromeFilePropertyBag& aBag,
+                    SystemCallerGuarantee aGuarantee,
                     ErrorResult& aRv);
 
   void GetName(nsAString& aName) const;
@@ -231,7 +233,8 @@ public:
 
   void SetPath(const nsAString& aName);
 
-  void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv) const;
+  void GetMozFullPath(nsAString& aFilename, SystemCallerGuarantee aGuarantee,
+                      ErrorResult& aRv) const;
 
   void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv) const;
 
@@ -265,7 +268,9 @@ public:
 
   virtual void SetLastModified(int64_t aLastModified) = 0;
 
-  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) const = 0;
+  virtual void GetMozFullPath(nsAString& aName,
+                              SystemCallerGuarantee /* unused */,
+                              ErrorResult& aRv) const = 0;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const = 0;
 
@@ -409,7 +414,9 @@ public:
 
   virtual void SetLastModified(int64_t aLastModified) override;
 
-  virtual void GetMozFullPath(nsAString& aName, ErrorResult& aRv) const override;
+  virtual void GetMozFullPath(nsAString& aName,
+                              SystemCallerGuarantee /* unused */,
+                              ErrorResult& aRv) const override;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName,
                                       ErrorResult& aRv) const override;

@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
                                   "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -146,7 +146,7 @@ PushRecord.prototype = {
     }
 
     if (AppConstants.MOZ_ANDROID_HISTORY) {
-      let result = yield Messaging.sendRequestForResult({
+      let result = yield EventDispatcher.instance.sendRequestForResult({
         type: "History:GetPrePathLastVisitedTimeMilliseconds",
         prePath: this.uri.prePath,
       });

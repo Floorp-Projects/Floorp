@@ -164,7 +164,7 @@ interface MozObjectLoadingContent {
    * This method will play a plugin that has been stopped by the click-to-play
    * feature.
    */
-  [ChromeOnly, Throws]
+  [ChromeOnly, Throws, NeedsCallerType]
   void playPlugin();
 
   /**
@@ -204,7 +204,7 @@ interface MozObjectLoadingContent {
   [ChromeOnly]
   readonly attribute boolean hasRunningPlugin;
 
-  [ChromeOnly, Throws]
+  [ChromeOnly, Throws, NeedsCallerType]
   readonly attribute unsigned long runID;
 };
 

@@ -217,7 +217,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
             if ("1".equals(quitAndFinish)) {
                 // Request the browser force quit and wait for it to take effect.
                 Log.i(LOGTAG, "Requesting force quit.");
-                mActions.sendGeckoEvent("Robocop:Quit", null);
+                mActions.sendGlobalEvent("Robocop:Quit", null);
                 mSolo.sleep(ROBOCOP_QUIT_WAIT_MS);
 
                 // If still running, finish activities as recommended by Robotium.

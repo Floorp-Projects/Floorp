@@ -3321,9 +3321,9 @@ Element::AttrValueToCORSMode(const nsAttrValue* aValue)
 }
 
 static const char*
-GetFullScreenError(nsIDocument* aDoc)
+GetFullScreenError(CallerType aCallerType)
 {
-  if (!nsContentUtils::IsRequestFullScreenAllowed()) {
+  if (!nsContentUtils::IsRequestFullScreenAllowed(aCallerType)) {
     return "FullscreenDeniedNotInputDriven";
   }
 
@@ -3340,7 +3340,7 @@ Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
   // spoof the browser chrome/window and phish logins etc.
   // Note that requests for fullscreen inside a web app's origin are exempt
   // from this restriction.
-  if (const char* error = GetFullScreenError(OwnerDoc())) {
+  if (const char* error = GetFullScreenError(aCallerType)) {
     OwnerDoc()->DispatchFullscreenError(error);
     return;
   }

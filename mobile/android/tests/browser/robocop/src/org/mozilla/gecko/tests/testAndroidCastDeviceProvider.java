@@ -7,25 +7,28 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import org.json.JSONObject;
 import org.json.JSONException;
 
-public class testAndroidCastDeviceProvider extends JavascriptTest implements NativeEventListener {
+public class testAndroidCastDeviceProvider extends JavascriptTest implements BundleEventListener {
     public testAndroidCastDeviceProvider() {
         super("testAndroidCastDeviceProvider.js");
     }
 
-    @Override
-    public void handleMessage(String event, final NativeJSObject message, final EventCallback callback) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
       mAsserter.dumpLog("Got event: " + event);
-      if (event.equals("AndroidCastDevice:Start")) {
+
+      if ("AndroidCastDevice:Start".equals(event)) {
         callback.sendSuccess("Succeed to start presentation.");
         GeckoAppShell.notifyObservers("presentation-view-ready", "chromecast");
-      } else if (event.equals("AndroidCastDevice:SyncDevice")) {
+
+      } else if ("AndroidCastDevice:SyncDevice".equals(event)) {
         final JSONObject json = new JSONObject();
         try {
             json.put("uuid", "existed-chromecast");

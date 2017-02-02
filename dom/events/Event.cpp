@@ -37,10 +37,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-extern bool IsCurrentThreadRunningChromeWorker();
-} // namespace workers
-
 static char *sPopupAllowedEvents;
 
 static bool sReturnHighResTimeStamp = false;
@@ -367,7 +363,7 @@ bool
 Event::Init(mozilla::dom::EventTarget* aGlobal)
 {
   if (!mIsMainThreadEvent) {
-    return nsContentUtils::ThreadsafeIsCallerChrome();
+    return workers::IsCurrentThreadRunningChromeWorker();
   }
   bool trusted = false;
   nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);

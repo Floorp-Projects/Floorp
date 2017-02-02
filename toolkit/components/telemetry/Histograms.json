@@ -8236,7 +8236,7 @@
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
-    "description": "Measuring the effects of draft-ietf-httpbis-cookie-alone blocking. 0=blocked http setting secure cookie; 1=blocked http downgrading secure cookie; 2=blocked evicting secure cookie; 3=evicting newer insecure cookie; 4=evicting the oldest insecure cookie; 5=evicting the preferred cookie; 6=evicting the secure blocked"
+    "description": "Strict Secure Cookies: 0=blocked secure cookie from http; 1=blocked shadowing secure cookie from http; 2=shadowing secure cookie from https; 3=evicted newer insecure cookie; 4=evicted oldest insecure cookie; 5=evicted secure cookie; 6=evicting secure cookie blocked; 7=blocked downgrading secure cookie from http; 8=downgraded secure cookie from https"
   },
   "NTLM_MODULE_USED_2": {
     "expires_in_version": "never",

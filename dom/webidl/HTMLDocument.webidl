@@ -45,10 +45,10 @@ interface HTMLDocument : Document {
 
   [SetterThrows, NeedsSubjectPrincipal]
            attribute DOMString designMode;
-  [Throws, NeedsCallerType]
+  [Throws, NeedsSubjectPrincipal]
   boolean execCommand(DOMString commandId, optional boolean showUI = false,
                       optional DOMString value = "");
-  [Throws, NeedsCallerType]
+  [Throws, NeedsSubjectPrincipal]
   boolean queryCommandEnabled(DOMString commandId);
   [Throws]
   boolean queryCommandIndeterm(DOMString commandId);
