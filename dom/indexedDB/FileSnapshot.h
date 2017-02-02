@@ -84,9 +84,10 @@ private:
   }
 
   virtual void
-  GetMozFullPath(nsAString& aName, ErrorResult& aRv) const override
+  GetMozFullPath(nsAString& aName, SystemCallerGuarantee aGuarantee,
+                 ErrorResult& aRv) const override
   {
-    mBlobImpl->GetMozFullPath(aName, aRv);
+    mBlobImpl->GetMozFullPath(aName, aGuarantee, aRv);
   }
 
   virtual void

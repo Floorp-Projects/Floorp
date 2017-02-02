@@ -55,7 +55,7 @@ ThreadNode.prototype = {
   /**
    * Build an inverted call tree from profile samples. The format of the
    * samples is described in tools/profiler/ProfileEntry.h, under the heading
-   * "ThreadProfile JSON Format".
+   * "Thread profile JSON Format".
    *
    * The profile data is naturally presented inverted. Inverting the call tree
    * is also the default in the Performance tool.

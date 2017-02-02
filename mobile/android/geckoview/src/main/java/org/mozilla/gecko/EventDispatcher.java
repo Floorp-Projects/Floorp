@@ -12,10 +12,6 @@ import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSContainer;
-import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -48,17 +44,9 @@ public final class EventDispatcher extends JNIObject {
      * empirically determine the initial capacity that avoids rehashing, we need to
      * determine the initial size, divide it by 75%, and round up to the next power-of-2.
      */
-    private static final int DEFAULT_GECKO_NATIVE_EVENTS_COUNT = 0; // Default for HashMap
-    private static final int DEFAULT_GECKO_JSON_EVENTS_COUNT = 256; // Empirically measured
-    private static final int DEFAULT_GECKO_EVENTS_COUNT = 0; // Default for HashMap
+    private static final int DEFAULT_GECKO_EVENTS_COUNT = 256; // Empirically measured
     private static final int DEFAULT_UI_EVENTS_COUNT = 0; // Default for HashMap
     private static final int DEFAULT_BACKGROUND_EVENTS_COUNT = 0; // Default for HashMap
-
-    // Legacy events.
-    private final Map<String, List<NativeEventListener>> mGeckoThreadNativeListeners =
-        new HashMap<String, List<NativeEventListener>>(DEFAULT_GECKO_NATIVE_EVENTS_COUNT);
-    private final Map<String, List<GeckoEventListener>> mGeckoThreadJSONListeners =
-        new HashMap<String, List<GeckoEventListener>>(DEFAULT_GECKO_JSON_EVENTS_COUNT);
 
     // GeckoBundle-based events.
     private final Map<String, List<BundleEventListener>> mGeckoThreadListeners =
@@ -134,9 +122,7 @@ public final class EventDispatcher extends JNIObject {
             // already-registered listeners in non-release builds.
             return;
         }
-        for (final Map<String, ?> listenersMap : Arrays.asList(mGeckoThreadNativeListeners,
-                                                               mGeckoThreadJSONListeners,
-                                                               mGeckoThreadListeners,
+        for (final Map<String, ?> listenersMap : Arrays.asList(mGeckoThreadListeners,
                                                                mUiThreadListeners,
                                                                mBackgroundThreadListeners)) {
             if (listenersMap == allowedMap) {
@@ -183,24 +169,6 @@ public final class EventDispatcher extends JNIObject {
                          mGeckoThreadListeners, listener, events);
     }
 
-    @Deprecated // Use BundleEventListener instead
-    public void registerGeckoThreadListener(final NativeEventListener listener,
-                                            final String... events) {
-        checkNotRegisteredElsewhere(mGeckoThreadNativeListeners, events);
-
-        registerListener(CopyOnWriteArrayList.class,
-                         mGeckoThreadNativeListeners, listener, events);
-    }
-
-    @Deprecated // Use BundleEventListener instead
-    public void registerGeckoThreadListener(final GeckoEventListener listener,
-                                            final String... events) {
-        checkNotRegisteredElsewhere(mGeckoThreadJSONListeners, events);
-
-        registerListener(CopyOnWriteArrayList.class,
-                         mGeckoThreadJSONListeners, listener, events);
-    }
-
     public void registerUiThreadListener(final BundleEventListener listener,
                                          final String... events) {
         checkNotRegisteredElsewhere(mUiThreadListeners, events);
@@ -223,18 +191,6 @@ public final class EventDispatcher extends JNIObject {
         unregisterListener(mGeckoThreadListeners, listener, events);
     }
 
-    @Deprecated // Use BundleEventListener instead
-    public void unregisterGeckoThreadListener(final NativeEventListener listener,
-                                              final String... events) {
-        unregisterListener(mGeckoThreadNativeListeners, listener, events);
-    }
-
-    @Deprecated // Use BundleEventListener instead
-    public void unregisterGeckoThreadListener(final GeckoEventListener listener,
-                                              final String... events) {
-        unregisterListener(mGeckoThreadJSONListeners, listener, events);
-    }
-
     public void unregisterUiThreadListener(final BundleEventListener listener,
                                            final String... events) {
         unregisterListener(mUiThreadListeners, listener, events);
@@ -243,81 +199,6 @@ public final class EventDispatcher extends JNIObject {
     public void unregisterBackgroundThreadListener(final BundleEventListener listener,
                                                    final String... events) {
         unregisterListener(mBackgroundThreadListeners, listener, events);
-    }
-
-    private List<NativeEventListener> getNativeListeners(final String type) {
-        final List<NativeEventListener> listeners;
-        synchronized (mGeckoThreadNativeListeners) {
-            listeners = mGeckoThreadNativeListeners.get(type);
-        }
-        return listeners;
-    }
-
-    private List<GeckoEventListener> getGeckoListeners(final String type) {
-        final List<GeckoEventListener> listeners;
-        synchronized (mGeckoThreadJSONListeners) {
-            listeners = mGeckoThreadJSONListeners.get(type);
-        }
-        return listeners;
-    }
-
-    public boolean dispatchEvent(final NativeJSContainer message) {
-        // First try native listeners.
-        final String type = message.optString("type", null);
-        if (type == null) {
-            Log.e(LOGTAG, "JSON message must have a type property");
-            return true; // It may seem odd to return true here, but it's necessary to preserve the correct behavior.
-        }
-
-        final List<NativeEventListener> listeners = getNativeListeners(type);
-
-        final String guid = message.optString(GUID, null);
-        EventCallback callback = null;
-        if (guid != null) {
-            callback = new GeckoEventCallback(guid, type);
-        }
-
-        if (listeners != null) {
-            if (listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type);
-
-                // There were native listeners, and they're gone.  Return a failure rather than
-                // looking for JSON listeners. This is an optimization, as we can safely assume
-                // that an event which previously had native listeners will never have JSON
-                // listeners.
-                return false;
-            }
-            try {
-                for (final NativeEventListener listener : listeners) {
-                    listener.handleMessage(type, message, callback);
-                }
-            } catch (final NativeJSObject.InvalidPropertyException e) {
-                Log.e(LOGTAG, "Exception occurred while handling " + type, e);
-            }
-            // If we found native listeners, we assume we don't have any other types of listeners
-            // and return early. This assumption is checked when registering listeners.
-            return true;
-        }
-
-        // Check for thread event listeners before checking for JSON event listeners,
-        // because checking for thread listeners is very fast and doesn't require us to
-        // serialize into JSON and construct a JSONObject.
-        if (dispatchToThreads(type, message, /* bundle */ null, callback)) {
-            // If we found thread listeners, we assume we don't have any other types of listeners
-            // and return early. This assumption is checked when registering listeners.
-            return true;
-        }
-
-        try {
-            // If we didn't find native listeners, try JSON listeners.
-            return dispatchEvent(new JSONObject(message.toString()), callback);
-        } catch (final JSONException e) {
-            Log.e(LOGTAG, "Cannot parse JSON", e);
-        } catch (final UnsupportedOperationException e) {
-            Log.e(LOGTAG, "Cannot convert message to JSON", e);
-        }
-
-        return true;
     }
 
     @WrapForJNI
@@ -353,13 +234,12 @@ public final class EventDispatcher extends JNIObject {
             }
         }
 
-        dispatchToThreads(type, /* js */ null, message, /* callback */ callback);
+        dispatchToThreads(type, message, /* callback */ callback);
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private boolean dispatchToThreads(final String type,
-                                      final NativeJSObject jsMessage,
-                                      final GeckoBundle bundleMessage,
+                                      final GeckoBundle message,
                                       final EventCallback callback) {
         final List<BundleEventListener> geckoListeners;
         synchronized (mGeckoThreadListeners) {
@@ -368,122 +248,52 @@ public final class EventDispatcher extends JNIObject {
         if (geckoListeners != null && !geckoListeners.isEmpty()) {
             final boolean onGeckoThread = ThreadUtils.isOnGeckoThread();
             final EventCallback wrappedCallback = JavaCallbackDelegate.wrap(callback);
-            final GeckoBundle messageAsBundle;
-            try {
-                messageAsBundle = jsMessage != null ?
-                        convertBundle(jsMessage.toBundle(), jsMessage) : bundleMessage;
-            } catch (final NativeJSObject.InvalidPropertyException e) {
-                Log.e(LOGTAG, "Exception occurred while handling " + type, e);
-                return true;
-            }
 
             for (final BundleEventListener listener : geckoListeners) {
                 // For other threads, we always dispatch asynchronously. However, for
                 // Gecko listeners only, we dispatch synchronously if we're already on
                 // Gecko thread.
                 if (onGeckoThread) {
-                    listener.handleMessage(type, messageAsBundle, wrappedCallback);
+                    listener.handleMessage(type, message, wrappedCallback);
                     continue;
                 }
                 ThreadUtils.sGeckoHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        listener.handleMessage(type, messageAsBundle, wrappedCallback);
+                        listener.handleMessage(type, message, wrappedCallback);
                     }
                 });
             }
             return true;
         }
 
-        if (dispatchToThread(type, jsMessage, bundleMessage, callback,
+        if (dispatchToThread(type, message, callback,
                              mUiThreadListeners, ThreadUtils.getUiHandler())) {
             return true;
         }
 
-        if (dispatchToThread(type, jsMessage, bundleMessage, callback,
+        if (dispatchToThread(type, message, callback,
                              mBackgroundThreadListeners, ThreadUtils.getBackgroundHandler())) {
             return true;
         }
 
-        if (jsMessage == null) {
-            Log.w(LOGTAG, "No listeners for " + type);
-        }
-
-        if (!GeckoThread.isRunning() && jsMessage == null) {
+        if (!GeckoThread.isRunning()) {
             // Usually, we discard an event if there is no listeners for it by the time of
             // the dispatch. However, if Gecko is not ready and there is no listener for
             // this event that's possibly headed to Gecko, we make a special exception to
             // queue this event until Gecko is ready. This way, Gecko can first register
             // its listeners, and accept the event when it is ready.
             GeckoThread.queueNativeCall(this, "dispatchToGecko",
-                                        String.class, type, GeckoBundle.class, bundleMessage,
+                                        String.class, type, GeckoBundle.class, message,
                                         EventCallback.class, JavaCallbackDelegate.wrap(callback));
             return true;
-        }
-
-        if (!AppConstants.RELEASE_OR_BETA && jsMessage == null) {
-            // We're dispatching a Bundle message. Because Gecko thread listeners are not
-            // supported for Bundle messages, do a sanity check to make sure we don't have
-            // matching Gecko thread listeners.
-            boolean hasGeckoListener = false;
-            synchronized (mGeckoThreadNativeListeners) {
-                hasGeckoListener |= mGeckoThreadNativeListeners.containsKey(type);
-            }
-            synchronized (mGeckoThreadJSONListeners) {
-                hasGeckoListener |= mGeckoThreadJSONListeners.containsKey(type);
-            }
-            if (hasGeckoListener) {
-                throw new IllegalStateException(
-                        "Dispatching Bundle message to Gecko listener " + type);
-            }
         }
 
         return false;
     }
 
-    // XXX: temporary helper for converting Bundle to GeckoBundle.
-    private GeckoBundle convertBundle(final Bundle bundle, final NativeJSObject jsObj) {
-        if (bundle == null) {
-            return null;
-        }
-
-        final Set<String> keys = bundle.keySet();
-        final GeckoBundle out = new GeckoBundle(keys.size());
-
-        for (final String key : keys) {
-            final Object value = bundle.get(key);
-
-            if (value instanceof Bundle) {
-                final Bundle bundleValue = (Bundle) value;
-                try {
-                    // XXX: NativeJSObject.toBundle doesn't support object arrays, and
-                    // instead converts it to a Bundle with integer members; correct that.
-                    final NativeJSObject[] objs = jsObj.getObjectArray(key);
-                    final GeckoBundle[] outArray = new GeckoBundle[objs.length];
-                    for (int i = 0; i < objs.length; i++) {
-                        outArray[i] = convertBundle(
-                                bundleValue.getBundle(String.valueOf(i)), objs[i]);
-                    }
-                    out.putBundleArray(key, outArray);
-
-                } catch (final Exception e) {
-                    // Not an array
-                    out.putBundle(key, convertBundle(bundleValue, jsObj.getObject(key)));
-                }
-
-            } else if (value instanceof Bundle[]) {
-                throw new IllegalStateException("toBundle should not have generated Bundle[] values");
-
-            } else {
-                out.put(key, value);
-            }
-        }
-        return out;
-    }
-
     private boolean dispatchToThread(final String type,
-                                     final NativeJSObject jsMessage,
-                                     final GeckoBundle bundleMessage,
+                                     final GeckoBundle message,
                                      final EventCallback callback,
                                      final Map<String, List<BundleEventListener>> listenersMap,
                                      final Handler thread) {
@@ -502,15 +312,6 @@ public final class EventDispatcher extends JNIObject {
                 return false;
             }
 
-            final GeckoBundle messageAsBundle;
-            try {
-                messageAsBundle = jsMessage != null ?
-                        convertBundle(jsMessage.toBundle(), jsMessage) : bundleMessage;
-            } catch (final NativeJSObject.InvalidPropertyException e) {
-                Log.e(LOGTAG, "Exception occurred while handling " + type, e);
-                return true;
-            }
-
             // Use a delegate to make sure callbacks happen on a specific thread.
             final EventCallback wrappedCallback = JavaCallbackDelegate.wrap(callback);
 
@@ -519,67 +320,11 @@ public final class EventDispatcher extends JNIObject {
                 thread.post(new Runnable() {
                     @Override
                     public void run() {
-                        listener.handleMessage(type, messageAsBundle, wrappedCallback);
+                        listener.handleMessage(type, message, wrappedCallback);
                     }
                 });
             }
             return true;
-        }
-    }
-
-    public boolean dispatchEvent(final JSONObject message, final EventCallback callback) {
-        // {
-        //   "type": "value",
-        //   "event_specific": "value",
-        //   ...
-        try {
-            final String type = message.getString("type");
-
-            final List<GeckoEventListener> listeners = getGeckoListeners(type);
-
-            if (listeners == null || listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type);
-                return false;
-            }
-
-            for (final GeckoEventListener listener : listeners) {
-                listener.handleMessage(type, message);
-            }
-        } catch (final JSONException e) {
-            Log.e(LOGTAG, "handleGeckoMessage throws " + e, e);
-        }
-
-        return true;
-    }
-
-    @RobocopTarget
-    @Deprecated
-    public static void sendResponse(JSONObject message, Object response) {
-        sendResponseHelper(STATUS_SUCCESS, message, response);
-    }
-
-    @Deprecated
-    public static void sendError(JSONObject message, Object response) {
-        sendResponseHelper(STATUS_ERROR, message, response);
-    }
-
-    @Deprecated
-    private static void sendResponseHelper(String status, JSONObject message, Object response) {
-        try {
-            final String topic = message.getString("type") + ":Response";
-            final JSONObject wrapper = new JSONObject();
-            wrapper.put(GUID, message.getString(GUID));
-            wrapper.put("status", status);
-            wrapper.put("response", response);
-
-            if (ThreadUtils.isOnGeckoThread()) {
-                GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
-            } else {
-                GeckoAppShell.notifyObservers(topic, wrapper.toString(),
-                                              GeckoThread.State.PROFILE_READY);
-            }
-        } catch (final JSONException e) {
-            Log.e(LOGTAG, "Unable to send response", e);
         }
     }
 
@@ -623,7 +368,26 @@ public final class EventDispatcher extends JNIObject {
             this.callback = callback;
         }
 
-        private void makeCallback(final boolean callSuccess, final Object response) {
+        private void makeCallback(final boolean callSuccess, final Object rawResponse) {
+            final Object response;
+            if (rawResponse instanceof Number) {
+                // There is ambiguity because a number can be converted to either int or
+                // double, so e.g. the user can be expecting a double when we give it an
+                // int. To avoid these pitfalls, we disallow all numbers. The workaround
+                // is to wrap the number in a JS object / GeckoBundle, which supports
+                // type coersion for numbers.
+                throw new UnsupportedOperationException(
+                        "Cannot use number as Java callback result");
+            } else if (rawResponse != null && rawResponse.getClass().isArray()) {
+                // Same with arrays.
+                throw new UnsupportedOperationException(
+                        "Cannot use arrays as Java callback result");
+            } else if (rawResponse instanceof Character) {
+                response = rawResponse.toString();
+            } else {
+                response = rawResponse;
+            }
+
             // Call back synchronously if we happen to be on the same thread as the thread
             // making the original request.
             if (ThreadUtils.isOnThread(originalThread)) {
@@ -663,53 +427,6 @@ public final class EventDispatcher extends JNIObject {
         @Override // EventCallback
         public void sendError(Object response) {
             makeCallback(/* success */ false, response);
-        }
-    }
-
-    /* package */ static class GeckoEventCallback implements EventCallback {
-        private final String guid;
-        private final String type;
-        private boolean sent;
-
-        public GeckoEventCallback(final String guid, final String type) {
-            this.guid = guid;
-            this.type = type;
-        }
-
-        @Override
-        public void sendSuccess(final Object response) {
-            sendResponse(STATUS_SUCCESS, response);
-        }
-
-        @Override
-        public void sendError(final Object response) {
-            sendResponse(STATUS_ERROR, response);
-        }
-
-        private void sendResponse(final String status, final Object response) {
-            if (sent) {
-                throw new IllegalStateException("Callback has already been executed for type=" +
-                        type + ", guid=" + guid);
-            }
-
-            sent = true;
-
-            try {
-                final String topic = type + ":Response";
-                final JSONObject wrapper = new JSONObject();
-                wrapper.put(GUID, guid);
-                wrapper.put("status", status);
-                wrapper.put("response", response);
-
-                if (ThreadUtils.isOnGeckoThread()) {
-                    GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
-                } else {
-                    GeckoAppShell.notifyObservers(topic, wrapper.toString(),
-                                                  GeckoThread.State.PROFILE_READY);
-                }
-            } catch (final JSONException e) {
-                Log.e(LOGTAG, "Unable to send response for: " + type, e);
-            }
         }
     }
 }

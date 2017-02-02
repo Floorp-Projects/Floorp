@@ -43,3 +43,10 @@ GeckoCustom::get_ID(uint64_t* aID)
   *aID = mAcc->IsDoc() ? 0 : reinterpret_cast<uintptr_t>(mAcc.get());
   return S_OK;
 }
+
+STDMETHODIMP
+GeckoCustom::get_minimumIncrement(double* aIncrement)
+{
+  *aIncrement = mAcc->Step();
+  return S_OK;
+}

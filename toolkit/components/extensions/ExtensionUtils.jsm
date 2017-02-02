@@ -731,6 +731,33 @@ function injectAPI(source, dest) {
 }
 
 /**
+ * A set with a limited number of slots, which flushes older entries as
+ * newer ones are added.
+ */
+class LimitedSet extends Set {
+  constructor(limit, iterable = undefined) {
+    super(iterable);
+    this.limit = limit;
+  }
+
+  truncate(limit) {
+    for (let item of this) {
+      if (this.size <= limit) {
+        break;
+      }
+      this.delete(item);
+    }
+  }
+
+  add(item) {
+    if (!this.has(item) && this.size >= this.limit) {
+      this.truncate(this.limit - 1);
+    }
+    super.add(item);
+  }
+}
+
+/**
  * Returns a Promise which resolves when the given document's DOM has
  * fully loaded.
  *
@@ -1037,6 +1064,10 @@ class MessageManagerProxy {
     Cu.reportError(`Cannot send message: Other side disconnected: ${uneval(args)}`);
   }
 
+  get isDisconnected() {
+    return !this.messageManager;
+  }
+
   /**
    * Adds a message listener to the current message manager, and
    * transfers it to the new message manager after a docShell swap.
@@ -1152,6 +1183,7 @@ this.ExtensionUtils = {
   EventEmitter,
   ExtensionError,
   IconDetails,
+  LimitedSet,
   LocaleData,
   MessageManagerProxy,
   PlatformInfo,

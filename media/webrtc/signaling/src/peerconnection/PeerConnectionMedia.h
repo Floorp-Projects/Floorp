@@ -170,7 +170,8 @@ public:
 
   already_AddRefed<PledgeVoid>
   ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints) override;
+                   const dom::MediaTrackConstraints& aConstraints,
+                   dom::CallerType aCallerType) override;
 
   void Stop() override
   {

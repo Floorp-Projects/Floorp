@@ -540,7 +540,6 @@ NS_IMETHODIMP
 QuotaManagerService::Clear(nsIQuotaRequest** _retval)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (NS_WARN_IF(!gTestingMode)) {
     return NS_ERROR_UNEXPECTED;
@@ -569,7 +568,6 @@ QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCString suffix;
   aPrincipal->OriginAttributesRef().CreateSuffix(suffix);
@@ -626,7 +624,6 @@ NS_IMETHODIMP
 QuotaManagerService::Reset(nsIQuotaRequest** _retval)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (NS_WARN_IF(!gTestingMode)) {
     return NS_ERROR_UNEXPECTED;

@@ -86,7 +86,6 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                                                                   "MediaPlayer:Play",
                                                                   "MediaPlayer:Pause",
                                                                   "MediaPlayer:End",
-                                                                  "MediaPlayer:Mirror",
                                                                   "MediaPlayer:Message",
                                                                   "AndroidCastDevice:Start",
                                                                   "AndroidCastDevice:Stop",
@@ -102,7 +101,6 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                                                                     "MediaPlayer:Play",
                                                                     "MediaPlayer:Pause",
                                                                     "MediaPlayer:End",
-                                                                    "MediaPlayer:Mirror",
                                                                     "MediaPlayer:Message",
                                                                     "AndroidCastDevice:Start",
                                                                     "AndroidCastDevice:Stop",
@@ -136,8 +134,6 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                 player.pause(callback);
             } else if ("MediaPlayer:End".equals(event)) {
                 player.end(callback);
-            } else if ("MediaPlayer:Mirror".equals(event)) {
-                player.mirror(callback);
             } else if ("MediaPlayer:Message".equals(event) && message.containsKey("data")) {
                 player.message(message.getString("data"), callback);
             } else if ("MediaPlayer:Load".equals(event)) {

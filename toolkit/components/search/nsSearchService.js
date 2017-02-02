@@ -3635,22 +3635,24 @@ SearchService.prototype = {
       return;
     }
 
-    let jarNames = new Set();
-    for (let region in searchSettings) {
-      // Artifact builds use the full list.json which parses
-      // slightly differently
-      if (!("visibleDefaultEngines" in searchSettings[region])) {
-        continue;
-      }
-      for (let engine of searchSettings[region]["visibleDefaultEngines"]) {
-        jarNames.add(engine);
-      }
-    }
-
     // Check if we have a useable country specific list of visible default engines.
+    // This will only be set if we got the list from the Mozilla search server;
+    // it will not be set for distributions.
     let engineNames;
     let visibleDefaultEngines = this.getVerifiedGlobalAttr("visibleDefaultEngines");
     if (visibleDefaultEngines) {
+      let jarNames = new Set();
+      for (let region in searchSettings) {
+        // Artifact builds use the full list.json which parses
+        // slightly differently
+        if (!("visibleDefaultEngines" in searchSettings[region])) {
+          continue;
+        }
+        for (let engine of searchSettings[region]["visibleDefaultEngines"]) {
+          jarNames.add(engine);
+        }
+      }
+
       engineNames = visibleDefaultEngines.split(",");
       for (let engineName of engineNames) {
         // If all engineName values are part of jarNames,

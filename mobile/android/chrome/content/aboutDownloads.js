@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils", "resource://gre/modules/DownloadUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
@@ -184,7 +184,7 @@ DownloadListView.prototype = {
     this.items.delete(download);
     this.listElement.removeChild(item.element);
 
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "Download:Remove",
       path: download.target.path
     });

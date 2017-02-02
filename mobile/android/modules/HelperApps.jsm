@@ -148,12 +148,15 @@ var HelperApps =  {
     };
 
     if (!callback) {
-      let data = [];
+      let data = null;
       // Use dispatch to enable synchronous callback for Gecko thread event.
-      EventDispatcher.instance.dispatch(msg, {
+      EventDispatcher.instance.dispatch(msg.type, msg, {
         onSuccess: (result) => { data = result; },
         onError: () => { throw new Error("Intent:GetHandler callback failed"); },
       });
+      if (data === null) {
+        throw new Error("Intent:GetHandler did not return data");
+      }
       return parseData(data);
     } else {
       EventDispatcher.instance.sendRequestForResult(msg).then(function(data) {

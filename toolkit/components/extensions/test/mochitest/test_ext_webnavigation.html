@@ -14,6 +14,10 @@
 <script type="text/javascript">
 "use strict";
 
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
 /* globals sendMouseEvent */
 
 function backgroundScript() {
@@ -334,8 +338,13 @@ add_task(function* webnav_transitions_props() {
   ok(found, "Got the onCommitted event");
 
   if (found) {
-    is(found.details.transitionType, "manual_subframe",
-       "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
+    if (AppConstants.MOZ_BUILD_APP === "browser") {
+      is(found.details.transitionType, "manual_subframe",
+         "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
+    } else {
+      is(found.details.transitionType, "auto_subframe",
+         "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
+    }
   }
 
   // Test transitions properties on onHistoryStateUpdated events.

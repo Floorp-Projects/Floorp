@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs executeScript Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* testExecuteScript() {
+  let win = window.open("http://mochi.test:8888/");
+
+  async function background() {
+    let tasks = [
+      {
+        background: "transparent",
+        foreground: "rgb(0, 113, 4)",
+        promise: () => {
+          return browser.tabs.insertCSS({
+            file: "file2.css",
+          });
+        },
+      },
+      {
+        background: "rgb(42, 42, 42)",
+        foreground: "rgb(0, 113, 4)",
+        promise: () => {
+          return browser.tabs.insertCSS({
+            code: "* { background: rgb(42, 42, 42) }",
+          });
+        },
+      },
+      {
+        background: "rgb(42, 42, 42)",
+        foreground: "rgb(0, 113, 4)",
+        promise: () => {
+          return browser.tabs.insertCSS({
+            code: "* { background: rgb(100, 100, 100) !important }",
+            cssOrigin: "author",
+          }).then(r => browser.tabs.insertCSS({
+            code: "* { background: rgb(42, 42, 42) !important }",
+            cssOrigin: "author",
+          }));
+        },
+      },
+      {
+        background: "rgb(100, 100, 100)",
+        foreground: "rgb(0, 113, 4)",
+        promise: () => {
+          // User has higher importance
+          return browser.tabs.insertCSS({
+            code: "* { background: rgb(100, 100, 100) !important }",
+            cssOrigin: "user",
+          }).then(r => browser.tabs.insertCSS({
+            code: "* { background: rgb(42, 42, 42) !important }",
+            cssOrigin: "author",
+          }));
+        },
+      },
+    ];
+
+    function checkCSS() {
+      let computedStyle = window.getComputedStyle(document.body);
+      return [computedStyle.backgroundColor, computedStyle.color];
+    }
+
+    try {
+      for (let {promise, background, foreground} of tasks) {
+        let result = await promise();
+
+        browser.test.assertEq(undefined, result, "Expected callback result");
+
+        [result] = await browser.tabs.executeScript({
+          code: `(${checkCSS})()`,
+        });
+
+        browser.test.assertEq(background, result[0], "Expected background color");
+        browser.test.assertEq(foreground, result[1], "Expected foreground color");
+      }
+
+      browser.test.notifyPass("insertCSS");
+    } catch (e) {
+      browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      browser.test.notifyFailure("insertCSS");
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["http://mochi.test/"],
+    },
+
+    background,
+
+    files: {
+      "file2.css": "* { color: rgb(0, 113, 4) }",
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("insertCSS");
+
+  yield extension.unload();
+
+  win.close();
+});
+</script>
+
+</body>
+</html>

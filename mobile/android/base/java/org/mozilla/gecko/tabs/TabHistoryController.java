@@ -7,12 +7,10 @@ package org.mozilla.gecko.tabs;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.util.GeckoRequest;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.util.Log;
 
@@ -38,17 +36,13 @@ public class TabHistoryController {
      * This method will show the history for the current tab.
      */
     public boolean showTabHistory(final Tab tab, final HistoryAction action) {
-        JSONObject json = new JSONObject();
-        try {
-            json.put("action", action.name());
-            json.put("tabId", tab.getId());
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error", e);
-        }
+        final GeckoBundle data = new GeckoBundle(2);
+        data.putString("action", action.name());
+        data.putInt("tabId", tab.getId());
 
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("Session:GetHistory", json) {
+        EventDispatcher.getInstance().dispatch("Session:GetHistory", data, new EventCallback() {
             @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
+            public void sendSuccess(final Object response) {
                 /*
                  * The response from gecko request is of the form
                  * {
@@ -63,16 +57,17 @@ public class TabHistoryController {
                  * }
                  */
 
-                final NativeJSObject[] historyItems = nativeJSObject.getObjectArray("historyItems");
+                final GeckoBundle data = (GeckoBundle) response;
+                final GeckoBundle[] historyItems = data.getBundleArray("historyItems");
                 if (historyItems.length == 0) {
                     // Empty history, return without showing the popup.
                     return;
                 }
 
                 final List<TabHistoryPage> historyPageList = new ArrayList<>(historyItems.length);
-                final int toIndex = nativeJSObject.getInt("toIndex");
+                final int toIndex = data.getInt("toIndex");
 
-                for (NativeJSObject obj : historyItems) {
+                for (GeckoBundle obj : historyItems) {
                     final String title = obj.getString("title");
                     final String url = obj.getString("url");
                     final boolean selected = obj.getBoolean("selected");
@@ -80,6 +75,11 @@ public class TabHistoryController {
                 }
 
                 showTabHistoryListener.onShowHistory(historyPageList, toIndex);
+            }
+
+            @Override
+            public void sendError(final Object response) {
+                Log.e(LOGTAG, "Unexpected error: " + response);
             }
         });
         return true;

@@ -30,8 +30,15 @@
   white-space: nowrap;
 }
 
+/* To avoid "select all" commands from selecting content in hidden tabs */
+.tabs .hidden,
+.tabs .hidden * {
+  -moz-user-select: none !important;
+}
+
 .tabs .tabs-menu-item a {
   cursor: default;
+  -moz-user-select: none;
 }
 
 /* Make sure panel content takes entire vertical space.

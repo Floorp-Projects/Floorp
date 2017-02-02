@@ -14,10 +14,9 @@ public interface BundleEventListener {
      *
      * @param event    The name of the event being sent.
      * @param message  The message data.
-     * @param callback The callback interface for this message. A callback is provided only if the
-     *                 originating Messaging.sendRequest call included a callback argument;
-     *                 otherwise, callback will be null. All listeners for a given event are given
-     *                 the same callback object, and exactly one listener must handle the callback.
+     * @param callback The callback interface for this message. A callback is provided
+     *                 only if the originating call included a callback argument;
+     *                 otherwise, callback will be null.
      */
     void handleMessage(String event, GeckoBundle message, EventCallback callback);
 }

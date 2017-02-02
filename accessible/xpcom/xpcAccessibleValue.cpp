@@ -119,11 +119,7 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue)
   if (Intl().IsAccessible()) {
     value = Intl().AsAccessible()->Step();
   } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     value = Intl().AsProxy()->Step();
-#endif
   }
 
   if (!IsNaN(value))
