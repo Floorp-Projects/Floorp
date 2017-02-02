@@ -100,7 +100,7 @@ interface XULElement : Element {
   void                      focus();
   [Throws]
   void                      blur();
-  [Throws]
+  [NeedsCallerType]
   void                      click();
   void                      doCommand();
 

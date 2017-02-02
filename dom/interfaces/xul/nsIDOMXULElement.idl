@@ -68,7 +68,6 @@ interface nsIDOMXULElement : nsIDOMElement
 
   void                      focus();
   void                      blur();
-  void                      click();
 
   nsIDOMNodeList            getElementsByAttribute(in DOMString name,
                                                    in DOMString value);
