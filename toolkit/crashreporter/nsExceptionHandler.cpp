@@ -1507,6 +1507,15 @@ MINIDUMP_TYPE GetMinidumpType()
           (major == 6 && minor == 1 && revision >= 7600)) {
         minidump_type = MiniDumpWithFullMemoryInfo;
       }
+#ifdef NIGHTLY_BUILD
+      // TODO: Remove the NIGHTLY_BUILD wrapping if the increased size is
+      // accetable.
+      if (major > 5 || (major == 5 && minor > 1)) {
+        minidump_type = static_cast<MINIDUMP_TYPE>(minidump_type |
+            MiniDumpWithUnloadedModules |
+            MiniDumpWithProcessThreadData);
+      }
+#endif
     }
   }
 
