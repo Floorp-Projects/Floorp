@@ -286,6 +286,8 @@ Sampler::~Sampler()
       // We've stopped profiling. We no longer need to retain
       // information for an old thread.
       if (info->IsPendingDelete()) {
+        // The stack was nulled when SetPendingDelete() was called.
+        MOZ_ASSERT(!info->Stack());
         delete info;
         sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
         i--;
@@ -366,8 +368,8 @@ Sampler::RegisterCurrentThread(const char* aName,
     }
   }
 
-  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
-    aIsMainThread, aPseudoStack, stackTop);
+  ThreadInfo* info =
+    new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
 
   // XXX: this is an off-main-thread use of gSampler
   if (gSampler) {
