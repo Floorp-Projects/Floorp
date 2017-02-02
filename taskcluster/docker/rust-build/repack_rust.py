@@ -6,6 +6,7 @@ build environment.
 '''
 
 import os.path
+import re
 import sys
 
 import requests
@@ -59,7 +60,7 @@ def install(filename, target):
     basename = filename.split('.tar')[0]
     # Work around bad tarball naming in 1.15 cargo packages.
     basename = basename.replace('cargo-beta', 'cargo-nightly')
-    basename = basename.replace('cargo-0.16', 'cargo-nightly')
+    basename = re.sub(r'cargo-0\.[\d\.]+', 'cargo-nightly', basename)
     print(' Installing %s...' % basename)
     install_cmd = [os.path.join(basename, 'install.sh')]
     install_cmd += ['--prefix=' + os.path.abspath(target)]
@@ -198,4 +199,4 @@ if __name__ == '__main__':
     repack(win64, [win64])
     repack(linux64, [linux64, linux32])
     repack(linux64, [linux64, mac64, mac32], suffix='mac-cross')
-    repack(linux64, [linux64, android, android_x86], channel='beta', suffix='android-cross')
+    repack(linux64, [linux64, android, android_x86], suffix='android-cross')
