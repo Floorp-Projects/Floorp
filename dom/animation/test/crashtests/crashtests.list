@@ -21,4 +21,6 @@ skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1325193-1.html # 
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1330190-1.html # bug 1311257
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1330190-2.html # bug 1311257
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1330513-1.html # bug 1311257
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1333539-1.html
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1333539-2.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1333418-1.html # bug 1311257
