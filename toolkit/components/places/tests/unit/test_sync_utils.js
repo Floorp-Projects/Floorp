@@ -2227,6 +2227,64 @@ add_task(function* test_touch() {
   yield PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(function* test_separator() {
+  yield ignoreChangedRoots();
+
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: "menu",
+    syncId: makeGuid(),
+    url: "https://example.com",
+  });
+  let childBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: "menu",
+    syncId: makeGuid(),
+    url: "https://foo.bar",
+  });
+  let separatorSyncId = makeGuid();
+  let separator = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "separator",
+    parentSyncId: "menu",
+    syncId: separatorSyncId
+  });
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: "menu",
+    syncId: makeGuid(),
+    url: "https://bar.foo",
+  });
+  let child2Id = yield syncIdToId(childBmk.syncId);
+  let parentId = yield syncIdToId("menu");
+  let separatorId = yield syncIdToId(separator.syncId);
+  let separatorGuid = PlacesSyncUtils.bookmarks.syncIdToGuid(separatorSyncId);
+
+  do_print("Move a bookmark around the separator");
+  PlacesUtils.bookmarks.moveItem(child2Id, parentId, separator + 1);
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(),
+    [separator.syncId, "menu"].sort());
+
+  yield setChangesSynced(changes);
+
+  do_print("Move a separator around directly");
+  PlacesUtils.bookmarks.moveItem(separatorId, parentId, 0);
+  changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(),
+    [separator.syncId, "menu"].sort());
+
+  yield setChangesSynced(changes);
+
+  do_print("Move a separator around directly using update");
+  yield PlacesUtils.bookmarks.update({ guid: separatorGuid, index: 2 });
+  changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(),
+    [separator.syncId, "menu"].sort());
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(function* test_remove() {
   yield ignoreChangedRoots();
 

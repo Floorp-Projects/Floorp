@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+FINAL_TARGET = '_tests/xpcshell/tests/mozbuildtest'
+
+@template
+def Library(name):
+    '''Template for libraries'''
+    LIBRARY_NAME = name
+
+@template
+def SimplePrograms(names, ext='.cpp'):
+    '''Template for simple program executables.
+
+    Those have a single source with the same base name as the executable.
+    '''
+    SIMPLE_PROGRAMS += names
+    SOURCES += ['%s%s' % (name, ext) for name in names]
+
+@template
+def HostLibrary(name):
+    '''Template for build tools libraries.'''
+    HOST_LIBRARY_NAME = name
+
+
+Library('test-library')
+HostLibrary('host-test-library')
+SimplePrograms(['test-one', 'test-two'])

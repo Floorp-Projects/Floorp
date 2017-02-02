@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="200">
+
+<title>position:fixed with scrolled clip should prerender everything and correctly move the clip</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.absoluteClip {
+  position: absolute;
+  top: 300px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: red;
+  clip: rect(auto auto auto auto);
+}
+
+.fixed {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(lime, lime) black 0 100px no-repeat;
+  background-size: 100% 200px;
+}
+
+</style>
+
+<div class="absoluteClip">
+  <div class="fixed"></div>
+</div>

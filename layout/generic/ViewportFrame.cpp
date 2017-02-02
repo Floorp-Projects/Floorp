@@ -102,14 +102,24 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
 {
   nsRect dirty;
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
+  nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
     dirty = savedOutOfFlowData->mDirtyRect;
-    clipState.SetClipForContainingBlockDescendants(
-      &savedOutOfFlowData->mContainingBlockClip);
-    clipState.SetScrollClipForContainingBlockDescendants(
-      aBuilder, savedOutOfFlowData->mContainingBlockScrollClip);
+    // This function is called after we've finished building display items for
+    // the root scroll frame. That means that the content clip from the root
+    // scroll frame is no longer on aBuilder. However, we need to make sure
+    // that the display items we build in this function have finite clipped
+    // bounds with respect to the root ASR, so we restore the *combined clip*
+    // that we saved earlier. The combined clip will include the clip from the
+    // root scroll frame.
+    clipState.SetClipChainForContainingBlockDescendants(
+      savedOutOfFlowData->mCombinedClipChain);
+    clipState.ClipContainingBlockDescendantsExtra(
+      dirty + aBuilder->ToReferenceFrame(aFrame), nullptr);
+    asrSetter.SetCurrentActiveScrolledRoot(
+      savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
   nsDisplayList list;
   aFrame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);

@@ -474,8 +474,6 @@ public:
    */
   virtual ScrollSnapInfo GetScrollSnapInfo() const = 0;
 
-  virtual void SetScrollsClipOnUnscrolledOutOfFlow() = 0;
-
   /**
    * Given the drag event aEvent, determine whether the mouse is near the edge
    * of the scrollable area, and scroll the view in the direction of that edge

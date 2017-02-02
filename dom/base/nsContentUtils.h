@@ -503,6 +503,9 @@ public:
   // aWindow can be either outer or inner window.
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
+  // Check if the JS caller is chrome or an addon with the permission.
+  static bool CallerHasPermission(JSContext* aCx, const nsAString& aPerm);
+
   /**
    * GetDocumentFromCaller gets its document by looking at the last called
    * function and finding the document that the function itself relates to.

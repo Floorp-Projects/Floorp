@@ -191,15 +191,9 @@ public:
 
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
 public:
-  nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                                 uint32_t aLayer, const nsStyleBackground* aBg)
-    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer,
-                               aFrame->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(aFrame),
-                               aBg)
+  explicit nsDisplayCanvasBackgroundImage(const InitData& aInitData)
+    : nsDisplayBackgroundImage(aInitData)
   {
-    if (ShouldFixToViewport(aBuilder)) {
-      mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
-    }
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
@@ -208,22 +202,12 @@ public:
   {
     mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
   }
-
-  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override
-  {
-    // Put background-attachment:fixed canvas background images in their own
-    // compositing layer. Since we know their background painting area can't
-    // change (unless the viewport size itself changes), async scrolling
-    // will work well.
-    return ShouldTreatAsFixed() &&
-           !mBackgroundStyle->mImage.mLayers[mLayer].mImage.IsEmpty();
-  }
  
   // We still need to paint a background color as well as an image for this item, 
   // so we can't support this yet.
   virtual bool SupportsOptimizingToImage() override { return false; }
 
- bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
+  bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aClipRect,
                                   gfxRect* aDestRect);
   
