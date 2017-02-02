@@ -1,10 +1,12 @@
 "use strict";
 
-/* exported isPageActionShown clickPageAction */
+/* exported isPageActionShown clickPageAction, AppConstants */
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/PageActions.jsm");
+
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
 {
   let chromeScript = SpecialPowers.loadChromeScript(
