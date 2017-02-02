@@ -1,6 +1,43 @@
 "use strict";
 
 let ssm = Services.scriptSecurityManager;
+// This will show a directory listing, but we never actually load these so that's OK.
+const kDummyPage = getRootDirectory(gTestPath);
+
+const kAboutPagesRegistered = Promise.all([
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-chrome-privs", kDummyPage,
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-chrome-privs2", kDummyPage,
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-unknown-linkable", kDummyPage,
+    Ci.nsIAboutModule.MAKE_LINKABLE | Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-unknown-linkable2", kDummyPage,
+    Ci.nsIAboutModule.MAKE_LINKABLE | Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-unknown-unlinkable", kDummyPage,
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-unknown-unlinkable2", kDummyPage,
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-content-unlinkable", kDummyPage,
+    Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT | Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-content-unlinkable2", kDummyPage,
+    Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT | Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-content-linkable", kDummyPage,
+    Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT | Ci.nsIAboutModule.MAKE_LINKABLE |
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-content-linkable2", kDummyPage,
+    Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT | Ci.nsIAboutModule.MAKE_LINKABLE |
+    Ci.nsIAboutModule.ALLOW_SCRIPT),
+]);
 
 const URLs = new Map([
   ["http://www.example.com", [
@@ -22,6 +59,12 @@ const URLs = new Map([
     ["view-source:data:text/html,Hi", false, false, true],
     ["javascript:alert('hi')", true, false, true],
     ["moz://a", false, false, true],
+    ["about:test-chrome-privs", false, false, true],
+    ["about:test-unknown-unlinkable", false, false, true],
+    ["about:test-content-unlinkable", false, false, true],
+    ["about:test-content-linkable", true, true, true],
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable", false, false, true],
   ]],
   ["feed:http://www.example.com", [
     ["http://www.example2.com", true, true, true],
@@ -38,6 +81,12 @@ const URLs = new Map([
     ["view-source:data:text/html,Hi", false, false, true],
     ["javascript:alert('hi')", true, false, true],
     ["moz://a", false, false, true],
+    ["about:test-chrome-privs", false, false, true],
+    ["about:test-unknown-unlinkable", false, false, true],
+    ["about:test-content-unlinkable", false, false, true],
+    ["about:test-content-linkable", true, true, true],
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable", false, false, true],
   ]],
   ["view-source:http://www.example.com", [
     ["http://www.example2.com", true, true, true],
@@ -54,23 +103,117 @@ const URLs = new Map([
     ["view-source:data:text/html,Hi", true, false, true],
     ["javascript:alert('hi')", true, false, true],
     ["moz://a", false, false, true],
+    ["about:test-chrome-privs", false, false, true],
+    ["about:test-unknown-unlinkable", false, false, true],
+    ["about:test-content-unlinkable", false, false, true],
+    ["about:test-content-linkable", true, true, true],
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable", false, false, true],
   ]],
-  ["about:foo", [
-    ["about:foo?", true, true, true],
-    ["about:foo?bar", true, true, true],
-    ["about:foo#", true, true, true],
-    ["about:foo#bar", true, true, true],
-    ["about:foo?#", true, true, true],
-    ["about:foo?bar#baz", true, true, true],
-    ["about:bar", false, false, true],
-    ["about:bar?foo#baz", false, false, true],
-    ["about:bar?foo", false, false, true],
-    ["http://www.example.com/", true, true, true],
-    ["moz://a", false, false, true],
+  // about: related tests.
+  ["about:test-chrome-privs", [
+    ["about:test-chrome-privs", true, true, true],
+    ["about:test-chrome-privs2", true, true, true],
+    ["about:test-chrome-privs2?foo#bar", true, true, true],
+    ["about:test-chrome-privs2?foo", true, true, true],
+    ["about:test-chrome-privs2#bar", true, true, true],
+
+    ["about:test-unknown-unlinkable", true, true, true],
+
+    ["about:test-content-unlinkable", true, true, true],
+    ["about:test-content-unlinkable?foo", true, true, true],
+    ["about:test-content-unlinkable?foo#bar", true, true, true],
+    ["about:test-content-unlinkable#bar", true, true, true],
+
+    ["about:test-content-linkable", true, true, true],
+
+    ["about:test-unknown-linkable", true, true, true],
+  ]],
+  ["about:test-unknown-unlinkable", [
+    ["about:test-chrome-privs", false, false, true],
+
+    // Can link to ourselves:
+    ["about:test-unknown-unlinkable", true, true, true],
+    // Can't link to unlinkable content if we're not sure it's privileged:
+    ["about:test-unknown-unlinkable2", false, false, true],
+
+    ["about:test-content-unlinkable", true, true, true],
+    ["about:test-content-unlinkable2", true, true, true],
+    ["about:test-content-unlinkable2?foo", true, true, true],
+    ["about:test-content-unlinkable2?foo#bar", true, true, true],
+    ["about:test-content-unlinkable2#bar", true, true, true],
+
+    ["about:test-content-linkable", true, true, true],
+
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable", false, false, true],
+  ]],
+  ["about:test-content-unlinkable", [
+    ["about:test-chrome-privs", false, false, true],
+
+    // Can't link to unlinkable content if we're not sure it's privileged:
+    ["about:test-unknown-unlinkable", false, false, true],
+
+    ["about:test-content-unlinkable", true, true, true],
+    ["about:test-content-unlinkable2", true, true, true],
+    ["about:test-content-unlinkable2?foo", true, true, true],
+    ["about:test-content-unlinkable2?foo#bar", true, true, true],
+    ["about:test-content-unlinkable2#bar", true, true, true],
+
+    ["about:test-content-linkable", true, true, true],
+    ["about:test-unknown-linkable", false, false, true],
+  ]],
+  ["about:test-unknown-linkable", [
+    ["about:test-chrome-privs", false, false, true],
+
+    // Linkable content can't link to unlinkable content.
+    ["about:test-unknown-unlinkable", false, false, true],
+
+    ["about:test-content-unlinkable", false, false, true],
+    ["about:test-content-unlinkable2", false, false, true],
+    ["about:test-content-unlinkable2?foo", false, false, true],
+    ["about:test-content-unlinkable2?foo#bar", false, false, true],
+    ["about:test-content-unlinkable2#bar", false, false, true],
+
+    // ... but it can link to other linkable content.
+    ["about:test-content-linkable", true, true, true],
+
+    // Can link to ourselves:
+    ["about:test-unknown-linkable", true, true, true],
+
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable2", false, false, true],
+  ]],
+  ["about:test-content-linkable", [
+    ["about:test-chrome-privs", false, false, true],
+
+    // Linkable content can't link to unlinkable content.
+    ["about:test-unknown-unlinkable", false, false, true],
+
+    ["about:test-content-unlinkable", false, false, true],
+
+    // ... but it can link to itself and other linkable content.
+    ["about:test-content-linkable", true, true, true],
+    ["about:test-content-linkable2", true, true, true],
+
+    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
+    ["about:test-unknown-linkable", false, false, true],
   ]],
 ]);
 
 function testURL(source, target, canLoad, canLoadWithoutInherit, canCreate, flags) {
+  function getPrincipalDesc(principal) {
+    if (principal.URI) {
+      return principal.URI.spec;
+    }
+    if (principal.isSystemPrincipal) {
+      return "system principal";
+    }
+    if (principal.isNullPrincipal) {
+      return "null principal";
+    }
+    return "unknown principal";
+  }
   let threw = false;
   let targetURI;
   try {
@@ -91,14 +234,20 @@ function testURL(source, target, canLoad, canLoadWithoutInherit, canCreate, flag
   let shouldThrow = inheritDisallowed ? !canLoadWithoutInherit : !canLoad;
   ok(threw == shouldThrow,
      "Should " + (shouldThrow ? "" : "not ") + "throw an error when loading " +
-     target + " from " + source.URI.spec +
+     target + " from " + getPrincipalDesc(source) +
      (inheritDisallowed ? " without" : " with") + " principal inheritance.");
 }
 
 add_task(function* () {
+  yield kAboutPagesRegistered;
   let baseFlags = ssm.STANDARD | ssm.DONT_REPORT_ERRORS;
   for (let [sourceString, targetsAndExpectations] of URLs) {
-    let source = ssm.createCodebasePrincipal(makeURI(sourceString), {});
+    let source;
+    if (sourceString.startsWith("about:test-chrome-privs")) {
+      source = ssm.getSystemPrincipal();
+    } else {
+      source = ssm.createCodebasePrincipal(makeURI(sourceString), {});
+    }
     for (let [target, canLoad, canLoadWithoutInherit, canCreate] of targetsAndExpectations) {
       testURL(source, target, canLoad, canLoadWithoutInherit, canCreate, baseFlags);
       testURL(source, target, canLoad, canLoadWithoutInherit, canCreate,
