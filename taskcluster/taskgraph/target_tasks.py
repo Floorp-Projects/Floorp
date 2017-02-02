@@ -42,12 +42,32 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     target_tasks_labels = [t.label for t in full_task_graph.tasks.itervalues()
                            if options.task_matches(t.attributes)]
 
-    # If the developer wants test jobs to be rebuilt N times we add that value here
-    if int(options.trigger_tests) > 1:
-        for l in target_tasks_labels:
-            task = full_task_graph[l]
-            if 'unittest_suite' in task.attributes:
-                task.attributes['task_duplicates'] = options.trigger_tests
+    attributes = {
+        k: getattr(options, k) for k in [
+            'env',
+            'no_retry',
+            'tag',
+        ]
+    }
+
+    for l in target_tasks_labels:
+        task = full_task_graph[l]
+        if 'unittest_suite' in task.attributes:
+            task.attributes['task_duplicates'] = options.trigger_tests
+
+    for l in target_tasks_labels:
+        task = full_task_graph[l]
+        # If the developer wants test jobs to be rebuilt N times we add that value here
+        if options.trigger_tests > 1 and 'unittest_suite' in task.attributes:
+            task.attributes['task_duplicates'] = options.trigger_tests
+            task.attributes['profile'] = False
+
+        # If the developer wants test talos jobs to be rebuilt N times we add that value here
+        if options.talos_trigger_tests > 1 and 'talos_suite' in task.attributes:
+            task.attributes['task_duplicates'] = options.talos_trigger_tests
+            task.attributes['profile'] = options.profile
+
+        task.attributes.update(attributes)
 
     # Add notifications here as well
     if options.notifications:

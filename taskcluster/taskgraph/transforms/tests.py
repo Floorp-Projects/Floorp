@@ -568,6 +568,25 @@ def set_retry_exit_status(config, tests):
 
 
 @transforms.add
+def set_profile(config, tests):
+    """Set profiling mode for tests."""
+    for test in tests:
+        if config.config['args'].profile and test['suite'] == 'talos':
+            test['mozharness']['extra-options'].append('--spsProfile')
+        yield test
+
+
+@transforms.add
+def set_tag(config, tests):
+    """Set test for a specific tag."""
+    for test in tests:
+        tag = config.config['args'].tag
+        if tag:
+            test['mozharness']['extra-options'].extend(['--tag', tag])
+        yield test
+
+
+@transforms.add
 def remove_linux_pgo_try_talos(config, tests):
     """linux64-pgo talos tests don't run on try."""
     def predicate(test):
