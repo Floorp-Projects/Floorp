@@ -155,6 +155,23 @@ ProxyAccessible::Value(nsString& aValue) const
   aValue = (wchar_t*)resultWrap;
 }
 
+double
+ProxyAccessible::Step()
+{
+  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
+  if (!custom) {
+    return 0;
+  }
+
+  double increment;
+  HRESULT hr = custom->get_minimumIncrement(&increment);
+  if (FAILED(hr)) {
+    return 0;
+  }
+
+  return increment;
+}
+
 void
 ProxyAccessible::Description(nsString& aDesc) const
 {

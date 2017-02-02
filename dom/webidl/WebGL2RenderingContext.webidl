@@ -611,14 +611,14 @@ interface WebGL2RenderingContextBase
 
     /* Reading back pixels */
     // WebGL1:
-    [Throws] // Throws on readback in a write-only context.
+    [Throws, NeedsCallerType] // Throws on readback in a write-only context.
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                     ArrayBufferView? dstData);
     // WebGL2:
-    [Throws] // Throws on readback in a write-only context.
+    [Throws, NeedsCallerType] // Throws on readback in a write-only context.
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                     GLintptr offset);
-    [Throws] // Throws on readback in a write-only context.
+    [Throws, NeedsCallerType] // Throws on readback in a write-only context.
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
                     ArrayBufferView dstData, GLuint dstOffset);
 

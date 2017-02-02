@@ -17,6 +17,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsINode;
@@ -128,12 +129,8 @@ public:
         aRv = RemoveParameter(aNamespaceURI, aLocalName);
     }
 
-    uint32_t Flags()
-    {
-        uint32_t flags;
-        GetFlags(&flags);
-        return flags;
-    }
+    uint32_t Flags(mozilla::dom::SystemCallerGuarantee);
+    void SetFlags(uint32_t aFlags, mozilla::dom::SystemCallerGuarantee);
 
     nsresult setStylesheet(txStylesheet* aStylesheet);
     void reportError(nsresult aResult, const char16_t *aErrorText,

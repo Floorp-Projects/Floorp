@@ -208,6 +208,37 @@
    fun:sk_once_no_arg_adaptor
 }
 
+# More stuff to do with CPUID and Skia.  Apparently we could get rid of
+# these if we could patch our in-tree Skia, but that's not favoured.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFDD1D97: SkCpu::CacheRuntimeFeatures()
+#    by 0xFE8A66E: SkGraphics::Init()
+#    by 0xE757308: gfxPlatform::Init()
+#    by 0xE75772C: gfxPlatform::GetPlatform()
+{
+   Skia and CPUID, Jan 2017, #1
+   Memcheck:Cond
+   fun:_ZN5SkCpu20CacheRuntimeFeaturesEv
+   fun:_ZN10SkGraphics4InitEv
+   fun:_ZN11gfxPlatform4InitEv
+   fun:_ZN11gfxPlatform11GetPlatformEv
+}
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFD5B218: SkOpts::Init()
+#    by 0xE757308: gfxPlatform::Init()
+#    by 0xE75772C: gfxPlatform::GetPlatform()
+#    by 0xF1A3691: mozilla::dom::ContentProcess::Init()
+{
+   Skia and CPUID, Jan 2017, #2
+   Memcheck:Cond
+   fun:_ZN6SkOpts4InitEv
+   fun:_ZN11gfxPlatform4InitEv
+   fun:_ZN11gfxPlatform11GetPlatformEv
+   fun:_ZN7mozilla3dom14ContentProcess4InitEv
+}
+
 
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
@@ -432,6 +463,20 @@
    fun:_ZN7mozilla6layers16PlanarYCbCrImage18GetAsSourceSurface*
 }
 
+# Similarly:
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xFDAD1D1: sse41::blit_row_s32a_opaque(unsigned int*, unsigned int con
+#    by 0xFD60FA9: Sprite_D32_S32::blitRect(int, int, int, int) (in /home/work
+#    by 0xFEB9E0D: SkScan::FillIRect(SkIRect const&, SkRegion const*, SkBlitte
+#    by 0xFEBDDF3: SkScan::FillIRect(SkIRect const&, SkRasterClip const&, SkBl
+{
+   SKIA and SSE4, Jan 2017
+   Memcheck:Cond
+   fun:_ZN5sse41L20blit_row_s32a_opaque*
+   fun:_ZN14Sprite_D32_S328blitRect*
+   fun:_ZN6SkScan9FillIRect*
+   fun:_ZN6SkScan9FillIRect*
+}
 
 # This is probably a V false positive, due to an insufficiently accurate
 # description of the ioctl(SIOCETHTOOL) behavior.
@@ -488,9 +533,9 @@
 }
 
 
-# There's nothing we can do about this short of throwing in
+# There's nothing we can do about these short of throwing in
 # --show-mismatched-frees=no, but that's a bit drastic, so for now,
-# just suppress it.
+# just suppress them.  A typical error is:
 #
 # Mismatched free() / delete / delete []
 #    at 0x4C2BE97: free (vg_replace_malloc.c:530)
@@ -517,4 +562,54 @@
    fun:_ZN3ots13ots_post_free*
    fun:_ZN3ots4FontD1Ev
    fun:_ZN3ots10OTSContext7Process*
+}
+
+# and various similar:
+{
+   ots mismatched frees, Jan 2017, #1
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots14ots_glyf_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN12_GLOBAL__N_110ProcessTTFEPN3ots12OpenTypeFile*
+}
+{
+   ots mismatched frees, Jan 2017, #2
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_cff_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
+}
+{
+   ots mismatched frees, Jan 2017, #3
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_cff_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN12_GLOBAL__N_110Process*
+}
+{
+   ots mismatched frees, Jan 2017, #4
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots12ots_cff_free*
+   fun:_ZN3ots4FontD1Ev*
+   fun:_ZN3ots10OTSContext7Process*
+}
+{
+   ots mismatched frees, Jan 2017, #5
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots13ots_loca_free*
+   fun:_ZN3ots4FontD1Ev*
+   fun:_ZN3ots10OTSContext7Process*
+}
+{
+   ots mismatched frees, Jan 2017, #6
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN3ots14ots_glyf_parse*
+   fun:_ZN12_GLOBAL__N_114ProcessGenericEPN3ots12OpenTypeFile*
+   fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
 }

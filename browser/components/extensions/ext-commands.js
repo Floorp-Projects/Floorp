@@ -36,7 +36,7 @@ CommandList.prototype = {
    * are later created.
    */
   register() {
-    for (let window of WindowListManager.browserWindows()) {
+    for (let window of windowTracker.browserWindows()) {
       this.registerKeysToDocument(window);
     }
 
@@ -46,7 +46,7 @@ CommandList.prototype = {
       }
     };
 
-    WindowListManager.addOpenListener(this.windowOpenListener);
+    windowTracker.addOpenListener(this.windowOpenListener);
   },
 
   /**
@@ -54,13 +54,13 @@ CommandList.prototype = {
    * from being registered to windows which are later created.
    */
   unregister() {
-    for (let window of WindowListManager.browserWindows()) {
+    for (let window of windowTracker.browserWindows()) {
       if (this.keysetsMap.has(window)) {
         this.keysetsMap.get(window).remove();
       }
     }
 
-    WindowListManager.removeOpenListener(this.windowOpenListener);
+    windowTracker.removeOpenListener(this.windowOpenListener);
   },
 
   /**
@@ -132,8 +132,8 @@ CommandList.prototype = {
         let win = event.target.ownerGlobal;
         browserActionFor(this.extension).triggerAction(win);
       } else {
-        TabManager.for(this.extension)
-                  .addActiveTabPermission(TabManager.activeTab);
+        this.extension.tabManager
+            .addActiveTabPermission();
         this.emit("command", name);
       }
     });

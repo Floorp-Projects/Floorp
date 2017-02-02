@@ -161,9 +161,9 @@ add_task(function* () {
   });
 
   extension.onMessage("change-tab", (tabId, attr, on) => {
-    let {Management: {global: {TabManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+    let {Management: {global: {tabTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-    let tab = TabManager.getTab(tabId);
+    let tab = tabTracker.getTab(tabId);
 
     if (attr == "muted") {
       // Ideally we'd simulate a click on the tab audio icon for this, but the
@@ -184,7 +184,7 @@ add_task(function* () {
       // `tabs.duplicate`.
       let newTab = gBrowser.duplicateTab(tab);
       BrowserTestUtils.waitForEvent(newTab, "SSTabRestored", () => true).then(() => {
-        extension.sendMessage("change-tab-done", tabId, TabManager.getId(newTab));
+        extension.sendMessage("change-tab-done", tabId, tabTracker.getId(newTab));
       });
       return;
     }

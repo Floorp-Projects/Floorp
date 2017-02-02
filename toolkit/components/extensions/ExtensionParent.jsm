@@ -102,8 +102,25 @@ let apiManager = new class extends SchemaAPIManager {
       this.loadScript(value);
     }
 
+    /* eslint-disable mozilla/balanced-listeners */
+    Services.mm.addMessageListener("Extension:GetTabAndWindowId", this);
+    /* eslint-enable mozilla/balanced-listeners */
+
     this.initialized = promise;
     return this.initialized;
+  }
+
+  receiveMessage({name, target, sync}) {
+    if (name === "Extension:GetTabAndWindowId") {
+      let result = this.global.tabTracker.getBrowserData(target);
+
+      if (result.tabId) {
+        if (sync) {
+          return result;
+        }
+        target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
+      }
+    }
   }
 
   registerSchemaAPI(namespace, envType, getAPI) {
@@ -191,9 +208,9 @@ ProxyMessenger = {
     // tabs.sendMessage / tabs.connect
     if (tabId) {
       // `tabId` being set implies that the tabs API is supported, so we don't
-      // need to check whether `TabManager` exists.
-      let tab = apiManager.global.TabManager.getTab(tabId, null, null);
-      return tab && tab.linkedBrowser.messageManager;
+      // need to check whether `tabTracker` exists.
+      let tab = apiManager.global.tabTracker.getTab(tabId, null);
+      return tab && (tab.linkedBrowser || tab.browser).messageManager;
     }
 
     // runtime.sendMessage / runtime.connect
@@ -245,10 +262,8 @@ GlobalManager = {
     if (viewType) {
       let data = {viewType};
 
-      let {getBrowserInfo} = apiManager.global;
-      if (getBrowserInfo) {
-        Object.assign(data, getBrowserInfo(browser), additionalData);
-      }
+      let {tabTracker} = apiManager.global;
+      Object.assign(data, tabTracker.getBrowserData(browser), additionalData);
 
       browser.messageManager.sendAsyncMessage("Extension:InitExtensionView",
                                               data);
@@ -354,22 +369,27 @@ class ExtensionPageContextParent extends ProxyContextParent {
     return this.xulBrowser.ownerGlobal;
   }
 
-  get windowId() {
-    if (!apiManager.global.WindowManager || this.viewType == "background") {
-      return;
+  get currentWindow() {
+    if (this.viewType !== "background") {
+      return this.xulWindow;
     }
-    // viewType popup or tab:
-    return apiManager.global.WindowManager.getId(this.xulWindow);
+  }
+
+  get windowId() {
+    let {currentWindow} = this;
+    let {windowTracker} = apiManager.global;
+
+    if (currentWindow && windowTracker) {
+      return windowTracker.getId(currentWindow);
+    }
   }
 
   get tabId() {
-    let {getBrowserInfo} = apiManager.global;
-
-    if (getBrowserInfo) {
-      // This is currently only available on desktop Firefox.
-      return getBrowserInfo(this.xulBrowser).tabId;
+    let {tabTracker} = apiManager.global;
+    let data = tabTracker.getBrowserData(this.xulBrowser);
+    if (data.tabId >= 0) {
+      return data.tabId;
     }
-    return undefined;
   }
 
   onBrowserChange(browser) {
@@ -551,7 +571,8 @@ ParentAPIManager = {
 
     let reply = result => {
       if (!context.parentMessageManager) {
-        Cu.reportError("Cannot send function call result: other side closed connection");
+        Services.console.logStringMessage("Cannot send function call result: other side closed connection " +
+                                          `(call data: ${uneval({path: data.path, args: data.args})})`);
         return;
       }
 

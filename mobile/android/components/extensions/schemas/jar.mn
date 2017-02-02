@@ -4,3 +4,4 @@
 
 chrome.jar:
     content/schemas/page_action.json
+    content/schemas/tabs.json

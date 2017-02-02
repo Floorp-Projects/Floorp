@@ -183,9 +183,9 @@ function CssComputedView(inspector, document, pageStyle) {
   this._onShortcut = this._onShortcut.bind(this);
   this.shortcuts.on("CmdOrCtrl+F", this._onShortcut);
   this.shortcuts.on("Escape", this._onShortcut);
+  this.styleDocument.addEventListener("copy", this._onCopy);
   this.styleDocument.addEventListener("mousedown", this.focusWindow);
   this.element.addEventListener("click", this._onClick);
-  this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
   this.searchField.addEventListener("contextmenu", this.inspector.onTextBoxContextMenu);
@@ -687,8 +687,12 @@ CssComputedView.prototype = {
    *        copy event object.
    */
   _onCopy: function (event) {
-    this.copySelection();
-    event.preventDefault();
+    let win = this.styleWindow;
+    let text = win.getSelection().toString().trim();
+    if (text !== "") {
+      this.copySelection();
+      event.preventDefault();
+    }
   },
 
   /**
@@ -698,7 +702,9 @@ CssComputedView.prototype = {
     try {
       let win = this.styleWindow;
       let text = win.getSelection().toString().trim();
-
+      // isPropertyPresent is set when a property name is spotted and
+      // we assume that the next line will be a property value.
+      let isPropertyPresent = false;
       // Tidy up block headings by moving CSS property names and their
       // values onto the same line and inserting a colon between them.
       let textArray = text.split(/[\r\n]+/);
@@ -708,11 +714,20 @@ CssComputedView.prototype = {
       if (textArray.length > 1) {
         for (let prop of textArray) {
           if (CssComputedView.propertyNames.indexOf(prop) !== -1) {
+            // Property name found so setting isPropertyPresent to true
+            isPropertyPresent = true;
             // Property name
             result += prop;
-          } else {
-            // Property value
+          } else if (isPropertyPresent === true) {
+            // Since isPropertyPresent is true so we assume that this is
+            // a property value and we append it to result preceeded by
+            // a :.
             result += ": " + prop + ";\n";
+            isPropertyPresent = false;
+          } else {
+            // since isPropertyPresent is not set, we assume this is
+            // normal text and we append it to result without any :.
+            result += prop + "\n";
           }
         }
       } else {
@@ -757,7 +772,7 @@ CssComputedView.prototype = {
     // Remove bound listeners
     this.styleDocument.removeEventListener("mousedown", this.focusWindow);
     this.element.removeEventListener("click", this._onClick);
-    this.element.removeEventListener("copy", this._onCopy);
+    this.styleDocument.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
     this.searchField.removeEventListener("contextmenu",

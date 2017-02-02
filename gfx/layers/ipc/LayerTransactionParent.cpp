@@ -420,8 +420,12 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
       }
       RefPtr<CompositableHost> host = imageBridge->FindCompositable(op.compositable());
       if (!host) {
-        NS_ERROR("CompositableHost not found in the map");
-        return IPC_FAIL_NO_REASON(this);
+        // This normally should not happen, but can after a GPU process crash.
+        // Media may not have had time to update the ImageContainer associated
+        // with a video frame, and we may try to attach a stale CompositableHandle.
+        // Rather than break the whole transaction, we just continue.
+        gfxCriticalNote << "CompositableHost " << op.compositable().Value() << " not found";
+        continue;
       }
       if (!Attach(AsLayer(op.layer()), host, true)) {
         return IPC_FAIL_NO_REASON(this);

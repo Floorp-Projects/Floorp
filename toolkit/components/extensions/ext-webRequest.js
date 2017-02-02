@@ -27,8 +27,11 @@ function WebRequestEventManager(context, eventName) {
       if (data.isSystemPrincipal) {
         return;
       }
-      let browserData = {};
-      extensions.emit("fill-browser-data", data.browser, browserData);
+
+      let browserData = {tabId: -1, windowId: -1};
+      if (data.browser) {
+        browserData = tabTracker.getBrowserData(data.browser);
+      }
       if (filter.tabId != null && browserData.tabId != filter.tabId) {
         return;
       }

@@ -948,10 +948,10 @@ public class GeckoPreferences
      * Restore default search engines in Gecko and retrigger a search engine refresh.
      */
     protected void restoreDefaultSearchEngines() {
-        GeckoAppShell.notifyObservers("SearchEngines:RestoreDefaults", null);
+        EventDispatcher.getInstance().dispatch("SearchEngines:RestoreDefaults", null);
 
         // Send message to Gecko to get engines. SearchPreferenceCategory listens for the response.
-        GeckoAppShell.notifyObservers("SearchEngines:GetVisible", null);
+        EventDispatcher.getInstance().dispatch("SearchEngines:GetVisible", null);
     }
 
     @Override

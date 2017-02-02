@@ -1,5 +1,9 @@
 # scripts
 category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js
+category webextension-scripts tabs chrome://browser/content/ext-tabs.js
+category webextension-scripts utils chrome://browser/content/ext-utils.js
+category webextension-scripts-addon tabs chrome://browser/content/ext-c-tabs.js
 
 # schemas
 category webextension-schemas page_action chrome://browser/content/schemas/page_action.json
+category webextension-schemas tabs chrome://browser/content/schemas/tabs.json

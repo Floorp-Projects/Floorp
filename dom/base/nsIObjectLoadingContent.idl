@@ -126,11 +126,6 @@ interface nsIObjectLoadingContent : nsISupports
                                 in boolean submittedCrashReport);
 
   /**
-   * This method will play a plugin that has been stopped by click-to-play.
-   */
-  void playPlugin();
-
-  /**
    * Forces a re-evaluation and reload of the tag, optionally invalidating its
    * click-to-play state.  This can be used when the MIME type that provides a
    * type has changed, for instance, to force the tag to re-evalulate the
@@ -168,18 +163,4 @@ interface nsIObjectLoadingContent : nsISupports
    * an <embed> with no src).
    */
   readonly attribute nsIURI srcURI;
-
-  /**
-   * The plugin's current state of fallback content. This property
-   * only makes sense if the plugin is not activated.
-   */
-  readonly attribute unsigned long pluginFallbackType;
-
-  /**
-   * If this plugin runs out-of-process, it has a runID to differentiate
-   * between different times the plugin process has been instantiated.
-   *
-   * This throws NS_ERROR_NOT_IMPLEMENTED for in-process plugins.
-   */
-  readonly attribute unsigned long runID;
 };

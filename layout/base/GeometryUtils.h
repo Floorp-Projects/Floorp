@@ -28,6 +28,7 @@ class DOMPoint;
 struct DOMPointInit;
 class OwningTextOrElementOrDocument;
 class TextOrElementOrDocument;
+enum class CallerType : uint32_t;
 } // namespace dom
 
 typedef dom::TextOrElementOrDocument GeometryNode;
@@ -40,24 +41,28 @@ typedef dom::OwningTextOrElementOrDocument OwningGeometryNode;
 void GetBoxQuads(nsINode* aNode,
                  const dom::BoxQuadOptions& aOptions,
                  nsTArray<RefPtr<dom::DOMQuad> >& aResult,
+                 dom::CallerType aCallerType,
                  ErrorResult& aRv);
 
 already_AddRefed<dom::DOMQuad>
 ConvertQuadFromNode(nsINode* aTo, dom::DOMQuad& aQuad,
                     const GeometryNode& aFrom,
                     const dom::ConvertCoordinateOptions& aOptions,
+                    dom::CallerType aCallerType,
                     ErrorResult& aRv);
 
 already_AddRefed<dom::DOMQuad>
 ConvertRectFromNode(nsINode* aTo, dom::DOMRectReadOnly& aRect,
                     const GeometryNode& aFrom,
                     const dom::ConvertCoordinateOptions& aOptions,
+                    dom::CallerType aCallerType,
                     ErrorResult& aRv);
 
 already_AddRefed<dom::DOMPoint>
 ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
                      const GeometryNode& aFrom,
                      const dom::ConvertCoordinateOptions& aOptions,
+                     dom::CallerType aCallerType,
                      ErrorResult& aRv);
 
 } // namespace mozilla

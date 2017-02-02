@@ -9,7 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include "GeckoProfiler.h"
-#include "SaveProfileTask.h"
+#include "nsIProfileSaveEvent.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prtime.h"
@@ -98,6 +98,35 @@ using namespace mozilla;
 
 
 ///////////////////////////////////////////////////////////////////////
+// BEGIN ProfileSaveEvent
+
+class ProfileSaveEvent final : public nsIProfileSaveEvent {
+public:
+  typedef void (*AddSubProfileFunc)(const char* aProfile, void* aClosure);
+  NS_DECL_ISUPPORTS
+
+  ProfileSaveEvent(AddSubProfileFunc aFunc, void* aClosure)
+    : mFunc(aFunc)
+    , mClosure(aClosure)
+  {}
+
+  NS_IMETHOD AddSubProfile(const char* aProfile) override {
+    mFunc(aProfile, mClosure);
+    return NS_OK;
+  }
+private:
+  ~ProfileSaveEvent() {}
+
+  AddSubProfileFunc mFunc;
+  void* mClosure;
+};
+
+NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
+
+// END ProfileSaveEvent
+///////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////
 // BEGIN SaveProfileTask et al
 
 static void
@@ -176,7 +205,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
   , active_(false)
   , entrySize_(aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
-  , mSaveRequested(false)
 {
   MOZ_COUNT_CTOR(Sampler);
 
@@ -221,7 +249,7 @@ Sampler::Sampler(double aInterval, int aEntrySize,
   {
     MutexAutoLock lock(*sRegisteredThreadsMutex);
 
-    // Create ThreadProfile for each registered thread
+    // Set up profiling for each registered thread, if appropriate
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
       ThreadInfo* info = sRegisteredThreads->at(i);
 
@@ -245,7 +273,7 @@ Sampler::~Sampler()
   if (IsActive())
     Stop();
 
-  // Destroy ThreadProfile for all threads
+  // Destroy ThreadInfo for all threads
   {
     MutexAutoLock lock(*sRegisteredThreadsMutex);
 
@@ -329,7 +357,7 @@ Sampler::RegisterCurrentThread(const char* aName,
     if (info->ThreadId() == id && !info->IsPendingDelete()) {
       // Thread already registered. This means the first unregister will be
       // too early.
-      ASSERT(false);
+      MOZ_ASSERT(false);
       return false;
     }
   }
@@ -374,19 +402,6 @@ Sampler::UnregisterCurrentThread()
       }
     }
   }
-}
-
-void
-Sampler::HandleSaveRequest()
-{
-  if (!mSaveRequested)
-    return;
-  mSaveRequested = false;
-
-  // TODO: Use use the ipc/chromium Tasks here to support processes
-  // without XPCOM.
-  nsCOMPtr<nsIRunnable> runnable = new SaveProfileTask();
-  NS_DispatchToMainThread(runnable);
 }
 
 void
@@ -640,7 +655,7 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
       aWriter.EndObject();
     }
 
-    // Lists the samples for each ThreadProfile
+    // Lists the samples for each thread profile
     aWriter.StartArrayProperty("threads");
     {
       SetPaused(true);
@@ -650,15 +665,17 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 
         for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
           // Thread not being profiled, skip it
-          if (!sRegisteredThreads->at(i)->Profile())
+          ThreadInfo* info = sRegisteredThreads->at(i);
+          if (!info->hasProfile()) {
             continue;
+          }
 
-          // Note that we intentionally include ThreadProfile which
+          // Note that we intentionally include thread profiles which
           // have been marked for pending delete.
 
-          MutexAutoLock lock(sRegisteredThreads->at(i)->Profile()->GetMutex());
+          MutexAutoLock lock(info->GetMutex());
 
-          sRegisteredThreads->at(i)->Profile()->StreamJSON(aWriter, aSinceTime);
+          info->StreamJSON(aWriter, aSinceTime);
         }
       }
 
@@ -704,18 +721,18 @@ Sampler::FlushOnJSShutdown(JSContext* aContext)
 
     for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
       // Thread not being profiled, skip it.
-      if (!sRegisteredThreads->at(i)->Profile() ||
-          sRegisteredThreads->at(i)->IsPendingDelete()) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+      if (!info->hasProfile() || info->IsPendingDelete()) {
         continue;
       }
 
       // Thread not profiling the context that's going away, skip it.
-      if (sRegisteredThreads->at(i)->Profile()->GetPseudoStack()->mContext != aContext) {
+      if (info->Stack()->mContext != aContext) {
         continue;
       }
 
-      MutexAutoLock lock(sRegisteredThreads->at(i)->Profile()->GetMutex());
-      sRegisteredThreads->at(i)->Profile()->FlushSamplesAndMarkers();
+      MutexAutoLock lock(info->GetMutex());
+      info->FlushSamplesAndMarkers();
     }
   }
 
@@ -741,9 +758,9 @@ void PseudoStack::flushSamplerOnJSShutdown()
 ////////////////////////////////////////////////////////////////////////
 
 static
-void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
+void addDynamicTag(ThreadInfo& aInfo, char aTagName, const char* aStr)
 {
-  aProfile.addTag(ProfileEntry(aTagName, ""));
+  aInfo.addTag(ProfileEntry(aTagName, ""));
   // Add one to store the null termination
   size_t strLen = strlen(aStr) + 1;
   for (size_t j = 0; j < strLen;) {
@@ -756,13 +773,13 @@ void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
     memcpy(text, &aStr[j], len);
     j += sizeof(void*)/sizeof(char);
     // Cast to *((void**) to pass the text data to a void*
-    aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
+    aInfo.addTag(ProfileEntry('d', *((void**)(&text[0]))));
   }
 }
 
 static
-void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
-                    PseudoStack *stack, void *lastpc)
+void addPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
+                    PseudoStack* stack, void* lastpc)
 {
   // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations
   // and should not be recorded in the profile.
@@ -778,7 +795,7 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     // Store the string using 1 or more 'd' (dynamic) tags
     // that will happen to the preceding tag
 
-    addDynamicTag(aProfile, 'c', sampleLabel);
+    addDynamicTag(aInfo, 'c', sampleLabel);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -801,7 +818,7 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
       lineno = entry.line();
     }
   } else {
-    aProfile.addTag(ProfileEntry('c', sampleLabel));
+    aInfo.addTag(ProfileEntry('c', sampleLabel));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the
     // line for js entries as well.
@@ -811,7 +828,7 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   }
 
   if (lineno != -1) {
-    aProfile.addTag(ProfileEntry('n', lineno));
+    aInfo.addTag(ProfileEntry('n', lineno));
   }
 
   uint32_t category = entry.category();
@@ -819,7 +836,7 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   MOZ_ASSERT(!(category & StackEntry::FRAME_LABEL_COPY));
 
   if (category) {
-    aProfile.addTag(ProfileEntry('y', (int)category));
+    aInfo.addTag(ProfileEntry('y', (int)category));
   }
 }
 
@@ -846,16 +863,17 @@ struct AutoWalkJSStack {
   }
 };
 
-static
-void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, NativeStack& aNativeStack)
+static void
+mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
+                       NativeStack& aNativeStack)
 {
-  PseudoStack* pseudoStack = aProfile.GetPseudoStack();
+  PseudoStack* pseudoStack = aInfo.Stack();
   volatile StackEntry *pseudoFrames = pseudoStack->mStack;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   // Make a copy of the JS stack into a JSFrame array. This is necessary since,
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
-  // need to iterate oldest-to-youngest when adding entries to aProfile.
+  // need to iterate oldest-to-youngest when adding entries to aInfo.
 
   // Synchronous sampling reports an invalid buffer generation to
   // ProfilingFrameIterator to avoid incorrectly resetting the generation of
@@ -865,7 +883,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   if (aSample->isSamplingCurrentThread) {
     startBufferGen = UINT32_MAX;
   } else {
-    startBufferGen = aProfile.bufferGeneration();
+    startBufferGen = aInfo.bufferGeneration();
   }
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
@@ -878,9 +896,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       JS::ProfilingFrameIterator::RegisterState registerState;
       registerState.pc = aSample->pc;
       registerState.sp = aSample->sp;
-#ifdef ENABLE_ARM_LR_SAVING
       registerState.lr = aSample->lr;
-#endif
 
       JS::ProfilingFrameIterator jsIter(pseudoStack->mContext,
                                         registerState,
@@ -903,11 +919,11 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   }
 
   // Start the sample with a root entry.
-  aProfile.addTag(ProfileEntry('s', "(root)"));
+  aInfo.addTag(ProfileEntry('s', "(root)"));
 
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to
-  // aProfile oldest-to-youngest. Thus, iterate over the pseudo-stack forwards
+  // aInfo oldest-to-youngest. Thus, iterate over the pseudo-stack forwards
   // and JS and native arrays backwards. Note: this means the terminating
   // condition jsIndex and nativeIndex is being < 0.
   uint32_t pseudoIndex = 0;
@@ -975,7 +991,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       volatile StackEntry &pseudoFrame = pseudoFrames[pseudoIndex];
-      addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
+      addPseudoEntry(pseudoFrame, aInfo, pseudoStack, nullptr);
       pseudoIndex++;
       continue;
     }
@@ -1000,11 +1016,11 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       // with stale JIT code return addresses.
       if (aSample->isSamplingCurrentThread ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        addDynamicTag(aProfile, 'c', jsFrame.label);
+        addDynamicTag(aInfo, 'c', jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aProfile.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
+        aInfo.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
       }
 
       jsIndex--;
@@ -1015,7 +1031,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     // greatest entry.
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
-      aProfile
+      aInfo
         .addTag(ProfileEntry('l', (void*)aNativeStack.pc_array[nativeIndex]));
     }
     if (nativeIndex >= 0) {
@@ -1028,10 +1044,10 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   // Do not do this for synchronous sampling, which create their own
   // ProfileBuffers.
   if (!aSample->isSamplingCurrentThread && pseudoStack->mContext) {
-    MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
-    uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
+    MOZ_ASSERT(aInfo.bufferGeneration() >= startBufferGen);
+    uint32_t lapCount = aInfo.bufferGeneration() - startBufferGen;
     JS::UpdateJSContextProfilerSampleBufferGen(pseudoStack->mContext,
-                                               aProfile.bufferGeneration(),
+                                               aInfo.bufferGeneration(),
                                                lapCount);
   }
 }
@@ -1049,7 +1065,7 @@ void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
 }
 
 void
-Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+Sampler::doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 {
   void* pc_array[1000];
   void* sp_array[1000];
@@ -1070,7 +1086,7 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   // win X64 doesn't support disabling frame pointers emission so we need
   // to fallback to using StackWalk64 which is slower.
 #if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(V8_HOST_ARCH_X64))
-  void *stackEnd = aSample->threadProfile->GetStackTop();
+  void* stackEnd = aSample->threadInfo->StackTop();
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                           &nativeStack, reinterpret_cast<void**>(aSample->fp),
@@ -1079,20 +1095,20 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 #else
   void *platformData = nullptr;
 
-  uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
+  uintptr_t thread = GetThreadHandle(aSample->threadInfo->GetPlatformData());
   MOZ_ASSERT(thread);
   MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &nativeStack,
                thread, platformData);
 #endif
 
-  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+  mergeStacksIntoProfile(aInfo, aSample, nativeStack);
 }
 #endif
 
 
 #ifdef USE_EHABI_STACKWALK
 void
-Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+Sampler::doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 {
   void *pc_array[1000];
   void *sp_array[1000];
@@ -1105,7 +1121,7 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 
   const mcontext_t *mcontext = &reinterpret_cast<ucontext_t *>(aSample->context)->uc_mcontext;
   mcontext_t savedContext;
-  PseudoStack *pseudoStack = aProfile.GetPseudoStack();
+  PseudoStack* pseudoStack = aInfo.Stack();
 
   nativeStack.count = 0;
   // The pseudostack contains an "EnterJIT" frame whenever we enter
@@ -1149,19 +1165,19 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   // Now unwind whatever's left (starting from either the last EnterJIT
   // frame or, if no EnterJIT was found, the original registers).
   nativeStack.count += EHABIStackWalk(*mcontext,
-                                      aProfile.GetStackTop(),
+                                      aInfo.StackTop(),
                                       sp_array + nativeStack.count,
                                       pc_array + nativeStack.count,
                                       nativeStack.size - nativeStack.count);
 
-  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+  mergeStacksIntoProfile(aInfo, aSample, nativeStack);
 }
 #endif
 
 
 #ifdef USE_LUL_STACKWALK
 void
-Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+Sampler::doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 {
   const mcontext_t* mc
     = &reinterpret_cast<ucontext_t *>(aSample->context)->uc_mcontext;
@@ -1209,7 +1225,7 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 #   else
 #     error "Unknown plat"
 #   endif
-    uintptr_t end   = reinterpret_cast<uintptr_t>(aProfile.GetStackTop());
+    uintptr_t end   = reinterpret_cast<uintptr_t>(aInfo.StackTop());
     uintptr_t ws    = sizeof(void*);
     start &= ~(ws-1);
     end   &= ~(ws-1);
@@ -1254,7 +1270,7 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 
   nativeStack.count = framesUsed;
 
-  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+  mergeStacksIntoProfile(aInfo, aSample, nativeStack);
 
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
@@ -1265,18 +1281,16 @@ Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 #endif
 
 
-static
-void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddLeafAddresses)
+static void
+doSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
+                   bool aAddLeafAddresses)
 {
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
-  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+  mergeStacksIntoProfile(aInfo, aSample, nativeStack);
 
 #ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
-    aProfile.addTag(ProfileEntry('l', (void*)aSample->pc));
-#ifdef ENABLE_ARM_LR_SAVING
-    aProfile.addTag(ProfileEntry('L', (void*)aSample->lr));
-#endif
+    aInfo.addTag(ProfileEntry('l', (void*)aSample->pc));
   }
 #endif
 }
@@ -1291,26 +1305,24 @@ Sampler::Tick(TickSample* sample)
 void
 Sampler::InplaceTick(TickSample* sample)
 {
-  ThreadProfile& currThreadProfile = *sample->threadProfile;
+  ThreadInfo& currThreadInfo = *sample->threadInfo;
 
-  currThreadProfile.addTag(ProfileEntry('T', currThreadProfile.ThreadId()));
+  currThreadInfo.addTag(ProfileEntry('T', currThreadInfo.ThreadId()));
 
-  if (sample) {
-    mozilla::TimeDuration delta = sample->timestamp - sStartTime;
-    currThreadProfile.addTag(ProfileEntry('t', delta.ToMilliseconds()));
-  }
+  mozilla::TimeDuration delta = sample->timestamp - sStartTime;
+  currThreadInfo.addTag(ProfileEntry('t', delta.ToMilliseconds()));
 
-  PseudoStack* stack = currThreadProfile.GetPseudoStack();
+  PseudoStack* stack = currThreadInfo.Stack();
 
 #if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK) || \
     defined(USE_LUL_STACKWALK)
   if (mUseStackWalk) {
-    doNativeBacktrace(currThreadProfile, sample);
+    doNativeBacktrace(currThreadInfo, sample);
   } else {
-    doSampleStackTrace(currThreadProfile, sample, mAddLeafAddresses);
+    doSampleStackTrace(currThreadInfo, sample, mAddLeafAddresses);
   }
 #else
-  doSampleStackTrace(currThreadProfile, sample, mAddLeafAddresses);
+  doSampleStackTrace(currThreadInfo, sample, mAddLeafAddresses);
 #endif
 
   // Don't process the PeudoStack's markers if we're
@@ -1319,28 +1331,28 @@ Sampler::InplaceTick(TickSample* sample)
     ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
-      currThreadProfile.addStoredMarker(marker);
-      currThreadProfile.addTag(ProfileEntry('m', marker));
+      currThreadInfo.addStoredMarker(marker);
+      currThreadInfo.addTag(ProfileEntry('m', marker));
     }
   }
 
-  if (sample && currThreadProfile.GetThreadResponsiveness()->HasData()) {
-    mozilla::TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
-    currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+  if (currThreadInfo.GetThreadResponsiveness()->HasData()) {
+    mozilla::TimeDuration delta = currThreadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
+    currThreadInfo.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
-  if (sample && sample->rssMemory != 0) {
-    currThreadProfile.addTag(ProfileEntry('R', static_cast<double>(sample->rssMemory)));
+  if (sample->rssMemory != 0) {
+    currThreadInfo.addTag(ProfileEntry('R', static_cast<double>(sample->rssMemory)));
   }
 
   // ussMemory is equal to 0 when we are not recording.
-  if (sample && sample->ussMemory != 0) {
-    currThreadProfile.addTag(ProfileEntry('U', static_cast<double>(sample->ussMemory)));
+  if (sample->ussMemory != 0) {
+    currThreadInfo.addTag(ProfileEntry('U', static_cast<double>(sample->ussMemory)));
   }
 
   if (sLastFrameNumber != sFrameNumber) {
-    currThreadProfile.addTag(ProfileEntry('f', sFrameNumber));
+    currThreadInfo.addTag(ProfileEntry('f', sFrameNumber));
     sLastFrameNumber = sFrameNumber;
   }
 }
@@ -1356,9 +1368,7 @@ SyncProfile* NewSyncProfile()
   }
   Thread::tid_t tid = Thread::GetCurrentId();
 
-  ThreadInfo* info = new ThreadInfo("SyncProfile", tid, false, stack, nullptr);
-  SyncProfile* profile = new SyncProfile(info, GET_BACKTRACE_DEFAULT_ENTRY);
-  return profile;
+  return new SyncProfile(tid, stack);
 }
 
 } // namespace
@@ -1369,7 +1379,7 @@ Sampler::GetBacktrace()
   SyncProfile* profile = NewSyncProfile();
 
   TickSample sample;
-  sample.threadProfile = profile;
+  sample.threadInfo = profile;
 
 #if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
 #if defined(XP_WIN) || defined(LINUX)
@@ -1400,14 +1410,14 @@ Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
 }
 
 static bool
-ThreadSelected(ThreadInfo* aInfo,
+ThreadSelected(const char* aThreadName,
                const ThreadNameFilterList &aThreadNameFilters)
 {
   if (aThreadNameFilters.empty()) {
     return true;
   }
 
-  std::string name = aInfo->Name();
+  std::string name = aThreadName;
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
   for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
@@ -1430,10 +1440,10 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
     return;
   }
 
-  if (!ThreadSelected(aInfo, mThreadNameFilters)) {
+  if (!ThreadSelected(aInfo->Name(), mThreadNameFilters)) {
     return;
   }
 
-  aInfo->SetProfile(mozilla::MakeUnique<ThreadProfile>(aInfo, mBuffer));
+  aInfo->SetProfile(mBuffer);
 }
 

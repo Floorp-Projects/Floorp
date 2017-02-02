@@ -14,12 +14,6 @@ import android.view.View;
 import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
-    // Bug 908744: Implement GeckoEventListener
-    // Bug 908752: Implement SensorEventListener
-    // Bug 908755: Implement LocationListener
-    // Bug 908756: Implement Tabs.OnTabsChangedListener
-    // Bug 908760: Implement GeckoEventResponder
-
     private final Context mContext;
     private GeckoProfile mProfile;
     private final EventDispatcher eventDispatcher;

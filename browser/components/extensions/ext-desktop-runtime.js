@@ -3,13 +3,13 @@
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("uninstall", (msg, extension) => {
   if (extension.uninstallURL) {
-    let browser = WindowManager.topWindow.gBrowser;
+    let browser = windowTracker.topWindow.gBrowser;
     browser.addTab(extension.uninstallURL, {relatedToCurrent: true});
   }
 });
 
 global.openOptionsPage = (extension) => {
-  let window = WindowManager.topWindow;
+  let window = windowTracker.topWindow;
   if (!window) {
     return Promise.reject({message: "No browser window available"});
   }

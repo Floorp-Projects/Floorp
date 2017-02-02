@@ -167,15 +167,15 @@ public final class SharedPreferencesHelper
             final String name = pref.getString("name");
             final String type = pref.getString("type");
             final GeckoBundle bundleValue = new GeckoBundle(3);
-            bundleValue.put("name", name);
-            bundleValue.put("type", type);
+            bundleValue.putString("name", name);
+            bundleValue.putString("type", type);
             try {
                 if ("bool".equals(type)) {
-                    bundleValue.put("value", prefs.getBoolean(name, false));
+                    bundleValue.putBoolean("value", prefs.getBoolean(name, false));
                 } else if ("int".equals(type)) {
-                    bundleValue.put("value", prefs.getInt(name, 0));
+                    bundleValue.putInt("value", prefs.getInt(name, 0));
                 } else if ("string".equals(type)) {
-                    bundleValue.put("value", prefs.getString(name, ""));
+                    bundleValue.putString("value", prefs.getString(name, ""));
                 } else {
                     Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
                 }

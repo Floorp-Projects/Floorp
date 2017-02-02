@@ -31,7 +31,7 @@ interface Node : EventTarget {
   [Pure]
   readonly attribute DOMString nodeName;
 
-  [Pure, Throws]
+  [Pure, Throws, NeedsCallerType, BinaryName="baseURIFromJS"]
   readonly attribute DOMString? baseURI;
 
   [Pure, BinaryName=getComposedDoc]

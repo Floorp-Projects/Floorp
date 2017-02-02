@@ -206,7 +206,7 @@ AppendBlobImplAsDirectory(nsTArray<OwningFileOrDirectory>& aArray,
 
   nsAutoString fullpath;
   ErrorResult err;
-  aBlobImpl->GetMozFullPath(fullpath, err);
+  aBlobImpl->GetMozFullPath(fullpath, SystemCallerGuarantee(), err);
   if (err.Failed()) {
     err.SuppressException();
     return;

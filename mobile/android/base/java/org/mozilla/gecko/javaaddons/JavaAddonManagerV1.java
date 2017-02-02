@@ -11,14 +11,13 @@ import android.util.Pair;
 import dalvik.system.DexClassLoader;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoJarReader;
-import org.mozilla.gecko.util.GeckoRequest;
-import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.javaaddons.JavaAddonInterfaceV1;
 
 import java.io.File;
@@ -181,17 +180,36 @@ public class JavaAddonManagerV1 implements BundleEventListener {
                     return;
                 }
                 final String event = prefixedEvent.substring(guid.length() + 1); // Skip "guid:".
-                JavaAddonInterfaceV1.EventCallback callbackAdapter = null;
-                if (callback != null) {
+                final JavaAddonInterfaceV1.EventCallback callbackAdapter;
+                if (callback == null) {
+                    callbackAdapter = null;
+                } else {
                     callbackAdapter = new JavaAddonInterfaceV1.EventCallback() {
+                        private void invokeCallback(final boolean success, final Object response) {
+                            final GeckoBundle bundle;
+                            try {
+                                final JSONObject wrapper = new JSONObject();
+                                wrapper.put("response", response);
+                                bundle = GeckoBundle.fromJSONObject(wrapper);
+                            } catch (final JSONException e) {
+                                Log.e(LOGTAG, "Unsupported response for message [" + event + "]", e);
+                                return;
+                            }
+                            if (success) {
+                                callback.sendSuccess(bundle);
+                            } else {
+                                callback.sendError(bundle);
+                            }
+                        }
+
                         @Override
                         public void sendSuccess(Object response) {
-                            callback.sendSuccess(response);
+                            invokeCallback(/* success */ true, response);
                         }
 
                         @Override
                         public void sendError(Object response) {
-                            callback.sendError(response);
+                            invokeCallback(/* success */ false, response);
                         }
                     };
                 }
@@ -247,22 +265,44 @@ public class JavaAddonManagerV1 implements BundleEventListener {
         public void sendRequestToGecko(final String event, final JSONObject message,
                                        final JavaAddonInterfaceV1.RequestCallback callback) {
             final String prefixedEvent = guid + ":" + event;
-            GeckoAppShell.sendRequestToGecko(new GeckoRequest(prefixedEvent, message) {
-                @Override
-                public void onResponse(NativeJSObject nativeJSObject) {
-                    if (callback == null) {
-                        // Nothing to do.
-                        return;
+            final GeckoBundle data;
+            try {
+                data = GeckoBundle.fromJSONObject(message);
+            } catch (final JSONException e) {
+                Log.e(LOGTAG, "Cannot convert message", e);
+                return;
+            }
+
+            final EventCallback cb;
+            if (callback == null) {
+                cb = null;
+            } else {
+                cb = new EventCallback() {
+                    @Override
+                    public void sendSuccess(final Object response) {
+                        if (!(response instanceof GeckoBundle)) {
+                            Log.e(LOGTAG, "Response to request [" + event + "] must be an object");
+                            return;
+                        }
+                        try {
+                            final JSONObject json = ((GeckoBundle) response).toJSONObject();
+                            callback.onResponse(GeckoAppShell.getApplicationContext(), json);
+                        } catch (final Exception e) {
+                            // No way to report failure.
+                            Log.e(LOGTAG, "Exception handling response to request [" +
+                                          event + "]", e);
+                        }
                     }
-                    try {
-                        final JSONObject json = new JSONObject(nativeJSObject.toString());
-                        callback.onResponse(GeckoAppShell.getApplicationContext(), json);
-                    } catch (JSONException e) {
-                        // No way to report failure.
-                        Log.e(LOGTAG, "Exception handling response to request [" + event + "]:", e);
+
+                    @Override
+                    public void sendError(final Object response) {
+                        Log.e(LOGTAG, "Exception handling response to request [" +
+                                      event + "]: " + response);
                     }
-                }
-            });
+                };
+            }
+
+            mDispatcher.dispatch(prefixedEvent, data, cb);
         }
     }
 }

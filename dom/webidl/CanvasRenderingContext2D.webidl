@@ -110,10 +110,6 @@ interface CanvasRenderingContext2D {
   [Throws, Func="CanvasUtils::HasDrawWindowPrivilege"]
   void drawWindow(Window window, double x, double y, double w, double h,
                   DOMString bgColor, optional unsigned long flags = 0);
-  [Throws, ChromeOnly]
-  void asyncDrawXULElement(XULElement elem, double x, double y, double w,
-                           double h, DOMString bgColor,
-                           optional unsigned long flags = 0);
 
   /**
    * This causes a context that is currently using a hardware-accelerated

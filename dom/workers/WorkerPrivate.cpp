@@ -4275,7 +4275,7 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
 
 // static
 bool
-WorkerPrivate::WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */)
+WorkerPrivate::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
 {
   // If we're already on a worker workers are clearly enabled.
   if (!NS_IsMainThread()) {
@@ -4283,7 +4283,7 @@ WorkerPrivate::WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */)
   }
 
   // If our caller is chrome, workers are always available.
-  if (nsContentUtils::IsCallerChrome()) {
+  if (nsContentUtils::IsSystemCaller(aCx)) {
     return true;
   }
 
@@ -4312,7 +4312,7 @@ ChromeWorkerPrivate::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
   // caller.  However, chrome workers apparently might not have a
   // system principal, so we have to check for them manually.
   if (NS_IsMainThread()) {
-    return nsContentUtils::IsCallerChrome();
+    return nsContentUtils::IsSystemCaller(aCx);
   }
 
   return GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
@@ -4493,7 +4493,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);
 
-    bool isChrome = nsContentUtils::IsCallerChrome();
+    bool isChrome = nsContentUtils::IsSystemCaller(aCx);
 
     // First check to make sure the caller has permission to make a privileged
     // worker if they called the ChromeWorker/ChromeSharedWorker constructor.

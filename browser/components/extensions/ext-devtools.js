@@ -81,7 +81,7 @@ global.getTargetTabIdForToolbox = (toolbox) => {
   let parentWindow = target.tab.linkedBrowser.ownerGlobal;
   let tab = parentWindow.gBrowser.getTabForBrowser(target.tab.linkedBrowser);
 
-  return TabManager.getId(tab);
+  return tabTracker.getId(tab);
 };
 
 /**
