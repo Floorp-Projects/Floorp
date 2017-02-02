@@ -453,18 +453,28 @@ nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
   return false;
 }
 
+static bool sMozBrowserFramesEnabled = false;
+#ifdef DEBUG
+static bool sBoolVarCacheInitialized = false;
+#endif
+
+void
+nsGenericHTMLFrameElement::InitStatics()
+{
+  MOZ_ASSERT(!sBoolVarCacheInitialized);
+  MOZ_ASSERT(NS_IsMainThread());
+  Preferences::AddBoolVarCache(&sMozBrowserFramesEnabled,
+                               "dom.mozBrowserFramesEnabled");
+#ifdef DEBUG
+  sBoolVarCacheInitialized = true;
+#endif
+}
+
+
 bool
 nsGenericHTMLFrameElement::BrowserFramesEnabled()
 {
-  static bool sMozBrowserFramesEnabled = false;
-  static bool sBoolVarCacheInitialized = false;
-
-  if (!sBoolVarCacheInitialized) {
-    sBoolVarCacheInitialized = true;
-    Preferences::AddBoolVarCache(&sMozBrowserFramesEnabled,
-                                 "dom.mozBrowserFramesEnabled");
-  }
-
+  MOZ_ASSERT(sBoolVarCacheInitialized);
   return sMozBrowserFramesEnabled;
 }
 
