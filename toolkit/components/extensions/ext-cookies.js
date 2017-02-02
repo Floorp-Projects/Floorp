@@ -421,14 +421,11 @@ extensions.registerSchemaAPI("cookies", "addon_parent", context => {
 
       getAllCookieStores: function() {
         let data = {};
-        for (let window of WindowListManager.browserWindows()) {
-          let tabs = TabManager.for(extension).getTabs(window);
-          for (let tab of tabs) {
-            if (!(tab.cookieStoreId in data)) {
-              data[tab.cookieStoreId] = [];
-            }
-            data[tab.cookieStoreId].push(tab.id);
+        for (let tab of extension.tabManager.query()) {
+          if (!(tab.cookieStoreId in data)) {
+            data[tab.cookieStoreId] = [];
           }
+          data[tab.cookieStoreId].push(tab.id);
         }
 
         let result = [];

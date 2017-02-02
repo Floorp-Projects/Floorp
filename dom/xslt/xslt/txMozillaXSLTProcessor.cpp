@@ -1011,26 +1011,16 @@ txMozillaXSLTProcessor::Reset()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::SetFlags(uint32_t aFlags)
+void
+txMozillaXSLTProcessor::SetFlags(uint32_t aFlags, SystemCallerGuarantee)
 {
-    NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(),
-                   NS_ERROR_DOM_SECURITY_ERR);
-
     mFlags = aFlags;
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
-txMozillaXSLTProcessor::GetFlags(uint32_t* aFlags)
+uint32_t
+txMozillaXSLTProcessor::Flags(SystemCallerGuarantee)
 {
-    NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(),
-                   NS_ERROR_DOM_SECURITY_ERR);
-
-    *aFlags = mFlags;
-
-    return NS_OK;
+    return mFlags;
 }
 
 NS_IMETHODIMP

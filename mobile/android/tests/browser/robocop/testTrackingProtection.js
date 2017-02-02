@@ -102,11 +102,11 @@ add_task(function* test_tracking_pb() {
 
   // Point tab to a test page NOT containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "unknown" });
 
   // Point tab to a test page containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 
   // Simulate a click on the "Disable protection" button in the site identity popup.
   // We need to wait for a "load" event because "Session:Reload" will cause a full page reload.
@@ -116,7 +116,7 @@ add_task(function* test_tracking_pb() {
       contentType: "tracking",
     });
   });
-  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_loaded" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "tracking_content_loaded" });
 
   // Simulate a click on the "Enable protection" button in the site identity popup.
   yield promiseLoadEvent(browser, undefined, undefined, () => {
@@ -125,18 +125,18 @@ add_task(function* test_tracking_pb() {
       contentType: "tracking",
     });
   });
-  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 
   // Disable tracking protection to make sure we don't show the UI when the pref is disabled.
   Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled", false);
 
   // Point tab to a test page containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "unknown" });
 
   // Point tab to a test page NOT containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "unknown" });
 
   // Reset the pref before the next testcase
   Services.prefs.clearUserPref("privacy.trackingprotection.pbmode.enabled");
@@ -153,18 +153,18 @@ add_task(function* test_tracking_not_pb() {
 
   // Point tab to a test page NOT containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_good.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "unknown" });
 
   // Point tab to a test page containing tracking elements (tracking protection UI *should not* be shown)
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "unknown" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "unknown" });
 
   // Enable tracking protection in normal tabs
   Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
 
   // Point tab to a test page containing tracking elements (tracking protection UI *should* be shown)
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
-  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
+  EventDispatcher.instance.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 });
 
 run_next_test();

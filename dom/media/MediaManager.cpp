@@ -38,6 +38,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaStreamBinding.h"
@@ -239,7 +240,8 @@ public:
   already_AddRefed<PledgeVoid>
   ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
                           TrackID aID,
-                          const dom::MediaTrackConstraints& aConstraints);
+                          const dom::MediaTrackConstraints& aConstraints,
+                          dom::CallerType aCallerType);
 
   // mVideo/AudioDevice are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
@@ -1112,7 +1114,8 @@ public:
 
         already_AddRefed<PledgeVoid>
         ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                         const MediaTrackConstraints& aConstraints) override
+                         const MediaTrackConstraints& aConstraints,
+                         dom::CallerType aCallerType) override
         {
           if (sInShutdown || !mListener) {
             // Track has been stopped, or we are in shutdown. In either case
@@ -1121,7 +1124,8 @@ public:
             p->Resolve(false);
             return p.forget();
           }
-          return mListener->ApplyConstraintsToTrack(aWindow, mTrackID, aConstraints);
+          return mListener->ApplyConstraintsToTrack(aWindow, mTrackID,
+                                                    aConstraints, aCallerType);
         }
 
         void
@@ -1998,7 +2002,8 @@ nsresult
 MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                            const MediaStreamConstraints& aConstraintsPassedIn,
                            nsIDOMGetUserMediaSuccessCallback* aOnSuccess,
-                           nsIDOMGetUserMediaErrorCallback* aOnFailure)
+                           nsIDOMGetUserMediaErrorCallback* aOnFailure,
+                           dom::CallerType aCallerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
@@ -2036,7 +2041,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   if (!docURI) {
     return NS_ERROR_UNEXPECTED;
   }
-  bool isChrome = nsContentUtils::IsCallerChrome();
+  bool isChrome = (aCallerType == dom::CallerType::System);
   bool privileged = isChrome ||
       Preferences::GetBool("media.navigator.permission.disabled", false);
   bool isHTTPS = false;
@@ -3466,7 +3471,8 @@ auto
 GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
     nsPIDOMWindowInner* aWindow,
     TrackID aTrackID,
-    const MediaTrackConstraints& aConstraints) -> already_AddRefed<PledgeVoid>
+    const MediaTrackConstraints& aConstraints,
+    dom::CallerType aCallerType) -> already_AddRefed<PledgeVoid>
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<PledgeVoid> p = new PledgeVoid();
@@ -3489,7 +3495,7 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   uint32_t id = mgr->mOutstandingVoidPledges.Append(*p);
   uint64_t windowId = aWindow->WindowID();
-  bool isChrome = nsContentUtils::IsCallerChrome();
+  bool isChrome = (aCallerType == dom::CallerType::System);
 
   MediaManager::PostTask(NewTaskFrom([id, windowId,
                                       audioDevice, videoDevice,

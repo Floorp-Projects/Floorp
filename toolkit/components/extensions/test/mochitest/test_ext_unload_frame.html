@@ -135,6 +135,11 @@ add_task(function* testConnect_and_remove_frame() {
 });
 
 add_task(function* testSendMessage_and_remove_window() {
+  if (AppConstants.MOZ_BUILD_APP !== "browser") {
+    // We can't rely on this timing on Android.
+    return;
+  }
+
   let extension = createTestExtension("window", sendMessage_background, sendMessage_contentScript);
   yield extension.startup();
 
@@ -145,6 +150,11 @@ add_task(function* testSendMessage_and_remove_window() {
 });
 
 add_task(function* testConnect_and_remove_window() {
+  if (AppConstants.MOZ_BUILD_APP !== "browser") {
+    // We can't rely on this timing on Android.
+    return;
+  }
+
   let extension = createTestExtension("window", connect_background, connect_contentScript);
   yield extension.startup();
 

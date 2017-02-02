@@ -1134,7 +1134,7 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
     // We don't serialize mutedError-ness of scripts, which is fine as long as
     // we only serialize system and XUL-y things. We can detect this by checking
     // where the caller wants us to deserialize.
-    MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome() ||
+    MOZ_RELEASE_ASSERT(nsContentUtils::IsSystemCaller(cx) ||
                        CurrentGlobalOrNull(cx) == xpc::CompilationScope());
 
     uint32_t size;

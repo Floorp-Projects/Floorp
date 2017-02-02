@@ -10,16 +10,15 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
-class ThreadProfile;
 class CheckResponsivenessTask;
 
 class ThreadResponsiveness {
 public:
-  explicit ThreadResponsiveness(ThreadProfile *aThreadProfile);
+  explicit ThreadResponsiveness();
 
   ~ThreadResponsiveness();
 
-  void Update();
+  void Update(bool aIsMainThread, nsIThread* aThread);
 
   mozilla::TimeDuration GetUnresponsiveDuration(const mozilla::TimeStamp& now) const {
     return now - mLastTracerTime;
@@ -29,7 +28,6 @@ public:
     return !mLastTracerTime.IsNull();
   }
 private:
-  ThreadProfile* mThreadProfile;
   RefPtr<CheckResponsivenessTask> mActiveTracerEvent;
   mozilla::TimeStamp mLastTracerTime;
 };
