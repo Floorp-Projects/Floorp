@@ -37,7 +37,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'gecko/nsProfilerFactory.cpp',
         'gecko/nsProfilerStartParams.cpp',
         'gecko/ProfilerIOInterposeObserver.cpp',
-        'gecko/SaveProfileTask.cpp',
         'gecko/ThreadResponsiveness.cpp',
     ]
     if CONFIG['OS_TARGET'] == 'Darwin':

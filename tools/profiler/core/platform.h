@@ -262,12 +262,6 @@ public:
   // Immediately captures the calling thread's call stack and returns it.
   SyncProfile* GetBacktrace();
 
-  // Request a save from a signal handler. This function must be re-entrant.
-  void RequestSave() { mSaveRequested = true; }
-
-  // Process any outstanding request outside a signal handler.
-  void HandleSaveRequest();
-
   // Delete markers which are no longer part of the profile due to buffer
   // wraparound.
   void DeleteExpiredMarkers();
@@ -388,7 +382,6 @@ private:
 #endif
 
   RefPtr<ProfileBuffer> mBuffer;
-  bool mSaveRequested;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mProfileJS;
