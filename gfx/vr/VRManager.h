@@ -50,7 +50,7 @@ public:
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
   void CreateVRTestSystem();
   void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                     double aIntensity, double aDuration);
+                     double aIntensity, double aDuration, uint32_t aPromiseID);
 
 protected:
   VRManager();

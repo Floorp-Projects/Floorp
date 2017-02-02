@@ -442,11 +442,12 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
                                    const uint32_t& aHapticIndex,
                                    const double& aIntensity,
-                                   const double& aDuration)
+                                   const double& aDuration,
+                                   const uint32_t& aPromiseID)
 {
   VRManager* vm = VRManager::Get();
   vm->VibrateHaptic(aControllerIdx, aHapticIndex, aIntensity,
-                    aDuration);
+                    aDuration, aPromiseID);
   return IPC_OK();
 }
 

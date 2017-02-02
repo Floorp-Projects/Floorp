@@ -55,7 +55,7 @@ parent:
   async ControllerListenerAdded();
   async ControllerListenerRemoved();
   async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                      double aIntensity, double aDuration);
+                      double aIntensity, double aDuration, uint32_t aPromiseID);
 
   async CreateVRTestSystem();
   async CreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID);
@@ -82,6 +82,8 @@ child:
   async NotifyVSync();
   async NotifyVRVSync(uint32_t aDisplayID);
   async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
+  async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);
+
   async ReplyCreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID,
                                         uint32_t aDeviceID);
   async ReplyCreateVRServiceTestController(nsCString aID, uint32_t aPromiseID,
