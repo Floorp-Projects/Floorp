@@ -35,7 +35,6 @@ public:
 
   void BeginUnwind();
   virtual void EndUnwind();
-  virtual SyncProfile* AsSyncProfile() { return nullptr; }
 
   bool IsMainThread() const { return mIsMainThread; }
   const char* Name() const { return mThreadInfo->Name(); }
