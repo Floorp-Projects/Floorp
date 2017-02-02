@@ -992,6 +992,42 @@ VRSystemManagerOculus::HandleInput()
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickYAxis);
     HandleAxisMove(controller->GetIndex(), axis, -inputState.Thumbstick[i].y);
+
+    // Start to process pose
+    ovrTrackingState state = ovr_GetTrackingState(mSession, 0.0, false);
+    ovrPoseStatef& pose(state.HandPoses[i]);
+    GamepadPoseState poseState;
+
+    if (state.HandStatusFlags[i] & ovrStatus_OrientationTracked) {
+      poseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
+      poseState.orientation[0] = pose.ThePose.Orientation.x;
+      poseState.orientation[1] = pose.ThePose.Orientation.y;
+      poseState.orientation[2] = pose.ThePose.Orientation.z;
+      poseState.orientation[3] = pose.ThePose.Orientation.w;
+      poseState.angularVelocity[0] = pose.AngularVelocity.x;
+      poseState.angularVelocity[1] = pose.AngularVelocity.y;
+      poseState.angularVelocity[2] = pose.AngularVelocity.z;
+
+      poseState.flags |= GamepadCapabilityFlags::Cap_AngularAcceleration;
+      poseState.angularAcceleration[0] = pose.AngularAcceleration.x;
+      poseState.angularAcceleration[1] = pose.AngularAcceleration.y;
+      poseState.angularAcceleration[2] = pose.AngularAcceleration.z;
+    }
+    if (state.HandStatusFlags[i] & ovrStatus_PositionTracked) {
+      poseState.flags |= GamepadCapabilityFlags::Cap_Position;
+      poseState.position[0] = pose.ThePose.Position.x;
+      poseState.position[1] = pose.ThePose.Position.y;
+      poseState.position[2] = pose.ThePose.Position.z;
+      poseState.linearVelocity[0] = pose.LinearVelocity.x;
+      poseState.linearVelocity[1] = pose.LinearVelocity.y;
+      poseState.linearVelocity[2] = pose.LinearVelocity.z;
+
+      poseState.flags |= GamepadCapabilityFlags::Cap_LinearAcceleration;
+      poseState.linearAcceleration[0] = pose.LinearAcceleration.x;
+      poseState.linearAcceleration[1] = pose.LinearAcceleration.y;
+      poseState.linearAcceleration[2] = pose.LinearAcceleration.z;
+    }
+    HandlePoseTracking(controller->GetIndex(), poseState, controller);
   }
 }
 
@@ -1051,7 +1087,10 @@ VRSystemManagerOculus::HandlePoseTracking(uint32_t aControllerIdx,
                                           const GamepadPoseState& aPose,
                                           VRControllerHost* aController)
 {
-  // TODO: Bug 1305891
+  if (aPose != aController->GetPose()) {
+    aController->SetPose(aPose);
+    NewPoseState(aControllerIdx, aPose);
+  }
 }
 
 void
