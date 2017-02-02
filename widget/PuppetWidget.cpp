@@ -600,6 +600,10 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 LayerManager*
 PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 {
+  // Force the old LM to self destruct, otherwise if the reference dangles we
+  // could fail to revoke the most recent transaction.
+  DestroyLayerManager();
+
   mLayerManager = new ClientLayerManager(this);
   if (ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder()) {
     lf->SetShadowManager(aShadowManager);
