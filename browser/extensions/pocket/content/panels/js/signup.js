@@ -1,3 +1,6 @@
+/* global $:false, Handlebars:false */
+/* import-globals-from messages.js */
+
 /*
 PKT_SIGNUP_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
@@ -157,6 +160,7 @@ PKT_SIGNUP.prototype = {
 $(function() {
     if (!window.thePKT_SIGNUP) {
         var thePKT_SIGNUP = new PKT_SIGNUP();
+        /* global thePKT_SIGNUP */
         window.thePKT_SIGNUP = thePKT_SIGNUP;
         thePKT_SIGNUP.init();
     }
