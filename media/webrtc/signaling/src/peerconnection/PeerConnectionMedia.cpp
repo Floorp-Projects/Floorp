@@ -1721,7 +1721,8 @@ LocalSourceStreamInfo::ForgetPipelineByTrackId_m(const std::string& trackId)
 auto
 RemoteTrackSource::ApplyConstraints(
     nsPIDOMWindowInner* aWindow,
-    const dom::MediaTrackConstraints& aConstraints) -> already_AddRefed<PledgeVoid>
+    const dom::MediaTrackConstraints& aConstraints,
+    dom::CallerType aCallerType) -> already_AddRefed<PledgeVoid>
 {
   RefPtr<PledgeVoid> p = new PledgeVoid();
   p->Reject(new dom::MediaStreamError(aWindow,

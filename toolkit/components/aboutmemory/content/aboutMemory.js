@@ -98,7 +98,7 @@ function handleException(ex) {
     throw ex;
   } else {
     // File or memory reporter problem.  Print a message.
-    updateMainAndFooter(str, HIDE_FOOTER, "badInputWarning");
+    updateMainAndFooter(str, NO_TIMESTAMP, HIDE_FOOTER, "badInputWarning");
   }
 }
 
@@ -135,10 +135,15 @@ var gVerbose;
 var gAnonymize;
 
 // Values for the |aFooterAction| argument to updateTitleMainAndFooter.
-var HIDE_FOOTER = 0;
-var SHOW_FOOTER = 1;
+const HIDE_FOOTER = 0;
+const SHOW_FOOTER = 1;
 
-function updateTitleMainAndFooter(aTitleNote, aMsg, aFooterAction, aClassName) {
+// Values for the |aShowTimestamp| argument to updateTitleMainAndFooter.
+const NO_TIMESTAMP = 0;
+const SHOW_TIMESTAMP = 1;
+
+function updateTitleMainAndFooter(aTitleNote, aMsg, aShowTimestamp,
+                                  aFooterAction, aClassName) {
   document.title = gPageName;
   if (aTitleNote) {
     document.title += " (" + aTitleNote + ")";
@@ -162,6 +167,12 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aFooterAction, aClassName) {
     if (aClassName) {
       className = className + " " + aClassName;
     }
+    if (aShowTimestamp == SHOW_TIMESTAMP) {
+      // JS has many options for pretty-printing timestamps. We use
+      // toISOString() because it has sub-second granularity, which is useful
+      // if you quickly and repeatedly click one of the buttons.
+      aMsg += " (" + (new Date()).toISOString() + ")";
+    }
     msgElement = appendElementWithText(gMain, "div", className, aMsg);
   }
 
@@ -173,8 +184,9 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aFooterAction, aClassName) {
   return msgElement;
 }
 
-function updateMainAndFooter(aMsg, aFooterAction, aClassName) {
-  return updateTitleMainAndFooter("", aMsg, aFooterAction, aClassName);
+function updateMainAndFooter(aMsg, aShowTimestamp, aFooterAction, aClassName) {
+  return updateTitleMainAndFooter("", aMsg, aShowTimestamp, aFooterAction,
+                                  aClassName);
 }
 
 function appendTextNode(aP, aText) {
@@ -411,7 +423,8 @@ function onLoad() {
 function doGC() {
   Services.obs.notifyObservers(null, "child-gc-request", null);
   Cu.forceGC();
-  updateMainAndFooter("Garbage collection completed", HIDE_FOOTER);
+  updateMainAndFooter("Garbage collection completed", SHOW_TIMESTAMP,
+                      HIDE_FOOTER);
 }
 
 function doCC() {
@@ -419,13 +432,15 @@ function doCC() {
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  updateMainAndFooter("Cycle collection completed", HIDE_FOOTER);
+  updateMainAndFooter("Cycle collection completed", SHOW_TIMESTAMP,
+                      HIDE_FOOTER);
 }
 
 function doMMU() {
   Services.obs.notifyObservers(null, "child-mmu-request", null);
   gMgr.minimizeMemoryUsage(
-    () => updateMainAndFooter("Memory minimization completed", HIDE_FOOTER));
+    () => updateMainAndFooter("Memory minimization completed",
+                              SHOW_TIMESTAMP, HIDE_FOOTER));
 }
 
 function doMeasure() {
@@ -441,7 +456,8 @@ function saveGCLogAndVerboseCCLog() {
 }
 
 function doDMD() {
-  updateMainAndFooter("Saving memory reports and DMD output...", HIDE_FOOTER);
+  updateMainAndFooter("Saving memory reports and DMD output...",
+                      NO_TIMESTAMP, HIDE_FOOTER);
   try {
     let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
                    .getService(Ci.nsIMemoryInfoDumper);
@@ -451,9 +467,9 @@ function doDMD() {
                                    /* minimize = */ false);
     updateMainAndFooter("Saved memory reports and DMD reports analysis " +
                         "to the temp directory",
-                        HIDE_FOOTER);
+                        SHOW_TIMESTAMP, HIDE_FOOTER);
   } catch (ex) {
-    updateMainAndFooter(ex.toString(), HIDE_FOOTER);
+    updateMainAndFooter(ex.toString(), NO_TIMESTAMP, HIDE_FOOTER);
   }
 }
 
@@ -461,7 +477,8 @@ function dumpGCLogAndCCLog(aVerbose) {
   let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
                 .getService(Ci.nsIMemoryInfoDumper);
 
-  let inProgress = updateMainAndFooter("Saving logs...", HIDE_FOOTER);
+  let inProgress = updateMainAndFooter("Saving logs...",
+                                       NO_TIMESTAMP, HIDE_FOOTER);
   let section = appendElement(gMain, "div", "section");
 
   function displayInfo(gcLog, ccLog, isParent) {
@@ -486,7 +503,7 @@ function dumpGCLogAndCCLog(aVerbose) {
  * reporters.
  */
 function updateAboutMemoryFromReporters() {
-  updateMainAndFooter("Measuring...", HIDE_FOOTER);
+  updateMainAndFooter("Measuring...", NO_TIMESTAMP, HIDE_FOOTER);
 
   try {
     let processLiveMemoryReports =
@@ -498,7 +515,8 @@ function updateAboutMemoryFromReporters() {
       }
 
       let displayReportsAndFooter = function() {
-        updateTitleMainAndFooter("live measurement", "", SHOW_FOOTER);
+        updateTitleMainAndFooter("live measurement", "", NO_TIMESTAMP,
+                                 SHOW_FOOTER);
         aDisplayReports();
       }
 
@@ -608,7 +626,7 @@ function updateAboutMemoryFromJSONString(aStr) {
  *        The function to call and pass the read string to upon completion.
  */
 function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
-  updateMainAndFooter("Loading...", HIDE_FOOTER);
+  updateMainAndFooter("Loading...", NO_TIMESTAMP, HIDE_FOOTER);
 
   try {
     let reader = new FileReader();
@@ -616,7 +634,7 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn) {
     reader.onabort = () => { throw new Error("FileReader.onabort"); };
     reader.onload = (aEvent) => {
       // Clear "Loading..." from above.
-      updateTitleMainAndFooter(aTitleNote, "", SHOW_FOOTER);
+      updateTitleMainAndFooter(aTitleNote, "", NO_TIMESTAMP, SHOW_FOOTER);
       aFn(aEvent.target.result);
     };
 
@@ -1950,7 +1968,8 @@ function saveReportsToFile() {
     let dumper = Cc["@mozilla.org/memory-info-dumper;1"]
                    .getService(Ci.nsIMemoryInfoDumper);
     let finishDumping = () => {
-      updateMainAndFooter("Saved memory reports to " + file.path, HIDE_FOOTER);
+      updateMainAndFooter("Saved memory reports to " + file.path,
+                          SHOW_TIMESTAMP, HIDE_FOOTER);
     }
     dumper.dumpMemoryReportsToNamedFile(file.path, finishDumping, null,
                                         gAnonymize.checked);

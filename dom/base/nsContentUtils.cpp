@@ -6847,23 +6847,23 @@ nsContentUtils::IsFullScreenApiEnabled()
 
 /* static */
 bool
-nsContentUtils::IsRequestFullScreenAllowed()
+nsContentUtils::IsRequestFullScreenAllowed(CallerType aCallerType)
 {
   return !sTrustedFullScreenOnly ||
          EventStateManager::IsHandlingUserInput() ||
-         IsCallerChrome();
+         aCallerType == CallerType::System;
 }
 
 /* static */
 bool
-nsContentUtils::IsCutCopyAllowed()
+nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal)
 {
   if ((!IsCutCopyRestricted() && EventStateManager::IsHandlingUserInput()) ||
-      IsCallerChrome()) {
+      IsSystemPrincipal(aSubjectPrincipal)) {
     return true;
   }
 
-  return BasePrincipal::Cast(SubjectPrincipal())->AddonHasPermission(NS_LITERAL_STRING("clipboardWrite"));
+  return BasePrincipal::Cast(aSubjectPrincipal)->AddonHasPermission(NS_LITERAL_STRING("clipboardWrite"));
 }
 
 /* static */

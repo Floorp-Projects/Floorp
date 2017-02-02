@@ -189,14 +189,14 @@ add_task(function* () {
   });
 
   extension.onMessage("msg", (id, msg, ...args) => {
-    let {Management: {global: {TabManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+    let {Management: {global: {tabTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
     let resp;
     if (msg == "get-zoom") {
-      let tab = TabManager.getTab(args[0]);
+      let tab = tabTracker.getTab(args[0]);
       resp = ZoomManager.getZoomForBrowser(tab.linkedBrowser);
     } else if (msg == "set-zoom") {
-      let tab = TabManager.getTab(args[0]);
+      let tab = tabTracker.getTab(args[0]);
       ZoomManager.setZoomForBrowser(tab.linkedBrowser);
     } else if (msg == "enlarge") {
       FullZoom.enlarge();

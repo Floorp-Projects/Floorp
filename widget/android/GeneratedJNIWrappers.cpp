@@ -61,9 +61,9 @@ constexpr char EventDispatcher::DispatchToGecko_t::signature[];
 constexpr char EventDispatcher::DispatchToThreads_t::name[];
 constexpr char EventDispatcher::DispatchToThreads_t::signature[];
 
-auto EventDispatcher::DispatchToThreads(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2, mozilla::jni::Object::Param a3) const -> bool
+auto EventDispatcher::DispatchToThreads(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2) const -> bool
 {
-    return mozilla::jni::Method<DispatchToThreads_t>::Call(EventDispatcher::mCtx, nullptr, a0, a1, a2, a3);
+    return mozilla::jni::Method<DispatchToThreads_t>::Call(EventDispatcher::mCtx, nullptr, a0, a1, a2);
 }
 
 constexpr char EventDispatcher::DisposeNative_t::name[];
@@ -461,14 +461,6 @@ constexpr char GeckoAppShell::GetSystemColors_t::signature[];
 auto GeckoAppShell::GetSystemColors() -> mozilla::jni::IntArray::LocalRef
 {
     return mozilla::jni::Method<GetSystemColors_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
-constexpr char GeckoAppShell::HandleGeckoMessage_t::name[];
-constexpr char GeckoAppShell::HandleGeckoMessage_t::signature[];
-
-auto GeckoAppShell::HandleGeckoMessage(mozilla::jni::Object::Param a0) -> void
-{
-    return mozilla::jni::Method<HandleGeckoMessage_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
 constexpr char GeckoAppShell::HandleUncaughtException_t::name[];
@@ -1860,6 +1852,14 @@ auto GeckoBundle::UnboxInteger(mozilla::jni::Object::Param a0) -> int32_t
     return mozilla::jni::Method<UnboxInteger_t>::Call(GeckoBundle::Context(), nullptr, a0);
 }
 
+constexpr char GeckoBundle::UnboxString_t::name[];
+constexpr char GeckoBundle::UnboxString_t::signature[];
+
+auto GeckoBundle::UnboxString(mozilla::jni::Object::Param a0) -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<UnboxString_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
 constexpr char GeckoBundle::Values_t::name[];
 constexpr char GeckoBundle::Values_t::signature[];
 
@@ -1902,123 +1902,6 @@ auto HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(mozilla::jni:
 {
     return mozilla::jni::Method<FindDecoderCodecInfoForMimeType_t>::Call(HardwareCodecCapabilityUtils::Context(), nullptr, a0);
 }
-
-const char NativeJSContainer::name[] =
-        "org/mozilla/gecko/util/NativeJSContainer";
-
-constexpr char NativeJSContainer::New_t::name[];
-constexpr char NativeJSContainer::New_t::signature[];
-
-auto NativeJSContainer::New() -> NativeJSContainer::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(NativeJSContainer::Context(), nullptr);
-}
-
-constexpr char NativeJSContainer::Clone2_t::name[];
-constexpr char NativeJSContainer::Clone2_t::signature[];
-
-constexpr char NativeJSContainer::DisposeNative_t::name[];
-constexpr char NativeJSContainer::DisposeNative_t::signature[];
-
-const char NativeJSObject::name[] =
-        "org/mozilla/gecko/util/NativeJSObject";
-
-constexpr char NativeJSObject::New_t::name[];
-constexpr char NativeJSObject::New_t::signature[];
-
-auto NativeJSObject::New() -> NativeJSObject::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(NativeJSObject::Context(), nullptr);
-}
-
-constexpr char NativeJSObject::DisposeNative_t::name[];
-constexpr char NativeJSObject::DisposeNative_t::signature[];
-
-auto NativeJSObject::DisposeNative() const -> void
-{
-    return mozilla::jni::Method<DisposeNative_t>::Call(NativeJSObject::mCtx, nullptr);
-}
-
-constexpr char NativeJSObject::GetBoolean_t::name[];
-constexpr char NativeJSObject::GetBoolean_t::signature[];
-
-constexpr char NativeJSObject::GetBooleanArray_t::name[];
-constexpr char NativeJSObject::GetBooleanArray_t::signature[];
-
-constexpr char NativeJSObject::GetBundle_t::name[];
-constexpr char NativeJSObject::GetBundle_t::signature[];
-
-constexpr char NativeJSObject::GetBundleArray_t::name[];
-constexpr char NativeJSObject::GetBundleArray_t::signature[];
-
-constexpr char NativeJSObject::GetDouble_t::name[];
-constexpr char NativeJSObject::GetDouble_t::signature[];
-
-constexpr char NativeJSObject::GetDoubleArray_t::name[];
-constexpr char NativeJSObject::GetDoubleArray_t::signature[];
-
-constexpr char NativeJSObject::GetInt_t::name[];
-constexpr char NativeJSObject::GetInt_t::signature[];
-
-constexpr char NativeJSObject::GetIntArray_t::name[];
-constexpr char NativeJSObject::GetIntArray_t::signature[];
-
-constexpr char NativeJSObject::GetObject_t::name[];
-constexpr char NativeJSObject::GetObject_t::signature[];
-
-constexpr char NativeJSObject::GetObjectArray_t::name[];
-constexpr char NativeJSObject::GetObjectArray_t::signature[];
-
-constexpr char NativeJSObject::GetString_t::name[];
-constexpr char NativeJSObject::GetString_t::signature[];
-
-constexpr char NativeJSObject::GetStringArray_t::name[];
-constexpr char NativeJSObject::GetStringArray_t::signature[];
-
-constexpr char NativeJSObject::Has_t::name[];
-constexpr char NativeJSObject::Has_t::signature[];
-
-constexpr char NativeJSObject::OptBoolean_t::name[];
-constexpr char NativeJSObject::OptBoolean_t::signature[];
-
-constexpr char NativeJSObject::OptBooleanArray_t::name[];
-constexpr char NativeJSObject::OptBooleanArray_t::signature[];
-
-constexpr char NativeJSObject::OptBundle_t::name[];
-constexpr char NativeJSObject::OptBundle_t::signature[];
-
-constexpr char NativeJSObject::OptBundleArray_t::name[];
-constexpr char NativeJSObject::OptBundleArray_t::signature[];
-
-constexpr char NativeJSObject::OptDouble_t::name[];
-constexpr char NativeJSObject::OptDouble_t::signature[];
-
-constexpr char NativeJSObject::OptDoubleArray_t::name[];
-constexpr char NativeJSObject::OptDoubleArray_t::signature[];
-
-constexpr char NativeJSObject::OptInt_t::name[];
-constexpr char NativeJSObject::OptInt_t::signature[];
-
-constexpr char NativeJSObject::OptIntArray_t::name[];
-constexpr char NativeJSObject::OptIntArray_t::signature[];
-
-constexpr char NativeJSObject::OptObject_t::name[];
-constexpr char NativeJSObject::OptObject_t::signature[];
-
-constexpr char NativeJSObject::OptObjectArray_t::name[];
-constexpr char NativeJSObject::OptObjectArray_t::signature[];
-
-constexpr char NativeJSObject::OptString_t::name[];
-constexpr char NativeJSObject::OptString_t::signature[];
-
-constexpr char NativeJSObject::OptStringArray_t::name[];
-constexpr char NativeJSObject::OptStringArray_t::signature[];
-
-constexpr char NativeJSObject::ToBundle_t::name[];
-constexpr char NativeJSObject::ToBundle_t::signature[];
-
-constexpr char NativeJSObject::ToString_t::name[];
-constexpr char NativeJSObject::ToString_t::signature[];
 
 } /* java */
 } /* mozilla */

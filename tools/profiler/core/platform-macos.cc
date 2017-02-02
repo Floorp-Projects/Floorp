@@ -47,7 +47,7 @@ using mozilla::TimeDuration;
 // that only supports a single Sampler
 struct SamplerRegistry {
   static void AddActiveSampler(Sampler *sampler) {
-    ASSERT(!SamplerRegistry::sampler);
+    MOZ_ASSERT(!SamplerRegistry::sampler);
     SamplerRegistry::sampler = sampler;
   }
   static void RemoveActiveSampler(Sampler *sampler) {
@@ -138,7 +138,7 @@ public:
 
     thread->mThread = pthread_self();
     SetThreadName();
-    ASSERT(thread->mThread != kNoThread);
+    MOZ_ASSERT(thread->mThread != kNoThread);
     thread->Run();
     return NULL;
   }
@@ -146,7 +146,7 @@ public:
   void Start() {
     pthread_attr_t* attr_ptr = NULL;
     pthread_create(&mThread, attr_ptr, ThreadEntry, this);
-    ASSERT(mThread != kNoThread);
+    MOZ_ASSERT(mThread != kNoThread);
   }
 
   void Join() {
@@ -184,21 +184,19 @@ public:
           ThreadInfo* info = threads[i];
 
           // This will be null if we're not interested in profiling this thread.
-          if (!info->Profile() || info->IsPendingDelete())
-            continue;
-
-          PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
-          if (sleeping == PseudoStack::SLEEPING_AGAIN) {
-            info->Profile()->DuplicateLastSample();
+          if (!info->hasProfile() || info->IsPendingDelete()) {
             continue;
           }
 
-          info->Profile()->GetThreadResponsiveness()->Update();
+          PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
+          if (sleeping == PseudoStack::SLEEPING_AGAIN) {
+            info->DuplicateLastSample();
+            continue;
+          }
 
-          ThreadProfile* thread_profile = info->Profile();
+          info->UpdateThreadResponsiveness();
 
-          SampleContext(SamplerRegistry::sampler, thread_profile,
-                        isFirstProfiledThread);
+          SampleContext(SamplerRegistry::sampler, info, isFirstProfiledThread);
           isFirstProfiledThread = false;
         }
       }
@@ -213,11 +211,11 @@ public:
     }
   }
 
-  void SampleContext(Sampler* sampler, ThreadProfile* thread_profile,
+  void SampleContext(Sampler* sampler, ThreadInfo* aThreadInfo,
                      bool isFirstProfiledThread)
   {
     thread_act_t profiled_thread =
-      thread_profile->GetPlatformData()->profiled_thread();
+      aThreadInfo->GetPlatformData()->profiled_thread();
 
     TickSample sample_obj;
     TickSample* sample = &sample_obj;
@@ -267,7 +265,7 @@ public:
       sample->sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
       sample->fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
       sample->timestamp = mozilla::TimeStamp::Now();
-      sample->threadProfile = thread_profile;
+      sample->threadInfo = aThreadInfo;
 
       sampler->Tick(sample);
     }
@@ -289,13 +287,13 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
-  ASSERT(!IsActive());
+  MOZ_ASSERT(!IsActive());
   SetActive(true);
   SamplerThread::AddActiveSampler(this);
 }
 
 void Sampler::Stop() {
-  ASSERT(IsActive());
+  MOZ_ASSERT(IsActive());
   SetActive(false);
   SamplerThread::RemoveActiveSampler(this);
 }

@@ -7286,9 +7286,10 @@ nsGlobalWindow::Confirm(const nsAString& aMessage,
 
 already_AddRefed<Promise>
 nsGlobalWindow::Fetch(const RequestOrUSVString& aInput,
-                      const RequestInit& aInit, ErrorResult& aRv)
+                      const RequestInit& aInit,
+                      CallerType aCallerType, ErrorResult& aRv)
 {
-  return FetchRequest(this, aInput, aInit, aRv);
+  return FetchRequest(this, aInput, aInit, aCallerType, aRv);
 }
 
 void

@@ -32,8 +32,8 @@ add_task(function* test_sessions_get_recently_closed_private() {
 
   yield extension.startup();
 
-  let {Management: {global: {WindowManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  let privateWinId = WindowManager.getId(privateWin);
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let privateWinId = windowTracker.getId(privateWin);
 
   extension.sendMessage("check-sessions");
   let recentlyClosed = yield extension.awaitMessage("recentlyClosed");

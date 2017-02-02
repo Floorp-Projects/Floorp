@@ -585,7 +585,7 @@ def remove_native_non_try(config, tests):
     """Remove native-engine jobs if they are not in try branch."""
     for test in tests:
         if test['worker-implementation'] != 'native-engine' \
-                or config.params['project'] != 'try':
+                or config.params['project'] == 'try':
             yield test
 
 
