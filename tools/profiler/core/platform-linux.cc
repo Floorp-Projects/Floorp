@@ -203,16 +203,12 @@ static void SetSampleContext(TickSample* sample, void* context)
   sample->pc = reinterpret_cast<Address>(mcontext.gregs[R15]);
   sample->sp = reinterpret_cast<Address>(mcontext.gregs[R13]);
   sample->fp = reinterpret_cast<Address>(mcontext.gregs[R11]);
-#ifdef ENABLE_ARM_LR_SAVING
   sample->lr = reinterpret_cast<Address>(mcontext.gregs[R14]);
-#endif
 #else
   sample->pc = reinterpret_cast<Address>(mcontext.arm_pc);
   sample->sp = reinterpret_cast<Address>(mcontext.arm_sp);
   sample->fp = reinterpret_cast<Address>(mcontext.arm_fp);
-#ifdef ENABLE_ARM_LR_SAVING
   sample->lr = reinterpret_cast<Address>(mcontext.arm_lr);
-#endif
 #endif
 #elif V8_HOST_ARCH_MIPS
   // Implement this on MIPS.
