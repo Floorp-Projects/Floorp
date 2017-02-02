@@ -31,7 +31,11 @@
 #include "nsGkAtoms.h"
 #include "nsStyledElement.h"
 #include "nsIFrameLoader.h"
-#include "nsFrameLoader.h"
+#include "nsFrameLoader.h" // Needed because we return an
+                           // already_AddRefed<nsFrameLoader> where bindings
+                           // want an already_AddRefed<nsIFrameLoader> and hence
+                           // bindings need to know that the former can cast to
+                           // the latter.
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 
@@ -54,6 +58,7 @@ class StyleRule;
 namespace dom {
 class BoxObject;
 class HTMLIFrameElement;
+enum class CallerType : uint32_t;
 } // namespace dom
 } // namespace mozilla
 
@@ -376,7 +381,7 @@ public:
 
     virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                   bool aIsTrustedEvent) override;
-    nsresult ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
+    void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
     virtual nsIContent *GetBindingParent() const override;
     virtual bool IsNodeOfType(uint32_t aFlags) const override;
@@ -563,7 +568,7 @@ public:
     already_AddRefed<nsIRDFResource> GetResource(mozilla::ErrorResult& rv);
     nsIControllers* GetControllers(mozilla::ErrorResult& rv);
     already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
-    void Click(mozilla::ErrorResult& rv);
+    void Click(mozilla::dom::CallerType aCallerType);
     void DoCommand();
     already_AddRefed<nsINodeList>
       GetElementsByAttribute(const nsAString& aAttribute,

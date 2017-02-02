@@ -1755,23 +1755,18 @@ nsXULElement::Blur()
     return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-nsXULElement::Click()
+void
+nsXULElement::Click(CallerType aCallerType)
 {
-  return ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN, /* aIsTrusted = */ true);
+  ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN,
+                       aCallerType == CallerType::System);
 }
 
 void
-nsXULElement::Click(ErrorResult& rv)
-{
-  rv = ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN, nsContentUtils::IsCallerChrome());
-}
-
-nsresult
 nsXULElement::ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent)
 {
     if (BoolAttrIsTrue(nsGkAtoms::disabled))
-        return NS_OK;
+        return;
 
     nsCOMPtr<nsIDocument> doc = GetComposedDoc(); // Strong just in case
     if (doc) {
@@ -1807,13 +1802,13 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent)
             // If the click has been prevented, lets skip the command call
             // this is how a physical click works
             if (status == nsEventStatus_eConsumeNoDefault) {
-                return NS_OK;
+                return;
             }
         }
     }
 
     // oncommand is fired when an element is clicked...
-    return DoCommand();
+    DoCommand();
 }
 
 void
