@@ -1103,6 +1103,7 @@ class JS_PUBLIC_API(ContextOptions) {
         asmJS_(true),
         wasm_(false),
         wasmAlwaysBaseline_(false),
+        wasmAllowDebugging_(false),
         throwOnAsmJSValidationFailure_(false),
         nativeRegExp_(true),
         unboxedArrays_(false),
@@ -1167,6 +1168,11 @@ class JS_PUBLIC_API(ContextOptions) {
     }
     ContextOptions& toggleWasmAlwaysBaseline() {
         wasmAlwaysBaseline_ = !wasmAlwaysBaseline_;
+        return *this;
+    }
+    bool wasmAllowDebugging() const { return wasmAllowDebugging_; }
+    ContextOptions& setWasmAllowDebugging(bool flag) {
+        wasmAllowDebugging_ = flag;
         return *this;
     }
 
@@ -1252,6 +1258,7 @@ class JS_PUBLIC_API(ContextOptions) {
     bool asmJS_ : 1;
     bool wasm_ : 1;
     bool wasmAlwaysBaseline_ : 1;
+    bool wasmAllowDebugging_ : 1;
     bool throwOnAsmJSValidationFailure_ : 1;
     bool nativeRegExp_ : 1;
     bool unboxedArrays_ : 1;

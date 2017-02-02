@@ -7247,6 +7247,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
                              .setWasmAlwaysBaseline(enableWasmAlwaysBaseline)
+                             .setWasmAllowDebugging(true)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays);
 
@@ -7528,6 +7529,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setAsmJS(enableAsmJS)
                              .setWasm(enableWasm)
                              .setWasmAlwaysBaseline(enableWasmAlwaysBaseline)
+                             .setWasmAllowDebugging(true)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays);
     cx->setOffthreadIonCompilationEnabled(offthreadCompilation);
