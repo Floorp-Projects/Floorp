@@ -1816,15 +1816,13 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent)
     return DoCommand();
 }
 
-NS_IMETHODIMP
+void
 nsXULElement::DoCommand()
 {
     nsCOMPtr<nsIDocument> doc = GetComposedDoc(); // strong just in case
     if (doc) {
         nsContentUtils::DispatchXULCommand(this, true);
     }
-
-    return NS_OK;
 }
 
 nsIContent *
