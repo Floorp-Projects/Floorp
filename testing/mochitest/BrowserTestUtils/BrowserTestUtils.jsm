@@ -42,6 +42,9 @@ var gSynthesizeKeyCount = 0;
 var gSynthesizeCompositionCount = 0;
 var gSynthesizeCompositionChangeCount = 0;
 
+const kAboutPageRegistrationContentScript =
+  "chrome://mochikit/content/tests/BrowserTestUtils/content-about-page-utils.js";
+
 this.BrowserTestUtils = {
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
@@ -1267,5 +1270,63 @@ this.BrowserTestUtils = {
         })
       });
     });
+  },
+
+  _knownAboutPages: new Set(),
+  _loadedAboutContentScript: false,
+  /**
+   * Registers an about: page with particular flags in both the parent
+   * and any content processes. Returns a promise that resolves when
+   * registration is complete.
+   *
+   * @param registerCleanupFunction (Function)
+   *        The test framework doesn't keep its cleanup stuff anywhere accessible,
+   *        so the first argument is a reference to your cleanup registration
+   *        function, allowing us to clean up after you if necessary.
+   * @param aboutModule (String)
+   *        The name of the about page.
+   * @param pageURI (String)
+   *        The URI the about: page should point to.
+   * @param flags (Number)
+   *        The nsIAboutModule flags to use for registration.
+   * @returns Promise that resolves when registration has finished.
+   */
+  registerAboutPage(registerCleanupFunction, aboutModule, pageURI, flags) {
+    // Return a promise that resolves when registration finished.
+    const kRegistrationMsgId = "browser-test-utils:about-registration:registered";
+    let rv = this.waitForMessage(Services.ppmm, kRegistrationMsgId, msg => {
+      return msg.data == aboutModule;
+    });
+    // Load a script that registers our page, then send it a message to execute the registration.
+    if (!this._loadedAboutContentScript) {
+      Services.ppmm.loadProcessScript(kAboutPageRegistrationContentScript, true);
+      this._loadedAboutContentScript = true;
+      registerCleanupFunction(this._removeAboutPageRegistrations.bind(this));
+    }
+    Services.ppmm.broadcastAsyncMessage("browser-test-utils:about-registration:register",
+                                        {aboutModule, pageURI, flags});
+    return rv.then(() => {
+      this._knownAboutPages.add(aboutModule);
+    });
+  },
+
+  unregisterAboutPage(aboutModule) {
+    if (!this._knownAboutPages.has(aboutModule)) {
+      return Promise.reject(new Error("We don't think this about page exists!"));
+    }
+    const kUnregistrationMsgId = "browser-test-utils:about-registration:unregistered";
+    let rv = this.waitForMessage(Services.ppmm, kUnregistrationMsgId, msg => {
+      return msg.data == aboutModule;
+    });
+    Services.ppmm.broadcastAsyncMessage("browser-test-utils:about-registration:unregister",
+                                        aboutModule);
+    return rv.then(() => this._knownAboutPages.delete(aboutModule));
+  },
+
+  *_removeAboutPageRegistrations() {
+    for (let aboutModule of this._knownAboutPages) {
+      yield this.unregisterAboutPage(aboutModule);
+    }
+    Services.ppmm.removeDelayedProcessScript(kAboutPageRegistrationContentScript);
   },
 };
