@@ -1,0 +1,64 @@
+commit 783f98e4a55266c40b6ecee9b41381353f37013b
+Author: Tim Shen <timshen91@gmail.com>
+Date:   Tue Nov 1 00:19:04 2016 +0000
+
+    [ReachableCode] Skip over ExprWithCleanups in isConfigurationValue
+    
+    Summary: Fixes pr29152.
+    
+    Reviewers: rsmith, pirama, krememek
+    
+    Subscribers: cfe-commits
+    
+    Differential Revision: https://reviews.llvm.org/D24010
+    
+    git-svn-id: https://llvm.org/svn/llvm-project/cfe/trunk@285657 91177308-0d34-0410-b5e6-96231b3b80d8
+
+diff --git a/clang/include/clang/AST/Stmt.h a/clang/include/clang/AST/Stmt.h
+index 9381a44985..e28675d6a8 100644
+--- a/clang/include/clang/AST/Stmt.h
++++ a/clang/include/clang/AST/Stmt.h
+@@ -387,6 +387,9 @@ public:
+   /// Skip past any implicit AST nodes which might surround this
+   /// statement, such as ExprWithCleanups or ImplicitCastExpr nodes.
+   Stmt *IgnoreImplicit();
++  const Stmt *IgnoreImplicit() const {
++    return const_cast<Stmt *>(this)->IgnoreImplicit();
++  }
+ 
+   /// \brief Skip no-op (attributed, compound) container stmts and skip captured
+   /// stmt at the top, if \a IgnoreCaptured is true.
+diff --git a/clang/lib/Analysis/ReachableCode.cpp a/clang/lib/Analysis/ReachableCode.cpp
+index 8165b09f40..69d000c03b 100644
+--- a/clang/lib/Analysis/ReachableCode.cpp
++++ a/clang/lib/Analysis/ReachableCode.cpp
+@@ -164,6 +164,8 @@ static bool isConfigurationValue(const Stmt *S,
+   if (!S)
+     return false;
+ 
++  S = S->IgnoreImplicit();
++
+   if (const Expr *Ex = dyn_cast<Expr>(S))
+     S = Ex->IgnoreCasts();
+ 
+diff --git a/clang/test/SemaCXX/PR29152.cpp a/clang/test/SemaCXX/PR29152.cpp
+new file mode 100644
+index 0000000000..63c9c9bed5
+--- /dev/null
++++ a/clang/test/SemaCXX/PR29152.cpp
+@@ -0,0 +1,15 @@
++// RUN: %clang_cc1 -fsyntax-only -Wunreachable-code -verify %s
++
++static const bool False = false;
++
++struct A {
++  ~A();
++  operator bool();
++};
++void Bar();
++
++void Foo() {
++  if (False && A()) {
++    Bar(); // expected-no-diagnostics
++  }
++}
