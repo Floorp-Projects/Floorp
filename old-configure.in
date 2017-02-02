@@ -992,12 +992,14 @@ case "$target" in
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
             dnl more recent, so set that explicitly here unless another
             dnl target arch has already been set.
+            changequote(,)
             if test -z `echo $CFLAGS | grep -i [-/]arch:`; then
               CFLAGS="$CFLAGS -arch:SSE2"
             fi
             if test -z `echo $CXXFLAGS | grep -i [-/]arch:`; then
               CXXFLAGS="$CXXFLAGS -arch:SSE2"
             fi
+            changequote([,])
             SSE_FLAGS="-arch:SSE"
             SSE2_FLAGS="-arch:SSE2"
             dnl MSVC allows the use of intrinsics without any flags
