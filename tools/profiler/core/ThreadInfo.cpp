@@ -19,7 +19,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mMutex(MakeUnique<mozilla::Mutex>("ThreadInfo::mMutex"))
-  , mRespInfo(this)
 #ifdef XP_LINUX
   , mRssMemory(0)
   , mUssMemory(0)
@@ -54,13 +53,12 @@ ThreadInfo::SetPendingDelete()
 bool
 ThreadInfo::CanInvokeJS() const
 {
-  nsIThread* thread = GetThread();
-  if (!thread) {
+  if (!mThread) {
     MOZ_ASSERT(IsMainThread());
     return true;
   }
   bool result;
-  mozilla::DebugOnly<nsresult> rv = thread->GetCanInvokeJS(&result);
+  mozilla::DebugOnly<nsresult> rv = mThread->GetCanInvokeJS(&result);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return result;
 }

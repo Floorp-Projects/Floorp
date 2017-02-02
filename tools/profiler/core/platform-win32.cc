@@ -184,7 +184,7 @@ class SamplerThread
             continue;
           }
 
-          info->GetThreadResponsiveness()->Update();
+          info->UpdateThreadResponsiveness();
 
           SampleContext(mSampler, info, isFirstProfiledThread);
           isFirstProfiledThread = false;
