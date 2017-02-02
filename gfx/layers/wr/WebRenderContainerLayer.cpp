@@ -39,6 +39,7 @@ WebRenderContainerLayer::RenderLayer()
     OpDPPushStackingContext(wr::ToWrRect(relBounds),
                             wr::ToWrRect(overflow),
                             mask,
+                            GetLocalOpacity(),
                             GetLayer()->GetAnimations(),
                             transform,
                             mixBlendMode,
