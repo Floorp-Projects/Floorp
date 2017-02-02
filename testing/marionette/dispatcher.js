@@ -56,7 +56,7 @@ this.Dispatcher = function (connId, transport, driverFactory) {
  * after a connection is closed.
  */
 Dispatcher.prototype.onClosed = function (reason) {
-  this.driver.sessionTearDown();
+  this.driver.deleteSession();
   if (this.onclose) {
     this.onclose(this);
   }
