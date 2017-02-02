@@ -675,6 +675,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-update-status > .toolbarbutton-text,
 #PanelUI-fxa-label > .toolbarbutton-text,
+#PanelUI-footer-addons > toolbarbutton > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
   margin: 0;
   padding: 0 6px;
