@@ -343,24 +343,79 @@ TEST(NsDeque, TestForEach)
 
 TEST(NsDeque, TestRangeFor)
 {
-  nsDeque d(new Deallocator());
-  const size_t NumTestValues = 8;
-  int sum = 0;
-
-  int* testArray[NumTestValues];
-  for (size_t i=0; i < NumTestValues; i++)
+  const size_t NumTestValues = 3;
+  struct Test
   {
-    testArray[i] = new int();
-    *(testArray[i]) = i;
-    sum += i;
-    d.Push((void*)testArray[i]);
-  }
+    size_t runAfterLoopCount;
+    std::function<void(nsDeque&)> function;
+    int expectedSum;
+    const char* description;
+  };
+  // Note: All tests start with a deque containing 3 pointers to ints 1, 2, 3.
+  Test tests[] = {
+    { 0, [](nsDeque& d){}, 1+2+3, "no changes" },
 
-  int added = 0;
-  for (void* ob : d) {
-    added += *(int*)ob;
-  }
-  EXPECT_EQ(sum, added) << "Range-for should iterate over values";
+    { 1, [](nsDeque& d) { d.Pop(); }, 1+2, "Pop after 1st loop" },
+    { 2, [](nsDeque& d) { d.Pop(); }, 1+2, "Pop after 2nd loop" },
+    { 3, [](nsDeque& d) { d.Pop(); }, 1+2+3, "Pop after 3rd loop" },
 
-  d.Erase();
+    { 1, [](nsDeque& d) { d.PopFront(); }, 1+3, "PopFront after 1st loop" },
+    { 2, [](nsDeque& d) { d.PopFront(); }, 1+2, "PopFront after 2nd loop" },
+    { 3, [](nsDeque& d) { d.PopFront(); }, 1+2+3, "PopFront after 3rd loop" },
+
+    { 1, [](nsDeque& d) { d.Push(new int(4)); },
+      1+2+3+4, "Push after 1st loop" },
+    { 2, [](nsDeque& d) { d.Push(new int(4)); },
+      1+2+3+4, "Push after 2nd loop" },
+    { 3, [](nsDeque& d) { d.Push(new int(4)); },
+      1+2+3+4, "Push after 3rd loop" },
+    { 4, [](nsDeque& d) { d.Push(new int(4)); },
+      1+2+3, "Push after would-be-4th loop" },
+
+    { 1, [](nsDeque& d) { d.PushFront(new int(4)); },
+      1+1+2+3, "PushFront after 1st loop" },
+    { 2, [](nsDeque& d) { d.PushFront(new int(4)); },
+      1+2+2+3, "PushFront after 2nd loop" },
+    { 3, [](nsDeque& d) { d.PushFront(new int(4)); },
+      1+2+3+3, "PushFront after 3rd loop" },
+    { 4, [](nsDeque& d) { d.PushFront(new int(4)); },
+      1+2+3, "PushFront after would-be-4th loop" },
+
+    { 1, [](nsDeque& d) { d.Erase(); }, 1, "Erase after 1st loop" },
+    { 2, [](nsDeque& d) { d.Erase(); }, 1+2, "Erase after 2nd loop" },
+    { 3, [](nsDeque& d) { d.Erase(); }, 1+2+3, "Erase after 3rd loop" },
+
+    { 1, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); },
+      1, "Erase after 1st loop, Push 4" },
+    { 1, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); },
+      1+5, "Erase after 1st loop, Push 4,5" },
+    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); },
+      1+2, "Erase after 2nd loop, Push 4" },
+    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); },
+      1+2, "Erase after 2nd loop, Push 4,5" },
+    { 2, [](nsDeque& d) { d.Erase(); d.Push(new int(4)); d.Push(new int(5)); d.Push(new int(6)); },
+      1+2+6, "Erase after 2nd loop, Push 4,5,6" }
+  };
+
+  for (const Test& test : tests) {
+    nsDeque d(new Deallocator());
+
+    for (size_t i = 0; i < NumTestValues; ++i)
+    {
+      d.Push(new int(i + 1));
+    }
+
+    int sum = 0;
+    size_t loopCount = 0;
+    for (void* ob : d) {
+      sum += *static_cast<int*>(ob);
+      if (++loopCount == test.runAfterLoopCount) {
+        test.function(d);
+      }
+    }
+    EXPECT_EQ(test.expectedSum, sum)
+      << "Range-for should iterate over values in test '"
+      << test.description
+      << "'";
+  }
 }
