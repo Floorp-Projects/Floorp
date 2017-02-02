@@ -124,7 +124,7 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
   GamepadAdded a(nsString(aID), 0,
                  aMapping, GamepadHand::_empty,
                  GamepadServiceType::Standard,
-                 aNumButtons, aNumAxes);
+                 aNumButtons, aNumAxes, 0);
   GamepadChangeEvent e(a);
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
 
