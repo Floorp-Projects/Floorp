@@ -233,6 +233,14 @@ public class GeckoPreferences
         }
     }
 
+    private void updateHomeAsUpIndicator() {
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar == null) {
+            return;
+        }
+        actionBar.setHomeAsUpIndicator(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+    }
+
     /**
      * We only call this method for pre-HC versions of Android.
      */
@@ -263,10 +271,8 @@ public class GeckoPreferences
         //  If activity is not recreated, also update locale to current activity configuration
         BrowserLocaleManager.getInstance().updateConfiguration(GeckoPreferences.this, newLocale);
         ViewUtil.setLayoutDirection(getWindow().getDecorView(), newLocale);
-
         //  Force update navigate up icon by current layout direction
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeAsUpIndicator(android.support.v7.appcompat.R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+        updateHomeAsUpIndicator();
 
         this.lastLocale = newLocale;
 
@@ -326,6 +332,11 @@ public class GeckoPreferences
     }
 
     private void checkLocale() {
+        if (AppConstants.Versions.feature21Plus && AppConstants.Versions.preMarshmallow) {
+            //  Force update navigate up icon by current layout direction
+            updateHomeAsUpIndicator();
+        }
+
         final Locale currentLocale = Locale.getDefault();
         Log.v(LOGTAG, "Checking locale: " + currentLocale + " vs " + lastLocale);
         if (currentLocale.equals(lastLocale)) {
