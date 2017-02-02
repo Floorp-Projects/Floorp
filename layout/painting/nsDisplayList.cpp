@@ -627,7 +627,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
     // driver under test control. In this case, the next time the refresh
     // driver is advanced it will trigger any pending animations.
     if (anim->PlayState() == AnimationPlayState::Pending &&
-        (!anim->GetTimeline() ||
+        (anim->GetTimeline() &&
          !anim->GetTimeline()->TracksWallclockTime())) {
       continue;
     }
