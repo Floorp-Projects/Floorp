@@ -38,7 +38,12 @@
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #include "ScriptSettings.h"
-#include <unistd.h>
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
+#endif
 #include "xpcpublic.h"
 
 #include "jsapi.h"
