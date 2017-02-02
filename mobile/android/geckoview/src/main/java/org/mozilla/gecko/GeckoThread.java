@@ -497,6 +497,8 @@ public class GeckoThread extends Thread {
 
     @Override
     public void run() {
+        Log.i(LOGTAG, "preparing to run Gecko");
+
         Looper.prepare();
         GeckoThread.msgQueue = Looper.myQueue();
         ThreadUtils.sGeckoThread = this;
