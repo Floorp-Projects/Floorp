@@ -2171,17 +2171,8 @@ GeckoDriver.prototype.closeChromeWindow = function (cmd, resp) {
   return this.curBrowser.closeWindow().then(() => this.chromeWindowHandles);
 };
 
-/**
- * Deletes the session.
- *
- * If it is a desktop environment, it will close all listeners.
- *
- * If it is a B2G environment, it will make the main content listener
- * sleep, and close all other listeners.  The main content listener
- * persists after disconnect (it's the homescreen), and can safely
- * be reused.
- */
-GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
+/** Delete Marionette session. */
+GeckoDriver.prototype.deleteSession = function (cmd, resp) {
   if (this.curBrowser !== null) {
     // frame scripts can be safely reused
     Preferences.set(CONTENT_LISTENER_PREF, false);
@@ -2234,14 +2225,6 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
 
   this.sessionId = null;
   this.capabilities = new session.Capabilities();
-};
-
-/**
- * Processes the "deleteSession" request from the client by tearing down
- * the session and responding "ok".
- */
-GeckoDriver.prototype.deleteSession = function (cmd, resp) {
-  this.sessionTearDown();
 };
 
 /** Returns the current status of the Application Cache. */
@@ -2552,7 +2535,7 @@ GeckoDriver.prototype.quitApplication = function (cmd, resp) {
   this._server.acceptConnections = false;
   resp.send();
 
-  this.sessionTearDown();
+  this.deleteSession();
   Services.startup.quit(flags);
 };
 
