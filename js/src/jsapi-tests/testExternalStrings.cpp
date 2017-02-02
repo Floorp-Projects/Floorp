@@ -19,13 +19,13 @@ static int finalized1 = 0;
 static int finalized2 = 0;
 
 static void
-finalize_str(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+finalize_str(const JSStringFinalizer* fin, char16_t* chars);
 
 static const JSStringFinalizer finalizer1 = { finalize_str };
 static const JSStringFinalizer finalizer2 = { finalize_str };
 
 static void
-finalize_str(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
+finalize_str(const JSStringFinalizer* fin, char16_t* chars)
 {
     if (chars && PodEqual(const_cast<const char16_t*>(chars), arr, arrlen)) {
         if (fin == &finalizer1) {
