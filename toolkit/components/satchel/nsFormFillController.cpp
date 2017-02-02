@@ -522,7 +522,7 @@ nsFormFillController::GetSearchParam(nsAString &aSearchParam)
 
   mFocusedInput->GetName(aSearchParam);
   if (aSearchParam.IsEmpty()) {
-    nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(mFocusedInput);
+    nsCOMPtr<Element> element = do_QueryInterface(mFocusedInput);
     element->GetId(aSearchParam);
   }
 
