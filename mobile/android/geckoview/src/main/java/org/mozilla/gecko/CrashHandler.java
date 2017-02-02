@@ -179,15 +179,8 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         return CrashHandler.class.getPackage().getName();
     }
 
-    protected String getAppPackageName() {
-        final Context context = getAppContext();
-
-        if (context != null) {
-            return context.getPackageName();
-        }
-
+    private static String getProcessName() {
         try {
-            // Package name is also the command line string in most cases.
             final FileReader reader = new FileReader("/proc/self/cmdline");
             final char[] buffer = new char[64];
             try {
@@ -199,9 +192,23 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             } finally {
                 reader.close();
             }
-
         } catch (final IOException e) {
-            Log.i(LOGTAG, "Error reading package name", e);
+        }
+
+        return null;
+    }
+
+    protected String getAppPackageName() {
+        final Context context = getAppContext();
+
+        if (context != null) {
+            return context.getPackageName();
+        }
+
+        // Package name is also the process name in most cases.
+        String processName = getProcessName();
+        if (processName != null) {
+            return processName;
         }
 
         // Fallback to using CrashHandler's package name.
@@ -223,10 +230,12 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         final Context context = getAppContext();
         final Bundle extras = new Bundle();
         final String pkgName = getAppPackageName();
+        final String processName = getProcessName();
 
         extras.putString("ProductName", pkgName);
         extras.putLong("CrashTime", getCrashTime());
         extras.putLong("StartupTime", getStartupTime());
+        extras.putString("AndroidProcessName", getProcessName());
 
         if (context != null) {
             final PackageManager pkgMgr = context.getPackageManager();
