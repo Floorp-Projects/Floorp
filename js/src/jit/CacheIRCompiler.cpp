@@ -1470,6 +1470,20 @@ CacheIRCompiler::emitLoadUndefinedResult()
     return true;
 }
 
+bool
+CacheIRCompiler::emitLoadBooleanResult()
+{
+    AutoOutputRegister output(*this);
+    if (output.hasValue()) {
+        Value val = BooleanValue(reader.readBool());
+        masm.moveValue(val, output.valueReg());
+    }
+    else {
+        MOZ_CRASH("NYI: Typed LoadBooleanResult");
+    }
+    return true;
+}
+
 static void
 EmitStoreResult(MacroAssembler& masm, Register reg, JSValueType type,
                 const AutoOutputRegister& output)

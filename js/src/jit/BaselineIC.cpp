@@ -1963,46 +1963,6 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-TryAttachNativeInStub(JSContext* cx, HandleScript outerScript, ICIn_Fallback* stub,
-                      HandleValue key, HandleObject obj, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    RootedId id(cx);
-    if (!IsOptimizableElementPropertyName(cx, key, &id))
-        return true;
-
-    RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
-    Rooted<PropertyResult> prop(cx);
-    RootedObject holder(cx);
-    if (!LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
-        return true;
-
-    if (prop.isNonNativeProperty()) {
-        MOZ_ASSERT(!IsCacheableProtoChain(obj, holder, false));
-        return true;
-    }
-
-    RootedShape shape(cx, prop.maybeShape());
-    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
-        ICStub::Kind kind = (obj == holder) ? ICStub::In_Native
-                                            : ICStub::In_NativePrototype;
-        JitSpew(JitSpew_BaselineIC, "  Generating In(Native %s) stub",
-                    (obj == holder) ? "direct" : "prototype");
-        ICInNativeCompiler compiler(cx, kind, obj, holder, name);
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(outerScript));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
-    return true;
-}
-
-static bool
 TryAttachNativeInDoesNotExistStub(JSContext* cx, HandleScript outerScript,
                                   ICIn_Fallback* stub, HandleValue key,
                                   HandleObject obj, bool* attached)
@@ -2085,12 +2045,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
     if (obj->isNative()) {
         RootedScript script(cx, frame->script());
         bool attached = false;
-        if (cond) {
-            if (!TryAttachNativeInStub(cx, script, stub, key, obj, &attached))
-                return false;
-            if (attached)
-                return true;
-        } else {
+        if (!cond) {
             if (!TryAttachNativeInDoesNotExistStub(cx, script, stub, key, obj, &attached))
                 return false;
             if (attached)
@@ -2124,53 +2079,6 @@ ICIn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoInFallbackInfo, masm);
-}
-
-bool
-ICInNativeCompiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure, failurePopR0Scratch;
-
-    masm.branchTestString(Assembler::NotEqual, R0, &failure);
-    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratch = regs.takeAny();
-
-    // Check key identity.
-    Register strExtract = masm.extractString(R0, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICInNativeStub::offsetOfName()), scratch);
-    masm.branchPtr(Assembler::NotEqual, strExtract, scratch, &failure);
-
-    // Unbox and shape guard object.
-    Register objReg = masm.extractObject(R1, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICInNativeStub::offsetOfShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
-
-    if (kind == ICStub::In_NativePrototype) {
-        // Shape guard holder. Use R0 scrachReg since on x86 there're not enough registers.
-        Register holderReg = R0.scratchReg();
-        masm.push(R0.scratchReg());
-        masm.loadPtr(Address(ICStubReg, ICIn_NativePrototype::offsetOfHolder()),
-                     holderReg);
-        masm.loadPtr(Address(ICStubReg, ICIn_NativePrototype::offsetOfHolderShape()),
-                     scratch);
-        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failurePopR0Scratch);
-        masm.addToStackPtr(Imm32(sizeof(size_t)));
-    }
-
-    masm.moveValue(BooleanValue(true), R0);
-
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failurePopR0Scratch);
-    masm.pop(R0.scratchReg());
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
 }
 
 ICStub*
@@ -5560,21 +5468,6 @@ ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode* stubCode, Shape* shape, Scal
     MOZ_ASSERT(extra_ == type);
     extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
 }
-
-ICInNativeStub::ICInNativeStub(ICStub::Kind kind, JitCode* stubCode, HandleShape shape,
-                               HandlePropertyName name)
-  : ICStub(kind, stubCode),
-    shape_(shape),
-    name_(name)
-{ }
-
-ICIn_NativePrototype::ICIn_NativePrototype(JitCode* stubCode, HandleShape shape,
-                                           HandlePropertyName name, HandleObject holder,
-                                           HandleShape holderShape)
-  : ICInNativeStub(In_NativePrototype, stubCode, shape, name),
-    holder_(holder),
-    holderShape_(holderShape)
-{ }
 
 ICIn_NativeDoesNotExist::ICIn_NativeDoesNotExist(JitCode* stubCode, size_t protoChainDepth,
                                                  HandlePropertyName name)
