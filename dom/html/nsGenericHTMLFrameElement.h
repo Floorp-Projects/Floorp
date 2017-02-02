@@ -88,6 +88,7 @@ public:
   void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
                           mozilla::ErrorResult& aRv);
 
+  static void InitStatics();
   static bool BrowserFramesEnabled();
 
   /**

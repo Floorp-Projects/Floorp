@@ -42,6 +42,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS",
   "dom.max_chrome_script_run_time",
   "dom.max_script_run_time",
+  "dom.mozBrowserFramesEnabled",
   "dom.performance.enable_notify_performance_timing",
   "dom.performance.enable_user_timing_logging",
   "dom.storage.testing",
