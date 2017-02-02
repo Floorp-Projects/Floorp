@@ -9,6 +9,7 @@
 
 #include "jswrapper.h"
 #include "js/Id.h"
+#include "nsStringGlue.h"
 
 class nsIPrincipal;
 
@@ -29,6 +30,11 @@ class AccessCheck {
                                           JS::HandleValue value);
     static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,
                                           const JS::CallArgs& args);
+    // Called to report the correct sort of exception when our policy denies and
+    // should throw.  The accessType argument should be one of "access",
+    // "define", "delete", depending on which operation is being denied.
+    static void reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
+                                        const nsACString& accessType);
 };
 
 enum CrossOriginObjectType {
@@ -86,6 +92,9 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
         // Silently fail for enumerate-like operations.
         if (act == js::Wrapper::ENUMERATE)
             return true;
+        if (mayThrow)
+            AccessCheck::reportCrossOriginDenial(cx, id,
+                                                 NS_LITERAL_CSTRING("access"));
         return false;
     }
     static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
