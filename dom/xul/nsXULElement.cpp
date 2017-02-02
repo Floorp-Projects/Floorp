@@ -418,15 +418,6 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 
 //----------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
-                                     const nsAString& aValue,
-                                     nsIDOMNodeList** aReturn)
-{
-    *aReturn = GetElementsByAttribute(aAttribute, aValue).take();
-    return NS_OK;
-}
-
 already_AddRefed<nsINodeList>
 nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                                      const nsAString& aValue)
@@ -442,18 +433,6 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                           attrAtom,
                           kNameSpaceID_Unknown);
     return list.forget();
-}
-
-NS_IMETHODIMP
-nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
-                                       const nsAString& aAttribute,
-                                       const nsAString& aValue,
-                                       nsIDOMNodeList** aReturn)
-{
-    ErrorResult rv;
-    *aReturn =
-        GetElementsByAttributeNS(aNamespaceURI, aAttribute, aValue, rv).take();
-    return rv.StealNSResult();
 }
 
 already_AddRefed<nsINodeList>
@@ -1376,14 +1355,6 @@ nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor)
 }
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
-NS_IMETHODIMP
-nsXULElement::GetResource(nsIRDFResource** aResource)
-{
-    ErrorResult rv;
-    *aResource = GetResource(rv).take();
-    return rv.StealNSResult();
-}
-
 already_AddRefed<nsIRDFResource>
 nsXULElement::GetResource(ErrorResult& rv)
 {
@@ -1498,64 +1469,6 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
     // XXX sXBL/XBL2 issue! Owner or current document?
     return OwnerDoc()->GetBoxObjectFor(this, rv);
 }
-
-// Methods for setting/getting attributes from nsIDOMXULElement
-#define NS_IMPL_XUL_STRING_ATTR(_method, _atom)                     \
-  NS_IMETHODIMP                                                     \
-  nsXULElement::Get##_method(nsAString& aReturn)                    \
-  {                                                                 \
-    GetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aReturn);         \
-    return NS_OK;                                                   \
-  }                                                                 \
-  NS_IMETHODIMP                                                     \
-  nsXULElement::Set##_method(const nsAString& aValue)               \
-  {                                                                 \
-    return SetAttr(kNameSpaceID_None, nsGkAtoms::_atom, aValue,    \
-                   true);                                        \
-  }
-
-#define NS_IMPL_XUL_BOOL_ATTR(_method, _atom)                       \
-  NS_IMETHODIMP                                                     \
-  nsXULElement::Get##_method(bool* aResult)                         \
-  {                                                                 \
-    *aResult = _method();                                           \
-    return NS_OK;                                                   \
-  }                                                                 \
-  NS_IMETHODIMP                                                     \
-  nsXULElement::Set##_method(bool aValue)                           \
-  {                                                                 \
-      SetXULBoolAttr(nsGkAtoms::_atom, aValue);                     \
-      return NS_OK;                                                 \
-  }
-
-
-NS_IMPL_XUL_STRING_ATTR(Align, align)
-NS_IMPL_XUL_STRING_ATTR(Dir, dir)
-NS_IMPL_XUL_STRING_ATTR(Flex, flex)
-NS_IMPL_XUL_STRING_ATTR(FlexGroup, flexgroup)
-NS_IMPL_XUL_STRING_ATTR(Ordinal, ordinal)
-NS_IMPL_XUL_STRING_ATTR(Orient, orient)
-NS_IMPL_XUL_STRING_ATTR(Pack, pack)
-NS_IMPL_XUL_BOOL_ATTR(Hidden, hidden)
-NS_IMPL_XUL_BOOL_ATTR(Collapsed, collapsed)
-NS_IMPL_XUL_BOOL_ATTR(AllowEvents, allowevents)
-NS_IMPL_XUL_STRING_ATTR(Observes, observes)
-NS_IMPL_XUL_STRING_ATTR(Menu, menu)
-NS_IMPL_XUL_STRING_ATTR(ContextMenu, contextmenu)
-NS_IMPL_XUL_STRING_ATTR(Tooltip, tooltip)
-NS_IMPL_XUL_STRING_ATTR(Width, width)
-NS_IMPL_XUL_STRING_ATTR(Height, height)
-NS_IMPL_XUL_STRING_ATTR(MinWidth, minwidth)
-NS_IMPL_XUL_STRING_ATTR(MinHeight, minheight)
-NS_IMPL_XUL_STRING_ATTR(MaxWidth, maxwidth)
-NS_IMPL_XUL_STRING_ATTR(MaxHeight, maxheight)
-NS_IMPL_XUL_STRING_ATTR(Persist, persist)
-NS_IMPL_XUL_STRING_ATTR(Left, left)
-NS_IMPL_XUL_STRING_ATTR(Top, top)
-NS_IMPL_XUL_STRING_ATTR(Datasources, datasources)
-NS_IMPL_XUL_STRING_ATTR(Ref, ref)
-NS_IMPL_XUL_STRING_ATTR(TooltipText, tooltiptext)
-NS_IMPL_XUL_STRING_ATTR(StatusText, statustext)
 
 nsresult
 nsXULElement::LoadSrc()
@@ -1721,22 +1634,6 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::Focus()
-{
-    ErrorResult rv;
-    Focus(rv);
-    return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsXULElement::Blur()
-{
-    ErrorResult rv;
-    Blur(rv);
-    return rv.StealNSResult();
 }
 
 void
