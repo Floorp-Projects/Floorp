@@ -164,6 +164,9 @@ public:
   }
   inline void PreventDefault(bool aCalledByDefaultHandler = true)
   {
+    if (!mCancelable) {
+      return;
+    }
     mDefaultPrevented = true;
     // Note that even if preventDefault() has already been called by chrome,
     // a call of preventDefault() by content needs to overwrite
@@ -178,6 +181,9 @@ public:
   // This should be used only before dispatching events into the DOM tree.
   inline void PreventDefaultBeforeDispatch()
   {
+    if (!mCancelable) {
+      return;
+    }
     mDefaultPrevented = true;
   }
   inline bool DefaultPrevented() const
@@ -410,9 +416,15 @@ public:
   nsString mSpecifiedEventTypeString;
 
   // Event targets, needed by DOM Events
+  // Note that when you need event target for DOM event, you should use
+  // Get*DOMEventTarget() instead of accessing these members directly.
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<dom::EventTarget> mCurrentTarget;
   nsCOMPtr<dom::EventTarget> mOriginalTarget;
+
+  dom::EventTarget* GetDOMEventTarget() const;
+  dom::EventTarget* GetCurrentDOMEventTarget() const;
+  dom::EventTarget* GetOriginalDOMEventTarget() const;
 
   void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
   {

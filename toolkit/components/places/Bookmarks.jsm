@@ -852,9 +852,9 @@ function updateBookmark(info, item, newParent) {
                           , fragment: "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)" });
       }
 
+      let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
       if (newParent) {
         // For simplicity, update the index regardless.
-        let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
         tuples.set("position", { value: newIndex });
 
         if (newParent.guid == item.parentGuid) {
@@ -936,6 +936,16 @@ function updateBookmark(info, item, newParent) {
                          [...tuples.entries()].reduce((p, c) => { p[c[0]] = c[1].value; return p; }, {})));
 
       if (newParent) {
+        if (newParent.guid == item.parentGuid) {
+          // Mark all affected separators as changed
+          // Also bumps the change counter if the item itself is a separator
+          const startIndex = Math.min(newIndex, item.index);
+          yield adjustSeparatorsSyncCounter(db, newParent._id, startIndex, syncChangeDelta);
+        } else {
+          // Mark all affected separators as changed
+          yield adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
+          yield adjustSeparatorsSyncCounter(db, newParent._id, newIndex, syncChangeDelta);
+        }
         // Remove the Sync orphan annotation from reparented items. We don't
         // notify annotation observers about this because this is a temporary,
         // internal anno that's only used by Sync.
@@ -1014,6 +1024,9 @@ function insertBookmark(item, parent) {
              title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
              last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid,
              syncChangeCounter: syncChangeDelta, syncStatus });
+
+      // Mark all affected separators as changed
+      yield adjustSeparatorsSyncCounter(db, parent._id, item.index + 1, syncChangeDelta);
 
       if (hasExistingGuid) {
         // Remove stale tombstones if we're reinserting an item.
@@ -1246,6 +1259,9 @@ function removeBookmark(item, options) {
 
       let syncChangeDelta =
         PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
+
+      // Mark all affected separators as changed
+      yield adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
 
       if (isUntagging) {
         // If we're removing a tag entry, increment the change counter for all
@@ -1766,4 +1782,23 @@ function addSyncChangesForBookmarksInFolder(db, folder, syncChangeDelta) {
           fk = (SELECT fk FROM moz_bookmarks WHERE parent = :parent)
     `,
     { syncChangeDelta, type: Bookmarks.TYPE_BOOKMARK, parent: folder._id });
+}
+
+function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) {
+  if (!syncChangeDelta) {
+    return Promise.resolve();
+  }
+
+  return db.executeCached(`
+    UPDATE moz_bookmarks
+    SET syncChangeCounter = syncChangeCounter + :delta
+    WHERE parent = :parent AND position >= :start_index
+      AND type = :item_type
+    `,
+    {
+      delta: syncChangeDelta,
+      parent: parentId,
+      start_index: startIndex,
+      item_type: Bookmarks.TYPE_SEPARATOR
+    });
 }

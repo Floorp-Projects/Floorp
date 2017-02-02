@@ -10,6 +10,7 @@ with Files('**'):
 EXPORTS += [
     'ActiveLayerTracker.h',
     'DisplayItemClip.h',
+    'DisplayItemClipChain.h',
     'DisplayItemScrollClip.h',
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
@@ -28,6 +29,7 @@ UNIFIED_SOURCES += [
     'ActiveLayerTracker.cpp',
     'DashedCornerFinder.cpp',
     'DisplayItemClip.cpp',
+    'DisplayItemClipChain.cpp',
     'DisplayItemScrollClip.cpp',
     'DisplayListClipState.cpp',
     'DottedCornerFinder.cpp',

@@ -384,7 +384,7 @@ DOMParser::Constructor(const GlobalObject& aOwner,
                        nsIPrincipal* aPrincipal, nsIURI* aDocumentURI,
                        nsIURI* aBaseURI, ErrorResult& rv)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (aOwner.CallerType() != CallerType::System) {
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }

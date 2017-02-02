@@ -409,7 +409,7 @@ gfxPlatformGtk::GetDPIScale()
     // scale on WINNT and at this ratio the advantages of larger rendering
     // outweigh the disadvantages from scaling and pixel mis-alignment.
     int32_t dpi = GetDPI();
-    if (dpi < 144) {
+    if (dpi < 132) {
         return 1.0;
     } else if (dpi < 168) {
         return 1.5;

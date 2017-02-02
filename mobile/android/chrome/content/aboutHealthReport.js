@@ -90,7 +90,7 @@ var healthReportWrapper = {
 
   refreshPayload: function () {
     console.log("AboutHealthReport: page requested fresh payload.");
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: EVENT_HEALTH_REQUEST,
     });
   },

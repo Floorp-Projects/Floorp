@@ -13,6 +13,10 @@
 <script type="text/javascript">
 "use strict";
 
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(6);
+}
+
 add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   function background() {
     let lastTest;

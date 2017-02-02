@@ -93,7 +93,7 @@ fails == 413928-2.html 413928-2.html
 == 425338-1b.html 425338-1b.html
 == 489517-1.html 489517-1.html
 == 489887-1.html 489887-1.html
-== 492231-1.html 492231-1.html
+# == 492231-1.html 492231-1.html
 == 496006-1.html 496006-1.html
 fails == 503269-1.html 503269-1.html
 == 503957-1.html 503957-1.html
@@ -153,7 +153,7 @@ fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == 869833-1.xul 869833-1.xul
 == 1155359-1.xul 1155359-1.xul
 == 1157726-1.html 1157726-1.html
 == 1161752.html 1161752.html
-fails == 1161752-5-embed.html 1161752-5-embed.html
+== 1161752-5-embed.html 1161752-5-embed.html
 # == brackets-1a-ltr.html brackets-1a-ltr.html
 # == brackets-1a-rtl.html brackets-1a-rtl.html
 # == brackets-1b-ltr.html brackets-1b-ltr.html

@@ -6,6 +6,7 @@ module.exports = {
   ],
 
   "rules": {
-    "no-shadow": "error"
+    "no-shadow": "error",
+    "no-undef": "off"
   }
 };

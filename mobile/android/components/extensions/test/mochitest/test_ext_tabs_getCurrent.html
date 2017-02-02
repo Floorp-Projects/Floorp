@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs getCurrent Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* () {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    files: {
+      "tab.js": function() {
+        let url = document.location.href;
+
+        browser.tabs.getCurrent().then(currentTab => {
+          browser.test.assertEq(currentTab.url, url, "getCurrent in non-active background tab");
+
+          // Activate the tab.
+          browser.tabs.onActivated.addListener(function listener({tabId}) {
+            if (tabId == currentTab.id) {
+              browser.tabs.onActivated.removeListener(listener);
+
+              browser.tabs.getCurrent().then(currentTab => {
+                browser.test.assertEq(currentTab.id, tabId, "in active background tab");
+                browser.test.assertEq(currentTab.url, url, "getCurrent in non-active background tab");
+
+                browser.test.sendMessage("tab-finished");
+              });
+            }
+          });
+          browser.tabs.update(currentTab.id, {active: true});
+        });
+      },
+
+      "tab.html": `<head><meta charset="utf-8"><script src="tab.js"><\/script></head>`,
+    },
+
+    background: function() {
+      browser.tabs.getCurrent().then(tab => {
+        browser.test.assertEq(tab, undefined, "getCurrent in background script");
+        browser.test.sendMessage("background-finished");
+      });
+
+      browser.tabs.create({url: "tab.html", active: false});
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitMessage("background-finished");
+  yield extension.awaitMessage("tab-finished");
+
+  // The extension tab is automatically closed when the extension unloads.
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

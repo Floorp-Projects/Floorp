@@ -89,7 +89,7 @@ crashtest:
                 extra-options:
                     - --reftest-suite=crashtest
 
-external-media-tests:
+external-media-tests-base:
     description: "External Media Test run"
     suite: external-media-tests
     treeherder-symbol: tc-VP(b-m)
@@ -110,6 +110,54 @@ external-media-tests:
                 default:
                     - mediatests/taskcluster_posix_config.py
                     - remove_executables.py
+
+external-media-tests-twitch:
+    description: "External Media Test Twitch run"
+    suite: external-media-tests/twitch
+    treeherder-symbol: tc-VP(b-t)
+    e10s: false
+    tier: 2
+    max-run-time: 5400
+    docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
+    mozharness:
+        script: firefox_media_tests_taskcluster.py
+        config:
+            by-test-platform:
+                windows.*:
+                    - mediatests/taskcluster_windows_config.py
+                default:
+                    - mediatests/taskcluster_posix_config.py
+                    - remove_executables.py
+        extra-options:
+            - "--suite=media-twitch-tests"
+
+external-media-tests-youtube:
+    description: "External Media Test Youtube run"
+    suite: external-media-tests/youtube
+    treeherder-symbol: tc-VP(b-y)
+    e10s: false
+    tier: 2
+    max-run-time: 5400
+    docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
+    mozharness:
+        script: firefox_media_tests_taskcluster.py
+        config:
+            by-test-platform:
+                windows.*:
+                    - mediatests/taskcluster_windows_config.py
+                default:
+                    - mediatests/taskcluster_posix_config.py
+                    - remove_executables.py
+        extra-options:
+            - "--suite=media-youtube-tests"
 
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"

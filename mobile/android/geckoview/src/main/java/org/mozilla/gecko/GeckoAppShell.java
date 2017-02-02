@@ -36,12 +36,8 @@ import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.process.GeckoProcessManager;
 import org.mozilla.gecko.process.GeckoServiceChildProcess;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSContainer;
-import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -207,9 +203,6 @@ public class GeckoAppShell
     private static Sensor gRotationVectorSensor;
     private static Sensor gGameRotationVectorSensor;
 
-    private static final String GECKOREQUEST_RESPONSE_KEY = "response";
-    private static final String GECKOREQUEST_ERROR_KEY = "error";
-
     /*
      * Keep in sync with constants found here:
      * http://dxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
@@ -255,35 +248,6 @@ public class GeckoAppShell
     @RobocopTarget
     public static LayerView getLayerView() {
         return sLayerView;
-    }
-
-    /**
-     * Sends an asynchronous request to Gecko.
-     *
-     * The response data will be passed to {@link GeckoRequest#onResponse(NativeJSObject)} if the
-     * request succeeds; otherwise, {@link GeckoRequest#onError()} will fire.
-     *
-     * It can be called from any thread. The GeckoRequest callbacks will be executed on the Gecko thread.
-     *
-     * @param request The request to dispatch. Cannot be null.
-     */
-    @RobocopTarget
-    public static void sendRequestToGecko(final GeckoRequest request) {
-        final String responseMessage = "Gecko:Request" + request.getId();
-
-        EventDispatcher.getInstance().registerGeckoThreadListener(new NativeEventListener() {
-            @Override
-            public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
-                EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
-                if (!message.has(GECKOREQUEST_RESPONSE_KEY)) {
-                    request.onError(message.getObject(GECKOREQUEST_ERROR_KEY));
-                    return;
-                }
-                request.onResponse(message.getObject(GECKOREQUEST_RESPONSE_KEY));
-            }
-        }, responseMessage);
-
-        notifyObservers(request.getName(), request.getData());
     }
 
     // Synchronously notify a Gecko observer; must be called from Gecko thread.
@@ -1967,23 +1931,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void handleGeckoMessage(final NativeJSContainer message) {
-        boolean success = EventDispatcher.getInstance().dispatchEvent(message);
-        if (getGeckoInterface() != null && getGeckoInterface().getAppEventDispatcher() != null) {
-            success |= getGeckoInterface().getAppEventDispatcher().dispatchEvent(message);
-        }
-
-        if (!success) {
-            final String type = message.optString("type", null);
-            final String guid = message.optString(EventDispatcher.GUID, null);
-            if (type != null && guid != null) {
-                (new EventDispatcher.GeckoEventCallback(guid, type)).sendError("No listeners for request");
-            }
-        }
-        message.disposeNative();
     }
 
     @WrapForJNI(calledFrom = "gecko")

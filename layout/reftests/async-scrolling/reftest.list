@@ -49,6 +49,12 @@ pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-a
 fuzzy-if(browserIsRemote&&d2d,1,19) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
 skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
+fuzzy-if(Android,6,4) skip-if(!asyncPan) == fixed-pos-scrolled-clip-1.html fixed-pos-scrolled-clip-1-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-2.html fixed-pos-scrolled-clip-2-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-3.html fixed-pos-scrolled-clip-3-ref.html
+fuzzy-if(Android,6,8) skip-if(!asyncPan) == fixed-pos-scrolled-clip-4.html fixed-pos-scrolled-clip-4-ref.html
+fuzzy-if(Android,6,4) skip-if(!asyncPan) == position-sticky-scrolled-clip-1.html position-sticky-scrolled-clip-1-ref.html
+fuzzy-if(Android,6,4) skip == position-sticky-scrolled-clip-2.html position-sticky-scrolled-clip-2-ref.html # bug ?????? - incorrectly applying clip to sticky contents
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in

@@ -2805,7 +2805,12 @@ nsHTMLDocument::EditingStateChanged()
     // restricted one.
     ErrorResult errorResult;
     Unused << ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), false,
-                          NS_LITERAL_STRING("false"), CallerType::NonSystem,
+                          NS_LITERAL_STRING("false"),
+                          // Principal doesn't matter here, because the
+                          // insertBrOnReturn command doesn't use it.   Still
+                          // it's too bad we can't easily grab a nullprincipal
+                          // from somewhere without allocating one..
+                          *NodePrincipal(),
                           errorResult);
 
     if (errorResult.Failed()) {
@@ -3134,7 +3139,7 @@ bool
 nsHTMLDocument::ExecCommand(const nsAString& commandID,
                             bool doShowUI,
                             const nsAString& value,
-                            CallerType aCallerType,
+                            nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& rv)
 {
   //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
@@ -3164,7 +3169,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   // special case for cut & copy
   // cut & copy are allowed in non editable documents
   if (isCutCopy) {
-    if (!nsContentUtils::IsCutCopyAllowed()) {
+    if (!nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal)) {
       // We have rejected the event due to it not being performed in an
       // input-driven context therefore, we report the error to the console.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -3194,7 +3199,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   }
 
   bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && aCallerType != CallerType::System) {
+  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return false;
   }
 
@@ -3260,7 +3265,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
 
 bool
 nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID,
-                                    CallerType aCallerType,
+                                    nsIPrincipal& aSubjectPrincipal,
                                     ErrorResult& rv)
 {
   nsAutoCString cmdToDispatch;
@@ -3272,12 +3277,12 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID,
   bool isCutCopy = commandID.LowerCaseEqualsLiteral("cut") ||
                    commandID.LowerCaseEqualsLiteral("copy");
   if (isCutCopy) {
-    return nsContentUtils::IsCutCopyAllowed();
+    return nsContentUtils::IsCutCopyAllowed(&aSubjectPrincipal);
   }
 
   // Report false for restricted commands
   bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && aCallerType != CallerType::System) {
+  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
     return false;
   }
 
@@ -3460,6 +3465,9 @@ nsHTMLDocument::QueryCommandSupported(const nsAString& commandID,
       return false;
     }
     if (nsContentUtils::IsCutCopyRestricted()) {
+      // XXXbz should we worry about correctly reporting "true" in the
+      // "restricted, but we're an addon with clipboardWrite permissions" case?
+      // See also nsContentUtils::IsCutCopyAllowed.
       if (commandID.LowerCaseEqualsLiteral("cut") ||
           commandID.LowerCaseEqualsLiteral("copy")) {
         return false;

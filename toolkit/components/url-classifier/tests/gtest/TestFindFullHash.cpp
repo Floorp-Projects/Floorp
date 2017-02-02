@@ -146,15 +146,21 @@ public:
   NS_IMETHOD
   OnCompleteHashFound(const nsACString& aCompleteHash,
                       const nsACString& aTableNames,
-                      uint32_t aMinWaitDuration,
-                      uint32_t aNegCacheDuration,
                       uint32_t aPerHashCacheDuration) override
   {
     Verify(aCompleteHash,
            aTableNames,
-           aMinWaitDuration,
-           aNegCacheDuration,
            aPerHashCacheDuration);
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnResponseParsed(uint32_t aMinWaitDuration,
+                   uint32_t aNegCacheDuration) override
+  {
+    VerifyDuration(aMinWaitDuration, EXPECTED_MIN_WAIT_DURATION);
+    VerifyDuration(aNegCacheDuration, EXPECTED_NEG_CACHE_DURATION);
 
     return NS_OK;
   }
@@ -163,8 +169,6 @@ private:
   void
   Verify(const nsACString& aCompleteHash,
          const nsACString& aTableNames,
-         uint32_t aMinWaitDuration,
-         uint32_t aNegCacheDuration,
          uint32_t aPerHashCacheDuration)
   {
     auto expected = EXPECTED_MATCH[mCallbackCount];
@@ -179,8 +183,6 @@ private:
     ASSERT_TRUE(NS_SUCCEEDED(rv));
     ASSERT_TRUE(aTableNames.Equals(tableNames));
 
-    VerifyDuration(aMinWaitDuration, EXPECTED_MIN_WAIT_DURATION);
-    VerifyDuration(aNegCacheDuration, EXPECTED_NEG_CACHE_DURATION);
     VerifyDuration(aPerHashCacheDuration, expected.mPerHashCacheDuration);
 
     mCallbackCount++;

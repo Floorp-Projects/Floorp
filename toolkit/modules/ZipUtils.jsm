@@ -57,13 +57,13 @@ function saveStreamAsync(aPath, aStream, aFile) {
     try {
       aStream.close();
     } catch (e) {
-      logger.error("Failed to close JAR stream for " + aPath);
+      Cu.reportError("Failed to close JAR stream for " + aPath);
     }
 
     aFile.close().then(function() {
       deferred.reject(error);
     }, function(e) {
-      logger.error("Failed to close file for " + aPath);
+      Cu.reportError("Failed to close file for " + aPath);
       deferred.reject(error);
     });
   }

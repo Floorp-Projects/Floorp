@@ -120,19 +120,6 @@ IsWebkitPrefixSupportEnabled()
   return sIsWebkitPrefixSupportEnabled;
 }
 
-static bool
-IsPrefixedPointerLockEnabled()
-{
-  static bool sIsPrefixedPointerLockEnabled;
-  static bool sIsPrefCached = false;
-  if (!sIsPrefCached) {
-    sIsPrefCached = true;
-    Preferences::AddBoolVarCache(&sIsPrefixedPointerLockEnabled,
-                                 "pointer-lock-api.prefixed.enabled");
-  }
-  return sIsPrefixedPointerLockEnabled;
-}
-
 EventListenerManagerBase::EventListenerManagerBase()
   : mNoListenerForEvent(eVoidEvent)
   , mMayHavePaintEventListener(false)
@@ -1162,14 +1149,6 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
       }
       if (aEventMessage == eAnimationIteration) {
         return eWebkitAnimationIteration;
-      }
-    }
-    if (IsPrefixedPointerLockEnabled()) {
-      if (aEventMessage == ePointerLockChange) {
-        return eMozPointerLockChange;
-      }
-      if (aEventMessage == ePointerLockError) {
-        return eMozPointerLockError;
       }
     }
   }

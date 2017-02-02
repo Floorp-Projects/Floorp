@@ -2354,44 +2354,25 @@ UnsetPropertiesWithoutFlags(const nsStyleStructID aSID,
   }
 }
 
-/**
- * We allocate arrays of CSS values with alloca.  (These arrays are a
- * fixed size per style struct, but we don't want to waste the
- * allocation and construction/destruction costs of the big structs when
- * we're handling much smaller ones.)  Since the lifetime of an alloca
- * allocation is the life of the calling function, the caller must call
- * alloca.  However, to ensure that constructors and destructors are
- * balanced, we do the constructor and destructor calling from this RAII
- * class, AutoCSSValueArray.
- */
-struct AutoCSSValueArray {
-  /**
-   * aStorage must be the result of alloca(aCount * sizeof(nsCSSValue))
-   */
-  AutoCSSValueArray(void* aStorage, size_t aCount) {
-    MOZ_ASSERT(size_t(aStorage) % NS_ALIGNMENT_OF(nsCSSValue) == 0,
-               "bad alignment from alloca");
-    mCount = aCount;
-    // Don't use placement new[], since it might store extra data
-    // for the count (on Windows!).
-    mArray = static_cast<nsCSSValue*>(aStorage);
-    for (size_t i = 0; i < mCount; ++i) {
-      new (KnownNotNull, mArray + i) nsCSSValue();
-    }
+AutoCSSValueArray::AutoCSSValueArray(void* aStorage, size_t aCount)
+{
+  MOZ_ASSERT(size_t(aStorage) % NS_ALIGNMENT_OF(nsCSSValue) == 0,
+             "bad alignment from alloca");
+  mCount = aCount;
+  // Don't use placement new[], since it might store extra data
+  // for the count (on Windows!).
+  mArray = static_cast<nsCSSValue*>(aStorage);
+  for (size_t i = 0; i < mCount; ++i) {
+    new (KnownNotNull, mArray + i) nsCSSValue();
   }
+}
 
-  ~AutoCSSValueArray() {
-    for (size_t i = 0; i < mCount; ++i) {
-      mArray[i].~nsCSSValue();
-    }
+AutoCSSValueArray::~AutoCSSValueArray()
+{
+  for (size_t i = 0; i < mCount; ++i) {
+    mArray[i].~nsCSSValue();
   }
-
-  nsCSSValue* get() { return mArray; }
-
-private:
-  nsCSSValue *mArray;
-  size_t mCount;
-};
+}
 
 /* static */ bool
 nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,

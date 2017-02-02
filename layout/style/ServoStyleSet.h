@@ -199,6 +199,20 @@ private:
                                               CSSPseudoElementType aPseudoType,
                                               LazyComputeBehavior aMayCompute);
 
+  /**
+   * Resolve all ServoDeclarationBlocks attached to mapped
+   * presentation attributes cached on the document.
+   * Call this before jumping into Servo's style system.
+   */
+  void ResolveMappedAttrDeclarationBlocks();
+
+  /**
+   * Perform all lazy operations required before traversing
+   * a subtree.
+   */
+  void PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
+                                 mozilla::TraversalRootBehavior aRootBehavior);
+
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,

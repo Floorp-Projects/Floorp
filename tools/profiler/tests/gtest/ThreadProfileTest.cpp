@@ -6,15 +6,15 @@
 #include "gtest/gtest.h"
 
 #include "ProfileEntry.h"
-#include "ThreadProfile.h"
+#include "ThreadInfo.h"
 
-// Make sure we can initialize our ThreadProfile
+// Make sure we can initialize our thread profile
 TEST(ThreadProfile, Initialization) {
   PseudoStack* stack = PseudoStack::create();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
   RefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
-  ThreadProfile tp(&info, pb);
+  info.SetProfile(pb);
 }
 
 // Make sure we can record one tag and read it

@@ -68,8 +68,8 @@ fuzzy-if(true,1,33) fuzzy-if(d2d,48,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(An
 # == table-collapse-1.html table-collapse-1.html
 # when border-collapse: collapse
 
-fuzzy-if(azureQuartz,1,3) fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1a.html
-fuzzy-if(azureQuartz,1,3) fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1b.html
+fuzzy-if(skiaContent,1,116) == invalidate-1a.html invalidate-1a.html
+fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1b.html
 
 # test that border-radius is reduced for scrollbars
 fails == scrollbar-clamping-1.html scrollbar-clamping-1.html

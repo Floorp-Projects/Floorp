@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<title>Reference for: like fixed-pos-scrolled-clip-1.html, but inside a transform. This also tests that scrolling the root scroll frame moves the "fixed" layer which is only fixed with respect to the transform, not with respect to the viewport.</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.subframe {
+  position: relative;
+  left: 10px;
+  top: 10px;
+  width: 500px;
+  height: 600px;
+  overflow: auto;
+  box-shadow: 0 0 0 2px black;
+}
+
+.scrolled {
+  height: 4000px;
+}
+
+.greenSquare {
+  position: absolute;
+  top: 300px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: lime;
+}
+
+</style>
+
+<div class="subframe">
+  <div class="scrolled">
+    <div class="greenSquare"></div>
+  </div>
+</div>
+
+<script>
+
+document.documentElement.scrollTop = 20;
+document.querySelector('.subframe').scrollTop = 200;
+
+</script>

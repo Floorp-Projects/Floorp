@@ -339,6 +339,40 @@ nsNavBookmarks::AdjustIndices(int64_t aFolderId,
 }
 
 
+nsresult
+nsNavBookmarks::AdjustSeparatorsSyncCounter(int64_t aFolderId,
+                                            int32_t aStartIndex,
+                                            int64_t aSyncChangeDelta)
+{
+  MOZ_ASSERT(aStartIndex >= 0, "Bad start position");
+  if (!aSyncChangeDelta) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
+    "UPDATE moz_bookmarks SET syncChangeCounter = syncChangeCounter + :delta "
+      "WHERE parent = :parent AND position >= :start_index "
+      "AND type = :item_type "
+  );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("delta"), aSyncChangeDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("parent"), aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("start_index"), aStartIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"), TYPE_SEPARATOR);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsNavBookmarks::GetPlacesRoot(int64_t* aRoot)
 {
@@ -513,6 +547,10 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
     rv = AddSyncChangesForBookmarksWithURI(aURI, syncChangeDelta);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Mark all affected separators as changed
+  rv = AdjustSeparatorsSyncCounter(aParentId, aIndex + 1, syncChangeDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Add a cache entry since we know everything about this bookmark.
   BookmarkData bookmark;
@@ -703,6 +741,10 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource)
   bookmark.lastModified = RoundedPRNow();
   rv = SetItemDateInternal(LAST_MODIFIED, syncChangeDelta,
                            bookmark.parentId, bookmark.lastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Mark all affected separators as changed
+  rv = AdjustSeparatorsSyncCounter(bookmark.parentId, bookmark.position, syncChangeDelta);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isUntagging) {
@@ -1414,12 +1456,23 @@ nsNavBookmarks::MoveItem(int64_t aItemId,
     // change. Update the item's last modified date without bumping its counter.
     rv = SetItemDateInternal(LAST_MODIFIED, 0, bookmark.id, now);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Mark all affected separators as changed
+    int32_t startIndex = std::min(bookmark.position, newIndex);
+    rv = AdjustSeparatorsSyncCounter(bookmark.parentId, startIndex, syncChangeDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // Otherwise, if we're moving between containers, both parents and the child
     // need sync changes.
     rv = SetItemDateInternal(LAST_MODIFIED, syncChangeDelta, aNewParent, now);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = SetItemDateInternal(LAST_MODIFIED, syncChangeDelta, bookmark.id, now);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Mark all affected separators as changed
+    rv = AdjustSeparatorsSyncCounter(bookmark.parentId, bookmark.position, syncChangeDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AdjustSeparatorsSyncCounter(aNewParent, newIndex, syncChangeDelta);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2738,6 +2791,9 @@ nsNavBookmarks::SetItemIndex(int64_t aItemId,
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = AdjustSeparatorsSyncCounter(bookmark.parentId, aNewIndex, syncChangeDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = PreventSyncReparenting(bookmark);
   NS_ENSURE_SUCCESS(rv, rv);

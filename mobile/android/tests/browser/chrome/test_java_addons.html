@@ -89,17 +89,18 @@ Migrated from Robocop https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     yield messagePromise.promise;
     is(count, 1, "count is 1");
 
-    info("Send request for result 2 for request initiated from Java Addon.");
-
-    // The JavaAddon should have removed its listener, so we shouldn't get a response and count should stay the same.
-    let gotError = yield javaAddon.sendRequestForResult(message)
-      .then((result) => false)
-      .catch((error) => true);
-    is(gotError, true, "got expected error");
-    is(count, 1, "count is still 1");
-
     info("Waiting for verification request initiated from Java Addon.");
     yield verifierPromise.promise;
+
+    info("Sending unregistered request to Java Addon: " + JSON.stringify(message));
+    javaAddon.sendRequest(message);
+
+    // Wait for the above request.
+    info("Waiting for unregistered request to finish processing.");
+    yield javaAddon.sendRequestForResult({type: "JavaAddon:V1:Finish"});
+
+    // The JavaAddon should have removed its listener, so we shouldn't get a response and count should stay the same.
+    is(count, 1, "count is still 1");
   });
 
   </script>

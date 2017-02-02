@@ -18,11 +18,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.app.Activity;
 import android.util.Log;
@@ -248,23 +248,18 @@ public class FennecNativeDriver implements Driver {
 
     @Override
     public void setupScrollHandling() {
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(new GeckoEventListener() {
+        EventDispatcher.getInstance().registerGeckoThreadListener(new BundleEventListener() {
             @Override
-            public void handleMessage(final String event, final JSONObject message) {
-                try {
-                    mScrollHeight = message.getInt("y");
-                    mHeight = message.getInt("cheight");
-                    // We don't want a height of 0. That means it's a bad response.
-                    if (mHeight > 0) {
-                        mPageHeight = message.getInt("height");
-                    }
-                } catch (JSONException e) {
-                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
-                            "WARNING: ScrollReceived, but message does not contain " +
-                            "expected fields: " + e);
+            public void handleMessage(final String event, final GeckoBundle message,
+                                      final EventCallback callback) {
+                mScrollHeight = message.getInt("y");
+                mHeight = message.getInt("cheight");
+                // We don't want a height of 0. That means it's a bad response.
+                if (mHeight > 0) {
+                    mPageHeight = message.getInt("height");
                 }
             }
-        }, "robocop:scroll");
+        }, "Robocop:Scroll");
     }
 
     /**

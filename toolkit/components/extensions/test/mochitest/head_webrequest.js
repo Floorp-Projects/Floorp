@@ -21,10 +21,13 @@ let commonEvents = {
 };
 
 function background(events) {
+  const IP_PATTERN = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+
   let expect;
   let ignore;
   let defaultOrigin;
   let watchAuth = Object.keys(events).includes("onAuthRequired");
+  let expectedIp = null;
 
   browser.test.onMessage.addListener((msg, expected) => {
     if (msg !== "set-expected") {
@@ -223,7 +226,12 @@ function background(events) {
       browser.test.assertEq(expectCached, details.fromCache, "fromCache is correct");
       // We can only tell IPs for non-cached HTTP requests.
       if (!details.fromCache && /^https?:/.test(details.url)) {
-        browser.test.assertEq("127.0.0.1", details.ip, `correct ip for ${details.url}`);
+        browser.test.assertTrue(IP_PATTERN.test(details.ip), `IP for ${details.url} looks IP-ish: ${details.ip}`);
+
+        // We can't easily predict the IP ahead of time, so just make
+        // sure they're all consistent.
+        expectedIp = expectedIp || details.ip;
+        browser.test.assertEq(expectedIp, details.ip, `correct ip for ${details.url}`);
       }
       if (expected.headers && expected.headers.response) {
         checkHeaders("response", expected, details);

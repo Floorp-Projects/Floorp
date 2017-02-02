@@ -120,10 +120,6 @@ interface GlobalEventHandlers {
            // Document rather than here.
            attribute EventHandler onmozfullscreenchange;
            attribute EventHandler onmozfullscreenerror;
-           [Pref="pointer-lock-api.prefixed.enabled"]
-           attribute EventHandler onmozpointerlockchange;
-           [Pref="pointer-lock-api.prefixed.enabled"]
-           attribute EventHandler onmozpointerlockerror;
 
            // CSS-Animation and CSS-Transition handlers.
            attribute EventHandler onanimationend;

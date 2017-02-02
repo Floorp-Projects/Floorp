@@ -5677,7 +5677,7 @@ struct DebuggerScriptGetLineCountMatcher
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         uint32_t result;
-        if (wasmInstance->instance().code().totalSourceLines(cx_, &result))
+        if (!wasmInstance->instance().code().totalSourceLines(cx_, &result))
             return false;
         totalLines = double(result);
         return true;
@@ -7490,7 +7490,9 @@ DebuggerSource_setSourceMapURL(JSContext* cx, unsigned argc, Value* vp)
     if (!stableChars.initTwoByte(cx, str))
         return false;
 
-    ss->setSourceMapURL(cx, stableChars.twoByteChars());
+    if (!ss->setSourceMapURL(cx, stableChars.twoByteChars()))
+        return false;
+
     args.rval().setUndefined();
     return true;
 }
