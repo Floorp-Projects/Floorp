@@ -18,7 +18,6 @@ enum MediaKeySessionType {
   // persistent-usage-record,
 };
 
-[Pref="media.eme.apiVisible"]
 interface MediaKeys {
   readonly attribute DOMString keySystem;
 

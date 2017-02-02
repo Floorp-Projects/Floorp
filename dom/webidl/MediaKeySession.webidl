@@ -10,7 +10,6 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-[Pref="media.eme.apiVisible"]
 interface MediaKeySession : EventTarget {
   // error state
   readonly attribute MediaKeyError? error;
