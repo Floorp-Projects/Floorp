@@ -28,6 +28,5 @@ EXTRA_JS_MODULES += [
     'SharedPreferences.jsm',
     'Snackbars.jsm',
     'SSLExceptions.jsm',
-    'TabMirror.jsm',
     'WebsiteMetadata.jsm'
 ]
