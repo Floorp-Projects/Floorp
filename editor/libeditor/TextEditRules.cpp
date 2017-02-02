@@ -38,6 +38,7 @@
 #include "nsISupportsBase.h"
 #include "nsLiteralString.h"
 #include "nsUnicharUtils.h"
+#include "nsIHTMLCollection.h"
 
 namespace mozilla {
 
@@ -1028,32 +1029,25 @@ TextEditRules::DidRedo(Selection* aSelection,
   }
 
   NS_ENSURE_STATE(mTextEditor);
-  nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mTextEditor->GetRoot());
+  RefPtr<Element> theRoot = mTextEditor->GetRoot();
   NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-  nsresult rv = theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"),
-                                              getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (nodeList) {
-    uint32_t len;
-    nodeList->GetLength(&len);
+  nsCOMPtr<nsIHTMLCollection> nodeList =
+    theRoot->GetElementsByTagName(NS_LITERAL_STRING("br"));
+  MOZ_ASSERT(nodeList);
+  uint32_t len = nodeList->Length();
 
-    if (len != 1) {
-      // only in the case of one br could there be the bogus node
-      mBogusNode = nullptr;
-      return NS_OK;
-    }
+  if (len != 1) {
+    // only in the case of one br could there be the bogus node
+    mBogusNode = nullptr;
+    return NS_OK;
+  }
 
-    nsCOMPtr<nsIDOMNode> node;
-    nodeList->Item(0, getter_AddRefs(node));
-    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-    MOZ_ASSERT(content);
-    if (mTextEditor->IsMozEditorBogusNode(content)) {
-      mBogusNode = node;
-    } else {
-      mBogusNode = nullptr;
-    }
+  RefPtr<Element> node = nodeList->Item(0);
+  if (mTextEditor->IsMozEditorBogusNode(node)) {
+    mBogusNode = do_QueryInterface(node);
+  } else {
+    mBogusNode = nullptr;
   }
   return NS_OK;
 }
