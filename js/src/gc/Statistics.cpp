@@ -1100,7 +1100,7 @@ Statistics::beginNurseryCollection(JS::gcreason::Reason reason)
 {
     count(STAT_MINOR_GC);
     if (nurseryCollectionCallback) {
-        (*nurseryCollectionCallback)(runtime->contextFromMainThread(),
+        (*nurseryCollectionCallback)(TlsContext.get(),
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START,
                                      reason);
     }
@@ -1110,7 +1110,7 @@ void
 Statistics::endNurseryCollection(JS::gcreason::Reason reason)
 {
     if (nurseryCollectionCallback) {
-        (*nurseryCollectionCallback)(runtime->contextFromMainThread(),
+        (*nurseryCollectionCallback)(TlsContext.get(),
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END,
                                      reason);
     }
@@ -1142,7 +1142,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     // Slice callbacks should only fire for the outermost level.
     bool wasFullGC = zoneStats.isCollectingAllZones();
     if (sliceCallback)
-        (*sliceCallback)(runtime->contextFromMainThread(),
+        (*sliceCallback)(TlsContext.get(),
                          first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
                          JS::GCDescription(!wasFullGC, gckind, reason));
 }
@@ -1188,7 +1188,7 @@ Statistics::endSlice()
     if (!aborted) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback)
-            (*sliceCallback)(runtime->contextFromMainThread(),
+            (*sliceCallback)(TlsContext.get(),
                              last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
                              JS::GCDescription(!wasFullGC, gckind, slices.back().reason));
     }
@@ -1405,7 +1405,7 @@ Statistics::maybePrintProfileHeaders()
     static int printedHeader = 0;
     if ((printedHeader++ % 200) == 0) {
         printProfileHeader();
-        runtime->gc.nursery.printProfileHeader();
+        runtime->zoneGroupFromMainThread()->nursery().printProfileHeader();
     }
 }
 

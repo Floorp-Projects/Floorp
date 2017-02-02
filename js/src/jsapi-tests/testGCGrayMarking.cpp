@@ -11,6 +11,7 @@
  */
 
 #include "gc/Heap.h"
+#include "gc/Zone.h"
 
 #include "jsapi-tests/tests.h"
 
@@ -159,7 +160,7 @@ JSObject*
 AllocTargetObject()
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    cx->gc.evictNursery();
+    cx->zone()->group()->evictNursery();
 
     MOZ_ASSERT(obj->compartment() == global1->compartment());
     return obj;
@@ -176,7 +177,7 @@ AllocSameCompartmentSourceObject(JSObject* target)
     if (!JS_DefineProperty(cx, source, "ptr", obj, 0))
         return nullptr;
 
-    cx->gc.evictNursery();
+    cx->zone()->group()->evictNursery();
 
     MOZ_ASSERT(source->compartment() == global1->compartment());
     return source;
@@ -191,7 +192,7 @@ AllocCrossCompartmentSourceObject(JSObject* target)
     if (!JS_WrapObject(cx, &obj))
         return nullptr;
 
-    cx->gc.evictNursery();
+    cx->zone()->group()->evictNursery();
 
     MOZ_ASSERT(obj->compartment() == global2->compartment());
     return obj;
@@ -219,8 +220,8 @@ ZoneGC(JS::Zone* zone)
     uint32_t oldMode = JS_GetGCParameter(cx, JSGC_MODE);
     JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_ZONE);
     JS::PrepareZoneForGC(zone);
-    cx->gc.gc(GC_NORMAL, JS::gcreason::API);
-    CHECK(!cx->gc.isFullGc());
+    cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::API);
+    CHECK(!cx->runtime()->gc.isFullGc());
     JS_SetGCParameter(cx, JSGC_MODE, oldMode);
     return true;
 }

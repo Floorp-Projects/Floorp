@@ -91,7 +91,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 bool
-CompileArgs::initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCaller)
+CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
 

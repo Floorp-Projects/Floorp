@@ -79,7 +79,7 @@ class ErrorObject : public NativeObject
      * ErrorObject::init.)
      */
     static Shape*
-    assignInitialShape(ExclusiveContext* cx, Handle<ErrorObject*> obj);
+    assignInitialShape(JSContext* cx, Handle<ErrorObject*> obj);
 
     JSExnType type() const {
         return JSExnType(getReservedSlot(EXNTYPE_SLOT).toInt32());

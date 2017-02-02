@@ -131,7 +131,7 @@ StatementKindIsBraced(StatementKind kind)
 void
 ParseContext::Scope::dump(ParseContext* pc)
 {
-    ExclusiveContext* cx = pc->sc()->context;
+    JSContext* cx = pc->sc()->context;
 
     fprintf(stdout, "ParseScope %p", this);
 
@@ -272,7 +272,7 @@ SharedContext::computeInWith(Scope* scope)
     }
 }
 
-EvalSharedContext::EvalSharedContext(ExclusiveContext* cx, JSObject* enclosingEnv,
+EvalSharedContext::EvalSharedContext(JSContext* cx, JSObject* enclosingEnv,
                                      Scope* enclosingScope, Directives directives,
                                      bool extraWarnings)
   : SharedContext(cx, Kind::Eval, directives, extraWarnings),
@@ -315,7 +315,7 @@ ParseContext::init()
         return false;
     }
 
-    ExclusiveContext* cx = sc()->context;
+    JSContext* cx = sc()->context;
 
     if (isFunctionBox()) {
         // Named lambdas always need a binding for their own name. If this
@@ -400,7 +400,7 @@ ParseContext::~ParseContext()
 }
 
 bool
-UsedNameTracker::noteUse(ExclusiveContext* cx, JSAtom* name, uint32_t scriptId, uint32_t scopeId)
+UsedNameTracker::noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId, uint32_t scopeId)
 {
     if (UsedNameMap::AddPtr p = map_.lookupForAdd(name)) {
         if (!p->value().noteUsedInScope(scriptId, scopeId))
@@ -438,7 +438,7 @@ UsedNameTracker::rewind(RewindToken token)
         r.front().value().resetToScope(token.scriptId, token.scopeId);
 }
 
-FunctionBox::FunctionBox(ExclusiveContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead,
+FunctionBox::FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead,
                          JSFunction* fun, Directives directives, bool extraWarnings,
                          GeneratorKind generatorKind, FunctionAsyncKind asyncKind)
   : ObjectBox(fun, traceListHead),
@@ -690,7 +690,7 @@ Parser<SyntaxParseHandler>::abortIfSyntaxParser()
     return false;
 }
 
-ParserBase::ParserBase(ExclusiveContext* cx, LifoAlloc& alloc,
+ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
                        const char16_t* chars, size_t length,
                        bool foldConstants,
@@ -705,7 +705,7 @@ ParserBase::ParserBase(ExclusiveContext* cx, LifoAlloc& alloc,
     usedNames(usedNames),
     sct(nullptr),
     ss(nullptr),
-    keepAtoms(cx->perThreadData),
+    keepAtoms(cx),
     foldConstants(foldConstants),
 #ifdef DEBUG
     checkOptionsCalled(false),
@@ -713,7 +713,7 @@ ParserBase::ParserBase(ExclusiveContext* cx, LifoAlloc& alloc,
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false)
 {
-    cx->perThreadData->frontendCollectionPool.addActiveCompilation();
+    cx->frontendCollectionPool().addActiveCompilation();
     tempPoolMark = alloc.mark();
 }
 
@@ -728,11 +728,11 @@ ParserBase::~ParserBase()
      */
     alloc.freeAllIfHugeAndUnused();
 
-    context->perThreadData->frontendCollectionPool.removeActiveCompilation();
+    context->frontendCollectionPool().removeActiveCompilation();
 }
 
 template <typename ParseHandler>
-Parser<ParseHandler>::Parser(ExclusiveContext* cx, LifoAlloc& alloc,
+Parser<ParseHandler>::Parser(JSContext* cx, LifoAlloc& alloc,
                              const ReadOnlyCompileOptions& options,
                              const char16_t* chars, size_t length,
                              bool foldConstants,
@@ -827,7 +827,7 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun, Directives inheri
     return funbox;
 }
 
-ModuleSharedContext::ModuleSharedContext(ExclusiveContext* cx, ModuleObject* module,
+ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
                                          Scope* enclosingScope, ModuleBuilder& builder)
   : SharedContext(cx, Kind::Module, Directives(true), false),
     module_(cx, module),
@@ -1491,7 +1491,7 @@ Parser<FullParseHandler>::checkStatementsEOF()
 
 template <typename Scope>
 static typename Scope::Data*
-NewEmptyBindingData(ExclusiveContext* cx, LifoAlloc& alloc, uint32_t numBindings)
+NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 {
     size_t allocSize = Scope::sizeOfData(numBindings);
     typename Scope::Data* bindings = static_cast<typename Scope::Data*>(alloc.alloc(allocSize));
@@ -1886,7 +1886,7 @@ Parser<FullParseHandler>::finishLexicalScope(ParseContext::Scope& scope, ParseNo
 }
 
 static bool
-IsArgumentsUsedInLegacyGenerator(ExclusiveContext* cx, Scope* scope)
+IsArgumentsUsedInLegacyGenerator(JSContext* cx, Scope* scope)
 {
     JSAtom* argumentsName = cx->names().arguments;
     for (ScopeIter si(scope); si; si++) {
@@ -2058,7 +2058,7 @@ Parser<FullParseHandler>::moduleBody(ModuleSharedContext* modulesc)
             if (!str.encodeLatin1(context, name))
                 return null();
 
-            JS_ReportErrorNumberLatin1(context->asJSContext(), GetErrorMessage, nullptr,
+            JS_ReportErrorNumberLatin1(context, GetErrorMessage, nullptr,
                                        JSMSG_MISSING_EXPORT, str.ptr());
             return null();
         }
@@ -3132,7 +3132,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, InHandling inHandling,
         // If we are off the main thread, the generator meta-objects have
         // already been created by js::StartOffThreadParseTask, so cx will not
         // be necessary.
-        JSContext* cx = context->maybeJSContext();
+        JSContext* cx = context->helperThread() ? nullptr : context;
         proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
         if (!proto)
             return null();
@@ -3231,8 +3231,8 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
                 // correctness.
                 parser->clearAbortedSyntaxParse();
                 usedNames.rewind(token);
-                MOZ_ASSERT_IF(parser->context->isJSContext(),
-                              !parser->context->asJSContext()->isExceptionPending());
+                MOZ_ASSERT_IF(!parser->context->helperThread(),
+                              !parser->context->isExceptionPending());
                 break;
             }
             return false;
@@ -7982,7 +7982,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(unsigned begin)
     // already been created by js::StartOffThreadParseScript, so cx will not
     // be necessary.
     RootedObject proto(context);
-    JSContext* cx = context->maybeJSContext();
+    JSContext* cx = context->helperThread() ? nullptr : context;
     proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
     if (!proto)
         return null();
@@ -8848,7 +8848,7 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleErro
 }
 
 static JSAtom*
-DoubleToAtom(ExclusiveContext* cx, double value)
+DoubleToAtom(JSContext* cx, double value)
 {
     // This is safe because doubles can not be moved.
     Value tmp = DoubleValue(value);
@@ -9567,24 +9567,22 @@ Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHan
 void
 ParserBase::addTelemetry(JSCompartment::DeprecatedLanguageExtension e)
 {
-    JSContext* cx = context->maybeJSContext();
-    if (!cx)
+    if (context->helperThread())
         return;
-    cx->compartment()->addTelemetry(getFilename(), e);
+    context->compartment()->addTelemetry(getFilename(), e);
 }
 
 bool
 ParserBase::warnOnceAboutExprClosure()
 {
 #ifndef RELEASE_OR_BETA
-    JSContext* cx = context->maybeJSContext();
-    if (!cx)
+    if (context->helperThread())
         return true;
 
-    if (!cx->compartment()->warnedAboutExprClosure) {
+    if (!context->compartment()->warnedAboutExprClosure) {
         if (!warning(JSMSG_DEPRECATED_EXPR_CLOSURE))
             return false;
-        cx->compartment()->warnedAboutExprClosure = true;
+        context->compartment()->warnedAboutExprClosure = true;
     }
 #endif
     return true;
@@ -9593,14 +9591,13 @@ ParserBase::warnOnceAboutExprClosure()
 bool
 ParserBase::warnOnceAboutForEach()
 {
-    JSContext* cx = context->maybeJSContext();
-    if (!cx)
+    if (context->helperThread())
         return true;
 
-    if (!cx->compartment()->warnedAboutForEach) {
+    if (!context->compartment()->warnedAboutForEach) {
         if (!warning(JSMSG_DEPRECATED_FOR_EACH))
             return false;
-        cx->compartment()->warnedAboutForEach = true;
+        context->compartment()->warnedAboutForEach = true;
     }
     return true;
 }

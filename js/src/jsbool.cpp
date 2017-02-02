@@ -161,7 +161,7 @@ js::InitBooleanClass(JSContext* cx, HandleObject obj)
 }
 
 JSString*
-js::BooleanToString(ExclusiveContext* cx, bool b)
+js::BooleanToString(JSContext* cx, bool b)
 {
     return b ? cx->names().true_ : cx->names().false_;
 }

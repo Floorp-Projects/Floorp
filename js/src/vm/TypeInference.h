@@ -23,6 +23,7 @@
 #include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "threading/ProtectedData.h"
 #include "vm/TaggedProto.h"
 
 namespace js {
@@ -690,11 +691,11 @@ class ConstraintTypeSet : public TypeSet
      * Add a type to this set, calling any constraint handlers if this is a new
      * possible type.
      */
-    void addType(ExclusiveContext* cx, Type type);
+    void addType(JSContext* cx, Type type);
 
     // Trigger a post barrier when writing to this set, if necessary.
     // addType(cx, type) takes care of this automatically.
-    void postWriteBarrier(ExclusiveContext* cx, Type type);
+    void postWriteBarrier(JSContext* cx, Type type);
 
     /* Add a new constraint to this set. */
     bool addConstraint(JSContext* cx, TypeConstraint* constraint, bool callExisting = true);
@@ -710,17 +711,17 @@ class StackTypeSet : public ConstraintTypeSet
 
 class HeapTypeSet : public ConstraintTypeSet
 {
-    inline void newPropertyState(ExclusiveContext* cx);
+    inline void newPropertyState(JSContext* cx);
 
   public:
     /* Mark this type set as representing a non-data property. */
-    inline void setNonDataProperty(ExclusiveContext* cx);
+    inline void setNonDataProperty(JSContext* cx);
 
     /* Mark this type set as representing a non-writable property. */
-    inline void setNonWritableProperty(ExclusiveContext* cx);
+    inline void setNonWritableProperty(JSContext* cx);
 
     // Mark this type set as being non-constant.
-    inline void setNonConstantProperty(ExclusiveContext* cx);
+    inline void setNonConstantProperty(JSContext* cx);
 };
 
 CompilerConstraintList*
@@ -918,7 +919,7 @@ class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray
         return shape_;
     }
 
-    void maybeAnalyze(ExclusiveContext* cx, ObjectGroup* group, bool force = false);
+    void maybeAnalyze(JSContext* cx, ObjectGroup* group, bool force = false);
 
     void trace(JSTracer* trc);
 
@@ -1316,14 +1317,14 @@ struct AutoEnterAnalysis;
 
 struct TypeZone
 {
-    JS::Zone* zone_;
+    JS::Zone* const zone_;
 
     /* Pool for type information in this zone. */
     static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
-    LifoAlloc typeLifoAlloc;
+    ZoneGroupData<LifoAlloc> typeLifoAlloc;
 
     // Current generation for sweeping.
-    uint32_t generation : 1;
+    ZoneGroupOrGCTaskOrIonCompileData<uint32_t> generation;
 
     /*
      * All Ion compilations that have occured in this zone, for indexing via
@@ -1331,24 +1332,24 @@ struct TypeZone
      * invalidated compilations are swept on GC.
      */
     typedef Vector<CompilerOutput, 4, SystemAllocPolicy> CompilerOutputVector;
-    CompilerOutputVector* compilerOutputs;
+    ZoneGroupData<CompilerOutputVector*> compilerOutputs;
 
     // During incremental sweeping, allocator holding the old type information
     // for the zone.
-    LifoAlloc sweepTypeLifoAlloc;
+    ZoneGroupData<LifoAlloc> sweepTypeLifoAlloc;
 
     // During incremental sweeping, the old compiler outputs for use by
     // recompile indexes with a stale generation.
-    CompilerOutputVector* sweepCompilerOutputs;
+    ZoneGroupData<CompilerOutputVector*> sweepCompilerOutputs;
 
     // During incremental sweeping, whether to try to destroy all type
     // information attached to scripts.
-    bool sweepReleaseTypes;
+    ZoneGroupData<bool> sweepReleaseTypes;
 
-    bool sweepingTypes;
+    ZoneGroupData<bool> sweepingTypes;
 
     // The topmost AutoEnterAnalysis on the stack, if there is one.
-    AutoEnterAnalysis* activeAnalysis;
+    ZoneGroupData<AutoEnterAnalysis*> activeAnalysis;
 
     explicit TypeZone(JS::Zone* zone);
     ~TypeZone();
