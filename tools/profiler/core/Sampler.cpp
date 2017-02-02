@@ -881,9 +881,7 @@ mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
       JS::ProfilingFrameIterator::RegisterState registerState;
       registerState.pc = aSample->pc;
       registerState.sp = aSample->sp;
-#ifdef ENABLE_ARM_LR_SAVING
       registerState.lr = aSample->lr;
-#endif
 
       JS::ProfilingFrameIterator jsIter(pseudoStack->mContext,
                                         registerState,
@@ -1278,9 +1276,6 @@ doSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
 #ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
     aInfo.addTag(ProfileEntry('l', (void*)aSample->pc));
-#ifdef ENABLE_ARM_LR_SAVING
-    aInfo.addTag(ProfileEntry('L', (void*)aSample->lr));
-#endif
   }
 #endif
 }
