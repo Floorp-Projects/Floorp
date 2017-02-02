@@ -364,6 +364,16 @@ enum class Tier
     TBD      // A placeholder while tiering is being implemented};
 };
 
+// The CompileMode controls how compilation of a module is performed (notably,
+// how many times we compile it).
+
+enum class CompileMode
+{
+    Once,
+    Tier1,
+    Tier2
+};
+
 // Iterator over tiers present in a tiered data structure.
 
 class Tiers

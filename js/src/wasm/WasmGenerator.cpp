@@ -47,6 +47,7 @@ static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(UniqueChars* error)
   : tier_(Tier(-1)),
+    compileMode_(CompileMode::Once),
     error_(error),
     linkDataTier_(nullptr),
     metadataTier_(nullptr),
@@ -141,11 +142,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
-    bool canBaseline = BaselineCanCompile();
-    bool debugEnabled = args.debugEnabled && canBaseline;
-    tier_ = ((args.baselineEnabled || debugEnabled) && canBaseline)
-            ? Tier::Baseline
-            : Tier::Ion;
+    tier_ = GetTier(args, compileMode_);
 
     auto metadataTier = js::MakeUnique<MetadataTier>(tier_);
     if (!metadataTier)
@@ -163,7 +160,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     MOZ_ASSERT(!isAsmJS());
 
-    metadata_->debugEnabled = debugEnabled;
+    metadata_->debugEnabled = GetDebugEnabled(args);
 
     // For wasm, the Vectors are correctly-sized and already initialized.
 
@@ -239,9 +236,10 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
 bool
 ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
-                      Metadata* maybeAsmJSMetadata)
+                      CompileMode compileMode, Metadata* maybeAsmJSMetadata)
 {
     env_ = Move(env);
+    compileMode_ = compileMode;
 
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
@@ -979,6 +977,7 @@ bool
 ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFuncDef_ == fg);
+    MOZ_ASSERT_IF(compileMode_ == CompileMode::Tier1, funcIndex < env_->numFuncs());
 
     UniqueFuncBytes func = Move(fg->funcBytes_);
     func->setFunc(funcIndex, &funcSig(funcIndex));
