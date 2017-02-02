@@ -29,45 +29,14 @@ interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
 
-           attribute DOMString        id;
-           attribute DOMString        className;
-  /**
-   * Returns a DOMTokenList object reflecting the class attribute.
-   */
-  readonly attribute nsISupports classList;
-
   readonly attribute nsIDOMMozNamedAttrMap attributes;
   DOMString          getAttribute(in DOMString name);
-  DOMString          getAttributeNS(in DOMString namespaceURI, 
-                                    in DOMString localName);
   void               setAttribute(in DOMString name, 
                                   in DOMString value);
-  void               setAttributeNS(in DOMString namespaceURI, 
-                                    in DOMString qualifiedName, 
-                                    in DOMString value);
-  void               removeAttribute(in DOMString name);
-  void               removeAttributeNS(in DOMString namespaceURI, 
-                                       in DOMString localName);
   boolean            hasAttribute(in DOMString name);
-  boolean            hasAttributeNS(in DOMString namespaceURI, 
-                                    in DOMString localName);
-  boolean            hasAttributes();
 
   // Obsolete methods.
   nsIDOMAttr         getAttributeNode(in DOMString name);
-  nsIDOMAttr         setAttributeNode(in nsIDOMAttr newAttr);
-  nsIDOMAttr         removeAttributeNode(in nsIDOMAttr oldAttr);
   nsIDOMAttr         getAttributeNodeNS(in DOMString namespaceURI, 
                                         in DOMString localName);
-  nsIDOMAttr         setAttributeNodeNS(in nsIDOMAttr newAttr)
-                                        raises(DOMException);
-
-  nsIDOMHTMLCollection getElementsByTagName(in DOMString name);
-  nsIDOMHTMLCollection getElementsByTagNameNS(in DOMString namespaceURI, 
-                                              in DOMString localName);
-  /**
-   * Retrieve elements matching all classes listed in a
-   * space-separated string.
-   */
-  nsIDOMHTMLCollection getElementsByClassName(in DOMString classes);
 };
