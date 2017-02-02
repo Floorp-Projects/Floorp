@@ -161,6 +161,7 @@ WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
       OpDPPushStackingContext(wr::ToWrRect(bounds),
                               wr::ToWrRect(overflow),
                               Nothing(),
+                              1.0f,
                               layer->GetAnimations(),
                               identity,
                               WrMixBlendMode::Normal,

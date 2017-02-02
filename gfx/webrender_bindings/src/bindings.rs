@@ -8,7 +8,7 @@ use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF, GlyphInstance, ImageDescriptor};
-use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
+use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
@@ -561,7 +561,7 @@ pub extern fn wr_window_dp_begin(window: &mut WrWindowState, state: &mut WrState
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
+pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
 {
     assert!( unsafe { is_in_compositor_thread() });
     state.z_index += 1;
@@ -574,6 +574,11 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
 
+    let mut filters: Vec<FilterOp> = Vec::new();
+    if opacity < 1.0 {
+        filters.push(FilterOp::Opacity(opacity));
+    }
+
     state.frame_builder.dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   clip_region,
@@ -581,7 +586,7 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
                                   transform,
                                   &LayoutTransform::identity(),
                                   mix_blend_mode,
-                                  Vec::new());
+                                  filters);
 
 }
 
