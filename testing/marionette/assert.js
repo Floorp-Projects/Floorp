@@ -22,6 +22,26 @@ const isFirefox = () => Services.appinfo.name == "Firefox";
 this.assert = {};
 
 /**
+ * Asserts that Marionette has a session.
+ *
+ * @param {GeckoDriver} driver
+ *     Marionette driver instance.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {string}
+ *     Session ID.
+ *
+ * @throws {InvalidSessionIdError}
+ *     If |driver| does not have a session ID.
+ */
+assert.session = function (driver, msg = "") {
+  assert.that(sessionID => sessionID,
+      msg, InvalidSessionIdError)(driver.sessionId);
+  return driver.sessionId;
+};
+
+/**
  * Asserts that the current browser is Firefox Desktop.
  *
  * @param {string=} msg
