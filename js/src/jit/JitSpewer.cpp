@@ -31,11 +31,11 @@
 
 #ifndef JIT_SPEW_DIR
 # if defined(_WIN32)
-#  define JIT_SPEW_DIR ""
+#  define JIT_SPEW_DIR "."
 # elif defined(__ANDROID__)
-#  define JIT_SPEW_DIR "/data/local/tmp/"
+#  define JIT_SPEW_DIR "/data/local/tmp"
 # else
-#  define JIT_SPEW_DIR "/tmp/"
+#  define JIT_SPEW_DIR "/tmp"
 # endif
 #endif
 
