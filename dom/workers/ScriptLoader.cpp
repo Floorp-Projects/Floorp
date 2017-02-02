@@ -1557,19 +1557,27 @@ void
 CacheCreator::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aValue.isObject());
+
+  if (!aValue.isObject()) {
+    FailLoaders(NS_ERROR_FAILURE);
+    return;
+  }
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
   Cache* cache = nullptr;
   nsresult rv = UNWRAP_OBJECT(Cache, obj, cache);
-  MOZ_ALWAYS_SUCCEEDS(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailLoaders(NS_ERROR_FAILURE);
+    return;
+  }
 
   mCache = cache;
-  MOZ_ASSERT(mCache);
+  MOZ_DIAGNOSTIC_ASSERT(mCache);
 
   // If the worker is canceled, CancelMainThread() will have cleared the
-  // loaders.
+  // loaders via DeleteCache().
   for (uint32_t i = 0, len = mLoaders.Length(); i < len; ++i) {
+    MOZ_DIAGNOSTIC_ASSERT(mLoaders[i]);
     mLoaders[i]->Load(cache);
   }
 }
@@ -1581,19 +1589,16 @@ CacheCreator::DeleteCache()
 
   // This is called when the load is canceled which can occur before
   // mCacheStorage is initialized.
-  if (!mCacheStorage) {
-    return;
+  if (mCacheStorage) {
+    // It's safe to do this while Cache::Match() and Cache::Put() calls are
+    // running.
+    IgnoredErrorResult rv;
+    RefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
+
+    // We don't care to know the result of the promise object.
   }
 
-  // It's safe to do this while Cache::Match() and Cache::Put() calls are
-  // running.
-  IgnoredErrorResult rv;
-  RefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
-
-  // We don't care to know the result of the promise object.
+  // Always call this here to ensure the loaders array is cleared.
   FailLoaders(NS_ERROR_FAILURE);
 }
 

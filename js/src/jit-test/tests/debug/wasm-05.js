@@ -57,6 +57,8 @@ for (let descriptor of WebAssembly.Module.imports(module)) {
 var instance = new WebAssembly.Instance(module, imports);
 `);
     var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
+    assertEq(wasmScript.startLine, 1);
+    assertEq(wasmScript.lineCount > 0, true);
     var lines = wasmScript.source.text.split('\n');
     var offsetsFound = 0;
     lines.forEach(function (l, n) {
@@ -102,6 +104,8 @@ function getWasmScriptAfterDebuggerAttached(wast) {
 
 var wasmScript1 = getWasmScriptAfterDebuggerAttached('(module (func (nop)))');
 var wasmLines1 = wasmScript1.source.text.split('\n');
+assertEq(wasmScript1.startLine, 1);
+assertEq(wasmScript1.lineCount, 0);
 assertEq(wasmLines1.every((l, n) => wasmScript1.getLineOffsets(n + 1).length == 0), true);
 
 // Checking that we must not resolve any location for any offset in a wasm

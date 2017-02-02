@@ -873,7 +873,77 @@
       "label": "Certum_Trusted_Network_CA_2",
       "binNumber": 173,
       "sha256Fingerprint": "tnby7drod1zTbLD2PNHUYDlh9J5iZboBOi8DB7bQuAQ="
+    },
+    {
+      "label": "Hellenic_Academic_and_Research_Institutions_RootCA_2015",
+      "binNumber": 174,
+      "sha256Fingerprint": "oECSmgLOU7Ss9PL/xpgc5ElvdV5tRf4LKmkrzVJSPzY="
+    },
+    {
+      "label": "Hellenic_Academic_and_Research_Institutions_ECC_RootCA_2015",
+      "binNumber": 175,
+      "sha256Fingerprint": "RLVFqool5lpzyhXcJ/w20kwcuZU6BmU5sRWC3Eh7SDM="
+    },
+    {
+      "label": "Certplus_Root_CA_G1",
+      "binNumber": 176,
+      "sha256Fingerprint": "FSpAK/zfLNVIBU0idbOcf8o+wJeAeLDw6nblYabHQz4="
+    },
+    {
+      "label": "Certplus_Root_CA_G2",
+      "binNumber": 177,
+      "sha256Fingerprint": "bMBQQeZEXnRpbEz7yfgPVDt+q7tEtM5veHxqmXHELxc="
+    },
+    {
+      "label": "OpenTrust_Root_CA_G1",
+      "binNumber": 178,
+      "sha256Fingerprint": "VsdxKNmMGNkbTP3/vCXukQPUdY6iq62CapDzRX1GDrQ="
+    },
+    {
+      "label": "OpenTrust_Root_CA_G2",
+      "binNumber": 179,
+      "sha256Fingerprint": "J5lYKf5qdRXBv+hI+cR2HbFsIlkpJXv0DQiU8p6ouvI="
+    },
+    {
+      "label": "OpenTrust_Root_CA_G3",
+      "binNumber": 180,
+      "sha256Fingerprint": "t8NiMXBugQeMNny4lhmPHjII3ZJpSd2PVwmkEPdbYpI="
+    },
+    {
+      "label": "ISRG_Root_X1",
+      "binNumber": 181,
+      "sha256Fingerprint": "lrzsBiZJdvN0YHeazyjFp8/oo8Cq4RqP/O4FwL3fCMY="
+    },
+    {
+      "label": "OU_AC_RAIZ_FNMT_RCM_O_FNMT_RCM_C_ES",
+      "binNumber": 182,
+      "sha256Fingerprint": "68VXDCkBjE1nsaoSe68S9wO0YR68F7fatVc4lBebk/o="
+    },
+    {
+      "label": "Amazon_Root_CA_1",
+      "binNumber": 183,
+      "sha256Fingerprint": "js3miE89h7ESW6Maw/yxPXAW3n9XzJBP4cuXxq6YGW4="
+    },
+    {
+      "label": "Amazon_Root_CA_2",
+      "binNumber": 184,
+      "sha256Fingerprint": "G6WyqoxlQBqClgEY+AvsT2IwTYPOxHE6GcOcAR6kbbQ="
+    },
+    {
+      "label": "Amazon_Root_CA_3",
+      "binNumber": 185,
+      "sha256Fingerprint": "GM5s/nvxTmCy40e43+hoyzHQLrs62icVafUDQ7Rts6Q="
+    },
+    {
+      "label": "Amazon_Root_CA_4",
+      "binNumber": 186,
+      "sha256Fingerprint": "410oQZ7QICXPppA4zWI5YkWNpcaV+96jwisL+yWJcJI="
+    },
+    {
+      "label": "LuxTrust_Global_Root_2",
+      "binNumber": 187,
+      "sha256Fingerprint": "VEVfcSnCCxRHxBj5lxaPJMWPxQI79dpb4utuHdiQLtU="
     }
   ],
-  "maxBin": 173
+  "maxBin": 187
 }

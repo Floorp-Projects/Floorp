@@ -11,6 +11,7 @@
 let bookmarkPanel = document.getElementById("editBookmarkPanel");
 let bookmarkStar = document.getElementById("bookmarks-menu-button");
 let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
+let editBookmarkPanelRemoveButtonRect;
 
 StarUI._closePanelQuickForTesting = true;
 
@@ -33,6 +34,9 @@ function* test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       yield popupShowFn(browser);
       yield shownPromise;
       is(bookmarkPanel.state, "open", "Panel should be 'open' after shownPromise is resolved");
+
+    editBookmarkPanelRemoveButtonRect =
+      document.getElementById("editBookmarkPanelRemoveButton").getBoundingClientRect();
 
       if (popupEditFn) {
         yield popupEditFn();
@@ -358,6 +362,32 @@ add_task(function* enter_on_remove_bookmark_should_remove_bookmark() {
         EventUtils.sendChar("VK_TAB", window);
       }
       EventUtils.sendChar("VK_RETURN", window);
+    },
+    isBookmarkRemoved: true,
+  });
+});
+
+add_task(function* mouse_hovering_panel_should_prevent_autoclose() {
+  if (AppConstants.platform != "win") {
+    // This test requires synthesizing native mouse movement which is
+    // best supported on Windows.
+    return;
+  }
+  yield test_bookmarks_popup({
+    isNewBookmark: true,
+    *popupShowFn(browser) {
+      yield new Promise(resolve => {
+        EventUtils.synthesizeNativeMouseMove(
+          document.documentElement,
+          editBookmarkPanelRemoveButtonRect.left,
+          editBookmarkPanelRemoveButtonRect.top,
+          resolve);
+      });
+      EventUtils.synthesizeKey("D", {accelKey: true}, window);
+    },
+    shouldAutoClose: false,
+    popupHideFn() {
+      document.getElementById("editBookmarkPanelRemoveButton").click();
     },
     isBookmarkRemoved: true,
   });

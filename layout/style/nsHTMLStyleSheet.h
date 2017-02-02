@@ -62,6 +62,10 @@ public:
   already_AddRefed<nsMappedAttributes>
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
+  // For each mapped presentation attribute in the cache, resolve
+  // the attached ServoDeclarationBlock by running the mapping
+  // and converting the ruledata to Servo specified values.
+  void CalculateMappedServoDeclarations();
 
   nsIStyleRule* LangRuleFor(const nsString& aLanguage);
 
@@ -175,6 +179,10 @@ private:
   RefPtr<TableTHRule>   mTableTHRule;
 
   PLDHashTable            mMappedAttrTable;
+  // Whether or not the mapped attributes table
+  // has been changed since the last call to
+  // CalculateMappedServoDeclarations()
+  bool                    mMappedAttrsDirty;
   PLDHashTable            mLangRuleTable;
 };
 

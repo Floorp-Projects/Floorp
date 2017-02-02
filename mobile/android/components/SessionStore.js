@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition", "resource://gre/modules/ScrollPosition.jsm");
@@ -1789,7 +1789,7 @@ SessionStore.prototype = {
       });
 
     log("sending " + tabs.length + " closed tabs to Java");
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "ClosedTabs:Data",
       tabs: tabs
     });

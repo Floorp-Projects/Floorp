@@ -159,7 +159,7 @@ CheckerboardReportService::IsEnabled(JSContext* aCtx, JSObject* aGlobal)
     return false;
   }
   // Allow privileged code or about:checkerboard (unprivileged) to access this.
-  return nsContentUtils::IsCallerChrome()
+  return nsContentUtils::IsSystemCaller(aCtx)
       || nsContentUtils::IsSpecificAboutPage(aGlobal, "about:checkerboard");
 }
 

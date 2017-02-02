@@ -474,11 +474,12 @@ class ScriptSource
         if (--refs == 0)
             js_delete(this);
     }
-    bool initFromOptions(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
-                         mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
-    bool setSourceCopy(ExclusiveContext* cx,
-                       JS::SourceBufferHolder& srcBuf,
-                       SourceCompressionTask* tok);
+    MOZ_MUST_USE bool initFromOptions(ExclusiveContext* cx,
+                                      const ReadOnlyCompileOptions& options,
+                                      mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
+    MOZ_MUST_USE bool setSourceCopy(ExclusiveContext* cx,
+                                    JS::SourceBufferHolder& srcBuf,
+                                    SourceCompressionTask* tok);
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !data.is<Missing>(); }
@@ -522,22 +523,21 @@ class ScriptSource
                                 JS::ScriptSourceInfo* info) const;
 
     MOZ_MUST_USE bool setSource(ExclusiveContext* cx,
-                                mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
+                                UniqueTwoByteChars&& source,
                                 size_t length);
     void setSource(SharedImmutableTwoByteString&& string);
 
-    MOZ_MUST_USE bool setCompressedSource(
-        ExclusiveContext* cx,
-        mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
-        size_t rawLength,
-        size_t sourceLength);
+    MOZ_MUST_USE bool setCompressedSource(ExclusiveContext* cx,
+                                          UniqueChars&& raw,
+                                          size_t rawLength,
+                                          size_t sourceLength);
     void setCompressedSource(SharedImmutableString&& raw, size_t sourceLength);
 
     // XDR handling
     template <XDRMode mode>
-    bool performXDR(XDRState<mode>* xdr);
+    MOZ_MUST_USE bool performXDR(XDRState<mode>* xdr);
 
-    bool setFilename(ExclusiveContext* cx, const char* filename);
+    MOZ_MUST_USE bool setFilename(ExclusiveContext* cx, const char* filename);
     const char* introducerFilename() const {
         return introducerFilename_ ? introducerFilename_.get() : filename_.get();
     }
@@ -553,7 +553,7 @@ class ScriptSource
     }
 
     // Display URLs
-    bool setDisplayURL(ExclusiveContext* cx, const char16_t* displayURL);
+    MOZ_MUST_USE bool setDisplayURL(ExclusiveContext* cx, const char16_t* displayURL);
     bool hasDisplayURL() const { return displayURL_ != nullptr; }
     const char16_t * displayURL() {
         MOZ_ASSERT(hasDisplayURL());
@@ -561,7 +561,7 @@ class ScriptSource
     }
 
     // Source maps
-    bool setSourceMapURL(ExclusiveContext* cx, const char16_t* sourceMapURL);
+    MOZ_MUST_USE bool setSourceMapURL(ExclusiveContext* cx, const char16_t* sourceMapURL);
     bool hasSourceMapURL() const { return sourceMapURL_ != nullptr; }
     const char16_t * sourceMapURL() {
         MOZ_ASSERT(hasSourceMapURL());

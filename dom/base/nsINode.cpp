@@ -106,6 +106,7 @@
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"
 #include "mozilla/dom/NodeBinding.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/dom/AccessibleNode.h"
@@ -719,9 +720,11 @@ nsINode::GetBaseURI(nsAString &aURI) const
 }
 
 void
-nsINode::GetBaseURIFromJS(nsAString& aURI, ErrorResult& aRv) const
+nsINode::GetBaseURIFromJS(nsAString& aURI,
+                          CallerType aCallerType,
+                          ErrorResult& aRv) const
 {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI(nsContentUtils::IsCallerChrome());
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI(aCallerType == CallerType::System);
   nsAutoCString spec;
   if (baseURI) {
     nsresult res = baseURI->GetSpec(spec);
@@ -1265,36 +1268,43 @@ nsINode::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 void
 nsINode::GetBoxQuads(const BoxQuadOptions& aOptions,
                      nsTArray<RefPtr<DOMQuad> >& aResult,
+                     CallerType aCallerType,
                      mozilla::ErrorResult& aRv)
 {
-  mozilla::GetBoxQuads(this, aOptions, aResult, aRv);
+  mozilla::GetBoxQuads(this, aOptions, aResult, aCallerType, aRv);
 }
 
 already_AddRefed<DOMQuad>
 nsINode::ConvertQuadFromNode(DOMQuad& aQuad,
                              const GeometryNode& aFrom,
                              const ConvertCoordinateOptions& aOptions,
+                             CallerType aCallerType,
                              ErrorResult& aRv)
 {
-  return mozilla::ConvertQuadFromNode(this, aQuad, aFrom, aOptions, aRv);
+  return mozilla::ConvertQuadFromNode(this, aQuad, aFrom, aOptions, aCallerType,
+                                      aRv);
 }
 
 already_AddRefed<DOMQuad>
 nsINode::ConvertRectFromNode(DOMRectReadOnly& aRect,
                              const GeometryNode& aFrom,
                              const ConvertCoordinateOptions& aOptions,
+                             CallerType aCallerType,
                              ErrorResult& aRv)
 {
-  return mozilla::ConvertRectFromNode(this, aRect, aFrom, aOptions, aRv);
+  return mozilla::ConvertRectFromNode(this, aRect, aFrom, aOptions, aCallerType,
+                                      aRv);
 }
 
 already_AddRefed<DOMPoint>
 nsINode::ConvertPointFromNode(const DOMPointInit& aPoint,
                               const GeometryNode& aFrom,
                               const ConvertCoordinateOptions& aOptions,
+                              CallerType aCallerType,
                               ErrorResult& aRv)
 {
-  return mozilla::ConvertPointFromNode(this, aPoint, aFrom, aOptions, aRv);
+  return mozilla::ConvertPointFromNode(this, aPoint, aFrom, aOptions,
+                                       aCallerType, aRv);
 }
 
 nsresult
@@ -2944,7 +2954,7 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   bool hasHadScriptHandlingObject = false;
   if (!OwnerDoc()->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
       !hasHadScriptHandlingObject &&
-      !nsContentUtils::IsCallerChrome()) {
+      !nsContentUtils::IsSystemCaller(aCx)) {
     Throw(aCx, NS_ERROR_UNEXPECTED);
     return nullptr;
   }

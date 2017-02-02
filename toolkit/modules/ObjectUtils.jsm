@@ -20,6 +20,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
+var pSlice = Array.prototype.slice;
+
 this.ObjectUtils = {
   /**
    * This tests objects & values for deep equality.

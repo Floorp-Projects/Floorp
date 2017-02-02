@@ -59,13 +59,6 @@ MediaPlayerApp.prototype = {
     }
   },
 
-  mirror: function mirror(callback) {
-    send("MediaPlayer:Mirror", { id: this.id }, (result, err) => {
-      if (callback) {
-        callback(err == null);
-      }
-    });
-  }
 }
 
 /* RemoteMedia provides a proxy to a native media player session.

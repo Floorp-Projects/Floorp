@@ -329,7 +329,7 @@ define(function (require, exports, module) {
               id: id ? id + "-panel" : "panel-" + index,
               key: index,
               style: style,
-              className: "tab-panel-box",
+              className: selected ? "tab-panel-box" : "tab-panel-box hidden",
               role: "tabpanel",
               "aria-labelledby": id ? id + "-tab" : "tab-" + index,
             },
@@ -349,7 +349,7 @@ define(function (require, exports, module) {
       return (
         DOM.div({ className: ["tabs", this.props.className].join(" ") },
           this.renderMenuItems(),
-          this.renderPanels(),
+          this.renderPanels()
         )
       );
     },

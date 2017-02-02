@@ -15,7 +15,7 @@ action.inputStateMap = new Map();
 add_test(function test_createAction() {
   Assert.throws(() => new action.Action(), InvalidArgumentError,
       "Missing Action constructor args");
-  Assert.throws(() => new action.Action(1,2), InvalidArgumentError,
+  Assert.throws(() => new action.Action(1, 2), InvalidArgumentError,
       "Missing Action constructor args");
   Assert.throws(
       () => new action.Action(1, 2, "sometype"), /Expected string/, "Non-string arguments.");
@@ -157,7 +157,7 @@ add_test(function test_processPointerAction() {
       pointerType: "touch",
       primary: false,
     },
-  }
+  };
   let actionItems = [
     {
       duration: 2000,
@@ -364,7 +364,7 @@ add_test(function test_processPointerActionInputStateMap() {
   let parameters = {pointerType: "mouse", primary: false};
   let a = new action.Action(id, "pointer", actionItem.type);
   let wrongInputState = new action.InputState.Pointer("pause", true);
-  action.inputStateMap.set(id, wrongInputState)
+  action.inputStateMap.set(id, wrongInputState);
   checkErrors(
       /to be mapped to InputState whose subtype is/, action.processPointerAction,
       [id, parameters, a],
@@ -378,9 +378,22 @@ add_test(function test_processPointerActionInputStateMap() {
   run_next_test();
 });
 
+add_test(function test_createInputState() {
+  for (let kind in action.InputState) {
+    let state = new action.InputState[kind]();
+    ok(state);
+    if (kind === "Null") {
+      equal(state.type, "none");
+    } else {
+      equal(state.type, kind.toLowerCase());
+    }
+  }
+  run_next_test();
+});
+
 add_test(function test_extractActionChainValidation() {
   for (let actions of [-1, "a", undefined, null]) {
-    let message = `actions: ${getTypeString(actions)}`
+    let message = `actions: ${getTypeString(actions)}`;
     Assert.throws(() => action.Chain.fromJson(actions),
         InvalidArgumentError, message);
     Assert.throws(() => action.Chain.fromJson(actions),

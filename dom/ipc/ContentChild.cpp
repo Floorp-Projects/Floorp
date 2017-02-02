@@ -35,6 +35,7 @@
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
+#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
@@ -1398,6 +1399,15 @@ ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL,
   return IPC_OK();
 }
 
+static StaticRefPtr<CancelableRunnable> gFirstIdleTask;
+
+static void
+FirstIdle(void)
+{
+  MOZ_ASSERT(gFirstIdleTask);
+  gFirstIdleTask = nullptr;
+  ContentChild::GetSingleton()->SendFirstIdle();
+}
 
 mozilla::jsipc::PJavaScriptChild *
 ContentChild::AllocPJavaScriptChild()
@@ -1456,6 +1466,15 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const bool& aIsForBrowser)
 {
   MOZ_ASSERT(!IsShuttingDown());
+
+  static bool hasRunOnce = false;
+  if (!hasRunOnce) {
+    hasRunOnce = true;
+    MOZ_ASSERT(!gFirstIdleTask);
+    RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction(FirstIdle);
+    gFirstIdleTask = firstIdleTask;
+    NS_IdleDispatchToCurrentThread(firstIdleTask.forget());
+  }
 
   return nsIContentChild::RecvPBrowserConstructor(aActor, aTabId, aContext,
                                                   aChromeFlags, aCpID, aIsForBrowser);
@@ -1995,6 +2014,9 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   // keep persistent state.
   ProcessChild::QuickExit();
 #else
+  if (gFirstIdleTask) {
+    gFirstIdleTask->Cancel();
+  }
 
   nsHostObjectProtocolHandler::RemoveDataEntries();
 
@@ -3026,6 +3048,20 @@ mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
   nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
+                                             const nsString& aKey,
+                                             const nsString& aOldValue,
+                                             const nsString& aNewValue,
+                                             const IPC::Principal& aPrincipal,
+                                             const bool& aIsPrivate)
+{
+  Storage::DispatchStorageEvent(Storage::LocalStorage,
+                                aDocumentURI, aKey, aOldValue, aNewValue,
+                                aPrincipal, aIsPrivate, nullptr, true);
   return IPC_OK();
 }
 

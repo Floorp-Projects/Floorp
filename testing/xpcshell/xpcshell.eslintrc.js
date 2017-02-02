@@ -52,6 +52,7 @@ module.exports = {
     "notEqual": false,
     "notStrictEqual": false,
     "ok": false,
+    "PromiseDebugging": false,
     "runningInParent": false,
     "run_next_test": false,
     "run_test": false,

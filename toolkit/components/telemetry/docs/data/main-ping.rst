@@ -112,10 +112,11 @@ Structure:
 .. code-block:: js
 
     "processes" : {
-      ... other processes ...
+      // ... other processes ...
       "parent": {
         scalars: {...},
         keyedScalars: {...},
+        events: {...},
       },
       "content": {
         scalars: {...},
@@ -124,7 +125,7 @@ Structure:
         keyedHistograms: {...},
       },
       "gpu": {
-        ...
+        // ...
       }
     }
 
@@ -136,7 +137,13 @@ This format was adopted in Firefox 51 via bug 1218576.
 
 scalars and keyedScalars
 ~~~~~~~~~~~~~~~~~~~~~~~~
-This section contains the :doc:`../collection/scalars` that are valid for the current platform. Scalars are only submitted if if data was added to them, and are only reported with subsession pings. The record scalars are described in the `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_ file. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
+This section contains the :doc:`../collection/scalars` that are valid for the current platform. Scalars are only submitted if data was added to them, and are only reported with subsession pings. The recorded scalars are described in the `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_ file. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
+
+events
+~~~~~~
+This section contains the :ref:`eventtelemetry` that are recorded for the current subsession. Events are not always recorded, recording has to be enabled first for the Firefox session.
+
+The recorded events are defined in the `Events.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Events.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported events.
 
 childPayloads
 -------------

@@ -293,18 +293,9 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
 
     if (loadInfo) {
         if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
-            RefPtr<nsNullPrincipal> prin;
-            if (loadInfo->LoadingPrincipal()) {
-              prin =
-                nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
-            } else {
-              OriginAttributes attrs;
-              loadInfo->GetOriginAttributes(&attrs);
-              attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
-              prin = nsNullPrincipal::Create(attrs);
-            }
-            prin.forget(aPrincipal);
-            return NS_OK;
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSandboxedLoadingPrincipal(aPrincipal)));
+          MOZ_ASSERT(*aPrincipal);
+          return NS_OK;
         }
 
         bool forceInherit = loadInfo->GetForceInheritPrincipal();
@@ -529,19 +520,6 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     if (NS_SUCCEEDED(rv)) {
         // OK to load
         return NS_OK;
-    }
-
-    // See if we're attempting to load a file: URI. If so, let a
-    // UniversalXPConnect capability trump the above check.
-    bool isFile = false;
-    bool isRes = false;
-    if (NS_FAILED(aURI->SchemeIs("file", &isFile)) ||
-        NS_FAILED(aURI->SchemeIs("resource", &isRes)))
-        return NS_ERROR_FAILURE;
-    if (isFile || isRes)
-    {
-        if (nsContentUtils::IsCallerChrome())
-            return NS_OK;
     }
 
     // Report error.

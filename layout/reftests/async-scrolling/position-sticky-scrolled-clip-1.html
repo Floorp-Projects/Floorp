@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+
+<title>position:sticky with scrolled clip should correctly move the clip</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+  position: relative;
+}
+
+.absoluteClip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 200px;
+  clip: rect(auto, auto, 150px, auto);
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  box-sizing: border-box;
+  height: 100px;
+  border: 1px solid black;
+}
+
+</style>
+
+<div class="absoluteClip">
+  <div class="sticky"></div>
+</div>

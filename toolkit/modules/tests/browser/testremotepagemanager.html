@@ -3,6 +3,8 @@
 <html>
 <head>
 <script type="text/javascript">
+/* global addMessageListener, sendAsyncMessage, removeMessageListener */
+
 addMessageListener("Ping", function(message) {
   sendAsyncMessage("Pong", {
     str: message.data.str,

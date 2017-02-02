@@ -7,6 +7,7 @@
 
 #include "HTMLEditUtils.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
@@ -52,6 +53,12 @@ HTMLEditorEventListener::GetHTMLEditor()
 nsresult
 HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  // FYI: We need to notify HTML editor of mouseup even if it's consumed
+  //      because HTML editor always needs to release grabbing resizer.
   HTMLEditor* htmlEditor = GetHTMLEditor();
 
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -71,16 +78,26 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  WidgetMouseEvent* mousedownEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+
   HTMLEditor* htmlEditor = GetHTMLEditor();
   // Contenteditable should disregard mousedowns outside it.
   // IsAcceptableInputEvent() checks it for a mouse event.
-  if (!htmlEditor->IsAcceptableInputEvent(aMouseEvent->AsEvent())) {
+  if (!htmlEditor->IsAcceptableInputEvent(mousedownEvent)) {
     // If it's not acceptable mousedown event (including when mousedown event
     // is fired outside of the active editing host), we need to commit
     // composition because it will be change the selection to the clicked
     // point.  Then, we won't be able to commit the composition.
     return EditorEventListener::MouseDown(aMouseEvent);
   }
+
+  // XXX This method may change selection. So, we need to commit composition
+  //     here, first.
 
   // Detect only "context menu" click
   // XXX This should be easier to do!
@@ -103,7 +120,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
+    RefPtr<Selection> selection = htmlEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
@@ -174,6 +191,9 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
           selection->Collapse(parent, offset);
         } else {
           htmlEditor->SelectElement(element);
+        }
+        if (DetachedFromEditor()) {
+          return NS_OK;
         }
       }
     }

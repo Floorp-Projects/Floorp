@@ -17,9 +17,9 @@ interface Cache {
   Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
   [NewObject]
   Promise<sequence<Response>> matchAll(optional RequestInfo request, optional CacheQueryOptions options);
-  [NewObject]
+  [NewObject, NeedsCallerType]
   Promise<void> add(RequestInfo request);
-  [NewObject]
+  [NewObject, NeedsCallerType]
   Promise<void> addAll(sequence<RequestInfo> requests);
   [NewObject]
   Promise<void> put(RequestInfo request, Response response);

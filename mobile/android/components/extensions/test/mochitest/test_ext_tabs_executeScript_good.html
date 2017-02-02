@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs executeScript Good Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function* testHasPermission(params) {
+  let contentSetup = params.contentSetup || (() => Promise.resolve());
+
+  async function background(contentSetup) {
+    browser.runtime.onMessage.addListener((msg, sender) => {
+      browser.test.assertEq(msg, "script ran", "script ran");
+      browser.test.notifyPass("executeScript");
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, "execute-script");
+
+      browser.tabs.executeScript({
+        file: "script.js",
+      });
+    });
+
+    await contentSetup();
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: params.manifest,
+
+    background: `(${background})(${contentSetup})`,
+
+    files: {
+      "script.js": function() {
+        browser.runtime.sendMessage("script ran");
+      },
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  if (params.setup) {
+    yield params.setup(extension);
+  }
+
+  extension.sendMessage("execute-script");
+
+  yield extension.awaitFinish("executeScript");
+
+  if (params.tearDown) {
+    yield params.tearDown(extension);
+  }
+
+  yield extension.unload();
+}
+
+add_task(function* testGoodPermissions() {
+  let win = window.open("http://mochi.test:8888/");
+
+  info("Test explicit host permission");
+  yield testHasPermission({
+    manifest: {"permissions": ["http://mochi.test/"]},
+  });
+
+  info("Test explicit host subdomain permission");
+  yield testHasPermission({
+    manifest: {"permissions": ["http://*.mochi.test/"]},
+  });
+
+  info("Test explicit <all_urls> permission");
+  yield testHasPermission({
+    manifest: {"permissions": ["<all_urls>"]},
+  });
+
+  win.close();
+});
+</script>
+
+</body>
+</html>

@@ -525,7 +525,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
              * ScriptSourceObject, and those that are (element; elementAttributeName)
              * aren't preserved by XDR. So this can be simple.
              */
-            ss->initFromOptions(cx, *options);
+            if (!ss->initFromOptions(cx, *options))
+                return false;
+
             sourceObject = ScriptSourceObject::create(cx, ss);
             if (xdr->hasScriptSourceObjectOut()) {
                 // When the ScriptSourceObjectOut is provided by ParseTask, it

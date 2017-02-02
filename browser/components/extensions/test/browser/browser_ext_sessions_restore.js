@@ -55,10 +55,10 @@ add_task(function* test_sessions_restore() {
 
   yield extension.startup();
 
-  let {Management: {global: {WindowManager, TabManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker, tabTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   function checkLocalTab(tab, expectedUrl) {
-    let realTab = TabManager.getTab(tab.id);
+    let realTab = tabTracker.getTab(tab.id);
     let tabState = JSON.parse(SessionStore.getTabState(realTab));
     is(tabState.entries[0].url, expectedUrl, "restored tab has the expected url");
   }
@@ -92,7 +92,7 @@ add_task(function* test_sessions_restore() {
   checkLocalTab(restored[0].window.tabs[2], "about:mozilla");
 
   // Close the window again.
-  let window = WindowManager.getWindow(restored[0].window.id);
+  let window = windowTracker.getWindow(restored[0].window.id);
   yield BrowserTestUtils.closeWindow(window);
   yield assertNotificationCount(3);
 
@@ -110,7 +110,7 @@ add_task(function* test_sessions_restore() {
   checkLocalTab(restored[0].window.tabs[2], "about:mozilla");
 
   // Close the window again.
-  window = WindowManager.getWindow(restored[0].window.id);
+  window = windowTracker.getWindow(restored[0].window.id);
   yield BrowserTestUtils.closeWindow(window);
   // notificationCount = yield extension.awaitMessage("notificationCount");
   yield assertNotificationCount(5);
@@ -132,7 +132,7 @@ add_task(function* test_sessions_restore() {
   checkLocalTab(tab, "about:robots");
 
   // Close the tab again.
-  let realTab = TabManager.getTab(tab.id);
+  let realTab = tabTracker.getTab(tab.id);
   yield BrowserTestUtils.removeTab(realTab);
   yield assertNotificationCount(8);
 
@@ -149,7 +149,7 @@ add_task(function* test_sessions_restore() {
   checkLocalTab(tab, "about:robots");
 
   // Close the tab again.
-  realTab = TabManager.getTab(tab.id);
+  realTab = tabTracker.getTab(tab.id);
   yield BrowserTestUtils.removeTab(realTab);
   yield assertNotificationCount(10);
 

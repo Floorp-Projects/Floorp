@@ -47,9 +47,11 @@ public final class GeckoBundle {
     @WrapForJNI(calledFrom = "gecko")
     private static boolean unboxBoolean(Boolean b) { return b; }
     @WrapForJNI(calledFrom = "gecko")
-    private static int unboxInteger(Integer i) { return i; }
+    private static int unboxInteger(Number i) { return i.intValue(); }
     @WrapForJNI(calledFrom = "gecko")
-    private static double unboxDouble(Double d) { return d; }
+    private static double unboxDouble(Number d) { return d.doubleValue(); }
+    @WrapForJNI(calledFrom = "gecko")
+    private static String unboxString(Object s) { return s.toString(); }
 
     private SimpleArrayMap<String, Object> mMap;
 
@@ -175,7 +177,7 @@ public final class GeckoBundle {
         return getDouble(key, 0.0);
     }
 
-    private double[] getDoubleArray(final int[] array) {
+    private static double[] getDoubleArray(final int[] array) {
         final int len = array.length;
         final double[] ret = new double[len];
         for (int i = 0; i < len; i++) {
@@ -221,7 +223,7 @@ public final class GeckoBundle {
         return getInt(key, 0);
     }
 
-    private int[] getIntArray(final double[] array) {
+    private static int[] getIntArray(final double[] array) {
         final int len = array.length;
         final int[] ret = new int[len];
         for (int i = 0; i < len; i++) {
@@ -269,7 +271,7 @@ public final class GeckoBundle {
 
     // The only case where we convert String[] to/from GeckoBundle[] is if every element
     // is null.
-    private int getNullArrayLength(final Object array) {
+    private static int getNullArrayLength(final Object array) {
         final int len = Array.getLength(array);
         for (int i = 0; i < len; i++) {
             if (Array.get(array, i) != null) {
@@ -350,14 +352,6 @@ public final class GeckoBundle {
             ret[i] = mMap.valueAt(i);
         }
         return ret;
-    }
-
-    /**
-     * @hide
-     * XXX: temporary helper for converting Bundle to GeckoBundle.
-     */
-    public void put(final String key, final Object value) {
-        mMap.put(key, value);
     }
 
     /**
@@ -627,6 +621,29 @@ public final class GeckoBundle {
         return mMap.size();
     }
 
+    private static Object normalizeValue(final Object value) {
+        if (value instanceof Integer) {
+            // We treat int and double as the same type.
+            return ((Integer) value).doubleValue();
+
+        } else if (value instanceof int[]) {
+            // We treat int[] and double[] as the same type.
+            final int[] array = (int[]) value;
+            return array.length == 0 ? EMPTY_STRING_ARRAY : getDoubleArray(array);
+
+        } else if (value != null && value.getClass().isArray()) {
+            // We treat arrays of all nulls as the same type, including empty arrays.
+            final int len = Array.getLength(value);
+            for (int i = 0; i < len; i++) {
+                if (Array.get(value, i) != null) {
+                    return value;
+                }
+            }
+            return len == 0 ? EMPTY_STRING_ARRAY : new String[len];
+        }
+        return value;
+    }
+
     @Override // Object
     public boolean equals(Object other) {
         if (!(other instanceof GeckoBundle)) {
@@ -648,13 +665,38 @@ public final class GeckoBundle {
             if (otherKey < 0) {
                 return false;
             }
-            final Object thisValue = mMap.valueAt(i);
-            final Object otherValue = otherMap.valueAt(otherKey);
+            final Object thisValue = normalizeValue(mMap.valueAt(i));
+            final Object otherValue = normalizeValue(otherMap.valueAt(otherKey));
             if (thisValue == otherValue) {
                 continue;
-            }
-            if (thisValue == null || otherValue == null || !thisValue.equals(otherValue)) {
+            } else if (thisValue == null || otherValue == null) {
                 return false;
+            }
+
+            final Class<?> thisClass = thisValue.getClass();
+            final Class<?> otherClass = otherValue.getClass();
+            if (thisClass != otherClass && !thisClass.equals(otherClass)) {
+                return false;
+            } else if (!thisClass.isArray()) {
+                if (!thisValue.equals(otherValue)) {
+                    return false;
+                }
+                continue;
+            }
+
+            // Work with both primitive arrays and Object arrays, unlike Arrays.equals().
+            final int thisLen = Array.getLength(thisValue);
+            final int otherLen = Array.getLength(otherValue);
+            if (thisLen != otherLen) {
+                return false;
+            }
+            for (int j = 0; j < thisLen; j++) {
+                final Object thisElem = Array.get(thisValue, j);
+                final Object otherElem = Array.get(otherValue, j);
+                if (thisElem != otherElem && (thisElem == null ||
+                        otherElem == null || !thisElem.equals(otherElem))) {
+                    return false;
+                }
             }
         }
         return true;

@@ -254,11 +254,7 @@ partial interface Document {
 // https://w3c.github.io/pointerlock/#extensions-to-the-documentorshadowroot-mixin
 partial interface Document {
   readonly attribute Element? pointerLockElement;
-  [BinaryName="pointerLockElement", Pref="pointer-lock-api.prefixed.enabled"]
-  readonly attribute Element? mozPointerLockElement;
   void exitPointerLock();
-  [BinaryName="exitPointerLock", Pref="pointer-lock-api.prefixed.enabled"]
-  void mozExitPointerLock();
 
   // Event handlers
   attribute EventHandler onpointerlockchange;
