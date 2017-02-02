@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+add_task(function* test_geolocation_nopermission() {
+  let GEO_URL = "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
+  yield SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", GEO_URL]]});
+});
+
+add_task(function* test_geolocation() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "geolocation",
+      ],
+    },
+    background() {
+      navigator.geolocation.getCurrentPosition(() => {
+        browser.test.notifyPass("success geolocation call");
+      }, (error) => {
+        browser.test.notifyFail(`geolocation call ${error}`);
+      });
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish();
+  yield extension.unload();
+});
+
+add_task(function* test_geolocation_nopermission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      navigator.geolocation.getCurrentPosition(() => {
+        browser.test.notifyFail("success geolocation call");
+      }, (error) => {
+        browser.test.notifyPass(`geolocation call ${error}`);
+      });
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish();
+  yield extension.unload();
+});
+
+add_task(function* test_geolocation_prompt() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.tabs.create({url: "tab.html"});
+    },
+    files: {
+      "tab.html": `<html><head>
+        <meta charset="utf-8">
+        <script src="tab.js"><\/script>
+      </head></html>`,
+      "tab.js": () => {
+        navigator.geolocation.getCurrentPosition(() => {
+          browser.test.notifyPass("success geolocation call");
+        }, (error) => {
+          browser.test.notifyFail(`geolocation call ${error}`);
+        });
+      },
+    },
+  });
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let panel = win.PopupNotifications.panel;
+    panel.addEventListener("popupshown", function() {
+      panel.addEventListener("popuphidden", function() {
+        sendAsyncMessage("notification-handled");
+      }, {capture: true, once: true});
+      let popupNotification = win.PopupNotifications.panel.childNodes[0];
+      popupNotification.button.click();
+    }, {capture: true, once: true});
+    sendAsyncMessage("script-loaded");
+  });
+
+  yield chromeScript.promiseOneMessage("script-loaded");
+  yield extension.startup();
+  yield chromeScript.promiseOneMessage("notification-handled");
+  yield extension.awaitFinish();
+  yield extension.unload();
+  chromeScript.destroy();
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>
