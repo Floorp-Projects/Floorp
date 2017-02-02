@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+}
+</style>
+<script>
+window.onload = function(){
+  let body = document.getElementsByTagName("body")[0];
+  let target = document.createElement("div");
+  let anim1 = new Animation();
+  let anim2 = new Animation();
+  let effect = new KeyframeEffect(target, { opacity: [ 0, 1 ] }, 1000);
+  body.appendChild(target);
+  anim1.startTime = 88;
+  anim1.timeline = null;
+  anim1.pause();
+  anim1.effect = effect;
+  anim2.effect = effect;
+  anim1.effect = effect;
+  // Put another opacity animation on the top of the effect stack so that we
+  // try to send a lower priority animation that has no timeline to the
+  // compositor.
+  let anim3 = target.animate({ opacity : [ 1, 0 ] }, 1000);
+
+  Promise.all([anim1.ready, anim2.ready, anim2.ready]).then(function() {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+};
+</script>
+</head>
+<body></body>
+</html>
