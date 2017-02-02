@@ -32,8 +32,8 @@
 
       let prefs = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefBranch);
-      const UI_DIRECTION_PREF = "intl.uidirection.ar";
-      prefs.setCharPref(UI_DIRECTION_PREF, "rtl");
+      const UI_DIRECTION_PREF = "intl.uidirection";
+      prefs.setIntPref(UI_DIRECTION_PREF, -1);
 
       let rootDir = getRootDirectory(window.location.href);
       registerManifestPermanently(rootDir + "rtltest/righttoleft.manifest");
@@ -98,21 +98,15 @@
 
           subdoc.documentElement.removeAttribute("localedir");
 
-          prefs.setCharPref(UI_DIRECTION_PREF, "");
-          is(subwin.getComputedStyle(subdoc.documentElement).direction, "ltr",
-             "left to right direction with no preference set");
-          prefs.setCharPref(UI_DIRECTION_PREF + "-QA", "rtl");
+          prefs.setIntPref(UI_DIRECTION_PREF, -1);
           is(subwin.getComputedStyle(subdoc.documentElement).direction, "rtl",
-             "right to left direction with more specific preference set");
-          prefs.setCharPref(UI_DIRECTION_PREF, "ltr");
-          is(subwin.getComputedStyle(subdoc.documentElement).direction, "rtl",
-             "right to left direction with less specific and more specific preference set");
-          prefs.setCharPref(UI_DIRECTION_PREF, "rtl");
-          prefs.setCharPref(UI_DIRECTION_PREF + "-QA", "ltr");
+             "right to left direction with default uidirection preference");
+          prefs.setIntPref(UI_DIRECTION_PREF, 0);
           is(subwin.getComputedStyle(subdoc.documentElement).direction, "ltr",
-             "left to right direction specific preference overrides");
-          if (prefs.prefHasUserValue(UI_DIRECTION_PREF + "-QA"))
-            prefs.clearUserPref(UI_DIRECTION_PREF + "-QA");
+             "right to left direction overridden by uidirection preference = 0");
+          prefs.setIntPref(UI_DIRECTION_PREF, 1);
+          is(subwin.getComputedStyle(subdoc.documentElement).direction, "rtl",
+             "right to left direction overridden by uidirection preference = 1");
 
           if (prefs.prefHasUserValue(UI_DIRECTION_PREF))
             prefs.clearUserPref(UI_DIRECTION_PREF);
