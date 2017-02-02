@@ -326,7 +326,7 @@ class MOZ_STACK_CLASS TokenStream
   public:
     typedef Vector<char16_t, 32> CharBuffer;
 
-    TokenStream(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+    TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
                 const char16_t* base, size_t length, StrictModeGetter* smg);
 
     ~TokenStream();
@@ -480,7 +480,7 @@ class MOZ_STACK_CLASS TokenStream
         }
     }
 
-    static JSAtom* atomize(ExclusiveContext* cx, CharBuffer& cb);
+    static JSAtom* atomize(JSContext* cx, CharBuffer& cb);
     MOZ_MUST_USE bool putIdentInTokenbuf(const char16_t* identStart);
 
     struct Flags
@@ -872,7 +872,7 @@ class MOZ_STACK_CLASS TokenStream
         uint32_t lineNumToIndex(uint32_t lineNum)   const { return lineNum   - initialLineNum_; }
 
       public:
-        SourceCoords(ExclusiveContext* cx, uint32_t ln);
+        SourceCoords(JSContext* cx, uint32_t ln);
 
         MOZ_MUST_USE bool add(uint32_t lineNum, uint32_t lineStartOffset);
         MOZ_MUST_USE bool fill(const SourceCoords& other);
@@ -897,7 +897,7 @@ class MOZ_STACK_CLASS TokenStream
         return cx->names();
     }
 
-    ExclusiveContext* context() const {
+    JSContext* context() const {
         return cx;
     }
 
@@ -918,7 +918,7 @@ class MOZ_STACK_CLASS TokenStream
     // begins, the offset of |buf[0]|.
     class TokenBuf {
       public:
-        TokenBuf(ExclusiveContext* cx, const char16_t* buf, size_t length, size_t startOffset)
+        TokenBuf(JSContext* cx, const char16_t* buf, size_t length, size_t startOffset)
           : base_(buf),
             startOffset_(startOffset),
             limit_(buf + length),
@@ -1097,7 +1097,7 @@ class MOZ_STACK_CLASS TokenStream
     UniqueTwoByteChars  sourceMapURL_;      // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
     uint8_t             isExprEnding[TOK_LIMIT];// which tokens definitely terminate exprs?
-    ExclusiveContext*   const cx;
+    JSContext* const    cx;
     bool                mutedErrors;
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
 };

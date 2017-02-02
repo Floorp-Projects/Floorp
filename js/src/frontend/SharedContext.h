@@ -272,7 +272,7 @@ class ModuleSharedContext;
 class SharedContext
 {
   public:
-    ExclusiveContext* const context;
+    JSContext* const context;
     AnyContextFlags anyCxFlags;
     bool strictScript;
     bool localStrict;
@@ -301,7 +301,7 @@ class SharedContext
     void computeThisBinding(Scope* scope);
 
   public:
-    SharedContext(ExclusiveContext* cx, Kind kind, Directives directives, bool extraWarnings)
+    SharedContext(JSContext* cx, Kind kind, Directives directives, bool extraWarnings)
       : context(cx),
         anyCxFlags(),
         strictScript(directives.strict()),
@@ -377,7 +377,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
   public:
     Rooted<GlobalScope::Data*> bindings;
 
-    GlobalSharedContext(ExclusiveContext* cx, ScopeKind scopeKind, Directives directives,
+    GlobalSharedContext(JSContext* cx, ScopeKind scopeKind, Directives directives,
                         bool extraWarnings)
       : SharedContext(cx, Kind::Global, directives, extraWarnings),
         scopeKind_(scopeKind),
@@ -410,7 +410,7 @@ class MOZ_STACK_CLASS EvalSharedContext : public SharedContext
   public:
     Rooted<EvalScope::Data*> bindings;
 
-    EvalSharedContext(ExclusiveContext* cx, JSObject* enclosingEnv, Scope* enclosingScope,
+    EvalSharedContext(JSContext* cx, JSObject* enclosingEnv, Scope* enclosingScope,
                       Directives directives, bool extraWarnings);
 
     Scope* compilationEnclosingScope() const override {
@@ -478,22 +478,22 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     FunctionContextFlags funCxFlags;
 
-    FunctionBox(ExclusiveContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
+    FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
                 Directives directives, bool extraWarnings, GeneratorKind generatorKind,
                 FunctionAsyncKind asyncKind);
 
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
-        MOZ_ASSERT(context->compartment()->runtimeFromAnyThread()->keepAtoms());
+        MOZ_ASSERT(context->keepAtoms);
         return MutableHandle<LexicalScope::Data*>::fromMarkedLocation(&namedLambdaBindings_);
     }
 
     MutableHandle<FunctionScope::Data*> functionScopeBindings() {
-        MOZ_ASSERT(context->compartment()->runtimeFromAnyThread()->keepAtoms());
+        MOZ_ASSERT(context->keepAtoms);
         return MutableHandle<FunctionScope::Data*>::fromMarkedLocation(&functionScopeBindings_);
     }
 
     MutableHandle<VarScope::Data*> extraVarScopeBindings() {
-        MOZ_ASSERT(context->compartment()->runtimeFromAnyThread()->keepAtoms());
+        MOZ_ASSERT(context->keepAtoms);
         return MutableHandle<VarScope::Data*>::fromMarkedLocation(&extraVarScopeBindings_);
     }
 
@@ -621,7 +621,7 @@ class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext
     Rooted<ModuleScope::Data*> bindings;
     ModuleBuilder& builder;
 
-    ModuleSharedContext(ExclusiveContext* cx, ModuleObject* module, Scope* enclosingScope,
+    ModuleSharedContext(JSContext* cx, ModuleObject* module, Scope* enclosingScope,
                         ModuleBuilder& builder);
 
     HandleModuleObject module() const { return module_; }

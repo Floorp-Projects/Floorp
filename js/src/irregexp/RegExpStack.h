@@ -51,7 +51,7 @@ class RegExpStackScope
     // Create and delete an instance to control the life-time of a growing stack.
 
     // Initializes the stack memory area if necessary.
-    explicit RegExpStackScope(JSRuntime* rt);
+    explicit RegExpStackScope(JSContext* cx);
 
     // Releases the stack if it has grown.
     ~RegExpStackScope();

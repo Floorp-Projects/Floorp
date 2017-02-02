@@ -28,7 +28,7 @@ namespace js {
  * The lifetime of the result matches the lifetime of bytes.
  */
 extern const char*
-AtomToPrintableString(ExclusiveContext* cx, JSAtom* atom, JSAutoByteString* bytes);
+AtomToPrintableString(JSContext* cx, JSAtom* atom, JSAutoByteString* bytes);
 
 class AtomStateEntry
 {
@@ -57,7 +57,7 @@ class AtomStateEntry
         const_cast<AtomStateEntry*>(this)->bits |= uintptr_t(pinned);
     }
 
-    JSAtom* asPtr(ExclusiveContext* cx) const;
+    JSAtom* asPtr(JSContext* cx) const;
     JSAtom* asPtrUnbarriered() const;
 
     bool needsSweep() {
@@ -213,23 +213,23 @@ enum PinningBehavior
 };
 
 extern JSAtom*
-Atomize(ExclusiveContext* cx, const char* bytes, size_t length,
+Atomize(JSContext* cx, const char* bytes, size_t length,
         js::PinningBehavior pin = js::DoNotPinAtom);
 
 template <typename CharT>
 extern JSAtom*
-AtomizeChars(ExclusiveContext* cx, const CharT* chars, size_t length,
+AtomizeChars(JSContext* cx, const CharT* chars, size_t length,
              js::PinningBehavior pin = js::DoNotPinAtom);
 
 extern JSAtom*
 AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength);
 
 extern JSAtom*
-AtomizeString(ExclusiveContext* cx, JSString* str, js::PinningBehavior pin = js::DoNotPinAtom);
+AtomizeString(JSContext* cx, JSString* str, js::PinningBehavior pin = js::DoNotPinAtom);
 
 template <AllowGC allowGC>
 extern JSAtom*
-ToAtom(ExclusiveContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v);
+ToAtom(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v);
 
 enum XDRMode {
     XDR_ENCODE,

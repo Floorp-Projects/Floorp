@@ -699,7 +699,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void leaveExitFrame(size_t extraFrame = 0);
 
   private:
-    // Save the top of the stack into PerThreadData::jitTop of the main thread,
+    // Save the top of the stack into JSontext::jitTop of the current thread,
     // which should be the location of the latest exit frame.
     void linkExitFrame();
 

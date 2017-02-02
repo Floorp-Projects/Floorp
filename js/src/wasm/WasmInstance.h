@@ -49,7 +49,7 @@ class Instance
     TableTls& tableTls(const TableDesc& td) const;
 
     // Import call slow paths which are called directly from wasm code.
-    friend void* AddressOf(SymbolicAddress, ExclusiveContext*);
+    friend void* AddressOf(SymbolicAddress, JSContext*);
     static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);

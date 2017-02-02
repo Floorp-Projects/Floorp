@@ -279,7 +279,7 @@ class JSString : public js::gc::TenuredCell
      * representable by a JSString. An allocation overflow is reported if false
      * is returned.
      */
-    static inline bool validateLength(js::ExclusiveContext* maybecx, size_t length);
+    static inline bool validateLength(JSContext* maybecx, size_t length);
 
     static void staticAsserts() {
         static_assert(JSString::MAX_LENGTH < UINT32_MAX, "Length must fit in 32 bits");
@@ -343,7 +343,7 @@ class JSString : public js::gc::TenuredCell
         return d.u1.length == 0;
     }
 
-    inline bool getChar(js::ExclusiveContext* cx, size_t index, char16_t* code);
+    inline bool getChar(JSContext* cx, size_t index, char16_t* code);
 
     /* Strings have either Latin1 or TwoByte chars. */
     bool hasLatin1Chars() const {
@@ -355,10 +355,10 @@ class JSString : public js::gc::TenuredCell
 
     /* Fallible conversions to more-derived string types. */
 
-    inline JSLinearString* ensureLinear(js::ExclusiveContext* cx);
+    inline JSLinearString* ensureLinear(JSContext* cx);
     JSFlatString* ensureFlat(JSContext* cx);
 
-    static bool ensureLinear(js::ExclusiveContext* cx, JSString* str) {
+    static bool ensureLinear(JSContext* cx, JSString* str) {
         return str->ensureLinear(cx) != nullptr;
     }
 
@@ -542,39 +542,39 @@ class JSString : public js::gc::TenuredCell
 class JSRope : public JSString
 {
     template <typename CharT>
-    bool copyCharsInternal(js::ExclusiveContext* cx, js::ScopedJSFreePtr<CharT>& out,
+    bool copyCharsInternal(JSContext* cx, js::ScopedJSFreePtr<CharT>& out,
                            bool nullTerminate) const;
 
     enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
 
     template<UsingBarrier b, typename CharT>
-    JSFlatString* flattenInternal(js::ExclusiveContext* cx);
+    JSFlatString* flattenInternal(JSContext* cx);
 
     template<UsingBarrier b>
-    JSFlatString* flattenInternal(js::ExclusiveContext* cx);
+    JSFlatString* flattenInternal(JSContext* cx);
 
     friend class JSString;
-    JSFlatString* flatten(js::ExclusiveContext* cx);
+    JSFlatString* flatten(JSContext* cx);
 
-    void init(js::ExclusiveContext* cx, JSString* left, JSString* right, size_t length);
+    void init(JSContext* cx, JSString* left, JSString* right, size_t length);
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSRope* new_(js::ExclusiveContext* cx,
+    static inline JSRope* new_(JSContext* cx,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
                                typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
                                size_t length);
 
-    bool copyLatin1Chars(js::ExclusiveContext* cx,
+    bool copyLatin1Chars(JSContext* cx,
                          js::ScopedJSFreePtr<JS::Latin1Char>& out) const;
-    bool copyTwoByteChars(js::ExclusiveContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
+    bool copyTwoByteChars(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
 
-    bool copyLatin1CharsZ(js::ExclusiveContext* cx,
+    bool copyLatin1CharsZ(JSContext* cx,
                           js::ScopedJSFreePtr<JS::Latin1Char>& out) const;
-    bool copyTwoByteCharsZ(js::ExclusiveContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
+    bool copyTwoByteCharsZ(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const;
 
     template <typename CharT>
-    bool copyChars(js::ExclusiveContext* cx, js::ScopedJSFreePtr<CharT>& out) const;
+    bool copyChars(JSContext* cx, js::ScopedJSFreePtr<CharT>& out) const;
 
     JSString* leftChild() const {
         MOZ_ASSERT(isRope());
@@ -609,7 +609,7 @@ class JSLinearString : public JSString
     friend class js::AutoStableStringChars;
 
     /* Vacuous and therefore unimplemented. */
-    JSLinearString* ensureLinear(js::ExclusiveContext* cx) = delete;
+    JSLinearString* ensureLinear(JSContext* cx) = delete;
     bool isLinear() const = delete;
     JSLinearString& asLinear() const = delete;
 
@@ -694,7 +694,7 @@ class JSDependentString : public JSLinearString
     template <typename CharT>
     JSFlatString* undependInternal(JSContext* cx);
 
-    void init(js::ExclusiveContext* cx, JSLinearString* base, size_t start,
+    void init(JSContext* cx, JSLinearString* base, size_t start,
               size_t length);
 
     /* Vacuous and therefore unimplemented. */
@@ -715,7 +715,7 @@ class JSDependentString : public JSLinearString
     }
 
   public:
-    static inline JSLinearString* new_(js::ExclusiveContext* cx, JSLinearString* base,
+    static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                        size_t start, size_t length);
 
     inline static size_t offsetOfBase() {
@@ -745,7 +745,7 @@ class JSFlatString : public JSLinearString
 
   public:
     template <js::AllowGC allowGC, typename CharT>
-    static inline JSFlatString* new_(js::ExclusiveContext* cx,
+    static inline JSFlatString* new_(JSContext* cx,
                                      const CharT* chars, size_t length);
 
     /*
@@ -854,7 +854,7 @@ class JSThinInlineString : public JSInlineString
     static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE - 1;
 
     template <js::AllowGC allowGC>
-    static inline JSThinInlineString* new_(js::ExclusiveContext* cx);
+    static inline JSThinInlineString* new_(JSContext* cx);
 
     template <typename CharT>
     inline CharT* init(size_t length);
@@ -892,7 +892,7 @@ class JSFatInlineString : public JSInlineString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSFatInlineString* new_(js::ExclusiveContext* cx);
+    static inline JSFatInlineString* new_(JSContext* cx);
 
     static const size_t MAX_LENGTH_LATIN1 = JSString::NUM_INLINE_CHARS_LATIN1 +
                                             INLINE_EXTENSION_CHARS_LATIN1
@@ -1231,7 +1231,7 @@ void
 CopyChars(CharT* dest, const JSLinearString& str);
 
 static inline UniqueChars
-StringToNewUTF8CharsZ(ExclusiveContext* maybecx, JSString& str)
+StringToNewUTF8CharsZ(JSContext* maybecx, JSString& str)
 {
     JS::AutoCheckCannotGC nogc;
 
@@ -1247,28 +1247,28 @@ StringToNewUTF8CharsZ(ExclusiveContext* maybecx, JSString& str)
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString*
-NewString(js::ExclusiveContext* cx, CharT* chars, size_t length);
+NewString(JSContext* cx, CharT* chars, size_t length);
 
 /* Like NewString, but doesn't try to deflate to Latin1. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString*
-NewStringDontDeflate(js::ExclusiveContext* cx, CharT* chars, size_t length);
+NewStringDontDeflate(JSContext* cx, CharT* chars, size_t length);
 
 extern JSLinearString*
 NewDependentString(JSContext* cx, JSString* base, size_t start, size_t length);
 
 /* Take ownership of an array of Latin1Chars. */
 extern JSFlatString*
-NewLatin1StringZ(js::ExclusiveContext* cx, UniqueChars chars);
+NewLatin1StringZ(JSContext* cx, UniqueChars chars);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString*
-NewStringCopyN(js::ExclusiveContext* cx, const CharT* s, size_t n);
+NewStringCopyN(JSContext* cx, const CharT* s, size_t n);
 
 template <js::AllowGC allowGC>
 inline JSFlatString*
-NewStringCopyN(ExclusiveContext* cx, const char* s, size_t n)
+NewStringCopyN(JSContext* cx, const char* s, size_t n)
 {
     return NewStringCopyN<allowGC>(cx, reinterpret_cast<const Latin1Char*>(s), n);
 }
@@ -1276,19 +1276,19 @@ NewStringCopyN(ExclusiveContext* cx, const char* s, size_t n)
 /* Like NewStringCopyN, but doesn't try to deflate to Latin1. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString*
-NewStringCopyNDontDeflate(js::ExclusiveContext* cx, const CharT* s, size_t n);
+NewStringCopyNDontDeflate(JSContext* cx, const CharT* s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC>
 inline JSFlatString*
-NewStringCopyZ(js::ExclusiveContext* cx, const char16_t* s)
+NewStringCopyZ(JSContext* cx, const char16_t* s)
 {
     return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
 }
 
 template <js::AllowGC allowGC>
 inline JSFlatString*
-NewStringCopyZ(js::ExclusiveContext* cx, const char* s)
+NewStringCopyZ(JSContext* cx, const char* s)
 {
     return NewStringCopyN<allowGC>(cx, s, strlen(s));
 }
@@ -1314,7 +1314,7 @@ class JSAddonId : public JSAtom
 {};
 
 MOZ_ALWAYS_INLINE bool
-JSString::getChar(js::ExclusiveContext* cx, size_t index, char16_t* code)
+JSString::getChar(JSContext* cx, size_t index, char16_t* code)
 {
     MOZ_ASSERT(index < length());
 
@@ -1348,7 +1348,7 @@ JSString::getChar(js::ExclusiveContext* cx, size_t index, char16_t* code)
 }
 
 MOZ_ALWAYS_INLINE JSLinearString*
-JSString::ensureLinear(js::ExclusiveContext* cx)
+JSString::ensureLinear(JSContext* cx)
 {
     return isLinear()
            ? &asLinear()
@@ -1393,7 +1393,7 @@ JSLinearString::chars(const JS::AutoCheckCannotGC& nogc) const
 
 template <>
 MOZ_ALWAYS_INLINE bool
-JSRope::copyChars<JS::Latin1Char>(js::ExclusiveContext* cx,
+JSRope::copyChars<JS::Latin1Char>(JSContext* cx,
                                   js::ScopedJSFreePtr<JS::Latin1Char>& out) const
 {
     return copyLatin1Chars(cx, out);
@@ -1401,7 +1401,7 @@ JSRope::copyChars<JS::Latin1Char>(js::ExclusiveContext* cx,
 
 template <>
 MOZ_ALWAYS_INLINE bool
-JSRope::copyChars<char16_t>(js::ExclusiveContext* cx, js::ScopedJSFreePtr<char16_t>& out) const
+JSRope::copyChars<char16_t>(JSContext* cx, js::ScopedJSFreePtr<char16_t>& out) const
 {
     return copyTwoByteChars(cx, out);
 }

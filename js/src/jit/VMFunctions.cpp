@@ -136,7 +136,7 @@ CheckOverRecursed(JSContext* cx)
     JS_CHECK_RECURSION(cx, return false);
 #endif
     gc::MaybeVerifyBarriers(cx);
-    return cx->runtime()->handleInterrupt(cx);
+    return cx->handleInterrupt();
 }
 
 // This function can get called in two contexts.  In the usual context, it's
@@ -181,7 +181,7 @@ CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
 #endif
 
     gc::MaybeVerifyBarriers(cx);
-    return cx->runtime()->handleInterrupt(cx);
+    return cx->handleInterrupt();
 }
 
 JSObject*
@@ -481,7 +481,7 @@ InterruptCheck(JSContext* cx)
     {
         JSRuntime* rt = cx->runtime();
         JitRuntime::AutoPreventBackedgePatching apbp(rt);
-        rt->jitRuntime()->patchIonBackedges(rt, JitRuntime::BackedgeLoopHeader);
+        cx->zone()->group()->jitZoneGroup->patchIonBackedges(cx, JitZoneGroup::BackedgeLoopHeader);
     }
 
     return CheckForInterrupt(cx);
@@ -504,7 +504,7 @@ NewCallObject(JSContext* cx, HandleShape shape, HandleObjectGroup group)
     // the initializing writes. The interpreter, however, may have allocated
     // the call object tenured, so barrier as needed before re-entering.
     if (!IsInsideNursery(obj))
-        cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+        cx->zone()->group()->storeBuffer().putWholeCell(obj);
 
     return obj;
 }
@@ -521,7 +521,7 @@ NewSingletonCallObject(JSContext* cx, HandleShape shape)
     // the call object tenured, so barrier as needed before re-entering.
     MOZ_ASSERT(!IsInsideNursery(obj),
                "singletons are created in the tenured heap");
-    cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+    cx->zone()->group()->storeBuffer().putWholeCell(obj);
 
     return obj;
 }
@@ -626,7 +626,7 @@ void
 PostWriteBarrier(JSRuntime* rt, JSObject* obj)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
-    rt->gc.storeBuffer.putWholeCell(obj);
+    obj->zone()->group()->storeBuffer().putWholeCell(obj);
 }
 
 static const size_t MAX_WHOLE_CELL_BUFFER_SIZE = 4096;
@@ -644,11 +644,11 @@ PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index)
 #endif
         ))
     {
-        rt->gc.storeBuffer.putSlot(&obj->as<NativeObject>(), HeapSlot::Element, index, 1);
+        obj->zone()->group()->storeBuffer().putSlot(&obj->as<NativeObject>(), HeapSlot::Element, index, 1);
         return;
     }
 
-    rt->gc.storeBuffer.putWholeCell(obj);
+    obj->zone()->group()->storeBuffer().putWholeCell(obj);
 }
 
 void
@@ -1180,7 +1180,7 @@ SetDenseOrUnboxedArrayElement(JSContext* cx, HandleObject obj, int32_t index,
 void
 AutoDetectInvalidation::setReturnOverride()
 {
-    cx_->runtime()->jitRuntime()->setIonReturnOverride(rval_.get());
+    cx_->setIonReturnOverride(rval_.get());
 }
 
 void

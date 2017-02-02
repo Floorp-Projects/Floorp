@@ -20,8 +20,8 @@ reset(JSContext* cx)
 {
     psize = max_stack = 0;
     memset(pstack, 0, sizeof(pstack));
-    cx->geckoProfiler.stringsReset();
-    cx->geckoProfiler.enableSlowAssertions(true);
+    cx->runtime()->geckoProfiler().stringsReset();
+    cx->runtime()->geckoProfiler().enableSlowAssertions(true);
     js::EnableContextProfilingStack(cx, true);
 }
 
@@ -108,21 +108,21 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
                                   &rval));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == 8);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == 8);
         /* Make sure the stack resets and we added no new entries */
         max_stack = 0;
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == 8);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == 8);
     }
     reset(cx);
     {
         JS::RootedValue rval(cx);
         CHECK(JS_CallFunctionName(cx, global, "check2", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == 5);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == 5);
         CHECK(max_stack >= 6);
         CHECK(psize == 0);
     }
@@ -168,12 +168,12 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         CHECK(max_stack >= 8);
 
         /* Make sure the stack resets and we added no new entries */
-        uint32_t cnt = cx->runtime()->geckoProfiler.stringsCount();
+        uint32_t cnt = cx->runtime()->geckoProfiler().stringsCount();
         max_stack = 0;
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
         CHECK(psize == 0);
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == cnt);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == cnt);
         CHECK(max_stack >= 8);
     }
 
@@ -210,7 +210,7 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
                                       &rval);
         CHECK(!ok);
         CHECK(psize == 0);
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == 1);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == 1);
 
         JS_ClearPendingException(cx);
     }
@@ -234,7 +234,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         JS_CallFunctionName(cx, global, "a", JS::HandleValueArray::empty(), &rval);
         CHECK(psize == 0);
         CHECK(max_stack >= 1);
-        CHECK(cx->runtime()->geckoProfiler.stringsCount() == 1);
+        CHECK(cx->runtime()->geckoProfiler().stringsCount() == 1);
     }
 
     EXEC("function d(p) { p.disable(); }");
@@ -261,7 +261,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
     EXEC("function g(p) { p.disable(); for (var i = 0; i < 100; i++) i++; }");
     EXEC("function f() { g(new Prof()); }");
     reset(cx);
-    cx->runtime()->geckoProfiler.enableSlowAssertions(false);
+    cx->runtime()->geckoProfiler().enableSlowAssertions(false);
     {
         JS::RootedValue rval(cx);
         /* disable, and make sure that if we try to re-enter the JIT the pop

@@ -7,7 +7,7 @@
 #include "js/Realm.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h" // For ExclusiveContext::global
+#include "jscompartment.h" // For JSContext::global
 
 #include "vm/GlobalObject.h"
 

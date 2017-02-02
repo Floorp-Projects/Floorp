@@ -52,7 +52,7 @@ struct CompileArgs
     // If CompileArgs is constructed without arguments, initFromContext() must
     // be called to complete initialization.
     CompileArgs() = default;
-    bool initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCaller);
+    bool initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller);
 };
 
 // Compile the given WebAssembly bytecode with the given arguments into a

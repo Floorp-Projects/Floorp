@@ -257,7 +257,9 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
      * thread during compacting GC and reading the contents of the thing by
      * IsThingPoisoned would be racy in this case.
      */
-    MOZ_ASSERT_IF(rt->isHeapBusy() && !zone->isGCCompacting() && !rt->gc.isBackgroundSweeping(),
+    MOZ_ASSERT_IF(JS::CurrentThreadIsHeapBusy() &&
+                  !zone->isGCCompacting() &&
+                  !rt->gc.isBackgroundSweeping(),
                   !IsThingPoisoned(thing) || !InFreeList(thing->asTenured().arena(), thing));
 #endif
 }
@@ -725,7 +727,7 @@ GCMarker::markImplicitEdgesHelper(T markedThing)
     MOZ_ASSERT(zone->isGCMarking());
     MOZ_ASSERT(!zone->isGCSweeping());
 
-    auto p = zone->gcWeakKeys.get(JS::GCCellPtr(markedThing));
+    auto p = zone->gcWeakKeys().get(JS::GCCellPtr(markedThing));
     if (!p)
         return;
     WeakEntryVector& markables = p->value;
@@ -844,7 +846,7 @@ js::GCMarker::noteWeakEdge(T* edge)
     // Note: we really want the *source* Zone here. The edge may start in a
     // non-gc heap location, however, so we use the fact that cross-zone weak
     // references are not allowed and use the *target's* zone.
-    JS::Zone::WeakEdges &weakRefs = (*edge)->asTenured().zone()->gcWeakRefs;
+    JS::Zone::WeakEdges &weakRefs = (*edge)->asTenured().zone()->gcWeakRefs();
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!weakRefs.append(reinterpret_cast<TenuredCell**>(edge)))
         oomUnsafe.crash("Failed to record a weak edge for sweeping.");
@@ -1970,7 +1972,7 @@ MarkStack::reset()
 bool
 MarkStack::enlarge(unsigned count)
 {
-    size_t newCapacity = Min(maxCapacity_, capacity() * 2);
+    size_t newCapacity = Min(maxCapacity_.ref(), capacity() * 2);
     if (newCapacity < capacity() + count)
         return false;
 
@@ -2058,7 +2060,7 @@ GCMarker::stop()
     stack.reset();
     AutoEnterOOMUnsafeRegion oomUnsafe;
     for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
-        if (!zone->gcWeakKeys.clear())
+        if (!zone->gcWeakKeys().clear())
             oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
     }
 }
@@ -2104,7 +2106,7 @@ GCMarker::enterWeakMarkingMode()
         tag_ = TracerKindTag::WeakMarking;
 
         for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
-            for (WeakMapBase* m : zone->gcWeakMapList) {
+            for (WeakMapBase* m : zone->gcWeakMapList()) {
                 if (m->marked)
                     (void) m->markIteratively(this);
             }
@@ -2123,7 +2125,7 @@ GCMarker::leaveWeakMarkingMode()
     // rebuild it upon entry rather than allow it to contain stale data.
     AutoEnterOOMUnsafeRegion oomUnsafe;
     for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
-        if (!zone->gcWeakKeys.clear())
+        if (!zone->gcWeakKeys().clear())
             oomUnsafe.crash("clearing weak keys in GCMarker::leaveWeakMarkingMode()");
     }
 }
@@ -2158,7 +2160,7 @@ bool
 GCMarker::markDelayedChildren(SliceBudget& budget)
 {
     GCRuntime& gc = runtime()->gc;
-    gcstats::AutoPhase ap(gc.stats, gc.state() == State::Mark, gcstats::PHASE_MARK_DELAYED);
+    gcstats::AutoPhase ap(gc.stats(), gc.state() == State::Mark, gcstats::PHASE_MARK_DELAYED);
 
     MOZ_ASSERT(unmarkedArenaStackTop);
     do {
@@ -2222,7 +2224,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
     for (ZonesIter zone(runtime(), WithAtoms); !zone.done(); zone.next())
-        size += zone->gcGrayRoots.sizeOfExcludingThis(mallocSizeOf);
+        size += zone->gcGrayRoots().sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
 
@@ -2681,7 +2683,7 @@ CheckIsMarkedThing(T* thingp)
     JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
                   CurrentThreadCanAccessRuntime(rt) ||
-                  (rt->isHeapCollecting() && rt->gc.state() == State::Sweep));
+                  (JS::CurrentThreadIsHeapCollecting() && rt->gc.state() == State::Sweep));
 #endif
 }
 
@@ -2719,7 +2721,7 @@ IsMarkedInternal(JSRuntime* rt, JSObject** thingp)
 
     if (IsInsideNursery(*thingp)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        return rt->gc.nursery.getForwardedPointer(thingp);
+        return rt->zoneGroupFromMainThread()->nursery().getForwardedPointer(thingp);
     }
     return IsMarkedInternalCommon(thingp);
 }
@@ -2760,13 +2762,12 @@ IsAboutToBeFinalizedInternal(T** thingp)
     JSRuntime* rt = thing->runtimeFromAnyThread();
 
     /* Permanent atoms are never finalized by non-owning runtimes. */
-    if (ThingIsPermanentAtomOrWellKnownSymbol(thing) && !TlsPerThreadData.get()->associatedWith(rt))
+    if (ThingIsPermanentAtomOrWellKnownSymbol(thing) && TlsContext.get()->runtime() != rt)
         return false;
 
-    Nursery& nursery = rt->gc.nursery;
     if (IsInsideNursery(thing)) {
-        MOZ_ASSERT(rt->isHeapMinorCollecting());
-        return !nursery.getForwardedPointer(reinterpret_cast<JSObject**>(thingp));
+        MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
+        return !Nursery::getForwardedPointer(reinterpret_cast<JSObject**>(thingp));
     }
 
     Zone* zone = thing->asTenured().zoneFromAnyThread();
@@ -2933,13 +2934,13 @@ void
 UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
 {
     int stackDummy;
-    JSContext* cx = runtime()->contextFromMainThread();
-    if (!JS_CHECK_STACK_SIZE(cx->nativeStackLimit[StackForSystemCode], &stackDummy)) {
+    JSContext* cx = TlsContext.get();
+    if (!JS_CHECK_STACK_SIZE(cx->nativeStackLimit[JS::StackForSystemCode], &stackDummy)) {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
          */
-        runtime()->setGCGrayBitsValid(false);
+        runtime()->gc.setGrayBitsInvalid();
         return;
     }
 
@@ -3000,8 +3001,8 @@ TypedUnmarkGrayCellRecursively(T* t)
     MOZ_ASSERT(t);
 
     JSRuntime* rt = t->runtimeFromMainThread();
-    MOZ_ASSERT(!rt->isHeapCollecting());
-    MOZ_ASSERT(!rt->isCycleCollecting());
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
 
     bool unmarkedArg = false;
     if (t->isTenured()) {
@@ -3013,8 +3014,8 @@ TypedUnmarkGrayCellRecursively(T* t)
     }
 
     UnmarkGrayTracer trc(rt);
-    gcstats::AutoPhase outerPhase(rt->gc.stats, gcstats::PHASE_BARRIER);
-    gcstats::AutoPhase innerPhase(rt->gc.stats, gcstats::PHASE_UNMARK_GRAY);
+    gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PHASE_BARRIER);
+    gcstats::AutoPhase innerPhase(rt->gc.stats(), gcstats::PHASE_UNMARK_GRAY);
     t->traceChildren(&trc);
 
     return unmarkedArg || trc.unmarkedAny;
