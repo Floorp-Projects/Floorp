@@ -192,7 +192,8 @@ FilteringWrapper<Base, Policy>::getPrototype(JSContext* cx, JS::HandleObject wra
 template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::enter(JSContext* cx, HandleObject wrapper,
-                                      HandleId id, Wrapper::Action act, bool* bp) const
+                                      HandleId id, Wrapper::Action act,
+                                      bool mayThrow, bool* bp) const
 {
     if (!Policy::check(cx, wrapper, id, act)) {
         *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act, id);
