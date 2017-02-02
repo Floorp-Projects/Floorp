@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "gfxTextRun.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BasicRenderingContext2D.h"
 #include "mozilla/dom/CanvasGradient.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
@@ -61,7 +62,8 @@ class CanvasShutdownObserver;
  **/
 class CanvasRenderingContext2D final :
   public nsICanvasRenderingContextInternal,
-  public nsWrapperCache
+  public nsWrapperCache,
+  public BasicRenderingContext2D
 {
   virtual ~CanvasRenderingContext2D();
 
@@ -80,18 +82,18 @@ public:
     return mCanvasElement->GetOriginalCanvas();
   }
 
-  void Save();
-  void Restore();
-  void Scale(double aX, double aY, mozilla::ErrorResult& aError);
-  void Rotate(double aAngle, mozilla::ErrorResult& aError);
-  void Translate(double aX, double aY, mozilla::ErrorResult& aError);
-  void Transform(double aM11, double aM12, double aM21, double aM22, double aDx,
-                 double aDy, mozilla::ErrorResult& aError);
-  void SetTransform(double aM11, double aM12, double aM21, double aM22, double aDx,
-                    double aDy, mozilla::ErrorResult& aError);
-  void ResetTransform(mozilla::ErrorResult& aError);
+  void Save() override;
+  void Restore() override;
+  void Scale(double aX, double aY, mozilla::ErrorResult& aError) override;
+  void Rotate(double aAngle, mozilla::ErrorResult& aError) override;
+  void Translate(double aX, double aY, mozilla::ErrorResult& aError) override;
+  void Transform(double aM11, double aM12, double aM21, double aM22,
+                 double aDx, double aDy, mozilla::ErrorResult& aError) override;
+  void SetTransform(double aM11, double aM12, double aM21, double aM22,
+                    double aDx, double aDy, mozilla::ErrorResult& aError) override;
+  void ResetTransform(mozilla::ErrorResult& aError) override;
 
-  double GlobalAlpha()
+  double GlobalAlpha() override
   {
     return CurrentState().globalAlpha;
   }
@@ -99,79 +101,85 @@ public:
   // Useful for silencing cast warnings
   static mozilla::gfx::Float ToFloat(double aValue) { return mozilla::gfx::Float(aValue); }
 
-  void SetGlobalAlpha(double aGlobalAlpha)
+  void SetGlobalAlpha(double aGlobalAlpha) override
   {
     if (aGlobalAlpha >= 0.0 && aGlobalAlpha <= 1.0) {
       CurrentState().globalAlpha = ToFloat(aGlobalAlpha);
     }
   }
 
-  void GetGlobalCompositeOperation(nsAString& aOp, mozilla::ErrorResult& aError);
+  void GetGlobalCompositeOperation(nsAString& aOp,
+                                   mozilla::ErrorResult& aError) override;
   void SetGlobalCompositeOperation(const nsAString& aOp,
-                                   mozilla::ErrorResult& aError);
+                                   mozilla::ErrorResult& aError) override;
 
-  void GetStrokeStyle(OwningStringOrCanvasGradientOrCanvasPattern& aValue)
+  void
+  GetStrokeStyle(OwningStringOrCanvasGradientOrCanvasPattern& aValue) override
   {
     GetStyleAsUnion(aValue, Style::STROKE);
   }
 
-  void SetStrokeStyle(const StringOrCanvasGradientOrCanvasPattern& aValue)
+  void
+  SetStrokeStyle(const StringOrCanvasGradientOrCanvasPattern& aValue) override
   {
     SetStyleFromUnion(aValue, Style::STROKE);
   }
 
-  void GetFillStyle(OwningStringOrCanvasGradientOrCanvasPattern& aValue)
+  void
+  GetFillStyle(OwningStringOrCanvasGradientOrCanvasPattern& aValue) override
   {
     GetStyleAsUnion(aValue, Style::FILL);
   }
 
-  void SetFillStyle(const StringOrCanvasGradientOrCanvasPattern& aValue)
+  void
+  SetFillStyle(const StringOrCanvasGradientOrCanvasPattern& aValue) override
   {
     SetStyleFromUnion(aValue, Style::FILL);
   }
 
   already_AddRefed<CanvasGradient>
-    CreateLinearGradient(double aX0, double aY0, double aX1, double aY1);
+    CreateLinearGradient(double aX0, double aY0, double aX1, double aY1) override;
   already_AddRefed<CanvasGradient>
-    CreateRadialGradient(double aX0, double aY0, double aR0, double aX1, double aY1,
-                         double aR1, ErrorResult& aError);
+    CreateRadialGradient(double aX0, double aY0, double aR0,
+                         double aX1, double aY1, double aR1,
+                         ErrorResult& aError) override;
   already_AddRefed<CanvasPattern>
     CreatePattern(const CanvasImageSource& aElement,
-                  const nsAString& aRepeat, ErrorResult& aError);
+                  const nsAString& aRepeat, ErrorResult& aError) override;
 
-  double ShadowOffsetX()
+  double ShadowOffsetX() override
   {
     return CurrentState().shadowOffset.x;
   }
 
-  void SetShadowOffsetX(double aShadowOffsetX)
+  void SetShadowOffsetX(double aShadowOffsetX) override
   {
     CurrentState().shadowOffset.x = ToFloat(aShadowOffsetX);
   }
 
-  double ShadowOffsetY()
+  double ShadowOffsetY() override
   {
     return CurrentState().shadowOffset.y;
   }
 
-  void SetShadowOffsetY(double aShadowOffsetY)
+  void SetShadowOffsetY(double aShadowOffsetY) override
   {
     CurrentState().shadowOffset.y = ToFloat(aShadowOffsetY);
   }
 
-  double ShadowBlur()
+  double ShadowBlur() override
   {
     return CurrentState().shadowBlur;
   }
 
-  void SetShadowBlur(double aShadowBlur)
+  void SetShadowBlur(double aShadowBlur) override
   {
     if (aShadowBlur >= 0.0) {
       CurrentState().shadowBlur = ToFloat(aShadowBlur);
     }
   }
 
-  void GetShadowColor(nsAString& aShadowColor)
+  void GetShadowColor(nsAString& aShadowColor) override
   {
     StyleColorToString(CurrentState().shadowColor, aShadowColor);
   }
@@ -181,11 +189,11 @@ public:
     aFilter = CurrentState().filterString;
   }
 
-  void SetShadowColor(const nsAString& aShadowColor);
+  void SetShadowColor(const nsAString& aShadowColor) override;
   void SetFilter(const nsAString& aFilter, mozilla::ErrorResult& aError);
-  void ClearRect(double aX, double aY, double aW, double aH);
-  void FillRect(double aX, double aY, double aW, double aH);
-  void StrokeRect(double aX, double aY, double aW, double aH);
+  void ClearRect(double aX, double aY, double aW, double aH) override;
+  void FillRect(double aX, double aY, double aW, double aH) override;
+  void StrokeRect(double aX, double aY, double aW, double aH) override;
   void BeginPath();
   void Fill(const CanvasWindingRule& aWinding);
   void Fill(const CanvasPath& aPath, const CanvasWindingRule& aWinding);
@@ -212,22 +220,22 @@ public:
   void RemoveHitRegion(const nsAString& aId);
   void ClearHitRegions();
 
-  void DrawImage(const CanvasImageSource& aImage,
-                 double aDx, double aDy, mozilla::ErrorResult& aError)
+  void DrawImage(const CanvasImageSource& aImage, double aDx, double aDy,
+                 mozilla::ErrorResult& aError) override
   {
     DrawImage(aImage, 0.0, 0.0, 0.0, 0.0, aDx, aDy, 0.0, 0.0, 0, aError);
   }
 
-  void DrawImage(const CanvasImageSource& aImage,
-                 double aDx, double aDy, double aDw, double aDh,
-                 mozilla::ErrorResult& aError)
+  void DrawImage(const CanvasImageSource& aImage, double aDx, double aDy,
+                 double aDw, double aDh, mozilla::ErrorResult& aError) override
   {
     DrawImage(aImage, 0.0, 0.0, 0.0, 0.0, aDx, aDy, aDw, aDh, 2, aError);
   }
 
   void DrawImage(const CanvasImageSource& aImage,
-                 double aSx, double aSy, double aSw, double aSh, double aDx,
-                 double aDy, double aDw, double aDh, mozilla::ErrorResult& aError)
+                 double aSx, double aSy, double aSw, double aSh,
+                 double aDx, double aDy, double aDw, double aDh,
+                 mozilla::ErrorResult& aError) override
   {
     DrawImage(aImage, aSx, aSy, aSw, aSh, aDx, aDy, aDw, aDh, 6, aError);
   }
@@ -248,28 +256,29 @@ public:
                     double aDirtyWidth, double aDirtyHeight,
                     mozilla::ErrorResult& aError);
 
-  double LineWidth()
+  double LineWidth() override
   {
     return CurrentState().lineWidth;
   }
 
-  void SetLineWidth(double aWidth)
+  void SetLineWidth(double aWidth) override
   {
     if (aWidth > 0.0) {
       CurrentState().lineWidth = ToFloat(aWidth);
     }
   }
-  void GetLineCap(nsAString& aLinecapStyle);
-  void SetLineCap(const nsAString& aLinecapStyle);
-  void GetLineJoin(nsAString& aLinejoinStyle, mozilla::ErrorResult& aError);
-  void SetLineJoin(const nsAString& aLinejoinStyle);
+  void GetLineCap(nsAString& aLinecapStyle) override;
+  void SetLineCap(const nsAString& aLinecapStyle) override;
+  void GetLineJoin(nsAString& aLinejoinStyle,
+                   mozilla::ErrorResult& aError) override;
+  void SetLineJoin(const nsAString& aLinejoinStyle) override;
 
-  double MiterLimit()
+  double MiterLimit() override
   {
     return CurrentState().miterLimit;
   }
 
-  void SetMiterLimit(double aMiter)
+  void SetMiterLimit(double aMiter) override
   {
     if (aMiter > 0.0) {
       CurrentState().miterLimit = ToFloat(aMiter);
@@ -287,7 +296,7 @@ public:
   void GetTextBaseline(nsAString& aTextBaseline);
   void SetTextBaseline(const nsAString& aTextBaseline);
 
-  void ClosePath()
+  void ClosePath() override
   {
     EnsureWritablePath();
 
@@ -298,7 +307,7 @@ public:
     }
   }
 
-  void MoveTo(double aX, double aY)
+  void MoveTo(double aX, double aY) override
   {
     EnsureWritablePath();
 
@@ -310,14 +319,14 @@ public:
     }
   }
 
-  void LineTo(double aX, double aY)
+  void LineTo(double aX, double aY) override
   {
     EnsureWritablePath();
 
     LineTo(mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
   }
 
-  void QuadraticCurveTo(double aCpx, double aCpy, double aX, double aY)
+  void QuadraticCurveTo(double aCpx, double aCpy, double aX, double aY) override
   {
     EnsureWritablePath();
 
@@ -333,7 +342,8 @@ public:
     }
   }
 
-  void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x, double aCp2y, double aX, double aY)
+  void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x, double aCp2y,
+                     double aX, double aY) override
   {
     EnsureWritablePath();
 
@@ -342,14 +352,15 @@ public:
              mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
   }
 
-  void ArcTo(double aX1, double aY1, double aX2, double aY2, double aRadius,
-             mozilla::ErrorResult& aError);
-  void Rect(double aX, double aY, double aW, double aH);
+  void ArcTo(double aX1, double aY1, double aX2, double aY2,
+             double aRadius, mozilla::ErrorResult& aError) override;
+  void Rect(double aX, double aY, double aW, double aH) override;
   void Arc(double aX, double aY, double aRadius, double aStartAngle,
-           double aEndAngle, bool aAnticlockwise, mozilla::ErrorResult& aError);
+           double aEndAngle, bool aAnticlockwise,
+           mozilla::ErrorResult& aError) override;
   void Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
                double aRotation, double aStartAngle, double aEndAngle,
-               bool aAnticlockwise, ErrorResult& aError);
+               bool aAnticlockwise, ErrorResult& aError) override;
 
   void GetMozCurrentTransform(JSContext* aCx,
                               JS::MutableHandle<JSObject*> aResult,
@@ -367,11 +378,11 @@ public:
   void SetFillRule(const nsAString& aFillRule);
 
   void SetLineDash(const Sequence<double>& aSegments,
-                   mozilla::ErrorResult& aRv);
-  void GetLineDash(nsTArray<double>& aSegments) const;
+                   mozilla::ErrorResult& aRv) override;
+  void GetLineDash(nsTArray<double>& aSegments) const override;
 
-  void SetLineDashOffset(double aOffset);
-  double LineDashOffset() const;
+  void SetLineDashOffset(double aOffset) override;
+  double LineDashOffset() const override;
 
   void GetMozTextStyle(nsAString& aMozTextStyle)
   {
@@ -384,12 +395,12 @@ public:
     SetFont(aMozTextStyle, aError);
   }
 
-  bool ImageSmoothingEnabled()
+  bool ImageSmoothingEnabled() override
   {
     return CurrentState().imageSmoothingEnabled;
   }
 
-  void SetImageSmoothingEnabled(bool aImageSmoothingEnabled)
+  void SetImageSmoothingEnabled(bool aImageSmoothingEnabled) override
   {
     if (aImageSmoothingEnabled != CurrentState().imageSmoothingEnabled) {
       CurrentState().imageSmoothingEnabled = aImageSmoothingEnabled;
