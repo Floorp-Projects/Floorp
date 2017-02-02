@@ -792,7 +792,7 @@ DeviceManagerDx::CanInitializeKeyedMutexTextures()
   }
   // Disable this on all Intel devices because of crashes.
   // See bug 1292923.
-  return mDeviceStatus->adapter().VendorId != 0x8086;
+  return (mDeviceStatus->adapter().VendorId != 0x8086 || gfxPrefs::Direct3D11AllowIntelMutex());
 }
 
 bool

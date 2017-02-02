@@ -246,6 +246,18 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
     }
     return nullptr;
   }
+ 
+  HRESULT hr;
+  RefPtr<ID3D10Multithread> mt;
+  hr = device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
+
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  if (!mt->GetMultithreadProtected()) {
+    return nullptr;
+  }
 
   if (!gfx::DeviceManagerDx::Get()->CanInitializeKeyedMutexTextures()) {
     return nullptr;
@@ -266,29 +278,51 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
   }
 
   RefPtr<ID3D11Texture2D> textureY;
-  D3D11_SUBRESOURCE_DATA yData = { mData.mYChannel, (UINT)mData.mYStride, 0 };
-  HRESULT hr = device->CreateTexture2D(&newDesc, &yData, getter_AddRefs(textureY));
+  hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   newDesc.Width = mData.mCbCrSize.width;
   newDesc.Height = mData.mCbCrSize.height;
 
   RefPtr<ID3D11Texture2D> textureCb;
-  D3D11_SUBRESOURCE_DATA cbData = { mData.mCbChannel, (UINT)mData.mCbCrStride, 0 };
-  hr = device->CreateTexture2D(&newDesc, &cbData, getter_AddRefs(textureCb));
+  hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCb));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
 
   RefPtr<ID3D11Texture2D> textureCr;
-  D3D11_SUBRESOURCE_DATA crData = { mData.mCrChannel, (UINT)mData.mCbCrStride, 0 };
-  hr = device->CreateTexture2D(&newDesc, &crData, getter_AddRefs(textureCr));
+  hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCr));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  // Even though the textures we created are meant to be protected by a keyed mutex,
-  // it appears that D3D doesn't include the initial memory upload within this
-  // synchronization. Add an empty lock/unlock pair since that appears to
-  // be sufficient to make sure we synchronize.
+  // The documentation here seems to suggest using the immediate mode context
+  // on more than one thread is not allowed:
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ff476891(v=vs.85).aspx
+  // The Debug Layer seems to imply it is though. When the ID3D10Multithread
+  // layer is on. The Enter/Leave of the critical section shouldn't even be
+  // required but were added for extra security.
+
   {
+    AutoLockTexture lockY(textureY);
     AutoLockTexture lockCr(textureCr);
+    AutoLockTexture lockCb(textureCb);
+
+    mt->Enter();
+
+    RefPtr<ID3D11DeviceContext> ctx;
+    device->GetImmediateContext((ID3D11DeviceContext**)getter_AddRefs(ctx));
+
+    D3D11_BOX box;
+    box.front = box.top = box.left = 0;
+    box.back = 1;
+    box.right = mData.mYSize.width;
+    box.bottom = mData.mYSize.height;
+    ctx->UpdateSubresource(textureY, 0, &box, mData.mYChannel, mData.mYStride, 0);
+
+    box.right = mData.mCbCrSize.width;
+    box.bottom = mData.mCbCrSize.height;
+    ctx->UpdateSubresource(textureCb, 0, &box, mData.mCbChannel, mData.mCbCrStride, 0);
+    ctx->UpdateSubresource(textureCr, 0, &box, mData.mCrChannel, mData.mCbCrStride, 0);
+
+    mt->Leave();
   }
 
   mTextureClient = TextureClient::CreateWithData(
