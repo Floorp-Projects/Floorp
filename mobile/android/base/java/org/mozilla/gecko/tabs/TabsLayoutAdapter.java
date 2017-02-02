@@ -6,6 +6,7 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.util.JavaUtil;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -95,6 +96,12 @@ public class TabsLayoutAdapter
                 Log.e(LOGTAG, "Tab was inserted at an invalid position: " + Integer.toString(index));
             }
         }
+    }
+
+    /* package */ boolean moveTab(int fromPosition, int toPosition) {
+        JavaUtil.moveInList(tabs, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
     }
 
     @Override
