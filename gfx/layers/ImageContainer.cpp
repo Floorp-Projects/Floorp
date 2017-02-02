@@ -125,11 +125,14 @@ ImageContainerListener::ClearImageContainer()
 }
 
 void
-ImageContainer::EnsureImageClient(bool aCreate)
+ImageContainer::EnsureImageClient()
 {
   // If we're not forcing a new ImageClient, then we can skip this if we don't have an existing
   // ImageClient, or if the existing one belongs to an IPC actor that is still open.
-  if (!aCreate && (!mImageClient || mImageClient->GetForwarder()->GetLayersIPCActor()->IPCOpen())) {
+  if (!mIsAsync) {
+    return;
+  }
+  if (mImageClient && mImageClient->GetForwarder()->GetLayersIPCActor()->IPCOpen()) {
     return;
   }
 
@@ -139,6 +142,11 @@ ImageContainer::EnsureImageClient(bool aCreate)
     if (mImageClient) {
       mAsyncContainerHandle = mImageClient->GetAsyncHandle();
       mNotifyCompositeListener = new ImageContainerListener(this);
+    } else {
+      // It's okay to drop the async container handle since the ImageBridgeChild
+      // is going to die anyway.
+      mAsyncContainerHandle = CompositableHandle();
+      mNotifyCompositeListener = nullptr;
     }
   }
 }
@@ -150,10 +158,11 @@ ImageContainer::ImageContainer(Mode flag)
   mDroppedImageCount(0),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
+  mIsAsync(flag == ASYNCHRONOUS),
   mCurrentProducerID(-1)
 {
   if (flag == ASYNCHRONOUS) {
-    EnsureImageClient(true);
+    EnsureImageClient();
   }
 }
 
@@ -164,6 +173,7 @@ ImageContainer::ImageContainer(const CompositableHandle& aHandle)
   mDroppedImageCount(0),
   mImageFactory(nullptr),
   mRecycleBin(nullptr),
+  mIsAsync(true),
   mAsyncContainerHandle(aHandle),
   mCurrentProducerID(-1)
 {
@@ -186,7 +196,7 @@ RefPtr<PlanarYCbCrImage>
 ImageContainer::CreatePlanarYCbCrImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  EnsureImageClient(false);
+  EnsureImageClient();
   if (mImageClient && mImageClient->AsImageClientSingle()) {
     return new SharedPlanarYCbCrImage(mImageClient);
   }
@@ -197,7 +207,7 @@ RefPtr<SharedRGBImage>
 ImageContainer::CreateSharedRGBImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  EnsureImageClient(false);
+  EnsureImageClient();
   if (!mImageClient || !mImageClient->AsImageClientSingle()) {
     return nullptr;
   }
@@ -343,13 +353,14 @@ ImageContainer::SetCurrentImagesInTransaction(const nsTArray<NonOwningImage>& aI
 
 bool ImageContainer::IsAsync() const
 {
-  return !!mAsyncContainerHandle;
+  return mIsAsync;
 }
 
 CompositableHandle ImageContainer::GetAsyncContainerHandle()
 {
-  NS_ASSERTION(IsAsync(),"Shared image ID is only relevant to async ImageContainers");
-  EnsureImageClient(false);
+  NS_ASSERTION(IsAsync(), "Shared image ID is only relevant to async ImageContainers");
+  NS_ASSERTION(mAsyncContainerHandle, "Should have a shared image ID");
+  EnsureImageClient();
   return mAsyncContainerHandle;
 }
 
