@@ -7,6 +7,7 @@ package org.mozilla.gecko.activitystream.ranking;
 
 import android.database.Cursor;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 
 import org.mozilla.gecko.home.activitystream.model.Highlight;
 
