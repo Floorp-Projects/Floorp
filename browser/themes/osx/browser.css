@@ -3096,6 +3096,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 }
 
 .addon-webext-name {
+  display: inline;
   font-weight: bold;
   margin: 0;
 }

@@ -4208,6 +4208,17 @@ AflLoop(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
+static bool
+TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    bool ignore;
+    double when = (mozilla::TimeStamp::Now()
+                   - mozilla::TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
+    args.rval().setNumber(when);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'zone' [, 'shrinking'])",
@@ -4752,6 +4763,11 @@ gc::ZealModeHelpText),
 "aflloop(max_cnt)",
 "  Call the __AFL_LOOP() runtime function (see AFL docs)\n"),
 #endif
+
+    JS_FN_HELP("timeSinceCreation", TimeSinceCreation, 0, 0,
+"TimeSinceCreation()",
+"  Returns the time in milliseconds since process creation.\n"
+"  This uses a clock compatible with the profiler.\n"),
 
     JS_FS_HELP_END
 };

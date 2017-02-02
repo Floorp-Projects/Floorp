@@ -174,10 +174,10 @@ this.ExtensionsUI = {
     }
     name = this._sanitizeName(name);
 
-    let addonLabel = `<label class="addon-webext-name">${name}</label>`;
+    let addonName = `<span class="addon-webext-name">${name}</span>`;
     let bundle = win.gNavigatorBundle;
 
-    let header = bundle.getFormattedString("webextPerms.header", [addonLabel]);
+    let header = bundle.getFormattedString("webextPerms.header", [addonName]);
     let text = "";
     let listIntro = bundle.getString("webextPerms.listIntro");
 
@@ -187,7 +187,7 @@ this.ExtensionsUI = {
     let cancelKey = bundle.getString("webextPerms.cancel.accessKey");
 
     if (info.type == "sideload") {
-      header = bundle.getFormattedString("webextPerms.sideloadHeader", [addonLabel]);
+      header = bundle.getFormattedString("webextPerms.sideloadHeader", [addonName]);
       text = bundle.getString("webextPerms.sideloadText");
       acceptText = bundle.getString("webextPerms.sideloadEnable.label");
       acceptKey = bundle.getString("webextPerms.sideloadEnable.accessKey");
@@ -195,7 +195,7 @@ this.ExtensionsUI = {
       cancelKey = bundle.getString("webextPerms.sideloadDisable.accessKey");
     } else if (info.type == "update") {
       header = "";
-      text = bundle.getFormattedString("webextPerms.updateText", [addonLabel]);
+      text = bundle.getFormattedString("webextPerms.updateText", [addonName]);
       acceptText = bundle.getString("webextPerms.updateAccept.label");
       acceptKey = bundle.getString("webextPerms.updateAccept.accessKey");
     }
@@ -321,7 +321,7 @@ this.ExtensionsUI = {
     let popups = win.PopupNotifications;
 
     let name = this._sanitizeName(addon.name);
-    let addonLabel = `<label class="addon-webext-name">${name}</label>`;
+    let addonName = `<span class="addon-webext-name">${name}</span>`;
     let addonIcon = '<image class="addon-addon-icon"/>';
     let toolbarIcon = '<image class="addon-toolbar-icon"/>';
 
@@ -330,7 +330,7 @@ this.ExtensionsUI = {
 
     let bundle = win.gNavigatorBundle;
     let msg1 = bundle.getFormattedString("addonPostInstall.message1",
-                                         [addonLabel, appName]);
+                                         [addonName, appName]);
     let msg2 = bundle.getFormattedString("addonPostInstall.messageDetail",
                                          [addonIcon, toolbarIcon]);
 

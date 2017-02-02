@@ -1184,7 +1184,7 @@ TextEditor::CanDelete(bool* aCanDelete)
 }
 
 // Shared between OutputToString and OutputToStream
-NS_IMETHODIMP
+nsresult
 TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                  uint32_t aFlags,
                                  const nsACString& aCharset,

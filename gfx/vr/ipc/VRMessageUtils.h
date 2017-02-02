@@ -39,6 +39,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mCapabilityFlags);
     WriteParam(aMsg, aParam.mEyeResolution);
     WriteParam(aMsg, aParam.mIsConnected);
+    WriteParam(aMsg, aParam.mIsMounted);
     WriteParam(aMsg, aParam.mIsPresenting);
     WriteParam(aMsg, aParam.mStageSize);
     WriteParam(aMsg, aParam.mSittingToStandingTransform);
@@ -56,6 +57,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mCapabilityFlags)) ||
         !ReadParam(aMsg, aIter, &(aResult->mEyeResolution)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsConnected)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIsMounted)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsPresenting)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize)) ||
         !ReadParam(aMsg, aIter, &(aResult->mSittingToStandingTransform))) {
