@@ -14,6 +14,7 @@ from shutil     import rmtree
 
 import logging
 import unittest
+import mozunit
 
 
 def banner():
@@ -266,4 +267,4 @@ if __name__ == '__main__':
         else:
             sys.argv[1:] = []
 
-    unittest.main()
+    mozunit.main()
