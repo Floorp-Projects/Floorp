@@ -194,7 +194,7 @@ public:
             continue;
           }
 
-          info->GetThreadResponsiveness()->Update();
+          info->UpdateThreadResponsiveness();
 
           SampleContext(SamplerRegistry::sampler, info, isFirstProfiledThread);
           isFirstProfiledThread = false;
