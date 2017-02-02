@@ -1402,13 +1402,6 @@ nsXULElement::GetResource(ErrorResult& rv)
     return resource.forget();
 }
 
-NS_IMETHODIMP
-nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
-{
-    *aDatabase = GetDatabase().take();
-    return NS_OK;
-}
-
 already_AddRefed<nsIRDFCompositeDataSource>
 nsXULElement::GetDatabase()
 {

@@ -62,7 +62,6 @@ interface nsIDOMXULElement : nsIDOMElement
   
   attribute boolean allowEvents;
 
-  readonly attribute nsIRDFCompositeDataSource database;
   readonly attribute nsIRDFResource            resource;
   readonly attribute nsIControllers            controllers;
   readonly attribute nsIBoxObject              boxObject;
