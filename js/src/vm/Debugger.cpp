@@ -3029,7 +3029,7 @@ Debugger::traceCrossCompartmentEdges(JSTracer* trc)
  * all the edges being reported here are strong references.
  *
  * This method is also used during compacting GC to update cross compartment
- * pointers in zones that are not currently being compacted.
+ * pointers into zones that are being compacted.
  */
 /* static */ void
 Debugger::traceIncomingCrossCompartmentEdges(JSTracer* trc)
@@ -3040,11 +3040,8 @@ Debugger::traceIncomingCrossCompartmentEdges(JSTracer* trc)
 
     for (Debugger* dbg : rt->debuggerList) {
         Zone* zone = MaybeForwarded(dbg->object.get())->zone();
-        if ((state == gc::State::MarkRoots && !zone->isCollecting()) ||
-            (state == gc::State::Compact && !zone->isGCCompacting()))
-        {
+        if (!zone->isCollecting() || state == gc::State::Compact)
             dbg->traceCrossCompartmentEdges(trc);
-        }
     }
 }
 
@@ -3142,9 +3139,9 @@ Debugger::markIteratively(GCMarker* marker)
 }
 
 /*
- * Trace all debugger-owned GC things unconditionally. This is used by the minor
- * GC: the minor GC cannot apply the weak constraints of the full GC because it
- * visits only part of the heap.
+ * Trace all debugger-owned GC things unconditionally. This is used during
+ * compacting GC and in minor GC: the minor GC cannot apply the weak constraints
+ * of the full GC because it visits only part of the heap.
  */
 /* static */ void
 Debugger::traceAll(JSTracer* trc)
