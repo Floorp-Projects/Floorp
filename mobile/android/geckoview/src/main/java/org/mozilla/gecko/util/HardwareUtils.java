@@ -79,11 +79,11 @@ public final class HardwareUtils {
     }
 
     public static boolean isARMSystem() {
-        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
+        return Build.CPU_ABI != null && Build.CPU_ABI.equals("armeabi-v7a");
     }
 
     public static boolean isX86System() {
-        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
+        return Build.CPU_ABI != null && Build.CPU_ABI.equals("x86");
     }
 
     /**
@@ -99,7 +99,7 @@ public final class HardwareUtils {
         final boolean isSystemARM = isARMSystem();
         final boolean isSystemX86 = isX86System();
 
-        final boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("arm");
+        final boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("armeabi-v7a");
         final boolean isAppX86 = AppConstants.ANDROID_CPU_ARCH.startsWith("x86");
 
         // Only reject known incompatible ABIs. Better safe than sorry.
