@@ -645,6 +645,7 @@ mochitest-gpu:
     suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
+    docker-image: {"in-tree": "desktop1604-test"}
     e10s:
         by-test-platform:
             windows.*: both
