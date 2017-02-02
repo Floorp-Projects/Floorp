@@ -10,7 +10,11 @@ const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
 const URL_STRING = "https://example.com";
 
 const mockSendingContext = {
-  browser: {},
+  browser: {
+    docShell: {
+      usePrivateBrowsing: false
+    }
+  },
   principal: {},
   eventTarget: {}
 };
@@ -235,6 +239,51 @@ add_test(function test_sync_preferences_message() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
+add_test(function test_fxa_status_message() {
+  let mockMessage = {
+    command: "fxaccounts:fxa_status",
+    messageId: 123,
+    data: {
+      service: "sync"
+    }
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      async getFxaStatus() {
+        return {
+          signedInUser: {
+            email: "testuser@testuser.com",
+            sessionToken: "session-token",
+            uid: "uid",
+            verified: true
+          }
+        };
+      }
+    }
+  });
+
+  channel._channel = {
+    send(response, sendingContext) {
+      do_check_eq(response.command, "fxaccounts:fxa_status");
+      do_check_eq(response.messageId, 123);
+
+      let signedInUser = response.data.signedInUser;
+      do_check_true(!!signedInUser);
+      do_check_eq(signedInUser.email, "testuser@testuser.com");
+      do_check_eq(signedInUser.sessionToken, "session-token");
+      do_check_eq(signedInUser.uid, "uid");
+      do_check_eq(signedInUser.verified, true);
+
+      run_next_test();
+    }
+  };
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
 add_test(function test_unrecognized_message() {
   let mockMessage = {
     command: "fxaccounts:unrecognized",
@@ -382,6 +431,242 @@ add_test(function test_helpers_open_sync_preferences() {
   };
 
   helpers.openSyncPreferences(mockBrowser, "fxa:verification_complete");
+});
+
+
+add_task(function* test_helpers_getFxaStatus_allowed_signedInUser() {
+  let wasCalled = {
+    getSignedInUser: false,
+    shouldAllowFxaStatus: false
+  };
+
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      getSignedInUser() {
+        wasCalled.getSignedInUser = true;
+        return Promise.resolve({
+          email: "testuser@testuser.com",
+          kA: "kA",
+          kb: "kB",
+          sessionToken: "sessionToken",
+          uid: "uid",
+          verified: true
+        });
+      }
+    }
+  });
+
+  helpers.shouldAllowFxaStatus = (service, sendingContext) => {
+    wasCalled.shouldAllowFxaStatus = true;
+    do_check_eq(service, "sync");
+    do_check_eq(sendingContext, mockSendingContext);
+
+    return true;
+  };
+
+  return helpers.getFxaStatus("sync", mockSendingContext)
+    .then(fxaStatus => {
+      do_check_true(!!fxaStatus);
+      do_check_true(wasCalled.getSignedInUser);
+      do_check_true(wasCalled.shouldAllowFxaStatus);
+
+      do_check_true(!!fxaStatus.signedInUser);
+      let {signedInUser} = fxaStatus;
+
+      do_check_eq(signedInUser.email, "testuser@testuser.com");
+      do_check_eq(signedInUser.sessionToken, "sessionToken");
+      do_check_eq(signedInUser.uid, "uid");
+      do_check_true(signedInUser.verified);
+
+      // These properties are filtered and should not
+      // be returned to the requester.
+      do_check_false("kA" in signedInUser);
+      do_check_false("kB" in signedInUser);
+    });
+});
+
+add_task(function* test_helpers_getFxaStatus_allowed_no_signedInUser() {
+  let wasCalled = {
+    getSignedInUser: false,
+    shouldAllowFxaStatus: false
+  };
+
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      getSignedInUser() {
+        wasCalled.getSignedInUser = true;
+        return Promise.resolve(null);
+      }
+    }
+  });
+
+  helpers.shouldAllowFxaStatus = (service, sendingContext) => {
+    wasCalled.shouldAllowFxaStatus = true;
+    do_check_eq(service, "sync");
+    do_check_eq(sendingContext, mockSendingContext);
+
+    return true;
+  };
+
+  return helpers.getFxaStatus("sync", mockSendingContext)
+    .then(fxaStatus => {
+      do_check_true(!!fxaStatus);
+      do_check_true(wasCalled.getSignedInUser);
+      do_check_true(wasCalled.shouldAllowFxaStatus);
+
+      do_check_null(fxaStatus.signedInUser);
+    });
+});
+
+add_task(function* test_helpers_getFxaStatus_not_allowed() {
+  let wasCalled = {
+    getSignedInUser: false,
+    shouldAllowFxaStatus: false
+  };
+
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      getSignedInUser() {
+        wasCalled.getSignedInUser = true;
+        return Promise.resolve(null);
+      }
+    }
+  });
+
+  helpers.shouldAllowFxaStatus = (service, sendingContext) => {
+    wasCalled.shouldAllowFxaStatus = true;
+    do_check_eq(service, "sync");
+    do_check_eq(sendingContext, mockSendingContext);
+
+    return false;
+  };
+
+  return helpers.getFxaStatus("sync", mockSendingContext)
+    .then(fxaStatus => {
+      do_check_true(!!fxaStatus);
+      do_check_false(wasCalled.getSignedInUser);
+      do_check_true(wasCalled.shouldAllowFxaStatus);
+
+      do_check_null(fxaStatus.signedInUser);
+    });
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_sync_service_not_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return false;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
+  do_check_true(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_oauth_service_not_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return false;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
+  do_check_true(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_no_service_not_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return false;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
+  do_check_true(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_sync_service_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return true;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("sync", mockSendingContext);
+  do_check_true(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_oauth_service_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return true;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("dcdb5ae7add825d2", mockSendingContext);
+  do_check_false(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_shouldAllowFxaStatus_no_service_private_browsing() {
+  let wasCalled = {
+    isPrivateBrowsingMode: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({});
+
+  helpers.isPrivateBrowsingMode = (sendingContext) => {
+    wasCalled.isPrivateBrowsingMode = true;
+    do_check_eq(sendingContext, mockSendingContext);
+    return true;
+  }
+
+  let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus("", mockSendingContext);
+  do_check_false(shouldAllowFxaStatus);
+  do_check_true(wasCalled.isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_isPrivateBrowsingMode_private_browsing() {
+  let helpers = new FxAccountsWebChannelHelpers({});
+  mockSendingContext.browser.docShell.usePrivateBrowsing = true;
+
+  let isPrivateBrowsingMode = helpers.isPrivateBrowsingMode(mockSendingContext);
+  do_check_true(isPrivateBrowsingMode);
+});
+
+add_task(function* test_helpers_isPrivateBrowsingMode_private_browsing() {
+  let helpers = new FxAccountsWebChannelHelpers({});
+  mockSendingContext.browser.docShell.usePrivateBrowsing = false;
+
+  let isPrivateBrowsingMode = helpers.isPrivateBrowsingMode(mockSendingContext);
+  do_check_false(isPrivateBrowsingMode);
 });
 
 add_task(function* test_helpers_change_password() {
