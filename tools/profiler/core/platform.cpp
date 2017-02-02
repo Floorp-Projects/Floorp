@@ -107,33 +107,6 @@ static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
 
-StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
-                                             bool aIsMainThread,
-                                             PseudoStack* aPseudoStack,
-                                             void* aStackTop)
-  : ThreadInfo(aName, aThreadId, aIsMainThread, aPseudoStack, aStackTop)
-{
-  aPseudoStack->ref();
-}
-
-StackOwningThreadInfo::~StackOwningThreadInfo()
-{
-  PseudoStack* stack = Stack();
-  if (stack) {
-    stack->deref();
-  }
-}
-
-void
-StackOwningThreadInfo::SetPendingDelete()
-{
-  PseudoStack* stack = Stack();
-  if (stack) {
-    stack->deref();
-  }
-  ThreadInfo::SetPendingDelete();
-}
-
 ProfilerMarker::ProfilerMarker(const char* aMarkerName,
                                ProfilerMarkerPayload* aPayload,
                                double aTime)
@@ -455,7 +428,7 @@ profiler_init(void* stackTop)
 
   Sampler::Startup();
 
-  PseudoStack *stack = PseudoStack::create();
+  PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
 
   bool isMainThread = true;
@@ -536,8 +509,9 @@ profiler_shutdown()
 
   Sampler::Shutdown();
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  stack->deref();
+  // We just called Sampler::Shutdown() which kills all the ThreadInfos in
+  // sRegisteredThreads, so it is safe the delete the PseudoStack.
+  delete tlsPseudoStack.get();
   tlsPseudoStack.set(nullptr);
 
 #ifdef MOZ_TASK_TRACER
@@ -1013,7 +987,7 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
 #endif
 
   MOZ_ASSERT(tlsPseudoStack.get() == nullptr);
-  PseudoStack* stack = PseudoStack::create();
+  PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
   bool isMainThread = is_main_thread_name(aName);
   void* stackTop = GetStackTop(aGuessStackTop);
@@ -1029,14 +1003,14 @@ profiler_unregister_thread()
     return;
   }
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    return;
-  }
-  stack->deref();
-  tlsPseudoStack.set(nullptr);
-
   Sampler::UnregisterCurrentThread();
+
+  // We just called Sampler::UnregisterCurrentThread() which cuts the
+  // ThreadInfo's PseudoStack pointer (either nulling it via SetPendingDelete()
+  // or by deleting the ThreadInfo altogether), so it is safe to delete the
+  // PseudoStack.
+  delete tlsPseudoStack.get();
+  tlsPseudoStack.set(nullptr);
 }
 
 void
