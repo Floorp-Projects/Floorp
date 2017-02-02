@@ -29,6 +29,7 @@ struct OpDPPushStackingContext {
   WrRect bounds;
   WrRect overflow;
   MaybeImageMask mask;
+  float opacity;
   Animation[] animations;
   Matrix4x4 matrix;
   WrMixBlendMode mixBlendMode;

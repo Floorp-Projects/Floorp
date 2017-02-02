@@ -431,7 +431,8 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
                             WrRect overflow, const WrImageMask *mask,
-                            const float* matrix, WrMixBlendMode mixBlendMode)
+                            float opacity, const float* matrix,
+                            WrMixBlendMode mixBlendMode)
 WR_FUNC;
 
 //XXX: matrix should use a proper type
