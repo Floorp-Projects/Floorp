@@ -53,23 +53,23 @@ interface CanvasRenderingContext2D {
   attribute boolean mozImageSmoothingEnabled;
 
   // Show the caret if appropriate when drawing
-  [ChromeOnly]
+  [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
   // Don't flush pending layout notifications that could otherwise
   // be batched up
-  [ChromeOnly]
+  [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_DO_NOT_FLUSH = 0x02;
   // Draw scrollbars and scroll the viewport if they are present
-  [ChromeOnly]
+  [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_DRAW_VIEW    = 0x04;
   // Use the widget layer manager if available. This means hardware
   // acceleration may be used, but it might actually be slower or
   // lower quality than normal. It will however more accurately reflect
   // the pixels rendered to the screen.
-  [ChromeOnly]
+  [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_USE_WIDGET_LAYERS = 0x08;
   // Don't synchronously decode images - draw what we have
-  [ChromeOnly]
+  [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_ASYNC_DECODE_IMAGES = 0x10;
 
   /**
@@ -105,9 +105,9 @@ interface CanvasRenderingContext2D {
    * transparency.
    *
    * This API cannot currently be used by Web content. It is chrome
-   * only.
+   * and Web Extensions (with a permission) only.
    */
-  [Throws, ChromeOnly]
+  [Throws, Func="CanvasUtils::HasDrawWindowPrivilege"]
   void drawWindow(Window window, double x, double y, double w, double h,
                   DOMString bgColor, optional unsigned long flags = 0);
 
@@ -320,14 +320,14 @@ interface CanvasPathMethods {
   void bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y, double x, double y);
 
   [Throws, LenientFloat]
-  void arcTo(double x1, double y1, double x2, double y2, double radius); 
+  void arcTo(double x1, double y1, double x2, double y2, double radius);
 // NOT IMPLEMENTED  [LenientFloat] void arcTo(double x1, double y1, double x2, double y2, double radiusX, double radiusY, double rotation);
 
   [LenientFloat]
   void rect(double x, double y, double w, double h);
 
   [Throws, LenientFloat]
-  void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false); 
+  void arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false);
 
   [Throws, LenientFloat]
   void ellipse(double x, double y, double radiusX, double radiusY, double rotation, double startAngle, double endAngle, optional boolean anticlockwise = false);
