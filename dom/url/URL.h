@@ -26,6 +26,7 @@ namespace dom {
 class Blob;
 class MediaSource;
 class GlobalObject;
+struct objectURLOptions;
 
 class URL : public URLSearchParamsObserver
           , public nsWrapperCache
@@ -63,15 +64,18 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                  const objectURLOptions& aOptions,
                   nsAString& aResult, ErrorResult& aRv);
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
-                  nsAString& aResult, ErrorResult& aRv);
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv);
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                  nsAString& aResult, ErrorResult& aRv);
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv);
 
   static void
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,

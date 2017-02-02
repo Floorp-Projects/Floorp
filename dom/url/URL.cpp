@@ -80,7 +80,8 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                  nsAString& aResult, ErrorResult& aRv)
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread());
     CreateObjectURLInternal(aGlobal, aBlob.Impl(), aResult, aRv);
@@ -88,7 +89,8 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
-                  nsAString& aResult, ErrorResult& aRv)
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread());
     CreateObjectURLInternal(aGlobal, &aStream, aResult, aRv);
@@ -96,7 +98,8 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                  nsAString& aResult, ErrorResult& aRv);
+                  const objectURLOptions& aOptions, nsAString& aResult,
+                  ErrorResult& aRv);
 
   static void
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
@@ -254,6 +257,7 @@ URLMainThread::Constructor(nsISupports* aParent, const nsAString& aURL,
 /* static */ void
 URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
                                MediaSource& aSource,
+                               const objectURLOptions& aOptions,
                                nsAString& aResult, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -650,6 +654,7 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                  const mozilla::dom::objectURLOptions& aOptions,
                   nsAString& aResult, mozilla::ErrorResult& aRv);
 
   static void
@@ -750,6 +755,7 @@ private:
 
 public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl,
+                    const objectURLOptions& aOptions,
                     nsAString& aURL)
   : WorkerMainThreadRunnable(aWorkerPrivate,
                              NS_LITERAL_CSTRING("URL :: CreateURL"))
@@ -1291,6 +1297,7 @@ URLWorker::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
 
 /* static */ void
 URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
+                           const mozilla::dom::objectURLOptions& aOptions,
                            nsAString& aResult, mozilla::ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
@@ -1305,7 +1312,7 @@ URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
   }
 
   RefPtr<CreateURLRunnable> runnable =
-    new CreateURLRunnable(workerPrivate, blobImpl, aResult);
+    new CreateURLRunnable(workerPrivate, blobImpl, aOptions, aResult);
 
   runnable->Dispatch(Terminating, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1713,29 +1720,33 @@ URL::WorkerConstructor(const GlobalObject& aGlobal, const nsAString& aURL,
 
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                     nsAString& aResult, ErrorResult& aRv)
+                     const objectURLOptions& aOptions, nsAString& aResult,
+                     ErrorResult& aRv)
 {
   if (NS_IsMainThread()) {
-    URLMainThread::CreateObjectURL(aGlobal, aBlob, aResult, aRv);
+    URLMainThread::CreateObjectURL(aGlobal, aBlob, aOptions, aResult, aRv);
   } else {
-    URLWorker::CreateObjectURL(aGlobal, aBlob, aResult, aRv);
+    URLWorker::CreateObjectURL(aGlobal, aBlob, aOptions, aResult, aRv);
   }
 }
 
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
-                     nsAString& aResult, ErrorResult& aRv)
+                     const objectURLOptions& aOptions, nsAString& aResult,
+                     ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  URLMainThread::CreateObjectURL(aGlobal, aStream, aResult, aRv);
+  URLMainThread::CreateObjectURL(aGlobal, aStream, aOptions, aResult, aRv);
 }
 
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                     nsAString& aResult, ErrorResult& aRv)
+                     const objectURLOptions& aOptions,
+                     nsAString& aResult,
+                     ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  URLMainThread::CreateObjectURL(aGlobal, aSource, aResult, aRv);
+  URLMainThread::CreateObjectURL(aGlobal, aSource, aOptions, aResult, aRv);
 }
 
 void
