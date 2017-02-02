@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import static org.mozilla.gecko.db.URLMetadataTable.TILE_COLOR_COLUMN;
-import static org.mozilla.gecko.db.URLMetadataTable.TILE_IMAGE_URL_COLUMN;
+import static org.mozilla.gecko.db.URLImageDataTable.TILE_COLOR_COLUMN;
+import static org.mozilla.gecko.db.URLImageDataTable.TILE_IMAGE_URL_COLUMN;
 
 import java.util.ArrayList;
 import java.util.Collections;
