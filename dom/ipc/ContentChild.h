@@ -137,22 +137,8 @@ public:
 
   static void AppendProcessId(nsACString& aName);
 
-  ContentBridgeParent* GetLastBridge()
-  {
-    MOZ_ASSERT(mLastBridge);
-    ContentBridgeParent* parent = mLastBridge;
-    mLastBridge = nullptr;
-    return parent;
-  }
-
-  RefPtr<ContentBridgeParent> mLastBridge;
-
-  PContentBridgeParent*
-  AllocPContentBridgeParent(mozilla::ipc::Transport* transport,
-                            base::ProcessId otherProcess) override;
-  PContentBridgeChild*
-  AllocPContentBridgeChild(mozilla::ipc::Transport* transport,
-                           base::ProcessId otherProcess) override;
+  mozilla::ipc::IPCResult
+  RecvInitContentBridgeChild(Endpoint<PContentBridgeChild>&& aEndpoint) override;
 
   mozilla::ipc::IPCResult
   RecvInitGMPService(Endpoint<PGMPServiceChild>&& aGMPService) override;

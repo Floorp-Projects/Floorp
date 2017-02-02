@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.v4.widget.TextViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.util.DrawableUtil;
 
 import java.util.concurrent.Future;
 
@@ -277,8 +279,13 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
         mType = type;
         refreshDrawableState();
 
-        int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0);
-        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mTitleView, pinResourceId, 0, 0, 0);
+        final Drawable pinDrawable;
+        if (type == TopSites.TYPE_PINNED) {
+            pinDrawable = DrawableUtil.tintDrawable(getContext(), R.drawable.as_pin, getResources().getColor(R.color.placeholder_grey));
+        } else {
+            pinDrawable = null;
+        }
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mTitleView, pinDrawable, null, null, null);
 
         return true;
     }

@@ -17,12 +17,12 @@ class ContentBridgeChild final : public PContentBridgeChild
                                , public nsIContentChild
 {
 public:
-  explicit ContentBridgeChild(Transport* aTransport);
+  explicit ContentBridgeChild();
 
   NS_DECL_ISUPPORTS
 
-  static ContentBridgeChild*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  static void
+  Create(Endpoint<PContentBridgeChild>&& aEndpoint);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
@@ -90,7 +90,6 @@ protected:
 
 protected: // members
   RefPtr<ContentBridgeChild> mSelfRef;
-  Transport* mTransport; // owned
 };
 
 } // namespace dom

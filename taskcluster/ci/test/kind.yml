@@ -6,3 +6,5 @@ kind-dependencies:
 transforms:
    - taskgraph.transforms.tests:transforms
    - taskgraph.transforms.task:transforms
+
+parse-commit: taskgraph.try_option_syntax:parse_message

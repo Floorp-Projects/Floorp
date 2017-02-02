@@ -10,6 +10,7 @@ import android.content.Context;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
@@ -523,8 +524,9 @@ public class TestDownloadAction {
         DownloadContent unknownContent = createUnknownContent(1024L);
         DownloadContent contentWithUnknownType = createContentWithoutType(1024L);
 
-        Assert.assertTrue(fontContent.isKnownContent());
-        Assert.assertTrue(hyphenationContent.isKnownContent());
+        Assert.assertEquals(AppConstants.MOZ_ANDROID_EXCLUDE_FONTS, fontContent.isKnownContent());
+        Assert.assertEquals(AppConstants.MOZ_EXCLUDE_HYPHENATION_DICTIONARIES, hyphenationContent.isKnownContent());
+
         Assert.assertFalse(unknownContent.isKnownContent());
         Assert.assertFalse(contentWithUnknownType.isKnownContent());
     }
