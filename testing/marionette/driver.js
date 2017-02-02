@@ -1188,8 +1188,14 @@ GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
   let orig = {screenX: win.screenX, screenY: win.screenY};
 
   win.moveTo(x, y);
-  yield wait.until(() => win.screenX != orig.screenX ||
-      win.screenY != orig.screenY);
+  yield wait.until((resolve, reject) => {
+    if ((x == win.screenX && y == win.screenY) ||
+      (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
+      resolve();
+    } else {
+      reject();
+    }
+  });
 
   return this.curBrowser.position;
 };
