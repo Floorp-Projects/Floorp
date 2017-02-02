@@ -51,6 +51,9 @@ public class Tabs implements BundleEventListener {
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
     private volatile CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
 
+    // A cache that maps a tab ID to an mOrder tab position.  All access should be synchronized.
+    private final TabPositionCache tabPositionCache = new TabPositionCache();
+
     // All writes to mSelectedTab must be synchronized on the Tabs instance.
     // In general, it's preferred to always use selectTab()).
     private volatile Tab mSelectedTab;
@@ -239,6 +242,9 @@ public class Tabs implements BundleEventListener {
 
             if (tabIndex > -1) {
                 mOrder.add(tabIndex, tab);
+                if (tabPositionCache.mOrderPosition >= tabIndex) {
+                    tabPositionCache.mTabId = INVALID_TAB_ID;
+                }
             } else {
                 mOrder.add(tab);
             }
@@ -271,6 +277,7 @@ public class Tabs implements BundleEventListener {
             Tab tab = getTab(id);
             mOrder.remove(tab);
             mTabs.remove(id);
+            tabPositionCache.mTabId = INVALID_TAB_ID;
         }
     }
 
@@ -1076,6 +1083,21 @@ public class Tabs implements BundleEventListener {
         return Color.WHITE;
     }
 
+    /** Holds a tab id and the index in {@code mOrder} of the tab having that id. */
+    private static class TabPositionCache {
+        int mTabId;
+        int mOrderPosition;
+
+        TabPositionCache() {
+            mTabId = INVALID_TAB_ID;
+        }
+
+        void cache(int tabId, int position) {
+            mTabId = tabId;
+            mOrderPosition = position;
+        }
+    }
+
     /**
      * Search for {@code tabId} in {@code mOrder}, starting from position {@code positionHint}.
      * Callers must be synchronized.
@@ -1116,10 +1138,18 @@ public class Tabs implements BundleEventListener {
         // non-private, in the order in which they were added.
 
         synchronized (this) {
-            final int fromPosition = getOrderPositionForTab(fromTabId, fromPositionHint, true);
+            final int fromPosition;
+            if (tabPositionCache.mTabId == fromTabId) {
+                fromPosition = tabPositionCache.mOrderPosition;
+            } else {
+                fromPosition = getOrderPositionForTab(fromTabId, fromPositionHint, true);
+            }
+
             // Start the toPosition search from the mOrder from position.
             final int adjustedToPositionHint = fromPosition + (toPositionHint - fromPositionHint);
             final int toPosition = getOrderPositionForTab(toTabId, adjustedToPositionHint, fromPositionHint < toPositionHint);
+            // Remember where the tab was moved to so that if this move continues we'll be ready.
+            tabPositionCache.cache(fromTabId, toPosition);
 
             if (fromPosition == -1 || toPosition == -1) {
                 throw new IllegalStateException("Tabs search failed: (" + fromPositionHint + ", " + toPositionHint + ")" +
