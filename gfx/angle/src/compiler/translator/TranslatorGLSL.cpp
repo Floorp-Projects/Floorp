@@ -257,20 +257,14 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root)
     }
 
     // Need to enable gpu_shader5 to have index constant sampler array indexing
-    if (getOutputType() != SH_ESSL_OUTPUT && getOutputType() < SH_GLSL_400_CORE_OUTPUT)
+    if (getOutputType() != SH_ESSL_OUTPUT && getOutputType() < SH_GLSL_400_CORE_OUTPUT  &&
+        getShaderVersion() == 100)
     {
-        sink << "#extension GL_ARB_gpu_shader5 : ";
-
-        // Don't use "require" on WebGL 1 to avoid breaking WebGL on drivers that silently
-        // support index constant sampler array indexing, but don't have the extension.
-        if (getShaderVersion() >= 300)
-        {
-            sink << "require\n";
-        }
-        else
-        {
-            sink << "enable\n";
-        }
+        // Don't use "require" on to avoid breaking WebGL 1 on drivers that silently
+        // support index constant sampler array indexing, but don't have the extension or
+        // on drivers that don't have the extension at all as it would break WebGL 1 for
+        // some users.
+        sink << "#extension GL_ARB_gpu_shader5 : enable\n";
     }
 
     TExtensionGLSL extensionGLSL(getOutputType());
