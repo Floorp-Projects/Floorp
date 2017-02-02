@@ -14,8 +14,6 @@
 "use strict";
 
 add_task(function* () {
-  let win = window.open("http://example.org/");
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -134,8 +132,6 @@ add_task(function* () {
   yield extension.startup();
   yield extension.awaitFinish("tabs.create");
   yield extension.unload();
-
-  win.close();
 });
 </script>
 

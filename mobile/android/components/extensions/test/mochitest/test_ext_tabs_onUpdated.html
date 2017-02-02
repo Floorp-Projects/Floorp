@@ -33,6 +33,7 @@ add_task(function* test_onUpdated() {
       ];
       let collectedSequence = [];
 
+      let tabId;
       browser.tabs.onUpdated.addListener(function(tabId, updatedInfo) {
         // onUpdated also fires with updatedInfo.faviconUrl, so explicitly
         // check for updatedInfo.status before recording the event.
@@ -41,7 +42,7 @@ add_task(function* test_onUpdated() {
         }
       });
 
-      browser.runtime.onMessage.addListener(msg => {
+      browser.runtime.onMessage.addListener(async msg => {
         if (collectedSequence.length !== expectedSequence.length) {
           browser.test.assertEq(
             JSON.stringify(expectedSequence),
@@ -65,10 +66,13 @@ add_task(function* test_onUpdated() {
           }
         }
 
+        await browser.tabs.remove(tabId);
         browser.test.notifyPass("tabs.onUpdated");
       });
 
-      browser.tabs.create({url: pageURL});
+      browser.tabs.create({url: pageURL}).then(tab => {
+        tabId = tab.id;
+      });
     },
     files: {
       "content-script.js": `
@@ -108,7 +112,7 @@ add_task(function* test_url() {
   yield do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
-      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+      browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
         // Check callback
         browser.test.assertEq(tabId, tab.id, "Check tab id");
         browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
@@ -117,7 +121,7 @@ add_task(function* test_url() {
                                 "Check changeInfo.url");
           browser.tabs.onUpdated.removeListener(onUpdated);
           // Remove created tab.
-          browser.tabs.remove(tabId);
+          await browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
         }
       });
@@ -131,13 +135,13 @@ add_task(function* test_title() {
     const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
 
-    browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+    browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
       browser.test.assertEq(tabId, tab.id, "Check tab id");
       browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
       if ("title" in changeInfo && changeInfo.title === "New Message (1)") {
         browser.test.log("changeInfo.title is correct");
         browser.tabs.onUpdated.removeListener(onUpdated);
-        browser.tabs.remove(tabId);
+        await browser.tabs.remove(tabId);
         browser.test.notifyPass("finish");
       }
     });
@@ -152,7 +156,7 @@ add_task(function* test_without_tabs_permission() {
     const tab = await browser.tabs.create({url});
     let count = 0;
 
-    browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+    browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
       browser.test.assertEq(tabId, tab.id, "Check tab id");
       browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
 
@@ -165,7 +169,7 @@ add_task(function* test_without_tabs_permission() {
         if (count === 2) {
           browser.test.log("Reload complete");
           browser.tabs.onUpdated.removeListener(onUpdated);
-          browser.tabs.remove(tabId);
+          await browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
         }
       }
