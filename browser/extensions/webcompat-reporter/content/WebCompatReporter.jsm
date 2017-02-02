@@ -31,6 +31,7 @@ let WebCompatReporter = {
   },
 
   init() {
+    /* global TabListener */
     Cu.import(TABLISTENER_JSM);
 
     let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
