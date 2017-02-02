@@ -118,10 +118,9 @@ import static org.mozilla.gecko.activitystream.ranking.RankingUtils.normalize;
                     Math.max(1, System.currentTimeMillis() - cursor.getDouble(bookmarkDateColumnIndex)));
         }
 
-        // TODO: We do not know the description length yet. Let's assume it's 0 for now. (Bug 1330973)
         candidate.features.put(
                 FEATURE_DESCRIPTION_LENGTH,
-                0d);
+                (double) candidate.highlight.getMetadata().getDescriptionLength());
 
         final Uri uri = Uri.parse(candidate.highlight.getUrl());
 
