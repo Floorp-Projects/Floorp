@@ -212,7 +212,6 @@
             "enum": [
               "alarms",
               "clipboardWrite",
-              "geolocation",
               "idle",
               "notifications",
               "storage"
