@@ -1423,13 +1423,6 @@ nsXULElement::GetDatabase()
 }
 
 
-NS_IMETHODIMP
-nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
-{
-    *aBuilder = GetBuilder().take();
-    return NS_OK;
-}
-
 already_AddRefed<nsIXULTemplateBuilder>
 nsXULElement::GetBuilder()
 {

@@ -6,7 +6,6 @@
 #include "nsIDOMElement.idl"
 
 interface nsIRDFCompositeDataSource;
-interface nsIXULTemplateBuilder;
 interface nsIRDFResource;
 interface nsIControllers;
 interface nsIBoxObject;
@@ -64,7 +63,6 @@ interface nsIDOMXULElement : nsIDOMElement
   attribute boolean allowEvents;
 
   readonly attribute nsIRDFCompositeDataSource database;
-  readonly attribute nsIXULTemplateBuilder     builder;
   readonly attribute nsIRDFResource            resource;
   readonly attribute nsIControllers            controllers;
   readonly attribute nsIBoxObject              boxObject;
