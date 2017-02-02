@@ -1619,6 +1619,8 @@ ParseBlock(WasmParseContext& c, Op op, bool inParens)
     }
 
     AstBlock* result = new(c.lifo) AstBlock(op, type, name, Move(exprs));
+    if (!result)
+        return nullptr;
 
     if (op == Op::Loop && !otherName.empty()) {
         if (!exprs.append(result))

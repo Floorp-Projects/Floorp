@@ -3283,6 +3283,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   // * Assume a default of click-to-play
   // * If globally disabled, per-site permissions cannot override.
   // * If blocklisted, override the reason with the blocklist reason
+  // * Check if the flash blocking status for this page denies flash from loading.
   // * Check per-site permissions and follow those if specified.
   // * Honor per-plugin disabled permission
   // * Blocklisted plugins are forced to CtP
@@ -3318,9 +3319,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     aReason = eFallbackVulnerableNoUpdate;
   }
 
-  // Check the permission manager for permission based on the principal of
-  // the toplevel content.
-
+  // Document and window lookup
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
   MOZ_ASSERT(thisContent);
   nsIDocument* ownerDoc = thisContent->OwnerDoc();
@@ -3334,6 +3333,18 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   nsCOMPtr<nsIDocument> topDoc = topWindow->GetDoc();
   NS_ENSURE_TRUE(topDoc, false);
 
+  // Check the flash blocking status for this page (this applies to Flash only)
+  nsIDocument::FlashClassification documentClassification = nsIDocument::FlashClassification::Allowed;
+  if (IsFlashMIME(mContentType)) {
+    documentClassification = ownerDoc->DocumentFlashClassification();
+  }
+  if (documentClassification == nsIDocument::FlashClassification::Denied) {
+    aReason = eFallbackSuppressed;
+    return false;
+  }
+
+  // Check the permission manager for permission based on the principal of
+  // the toplevel content.
   nsCOMPtr<nsIPermissionManager> permissionManager = services::GetPermissionManager();
   NS_ENSURE_TRUE(permissionManager, false);
 
@@ -3400,7 +3411,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
 
   switch (enabledState) {
   case nsIPluginTag::STATE_ENABLED:
-    return true;
+    return documentClassification == nsIDocument::FlashClassification::Allowed;
   case nsIPluginTag::STATE_CLICKTOPLAY:
     return false;
   }

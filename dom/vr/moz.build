@@ -6,11 +6,13 @@
 
 EXPORTS.mozilla.dom += [
     'VRDisplay.h',
+    'VRDisplayEvent.h',
     'VREventObserver.h',
     ]
 
 UNIFIED_SOURCES = [
     'VRDisplay.cpp',
+    'VRDisplayEvent.cpp',
     'VREventObserver.cpp',
     ]
 

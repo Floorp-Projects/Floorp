@@ -34,8 +34,6 @@ namespace dom {
  */
 nested(upto inside_cpow) sync protocol PContentBridge
 {
-    bridges PContent, PContent;
-
     manages PBlob;
     manages PBrowser;
     manages PFileDescriptorSet;

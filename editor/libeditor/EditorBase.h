@@ -402,8 +402,8 @@ protected:
   /**
    * Tell the doc state listeners that the doc state has changed.
    */
-  NS_IMETHOD NotifyDocumentListeners(
-               TDocumentListenerNotification aNotificationType);
+  nsresult NotifyDocumentListeners(
+             TDocumentListenerNotification aNotificationType);
 
   /**
    * Make the given selection span the entire document.
@@ -421,7 +421,7 @@ protected:
    * that the editor's sync/async settings for reflowing, painting, and
    * scrolling match.
    */
-  NS_IMETHOD ScrollSelectionIntoView(bool aScrollToAnchor);
+  nsresult ScrollSelectionIntoView(bool aScrollToAnchor);
 
   virtual bool IsBlockNode(nsINode* aNode);
 

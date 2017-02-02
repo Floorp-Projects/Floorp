@@ -179,6 +179,9 @@
       testStates("aria_treegrid_readonly_cell_inherited", STATE_READONLY, 0,
                  0, EXT_STATE_EDITABLE);
 
+      // aria-readonly on directory
+      testStates("aria_directory", STATE_READONLY);
+
       // aria-selectable
       testStates("aria_selectable_listitem", STATE_SELECTABLE | STATE_SELECTED);
 
@@ -624,6 +627,9 @@
     <div role="row"><div role="gridcell">H</div></div>
     <div role="row"><div role="gridcell">h</div></div>
   </div>
+
+  <!-- Test that directory is readonly -->
+  <div id="aria_directory" role="directory"></div>
 
 </body>
 </html>

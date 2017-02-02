@@ -506,6 +506,22 @@ VRManagerChild::RunFrameRequestCallbacks()
 }
 
 void
+VRManagerChild::FireDOMVRDisplayMountedEvent(uint32_t aDisplayID)
+{
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
+    &VRManagerChild::FireDOMVRDisplayMountedEventInternal,
+    aDisplayID));
+}
+
+void
+VRManagerChild::FireDOMVRDisplayUnmountedEvent(uint32_t aDisplayID)
+{
+  nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t>(this,
+    &VRManagerChild::FireDOMVRDisplayUnmountedEventInternal,
+    aDisplayID));
+}
+
+void
 VRManagerChild::FireDOMVRDisplayConnectEvent()
 {
   nsContentUtils::AddScriptRunner(NewRunnableMethod(this,
@@ -524,6 +540,22 @@ VRManagerChild::FireDOMVRDisplayPresentChangeEvent()
 {
   nsContentUtils::AddScriptRunner(NewRunnableMethod(this,
     &VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal));
+}
+
+void
+VRManagerChild::FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID)
+{
+  for (auto& listener : mListeners) {
+    listener->NotifyVRDisplayMounted(aDisplayID);
+  }
+}
+
+void
+VRManagerChild::FireDOMVRDisplayUnmountedEventInternal(uint32_t aDisplayID)
+{
+  for (auto& listener : mListeners) {
+    listener->NotifyVRDisplayUnmounted(aDisplayID);
+  }
 }
 
 void

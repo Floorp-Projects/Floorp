@@ -182,6 +182,22 @@ https://tracking.example.com:443
 https://not-tracking.example.com:443
 https://tracking.example.org:443
 
+#
+# Used while testing flash blocking (Bug 1307604)
+#
+http://flashallow.example.com:80
+http://exception.flashallow.example.com:80
+http://flashblock.example.com:80
+http://exception.flashblock.example.com:80
+http://subdocument.example.com:80
+http://exception.subdocument.example.com:80
+
+#
+# Flash usage can fail unless this URL exists
+#
+http://fpdownload2.macromedia.com:80
+https://fpdownload2.macromedia.com:443
+
 # Bug 1281083
 http://bug1281083.example.com:80
 

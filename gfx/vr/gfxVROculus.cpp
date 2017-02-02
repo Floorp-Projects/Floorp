@@ -335,6 +335,7 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
 
   mDisplayInfo.mDisplayName.AssignLiteral("Oculus VR HMD");
   mDisplayInfo.mIsConnected = true;
+  mDisplayInfo.mIsMounted = false;
 
   mDesc = ovr_GetHmdDesc(aSession);
 
@@ -348,6 +349,7 @@ VRDisplayOculus::VRDisplayOculus(ovrSession aSession)
     mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_LinearAcceleration;
   }
   mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
   mDisplayInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
 
   mFOVPort[VRDisplayInfo::Eye_Left] = mDesc.DefaultEyeFov[ovrEye_Left];
@@ -469,6 +471,7 @@ VRDisplayOculus::GetSensorState(double timeOffset)
     result.linearAcceleration[2] = pose.LinearAcceleration.z;
   }
   result.flags |= VRDisplayCapabilityFlags::Cap_External;
+  result.flags |= VRDisplayCapabilityFlags::Cap_MountDetection;
   result.flags |= VRDisplayCapabilityFlags::Cap_Present;
 
   return result;
@@ -937,4 +940,5 @@ VRDisplayOculus::NotifyVSync()
   ovrSessionStatus sessionStatus;
   ovrResult ovr = ovr_GetSessionStatus(mSession, &sessionStatus);
   mDisplayInfo.mIsConnected = (ovr == ovrSuccess && sessionStatus.HmdPresent);
+  mDisplayInfo.mIsMounted = (ovr == ovrSuccess && sessionStatus.HmdMounted);
 }
