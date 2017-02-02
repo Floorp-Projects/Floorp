@@ -191,7 +191,11 @@ void
 ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
                                          mozilla::TraversalRootBehavior aRootBehavior) {
   ResolveMappedAttrDeclarationBlocks();
+
+  MOZ_ASSERT(!sInServoTraversal);
+  sInServoTraversal = true;
   Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior);
+  sInServoTraversal = false;
 }
 
 already_AddRefed<nsStyleContext>
@@ -628,3 +632,5 @@ ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
   return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
 }
+
+bool ServoStyleSet::sInServoTraversal = false;
