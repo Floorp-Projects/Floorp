@@ -23,19 +23,22 @@
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch",
-          "r277806.patch"
+          "r277806.patch",
+          "r285657.patch"
         ],
         "linux64": [
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch",
-          "r277806.patch"
+          "r277806.patch",
+          "r285657.patch"
         ],
         "linux32": [
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch",
-          "r277806.patch"
+          "r277806.patch",
+          "r285657.patch"
         ]
     }
 }
