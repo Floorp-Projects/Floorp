@@ -47,7 +47,7 @@ def myopts(vals):
         myopts.vals = tmp
 
     return myopts.vals
-    
+
 
 def path2posix(src):
     """
@@ -78,7 +78,7 @@ def path2posix(src):
 
     dst = '/'.join(todo)
     return dst
-    
+
 
 def checkMkdir(work, debug=False):
     """
@@ -166,7 +166,7 @@ def checkMkdir(work, debug=False):
 def parseargs():
     """
     Support additional command line arguments for testing
-    
+
     Returns:
     hash - arguments of interested parsed from the command line
     """
