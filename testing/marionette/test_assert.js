@@ -9,6 +9,15 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/error.js");
 
+add_test(function test_session() {
+  assert.session({sessionId: "foo"});
+  for (let typ of [null, undefined, ""]) {
+    Assert.throws(() => assert.session({sessionId: typ}), InvalidSessionIdError);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_platforms() {
   // at least one will fail
   let raised;
