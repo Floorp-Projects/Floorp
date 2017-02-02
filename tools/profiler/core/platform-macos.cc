@@ -184,21 +184,19 @@ public:
           ThreadInfo* info = threads[i];
 
           // This will be null if we're not interested in profiling this thread.
-          if (!info->Profile() || info->IsPendingDelete())
-            continue;
-
-          PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
-          if (sleeping == PseudoStack::SLEEPING_AGAIN) {
-            info->Profile()->DuplicateLastSample();
+          if (!info->hasProfile() || info->IsPendingDelete()) {
             continue;
           }
 
-          info->Profile()->GetThreadResponsiveness()->Update();
+          PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
+          if (sleeping == PseudoStack::SLEEPING_AGAIN) {
+            info->DuplicateLastSample();
+            continue;
+          }
 
-          ThreadProfile* thread_profile = info->Profile();
+          info->GetThreadResponsiveness()->Update();
 
-          SampleContext(SamplerRegistry::sampler, thread_profile,
-                        isFirstProfiledThread);
+          SampleContext(SamplerRegistry::sampler, info, isFirstProfiledThread);
           isFirstProfiledThread = false;
         }
       }
@@ -213,11 +211,11 @@ public:
     }
   }
 
-  void SampleContext(Sampler* sampler, ThreadProfile* thread_profile,
+  void SampleContext(Sampler* sampler, ThreadInfo* aThreadInfo,
                      bool isFirstProfiledThread)
   {
     thread_act_t profiled_thread =
-      thread_profile->GetPlatformData()->profiled_thread();
+      aThreadInfo->GetPlatformData()->profiled_thread();
 
     TickSample sample_obj;
     TickSample* sample = &sample_obj;
@@ -267,7 +265,7 @@ public:
       sample->sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
       sample->fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
       sample->timestamp = mozilla::TimeStamp::Now();
-      sample->threadProfile = thread_profile;
+      sample->threadInfo = aThreadInfo;
 
       sampler->Tick(sample);
     }
