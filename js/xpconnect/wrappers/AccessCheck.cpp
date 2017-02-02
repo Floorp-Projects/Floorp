@@ -441,13 +441,15 @@ ExposedPropertiesOnly::check(JSContext* cx, HandleObject wrapper, HandleId id, W
 }
 
 bool
-ExposedPropertiesOnly::deny(js::Wrapper::Action act, HandleId id)
+ExposedPropertiesOnly::deny(JSContext* cx, js::Wrapper::Action act, HandleId id,
+                            bool mayThrow)
 {
     // Fail silently for GET, ENUMERATE, and GET_PROPERTY_DESCRIPTOR.
     if (act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE ||
         act == js::Wrapper::GET_PROPERTY_DESCRIPTOR)
     {
-        AutoJSContext cx;
+        // Note that ReportWrapperDenial doesn't do any _exception_ reporting,
+        // so we want to do this regardless of the value of mayThrow.
         return ReportWrapperDenial(cx, id, WrapperDenialForCOW,
                                    "Access to privileged JS object not permitted");
     }
