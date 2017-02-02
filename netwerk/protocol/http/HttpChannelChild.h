@@ -126,8 +126,6 @@ protected:
                                              const nsCString& altDataType) override;
   mozilla::ipc::IPCResult RecvOnTransportAndData(const nsresult& channelStatus,
                                                  const nsresult& status,
-                                                 const uint64_t& progress,
-                                                 const uint64_t& progressMax,
                                                  const uint64_t& offset,
                                                  const uint32_t& count,
                                                  const nsCString& data) override;
@@ -309,8 +307,6 @@ private:
                          const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus,
                           const nsresult& status,
-                          const uint64_t progress,
-                          const uint64_t& progressMax,
                           const uint64_t& offset,
                           const uint32_t& count,
                           const nsCString& data);

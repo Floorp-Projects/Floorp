@@ -221,11 +221,10 @@ private:
 
   nsAutoPtr<class nsHttpChannel::OfflineCacheEntryAsForeignMarker> mOfflineForeignMarker;
 
-  // state for combining OnStatus/OnProgress with OnDataAvailable
-  // into one IPDL call to child.
-  nsresult mStoredStatus;
-  int64_t mStoredProgress;
-  int64_t mStoredProgressMax;
+  // OnStatus is always called before OnProgress.
+  // Set true in OnStatus if next OnProgress can be ignored
+  // since the information can be recontructed from ODA.
+  bool mIgnoreProgress              : 1;
 
   bool mSentRedirect1Begin          : 1;
   bool mSentRedirect1BeginFailed    : 1;
