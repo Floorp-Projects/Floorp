@@ -432,9 +432,8 @@ profiler_init(void* stackTop)
   tlsPseudoStack.set(stack);
 
   bool isMainThread = true;
-  Sampler::RegisterCurrentThread(isMainThread ?
-                                   gGeckoThreadName : "Application Thread",
-                                 stack, isMainThread, stackTop);
+  Sampler::RegisterCurrentThread(gGeckoThreadName, stack, isMainThread,
+                                 stackTop);
 
   // Read interval settings from MOZ_PROFILER_INTERVAL and stack-scan
   // threshhold from MOZ_PROFILER_STACK_SCAN.
