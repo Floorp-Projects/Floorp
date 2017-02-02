@@ -50,13 +50,13 @@ passes them to signing servers to have their contents signed appropriately, base
 on an appropriate signing format. One signing job is created for each nightly-l10n
 job (usually chunked).
 
-source-check
+source-test
 ------------
 
-Source-checks are tasks that look at the Gecko source directly to check
-correctness.  This can include linting, Python unit tests, source-code
-analysis, or measurement work -- basically anything that does not require a
-build.
+Source-tests are tasks that run directly from the Gecko source. This can include linting,
+unit tests, source-code analysis, or measurement work. While source-test tasks run from
+a source checkout, it is still possible for them to depend on a build artifact, though
+often they do not.
 
 upload-symbols
 --------------
