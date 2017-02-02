@@ -938,7 +938,8 @@ nsXULElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
       // If it's not, look at our parent
       if (!controlElement)
         GetParentTree(getter_AddRefs(controlElement));
-      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(controlElement));
+      nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
+      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (xulElement && oldKidElem) {
@@ -964,8 +965,8 @@ nsXULElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
         nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
         if (curNode && nsContentUtils::ContentIsDescendantOf(curNode, oldKid)) {
             // Current item going away
-            nsCOMPtr<nsIBoxObject> box;
-            xulElement->GetBoxObject(getter_AddRefs(box));
+            IgnoredErrorResult ignored;
+            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
             listBox = do_QueryInterface(box);
             if (listBox && oldKidElem) {
               listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
@@ -1498,14 +1499,6 @@ nsXULElement::GetControllers(ErrorResult& rv)
     }
 
     return Controllers();
-}
-
-NS_IMETHODIMP
-nsXULElement::GetBoxObject(nsIBoxObject** aResult)
-{
-    ErrorResult rv;
-    *aResult = GetBoxObject(rv).take();
-    return rv.StealNSResult();
 }
 
 already_AddRefed<BoxObject>

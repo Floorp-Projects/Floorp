@@ -14,7 +14,8 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsRange.h"
 #include "nsIBoxObject.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
+#include "mozilla/dom/BoxObject.h"
 #include "nsIDocShell.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -24,6 +25,7 @@
 #include "nsISelectionController.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
@@ -97,9 +99,10 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   if (NS_FAILED(rv))
     return;
 
-  nsCOMPtr<nsIDOMXULElement> tcXULElm(do_QueryInterface(tcElm));
-  nsCOMPtr<nsIBoxObject> tcBoxObj;
-  tcXULElm->GetBoxObject(getter_AddRefs(tcBoxObj));
+  nsCOMPtr<nsIContent> tcXULElm(do_QueryInterface(tcElm));
+  IgnoredErrorResult ignored;
+  nsCOMPtr<nsIBoxObject> tcBoxObj =
+    nsXULElement::FromContent(tcXULElm)->GetBoxObject(ignored);
 
   int32_t tcX = 0;
   tcBoxObj->GetX(&tcX);
@@ -489,13 +492,13 @@ nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
 {
   nsCOMPtr<nsIDOMElement> tcElm;
   aTreeBoxObj->GetTreeBody(getter_AddRefs(tcElm));
-  nsCOMPtr<nsIDOMXULElement> tcXULElm(do_QueryInterface(tcElm));
+  nsCOMPtr<nsIContent> tcContent(do_QueryInterface(tcElm));
+  RefPtr<nsXULElement> tcXULElm = nsXULElement::FromContentOrNull(tcContent);
   if (!tcXULElm)
     return nullptr;
 
-  nsCOMPtr<nsIBoxObject> boxObj;
-  tcXULElm->GetBoxObject(getter_AddRefs(boxObj));
-  return boxObj.forget();
+  IgnoredErrorResult ignored;
+  return tcXULElm->GetBoxObject(ignored);
 }
 
 already_AddRefed<nsITreeBoxObject>
@@ -507,14 +510,13 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
     if (currentContent->NodeInfo()->Equals(nsGkAtoms::tree,
                                            kNameSpaceID_XUL)) {
       // We will get the nsITreeBoxObject from the tree node
-      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(currentContent));
-      if (xulElement) {
-        nsCOMPtr<nsIBoxObject> box;
-        xulElement->GetBoxObject(getter_AddRefs(box));
-        nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
-        if (treeBox)
-          return treeBox.forget();
-      }
+      RefPtr<nsXULElement> xulElement =
+        nsXULElement::FromContent(currentContent);
+      IgnoredErrorResult ignored;
+      nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+      nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
+      if (treeBox)
+        return treeBox.forget();
     }
     currentContent = currentContent->GetFlattenedTreeParent();
   }

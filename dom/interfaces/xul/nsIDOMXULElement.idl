@@ -64,7 +64,6 @@ interface nsIDOMXULElement : nsIDOMElement
 
   readonly attribute nsIRDFResource            resource;
   readonly attribute nsIControllers            controllers;
-  readonly attribute nsIBoxObject              boxObject;
 
   void                      focus();
   void                      blur();

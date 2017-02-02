@@ -165,6 +165,7 @@ LOCAL_INCLUDES += [
     '/dom/html',
     '/dom/svg',
     '/dom/xbl',
+    '/dom/xul',
     '/view',
 ]
 
