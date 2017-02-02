@@ -2110,7 +2110,9 @@ var AddonManagerInternal = {
               install.addon.userDisabled = false;
         }
 
-        if (WEBEXT_PERMISSION_PROMPTS) {
+        let needsRestart = (install.addon.pendingOperations != AddonManager.PENDING_NONE);
+
+        if (WEBEXT_PERMISSION_PROMPTS && !needsRestart) {
           let subject = {wrappedJSObject: {target: browser, addon: install.addon}};
           Services.obs.notifyObservers(subject, "webextension-install-notify", null);
         } else {
