@@ -3599,9 +3599,11 @@ nsStyleContentData::~nsStyleContentData()
   MOZ_COUNT_DTOR(nsStyleContentData);
 
   if (mType == eStyleContentType_Image) {
+    MOZ_ASSERT(NS_IsMainThread());
     mContent.mImage->Release();
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
+    MOZ_ASSERT(NS_IsMainThread());
     mContent.mCounters->Release();
   } else if (mContent.mString) {
     free(mContent.mString);
