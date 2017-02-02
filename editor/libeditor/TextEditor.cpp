@@ -797,17 +797,19 @@ TextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 }
 
 nsresult
-TextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
+TextEditor::UpdateIMEComposition(WidgetCompositionEvent* aCompsitionChangeEvent)
 {
-  MOZ_ASSERT(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
+  MOZ_ASSERT(aCompsitionChangeEvent,
+             "aCompsitionChangeEvent must not be nullptr");
 
-  WidgetCompositionEvent* compositionChangeEvent =
-    aDOMTextEvent->WidgetEventPtr()->AsCompositionEvent();
-  NS_ENSURE_TRUE(compositionChangeEvent, NS_ERROR_INVALID_ARG);
-  MOZ_ASSERT(compositionChangeEvent->mMessage == eCompositionChange,
-             "The internal event should be eCompositionChange");
+  if (NS_WARN_IF(!aCompsitionChangeEvent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  if (!EnsureComposition(compositionChangeEvent)) {
+  MOZ_ASSERT(aCompsitionChangeEvent->mMessage == eCompositionChange,
+             "The event should be eCompositionChange");
+
+  if (!EnsureComposition(aCompsitionChangeEvent)) {
     return NS_OK;
   }
 
@@ -828,7 +830,7 @@ TextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   MOZ_ASSERT(!mPlaceHolderBatch,
     "UpdateIMEComposition() must be called without place holder batch");
   TextComposition::CompositionChangeEventHandlingMarker
-    compositionChangeEventHandlingMarker(mComposition, compositionChangeEvent);
+    compositionChangeEventHandlingMarker(mComposition, aCompsitionChangeEvent);
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
@@ -838,7 +840,7 @@ TextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   {
     AutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
-    rv = InsertText(compositionChangeEvent->mData);
+    rv = InsertText(aCompsitionChangeEvent->mData);
 
     if (caretP) {
       caretP->SetSelection(selection);
@@ -850,7 +852,7 @@ TextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   // compositionend event, we don't need to notify editor observes of this
   // change.
   // NOTE: We must notify after the auto batch will be gone.
-  if (!compositionChangeEvent->IsFollowedByCompositionEnd()) {
+  if (!aCompsitionChangeEvent->IsFollowedByCompositionEnd()) {
     NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
