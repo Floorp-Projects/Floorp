@@ -438,6 +438,18 @@ VRManagerParent::RecvNewPoseMoveToMockController(const uint32_t& aDeviceID,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+VRManagerParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
+                                   const uint32_t& aHapticIndex,
+                                   const double& aIntensity,
+                                   const double& aDuration)
+{
+  VRManager* vm = VRManager::Get();
+  vm->VibrateHaptic(aControllerIdx, aHapticIndex, aIntensity,
+                    aDuration);
+  return IPC_OK();
+}
+
 bool
 VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
