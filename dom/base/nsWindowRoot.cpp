@@ -27,7 +27,7 @@
 #include "mozilla/dom/TabParent.h"
 
 #ifdef MOZ_XUL
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #endif
 
 using namespace mozilla;
@@ -231,9 +231,13 @@ nsWindowRoot::GetControllers(nsIControllers** aResult)
     nsFocusManager::GetFocusedDescendant(mWindow, true, getter_AddRefs(focusedWindow));
   if (focusedContent) {
 #ifdef MOZ_XUL
-    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedContent));
-    if (xulElement)
-      return xulElement->GetControllers(aResult);
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(focusedContent);
+    if (xulElement) {
+      ErrorResult rv;
+      *aResult = xulElement->GetControllers(rv);
+      NS_IF_ADDREF(*aResult);
+      return rv.StealNSResult();
+    }
 #endif
 
     nsCOMPtr<nsIDOMHTMLTextAreaElement> htmlTextArea =
