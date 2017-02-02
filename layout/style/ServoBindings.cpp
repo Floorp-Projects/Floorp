@@ -21,6 +21,7 @@
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
+#include "nsMappedAttributes.h"
 #include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
@@ -312,7 +313,7 @@ Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
+Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
 {
   DeclarationBlock* decl = aElement->GetInlineStyleDeclaration();
   if (!decl) {
@@ -326,6 +327,21 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
   }
   return reinterpret_cast<const RawServoDeclarationBlockStrong*>
     (decl->AsServo()->RefRaw());
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
+  static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
+                sizeof(RawServoDeclarationBlockStrong),
+                "RefPtr should just be a pointer");
+  const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
+  if (!attrs) {
+    return nullptr;
+  }
+
+  const RefPtr<RawServoDeclarationBlock>& servo = attrs->GetServoStyle();
+  return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&servo);
 }
 
 RawServoDeclarationBlockStrong

@@ -38,6 +38,7 @@ module.exports = {
     "is": false,
     "isnot": false,
     "ok": false,
+    "PromiseDebugging": false,
     "privateNoteIntentionalCrash": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,

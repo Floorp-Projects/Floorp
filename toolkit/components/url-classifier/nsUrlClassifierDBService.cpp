@@ -631,8 +631,11 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
      mUpdateStatus : NS_ERROR_UC_UPDATE_UNKNOWN;
   }
 
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR, provider,
-                        NS_ERROR_GET_CODE(updateStatus));
+  // Do not record telemetry for testing tables.
+  if (!provider.Equals(TESTING_TABLE_PROVIDER_NAME)) {
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_UPDATE_ERROR, provider,
+                          NS_ERROR_GET_CODE(updateStatus));
+  }
 
   mMissCache.Clear();
 
@@ -989,7 +992,7 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
       // has registered the table. In the second case we should not call
       // complete.
       if ((!gethashUrl.IsEmpty() ||
-           StringBeginsWith(result.mTableName, NS_LITERAL_CSTRING("test-"))) &&
+           StringBeginsWith(result.mTableName, NS_LITERAL_CSTRING("test"))) &&
           mDBService->GetCompleter(result.mTableName,
                                    getter_AddRefs(completer))) {
 

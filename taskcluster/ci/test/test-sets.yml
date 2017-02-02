@@ -44,7 +44,9 @@ web-platform-tests:
     - web-platform-tests-wdspec
 
 external-media-tests:
-    - external-media-tests
+    - external-media-tests-base
+    - external-media-tests-youtube
+    - external-media-tests-twitch
 
 opt-only-tests:
     - mochitest-valgrind
@@ -88,7 +90,6 @@ jsdcov-code-coverage-tests:
 windows-vm-tests:
     - cppunit
     #- crashtest
-    - external-media-tests
     #- gtest
     #- jittest
     - jsreftest
@@ -147,7 +148,6 @@ macosx64-tests-talos:
 linux32-tests:
     - cppunit
     - crashtest
-    - external-media-tests
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest

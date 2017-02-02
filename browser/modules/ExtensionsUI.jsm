@@ -343,6 +343,7 @@ this.ExtensionsUI = {
 
       let options = {
         hideClose: true,
+        timeout: Date.now() + 30000,
         popupIconURL: addon.iconURL || DEFAULT_EXTENSION_ICON,
         eventCallback(topic) {
           if (topic == "showing") {

@@ -619,6 +619,98 @@ add_task(function* test_update_keyword() {
       "Removing keyword for URL without existing keyword should succeed");
   }
 
+  let item2;
+  do_print("Insert removes other item's keyword if they are the same");
+  {
+    let updatedItem = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item.syncId,
+      keyword: "test",
+    });
+    equal(updatedItem.keyword, "test", "Initial update succeeds");
+    item2 = yield PlacesSyncUtils.bookmarks.insert({
+      kind: "bookmark",
+      parentSyncId: "menu",
+      url: "https://mozilla.org/1",
+      syncId: makeGuid(),
+      keyword: "test",
+    });
+    equal(item2.keyword, "test", "insert with existing should succeed");
+    updatedItem = yield PlacesSyncUtils.bookmarks.fetch(item.syncId);
+    ok(!updatedItem.keyword, "initial item no longer has keyword");
+    let entry = yield PlacesUtils.keywords.fetch({
+      url: "https://mozilla.org",
+    });
+    ok(!entry, "Direct check for original url keyword gives nothing");
+    let newEntry = yield PlacesUtils.keywords.fetch("test");
+    ok(newEntry, "Keyword should exist for new item");
+    equal(newEntry.url.href, "https://mozilla.org/1", "Keyword should point to new url");
+  }
+
+  do_print("Insert updates other item's keyword if they are the same url");
+  {
+    let updatedItem = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item.syncId,
+      keyword: "test2",
+    });
+    equal(updatedItem.keyword, "test2", "Initial update succeeds");
+    let newItem = yield PlacesSyncUtils.bookmarks.insert({
+      kind: "bookmark",
+      parentSyncId: "menu",
+      url: "https://mozilla.org",
+      syncId: makeGuid(),
+      keyword: "test3",
+    });
+    equal(newItem.keyword, "test3", "insert with existing should succeed");
+    updatedItem = yield PlacesSyncUtils.bookmarks.fetch(item.syncId);
+    equal(updatedItem.keyword, "test3", "initial item has new keyword");
+  }
+
+  do_print("Update removes other item's keyword if they are the same");
+  {
+    let updatedItem = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item.syncId,
+      keyword: "test4",
+    });
+    equal(updatedItem.keyword, "test4", "Initial update succeeds");
+    let updatedItem2 = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item2.syncId,
+      keyword: "test4",
+    });
+    equal(updatedItem2.keyword, "test4", "New update succeeds");
+    updatedItem = yield PlacesSyncUtils.bookmarks.fetch(item.syncId);
+    ok(!updatedItem.keyword, "initial item no longer has keyword");
+    let entry = yield PlacesUtils.keywords.fetch({
+      url: "https://mozilla.org",
+    });
+    ok(!entry, "Direct check for original url keyword gives nothing");
+    let newEntry = yield PlacesUtils.keywords.fetch("test4");
+    ok(newEntry, "Keyword should exist for new item");
+    equal(newEntry.url.href, "https://mozilla.org/1", "Keyword should point to new url");
+  }
+
+  do_print("Update url updates it's keyword if url already has keyword");
+  {
+    let updatedItem = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item.syncId,
+      keyword: "test4",
+    });
+    equal(updatedItem.keyword, "test4", "Initial update succeeds");
+    let updatedItem2 = yield PlacesSyncUtils.bookmarks.update({
+      syncId: item2.syncId,
+      keyword: "test5",
+    });
+    equal(updatedItem2.keyword, "test5", "New update succeeds");
+    yield PlacesSyncUtils.bookmarks.update({
+      syncId: item2.syncId,
+      url: item.url.href,
+    });
+    updatedItem2 = yield PlacesSyncUtils.bookmarks.fetch(item2.syncId);
+    equal(updatedItem2.keyword, "test4", "Item keyword has been updated");
+    updatedItem = yield PlacesSyncUtils.bookmarks.fetch(item.syncId);
+    equal(updatedItem.keyword, "test4", "Initial item still has keyword");
+  }
+
+
   yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesSyncUtils.bookmarks.reset();
 });

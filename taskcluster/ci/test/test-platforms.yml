@@ -19,11 +19,13 @@ linux32/debug:
     build-platform: linux/debug
     test-sets:
         - linux32-tests
+        - external-media-tests
 linux32/opt:
     build-platform: linux/opt
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
+        - external-media-tests
 
 linux64/debug:
     build-platform: linux64/debug
@@ -84,10 +86,12 @@ windows7-32-vm/debug:
     build-platform: win32/debug
     test-sets:
         - windows-vm-tests
+        - external-media-tests
 windows7-32-vm/opt:
     build-platform: win32/opt
     test-sets:
         - windows-vm-tests
+        - external-media-tests
 
 # win32 gpu
 #windows7-32/debug:
@@ -104,10 +108,12 @@ windows10-64-vm/debug:
     build-platform: win64/debug
     test-sets:
         - windows-vm-tests
+        - external-media-tests
 windows10-64-vm/opt:
     build-platform: win64/opt
     test-sets:
         - windows-vm-tests
+        - external-media-tests
 
 # win64 gpu
 #windows10-64/debug:
