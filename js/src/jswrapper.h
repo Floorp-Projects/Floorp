@@ -294,7 +294,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     { }
 
     virtual bool enter(JSContext* cx, HandleObject wrapper, HandleId id, Wrapper::Action act,
-                       bool* bp) const override;
+                       bool mayThrow, bool* bp) const override;
 
     virtual bool defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
                                 Handle<PropertyDescriptor> desc,
