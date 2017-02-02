@@ -138,6 +138,7 @@ GMPInstallManager.prototype = {
    */
   installAddon(gmpAddon) {
     if (this._deferred) {
+        let log = getScopedLogger("GMPInstallManager.installAddon");
         log.error("previous error encountered");
         return Promise.reject({type: "previouserrorencountered"});
     }

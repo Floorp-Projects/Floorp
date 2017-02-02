@@ -850,7 +850,6 @@ add_task(function* test_direct() {
       print("Error when executing SQL (" + error.result + "): " +
             error.message);
       print("Original error: " + error.error);
-      errors.push(error);
       deferred.reject();
     },
 

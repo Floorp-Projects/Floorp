@@ -37,6 +37,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -199,16 +200,22 @@ public class SwitchBoard {
         return experiment;
     }
 
-    private static boolean isMatch(Context c, @Nullable JSONObject matchKeys) {
+    /**
+     * Return false if the match object contains any non-matching patterns. Otherwise returns true.
+     */
+    private static boolean isMatch(Context context, @Nullable JSONObject matchKeys) {
         // If no match keys are specified, default to enabling the experiment.
         if (matchKeys == null) {
             return true;
         }
 
         if (matchKeys.has(KEY_APP_ID)) {
-            final String packageName = c.getPackageName();
             try {
-                if (!packageName.matches(matchKeys.getString(KEY_APP_ID))) {
+                final String packageName = context.getPackageName();
+                final String expectedAppIdPattern = matchKeys.getString(KEY_APP_ID);
+
+                if (!TextUtils.isEmpty(expectedAppIdPattern)
+                        && !packageName.matches(expectedAppIdPattern)) {
                     return false;
                 }
             } catch (JSONException e) {
@@ -219,7 +226,10 @@ public class SwitchBoard {
         if (matchKeys.has(KEY_COUNTRY)) {
             try {
                 final String country = Locale.getDefault().getISO3Country();
-                if (!country.matches(matchKeys.getString(KEY_COUNTRY))) {
+                final String expectedCountryPattern = matchKeys.getString(KEY_COUNTRY);
+
+                if (!TextUtils.isEmpty(expectedCountryPattern)
+                        && !country.matches(expectedCountryPattern)) {
                     return false;
                 }
             } catch (MissingResourceException | JSONException e) {
@@ -228,30 +238,40 @@ public class SwitchBoard {
         }
 
         if (matchKeys.has(KEY_DEVICE)) {
-            final String device = Build.DEVICE;
             try {
-                if (!device.matches(matchKeys.getString(KEY_DEVICE))) {
+                final String device = Build.DEVICE;
+                final String expectedDevicePattern = matchKeys.getString(KEY_DEVICE);
+
+                if (!TextUtils.isEmpty(expectedDevicePattern)
+                        && !device.matches(expectedDevicePattern)) {
                     return false;
                 }
             } catch (JSONException e) {
                 Log.e(TAG, "Exception matching device", e);
             }
-
         }
+
         if (matchKeys.has(KEY_LANG)) {
             try {
                 final String lang = Locale.getDefault().getISO3Language();
-                if (!lang.matches(matchKeys.getString(KEY_LANG))) {
+                final String expectedLanguagePattern = matchKeys.getString(KEY_LANG);
+
+                if (!TextUtils.isEmpty(expectedLanguagePattern)
+                        && !lang.matches(expectedLanguagePattern)) {
                     return false;
                 }
             } catch (MissingResourceException | JSONException e) {
                 Log.e(TAG, "Exception matching lang", e);
             }
         }
+
         if (matchKeys.has(KEY_MANUFACTURER)) {
-            final String manufacturer = Build.MANUFACTURER;
             try {
-                if (!manufacturer.matches(matchKeys.getString(KEY_MANUFACTURER))) {
+                final String manufacturer = Build.MANUFACTURER;
+                final String expectedManufacturerPattern = matchKeys.getString(KEY_MANUFACTURER);
+
+                if (!TextUtils.isEmpty(expectedManufacturerPattern)
+                        && !manufacturer.matches(expectedManufacturerPattern)) {
                     return false;
                 }
             } catch (JSONException e) {
@@ -261,8 +281,11 @@ public class SwitchBoard {
 
         if (matchKeys.has(KEY_VERSION)) {
             try {
-                final String version = c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName;
-                if (!version.matches(matchKeys.getString(KEY_VERSION))) {
+                final String version = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+                final String expectedVersionPattern = matchKeys.getString(KEY_VERSION);
+
+                if (!TextUtils.isEmpty(expectedVersionPattern)
+                        && !version.matches(expectedVersionPattern)) {
                     return false;
                 }
             } catch (NameNotFoundException | JSONException e) {

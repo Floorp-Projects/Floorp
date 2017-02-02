@@ -901,6 +901,43 @@ var insertSyncLivemark = Task.async(function* (insertInfo) {
   return insertBookmarkMetadata(livemarkItem, insertInfo);
 });
 
+// Keywords are a 1 to 1 mapping between strings and pairs of (URL, postData).
+// (the postData is not synced, so we ignore it). Sync associates keywords with
+// bookmarks, which is not really accurate. -- We might already have a keyword
+// with that name, or we might already have another bookmark with that URL with
+// a different keyword, etc.
+//
+// If we don't handle those cases by removing the conflicting keywords first,
+// the insertion  will fail, and the keywords will either be wrong, or missing.
+// This function handles those cases.
+var removeConflictingKeywords = Task.async(function* (bookmarkURL, newKeyword) {
+  let entryForURL = yield PlacesUtils.keywords.fetch({
+    url: bookmarkURL
+  });
+  if (entryForURL && entryForURL.keyword !== newKeyword) {
+    yield PlacesUtils.keywords.remove({
+      keyword: entryForURL.keyword,
+      source: SOURCE_SYNC,
+    });
+    // This will cause us to reupload this record for this sync, but without it,
+    // we will risk data corruption.
+    yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(entryForURL.url.href);
+  }
+  if (!newKeyword) {
+    return;
+  }
+  let entryForNewKeyword = yield PlacesUtils.keywords.fetch({
+    keyword: newKeyword
+  });
+  if (entryForNewKeyword) {
+    yield PlacesUtils.keywords.remove({
+      keyword: entryForNewKeyword.keyword,
+      source: SOURCE_SYNC,
+    });
+    yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(entryForNewKeyword.url.href);
+  }
+});
+
 // Sets annotations, keywords, and tags on a new bookmark. Returns a Sync
 // bookmark object.
 var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
@@ -923,6 +960,7 @@ var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
   }
 
   if (insertInfo.keyword) {
+    yield removeConflictingKeywords(bookmarkItem.url.href, insertInfo.keyword);
     yield PlacesUtils.keywords.insert({
       keyword: insertInfo.keyword,
       url: bookmarkItem.url.href,
@@ -1136,15 +1174,7 @@ var updateBookmarkMetadata = Task.async(function* (oldBookmarkItem,
 
   if (updateInfo.hasOwnProperty("keyword")) {
     // Unconditionally remove the old keyword.
-    let entry = yield PlacesUtils.keywords.fetch({
-      url: oldBookmarkItem.url.href,
-    });
-    if (entry) {
-      yield PlacesUtils.keywords.remove({
-        keyword: entry.keyword,
-        source: SOURCE_SYNC,
-      });
-    }
+    yield removeConflictingKeywords(oldBookmarkItem.url.href, updateInfo.keyword);
     if (updateInfo.keyword) {
       yield PlacesUtils.keywords.insert({
         keyword: updateInfo.keyword,

@@ -791,7 +791,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
            Preferences::GetUint("media.audio-max-decode-error", 3))
   , mVideo(this, MediaData::VIDEO_DATA,
            Preferences::GetUint("media.video-max-decode-error", 2))
-  , mDemuxer(new DemuxerProxy(aDemuxer, aDecoder->AbstractMainThread()))
+  , mDemuxer(nullptr)
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
@@ -804,10 +804,15 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
 
-  if (aDecoder && aDecoder->CompositorUpdatedEvent()) {
-    mCompositorUpdatedListener =
-      aDecoder->CompositorUpdatedEvent()->Connect(
-        mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
+  if (aDecoder) {
+    mDemuxer = MakeUnique<DemuxerProxy>(aDemuxer,
+      aDecoder->AbstractMainThread());
+
+    if (aDecoder->CompositorUpdatedEvent()) {
+      mCompositorUpdatedListener =
+        aDecoder->CompositorUpdatedEvent()->Connect(
+          mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
+    }
   }
 }
 
