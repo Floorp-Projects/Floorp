@@ -1,21 +1,19 @@
 "use strict";
-Cu.import("resource://gre/modules/Services.jsm");
 
-registerCleanupFunction(function() {
-  Services.ppmm.broadcastAsyncMessage("AboutPrincipalTest:Unregister");
-  BrowserTestUtils.waitForMessage(Services.ppmm, "AboutPrincipalTest:Unregistered").then(
-    Services.ppmm.removeDelayedProcessScript(
-      "chrome://mochitests/content/browser/browser/base/content/test/general/file_register_about_page.js"
-    )
-  );
-});
+const kChildPage = getRootDirectory(gTestPath) + "file_about_child.html";
+const kParentPage = getRootDirectory(gTestPath) + "file_about_parent.html";
+
+const kAboutPagesRegistered = Promise.all([
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-about-principal-child", kChildPage,
+    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD | Ci.nsIAboutModule.ALLOW_SCRIPT),
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction, "test-about-principal-parent", kParentPage,
+    Ci.nsIAboutModule.ALLOW_SCRIPT)
+]);
 
 add_task(function* test_principal_click() {
-  Services.ppmm.loadProcessScript(
-    "chrome://mochitests/content/browser/browser/base/content/test/general/file_register_about_page.js",
-    true
-  );
-
+  yield kAboutPagesRegistered;
   yield BrowserTestUtils.withNewTab("about:test-about-principal-parent", function*(browser) {
     let loadPromise = BrowserTestUtils.browserLoaded(browser, false, "about:test-about-principal-child");
     let myLink = browser.contentDocument.getElementById("aboutchildprincipal");
@@ -44,6 +42,7 @@ add_task(function* test_principal_click() {
 });
 
 add_task(function* test_principal_ctrl_click() {
+  yield kAboutPagesRegistered;
   yield SpecialPowers.pushPrefEnv({
     "set": [["security.sandbox.content.level", 1]],
   });
@@ -80,6 +79,7 @@ add_task(function* test_principal_ctrl_click() {
 });
 
 add_task(function* test_principal_right_click_open_link_in_new_tab() {
+  yield kAboutPagesRegistered;
   yield SpecialPowers.pushPrefEnv({
     "set": [["security.sandbox.content.level", 1]],
   });
