@@ -21,7 +21,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Gamepad)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Gamepad, mParent, mButtons, mPose)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Gamepad, mParent, mButtons, mPose,
+                                      mHapticActuators)
 
 void
 Gamepad::UpdateTimestamp()
@@ -30,19 +31,22 @@ Gamepad::UpdateTimestamp()
   if(newWindow) {
     Performance* perf = newWindow->GetPerformance();
     if (perf) {
-      mTimestamp =  perf->Now();
+      mTimestamp = perf->Now();
     }
   }
 }
 
 Gamepad::Gamepad(nsISupports* aParent,
                  const nsAString& aID, uint32_t aIndex,
+                 uint32_t aHashKey,
                  GamepadMappingType aMapping,
                  GamepadHand aHand,
-                 uint32_t aNumButtons, uint32_t aNumAxes)
+                 uint32_t aNumButtons, uint32_t aNumAxes,
+                 uint32_t aNumHaptics)
   : mParent(aParent),
     mID(aID),
     mIndex(aIndex),
+    mHashKey(aHashKey),
     mMapping(aMapping),
     mHand(aHand),
     mConnected(true),
@@ -55,6 +59,9 @@ Gamepad::Gamepad(nsISupports* aParent,
   }
   mAxes.InsertElementsAt(0, aNumAxes, 0.0f);
   mPose = new GamepadPose(aParent);
+  for (uint32_t i = 0; i < aNumHaptics; ++i) {
+    mHapticActuators.AppendElement(new GamepadHapticActuator(mParent, mHashKey, i));
+  }
   UpdateTimestamp();
 }
 
@@ -125,6 +132,9 @@ Gamepad::SyncState(Gamepad* aOther)
     MOZ_ASSERT(aOther->GetPose());
     mPose->SetPoseState(aOther->GetPose()->GetPoseState());
     mHand = aOther->Hand();
+    for (uint32_t i = 0; i < mHapticActuators.Length(); ++i) {
+      mHapticActuators[i]->Set(aOther->mHapticActuators[i]);
+    }
   }
 
   UpdateTimestamp();
@@ -134,8 +144,9 @@ already_AddRefed<Gamepad>
 Gamepad::Clone(nsISupports* aParent)
 {
   RefPtr<Gamepad> out =
-    new Gamepad(aParent, mID, mIndex, mMapping,
-                mHand, mButtons.Length(), mAxes.Length());
+    new Gamepad(aParent, mID, mIndex, mHashKey, mMapping,
+                mHand, mButtons.Length(), mAxes.Length(),
+                mHapticActuators.Length());
   out->SyncState(this);
   return out.forget();
 }
