@@ -332,6 +332,7 @@ SPConsoleListener.prototype = {
       m.columnNumber  = msg.columnNumber;
       m.category      = msg.category;
       m.windowID      = msg.outerWindowID;
+      m.innerWindowID = msg.innerWindowID;
       m.isScriptError = true;
       m.isWarning     = ((msg.flags & Ci.nsIScriptError.warningFlag) === 1);
       m.isException   = ((msg.flags & Ci.nsIScriptError.exceptionFlag) === 1);
@@ -340,7 +341,11 @@ SPConsoleListener.prototype = {
 
     Object.freeze(m);
 
-    this.callback.call(undefined, m);
+    // Run in a separate runnable since console listeners aren't
+    // supposed to touch content and this one might.
+    Services.tm.mainThread.dispatch(() => {
+      this.callback.call(undefined, m);
+    }, Ci.nsIThread.DISPATCH_NORMAL);
 
     if (!m.isScriptError && m.message === "SENTINEL")
       Services.console.unregisterListener(this);
