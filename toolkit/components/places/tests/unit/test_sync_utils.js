@@ -715,6 +715,88 @@ add_task(function* test_update_keyword() {
   yield PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(function* test_conflicting_keywords() {
+  yield ignoreChangedRoots();
+
+  do_print("Insert bookmark with new keyword");
+  let tbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "unfiled",
+    url: "http://getthunderbird.com",
+    keyword: "tbird",
+  });
+  {
+    let entryByKeyword = yield PlacesUtils.keywords.fetch("tbird");
+    equal(entryByKeyword.url.href, "http://getthunderbird.com/",
+      "Should return new keyword entry by URL");
+    let entryByURL = yield PlacesUtils.keywords.fetch({
+      url: "http://getthunderbird.com",
+    });
+    equal(entryByURL.keyword, "tbird", "Should return new entry by keyword");
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(changes, {},
+      "Should not bump change counter for new keyword entry");
+  }
+
+  do_print("Insert bookmark with same URL and different keyword");
+  let dupeTbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "toolbar",
+    url: "http://getthunderbird.com",
+    keyword: "tb",
+  });
+  {
+    let oldKeywordByURL = yield PlacesUtils.keywords.fetch("tbird");
+    ok(!oldKeywordByURL,
+      "Should remove old entry when inserting bookmark with different keyword");
+    let entryByKeyword = yield PlacesUtils.keywords.fetch("tb");
+    equal(entryByKeyword.url.href, "http://getthunderbird.com/",
+      "Should return different keyword entry by URL");
+    let entryByURL = yield PlacesUtils.keywords.fetch({
+      url: "http://getthunderbird.com",
+    });
+    equal(entryByURL.keyword, "tb", "Should return different entry by keyword");
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), [
+      tbBmk.syncId,
+      dupeTbBmk.syncId,
+    ].sort(), "Should bump change counter for bookmarks with different keyword");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Update bookmark with different keyword");
+  yield PlacesSyncUtils.bookmarks.update({
+    kind: "bookmark",
+    syncId: tbBmk.syncId,
+    url: "http://getthunderbird.com",
+    keyword: "thunderbird",
+  });
+  {
+    let oldKeywordByURL = yield PlacesUtils.keywords.fetch("tb");
+    ok(!oldKeywordByURL,
+      "Should remove old entry when updating bookmark keyword");
+    let entryByKeyword = yield PlacesUtils.keywords.fetch("thunderbird");
+    equal(entryByKeyword.url.href, "http://getthunderbird.com/",
+      "Should return updated keyword entry by URL");
+    let entryByURL = yield PlacesUtils.keywords.fetch({
+      url: "http://getthunderbird.com",
+    });
+    equal(entryByURL.keyword, "thunderbird",
+      "Should return entry by updated keyword");
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), [
+      tbBmk.syncId,
+      dupeTbBmk.syncId,
+    ].sort(), "Should bump change counter for bookmarks with updated keyword");
+    yield setChangesSynced(changes);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(function* test_update_annos() {
   let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
     kind: "folder",
