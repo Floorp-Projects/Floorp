@@ -15,6 +15,9 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULRelatedElement.h"
+#include "nsXULElement.h"
+
+#include "mozilla/dom/BindingDeclarations.h"
 
 using namespace mozilla::a11y;
 
@@ -48,9 +51,10 @@ bool
 XULTabAccessible::DoAction(uint8_t index)
 {
   if (index == eAction_Switch) {
-    nsCOMPtr<nsIDOMXULElement> tab(do_QueryInterface(mContent));
+    // XXXbz Could this just FromContent?
+    RefPtr<nsXULElement> tab = nsXULElement::FromContentOrNull(mContent);
     if (tab) {
-      tab->Click();
+      tab->Click(mozilla::dom::CallerType::System);
       return true;
     }
   }
