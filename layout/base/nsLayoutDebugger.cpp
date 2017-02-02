@@ -15,7 +15,6 @@
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
 #include "nsPrintfCString.h"
-#include "DisplayItemScrollClip.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -150,7 +149,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
 #endif
 
-  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) %sbounds(%d,%d,%d,%d) layerBounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) scrollClip(%s)%s ref=0x%p agr=0x%p",
+  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) %sbounds(%d,%d,%d,%d) layerBounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) asr(%s) clipChain(%s)%s ref=0x%p agr=0x%p",
           aItem->Name(), aItem, (void*)f, NS_ConvertUTF16toUTF8(contentData).get(),
           (aItem->ZIndex() ? nsPrintfCString("z=%d ", aItem->ZIndex()).get() : ""),
           rect.x, rect.y, rect.width, rect.height,
@@ -158,7 +157,8 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           vis.x, vis.y, vis.width, vis.height,
           component.x, component.y, component.width, component.height,
           clip.ToString().get(),
-          DisplayItemScrollClip::ToString(aItem->ScrollClip()).get(),
+          ActiveScrolledRoot::ToString(aItem->GetActiveScrolledRoot()).get(),
+          DisplayItemClipChain::ToString(aItem->GetClipChain()).get(),
           aItem->IsUniform(aBuilder) ? " uniform" : "",
           aItem->ReferenceFrame(), aItem->GetAnimatedGeometryRoot()->mFrame);
 

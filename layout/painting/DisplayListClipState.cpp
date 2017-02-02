@@ -5,116 +5,143 @@
 
 #include "DisplayListClipState.h"
 
-#include "DisplayItemScrollClip.h"
 #include "nsDisplayList.h"
 
 namespace mozilla {
 
-const DisplayItemClip*
-DisplayListClipState::GetCurrentCombinedClip(nsDisplayListBuilder* aBuilder)
+void
+DisplayListClipState::ClearUpToASR(const ActiveScrolledRoot* aASR)
 {
-  if (mCurrentCombinedClip) {
-    return mCurrentCombinedClip;
+  while (mClipChainContentDescendants &&
+         ActiveScrolledRoot::IsAncestor(aASR, mClipChainContentDescendants->mASR)) {
+    mClipChainContentDescendants = mClipChainContentDescendants->mParent;
   }
-  if (!mClipContentDescendants && !mClipContainingBlockDescendants) {
+  while (mClipChainContainingBlockDescendants &&
+         ActiveScrolledRoot::IsAncestor(aASR, mClipChainContainingBlockDescendants->mASR)) {
+    mClipChainContainingBlockDescendants = mClipChainContainingBlockDescendants->mParent;
+  }
+  InvalidateCurrentCombinedClipChain(aASR);
+}
+
+const DisplayItemClipChain*
+DisplayListClipState::GetCurrentCombinedClipChain(nsDisplayListBuilder* aBuilder)
+{
+  if (mCurrentCombinedClipChainIsValid) {
+    return mCurrentCombinedClipChain;
+  }
+  if (!mClipChainContentDescendants && !mClipChainContainingBlockDescendants) {
+    mCurrentCombinedClipChain = nullptr;
+    mCurrentCombinedClipChainIsValid = true;
     return nullptr;
   }
-  if (mClipContentDescendants) {
-    if (mClipContainingBlockDescendants) {
-      DisplayItemClip intersection = *mClipContentDescendants;
-      intersection.IntersectWith(*mClipContainingBlockDescendants);
-      mCurrentCombinedClip = aBuilder->AllocateDisplayItemClip(intersection);
-    } else {
-      mCurrentCombinedClip =
-        aBuilder->AllocateDisplayItemClip(*mClipContentDescendants);
-    }
-  } else {
-    mCurrentCombinedClip =
-      aBuilder->AllocateDisplayItemClip(*mClipContainingBlockDescendants);
-  }
-  return mCurrentCombinedClip;
+
+  mCurrentCombinedClipChain =
+    aBuilder->CreateClipChainIntersection(mCurrentCombinedClipChain,
+                                             mClipChainContentDescendants,
+                                             mClipChainContainingBlockDescendants);
+  mCurrentCombinedClipChainIsValid = true;
+  return mCurrentCombinedClipChain;
 }
 
-void
-DisplayListClipState::SetScrollClipForContainingBlockDescendants(
-    nsDisplayListBuilder* aBuilder,
-    const DisplayItemScrollClip* aScrollClip)
+static void
+ApplyClip(nsDisplayListBuilder* aBuilder,
+          const DisplayItemClipChain*& aClipToModify,
+          const ActiveScrolledRoot* aASR,
+          DisplayItemClipChain& aClipChainOnStack)
 {
-  if (aBuilder->IsPaintingToWindow() &&
-      mClipContentDescendants &&
-      aScrollClip != mScrollClipContainingBlockDescendants) {
-    // Disable paint skipping for all scroll frames on the way to aScrollClip.
-    for (const DisplayItemScrollClip* sc = mClipContentDescendantsScrollClip;
-         sc && !DisplayItemScrollClip::IsAncestor(sc, aScrollClip);
-         sc = sc->mParent) {
-      if (sc->mScrollableFrame) {
-        sc->mScrollableFrame->SetScrollsClipOnUnscrolledOutOfFlow();
-      }
+  aClipChainOnStack.mASR = aASR;
+  if (aClipToModify && aClipToModify->mASR == aASR) {
+    // Intersect with aClipToModify and replace the clip chain item.
+    aClipChainOnStack.mClip.IntersectWith(aClipToModify->mClip);
+    aClipChainOnStack.mParent = aClipToModify->mParent;
+    aClipToModify = &aClipChainOnStack;
+  } else if (!aClipToModify ||
+             ActiveScrolledRoot::IsAncestor(aClipToModify->mASR, aASR)) {
+    // Add a new clip chain item at the bottom.
+    aClipChainOnStack.mParent = aClipToModify;
+    aClipToModify = &aClipChainOnStack;
+  } else {
+    // We need to insert / intersect a DisplayItemClipChain in the middle of the
+    // aClipToModify chain. This is a very rare case.
+    // Find the common ancestor and have the builder create the DisplayItemClipChain
+    // intersection. This will create new DisplayItemClipChain objects for all
+    // descendants of ancestorSC and we will not hold on to a pointer to
+    // aClipChainOnStack.
+    const DisplayItemClipChain* ancestorSC = aClipToModify;
+    while (ancestorSC && ActiveScrolledRoot::IsAncestor(aASR, ancestorSC->mASR)) {
+      ancestorSC = ancestorSC->mParent;
     }
-    mClipContentDescendantsScrollClip = nullptr;
+    aClipChainOnStack.mParent = nullptr;
+    aClipToModify =
+      aBuilder->CreateClipChainIntersection(ancestorSC, aClipToModify, &aClipChainOnStack);
   }
-  mScrollClipContainingBlockDescendants = aScrollClip;
-  mStackingContextAncestorSC = DisplayItemScrollClip::PickAncestor(mStackingContextAncestorSC, aScrollClip);
 }
 
 void
-DisplayListClipState::ClipContainingBlockDescendants(const nsRect& aRect,
+DisplayListClipState::ClipContainingBlockDescendants(nsDisplayListBuilder* aBuilder,
+                                                     const nsRect& aRect,
                                                      const nscoord* aRadii,
-                                                     DisplayItemClip& aClipOnStack)
+                                                     DisplayItemClipChain& aClipChainOnStack)
 {
   if (aRadii) {
-    aClipOnStack.SetTo(aRect, aRadii);
+    aClipChainOnStack.mClip.SetTo(aRect, aRadii);
   } else {
-    aClipOnStack.SetTo(aRect);
+    aClipChainOnStack.mClip.SetTo(aRect);
   }
-  if (mClipContainingBlockDescendants) {
-    aClipOnStack.IntersectWith(*mClipContainingBlockDescendants);
-  }
-  mClipContainingBlockDescendants = &aClipOnStack;
-  mClipContentDescendantsScrollClip = GetCurrentInnermostScrollClip();
-  mCurrentCombinedClip = nullptr;
+  const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
+  ApplyClip(aBuilder, mClipChainContainingBlockDescendants, asr, aClipChainOnStack);
+  InvalidateCurrentCombinedClipChain(asr);
 }
 
 void
-DisplayListClipState::ClipContentDescendants(const nsRect& aRect,
+DisplayListClipState::ClipContentDescendants(nsDisplayListBuilder* aBuilder,
+                                             const nsRect& aRect,
                                              const nscoord* aRadii,
-                                             DisplayItemClip& aClipOnStack)
+                                             DisplayItemClipChain& aClipChainOnStack)
 {
   if (aRadii) {
-    aClipOnStack.SetTo(aRect, aRadii);
+    aClipChainOnStack.mClip.SetTo(aRect, aRadii);
   } else {
-    aClipOnStack.SetTo(aRect);
+    aClipChainOnStack.mClip.SetTo(aRect);
   }
-  if (mClipContentDescendants) {
-    aClipOnStack.IntersectWith(*mClipContentDescendants);
-  }
-  mClipContentDescendants = &aClipOnStack;
-  mCurrentCombinedClip = nullptr;
+  const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
+  ApplyClip(aBuilder, mClipChainContentDescendants, asr, aClipChainOnStack);
+  InvalidateCurrentCombinedClipChain(asr);
 }
 
 void
-DisplayListClipState::ClipContentDescendants(const nsRect& aRect,
+DisplayListClipState::ClipContentDescendants(nsDisplayListBuilder* aBuilder,
+                                             const nsRect& aRect,
                                              const nsRect& aRoundedRect,
                                              const nscoord* aRadii,
-                                             DisplayItemClip& aClipOnStack)
+                                             DisplayItemClipChain& aClipChainOnStack)
 {
   if (aRadii) {
-    aClipOnStack.SetTo(aRect, aRoundedRect, aRadii);
+    aClipChainOnStack.mClip.SetTo(aRect, aRoundedRect, aRadii);
   } else {
     nsRect intersect = aRect.Intersect(aRoundedRect);
-    aClipOnStack.SetTo(intersect);
+    aClipChainOnStack.mClip.SetTo(intersect);
   }
-  if (mClipContentDescendants) {
-    aClipOnStack.IntersectWith(*mClipContentDescendants);
+  const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
+  ApplyClip(aBuilder, mClipChainContentDescendants, asr, aClipChainOnStack);
+  InvalidateCurrentCombinedClipChain(asr);
+}
+
+
+void
+DisplayListClipState::InvalidateCurrentCombinedClipChain(const ActiveScrolledRoot* aInvalidateUpTo)
+{
+  mCurrentCombinedClipChainIsValid = false;
+  while (mCurrentCombinedClipChain &&
+         ActiveScrolledRoot::IsAncestor(aInvalidateUpTo, mCurrentCombinedClipChain->mASR)) {
+    mCurrentCombinedClipChain = mCurrentCombinedClipChain->mParent;
   }
-  mClipContentDescendants = &aClipOnStack;
-  mCurrentCombinedClip = nullptr;
 }
 
 void
 DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
                                                                  nsIFrame* aFrame,
-                                                                 DisplayItemClip& aClipOnStack,
+                                                                 DisplayItemClipChain& aClipChainOnStack,
                                                                  uint32_t aFlags)
 {
   nscoord radii[8];
@@ -127,101 +154,18 @@ DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBu
     aBuilder->ToReferenceFrame(aFrame);
   // If we have a border-radius, we have to clip our content to that
   // radius.
-  ClipContainingBlockDescendants(clipRect, hasBorderRadius ? radii : nullptr,
-                                 aClipOnStack);
-}
-
-const DisplayItemScrollClip*
-DisplayListClipState::GetCurrentInnermostScrollClip()
-{
-  return DisplayItemScrollClip::PickDescendant(
-    mScrollClipContentDescendants, mScrollClipContainingBlockDescendants);
-}
-
-void
-DisplayListClipState::TurnClipIntoScrollClipForContentDescendants(
-    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
-{
-  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  mScrollClipContentDescendants =
-    aBuilder->AllocateDisplayItemScrollClip(parent,
-                                      aScrollableFrame,
-                                      GetCurrentCombinedClip(aBuilder), true);
-  Clear();
-}
-
-void
-DisplayListClipState::TurnClipIntoScrollClipForContainingBlockDescendants(
-    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
-{
-  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  mScrollClipContainingBlockDescendants =
-    aBuilder->AllocateDisplayItemScrollClip(parent,
-                                      aScrollableFrame,
-                                      GetCurrentCombinedClip(aBuilder), true);
-  Clear();
-}
-
-const DisplayItemClip*
-WithoutRoundedCorners(nsDisplayListBuilder* aBuilder, const DisplayItemClip* aClip)
-{
-  if (!aClip) {
-    return nullptr;
-  }
-  DisplayItemClip rectClip(*aClip);
-  rectClip.RemoveRoundedCorners();
-  return aBuilder->AllocateDisplayItemClip(rectClip);
-}
-
-DisplayItemScrollClip*
-DisplayListClipState::CreateInactiveScrollClip(
-    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
-{
-  // We ignore the rounded corners on the current clip because we don't want
-  // them to be double-applied (as scroll clip and as regular clip).
-  // Double-applying rectangle clips doesn't make a visual difference so it's
-  // fine.
-  const DisplayItemClip* rectClip =
-    WithoutRoundedCorners(aBuilder, GetCurrentCombinedClip(aBuilder));
-
-  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
-  DisplayItemScrollClip* scrollClip =
-    aBuilder->AllocateDisplayItemScrollClip(parent,
-                                            aScrollableFrame,
-                                            rectClip, false);
-  return scrollClip;
-}
-
-DisplayItemScrollClip*
-DisplayListClipState::InsertInactiveScrollClipForContentDescendants(
-    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
-{
-  DisplayItemScrollClip* scrollClip =
-    CreateInactiveScrollClip(aBuilder, aScrollableFrame);
-  mScrollClipContentDescendants = scrollClip;
-  return scrollClip;
-}
-
-DisplayItemScrollClip*
-DisplayListClipState::InsertInactiveScrollClipForContainingBlockDescendants(
-    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
-{
-  DisplayItemScrollClip* scrollClip =
-    CreateInactiveScrollClip(aBuilder, aScrollableFrame);
-  mScrollClipContainingBlockDescendants = scrollClip;
-  return scrollClip;
+  ClipContainingBlockDescendants(aBuilder, clipRect, hasBorderRadius ? radii : nullptr,
+                                 aClipChainOnStack);
 }
 
 DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBuilder)
-  : mState(aBuilder->ClipState())
+  : mBuilder(aBuilder)
+  , mState(aBuilder->ClipState())
   , mSavedState(aBuilder->ClipState())
 #ifdef DEBUG
   , mClipUsed(false)
   , mRestored(false)
 #endif
-  , mClearedForStackingContextContents(false)
-{
-  mState.mStackingContextAncestorSC = mState.GetCurrentInnermostScrollClip();
-}
+{}
 
 } // namespace mozilla

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="20">
+
+<title>like fixed-pos-scrolled-clip-1.html, but inside a transform. This also tests that scrolling the root scroll frame moves the "fixed" layer which is only fixed with respect to the transform, not with respect to the viewport.</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+}
+
+.transform {
+  transform: translate(10px, 10px);
+  width: 500px;
+}
+
+.subframe {
+  height: 600px;
+  overflow: auto;
+  box-shadow: 0 0 0 2px black;
+}
+
+.scrolled {
+  height: 4000px;
+  position: relative;
+}
+
+.absoluteClip {
+  position: absolute;
+  top: 300px;
+  left: 100px;
+  width: 200px;
+  height: 200px;
+  background: red;
+  clip: rect(auto auto auto auto);
+}
+
+.fixed {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(lime, lime) black 0 100px no-repeat;
+  background-size: 100% 200px;
+}
+
+</style>
+
+<div class="transform">
+  <div class="subframe"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="800" reftest-displayport-h="2000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="200">
+    <div class="scrolled">
+      <div class="absoluteClip">
+        <div class="fixed"></div>
+      </div>
+    </div>
+  </div>
+</div>
