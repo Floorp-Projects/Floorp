@@ -8,6 +8,8 @@
 #include "AccessCheck.h"
 #include "ChromeObjectWrapper.h"
 #include "XrayWrapper.h"
+#include "nsJSUtils.h"
+#include "mozilla/ErrorResult.h"
 
 #include "jsapi.h"
 
@@ -287,7 +289,7 @@ CrossOriginXrayWrapper::defineProperty(JSContext* cx, JS::Handle<JSObject*> wrap
                                        JS::Handle<PropertyDescriptor> desc,
                                        JS::ObjectOpResult& result) const
 {
-    JS_ReportErrorASCII(cx, "Permission denied to define property on cross-origin object");
+    AccessCheck::reportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("define"));
     return false;
 }
 
@@ -295,7 +297,7 @@ bool
 CrossOriginXrayWrapper::delete_(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                 JS::Handle<jsid> id, JS::ObjectOpResult& result) const
 {
-    JS_ReportErrorASCII(cx, "Permission denied to delete property on cross-origin object");
+    AccessCheck::reportCrossOriginDenial(cx, id, NS_LITERAL_CSTRING("delete"));
     return false;
 }
 
