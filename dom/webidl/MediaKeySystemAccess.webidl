@@ -31,7 +31,6 @@ dictionary MediaKeySystemConfiguration {
   sequence<DOMString>                     sessionTypes;
 };
 
-[Pref="media.eme.apiVisible"]
 interface MediaKeySystemAccess {
   readonly    attribute DOMString keySystem;
   [NewObject]

@@ -1376,7 +1376,6 @@ pref("media.eme.enabled", false);
 #else
 pref("media.eme.enabled", true);
 #endif
-pref("media.eme.apiVisible", true);
 
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
 // decode H.264.
