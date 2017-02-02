@@ -8,6 +8,9 @@
 
 #include "PreloadedStyleSheet.h"
 
+#include "mozilla/css/Loader.h"
+#include "nsLayoutUtils.h"
+
 namespace mozilla {
 
 PreloadedStyleSheet::PreloadedStyleSheet(nsIURI* aURI,
