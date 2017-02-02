@@ -75,116 +75,133 @@ var testCases = [
     domains: ["http://example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Nested unknown domains",
     domains: ["http://example.com", "http://example.org"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Allowed domain",
     domains: ["http://flashallow.example.com"],
     expectedActivated: true,
-    expectedHasRunningPlugin: true
+    expectedHasRunningPlugin: true,
+    pluginListed: true
   },
   {
     name: "Allowed nested domain",
     domains: ["http://example.com", "http://flashallow.example.com"],
     expectedActivated: true,
-    expectedHasRunningPlugin: true
+    expectedHasRunningPlugin: true,
+    pluginListed: true
   },
   {
     name: "Subdocument of allowed domain",
     domains: ["http://flashallow.example.com", "http://example.com"],
     expectedActivated: true,
-    expectedHasRunningPlugin: true
+    expectedHasRunningPlugin: true,
+    pluginListed: true
   },
   {
     name: "Exception to allowed domain",
     domains: ["http://exception.flashallow.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Blocked domain",
     domains: ["http://flashblock.example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Nested blocked domain",
     domains: ["http://example.com", "http://flashblock.example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Subdocument of blocked subdocument",
     domains: ["http://example.com", "http://flashblock.example.com", "http://example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Blocked subdocument nested among in allowed documents",
     domains: ["http://flashallow.example.com", "http://flashblock.example.com", "http://flashallow.example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Exception to blocked domain",
     domains: ["http://exception.flashblock.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Sub-document blocked domain in top-level context",
     domains: ["http://subdocument.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Sub-document blocked domain",
     domains: ["http://example.com", "http://subdocument.example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Sub-document blocked subdocument of an allowed domain",
     domains: ["http://flashallow.example.com", "http://subdocument.example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Subdocument of Sub-document blocked domain",
     domains: ["http://example.com", "http://subdocument.example.com", "http://example.com"],
-    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_SUPPRESSED,
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: false
   },
   {
     name: "Sub-document exception in top-level context",
     domains: ["http://exception.subdocument.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   },
   {
     name: "Sub-document blocked domain exception",
     domains: ["http://example.com", "http://exception.subdocument.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
-    expectedHasRunningPlugin: false
+    expectedHasRunningPlugin: false,
+    pluginListed: true
   }
 ];
 
@@ -212,13 +229,16 @@ function buildDocumentStructure(browser, iframeDomains) {
   });
 }
 
-function getPlugin(browser, depth) {
+function getPluginInfo(browser, depth) {
   return ContentTask.spawn(browser,
                            {iframeId: IFRAME_ID, depth: depth},
                            function* ({iframeId, depth}) {
     let doc = content.document;
+    let win = content.window;
     for (let i = 0; i < depth; ++i) {
-      doc = doc.getElementById(iframeId).contentDocument;
+      let frame = doc.getElementById(iframeId);
+      doc = frame.contentDocument;
+      win = frame.contentWindow;
     }
 
     let pluginObj = doc.getElementById("testObject");
@@ -228,7 +248,8 @@ function getPlugin(browser, depth) {
     return {
       pluginFallbackType: pluginObj.pluginFallbackType,
       activated: pluginObj.activated,
-      hasRunningPlugin: pluginObj.hasRunningPlugin
+      hasRunningPlugin: pluginObj.hasRunningPlugin,
+      listed: ("Shockwave Flash" in win.navigator.plugins)
     };
   });
 }
@@ -249,19 +270,23 @@ add_task(function* checkFlashBlockLists() {
 
     yield buildDocumentStructure(tab.linkedBrowser, iframeDomains);
 
-    let plugin = yield getPlugin(tab.linkedBrowser, iframeDomains.length);
+    let pluginInfo = yield getPluginInfo(tab.linkedBrowser, iframeDomains.length);
 
     if ("expectedPluginFallbackType" in testCase) {
-      is(plugin.pluginFallbackType, testCase.expectedPluginFallbackType,
+      is(pluginInfo.pluginFallbackType, testCase.expectedPluginFallbackType,
         "Plugin should have the correct fallback type");
     }
     if ("expectedActivated" in testCase) {
-      is(plugin.activated, testCase.expectedActivated,
+      is(pluginInfo.activated, testCase.expectedActivated,
         "Plugin should have the correct activation");
     }
     if ("expectedHasRunningPlugin" in testCase) {
-      is(plugin.hasRunningPlugin, testCase.expectedHasRunningPlugin,
+      is(pluginInfo.hasRunningPlugin, testCase.expectedHasRunningPlugin,
         "Plugin should have the correct 'plugin running' state");
+    }
+    if ("pluginListed" in testCase) {
+      is(pluginInfo.listed, testCase.pluginListed,
+        "Plugin's existance in navigator.plugins should match expected")
     }
 
     yield BrowserTestUtils.removeTab(tab);
@@ -285,11 +310,12 @@ add_task(function* checkFlashBlockDisabled() {
 
     yield buildDocumentStructure(tab.linkedBrowser, iframeDomains);
 
-    let plugin = yield getPlugin(tab.linkedBrowser, iframeDomains.length);
+    let pluginInfo = yield getPluginInfo(tab.linkedBrowser, iframeDomains.length);
 
     // With flashblock disabled, all plugins should be activated.
-    ok(plugin.activated, "Plugin should be activated");
-    ok(plugin.hasRunningPlugin, "Plugin should be running");
+    ok(pluginInfo.activated, "Plugin should be activated");
+    ok(pluginInfo.hasRunningPlugin, "Plugin should be running");
+    ok(pluginInfo.listed, "Flash should be listed in navigator.plugins");
 
     yield BrowserTestUtils.removeTab(tab);
   }
