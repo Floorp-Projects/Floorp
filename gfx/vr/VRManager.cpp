@@ -425,11 +425,12 @@ VRManager::NotifyGamepadChange(const T& aInfo)
 
 void
 VRManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                         double aIntensity, double aDuration)
+                         double aIntensity, double aDuration, uint32_t aPromiseID)
+
 {
   for (uint32_t i = 0; i < mManagers.Length(); ++i) {
     mManagers[i]->VibrateHaptic(aControllerIdx, aHapticIndex,
-                                aIntensity, aDuration);
+                                aIntensity, aDuration, aPromiseID);
   }
 }
 

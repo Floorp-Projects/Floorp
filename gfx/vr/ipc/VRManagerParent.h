@@ -92,7 +92,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
   virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
   virtual mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx, const uint32_t& aHapticIndex,
-                                                    const double& aIntensity, const double& aDuration) override;
+                                                    const double& aIntensity, const double& aDuration, const uint32_t& aPromiseID) override;
+  
   virtual mozilla::ipc::IPCResult RecvCreateVRTestSystem() override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID) override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestController(const nsCString& aID, const uint32_t& aPromiseID) override;

@@ -85,8 +85,9 @@ class GamepadManager final : public nsIObserver,
   void Update(const GamepadChangeEvent& aGamepadEvent);
 
   // Trigger vibrate haptic event to gamepad channels.
-  void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                     double aIntensity, double aDuration);
+  already_AddRefed<Promise> VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                                          double aIntensity, double aDuration,
+                                          nsIGlobalObject* aGlobal, ErrorResult& aRv);
 
  protected:
   GamepadManager();
@@ -153,6 +154,7 @@ class GamepadManager final : public nsIObserver,
   // Inner windows that are listening for gamepad events.
   // has been sent to that window.
   nsTArray<RefPtr<nsGlobalWindow>> mListeners;
+  uint32_t mPromiseID;
 };
 
 } // namespace dom
