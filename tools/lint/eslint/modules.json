@@ -128,7 +128,6 @@
   "LoginManagerContent.jsm": ["LoginManagerContent", "LoginFormFactory", "UserAutoCompleteResult"],
   "LoginRecipes.jsm": ["LoginRecipesContent", "LoginRecipesParent"],
   "logmanager.js": ["LogManager"],
-  "LogUtils.jsm": ["Logger"],
   "lz4.js": ["Lz4"],
   "lz4_internal.js": ["Primitives"],
   "main.js": ["Weave"],

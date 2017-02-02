@@ -116,7 +116,6 @@ gfxContext::~gfxContext()
       mStateStack[i].drawTarget->PopClip();
     }
   }
-  mDT->Flush();
 }
 
 void

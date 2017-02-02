@@ -28,9 +28,9 @@ fails == justification-2.html justification-2.html
 fails == lang-specific-style-1.html lang-specific-style-1.html
 fails == line-breaking-1.html line-breaking-1.html
 fails == line-breaking-2.html line-breaking-2.html
-fails == line-break-suppression-1.html line-break-suppression-1.html
-fails == line-break-suppression-2.html line-break-suppression-2.html
-fails == line-break-suppression-3.html line-break-suppression-3.html
+# == line-break-suppression-1.html line-break-suppression-1.html
+# == line-break-suppression-2.html line-break-suppression-2.html
+# == line-break-suppression-3.html line-break-suppression-3.html
 == line-break-suppression-4.html line-break-suppression-4.html
 == line-break-suppression-5.html line-break-suppression-5.html
 # == line-height-1.html line-height-1.html
