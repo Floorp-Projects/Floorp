@@ -129,10 +129,15 @@ private:
   void EnsureThrottledEventQueues();
 
   ~TabGroup();
-  DocGroupMap mDocGroups;
+
+  // Thread-safe members
   Atomic<bool> mLastWindowLeft;
-  nsTArray<nsPIDOMWindowOuter*> mWindows;
   Atomic<bool> mThrottledQueuesInitialized;
+  const bool mIsChrome;
+
+  // Main thread only
+  DocGroupMap mDocGroups;
+  nsTArray<nsPIDOMWindowOuter*> mWindows;
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
