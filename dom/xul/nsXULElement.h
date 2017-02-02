@@ -564,7 +564,7 @@ public:
     nsIControllers* GetControllers(mozilla::ErrorResult& rv);
     already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
     void Click(mozilla::ErrorResult& rv);
-    // The XPCOM DoCommand never fails, so it's OK for us.
+    void DoCommand();
     already_AddRefed<nsINodeList>
       GetElementsByAttribute(const nsAString& aAttribute,
                              const nsAString& aValue);
