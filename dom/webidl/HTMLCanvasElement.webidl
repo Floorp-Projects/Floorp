@@ -68,4 +68,4 @@ interface MozCanvasPrintState
 
 callback PrintCallback = void(MozCanvasPrintState ctx);
 
-callback BlobCallback = void(Blob blob);
+callback BlobCallback = void(Blob? blob);
