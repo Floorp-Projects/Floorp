@@ -246,11 +246,16 @@ this.PermissionPromptPrototype = {
    * allow or cancel itself based on the user's current
    * permission settings without displaying the prompt.
    *
-   * If the permission is not already set and the <xul:browser> that the request
-   * is associated with does not belong to a browser window with the
-   * PopupNotifications global set, the prompt request is ignored.
+   * If the <xul:browser> that the request is associated with
+   * does not belong to a browser window with the PopupNotifications
+   * global set, the prompt request is ignored.
    */
   prompt() {
+    let chromeWin = this.browser.ownerGlobal;
+    if (!chromeWin.PopupNotifications) {
+      return;
+    }
+
     // We ignore requests from non-nsIStandardURLs
     let requestingURI = this.principal.URI;
     if (!(requestingURI instanceof Ci.nsIStandardURL)) {
@@ -279,12 +284,6 @@ this.PermissionPromptPrototype = {
       // are expired permission states.
       this.browser.dispatchEvent(new this.browser.ownerGlobal
                                          .CustomEvent("PermissionStateChange"));
-    }
-
-    let chromeWin = this.browser.ownerGlobal;
-    if (!chromeWin.PopupNotifications) {
-      this.cancel();
-      return;
     }
 
     // Transform the PermissionPrompt actions into PopupNotification actions.
