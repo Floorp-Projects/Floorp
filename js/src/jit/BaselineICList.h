@@ -56,8 +56,6 @@ namespace jit {
     _(SetElem_TypedArray)                        \
                                                  \
     _(In_Fallback)                               \
-    _(In_Native)                                 \
-    _(In_NativePrototype)                        \
     _(In_NativeDoesNotExist)                     \
                                                  \
     _(GetName_Fallback)                          \

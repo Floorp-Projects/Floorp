@@ -314,20 +314,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &updateStub->group(), "baseline-update-group");
         break;
       }
-      case ICStub::In_Native: {
-        ICIn_Native* inStub = toIn_Native();
-        TraceEdge(trc, &inStub->shape(), "baseline-innative-stub-shape");
-        TraceEdge(trc, &inStub->name(), "baseline-innative-stub-name");
-        break;
-      }
-      case ICStub::In_NativePrototype: {
-        ICIn_NativePrototype* inStub = toIn_NativePrototype();
-        TraceEdge(trc, &inStub->shape(), "baseline-innativeproto-stub-shape");
-        TraceEdge(trc, &inStub->name(), "baseline-innativeproto-stub-name");
-        TraceEdge(trc, &inStub->holder(), "baseline-innativeproto-stub-holder");
-        TraceEdge(trc, &inStub->holderShape(), "baseline-innativeproto-stub-holdershape");
-        break;
-      }
       case ICStub::In_NativeDoesNotExist: {
         ICIn_NativeDoesNotExist* inStub = toIn_NativeDoesNotExist();
         TraceEdge(trc, &inStub->name(), "baseline-innativedoesnotexist-stub-name");

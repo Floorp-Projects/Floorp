@@ -365,20 +365,19 @@ TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj, Shape* shape, ObjOper
 }
 
 static void
-EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
-                   Shape* shape, ObjOperandId objId)
+EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
+                  Shape* shape, ObjOperandId objId, Maybe<ObjOperandId>* holderId)
 {
     Maybe<ObjOperandId> expandoId;
     TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
 
-    ObjOperandId holderId;
     if (obj != holder) {
         GeneratePrototypeGuards(writer, obj, holder, objId);
 
         if (holder) {
             // Guard on the holder's shape.
-            holderId = writer.loadObject(holder);
-            writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+            holderId->emplace(writer.loadObject(holder));
+            writer.guardShape(holderId->ref(), holder->as<NativeObject>().lastProperty());
         } else {
             // The property does not exist. Guard on everything in the prototype
             // chain. This is guaranteed to see only Native objects because of
@@ -393,18 +392,28 @@ EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
             }
         }
     } else if (obj->is<UnboxedPlainObject>()) {
-        holder = obj->as<UnboxedPlainObject>().maybeExpando();
-        holderId = *expandoId;
+        holderId->emplace(*expandoId);
     } else {
-        holderId = objId;
+        holderId->emplace(objId);
     }
+}
+
+static void
+EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
+                   Shape* shape, ObjOperandId objId)
+{
+    Maybe<ObjOperandId> holderId;
+    EmitReadSlotGuard(writer, obj, holder, shape, objId, &holderId);
+
+    if (obj == holder && obj->is<UnboxedPlainObject>())
+        holder = obj->as<UnboxedPlainObject>().maybeExpando();
 
     // Slot access.
     if (holder) {
-        MOZ_ASSERT(holderId.valid());
-        EmitLoadSlotResult(writer, holderId, &holder->as<NativeObject>(), shape);
+        MOZ_ASSERT(holderId->valid());
+        EmitLoadSlotResult(writer, *holderId, &holder->as<NativeObject>(), shape);
     } else {
-        MOZ_ASSERT(!holderId.valid());
+        MOZ_ASSERT(holderId.isNothing());
         writer.loadUndefinedResult();
     }
 }
@@ -1584,6 +1593,30 @@ InIRGenerator::tryAttachDenseIn(uint32_t index, Int32OperandId indexId,
 }
 
 bool
+InIRGenerator::tryAttachNativeIn(HandleId key, ValOperandId keyId,
+                                 HandleObject obj, ObjOperandId objId)
+{
+    PropertyResult prop;
+    JSObject* holder;
+    if (!LookupPropertyPure(cx_, obj, key, &holder, &prop))
+        return false;
+
+    if (prop.isNonNativeProperty())
+        return false;
+
+    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop))
+        return false;
+
+    Maybe<ObjOperandId> holderId;
+    emitIdGuard(keyId, key);
+    EmitReadSlotGuard(writer, obj, holder, prop.maybeShape(), objId, &holderId);
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
 InIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::In);
@@ -1593,6 +1626,19 @@ InIRGenerator::tryAttachStub()
     ValOperandId keyId(writer.setInputOperandId(0));
     ValOperandId valId(writer.setInputOperandId(1));
     ObjOperandId objId = writer.guardIsObject(valId);
+
+    RootedId id(cx_);
+    bool nameOrSymbol;
+    if (!ValueToNameOrSymbolId(cx_, key_, &id, &nameOrSymbol)) {
+        cx_->clearPendingException();
+        return false;
+    }
+
+    if (nameOrSymbol) {
+        if (tryAttachNativeIn(id, keyId, obj_, objId))
+            return true;
+        return false;
+    }
 
     uint32_t index;
     Int32OperandId indexId;
