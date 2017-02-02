@@ -39,7 +39,8 @@ public:
   void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult) {};
 
   already_AddRefed<Promise>
-  GetUserMedia(const MediaStreamConstraints& aConstraints, ErrorResult &aRv);
+  GetUserMedia(const MediaStreamConstraints& aConstraints,
+	       CallerType aCallerType, ErrorResult &aRv);
 
   already_AddRefed<Promise>
   EnumerateDevices(ErrorResult &aRv);

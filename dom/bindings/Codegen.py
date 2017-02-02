@@ -4243,7 +4243,7 @@ class CastableObjectUnwrapper():
                   // want to be in that compartment for the UnwrapArg call.
                   JS::Rooted<JSObject*> source(cx, ${source});
                   JSAutoCompartment ac(cx, ${source});
-                  rv = UnwrapArg<${type}>(source, getter_AddRefs(objPtr));
+                  rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));
                 }
                 """)
         else:
@@ -4251,7 +4251,7 @@ class CastableObjectUnwrapper():
             self.substitution["source"] = source
             xpconnectUnwrap = (
                 "JS::Rooted<JSObject*> source(cx, ${source});\n"
-                "nsresult rv = UnwrapArg<${type}>(source, getter_AddRefs(objPtr));\n")
+                "nsresult rv = UnwrapArg<${type}>(cx, source, getter_AddRefs(objPtr));\n")
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(
@@ -5503,7 +5503,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 holderType = "RefPtr<" + typeName + ">"
             templateBody += (
                 "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n" +
-                "if (NS_FAILED(UnwrapArg<" + typeName + ">(source, getter_AddRefs(${holderName})))) {\n")
+                "if (NS_FAILED(UnwrapArg<" + typeName + ">(cx, source, getter_AddRefs(${holderName})))) {\n")
             templateBody += CGIndenter(onFailureBadType(failureCode,
                                                         descriptor.interface.identifier.name)).define()
             templateBody += ("}\n"
@@ -7039,6 +7039,7 @@ class CGCallGenerator(CGThing):
     value, resultVar can be omitted.
     """
     def __init__(self, isFallible, needsSubjectPrincipal, needsCallerType,
+                 isChromeOnly,
                  arguments, argsPre, returnType, extendedAttributes, descriptor,
                  nativeMethodName, static, object="self", argsPost=[],
                  resultVar=None):
@@ -7104,7 +7105,10 @@ class CGCallGenerator(CGThing):
             args.append(CGGeneric("subjectPrincipal"))
 
         if needsCallerType:
-            args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
+            if isChromeOnly:
+                args.append(CGGeneric("SystemCallerGuarantee()"))
+            else:
+                args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
 
         canOOM = "canOOM" in extendedAttributes
         if isFallible or canOOM:
@@ -7601,6 +7605,7 @@ class CGPerSignatureCall(CGThing):
                 self.isFallible(),
                 idlNode.getExtendedAttribute('NeedsSubjectPrincipal'),
                 needsCallerType(idlNode),
+                isChromeOnly(idlNode),
                 self.getArguments(), argsPre, returnType,
                 self.extendedAttributes, descriptor,
                 nativeMethodName,

@@ -12,6 +12,10 @@
 <script>
 "use strict";
 
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(3);
+}
+
 let extension;
 add_task(function* setup() {
   // SelfSupport has a tendency to fire when running this test alone, without

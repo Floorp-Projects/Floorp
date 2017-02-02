@@ -1,6 +1,8 @@
 "use strict";
 
-let {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+/* exported AppConstants */
+
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
 // We run tests under two different configurations, from mochitest.ini and
 // mochitest-remote.ini. When running from mochitest-remote.ini, the tests are
@@ -16,11 +18,13 @@ if (location.pathname.includes("test-oop-extensions")) {
   SpecialPowers.setIntPref("dom.ipc.keepProcessesAlive.extension", 1);
 }
 
-if (AppConstants.MOZ_BUILD_APP === "browser") {
+{
   let chromeScript = SpecialPowers.loadChromeScript(
     SimpleTest.getTestFileURL("chrome_cleanup_script.js"));
 
   SimpleTest.registerCleanupFunction(async () => {
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     chromeScript.sendAsyncMessage("check-cleanup");
 
     let results = await chromeScript.promiseOneMessage("cleanup-results");

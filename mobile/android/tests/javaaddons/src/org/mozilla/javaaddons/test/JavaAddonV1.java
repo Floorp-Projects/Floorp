@@ -55,5 +55,13 @@ public class JavaAddonV1 implements EventListener, RequestCallback {
         // check it is not handled.
         mDispatcher.unregisterEventListener(this);
         mDispatcher.sendRequestToGecko("JavaAddon:V1:VerificationRequest", jsonObject, null);
+
+        mDispatcher.registerEventListener(new EventListener() {
+            @Override
+            public void handleMessage(Context context, String event, JSONObject message, EventCallback callback) {
+                mDispatcher.unregisterEventListener(this);
+                callback.sendSuccess(null);
+            }
+        }, "JavaAddon:V1:Finish");
     }
 }

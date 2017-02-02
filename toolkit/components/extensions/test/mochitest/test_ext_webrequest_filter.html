@@ -12,9 +12,20 @@
 <script>
 "use strict";
 
+if (AppConstants.platform === "android") {
+  SimpleTest.requestLongerTimeout(6);
+}
+
 let windowData, testWindow;
 
 add_task(function* setup() {
+  let chromeScript = SpecialPowers.loadChromeScript(function() {
+    let cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
+                          .getService(Components.interfaces.nsICacheStorageService);
+    cache.clear();
+  });
+  chromeScript.destroy();
+
   testWindow = window.open("about:blank", "_blank", "width=100,height=100");
   yield waitForLoad(testWindow);
 
@@ -26,9 +37,12 @@ add_task(function* setup() {
       ],
     },
     background() {
-      browser.windows.getCurrent({populate: true}).then(window => {
-        browser.test.log(`current window ${window.id} tabs: ${JSON.stringify(window.tabs.map(tab => [tab.id, tab.url]))}`);
-        browser.test.sendMessage("windowData", {windowId: window.id, tabId: window.tabs[0].id});
+      browser.tabs.query({currentWindow: true}).then(tabs => {
+        let tab = tabs.find(tab => tab.active);
+        let {windowId} = tab;
+
+        browser.test.log(`current window ${windowId} tabs: ${JSON.stringify(tabs.map(tab => [tab.id, tab.url]))}`);
+        browser.test.sendMessage("windowData", {windowId, tabId: tab.id});
       });
     },
   });
@@ -39,6 +53,11 @@ add_task(function* setup() {
 });
 
 add_task(function* test_webRequest_filter_window() {
+  if (AppConstants.MOZ_BUILD_APP !== "browser") {
+    // Android does not support multiple windows.
+    return;
+  }
+
   yield SpecialPowers.pushPrefEnv({
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
@@ -100,7 +119,7 @@ add_task(function* test_webRequest_filter_tab() {
     "file_image_good.png": {
       optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
       type: "main_frame",
-      cached: true,
+      cached: AppConstants.MOZ_BUILD_APP === "browser",
     },
   };
 
@@ -109,10 +128,12 @@ add_task(function* test_webRequest_filter_tab() {
   extension.sendMessage("set-expected", {expect, origin: location.href});
   yield extension.awaitMessage("continue");
 
-  // We should not get events for a new window load.
-  let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
-  yield waitForLoad(newWindow);
-  newWindow.close();
+  if (AppConstants.MOZ_BUILD_APP === "browser") {
+    // We should not get events for a new window load.
+    let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
+    yield waitForLoad(newWindow);
+    newWindow.close();
+  }
 
   // We should not get background events.
   let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
@@ -172,8 +193,6 @@ add_task(function* test_webRequest_filter_background() {
 
 add_task(function* teardown() {
   testWindow.close();
-
-  yield new Promise(resolve => setTimeout(resolve, 0));
 });
 </script>
 </head>

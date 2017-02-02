@@ -25,8 +25,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 
-class ThreadProfile;
-
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #ifndef __arm__
 #pragma pack(push, 1)
@@ -289,8 +287,8 @@ private:
 };
 
 //
-// ThreadProfile JSON Format
-// -------------------------
+// Thread profile JSON Format
+// --------------------------
 //
 // The profile contains much duplicate information. The output JSON of the
 // profile attempts to deduplicate strings, frames, and stack prefixes, to cut

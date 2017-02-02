@@ -749,19 +749,15 @@ profiler_start(int aProfileEntries, double aInterval,
 
     for (uint32_t i = 0; i < threads.size(); i++) {
       ThreadInfo* info = threads[i];
-      if (info->IsPendingDelete()) {
+      if (info->IsPendingDelete() || !info->hasProfile()) {
         continue;
       }
-      ThreadProfile* thread_profile = info->Profile();
-      if (!thread_profile) {
-        continue;
-      }
-      thread_profile->GetPseudoStack()->reinitializeOnResume();
+      info->Stack()->reinitializeOnResume();
       if (gSampler->ProfileJS()) {
-        thread_profile->GetPseudoStack()->enableJSSampling();
+        info->Stack()->enableJSSampling();
       }
       if (gSampler->InPrivacyMode()) {
-        thread_profile->GetPseudoStack()->mPrivacyMode = true;
+        info->Stack()->mPrivacyMode = true;
       }
     }
   }
@@ -840,7 +836,7 @@ profiler_stop()
 
   if (disableJS) {
     PseudoStack *stack = tlsPseudoStack.get();
-    ASSERT(stack != nullptr);
+    MOZ_ASSERT(stack != nullptr);
     stack->disableJSSampling();
   }
 

@@ -5356,98 +5356,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   RedrawUser(gfxRect(0, 0, aW, aH));
 }
 
-void
-CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& aElem,
-                                              double aX, double aY,
-                                              double aW, double aH,
-                                              const nsAString& aBgColor,
-                                              uint32_t aFlags,
-                                              ErrorResult& aError)
-{
-  // We can't allow web apps to call this until we fix at least the
-  // following potential security issues:
-  // -- rendering cross-domain IFRAMEs and then extracting the results
-  // -- rendering the user's theme and then extracting the results
-  // -- rendering native anonymous content (e.g., file input paths;
-  // scrollbars should be allowed)
-  if (!nsContentUtils::IsCallerChrome()) {
-    // not permitted to use DrawWindow
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-#if 0
-  nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(&elem);
-  if (!loaderOwner) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<nsFrameLoader> frameloader = loaderOwner->GetFrameLoader();
-  if (!frameloader) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  PBrowserParent *child = frameloader->GetRemoteBrowser();
-  if (!child) {
-    nsIDocShell* docShell = frameLoader->GetExistingDocShell();
-    if (!docShell) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
-    if (!window) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    return DrawWindow(window->GetCurrentInnerWindow(), aX, aY, aW, aH,
-                      aBgColor, aFlags);
-  }
-
-  // protect against too-large surfaces that will cause allocation
-  // or overflow issues
-  if (!Factory::CheckSurfaceSize(IntSize(aW, aH), 0xffff)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  bool flush =
-    (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) == 0;
-
-  uint32_t renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
-    renderDocFlags |= nsIPresShell::RENDER_CARET;
-  }
-  if (aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
-    renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
-  }
-
-  nsRect rect(nsPresContext::CSSPixelsToAppUnits(aX),
-              nsPresContext::CSSPixelsToAppUnits(aY),
-              nsPresContext::CSSPixelsToAppUnits(aW),
-              nsPresContext::CSSPixelsToAppUnits(aH));
-  if (mIPC) {
-    PDocumentRendererParent *pdocrender =
-      child->SendPDocumentRendererConstructor(rect,
-                                              mThebes->CurrentMatrix(),
-                                              nsString(aBGColor),
-                                              renderDocFlags, flush,
-                                              nsIntSize(mWidth, mHeight));
-    if (!pdocrender)
-      return NS_ERROR_FAILURE;
-
-    DocumentRendererParent *docrender =
-      static_cast<DocumentRendererParent *>(pdocrender);
-
-    docrender->SetCanvasContext(this, mThebes);
-  }
-#endif
-}
-
 //
 // device pixel getting/setting
 //
@@ -5470,7 +5378,11 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
   if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      !nsContentUtils::IsCallerChrome())
+      // We could ask bindings for the caller type, but they already hand us a
+      // JSContext, and we're at least _somewhat_ perf-sensitive (so may not
+      // want to compute the caller type in the common non-write-only case), so
+      // let's just use what we have.
+      !nsContentUtils::IsSystemCaller(aCx))
   {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);

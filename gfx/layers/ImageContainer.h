@@ -609,7 +609,7 @@ private:
   // calling this function!
   void EnsureActiveImage();
 
-  void EnsureImageClient(bool aCreate);
+  void EnsureImageClient();
 
   // ReentrantMonitor to protect thread safe access to the "current
   // image", and any other state which is shared between threads.
@@ -649,6 +649,7 @@ private:
   // asynchronusly using the ImageBridge IPDL protocol.
   RefPtr<ImageClient> mImageClient;
 
+  bool mIsAsync;
   CompositableHandle mAsyncContainerHandle;
 
   nsTArray<FrameID> mFrameIDsNotYetComposited;

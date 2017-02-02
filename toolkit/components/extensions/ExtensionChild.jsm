@@ -41,6 +41,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
+  LimitedSet,
   SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
@@ -544,6 +545,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     let id = map.listeners.get(listener);
     map.listeners.delete(listener);
     map.ids.delete(id);
+    map.removedIds.add(id);
 
     this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
       childId: this.childApiManager.id,
@@ -583,6 +585,7 @@ class ChildAPIManager {
     this.listeners = new DefaultMap(() => ({
       ids: new Map(),
       listeners: new Map(),
+      removedIds: new LimitedSet(10),
     }));
 
     // Map[callId -> Deferred]
@@ -611,8 +614,10 @@ class ChildAPIManager {
         if (listener) {
           return this.context.runSafe(listener, ...data.args);
         }
-
-        Cu.reportError(`Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`);
+        if (!map.removedIds.has(data.listenerId)) {
+          Services.console.logStringMessage(
+            `Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`);
+        }
         break;
 
       case "API:CallResult":

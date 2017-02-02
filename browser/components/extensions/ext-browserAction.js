@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ViewPopup",
+                                  "resource:///modules/ExtensionPopups.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
                                    "@mozilla.org/inspector/dom-utils;1",
@@ -18,8 +20,8 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 var {
-  SingletonEventManager,
   IconDetails,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
@@ -51,7 +53,7 @@ function BrowserAction(options, extension) {
   this.pendingPopup = null;
   this.pendingPopupTimeout = null;
 
-  this.tabManager = TabManager.for(extension);
+  this.tabManager = extension.tabManager;
 
   this.defaults = {
     enabled: true,
@@ -386,7 +388,7 @@ BrowserAction.prototype = {
         this.updateWindow(tab.ownerGlobal);
       }
     } else {
-      for (let window of WindowListManager.browserWindows()) {
+      for (let window of windowTracker.browserWindows()) {
         this.updateWindow(window);
       }
     }
@@ -444,12 +446,21 @@ extensions.on("shutdown", (type, extension) => {
 
 extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
   let {extension} = context;
+
+  let {tabManager} = extension;
+
+  function getTab(tabId) {
+    if (tabId !== null) {
+      return tabTracker.getTab(tabId);
+    }
+    return null;
+  }
+
   return {
     browserAction: {
       onClicked: new SingletonEventManager(context, "browserAction.onClicked", fire => {
         let listener = () => {
-          let tab = TabManager.activeTab;
-          fire.async(TabManager.convert(extension, tab));
+          fire.async(tabManager.convert(tabTracker.activeTab));
         };
         BrowserAction.for(extension).on("click", listener);
         return () => {
@@ -458,17 +469,17 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       }).api(),
 
       enable: function(tabId) {
-        let tab = tabId !== null ? TabManager.getTab(tabId, context) : null;
+        let tab = getTab(tabId);
         BrowserAction.for(extension).setProperty(tab, "enabled", true);
       },
 
       disable: function(tabId) {
-        let tab = tabId !== null ? TabManager.getTab(tabId, context) : null;
+        let tab = getTab(tabId);
         BrowserAction.for(extension).setProperty(tab, "enabled", false);
       },
 
       setTitle: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let title = details.title;
         // Clear the tab-specific title when given a null string.
@@ -479,34 +490,34 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       },
 
       getTitle: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let title = BrowserAction.for(extension).getProperty(tab, "title");
         return Promise.resolve(title);
       },
 
       setIcon: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let icon = IconDetails.normalize(details, extension, context);
         BrowserAction.for(extension).setProperty(tab, "icon", icon);
       },
 
       setBadgeText: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         BrowserAction.for(extension).setProperty(tab, "badgeText", details.text);
       },
 
       getBadgeText: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let text = BrowserAction.for(extension).getProperty(tab, "badgeText");
         return Promise.resolve(text);
       },
 
       setPopup: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         // Note: Chrome resolves arguments to setIcon relative to the calling
         // context, but resolves arguments to setPopup relative to the extension
@@ -518,14 +529,14 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       },
 
       getPopup: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let popup = BrowserAction.for(extension).getProperty(tab, "popup");
         return Promise.resolve(popup);
       },
 
       setBadgeBackgroundColor: function(details) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
         let color = details.color;
         if (!Array.isArray(color)) {
           let col = DOMUtils.colorToRGBA(color);
@@ -535,7 +546,7 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
       },
 
       getBadgeBackgroundColor: function(details, callback) {
-        let tab = details.tabId !== null ? TabManager.getTab(details.tabId, context) : null;
+        let tab = getTab(details.tabId);
 
         let color = BrowserAction.for(extension).getProperty(tab, "badgeBackgroundColor");
         return Promise.resolve(color || [0xd9, 0, 0, 255]);

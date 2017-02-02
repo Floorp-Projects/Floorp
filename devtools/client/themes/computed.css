@@ -29,6 +29,7 @@
 #computedview-toolbar {
   display: flex;
   align-items: center;
+  -moz-user-select: none;
 }
 
 #browser-style-checkbox {

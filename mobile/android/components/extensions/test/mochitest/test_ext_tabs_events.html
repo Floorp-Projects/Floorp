@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tabs Events Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* testTabEvents() {
+  async function background() {
+    let events = [];
+    let eventPromise;
+    let checkEvents = () => {
+      if (eventPromise && events.length >= eventPromise.names.length) {
+        eventPromise.resolve();
+      }
+    };
+
+    browser.tabs.onCreated.addListener(tab => {
+      events.push({type: "onCreated", tab});
+      checkEvents();
+    });
+
+    browser.tabs.onAttached.addListener((tabId, info) => {
+      events.push(Object.assign({type: "onAttached", tabId}, info));
+      checkEvents();
+    });
+
+    browser.tabs.onDetached.addListener((tabId, info) => {
+      events.push(Object.assign({type: "onDetached", tabId}, info));
+      checkEvents();
+    });
+
+    browser.tabs.onRemoved.addListener((tabId, info) => {
+      events.push(Object.assign({type: "onRemoved", tabId}, info));
+      checkEvents();
+    });
+
+    browser.tabs.onMoved.addListener((tabId, info) => {
+      events.push(Object.assign({type: "onMoved", tabId}, info));
+      checkEvents();
+    });
+
+    async function expectEvents(names) {
+      browser.test.log(`Expecting events: ${names.join(", ")}`);
+
+      await new Promise(resolve => {
+        eventPromise = {names, resolve};
+        checkEvents();
+      });
+
+      browser.test.assertEq(names.length, events.length, "Got expected number of events");
+      for (let [i, name] of names.entries()) {
+        browser.test.assertEq(name, i in events && events[i].type,
+                              `Got expected ${name} event`);
+      }
+      return events.splice(0);
+    }
+
+    try {
+      browser.test.log("Create tab");
+      let tab = await browser.tabs.create({url: "about:blank"});
+      let oldIndex = tab.index;
+
+      let [created] = await expectEvents(["onCreated"]);
+      browser.test.assertEq(tab.id, created.tab.id, "Got expected tab ID");
+      browser.test.assertEq(oldIndex, created.tab.index, "Got expected tab index");
+
+
+      browser.test.log("Remove tab");
+      await browser.tabs.remove(tab.id);
+      let [removed] = await expectEvents(["onRemoved"]);
+
+      browser.test.assertEq(tab.id, removed.tabId, "Expected removed tab ID");
+      browser.test.assertEq(tab.windowId, removed.windowId, "Expected removed tab window ID");
+      // Note: We want to test for the actual boolean value false here.
+      browser.test.assertEq(false, removed.isWindowClosing, "Expected isWindowClosing value");
+
+      browser.test.notifyPass("tabs-events");
+    } catch (e) {
+      browser.test.fail(`${e} :: ${e.stack}`);
+      browser.test.notifyFail("tabs-events");
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background,
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("tabs-events");
+  yield extension.unload();
+});
+
+add_task(function* testTabRemovalEvent() {
+  async function background() {
+    function awaitLoad(tabId) {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+          if (tabId == tabId_ && changed.status == "complete") {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    }
+
+    chrome.tabs.onRemoved.addListener((tabId, info) => {
+      browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
+      chrome.tabs.query({}, tabs => {
+        for (let tab of tabs) {
+          browser.test.assertTrue(tab.id != tabId, "Tab query should not include removed tabId");
+        }
+        browser.test.notifyPass("tabs-events");
+      });
+    });
+
+    try {
+      let url = "http://example.com/mochitest/mobile/android/components/extensions/test/mochitest/context.html";
+      let tab = await browser.tabs.create({url: url});
+      await awaitLoad(tab.id);
+
+      await browser.tabs.remove(tab.id);
+    } catch (e) {
+      browser.test.fail(`${e} :: ${e.stack}`);
+      browser.test.notifyFail("tabs-events");
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background,
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("tabs-events");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

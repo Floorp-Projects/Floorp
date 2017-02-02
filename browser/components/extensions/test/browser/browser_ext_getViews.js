@@ -104,10 +104,10 @@ add_task(function* () {
 
   info("started");
 
-  let {Management: {global: {WindowManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-  let winId1 = WindowManager.getId(win1);
-  let winId2 = WindowManager.getId(win2);
+  let winId1 = windowTracker.getId(win1);
+  let winId2 = windowTracker.getId(win2);
 
   function* openTab(winId) {
     extension.sendMessage("background-open-tab", winId);

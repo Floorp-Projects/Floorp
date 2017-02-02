@@ -535,6 +535,14 @@ enum class CallerType : uint32_t {
   NonSystem
 };
 
+// A class that can be passed (by value or const reference) to indicate that the
+// caller is always a system caller.  This can be used as the type of an
+// argument to force only system callers to call a function.
+class SystemCallerGuarantee {
+public:
+  operator CallerType() const { return CallerType::System; }
+};
+
 } // namespace dom
 } // namespace mozilla
 

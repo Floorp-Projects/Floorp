@@ -10,6 +10,10 @@ EXTRA_COMPONENTS += [
     'extensions-browser.manifest',
 ]
 
+EXTRA_JS_MODULES += [
+    'ExtensionPopups.jsm',
+]
+
 DIRS += ['schemas']
 
 BROWSER_CHROME_MANIFESTS += [

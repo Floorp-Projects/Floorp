@@ -9,7 +9,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.FennecNativeDriver.LogLevel;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
@@ -18,7 +17,6 @@ import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -53,7 +51,6 @@ public class FennecNativeActions implements Actions {
         private final EventType mType;
         private final String mGeckoEvent;
         private final BlockingQueue<Object> mEventDataQueue;
-        private final GeckoEventListener mListener;
         private final BundleEventListener mBundleListener;
 
         private volatile boolean mEventEverReceived;
@@ -71,24 +68,6 @@ public class FennecNativeActions implements Actions {
             mEventDataQueue = new LinkedBlockingQueue<>();
             mIsRegistered = true;
 
-            if (type == EventType.JSON) {
-                mListener = new GeckoEventListener() {
-                    @Override
-                    public void handleMessage(final String event, final JSONObject message) {
-                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
-                                "handleMessage called for: " + event + "; expecting: " + mGeckoEvent);
-                        mAsserter.is(event, mGeckoEvent,
-                                "Given message occurred for registered event: " + message);
-
-                        notifyOfEvent(message.toString());
-                    }
-                };
-                mBundleListener = null;
-                dispatcher.registerGeckoThreadListener(mListener, geckoEvent);
-                return;
-            }
-
-            mListener = null;
             mBundleListener = new BundleEventListener() {
                 @Override
                 public void handleMessage(final String event, final GeckoBundle message,
@@ -207,9 +186,7 @@ public class FennecNativeActions implements Actions {
             FennecNativeDriver.log(LogLevel.INFO,
                     "EventExpecter: no longer listening for " + mGeckoEvent);
 
-            if (mType == EventType.JSON) {
-                mDispatcher.unregisterGeckoThreadListener(mListener, mGeckoEvent);
-            } else if (mType == EventType.GECKO) {
+            if (mType == EventType.GECKO) {
                 mDispatcher.unregisterGeckoThreadListener(mBundleListener, mGeckoEvent);
             } else if (mType == EventType.UI) {
                 mDispatcher.unregisterUiThreadListener(mBundleListener, mGeckoEvent);
@@ -240,11 +217,6 @@ public class FennecNativeActions implements Actions {
         }
     }
 
-    public RepeatedEventExpecter expectGeckoEvent(final String geckoEvent) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
-        return new GeckoEventExpecter(EventDispatcher.getInstance(), EventType.JSON, geckoEvent);
-    }
-
     public RepeatedEventExpecter expectGlobalEvent(final EventType type, final String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
         return new GeckoEventExpecter(EventDispatcher.getInstance(), type, geckoEvent);
@@ -253,10 +225,6 @@ public class FennecNativeActions implements Actions {
     public RepeatedEventExpecter expectWindowEvent(final EventType type, final String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
         return new GeckoEventExpecter(GeckoApp.getEventDispatcher(), type, geckoEvent);
-    }
-
-    public void sendGeckoEvent(final String geckoEvent, final String data) {
-        GeckoAppShell.notifyObservers(geckoEvent, data);
     }
 
     public void sendGlobalEvent(final String event, final GeckoBundle data) {
