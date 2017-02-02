@@ -943,7 +943,13 @@ endif
 # optimization level here, if necessary.  (The Cargo.toml files already
 # specify debug-assertions appropriately for --{disable,enable}-debug.)
 ifndef MOZ_OPTIMIZE
-rustflags_override = RUSTFLAGS='-C opt-level=0'
+rustflags = -C opt-level=0
+# Unfortunately, -C opt-level=0 implies -C debug-assertions, so we need
+# to explicitly disable them when MOZ_DEBUG is not set.
+ifndef MOZ_DEBUG
+rustflags += -C debug-assertions=no
+endif
+rustflags_override = RUSTFLAGS='$(rustflags)'
 endif
 
 CARGO_BUILD = env $(rustflags_override) \

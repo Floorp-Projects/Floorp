@@ -41,7 +41,11 @@ public:
   // default main thread being used.
   nsresult InitTimer(nsIEventTarget* aTarget, uint32_t aDelay);
 
-  enum class Reason { eTimeoutOrInterval, eIdleCallbackTimeout };
+  enum class Reason
+  {
+    eTimeoutOrInterval,
+    eIdleCallbackTimeout,
+  };
 
 #ifdef DEBUG
   bool HasRefCnt(uint32_t aCount) const;
@@ -76,6 +80,8 @@ public:
   // True if this is a timeout coming from a tracking script
   bool mIsTracking;
 
+  // Used to allow several reasons for setting a timeout, where each
+  // 'Reason' value is using a possibly overlapping set of id:s.
   Reason mReason;
 
   // Returned as value of setTimeout()

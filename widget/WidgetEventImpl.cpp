@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "nsIDOMEventTarget.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
@@ -458,6 +459,39 @@ WidgetEvent::IsAllowedToDispatchInSystemGroup() const
   // if we do, prevent default on mouse events can't prevent default behaviors
   // anymore.
   return mClass != ePointerEventClass;
+}
+
+/******************************************************************************
+ * mozilla::WidgetEvent
+ *
+ * Misc methods.
+ ******************************************************************************/
+
+static dom::EventTarget*
+GetTargetForDOMEvent(nsIDOMEventTarget* aTarget)
+{
+  return aTarget ? aTarget->GetTargetForDOMEvent() : nullptr;
+}
+
+dom::EventTarget*
+WidgetEvent::GetDOMEventTarget() const
+{
+  return GetTargetForDOMEvent(mTarget);
+}
+
+dom::EventTarget*
+WidgetEvent::GetCurrentDOMEventTarget() const
+{
+  return GetTargetForDOMEvent(mCurrentTarget);
+}
+
+dom::EventTarget*
+WidgetEvent::GetOriginalDOMEventTarget() const
+{
+  if (mOriginalTarget) {
+    return GetTargetForDOMEvent(mOriginalTarget);
+  }
+  return GetDOMEventTarget();
 }
 
 /******************************************************************************

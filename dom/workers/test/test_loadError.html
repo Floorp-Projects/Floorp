@@ -13,15 +13,13 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
-var loadErrorMessage = 'SecurityError: Failed to load worker script at "about:blank"';
-
 function nextTest() {
   (function(){
     function workerfunc() {
       var subworker = new Worker("about:blank");
       subworker.onerror = function(e) {
         e.preventDefault();
-        postMessage(e.message);
+        postMessage("ERROR");
       }
     }
     var b = new Blob([workerfunc+'workerfunc();']);
@@ -37,7 +35,7 @@ function nextTest() {
         return;
       }
       w.onmessage = function(e) {
-        is(e.data, loadErrorMessage,
+        is(e.data, "ERROR",
            "Should catch the error when loading inner script");
         if (++i < 2) callworker(i);
         else SimpleTest.finish();
@@ -54,8 +52,6 @@ try {
   var worker = new Worker("about:blank");
   worker.onerror = function(e) {
     e.preventDefault();
-    is(e.message, loadErrorMessage,
-       "Should get the right error from the toplevel script");
     nextTest();
   }
 

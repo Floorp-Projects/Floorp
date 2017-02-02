@@ -205,8 +205,8 @@ FileSystemTaskChildBase::SetError(const nsresult& aErrorValue)
  */
 
 FileSystemTaskParentBase::FileSystemTaskParentBase(FileSystemBase* aFileSystem,
-                                                  const FileSystemParams& aParam,
-                                                  FileSystemRequestParent* aParent)
+                                                   const FileSystemParams& aParam,
+                                                   FileSystemRequestParent* aParent)
   : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
   , mRequestParent(aParent)

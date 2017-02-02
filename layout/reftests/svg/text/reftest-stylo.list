@@ -168,7 +168,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == dynamic-font-size-4.svg dynamic-font-size-4.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline.svg
 == dynamic-multiple-x.svg dynamic-multiple-x.svg
-fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke.svg
+fuzzy-if(!d2d,14,2) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke.svg
 == dynamic-text-shadow.svg dynamic-text-shadow.svg
 
 # text and masks

@@ -99,7 +99,7 @@ Structure:
           ]
         }],
         events: [
-          event_array // See events below,
+          event_array // See events below.
         ]
       }
     }
@@ -189,7 +189,7 @@ Events in the "sync" ping
 -------------------------
 
 The sync ping includes events in the same format as they are included in the
-main ping. The documentation for these events will land in bug 1302666.
+main ping, see :ref:`eventtelemetry`.
 
 Every event recorded in this ping will have a category of ``sync``. The following
 events are defined, categorized by the event method.
