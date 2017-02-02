@@ -110,6 +110,10 @@ _hb_ot_layout_create (hb_face_t *face)
       || (994 == gdef_len && 60336 == gpos_len && 24474 == gsub_len)
       /* sha1sum:7199385abb4c2cc81c83a151a7599b6368e92343  tahomabd.ttf from Windows 10 */
       || (1006 == gdef_len && 61740 == gpos_len && 24470 == gsub_len)
+      /* sha1sum:b9c84d820c49850d3d27ec498be93955b82772b5  tahoma.ttf from Windows 10 AU */
+      || (1006 == gdef_len && 61352 == gpos_len && 24576 == gsub_len)
+      /* sha1sum:2bdfaab28174bdadd2f3d4200a30a7ae31db79d2  tahomabd.ttf from Windows 10 AU */
+      || (1018 == gdef_len && 62834 == gpos_len && 24572 == gsub_len)
       /* sha1sum:b0d36cf5a2fbe746a3dd277bffc6756a820807a7  Tahoma.ttf from Mac OS X 10.9 */
       || (832 == gdef_len && 47162 == gpos_len && 7324 == gsub_len)
       /* sha1sum:12fc4538e84d461771b30c18b5eb6bd434e30fba  Tahoma Bold.ttf from Mac OS X 10.9 */
