@@ -187,20 +187,20 @@ SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata&
 #endif
 #ifdef MOZ_VTUNE
         if (IsVTuneProfilingActive()) {
-            unsigned method_id = iJIT_GetNewMethodID();
-            if (method_id == 0)
+            cs.vtune_method_id_ = iJIT_GetNewMethodID();
+            if (cs.vtune_method_id_ == 0)
                 return;
-            iJIT_Method_Load method;
-            method.method_id = method_id;
+            iJIT_Method_Load_V2 method = {0};
+            method.method_id = cs.vtune_method_id_;
             method.method_name = name.begin();
             method.method_load_address = (void*)start;
             method.method_size = size;
             method.line_number_size = 0;
             method.line_number_table = nullptr;
-            method.class_id = 0;
             method.class_file_name = nullptr;
             method.source_file_name = nullptr;
-            iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED, (void*)&method);
+            method.module_name = "wasm"; // Used to distinguish between JIT engines.
+            iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
         }
 #endif
     }
@@ -266,6 +266,14 @@ CodeSegment::~CodeSegment()
 {
     if (!bytes_)
         return;
+
+#ifdef MOZ_VTUNE
+    if (IsVTuneProfilingActive() && vtune_method_id_ != 0) {
+        iJIT_Method_Load method = {0};
+        method.method_id = vtune_method_id_;
+        iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_UNLOAD_START, (void*)&method);
+    }
+#endif // MOZ_VTUNE
 
     MOZ_ASSERT(wasmCodeAllocations > 0);
     wasmCodeAllocations--;

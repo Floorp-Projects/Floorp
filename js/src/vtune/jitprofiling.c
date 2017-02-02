@@ -1,10 +1,10 @@
-/*
+/* <copyright>
   This file is provided under a dual BSD/GPLv2 license.  When using or
   redistributing this file, you may do so under either license.
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2012 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2012 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -54,22 +54,21 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+</copyright> */
+
 #include "vtune/ittnotify_config.h"
 
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
 #include <windows.h>
-#pragma optimize("", off)
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-#include <pthread.h>
-#include <dlfcn.h>
 #endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
+#if ITT_PLATFORM != ITT_PLATFORM_MAC && ITT_PLATFORM != ITT_PLATFORM_FREEBSD
 #include <malloc.h>
+#endif
 #include <stdlib.h>
 
 #include "vtune/jitprofiling.h"
 
-static const char rcsid[] = "\n@(#) $Revision: 294150 $\n";
+static const char rcsid[] = "\n@(#) $Revision: 471937 $\n";
 
 #define DLL_ENVIRONMENT_VAR             "VS_PROFILER"
 
@@ -84,7 +83,10 @@ static const char rcsid[] = "\n@(#) $Revision: 294150 $\n";
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
 #define DEFAULT_DLLNAME                 "JitPI.dll"
 HINSTANCE m_libHandle = NULL;
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
+#elif ITT_PLATFORM==ITT_PLATFORM_MAC
+#define DEFAULT_DLLNAME                 "libJitPI.dylib"
+void* m_libHandle = NULL;
+#else
 #define DEFAULT_DLLNAME                 "libJitPI.so"
 void* m_libHandle = NULL;
 #endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
@@ -93,191 +95,62 @@ void* m_libHandle = NULL;
 #define ANDROID_JIT_AGENT_PATH  "/data/intel/libittnotify.so"
 
 /* the function pointers */
-typedef unsigned int(*TPInitialize)(void);
+typedef unsigned int(JITAPI *TPInitialize)(void);
 static TPInitialize FUNC_Initialize=NULL;
 
-typedef unsigned int(*TPNotify)(unsigned int, void*);
+typedef unsigned int(JITAPI *TPNotify)(unsigned int, void*);
 static TPNotify FUNC_NotifyEvent=NULL;
 
 static iJIT_IsProfilingActiveFlags executionMode = iJIT_NOTHING_RUNNING;
 
 /* end collector dll part. */
 
-/* loadiJIT_Funcs() : this function is called just in the beginning 
- *  and is responsible to load the functions from BistroJavaCollector.dll
+/* loadiJIT_Funcs() : this function is called just in the beginning
+ * and is responsible to load the functions from BistroJavaCollector.dll
  * result:
  *  on success: the functions loads, iJIT_DLL_is_missing=0, return value = 1
  *  on failure: the functions are NULL, iJIT_DLL_is_missing=1, return value = 0
- */ 
+ */
 static int loadiJIT_Funcs(void);
 
-/* global representing whether the BistroJavaCollector can't be loaded */
+/* global representing whether the collector can't be loaded */
 static int iJIT_DLL_is_missing = 0;
 
-/* Virtual stack - the struct is used as a virtual stack for each thread.
- * Every thread initializes with a stack of size INIT_TOP_STACK.
- * Every method entry decreases from the current stack point,
- * and when a thread stack reaches its top of stack (return from the global 
- * function), the top of stack and the current stack increase. Notice that 
- * when returning from a function the stack pointer is the address of 
- * the function return.
-*/
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-static DWORD threadLocalStorageHandle = 0;
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-static pthread_key_t threadLocalStorageHandle = (pthread_key_t)0;
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-
-#define INIT_TOP_Stack 10000
-
-typedef struct 
-{
-    unsigned int TopStack;
-    unsigned int CurrentStack;
-} ThreadStack, *pThreadStack;
-
-/* end of virtual stack. */
-
-/*
- * The function for reporting virtual-machine related events to VTune.
- * Note: when reporting iJVM_EVENT_TYPE_ENTER_NIDS, there is no need to fill 
- * in the stack_id field in the iJIT_Method_NIDS structure, as VTune fills it.
- * The return value in iJVM_EVENT_TYPE_ENTER_NIDS && 
- * iJVM_EVENT_TYPE_LEAVE_NIDS events will be 0 in case of failure.
- * in iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED event 
- * it will be -1 if EventSpecificData == 0 otherwise it will be 0.
-*/
-
-ITT_EXTERN_C int JITAPI 
+ITT_EXTERN_C int JITAPI
 iJIT_NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecificData)
 {
-    int ReturnValue;
+    int ReturnValue = 0;
 
-    /*
-     * This section is for debugging outside of VTune. 
-     * It creates the environment variables that indicates call graph mode.
-     * If running outside of VTune remove the remark.
-     *
-     *
-     * static int firstTime = 1;
-     * char DoCallGraph[12] = "DoCallGraph";
-     * if (firstTime)
-     * {
-     * firstTime = 0;
-     * SetEnvironmentVariable( "BISTRO_COLLECTORS_DO_CALLGRAPH", DoCallGraph);
-     * }
-     *
-     * end of section.
-    */
-
-    /* initialization part - the functions have not been loaded yet. This part
-     *        will load the functions, and check if we are in Call Graph mode. 
-     *        (for special treatment).
-     */
-    if (!FUNC_NotifyEvent) 
+    /* initialization part - the collector has not been loaded yet. */
+    if (!FUNC_NotifyEvent)
     {
-        if (iJIT_DLL_is_missing) 
+        if (iJIT_DLL_is_missing)
             return 0;
 
-        /* load the Function from the DLL */
-        if (!loadiJIT_Funcs()) 
+        if (!loadiJIT_Funcs())
             return 0;
-
-        /* Call Graph initialization. */
     }
 
-    /* If the event is method entry/exit, check that in the current mode 
-     * VTune is allowed to receive it
-     */
-    if ((event_type == iJVM_EVENT_TYPE_ENTER_NIDS || 
-         event_type == iJVM_EVENT_TYPE_LEAVE_NIDS) &&
-        (executionMode != iJIT_CALLGRAPH_ON))
+    if (event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED ||
+        event_type == iJVM_EVENT_TYPE_METHOD_UPDATE)
     {
-        return 0;
-    }
-    /* This section is performed when method enter event occurs.
-     * It updates the virtual stack, or creates it if this is the first 
-     * method entry in the thread. The stack pointer is decreased.
-     */
-    if (event_type == iJVM_EVENT_TYPE_ENTER_NIDS)
-    {
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-        pThreadStack threadStack = 
-            (pThreadStack)TlsGetValue (threadLocalStorageHandle);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        pThreadStack threadStack = 
-            (pThreadStack)pthread_getspecific(threadLocalStorageHandle);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-
-        /* check for use of reserved method IDs */
-        if ( ((piJIT_Method_NIDS) EventSpecificData)->method_id <= 999 )
-            return 0;
-
-        if (!threadStack)
-        {
-            /* initialize the stack. */
-            threadStack = (pThreadStack) calloc (sizeof(ThreadStack), 1);
-            if (!threadStack)
-                return 0;
-            threadStack->TopStack = INIT_TOP_Stack;
-            threadStack->CurrentStack = INIT_TOP_Stack;
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-            TlsSetValue(threadLocalStorageHandle,(void*)threadStack);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-            pthread_setspecific(threadLocalStorageHandle,(void*)threadStack);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        }
-
-        /* decrease the stack. */
-        ((piJIT_Method_NIDS) EventSpecificData)->stack_id = 
-            (threadStack->CurrentStack)--;
-    }
-
-    /* This section is performed when method leave event occurs
-     * It updates the virtual stack.
-     *    Increases the stack pointer.
-     *    If the stack pointer reached the top (left the global function)
-     *        increase the pointer and the top pointer.
-     */
-    if (event_type == iJVM_EVENT_TYPE_LEAVE_NIDS)
-    {
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-        pThreadStack threadStack = 
-           (pThreadStack)TlsGetValue (threadLocalStorageHandle);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        pThreadStack threadStack = 
-            (pThreadStack)pthread_getspecific(threadLocalStorageHandle);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-
-        /* check for use of reserved method IDs */
-        if ( ((piJIT_Method_NIDS) EventSpecificData)->method_id <= 999 )
-            return 0;
-
-        if (!threadStack)
-        {
-            /* Error: first report in this thread is method exit */
-            exit (1);
-        }
-
-        ((piJIT_Method_NIDS) EventSpecificData)->stack_id = 
-            ++(threadStack->CurrentStack) + 1;
-
-        if (((piJIT_Method_NIDS) EventSpecificData)->stack_id 
-               > threadStack->TopStack)
-            ((piJIT_Method_NIDS) EventSpecificData)->stack_id = 
-                (unsigned int)-1;
-    }
-
-    if (event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED)
-    {
-        /* check for use of reserved method IDs */
-        if ( ((piJIT_Method_Load) EventSpecificData)->method_id <= 999 )
+        if (((piJIT_Method_Load)EventSpecificData)->method_id == 0)
             return 0;
     }
     else if (event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2)
     {
-        /* check for use of reserved method IDs */
-        if ( ((piJIT_Method_Load_V2) EventSpecificData)->method_id <= 999 )
+        if (((piJIT_Method_Load_V2)EventSpecificData)->method_id == 0)
+            return 0;
+    }
+    else if (event_type == iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V3)
+    {
+        if (((piJIT_Method_Load_V3)EventSpecificData)->method_id == 0)
+            return 0;
+    }
+    else if (event_type == iJVM_EVENT_TYPE_METHOD_INLINE_LOAD_FINISHED)
+    {
+        if (((piJIT_Method_Inline_Load)EventSpecificData)->method_id == 0 ||
+            ((piJIT_Method_Inline_Load)EventSpecificData)->parent_method_id == 0)
             return 0;
     }
 
@@ -286,26 +159,6 @@ iJIT_NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecificData)
     return ReturnValue;
 }
 
-/* The new mode call back routine */
-ITT_EXTERN_C void JITAPI 
-iJIT_RegisterCallbackEx(void *userdata, iJIT_ModeChangedEx 
-                        NewModeCallBackFuncEx) 
-{
-    /* is it already missing... or the load of functions from the DLL failed */
-    if (iJIT_DLL_is_missing || !loadiJIT_Funcs())
-    {
-        /* then do not bother with notifications */
-        NewModeCallBackFuncEx(userdata, iJIT_NO_NOTIFICATIONS);  
-        /* Error: could not load JIT functions. */
-        return;
-    }
-    /* nothing to do with the callback */
-}
-
-/*
- * This function allows the user to query in which mode, if at all, 
- *VTune is running
- */
 ITT_EXTERN_C iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive()
 {
     if (!iJIT_DLL_is_missing)
@@ -316,11 +169,10 @@ ITT_EXTERN_C iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive()
     return executionMode;
 }
 
-/* this function loads the collector dll (BistroJavaCollector) 
- * and the relevant functions.
+/* This function loads the collector dll and the relevant functions.
  * on success: all functions load,     iJIT_DLL_is_missing = 0, return value = 1
  * on failure: all functions are NULL, iJIT_DLL_is_missing = 1, return value = 0
- */ 
+ */
 static int loadiJIT_Funcs()
 {
     static int bDllWasLoaded = 0;
@@ -339,7 +191,7 @@ static int loadiJIT_Funcs()
     iJIT_DLL_is_missing = 1;
     FUNC_NotifyEvent = NULL;
 
-    if (m_libHandle) 
+    if (m_libHandle)
     {
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
         FreeLibrary(m_libHandle);
@@ -356,15 +208,18 @@ static int loadiJIT_Funcs()
     {
         DWORD envret = 0;
         dllName = (char*)malloc(sizeof(char) * (dNameLength + 1));
-        envret = GetEnvironmentVariableA(NEW_DLL_ENVIRONMENT_VAR, 
-                                         dllName, dNameLength);
-        if (envret)
+        if(dllName != NULL)
         {
-            /* Try to load the dll from the PATH... */
-            m_libHandle = LoadLibraryExA(dllName, 
-                                         NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+            envret = GetEnvironmentVariableA(NEW_DLL_ENVIRONMENT_VAR, 
+                                             dllName, dNameLength);
+            if (envret)
+            {
+                /* Try to load the dll from the PATH... */
+                m_libHandle = LoadLibraryExA(dllName, 
+                                             NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+            }
+            free(dllName);
         }
-        free(dllName);
     } else {
         /* Try to use old VS_PROFILER variable */
         dNameLength = GetEnvironmentVariableA(DLL_ENVIRONMENT_VAR, NULL, 0);
@@ -372,21 +227,24 @@ static int loadiJIT_Funcs()
         {
             DWORD envret = 0;
             dllName = (char*)malloc(sizeof(char) * (dNameLength + 1));
-            envret = GetEnvironmentVariableA(DLL_ENVIRONMENT_VAR, 
-                                             dllName, dNameLength);
-            if (envret)
+            if(dllName != NULL)
             {
-                /* Try to load the dll from the PATH... */
-                m_libHandle = LoadLibraryA(dllName);
+                envret = GetEnvironmentVariableA(DLL_ENVIRONMENT_VAR, 
+                                                 dllName, dNameLength);
+                if (envret)
+                {
+                    /* Try to load the dll from the PATH... */
+                    m_libHandle = LoadLibraryA(dllName);
+                }
+                free(dllName);
             }
-            free(dllName);
         }
     }
 #else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
     dllName = getenv(NEW_DLL_ENVIRONMENT_VAR);
     if (!dllName)
         dllName = getenv(DLL_ENVIRONMENT_VAR);
-#ifdef ANDROID
+#if defined(__ANDROID__) || defined(ANDROID)
     if (!dllName)
         dllName = ANDROID_JIT_AGENT_PATH;
 #endif
@@ -409,8 +267,8 @@ static int loadiJIT_Funcs()
     /* if the dll wasn't loaded - exit. */
     if (!m_libHandle)
     {
-        iJIT_DLL_is_missing = 1; /* don't try to initialize 
-                                  * JIT agent the second time 
+        iJIT_DLL_is_missing = 1; /* don't try to initialize
+                                  * JIT agent the second time
                                   */
         return 0;
     }
@@ -442,84 +300,12 @@ static int loadiJIT_Funcs()
     bDllWasLoaded = 1;
     iJIT_DLL_is_missing = 0; /* DLL is ok. */
 
-    /*
-     * Call Graph mode: init the thread local storage
-     * (need to store the virtual stack there).
-     */
-    if ( executionMode == iJIT_CALLGRAPH_ON )
-    {
-        /* Allocate a thread local storage slot for the thread "stack" */
-        if (!threadLocalStorageHandle)
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-            threadLocalStorageHandle = TlsAlloc();
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        pthread_key_create(&threadLocalStorageHandle, NULL);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-    }
-
     return 1;
 }
 
-/*
- * This function should be called by the user whenever a thread ends, 
- * to free the thread "virtual stack" storage
- */
-ITT_EXTERN_C void JITAPI FinalizeThread()
-{
-    if (threadLocalStorageHandle)
-    {
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-        pThreadStack threadStack = 
-            (pThreadStack)TlsGetValue (threadLocalStorageHandle);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        pThreadStack threadStack = 
-            (pThreadStack)pthread_getspecific(threadLocalStorageHandle);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        if (threadStack)
-        {
-            free (threadStack);
-            threadStack = NULL;
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-            TlsSetValue (threadLocalStorageHandle, threadStack);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-            pthread_setspecific(threadLocalStorageHandle, threadStack);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        }
-    }
-}
-
-/*
- * This function should be called by the user when the process ends, 
- * to free the local storage index
-*/
-ITT_EXTERN_C void JITAPI FinalizeProcess()
-{
-    if (m_libHandle) 
-    {
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-        FreeLibrary(m_libHandle);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        dlclose(m_libHandle);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-        m_libHandle = NULL;
-    }
-
-    if (threadLocalStorageHandle)
-#if ITT_PLATFORM==ITT_PLATFORM_WIN
-        TlsFree (threadLocalStorageHandle);
-#else  /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-    pthread_key_delete(threadLocalStorageHandle);
-#endif /* ITT_PLATFORM==ITT_PLATFORM_WIN */
-}
-
-/*
- * This function should be called by the user for any method once.
- * The function will return a unique method ID, the user should maintain 
- * the ID for each method
- */
 ITT_EXTERN_C unsigned int JITAPI iJIT_GetNewMethodID()
 {
-    static unsigned int methodID = 0x100000;
+    static unsigned int methodID = 1;
 
     if (methodID == 0)
         return 0;  /* ERROR : this is not a valid value */
