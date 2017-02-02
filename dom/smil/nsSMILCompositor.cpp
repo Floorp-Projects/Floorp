@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILCompositor.h"
-#include "nsSMILCSSProperty.h"
+
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
+#include "nsSMILCSSProperty.h"
 
 // PLDHashEntryHdr methods
 bool
@@ -143,14 +144,17 @@ nsSMILCompositor::CreateSMILAttr()
 uint32_t
 nsSMILCompositor::GetFirstFuncToAffectSandwich()
 {
-  // canThrottle is true when attributeName is not 'display' and
-  // the element or subtree is display:none
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(mKey.mElement,
-                                                         nullptr, nullptr);
+  // For performance reasons, we throttle most animations on elements in
+  // display:none subtrees. (We can't throttle animations that target the
+  // "display" property itself, though -- if we did, display:none elements
+  // could never be dynamically displayed via animations.)
+  // To determine whether we're in a display:none subtree, we will check the
+  // element's primary frame since element in display:none subtree doesn't have
+  // a primary frame. Before this process, we will construct frame when we
+  // append an element to subtree. So we will not need to worry about pending
+  // frame construction in this step.
   bool canThrottle = mKey.mAttributeName != nsGkAtoms::display &&
-                     styleContext &&
-                     styleContext->IsInDisplayNoneSubtree();
+                     !mKey.mElement->GetPrimaryFrame();
 
   uint32_t i;
   for (i = mAnimationFunctions.Length(); i > 0; --i) {

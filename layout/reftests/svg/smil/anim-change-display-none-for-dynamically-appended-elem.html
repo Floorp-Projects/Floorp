@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Test dynamically-appended animation on an element that dynamically becomes 'display:none'</title>
+  </head>
+  <body style="background-color: lime;">
+    <div>
+      <svg>
+        <rect width="100" height="100" fill="brown" id="rect">
+        </rect>
+      </svg>
+    </div>
+    <script>
+      document.addEventListener('MozReftestInvalidate', function() {
+        var rect    = document.getElementById("rect");
+        var animate = document.createElementNS('http://www.w3.org/2000/svg',
+                                               'animate');
+        animate.setAttribute('attributeName', 'fill');
+        animate.setAttribute('from', 'blue');
+        animate.setAttribute('to', 'red');
+        animate.setAttribute('dur', '100s');
+        rect.appendChild(animate);
+
+        requestAnimationFrame(function(time) {
+          rect.style.display = 'none';
+          requestAnimationFrame(function(time) {
+            document.documentElement.removeAttribute("class");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
