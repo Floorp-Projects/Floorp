@@ -29,6 +29,7 @@ function configureStore() {
       error: Services.prefs.getBoolPref(PREFS.FILTER.ERROR),
       warn: Services.prefs.getBoolPref(PREFS.FILTER.WARN),
       info: Services.prefs.getBoolPref(PREFS.FILTER.INFO),
+      debug: Services.prefs.getBoolPref(PREFS.FILTER.DEBUG),
       log: Services.prefs.getBoolPref(PREFS.FILTER.LOG),
       css: Services.prefs.getBoolPref(PREFS.FILTER.CSS),
       net: Services.prefs.getBoolPref(PREFS.FILTER.NET),
