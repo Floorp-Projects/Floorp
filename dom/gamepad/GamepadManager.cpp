@@ -686,7 +686,12 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                                        aIntensity, aDuration,
                                        mPromiseID);
   } else {
-    // TODO: Bug 680289, implement for standard gamepads
+    for (const auto& channelChild: mChannelChildren) {
+      channelChild->AddPromise(mPromiseID, promise);
+      channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
+                                      aIntensity, aDuration,
+                                      mPromiseID);
+    }
   }
 
   ++mPromiseID;

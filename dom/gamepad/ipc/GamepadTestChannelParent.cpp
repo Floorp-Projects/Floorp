@@ -24,8 +24,10 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
     LossyCopyUTF16toASCII(a.id(), gamepadID);
     uint32_t index = service->AddGamepad(gamepadID.get(),
                                          static_cast<GamepadMappingType>(a.mapping()),
+                                         a.hand(),
                                          a.num_buttons(),
-                                         a.num_axes());
+                                         a.num_axes(),
+                                         a.num_haptics());
     if (!mShuttingdown) {
       Unused << SendReplyGamepadIndex(aID, index);
     }
@@ -44,6 +46,11 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
     service->NewAxisMoveEvent(a.index(), a.axis(), a.value());
+    return IPC_OK();
+  }
+  if (aEvent.type() == GamepadChangeEvent::TGamepadPoseInformation) {
+    const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
+    service->NewPoseEvent(a.index(), a.pose_state());
     return IPC_OK();
   }
 

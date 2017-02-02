@@ -284,8 +284,10 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
   uint32_t index = service->AddGamepad(buffer,
                                        mozilla::dom::GamepadMappingType::_empty,
+                                       mozilla::dom::GamepadHand::_empty,
                                        (int)mGamepads[slot].numButtons(),
-                                       (int)mGamepads[slot].numAxes());
+                                       (int)mGamepads[slot].numAxes(),
+                                       0); // TODO: Bug 680289, implement gamepad haptics for cocoa
   mGamepads[slot].mSuperIndex = index;
 }
 
