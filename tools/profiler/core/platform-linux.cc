@@ -340,7 +340,7 @@ static void* SignalSender(void* arg) {
           continue;
         }
 
-        info->GetThreadResponsiveness()->Update();
+        info->UpdateThreadResponsiveness();
 
         // We use sCurrentThreadInfo to pass the ThreadInfo for the
         // thread we're profiling to the signal handler.

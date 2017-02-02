@@ -32,11 +32,6 @@ class ThreadInfo {
   virtual void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
-  /**
-   * May be null for the main thread if the profiler was started during startup
-   */
-  nsIThread* GetThread() const { return mThread.get(); }
-
   bool CanInvokeJS() const;
 
  private:
@@ -46,7 +41,10 @@ class ThreadInfo {
   PseudoStack* mPseudoStack;
   Sampler::UniquePlatformData mPlatformData;
   void* mStackTop;
+
+  // May be null for the main thread if the profiler was started during startup.
   nsCOMPtr<nsIThread> mThread;
+
   bool mPendingDelete;
 
   //
@@ -76,6 +74,10 @@ public:
   void DuplicateLastSample();
 
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
+
+  void UpdateThreadResponsiveness() {
+    mRespInfo.Update(mIsMainThread, mThread);
+  }
 
   uint32_t bufferGeneration() const { return mBuffer->mGeneration; }
 
