@@ -201,6 +201,13 @@ AudioChannelService::CreateServiceIfNeeded()
   }
 }
 
+/* static */ bool
+AudioChannelService::IsServiceStarted()
+{
+  // The service would start when the first AudioChannelAgent is created.
+  return !!gAudioChannelService;
+}
+
 /* static */ already_AddRefed<AudioChannelService>
 AudioChannelService::GetOrCreate()
 {
