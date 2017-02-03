@@ -464,6 +464,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   mWatchManager.Watch(mIsAudioDataAudible,
                       &MediaDecoder::NotifyAudibleStateChanged);
 
+  MediaShutdownManager::InitStatics();
   MediaShutdownManager::Instance().Register(this);
 }
 
