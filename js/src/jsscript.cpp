@@ -51,9 +51,6 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Xdr.h"
-#ifdef MOZ_VTUNE
-# include "vtune/VTuneWrapper.h"
-#endif
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
@@ -2534,10 +2531,6 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     script->setSourceObject(sourceObject);
     script->sourceStart_ = bufStart;
     script->sourceEnd_ = bufEnd;
-
-#ifdef MOZ_VTUNE
-    script->vtuneMethodId_ = VTuneGenerateUniqueMethodID();
-#endif
 
     return script;
 }

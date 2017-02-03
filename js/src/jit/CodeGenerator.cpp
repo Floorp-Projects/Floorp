@@ -53,9 +53,6 @@
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Interpreter-inl.h"
-#ifdef MOZ_VTUNE
-# include "vtune/VTuneWrapper.h"
-#endif
 
 using namespace js;
 using namespace js::jit;
@@ -1813,9 +1810,6 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExpMatcherStub");
 #endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "RegExpMatcherStub");
-#endif
 
     if (cx->zone()->needsIncrementalBarrier())
         code->togglePreBarriers(true, DontReprotect);
@@ -1973,9 +1967,6 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExpSearcherStub");
 #endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "RegExpSearcherStub");
-#endif
 
     if (cx->zone()->needsIncrementalBarrier())
         code->togglePreBarriers(true, DontReprotect);
@@ -2123,9 +2114,6 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExpTesterStub");
-#endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "RegExpTesterStub");
 #endif
 
     if (cx->zone()->needsIncrementalBarrier())
@@ -7728,9 +7716,6 @@ JitCompartment::generateStringConcatStub(JSContext* cx)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "StringConcatStub");
 #endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "StringConcatStub");
-#endif
 
     return code;
 }
@@ -7772,9 +7757,6 @@ JitRuntime::generateMallocStub(JSContext* cx)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "MallocStub");
 #endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "MallocStub");
-#endif
 
     return code;
 }
@@ -7810,9 +7792,6 @@ JitRuntime::generateFreeStub(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "FreeStub");
-#endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "FreeStub");
 #endif
 
     return code;
@@ -7853,9 +7832,6 @@ JitRuntime::generateLazyLinkStub(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "LazyLinkStub");
-#endif
-#ifdef MOZ_VTUNE
-    VTuneMarkStub(code, "LazyLinkStub");
 #endif
     return code;
 }
@@ -9937,11 +9913,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 #if defined(JS_ION_PERF)
     if (PerfEnabled())
         perfSpewer_.writeProfile(script, code, masm);
-#endif
-
-#ifdef MOZ_VTUNE
-    if (IsVTuneProfilingActive())
-        VTuneMarkScript(code, script, "ion");
 #endif
 
     // for marking during GC.
