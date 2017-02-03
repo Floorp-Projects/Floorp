@@ -6968,6 +6968,8 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   int32_t namespaceID;
   nsCOMPtr<nsIAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
 
+  // XXXbz Can we just switch to using "new" directly instead of this
+  // createInstance insanity?
   nsAutoCString contractID("@mozilla.org/layout/xul-boxobject");
   if (namespaceID == kNameSpaceID_XUL) {
     if (tag == nsGkAtoms::browser ||

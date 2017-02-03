@@ -3647,10 +3647,9 @@ XULDocument::CheckTemplateBuilderHookup(nsIContent* aElement,
     // bad) if aElement is not a XUL element.
     //
     // XXXvarga Do we still want to support non XUL content?
-    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aElement);
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(aElement);
     if (xulElement) {
-        nsCOMPtr<nsIRDFCompositeDataSource> ds;
-        xulElement->GetDatabase(getter_AddRefs(ds));
+        nsCOMPtr<nsIRDFCompositeDataSource> ds = xulElement->GetDatabase();
         if (ds) {
             *aNeedsHookup = false;
             return NS_OK;

@@ -10,12 +10,14 @@
 #include "nsStyleContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsIBoxObject.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsITreeColumns.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsDisplayList.h"
 #include "nsTreeBodyFrame.h"
+#include "nsXULElement.h"
 
 //
 // NS_NewTreeColFrame
@@ -166,10 +168,11 @@ nsTreeColFrame::GetTreeBoxObject()
   nsIContent* parent = mContent->GetParent();
   if (parent) {
     nsIContent* grandParent = parent->GetParent();
-    nsCOMPtr<nsIDOMXULElement> treeElement = do_QueryInterface(grandParent);
+    RefPtr<nsXULElement> treeElement =
+      nsXULElement::FromContentOrNull(grandParent);
     if (treeElement) {
-      nsCOMPtr<nsIBoxObject> boxObject;
-      treeElement->GetBoxObject(getter_AddRefs(boxObject));
+      IgnoredErrorResult ignored;
+      nsCOMPtr<nsIBoxObject> boxObject = treeElement->GetBoxObject(ignored);
 
       nsCOMPtr<nsITreeBoxObject> treeBoxObject = do_QueryInterface(boxObject);
       result = treeBoxObject.get();

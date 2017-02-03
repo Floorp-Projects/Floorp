@@ -13,7 +13,7 @@
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsIDocument.h"
@@ -423,7 +423,8 @@ nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext,
 
     // if we dragged then fire a command event.
     if (mDidDrag) {
-      nsCOMPtr<nsIDOMXULElement> element = do_QueryInterface(mOuter->GetContent());
+      RefPtr<nsXULElement> element =
+        nsXULElement::FromContent(mOuter->GetContent());
       element->DoCommand();
     }
 
