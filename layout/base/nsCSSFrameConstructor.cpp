@@ -13,6 +13,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
@@ -39,7 +40,10 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsViewManager.h"
 #include "nsStyleConsts.h"
-#include "nsIDOMXULElement.h"
+#ifdef MOZ_XUL
+#include "nsXULElement.h"
+#include "mozilla/dom/BoxObject.h"
+#endif // MOZ_XUL
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsIComboboxControlFrame.h"
@@ -6935,9 +6939,9 @@ MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
 
   if (IsXULListBox(aContainer) &&
       aChild->IsXULElement(nsGkAtoms::listitem)) {
-    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
-    nsCOMPtr<nsIBoxObject> boxObject;
-    xulElement->GetBoxObject(getter_AddRefs(boxObject));
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(aContainer);
+    IgnoredErrorResult ignored;
+    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(ignored);
     nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
     if (listBoxObject) {
       return listBoxObject->GetListBoxBody(false);
@@ -6946,7 +6950,7 @@ MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
 
   return nullptr;
 }
-#endif
+#endif // MOZ_XUL
 
 void
 nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,

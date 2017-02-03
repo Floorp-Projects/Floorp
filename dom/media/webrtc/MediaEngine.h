@@ -327,7 +327,7 @@ public:
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs,
                             const nsString& aDeviceId,
-                            const ipc::PrincipalInfo& aPrincipalInfo,
+                            const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                             AllocationHandle** aOutHandle,
                             const char** aOutBadConstraint)
   {

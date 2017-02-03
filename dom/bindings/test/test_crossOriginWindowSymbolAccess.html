@@ -10,10 +10,10 @@ async_test(function (t) {
   window.addEventListener("load", t.step_func(
     function() {
       assert_equals(document.querySelector("iframe").contentDocument, null, "Should have a crossorigin frame");
-      assert_throws(new Error(), function() {
+      assert_throws("SecurityError", function() {
         frames[0][Symbol.iterator];
       }, "Should throw exception on cross-origin Window symbol-named get");
-      assert_throws(new Error(), function() {
+      assert_throws("SecurityError", function() {
         frames[0].location[Symbol.iterator];
       }, "Should throw exception on cross-origin Location symbol-named get");
       t.done();

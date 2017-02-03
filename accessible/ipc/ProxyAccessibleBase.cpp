@@ -39,7 +39,7 @@ ProxyAccessibleBase<Derived>::Shutdown()
     for (uint32_t idx = 0; idx < childCount; idx++)
       mChildren[idx]->Shutdown();
   } else {
-    if (mChildren.Length() != 1)
+    if (mChildren.Length() > 1)
       MOZ_CRASH("outer doc doesn't own adoc!");
 
     mChildren[0]->AsDoc()->Unbind();

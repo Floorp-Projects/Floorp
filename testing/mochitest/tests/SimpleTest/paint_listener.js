@@ -10,11 +10,15 @@
   function paintListener(event) {
     if (event.target != window)
       return;
-    var eventRect =
-      [ event.boundingClientRect.left,
-        event.boundingClientRect.top,
-        event.boundingClientRect.right,
-        event.boundingClientRect.bottom ];
+    var clientRect = event.boundingClientRect;
+    var eventRect;
+    if (clientRect) {
+      eventRect =
+        [ clientRect.left, clientRect.top,
+          clientRect.right, clientRect.bottom ];
+    } else {
+      eventRect = [ 0, 0, 0, 0 ];
+    }
     if (debug) {
       dump("got MozAfterPaint: " + eventRect.join(",") + "\n");
     }

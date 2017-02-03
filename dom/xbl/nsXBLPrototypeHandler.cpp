@@ -20,7 +20,7 @@
 #include "nsIDocument.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #include "nsIURI.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -553,9 +553,13 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   // This code should have no special knowledge of what objects might have controllers.
   nsCOMPtr<nsIControllers> controllers;
 
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aTarget));
-  if (xulElement)
-    xulElement->GetControllers(getter_AddRefs(controllers));
+  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(aTarget));
+  RefPtr<nsXULElement> xulElement =
+    nsXULElement::FromContentOrNull(targetContent);
+  if (xulElement) {
+    IgnoredErrorResult rv;
+    controllers = xulElement->GetControllers(rv);
+  }
 
   if (!controllers) {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> htmlTextArea(do_QueryInterface(aTarget));

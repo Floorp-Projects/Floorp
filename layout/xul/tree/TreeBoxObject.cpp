@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #include "nsIScriptableRegion.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsTreeContentView.h"
@@ -143,11 +143,10 @@ TreeBoxObject::GetView(nsITreeView * *aView)
       return mTreeBody->GetView(aView);
   }
   if (!mView) {
-    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent);
+    RefPtr<nsXULElement> xulele = nsXULElement::FromContentOrNull(mContent);
     if (xulele) {
       // See if there is a XUL tree builder associated with the element
-      nsCOMPtr<nsIXULTemplateBuilder> builder;
-      xulele->GetBuilder(getter_AddRefs(builder));
+      nsCOMPtr<nsIXULTemplateBuilder> builder = xulele->GetBuilder();
       mView = do_QueryInterface(builder);
 
       if (!mView) {
