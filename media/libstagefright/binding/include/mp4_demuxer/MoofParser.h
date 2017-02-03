@@ -17,6 +17,7 @@ typedef int64_t Microseconds;
 
 class Box;
 class BoxContext;
+class BoxReader;
 class Moof;
 
 class Mvhd : public Atom
@@ -160,6 +161,53 @@ public:
   FallibleTArray<uint64_t> mOffsets;
 };
 
+struct SampleToGroupEntry
+{
+public:
+  static const uint32_t kTrackGroupDescriptionIndexBase = 0;
+  static const uint32_t kFragmentGroupDescriptionIndexBase = 0x10000;
+
+  SampleToGroupEntry(uint32_t aSampleCount, uint32_t aGroupDescriptionIndex)
+    : mSampleCount(aSampleCount)
+    , mGroupDescriptionIndex(aGroupDescriptionIndex)
+    {
+    }
+
+  uint32_t mSampleCount;
+  uint32_t mGroupDescriptionIndex;
+};
+
+class Sbgp final : public Atom // SampleToGroup box.
+{
+public:
+  explicit Sbgp(Box& aBox);
+
+  AtomType mGroupingType;
+  uint32_t mGroupingTypeParam;
+  nsTArray<SampleToGroupEntry> mEntries;
+};
+
+struct CencSampleEncryptionInfoEntry final
+{
+public:
+  CencSampleEncryptionInfoEntry() { }
+
+  bool Init(BoxReader& aReader);
+
+  bool mIsEncrypted = false;
+  uint8_t mIVSize = 0;
+  nsTArray<uint8_t> mKeyId;
+};
+
+class Sgpd final : public Atom // SampleGroupDescription box.
+{
+public:
+  explicit Sgpd(Box& aBox);
+
+  AtomType mGroupingType;
+  nsTArray<CencSampleEncryptionInfoEntry> mEntries;
+};
+
 class AuxInfo {
 public:
   AuxInfo(int64_t aMoofOffset, Saiz& aSaiz, Saio& aSaio);
@@ -181,6 +229,9 @@ public:
   mozilla::MediaByteRange mMdatRange;
   Interval<Microseconds> mTimeRange;
   FallibleTArray<Sample> mIndex;
+
+  nsTArray<CencSampleEncryptionInfoEntry> mFragmentSampleEncryptionInfoEntries;
+  nsTArray<SampleToGroupEntry> mFragmentSampleToGroupEntries;
 
   nsTArray<Saiz> mSaizs;
   nsTArray<Saio> mSaios;
@@ -242,6 +293,10 @@ public:
   Tfdt mTfdt;
   Edts mEdts;
   Sinf mSinf;
+
+  nsTArray<CencSampleEncryptionInfoEntry> mTrackSampleEncryptionInfoEntries;
+  nsTArray<SampleToGroupEntry> mTrackSampleToGroupEntries;
+
   nsTArray<Moof>& Moofs() { return mMoofs; }
 private:
   void ScanForMetadata(mozilla::MediaByteRange& aFtyp,

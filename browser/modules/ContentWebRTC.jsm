@@ -136,7 +136,8 @@ function handleGUMStop(aSubject, aTopic, aData) {
   };
 
   let mm = getMessageManagerForWindow(contentWindow);
-  mm.sendAsyncMessage("webrtc:StopRecording", request);
+  if (mm)
+    mm.sendAsyncMessage("webrtc:StopRecording", request);
 }
 
 function handleGUMRequest(aSubject, aTopic, aData) {
