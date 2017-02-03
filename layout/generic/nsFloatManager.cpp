@@ -703,7 +703,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       case StyleBasicShapeType::Polygon:
         // Bug 1326409 - Implement the rendering of basic shape polygon()
         // for CSS shape-outside.
-        break;
+        return;
       case StyleBasicShapeType::Circle:
       case StyleBasicShapeType::Ellipse:
         mShapeInfo =
@@ -712,11 +712,14 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       case StyleBasicShapeType::Inset:
         // Bug 1326407 - Implement the rendering of basic shape inset() for
         // CSS shape-outside.
-        break;
+        return;
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
   }
+
+  MOZ_ASSERT(mShapeInfo,
+             "All shape-outside values except none should have mShapeInfo!");
 
   // Translate the shape to the same origin as nsFloatManager.
   mShapeInfo->Translate(aLineLeft, aBlockStart);

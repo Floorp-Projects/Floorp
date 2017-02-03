@@ -274,6 +274,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   bool IsPresenting() const;
+  bool IsAnyPresenting() const;
   bool IsConnected() const;
 
   VRDisplayCapabilities* Capabilities();

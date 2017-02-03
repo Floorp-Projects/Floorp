@@ -9,15 +9,6 @@ Rust code is built using ``cargo`` in the typical way, so it is
 straightforward to take an existing Rust crate and integrate it
 into Firefox.
 
-.. important::
-
-   Rust code is enabled by default in Firefox builds. Until we have
-   a required component written in Rust, you can build without by
-   setting ``ac_add_options --disable-rust`` in your mozconfig.
-   This option will be around for a little longer
-   (`bug 1284816 <https://bugzilla.mozilla.org/show_bug.cgi?id=1284816>`_).
-
-
 Linking Rust Crates into libxul
 ===============================
 

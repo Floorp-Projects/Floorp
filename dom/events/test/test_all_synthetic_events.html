@@ -450,6 +450,12 @@ const kEventConstructors = {
                                                           return new USSDReceivedEvent(aName, aProps);
                                                        },
                                              },
+  VRDisplayEvent:                            { create: null,
+                                               // Required argument expects a VRDisplay that can not
+                                               // be created from Javascript without physical VR hardware
+                                               // connected.  When Bug 1229480 lands, this test can be
+                                               // updated to use the puppet VR device.
+                                             },
   WheelEvent:                                { create: function (aName, aProps) {
                                                          return new WheelEvent(aName, aProps);
                                                        },

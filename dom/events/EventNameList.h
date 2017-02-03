@@ -607,6 +607,14 @@ WINDOW_ONLY_EVENT(devicelight,
                   eDeviceLight,
                   EventNameType_None,
                   eBasicEventClass)
+WINDOW_ONLY_EVENT(vrdisplayactivate,
+                  eVRDisplayActivate,
+                  EventNameType_None,
+                  eBasicEventClass)
+WINDOW_ONLY_EVENT(vrdisplaydeactivate,
+                  eVRDisplayDeactivate,
+                  EventNameType_None,
+                  eBasicEventClass)
 WINDOW_ONLY_EVENT(vrdisplayconnect,
                   eVRDisplayConnect,
                   EventNameType_None,

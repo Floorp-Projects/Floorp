@@ -279,6 +279,7 @@ public:
   bool IsPlaying() const
   {
     return mPlaybackRate != 0.0 &&
+           mTimeline &&
            (PlayState() == AnimationPlayState::Running ||
             mPendingState == PendingState::PlayPending);
   }

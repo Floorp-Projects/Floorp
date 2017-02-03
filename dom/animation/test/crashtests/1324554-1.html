@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="UTF-8">
+  <title>Bug 1324554 - missing final keyframes and zero-length segments together</title>
+  </head>
+  <script>
+    function go() {
+      var div = document.getElementById('target');
+      div.animate([ { "flex": "none" },
+                    { "flex": "initial", offset: 0.5 },
+                    { "flex": "0.0 ", offset: 0.5 },
+                    {} ]);
+    }
+  </script>
+  <body onload="go()">
+    <div id='target' ></div>
+  </body>
+</html>

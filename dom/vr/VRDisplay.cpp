@@ -464,9 +464,12 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv)
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, nullptr);
 
-  if (mClient->GetIsPresenting()) {
+  if (!IsPresenting() && IsAnyPresenting()) {
     // Only one presentation allowed per VRDisplay
     // on a first-come-first-serve basis.
+    // If this Javascript context is presenting, then we can replace our
+    // presentation with a new one containing new layers but we should never
+    // replace the presentation of another context.
     promise->MaybeRejectWithUndefined();
   } else {
     mPresentation = mClient->BeginPresentation(aLayers);
@@ -583,6 +586,14 @@ VRDisplay::IsPresenting() const
   // IsPresenting returns true only if this Javascript context is presenting
   // and will return false if another context is presenting.
   return mPresentation != nullptr;
+}
+
+bool
+VRDisplay::IsAnyPresenting() const
+{
+  // IsAnyPresenting returns true if any Javascript context is presenting
+  // even if this context is not presenting.
+  return IsPresenting() || mClient->GetIsPresenting();
 }
 
 bool

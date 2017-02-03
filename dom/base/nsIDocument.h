@@ -2893,6 +2893,17 @@ public:
 
   bool PrerenderHref(nsIURI* aHref);
 
+  // For more information on Flash classification, see
+  // toolkit/components/url-classifier/flash-block-lists.rst
+  enum class FlashClassification {
+    Unclassified,   // Denotes a classification that has not yet been computed.
+                    // Allows for lazy classification.
+    Unknown,        // Site is not on the whitelist or blacklist
+    Allowed,        // Site is on the Flash whitelist
+    Denied          // Site is on the Flash blacklist
+  };
+  virtual FlashClassification DocumentFlashClassification() = 0;
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
