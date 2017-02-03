@@ -10,6 +10,7 @@ const {
   LOAD_DEVICE_LIST_START,
   LOAD_DEVICE_LIST_ERROR,
   LOAD_DEVICE_LIST_END,
+  REMOVE_DEVICE,
   UPDATE_DEVICE_DISPLAYED,
   UPDATE_DEVICE_MODAL,
 } = require("../actions/index");
@@ -67,6 +68,19 @@ let reducers = {
   [LOAD_DEVICE_LIST_END](devices, action) {
     return Object.assign({}, devices, {
       listState: Types.deviceListState.LOADED,
+    });
+  },
+
+  [REMOVE_DEVICE](devices, { device, deviceType }) {
+    let index = devices[deviceType].indexOf(device);
+    if (index < 0) {
+      return devices;
+    }
+
+    let list = [...devices[deviceType]];
+    list.splice(index, 1);
+    return Object.assign({}, devices, {
+      [deviceType]: list
     });
   },
 

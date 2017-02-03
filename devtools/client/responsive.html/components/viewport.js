@@ -91,8 +91,8 @@ module.exports = createClass({
       },
       ViewportDimension({
         viewport,
+        onChangeSize: onResizeViewport,
         onRemoveDeviceAssociation,
-        onResizeViewport,
       }),
       ResizableViewport({
         devices,

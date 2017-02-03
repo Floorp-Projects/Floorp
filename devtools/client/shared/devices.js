@@ -4,11 +4,15 @@
 
 "use strict";
 
+const { Task } = require("devtools/shared/task");
 const { getJSON } = require("devtools/client/shared/getjson");
-
-const DEVICES_URL = "devtools.devices.url";
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/device.properties");
+
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+
+const DEVICES_URL = "devtools.devices.url";
+const LOCAL_DEVICES = "devtools.devices.local";
 
 /* This is a catalog of common web-enabled devices and their properties,
  * intended for (mobile) device emulation.
@@ -20,10 +24,13 @@ const L10N = new LocalizationHelper("devtools/client/locales/device.properties")
  * - pixelRatio: ratio from viewport to physical screen pixels.
  * - userAgent: UA string of the device's browser.
  * - touch: whether it has a touch screen.
- * - firefoxOS: whether Firefox OS is supported.
+ * - os: default OS, such as "ios", "fxos", "android".
  *
  * The device types are:
  *   ["phones", "tablets", "laptops", "televisions", "consoles", "watches"].
+ *
+ * To propose new devices for the shared catalog, check out the repo at
+ * https://github.com/mozilla/simulated-devices and file a pull request.
  *
  * You can easily add more devices to this catalog from your own code (e.g. an
  * addon) like so:
@@ -33,21 +40,38 @@ const L10N = new LocalizationHelper("devtools/client/locales/device.properties")
  */
 
 // Local devices catalog that addons can add to.
-let localDevices = {};
+let localDevices;
+let localDevicesLoaded = false;
+
+// Load local devices from storage.
+let loadLocalDevices = Task.async(function* () {
+  if (localDevicesLoaded) {
+    return;
+  }
+  let devicesJSON = yield asyncStorage.getItem(LOCAL_DEVICES);
+  if (!devicesJSON) {
+    devicesJSON = "{}";
+  }
+  localDevices = JSON.parse(devicesJSON);
+  localDevicesLoaded = true;
+});
 
 // Add a device to the local catalog.
-function addDevice(device, type = "phones") {
+let addDevice = Task.async(function* (device, type = "phones") {
+  yield loadLocalDevices();
   let list = localDevices[type];
   if (!list) {
     list = localDevices[type] = [];
   }
   list.push(device);
-}
+  yield asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
+});
 exports.addDevice = addDevice;
 
 // Remove a device from the local catalog.
 // returns `true` if the device is removed, `false` otherwise.
-function removeDevice(device, type = "phones") {
+let removeDevice = Task.async(function* (device, type = "phones") {
+  yield loadLocalDevices();
   let list = localDevices[type];
   if (!list) {
     return false;
@@ -60,25 +84,26 @@ function removeDevice(device, type = "phones") {
   }
 
   list.splice(index, 1);
+  yield asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
 
   return true;
-}
+});
 exports.removeDevice = removeDevice;
 
 // Get the complete devices catalog.
-function getDevices() {
+let getDevices = Task.async(function* () {
   // Fetch common devices from Mozilla's CDN.
-  return getJSON(DEVICES_URL).then(devices => {
-    for (let type in localDevices) {
-      if (!devices[type]) {
-        devices.TYPES.push(type);
-        devices[type] = [];
-      }
-      devices[type] = localDevices[type].concat(devices[type]);
+  let devices = yield getJSON(DEVICES_URL);
+  yield loadLocalDevices();
+  for (let type in localDevices) {
+    if (!devices[type]) {
+      devices.TYPES.push(type);
+      devices[type] = [];
     }
-    return devices;
-  });
-}
+    devices[type] = localDevices[type].concat(devices[type]);
+  }
+  return devices;
+});
 exports.getDevices = getDevices;
 
 // Get the localized string for a device type.
