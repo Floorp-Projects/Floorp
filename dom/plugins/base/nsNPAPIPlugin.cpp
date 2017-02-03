@@ -2463,15 +2463,10 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
 
   switch (variable) {
   case NPNURLVProxy:
-    {
-      nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
-      nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
-      if (pluginHost && NS_SUCCEEDED(pluginHost->FindProxyForURL(url, value))) {
-        *len = *value ? strlen(*value) : 0;
-        return NPERR_NO_ERROR;
-      }
-      break;
-    }
+    // NPNURLVProxy is no longer supported.
+    *value = nullptr;
+    return NPERR_GENERIC_ERROR;
+
   case NPNURLVCookie:
     // NPNURLVCookie is no longer supported.
     *value = nullptr;
