@@ -749,7 +749,8 @@ add_task(function* test_colors_applied_to_popup() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_COLORS);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
   yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
@@ -777,7 +778,16 @@ add_task(function* test_colors_applied_to_popup() {
 
     // Press Down to move the selected item to the next item in the
     // list and check the colors of this item when it's not selected.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+    let originalSelectedIndex = menulist.selectedIndex;
+    let awaitSelectedItemChanged = BrowserTestUtils.waitForCondition(() => {
+      return menulist.selectedIndex != originalSelectedIndex;
+    });
+    if (child.nextSibling) {
+      EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+    } else {
+      EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
+    }
+    yield awaitSelectedItemChanged;
 
     if (expected.unstyled) {
       ok(!child.hasAttribute("customoptionstyling"),
