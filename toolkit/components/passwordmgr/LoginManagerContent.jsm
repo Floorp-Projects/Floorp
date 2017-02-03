@@ -441,6 +441,10 @@ var LoginManagerContent = {
     let loginFormState = this.loginFormStateByDocument.get(document);
     if (!loginFormState) {
       loginFormState = {
+        /**
+         * Keeps track of filled fields and values.
+         */
+        fillsByRootElement: new WeakMap(),
         loginFormRootElements: new Set(),
       };
       this.loginFormStateByDocument.set(document, loginFormState);
@@ -911,7 +915,7 @@ var LoginManagerContent = {
    * Attempt to find the username and password fields in a form, and fill them
    * in using the provided logins and recipes.
    *
-   * @param {HTMLFormElement} form
+   * @param {LoginForm} form
    * @param {bool} autofillForm denotes if we should fill the form in automatically
    * @param {bool} clobberUsername controls if an existing username can be overwritten.
    *                               If this is false and an inputElement of type password
@@ -928,7 +932,11 @@ var LoginManagerContent = {
             - [inputElement] is an optional target input element we want to fill
    */
   _fillForm(form, autofillForm, clobberUsername, clobberPassword,
-                        userTriggered, foundLogins, recipes, {inputElement} = {}) {
+            userTriggered, foundLogins, recipes, {inputElement} = {}) {
+    if (form instanceof Ci.nsIDOMHTMLFormElement) {
+      throw new Error("_fillForm should only be called with FormLike objects");
+    }
+
     log("_fillForm", form.elements);
     let ignoreAutocomplete = true;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
@@ -1145,13 +1153,24 @@ var LoginManagerContent = {
           usernameField.setUserInput(selectedLogin.username);
         }
       }
+
+      let doc = form.ownerDocument;
       if (passwordField.value != selectedLogin.password) {
         passwordField.setUserInput(selectedLogin.password);
+        let autoFilledLogin = {
+          guid: selectedLogin.QueryInterface(Ci.nsILoginMetaInfo).guid,
+          username: selectedLogin.username,
+          usernameField: usernameField ? Cu.getWeakReference(usernameField) : null,
+          password: selectedLogin.password,
+          passwordField: Cu.getWeakReference(passwordField),
+        };
+        log("Saving autoFilledLogin", autoFilledLogin.guid, "for", form.rootElement);
+        this.stateForDocument(doc).fillsByRootElement.set(form.rootElement, autoFilledLogin);
       }
 
       log("_fillForm succeeded");
       autofillResult = AUTOFILL_RESULT.FILLED;
-      let doc = form.ownerDocument;
+
       let win = doc.defaultView;
       let messageManager = messageManagerFromWindow(win);
       messageManager.sendAsyncMessage("LoginStats:LoginFillSuccessful");
@@ -1168,6 +1187,52 @@ var LoginManagerContent = {
 
       Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
     }
+  },
+
+  /**
+   * Given a field, determine whether that field was last filled as a username
+   * field AND whether the username is still filled in with the username AND
+   * whether the associated password field has the matching password.
+   *
+   * @note This could possibly be unified with getFieldContext but they have
+   * slightly different use cases. getFieldContext looks up recipes whereas this
+   * method doesn't need to since it's only returning a boolean based upon the
+   * recipes used for the last fill (in _fillForm).
+   *
+   * @param {HTMLInputElement} aUsernameField element contained in a FormLike
+   *                                          cached in _formLikeByRootElement.
+   * @returns {Boolean} whether the username and password fields still have the
+   *                    last-filled values, if previously filled.
+   */
+  _isLoginAlreadyFilled(aUsernameField) {
+    let formLikeRoot = FormLikeFactory.findRootForField(aUsernameField);
+    // Look for the existing FormLike.
+    let existingFormLike = this._formLikeByRootElement.get(formLikeRoot);
+    if (!existingFormLike) {
+      throw new Error("_isLoginAlreadyFilled called with a username field with " +
+                      "no rootElement FormLike");
+    }
+
+    log("_isLoginAlreadyFilled: existingFormLike", existingFormLike);
+    let filledLogin = this.stateForDocument(aUsernameField.ownerDocument).fillsByRootElement.get(formLikeRoot);
+    if (!filledLogin) {
+      return false;
+    }
+
+    // Unpack the weak references.
+    let autoFilledUsernameField = filledLogin.usernameField ? filledLogin.usernameField.get() : null;
+    let autoFilledPasswordField = filledLogin.passwordField.get();
+
+    // Check username and password values match what was filled.
+    if (!autoFilledUsernameField ||
+        autoFilledUsernameField != aUsernameField ||
+        autoFilledUsernameField.value != filledLogin.username ||
+        !autoFilledPasswordField ||
+        autoFilledPasswordField.value != filledLogin.password) {
+      return false;
+    }
+
+    return true;
   },
 
   /**
