@@ -307,17 +307,10 @@ protected:
    RefPtr<imgRequestProxy>& PrepareNextRequest(ImageLoadType aImageLoadType);
 
   /**
-   * Called when we would normally call PrepareNextRequest(), but the request was
-   * blocked.
-   */
-  void SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision);
-
-  /**
    * Returns a COMPtr reference to the current/pending image requests, cleaning
    * up and canceling anything that was there before. Note that if you just want
    * to get rid of one of the requests, you should call
-   * Clear*Request(NS_BINDING_ABORTED) instead, since it passes a more appropriate
-   * aReason than Prepare*Request() does (NS_ERROR_IMAGE_SRC_CHANGED).
+   * Clear*Request(NS_BINDING_ABORTED) instead.
    *
    * @param aImageLoadType The ImageLoadType for this request
    */
