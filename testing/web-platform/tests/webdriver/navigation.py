@@ -65,12 +65,16 @@ def test_get_current_url_special_pages(session):
     assert session.url == "about:blank"
 
 
+"""
+Disabled due to https://bugzilla.mozilla.org/show_bug.cgi?id=1332122
+
 # TODO(ato): This test requires modification to pass on Windows
 def test_get_current_url_file_protocol(session):
     # tests that the browsing context remains the same
     # when navigated privileged documents
     session.url = "file:///"
     assert session.url == "file:///"
+"""
 
 
 # TODO(ato): Test for http:// and https:// protocols.
