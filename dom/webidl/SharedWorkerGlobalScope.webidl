@@ -16,5 +16,8 @@
  Exposed=SharedWorker]
 interface SharedWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute DOMString name;
+
+  void close();
+
   attribute EventHandler onconnect;
 };
