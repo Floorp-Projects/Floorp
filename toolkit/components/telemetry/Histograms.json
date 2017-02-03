@@ -3946,12 +3946,12 @@
     "n_buckets": 10,
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
   },
-  "URLCLASSIFIER_LOOKUP_TIME": {
+  "URLCLASSIFIER_LOOKUP_TIME_2": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 500,
-    "n_buckets": 10,
+    "high": 5000,
+    "n_buckets": 30,
     "description": "Time spent per dbservice lookup (ms)"
   },
   "URLCLASSIFIER_SHUTDOWN_TIME": {
