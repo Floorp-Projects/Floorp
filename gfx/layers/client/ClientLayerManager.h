@@ -338,7 +338,6 @@ private:
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
   RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
-  uint64_t mDeviceCounter;
 };
 
 class ClientLayer : public ShadowableLayer
