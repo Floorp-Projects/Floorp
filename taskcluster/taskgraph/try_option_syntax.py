@@ -236,6 +236,13 @@ def parse_message(message):
     parser.add_argument('--spsProfile', dest='profile', action='store_true')
     parser.add_argument('--tag', dest='tag', action='store', default=None)
     parser.add_argument('--no-retry', dest='no_retry', action='store_true')
+
+    # While we are transitioning from BB to TC, we want to push jobs to tc-worker
+    # machines but not overload machines with every try push. Therefore, we add
+    # this temporary option to be able to push jobs to tc-worker.
+    parser.add_argument('-w', '--taskcluster-worker',
+                        dest='taskcluster_worker', action='store_true', default=False)
+
     # In order to run test jobs multiple times
     parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
     parts = parts[try_idx:] if try_idx is not None else []
