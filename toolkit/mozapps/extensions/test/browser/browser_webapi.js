@@ -104,3 +104,19 @@ add_task(testWithAPI(function*(browser) {
   compareObjects(w2, a2);
   compareObjects(w3, a3);
 }));
+
+add_task(testWithAPI(function*(browser) {
+  function* check(value, message) {
+    let enabled = yield ContentTask.spawn(browser, null, function*() {
+      return content.navigator.mozAddonManager.permissionPromptsEnabled;
+    });
+    is(enabled, value, message);
+  }
+
+  const PERM = "extensions.webextPermissionPrompts";
+  yield SpecialPowers.pushPrefEnv({clear: [[PERM]]});
+  yield check(false, `mozAddonManager.permissionPromptsEnabled is false when ${PERM} is unset`);
+
+  yield SpecialPowers.pushPrefEnv({set: [[PERM, true]]});
+  yield check(true, `mozAddonManager.permissionPromptsEnabled is true when ${PERM} is set`);
+}));

@@ -88,6 +88,7 @@ def run_tests(tests, verbose):
             print '%s:' % test
             for failure in failures:
                 print 'TEST-UNEXPECTED-FAIL | %s' % failure
+    return 1 if failed_tests else 0
 
 def get_parser():
     usage = """%(prog)s [OPTIONS] [TESTS]
@@ -105,4 +106,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.verbose is None:
         args.verbose = True
-    run_tests(args.tests, verbose=args.verbose)
+
+    # Make sure the current directory is in the python path so we can cache the
+    # result of the webidlyacc.py generation.
+    sys.path.append('.')
+
+    sys.exit(run_tests(args.tests, verbose=args.verbose))

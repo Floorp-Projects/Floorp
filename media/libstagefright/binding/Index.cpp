@@ -137,6 +137,11 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     writer->mCrypto.mValid = true;
     writer->mCrypto.mIVSize = ivSize;
 
+    CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
+    if (sampleInfo) {
+      writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
+    }
+
     if (!reader.ReadArray(writer->mCrypto.mIV, ivSize)) {
       return nullptr;
     }
@@ -162,6 +167,65 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
   Next();
 
   return sample.forget();
+}
+
+CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry()
+{
+  nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
+  Moof* currentMoof = &moofs[mCurrentMoof];
+  SampleToGroupEntry* sampleToGroupEntry = nullptr;
+
+  // Default to using the sample to group entries for the fragment, otherwise
+  // fall back to the sample to group entries for the track.
+  nsTArray<SampleToGroupEntry>* sampleToGroupEntries =
+    currentMoof->mFragmentSampleToGroupEntries.Length() != 0
+    ? &currentMoof->mFragmentSampleToGroupEntries
+    : &mIndex->mMoofParser->mTrackSampleToGroupEntries;
+
+  uint32_t seen = 0;
+
+  for (SampleToGroupEntry& entry : *sampleToGroupEntries) {
+    if (seen + entry.mSampleCount > mCurrentSample) {
+      sampleToGroupEntry = &entry;
+      break;
+    }
+    seen += entry.mSampleCount;
+  }
+
+  // ISO-14496-12 Section 8.9.2.3 and 8.9.4 : group description index
+  // (1) ranges from 1 to the number of sample group entries in the track
+  // level SampleGroupDescription Box, or (2) takes the value 0 to
+  // indicate that this sample is a member of no group, in this case, the
+  // sample is associated with the default values specified in
+  // TrackEncryption Box, or (3) starts at 0x10001, i.e. the index value
+  // 1, with the value 1 in the top 16 bits, to reference fragment-local
+  // SampleGroupDescription Box.
+
+  // According to the spec, ISO-14496-12, the sum of the sample counts in this
+  // box should be equal to the total number of samples, and, if less, the
+  // reader should behave as if an extra SampleToGroupEntry existed, with
+  // groupDescriptionIndex 0.
+
+  if (!sampleToGroupEntry || sampleToGroupEntry->mGroupDescriptionIndex == 0) {
+    return nullptr;
+  }
+
+  nsTArray<CencSampleEncryptionInfoEntry>* entries =
+                      &mIndex->mMoofParser->mTrackSampleEncryptionInfoEntries;
+
+  uint32_t groupIndex = sampleToGroupEntry->mGroupDescriptionIndex;
+
+  // If the first bit is set to a one, then we should use the sample group
+  // descriptions from the fragment.
+  if (groupIndex > SampleToGroupEntry::kFragmentGroupDescriptionIndexBase) {
+    groupIndex -= SampleToGroupEntry::kFragmentGroupDescriptionIndexBase;
+    entries = &currentMoof->mFragmentSampleEncryptionInfoEntries;
+  }
+
+  // The group_index is one based.
+  return groupIndex > entries->Length()
+         ? nullptr
+         : &entries->ElementAt(groupIndex - 1);
 }
 
 Sample* SampleIterator::Get()
