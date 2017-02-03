@@ -128,8 +128,11 @@ this.ExtensionsUI = {
       }
 
       let reply = answer => {
-        Services.obs.notifyObservers(subject, "webextension-permission-response",
-                                     JSON.stringify(answer));
+        if (answer) {
+          info.resolve();
+        } else {
+          info.reject();
+        }
       };
 
       let perms = info.addon.userPermissions;

@@ -38,6 +38,7 @@ parser/**
 probes/**
 python/**
 rdf/**
+servo/**
 startupcache/**
 testing/**
 tools/update-packaging/**

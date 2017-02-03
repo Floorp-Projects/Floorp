@@ -21,6 +21,8 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource:///modules/E10SUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Extension",
+                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
 
@@ -37,6 +39,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
   "resource:///modules/experiments/Experiments.jsm");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
+                                      "extensions.webextPermissionPrompts", false);
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -694,6 +699,40 @@ var gEventManager = {
   }
 };
 
+function attachUpdateHandler(install) {
+  if (!WEBEXT_PERMISSION_PROMPTS) {
+    return;
+  }
+
+  install.promptHandler = (info) => {
+    let oldPerms = info.existingAddon.userPermissions || {hosts: [], permissions: []};
+    let newPerms = info.addon.userPermissions;
+
+    let difference = Extension.comparePermissions(oldPerms, newPerms);
+
+    // If there are no new permissions, just proceed
+    if (difference.hosts.length == 0 && difference.permissions.length == 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      let subject = {
+        wrappedJSObject: {
+          target: getBrowserElement(),
+          info: {
+            type: "update",
+            addon: info.addon,
+            icon: info.addon.icon,
+            permissions: difference,
+            resolve,
+            reject,
+          },
+        },
+      };
+      Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
+    });
+  };
+}
 
 var gViewController = {
   viewPort: null,
@@ -1081,6 +1120,10 @@ var gViewController = {
             pendingChecks--;
             updateStatus();
           },
+          onInstallCancelled() {
+            pendingChecks--;
+            updateStatus();
+          },
           onInstallFailed() {
             pendingChecks--;
             updateStatus();
@@ -1098,6 +1141,7 @@ var gViewController = {
           onUpdateAvailable(aAddon, aInstall) {
             gEventManager.delegateAddonEvent("onUpdateAvailable",
                                              [aAddon, aInstall]);
+            attachUpdateHandler(aInstall);
             if (AddonManager.shouldAutoUpdate(aAddon)) {
               aInstall.addListener(updateInstallListener);
               aInstall.install();
@@ -1143,6 +1187,7 @@ var gViewController = {
           onUpdateAvailable(aAddon, aInstall) {
             gEventManager.delegateAddonEvent("onUpdateAvailable",
                                              [aAddon, aInstall]);
+            attachUpdateHandler(aInstall);
             if (AddonManager.shouldAutoUpdate(aAddon))
               aInstall.install();
           },
