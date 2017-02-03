@@ -6,6 +6,7 @@
 
 interface nsIURI;
 interface nsIFile;
+interface nsILoadContextInfo;
 
 [scriptable, uuid(6cc7c253-93b6-482b-8e9d-1e04d8e9d655)]
 interface nsICacheStorageVisitor : nsISupports
@@ -25,7 +26,8 @@ interface nsICacheStorageVisitor : nsISupports
                         in long aFetchCount,
                         in uint32_t aLastModifiedTime,
                         in uint32_t aExpirationTime,
-                        in boolean aPinned);
+                        in boolean aPinned,
+                        in nsILoadContextInfo aInfo);
 
   /**
    */
