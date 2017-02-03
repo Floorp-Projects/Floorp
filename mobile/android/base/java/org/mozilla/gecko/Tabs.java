@@ -1137,8 +1137,10 @@ public class Tabs implements BundleEventListener {
         // but we need the indices with respect to mOrder, which lists all tabs, both private and
         // non-private, in the order in which they were added.
 
+        // The positions in mOrder of the from and to tabs.
+        final int fromPosition;
+        final int toPosition;
         synchronized (this) {
-            final int fromPosition;
             if (tabPositionCache.mTabId == fromTabId) {
                 fromPosition = tabPositionCache.mOrderPosition;
             } else {
@@ -1147,7 +1149,7 @@ public class Tabs implements BundleEventListener {
 
             // Start the toPosition search from the mOrder from position.
             final int adjustedToPositionHint = fromPosition + (toPositionHint - fromPositionHint);
-            final int toPosition = getOrderPositionForTab(toTabId, adjustedToPositionHint, fromPositionHint < toPositionHint);
+            toPosition = getOrderPositionForTab(toTabId, adjustedToPositionHint, fromPositionHint < toPositionHint);
             // Remember where the tab was moved to so that if this move continues we'll be ready.
             tabPositionCache.cache(fromTabId, toPosition);
 
@@ -1174,5 +1176,12 @@ public class Tabs implements BundleEventListener {
         }
 
         queuePersistAllTabs();
+
+        final GeckoBundle data = new GeckoBundle();
+        data.putInt("fromTabId", fromTabId);
+        data.putInt("fromPosition", fromPosition);
+        data.putInt("toTabId", toTabId);
+        data.putInt("toPosition", toPosition);
+        EventDispatcher.getInstance().dispatch("Tab:Move", data);
     }
 }
