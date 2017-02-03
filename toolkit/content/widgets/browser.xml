@@ -700,6 +700,12 @@
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackStarted", true, false);
             this.dispatchEvent(event);
+            if (this._audioBlocked) {
+              this._audioBlocked = false;
+              event = document.createEvent("Events");
+              event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
+              this.dispatchEvent(event);
+            }
           ]]>
         </body>
       </method>
@@ -714,26 +720,12 @@
         </body>
       </method>
 
-      <method name="audioPlaybackBlockStarted">
+      <method name="audioPlaybackBlocked">
         <body>
           <![CDATA[
             this._audioBlocked = true;
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStarted", true, false);
-            this.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-
-      <method name="audioPlaybackBlockStopped">
-        <body>
-          <![CDATA[
-            if (!this._audioBlocked) {
-              return;
-            }
-            this._audioBlocked = false;
-            let event = document.createEvent("Events");
-            event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
             this.dispatchEvent(event);
           ]]>
         </body>
@@ -967,8 +959,7 @@
             this.messageManager.addMessageListener("Autoscroll:Cancel", this);
             this.messageManager.addMessageListener("AudioPlayback:Start", this);
             this.messageManager.addMessageListener("AudioPlayback:Stop", this);
-            this.messageManager.addMessageListener("AudioPlayback:BlockStart", this);
-            this.messageManager.addMessageListener("AudioPlayback:BlockStop", this);
+            this.messageManager.addMessageListener("AudioPlayback:Block", this);
 
             if (this.hasAttribute("selectmenulist")) {
               this.messageManager.addMessageListener("Forms:ShowDropDown", this);
@@ -1066,11 +1057,8 @@
             case "AudioPlayback:Stop":
               this.audioPlaybackStopped();
               break;
-            case "AudioPlayback:BlockStart":
-              this.audioPlaybackBlockStarted();
-              break;
-            case "AudioPlayback:BlockStop":
-              this.audioPlaybackBlockStopped();
+            case "AudioPlayback:Block":
+              this.audioPlaybackBlocked();
               break;
             case "Forms:ShowDropDown": {
               if (!this._selectParentHelper) {
