@@ -2746,6 +2746,11 @@ public:
                                         nsIPrincipal** aLoadingPrincipal,
                                         nsContentPolicyType& aContentPolicyType);
 
+  static nsresult
+  CreateJSValueFromSequenceOfObject(JSContext* aCx,
+                                    const mozilla::dom::Sequence<JSObject*>& aTransfer,
+                                    JS::MutableHandle<JS::Value> aValue);
+
 private:
   static bool InitializeEventTable();
 
