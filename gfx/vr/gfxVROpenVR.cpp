@@ -514,15 +514,15 @@ VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 void
 VRSystemManagerOpenVR::HandleInput()
 {
-  RefPtr<impl::VRControllerOpenVR> controller;
-  vr::VRControllerState_t state;
-  uint32_t axis = 0;
-
-  if (!mOpenVRInstalled) {
+  // mVRSystem is available after VRDisplay is created
+  // at GetHMDs().
+  if (!mVRSystem) {
     return;
   }
 
-  MOZ_ASSERT(mVRSystem);
+  RefPtr<impl::VRControllerOpenVR> controller;
+  vr::VRControllerState_t state;
+  uint32_t axis = 0;
 
   vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
   mVRSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseSeated, 0.0f,
