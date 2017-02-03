@@ -178,6 +178,24 @@ if test "$GNU_CC"; then
     fi
     CFLAGS="$CFLAGS -fno-math-errno"
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-math-errno"
+
+    if test -z "$CLANG_CC"; then
+        case "$CC_VERSION" in
+        4.*)
+            ;;
+        *)
+            # Lifetime Dead Store Elimination level 2 (default in GCC6+) breaks Gecko.
+            # Ideally, we'd use -flifetime-dse=1, but that means we'd forcefully
+            # enable it on optimization levels where it would otherwise not be enabled.
+            # So we disable it entirely. But since that would mean inconsistency with
+            # GCC5, which has level 1 depending on optimization level, disable it on
+            # GCC5 as well, because better safe than sorry.
+            # Add it first so that a mozconfig can override by setting CFLAGS/CXXFLAGS.
+            CFLAGS="-fno-lifetime-dse $CFLAGS"
+            CXXFLAGS="-fno-lifetime-dse $CXXFLAGS"
+            ;;
+        esac
+    fi
 fi
 
 dnl ========================================================
