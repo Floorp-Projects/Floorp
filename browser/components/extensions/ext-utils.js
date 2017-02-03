@@ -202,6 +202,11 @@ class TabTracker extends TabTrackerBase {
     throw new ExtensionError(`Invalid tab ID: ${tabId}`);
   }
 
+  /**
+   * @param {Event} event
+   *        The DOM Event to handle.
+   * @private
+   */
   handleEvent(event) {
     let tab = event.target;
 
@@ -248,6 +253,14 @@ class TabTracker extends TabTrackerBase {
     }
   }
 
+  /**
+   * A private method which is called whenever a new browser window is opened,
+   * and dispatches the necessary events for it.
+   *
+   * @param {DOMWindow} window
+   *        The window being opened.
+   * @private
+   */
   _handleWindowOpen(window) {
     if (window.arguments && window.arguments[0] instanceof window.XULElement) {
       // If the first window argument is a XUL element, it means the
@@ -285,6 +298,14 @@ class TabTracker extends TabTrackerBase {
     }
   }
 
+  /**
+   * A private method which is called whenever a browser window is closed,
+   * and dispatches the necessary events for it.
+   *
+   * @param {DOMWindow} window
+   *        The window being closed.
+   * @private
+   */
   _handleWindowClose(window) {
     for (let tab of window.gBrowser.tabs) {
       if (this.adoptedTabs.has(tab)) {
@@ -295,6 +316,13 @@ class TabTracker extends TabTrackerBase {
     }
   }
 
+  /**
+   * Emits a "tab-attached" event for the given tab element.
+   *
+   * @param {NativeTab} tab
+   *        The tab element in the window to which the tab is being attached.
+   * @private
+   */
   emitAttached(tab) {
     let newWindowId = windowTracker.getId(tab.ownerGlobal);
     let tabId = this.getId(tab);
@@ -302,6 +330,16 @@ class TabTracker extends TabTrackerBase {
     this.emit("tab-attached", {tab, tabId, newWindowId, newPosition: tab._tPos});
   }
 
+  /**
+   * Emits a "tab-detached" event for the given tab element.
+   *
+   * @param {NativeTab} tab
+   *        The tab element in the window from which the tab is being detached.
+   * @param {NativeTab} adoptedBy
+   *        The tab element in the window to which detached tab is being moved,
+   *        and will adopt this tab's contents.
+   * @private
+   */
   emitDetached(tab, adoptedBy) {
     let oldWindowId = windowTracker.getId(tab.ownerGlobal);
     let tabId = this.getId(tab);
@@ -309,10 +347,27 @@ class TabTracker extends TabTrackerBase {
     this.emit("tab-detached", {tab, adoptedBy, tabId, oldWindowId, oldPosition: tab._tPos});
   }
 
+  /**
+   * Emits a "tab-created" event for the given tab element.
+   *
+   * @param {NativeTab} tab
+   *        The tab element which is being created.
+   * @private
+   */
   emitCreated(tab) {
     this.emit("tab-created", {tab});
   }
 
+  /**
+   * Emits a "tab-removed" event for the given tab element.
+   *
+   * @param {NativeTab} tab
+   *        The tab element which is being removed.
+   * @param {boolean} isWindowClosing
+   *        True if the tab is being removed because the browser window is
+   *        closing.
+   * @private
+   */
   emitRemoved(tab, isWindowClosing) {
     let windowId = windowTracker.getId(tab.ownerGlobal);
     let tabId = this.getId(tab);
@@ -399,10 +454,6 @@ class Tab extends TabBase {
     return this.tab._tPos;
   }
 
-  get innerWindowID() {
-    return this.browser.innerWindowID;
-  }
-
   get mutedInfo() {
     let tab = this.tab;
 
@@ -448,24 +499,40 @@ class Tab extends TabBase {
     return windowTracker.getId(this.window);
   }
 
-  static convertFromSessionStoreClosedData(extension, tab, window = null) {
+  /**
+   * Converts session store data to an object compatible with the return value
+   * of the convert() method, representing that data.
+   *
+   * @param {Extension} extension
+   *        The extension for which to convert the data.
+   * @param {Object} tabData
+   *        Session store data for a closed tab, as returned by
+   *        `SessionStore.getClosedTabData()`.
+   * @param {DOMWindow} [window = null]
+   *        The browser window which the tab belonged to before it was closed.
+   *        May be null if the window the tab belonged to no longer exists.
+   *
+   * @returns {Object}
+   * @static
+   */
+  static convertFromSessionStoreClosedData(extension, tabData, window = null) {
     let result = {
-      sessionId: String(tab.closedId),
-      index: tab.pos ? tab.pos : 0,
+      sessionId: String(tabData.closedId),
+      index: tabData.pos ? tabData.pos : 0,
       windowId: window && windowTracker.getId(window),
       selected: false,
       highlighted: false,
       active: false,
       pinned: false,
-      incognito: Boolean(tab.state && tab.state.isPrivate),
+      incognito: Boolean(tabData.state && tabData.state.isPrivate),
     };
 
-    if (extension.tabManager.hasTabPermission(tab)) {
-      let entries = tab.state ? tab.state.entries : tab.entries;
+    if (extension.tabManager.hasTabPermission(tabData)) {
+      let entries = tabData.state ? tabData.state.entries : tabData.entries;
       result.url = entries[0].url;
       result.title = entries[0].title;
-      if (tab.image) {
-        result.favIconUrl = tab.image;
+      if (tabData.image) {
+        result.favIconUrl = tabData.image;
       }
     }
 
@@ -474,6 +541,22 @@ class Tab extends TabBase {
 }
 
 class Window extends WindowBase {
+  /**
+   * Update the geometry of the browser window.
+   *
+   * @param {Object} options
+   *        An object containing new values for the window's geometry.
+   * @param {integer} [options.left]
+   *        The new pixel distance of the left side of the browser window from
+   *        the left of the screen.
+   * @param {integer} [options.top]
+   *        The new pixel distance of the top side of the browser window from
+   *        the top of the screen.
+   * @param {integer} [options.width]
+   *        The new pixel width of the window.
+   * @param {integer} [options.height]
+   *        The new pixel height of the window.
+   */
   updateGeometry(options) {
     let {window} = this;
 
@@ -587,19 +670,32 @@ class Window extends WindowBase {
     }
   }
 
-  static convertFromSessionStoreClosedData(extension, window) {
+  /**
+   * Converts session store data to an object compatible with the return value
+   * of the convert() method, representing that data.
+   *
+   * @param {Extension} extension
+   *        The extension for which to convert the data.
+   * @param {Object} windowData
+   *        Session store data for a closed window, as returned by
+   *        `SessionStore.getClosedWindowData()`.
+   *
+   * @returns {Object}
+   * @static
+   */
+  static convertFromSessionStoreClosedData(extension, windowData) {
     let result = {
-      sessionId: String(window.closedId),
+      sessionId: String(windowData.closedId),
       focused: false,
       incognito: false,
       type: "normal", // this is always "normal" for a closed window
       // Surely this does not actually work?
-      state: this.getState(window),
+      state: this.getState(windowData),
       alwaysOnTop: false,
     };
 
-    if (window.tabs.length) {
-      result.tabs = window.tabs.map(tab => {
+    if (windowData.tabs.length) {
+      result.tabs = windowData.tabs.map(tab => {
         return Tab.convertFromSessionStoreClosedData(extension, tab);
       });
     }
