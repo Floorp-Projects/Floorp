@@ -309,7 +309,7 @@ StorageManagerBase::DropCache(StorageCache* aCache)
 }
 
 nsresult
-StorageManagerBase::GetStorageInternal(CreateMode aCreateMode,
+StorageManagerBase::GetStorageInternal(bool aCreate,
                                        mozIDOMWindow* aWindow,
                                        nsIPrincipal* aPrincipal,
                                        const nsAString& aDocumentURI,
@@ -331,12 +331,12 @@ StorageManagerBase::GetStorageInternal(CreateMode aCreateMode,
 
   // Get or create a cache for the given scope
   if (!cache) {
-    if (aCreateMode == CreateMode::UseIfExistsNeverCreate) {
+    if (!aCreate) {
       *aRetval = nullptr;
       return NS_OK;
     }
 
-    if (aCreateMode == CreateMode::CreateIfShouldPreload) {
+    if (!aRetval) {
       // This is a demand to just preload the cache, if the scope has
       // no data stored, bypass creation and preload of the cache.
       StorageDBBridge* db = StorageCache::GetDatabase();
@@ -372,11 +372,10 @@ StorageManagerBase::GetStorageInternal(CreateMode aCreateMode,
 }
 
 NS_IMETHODIMP
-StorageManagerBase::PrecacheStorage(nsIPrincipal* aPrincipal,
-                                    nsIDOMStorage** aRetval)
+StorageManagerBase::PrecacheStorage(nsIPrincipal* aPrincipal)
 {
-  return GetStorageInternal(CreateMode::CreateIfShouldPreload, nullptr,
-                            aPrincipal, EmptyString(), false, aRetval);
+  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), false,
+                            nullptr);
 }
 
 NS_IMETHODIMP
@@ -386,8 +385,8 @@ StorageManagerBase::CreateStorage(mozIDOMWindow* aWindow,
                                   bool aPrivate,
                                   nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(CreateMode::CreateAlways, aWindow, aPrincipal,
-                            aDocumentURI, aPrivate, aRetval);
+  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
@@ -396,8 +395,8 @@ StorageManagerBase::GetStorage(mozIDOMWindow* aWindow,
                                bool aPrivate,
                                nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(CreateMode::UseIfExistsNeverCreate, aWindow,
-                            aPrincipal, EmptyString(), aPrivate, aRetval);
+  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
