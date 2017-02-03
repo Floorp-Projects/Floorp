@@ -117,7 +117,7 @@ module.exports = createClass({
             width: normalizedViewport.width,
             height: normalizedViewport.height,
           },
-          onRemoveDevice: () => {},
+          onRemoveDeviceAssociation: () => {},
           onResizeViewport: () => {},
         })
       ),
