@@ -94,6 +94,7 @@ const PAGECONTENT_COLORS =
   '  <option value="Four" class="defaultColor defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
   '  <option value="Five" class="defaultColor">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
   '  <option value="Six" class="defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
+  '  <option value="Seven" selected="true">{"unstyled": "true"}</option>' +
   "</select></body></html>";
 
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
@@ -749,7 +750,8 @@ add_task(function* test_colors_applied_to_popup() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_COLORS);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
   yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
@@ -757,11 +759,11 @@ add_task(function* test_colors_applied_to_popup() {
 
   // The label contains a JSON string of the expected colors for
   // `color` and `background-color`.
-  is(selectPopup.parentNode.itemCount, 6, "Correct number of items");
+  is(selectPopup.parentNode.itemCount, 7, "Correct number of items");
   let child = selectPopup.firstChild;
   let idx = 1;
 
-  ok(child.selected, "The first child should be selected");
+  ok(!child.selected, "The first child should not be selected");
   while (child) {
     let expected = JSON.parse(child.label);
 
