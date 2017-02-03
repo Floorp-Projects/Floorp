@@ -191,7 +191,7 @@ private:
 
 void
 ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                                 const Sequence<JS::Value>& aTransferable,
+                                 const Sequence<JSObject*>& aTransferable,
                                  ErrorResult& aRv)
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -199,18 +199,11 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   workerPrivate->AssertIsOnWorkerThread();
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  if (!aTransferable.IsEmpty()) {
-    JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(aTransferable.Length(),
-                                               aTransferable.Elements());
 
-    JSObject* array = JS_NewArrayObject(aCx, elements);
-    if (!array) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
-
-    transferable.setObject(*array);
+  aRv = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransferable,
+                                                          &transferable);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   RefPtr<ServiceWorkerClientPostMessageRunnable> runnable =
