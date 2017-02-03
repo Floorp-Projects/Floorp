@@ -108,7 +108,11 @@ class TestCapabilityMatching(MarionetteTestCase):
         MarionetteTestCase.setUp(self)
         self.browser_name = self.marionette.session_capabilities["browserName"]
         self.platform_name = self.marionette.session_capabilities["platformName"]
-        self.marionette.delete_session()
+        self.delete_session()
+
+    def delete_session(self):
+        if self.marionette.session is not None:
+            self.marionette.delete_session()
 
     def test_browser_name_desired(self):
         self.marionette.start_session({"desiredCapabilities": {"browserName": self.browser_name}})
@@ -120,7 +124,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_browser_name_desired_allowed_types(self):
         for typ in self.allowed:
-            self.marionette.delete_session()
+            self.delete_session()
             self.marionette.start_session({"desiredCapabilities": {"browserName": typ}})
             self.assertEqual(self.marionette.session_capabilities["browserName"], self.browser_name)
 
@@ -131,7 +135,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_browser_name_required_allowed_types(self):
         for typ in self.allowed:
-            self.marionette.delete_session()
+            self.delete_session()
             self.marionette.start_session({"requiredCapabilities": {"browserName": typ}})
             self.assertEqual(self.marionette.session_capabilities["browserName"], self.browser_name)
 
@@ -163,7 +167,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_platform_name_desired_allowed_types(self):
         for typ in self.allowed:
-            self.marionette.delete_session()
+            self.delete_session()
             self.marionette.start_session({"desiredCapabilities": {"platformName": typ}})
             self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
@@ -174,7 +178,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_platform_name_required_allowed_types(self):
         for typ in self.allowed:
-            self.marionette.delete_session()
+            self.delete_session()
             self.marionette.start_session({"requiredCapabilities": {"platformName": typ}})
             self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
@@ -204,10 +208,10 @@ class TestCapabilityMatching(MarionetteTestCase):
                 with self.assertRaises(SessionNotCreatedException):
                     self.marionette.start_session({capability_type: {"acceptInsecureCerts": value}})
 
-        self.marionette.delete_session()
+        self.delete_session()
         self.marionette.start_session({"desiredCapabilities": {"acceptInsecureCerts": True}})
         self.assertTrue(self.marionette.session_capabilities["acceptInsecureCerts"])
-        self.marionette.delete_session()
+        self.delete_session()
         self.marionette.start_session({"requiredCapabilities": {"acceptInsecureCerts": True}})
 
         self.assertTrue(self.marionette.session_capabilities["acceptInsecureCerts"])
@@ -215,7 +219,7 @@ class TestCapabilityMatching(MarionetteTestCase):
     def test_page_load_strategy(self):
         for strategy in ["none", "eager", "normal"]:
             print("valid strategy {}".format(strategy))
-            self.marionette.delete_session()
+            self.delete_session()
             self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": strategy}})
             self.assertEqual(self.marionette.session_capabilities["pageLoadStrategy"], strategy)
 
