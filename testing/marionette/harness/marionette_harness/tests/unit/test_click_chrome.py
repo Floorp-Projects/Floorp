@@ -4,26 +4,31 @@
 
 from marionette_driver.by import By
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
-class TestClickChrome(MarionetteTestCase):
+class TestClickChrome(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.root_window = self.marionette.current_window_handle
+        super(TestClickChrome, self).setUp()
+
         self.marionette.set_context("chrome")
-        self.marionette.execute_script(
-            "window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen')")
-        self.marionette.switch_to_window("foo")
-        self.assertNotEqual(self.root_window, self.marionette.current_window_handle)
 
     def tearDown(self):
-        self.assertNotEqual(self.root_window, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close()")
-        self.marionette.switch_to_window(self.root_window)
-        MarionetteTestCase.tearDown(self)
+        self.close_all_windows()
+
+        super(TestClickChrome, self).tearDown()
 
     def test_click(self):
+
+        def open_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test.xul',
+                          'foo', 'chrome,centerscreen'); """)
+
+        win = self.open_window(open_with_js)
+        self.marionette.switch_to_window(win)
+
         def checked():
             return self.marionette.execute_script(
                 "return arguments[0].checked",
