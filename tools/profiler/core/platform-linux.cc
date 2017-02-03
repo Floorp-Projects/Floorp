@@ -309,7 +309,7 @@ static void* SignalSender(void* arg) {
     SamplerRegistry::sampler->DeleteExpiredMarkers();
 
     if (!SamplerRegistry::sampler->IsPaused()) {
-      MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+      StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
       for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
