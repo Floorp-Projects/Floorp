@@ -5,7 +5,7 @@
 import urllib
 
 from marionette_driver.by import By
-from marionette_driver.errors import ElementNotVisibleException
+from marionette_driver.errors import ElementNotInteractableException
 from marionette_driver.keys import Keys
 
 from marionette_harness import MarionetteTestCase, skip, skip_if_mobile
@@ -311,11 +311,11 @@ class TestTypingContent(TypingTestCase):
         # If we don't get an error below we are good
         self.marionette.find_element(By.TAG_NAME, "body").send_keys("foo")
 
-    def testShouldThrowElementNotVisibleWhenInputHidden(self):
+    def test_not_interactable_if_hidden(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
         not_displayed = self.marionette.find_element(By.ID, "notDisplayed")
-        self.assertRaises(ElementNotVisibleException, not_displayed.send_keys, "foo")
+        self.assertRaises(ElementNotInteractableException, not_displayed.send_keys, "foo")
 
     def test_appends_to_input_text(self):
         self.marionette.navigate(inline("<input>"))
