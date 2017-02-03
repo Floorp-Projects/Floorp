@@ -383,11 +383,6 @@ struct OpUseTiledLayerBuffer {
   SurfaceDescriptorTiles tileLayerDescriptor;
 };
 
-struct OpUseOverlaySource {
-  OverlaySource overlay;
-  IntRect picture;
-};
-
 struct OpPaintTextureRegion {
   ThebesBufferData bufferData;
   nsIntRegion updatedRegion;
@@ -449,7 +444,6 @@ union CompositableOperationDetail {
 
   OpUseTexture;
   OpUseComponentAlphaTextures;
-  OpUseOverlaySource;
 };
 
 struct CompositableOperation {
