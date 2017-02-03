@@ -10,6 +10,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
+                                      "extensions.webextPermissionPrompts", false);
+
 const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
 const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
 const MSG_INSTALL_EVENT    = "WebAPIInstallEvent";
@@ -237,6 +240,10 @@ class WebAPI extends APIObject {
       this.allInstalls.push(installInfo.id);
       return this.window.AddonInstall._create(this.window, install);
     });
+  }
+
+  get permissionPromptsEnabled() {
+    return WEBEXT_PERMISSION_PROMPTS;
   }
 
   eventListenerWasAdded(type) {
