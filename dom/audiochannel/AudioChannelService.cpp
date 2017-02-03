@@ -1370,7 +1370,7 @@ AudioChannelService::AudioChannelWindow::AudioAudibleChanged(AudioChannelAgent* 
 
   NotifyAudioCompetingChanged(aAgent, aAudible == AudibleState::eAudible);
   if (aAudible != AudibleState::eNotAudible) {
-    MaybeNotifyMediaBlocked(aAgent);
+    MaybeNotifyMediaBlockStart(aAgent);
   }
 }
 
@@ -1447,7 +1447,7 @@ AudioChannelService::AudioChannelWindow::NotifyChannelActive(uint64_t aWindowID,
 }
 
 void
-AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlocked(AudioChannelAgent* aAgent)
+AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlockStart(AudioChannelAgent* aAgent)
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = aAgent->Window();
   if (!window) {
