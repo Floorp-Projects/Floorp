@@ -25,9 +25,7 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
     ionBailAfter_(this, 0),
 #endif
     jitZoneGroup(this, nullptr),
-    debuggerList_(this),
-    profilingScripts(this, false),
-    scriptAndCountsVector(this, nullptr)
+    debuggerList_(this)
 {}
 
 bool
