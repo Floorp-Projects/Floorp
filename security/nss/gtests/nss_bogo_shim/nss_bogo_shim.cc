@@ -116,11 +116,7 @@ class TestAgent {
 
     if (cfg_.get<std::string>("key-file") != "") {
       key_ = ReadPrivateKey(cfg_.get<std::string>("key-file"));
-      if (!key_) {
-        // Temporary to handle our inability to handle ECDSA.
-        exitCodeUnimplemented = true;
-        return false;
-      }
+      if (!key_) return false;
     }
     if (cfg_.get<std::string>("cert-file") != "") {
       cert_ = ReadCertificate(cfg_.get<std::string>("cert-file"));
