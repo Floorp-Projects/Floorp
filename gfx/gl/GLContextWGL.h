@@ -59,6 +59,8 @@ public:
 
     virtual bool SetupLookupFunction() override;
 
+    virtual void GetWSIInfo(nsCString* const out) const override;
+
     HGLRC Context() { return mContext; }
 
 protected:

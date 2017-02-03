@@ -520,7 +520,7 @@ BEGIN_TEST(testAssemblerBuffer_ARM64)
     js::LifoAlloc lifo(4096);
     TempAllocator alloc(&lifo);
     JitContext jc(cx, &alloc);
-    cx->getJitRuntime(cx);
+    cx->runtime()->getJitRuntime(cx);
     MacroAssembler masm;
 
     // Branches to an unbound label.

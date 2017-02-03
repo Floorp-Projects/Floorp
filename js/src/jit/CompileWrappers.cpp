@@ -29,49 +29,42 @@ CompileRuntime::onMainThread()
     return js::CurrentThreadCanAccessRuntime(runtime());
 }
 
-js::PerThreadData*
-CompileRuntime::mainThread()
-{
-    MOZ_ASSERT(onMainThread());
-    return &runtime()->mainThread;
-}
-
 const void*
 CompileRuntime::addressOfJitTop()
 {
-    return &runtime()->jitTop;
+    return &runtime()->unsafeContextFromAnyThread()->jitTop;
 }
 
 const void*
 CompileRuntime::addressOfJitActivation()
 {
-    return &runtime()->jitActivation;
+    return &runtime()->unsafeContextFromAnyThread()->jitActivation;
 }
 
 const void*
 CompileRuntime::addressOfProfilingActivation()
 {
-    return (const void*) &runtime()->profilingActivation_;
+    return (const void*) &runtime()->unsafeContextFromAnyThread()->profilingActivation_;
 }
 
 const void*
 CompileRuntime::addressOfJitStackLimit()
 {
-    return runtime()->addressOfJitStackLimit();
+    return &runtime()->unsafeContextFromAnyThread()->jitStackLimit;
 }
 
 #ifdef DEBUG
 const void*
 CompileRuntime::addressOfIonBailAfter()
 {
-    return runtime()->addressOfIonBailAfter();
+    return runtime()->zoneGroupFromAnyThread()->addressOfIonBailAfter();
 }
 #endif
 
 const void*
 CompileRuntime::addressOfActivation()
 {
-    return runtime()->addressOfActivation();
+    return &runtime()->unsafeContextFromAnyThread()->activation_;
 }
 
 #ifdef JS_GC_ZEAL
@@ -85,7 +78,7 @@ CompileRuntime::addressOfGCZealModeBits()
 const void*
 CompileRuntime::addressOfInterruptUint32()
 {
-    return runtime()->addressOfInterruptUint32();
+    return &runtime()->unsafeContextFromAnyThread()->interrupt_;
 }
 
 const void*
@@ -103,7 +96,7 @@ CompileRuntime::jitRuntime()
 GeckoProfiler&
 CompileRuntime::geckoProfiler()
 {
-    return runtime()->geckoProfiler;
+    return runtime()->geckoProfiler();
 }
 
 bool
@@ -121,7 +114,7 @@ CompileRuntime::hadOutOfMemory()
 bool
 CompileRuntime::profilingScripts()
 {
-    return runtime()->profilingScripts;
+    return runtime()->zoneGroupFromAnyThread()->profilingScripts;
 }
 
 const JSAtomState&
@@ -178,14 +171,14 @@ CompileRuntime::DOMcallbacks()
 const Nursery&
 CompileRuntime::gcNursery()
 {
-    return runtime()->gc.nursery;
+    return runtime()->zoneGroupFromAnyThread()->nursery();
 }
 
 void
 CompileRuntime::setMinorGCShouldCancelIonCompilations()
 {
     MOZ_ASSERT(onMainThread());
-    runtime()->gc.storeBuffer.setShouldCancelIonCompilations();
+    runtime()->zoneGroupFromAnyThread()->storeBuffer().setShouldCancelIonCompilations();
 }
 
 bool
@@ -304,7 +297,7 @@ JitCompileOptions::JitCompileOptions()
 JitCompileOptions::JitCompileOptions(JSContext* cx)
 {
     cloneSingletons_ = cx->compartment()->creationOptions().cloneSingletons();
-    profilerSlowAssertionsEnabled_ = cx->runtime()->geckoProfiler.enabled() &&
-                                     cx->runtime()->geckoProfiler.slowAssertionsEnabled();
+    profilerSlowAssertionsEnabled_ = cx->runtime()->geckoProfiler().enabled() &&
+                                     cx->runtime()->geckoProfiler().slowAssertionsEnabled();
     offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
 }

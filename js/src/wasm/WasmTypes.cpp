@@ -81,13 +81,13 @@ __aeabi_uidivmod(int, int);
 static void
 WasmReportOverRecursed()
 {
-    ReportOverRecursed(JSRuntime::innermostWasmActivation()->cx());
+    ReportOverRecursed(JSContext::innermostWasmActivation()->cx());
 }
 
 static bool
 WasmHandleExecutionInterrupt()
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    WasmActivation* activation = JSContext::innermostWasmActivation();
     bool success = CheckForInterrupt(activation->cx());
 
     // Preserve the invariant that having a non-null resumePC means that we are
@@ -102,7 +102,7 @@ WasmHandleExecutionInterrupt()
 static bool
 WasmHandleDebugTrap()
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    WasmActivation* activation = JSContext::innermostWasmActivation();
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
@@ -165,7 +165,7 @@ WasmHandleDebugTrap()
 static void
 WasmHandleThrow()
 {
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    WasmActivation* activation = JSContext::innermostWasmActivation();
     MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
@@ -201,7 +201,7 @@ WasmHandleThrow()
 static void
 WasmReportTrap(int32_t trapIndex)
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JSContext* cx = JSContext::innermostWasmActivation()->cx();
 
     MOZ_ASSERT(trapIndex < int32_t(Trap::Limit) && trapIndex >= 0);
     Trap trap = Trap(trapIndex);
@@ -245,21 +245,21 @@ WasmReportTrap(int32_t trapIndex)
 static void
 WasmReportOutOfBounds()
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JSContext* cx = JSContext::innermostWasmActivation()->cx();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
 }
 
 static void
 WasmReportUnalignedAccess()
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JSContext* cx = JSContext::innermostWasmActivation()->cx();
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
 }
 
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JSContext* cx = JSContext::innermostWasmActivation()->cx();
 
     int32_t i32;
     if (!ToInt32(cx, val, &i32))
@@ -272,7 +272,7 @@ CoerceInPlace_ToInt32(MutableHandleValue val)
 static int32_t
 CoerceInPlace_ToNumber(MutableHandleValue val)
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JSContext* cx = JSContext::innermostWasmActivation()->cx();
 
     double dbl;
     if (!ToNumber(cx, val, &dbl))
@@ -366,13 +366,13 @@ FuncCast(F* pf, ABIFunctionType type)
 }
 
 void*
-wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
+wasm::AddressOf(SymbolicAddress imm, JSContext* cx)
 {
     switch (imm) {
       case SymbolicAddress::Context:
-        return cx->contextAddressForJit();
+        return cx->runtime()->unsafeContextFromAnyThread();
       case SymbolicAddress::InterruptUint32:
-        return cx->runtimeAddressOfInterruptUint32();
+        return &cx->runtime()->unsafeContextFromAnyThread()->interrupt_;
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
@@ -562,14 +562,47 @@ static const unsigned sMaxTypes = (sTotalBits - sTagBits - sReturnBit - sLengthB
 static bool
 IsImmediateType(ValType vt)
 {
-    MOZ_ASSERT(uint32_t(vt) > 0);
-    return (uint32_t(vt) - 1) < (1 << sTypeBits);
+    switch (vt) {
+      case ValType::I32:
+      case ValType::I64:
+      case ValType::F32:
+      case ValType::F64:
+        return true;
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        return false;
+    }
+    MOZ_CRASH("bad ValType");
 }
 
-static bool
-IsImmediateType(ExprType et)
+static unsigned
+EncodeImmediateType(ValType vt)
 {
-    return et == ExprType::Void || IsImmediateType(NonVoidToValType(et));
+    static_assert(3 < (1 << sTypeBits), "fits");
+    switch (vt) {
+      case ValType::I32:
+        return 0;
+      case ValType::I64:
+        return 1;
+      case ValType::F32:
+        return 2;
+      case ValType::F64:
+        return 3;
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        break;
+    }
+    MOZ_CRASH("bad ValType");
 }
 
 /* static */ bool
@@ -580,7 +613,7 @@ SigIdDesc::isGlobal(const Sig& sig)
     if (numTypes > sMaxTypes)
         return true;
 
-    if (!IsImmediateType(sig.ret()))
+    if (sig.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(sig.ret())))
         return true;
 
     for (ValType v : sig.args()) {
@@ -606,14 +639,6 @@ LengthToBits(uint32_t length)
     return length;
 }
 
-static ImmediateType
-TypeToBits(ValType type)
-{
-    static_assert(3 <= ((1 << sTypeBits) - 1), "fits");
-    MOZ_ASSERT(uint32_t(type) >= 1 && uint32_t(type) <= 4);
-    return uint32_t(type) - 1;
-}
-
 /* static */ SigIdDesc
 SigIdDesc::immediate(const Sig& sig)
 {
@@ -624,7 +649,7 @@ SigIdDesc::immediate(const Sig& sig)
         immediate |= (1 << shift);
         shift += sReturnBit;
 
-        immediate |= TypeToBits(NonVoidToValType(sig.ret())) << shift;
+        immediate |= EncodeImmediateType(NonVoidToValType(sig.ret())) << shift;
         shift += sTypeBits;
     } else {
         shift += sReturnBit;
@@ -634,7 +659,7 @@ SigIdDesc::immediate(const Sig& sig)
     shift += sLengthBits;
 
     for (ValType argType : sig.args()) {
-        immediate |= TypeToBits(argType) << shift;
+        immediate |= EncodeImmediateType(argType) << shift;
         shift += sTypeBits;
     }
 
@@ -808,7 +833,7 @@ Assumptions::Assumptions()
 {}
 
 bool
-Assumptions::initBuildIdFromContext(ExclusiveContext* cx)
+Assumptions::initBuildIdFromContext(JSContext* cx)
 {
     if (!cx->buildIdOp() || !cx->buildIdOp()(&buildId)) {
         ReportOutOfMemory(cx);

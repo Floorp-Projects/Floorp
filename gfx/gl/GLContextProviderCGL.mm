@@ -166,6 +166,11 @@ GLContextCGL::SwapBuffers()
   return true;
 }
 
+void
+GLContextCGL::GetWSIInfo(nsCString* const out) const
+{
+    out->AppendLiteral("CGL");
+}
 
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateWrappingExisting(void*, void*)

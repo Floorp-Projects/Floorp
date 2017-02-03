@@ -36,12 +36,12 @@ namespace js {
 
 // This is needed here for ensureShape() below.
 inline bool
-MaybeConvertUnboxedObjectToNative(ExclusiveContext* cx, JSObject* obj)
+MaybeConvertUnboxedObjectToNative(JSContext* cx, JSObject* obj)
 {
     if (obj->is<UnboxedPlainObject>())
-        return UnboxedPlainObject::convertToNative(cx->asJSContext(), obj);
+        return UnboxedPlainObject::convertToNative(cx, obj);
     if (obj->is<UnboxedArrayObject>())
-        return UnboxedArrayObject::convertToNative(cx->asJSContext(), obj);
+        return UnboxedArrayObject::convertToNative(cx, obj);
     return true;
 }
 
@@ -57,7 +57,7 @@ JSObject::maybeShape() const
 }
 
 inline js::Shape*
-JSObject::ensureShape(js::ExclusiveContext* cx)
+JSObject::ensureShape(JSContext* cx)
 {
     if (!js::MaybeConvertUnboxedObjectToNative(cx, this))
         return nullptr;
@@ -75,7 +75,7 @@ JSObject::finalize(js::FreeOp* fop)
     MOZ_ASSERT(isTenured());
     if (!IsBackgroundFinalized(asTenured().getAllocKind())) {
         /* Assert we're on the main thread. */
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(fop->runtime()));
+        MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
     }
 #endif
 
@@ -121,9 +121,9 @@ js::NativeObject::sweepDictionaryListPointer()
 }
 
 /* static */ inline bool
-JSObject::setSingleton(js::ExclusiveContext* cx, js::HandleObject obj)
+JSObject::setSingleton(JSContext* cx, js::HandleObject obj)
 {
-    MOZ_ASSERT_IF(cx->isJSContext(), !IsInsideNursery(obj));
+    MOZ_ASSERT(!IsInsideNursery(obj));
 
     js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(cx, obj->getClass(),
                                                                  obj->taggedProto());
@@ -170,12 +170,11 @@ js::GetPrototype(JSContext* cx, js::HandleObject obj, js::MutableHandleObject pr
 }
 
 inline bool
-js::IsExtensible(ExclusiveContext* cx, HandleObject obj, bool* extensible)
+js::IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
 {
     if (obj->is<ProxyObject>()) {
-        if (!cx->shouldBeJSContext())
-            return false;
-        return Proxy::isExtensible(cx->asJSContext(), obj, extensible);
+        MOZ_ASSERT(!cx->helperThread());
+        return Proxy::isExtensible(cx, obj, extensible);
     }
 
     *extensible = obj->nonProxyIsExtensible();
@@ -296,13 +295,13 @@ ClassCanHaveFixedData(const Class* clasp)
 // may be the passed pointer, relocated by GC. If no GC could occur, it's just
 // passed through. We root nothing unless necessary.
 static MOZ_ALWAYS_INLINE MOZ_MUST_USE JSObject*
-SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
+SetNewObjectMetadata(JSContext* cx, JSObject* obj)
 {
-    MOZ_ASSERT(!cxArg->compartment()->hasObjectPendingMetadata());
+    MOZ_ASSERT(!cx->compartment()->hasObjectPendingMetadata());
 
     // The metadata builder is invoked for each object created on the main
     // thread, except when analysis/compilation is active, to avoid recursion.
-    if (JSContext* cx = cxArg->maybeJSContext()) {
+    if (!cx->helperThread()) {
         if (MOZ_UNLIKELY((size_t)cx->compartment()->hasAllocationMetadataBuilder()) &&
             !cx->zone()->suppressAllocationMetadataBuilder)
         {
@@ -321,7 +320,7 @@ SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
 } // namespace js
 
 /* static */ inline JS::Result<JSObject*, JS::OOM&>
-JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+JSObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
                  js::HandleShape shape, js::HandleObjectGroup group)
 {
     const js::Class* clasp = group->clasp();
@@ -630,12 +629,12 @@ IsInternalFunctionObject(JSObject& funobj)
  * default to the prototype's global if the prototype is non-null.
  */
 JSObject*
-NewObjectWithGivenTaggedProto(ExclusiveContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+NewObjectWithGivenTaggedProto(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
                               gc::AllocKind allocKind, NewObjectKind newKind,
                               uint32_t initialShapeFlags = 0);
 
 inline JSObject*
-NewObjectWithGivenTaggedProto(ExclusiveContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+NewObjectWithGivenTaggedProto(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
                               NewObjectKind newKind = GenericObject,
                               uint32_t initialShapeFlags = 0)
 {
@@ -645,7 +644,7 @@ NewObjectWithGivenTaggedProto(ExclusiveContext* cx, const Class* clasp, Handle<T
 
 template <typename T>
 inline T*
-NewObjectWithGivenTaggedProto(ExclusiveContext* cx, Handle<TaggedProto> proto,
+NewObjectWithGivenTaggedProto(JSContext* cx, Handle<TaggedProto> proto,
                               NewObjectKind newKind = GenericObject,
                               uint32_t initialShapeFlags = 0)
 {
@@ -656,7 +655,7 @@ NewObjectWithGivenTaggedProto(ExclusiveContext* cx, Handle<TaggedProto> proto,
 
 template <typename T>
 inline T*
-NewObjectWithNullTaggedProto(ExclusiveContext* cx, NewObjectKind newKind = GenericObject,
+NewObjectWithNullTaggedProto(JSContext* cx, NewObjectKind newKind = GenericObject,
                              uint32_t initialShapeFlags = 0)
 {
     Rooted<TaggedProto> nullProto(cx, TaggedProto(nullptr));
@@ -664,7 +663,7 @@ NewObjectWithNullTaggedProto(ExclusiveContext* cx, NewObjectKind newKind = Gener
 }
 
 inline JSObject*
-NewObjectWithGivenProto(ExclusiveContext* cx, const Class* clasp, HandleObject proto,
+NewObjectWithGivenProto(JSContext* cx, const Class* clasp, HandleObject proto,
                         gc::AllocKind allocKind, NewObjectKind newKind)
 {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), allocKind,
@@ -672,7 +671,7 @@ NewObjectWithGivenProto(ExclusiveContext* cx, const Class* clasp, HandleObject p
 }
 
 inline JSObject*
-NewObjectWithGivenProto(ExclusiveContext* cx, const Class* clasp, HandleObject proto,
+NewObjectWithGivenProto(JSContext* cx, const Class* clasp, HandleObject proto,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto), newKind);
@@ -680,7 +679,7 @@ NewObjectWithGivenProto(ExclusiveContext* cx, const Class* clasp, HandleObject p
 
 template <typename T>
 inline T*
-NewObjectWithGivenProto(ExclusiveContext* cx, HandleObject proto,
+NewObjectWithGivenProto(JSContext* cx, HandleObject proto,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithGivenTaggedProto<T>(cx, AsTaggedProto(proto), newKind);
@@ -688,7 +687,7 @@ NewObjectWithGivenProto(ExclusiveContext* cx, HandleObject proto,
 
 template <typename T>
 inline T*
-NewObjectWithGivenProto(ExclusiveContext* cx, HandleObject proto,
+NewObjectWithGivenProto(JSContext* cx, HandleObject proto,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewObjectWithGivenTaggedProto(cx, &T::class_, AsTaggedProto(proto),
@@ -699,18 +698,18 @@ NewObjectWithGivenProto(ExclusiveContext* cx, HandleObject proto,
 // Make an object with the prototype set according to the cached prototype or
 // Object.prototype.
 JSObject*
-NewObjectWithClassProtoCommon(ExclusiveContext* cx, const Class* clasp, HandleObject proto,
+NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp, HandleObject proto,
                               gc::AllocKind allocKind, NewObjectKind newKind);
 
 inline JSObject*
-NewObjectWithClassProto(ExclusiveContext* cx, const Class* clasp, HandleObject proto,
+NewObjectWithClassProto(JSContext* cx, const Class* clasp, HandleObject proto,
                         gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithClassProtoCommon(cx, clasp, proto, allocKind, newKind);
 }
 
 inline JSObject*
-NewObjectWithClassProto(ExclusiveContext* cx, const Class* clasp, HandleObject proto,
+NewObjectWithClassProto(JSContext* cx, const Class* clasp, HandleObject proto,
                         NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
@@ -719,7 +718,7 @@ NewObjectWithClassProto(ExclusiveContext* cx, const Class* clasp, HandleObject p
 
 template<class T>
 inline T*
-NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto = nullptr,
+NewObjectWithClassProto(JSContext* cx, HandleObject proto = nullptr,
                         NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
@@ -728,7 +727,7 @@ NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto = nullptr,
 
 template <class T>
 inline T*
-NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto, gc::AllocKind allocKind,
+NewObjectWithClassProto(JSContext* cx, HandleObject proto, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, allocKind, newKind);
@@ -740,14 +739,14 @@ NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto, gc::AllocKind 
  * according to the context's active global.
  */
 inline JSObject*
-NewBuiltinClassInstance(ExclusiveContext* cx, const Class* clasp, gc::AllocKind allocKind,
+NewBuiltinClassInstance(JSContext* cx, const Class* clasp, gc::AllocKind allocKind,
                         NewObjectKind newKind = GenericObject)
 {
     return NewObjectWithClassProto(cx, clasp, nullptr, allocKind, newKind);
 }
 
 inline JSObject*
-NewBuiltinClassInstance(ExclusiveContext* cx, const Class* clasp, NewObjectKind newKind = GenericObject)
+NewBuiltinClassInstance(JSContext* cx, const Class* clasp, NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     return NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
@@ -755,7 +754,7 @@ NewBuiltinClassInstance(ExclusiveContext* cx, const Class* clasp, NewObjectKind 
 
 template<typename T>
 inline T*
-NewBuiltinClassInstance(ExclusiveContext* cx, NewObjectKind newKind = GenericObject)
+NewBuiltinClassInstance(JSContext* cx, NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewBuiltinClassInstance(cx, &T::class_, newKind);
     return obj ? &obj->as<T>() : nullptr;
@@ -763,7 +762,7 @@ NewBuiltinClassInstance(ExclusiveContext* cx, NewObjectKind newKind = GenericObj
 
 template<typename T>
 inline T*
-NewBuiltinClassInstance(ExclusiveContext* cx, gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+NewBuiltinClassInstance(JSContext* cx, gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewBuiltinClassInstance(cx, &T::class_, allocKind, newKind);
     return obj ? &obj->as<T>() : nullptr;
@@ -774,12 +773,12 @@ bool
 NewObjectScriptedCall(JSContext* cx, MutableHandleObject obj);
 
 JSObject*
-NewObjectWithGroupCommon(ExclusiveContext* cx, HandleObjectGroup group,
+NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
                          gc::AllocKind allocKind, NewObjectKind newKind);
 
 template <typename T>
 inline T*
-NewObjectWithGroup(ExclusiveContext* cx, HandleObjectGroup group,
+NewObjectWithGroup(JSContext* cx, HandleObjectGroup group,
                    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
 {
     JSObject* obj = NewObjectWithGroupCommon(cx, group, allocKind, newKind);
@@ -788,7 +787,7 @@ NewObjectWithGroup(ExclusiveContext* cx, HandleObjectGroup group,
 
 template <typename T>
 inline T*
-NewObjectWithGroup(ExclusiveContext* cx, HandleObjectGroup group,
+NewObjectWithGroup(JSContext* cx, HandleObjectGroup group,
                    NewObjectKind newKind = GenericObject)
 {
     gc::AllocKind allocKind = gc::GetGCObjectKind(group->clasp());

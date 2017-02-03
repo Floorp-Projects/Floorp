@@ -16,23 +16,17 @@
 interface WorkerGlobalScope : EventTarget {
   [Constant, Cached]
   readonly attribute WorkerGlobalScope self;
-
   readonly attribute WorkerLocation location;
+  readonly attribute WorkerNavigator navigator;
 
   [Throws]
-  void close();
+  void importScripts(DOMString... urls);
+
   attribute OnErrorEventHandler onerror;
 
   attribute EventHandler onoffline;
   attribute EventHandler ononline;
   // also has additional members in a partial interface
-};
-
-partial interface WorkerGlobalScope {
-  [Throws]
-  void importScripts(DOMString... urls);
-
-  readonly attribute WorkerNavigator navigator;
 };
 
 WorkerGlobalScope implements GlobalCrypto;

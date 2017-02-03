@@ -49,11 +49,11 @@ add_task(function* () {
   hostWindow.resizeTo(640, 300);
 
   info("Testing transitions ltr");
-  yield pushPref("intl.uidirection.en-US", "ltr");
+  yield pushPref("intl.uidirection", 0);
   yield testBreadcrumbTransitions(hostWindow, inspector);
 
   info("Testing transitions rtl");
-  yield pushPref("intl.uidirection.en-US", "rtl");
+  yield pushPref("intl.uidirection", 1);
   yield testBreadcrumbTransitions(hostWindow, inspector);
 
   hostWindow.resizeTo(originalWidth, originalHeight);

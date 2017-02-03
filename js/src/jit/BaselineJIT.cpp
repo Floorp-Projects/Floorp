@@ -51,7 +51,7 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue* stackVal)
 void
 ICStubSpace::freeAllAfterMinorGC(JSRuntime* rt)
 {
-    rt->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
+    rt->zoneGroupFromMainThread()->freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -160,7 +160,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
             data.osrFrame->clearRunningInJit();
     }
 
-    MOZ_ASSERT(!cx->runtime()->jitRuntime()->hasIonReturnOverride());
+    MOZ_ASSERT(!cx->hasIonReturnOverride());
 
     // Jit callers wrap primitive constructor return, except for derived
     // class constructors, which are forced to do it themselves.
@@ -174,7 +174,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     }
 
     // Release temporary buffer used for OSR into Ion.
-    cx->runtime()->getJitRuntime(cx)->freeOsrTempData();
+    cx->freeOsrTempData();
 
     MOZ_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
     return data.result.isMagic() ? JitExec_Error : JitExec_Ok;
