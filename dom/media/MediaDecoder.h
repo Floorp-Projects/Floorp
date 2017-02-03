@@ -130,6 +130,11 @@ public:
   // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
 
+  // Notified by the shutdown manager that XPCOM shutdown has begun.
+  // The decoder should notify its owner to drop the reference to the decoder
+  // to prevent further calls into the decoder.
+  void NotifyXPCOMShutdown();
+
   // Start downloading the media. Decode the downloaded data up to the
   // point of the first frame of data.
   // This is called at most once per decoder, after Init().
