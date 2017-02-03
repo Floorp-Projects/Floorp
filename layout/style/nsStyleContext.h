@@ -399,12 +399,7 @@ public:
                                    uint32_t* aSamePointerStructs);
 
 private:
-  enum class NeutralChangeHandling {
-    Retain,
-    Strip,
-  };
-
-  template<class StyleContextLike, NeutralChangeHandling aNeutralChangeHandling>
+  template<class StyleContextLike>
   nsChangeHint CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
                                            nsChangeHint aParentHintsNotHandledForDescendants,
                                            uint32_t* aEqualStructs,
