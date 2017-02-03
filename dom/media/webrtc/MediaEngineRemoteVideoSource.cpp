@@ -316,10 +316,10 @@ MediaEngineRemoteVideoSource::SetLastCapability(
   webrtc::CaptureCapability cap = aCapability;
   RefPtr<MediaEngineRemoteVideoSource> that = this;
 
-  NS_DispatchToMainThread(media::NewRunnableFrom([this, that, cap]() mutable {
-    mSettings.mWidth.Value() = cap.width;
-    mSettings.mHeight.Value() = cap.height;
-    mSettings.mFrameRate.Value() = cap.maxFPS;
+  NS_DispatchToMainThread(media::NewRunnableFrom([that, cap]() mutable {
+    that->mSettings.mWidth.Value() = cap.width;
+    that->mSettings.mHeight.Value() = cap.height;
+    that->mSettings.mFrameRate.Value() = cap.maxFPS;
     return NS_OK;
   }));
 }
