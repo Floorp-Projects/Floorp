@@ -393,6 +393,7 @@ var BrowserApp = {
       "Tab:Load",
       "Tab:Selected",
       "Tab:Closed",
+      "Tab:Move",
       "Browser:LoadManifest",
       "Browser:Quit",
       "Fonts:Reload",
@@ -1316,6 +1317,22 @@ var BrowserApp = {
     this._tabs.splice(tabIndex, 1);
   },
 
+  _handleTabMove(fromTabId, fromPosition, toTabId, toPosition) {
+    let movedTab = this._tabs[fromPosition];
+    if (movedTab.id != fromTabId || this._tabs[toPosition].id != toTabId) {
+      // The gecko and/or java Tabs tabs lists changed sometime between when the Tabs list was
+      // updated and when news of the update arrived here.
+      throw "Moved tab mismatch: (" + fromTabId + ", " + movedTab.id + "), " +
+            "(" + toTabId + ", " + this._tabs[toPosition].id + ")";
+    }
+
+    let step = (fromPosition < toPosition) ? 1 : -1;
+    for (let i = fromPosition; i != toPosition; i += step) {
+      this._tabs[i] = this._tabs[i + step];
+    }
+    this._tabs[toPosition] = movedTab;
+  },
+
   // Use this method to select a tab from JS. This method sends a message
   // to Java to select the tab in the Java UI (we'll get a Tab:Selected message
   // back from Java when that happens).
@@ -1898,6 +1915,10 @@ var BrowserApp = {
         this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
         break;
       }
+
+      case "Tab:Move":
+        this._handleTabMove(data.fromTabId, data.fromPosition, data.toTabId, data.toPosition);
+        break;
     }
   },
 
