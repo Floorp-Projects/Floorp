@@ -14,7 +14,34 @@ pub type uuid_t = ::uuid;
 pub type fsblkcnt_t = u64;
 pub type fsfilcnt_t = u64;
 
+pub type sem_t = *mut sem;
+
+pub enum sem {}
+
 s! {
+
+    pub struct exit_status {
+        pub e_termination: u16,
+        pub e_exit: u16
+    }
+
+    pub struct utmpx {
+        pub ut_name: [::c_char; 32],
+        pub ut_id: [::c_char; 4],
+
+        pub ut_line: [::c_char; 32],
+        pub ut_host: [::c_char; 256],
+
+        pub ut_unused: [u8; 16],
+        pub ut_session: u16,
+        pub ut_type: u16,
+        pub ut_pid: ::pid_t,
+        ut_exit: exit_status,
+        ut_ss: ::sockaddr_storage,
+        pub ut_tv: ::timeval,
+        pub ut_unused2: [u8; 16],
+    }
+
     pub struct aiocb {
         pub aio_fildes: ::c_int,
         pub aio_offset: ::off_t,
@@ -47,11 +74,15 @@ s! {
 
     pub struct sigevent {
         pub sigev_notify: ::c_int,
-        pub sigev_signo: ::c_int,       //actually a union
+        // The union is 8-byte in size, so it is aligned at a 8-byte offset.
         #[cfg(target_pointer_width = "64")]
         __unused1: ::c_int,
+        pub sigev_signo: ::c_int,       //actually a union
+        // pad the union
+        #[cfg(target_pointer_width = "64")]
+        __unused2: ::c_int,
         pub sigev_value: ::sigval,
-        __unused2: *mut ::c_void        //actually a function pointer
+        __unused3: *mut ::c_void        //actually a function pointer
     }
 
     pub struct statvfs {
@@ -271,7 +302,6 @@ pub const EVFILT_VNODE: ::int16_t = -4;
 pub const EVFILT_PROC: ::int16_t = -5;
 pub const EVFILT_SIGNAL: ::int16_t = -6;
 pub const EVFILT_TIMER: ::int16_t = -7;
-pub const EVFILT_PROCDESC: ::int16_t = -8;
 pub const EVFILT_USER: ::int16_t = -9;
 pub const EVFILT_FS: ::int16_t = -10;
 
@@ -314,11 +344,51 @@ pub const NOTE_TRACK: ::uint32_t = 0x00000001;
 pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
 pub const NOTE_CHILD: ::uint32_t = 0x00000004;
 
-pub const MSG_NOSIGNAL: ::uint32_t = 0x400;
+pub const MSG_PEEK: ::c_int = 0x2;
+pub const MSG_NOSIGNAL: ::c_int = 0x400;
+
+pub const EMPTY: ::c_short = 0;
+pub const RUN_LVL: ::c_short = 1;
+pub const BOOT_TIME: ::c_short = 2;
+pub const OLD_TIME: ::c_short = 3;
+pub const NEW_TIME: ::c_short = 4;
+pub const INIT_PROCESS: ::c_short = 5;
+pub const LOGIN_PROCESS: ::c_short = 6;
+pub const USER_PROCESS: ::c_short = 7;
+pub const DEAD_PROCESS: ::c_short = 8;
+
+pub const LC_COLLATE_MASK: ::c_int = (1 << 0);
+pub const LC_CTYPE_MASK: ::c_int = (1 << 1);
+pub const LC_MONETARY_MASK: ::c_int = (1 << 2);
+pub const LC_NUMERIC_MASK: ::c_int = (1 << 3);
+pub const LC_TIME_MASK: ::c_int = (1 << 4);
+pub const LC_MESSAGES_MASK: ::c_int = (1 << 5);
+pub const LC_ALL_MASK: ::c_int = LC_COLLATE_MASK
+                               | LC_CTYPE_MASK
+                               | LC_MESSAGES_MASK
+                               | LC_MONETARY_MASK
+                               | LC_NUMERIC_MASK
+                               | LC_TIME_MASK;
+
+pub const TIOCSIG: ::c_uint = 0x2000745f;
+pub const BTUARTDISC: ::c_int = 0x7;
+pub const TIOCDCDTIMESTAMP: ::c_uint = 0x40107458;
+pub const TIOCISPTMASTER: ::c_uint = 0x20007455;
+pub const TIOCMODG: ::c_uint = 0x40047403;
+pub const TIOCMODS: ::c_ulong = 0x80047404;
+pub const TIOCREMOTE: ::c_ulong = 0x80047469;
 
 extern {
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
     pub fn clock_getres(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn clock_gettime(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
+
+    pub fn setutxdb(_type: ::c_uint, file: *mut ::c_char) -> ::c_int;
+
+    pub fn aio_waitcomplete(iocbp: *mut *mut aiocb,
+                            timeout: *mut ::timespec) -> ::c_int;
+
+    pub fn freelocale(loc: ::locale_t);
 }
