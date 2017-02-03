@@ -488,6 +488,8 @@ KeyedStackCapturer::KeyedStackCapturer()
 {}
 
 void KeyedStackCapturer::Capture(const nsACString& aKey) {
+  MutexAutoLock captureStackMutex(mStackCapturerMutex);
+
   // Check if the key is ok.
   if (!IsKeyValid(aKey)) {
     NS_WARNING(nsPrintfCString(
@@ -524,7 +526,6 @@ void KeyedStackCapturer::Capture(const nsACString& aKey) {
   Telemetry::ProcessedStack stack = Telemetry::GetStackAndModules(rawStack);
 
   // Store the new stack info.
-  MutexAutoLock captureStackMutex(mStackCapturerMutex);
   size_t stackIndex = mStacks.AddStack(stack);
   mStackInfos.Put(aKey, new StackFrequencyInfo(1, stackIndex));
 }
