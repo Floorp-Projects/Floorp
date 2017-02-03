@@ -30,7 +30,7 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
-    onRemoveDevice: PropTypes.func.isRequired,
+    onRemoveDeviceAssociation: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModal: PropTypes.func.isRequired,
@@ -114,7 +114,7 @@ module.exports = createClass({
       // the properties of the device on resize.  However, at the moment, there is no
       // way to edit dPR when a device is selected, and there is no UI at all for editing
       // UA, so it's important to keep doing this for now.
-      this.props.onRemoveDevice();
+      this.props.onRemoveDeviceAssociation();
     }
 
     this.setState({
