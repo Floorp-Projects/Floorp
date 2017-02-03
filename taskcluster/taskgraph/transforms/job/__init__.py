@@ -15,7 +15,11 @@ import copy
 import logging
 import os
 
-from taskgraph.transforms.base import resolve_keyed_by, validate_schema, TransformSequence
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import (
+    validate_schema,
+    resolve_keyed_by,
+)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
     Any,

@@ -472,6 +472,10 @@ partial interface Window {
   [Pref="dom.vr.enabled"]
   attribute EventHandler onvrdisplaydisconnect;
   [Pref="dom.vr.enabled"]
+  attribute EventHandler onvrdisplayactivate;
+  [Pref="dom.vr.enabled"]
+  attribute EventHandler onvrdisplaydeactivate;
+  [Pref="dom.vr.enabled"]
   attribute EventHandler onvrdisplaypresentchange;
 };
 

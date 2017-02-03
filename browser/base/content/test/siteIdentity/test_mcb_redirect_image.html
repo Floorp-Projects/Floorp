@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test 3-6 for Bug 1082837 - See file browser_mcb_redirect.js for description.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1082837
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1082837</title>
+  <script>
+    function image_loaded() {
+      document.getElementById("mctestdiv").innerHTML = "image loaded";
+    }
+    function image_blocked() {
+      document.getElementById("mctestdiv").innerHTML = "image blocked";
+    }
+  </script>
+</head>
+<body>
+  <div id="mctestdiv"></div>
+  <img src="https://example.com/browser/browser/base/content/test/siteIdentity/test_mcb_redirect.sjs?image_http" onload="image_loaded()" onerror="image_blocked()" ></image>
+</body>
+</html>

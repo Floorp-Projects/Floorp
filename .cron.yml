@@ -9,11 +9,10 @@ jobs:
           treeherder-symbol: Nd
           triggered-by: nightly
           target-tasks-method: nightly_linux
-      projects:
+      run-on-projects:
           - mozilla-central
           - date
-      when:
-          - {hour: 16, minute: 0}
+      when: []  # never (temporary)
 
     - name: nightly-android
       job:
@@ -21,9 +20,8 @@ jobs:
           treeherder-symbol: Na
           triggered-by: nightly
           target-tasks-method: nightly_fennec
-      projects:
+      run-on-projects:
           - mozilla-central
           - date
-      when:
-          - {hour: 16, minute: 0}
+      when: []  # never (temporary)
 

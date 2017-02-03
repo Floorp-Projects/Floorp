@@ -116,6 +116,7 @@ add_task(function* test_verifiedUserEmptyProfile() {
   // we first fetch the profile. We want them both to fire or we aren't testing
   // the state we think we are testing.
   let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 2);
+  gFxAccounts._profileFetched = false;
   configureProfileURL({}); // successful but empty profile.
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;
@@ -135,6 +136,7 @@ add_task(function* test_verifiedUserEmptyProfile() {
 
 add_task(function* test_verifiedUserDisplayName() {
   let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 2);
+  gFxAccounts._profileFetched = false;
   configureProfileURL({ displayName: "Test User Display Name" });
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;

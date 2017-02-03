@@ -66,6 +66,7 @@ protected:
   bool mIsPresenting;
 
   void UpdateStageParameters();
+  void PollEvents();
 };
 
 class VRControllerOpenVR : public VRControllerHost

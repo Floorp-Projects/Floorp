@@ -720,9 +720,9 @@ U2FRegisterRunnable::Run()
           status->WaitGroupDone();
         },
         [&status, this] (ErrorCode aErrorCode) {
-          if (!status->IsStopped()) {
-            status->Stop(aErrorCode);
-          }
+          // Ignore the failing error code, as we only want the first success.
+          // U2F devices don't provide much for error codes anyway, so if
+          // they all fail we'll return DEVICE_INELIGIBLE.
           status->WaitGroupDone();
      });
     }
@@ -906,9 +906,9 @@ U2FSignRunnable::Run()
           status->WaitGroupDone();
         },
         [&status, this] (ErrorCode aErrorCode) {
-          if (!status->IsStopped()) {
-            status->Stop(aErrorCode);
-          }
+          // Ignore the failing error code, as we only want the first success.
+          // U2F devices don't provide much for error codes anyway, so if
+          // they all fail we'll return DEVICE_INELIGIBLE.
           status->WaitGroupDone();
       });
     }

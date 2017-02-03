@@ -1305,6 +1305,8 @@ protected:
 
   void UpdateScreenOrientation();
 
+  virtual FlashClassification DocumentFlashClassification() override;
+
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                        \
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
                                            func_, params_);
@@ -1324,6 +1326,14 @@ protected:
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
   bool ApplyFullscreen(const FullscreenRequest& aRequest);
+
+  // Retrieves the classification of the Flash plugins in the document based on
+  // the classification lists.
+  FlashClassification PrincipalFlashClassification(bool aIsTopLevel);
+
+  // Attempts to determine the Flash classification of this page based on the
+  // the classification lists and the classification of parent documents.
+  FlashClassification ComputeFlashClassification();
 
   nsTArray<nsIObserver*> mCharSetObservers;
 
@@ -1369,6 +1379,7 @@ protected:
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
 
+  FlashClassification mFlashClassification;
 private:
   static bool CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
 

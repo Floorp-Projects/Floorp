@@ -4,20 +4,20 @@ load(libdir + 'asserts.js');
 
 var allocTimes = [];
 
-allocTimes.push(dateNow());
+allocTimes.push(timeSinceCreation());
 
 const root = newGlobal();
 const dbg = new Debugger(root);
 
 dbg.memory.trackingAllocationSites = true;
 root.eval("this.alloc1 = {}");
-allocTimes.push(dateNow());
+allocTimes.push(timeSinceCreation());
 root.eval("this.alloc2 = {}");
-allocTimes.push(dateNow());
+allocTimes.push(timeSinceCreation());
 root.eval("this.alloc3 = {}");
-allocTimes.push(dateNow());
+allocTimes.push(timeSinceCreation());
 root.eval("this.alloc4 = {}");
-allocTimes.push(dateNow());
+allocTimes.push(timeSinceCreation());
 
 allocs = dbg.memory.drainAllocationsLog();
 assertEq(allocs.length >= 4, true);
