@@ -455,8 +455,10 @@ private:
                                ::GetCurrentThreadId());
     MOZ_ASSERT(mHook);
 
-    if (!IsWin10OrLater() && !sProcessCaretEventsStub) {
-      // tiptsf loads when STA COM is first initialized, so it should be present
+    // On touchscreen devices, tiptsf.dll will have been loaded when STA COM was
+    // first initialized.
+    if (!IsWin10OrLater() && GetModuleHandle(L"tiptsf.dll") &&
+        !sProcessCaretEventsStub) {
       sTipTsfInterceptor.Init("tiptsf.dll");
       DebugOnly<bool> ok = sTipTsfInterceptor.AddHook("ProcessCaretEvents",
           reinterpret_cast<intptr_t>(&ProcessCaretEventsHook),
