@@ -16,6 +16,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
@@ -106,6 +107,9 @@ class TransportLayerDtls final : public TransportLayer {
 
   TRANSPORT_LAYER_ID("dtls")
 
+  protected:
+  void SetState(State state, const char *file, unsigned line) override;
+
   private:
   DISALLOW_COPY_ASSIGN(TransportLayerDtls);
 
@@ -157,6 +161,8 @@ class TransportLayerDtls final : public TransportLayer {
   SECStatus CheckDigest(const RefPtr<VerificationDigest>& digest,
                         UniqueCERTCertificate& cert) const;
 
+  void RecordHandshakeCompletionTelemetry(TransportLayer::State endState);
+
   RefPtr<DtlsIdentity> identity_;
   // What ALPN identifiers are permitted.
   std::set<std::string> alpn_allowed_;
@@ -179,6 +185,7 @@ class TransportLayerDtls final : public TransportLayer {
   nsCOMPtr<nsITimer> timer_;
   bool auth_hook_called_;
   bool cert_ok_;
+  TimeStamp handshake_started_;
 };
 
 
