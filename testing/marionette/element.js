@@ -828,13 +828,69 @@ element.inViewport = function (el, x = undefined, y = undefined) {
 };
 
 /**
+ * Gets the element's container element.
+ *
+ * An element container is defined by the WebDriver
+ * specification to be an <option> element in a valid element context
+ * (https://html.spec.whatwg.org/#concept-element-contexts), meaning
+ * that it has an ancestral element that is either <datalist> or <select>.
+ *
+ * If the element does not have a valid context, its container element
+ * is itself.
+ *
+ * @param {Element} el
+ *     Element to get the container of.
+ *
+ * @return {Element}
+ *     Container element of |el|.
+ */
+element.getContainer = function (el) {
+  if (el.localName != "option") {
+    return el;
+  }
+
+  function validContext(ctx) {
+    return ctx.localName == "datalist" || ctx.localName == "select";
+  }
+
+  // does <option> have a valid context,
+  // meaning is it a child of <datalist> or <select>?
+  let parent = el;
+  while (parent.parentNode && !validContext(parent)) {
+    parent = parent.parentNode;
+  }
+
+  if (!validContext(parent)) {
+    return el;
+  }
+  return parent;
+};
+
+/**
+ * An element is in view if it is a member of its own pointer-interactable
+ * paint tree.
+ *
+ * This means an element is considered to be in view, but not necessarily
+ * pointer-interactable, if it is found somewhere in the
+ * |elementsFromPoint| list at |el|'s in-view centre coordinates.
+ *
+ * @param {Element} el
+ *     Element to check if is in view.
+ *
+ * @return {boolean}
+ *     True if |el| is inside the viewport, or false otherwise.
+ */
+element.isInView = function (el) {
+  let tree = element.getPointerInteractablePaintTree(el);
+  return tree.includes(el);
+};
+
+/**
  * This function throws the visibility of the element error if the element is
  * not displayed or the given coordinates are not within the viewport.
  *
- * @param {Element} element
+ * @param {Element} el
  *     Element to check if visible.
- * @param {Window} window
- *     Window object.
  * @param {number=} x
  *     Horizontal offset relative to target.  Defaults to the centre of
  *     the target's bounding box.
@@ -884,7 +940,7 @@ element.isInteractable = function (el) {
  *     True if interactable, false otherwise.
  */
 element.isPointerInteractable = function (el) {
-  let tree = element.getInteractableElementTree(el, el.ownerDocument);
+  let tree = element.getPointerInteractablePaintTree(el);
   return tree[0] === el;
 };
 
@@ -928,14 +984,13 @@ element.getInViewCentrePoint = function (rect, win) {
  *
  * @param {DOMElement} el
  *     Element to determine if is pointer-interactable.
- * @param {DOMDocument} doc
- *     Current browsing context's active document.
  *
  * @return {Array.<DOMElement>}
- *     Sequence of non-opaque elements in paint order.
+ *     Sequence of elements in paint order.
  */
-element.getInteractableElementTree = function (el, doc) {
-  let win = doc.defaultView;
+element.getPointerInteractablePaintTree = function (el) {
+  const doc = el.ownerDocument;
+  const win = doc.defaultView;
 
   // pointer-interactable elements tree, step 1
   if (element.isDisconnected(el, win)) {
@@ -952,10 +1007,7 @@ element.getInteractableElementTree = function (el, doc) {
   let centre = element.getInViewCentrePoint(rects[0], win);
 
   // step 5
-  let tree = doc.elementsFromPoint(centre.x, centre.y);
-
-  // only visible elements are considered interactable
-  return tree.filter(el => win.getComputedStyle(el).opacity === "1");
+  return doc.elementsFromPoint(centre.x, centre.y);
 };
 
 // TODO(ato): Not implemented.
