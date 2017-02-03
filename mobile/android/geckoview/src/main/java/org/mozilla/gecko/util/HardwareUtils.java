@@ -78,6 +78,14 @@ public final class HardwareUtils {
         return SysInfo.getMemSize();
     }
 
+    public static boolean isARMSystem() {
+        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
+    }
+
+    public static boolean isX86System() {
+        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
+    }
+
     /**
      * @return false if the current system is not supported (e.g. APK/system ABI mismatch).
      */
@@ -88,11 +96,11 @@ public final class HardwareUtils {
         }
 
         // See http://developer.android.com/ndk/guides/abis.html
-        boolean isSystemARM = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
-        boolean isSystemX86 = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
+        final boolean isSystemARM = isARMSystem();
+        final boolean isSystemX86 = isX86System();
 
-        boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("arm");
-        boolean isAppX86 = AppConstants.ANDROID_CPU_ARCH.startsWith("x86");
+        final boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("arm");
+        final boolean isAppX86 = AppConstants.ANDROID_CPU_ARCH.startsWith("x86");
 
         // Only reject known incompatible ABIs. Better safe than sorry.
         if ((isSystemX86 && isAppARM) || (isSystemARM && isAppX86)) {
