@@ -2,11 +2,6 @@
 This form triggers a MP and gets filled in.<br>
 <form>
 Username: <input type="text"     id="userfield" name="u"><br>
-Password: <input type="password" id="passfield" name="p"><br>
-<script>
-    // Only notify when we fill in the password field.
-    document.getElementById("passfield").addEventListener("input", function() {
-        parent.postMessage("filled", "*");
-    });
-</script>
+Password: <input type="password" id="passfield" name="p"
+                 oninput="parent.postMessage('filled', '*');"><br>
 </form>
