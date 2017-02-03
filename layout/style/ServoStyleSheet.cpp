@@ -23,8 +23,8 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Servo, aParsingMode)
-  , mSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
+  mInner = new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity);
 }
 
 ServoStyleSheet::~ServoStyleSheet()
@@ -32,6 +32,8 @@ ServoStyleSheet::~ServoStyleSheet()
   UnparentChildren();
 
   DropSheet();
+
+  delete mInner;
 }
 
 // QueryInterface implementation for ServoStyleSheet
