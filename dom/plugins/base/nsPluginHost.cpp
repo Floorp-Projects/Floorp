@@ -30,7 +30,6 @@
 #include "nsIURL.h"
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
-#include "nsProtocolProxyService.h"
 #include "nsIStreamConverterService.h"
 #include "nsIFile.h"
 #if defined(XP_MACOSX)
@@ -276,12 +275,6 @@ nsPluginHost::nsPluginHost()
   // this manually.
   if (XRE_IsParentProcess()) {
     IncrementChromeEpoch();
-  } else {
-    // When NPAPI requests the proxy setting by calling |FindProxyForURL|,
-    // the service is requested and initialized asynchronously, but
-    // |FindProxyForURL| is synchronous, so we should initialize this earlier.
-    nsCOMPtr<nsIProtocolProxyService> proxyService =
-      do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
   }
 
   // check to see if pref is set at startup to let plugins take over in
@@ -595,88 +588,6 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
                             postStream, postHeaders, postHeadersLength);
   }
   return rv;
-}
-
-/* This method queries the prefs for proxy information.
- * It has been tested and is known to work in the following three cases
- * when no proxy host or port is specified
- * when only the proxy host is specified
- * when only the proxy port is specified
- * This method conforms to the return code specified in
- * http://developer.netscape.com/docs/manuals/proxy/adminnt/autoconf.htm#1020923
- * with the exception that multiple values are not implemented.
- */
-
-nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
-{
-  if (!url || !result) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsresult res;
-
-  nsCOMPtr<nsIProtocolProxyService> proxyService =
-    do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &res);
-  if (NS_FAILED(res) || !proxyService)
-    return res;
-
-  RefPtr<nsProtocolProxyService> rawProxyService = do_QueryObject(proxyService);
-  if (!rawProxyService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // make a temporary channel from the argument url
-  nsCOMPtr<nsIURI> uri;
-  res = NS_NewURI(getter_AddRefs(uri), nsDependentCString(url));
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  // The following channel is never openend, so it does not matter what
-  // securityFlags we pass; let's follow the principle of least privilege.
-  nsCOMPtr<nsIChannel> tempChannel;
-  res = NS_NewChannel(getter_AddRefs(tempChannel), uri, nullPrincipal,
-                      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-                      nsIContentPolicy::TYPE_OTHER);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr<nsIProxyInfo> pi;
-
-  // Remove this deprecated call in the future (see Bug 778201):
-  res = rawProxyService->DeprecatedBlockingResolve(tempChannel, 0, getter_AddRefs(pi));
-  if (NS_FAILED(res))
-    return res;
-
-  nsAutoCString host, type;
-  int32_t port = -1;
-
-  // These won't fail, and even if they do... we'll be ok.
-  if (pi) {
-    pi->GetType(type);
-    pi->GetHost(host);
-    pi->GetPort(&port);
-  }
-
-  if (!pi || host.IsEmpty() || port <= 0 || host.EqualsLiteral("direct")) {
-    *result = PL_strdup("DIRECT");
-  } else if (type.EqualsLiteral("http")) {
-    *result = PR_smprintf("PROXY %s:%d", host.get(), port);
-  } else if (type.EqualsLiteral("socks4")) {
-    *result = PR_smprintf("SOCKS %s:%d", host.get(), port);
-  } else if (type.EqualsLiteral("socks")) {
-    // XXX - this is socks5, but there is no API for us to tell the
-    // plugin that fact. SOCKS for now, in case the proxy server
-    // speaks SOCKS4 as well. See bug 78176
-    // For a long time this was returning an http proxy type, so
-    // very little is probably broken by this
-    *result = PR_smprintf("SOCKS %s:%d", host.get(), port);
-  } else {
-    NS_ASSERTION(false, "Unknown proxy type!");
-    *result = PL_strdup("DIRECT");
-  }
-
-  if (nullptr == *result)
-    res = NS_ERROR_OUT_OF_MEMORY;
-
-  return res;
 }
 
 nsresult nsPluginHost::UnloadPlugins()
