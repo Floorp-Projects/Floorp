@@ -167,6 +167,34 @@ add_test(function test_WebDriverError() {
   run_next_test();
 });
 
+add_test(function test_ElementClickInterceptedError() {
+  let otherEl = {
+    nodeType: 1,
+    localName: "a",
+    classList: [],
+  };
+  let obscuredEl = {
+    nodeType: 1,
+    localName: "b",
+    classList: [],
+    ownerDocument: {
+      elementFromPoint: function (x, y) {
+        return otherEl;
+      },
+    },
+  };
+
+  let err = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
+  equal("ElementClickInterceptedError", err.name);
+  equal("Element <b> is not clickable at point (1,2) " +
+      "because another element <a> obscures it",
+      err.message);
+  equal("element click intercepted", err.status);
+  ok(err instanceof WebDriverError);
+
+  run_next_test();
+});
+
 add_test(function test_ElementNotAccessibleError() {
   let err = new ElementNotAccessibleError("foo");
   equal("ElementNotAccessibleError", err.name);
@@ -177,11 +205,11 @@ add_test(function test_ElementNotAccessibleError() {
   run_next_test();
 });
 
-add_test(function test_ElementNotVisibleError() {
-  let err = new ElementNotVisibleError("foo");
-  equal("ElementNotVisibleError", err.name);
+add_test(function test_ElementNotInteractableError() {
+  let err = new ElementNotInteractableError("foo");
+  equal("ElementNotInteractableError", err.name);
   equal("foo", err.message);
-  equal("element not visible", err.status);
+  equal("element not interactable", err.status);
   ok(err instanceof WebDriverError);
 
   run_next_test();
