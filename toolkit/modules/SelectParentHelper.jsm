@@ -28,6 +28,11 @@ this.SelectParentHelper = {
   populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
+    let stylesheet = menulist.querySelector("#ContentSelectDropdownScopedStylesheet");
+    if (stylesheet) {
+      stylesheet.remove();
+    }
+
     currentZoom = zoom;
     currentMenulist = menulist;
     populateChildren(menulist, items, selectedIndex, zoom,
@@ -174,9 +179,18 @@ this.SelectParentHelper = {
 function populateChildren(menulist, options, selectedIndex, zoom,
                           uaBackgroundColor, uaColor,
                           parentElement = null, isGroupDisabled = false,
-                          adjustedTextSize = -1, addSearch = true) {
+                          adjustedTextSize = -1, addSearch = true, nthChildIndex = 1) {
   let element = menulist.menupopup;
   let win = element.ownerGlobal;
+  let scopedStyleSheet = menulist.querySelector("#ContentSelectDropdownScopedStylesheet");
+  if (!scopedStyleSheet) {
+    let doc = element.ownerDocument;
+    scopedStyleSheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    scopedStyleSheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
+    scopedStyleSheet.scoped = true;
+    scopedStyleSheet.hidden = true;
+    scopedStyleSheet = menulist.appendChild(scopedStyleSheet);
+  }
 
   // -1 just means we haven't calculated it yet. When we recurse through this function
   // we will pass in adjustedTextSize to save on recalculations.
@@ -201,27 +215,31 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.hiddenByContent = item.hidden;
     item.setAttribute("tooltiptext", option.tooltip);
 
-    let customOptionStylingUsed = false;
+    let ruleBody = "";
     if (option.backgroundColor &&
         option.backgroundColor != "transparent" &&
         option.backgroundColor != uaBackgroundColor) {
-      item.style.backgroundColor = option.backgroundColor;
-      customOptionStylingUsed = true;
+      ruleBody = `background-color: ${option.backgroundColor};`;
     }
 
     if (option.color &&
         option.color != uaColor) {
-      item.style.color = option.color;
-      customOptionStylingUsed = true;
+      ruleBody += `color: ${option.color};`;
     }
 
-    if (customOptionStylingUsed) {
+    if (ruleBody) {
+      let sheet = scopedStyleSheet.sheet;
+      sheet.insertRule(`${item.localName}:nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
+        ${ruleBody}
+      }`, 0);
+
       item.setAttribute("customoptionstyling", "true");
     } else {
       item.removeAttribute("customoptionstyling");
     }
 
     element.appendChild(item);
+    nthChildIndex++;
 
     // A disabled optgroup disables all of its child options.
     let isDisabled = isGroupDisabled || option.disabled;
@@ -230,9 +248,10 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     }
 
     if (isOptGroup) {
-      populateChildren(menulist, option.children, selectedIndex, zoom,
-                       uaBackgroundColor, uaColor,
-                       item, isDisabled, adjustedTextSize, false);
+      nthChildIndex =
+        populateChildren(menulist, option.children, selectedIndex, zoom,
+                         uaBackgroundColor, uaColor,
+                         item, isDisabled, adjustedTextSize, false);
     } else {
       if (option.index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
@@ -308,6 +327,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     element.insertBefore(searchbox, element.childNodes[0]);
   }
 
+  return nthChildIndex;
 }
 
 function onSearchInput() {
