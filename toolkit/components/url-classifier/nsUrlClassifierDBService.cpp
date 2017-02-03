@@ -1567,6 +1567,7 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
   }
 
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CLASSIFYLOCAL_TIME> timer;
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
