@@ -21,7 +21,7 @@ interface ServiceWorker : EventTarget {
 
   // FIXME(catalinb): Should inherit this from Worker.
   [Throws]
-  void postMessage(any message, optional sequence<Transferable> transferable);
+  void postMessage(any message, optional sequence<Transferable> transferable = []);
 };
 
 ServiceWorker implements AbstractWorker;

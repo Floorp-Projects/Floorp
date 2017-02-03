@@ -250,7 +250,7 @@ private:
 
   void
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                      const Optional<Sequence<JS::Value>>& aTransferable,
+                      const Sequence<JS::Value>& aTransferable,
                       ErrorResult& aRv);
 
   nsresult
@@ -361,7 +361,7 @@ public:
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<Sequence<JS::Value>>& aTransferable,
+              const Sequence<JS::Value>& aTransferable,
               ErrorResult& aRv);
 
   void
@@ -1125,7 +1125,7 @@ public:
   void
   PostMessageToParent(JSContext* aCx,
                       JS::Handle<JS::Value> aMessage,
-                      const Optional<Sequence<JS::Value>>& aTransferable,
+                      const Sequence<JS::Value>& aTransferable,
                       ErrorResult& aRv)
   {
     PostMessageToParentInternal(aCx, aMessage, aTransferable, aRv);
@@ -1135,7 +1135,7 @@ public:
   PostMessageToParentMessagePort(
                              JSContext* aCx,
                              JS::Handle<JS::Value> aMessage,
-                             const Optional<Sequence<JS::Value>>& aTransferable,
+                             const Sequence<JS::Value>& aTransferable,
                              ErrorResult& aRv);
 
   void
@@ -1457,7 +1457,7 @@ private:
   void
   PostMessageToParentInternal(JSContext* aCx,
                               JS::Handle<JS::Value> aMessage,
-                              const Optional<Sequence<JS::Value>>& aTransferable,
+                              const Sequence<JS::Value>& aTransferable,
                               ErrorResult& aRv);
 
   void

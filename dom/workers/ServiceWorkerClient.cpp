@@ -191,7 +191,7 @@ private:
 
 void
 ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                                 const Optional<Sequence<JS::Value>>& aTransferable,
+                                 const Sequence<JS::Value>& aTransferable,
                                  ErrorResult& aRv)
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -199,12 +199,10 @@ ServiceWorkerClient::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   workerPrivate->AssertIsOnWorkerThread();
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  if (aTransferable.WasPassed()) {
-    const Sequence<JS::Value>& realTransferable = aTransferable.Value();
-
+  if (!aTransferable.IsEmpty()) {
     JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(realTransferable.Length(),
-                                               realTransferable.Elements());
+      JS::HandleValueArray::fromMarkedLocation(aTransferable.Length(),
+                                               aTransferable.Elements());
 
     JSObject* array = JS_NewArrayObject(aCx, elements);
     if (!array) {

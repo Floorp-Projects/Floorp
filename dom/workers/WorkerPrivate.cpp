@@ -3080,7 +3080,7 @@ void
 WorkerPrivateParent<Derived>::PostMessageInternal(
                                             JSContext* aCx,
                                             JS::Handle<JS::Value> aMessage,
-                                            const Optional<Sequence<JS::Value>>& aTransferable,
+                                            const Sequence<JS::Value>& aTransferable,
                                             ErrorResult& aRv)
 {
   AssertIsOnParentThread();
@@ -3093,14 +3093,12 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
   }
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  if (aTransferable.WasPassed()) {
-    const Sequence<JS::Value>& realTransferable = aTransferable.Value();
-
+  if (!aTransferable.IsEmpty()) {
     // The input sequence only comes from the generated bindings code, which
     // ensures it is rooted.
     JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(realTransferable.Length(),
-                                               realTransferable.Elements());
+      JS::HandleValueArray::fromMarkedLocation(aTransferable.Length(),
+                                               aTransferable.Elements());
 
     JSObject* array =
       JS_NewArrayObject(aCx, elements);
@@ -3151,7 +3149,7 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::PostMessage(
                              JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                             const Optional<Sequence<JS::Value>>& aTransferable,
+                             const Sequence<JS::Value>& aTransferable,
                              ErrorResult& aRv)
 {
   PostMessageInternal(aCx, aMessage, aTransferable, aRv);
@@ -5724,20 +5722,18 @@ void
 WorkerPrivate::PostMessageToParentInternal(
                             JSContext* aCx,
                             JS::Handle<JS::Value> aMessage,
-                            const Optional<Sequence<JS::Value>>& aTransferable,
+                            const Sequence<JS::Value>& aTransferable,
                             ErrorResult& aRv)
 {
   AssertIsOnWorkerThread();
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  if (aTransferable.WasPassed()) {
-    const Sequence<JS::Value>& realTransferable = aTransferable.Value();
-
+  if (!aTransferable.IsEmpty()) {
     // The input sequence only comes from the generated bindings code, which
     // ensures it is rooted.
     JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(realTransferable.Length(),
-                                               realTransferable.Elements());
+      JS::HandleValueArray::fromMarkedLocation(aTransferable.Length(),
+                                               aTransferable.Elements());
 
     JSObject* array = JS_NewArrayObject(aCx, elements);
     if (!array) {
