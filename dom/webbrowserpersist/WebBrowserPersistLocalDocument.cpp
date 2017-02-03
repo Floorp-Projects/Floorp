@@ -713,19 +713,6 @@ PersistNodeFixup::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
     } else {
         NS_ADDREF(*aNodeOut = aNodeIn);
     }
-    nsCOMPtr<nsIDOMHTMLElement> element(do_QueryInterface(*aNodeOut));
-    if (element) {
-        // Make sure this is not XHTML
-        nsAutoString namespaceURI;
-        element->GetNamespaceURI(namespaceURI);
-        if (namespaceURI.IsEmpty()) {
-            // This is a tag-soup node.  It may have a _base_href attribute
-            // stuck on it by the parser, but since we're fixing up all URIs
-            // relative to the overall document base that will screw us up.
-            // Just remove the _base_href.
-            element->RemoveAttribute(NS_LITERAL_STRING("_base_href"));
-        }
-    }
     return NS_OK;
 }
 
@@ -1155,8 +1142,9 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             }
             // Unset the codebase too, since we'll correctly relativize the
             // code and archive paths.
+            IgnoredErrorResult ignored;
             static_cast<dom::HTMLSharedObjectElement*>(newApplet.get())->
-              RemoveAttribute(NS_LITERAL_STRING("codebase"));
+              RemoveAttribute(NS_LITERAL_STRING("codebase"), ignored);
             FixupAttribute(*aNodeOut, "code");
             FixupAttribute(*aNodeOut, "archive");
             // restore the base URI we really want to have
@@ -1233,10 +1221,12 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
                 case NS_FORM_INPUT_COLOR:
                     nodeAsInput->GetValue(valueStr, dom::CallerType::System);
                     // Avoid superfluous value="" serialization
-                    if (valueStr.IsEmpty())
-                      outElt->RemoveAttribute(valueAttr);
-                    else
+                    if (valueStr.IsEmpty()) {
+                      IgnoredErrorResult ignored;
+                      outElt->RemoveAttribute(valueAttr, ignored);
+                    } else {
                       outElt->SetAttribute(valueAttr, valueStr);
+                    }
                     break;
                 case NS_FORM_INPUT_CHECKBOX:
                 case NS_FORM_INPUT_RADIO:
