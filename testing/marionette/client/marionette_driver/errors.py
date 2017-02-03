@@ -55,6 +55,10 @@ class ElementNotSelectableException(MarionetteException):
     status = "element not selectable"
 
 
+class ElementClickInterceptedException(MarionetteException):
+    status = "element click intercepted"
+
+
 class InsecureCertificateException(MarionetteException):
     status = "insecure certificate"
 
@@ -92,6 +96,8 @@ class ScriptTimeoutException(MarionetteException):
 
 
 class ElementNotVisibleException(MarionetteException):
+    """Deprecated.  Will be removed with the release of Firefox 54."""
+
     status = "element not visible"
 
     def __init__(self,
@@ -103,6 +109,10 @@ class ElementNotVisibleException(MarionetteException):
 
 class ElementNotAccessibleException(MarionetteException):
     status = "element not accessible"
+
+
+class ElementNotInteractableException(MarionetteException):
+    status = "element not interactable"
 
 
 class NoSuchFrameException(MarionetteException):
