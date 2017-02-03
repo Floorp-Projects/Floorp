@@ -85,9 +85,9 @@ this.interaction = {};
  * checks are performed.
  *
  * Selenium-style visibility checks will be performed if |specCompat|
- * is false (default).  Otherwise pointer-interactability checks will be
- * performed.  If either of these fail an {@code ElementNotVisibleError}
- * is returned.
+ * is false (default).  Otherwise pointer-interactability
+ * checks will be performed.  If either of these fail an
+ * {@code ElementNotInteractableError} is returned.
  *
  * If |strict| is enabled (defaults to disabled), further accessibility
  * checks will be performed, and these may result in an {@code
@@ -103,7 +103,7 @@ this.interaction = {};
  * @param {boolean=} specCompat
  *     Use WebDriver specification compatible interactability definition.
  *
- * @throws {ElementNotVisibleError}
+ * @throws {ElementNotInteractable}
  *     If either Selenium-style visibility check or
  *     pointer-interactability check fails.
  * @throws {ElementNotAccessibleError}
@@ -130,7 +130,7 @@ interaction.clickElement = function*(el, strict = false, specCompat = false) {
     interactable = element.isVisible(visibilityCheckEl);
   }
   if (!interactable) {
-    throw new ElementNotVisibleError();
+    throw new ElementNotInteractableError();
   }
 
   if (!atom.isElementEnabled(el)) {
