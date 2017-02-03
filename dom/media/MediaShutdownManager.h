@@ -54,6 +54,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
+  static void InitStatics();
+
   // The MediaShutdownManager is a singleton, access its instance with
   // this accessor.
   static MediaShutdownManager& Instance();
@@ -71,6 +73,7 @@ private:
 
   MediaShutdownManager();
   virtual ~MediaShutdownManager();
+  void RemoveBlocker();
 
   // Ensures we have a shutdown listener if we need one, and removes the
   // listener and destroys the singleton if we don't.
