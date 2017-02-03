@@ -647,6 +647,10 @@ int NrSocket::create(nr_transport_addr *addr) {
 #endif
       break;
     case IPPROTO_TCP:
+      // TODO: Add TLS layer with nsISocketProviderService?
+      if (my_addr_.tls_host[0] != '\0')
+        ABORT(R_INTERNAL);
+
       if (!(fd_ = PR_OpenTCPSocket(naddr.raw.family))) {
         r_log(LOG_GENERIC,LOG_CRIT,"Couldn't create TCP socket, "
               "family=%d, err=%d", naddr.raw.family, PR_GetError());
@@ -872,10 +876,6 @@ int NrSocket::connect(nr_transport_addr *addr) {
   int r,_status;
   PRNetAddr naddr;
   int32_t connect_status, getsockname_status;
-
-  // TODO: Add TLS layer with nsISocketProviderService?
-  if (addr->tls_host[0] != '\0')
-    ABORT(R_INTERNAL);
 
   if ((r=nr_transport_addr_to_praddr(addr, &naddr)))
     ABORT(r);
@@ -1859,7 +1859,7 @@ void NrTcpSocketIpc::close() {
 }
 
 int NrTcpSocketIpc::connect(nr_transport_addr *addr) {
-  nsCString remote_addr, local_addr, tls_host;
+  nsCString remote_addr, local_addr;
   int32_t remote_port, local_port;
   int r, _status;
   if ((r=nr_transport_addr_get_addrstring_and_port(addr,
@@ -1875,8 +1875,6 @@ int NrTcpSocketIpc::connect(nr_transport_addr *addr) {
     ABORT(r);
   }
 
-  tls_host = addr->tls_host;
-
   state_ = mirror_state_ = NR_CONNECTING;
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
@@ -1885,7 +1883,7 @@ int NrTcpSocketIpc::connect(nr_transport_addr *addr) {
                              static_cast<uint16_t>(remote_port),
                              local_addr,
                              static_cast<uint16_t>(local_port),
-                             tls_host),
+                             nsCString(my_addr_.tls_host)),
                 NS_DISPATCH_NORMAL);
 
   // Make caller wait for ready to write.
