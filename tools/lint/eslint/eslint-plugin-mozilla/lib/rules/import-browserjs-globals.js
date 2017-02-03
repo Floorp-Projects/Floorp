@@ -54,16 +54,13 @@ const SCRIPTS = [
 module.exports = function(context) {
   return {
     Program: function(node) {
-      let filepath = helpers.getAbsoluteFilePath(context);
-      let root = helpers.getRootDir(filepath);
-      let relativepath = path.relative(root, filepath);
-
-      if ((helpers.getTestType(this) != "browser" &&
-          !helpers.getIsHeadFile(this)) &&
-          !relativepath.includes("content")) {
+      if (helpers.getTestType(this) != "browser" &&
+          !helpers.getIsHeadFile(this)) {
         return;
       }
 
+      let filepath = helpers.getAbsoluteFilePath(context);
+      let root = helpers.getRootDir(filepath);
       for (let script of SCRIPTS) {
         let fileName = path.join(root, script);
         try {
