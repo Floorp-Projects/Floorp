@@ -6,7 +6,6 @@ DevToolsModules(
     'cookies-panel.js',
     'details-panel.js',
     'editor.js',
-    'headers-mdn.js',
     'headers-panel.js',
     'params-panel.js',
     'preview-panel.js',
