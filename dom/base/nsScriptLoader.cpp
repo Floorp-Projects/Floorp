@@ -1284,9 +1284,11 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest)
     }
   }
 
-  nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(docshell));
+  OriginAttributes attrs;
+  attrs.Inherit(mDocument->NodePrincipal()->OriginAttributesRef());
+
   mozilla::net::PredictorLearn(aRequest->mURI, mDocument->GetDocumentURI(),
-      nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, loadContext);
+      nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, attrs);
 
   // Set the initiator type
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
