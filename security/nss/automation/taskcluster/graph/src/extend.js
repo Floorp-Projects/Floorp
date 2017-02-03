@@ -278,6 +278,7 @@ async function scheduleFuzzing() {
       CC: "clang",
       CCC: "clang++"
     },
+    features: ["allowPtrace"],
     platform: "linux64",
     collection: "fuzz",
     image: FUZZ_IMAGE
@@ -332,10 +333,6 @@ async function scheduleFuzzing() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
         "hash nss/fuzz/corpus/hash -max_total_time=300 -max_len=4096"
     ],
-    // Need a privileged docker container to remove detect_leaks=0.
-    env: {
-      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
-    },
     symbol: "Hash",
     kind: "test"
   }));
@@ -349,10 +346,6 @@ async function scheduleFuzzing() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
         "quickder nss/fuzz/corpus/quickder -max_total_time=300 -max_len=10000"
     ],
-    // Need a privileged docker container to remove detect_leaks=0.
-    env: {
-      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
-    },
     symbol: "QuickDER",
     kind: "test"
   }));
@@ -366,10 +359,6 @@ async function scheduleFuzzing() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
         "mpi nss/fuzz/corpus/mpi -max_total_time=300 -max_len=2048"
     ],
-    // Need a privileged docker container to remove detect_leaks=0.
-    env: {
-      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
-    },
     symbol: "MPI",
     kind: "test"
   }));
@@ -383,10 +372,6 @@ async function scheduleFuzzing() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
         "certDN nss/fuzz/corpus/certDN -max_total_time=300 -max_len=4096"
     ],
-    // Need a privileged docker container to remove detect_leaks=0.
-    env: {
-      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
-    },
     symbol: "CertDN",
     kind: "test"
   }));

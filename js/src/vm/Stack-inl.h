@@ -907,7 +907,7 @@ ActivationEntryMonitor::~ActivationEntryMonitor()
     if (entryMonitor_)
         entryMonitor_->Exit(cx_);
 
-    cx_->runtime()->entryMonitor = entryMonitor_;
+    cx_->entryMonitor = entryMonitor_;
 }
 
 Activation::Activation(JSContext* cx, Kind kind)
@@ -917,12 +917,12 @@ Activation::Activation(JSContext* cx, Kind kind)
     prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
     hideScriptedCallerCount_(0),
     frameCache_(cx),
-    asyncStack_(cx, cx->asyncStackForNewActivations),
+    asyncStack_(cx, cx->asyncStackForNewActivations()),
     asyncCause_(cx->asyncCauseForNewActivations),
     asyncCallIsExplicit_(cx->asyncCallIsExplicit),
     kind_(kind)
 {
-    cx->asyncStackForNewActivations = nullptr;
+    cx->asyncStackForNewActivations() = nullptr;
     cx->asyncCauseForNewActivations = nullptr;
     cx->asyncCallIsExplicit = false;
     cx->activation_ = this;
@@ -935,7 +935,7 @@ Activation::~Activation()
     MOZ_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->activation_ = prev_;
     cx_->asyncCauseForNewActivations = asyncCause_;
-    cx_->asyncStackForNewActivations = asyncStack_;
+    cx_->asyncStackForNewActivations() = asyncStack_;
     cx_->asyncCallIsExplicit = asyncCallIsExplicit_;
 }
 
@@ -973,7 +973,7 @@ InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
     entryFrame_(entryFrame),
     opMask_(0)
 #ifdef DEBUG
-  , oldFrameCount_(cx->runtime()->interpreterStack().frameCount_)
+  , oldFrameCount_(cx->interpreterStack().frameCount_)
 #endif
 {
     regs_.prepareToRun(*entryFrame, state.script());
@@ -987,18 +987,18 @@ InterpreterActivation::~InterpreterActivation()
     while (regs_.fp() != entryFrame_)
         popInlineFrame(regs_.fp());
 
-    MOZ_ASSERT(oldFrameCount_ == cx_->runtime()->interpreterStack().frameCount_);
-    MOZ_ASSERT_IF(oldFrameCount_ == 0, cx_->runtime()->interpreterStack().allocator_.used() == 0);
+    MOZ_ASSERT(oldFrameCount_ == cx_->interpreterStack().frameCount_);
+    MOZ_ASSERT_IF(oldFrameCount_ == 0, cx_->interpreterStack().allocator_.used() == 0);
 
     if (entryFrame_)
-        cx_->runtime()->interpreterStack().releaseFrame(entryFrame_);
+        cx_->interpreterStack().releaseFrame(entryFrame_);
 }
 
 inline bool
 InterpreterActivation::pushInlineFrame(const CallArgs& args, HandleScript script,
                                        MaybeConstruct constructing)
 {
-    if (!cx_->runtime()->interpreterStack().pushInlineFrame(cx_, regs_, args, script, constructing))
+    if (!cx_->interpreterStack().pushInlineFrame(cx_, regs_, args, script, constructing))
         return false;
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment());
     return true;
@@ -1011,14 +1011,14 @@ InterpreterActivation::popInlineFrame(InterpreterFrame* frame)
     MOZ_ASSERT(regs_.fp() == frame);
     MOZ_ASSERT(regs_.fp() != entryFrame_);
 
-    cx_->runtime()->interpreterStack().popInlineFrame(regs_);
+    cx_->interpreterStack().popInlineFrame(regs_);
 }
 
 inline bool
 InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
                                             HandleObject envChain)
 {
-    InterpreterStack& stack = cx_->runtime()->interpreterStack();
+    InterpreterStack& stack = cx_->interpreterStack();
     if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, newTarget, envChain))
         return false;
 

@@ -998,6 +998,27 @@ GLContextGLX::SwapBuffers()
     return true;
 }
 
+void
+GLContextGLX::GetWSIInfo(nsCString* const out) const
+{
+    Display* display = DefaultXDisplay();
+    int screen = DefaultScreen(display);
+
+    int majorVersion, minorVersion;
+    sGLXLibrary.xQueryVersion(display, &majorVersion, &minorVersion);
+
+    out->Append(nsPrintfCString("GLX %u.%u", majorVersion, minorVersion));
+
+    out->AppendLiteral("\nGLX_VENDOR(client): ");
+    out->Append(sGLXLibrary.xGetClientString(display, LOCAL_GLX_VENDOR));
+
+    out->AppendLiteral("\nGLX_VENDOR(server): ");
+    out->Append(sGLXLibrary.xQueryServerString(display, screen, LOCAL_GLX_VENDOR));
+
+    out->AppendLiteral("\nExtensions: ");
+    out->Append(sGLXLibrary.xQueryExtensionsString(display, screen));
+}
+
 bool
 GLContextGLX::OverrideDrawable(GLXDrawable drawable)
 {

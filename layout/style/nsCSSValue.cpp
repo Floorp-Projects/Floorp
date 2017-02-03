@@ -833,6 +833,46 @@ void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
   SetArrayValue(arr, eCSSUnit_Calc);
 }
 
+nsStyleCoord::CalcValue
+nsCSSValue::GetCalcValue() const
+{
+  MOZ_ASSERT(mUnit == eCSSUnit_Calc,
+             "The unit should be eCSSUnit_Calc");
+
+  const nsCSSValue::Array* array = GetArrayValue();
+  MOZ_ASSERT(array->Count() == 1,
+             "There should be a 1-length array");
+
+  const nsCSSValue& rootValue = array->Item(0);
+
+  nsStyleCoord::CalcValue result;
+
+  if (rootValue.GetUnit() == eCSSUnit_Pixel) {
+    result.mLength = rootValue.GetFloatValue();
+    result.mPercent = 0.0f;
+    result.mHasPercent = false;
+  } else {
+    MOZ_ASSERT(rootValue.GetUnit() == eCSSUnit_Calc_Plus,
+               "Calc unit should be eCSSUnit_Calc_Plus");
+
+    const nsCSSValue::Array *calcPlusArray = rootValue.GetArrayValue();
+    MOZ_ASSERT(array->Count() == 2,
+               "eCSSUnit_Calc_Plus should have a 2-length array");
+
+    const nsCSSValue& length = calcPlusArray->Item(0);
+    const nsCSSValue& percent = calcPlusArray->Item(1);
+    MOZ_ASSERT(length.GetUnit() == eCSSUnit_Pixel,
+               "The first value should be eCSSUnit_Pixel");
+    MOZ_ASSERT(percent.GetUnit() == eCSSUnit_Percent,
+               "The first value should be eCSSUnit_Percent");
+    result.mLength = length.GetFloatValue();
+    result.mPercent = percent.GetPercentValue();
+    result.mHasPercent = true;
+  }
+
+  return result;
+}
+
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
   MOZ_ASSERT(eCSSUnit_URL == mUnit, "Not a URL value!");

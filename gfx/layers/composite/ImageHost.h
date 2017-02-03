@@ -56,9 +56,6 @@ public:
 
   virtual void RemoveTextureHost(TextureHost* aTexture) override;
 
-  virtual void UseOverlaySource(OverlaySource aOverlay,
-                                const gfx::IntRect& aPictureRect) override;
-
   virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
 
   virtual void Attach(Layer* aLayer,

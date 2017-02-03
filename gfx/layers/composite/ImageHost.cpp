@@ -152,12 +152,6 @@ ImageHost::RemoveTextureHost(TextureHost* aTexture)
   }
 }
 
-void
-ImageHost::UseOverlaySource(OverlaySource aOverlay,
-                            const gfx::IntRect& aPictureRect)
-{
-}
-
 static TimeStamp
 GetBiasedTime(const TimeStamp& aInput, ImageHost::Bias aBias)
 {

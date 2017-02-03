@@ -55,12 +55,12 @@ class Symbol : public js::gc::TenuredCell
     void operator=(const Symbol&) = delete;
 
     static Symbol*
-    newInternal(js::ExclusiveContext* cx, SymbolCode code, js::HashNumber hash,
+    newInternal(JSContext* cx, SymbolCode code, js::HashNumber hash,
                 JSAtom* description, js::AutoLockForExclusiveAccess& lock);
 
   public:
-    static Symbol* new_(js::ExclusiveContext* cx, SymbolCode code, JSString* description);
-    static Symbol* for_(js::ExclusiveContext* cx, js::HandleString description);
+    static Symbol* new_(JSContext* cx, SymbolCode code, JSString* description);
+    static Symbol* for_(JSContext* cx, js::HandleString description);
 
     JSAtom* description() const { return description_; }
     SymbolCode code() const { return code_; }

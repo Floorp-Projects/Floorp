@@ -733,7 +733,7 @@ class GlobalObject : public NativeObject
                                       unsigned nargs, MutableHandleValue funVal);
 
     bool hasRegExpStatics() const;
-    static RegExpStatics* getRegExpStatics(ExclusiveContext* cx,
+    static RegExpStatics* getRegExpStatics(JSContext* cx,
                                            Handle<GlobalObject*> global);
     RegExpStatics* getAlreadyCreatedRegExpStatics() const;
 
