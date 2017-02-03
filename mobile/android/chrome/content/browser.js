@@ -1331,6 +1331,9 @@ var BrowserApp = {
       this._tabs[i] = this._tabs[i + step];
     }
     this._tabs[toPosition] = movedTab;
+
+    let evt = new UIEvent("TabMove", {"bubbles":true, "cancellable":false, "view":window, "detail":fromPosition});
+    this.tabs[toPosition].browser.dispatchEvent(evt);
   },
 
   // Use this method to select a tab from JS. This method sends a message
