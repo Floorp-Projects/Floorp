@@ -1307,7 +1307,7 @@ event.sendKeysToElement = function (
     }
 
   } else {
-    throw new ElementNotVisibleError("Element is not visible");
+    throw new ElementNotInteractableError("Element is not visible");
   }
 };
 
