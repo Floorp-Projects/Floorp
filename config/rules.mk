@@ -919,9 +919,6 @@ endif
 ifdef MOZ_CARGO_SUPPORTS_FROZEN
 cargo_build_flags += --frozen
 endif
-ifdef MOZ_STYLO
-cargo_build_flags += --features=servo
-endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 ifdef BUILD_VERBOSE_LOG
