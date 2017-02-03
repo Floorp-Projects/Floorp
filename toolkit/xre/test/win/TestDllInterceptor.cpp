@@ -83,6 +83,7 @@ bool TestDetour(const char *dll, const char *func)
 bool MaybeTestHook(const bool cond, const char* dll, const char* func)
 {
   if (!cond) {
+    printf("TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from %s\n", func, dll);
     return true;
   }
 
@@ -91,9 +92,6 @@ bool MaybeTestHook(const bool cond, const char* dll, const char* func)
 
 bool ShouldTestTipTsf()
 {
-#if defined(_M_X64)
-  return false;
-#else
   if (!IsWin8OrLater()) {
     return false;
   }
@@ -125,7 +123,6 @@ bool ShouldTestTipTsf()
 
   // Leak the module so that it's loaded for the interceptor test
   return true;
-#endif
 }
 
 int main()
