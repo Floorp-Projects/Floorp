@@ -525,8 +525,9 @@ MacroAssembler::branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* l
     j(cond, label);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, L label)
 {
     cmpPtr(lhs, rhs);
     j(cond, label);

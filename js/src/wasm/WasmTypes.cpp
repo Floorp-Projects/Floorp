@@ -538,14 +538,47 @@ static const unsigned sMaxTypes = (sTotalBits - sTagBits - sReturnBit - sLengthB
 static bool
 IsImmediateType(ValType vt)
 {
-    MOZ_ASSERT(uint32_t(vt) > 0);
-    return (uint32_t(vt) - 1) < (1 << sTypeBits);
+    switch (vt) {
+      case ValType::I32:
+      case ValType::I64:
+      case ValType::F32:
+      case ValType::F64:
+        return true;
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        return false;
+    }
+    MOZ_CRASH("bad ValType");
 }
 
-static bool
-IsImmediateType(ExprType et)
+static unsigned
+EncodeImmediateType(ValType vt)
 {
-    return et == ExprType::Void || IsImmediateType(NonVoidToValType(et));
+    static_assert(3 < (1 << sTypeBits), "fits");
+    switch (vt) {
+      case ValType::I32:
+        return 0;
+      case ValType::I64:
+        return 1;
+      case ValType::F32:
+        return 2;
+      case ValType::F64:
+        return 3;
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        break;
+    }
+    MOZ_CRASH("bad ValType");
 }
 
 /* static */ bool
@@ -556,7 +589,7 @@ SigIdDesc::isGlobal(const Sig& sig)
     if (numTypes > sMaxTypes)
         return true;
 
-    if (!IsImmediateType(sig.ret()))
+    if (sig.ret() != ExprType::Void && !IsImmediateType(NonVoidToValType(sig.ret())))
         return true;
 
     for (ValType v : sig.args()) {
@@ -582,14 +615,6 @@ LengthToBits(uint32_t length)
     return length;
 }
 
-static ImmediateType
-TypeToBits(ValType type)
-{
-    static_assert(3 <= ((1 << sTypeBits) - 1), "fits");
-    MOZ_ASSERT(uint32_t(type) >= 1 && uint32_t(type) <= 4);
-    return uint32_t(type) - 1;
-}
-
 /* static */ SigIdDesc
 SigIdDesc::immediate(const Sig& sig)
 {
@@ -600,7 +625,7 @@ SigIdDesc::immediate(const Sig& sig)
         immediate |= (1 << shift);
         shift += sReturnBit;
 
-        immediate |= TypeToBits(NonVoidToValType(sig.ret())) << shift;
+        immediate |= EncodeImmediateType(NonVoidToValType(sig.ret())) << shift;
         shift += sTypeBits;
     } else {
         shift += sReturnBit;
@@ -610,7 +635,7 @@ SigIdDesc::immediate(const Sig& sig)
     shift += sLengthBits;
 
     for (ValType argType : sig.args()) {
-        immediate |= TypeToBits(argType) << shift;
+        immediate |= EncodeImmediateType(argType) << shift;
         shift += sTypeBits;
     }
 

@@ -917,8 +917,10 @@ MacroAssembler::branch64(Condition cond, const Address& lhs, const Address& rhs,
     loadPtr(rhs, scratch);
     branchPtr(cond, lhs, scratch, label);
 }
+
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, L label)
 {
     Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
     B(label, cond);
