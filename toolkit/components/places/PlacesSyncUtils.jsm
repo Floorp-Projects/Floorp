@@ -910,33 +910,39 @@ var insertSyncLivemark = Task.async(function* (insertInfo) {
 // If we don't handle those cases by removing the conflicting keywords first,
 // the insertion  will fail, and the keywords will either be wrong, or missing.
 // This function handles those cases.
-var removeConflictingKeywords = Task.async(function* (bookmarkURL, newKeyword) {
-  let entryForURL = yield PlacesUtils.keywords.fetch({
-    url: bookmarkURL
-  });
-  if (entryForURL && entryForURL.keyword !== newKeyword) {
-    yield PlacesUtils.keywords.remove({
-      keyword: entryForURL.keyword,
-      source: SOURCE_SYNC,
-    });
-    // This will cause us to reupload this record for this sync, but without it,
-    // we will risk data corruption.
-    yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(entryForURL.url.href);
-  }
-  if (!newKeyword) {
-    return;
-  }
-  let entryForNewKeyword = yield PlacesUtils.keywords.fetch({
-    keyword: newKeyword
-  });
-  if (entryForNewKeyword) {
-    yield PlacesUtils.keywords.remove({
-      keyword: entryForNewKeyword.keyword,
-      source: SOURCE_SYNC,
-    });
-    yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(entryForNewKeyword.url.href);
-  }
-});
+function removeConflictingKeywords(bookmarkURL, newKeyword) {
+  return PlacesUtils.withConnectionWrapper(
+    "BookmarkSyncUtils: removeConflictingKeywords", Task.async(function* (db) {
+      let entryForURL = yield PlacesUtils.keywords.fetch({
+        url: bookmarkURL.href,
+      });
+      if (entryForURL && entryForURL.keyword !== newKeyword) {
+        yield PlacesUtils.keywords.remove({
+          keyword: entryForURL.keyword,
+          source: SOURCE_SYNC,
+        });
+        // This will cause us to reupload this record for this sync, but without it,
+        // we will risk data corruption.
+        yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(
+          db, entryForURL.url, 1);
+      }
+      if (!newKeyword) {
+        return;
+      }
+      let entryForNewKeyword = yield PlacesUtils.keywords.fetch({
+        keyword: newKeyword
+      });
+      if (entryForNewKeyword) {
+        yield PlacesUtils.keywords.remove({
+          keyword: entryForNewKeyword.keyword,
+          source: SOURCE_SYNC,
+        });
+        yield BookmarkSyncUtils.addSyncChangesForBookmarksWithURL(
+          db, entryForNewKeyword.url, 1);
+      }
+    })
+  );
+}
 
 // Sets annotations, keywords, and tags on a new bookmark. Returns a Sync
 // bookmark object.
@@ -960,7 +966,7 @@ var insertBookmarkMetadata = Task.async(function* (bookmarkItem, insertInfo) {
   }
 
   if (insertInfo.keyword) {
-    yield removeConflictingKeywords(bookmarkItem.url.href, insertInfo.keyword);
+    yield removeConflictingKeywords(bookmarkItem.url, insertInfo.keyword);
     yield PlacesUtils.keywords.insert({
       keyword: insertInfo.keyword,
       url: bookmarkItem.url.href,
@@ -1174,7 +1180,7 @@ var updateBookmarkMetadata = Task.async(function* (oldBookmarkItem,
 
   if (updateInfo.hasOwnProperty("keyword")) {
     // Unconditionally remove the old keyword.
-    yield removeConflictingKeywords(oldBookmarkItem.url.href, updateInfo.keyword);
+    yield removeConflictingKeywords(oldBookmarkItem.url, updateInfo.keyword);
     if (updateInfo.keyword) {
       yield PlacesUtils.keywords.insert({
         keyword: updateInfo.keyword,
