@@ -5,7 +5,7 @@ A library to compile C/C++ code into a Rust library/application.
 [![Build Status](https://travis-ci.org/alexcrichton/gcc-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/gcc-rs)
 [![Build status](https://ci.appveyor.com/api/projects/status/onu270iw98h81nwv?svg=true)](https://ci.appveyor.com/project/alexcrichton/gcc-rs)
 
-[Documentation](http://alexcrichton.com/gcc-rs)
+[Documentation](https://docs.rs/gcc)
 
 A simple library meant to be used as a build dependency with Cargo packages in
 order to build a set of C/C++ files into a static archive. Note that while this
