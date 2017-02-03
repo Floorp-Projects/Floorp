@@ -419,13 +419,13 @@ var dataProviders = {
         data[keyPrefix + "Extensions"] = "-";
         data[keyPrefix + "WSIInfo"] = "-";
 
-        ////
+        // //
 
         let canvas = doc.createElement("canvas");
         canvas.width = 1;
         canvas.height = 1;
 
-        ////
+        // //
 
         let creationError = null;
 
@@ -450,7 +450,7 @@ var dataProviders = {
             return;
         }
 
-        ////
+        // //
 
         let ext = gl.getExtension("MOZ_debug_get");
         // This extension is unconditionally available to chrome. No need to check.
@@ -462,7 +462,7 @@ var dataProviders = {
         data[keyPrefix + "Extensions"] = ext.getParameter(ext.EXTENSIONS);
         data[keyPrefix + "WSIInfo"] = ext.getParameter(ext.WSI_INFO);
 
-        ////
+        // //
 
         // Eagerly free resources.
         let loseExt = gl.getExtension("WEBGL_lose_context");
