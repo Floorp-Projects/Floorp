@@ -59,6 +59,8 @@ public:
 
     virtual bool SwapBuffers() override;
 
+    virtual void GetWSIInfo(nsCString* const out) const override;
+
     // Overrides the current GLXDrawable backing the context and makes the
     // context current.
     bool OverrideDrawable(GLXDrawable drawable);

@@ -63,7 +63,6 @@ SECKEYPrivateKey* ReadPrivateKey(const std::string& file) {
   PK11_FreeSlot(slot);
   SECITEM_FreeItem(&item, PR_FALSE);
   if (rv != SECSuccess) {
-    // This is probably due to this being an ECDSA key (Bug 1295121).
     std::cerr << "Couldn't import key " << PORT_ErrorToString(PORT_GetError())
               << "\n";
     return nullptr;

@@ -432,6 +432,24 @@ GLContextEGL::SwapBuffers()
     }
 }
 
+void
+GLContextEGL::GetWSIInfo(nsCString* const out) const
+{
+    out->AppendLiteral("EGL_VENDOR: ");
+    out->Append((const char*)sEGLLibrary.fQueryString(EGL_DISPLAY(), LOCAL_EGL_VENDOR));
+
+    out->AppendLiteral("\nEGL_VERSION: ");
+    out->Append((const char*)sEGLLibrary.fQueryString(EGL_DISPLAY(), LOCAL_EGL_VERSION));
+
+    out->AppendLiteral("\nEGL_EXTENSIONS: ");
+    out->Append((const char*)sEGLLibrary.fQueryString(EGL_DISPLAY(), LOCAL_EGL_EXTENSIONS));
+
+#ifndef ANDROID // This query will crash some old android.
+    out->AppendLiteral("\nEGL_EXTENSIONS(nullptr): ");
+    out->Append((const char*)sEGLLibrary.fQueryString(nullptr, LOCAL_EGL_EXTENSIONS));
+#endif
+}
+
 // hold a reference to the given surface
 // for the lifetime of this context.
 void

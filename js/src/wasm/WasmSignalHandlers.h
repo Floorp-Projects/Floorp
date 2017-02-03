@@ -26,6 +26,7 @@
 #endif
 #include "threading/Thread.h"
 
+struct JSContext;
 struct JSRuntime;
 
 namespace js {
@@ -51,9 +52,9 @@ HaveSignalHandlers();
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
 // of Unix signals. Mach exceptions are not handled on the victim's stack but
 // rather require an extra thread. For simplicity, we create one such thread
-// per JSRuntime (upon the first use of asm.js in the JSRuntime). This thread
+// per JSContext (upon the first use of asm.js in the JSContext). This thread
 // and related resources are owned by AsmJSMachExceptionHandler which is owned
-// by JSRuntime.
+// by JSContext.
 class MachExceptionHandler
 {
     bool installed_;

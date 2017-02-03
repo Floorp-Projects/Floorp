@@ -304,14 +304,14 @@ struct AutoEnterAnalysis
     FreeOp* freeOp;
     Zone* zone;
 
-    explicit AutoEnterAnalysis(ExclusiveContext* cx)
+    explicit AutoEnterAnalysis(JSContext* cx)
       : suppressGC(cx), suppressMetadata(cx)
     {
         init(cx->defaultFreeOp(), cx->zone());
     }
 
     AutoEnterAnalysis(FreeOp* fop, Zone* zone)
-      : suppressGC(zone->runtimeFromMainThread()->contextFromMainThread()),
+      : suppressGC(TlsContext.get()),
         suppressMetadata(zone)
     {
         init(fop, zone);
@@ -364,7 +364,7 @@ TypeMonitorCall(JSContext* cx, const js::CallArgs& args, bool constructing)
 }
 
 inline bool
-TrackPropertyTypes(ExclusiveContext* cx, JSObject* obj, jsid id)
+TrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id)
 {
     if (obj->hasLazyGroup() || obj->group()->unknownProperties())
         return false;
@@ -422,12 +422,12 @@ HasTypePropertyId(JSObject* obj, jsid id, const Value& value)
     return HasTypePropertyId(obj, id, TypeSet::GetValueType(value));
 }
 
-void AddTypePropertyId(ExclusiveContext* cx, ObjectGroup* group, JSObject* obj, jsid id, TypeSet::Type type);
-void AddTypePropertyId(ExclusiveContext* cx, ObjectGroup* group, JSObject* obj, jsid id, const Value& value);
+void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id, TypeSet::Type type);
+void AddTypePropertyId(JSContext* cx, ObjectGroup* group, JSObject* obj, jsid id, const Value& value);
 
 /* Add a possible type for a property of obj. */
 inline void
-AddTypePropertyId(ExclusiveContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
+AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, TypeSet::Type type)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -435,7 +435,7 @@ AddTypePropertyId(ExclusiveContext* cx, JSObject* obj, jsid id, TypeSet::Type ty
 }
 
 inline void
-AddTypePropertyId(ExclusiveContext* cx, JSObject* obj, jsid id, const Value& value)
+AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id, const Value& value)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -443,21 +443,21 @@ AddTypePropertyId(ExclusiveContext* cx, JSObject* obj, jsid id, const Value& val
 }
 
 inline void
-MarkObjectGroupFlags(ExclusiveContext* cx, JSObject* obj, ObjectGroupFlags flags)
+MarkObjectGroupFlags(JSContext* cx, JSObject* obj, ObjectGroupFlags flags)
 {
     if (!obj->hasLazyGroup() && !obj->group()->hasAllFlags(flags))
         obj->group()->setFlags(cx, flags);
 }
 
 inline void
-MarkObjectGroupUnknownProperties(ExclusiveContext* cx, ObjectGroup* obj)
+MarkObjectGroupUnknownProperties(JSContext* cx, ObjectGroup* obj)
 {
     if (!obj->unknownProperties())
         obj->markUnknown(cx);
 }
 
 inline void
-MarkTypePropertyNonData(ExclusiveContext* cx, JSObject* obj, jsid id)
+MarkTypePropertyNonData(JSContext* cx, JSObject* obj, jsid id)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -465,7 +465,7 @@ MarkTypePropertyNonData(ExclusiveContext* cx, JSObject* obj, jsid id)
 }
 
 inline void
-MarkTypePropertyNonWritable(ExclusiveContext* cx, JSObject* obj, jsid id)
+MarkTypePropertyNonWritable(JSContext* cx, JSObject* obj, jsid id)
 {
     id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -474,7 +474,7 @@ MarkTypePropertyNonWritable(ExclusiveContext* cx, JSObject* obj, jsid id)
 
 /* Mark a state change on a particular object. */
 inline void
-MarkObjectStateChange(ExclusiveContext* cx, JSObject* obj)
+MarkObjectStateChange(JSContext* cx, JSObject* obj)
 {
     if (!obj->hasLazyGroup() && !obj->group()->unknownProperties())
         obj->group()->markStateChange(cx);
@@ -553,7 +553,7 @@ TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc, uint32_t* bytecodeMa
 /* static */ inline StackTypeSet*
 TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc)
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(script->runtimeFromMainThread()));
+    MOZ_ASSERT(CurrentThreadCanAccessZone(script->zone()));
     TypeScript* types = script->types();
     if (!types)
         return nullptr;
@@ -934,12 +934,12 @@ TypeSet::setBaseObjectCount(uint32_t count)
 }
 
 inline void
-HeapTypeSet::newPropertyState(ExclusiveContext* cxArg)
+HeapTypeSet::newPropertyState(JSContext* cx)
 {
     checkMagic();
 
     /* Propagate the change to all constraints. */
-    if (JSContext* cx = cxArg->maybeJSContext()) {
+    if (!cx->helperThread()) {
         TypeConstraint* constraint = constraintList();
         while (constraint) {
             constraint->newPropertyState(cx, this);
@@ -951,7 +951,7 @@ HeapTypeSet::newPropertyState(ExclusiveContext* cxArg)
 }
 
 inline void
-HeapTypeSet::setNonDataProperty(ExclusiveContext* cx)
+HeapTypeSet::setNonDataProperty(JSContext* cx)
 {
     checkMagic();
 
@@ -963,7 +963,7 @@ HeapTypeSet::setNonDataProperty(ExclusiveContext* cx)
 }
 
 inline void
-HeapTypeSet::setNonWritableProperty(ExclusiveContext* cx)
+HeapTypeSet::setNonWritableProperty(JSContext* cx)
 {
     checkMagic();
 
@@ -975,7 +975,7 @@ HeapTypeSet::setNonWritableProperty(ExclusiveContext* cx)
 }
 
 inline void
-HeapTypeSet::setNonConstantProperty(ExclusiveContext* cx)
+HeapTypeSet::setNonConstantProperty(JSContext* cx)
 {
     checkMagic();
 
@@ -1065,7 +1065,7 @@ ObjectGroup::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet*
-ObjectGroup::getProperty(ExclusiveContext* cx, JSObject* obj, jsid id)
+ObjectGroup::getProperty(JSContext* cx, JSObject* obj, jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
     MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));

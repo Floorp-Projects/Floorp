@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
 
       let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch);
-      prefs.setCharPref("intl.uidirection.en-US", "rtl");
+      prefs.setIntPref("intl.uidirection", 1);
 
       let rootDir = getRootDirectory(window.location.href);
       let manifest = rootDir + "rtlchrome/rtl.manifest";
@@ -82,7 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
               is(frame.contentDocument.body.dir, "rtl", "file:// listings should be RTL in RTL locales");
 
               cleanupFunc();
-              prefs.clearUserPref("intl.uidirection.en-US");
+              prefs.clearUserPref("intl.uidirection");
               SimpleTest.finish();
             }, false);
           document.documentElement.appendChild(frame);

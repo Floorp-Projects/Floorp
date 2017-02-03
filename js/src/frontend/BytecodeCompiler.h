@@ -27,14 +27,14 @@ struct SourceCompressionTask;
 namespace frontend {
 
 JSScript*
-CompileGlobalScript(ExclusiveContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
+CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
                     const ReadOnlyCompileOptions& options,
                     SourceBufferHolder& srcBuf,
                     SourceCompressionTask* extraSct = nullptr,
                     ScriptSourceObject** sourceObjectOut = nullptr);
 
 JSScript*
-CompileEvalScript(ExclusiveContext* cx, LifoAlloc& alloc,
+CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
                   HandleObject scopeChain, HandleScope enclosingScope,
                   const ReadOnlyCompileOptions& options,
                   SourceBufferHolder& srcBuf,
@@ -46,7 +46,7 @@ CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf);
 
 ModuleObject*
-CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, LifoAlloc& alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);
 
@@ -90,7 +90,7 @@ CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
                          Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
 
 ScriptSourceObject*
-CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+CreateScriptSourceObject(JSContext* cx, const ReadOnlyCompileOptions& options,
                          mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
 
 /*

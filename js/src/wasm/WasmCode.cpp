@@ -63,7 +63,7 @@ static Atomic<uint32_t> wasmCodeAllocations(0);
 static const uint32_t MaxWasmCodeAllocations = 16384;
 
 static uint8_t*
-AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
+AllocateCodeSegment(JSContext* cx, uint32_t totalLength)
 {
     if (wasmCodeAllocations >= MaxWasmCodeAllocations)
         return nullptr;
@@ -84,7 +84,7 @@ AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
 }
 
 static void
-StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
+StaticallyLink(CodeSegment& cs, const LinkData& linkData, JSContext* cx)
 {
     for (LinkData::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = cs.base() + link.patchAtOffset;

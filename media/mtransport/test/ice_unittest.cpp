@@ -236,7 +236,7 @@ static std::string IsLoopbackCandidate(const std::string& candidate) {
 
 static std::string IsIpv4Candidate(const std::string& candidate) {
   std::vector<std::string> tokens = split(candidate, ' ');
-  if (tokens.at(4).find(":") == std::string::npos) {
+  if (tokens.at(4).find(':') == std::string::npos) {
     return candidate;
   }
   return std::string();

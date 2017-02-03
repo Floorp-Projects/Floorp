@@ -18,13 +18,11 @@ using namespace js;
 BEGIN_TEST(testGCExactRooting)
 {
     JS::RootedObject rootCx(cx, JS_NewPlainObject(cx));
-    JS::RootedObject rootRootingCx(JS::RootingContext::get(cx), JS_NewPlainObject(cx));
 
     JS_GC(cx);
 
     /* Use the objects we just created to ensure that they are still alive. */
     JS_DefineProperty(cx, rootCx, "foo", JS::UndefinedHandleValue, 0);
-    JS_DefineProperty(cx, rootRootingCx, "foo", JS::UndefinedHandleValue, 0);
 
     return true;
 }

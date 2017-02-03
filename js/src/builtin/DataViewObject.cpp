@@ -114,7 +114,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
 
     // Include a barrier if the data view's data pointer is in the nursery, as
     // is done for typed arrays.
-    if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(ptr)) {
+    if (!IsInsideNursery(obj) && cx->nursery().isInside(ptr)) {
         // Shared buffer data should never be nursery-allocated, so we
         // need to fail here if isSharedMemory.  However, mmap() can
         // place a SharedArrayRawBuffer up against the bottom end of a
@@ -124,7 +124,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
             MOZ_ASSERT(arrayBuffer->byteLength() == 0 &&
                        (uintptr_t(ptr.unwrapValue()) & gc::ChunkMask) == 0);
         } else {
-            cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+            cx->zone()->group()->storeBuffer().putWholeCell(obj);
         }
     }
 

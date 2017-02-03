@@ -413,11 +413,19 @@ var dataProviders = {
       .createInstance(Ci.nsIDOMParser)
       .parseFromString("<html/>", "text/html");
 
-    function GetWebGLInfo(contextType) {
+    function GetWebGLInfo(data, keyPrefix, contextType) {
+        data[keyPrefix + "Renderer"] = "-";
+        data[keyPrefix + "Version"] = "-";
+        data[keyPrefix + "Extensions"] = "-";
+        data[keyPrefix + "WSIInfo"] = "-";
+
+        // //
+
         let canvas = doc.createElement("canvas");
         canvas.width = 1;
         canvas.height = 1;
 
+        // //
 
         let creationError = null;
 
@@ -431,35 +439,38 @@ var dataProviders = {
 
         let gl = null;
         try {
-          gl = canvas.getContext(contextType);
+            gl = canvas.getContext(contextType);
         } catch (e) {
-          if (!creationError) {
-            creationError = e.toString();
-          }
+            if (!creationError) {
+                creationError = e.toString();
+            }
         }
-        if (!gl)
-            return creationError || "(no info)";
+        if (!gl) {
+            data[keyPrefix + "Renderer"] = creationError || "(no creation error info)";
+            return;
+        }
 
+        // //
 
-        let infoExt = gl.getExtension("WEBGL_debug_renderer_info");
+        let ext = gl.getExtension("MOZ_debug_get");
         // This extension is unconditionally available to chrome. No need to check.
-        let vendor = gl.getParameter(infoExt.UNMASKED_VENDOR_WEBGL);
-        let renderer = gl.getParameter(infoExt.UNMASKED_RENDERER_WEBGL);
+        let vendor = ext.getParameter(gl.VENDOR);
+        let renderer = ext.getParameter(gl.RENDERER);
 
-        let contextInfo = vendor + " -- " + renderer;
+        data[keyPrefix + "Renderer"] = vendor + " -- " + renderer;
+        data[keyPrefix + "Version"] = ext.getParameter(gl.VERSION);
+        data[keyPrefix + "Extensions"] = ext.getParameter(ext.EXTENSIONS);
+        data[keyPrefix + "WSIInfo"] = ext.getParameter(ext.WSI_INFO);
 
+        // //
 
         // Eagerly free resources.
         let loseExt = gl.getExtension("WEBGL_lose_context");
         loseExt.loseContext();
-
-
-        return contextInfo;
     }
 
-
-    data.webglRenderer = GetWebGLInfo("webgl");
-    data.webgl2Renderer = GetWebGLInfo("webgl2");
+    GetWebGLInfo(data, "webgl1", "webgl");
+    GetWebGLInfo(data, "webgl2", "webgl2");
 
 
     let infoInfo = gfxInfo.getInfo();
