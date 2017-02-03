@@ -95,11 +95,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
 
     GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
 
-    # We can't enable warnings-as-errors for clang on Linux because of
-    # some warnings in clang static analysis and ASan builds on Linux.
-    if CONFIG['CLANG_CXX'] and CONFIG['OS_ARCH'] == 'Linux':
-        GYP_DIRS['signaling'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
-
     if CONFIG['_MSC_VER']:
         # Avoid warnings from third-party code that we can not modify.
         if CONFIG['CLANG_CL']:
@@ -128,11 +123,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         )
 
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
-
-        # We can't enable warnings-as-errors for clang on Linux because of
-        # some warnings in clang static analysis and ASan builds on Linux.
-        if CONFIG['CLANG_CXX'] and CONFIG['OS_ARCH'] == 'Linux':
-            GYP_DIRS['signalingtest'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['signaling/fuzztest']
