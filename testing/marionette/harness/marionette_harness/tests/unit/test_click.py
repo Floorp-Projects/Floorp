@@ -5,7 +5,7 @@
 import urllib
 
 from marionette_driver.by import By
-from marionette_driver.errors import NoSuchElementException, ElementNotVisibleException
+from marionette_driver import errors
 from marionette_driver.wait import Wait
 
 from marionette_harness import MarionetteTestCase
@@ -67,7 +67,7 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
-        Wait(self.marionette, timeout=30, ignored_exceptions=NoSuchElementException).until(
+        Wait(self.marionette, timeout=30, ignored_exceptions=errors.NoSuchElementException).until(
             lambda m: m.find_element(By.ID, 'username'))
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
@@ -75,7 +75,7 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url('hidden.html')
         self.marionette.navigate(test_html)
 
-        with self.assertRaises(ElementNotVisibleException):
+        with self.assertRaises(errors.ElementNotInteractableException):
             self.marionette.find_element(By.ID, 'child').click()
 
     def test_clicking_on_a_multiline_link(self):
@@ -118,7 +118,7 @@ class TestClick(TestLegacyClick):
         obscured = self.marionette.find_element(By.ID, "obscured")
 
         overlay.click()
-        with self.assertRaises(ElementNotVisibleException):
+        with self.assertRaises(errors.ElementClickInterceptedException):
             obscured.click()
 
     def test_centre_outside_viewport_vertically(self):
