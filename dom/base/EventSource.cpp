@@ -1444,11 +1444,11 @@ void
 EventSourceImpl::DispatchAllMessageEvents()
 {
   AssertIsOnTargetThread();
+  mGoingToDispatchAllMessages = false;
+
   if (IsClosed() || IsFrozen()) {
     return;
   }
-
-  mGoingToDispatchAllMessages = false;
 
   nsresult rv = mEventSource->CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
