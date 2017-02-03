@@ -278,7 +278,8 @@ public:
                                                          bool* aIsForBrowser,
                                                          TabId* aTabId) override;
 
-  virtual mozilla::ipc::IPCResult RecvBridgeToChildProcess(const ContentParentId& aCpId) override;
+  virtual mozilla::ipc::IPCResult RecvBridgeToChildProcess(const ContentParentId& aCpId,
+                                                           Endpoint<PContentBridgeParent>* aEndpoint) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateGMPService() override;
 

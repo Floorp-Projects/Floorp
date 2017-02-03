@@ -486,22 +486,6 @@ JS_DestroyContext(JSContext* cx)
     DestroyContext(cx);
 }
 
-static JS_CurrentEmbedderTimeFunction currentEmbedderTimeFunction;
-
-JS_PUBLIC_API(void)
-JS_SetCurrentEmbedderTimeFunction(JS_CurrentEmbedderTimeFunction timeFn)
-{
-    currentEmbedderTimeFunction = timeFn;
-}
-
-JS_PUBLIC_API(double)
-JS_GetCurrentEmbedderTime()
-{
-    if (currentEmbedderTimeFunction)
-        return currentEmbedderTimeFunction();
-    return PRMJ_Now() / static_cast<double>(PRMJ_USEC_PER_MSEC);
-}
-
 JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext* cx)
 {

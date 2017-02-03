@@ -885,7 +885,7 @@ FinderHighlighter.prototype = {
     // Text color in the outline is determined by kModalStyles.
     delete fontStyle.color;
 
-    let rectsAndTexts = this._getRangeRectsAndTexts(range);
+    let rectsAndTexts = this._updateRangeRects(range, true, dict);
     let outlineAnonNode = dict.modalHighlightOutline;
     let rectCount = rectsAndTexts.rectList.length;
     let previousRectCount = dict.previousRangeRectsAndTexts.rectList.length;
@@ -1279,7 +1279,7 @@ FinderHighlighter.prototype = {
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.addEventListener("MozAfterPaint", dict.highlightListeners[0]);
     target.addEventListener("resize", dict.highlightListeners[1]);
-    target.addEventListener("scroll", dict.highlightListeners[2]);
+    target.addEventListener("scroll", dict.highlightListeners[2], { capture: true, passive: true });
     target.addEventListener("click", dict.highlightListeners[3]);
     target.addEventListener("selectstart", dict.highlightListeners[4]);
   },
@@ -1298,7 +1298,7 @@ FinderHighlighter.prototype = {
     let target = this.iterator._getDocShell(window).chromeEventHandler;
     target.removeEventListener("MozAfterPaint", dict.highlightListeners[0]);
     target.removeEventListener("resize", dict.highlightListeners[1]);
-    target.removeEventListener("scroll", dict.highlightListeners[2]);
+    target.removeEventListener("scroll", dict.highlightListeners[2], { capture: true, passive: true });
     target.removeEventListener("click", dict.highlightListeners[3]);
     target.removeEventListener("selectstart", dict.highlightListeners[4]);
 

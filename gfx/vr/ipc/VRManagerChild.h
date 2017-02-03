@@ -80,6 +80,8 @@ public:
   void RunFrameRequestCallbacks();
 
   void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
+  void FireDOMVRDisplayMountedEvent(uint32_t aDisplayID);
+  void FireDOMVRDisplayUnmountedEvent(uint32_t aDisplayID);
   void FireDOMVRDisplayConnectEvent();
   void FireDOMVRDisplayDisconnectEvent();
   void FireDOMVRDisplayPresentChangeEvent();
@@ -138,6 +140,8 @@ protected:
 
 private:
 
+  void FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID);
+  void FireDOMVRDisplayUnmountedEventInternal(uint32_t aDisplayID);
   void FireDOMVRDisplayConnectEventInternal();
   void FireDOMVRDisplayDisconnectEventInternal();
   void FireDOMVRDisplayPresentChangeEventInternal();

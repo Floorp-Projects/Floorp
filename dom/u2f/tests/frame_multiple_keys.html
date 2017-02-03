@@ -52,6 +52,17 @@ window.u2f.register(window.location.origin, [regRequest], [], function(aRegRespo
 function registerSecondKey() {
   window.u2f.register(window.location.origin, [regRequest], [], function(aRegResponse) {
     testState.key2 = keyHandleFromRegResponse(aRegResponse);
+
+    registerWithInvalidAndValidKey();
+  });
+}
+
+function registerWithInvalidAndValidKey() {
+  window.u2f.register(window.location.origin, [regRequest],
+                      [invalidKey, testState.key1], function(aRegResponse) {
+    // Expect a failure response since key1 is already registered
+    local_is(aRegResponse.errorCode, 4, "The register should have skipped since there was a valid key");
+
     testSignSingleKey();
   });
 }
@@ -73,6 +84,33 @@ function testSignDual() {
                   [testState.key1, testState.key2], function(aSignResponse) {
     local_is(aSignResponse.errorCode, 0, "The signing did not error with two keys");
     local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData with two keys");
+
+    testSignWithInvalidKey();
+  });
+}
+
+// Just a key that came from a random profile; syntactically valid but not
+// unwrappable.
+var invalidKey = {
+  "version": "U2F_V2",
+  "keyHandle": "rQdreHgHrmKfsnGPAElEP9yfTx6eq2eU3_Y8n0RRsGKML0DY2d1_a8_-sOtxDr3"
+};
+
+function testSignWithInvalidKey() {
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [invalidKey, testState.key2], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error when given an invalid key");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData even when given an invalid key");
+
+    testSignWithInvalidKeyReverse();
+  });
+}
+
+function testSignWithInvalidKeyReverse() {
+  window.u2f.sign(window.location.origin, bytesToBase64UrlSafe(challenge),
+                  [testState.key2, invalidKey], function(aSignResponse) {
+    local_is(aSignResponse.errorCode, 0, "The signing did not error when given an invalid key");
+    local_isnot(aSignResponse.clientData, undefined, "The signing provided clientData even when given an invalid key");
 
     local_completeTest();
   });

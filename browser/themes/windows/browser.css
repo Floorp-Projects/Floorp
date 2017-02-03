@@ -2141,6 +2141,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 .addon-webext-name {
+  display: inline;
   font-weight: bold;
   margin: 0;
 }

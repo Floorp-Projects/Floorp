@@ -97,7 +97,7 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
   return InsertText(aStringToInsert);
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
                                        nsIDOMNode* aDestinationNode,
                                        int32_t aDestOffset,

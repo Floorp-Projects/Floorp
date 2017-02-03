@@ -874,6 +874,12 @@ function serializeInputStream(aStream) {
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
 function _loadURIWithFlags(browser, uri, params) {
+  let tab = gBrowser.getTabForBrowser(browser);
+  // Preloaded browsers don't have tabs, so we ignore those.
+  if (tab) {
+    maybeRecordAbandonmentTelemetry(tab, "newURI");
+  }
+
   if (!uri) {
     uri = "about:blank";
   }
@@ -1789,6 +1795,16 @@ function HandleAppCommandEvent(evt) {
   evt.preventDefault();
 }
 
+function maybeRecordAbandonmentTelemetry(tab, type) {
+  if (!tab.hasAttribute("busy")) {
+    return;
+  }
+
+  let histogram = Services.telemetry
+                          .getHistogramById("BUSY_TAB_ABANDONED");
+  histogram.add(type);
+}
+
 function gotoHistoryIndex(aEvent) {
   let index = aEvent.target.getAttribute("index");
   if (!index)
@@ -1800,6 +1816,8 @@ function gotoHistoryIndex(aEvent) {
     // Normal click. Go there in the current tab and update session history.
 
     try {
+      maybeRecordAbandonmentTelemetry(gBrowser.selectedTab,
+                                      "historyNavigation");
       gBrowser.gotoIndex(index);
     } catch (ex) {
       return false;
@@ -1818,6 +1836,7 @@ function BrowserForward(aEvent) {
 
   if (where == "current") {
     try {
+      maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "forward");
       gBrowser.goForward();
     } catch (ex) {
     }
@@ -1831,6 +1850,7 @@ function BrowserBack(aEvent) {
 
   if (where == "current") {
     try {
+      maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "back");
       gBrowser.goBack();
     } catch (ex) {
     }
@@ -1863,6 +1883,7 @@ function BrowserHandleShiftBackspace() {
 
 function BrowserStop() {
   const stopFlags = nsIWebNavigation.STOP_ALL;
+  maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "stop");
   gBrowser.webNavigation.stop(stopFlags);
 }
 
@@ -3254,6 +3275,12 @@ function BrowserReloadWithFlags(reloadFlags) {
     gBrowser.loadURIWithFlags(url, reloadFlags);
     return;
   }
+
+  // Do this after the above case where we might flip remoteness.
+  // Unfortunately, we'll count the remoteness flip case as a
+  // "newURL" load, since we're using loadURIWithFlags, but hopefully
+  // that's rare enough to not matter.
+  maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "reload");
 
   // Reset temporary permissions on the current tab. This is done here
   // because we only want to reset permissions on user reload.
