@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "MainThreadUtils.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "ThreadResponsiveness.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -306,7 +306,7 @@ public:
   // Should only be called on shutdown
   static void Shutdown();
 
-  static mozilla::UniquePtr<mozilla::Mutex> sRegisteredThreadsMutex;
+  static mozilla::StaticMutex sRegisteredThreadsMutex;
   static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   static bool CanNotifyObservers() {

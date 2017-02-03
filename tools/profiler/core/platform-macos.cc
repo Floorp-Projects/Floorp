@@ -175,8 +175,10 @@ public:
     TimeStamp sampleStart = TimeStamp::Now();
     while (SamplerRegistry::sampler->IsActive()) {
       SamplerRegistry::sampler->DeleteExpiredMarkers();
+
       if (!SamplerRegistry::sampler->IsPaused()) {
-        MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+        StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+
         bool isFirstProfiledThread = true;
         for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
           ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
