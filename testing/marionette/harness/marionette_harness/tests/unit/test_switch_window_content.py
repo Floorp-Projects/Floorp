@@ -134,3 +134,14 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.test_page)
+
+    def test_switch_from_content_to_chrome_window_should_not_change_selected_tab(self):
+        new_tab = self.open_tab(self.open_tab_in_foreground)
+
+        self.marionette.switch_to_window(new_tab)
+        self.assertEqual(self.marionette.current_window_handle, new_tab)
+        new_tab_index = self.get_selected_tab_index()
+
+        self.marionette.switch_to_window(self.start_window)
+        self.assertEqual(self.marionette.current_window_handle, new_tab)
+        self.assertEqual(self.get_selected_tab_index(), new_tab_index)
