@@ -204,10 +204,6 @@ menulist > menupopup > menu[_moz-menuactive="true"] {
   color: highlighttext;
 }
 
-menulist > menupopup > menuitem[_moz-menuactive="true"][customoptionstyling="true"] {
-  filter: invert(100%);
-}
-
 menulist > menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menucaption > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
