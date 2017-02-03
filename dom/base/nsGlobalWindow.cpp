@@ -4172,6 +4172,45 @@ nsPIDOMWindowInner::IsRunningTimeout()
   return TimeoutManager().IsRunningTimeout();
 }
 
+void
+nsPIDOMWindowOuter::NotifyCreatedNewMediaComponent()
+{
+  if (mMediaSuspend != nsISuspendedTypes::SUSPENDED_BLOCK) {
+    return;
+  }
+
+  // If the document is already on the foreground but the suspend state is still
+  // suspend-block, that means the media component was created after calling
+  // MaybeActiveMediaComponents, so the window's suspend state doesn't be
+  // changed yet. Therefore, we need to call it again, because the state is only
+  // changed after there exists alive media within the window.
+  MaybeActiveMediaComponents();
+}
+
+void
+nsPIDOMWindowOuter::MaybeActiveMediaComponents()
+{
+  if (IsInnerWindow()) {
+    return mOuterWindow->MaybeActiveMediaComponents();
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetCurrentInnerWindow();
+  if (!inner) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = inner->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  if (!doc->Hidden() &&
+      mMediaSuspend == nsISuspendedTypes::SUSPENDED_BLOCK &&
+      AudioChannelService::IsServiceStarted()) {
+    SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+  }
+}
+
 SuspendTypes
 nsPIDOMWindowOuter::GetMediaSuspend() const
 {
