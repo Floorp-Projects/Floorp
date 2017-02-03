@@ -90,17 +90,8 @@ private:
                                           const nsACString& aOriginNoSuffix,
                                           nsIPrincipal* aPrincipal);
 
-  enum class CreateMode {
-    // GetStorage: do not create if it's not already in memory.
-    UseIfExistsNeverCreate,
-    // CreateStorage: Create it if it's not already in memory.
-    CreateAlways,
-    // PrecacheStorage: Create only if the database says we ShouldPreloadOrigin.
-    CreateIfShouldPreload
-  };
-
   // Helper for creation of DOM storage objects
-  nsresult GetStorageInternal(CreateMode aCreate,
+  nsresult GetStorageInternal(bool aCreate,
                               mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
                               const nsAString& aDocumentURI,
