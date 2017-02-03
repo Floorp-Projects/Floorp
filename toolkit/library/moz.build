@@ -357,6 +357,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'wtsapi32',
         'locationapi',
         'sapi',
+        'dxguid',
     ]
     if CONFIG['ACCESSIBILITY']:
         OS_LIBS += [
