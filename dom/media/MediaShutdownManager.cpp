@@ -19,8 +19,6 @@ extern LazyLogModule gMediaDecoderLog;
 NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIAsyncShutdownBlocker)
 
 MediaShutdownManager::MediaShutdownManager()
-  : mIsObservingShutdown(false)
-  , mIsDoingXPCOMShutDown(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -84,36 +82,6 @@ MediaShutdownManager::InitStatics()
     snprintf(buf, CAPACITY, "Failed to add shutdown blocker! rv=%x", uint32_t(rv));
     MOZ_CRASH_ANNOTATE(buf);
     MOZ_REALLY_CRASH();
-  }
-}
-
-void
-MediaShutdownManager::EnsureCorrectShutdownObserverState()
-{
-  bool needShutdownObserver = mDecoders.Count() > 0;
-  if (needShutdownObserver != mIsObservingShutdown) {
-    mIsObservingShutdown = needShutdownObserver;
-    if (mIsObservingShutdown) {
-      nsresult rv = GetShutdownBarrier()->AddBlocker(
-        this, NS_LITERAL_STRING(__FILE__), __LINE__,
-        NS_LITERAL_STRING("MediaShutdownManager shutdown"));
-      if (NS_FAILED(rv)) {
-        // Leak the buffer on the heap to make sure that it lives long enough,
-        // as MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to
-        // the end of the program.
-        const size_t CAPACITY = 256;
-        auto buf = new char[CAPACITY];
-        snprintf(buf, CAPACITY, "Failed to add shutdown blocker! rv=%x", uint32_t(rv));
-        MOZ_CRASH_ANNOTATE(buf);
-        MOZ_REALLY_CRASH();
-      }
-    } else {
-      GetShutdownBarrier()->RemoveBlocker(this);
-      // Clear our singleton reference. This will probably delete
-      // this instance, so don't deref |this| clearing sInstance.
-      sInstance = nullptr;
-      DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::BlockShutdown() end."));
-    }
   }
 }
 
