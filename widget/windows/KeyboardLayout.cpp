@@ -2975,21 +2975,23 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
         nextKeyMsg = nextKeyMsgInAllWindows;
         continue;
       }
-      if (MayBeSameCharMessage(nextKeyMsgInAllWindows, nextKeyMsg)) {
-        // The found char message still in the queue, but PeekMessage() failed
-        // to remove it only with PM_REMOVE.  Although, we don't know why this
-        // occurs.  However, this occurs acctually.
-        // Try to remove the char message with GetMessage() again.
-        if (WinUtils::GetMessage(&removedMsg, mMsg.hwnd,
-                                 nextKeyMsg.message, nextKeyMsg.message)) {
-          MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
-            ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
-             "remove a char message, but succeeded with GetMessage(), "
-             "removedMsg=%s, kFoundCharMsg=%s",
-             this, ToString(removedMsg).get(), ToString(kFoundCharMsg).get()));
-          // Cancel to crash, but we need to check the removed message value.
-          doCrash = false;
-        }
+      // If there is still existing a char message caused by same physical key
+      // in the queue but PeekMessage(PM_REMOVE) failed to remove it from the
+      // queue, it might be possible that the odd keyboard layout or utility
+      // hooks only PeekMessage(PM_NOREMOVE) and GetMessage().  So, let's try
+      // remove the char message with GetMessage() again.
+      // FYI: The wParam might be different from the found message, but it's
+      //      okay because we assume that odd keyboard layouts return actual
+      //      inputting character at removing the char message.
+      if (WinUtils::GetMessage(&removedMsg, mMsg.hwnd,
+                               nextKeyMsg.message, nextKeyMsg.message)) {
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message, but succeeded with GetMessage(), "
+           "removedMsg=%s, kFoundCharMsg=%s",
+           this, ToString(removedMsg).get(), ToString(kFoundCharMsg).get()));
+        // Cancel to crash, but we need to check the removed message value.
+        doCrash = false;
       }
       // If we've already removed some WM_NULL messages from the queue and
       // the found message has already gone from the queue, let's treat the key
