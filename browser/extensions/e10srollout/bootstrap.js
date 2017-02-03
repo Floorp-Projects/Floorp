@@ -14,11 +14,13 @@ Cu.import("resource://gre/modules/UpdateUtils.jsm");
 const TEST_THRESHOLD = {
   "beta"    : 0.5,  // 50%
   "release" : 1.0,  // 100%
+  "esr"     : 1.0,  // 100%
 };
 
 const ADDON_ROLLOUT_POLICY = {
   "beta"    : "51alladdons", // Any WebExtension or addon except with mpc = false
   "release" : "51set1",
+  "esr"     : "esrA", // WebExtensions and Addons with mpc=true
 };
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
