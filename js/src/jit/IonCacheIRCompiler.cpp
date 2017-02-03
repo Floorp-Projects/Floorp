@@ -862,6 +862,12 @@ IonCacheIRCompiler::emitAddAndStoreDynamicSlot()
 }
 
 bool
+IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
 IonCacheIRCompiler::emitStoreUnboxedProperty()
 {
     MOZ_CRASH("Baseline-specific op");
