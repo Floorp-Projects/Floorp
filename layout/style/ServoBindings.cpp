@@ -1103,13 +1103,13 @@ Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
 void
 Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut aCSSValue, nsCSSKeyword aKeyword)
 {
-  aCSSValue->SetIntValue(aKeyword, eCSSUnit_Enumerated);
+  aCSSValue->SetEnumValue(aKeyword);
 }
 
 void
 Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut aCSSValue, float aPercent)
 {
-  aCSSValue->SetFloatValue(aPercent, eCSSUnit_Number);
+  aCSSValue->SetPercentValue(aPercent);
 }
 
 void
