@@ -41,6 +41,9 @@ AudioChannelAgent::AudioChannelAgent()
   , mInnerWindowID(0)
   , mIsRegToService(false)
 {
+  // Init service in the begining, it can help us to know whether there is any
+  // created media component via AudioChannelService::IsServiceStarted().
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
 }
 
 AudioChannelAgent::~AudioChannelAgent()
