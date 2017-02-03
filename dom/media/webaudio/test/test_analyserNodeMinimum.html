@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AnalyserNode when the input is silent</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  var ac = new AudioContext();
+  var analyser = ac.createAnalyser();
+  var constant = ac.createConstantSource();
+  var sp = ac.createScriptProcessor(2048, 1, 0);
+
+  constant.offset.value = 0.0;
+
+  constant.connect(analyser)
+          .connect(ac.destination);
+
+  constant.connect(sp);
+
+  var buf = new Float32Array(analyser.frequencyBinCount);
+  var iteration_count = 10;
+  sp.onaudioprocess = function() {
+    analyser.getFloatFrequencyData(buf);
+    var correct = true;
+    for (var i = 0; i < buf.length; i++) {
+     correct &= buf[i] == -Infinity;
+    }
+    ok(correct, "silent input process -Infinity in decibel bins");
+    if(!(iteration_count--)) {
+      sp.onaudioprocess = null;
+      constant.stop();
+      ac.close();
+      SimpleTest.finish();
+    }
+  }
+
+  constant.start();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -73,10 +73,24 @@ Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
   return aNode->IsInComposedDoc();
 }
 
+#ifdef DEBUG
+bool
+Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed aNode)
+{
+  // Servo calls this in debug builds to verify the result of its own
+  // flattened_tree_parent_is_parent() function.
+  return FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode);
+}
+#endif
+
 RawGeckoNodeBorrowedOrNull
 Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
 {
-  return aNode->GetFlattenedTreeParentNodeForStyle();
+  MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
+             "Should have taken the inline path");
+  MOZ_ASSERT(aNode->IsContent(), "Slow path only applies to content");
+  const nsIContent* c = aNode->AsContent();
+  return c->GetFlattenedTreeParentNodeInternal(nsIContent::eForStyle);
 }
 
 RawGeckoNodeBorrowedOrNull
@@ -168,12 +182,6 @@ EventStates::ServoType
 Gecko_ElementState(RawGeckoElementBorrowed aElement)
 {
   return aElement->StyleState().ServoValue();
-}
-
-bool
-Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed aElement)
-{
-  return aElement->IsHTMLElement() && aElement->OwnerDoc()->IsHTMLDocument();
 }
 
 bool
@@ -1086,22 +1094,52 @@ Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut aCSSValue, nscoord aLen)
   aCSSValue->SetIntegerCoordValue(aLen);
 }
 
+nscoord
+Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed aCSSValue)
+{
+  // SetIntegerCoordValue() which is used in Gecko_CSSValue_SetAbsoluteLength()
+  // converts values by nsPresContext::AppUnitsToFloatCSSPixels() and stores
+  // values in eCSSUnit_Pixel unit. We need to convert the values back to app
+  // units by GetPixelLength().
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Pixel,
+             "The unit should be eCSSUnit_Pixel");
+  return aCSSValue->GetPixelLength();
+}
+
 void
 Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
 {
   aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
 }
 
+float
+Gecko_CSSValue_GetNumber(nsCSSValueBorrowed aCSSValue)
+{
+  return aCSSValue->GetFloatValue();
+}
+
 void
 Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut aCSSValue, nsCSSKeyword aKeyword)
 {
-  aCSSValue->SetIntValue(aKeyword, eCSSUnit_Enumerated);
+  aCSSValue->SetEnumValue(aKeyword);
+}
+
+nsCSSKeyword
+Gecko_CSSValue_GetKeyword(nsCSSValueBorrowed aCSSValue)
+{
+  return aCSSValue->GetKeywordValue();
 }
 
 void
 Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut aCSSValue, float aPercent)
 {
-  aCSSValue->SetFloatValue(aPercent, eCSSUnit_Number);
+  aCSSValue->SetPercentValue(aPercent);
+}
+
+float
+Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed aCSSValue)
+{
+  return aCSSValue->GetPercentValue();
 }
 
 void
@@ -1110,10 +1148,26 @@ Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut aCSSValue, float aRadians)
   aCSSValue->SetFloatValue(aRadians, eCSSUnit_Radian);
 }
 
+float
+Gecko_CSSValue_GetAngle(nsCSSValueBorrowed aCSSValue)
+{
+  // Unfortunately nsCSSValue.GetAngleValueInRadians() returns double,
+  // so we use GetAngleValue() instead.
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Radian,
+             "The unit should be eCSSUnit_Radian");
+  return aCSSValue->GetAngleValue();
+}
+
 void
 Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut aCSSValue, nsStyleCoord::CalcValue aCalc)
 {
   aCSSValue->SetCalcValue(&aCalc);
+}
+
+nsStyleCoord::CalcValue
+Gecko_CSSValue_GetCalc(nsCSSValueBorrowed aCSSValue)
+{
+  return aCSSValue->GetCalcValue();
 }
 
 void
@@ -1125,6 +1179,12 @@ Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
 
 nsCSSValueBorrowedMut
 Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut aCSSValue, int32_t aIndex)
+{
+  return &aCSSValue->GetArrayValue()->Item(aIndex);
+}
+
+nsCSSValueBorrowed
+Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed aCSSValue, int32_t aIndex)
 {
   return &aCSSValue->GetArrayValue()->Item(aIndex);
 }

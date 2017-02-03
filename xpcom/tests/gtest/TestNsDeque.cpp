@@ -13,15 +13,15 @@
   Now define the token deallocator class...
  **************************************************************/
 namespace TestNsDeque {
-  
-  class _Dealloc: public nsDequeFunctor 
+
+  class _Dealloc: public nsDequeFunctor
   {
     virtual void* operator()(void* aObject) {
       return 0;
     }
   };
 
-  static bool VerifyContents(const nsDeque& aDeque, const int* aContents, size_t aLength) 
+  static bool VerifyContents(const nsDeque& aDeque, const int* aContents, size_t aLength)
   {
     for (size_t i=0; i<aLength; ++i) {
       if (*(int*)aDeque.ObjectAt(i) != aContents[i]) {
@@ -33,9 +33,9 @@ namespace TestNsDeque {
 
   class Deallocator: public nsDequeFunctor
   {
-    virtual void* operator()(void* aObject) 
+    virtual void* operator()(void* aObject)
     {
-      if (aObject) 
+      if (aObject)
       {
         // Set value to -1, to use in test function.
         *((int*)aObject) = -1;
@@ -47,9 +47,9 @@ namespace TestNsDeque {
 
   class ForEachAdder: public nsDequeFunctor
   {
-    virtual void* operator()(void* aObject) 
+    virtual void* operator()(void* aObject)
     {
-      if (aObject) 
+      if (aObject)
       {
         sum += *(int*)aObject;
       }
@@ -59,10 +59,10 @@ namespace TestNsDeque {
 
     private:
      int sum = 0;
-    
+
     public:
      int GetSum() { return sum; }
-    
+
   };
 }
 
@@ -75,7 +75,7 @@ TEST(NsDeque, OriginalTest)
   size_t i=0;
   int temp;
   nsDeque theDeque(new _Dealloc); //construct a simple one...
- 
+
   // ints = [0...199]
   for (i=0;i<size;i++) { //initialize'em
     ints[i]=static_cast<int>(i);
@@ -312,7 +312,7 @@ TEST(NsDeque,TestEraseShouldCallDeallocator)
 
   // Now check it again.
   CheckIfQueueEmpty(d);
-  
+
   for (size_t i=0; i < NumTestValues; i++)
   {
     EXPECT_EQ(-1, *(testArray[i])) << "Erase should call deallocator: " << *(testArray[i]);
@@ -337,6 +337,30 @@ TEST(NsDeque, TestForEach)
   ForEachAdder adder;
   d.ForEach(adder);
   EXPECT_EQ(sum, adder.GetSum()) << "For each should iterate over values";
+
+  d.Erase();
+}
+
+TEST(NsDeque, TestRangeFor)
+{
+  nsDeque d(new Deallocator());
+  const size_t NumTestValues = 8;
+  int sum = 0;
+
+  int* testArray[NumTestValues];
+  for (size_t i=0; i < NumTestValues; i++)
+  {
+    testArray[i] = new int();
+    *(testArray[i]) = i;
+    sum += i;
+    d.Push((void*)testArray[i]);
+  }
+
+  int added = 0;
+  for (void* ob : d) {
+    added += *(int*)ob;
+  }
+  EXPECT_EQ(sum, added) << "Range-for should iterate over values";
 
   d.Erase();
 }

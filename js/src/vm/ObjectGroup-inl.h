@@ -88,7 +88,7 @@ ObjectGroup::fromAllocationSite()
 }
 
 inline void
-ObjectGroup::setShouldPreTenure(ExclusiveContext* cx)
+ObjectGroup::setShouldPreTenure(JSContext* cx)
 {
     MOZ_ASSERT(canPreTenure());
     setFlags(cx, OBJECT_FLAG_PRE_TENURE);

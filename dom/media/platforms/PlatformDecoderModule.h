@@ -150,6 +150,7 @@ protected:
   friend class H264Converter;
   friend class PDMFactory;
   friend class dom::RemoteDecoderModule;
+  friend class EMEDecoderModule;
 
   // Creates a Video decoder. The layers backend is passed in so that
   // decoders can determine whether hardware accelerated decoding can be used.

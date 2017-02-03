@@ -6,7 +6,6 @@ IPDLTESTSRCS = $(filter Test%,$(CPPSRCS))
 IPDLTESTS = $(IPDLTESTSRCS:.cpp=)
 
 EXTRA_PROTOCOLS = \
-  TestBridgeSub \
   TestEndpointBridgeSub \
   $(NULL)
 

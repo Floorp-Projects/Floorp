@@ -74,11 +74,11 @@ js_option('--with-linux-headers',
 
 passed_linux_header_flags = depends_if('--with-linux-headers')(lambda v: ['-I%s' % v[0]])
 
-@depends_when(try_compile(includes=['asm/unistd.h'],
-                          body='return sizeof(__NR_perf_event_open);',
-                          flags=passed_linux_header_flags,
-                          check_msg='for perf_event_open system call'),
-              when=have_perf_event_h)
+@depends(try_compile(includes=['asm/unistd.h'],
+                     body='return sizeof(__NR_perf_event_open);',
+                     flags=passed_linux_header_flags,
+                     check_msg='for perf_event_open system call'),
+         when=have_perf_event_h)
 def have_perf_event_open(have_perf_event_open):
     if have_perf_event_open:
         return True

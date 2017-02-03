@@ -58,7 +58,8 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
   ACString getSelectedLocale(in ACString packageName,
                              [optional] in boolean asBCP47);
   
-  // Get the direction of the locale via the intl.uidirection.<locale> pref
+  // Get whether the default writing direction of the locale is RTL
+  // (or may be overridden by intl.uidirection pref)
   boolean isLocaleRTL(in ACString package);
 
   /* Should be called when skins change. Reloads only stylesheets. */

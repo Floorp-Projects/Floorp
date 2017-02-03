@@ -157,8 +157,9 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMenuListElement.h"
-
-#endif
+#include "nsXULElement.h"
+#include "mozilla/dom/BoxObject.h"
+#endif // MOZ_XUL
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "ClientLayerManager.h"
@@ -169,6 +170,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsCanvasFrame.h"
@@ -196,10 +198,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/ImageTracker.h"
-
-#ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"
-#endif
 
 #ifdef MOZ_B2G
 #include "nsIHardwareKeyHandler.h"
@@ -6314,6 +6313,10 @@ PresShell::Paint(nsView*        aViewToPaint,
 {
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
+  nsIDocument* contentRoot = GetPrimaryContentDocument();
+  if (contentRoot) {
+    uri = contentRoot->GetDocumentURI();
+  }
   PROFILER_LABEL_PRINTF("PresShell", "Paint",
     js::ProfileEntry::Category::GRAPHICS, "(%s)",
     uri ? uri->GetSpecOrDefault().get() : "N/A");
@@ -7269,7 +7272,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     } else if ((aEvent->mClass == eTouchEventClass) ||
                (aEvent->mClass == eMouseEventClass) ||
                (aEvent->mClass == eWheelEventClass)) {
-      retargetEventDoc = GetTouchEventTargetDocument();
+      retargetEventDoc = GetPrimaryContentDocument();
 #endif
     }
 
@@ -7836,9 +7839,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   return rv;
 }
 
-#ifdef ANDROID
 nsIDocument*
-PresShell::GetTouchEventTargetDocument()
+PresShell::GetPrimaryContentDocument()
 {
   nsPresContext* context = GetPresContext();
   if (!context || !context->IsRoot()) {
@@ -7866,7 +7868,6 @@ PresShell::GetTouchEventTargetDocument()
 
   return childDocShell->GetDocument();
 }
-#endif
 
 #ifdef DEBUG
 void
@@ -8615,10 +8616,11 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     int32_t currentIndex;
     multiSelect->GetCurrentIndex(&currentIndex);
     if (currentIndex >= 0) {
-      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aCurrentEl));
+      RefPtr<nsXULElement> xulElement =
+        nsXULElement::FromContent(focusedContent);
       if (xulElement) {
-        nsCOMPtr<nsIBoxObject> box;
-        xulElement->GetBoxObject(getter_AddRefs(box));
+        IgnoredErrorResult ignored;
+        nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
         nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
         // Tree view special case (tree items have no frames)
         // Get the focused row and add its coordinates, which are already in pixels

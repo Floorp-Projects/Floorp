@@ -49,7 +49,7 @@ HashChildren(Shape* kid1, Shape* kid2)
 }
 
 bool
-PropertyTree::insertChild(ExclusiveContext* cx, Shape* parent, Shape* child)
+PropertyTree::insertChild(JSContext* cx, Shape* parent, Shape* child)
 {
     MOZ_ASSERT(!parent->inDictionary());
     MOZ_ASSERT(!child->parent);
@@ -127,7 +127,7 @@ Shape::removeChild(Shape* child)
 }
 
 Shape*
-PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, Handle<StackShape> child)
+PropertyTree::getChild(JSContext* cx, Shape* parentArg, Handle<StackShape> child)
 {
     RootedShape parent(cx, parentArg);
     MOZ_ASSERT(parent);

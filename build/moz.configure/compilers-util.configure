@@ -43,7 +43,7 @@ def compiler_class(compiler):
                 def checking_fn(fn):
                     return fn
 
-            @depends_when(self, dependable(flags), extra_toolchain_flags, when=when)
+            @depends(self, dependable(flags), extra_toolchain_flags, when=when)
             @checking_fn
             def func(compiler, flags, extra_flags):
                 flags = flags or []

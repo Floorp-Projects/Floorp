@@ -13,6 +13,7 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
 using namespace js;
@@ -510,7 +511,7 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     // This must be a WindowProxy for the current Window/global. Else it would
     // be a cross-compartment wrapper and IsWindowProxy returns false for
     // those.
-    MOZ_ASSERT(obj->getClass() == cx_->maybeWindowProxyClass());
+    MOZ_ASSERT(obj->getClass() == cx_->runtime()->maybeWindowProxyClass());
     MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx_->global());
 
     // Now try to do the lookup on the Window (the current global).

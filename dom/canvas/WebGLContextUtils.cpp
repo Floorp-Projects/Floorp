@@ -911,4 +911,18 @@ InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims)
     }
 }
 
+////
+
+JS::Value
+StringValue(JSContext* cx, const nsAString& str, ErrorResult& er)
+{
+    JSString* jsStr = JS_NewUCStringCopyN(cx, str.BeginReading(), str.Length());
+    if (!jsStr) {
+        er.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return JS::NullValue();
+    }
+
+    return JS::StringValue(jsStr);
+}
+
 } // namespace mozilla

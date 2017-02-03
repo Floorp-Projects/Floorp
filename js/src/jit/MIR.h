@@ -359,7 +359,7 @@ class MNode : public TempObject
 
   protected:
     // Need visibility on getUseFor to avoid O(n^2) complexity.
-    friend void AssertBasicGraphCoherency(MIRGraph& graph);
+    friend void AssertBasicGraphCoherency(MIRGraph& graph, bool force);
 
     // Gets the MUse corresponding to given operand.
     virtual MUse* getUseFor(size_t index) = 0;
@@ -1047,10 +1047,7 @@ class CompilerGCPointer
       : ptr_(ptr)
     {
         MOZ_ASSERT_IF(IsInsideNursery(ptr), IonCompilationCanUseNurseryPointers());
-#ifdef DEBUG
-        PerThreadData* pt = TlsPerThreadData.get();
-        MOZ_ASSERT_IF(pt->runtimeIfOnOwnerThread(), pt->suppressGC);
-#endif
+        MOZ_ASSERT_IF(!CurrentThreadIsIonCompiling(), TlsContext.get()->suppressGC);
     }
 
     operator T() const { return static_cast<T>(ptr_); }
@@ -12923,7 +12920,7 @@ class MResumePoint final :
 
   private:
     friend class MBasicBlock;
-    friend void AssertBasicGraphCoherency(MIRGraph& graph);
+    friend void AssertBasicGraphCoherency(MIRGraph& graph, bool force);
 
     // List of stack slots needed to reconstruct the frame corresponding to the
     // function which is compiled by IonBuilder.

@@ -89,12 +89,12 @@ NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
 bool Gecko_NodeIsElement(RawGeckoNodeBorrowed node);
 bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
+bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetParentNode(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetFirstChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetLastChild(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetPrevSibling(RawGeckoNodeBorrowed node);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextSibling(RawGeckoNodeBorrowed node);
-RawGeckoElementBorrowedOrNull Gecko_GetParentElement(RawGeckoElementBorrowed element);
 RawGeckoElementBorrowedOrNull Gecko_GetFirstChildElement(RawGeckoElementBorrowed element);
 RawGeckoElementBorrowedOrNull Gecko_GetLastChildElement(RawGeckoElementBorrowed element);
 RawGeckoElementBorrowedOrNull Gecko_GetPrevSiblingElement(RawGeckoElementBorrowed element);
@@ -120,7 +120,6 @@ RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowed
 
 // Selector Matching.
 uint16_t Gecko_ElementState(RawGeckoElementBorrowed element);
-bool Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed element);
 bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
@@ -300,6 +299,18 @@ nsStyleQuoteValues* Gecko_NewStyleQuoteValues(uint32_t len);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
 
 nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
+
+// Getter for nsCSSValue
+nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_value, int32_t index);
+// const version of the above function.
+nsCSSValueBorrowed Gecko_CSSValue_GetArrayItemConst(nsCSSValueBorrowed css_value, int32_t index);
+nscoord Gecko_CSSValue_GetAbsoluteLength(nsCSSValueBorrowed css_value);
+float Gecko_CSSValue_GetAngle(nsCSSValueBorrowed css_value);
+nsCSSKeyword Gecko_CSSValue_GetKeyword(nsCSSValueBorrowed aCSSValue);
+float Gecko_CSSValue_GetNumber(nsCSSValueBorrowed css_value);
+float Gecko_CSSValue_GetPercentage(nsCSSValueBorrowed css_value);
+nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(nsCSSValueBorrowed aCSSValue);
+
 void Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut css_value, nscoord len);
 void Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut css_value, float number);
 void Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut css_value, nsCSSKeyword keyword);
@@ -307,7 +318,6 @@ void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent
 void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
-nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_value, int32_t index);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);

@@ -1438,6 +1438,12 @@
         }
 
         if (tt.index && tt.index < this.textTracksCount) {
+          // Don't create items for initialized tracks. However, we
+          // still need to care about mode since TextTrackManager would
+          // turn on the first available track automatically.
+          if (tt.mode === "showing") {
+            this.changeTextTrack(tt.index);
+          }
           return;
         }
 
@@ -1530,13 +1536,9 @@
       },
 
       initTextTracks() {
-        if (!this.isClosedCaptionAvailable) {
-          this.closedCaptionButton.setAttribute("hidden", "true");
-          return;
-        }
-
+        // add 'off' button anyway as new text track might be
+        // dynamically added after initialization.
         const offLabel = this.textTrackList.getAttribute("offlabel");
-
         this.addNewTextTrack({
           label: offLabel,
           kind: "subtitles"

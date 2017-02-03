@@ -1380,15 +1380,7 @@ var AddonManagerInternal = {
     let oldPerms = info.existingAddon.userPermissions || {hosts: [], permissions: []};
     let newPerms = info.addon.userPermissions;
 
-    // See bug 1331769: should we do something more complicated to
-    // compare host permissions?
-    // e.g., if we go from <all_urls> to a specific host or from
-    // a *.domain.com to specific-host.domain.com that's actually a
-    // drop in permissions but the simple test below will cause a prompt.
-    let difference = {
-      hosts: newPerms.hosts.filter(perm => !oldPerms.hosts.includes(perm)),
-      permissions: newPerms.permissions.filter(perm => !oldPerms.permissions.includes(perm)),
-    };
+    let difference = Extension.comparePermissions(oldPerms, newPerms);
 
     // If there are no new permissions, just go ahead with the update
     if (difference.hosts.length == 0 && difference.permissions.length == 0) {
@@ -2110,7 +2102,9 @@ var AddonManagerInternal = {
               install.addon.userDisabled = false;
         }
 
-        if (WEBEXT_PERMISSION_PROMPTS) {
+        let needsRestart = (install.addon.pendingOperations != AddonManager.PENDING_NONE);
+
+        if (WEBEXT_PERMISSION_PROMPTS && !needsRestart) {
           let subject = {wrappedJSObject: {target: browser, addon: install.addon}};
           Services.obs.notifyObservers(subject, "webextension-install-notify", null);
         } else {
@@ -2847,24 +2841,12 @@ var AddonManagerInternal = {
       // "addon-install-confirmation" notification.  If the application
       // does not implement its own prompt, use the built-in xul dialog.
       if (info.addon.userPermissions && WEBEXT_PERMISSION_PROMPTS) {
-        const observer = {
-          observe(subject, topic, data) {
-            if (topic == "webextension-permission-response"
-                && subject.wrappedJSObject.info.addon == info.addon) {
-              let answer = JSON.parse(data);
-              Services.obs.removeObserver(observer, "webextension-permission-response");
-              if (answer) {
-                resolve();
-              } else {
-                reject();
-              }
-            }
+        let subject = {
+          wrappedJSObject: {
+            target: browser,
+            info: Object.assign({resolve, reject}, info),
           }
         };
-
-        Services.obs.addObserver(observer, "webextension-permission-response", false);
-
-        let subject = {wrappedJSObject: {target: browser, info}};
         Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
       } else if (requireConfirm) {
         // The methods below all want to call the install() or cancel()

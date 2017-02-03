@@ -38,7 +38,12 @@
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #include "ScriptSettings.h"
-
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
+#endif
 #include "xpcpublic.h"
 
 #include "jsapi.h"
@@ -604,7 +609,7 @@ void
 nsJSContext::Destroy()
 {
   if (mGCOnDestruction) {
-    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
+    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY, mWindowProxy);
   }
 
   DropJSObjects(this);
@@ -1202,8 +1207,11 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   JSGCInvocationKind gckind = aShrinking == ShrinkingGC ? GC_SHRINK : GC_NORMAL;
 
-  if (sNeedsFullGC || aReason != JS::gcreason::CC_WAITING) {
-    sNeedsFullGC = false;
+  if (aIncremental == NonIncrementalGC || aReason == JS::gcreason::FULL_GC_TIMER) {
+    sNeedsFullGC = true;
+  }
+
+  if (sNeedsFullGC) {
     JS::PrepareForFullGC(sContext);
   } else {
     CycleCollectedJSContext::Get()->PrepareWaitingZonesForGC();
@@ -1580,7 +1588,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
 
   if (NeedsGCAfterCC()) {
-    PokeGC(JS::gcreason::CC_WAITING,
+    PokeGC(JS::gcreason::CC_WAITING, nullptr,
            NS_GC_DELAY - std::min(ccNowDuration, kMaxICCDuration));
   }
 
@@ -1618,11 +1626,11 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      u"CC(T+%.1f)[%s] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
+      u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
       u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu");
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
-                                        ProcessNameForCollectorLog(),
+                                        ProcessNameForCollectorLog(), getpid(),
                                         gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
                                         aResults.mNumSlices, gCCStats.mSuspected,
                                         aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
@@ -1850,9 +1858,7 @@ nsJSContext::LoadEnd()
     return;
   }
 
-  // Its probably a good idea to GC soon since we have finished loading.
   sLoadingInProgress = false;
-  PokeGC(JS::gcreason::LOAD_END);
 }
 
 // Only trigger expensive timers when they have been checked a number of times.
@@ -1915,11 +1921,22 @@ nsJSContext::RunNextCollectorTimer()
 
 // static
 void
-nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
+nsJSContext::PokeGC(JS::gcreason::Reason aReason,
+                    JSObject* aObj,
+                    int aDelay)
 {
-  sNeedsFullGC = sNeedsFullGC || aReason != JS::gcreason::CC_WAITING;
+  if (sShuttingDown) {
+    return;
+  }
 
-  if (sGCTimer || sInterSliceGCTimer || sShuttingDown) {
+  if (aObj) {
+    JS::Zone* zone = JS::GetObjectZone(aObj);
+    CycleCollectedJSContext::Get()->AddZoneWaitingForGC(zone);
+  } else if (aReason != JS::gcreason::CC_WAITING) {
+    sNeedsFullGC = true;
+  }
+
+  if (sGCTimer || sInterSliceGCTimer) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -2109,12 +2126,13 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       PRTime delta = GetCollectionTimeDelta();
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s] ");
+        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                                double(delta) / PR_USEC_PER_SEC,
-                                               ProcessNameForCollectorLog()));
+                                               ProcessNameForCollectorLog(),
+                                               getpid()));
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
@@ -2162,6 +2180,10 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
+      if (!aDesc.isZone_) {
+        sNeedsFullGC = false;
+      }
+
       break;
     }
 
@@ -2186,11 +2208,12 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       }
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "[%s] ");
+        NS_NAMED_LITERAL_STRING(kFmt, "[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSliceMessage(aCx));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
-                                               ProcessNameForCollectorLog()));
+                                               ProcessNameForCollectorLog(),
+                                               getpid()));
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
@@ -2244,7 +2267,7 @@ mozilla::dom::StartupJSEnvironment()
   sLikelyShortLivingObjectsNeedingGC = 0;
   sPostGCEventsToConsole = false;
   sNeedsFullCC = false;
-  sNeedsFullGC = false;
+  sNeedsFullGC = true;
   sNeedsGCAfterCC = false;
   gNameSpaceManager = nullptr;
   sContext = nullptr;

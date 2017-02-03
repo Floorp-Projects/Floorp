@@ -2498,6 +2498,8 @@
               var skipPermitUnload = aParams.skipPermitUnload;
             }
 
+            window.maybeRecordAbandonmentTelemetry(aTab, "tabClosed");
+
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
             if (!animate &&

@@ -14,6 +14,11 @@
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/StyleSheet.h"
 #include "nsCSSParser.h"
+#include "nsCSSRules.h"
+#include "nsMediaFeatures.h"
+#include "nsRuleNode.h"
+
+using namespace mozilla;
 
 template <class Numeric>
 int32_t DoCompare(Numeric a, Numeric b)
@@ -512,7 +517,7 @@ nsMediaList::~nsMediaList()
 /* virtual */ JSObject*
 nsMediaList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MediaListBinding::Wrap(aCx, this, aGivenProto);
+  return dom::MediaListBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void

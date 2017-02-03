@@ -1592,7 +1592,8 @@ nsStylePosition::CalcDifference(const nsStylePosition& aNewData,
       // for frames that have such replaced elements.
       hint |= nsChangeHint_NeedReflow |
               nsChangeHint_UpdateComputedBSize |
-              nsChangeHint_ReflowChangesSizeOrPosition;
+              nsChangeHint_ReflowChangesSizeOrPosition |
+              nsChangeHint_ClearAncestorIntrinsics;
     }
 
     if (isVertical ? heightChanged : widthChanged) {

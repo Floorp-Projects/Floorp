@@ -202,6 +202,8 @@
 #include "mozilla/dom/GamepadManager.h"
 
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VRDisplayEvent.h"
+#include "mozilla/dom/VRDisplayEventBinding.h"
 #include "mozilla/dom/VREventObserver.h"
 
 #include "nsRefreshDriver.h"
@@ -1443,6 +1445,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mHasSeenGamepadInput(false),
     mNotifiedIDDestroyed(false),
     mAllowScriptsToClose(false),
+    mTopLevelOuterContentWindow(false),
     mSuspendDepth(0),
     mFreezeDepth(0),
     mFocusMethod(0),
@@ -3144,7 +3147,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT);
+  nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT, GetWrapperPreserveColor());
   kungFuDeathGrip->DidInitializeContext();
 
   // We wait to fire the debugger hook until the window is all set up and hooked
@@ -3208,11 +3211,7 @@ nsGlobalWindow::PreloadLocalStorage()
   // private browsing windows do not persist local storage to disk so we should
   // only try to precache storage when we're not a private browsing window.
   if (principal->GetPrivateBrowsingId() == 0) {
-    nsCOMPtr<nsIDOMStorage> storage;
-    rv = storageManager->PrecacheStorage(principal, getter_AddRefs(storage));
-    if (NS_SUCCEEDED(rv)) {
-      mLocalStorage = static_cast<Storage*>(storage.get());
-    }
+    storageManager->PrecacheStorage(principal);
   }
 }
 
@@ -3295,6 +3294,9 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
   MOZ_RELEASE_ASSERT(!parentWindow || !mTabGroup || mTabGroup == Cast(parentWindow)->mTabGroup);
 
+  mTopLevelOuterContentWindow =
+    !mIsChrome && GetScriptableTopInternal() == this;
+
   NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
 
   if (mFrames) {
@@ -3374,7 +3376,12 @@ nsGlobalWindow::DetachFromDocShell()
   mChromeEventHandler = nullptr; // force release now
 
   if (mContext) {
-    nsJSContext::PokeGC(JS::gcreason::SET_DOC_SHELL);
+    // When we're about to destroy a top level content window
+    // (for example a tab), we trigger a full GC by passing null as the last
+    // param. We also trigger a full GC for chrome windows.
+    nsJSContext::PokeGC(JS::gcreason::SET_DOC_SHELL,
+                        (mTopLevelOuterContentWindow || mIsChrome) ?
+                          nullptr : GetWrapperPreserveColor());
     mContext = nullptr;
   }
 
@@ -4159,6 +4166,45 @@ bool
 nsPIDOMWindowInner::IsRunningTimeout()
 {
   return TimeoutManager().IsRunningTimeout();
+}
+
+void
+nsPIDOMWindowOuter::NotifyCreatedNewMediaComponent()
+{
+  if (mMediaSuspend != nsISuspendedTypes::SUSPENDED_BLOCK) {
+    return;
+  }
+
+  // If the document is already on the foreground but the suspend state is still
+  // suspend-block, that means the media component was created after calling
+  // MaybeActiveMediaComponents, so the window's suspend state doesn't be
+  // changed yet. Therefore, we need to call it again, because the state is only
+  // changed after there exists alive media within the window.
+  MaybeActiveMediaComponents();
+}
+
+void
+nsPIDOMWindowOuter::MaybeActiveMediaComponents()
+{
+  if (IsInnerWindow()) {
+    return mOuterWindow->MaybeActiveMediaComponents();
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetCurrentInnerWindow();
+  if (!inner) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = inner->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  if (!doc->Hidden() &&
+      mMediaSuspend == nsISuspendedTypes::SUSPENDED_BLOCK &&
+      AudioChannelService::IsServiceStarted()) {
+    SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+  }
 }
 
 SuspendTypes
@@ -11794,43 +11840,48 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   bool isPrivateBrowsing = IsPrivateBrowsing();
-  // In addition to determining if this is a storage event, the
-  // isPrivateBrowsing checks here enforce that the source storage area's
-  // private browsing state matches this window's state.  These flag checks
-  // and their maintenance independent from the principal's OriginAttributes
-  // matter because chrome docshells that are part of private browsing windows
-  // can be private browsing without having their OriginAttributes set (because
-  // they have the system principal).
   if ((!nsCRT::strcmp(aTopic, "dom-storage2-changed") && !isPrivateBrowsing) ||
       (!nsCRT::strcmp(aTopic, "dom-private-storage2-changed") && isPrivateBrowsing)) {
     if (!IsInnerWindow() || !AsInner()->IsCurrentInnerWindow()) {
       return NS_OK;
     }
 
-    nsIPrincipal *principal = GetPrincipal();
-    if (!principal) {
-      return NS_OK;
-    }
+    nsIPrincipal *principal;
+    nsresult rv;
 
     RefPtr<StorageEvent> event = static_cast<StorageEvent*>(aSubject);
     if (!event) {
       return NS_ERROR_FAILURE;
     }
 
+    RefPtr<Storage> changingStorage = event->GetStorageArea();
+    if (!changingStorage) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMStorage> istorage = changingStorage.get();
+
     bool fireMozStorageChanged = false;
     nsAutoString eventType;
     eventType.AssignLiteral("storage");
+    principal = GetPrincipal();
+    if (!principal) {
+      return NS_OK;
+    }
 
-    if (!NS_strcmp(aData, u"sessionStorage")) {
-      nsCOMPtr<nsIDOMStorage> changingStorage = event->GetStorageArea();
-      MOZ_ASSERT(changingStorage);
+    if (changingStorage->IsPrivate() != IsPrivateBrowsing()) {
+      return NS_OK;
+    }
 
+    switch (changingStorage->GetType())
+    {
+    case Storage::SessionStorage:
+    {
       bool check = false;
 
       nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(GetDocShell());
       if (storageManager) {
-        nsresult rv = storageManager->CheckStorage(principal, changingStorage,
-                                                   &check);
+        rv = storageManager->CheckStorage(principal, istorage, &check);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -11851,43 +11902,44 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       if (fireMozStorageChanged) {
         eventType.AssignLiteral("MozSessionStorageChanged");
       }
+      break;
     }
 
-    else {
-      MOZ_ASSERT(!NS_strcmp(aData, u"localStorage"));
-      nsIPrincipal* storagePrincipal = event->GetPrincipal();
-      if (!storagePrincipal) {
-        return NS_OK;
-      }
+    case Storage::LocalStorage:
+    {
+      // Allow event fire only for the same principal storages
+      // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
+      nsIPrincipal* storagePrincipal = changingStorage->GetPrincipal();
 
       bool equals = false;
-      nsresult rv = storagePrincipal->Equals(principal, &equals);
+      rv = storagePrincipal->Equals(principal, &equals);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!equals) {
+      if (!equals)
         return NS_OK;
-      }
 
-      fireMozStorageChanged = mLocalStorage == event->GetStorageArea();
-
+      fireMozStorageChanged = mLocalStorage == changingStorage;
       if (fireMozStorageChanged) {
         eventType.AssignLiteral("MozLocalStorageChanged");
       }
+      break;
+    }
+    default:
+      return NS_OK;
     }
 
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
     ErrorResult error;
-    RefPtr<StorageEvent> clonedEvent =
-      CloneStorageEvent(eventType, event, error);
+    RefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType, event, error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
 
-    clonedEvent->SetTrusted(true);
+    newEvent->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      WidgetEvent* internalEvent = clonedEvent->WidgetEventPtr();
+      WidgetEvent* internalEvent = newEvent->WidgetEventPtr();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
@@ -11896,12 +11948,12 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
 
-      mPendingStorageEvents.AppendElement(clonedEvent);
+      mPendingStorageEvents.AppendElement(newEvent);
       return NS_OK;
     }
 
     bool defaultActionEnabled;
-    DispatchEvent(clonedEvent, &defaultActionEnabled);
+    DispatchEvent(newEvent, &defaultActionEnabled);
 
     return NS_OK;
   }
@@ -11992,19 +12044,10 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetUrl(dict.mUrl);
 
   RefPtr<Storage> storageArea = aEvent->GetStorageArea();
+  MOZ_ASSERT(storageArea);
 
   RefPtr<Storage> storage;
-
-  // If null, this is a localStorage event received by IPC.
-  if (!storageArea) {
-    storage = GetLocalStorage(aRv);
-    if (aRv.Failed() || !storage) {
-      return nullptr;
-    }
-
-    // We must apply the current change to the 'local' localStorage.
-    storage->ApplyEvent(aEvent);
-  } else if (storageArea->GetType() == Storage::LocalStorage) {
+  if (storageArea->GetType() == Storage::LocalStorage) {
     storage = GetLocalStorage(aRv);
   } else {
     MOZ_ASSERT(storageArea->GetType() == Storage::SessionStorage);
@@ -12016,7 +12059,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   }
 
   MOZ_ASSERT(storage);
-  MOZ_ASSERT_IF(storageArea, storage->IsForkOf(storageArea));
+  MOZ_ASSERT(storage->IsForkOf(storageArea));
 
   dict.mStorageArea = storage;
 
@@ -13172,17 +13215,12 @@ nsGlobalWindow::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
 void
 nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
 {
-  if (aType == nsGkAtoms::onvrdisplayconnect ||
+  if (aType == nsGkAtoms::onvrdisplayactivate ||
+      aType == nsGkAtoms::onvrdisplayconnect ||
+      aType == nsGkAtoms::onvrdisplaydeactivate ||
       aType == nsGkAtoms::onvrdisplaydisconnect ||
       aType == nsGkAtoms::onvrdisplaypresentchange) {
     NotifyVREventListenerAdded();
-  }
-
-  // We need to initialize localStorage in order to receive notifications.
-  if (aType == nsGkAtoms::onstorage) {
-    ErrorResult rv;
-    GetLocalStorage(rv);
-    rv.SuppressException();
   }
 }
 
@@ -13353,6 +13391,62 @@ nsGlobalWindow::NotifyActiveVRDisplaysChanged()
   }
 }
 
+void
+nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
+                                          mozilla::dom::VRDisplayEventReason aReason)
+{
+  for (auto display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID
+        && !display->IsAnyPresenting()) {
+      // We only want to trigger this event if nobody is presenting to the
+      // display already.
+
+      VRDisplayEventInit init;
+      init.mBubbles = true;
+      init.mCancelable = false;
+      init.mDisplay = display;
+      init.mReason.Construct(aReason);
+
+      RefPtr<VRDisplayEvent> event =
+        VRDisplayEvent::Constructor(this,
+                                    NS_LITERAL_STRING("vrdisplayactivate"),
+                                    init);
+      // vrdisplayactivate is a trusted event, allowing VRDisplay.requestPresent
+      // to be used in response to link traversal, user request (chrome UX), and
+      // HMD mounting detection sensors.
+      event->SetTrusted(true);
+      bool defaultActionEnabled;
+      Unused << DispatchEvent(event, &defaultActionEnabled);
+      break;
+    }
+  }
+}
+
+void
+nsGlobalWindow::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
+                                            mozilla::dom::VRDisplayEventReason aReason)
+{
+  for (auto display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID && display->IsPresenting()) {
+      // We only want to trigger this event to content that is presenting to
+      // the display already.
+
+      VRDisplayEventInit init;
+      init.mBubbles = true;
+      init.mCancelable = false;
+      init.mDisplay = display;
+      init.mReason.Construct(aReason);
+
+      RefPtr<VRDisplayEvent> event =
+        VRDisplayEvent::Constructor(this,
+                                    NS_LITERAL_STRING("vrdisplaydeactivate"),
+                                    init);
+      bool defaultActionEnabled;
+      Unused << DispatchEvent(event, &defaultActionEnabled);
+      break;
+    }
+  }
+}
 
 // nsGlobalChromeWindow implementation
 

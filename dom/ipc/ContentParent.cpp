@@ -51,7 +51,6 @@
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
-#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -807,7 +806,8 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId)
+ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId,
+                                        Endpoint<PContentBridgeParent>* aEndpoint)
 {
   ContentProcessManager *cpm = ContentProcessManager::GetSingleton();
   ContentParent* cp = cpm->GetContentProcessById(aCpId);
@@ -816,9 +816,21 @@ ContentParent::RecvBridgeToChildProcess(const ContentParentId& aCpId)
     ContentParentId parentId;
     if (cpm->GetParentProcessId(cp->ChildID(), &parentId) &&
       parentId == this->ChildID()) {
-      if (NS_FAILED(PContentBridge::Bridge(this, cp))) {
-        return IPC_FAIL_NO_REASON(this);
+
+      Endpoint<PContentBridgeParent> parent;
+      Endpoint<PContentBridgeChild> child;
+
+      if (NS_FAILED(PContentBridge::CreateEndpoints(OtherPid(), cp->OtherPid(),
+                                                    &parent, &child))) {
+        return IPC_FAIL(this, "CreateEndpoints failed");
       }
+
+      *aEndpoint = Move(parent);
+
+      if (!cp->SendInitContentBridgeChild(Move(child))) {
+        return IPC_FAIL(this, "SendInitContentBridgeChild failed");
+      }
+
       return IPC_OK();
     }
   }
@@ -1091,10 +1103,11 @@ ContentParent::CreateContentBridgeParent(const TabContext& aContext,
   if (cpId == 0) {
     return nullptr;
   }
-  if (!child->SendBridgeToChildProcess(cpId)) {
+  Endpoint<PContentBridgeParent> endpoint;
+  if (!child->SendBridgeToChildProcess(cpId, &endpoint)) {
     return nullptr;
   }
-  ContentBridgeParent* parent = child->GetLastBridge();
+  ContentBridgeParent* parent = ContentBridgeParent::Create(Move(endpoint));
   parent->SetChildID(cpId);
   parent->SetIsForBrowser(isForBrowser);
   return parent;
@@ -4735,25 +4748,6 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
                                                false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
   mBlobURLs.RemoveElement(aURI);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
-                                               const nsString& aKey,
-                                               const nsString& aOldValue,
-                                               const nsString& aNewValue,
-                                               const Principal& aPrincipal,
-                                               const bool& aIsPrivate)
-{
-  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    if (cp != this) {
-      Unused << cp->SendDispatchLocalStorageChange(
-        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
-        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
-    }
-  }
 
   return IPC_OK();
 }
