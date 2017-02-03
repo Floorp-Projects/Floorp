@@ -269,45 +269,46 @@ NextFrameSeekTask::SetCallbacks()
 
   // Register dummy callbcak for audio decoding since we don't need to handle
   // the decoded audio samples.
+  RefPtr<NextFrameSeekTask> self = this;
   mAudioCallback = mReader->AudioCallback().Connect(
-    OwnerThread(), [this] (AudioCallbackData aData) {
+    OwnerThread(), [self] (AudioCallbackData aData) {
     if (aData.is<MediaData*>()) {
-      OnAudioDecoded(aData.as<MediaData*>());
+      self->OnAudioDecoded(aData.as<MediaData*>());
     } else {
-      OnAudioNotDecoded(aData.as<MediaResult>());
+      self->OnAudioNotDecoded(aData.as<MediaResult>());
     }
   });
 
   mVideoCallback = mReader->VideoCallback().Connect(
-    OwnerThread(), [this] (VideoCallbackData aData) {
+    OwnerThread(), [self] (VideoCallbackData aData) {
     typedef Tuple<MediaData*, TimeStamp> Type;
     if (aData.is<Type>()) {
-      OnVideoDecoded(Get<0>(aData.as<Type>()));
+      self->OnVideoDecoded(Get<0>(aData.as<Type>()));
     } else {
-      OnVideoNotDecoded(aData.as<MediaResult>());
+      self->OnVideoNotDecoded(aData.as<MediaResult>());
     }
   });
 
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
+    OwnerThread(), [self] (WaitCallbackData aData) {
     // We don't make an audio decode request here, instead, let MDSM to
     // trigger further audio decode tasks if MDSM itself needs to play audio.
-    MaybeFinishSeek();
+    self->MaybeFinishSeek();
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
-    if (NeedMoreVideo()) {
+    OwnerThread(), [self] (WaitCallbackData aData) {
+    if (self->NeedMoreVideo()) {
       if (aData.is<MediaData::Type>()) {
-        RequestVideoData();
+        self->RequestVideoData();
       } else {
         // Reject if we can't finish video seeking.
-        CancelCallbacks();
-        RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+        self->CancelCallbacks();
+        self->RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
       }
       return;
     }
-    MaybeFinishSeek();
+    self->MaybeFinishSeek();
   });
 }
 
