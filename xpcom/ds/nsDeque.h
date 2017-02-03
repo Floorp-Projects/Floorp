@@ -178,6 +178,52 @@ public:
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
 
+  // This iterator assumes that the deque itself is const, i.e., it cannot be
+  // modified while the iterator is used.
+  // Also it is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  class ConstDequeIterator
+  {
+  public:
+    ConstDequeIterator(const nsDeque& aDeque, size_t aIndex)
+      : mDeque(aDeque)
+      , mIndex(aIndex)
+    {
+    }
+    ConstDequeIterator& operator++()
+    {
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstDequeIterator& aOther) const
+    {
+      return mIndex == aOther.mIndex;
+    }
+    bool operator!=(const ConstDequeIterator& aOther) const
+    {
+      return mIndex != aOther.mIndex;
+    }
+    void* operator*() const
+    {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
+  private:
+    const nsDeque& mDeque;
+    size_t mIndex;
+  };
+  // If this deque is const, we can provide ConstDequeIterator's.
+  ConstDequeIterator begin() const
+  {
+    return ConstDequeIterator(*this, 0);
+  }
+  ConstDequeIterator end() const
+  {
+    return ConstDequeIterator(*this, mSize);
+  }
+
   // It is a 'const' iterator in that it provides copies of the deque's
   // elements, and therefore it is not possible to modify the deque's contents
   // by assigning to a dereference of this iterator.
@@ -227,11 +273,13 @@ public:
     const nsDeque& mDeque;
     size_t mIndex; // May point outside the deque!
   };
-  ConstIterator begin() const
+  // If this deque is *not* const, we provide ConstIterator's that can handle
+  // deque size changes.
+  ConstIterator begin()
   {
     return ConstIterator(*this, 0);
   }
-  ConstIterator end() const
+  ConstIterator end()
   {
     return ConstIterator(*this, ConstIterator::EndIteratorIndex);
   }

@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "nsDeque.h"
 #include "nsCRT.h"
+#include "mozilla/TypeTraits.h"
 #include <stdio.h>
 
 /**************************************************************
@@ -341,6 +342,31 @@ TEST(NsDeque, TestForEach)
   d.Erase();
 }
 
+TEST(NsDeque, TestConstRangeFor)
+{
+  nsDeque d(new Deallocator());
+
+  const size_t NumTestValues = 3;
+  for (size_t i = 0; i < NumTestValues; ++i)
+  {
+    d.Push(new int(i + 1));
+  }
+
+  static_assert(IsSame<nsDeque::ConstDequeIterator,
+                       decltype(DeclVal<const nsDeque&>().begin())>::value,
+                "(const nsDeque).begin() should return ConstDequeIterator");
+  static_assert(IsSame<nsDeque::ConstDequeIterator,
+                       decltype(DeclVal<const nsDeque&>().end())>::value,
+                "(const nsDeque).end() should return ConstDequeIterator");
+
+  int sum = 0;
+  for (void* ob : const_cast<const nsDeque&>(d)) {
+    sum += *static_cast<int*>(ob);
+  }
+  EXPECT_EQ(1+2+3, sum)
+    << "Const-range-for should iterate over values";
+}
+
 TEST(NsDeque, TestRangeFor)
 {
   const size_t NumTestValues = 3;
@@ -404,6 +430,13 @@ TEST(NsDeque, TestRangeFor)
     {
       d.Push(new int(i + 1));
     }
+
+    static_assert(IsSame<nsDeque::ConstIterator,
+                        decltype(d.begin())>::value,
+                  "(non-const nsDeque).begin() should return ConstIterator");
+    static_assert(IsSame<nsDeque::ConstIterator,
+                        decltype(d.end())>::value,
+                  "(non-const nsDeque).end() should return ConstIterator");
 
     int sum = 0;
     size_t loopCount = 0;
