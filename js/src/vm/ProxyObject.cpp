@@ -94,10 +94,10 @@ ProxyObject::objectMovedDuringMinorGC(TenuringTracer* trc, JSObject* dst, JSObje
 
     // We're about to sweep the nursery heap, so migrate the inline
     // ProxyValueArray to the malloc heap if they were nursery allocated.
-    if (trc->runtime()->gc.nursery.isInside(psrc.data.values))
+    if (dst->zone()->group()->nursery().isInside(psrc.data.values))
         pdst.data.values = js_new<detail::ProxyValueArray>(*psrc.data.values);
     else
-        trc->runtime()->gc.nursery.removeMallocedBuffer(psrc.data.values);
+        dst->zone()->group()->nursery().removeMallocedBuffer(psrc.data.values);
     return sizeof(detail::ProxyValueArray);
 }
 

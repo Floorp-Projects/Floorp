@@ -16,7 +16,7 @@ using namespace js;
 
 template <typename CharT, class Buffer>
 static CharT*
-ExtractWellSized(ExclusiveContext* cx, Buffer& cb)
+ExtractWellSized(JSContext* cx, Buffer& cb)
 {
     size_t capacity = cb.capacity();
     size_t length = cb.length();
@@ -74,7 +74,7 @@ StringBuffer::inflateChars()
 
 template <typename CharT, class Buffer>
 static JSFlatString*
-FinishStringFlat(ExclusiveContext* cx, StringBuffer& sb, Buffer& cb)
+FinishStringFlat(JSContext* cx, StringBuffer& sb, Buffer& cb)
 {
     size_t len = sb.length();
     if (!sb.append('\0'))

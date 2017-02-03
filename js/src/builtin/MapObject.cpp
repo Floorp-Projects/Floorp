@@ -102,9 +102,9 @@ HashableValue::operator==(const HashableValue& other) const
 
 #ifdef DEBUG
     bool same;
-    JS::RootingContext* rcx = GetJSContextFromMainThread();
-    RootedValue valueRoot(rcx, value);
-    RootedValue otherRoot(rcx, other.value);
+    JSContext* cx = TlsContext.get();
+    RootedValue valueRoot(cx, value);
+    RootedValue otherRoot(cx, other.value);
     MOZ_ASSERT(SameValue(nullptr, valueRoot, otherRoot, &same));
     MOZ_ASSERT(same == b);
 #endif
@@ -464,7 +464,7 @@ WriteBarrierPostImpl(JSRuntime* rt, ObjectT* obj, const Value& keyValue)
         if (!keys)
             return false;
 
-        rt->gc.storeBuffer.putGeneric(OrderedHashTableRef<ObjectT>(obj));
+        key->zone()->group()->storeBuffer().putGeneric(OrderedHashTableRef<ObjectT>(obj));
     }
 
     if (!keys->append(key))

@@ -1123,7 +1123,7 @@ class ICStubCompiler
 
 void BaselineEmitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, ValueOperand val,
                                       Register scratch, LiveGeneralRegisterSet saveRegs,
-                                      JSRuntime* rt);
+                                      JSContext* cx);
 
 class SharedStubInfo
 {

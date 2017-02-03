@@ -1063,8 +1063,7 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
         return;
 
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
-    Nursery& nursery = cx->runtime()->gc.nursery;
-    void* buf = nursery.allocateBuffer(obj, nbytes);
+    void* buf = cx->nursery().allocateBuffer(obj, nbytes);
     if (buf) {
         obj->initPrivate(buf);
         memset(buf, 0, nbytes);
@@ -2366,7 +2365,7 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
 #endif
     if (ion) {
         setFramePushed(ion->frameSize());
-        if (pc && cx->runtime()->geckoProfiler.enabled())
+        if (pc && cx->runtime()->geckoProfiler().enabled())
             enableProfilingInstrumentation();
     }
 }

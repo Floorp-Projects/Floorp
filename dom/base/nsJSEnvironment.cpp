@@ -38,7 +38,12 @@
 #include "nsIXULRuntime.h"
 #include "nsTextFormatter.h"
 #include "ScriptSettings.h"
-
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
+#endif
 #include "xpcpublic.h"
 
 #include "jsapi.h"
@@ -1621,11 +1626,11 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      u"CC(T+%.1f)[%s] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
+      u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
       u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu");
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
-                                        ProcessNameForCollectorLog(),
+                                        ProcessNameForCollectorLog(), getpid(),
                                         gCCStats.mMaxSliceTime, gCCStats.mTotalSliceTime,
                                         aResults.mNumSlices, gCCStats.mSuspected,
                                         aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
@@ -2121,12 +2126,13 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       PRTime delta = GetCollectionTimeDelta();
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s] ");
+        NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f)[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                                double(delta) / PR_USEC_PER_SEC,
-                                               ProcessNameForCollectorLog()));
+                                               ProcessNameForCollectorLog(),
+                                               getpid()));
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
@@ -2202,11 +2208,12 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       }
 
       if (sPostGCEventsToConsole) {
-        NS_NAMED_LITERAL_STRING(kFmt, "[%s] ");
+        NS_NAMED_LITERAL_STRING(kFmt, "[%s-%i] ");
         nsString prefix, gcstats;
         gcstats.Adopt(aDesc.formatSliceMessage(aCx));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
-                                               ProcessNameForCollectorLog()));
+                                               ProcessNameForCollectorLog(),
+                                               getpid()));
         nsString msg = prefix + gcstats;
         nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {

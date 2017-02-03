@@ -1710,9 +1710,7 @@ public:
 
   void SyncWindowProperties(nsView* aView);
 
-#ifdef ANDROID
-  virtual nsIDocument* GetTouchEventTargetDocument() = 0;
-#endif
+  virtual nsIDocument* GetPrimaryContentDocument() = 0;
 
 protected:
   friend class nsRefreshDriver;

@@ -206,10 +206,10 @@ PerformanceGroupHolder::getGroups(JSContext* cx)
     if (initialized_)
         return &groups_;
 
-    if (!runtime_->performanceMonitoring.getGroupsCallback)
+    if (!runtime_->performanceMonitoring().getGroupsCallback)
         return nullptr;
 
-    if (!runtime_->performanceMonitoring.getGroupsCallback(cx, groups_, runtime_->performanceMonitoring.getGroupsClosure))
+    if (!runtime_->performanceMonitoring().getGroupsCallback(cx, groups_, runtime_->performanceMonitoring().getGroupsClosure))
         return nullptr;
 
     initialized_ = true;
@@ -231,7 +231,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
         return;
 
     JSRuntime* runtime = cx_->runtime();
-    iteration_ = runtime->performanceMonitoring.iteration();
+    iteration_ = runtime->performanceMonitoring().iteration();
 
     const PerformanceGroupVector* groups = compartment->performanceMonitoring.getGroups(cx);
     if (!groups) {
@@ -254,7 +254,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
 
     // Now that we are sure that JS code is being executed,
     // initialize the stopwatch for this iteration, lazily.
-    runtime->performanceMonitoring.start();
+    runtime->performanceMonitoring().start();
     enter();
 }
 
@@ -270,7 +270,7 @@ AutoStopwatch::~AutoStopwatch()
         return;
 
     JSRuntime* runtime = cx_->runtime();
-    if (iteration_ != runtime->performanceMonitoring.iteration()) {
+    if (iteration_ != runtime->performanceMonitoring().iteration()) {
         // We have entered a nested event loop at some point.
         // Any information we may have is obsolete.
         return;
@@ -287,12 +287,12 @@ AutoStopwatch::enter()
 {
     JSRuntime* runtime = cx_->runtime();
 
-    if (runtime->performanceMonitoring.isMonitoringCPOW()) {
-        CPOWTimeStart_ = runtime->performanceMonitoring.totalCPOWTime;
+    if (runtime->performanceMonitoring().isMonitoringCPOW()) {
+        CPOWTimeStart_ = runtime->performanceMonitoring().totalCPOWTime;
         isMonitoringCPOW_ = true;
     }
 
-    if (runtime->performanceMonitoring.isMonitoringJank()) {
+    if (runtime->performanceMonitoring().isMonitoringJank()) {
         cyclesStart_ = this->getCycles(runtime);
         cpuStart_ = this->getCPU();
         isMonitoringJank_ = true;
@@ -305,7 +305,7 @@ AutoStopwatch::exit()
     JSRuntime* runtime = cx_->runtime();
 
     uint64_t cyclesDelta = 0;
-    if (isMonitoringJank_ && runtime->performanceMonitoring.isMonitoringJank()) {
+    if (isMonitoringJank_ && runtime->performanceMonitoring().isMonitoringJank()) {
         // We were monitoring jank when we entered and we still are.
 
         // If possible, discard results when we don't end on the
@@ -328,9 +328,9 @@ AutoStopwatch::exit()
     }
 
     uint64_t CPOWTimeDelta = 0;
-    if (isMonitoringCPOW_ && runtime->performanceMonitoring.isMonitoringCPOW()) {
+    if (isMonitoringCPOW_ && runtime->performanceMonitoring().isMonitoringCPOW()) {
         // We were monitoring CPOW when we entered and we still are.
-        const uint64_t CPOWTimeEnd = runtime->performanceMonitoring.totalCPOWTime;
+        const uint64_t CPOWTimeEnd = runtime->performanceMonitoring().totalCPOWTime;
         CPOWTimeDelta = getDelta(CPOWTimeEnd, CPOWTimeStart_);
     }
     return addToGroups(cyclesDelta, CPOWTimeDelta);
@@ -342,9 +342,9 @@ AutoStopwatch::updateTelemetry(const cpuid_t& cpuStart_, const cpuid_t& cpuEnd)
   JSRuntime* runtime = cx_->runtime();
 
     if (isSameCPU(cpuStart_, cpuEnd))
-        runtime->performanceMonitoring.testCpuRescheduling.stayed += 1;
+        runtime->performanceMonitoring().testCpuRescheduling.stayed += 1;
     else
-        runtime->performanceMonitoring.testCpuRescheduling.moved += 1;
+        runtime->performanceMonitoring().testCpuRescheduling.moved += 1;
 }
 
 PerformanceGroup*
@@ -387,7 +387,7 @@ AutoStopwatch::addToGroup(JSRuntime* runtime, uint64_t cyclesDelta, uint64_t CPO
     MOZ_ASSERT(group);
     MOZ_ASSERT(group->isAcquired(iteration_, this));
 
-    if (!runtime->performanceMonitoring.addRecentGroup(group))
+    if (!runtime->performanceMonitoring().addRecentGroup(group))
       return false;
     group->addRecentTicks(iteration_, 1);
     group->addRecentCycles(iteration_, cyclesDelta);
@@ -406,7 +406,7 @@ AutoStopwatch::getDelta(const uint64_t end, const uint64_t start) const
 uint64_t
 AutoStopwatch::getCycles(JSRuntime* runtime) const
 {
-    return runtime->performanceMonitoring.monotonicReadTimestampCounter();
+    return runtime->performanceMonitoring().monotonicReadTimestampCounter();
 }
 
 cpuid_t inline
@@ -584,73 +584,73 @@ PerformanceGroup::Release()
 JS_PUBLIC_API(bool)
 SetStopwatchStartCallback(JSContext* cx, StopwatchStartCallback cb, void* closure)
 {
-    cx->performanceMonitoring.setStopwatchStartCallback(cb, closure);
+    cx->runtime()->performanceMonitoring().setStopwatchStartCallback(cb, closure);
     return true;
 }
 
 JS_PUBLIC_API(bool)
 SetStopwatchCommitCallback(JSContext* cx, StopwatchCommitCallback cb, void* closure)
 {
-    cx->performanceMonitoring.setStopwatchCommitCallback(cb, closure);
+    cx->runtime()->performanceMonitoring().setStopwatchCommitCallback(cb, closure);
     return true;
 }
 
 JS_PUBLIC_API(bool)
 SetGetPerformanceGroupsCallback(JSContext* cx, GetGroupsCallback cb, void* closure)
 {
-    cx->performanceMonitoring.setGetGroupsCallback(cb, closure);
+    cx->runtime()->performanceMonitoring().setGetGroupsCallback(cb, closure);
     return true;
 }
 
 JS_PUBLIC_API(bool)
 FlushPerformanceMonitoring(JSContext* cx)
 {
-    return cx->performanceMonitoring.commit();
+    return cx->runtime()->performanceMonitoring().commit();
 }
 JS_PUBLIC_API(void)
 ResetPerformanceMonitoring(JSContext* cx)
 {
-    return cx->performanceMonitoring.reset();
+    return cx->runtime()->performanceMonitoring().reset();
 }
 JS_PUBLIC_API(void)
 DisposePerformanceMonitoring(JSContext* cx)
 {
-    return cx->performanceMonitoring.dispose(cx);
+    return cx->runtime()->performanceMonitoring().dispose(cx->runtime());
 }
 
 JS_PUBLIC_API(bool)
 SetStopwatchIsMonitoringJank(JSContext* cx, bool value)
 {
-    return cx->performanceMonitoring.setIsMonitoringJank(value);
+    return cx->runtime()->performanceMonitoring().setIsMonitoringJank(value);
 }
 JS_PUBLIC_API(bool)
 GetStopwatchIsMonitoringJank(JSContext* cx)
 {
-    return cx->performanceMonitoring.isMonitoringJank();
+    return cx->runtime()->performanceMonitoring().isMonitoringJank();
 }
 
 JS_PUBLIC_API(bool)
 SetStopwatchIsMonitoringCPOW(JSContext* cx, bool value)
 {
-    return cx->performanceMonitoring.setIsMonitoringCPOW(value);
+    return cx->runtime()->performanceMonitoring().setIsMonitoringCPOW(value);
 }
 JS_PUBLIC_API(bool)
 GetStopwatchIsMonitoringCPOW(JSContext* cx)
 {
-    return cx->performanceMonitoring.isMonitoringCPOW();
+    return cx->runtime()->performanceMonitoring().isMonitoringCPOW();
 }
 
 JS_PUBLIC_API(void)
 GetPerfMonitoringTestCpuRescheduling(JSContext* cx, uint64_t* stayed, uint64_t* moved)
 {
-    *stayed = cx->performanceMonitoring.testCpuRescheduling.stayed;
-    *moved = cx->performanceMonitoring.testCpuRescheduling.moved;
+    *stayed = cx->runtime()->performanceMonitoring().testCpuRescheduling.stayed;
+    *moved = cx->runtime()->performanceMonitoring().testCpuRescheduling.moved;
 }
 
 JS_PUBLIC_API(void)
 AddCPOWPerformanceDelta(JSContext* cx, uint64_t delta)
 {
-    cx->performanceMonitoring.totalCPOWTime += delta;
+    cx->runtime()->performanceMonitoring().totalCPOWTime += delta;
 }
 
 

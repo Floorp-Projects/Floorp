@@ -699,7 +699,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void leaveExitFrame(size_t extraFrame = 0);
 
   private:
-    // Save the top of the stack into PerThreadData::jitTop of the main thread,
+    // Save the top of the stack into JSontext::jitTop of the current thread,
     // which should be the location of the latest exit frame.
     void linkExitFrame();
 
@@ -1012,7 +1012,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch64(Condition cond, const Address& lhs, const Address& rhs, Register scratch,
                          Label* label) PER_ARCH;
 
-    inline void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;
+    template <class L>
+    inline void branchPtr(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, ImmPtr rhs, Label* label) PER_SHARED_ARCH;
     inline void branchPtr(Condition cond, Register lhs, ImmGCPtr rhs, Label* label) PER_SHARED_ARCH;

@@ -55,6 +55,8 @@ public:
 
     virtual bool SwapBuffers() override;
 
+    virtual void GetWSIInfo(nsCString* const out) const override;
+
     virtual GLuint GetDefaultFramebuffer() override {
         return mBackbufferFB;
     }

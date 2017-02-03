@@ -53,7 +53,7 @@ Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = fa
     code->copyFrom(masm);
     masm.link(code);
     if (masm.embedsNurseryPointers())
-        cx->runtime()->gc.storeBuffer.putWholeCell(code);
+        cx->zone()->group()->storeBuffer().putWholeCell(code);
     return code;
 }
 
