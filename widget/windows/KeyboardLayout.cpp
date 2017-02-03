@@ -2917,7 +2917,7 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
            "remove a char message, but it's already gone from all message "
            "queues, nextKeyMsg=%s, kFoundCharMsg=%s",
            this, ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
-        return true;
+        return true; // XXX should return false in this case
       }
       // The next key message is redirected to different window created by our
       // thread, we should do nothing because we must not have focus.
@@ -2931,11 +2931,40 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
            ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
         return true;
       }
+      // If next key message becomes non-char message, this key operation
+      // may have already been consumed or canceled.
+      if (!IsCharMessage(nextKeyMsgInAllWindows)) {
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message and next key message becomes non-char "
+           "message, nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, "
+           "kFoundCharMsg=%s",
+           this, ToString(nextKeyMsgInAllWindows).get(),
+           ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
+        MOZ_ASSERT(!mCharMessageHasGone);
+        mFollowingCharMsgs.Clear();
+        mCharMessageHasGone = true;
+        return false;
+      }
+      // If next key message is still a char message but different key message,
+      // we should treat current key operation is consumed or canceled and
+      // next char message should be handled as an orphan char message later.
+      if (!IsSamePhysicalKeyMessage(nextKeyMsgInAllWindows, kFoundCharMsg)) {
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message and next key message becomes differnt key's "
+           "char message, nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, "
+           "kFoundCharMsg=%s",
+           this, ToString(nextKeyMsgInAllWindows).get(),
+           ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
+        MOZ_ASSERT(!mCharMessageHasGone);
+        mFollowingCharMsgs.Clear();
+        mCharMessageHasGone = true;
+        return false;
+      }
       // If next key message is still a char message but the message is changed,
       // we should retry to remove the new message with PeekMessage() again.
-      if (IsCharMessage(nextKeyMsgInAllWindows) &&
-          nextKeyMsgInAllWindows.message != nextKeyMsg.message &&
-          IsSamePhysicalKeyMessage(nextKeyMsgInAllWindows, kFoundCharMsg)) {
+      if (nextKeyMsgInAllWindows.message != nextKeyMsg.message) {
         MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
           ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
            "remove a char message due to message change, let's retry to "
