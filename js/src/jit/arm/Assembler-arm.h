@@ -73,7 +73,6 @@ static constexpr Register IntArgReg0 = r0;
 static constexpr Register IntArgReg1 = r1;
 static constexpr Register IntArgReg2 = r2;
 static constexpr Register IntArgReg3 = r3;
-static constexpr Register GlobalReg = r10;
 static constexpr Register HeapReg = r11;
 static constexpr Register CallTempNonArgRegs[] = { r5, r6, r7, r8 };
 static const uint32_t NumCallTempNonArgRegs =
@@ -159,11 +158,6 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
       : AutoFloatRegisterScope(masm, ScratchDoubleReg)
     { }
 };
-
-// A bias applied to the GlobalReg to allow the use of instructions with small
-// negative immediate offsets which doubles the range of global data that can be
-// accessed with a single instruction.
-static const int32_t WasmGlobalRegBias = 1024;
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static constexpr Register WasmIonExitRegCallee = r4;

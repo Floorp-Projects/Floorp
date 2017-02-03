@@ -40,7 +40,6 @@ static constexpr Register IntArgReg0 = { Registers::invalid_reg };
 static constexpr Register IntArgReg1 = { Registers::invalid_reg };
 static constexpr Register IntArgReg2 = { Registers::invalid_reg };
 static constexpr Register IntArgReg3 = { Registers::invalid_reg };
-static constexpr Register GlobalReg = { Registers::invalid_reg };
 static constexpr Register HeapReg = { Registers::invalid_reg };
 
 static constexpr Register WasmIonExitRegCallee = { Registers::invalid_reg };
@@ -267,7 +266,9 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void loadInt32x1(T, FloatRegister dest) { MOZ_CRASH(); }
     template <typename T> void loadInt32x2(T, FloatRegister dest) { MOZ_CRASH(); }
     template <typename T> void loadInt32x3(T, FloatRegister dest) { MOZ_CRASH(); }
+    template <typename T> void loadInt32x4(T, FloatRegister dest) { MOZ_CRASH(); }
     template <typename T> void loadFloat32x3(T, FloatRegister dest) { MOZ_CRASH(); }
+    template <typename T> void loadFloat32x4(T, FloatRegister dest) { MOZ_CRASH(); }
 
     template <typename T> void loadPtr(T, Register) { MOZ_CRASH(); }
     template <typename T> void load32(T, Register) { MOZ_CRASH(); }
@@ -298,7 +299,9 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void storeInt32x1(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeInt32x2(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeInt32x3(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeInt32x4(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeFloat32x3(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeFloat32x4(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store64(T, S) { MOZ_CRASH(); }
 
     template <typename T> void computeEffectiveAddress(T, Register) { MOZ_CRASH(); }
