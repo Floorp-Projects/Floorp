@@ -128,6 +128,7 @@ using namespace mozilla::system;
 #include "TouchManager.h"
 #include "MediaDecoder.h"
 #include "MediaPrefs.h"
+#include "MediaShutdownManager.h"
 #include "mozilla/dom/devicestorage/DeviceStorageStatics.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
@@ -303,6 +304,8 @@ nsLayoutStatics::Initialize()
   nsStyleContext::Initialize();
   mozilla::LayerAnimationInfo::Initialize();
 #endif
+
+  MediaShutdownManager::InitStatics();
 
   MediaDecoder::InitStatics();
 
