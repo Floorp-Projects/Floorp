@@ -522,53 +522,21 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
                           tab => tab.convert());
       },
 
-      captureVisibleTab(windowId, options) {
-        if (!extension.hasPermission("<all_urls>")) {
-          return Promise.reject({message: "The <all_urls> permission is required to use the captureVisibleTab API"});
-        }
-
+      async captureVisibleTab(windowId, options) {
         let window = windowId == null ?
           windowTracker.topWindow :
           windowTracker.getWindow(windowId, context);
 
-        let tab = window.gBrowser.selectedTab;
-        return tabListener.awaitTabReady(tab).then(() => {
-          let browser = tab.linkedBrowser;
-          let recipient = {
-            innerWindowID: browser.innerWindowID,
-          };
+        let tab = tabManager.wrapTab(window.gBrowser.selectedTab);
+        await tabListener.awaitTabReady(tab.tab);
 
-          if (!options) {
-            options = {};
-          }
-          if (options.format == null) {
-            options.format = "png";
-          }
-          if (options.quality == null) {
-            options.quality = 92;
-          }
-
-          let message = {
-            options,
-            width: browser.clientWidth,
-            height: browser.clientHeight,
-          };
-
-          return context.sendMessage(browser.messageManager, "Extension:Capture",
-                                     message, {recipient});
-        });
+        return tab.capture(context, options);
       },
 
       async detectLanguage(tabId) {
-        let tab = getTabOrActive(tabId);
+        let tab = await promiseTabWhenReady(tabId);
 
-        return tabListener.awaitTabReady(tab).then(() => {
-          let browser = tab.linkedBrowser;
-          let recipient = {innerWindowID: browser.innerWindowID};
-
-          return context.sendMessage(browser.messageManager, "Extension:DetectLanguage",
-                                     {}, {recipient});
-        });
+        return tab.sendMessage(context, "Extension:DetectLanguage");
       },
 
       async executeScript(tabId, details) {

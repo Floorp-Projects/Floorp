@@ -36,6 +36,70 @@ class TabBase {
     this.activeTabWindowID = null;
   }
 
+  /**
+   * Sends a message, via the given context, to the ExtensionContent running in
+   * this tab. The tab's current innerWindowID is automatically added to the
+   * recipient filter for the message, and is used to ensure that the message is
+   * not processed if the content process navigates to a different content page
+   * before the message is received.
+   *
+   * @param {BaseContext} context
+   *        The context through which to send the message.
+   * @param {string} messageName
+   *        The name of the messge to send.
+   * @param {object} [data = {}]
+   *        Arbitrary, structured-clonable message data to send.
+   * @param {object} [options]
+   *        An options object, as accepted by BaseContext.sendMessage.
+   *
+   * @returns {Promise}
+   */
+  sendMessage(context, messageName, data = {}, options = null) {
+    let {browser, innerWindowID} = this;
+
+    options = Object.assign({}, options);
+    options.recipient = Object.assign({innerWindowID}, options.recipient);
+
+    return context.sendMessage(browser.messageManager, messageName,
+                               data, options);
+  }
+
+  /**
+   * Capture the visible area of this tab, and return the result as a data: URL.
+   *
+   * @param {BaseContext} context
+   *        The extension context for which to perform the capture.
+   * @param {Object} [options]
+   *        The options with which to perform the capture.
+   * @param {string} [options.format = "png"]
+   *        The image format in which to encode the captured data. May be one of
+   *        "png" or "jpeg".
+   * @param {integer} [options.quality = 92]
+   *        The quality at which to encode the captured image data, ranging from
+   *        0 to 100. Has no effect for the "png" format.
+   *
+   * @returns {Promise<string>}
+   */
+  capture(context, options = null) {
+    if (!options) {
+      options = {};
+    }
+    if (options.format == null) {
+      options.format = "png";
+    }
+    if (options.quality == null) {
+      options.quality = 92;
+    }
+
+    let message = {
+      options,
+      width: this.width,
+      height: this.height,
+    };
+
+    return this.sendMessage(context, "Extension:Capture", message);
+  }
+
   get innerWindowID() {
     return this.browser.innerWindowID;
   }
@@ -196,12 +260,7 @@ class TabBase {
       options.css_origin = "author";
     }
 
-    let {browser} = this;
-    let recipient = {
-      innerWindowID: browser.innerWindowID,
-    };
-
-    return context.sendMessage(browser.messageManager, "Extension:Execute", {options}, {recipient});
+    return this.sendMessage(context, "Extension:Execute", {options});
   }
 
   executeScript(context, details) {
