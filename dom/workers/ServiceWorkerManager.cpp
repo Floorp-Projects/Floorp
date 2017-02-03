@@ -1374,7 +1374,7 @@ void
 ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWorker);
+  MOZ_DIAGNOSTIC_ASSERT(aWorker);
 
   RefPtr<ServiceWorkerRegistrationInfo> reg =
     GetRegistration(aWorker->GetPrincipal(), aWorker->Scope());
