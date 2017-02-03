@@ -1984,10 +1984,6 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
             return false;
     }
 
-    // Only optimize if the dynamic slots didn't change. TODO: bug 1091978.
-    if (NativeObject::dynamicSlotsCount(propShape) != NativeObject::dynamicSlotsCount(oldShape))
-        return false;
-
     // Don't attach if we are adding a property to an object which the new
     // script properties analysis hasn't been performed for yet, as there
     // may be a shape change required here afterwards.
@@ -2041,8 +2037,16 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
                                     changeGroup, newGroup);
     } else {
         size_t offset = holderOrExpando->dynamicSlotIndex(propShape->slot()) * sizeof(Value);
-        writer.addAndStoreDynamicSlot(holderId, offset, rhsValId, propShape,
-                                      changeGroup, newGroup);
+        uint32_t numOldSlots = NativeObject::dynamicSlotsCount(oldShape);
+        uint32_t numNewSlots = NativeObject::dynamicSlotsCount(propShape);
+        if (numOldSlots == numNewSlots) {
+            writer.addAndStoreDynamicSlot(holderId, offset, rhsValId, propShape,
+                                          changeGroup, newGroup);
+        } else {
+            MOZ_ASSERT(numNewSlots > numOldSlots);
+            writer.allocateAndStoreDynamicSlot(holderId, offset, rhsValId, propShape,
+                                               changeGroup, newGroup, numNewSlots);
+        }
     }
     writer.returnFromIC();
 
