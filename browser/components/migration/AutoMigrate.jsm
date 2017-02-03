@@ -417,6 +417,9 @@ const AutoMigrate = {
 
   _dejsonifyUndoState(state) {
     state = JSON.parse(state);
+    if (!state) {
+      return new Map();
+    }
     for (let bm of state.bookmarks) {
       bm.lastModified = new Date(bm.lastModified);
     }
@@ -433,6 +436,13 @@ const AutoMigrate = {
     this._saveUndoStateTrackerForShutdown = "processing undo history";
     this._savingPromise = new Promise(resolve => { resolveSavingPromise = resolve });
     let state = yield MigrationUtils.stopAndRetrieveUndoData();
+
+    if (!state || ![...state.values()].some(ary => ary.length > 0)) {
+      // If we didn't import anything, abort now.
+      resolveSavingPromise();
+      return Promise.resolve();
+    }
+
     this._saveUndoStateTrackerForShutdown = "writing undo history";
     this._undoSavePromise = OS.File.writeAtomic(
       kUndoStateFullPath, this._jsonifyUndoState(state), {

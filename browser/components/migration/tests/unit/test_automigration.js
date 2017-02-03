@@ -144,6 +144,7 @@ add_task(function* checkIntegration() {
  * Test the undo preconditions and a no-op undo in the automigrator.
  */
 add_task(function* checkUndoPreconditions() {
+  let shouldAddData = false;
   gShimmedMigrator = {
     get sourceProfiles() {
       do_print("Read sourceProfiles");
@@ -155,6 +156,15 @@ add_task(function* checkUndoPreconditions() {
     },
     migrate(types, startup, profileToMigrate) {
       this._migrateArgs = [types, startup, profileToMigrate];
+      if (shouldAddData) {
+        // Insert a login and check that that worked.
+        MigrationUtils.insertLoginWrapper({
+          hostname: "www.mozilla.org",
+          formSubmitURL: "http://www.mozilla.org",
+          username: "user",
+          password: "pass",
+        });
+      }
       TestUtils.executeSoon(function() {
         Services.obs.notifyObservers(null, "Migration:Ended", undefined);
       });
@@ -177,10 +187,35 @@ add_task(function* checkUndoPreconditions() {
   yield migrationFinishedPromise;
   Assert.ok(Preferences.has("browser.migrate.automigrate.browser"),
             "Should have set browser pref");
-  Assert.ok((yield AutoMigrate.canUndo()), "Should be able to undo migration");
+  Assert.ok(!(yield AutoMigrate.canUndo()), "Should not be able to undo migration, as there's no data");
+  gShimmedMigrator._migrateArgs = null;
+  gShimmedMigrator._getMigrateDataArgs = null;
+  Preferences.reset("browser.migrate.automigrate.browser");
+  shouldAddData = true;
+
+  AutoMigrate.migrate("startup");
+  migrationFinishedPromise = TestUtils.topicObserved("Migration:Ended");
+  Assert.strictEqual(gShimmedMigrator._getMigrateDataArgs, null,
+                     "getMigrateData called with 'null' as a profile");
+  Assert.deepEqual(gShimmedMigrator._migrateArgs, [expectedTypes, "startup", null],
+                   "migrate called with 'null' as a profile");
+
+  yield migrationFinishedPromise;
+  let storedLogins = Services.logins.findLogins({}, "www.mozilla.org",
+                                                "http://www.mozilla.org", null);
+  Assert.equal(storedLogins.length, 1, "Should have 1 login");
+
+  Assert.ok(Preferences.has("browser.migrate.automigrate.browser"),
+            "Should have set browser pref");
+  Assert.ok((yield AutoMigrate.canUndo()), "Should be able to undo migration, as now there's data");
 
   yield AutoMigrate.undo();
   Assert.ok(true, "Should be able to finish an undo cycle.");
+
+  // Check that the undo removed the passwords:
+  storedLogins = Services.logins.findLogins({}, "www.mozilla.org",
+                                                "http://www.mozilla.org", null);
+  Assert.equal(storedLogins.length, 0, "Should have no logins");
 });
 
 /**
