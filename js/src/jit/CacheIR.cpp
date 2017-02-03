@@ -244,8 +244,9 @@ IsCacheableNoProperty(JSContext* cx, JSObject* obj, JSObject* holder, Shape* sha
         return false;
     }
 
-    // If we're doing a name lookup, we have to throw a ReferenceError.
-    if (*pc == JSOP_GETXPROP)
+    // If we're doing a name lookup, we have to throw a ReferenceError. If
+    // extra warnings are enabled, we may have to report a warning.
+    if (*pc == JSOP_GETXPROP || cx->compartment()->behaviors().extraWarnings(cx))
         return false;
 
     return CheckHasNoSuchProperty(cx, obj, id);
