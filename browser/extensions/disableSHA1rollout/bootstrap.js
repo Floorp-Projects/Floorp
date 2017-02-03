@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm");
 
  // Percentage of the population to attempt to disable SHA-1 for, by channel.
 const TEST_THRESHOLD = {
-  beta: 0.1, // 10%
+  beta: 0.5, // 50%
 };
 
 const PREF_COHORT_SAMPLE = "disableSHA1.rollout.cohortSample";
