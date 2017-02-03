@@ -23,33 +23,45 @@ using namespace js::gc;
 
 Zone * const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
-JS::Zone::Zone(JSRuntime* rt)
+JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
   : JS::shadow::Zone(rt, &rt->gc.marker),
-    debuggers(nullptr),
-    suppressAllocationMetadataBuilder(false),
-    arenas(rt),
+    group_(group),
+    debuggers(group, nullptr),
+    uniqueIds_(group),
+    suppressAllocationMetadataBuilder(group, false),
+    arenas(rt, group),
     types(this),
-    compartments(),
-    gcGrayRoots(),
-    gcWeakKeys(SystemAllocPolicy(), rt->randomHashCodeScrambler()),
-    typeDescrObjects(this, SystemAllocPolicy()),
+    gcWeakMapList_(group),
+    compartments_(),
+    gcGrayRoots_(group),
+    gcWeakRefs_(group),
+    weakCaches_(group),
+    gcWeakKeys_(group, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
+    gcZoneGroupEdges_(group),
+    typeDescrObjects_(group, this, SystemAllocPolicy()),
     gcMallocBytes(0),
+    gcMaxMallocBytes(0),
     gcMallocGCTriggered(false),
+    markedAtoms_(group),
     usage(&rt->gc.usage),
+    threshold(),
     gcDelayBytes(0),
-    propertyTree(this),
-    baseShapes(this, BaseShapeSet()),
-    initialShapes(this, InitialShapeSet()),
-    data(nullptr),
-    isSystem(false),
+    propertyTree_(group, this),
+    baseShapes_(group, this, BaseShapeSet()),
+    initialShapes_(group, this, InitialShapeSet()),
+    data(group, nullptr),
+    isSystem(group, false),
     usedByExclusiveThread(false),
-    jitZone_(nullptr),
+#ifdef DEBUG
+    gcLastZoneGroupIndex(group, 0),
+#endif
+    jitZone_(group, nullptr),
     gcState_(NoGC),
     gcScheduled_(false),
-    gcPreserveCode_(false),
-    jitUsingBarriers_(false),
-    keepShapeTables_(false),
-    listNext_(NotOnList)
+    gcPreserveCode_(group, false),
+    jitUsingBarriers_(group, false),
+    keepShapeTables_(group, false),
+    listNext_(group, NotOnList)
 {
     /* Ensure that there are no vtables to mess us up here. */
     MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
@@ -62,27 +74,27 @@ JS::Zone::Zone(JSRuntime* rt)
 
 Zone::~Zone()
 {
-    JSRuntime* rt = runtimeFromMainThread();
+    JSRuntime* rt = runtimeFromAnyThread();
     if (this == rt->gc.systemZone)
         rt->gc.systemZone = nullptr;
 
-    js_delete(debuggers);
-    js_delete(jitZone_);
+    js_delete(debuggers.ref());
+    js_delete(jitZone_.ref());
 
 #ifdef DEBUG
     // Avoid assertion destroying the weak map list if the embedding leaked GC things.
     if (!rt->gc.shutdownCollectedEverything())
-        gcWeakMapList.clear();
+        gcWeakMapList().clear();
 #endif
 }
 
 bool Zone::init(bool isSystemArg)
 {
     isSystem = isSystemArg;
-    return uniqueIds_.init() &&
-           gcZoneGroupEdges.init() &&
-           gcWeakKeys.init() &&
-           typeDescrObjects.init();
+    return uniqueIds().init() &&
+           gcZoneGroupEdges().init() &&
+           gcWeakKeys().init() &&
+           typeDescrObjects().init();
 }
 
 void
@@ -147,7 +159,7 @@ Zone::getOrCreateDebuggers(JSContext* cx)
 void
 Zone::sweepBreakpoints(FreeOp* fop)
 {
-    if (fop->runtime()->debuggerList.isEmpty())
+    if (!group() || group()->debuggerList().isEmpty())
         return;
 
     /*
@@ -273,7 +285,7 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 void
 JS::Zone::checkUniqueIdTableAfterMovingGC()
 {
-    for (UniqueIdMap::Enum e(uniqueIds_); !e.empty(); e.popFront())
+    for (UniqueIdMap::Enum e(uniqueIds()); !e.empty(); e.popFront())
         js::gc::CheckGCThingAfterMovingGC(e.front().key());
 }
 #endif
@@ -368,10 +380,10 @@ Zone::nextZone() const
 void
 Zone::clearTables()
 {
-    if (baseShapes.initialized())
-        baseShapes.clear();
-    if (initialShapes.initialized())
-        initialShapes.clear();
+    if (baseShapes().initialized())
+        baseShapes().clear();
+    if (initialShapes().initialized())
+        initialShapes().clear();
 }
 
 void
@@ -387,7 +399,7 @@ Zone::addTypeDescrObject(JSContext* cx, HandleObject obj)
     // on the set.
     MOZ_ASSERT(!IsInsideNursery(obj));
 
-    if (!typeDescrObjects.put(obj)) {
+    if (!typeDescrObjects().put(obj)) {
         ReportOutOfMemory(cx);
         return false;
     }

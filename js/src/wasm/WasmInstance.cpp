@@ -339,7 +339,7 @@ Instance::Instance(JSContext* cx,
     tlsData_.instance = this;
     tlsData_.globalData = code_->segment().globalData();
     tlsData_.memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
-    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(StackForUntrustedScript);
+    tlsData_.stackLimit = *(void**)cx->stackLimitAddressForJitCode(JS::StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
@@ -798,7 +798,7 @@ Instance::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
     if (code_->profilingEnabled() == newProfilingEnabled)
         return true;
 
-    if (!code_->ensureProfilingState(cx, newProfilingEnabled))
+    if (!code_->ensureProfilingState(cx->runtime(), newProfilingEnabled))
         return false;
 
     // Imported wasm functions and typed function tables point directly to

@@ -738,9 +738,7 @@ protected:
   virtual void SysColorChanged() override { mPresContext->SysColorChanged(); }
   virtual void ThemeChanged() override { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() override { mPresContext->UIResolutionChanged(); }
-#ifdef ANDROID
-  virtual nsIDocument* GetTouchEventTargetDocument() override;
-#endif
+  virtual nsIDocument* GetPrimaryContentDocument() override;
 
   virtual void PausePainting() override;
   virtual void ResumePainting() override;

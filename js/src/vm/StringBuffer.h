@@ -36,7 +36,7 @@ class StringBuffer
     typedef Vector<Latin1Char, 64> Latin1CharBuffer;
     typedef Vector<char16_t, 32> TwoByteCharBuffer;
 
-    ExclusiveContext* cx;
+    JSContext* cx;
 
     /*
      * If Latin1 strings are enabled, cb starts out as a Latin1CharBuffer. When
@@ -75,7 +75,7 @@ class StringBuffer
     MOZ_MUST_USE bool inflateChars();
 
   public:
-    explicit StringBuffer(ExclusiveContext* cx)
+    explicit StringBuffer(JSContext* cx)
       : cx(cx)
 #ifdef DEBUG
       , hasEnsuredTwoByteChars_(false)

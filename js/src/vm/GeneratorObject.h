@@ -48,7 +48,7 @@ class GeneratorObject : public NativeObject
         return static_cast<ResumeKind>(arg);
     }
 
-    static inline ResumeKind getResumeKind(ExclusiveContext* cx, JSAtom* atom) {
+    static inline ResumeKind getResumeKind(JSContext* cx, JSAtom* atom) {
         if (atom == cx->names().next)
             return NEXT;
         if (atom == cx->names().throw_)

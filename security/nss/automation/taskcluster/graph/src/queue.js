@@ -80,6 +80,7 @@ function parseTreeherder(def) {
 }
 
 function convertTask(def) {
+  let scopes = [];
   let dependencies = [];
 
   let env = merge({
@@ -110,12 +111,16 @@ function convertTask(def) {
     payload.image = def.image;
   }
 
-  if (def.features) {
-    payload.features = parseFeatures(def.features);
-  }
-
   if (def.artifacts) {
     payload.artifacts = parseArtifacts(def.artifacts);
+  }
+
+  if (def.features) {
+    payload.features = parseFeatures(def.features);
+
+    if (payload.features.allowPtrace) {
+      scopes.push("docker-worker:feature:allowPtrace");
+    }
   }
 
   return {
@@ -123,6 +128,7 @@ function convertTask(def) {
     workerType: def.workerType || "hg-worker",
     schedulerId: "task-graph-scheduler",
 
+    scopes,
     created: fromNow(0),
     deadline: fromNow(24),
 

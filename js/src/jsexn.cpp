@@ -603,7 +603,7 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     // Prevent infinite recursion.
     if (cx->generatingError)
         return;
-    AutoScopedAssign<bool> asa(&cx->generatingError, true);
+    AutoScopedAssign<bool> asa(&cx->generatingError.ref(), true);
 
     // Create an exception object.
     RootedString messageStr(cx, reportp->newMessageString(cx));

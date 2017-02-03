@@ -66,12 +66,12 @@ ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64);
 // eval/compile methods.
 
 bool
-HasCompilerSupport(ExclusiveContext* cx);
+HasCompilerSupport(JSContext* cx);
 
 // Return whether WebAssembly is enabled on this platform.
 
 bool
-HasSupport(ExclusiveContext* cx);
+HasSupport(JSContext* cx);
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
@@ -135,7 +135,7 @@ class WasmModuleObject : public NativeObject
     static const JSFunctionSpec static_methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmModuleObject* create(ExclusiveContext* cx,
+    static WasmModuleObject* create(JSContext* cx,
                                     wasm::Module& module,
                                     HandleObject proto = nullptr);
     wasm::Module& module() const;
@@ -234,7 +234,7 @@ class WasmMemoryObject : public NativeObject
     static const JSFunctionSpec static_methods[];
     static bool construct(JSContext*, unsigned, Value*);
 
-    static WasmMemoryObject* create(ExclusiveContext* cx,
+    static WasmMemoryObject* create(JSContext* cx,
                                     Handle<ArrayBufferObjectMaybeShared*> buffer,
                                     HandleObject proto);
     ArrayBufferObjectMaybeShared& buffer() const;

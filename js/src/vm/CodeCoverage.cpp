@@ -511,7 +511,7 @@ LCovCompartment::exportInto(GenericPrinter& out, bool* isEmpty) const
 bool
 LCovCompartment::writeCompartmentName(JSCompartment* comp)
 {
-    JSContext* cx = comp->contextFromMainThread();
+    JSContext* cx = TlsContext.get();
 
     // lcov trace files are starting with an optional test case name, that we
     // recycle to be a compartment name.
@@ -520,12 +520,12 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
     // thus we escape invalid chracters with a "_" symbol in front of its
     // hexadecimal code.
     outTN_.put("TN:");
-    if (cx->compartmentNameCallback) {
+    if (cx->runtime()->compartmentNameCallback) {
         char name[1024];
         {
             // Hazard analysis cannot tell that the callback does not GC.
             JS::AutoSuppressGCAnalysis nogc;
-            (*cx->compartmentNameCallback)(cx, comp, name, sizeof(name));
+            (*cx->runtime()->compartmentNameCallback)(cx, comp, name, sizeof(name));
         }
         for (char *s = name; s < name + sizeof(name) && *s; s++) {
             if (('a' <= *s && *s <= 'z') ||

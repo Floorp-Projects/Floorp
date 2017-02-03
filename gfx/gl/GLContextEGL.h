@@ -88,6 +88,8 @@ public:
 
     virtual bool SwapBuffers() override;
 
+    virtual void GetWSIInfo(nsCString* const out) const override;
+
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface* aSurf);
