@@ -47,7 +47,7 @@ SharedWorker::~SharedWorker()
 
 // static
 already_AddRefed<SharedWorker>
-SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+SharedWorker::Constructor(const GlobalObject& aGlobal,
                           const nsAString& aScriptURL,
                           const mozilla::dom::Optional<nsAString>& aName,
                           ErrorResult& aRv)
