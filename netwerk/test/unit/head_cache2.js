@@ -317,14 +317,28 @@ VisitCallback.prototype =
     if (!this.entries)
       this.notify();
   },
-  onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime)
+  onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime,
+                             aPinned, aInfo)
   {
     var key = (aIdEnhance ? (aIdEnhance + ":") : "") + aURI.asciiSpec;
     LOG_C2(this, "onCacheEntryInfo: key=" + key);
 
+    function findCacheIndex(element) {
+      if (typeof(element) === "string") {
+        return element === key;
+      } else if (typeof(element) === "object") {
+        return element.uri === key &&
+               element.lci.isAnonymous === aInfo.isAnonymous &&
+               ChromeUtils.isOriginAttributesEqual(element.lci.originAttributes,
+                                                   aInfo.originAttributes);
+      }
+
+      return false;
+    }
+
     do_check_true(!!this.entries);
 
-    var index = this.entries.indexOf(key);
+    var index = this.entries.findIndex(findCacheIndex);
     do_check_true(index > -1);
 
     this.entries.splice(index, 1);
