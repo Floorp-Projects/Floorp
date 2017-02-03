@@ -997,7 +997,8 @@ class GCRuntime
     void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
     void updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount);
     void updateAllCellPointers(MovingTracer* trc, Zone* zone);
-    void updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess& lock);
+    void updateZonePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess& lock);
+    void updateRuntimePointersToRelocatedCells(AutoLockForExclusiveAccess& lock);
     void protectAndHoldArenas(Arena* arenaList);
     void unprotectHeldRelocatedArenas();
     void releaseRelocatedArenas(Arena* arenaList);

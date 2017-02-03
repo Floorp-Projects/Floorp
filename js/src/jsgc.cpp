@@ -2514,13 +2514,14 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 }
 
 /*
- * Update pointers to relocated cells by doing a full heap traversal and sweep.
+ * Update pointers to relocated cells in a single zone by doing a traversal of
+ * that zone's arenas and calling per-zone sweep hooks.
  *
  * The latter is necessary to update weak references which are not marked as
  * part of the traversal.
  */
 void
-GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess& lock)
+GCRuntime::updateZonePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(!rt->isBeingDestroyed());
     MOZ_ASSERT(zone->isGCCompacting());
@@ -2533,8 +2534,6 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
     // Fixup compartment global pointers as these get accessed during marking.
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         comp->fixupAfterMovingGC();
-    JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
-    rt->geckoProfiler.fixupStringsMapAfterMovingGC();
 
     // Iterate through all cells that can contain relocatable pointers to update
     // them. Since updating each cell is independent we try to parallelize this
@@ -2543,11 +2542,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
 
     // Mark roots to update them.
     {
-        traceRuntimeForMajorGC(&trc, lock);
-
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-        Debugger::traceAll(&trc);
-        Debugger::traceIncomingCrossCompartmentEdges(&trc);
 
         WeakMapBase::traceZone(zone, &trc);
         for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
@@ -2555,6 +2550,40 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
             if (c->watchpointMap)
                 c->watchpointMap->trace(&trc);
         }
+    }
+
+    // Sweep everything to fix up weak pointers.
+    rt->gc.sweepZoneAfterCompacting(zone);
+
+    // Call callbacks to get the rest of the system to fixup other untraced pointers.
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+        callWeakPointerCompartmentCallbacks(comp);
+    if (rt->sweepZoneCallback)
+        rt->sweepZoneCallback(zone);
+}
+
+/*
+ * Update runtime-wide pointers to relocated cells.
+ */
+void
+GCRuntime::updateRuntimePointersToRelocatedCells(AutoLockForExclusiveAccess& lock)
+{
+    MOZ_ASSERT(!rt->isBeingDestroyed());
+
+    gcstats::AutoPhase ap1(stats, gcstats::PHASE_COMPACT_UPDATE);
+    MovingTracer trc(rt);
+
+    JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
+
+    rt->geckoProfiler.fixupStringsMapAfterMovingGC();
+
+    traceRuntimeForMajorGC(&trc, lock);
+
+    // Mark roots to update them.
+    {
+        gcstats::AutoPhase ap2(stats, gcstats::PHASE_MARK_ROOTS);
+        Debugger::traceAll(&trc);
+        Debugger::traceIncomingCrossCompartmentEdges(&trc);
 
         // Mark all gray roots, making sure we call the trace callback to get the
         // current set.
@@ -2562,21 +2591,16 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
             (*op)(&trc, grayRootTracer.data);
     }
 
-    // Sweep everything to fix up weak pointers
+    // Sweep everything to fix up weak pointers.
     WatchpointMap::sweepAll(rt);
     Debugger::sweepAll(rt->defaultFreeOp());
     jit::JitRuntime::SweepJitcodeGlobalTable(rt);
-    rt->gc.sweepZoneAfterCompacting(zone);
 
     // Type inference may put more blocks here to free.
     blocksToFreeAfterSweeping.freeAll();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerZoneGroupCallbacks();
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        callWeakPointerCompartmentCallbacks(comp);
-    if (rt->sweepZoneCallback)
-        rt->sweepZoneCallback(zone);
 }
 
 void
@@ -5481,23 +5505,42 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
+    // TODO: JSScripts can move. If the sampler interrupts the GC in the
+    // middle of relocating an arena, invalid JSScript pointers may be
+    // accessed. Suppress all sampling until a finer-grained solution can be
+    // found. See bug 1295775.
+    AutoSuppressProfilerSampling suppressSampling(rt);
+
+    ZoneList relocatedZones;
     Arena* relocatedArenas = nullptr;
     while (!zonesToMaybeCompact.isEmpty()) {
-        // TODO: JSScripts can move. If the sampler interrupts the GC in the
-        // middle of relocating an arena, invalid JSScript pointers may be
-        // accessed. Suppress all sampling until a finer-grained solution can be
-        // found. See bug 1295775.
-        AutoSuppressProfilerSampling suppressSampling(rt);
 
         Zone* zone = zonesToMaybeCompact.front();
+        zonesToMaybeCompact.removeFront();
+
         MOZ_ASSERT(zone->isGCFinished());
         zone->setGCState(Zone::Compact);
-        if (relocateArenas(zone, reason, relocatedArenas, sliceBudget))
-            updatePointersToRelocatedCells(zone, lock);
-        zone->setGCState(Zone::Finished);
-        zonesToMaybeCompact.removeFront();
+
+        if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
+            updateZonePointersToRelocatedCells(zone, lock);
+            relocatedZones.append(zone);
+        } else {
+            zone->setGCState(Zone::Finished);
+        }
+
         if (sliceBudget.isOverBudget())
             break;
+    }
+
+    if (!relocatedZones.isEmpty()) {
+        updateRuntimePointersToRelocatedCells(lock);
+
+        do {
+            Zone* zone = relocatedZones.front();
+            relocatedZones.removeFront();
+            zone->setGCState(Zone::Finished);
+        }
+        while (!relocatedZones.isEmpty());
     }
 
     if (ShouldProtectRelocatedArenas(reason))

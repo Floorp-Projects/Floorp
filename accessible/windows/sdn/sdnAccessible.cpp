@@ -166,7 +166,7 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
   if (!mNode->IsElement())
     return S_FALSE;
 
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mNode));
+  dom::Element* domElement = mNode->AsElement();
   nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
 
   int32_t index = 0;
@@ -177,18 +177,16 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
       nsAutoString attributeName(nsDependentString(
         static_cast<const wchar_t*>(aAttribNames[index])));
 
-      nsresult rv = NS_OK;
       if (aNameSpaceID[index]>0 &&
         NS_SUCCEEDED(nameSpaceManager->GetNameSpaceURI(aNameSpaceID[index],
                                                        nameSpaceURI))) {
-          rv = domElement->GetAttributeNS(nameSpaceURI, attributeName,
+          domElement->GetAttributeNS(nameSpaceURI, attributeName,
                                           attributeValue);
       } else {
-        rv = domElement->GetAttribute(attributeName, attributeValue);
+        domElement->GetAttribute(attributeName, attributeValue);
       }
 
-      if (NS_SUCCEEDED(rv))
-        aAttribValues[index] = ::SysAllocString(attributeValue.get());
+      aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }
   }
 

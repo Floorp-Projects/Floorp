@@ -102,6 +102,7 @@ LOCAL_INCLUDES += [
     '../painting',
     '../style',
     '/dom/base',
+    '/dom/xul',
 ]
 
 if CONFIG['GNU_CXX']:

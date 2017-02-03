@@ -42,13 +42,21 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   // required show events.
   if (!parent) {
     NS_ERROR("adding child to unknown accessible");
+#ifdef DEBUG
     return IPC_FAIL(this, "unknown parent accessible");
+#else
+    return IPC_OK();
+#endif
   }
 
   uint32_t newChildIdx = aData.Idx();
   if (newChildIdx > parent->ChildrenCount()) {
     NS_ERROR("invalid index to add child at");
+#ifdef DEBUG
     return IPC_FAIL(this, "invalid index");
+#else
+    return IPC_OK();
+#endif
   }
 
   uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);

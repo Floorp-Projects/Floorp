@@ -34,38 +34,51 @@ inline mozilla::dom::ShadowRoot* nsIContent::GetShadowRoot() const
 }
 
 template<nsIContent::FlattenedParentType Type>
-static inline nsINode*
-GetFlattenedTreeParentNode(const nsINode* aNode)
+static inline bool FlattenedTreeParentIsParent(const nsINode* aNode)
 {
-  nsINode* parent = aNode->GetParentNode();
   // Try to short-circuit past the complicated and not-exactly-fast logic for
   // computing the flattened parent.
   //
-  // There are four cases where we need might something other than parentNode:
-  //   (1) The node is an explicit child of an XBL-bound element, re-bound
-  //       to an XBL insertion point.
-  //   (2) The node is a top-level element in a shadow tree, whose flattened
-  //       parent is the host element (as opposed to the actual parent which
-  //       is the shadow root).
-  //   (3) The node is an explicit child of an element with a shadow root,
-  //       re-bound to an insertion point.
-  //   (4) We want the flattened parent for style, and the node is the root
-  //       of a native anonymous content subtree parented to the document's
-  //       root element.
-  bool needSlowCall = aNode->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
-                      aNode->IsInShadowTree() ||
-                      (parent &&
-                       parent->IsContent() &&
-                       parent->AsContent()->GetShadowRoot()) ||
-                      (Type == nsIContent::eForStyle &&
-                       aNode->IsContent() &&
-                       aNode->AsContent()->IsRootOfNativeAnonymousSubtree() &&
-                       aNode->OwnerDoc()->GetRootElement() == parent);
-  if (MOZ_UNLIKELY(needSlowCall)) {
-    MOZ_ASSERT(aNode->IsContent());
-    return aNode->AsContent()->GetFlattenedTreeParentNodeInternal(Type);
+  // WARNING! This logic is replicated in Servo to avoid out of line calls.
+  // If you change the cases here, you need to change them in Servo as well!
+
+  // Check if the node is an explicit child of an XBL-bound element, re-bound to
+  // an XBL insertion point, or is a top-level element in a shadow tree, whose
+  // flattened parent is the host element (as opposed to the actual parent which
+  // is the shadow root).
+  if (aNode->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR | NODE_IS_IN_SHADOW_TREE)) {
+    return false;
   }
-  return parent;
+
+  // Check if we want the flattened parent for style, and the node is the root
+  // of a native anonymous content subtree parented to the document's root element.
+  if (Type == nsIContent::eForStyle && aNode->HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) &&
+      aNode->OwnerDoc()->GetRootElement() == aNode->GetParentNode())
+  {
+    return false;
+  }
+
+  // Check if the node is an explicit child of an element with a shadow root,
+  // re-bound to an insertion point.
+  nsIContent* parent = aNode->GetParent();
+  if (parent && parent->GetShadowRoot()) {
+    return false;
+  }
+
+  // Common case.
+  return true;
+}
+
+template<nsIContent::FlattenedParentType Type>
+static inline nsINode*
+GetFlattenedTreeParentNode(const nsINode* aNode)
+{
+  if (MOZ_LIKELY(FlattenedTreeParentIsParent<Type>(aNode))) {
+    return aNode->GetParentNode();
+  }
+
+  MOZ_ASSERT(aNode->IsContent());
+  return aNode->AsContent()->GetFlattenedTreeParentNodeInternal(Type);
 }
 
 inline nsINode*
