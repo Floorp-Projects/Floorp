@@ -58,8 +58,7 @@ var Presentation = {
   init() {
     log("init");
     // Register PresentationDevicePrompt into a XPCOM component.
-    let {PresentationDevicePrompt} = Cu.import(PRESENTATION_DEVICE_PROMPT_PATH, {});
-    this.PresentationDevicePrompt = PresentationDevicePrompt;
+    Cu.import(PRESENTATION_DEVICE_PROMPT_PATH);
     this._register();
   },
 
@@ -67,7 +66,6 @@ var Presentation = {
     log("uninit");
     // Unregister PresentationDevicePrompt XPCOM component.
     this._unregister();
-    delete this.PresentationDevicePrompt;
     Cu.unload(PRESENTATION_DEVICE_PROMPT_PATH);
   },
 
@@ -75,7 +73,7 @@ var Presentation = {
   _register() {
     log("_register");
     this._devicePromptFactory = new Factory();
-    this._devicePromptFactory.register(this.PresentationDevicePrompt);
+    this._devicePromptFactory.register(PresentationDevicePrompt);
   },
 
   _unregister() {

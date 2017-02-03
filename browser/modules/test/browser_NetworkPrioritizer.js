@@ -19,12 +19,11 @@ function* getPriority(aBrowser) {
     aBrowser = aBrowser.linkedBrowser;
 
   return yield ContentTask.spawn(aBrowser, null, function* () {
-    return content.document.docShell
-      .QueryInterface(Components.interfaces.nsIWebNavigation)
-      .QueryInterface(Components.interfaces.nsIDocumentLoader)
-      .loadGroup
-      .QueryInterface(Components.interfaces.nsISupportsPriority)
-      .priority;
+    return docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+                   .QueryInterface(Components.interfaces.nsIDocumentLoader)
+                   .loadGroup
+                   .QueryInterface(Components.interfaces.nsISupportsPriority)
+                   .priority;
   });
 }
 
@@ -33,12 +32,11 @@ function* setPriority(aBrowser, aPriority) {
     aBrowser = aBrowser.linkedBrowser;
 
   yield ContentTask.spawn(aBrowser, aPriority, function* (contentPriority) {
-    content.document.docShell
-      .QueryInterface(Components.interfaces.nsIWebNavigation)
-      .QueryInterface(Components.interfaces.nsIDocumentLoader)
-      .loadGroup
-      .QueryInterface(Ci.nsISupportsPriority)
-      .priority = contentPriority;
+    docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
+                                    .QueryInterface(Components.interfaces.nsIDocumentLoader)
+                                    .loadGroup
+                                    .QueryInterface(Ci.nsISupportsPriority)
+                                    .priority = contentPriority;
   });
 }
 
