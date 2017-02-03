@@ -563,6 +563,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadPtr(const Address& address, Register dest) {
         movq(Operand(address), dest);
     }
+    void load64(const Address& address, Register dest) {
+        movq(Operand(address), dest);
+    }
     void loadPtr(const Operand& src, Register dest) {
         movq(src, dest);
     }
@@ -606,6 +609,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(scratch, Operand(address));
     }
     void storePtr(Register src, const Address& address) {
+        movq(src, Operand(address));
+    }
+    void store64(Register src, const Address& address) {
         movq(src, Operand(address));
     }
     void storePtr(Register src, const BaseIndex& address) {
@@ -878,8 +884,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
                                      Label* oolRejoin, FloatRegister tempDouble);
 
     void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-        CodeOffset label = loadRipRelativeInt64(dest);
-        append(wasm::GlobalAccess(label, globalDataOffset));
+        loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, globalArea) + globalDataOffset), dest);
     }
     void loadWasmPinnedRegsFromTls() {
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
