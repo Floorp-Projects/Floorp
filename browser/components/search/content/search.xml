@@ -495,7 +495,9 @@
       <![CDATA[
         // Speculatively connect to the current engine's search URI (and
         // suggest URI, if different) to reduce request latency
-        this.currentEngine.speculativeConnect({window});
+        this.currentEngine.speculativeConnect({window,
+                                               originAttributes: gBrowser.contentPrincipal
+                                                                         .originAttributes});
 
         if (this._ignoreFocus) {
           // This window has been re-focused, don't show the suggestions
