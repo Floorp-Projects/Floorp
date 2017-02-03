@@ -573,7 +573,11 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
 
     if (isStuns || isTurns) {
       // Should we barf if transport is set to udp or something?
-      transport = "tls";
+      transport = kNrIceTransportTls;
+    }
+
+    if (transport.IsEmpty()) {
+      transport = kNrIceTransportUdp;
     }
 
     if (isTurn || isTurns) {
@@ -583,13 +587,11 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
       if (!addTurnServer(host.get(), port,
                          username.get(),
                          credential.get(),
-                         (transport.IsEmpty() ?
-                          kNrIceTransportUdp : transport.get()))) {
+                         transport.get())) {
         return NS_ERROR_FAILURE;
       }
     } else {
-      if (!addStunServer(host.get(), port, (transport.IsEmpty() ?
-                         kNrIceTransportUdp : transport.get()))) {
+      if (!addStunServer(host.get(), port, transport.get())) {
         return NS_ERROR_FAILURE;
       }
     }
