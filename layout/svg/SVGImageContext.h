@@ -25,6 +25,7 @@ class SVGImageContext
 public:
   SVGImageContext()
     : mGlobalOpacity(1.0)
+    , mIsPaintingSVGImageElement(false)
   { }
 
   /**
