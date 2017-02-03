@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver.by import By
-from marionette_driver.errors import NoAlertPresentException, ElementNotVisibleException
+from marionette_driver.errors import NoAlertPresentException, ElementNotInteractableException
 from marionette_driver.marionette import Alert
 from marionette_driver.wait import Wait
 
@@ -113,7 +113,7 @@ class TestTabModals(MarionetteTestCase):
         self.marionette.find_element(By.ID, 'modal-alert').click()
         self.wait_for_alert()
         alert = self.marionette.switch_to_alert()
-        self.assertRaises(ElementNotVisibleException, alert.send_keys, "Foo")
+        self.assertRaises(ElementNotInteractableException, alert.send_keys, "Foo")
         alert.accept()
 
     def test_set_text_accept(self):
