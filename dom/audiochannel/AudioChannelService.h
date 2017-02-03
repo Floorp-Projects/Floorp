@@ -100,6 +100,8 @@ public:
 
   static bool IsEnableAudioCompeting();
 
+  static bool IsServiceStarted();
+
   /**
    * Any audio channel agent that starts playing should register itself to
    * this service, sharing the AudioChannel.
@@ -196,6 +198,8 @@ public:
 
   void ChildStatusReceived(uint64_t aChildID, bool aTelephonyChannel,
                            bool aContentOrNormalChannel, bool aAnyChannel);
+
+  void NotifyCreatedNewAgent(AudioChannelAgent* aAgent);
 
 private:
   AudioChannelService();

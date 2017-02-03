@@ -94,7 +94,7 @@ class EvalScriptGuard
             lookup_.str = lookupStr_;
             if (lookup_.str && IsEvalCacheCandidate(script_)) {
                 // Ignore failure to add cache entry.
-                if (!p_->add(cx_, cx_->caches.evalCache, lookup_, cacheEntry))
+                if (!p_->add(cx_, cx_->caches().evalCache, lookup_, cacheEntry))
                     cx_->recoverFromOutOfMemory();
             }
         }
@@ -107,10 +107,10 @@ class EvalScriptGuard
         lookup_.callerScript = callerScript;
         lookup_.version = cx_->findVersion();
         lookup_.pc = pc;
-        p_.emplace(cx_, cx_->caches.evalCache, lookup_);
+        p_.emplace(cx_, cx_->caches().evalCache, lookup_);
         if (*p_) {
             script_ = (*p_)->script;
-            p_->remove(cx_, cx_->caches.evalCache, lookup_);
+            p_->remove(cx_, cx_->caches().evalCache, lookup_);
             script_->uncacheForEval();
         }
     }

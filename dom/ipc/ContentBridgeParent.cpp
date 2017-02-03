@@ -21,8 +21,7 @@ NS_IMPL_ISUPPORTS(ContentBridgeParent,
                   nsIContentParent,
                   nsIObserver)
 
-ContentBridgeParent::ContentBridgeParent(Transport* aTransport)
-  : mTransport(aTransport)
+ContentBridgeParent::ContentBridgeParent()
 {}
 
 ContentBridgeParent::~ContentBridgeParent()
@@ -40,14 +39,12 @@ ContentBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 /*static*/ ContentBridgeParent*
-ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
+ContentBridgeParent::Create(Endpoint<PContentBridgeParent>&& aEndpoint)
 {
-  RefPtr<ContentBridgeParent> bridge =
-    new ContentBridgeParent(aTransport);
+  RefPtr<ContentBridgeParent> bridge = new ContentBridgeParent();
   bridge->mSelfRef = bridge;
 
-  DebugOnly<bool> ok = bridge->Open(aTransport, aOtherPid,
-                                    XRE_GetIOMessageLoop());
+  DebugOnly<bool> ok = aEndpoint.Bind(bridge);
   MOZ_ASSERT(ok);
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();

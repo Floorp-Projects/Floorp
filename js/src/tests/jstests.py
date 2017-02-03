@@ -66,6 +66,12 @@ def parse_args():
     harness_og.add_option('-t', '--timeout', type=float, default=150.0,
                           help='Set maximum time a test is allows to run'
                           ' (in seconds).')
+    harness_og.add_option('--show-slow', action='store_true',
+                          help='Show tests taking longer than a minimum time'
+                          ' (in seconds).')
+    harness_og.add_option('--slow-test-threshold', type=float, default=5.0,
+                          help='Time in seconds a test can take until it is'
+                          'considered slow (default %default).')
     harness_og.add_option('-a', '--args', dest='shell_args', default='',
                           help='Extra args to pass to the JS shell.')
     harness_og.add_option('--jitflags', dest='jitflags', default='none',

@@ -9,6 +9,7 @@
 
 #include "jswrapper.h"
 #include "js/Id.h"
+#include "nsStringGlue.h"
 
 class nsIPrincipal;
 
@@ -29,6 +30,11 @@ class AccessCheck {
                                           JS::HandleValue value);
     static bool checkPassToPrivilegedCode(JSContext* cx, JS::HandleObject wrapper,
                                           const JS::CallArgs& args);
+    // Called to report the correct sort of exception when our policy denies and
+    // should throw.  The accessType argument should be one of "access",
+    // "define", "delete", depending on which operation is being denied.
+    static void reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
+                                        const nsACString& accessType);
 };
 
 enum CrossOriginObjectType {
@@ -49,7 +55,8 @@ struct Opaque : public Policy {
     static bool check(JSContext* cx, JSObject* wrapper, jsid id, js::Wrapper::Action act) {
         return false;
     }
-    static bool deny(js::Wrapper::Action act, JS::HandleId id) {
+    static bool deny(JSContext* cx, js::Wrapper::Action act, JS::HandleId id,
+                     bool mayThrow) {
         return false;
     }
     static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
@@ -62,7 +69,8 @@ struct OpaqueWithCall : public Policy {
     static bool check(JSContext* cx, JSObject* wrapper, jsid id, js::Wrapper::Action act) {
         return act == js::Wrapper::CALL;
     }
-    static bool deny(js::Wrapper::Action act, JS::HandleId id) {
+    static bool deny(JSContext* cx, js::Wrapper::Action act, JS::HandleId id,
+                     bool mayThrow) {
         return false;
     }
     static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
@@ -79,10 +87,14 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act) {
         return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
     }
-    static bool deny(js::Wrapper::Action act, JS::HandleId id) {
+    static bool deny(JSContext* cx, js::Wrapper::Action act, JS::HandleId id,
+                     bool mayThrow) {
         // Silently fail for enumerate-like operations.
         if (act == js::Wrapper::ENUMERATE)
             return true;
+        if (mayThrow)
+            AccessCheck::reportCrossOriginDenial(cx, id,
+                                                 NS_LITERAL_CSTRING("access"));
         return false;
     }
     static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
@@ -95,7 +107,8 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 struct ExposedPropertiesOnly : public Policy {
     static bool check(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act);
 
-    static bool deny(js::Wrapper::Action act, JS::HandleId id);
+    static bool deny(JSContext* cx, js::Wrapper::Action act, JS::HandleId id,
+                     bool mayThrow);
     static bool allowNativeCall(JSContext* cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
         return false;
     }

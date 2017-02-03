@@ -732,7 +732,7 @@ GlobalObject::hasRegExpStatics() const
 }
 
 /* static */ RegExpStatics*
-GlobalObject::getRegExpStatics(ExclusiveContext* cx, Handle<GlobalObject*> global)
+GlobalObject::getRegExpStatics(JSContext* cx, Handle<GlobalObject*> global)
 {
     MOZ_ASSERT(cx);
     RegExpStaticsObject* resObj = nullptr;
@@ -852,7 +852,7 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
 
     RootedId id(cx, NameToId(name));
     Rooted<StackShape> child(cx, StackShape(base, id, slot, 0, 0));
-    Shape* shape = cx->zone()->propertyTree.getChild(cx, last, child);
+    Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
     if (!shape)
         return false;
 

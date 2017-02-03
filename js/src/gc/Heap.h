@@ -1064,7 +1064,7 @@ class HeapUsage
      * A heap usage that contains our parent's heap usage, or null if this is
      * the top-level usage container.
      */
-    HeapUsage* parent_;
+    HeapUsage* const parent_;
 
     /*
      * The approximate number of bytes in use on the GC heap, to the nearest

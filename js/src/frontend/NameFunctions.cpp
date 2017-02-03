@@ -25,7 +25,7 @@ class NameResolver
 {
     static const size_t MaxParents = 100;
 
-    ExclusiveContext* cx;
+    JSContext* cx;
     size_t nparents;                /* number of parents in the parents array */
     ParseNode* parents[MaxParents]; /* history of ParseNodes we've been looking at */
     StringBuffer* buf;              /* when resolving, buffer to append to */
@@ -342,7 +342,7 @@ class NameResolver
     }
 
   public:
-    explicit NameResolver(ExclusiveContext* cx) : cx(cx), nparents(0), buf(nullptr) {}
+    explicit NameResolver(JSContext* cx) : cx(cx), nparents(0), buf(nullptr) {}
 
     /*
      * Resolve all names for anonymous functions recursively within the
@@ -833,7 +833,7 @@ class NameResolver
 } /* anonymous namespace */
 
 bool
-frontend::NameFunctions(ExclusiveContext* cx, ParseNode* pn)
+frontend::NameFunctions(JSContext* cx, ParseNode* pn)
 {
     NameResolver nr(cx);
     return nr.resolve(pn);

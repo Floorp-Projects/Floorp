@@ -172,7 +172,7 @@ JSString*
 js::ObjectToSource(JSContext* cx, HandleObject obj)
 {
     /* If outermost, we need parentheses to be an expression, not a block. */
-    bool outermost = (cx->cycleDetectorSet.count() == 0);
+    bool outermost = (cx->cycleDetectorSet().count() == 0);
 
     AutoCycleDetector detector(cx, obj);
     if (!detector.init())

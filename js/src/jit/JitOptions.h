@@ -68,6 +68,7 @@ struct DefaultJitOptions
     bool disableSink;
     bool eagerCompilation;
     bool forceInlineCaches;
+    bool fullDebugChecks;
     bool limitScriptSize;
     bool osr;
     bool asmJSAtomicsEnable;

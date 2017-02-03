@@ -100,12 +100,6 @@ MediaKeySession::GetError() const
 }
 
 void
-MediaKeySession::GetKeySystem(nsString& aOutKeySystem) const
-{
-  aOutKeySystem.Assign(mKeySystem);
-}
-
-void
 MediaKeySession::GetSessionId(nsString& aSessionId) const
 {
   aSessionId = GetSessionId();
@@ -315,9 +309,6 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
   // If sanitized init data is empty, reject promise with a NotSupportedError.
 
   // Note: Remaining steps of generateRequest method continue in CDM.
-
-  Telemetry::Accumulate(Telemetry::VIDEO_CDM_GENERATE_REQUEST_CALLED,
-                        ToCDMTypeTelemetryEnum(mKeySystem));
 
   // Convert initData to hex for easier logging.
   // Note: CreateSession() Move()s the data out of the array, so we have

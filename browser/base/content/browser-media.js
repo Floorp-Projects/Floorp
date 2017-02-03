@@ -192,14 +192,6 @@ const TELEMETRY_DDSTAT_SOLVED = 4;
 
 let gDecoderDoctorHandler = {
   getLabelForNotificationBox(type) {
-    if (type == "adobe-cdm-not-found" &&
-        AppConstants.platform == "win") {
-      return gNavigatorBundle.getString("decoder.noCodecs.message");
-    }
-    if (type == "adobe-cdm-not-activated" &&
-        AppConstants.platform == "win") {
-      return gNavigatorBundle.getString("decoder.noCodecs.message");
-    }
     if (type == "platform-decoder-not-found") {
       if (AppConstants.platform == "win") {
         return gNavigatorBundle.getString("decoder.noHWAcceleration.message");

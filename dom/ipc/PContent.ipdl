@@ -413,6 +413,7 @@ both:
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
+    async InitContentBridgeChild(Endpoint<PContentBridgeChild> endpoint);
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
@@ -643,12 +644,6 @@ child:
 
     async BlobURLUnregistration(nsCString aURI);
 
-    async DispatchLocalStorageChange(nsString documentURI,
-                                     nsString key,
-                                     nsString oldValue,
-                                     nsString newValue,
-                                     Principal principal,
-                                     bool isPrivate);
 
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
@@ -683,7 +678,8 @@ parent:
                             ProcessPriority priority,
                             TabId openerTabId)
         returns (ContentParentId cpId, bool isForBrowser, TabId tabId);
-    sync BridgeToChildProcess(ContentParentId cpId);
+    sync BridgeToChildProcess(ContentParentId cpId)
+        returns (Endpoint<PContentBridgeParent> endpoint);
 
     async CreateGMPService();
 
@@ -1156,13 +1152,6 @@ parent:
                                                 Principal principal);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url);
-
-     async BroadcastLocalStorageChange(nsString documentURI,
-                                       nsString key,
-                                       nsString oldValue,
-                                       nsString newValue,
-                                       Principal principal,
-                                       bool isPrivate);
 
     /**
      * Messages for communicating child Telemetry to the parent process

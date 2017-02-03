@@ -7,6 +7,7 @@ description = "Testing code for libgkrust"
 
 [features]
 bindgen = ["gkrust-shared/bindgen"]
+servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
 
 [dependencies]

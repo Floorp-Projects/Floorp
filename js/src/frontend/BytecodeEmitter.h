@@ -32,7 +32,7 @@ class TokenStream;
 class CGConstList {
     Vector<Value> list;
   public:
-    explicit CGConstList(ExclusiveContext* cx) : list(cx) {}
+    explicit CGConstList(JSContext* cx) : list(cx) {}
     MOZ_MUST_USE bool append(const Value& v) {
         MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom());
         return list.append(v);
@@ -56,7 +56,7 @@ struct CGObjectList {
 struct MOZ_STACK_CLASS CGScopeList {
     Rooted<GCVector<Scope*>> vector;
 
-    explicit CGScopeList(ExclusiveContext* cx)
+    explicit CGScopeList(JSContext* cx)
       : vector(cx, GCVector<Scope*>(cx))
     { }
 
@@ -67,7 +67,7 @@ struct MOZ_STACK_CLASS CGScopeList {
 
 struct CGTryNoteList {
     Vector<JSTryNote> list;
-    explicit CGTryNoteList(ExclusiveContext* cx) : list(cx) {}
+    explicit CGTryNoteList(JSContext* cx) : list(cx) {}
 
     MOZ_MUST_USE bool append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
@@ -89,7 +89,7 @@ struct CGScopeNote : public ScopeNote
 
 struct CGScopeNoteList {
     Vector<CGScopeNote> list;
-    explicit CGScopeNoteList(ExclusiveContext* cx) : list(cx) {}
+    explicit CGScopeNoteList(JSContext* cx) : list(cx) {}
 
     MOZ_MUST_USE bool append(uint32_t scopeIndex, uint32_t offset, bool inPrologue,
                              uint32_t parent);
@@ -100,7 +100,7 @@ struct CGScopeNoteList {
 
 struct CGYieldOffsetList {
     Vector<uint32_t> list;
-    explicit CGYieldOffsetList(ExclusiveContext* cx) : list(cx) {}
+    explicit CGYieldOffsetList(JSContext* cx) : list(cx) {}
 
     MOZ_MUST_USE bool append(uint32_t offset) { return list.append(offset); }
     size_t length() const { return list.length(); }
@@ -175,7 +175,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     SharedContext* const sc;      /* context shared between parsing and bytecode generation */
 
-    ExclusiveContext* const cx;
+    JSContext* const cx;
 
     BytecodeEmitter* const parent;  /* enclosing function or global context */
 
@@ -193,7 +193,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
                                        last SRC_COLSPAN-annotated opcode */
         JumpTarget lastTarget;      // Last jump target emitted.
 
-        EmitSection(ExclusiveContext* cx, uint32_t lineNum)
+        EmitSection(JSContext* cx, uint32_t lineNum)
           : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineNum), lastColumn(0),
             lastTarget{ -1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH) }
         {}
@@ -350,7 +350,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     MOZ_MUST_USE bool maybeSetDisplayURL();
     MOZ_MUST_USE bool maybeSetSourceMap();
-    void tellDebuggerAboutCompiledScript(ExclusiveContext* cx);
+    void tellDebuggerAboutCompiledScript(JSContext* cx);
 
     inline TokenStream* tokenStream();
 

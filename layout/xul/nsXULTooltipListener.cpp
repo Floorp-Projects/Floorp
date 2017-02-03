@@ -7,7 +7,7 @@
 
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
@@ -24,6 +24,7 @@
 #endif
 #include "nsIRootBox.h"
 #include "nsIBoxObject.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
@@ -463,9 +464,9 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
 {
   int32_t junk;
   aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
-  nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aSourceNode));
-  nsCOMPtr<nsIBoxObject> bx;
-  xulEl->GetBoxObject(getter_AddRefs(bx));
+  RefPtr<nsXULElement> xulEl = nsXULElement::FromContent(aSourceNode);
+  IgnoredErrorResult ignored;
+  nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(ignored);
   int32_t myX, myY;
   bx->GetX(&myX);
   bx->GetY(&myY);
@@ -727,10 +728,10 @@ nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
 
   nsCOMPtr<nsIContent> sourceNode = do_QueryReferent(mSourceNode);
   if (mIsSourceTree && sourceNode) {
-    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(sourceNode->GetParent()));
+    RefPtr<nsXULElement> xulEl = nsXULElement::FromContent(sourceNode);
     if (xulEl) {
-      nsCOMPtr<nsIBoxObject> bx;
-      xulEl->GetBoxObject(getter_AddRefs(bx));
+      IgnoredErrorResult ignored;
+      nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(ignored);
       nsCOMPtr<nsITreeBoxObject> obx(do_QueryInterface(bx));
       if (obx) {
         *aBoxObject = obx;

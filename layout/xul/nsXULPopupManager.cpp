@@ -12,7 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMXULElement.h"
+#include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
@@ -678,10 +678,9 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   if (aMenu) {
     nsIContent* element = aMenu;
     do {
-      nsCOMPtr<nsIDOMXULElement> xulelem = do_QueryInterface(element);
+      RefPtr<nsXULElement> xulelem = nsXULElement::FromContent(element);
       if (xulelem) {
-        nsCOMPtr<nsIXULTemplateBuilder> builder;
-        xulelem->GetBuilder(getter_AddRefs(builder));
+        nsCOMPtr<nsIXULTemplateBuilder> builder = xulelem->GetBuilder();
         if (builder) {
           builder->CreateContents(aMenu, true);
           break;

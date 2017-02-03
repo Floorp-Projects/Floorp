@@ -387,6 +387,13 @@ GLContextWGL::SwapBuffers() {
     return ::SwapBuffers(mDC);
 }
 
+void
+GLContextWGL::GetWSIInfo(nsCString* const out) const
+{
+    out->AppendLiteral("wglGetExtensionsString: ");
+    out->Append(sWGLLib.fGetExtensionsString(mDC));
+}
+
 bool
 GLContextWGL::SetupLookupFunction()
 {
