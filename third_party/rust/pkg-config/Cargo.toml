@@ -1,13 +1,16 @@
 [package]
 
 name = "pkg-config"
-version = "0.3.8"
+version = "0.3.9"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/pkg-config-rs"
-documentation = "http://alexcrichton.com/pkg-config-rs"
+documentation = "https://docs.rs/pkg-config"
 description = """
 A library to run the pkg-config system tool at build time in order to be used in
 Cargo build scripts.
 """
 keywords = ["build-dependencies"]
+
+[dev-dependencies]
+lazy_static = "0.2"

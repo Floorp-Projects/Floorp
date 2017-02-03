@@ -1,13 +1,15 @@
-#![feature(static_mutex)]
-
 extern crate pkg_config;
+#[macro_use]
+extern crate lazy_static;
 
 use pkg_config::Error;
 use std::env;
-use std::sync::{StaticMutex, MUTEX_INIT};
+use std::sync::Mutex;
 use std::path::PathBuf;
 
-static LOCK: StaticMutex = MUTEX_INIT;
+lazy_static! {
+    static ref LOCK: Mutex<()> = Mutex::new(());
+}
 
 fn reset() {
     for (k, _) in env::vars() {

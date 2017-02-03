@@ -12,22 +12,10 @@ pub type tcflag_t = ::c_uint;
 pub type speed_t = ::c_uint;
 pub type nl_item = ::c_int;
 pub type id_t = i64;
-pub type sem_t = _sem;
 
 pub enum timezone {}
 
 s! {
-    pub struct utmpx {
-        pub ut_type: ::c_short,
-        pub ut_tv: ::timeval,
-        pub ut_id: [::c_char; 8],
-        pub ut_pid: ::pid_t,
-        pub ut_user: [::c_char; 32],
-        pub ut_line: [::c_char; 16],
-        pub ut_host: [::c_char; 128],
-        pub __ut_spare: [::c_char; 64],
-    }
-
     pub struct glob_t {
         pub gl_pathc:  ::size_t,
         pub gl_matchc: ::size_t,
@@ -170,11 +158,6 @@ s! {
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
     }
-
-    // internal structure has changed over time
-    pub struct _sem {
-        data: [u32; 4],
-    }
 }
 
 pub const AIO_LISTIO_MAX: ::c_int = 16;
@@ -191,29 +174,6 @@ pub const SIGEV_NONE: ::c_int = 0;
 pub const SIGEV_SIGNAL: ::c_int = 1;
 pub const SIGEV_THREAD: ::c_int = 2;
 pub const SIGEV_KEVENT: ::c_int = 3;
-
-pub const EMPTY: ::c_short = 0;
-pub const BOOT_TIME: ::c_short = 1;
-pub const OLD_TIME: ::c_short = 2;
-pub const NEW_TIME: ::c_short = 3;
-pub const USER_PROCESS: ::c_short = 4;
-pub const INIT_PROCESS: ::c_short = 5;
-pub const LOGIN_PROCESS: ::c_short = 6;
-pub const DEAD_PROCESS: ::c_short = 7;
-pub const SHUTDOWN_TIME: ::c_short = 8;
-
-pub const LC_COLLATE_MASK: ::c_int = (1 << 0);
-pub const LC_CTYPE_MASK: ::c_int = (1 << 1);
-pub const LC_MESSAGES_MASK: ::c_int = (1 << 2);
-pub const LC_MONETARY_MASK: ::c_int = (1 << 3);
-pub const LC_NUMERIC_MASK: ::c_int = (1 << 4);
-pub const LC_TIME_MASK: ::c_int = (1 << 5);
-pub const LC_ALL_MASK: ::c_int = LC_COLLATE_MASK
-                               | LC_CTYPE_MASK
-                               | LC_MESSAGES_MASK
-                               | LC_MONETARY_MASK
-                               | LC_NUMERIC_MASK
-                               | LC_TIME_MASK;
 
 pub const CODESET: ::nl_item = 0;
 pub const D_T_FMT: ::nl_item = 1;
@@ -706,7 +666,6 @@ pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = 0 as *mut _;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 1;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 2;
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 3;
-pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 4;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_ERRORCHECK;
 
 pub const SCHED_FIFO: ::c_int = 1;
@@ -729,8 +688,68 @@ pub const LOG_SECURITY: ::c_int = 13 << 3;
 pub const LOG_CONSOLE: ::c_int = 14 << 3;
 pub const LOG_NFACILITIES: ::c_int = 24;
 
-pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
+pub const TIOCEXCL: ::c_uint = 0x2000740d;
+pub const TIOCNXCL: ::c_uint = 0x2000740e;
+pub const TIOCFLUSH: ::c_ulong = 0x80047410;
+pub const TIOCGETA: ::c_uint = 0x402c7413;
+pub const TIOCSETA: ::c_ulong = 0x802c7414;
+pub const TIOCSETAW: ::c_ulong = 0x802c7415;
+pub const TIOCSETAF: ::c_ulong = 0x802c7416;
+pub const TIOCGETD: ::c_uint = 0x4004741a;
+pub const TIOCSETD: ::c_ulong = 0x8004741b;
+pub const TIOCGDRAINWAIT: ::c_uint = 0x40047456;
+pub const TIOCSDRAINWAIT: ::c_ulong = 0x80047457;
+pub const TIOCTIMESTAMP: ::c_uint = 0x40107459;
+pub const TIOCMGDTRWAIT: ::c_uint = 0x4004745a;
+pub const TIOCMSDTRWAIT: ::c_ulong = 0x8004745b;
+pub const TIOCDRAIN: ::c_uint = 0x2000745e;
+pub const TIOCEXT: ::c_ulong = 0x80047460;
+pub const TIOCSCTTY: ::c_uint = 0x20007461;
+pub const TIOCCONS: ::c_ulong = 0x80047462;
+pub const TIOCGSID: ::c_uint = 0x40047463;
+pub const TIOCSTAT: ::c_uint = 0x20007465;
+pub const TIOCUCNTL: ::c_ulong = 0x80047466;
 pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
+pub const TIOCGWINSZ: ::c_uint = 0x40087468;
+pub const TIOCMGET: ::c_uint = 0x4004746a;
+pub const TIOCM_LE: ::c_int = 0x1;
+pub const TIOCM_DTR: ::c_int = 0x2;
+pub const TIOCM_RTS: ::c_int = 0x4;
+pub const TIOCM_ST: ::c_int = 0x8;
+pub const TIOCM_SR: ::c_int = 0x10;
+pub const TIOCM_CTS: ::c_int = 0x20;
+pub const TIOCM_RI: ::c_int = 0x80;
+pub const TIOCM_DSR: ::c_int = 0x100;
+pub const TIOCM_CD: ::c_int = 0x40;
+pub const TIOCM_CAR: ::c_int = 0x40;
+pub const TIOCM_RNG: ::c_int = 0x80;
+pub const TIOCMBIC: ::c_ulong = 0x8004746b;
+pub const TIOCMBIS: ::c_ulong = 0x8004746c;
+pub const TIOCMSET: ::c_ulong = 0x8004746d;
+pub const TIOCSTART: ::c_uint = 0x2000746e;
+pub const TIOCSTOP: ::c_uint = 0x2000746f;
+pub const TIOCPKT: ::c_ulong = 0x80047470;
+pub const TIOCPKT_DATA: ::c_int = 0x0;
+pub const TIOCPKT_FLUSHREAD: ::c_int = 0x1;
+pub const TIOCPKT_FLUSHWRITE: ::c_int = 0x2;
+pub const TIOCPKT_STOP: ::c_int = 0x4;
+pub const TIOCPKT_START: ::c_int = 0x8;
+pub const TIOCPKT_NOSTOP: ::c_int = 0x10;
+pub const TIOCPKT_DOSTOP: ::c_int = 0x20;
+pub const TIOCPKT_IOCTL: ::c_int = 0x40;
+pub const TIOCNOTTY: ::c_uint = 0x20007471;
+pub const TIOCSTI: ::c_ulong = 0x80017472;
+pub const TIOCOUTQ: ::c_uint = 0x40047473;
+pub const TIOCSPGRP: ::c_ulong = 0x80047476;
+pub const TIOCGPGRP: ::c_uint = 0x40047477;
+pub const TIOCCDTR: ::c_uint = 0x20007478;
+pub const TIOCSDTR: ::c_uint = 0x20007479;
+pub const TIOCCBRK: ::c_uint = 0x2000747a;
+pub const TIOCSBRK: ::c_uint = 0x2000747b;
+pub const TTYDISC: ::c_int = 0x0;
+pub const SLIPDISC: ::c_int = 0x4;
+pub const PPPDISC: ::c_int = 0x5;
+pub const NETGRAPHDISC: ::c_int = 0x6;
 
 pub const SEM_FAILED: *mut sem_t = 0 as *mut sem_t;
 
@@ -756,8 +775,6 @@ extern {
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
     pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
     pub fn setutxent();
-    pub fn getutxuser(user: *const ::c_char) -> *mut utmpx;
-    pub fn setutxdb(_type: ::c_int, file: *const ::c_char) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -772,9 +789,6 @@ extern {
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
                       nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
-    pub fn aio_waitcomplete(iocbp: *mut *mut aiocb,
-                            timeout: *mut ::timespec) -> ::ssize_t;
-
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,
@@ -839,7 +853,6 @@ extern {
                    winp: *mut ::winsize) -> ::pid_t;
     pub fn nl_langinfo_l(item: ::nl_item, locale: ::locale_t) -> *mut ::c_char;
     pub fn duplocale(base: ::locale_t) -> ::locale_t;
-    pub fn freelocale(loc: ::locale_t) -> ::c_int;
     pub fn newlocale(mask: ::c_int,
                      locale: *const ::c_char,
                      base: ::locale_t) -> ::locale_t;

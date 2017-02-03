@@ -47,3 +47,11 @@ s! {
         pub sin6_scope_id: u32,
     }
 }
+
+extern {
+    pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
+}
+
+#[link(name = "c")]
+#[link(name = "m")]
+extern {}
