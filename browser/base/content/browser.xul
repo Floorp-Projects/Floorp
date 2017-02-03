@@ -146,6 +146,7 @@
            id="PopupAutoComplete"
            noautofocus="true"
            hidden="true"
+           overflowpadding="4"
            norolluponanchor="true" />
 
     <!-- for search with one-off buttons -->
