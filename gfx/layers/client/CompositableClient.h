@@ -25,7 +25,6 @@ class ImageBridgeChild;
 class ImageContainer;
 class CompositableForwarder;
 class CompositableChild;
-class PCompositableChild;
 class TextureClientRecycleAllocator;
 class ContentClientRemote;
 
