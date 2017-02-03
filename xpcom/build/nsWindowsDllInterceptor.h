@@ -500,10 +500,36 @@ protected:
   static const BYTE kMaskSibBase = 0x07;
   static const BYTE kSibBaseEbp = 0x05;
 
+  // Register bit IDs.
+  static const BYTE kRegAx = 0x0;
+  static const BYTE kRegCx = 0x1;
+  static const BYTE kRegDx = 0x2;
+  static const BYTE kRegBx = 0x3;
+  static const BYTE kRegSp = 0x4;
+  static const BYTE kRegBp = 0x5;
+  static const BYTE kRegSi = 0x6;
+  static const BYTE kRegDi = 0x7;
+
+  // Special ModR/M codes.  These indicate operands that cannot be simply
+  // memcpy-ed.
+  // Operand is a 64-bit RIP-relative address.
+  static const int kModOperand64 = -2;
+  // Operand is not yet handled by our trampoline.
+  static const int kModUnknown = -1;
+
+  /**
+   * Returns the number of bytes taken by the ModR/M byte, SIB (if present)
+   * and the instruction's operand.  In special cases, the special MODRM codes
+   * above are returned.
+   * aModRm points to the ModR/M byte of the instruction.
+   * On return, aSubOpcode (if present) is filled with the subopcode/register
+   * code found in the ModR/M byte.
+   */
   int CountModRmSib(const BYTE *aModRm, BYTE* aSubOpcode = nullptr)
   {
     if (!aModRm) {
-      return -1;
+      MOZ_ASSERT(aModRm, "Missing ModRM byte");
+      return kModUnknown;
     }
     int numBytes = 1; // Start with 1 for mod r/m byte itself
     switch (*aModRm & kMaskMod) {
@@ -518,8 +544,10 @@ protected:
       case kModNoRegDisp:
         if ((*aModRm & kMaskRm) == kRmNoRegDispDisp32) {
 #if defined(_M_X64)
-          // RIP-relative on AMD64, currently unsupported
-          return -1;
+          if (aSubOpcode) {
+            *aSubOpcode = (*aModRm & kMaskReg) >> kRegFieldShift;
+          }
+          return kModOperand64;
 #else
           // On IA-32, all ModR/M instruction modes address memory relative to 0
           numBytes += 4;
@@ -532,7 +560,7 @@ protected:
       default:
         // This should not be reachable
         MOZ_ASSERT_UNREACHABLE("Impossible value for modr/m byte mod bits");
-        return -1;
+        return kModUnknown;
     }
     if ((*aModRm & kMaskRm) == kRmNeedSib) {
       // SIB byte
@@ -666,6 +694,16 @@ protected:
           return index - aBytesIndex;
       }
     }
+  }
+
+  // Return a ModR/M byte made from the 2 Mod bits, the register used for the
+  // reg bits and the register used for the R/M bits.
+  BYTE BuildModRmByte(BYTE aModBits, BYTE aReg, BYTE aRm)
+  {
+    MOZ_ASSERT((aRm & kMaskRm) == aRm);
+    MOZ_ASSERT((aModBits & kMaskMod) == aModBits);
+    MOZ_ASSERT(((aReg << kRegFieldShift) & kMaskReg) == (aReg << kRegFieldShift));
+    return aModBits | (aReg << kRegFieldShift) | aRm;
   }
 
   void CreateTrampoline(void* aOrigFunction, intptr_t aDest, void** aOutTramp)
@@ -878,14 +916,50 @@ protected:
             return;
           }
         } else if ((origBytes[nOrigBytes] & 0xfd) == 0x89) {
-          COPY_CODES(1);
           // MOV r/m64, r64 | MOV r64, r/m64
-          int len = CountModRmSib(origBytes + nOrigBytes);
+          BYTE reg;
+          int len = CountModRmSib(origBytes + nOrigBytes + 1, &reg);
           if (len < 0) {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
-            return;
+            MOZ_ASSERT(len == kModOperand64);
+            if (len != kModOperand64) {
+              return;
+            }
+            nOrigBytes += 2;   // skip the MOV and MOD R/M bytes
+
+            // The instruction MOVs 64-bit data from a RIP-relative memory
+            // address (determined with a 32-bit offset from RIP) into a
+            // 64-bit register.
+            int64_t* absAddr =
+              reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 4 +
+                                         *reinterpret_cast<int32_t*>(origBytes + nOrigBytes));
+            nOrigBytes += 4;
+
+            if (reg == kRegAx) {
+              // Destination is RAX.  Encode instruction as MOVABS with a
+              // 64-bit absolute address as its immediate operand.
+              tramp[nTrampBytes] = 0xa1;
+              ++nTrampBytes;
+              int64_t** trampOperandPtr = reinterpret_cast<int64_t**>(tramp + nTrampBytes);
+              *trampOperandPtr = absAddr;
+              nTrampBytes += 8;
+            } else {
+              // The MOV must be done in two steps.  First, we MOVABS the
+              // absolute 64-bit address into our target register.
+              // Then, we MOV from that address into the register
+              // using register-indirect addressing.
+              tramp[nTrampBytes] = 0xb8 + reg;
+              ++nTrampBytes;
+              int64_t** trampOperandPtr = reinterpret_cast<int64_t**>(tramp + nTrampBytes);
+              *trampOperandPtr = absAddr;
+              nTrampBytes += 8;
+              tramp[nTrampBytes] = 0x48;
+              tramp[nTrampBytes+1] = 0x8b;
+              tramp[nTrampBytes+2] = BuildModRmByte(kModNoRegDisp, reg, reg);
+              nTrampBytes += 3;
+            }
+          } else {
+            COPY_CODES(len+1);
           }
-          COPY_CODES(len);
         } else if (origBytes[nOrigBytes] == 0xc7) {
           // MOV r/m64, imm32
           if (origBytes[nOrigBytes + 1] == 0x44) {
