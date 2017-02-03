@@ -28,6 +28,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "nsDebugImpl.h"
 #include "nsExceptionHandler.h"
 #include "nsThreadManager.h"
@@ -109,6 +110,9 @@ GPUParent::Init(base::ProcessId aParentPid,
     return false;
   }
 
+#ifdef MOZ_ENABLE_WEBRENDER
+  wr::RenderThread::Start();
+#endif
   CompositorThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   APZCTreeManager::InitializeGlobalState();
@@ -411,6 +415,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   dom::VideoDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
+#ifdef MOZ_ENABLE_WEBRENDER
+  wr::RenderThread::ShutDown();
+#endif
   Factory::ShutDown();
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
