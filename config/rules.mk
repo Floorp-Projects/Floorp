@@ -1536,12 +1536,6 @@ documentation:
 	@cd $(DEPTH)
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
-ifdef ENABLE_TESTS
-check::
-	$(LOOP_OVER_DIRS)
-endif
-
-
 FREEZE_VARIABLES = \
   CSRCS \
   CPPSRCS \
