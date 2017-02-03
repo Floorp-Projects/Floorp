@@ -19,12 +19,32 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     viewportTemplate: PropTypes.shape(Types.viewport).isRequired,
+    onAddCustomDevice: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
 
   getInitialState() {
     return {};
+  },
+
+  componentWillReceiveProps(nextProps) {
+    let {
+      width,
+      height,
+    } = nextProps.viewportTemplate;
+
+    this.setState({
+      width,
+      height,
+    });
+  },
+
+  onChangeSize(width, height) {
+    this.setState({
+      width,
+      height,
+    });
   },
 
   onDeviceAdderShow() {
@@ -34,8 +54,29 @@ module.exports = createClass({
   },
 
   onDeviceAdderSave() {
+    let {
+      devices,
+      onAddCustomDevice,
+    } = this.props;
+
+    if (!this.pixelRatioInput.checkValidity()) {
+      return;
+    }
+    if (devices.custom.find(device => device.name == this.nameInput.value)) {
+      this.nameInput.setCustomValidity("Device name already in use");
+      return;
+    }
+
     this.setState({
       deviceAdderDisplayed: false,
+    });
+    onAddCustomDevice({
+      name: this.nameInput.value,
+      width: this.state.width,
+      height: this.state.height,
+      pixelRatio: parseFloat(this.pixelRatioInput.value),
+      userAgent: this.userAgentInput.value,
+      touch: this.touchInput.checked,
     });
   },
 
@@ -47,6 +88,8 @@ module.exports = createClass({
 
     let {
       deviceAdderDisplayed,
+      height,
+      width,
     } = this.state;
 
     if (!deviceAdderDisplayed) {
@@ -93,7 +136,9 @@ module.exports = createClass({
         id: "device-adder"
       },
       dom.label(
-        {},
+        {
+          id: "device-adder-name",
+        },
         dom.span(
           {
             className: "device-adder-label",
@@ -102,10 +147,15 @@ module.exports = createClass({
         ),
         dom.input({
           defaultValue: deviceName,
+          ref: input => {
+            this.nameInput = input;
+          },
         })
       ),
       dom.label(
-        {},
+        {
+          id: "device-adder-size",
+        },
         dom.span(
           {
             className: "device-adder-label"
@@ -114,15 +164,17 @@ module.exports = createClass({
         ),
         ViewportDimension({
           viewport: {
-            width: normalizedViewport.width,
-            height: normalizedViewport.height,
+            width,
+            height,
           },
+          onChangeSize: this.onChangeSize,
           onRemoveDeviceAssociation: () => {},
-          onResizeViewport: () => {},
         })
       ),
       dom.label(
-        {},
+        {
+          id: "device-adder-pixel-ratio",
+        },
         dom.span(
           {
             className: "device-adder-label"
@@ -130,11 +182,18 @@ module.exports = createClass({
           getStr("responsive.deviceAdderPixelRatio")
         ),
         dom.input({
+          type: "number",
+          step: "any",
           defaultValue: normalizedViewport.pixelRatio,
+          ref: input => {
+            this.pixelRatioInput = input;
+          },
         })
       ),
       dom.label(
-        {},
+        {
+          id: "device-adder-user-agent",
+        },
         dom.span(
           {
             className: "device-adder-label"
@@ -143,10 +202,15 @@ module.exports = createClass({
         ),
         dom.input({
           defaultValue: normalizedViewport.userAgent,
+          ref: input => {
+            this.userAgentInput = input;
+          },
         })
       ),
       dom.label(
-        {},
+        {
+          id: "device-adder-touch",
+        },
         dom.span(
           {
             className: "device-adder-label"
@@ -156,6 +220,9 @@ module.exports = createClass({
         dom.input({
           defaultChecked: normalizedViewport.touch,
           type: "checkbox",
+          ref: input => {
+            this.touchInput = input;
+          },
         })
       ),
       dom.button(

@@ -11,6 +11,8 @@ const { createClass, createFactory, PropTypes, DOM: dom } =
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
+  addCustomDevice,
+  removeCustomDevice,
   updateDeviceDisplayed,
   updateDeviceModal,
   updatePreferredDevices,
@@ -42,6 +44,10 @@ let App = createClass({
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
+  },
+
+  onAddCustomDevice(device) {
+    this.props.dispatch(addCustomDevice(device));
   },
 
   onBrowserMounted() {
@@ -99,6 +105,10 @@ let App = createClass({
     window.postMessage({ type: "exit" }, "*");
   },
 
+  onRemoveCustomDevice(device) {
+    this.props.dispatch(removeCustomDevice(device));
+  },
+
   onRemoveDeviceAssociation(id) {
     // TODO: Bug 1332754: Move messaging and logic into the action creator.
     window.postMessage({
@@ -141,6 +151,7 @@ let App = createClass({
     } = this.props;
 
     let {
+      onAddCustomDevice,
       onBrowserMounted,
       onChangeDevice,
       onChangeNetworkThrottling,
@@ -149,6 +160,7 @@ let App = createClass({
       onContentResize,
       onDeviceListUpdate,
       onExit,
+      onRemoveCustomDevice,
       onRemoveDeviceAssociation,
       onResizeViewport,
       onRotateViewport,
@@ -204,7 +216,9 @@ let App = createClass({
       DeviceModal({
         deviceAdderViewportTemplate,
         devices,
+        onAddCustomDevice,
         onDeviceListUpdate,
+        onRemoveCustomDevice,
         onUpdateDeviceDisplayed,
         onUpdateDeviceModal,
       })
