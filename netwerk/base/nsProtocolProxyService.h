@@ -51,9 +51,6 @@ public:
     nsProtocolProxyService();
 
     nsresult Init();
-    nsresult DeprecatedBlockingResolve(nsIChannel *aChannel,
-                                       uint32_t aFlags,
-                                       nsIProxyInfo **retval);
 
 protected:
     friend class nsAsyncResolveRequest;
