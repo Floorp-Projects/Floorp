@@ -87,9 +87,9 @@ GeckoProfiler::enable(bool enabled)
     rt->resetProfilerSampleBufferLapCount();
 
     // Ensure that lastProfilingFrame is null before 'enabled' becomes true.
-    if (rt->jitActivation) {
-        rt->jitActivation->setLastProfilingFrame(nullptr);
-        rt->jitActivation->setLastProfilingCallSite(nullptr);
+    if (rt->contextFromMainThread()->jitActivation) {
+        rt->contextFromMainThread()->jitActivation->setLastProfilingFrame(nullptr);
+        rt->contextFromMainThread()->jitActivation->setLastProfilingCallSite(nullptr);
     }
 
     enabled_ = enabled;
@@ -104,11 +104,11 @@ GeckoProfiler::enable(bool enabled)
     /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
      * stack.
      */
-    if (rt->jitActivation) {
+    if (rt->contextFromMainThread()->jitActivation) {
         // Walk through all activations, and set their lastProfilingFrame appropriately.
         if (enabled) {
-            void* lastProfilingFrame = GetTopProfilingJitFrame(rt->jitTop);
-            jit::JitActivation* jitActivation = rt->jitActivation;
+            void* lastProfilingFrame = GetTopProfilingJitFrame(rt->contextFromMainThread()->jitTop);
+            jit::JitActivation* jitActivation = rt->contextFromMainThread()->jitActivation;
             while (jitActivation) {
                 jitActivation->setLastProfilingFrame(lastProfilingFrame);
                 jitActivation->setLastProfilingCallSite(nullptr);
@@ -117,7 +117,7 @@ GeckoProfiler::enable(bool enabled)
                 jitActivation = jitActivation->prevJitActivation();
             }
         } else {
-            jit::JitActivation* jitActivation = rt->jitActivation;
+            jit::JitActivation* jitActivation = rt->contextFromMainThread()->jitActivation;
             while (jitActivation) {
                 jitActivation->setLastProfilingFrame(nullptr);
                 jitActivation->setLastProfilingCallSite(nullptr);
@@ -401,7 +401,7 @@ ProfileEntry::trace(JSTracer* trc)
 GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSRuntime* rt,
                                                    JSScript* script
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->geckoProfiler)
+    : profiler(&rt->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler->installed()) {
@@ -427,7 +427,7 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
                                                ProfileEntry::Category category
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler_(&rt->geckoProfiler)
+    : profiler_(&rt->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler_->installed()) {
@@ -451,7 +451,7 @@ AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry()
 
 GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bool hasProfilerFrame
                                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->geckoProfiler)
+    : profiler(&rt->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!hasProfilerFrame || !profiler->enabled() ||
@@ -496,7 +496,7 @@ ProfileEntry::script() const volatile
     // valid as they could be in the process of being moved by a compacting GC
     // (although it's still OK to get the runtime from them).
     JSRuntime* rt = script->zoneFromAnyThread()->runtimeFromAnyThread();
-    if (!rt->isProfilerSamplingEnabled())
+    if (!rt->unsafeContextFromAnyThread()->isProfilerSamplingEnabled())
         return nullptr;
 
     MOZ_ASSERT(!IsForwarded(script));
@@ -526,52 +526,52 @@ ProfileEntry::setPC(jsbytecode* pc) volatile
 JS_FRIEND_API(void)
 js::SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
-    cx->geckoProfiler.setProfilingStack(stack, size, max);
+    cx->runtime()->geckoProfiler().setProfilingStack(stack, size, max);
 }
 
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
-    cx->geckoProfiler.enable(enabled);
+    cx->runtime()->geckoProfiler().enable(enabled);
 }
 
 JS_FRIEND_API(void)
 js::RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*))
 {
-    MOZ_ASSERT(cx->geckoProfiler.enabled());
-    cx->geckoProfiler.setEventMarker(fn);
+    MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
+    cx->runtime()->geckoProfiler().setEventMarker(fn);
 }
 
 JS_FRIEND_API(jsbytecode*)
 js::ProfilingGetPC(JSContext* cx, JSScript* script, void* ip)
 {
-    return cx->geckoProfiler.ipToPC(script, size_t(ip));
+    return cx->runtime()->geckoProfiler().ipToPC(script, size_t(ip));
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : rt_(cx->runtime()),
-    previouslyEnabled_(rt_->isProfilerSamplingEnabled())
+    previouslyEnabled_(cx->isProfilerSamplingEnabled())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (previouslyEnabled_)
-        rt_->disableProfilerSampling();
+        rt_->contextFromMainThread()->disableProfilerSampling();
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSRuntime* rt
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : rt_(rt),
-    previouslyEnabled_(rt_->isProfilerSamplingEnabled())
+    previouslyEnabled_(rt_->contextFromMainThread()->isProfilerSamplingEnabled())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (previouslyEnabled_)
-        rt_->disableProfilerSampling();
+        rt_->contextFromMainThread()->disableProfilerSampling();
 }
 
 AutoSuppressProfilerSampling::~AutoSuppressProfilerSampling()
 {
     if (previouslyEnabled_)
-        rt_->enableProfilerSampling();
+        rt_->contextFromMainThread()->enableProfilerSampling();
 }
 
 void*

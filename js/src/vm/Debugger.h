@@ -204,7 +204,7 @@ class AutoSuppressDebuggeeNoExecuteChecks
 
   public:
     explicit AutoSuppressDebuggeeNoExecuteChecks(JSContext* cx) {
-        stack_ = &cx->runtime()->noExecuteDebuggerTop;
+        stack_ = &cx->noExecuteDebuggerTop.ref();
         prev_ = *stack_;
         *stack_ = nullptr;
     }
@@ -1757,7 +1757,7 @@ Debugger::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 #ifdef DEBUG
     global->compartment()->firedOnNewGlobalObject = true;
 #endif
-    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
+    if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers()))
         Debugger::slowPathOnNewGlobalObject(cx, global);
 }
 

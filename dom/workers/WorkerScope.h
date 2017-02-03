@@ -112,9 +112,6 @@ public:
   already_AddRefed<WorkerNavigator>
   GetExistingNavigator() const;
 
-  void
-  Close(JSContext* aCx, ErrorResult& aRv);
-
   OnErrorEventHandlerNonNull*
   GetOnerror();
   void
@@ -218,6 +215,9 @@ public:
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 
+  void
+  Close(JSContext* aCx);
+
   IMPL_EVENT_HANDLER(message)
 };
 
@@ -239,6 +239,9 @@ public:
   {
     aName.AsAString() = NS_ConvertUTF8toUTF16(mName);
   }
+
+  void
+  Close(JSContext* aCx);
 
   IMPL_EVENT_HANDLER(connect)
 };

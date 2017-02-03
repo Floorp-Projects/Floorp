@@ -23,11 +23,11 @@ struct Class;
 // object-specific optimizations.
 template <typename T, AllowGC allowGC = CanGC>
 T*
-Allocate(ExclusiveContext* cx);
+Allocate(JSContext* cx);
 
 template <typename, AllowGC allowGC = CanGC>
 JSObject*
-Allocate(ExclusiveContext* cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
+Allocate(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
          const Class* clasp);
 
 } // namespace js

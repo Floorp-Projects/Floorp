@@ -294,10 +294,28 @@ const SNAPSHOT_SCHEMA = {
         clearTypeParameters: {
           type: "string",
         },
-        webglRenderer: {
+        webgl1Renderer: {
+          type: "string",
+        },
+        webgl1Version: {
+          type: "string",
+        },
+        webgl1Extensions: {
+          type: "string",
+        },
+        webgl1WSIInfo: {
           type: "string",
         },
         webgl2Renderer: {
+          type: "string",
+        },
+        webgl2Version: {
+          type: "string",
+        },
+        webgl2Extensions: {
+          type: "string",
+        },
+        webgl2WSIInfo: {
           type: "string",
         },
         info: {

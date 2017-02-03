@@ -3,6 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 {
   'target_defaults': {
+    'cflags': [
+      '-Wsign-compare',
+    ],
+    'xcode_settings': {
+      'OTHER_CFLAGS': [
+        '-Wsign-compare',
+      ],
+    },
     'conditions': [
       ['OS=="win"', {
         'libraries': [

@@ -788,7 +788,7 @@ class ParseNode
         ForCopyOnWriteArray
     };
 
-    MOZ_MUST_USE bool getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObjects,
+    MOZ_MUST_USE bool getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
                                        MutableHandleValue vp, Value* compare = nullptr,
                                        size_t ncompare = 0, NewObjectKind newKind = TenuredObject);
     inline bool isConstant();
@@ -1244,7 +1244,7 @@ struct CallSiteNode : public ListNode {
         return node.isKind(PNK_CALLSITEOBJ);
     }
 
-    MOZ_MUST_USE bool getRawArrayValue(ExclusiveContext* cx, MutableHandleValue vp) {
+    MOZ_MUST_USE bool getRawArrayValue(JSContext* cx, MutableHandleValue vp) {
         return pn_head->getConstantValue(cx, AllowObjects, vp);
     }
 };
@@ -1351,7 +1351,7 @@ void DumpParseTree(ParseNode* pn, int indent = 0);
 class ParseNodeAllocator
 {
   public:
-    explicit ParseNodeAllocator(ExclusiveContext* cx, LifoAlloc& alloc)
+    explicit ParseNodeAllocator(JSContext* cx, LifoAlloc& alloc)
       : cx(cx), alloc(alloc), freelist(nullptr)
     {}
 
@@ -1361,7 +1361,7 @@ class ParseNodeAllocator
     void prepareNodeForMutation(ParseNode* pn);
 
   private:
-    ExclusiveContext* cx;
+    JSContext* cx;
     LifoAlloc& alloc;
     ParseNode* freelist;
 };
