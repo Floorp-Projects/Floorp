@@ -100,12 +100,12 @@ var gTests = [
     yield checkSharingUI({video: true, audio: true});
 
     info("reloading the frame");
-    promise = promiseObserverCalled("recording-device-stopped");
+    let promises = [promiseObserverCalled("recording-device-stopped"),
+                    promiseObserverCalled("recording-device-events"),
+                    promiseObserverCalled("recording-window-ended")];
     yield promiseReloadFrame("frame1");
-    yield promise;
+    yield Promise.all(promises);
 
-    yield expectObserverCalled("recording-device-events");
-    yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();
   }
