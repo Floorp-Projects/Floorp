@@ -1,0 +1,27 @@
+# Ensure all versions are pinned for repeatability,
+# since `--system-site-packages` is enabled
+
+blessings == 1.6
+mach == 0.6.0
+mozdebug == 0.1
+mozinfo == 0.8
+mozlog == 3.3
+setuptools == 18.5
+toml == 0.9.2
+Mako == 1.0.4
+
+# For Python linting
+flake8 == 2.4.1
+pep8 == 1.5.7
+pyflakes == 0.8.1
+
+# For buildbot checking
+PyYAML == 3.12
+
+# For test-webidl
+ply == 3.8
+
+# For Cross-platform colored terminal text
+colorama == 0.3.7
+
+-e python/tidy

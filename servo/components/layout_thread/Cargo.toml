@@ -1,0 +1,44 @@
+[package]
+name = "layout_thread"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+publish = false
+
+[lib]
+name = "layout_thread"
+path = "lib.rs"
+
+[dependencies]
+app_units = "0.3"
+euclid = "0.10.1"
+fnv = "1.0"
+gfx = {path = "../gfx"}
+gfx_traits = {path = "../gfx_traits"}
+heapsize = "0.3.0"
+ipc-channel = "0.5"
+layout = {path = "../layout"}
+layout_traits = {path = "../layout_traits"}
+lazy_static = "0.2"
+log = "0.3.5"
+msg = {path = "../msg"}
+net_traits = {path = "../net_traits"}
+parking_lot = {version = "0.3.3", features = ["nightly"]}
+plugins = {path = "../plugins"}
+profile_traits = {path = "../profile_traits"}
+rayon = "0.6"
+script = {path = "../script"}
+script_layout_interface = {path = "../script_layout_interface"}
+script_traits = {path = "../script_traits"}
+selectors = "0.15.1"
+serde_derive = "0.8"
+serde_json = "0.8"
+servo_config = {path = "../config"}
+servo_geometry = {path = "../geometry"}
+servo_url = {path = "../url"}
+style = {path = "../style"}
+
+[dependencies.webrender_traits]
+git = "https://github.com/servo/webrender"
+default-features = false
+features = ["serde_derive", "ipc"]
