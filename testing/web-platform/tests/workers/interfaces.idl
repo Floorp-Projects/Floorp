@@ -28,7 +28,6 @@ interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerGlobalScope self;
   readonly attribute WorkerLocation location;
 
-  void close();
   attribute OnErrorEventHandler onerror;
   attribute EventHandler onlanguagechange;
   attribute EventHandler onoffline;
@@ -38,6 +37,7 @@ interface WorkerGlobalScope : EventTarget {
 [Global=(Worker,DedicatedWorker),Exposed=DedicatedWorker]
 /*sealed*/ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   void postMessage(any message, optional sequence<Transferable> transfer);
+  void close();
   attribute EventHandler onmessage;
 };
 
