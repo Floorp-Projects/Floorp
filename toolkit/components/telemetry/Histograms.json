@@ -6369,10 +6369,12 @@
     "description": "Has FIPS mode been enabled?"
   },
   "SECURITY_UI": {
+    "alert_emails": ["seceng-telemetry@mozilla.com", "fxprivacyandsecurity@mozilla.com"],
+    "bug_numbers": [767676],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
-    "description": "Security UI Telemetry"
+    "description": "Security-related UI events (addons, form submission, TLS certs, Safe Browsing, updates and geolocation). See /security/manager/ssl/nsISecurityUITelemetry.idl for the specific values."
   },
   "JS_TELEMETRY_ADDON_EXCEPTIONS" : {
     "expires_in_version" : "never",
