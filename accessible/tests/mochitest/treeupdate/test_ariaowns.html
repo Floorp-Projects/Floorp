@@ -532,6 +532,50 @@
       }
     }
 
+    /**
+     * Set ARIA owns on inaccessible span element that contains
+     * accessible children. This will move children from the container for
+     * the span.
+     */
+    function test8()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "t8_container")
+      ];
+
+      this.invoke = function test8_invoke()
+      {
+        var tree =
+          { SECTION: [
+            { PUSHBUTTON: [] },
+            { ENTRY: [] },
+            { ENTRY: [] },
+            { ENTRY: [] }
+          ] };
+        testAccessibleTree("t8_container", tree);
+
+        getNode(t8_container).setAttribute("aria-owns", "t8_span t8_button");
+      }
+
+      this.finalCheck = function test8_finalCheck()
+      {
+        var tree =
+          { SECTION: [
+            { TEXT: [
+              { ENTRY: [] },
+              { ENTRY: [] },
+              { ENTRY: [] }
+            ] },
+            { PUSHBUTTON: [] }
+          ] };
+        testAccessibleTree("t8_container", tree);
+      }
+
+      this.getID = function test8_getID()
+      {
+        return `Set ARIA owns on inaccessible span element that contains accessible children`;
+      }
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Test
@@ -579,6 +623,8 @@
       gQueue.push(new removeNotARIAOwnedEl("t6_container", "t6_span"));
 
       gQueue.push(new setARIAOwnsOnElToRemove("t7_parent", "t7_child"));
+
+      gQueue.push(new test8());
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -637,6 +683,10 @@
     <div id="t7_parent">
       <div id="t7_child"></div>
     </div>
+  </div>
+
+  <div id="t8_container">
+    <input id="t8_button" type="button"><span id="t8_span"><input><input><input></span>
   </div>
 </body>
 

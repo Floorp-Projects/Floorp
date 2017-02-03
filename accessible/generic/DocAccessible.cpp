@@ -2087,11 +2087,13 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
           child->SetRelocated(true);
           children->InsertElementAt(arrayIdx, child);
 
-          insertIdx = child->IndexInParent() + 1;
-          arrayIdx++;
-
+          // Create subtree before adjusting the insertion index, since subtree
+          // creation may alter children in the container.
           CreateSubtree(child);
           FireEventsOnInsertion(aOwner);
+
+          insertIdx = child->IndexInParent() + 1;
+          arrayIdx++;
         }
       }
       continue;
