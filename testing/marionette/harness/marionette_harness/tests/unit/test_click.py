@@ -48,6 +48,30 @@ link.addEventListener("click", () => window.clicked = true);
 """)
 
 
+obscured_overlay = inline("""
+<style>
+* { margin: 0; padding: 0; }
+body { height: 100vh }
+#overlay {
+  background-color: pink;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+</style>
+
+<div id=overlay></div>
+<a id=obscured href=#>link</a>
+
+<script>
+window.clicked = false;
+
+let link = document.querySelector("#obscured");
+link.addEventListener("click", () => window.clicked = true);
+</script>
+""")
+
+
 class TestLegacyClick(MarionetteTestCase):
     """Uses legacy Selenium element displayedness checks."""
 
@@ -57,26 +81,32 @@ class TestLegacyClick(MarionetteTestCase):
         self.marionette.start_session()
 
     def test_click(self):
-        test_html = self.marionette.absolute_url("test.html")
-        self.marionette.navigate(test_html)
-        link = self.marionette.find_element(By.ID, "mozLink")
-        link.click()
-        self.assertEqual("Clicked", self.marionette.execute_script("return document.getElementById('mozLink').innerHTML;"))
+        self.marionette.navigate(inline("""
+            <button>click me</button>
+            <script>
+              window.clicks = 0;
+              let button = document.querySelector("button");
+              button.addEventListener("click", () => window.clicks++);
+            </script>
+        """))
+        button = self.marionette.find_element(By.TAG_NAME, "button")
+        button.click()
+        self.assertEqual(1, self.marionette.execute_script("return window.clicks", sandbox=None))
 
-    def test_clicking_a_link_made_up_of_numbers_is_handled_correctly(self):
+    def test_click_number_link(self):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
         Wait(self.marionette, timeout=30, ignored_exceptions=errors.NoSuchElementException).until(
-            lambda m: m.find_element(By.ID, 'username'))
+            lambda m: m.find_element(By.ID, "username"))
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
-        test_html = self.marionette.absolute_url('hidden.html')
+        test_html = self.marionette.absolute_url("hidden.html")
         self.marionette.navigate(test_html)
 
         with self.assertRaises(errors.ElementNotInteractableException):
-            self.marionette.find_element(By.ID, 'child').click()
+            self.marionette.find_element(By.ID, "child").click()
 
     def test_clicking_on_a_multiline_link(self):
         test_html = self.marionette.absolute_url("clicks.html")
@@ -103,17 +133,7 @@ class TestClick(TestLegacyClick):
             {"requiredCapabilities": {"specificationLevel": 1}})
 
     def test_click_element_obscured_by_absolute_positioned_element(self):
-        self.marionette.navigate(inline("""
-            <style>
-            * { margin: 0; padding: 0; }
-            div { display: block; width: 100%; height: 100%; }
-            #obscured { background-color: blue }
-            #overlay { background-color: red; position: absolute; top: 0; }
-            </style>
-
-            <div id=obscured></div>
-            <div id=overlay></div>"""))
-
+        self.marionette.navigate(obscured_overlay)
         overlay = self.marionette.find_element(By.ID, "overlay")
         obscured = self.marionette.find_element(By.ID, "obscured")
 
@@ -199,3 +219,36 @@ class TestClick(TestLegacyClick):
             <div></div>"""))
 
         self.marionette.find_element(By.TAG_NAME, "div").click()
+
+    def test_input_file(self):
+        self.marionette.navigate(inline("<input type=file>"))
+        with self.assertRaises(errors.InvalidArgumentException):
+            self.marionette.find_element(By.TAG_NAME, "input").click()
+
+    def test_container_element(self):
+        self.marionette.navigate(inline("""
+            <select>
+              <option>foo</option>
+            </select>"""))
+        option = self.marionette.find_element(By.TAG_NAME, "option")
+        option.click()
+        self.assertTrue(option.get_property("selected"))
+
+    def test_container_element_outside_view(self):
+        self.marionette.navigate(inline("""
+            <select style="margin-top: 100vh">
+              <option>foo</option>
+            </select>"""))
+        option = self.marionette.find_element(By.TAG_NAME, "option")
+        option.click()
+        self.assertTrue(option.get_property("selected"))
+
+    def test_obscured_element(self):
+        self.marionette.navigate(obscured_overlay)
+        overlay = self.marionette.find_element(By.ID, "overlay")
+        obscured = self.marionette.find_element(By.ID, "obscured")
+
+        overlay.click()
+        with self.assertRaises(errors.ElementClickInterceptedException):
+            obscured.click()
+        self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
