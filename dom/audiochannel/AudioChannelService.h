@@ -201,6 +201,8 @@ public:
 
   void NotifyCreatedNewAgent(AudioChannelAgent* aAgent);
 
+  void NotifyMediaResumedFromBlock(nsPIDOMWindowOuter* aWindow);
+
 private:
   AudioChannelService();
   ~AudioChannelService();
@@ -245,6 +247,7 @@ private:
       : mWindowID(aWindowID)
       , mIsAudioCaptured(false)
       , mOwningAudioFocus(!AudioChannelService::IsEnableAudioCompeting())
+      , mShouldSendBlockStopEvent(false)
     {
       // Workaround for bug1183033, system channel type can always playback.
       mChannels[(int16_t)AudioChannel::System].mMuted = false;
@@ -258,6 +261,8 @@ private:
     void AppendAgent(AudioChannelAgent* aAgent, AudibleState aAudible);
     void RemoveAgent(AudioChannelAgent* aAgent);
 
+    void NotifyMediaBlockStop(nsPIDOMWindowOuter* aWindow);
+
     uint64_t mWindowID;
     bool mIsAudioCaptured;
     AudioChannelConfig mChannels[NUMBER_OF_AUDIO_CHANNELS];
@@ -270,6 +275,9 @@ private:
     // lose audio focus when other windows starts playing.
     bool mOwningAudioFocus;
 
+    // If we've dispatched "blockStart" event, we must dispatch another event
+    // "blockStop" when the window is resumed from suspend-block.
+    bool mShouldSendBlockStopEvent;
   private:
     void AudioCapturedChanged(AudioChannelAgent* aAgent,
                               AudioCaptureState aCapture);
