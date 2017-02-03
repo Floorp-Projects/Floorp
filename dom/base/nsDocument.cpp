@@ -8,6 +8,7 @@
  * Base class for all our document implementations.
  */
 
+#include "AudioChannelService.h"
 #include "nsDocument.h"
 #include "nsIDocumentInlines.h"
 #include "mozilla/AnimationComparator.h"
@@ -12084,9 +12085,7 @@ nsDocument::MaybeActiveMediaComponents()
   }
 
   mEverInForeground = true;
-  if (GetWindow()->GetMediaSuspend() == nsISuspendedTypes::SUSPENDED_BLOCK) {
-    GetWindow()->SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
-  }
+  GetWindow()->MaybeActiveMediaComponents();
 }
 
 NS_IMETHODIMP

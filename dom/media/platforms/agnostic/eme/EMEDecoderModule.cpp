@@ -16,10 +16,13 @@
 #include "nsClassHashtable.h"
 #include "GMPDecoderModule.h"
 #include "MP4Decoder.h"
+#include "MediaPrefs.h"
+#include "mozilla/EMEUtils.h"
 
 namespace mozilla {
 
 typedef MozPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
+extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
 class EMEDecryptor : public MediaDataDecoder {
 
@@ -232,6 +235,12 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   MOZ_ASSERT(aParams.mConfig.mCrypto.mValid);
 
+  if (MediaPrefs::EMEBlankVideo()) {
+    EME_LOG("EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
+    RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
+    return m->CreateVideoDecoder(aParams);
+  }
+
   if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
     // GMP decodes. Assume that means it can decrypt too.
     RefPtr<MediaDataDecoderProxy> wrapper =
@@ -262,6 +271,12 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   // We don't support using the GMP to decode audio.
   MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));
   MOZ_ASSERT(mPDM);
+
+  if (MediaPrefs::EMEBlankAudio()) {
+    EME_LOG("EMEDecoderModule::CreateAudioDecoder() creating a blank decoder.");
+    RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
+    return m->CreateAudioDecoder(aParams);
+  }
 
   RefPtr<MediaDataDecoder> decoder(mPDM->CreateDecoder(aParams));
   if (!decoder) {

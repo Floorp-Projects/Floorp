@@ -5,7 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 features = []
-if CONFIG['MOZ_STYLO'] and CONFIG['MOZ_STYLO_BINDGEN']:
-    features += ['bindgen']
+if CONFIG['MOZ_STYLO']:
+    features += ['servo']
+
+    if CONFIG['MOZ_STYLO_BINDGEN']:
+        features += ['bindgen']
 
 RustLibrary('gkrust-gtest', features)

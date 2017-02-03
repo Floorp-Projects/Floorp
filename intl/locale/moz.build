@@ -35,7 +35,12 @@ EXPORTS += [
     'nsWin32Locale.h',
 ]
 
+EXPORTS.mozilla.intl += [
+    'LocaleService.h'
+]
+
 UNIFIED_SOURCES += [
+    'LocaleService.cpp',
     'nsCollation.cpp',
     'nsLanguageAtomService.cpp',
     'nsLocale.cpp',
@@ -74,3 +79,6 @@ GENERATED_FILES += [
 langgroups = GENERATED_FILES['langGroups.properties.h']
 langgroups.script = 'props2arrays.py'
 langgroups.inputs = ['langGroups.properties']
+
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['tests/gtest']

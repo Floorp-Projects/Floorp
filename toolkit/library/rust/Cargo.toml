@@ -7,6 +7,7 @@ description = "Rust code for libxul"
 
 [features]
 bindgen = ["gkrust-shared/bindgen"]
+servo = ["gkrust-shared/servo"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }
