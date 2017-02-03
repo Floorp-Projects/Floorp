@@ -137,14 +137,6 @@ function handleRequest(request, response) {
         response.finish();
         break;
       }
-      case "json-b64": {
-        response.setStatusLine(request.httpVersion, status, "OK");
-        response.setHeader("Content-Type", "text/json; charset=utf-8", false);
-        setCacheHeaders();
-        response.write(btoa("{ \"greeting\": \"This is a base 64 string.\" }"));
-        response.finish();
-        break;
-      }
       case "json-long": {
         let str = "{ \"greeting\": \"Hello long string JSON!\" },";
         response.setStatusLine(request.httpVersion, status, "OK");
