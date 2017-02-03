@@ -49,23 +49,23 @@ global.TabContext = function TabContext(getDefaults, extension) {
 };
 
 TabContext.prototype = {
-  get(tab) {
-    if (!this.tabData.has(tab)) {
-      this.tabData.set(tab, this.getDefaults(tab));
+  get(nativeTab) {
+    if (!this.tabData.has(nativeTab)) {
+      this.tabData.set(nativeTab, this.getDefaults(nativeTab));
     }
 
-    return this.tabData.get(tab);
+    return this.tabData.get(nativeTab);
   },
 
-  clear(tab) {
-    this.tabData.delete(tab);
+  clear(nativeTab) {
+    this.tabData.delete(nativeTab);
   },
 
   handleEvent(event) {
     if (event.type == "TabSelect") {
-      let tab = event.target;
-      this.emit("tab-select", tab);
-      this.emit("location-change", tab);
+      let nativeTab = event.target;
+      this.emit("tab-select", nativeTab);
+      this.emit("location-change", nativeTab);
     }
   },
 
@@ -83,8 +83,8 @@ TabContext.prototype = {
     let lastLocation = this.lastLocation.get(browser);
     if (browser === gBrowser.selectedBrowser &&
         !(lastLocation && lastLocation.equalsExceptRef(browser.currentURI))) {
-      let tab = gBrowser.getTabForBrowser(browser);
-      this.emit("location-change", tab, true);
+      let nativeTab = gBrowser.getTabForBrowser(browser);
+      this.emit("location-change", nativeTab, true);
     }
     this.lastLocation.set(browser, browser.currentURI);
   },
@@ -152,28 +152,28 @@ class TabTracker extends TabTrackerBase {
     /* eslint-enable mozilla/balanced-listeners */
   }
 
-  getId(tab) {
-    if (this._tabs.has(tab)) {
-      return this._tabs.get(tab);
+  getId(nativeTab) {
+    if (this._tabs.has(nativeTab)) {
+      return this._tabs.get(nativeTab);
     }
 
     this.init();
 
     let id = this._nextId++;
-    this.setId(tab, id);
+    this.setId(nativeTab, id);
     return id;
   }
 
-  setId(tab, id) {
-    this._tabs.set(tab, id);
-    this._tabIds.set(id, tab);
+  setId(nativeTab, id) {
+    this._tabs.set(nativeTab, id);
+    this._tabIds.set(id, nativeTab);
   }
 
-  _handleTabDestroyed(event, {tab}) {
-    let id = this._tabs.get(tab);
+  _handleTabDestroyed(event, {nativeTab}) {
+    let id = this._tabs.get(nativeTab);
     if (id) {
-      this._tabs.delete(tab);
-      if (this._tabIds.get(id) === tab) {
+      this._tabs.delete(nativeTab);
+      if (this._tabIds.get(id) === nativeTab) {
         this._tabIds.delete(id);
       }
     }
@@ -192,9 +192,9 @@ class TabTracker extends TabTrackerBase {
    *        A XUL <tab> element.
    */
   getTab(tabId, default_ = undefined) {
-    let tab = this._tabIds.get(tabId);
-    if (tab) {
-      return tab;
+    let nativeTab = this._tabIds.get(tabId);
+    if (nativeTab) {
+      return nativeTab;
     }
     if (default_ !== undefined) {
       return default_;
@@ -208,7 +208,7 @@ class TabTracker extends TabTrackerBase {
    * @private
    */
   handleEvent(event) {
-    let tab = event.target;
+    let nativeTab = event.target;
 
     switch (event.type) {
       case "TabOpen":
@@ -218,10 +218,10 @@ class TabTracker extends TabTrackerBase {
 
           // This tab is being created to adopt a tab from a different window.
           // Copy the ID from the old tab to the new.
-          this.setId(tab, this.getId(adoptedTab));
+          this.setId(nativeTab, this.getId(adoptedTab));
 
           adoptedTab.linkedBrowser.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", {
-            windowId: windowTracker.getId(tab.ownerGlobal),
+            windowId: windowTracker.getId(nativeTab.ownerGlobal),
           });
         }
 
@@ -243,11 +243,11 @@ class TabTracker extends TabTrackerBase {
           // Copy its ID to the new tab, in case it was created as the first tab
           // of a new window, and did not have an `adoptedTab` detail when it was
           // opened.
-          this.setId(adoptedBy, this.getId(tab));
+          this.setId(adoptedBy, this.getId(nativeTab));
 
-          this.emitDetached(tab, adoptedBy);
+          this.emitDetached(nativeTab, adoptedBy);
         } else {
-          this.emitRemoved(tab, false);
+          this.emitRemoved(nativeTab, false);
         }
         break;
     }
@@ -272,16 +272,16 @@ class TabTracker extends TabTrackerBase {
       // by the first MozAfterPaint event. That code handles finally
       // adopting the tab, and clears it from the arguments list in the
       // process, so if we run later than it, we're too late.
-      let tab = window.arguments[0];
+      let nativeTab = window.arguments[0];
       let adoptedBy = window.gBrowser.tabs[0];
 
-      this.adoptedTabs.set(tab, adoptedBy);
-      this.setId(adoptedBy, this.getId(tab));
+      this.adoptedTabs.set(nativeTab, adoptedBy);
+      this.setId(adoptedBy, this.getId(nativeTab));
 
       // We need to be sure to fire this event after the onDetached event
       // for the original tab.
       let listener = (event, details) => {
-        if (details.tab === tab) {
+        if (details.nativeTab === nativeTab) {
           this.off("tab-detached", listener);
 
           Promise.resolve().then(() => {
@@ -292,8 +292,8 @@ class TabTracker extends TabTrackerBase {
 
       this.on("tab-detached", listener);
     } else {
-      for (let tab of window.gBrowser.tabs) {
-        this.emitCreated(tab);
+      for (let nativeTab of window.gBrowser.tabs) {
+        this.emitCreated(nativeTab);
       }
     }
   }
@@ -307,11 +307,11 @@ class TabTracker extends TabTrackerBase {
    * @private
    */
   _handleWindowClose(window) {
-    for (let tab of window.gBrowser.tabs) {
-      if (this.adoptedTabs.has(tab)) {
-        this.emitDetached(tab, this.adoptedTabs.get(tab));
+    for (let nativeTab of window.gBrowser.tabs) {
+      if (this.adoptedTabs.has(nativeTab)) {
+        this.emitDetached(nativeTab, this.adoptedTabs.get(nativeTab));
       } else {
-        this.emitRemoved(tab, true);
+        this.emitRemoved(nativeTab, true);
       }
     }
   }
@@ -319,58 +319,58 @@ class TabTracker extends TabTrackerBase {
   /**
    * Emits a "tab-attached" event for the given tab element.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The tab element in the window to which the tab is being attached.
    * @private
    */
-  emitAttached(tab) {
-    let newWindowId = windowTracker.getId(tab.ownerGlobal);
-    let tabId = this.getId(tab);
+  emitAttached(nativeTab) {
+    let newWindowId = windowTracker.getId(nativeTab.ownerGlobal);
+    let tabId = this.getId(nativeTab);
 
-    this.emit("tab-attached", {tab, tabId, newWindowId, newPosition: tab._tPos});
+    this.emit("tab-attached", {nativeTab, tabId, newWindowId, newPosition: nativeTab._tPos});
   }
 
   /**
    * Emits a "tab-detached" event for the given tab element.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The tab element in the window from which the tab is being detached.
    * @param {NativeTab} adoptedBy
    *        The tab element in the window to which detached tab is being moved,
    *        and will adopt this tab's contents.
    * @private
    */
-  emitDetached(tab, adoptedBy) {
-    let oldWindowId = windowTracker.getId(tab.ownerGlobal);
-    let tabId = this.getId(tab);
+  emitDetached(nativeTab, adoptedBy) {
+    let oldWindowId = windowTracker.getId(nativeTab.ownerGlobal);
+    let tabId = this.getId(nativeTab);
 
-    this.emit("tab-detached", {tab, adoptedBy, tabId, oldWindowId, oldPosition: tab._tPos});
+    this.emit("tab-detached", {nativeTab, adoptedBy, tabId, oldWindowId, oldPosition: nativeTab._tPos});
   }
 
   /**
    * Emits a "tab-created" event for the given tab element.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The tab element which is being created.
    * @private
    */
-  emitCreated(tab) {
-    this.emit("tab-created", {tab});
+  emitCreated(nativeTab) {
+    this.emit("tab-created", {nativeTab});
   }
 
   /**
    * Emits a "tab-removed" event for the given tab element.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The tab element which is being removed.
    * @param {boolean} isWindowClosing
    *        True if the tab is being removed because the browser window is
    *        closing.
    * @private
    */
-  emitRemoved(tab, isWindowClosing) {
-    let windowId = windowTracker.getId(tab.ownerGlobal);
-    let tabId = this.getId(tab);
+  emitRemoved(nativeTab, isWindowClosing) {
+    let windowId = windowTracker.getId(nativeTab.ownerGlobal);
+    let tabId = this.getId(nativeTab);
 
     // When addons run in-process, `window.close()` is synchronous. Most other
     // addon-invoked calls are asynchronous since they go through a proxy
@@ -382,7 +382,7 @@ class TabTracker extends TabTrackerBase {
     // event listener is registered. To make sure that the event listener is
     // notified, we dispatch `tabs.onRemoved` asynchronously.
     Services.tm.mainThread.dispatch(() => {
-      this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+      this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
     }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 
@@ -406,9 +406,9 @@ class TabTracker extends TabTrackerBase {
     if (gBrowser && gBrowser.getTabForBrowser) {
       result.windowId = windowTracker.getId(browser.ownerGlobal);
 
-      let tab = gBrowser.getTabForBrowser(browser);
-      if (tab) {
-        result.tabId = this.getId(tab);
+      let nativeTab = gBrowser.getTabForBrowser(browser);
+      if (nativeTab) {
+        result.tabId = this.getId(nativeTab);
       }
     }
 
@@ -431,19 +431,19 @@ Object.assign(global, {tabTracker, windowTracker});
 
 class Tab extends TabBase {
   get _favIconUrl() {
-    return this.window.gBrowser.getIcon(this.tab);
+    return this.window.gBrowser.getIcon(this.nativeTab);
   }
 
   get audible() {
-    return this.tab.soundPlaying;
+    return this.nativeTab.soundPlaying;
   }
 
   get browser() {
-    return this.tab.linkedBrowser;
+    return this.nativeTab.linkedBrowser;
   }
 
   get cookieStoreId() {
-    return getCookieStoreIdForTab(this, this.tab);
+    return getCookieStoreIdForTab(this, this.nativeTab);
   }
 
   get height() {
@@ -451,37 +451,37 @@ class Tab extends TabBase {
   }
 
   get index() {
-    return this.tab._tPos;
+    return this.nativeTab._tPos;
   }
 
   get mutedInfo() {
-    let tab = this.tab;
+    let {nativeTab} = this;
 
-    let mutedInfo = {muted: tab.muted};
-    if (tab.muteReason === null) {
+    let mutedInfo = {muted: nativeTab.muted};
+    if (nativeTab.muteReason === null) {
       mutedInfo.reason = "user";
-    } else if (tab.muteReason) {
+    } else if (nativeTab.muteReason) {
       mutedInfo.reason = "extension";
-      mutedInfo.extensionId = tab.muteReason;
+      mutedInfo.extensionId = nativeTab.muteReason;
     }
 
     return mutedInfo;
   }
 
   get pinned() {
-    return this.tab.pinned;
+    return this.nativeTab.pinned;
   }
 
   get active() {
-    return this.tab.selected;
+    return this.nativeTab.selected;
   }
 
   get selected() {
-    return this.tab.selected;
+    return this.nativeTab.selected;
   }
 
   get status() {
-    if (this.tab.getAttribute("busy") === "true") {
+    if (this.nativeTab.getAttribute("busy") === "true") {
       return "loading";
     }
     return "complete";
@@ -492,7 +492,7 @@ class Tab extends TabBase {
   }
 
   get window() {
-    return this.tab.ownerGlobal;
+    return this.nativeTab.ownerGlobal;
   }
 
   get windowId() {
@@ -665,8 +665,8 @@ class Window extends WindowBase {
   * getTabs() {
     let {tabManager} = this.extension;
 
-    for (let tab of this.window.gBrowser.tabs) {
-      yield tabManager.getWrapper(tab);
+    for (let nativeTab of this.window.gBrowser.tabs) {
+      yield tabManager.getWrapper(nativeTab);
     }
   }
 
@@ -695,8 +695,8 @@ class Window extends WindowBase {
     };
 
     if (windowData.tabs.length) {
-      result.tabs = windowData.tabs.map(tab => {
-        return Tab.convertFromSessionStoreClosedData(extension, tab);
+      result.tabs = windowData.tabs.map(tabData => {
+        return Tab.convertFromSessionStoreClosedData(extension, tabData);
       });
     }
 
@@ -708,24 +708,24 @@ Object.assign(global, {Tab, Window});
 
 class TabManager extends TabManagerBase {
   get(tabId, default_ = undefined) {
-    let tab = tabTracker.getTab(tabId, default_);
+    let nativeTab = tabTracker.getTab(tabId, default_);
 
-    if (tab) {
-      return this.getWrapper(tab);
+    if (nativeTab) {
+      return this.getWrapper(nativeTab);
     }
     return default_;
   }
 
-  addActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.addActiveTabPermission(tab);
+  addActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.addActiveTabPermission(nativeTab);
   }
 
-  revokeActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.revokeActiveTabPermission(tab);
+  revokeActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.revokeActiveTabPermission(nativeTab);
   }
 
-  wrapTab(tab) {
-    return new Tab(this.extension, tab, tabTracker.getId(tab));
+  wrapTab(nativeTab) {
+    return new Tab(this.extension, nativeTab, tabTracker.getId(nativeTab));
   }
 }
 

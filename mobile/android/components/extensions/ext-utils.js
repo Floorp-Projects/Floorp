@@ -66,8 +66,8 @@ class ProgressListenerWrapper {
     this.flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                  Ci.nsIWebProgress.NOTIFY_LOCATION;
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      this.addBrowserProgressListener(tab.browser);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      this.addBrowserProgressListener(nativeTab.browser);
     }
 
     this.window.BrowserApp.deck.addEventListener("TabOpen", this);
@@ -76,8 +76,8 @@ class ProgressListenerWrapper {
   destroy() {
     this.window.BrowserApp.deck.removeEventListener("TabOpen", this);
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      this.removeProgressListener(tab.browser);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      this.removeProgressListener(nativeTab.browser);
     }
   }
 
@@ -173,16 +173,16 @@ class TabTracker extends TabTrackerBase {
     windowTracker.addListener("TabOpen", this);
   }
 
-  getId(tab) {
-    return tab.id;
+  getId(nativeTab) {
+    return nativeTab.id;
   }
 
   getTab(id, default_ = undefined) {
     let win = windowTracker.topWindow;
     if (win) {
-      let tab = win.BrowserApp.getTabForId(id);
-      if (tab) {
-        return tab;
+      let nativeTab = win.BrowserApp.getTabForId(id);
+      if (nativeTab) {
+        return nativeTab;
       }
     }
     if (default_ !== undefined) {
@@ -193,29 +193,29 @@ class TabTracker extends TabTrackerBase {
 
   handleEvent(event) {
     const {BrowserApp} = event.target.ownerGlobal;
-    let tab = BrowserApp.getTabForBrowser(event.target);
+    let nativeTab = BrowserApp.getTabForBrowser(event.target);
 
     switch (event.type) {
       case "TabOpen":
-        this.emitCreated(tab);
+        this.emitCreated(nativeTab);
         break;
 
       case "TabClose":
-        this.emitRemoved(tab, false);
+        this.emitRemoved(nativeTab, false);
         break;
     }
   }
 
-  emitCreated(tab) {
-    this.emit("tab-created", {tab});
+  emitCreated(nativeTab) {
+    this.emit("tab-created", {nativeTab});
   }
 
-  emitRemoved(tab, isWindowClosing) {
-    let windowId = windowTracker.getId(tab.browser.ownerGlobal);
-    let tabId = this.getId(tab);
+  emitRemoved(nativeTab, isWindowClosing) {
+    let windowId = windowTracker.getId(nativeTab.browser.ownerGlobal);
+    let tabId = this.getId(nativeTab);
 
     Services.tm.mainThread.dispatch(() => {
-      this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+      this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
     }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 
@@ -229,9 +229,9 @@ class TabTracker extends TabTrackerBase {
     if (BrowserApp) {
       result.windowId = windowTracker.getId(browser.ownerGlobal);
 
-      let tab = BrowserApp.getTabForBrowser(browser);
-      if (tab) {
-        result.tabId = this.getId(tab);
+      let nativeTab = BrowserApp.getTabForBrowser(browser);
+      if (nativeTab) {
+        result.tabId = this.getId(nativeTab);
       }
     }
 
@@ -258,15 +258,15 @@ class Tab extends TabBase {
   }
 
   get audible() {
-    return this.tab.playingAudio;
+    return this.nativeTab.playingAudio;
   }
 
   get browser() {
-    return this.tab.browser;
+    return this.nativeTab.browser;
   }
 
   get cookieStoreId() {
-    return getCookieStoreIdForTab(this, this.tab);
+    return getCookieStoreIdForTab(this, this.nativeTab);
   }
 
   get height() {
@@ -278,7 +278,7 @@ class Tab extends TabBase {
   }
 
   get index() {
-    return this.window.BrowserApp.tabs.indexOf(this.tab);
+    return this.window.BrowserApp.tabs.indexOf(this.nativeTab);
   }
 
   get mutedInfo() {
@@ -290,11 +290,11 @@ class Tab extends TabBase {
   }
 
   get active() {
-    return this.tab.getActive();
+    return this.nativeTab.getActive();
   }
 
   get selected() {
-    return this.tab.getActive();
+    return this.nativeTab.getActive();
   }
 
   get status() {
@@ -357,8 +357,8 @@ class Window extends WindowBase {
   * getTabs() {
     let {tabManager} = this.extension;
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      yield tabManager.getWrapper(tab);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      yield tabManager.getWrapper(nativeTab);
     }
   }
 }
@@ -367,24 +367,24 @@ Object.assign(global, {Tab, Window});
 
 class TabManager extends TabManagerBase {
   get(tabId, default_ = undefined) {
-    let tab = tabTracker.getTab(tabId, default_);
+    let nativeTab = tabTracker.getTab(tabId, default_);
 
-    if (tab) {
-      return this.getWrapper(tab);
+    if (nativeTab) {
+      return this.getWrapper(nativeTab);
     }
     return default_;
   }
 
-  addActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.addActiveTabPermission(tab);
+  addActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.addActiveTabPermission(nativeTab);
   }
 
-  revokeActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.revokeActiveTabPermission(tab);
+  revokeActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.revokeActiveTabPermission(nativeTab);
   }
 
-  wrapTab(tab) {
-    return new Tab(this.extension, tab, tab.id);
+  wrapTab(nativeTab) {
+    return new Tab(this.extension, nativeTab, nativeTab.id);
   }
 }
 

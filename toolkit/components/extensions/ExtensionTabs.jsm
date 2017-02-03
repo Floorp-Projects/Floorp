@@ -54,7 +54,7 @@ const {
  *        The extension object for which this wrapper is being created. Used to
  *        determine permissions for access to certain properties and
  *        functionality.
- * @param {NativeTab} tab
+ * @param {NativeTab} nativeTab
  *        The native tab object which is being wrapped. The type of this object
  *        varies by platform.
  * @param {integer} id
@@ -62,11 +62,11 @@ const {
  *        every extension, and for the lifetime of the tab.
  */
 class TabBase {
-  constructor(extension, tab, id) {
+  constructor(extension, nativeTab, id) {
     this.extension = extension;
     this.tabManager = extension.tabManager;
     this.id = id;
-    this.tab = tab;
+    this.nativeTab = nativeTab;
     this.activeTabWindowID = null;
   }
 
@@ -224,7 +224,7 @@ class TabBase {
    *        @readonly
    */
   get _title() {
-    return this.browser.contentTitle || this.tab.label;
+    return this.browser.contentTitle || this.nativeTab.label;
   }
 
 
@@ -1020,14 +1020,14 @@ class TabTrackerBase extends EventEmitter {
   /**
    * Returns the numeric ID for the given native tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to return an ID.
    *
    * @returns {integer}
    *        The tab's numeric ID.
    * @abstract
    */
-  getId(tab) {
+  getId(nativeTab) {
     throw new Error("Not implemented");
   }
 
@@ -1556,16 +1556,16 @@ class TabManagerBase {
    * If the extension has requested activeTab permission, grant it those
    * permissions for the current inner window in the given native tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to grant permissions.
    */
-  addActiveTabPermission(tab) {
+  addActiveTabPermission(nativeTab) {
     if (this.extension.hasPermission("activeTab")) {
       // Note that, unlike Chrome, we don't currently clear this permission with
       // the tab navigates. If the inner window is revived from BFCache before
       // we've granted this permission to a new inner window, the extension
       // maintains its permissions for it.
-      tab = this.getWrapper(tab);
+      let tab = this.getWrapper(nativeTab);
       tab.activeTabWindowID = tab.innerWindowID;
     }
   }
@@ -1574,24 +1574,24 @@ class TabManagerBase {
    * Revoke the extension's activeTab permissions for the current inner window
    * of the given native tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to revoke permissions.
    */
-  revokeActiveTabPermission(tab) {
-    this.getWrapper(tab).activeTabWindowID = null;
+  revokeActiveTabPermission(nativeTab) {
+    this.getWrapper(nativeTab).activeTabWindowID = null;
   }
 
   /**
    * Returns true if the extension has requested activeTab permission, and has
    * been granted permissions for the current inner window if this tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to check permissions.
    * @returns {boolean}
    *        True if the extension has activeTab permissions for this tab.
    */
-  hasActiveTabPermission(tab) {
-    return this.getWrapper(tab).hasActiveTabPermission;
+  hasActiveTabPermission(nativeTab) {
+    return this.getWrapper(nativeTab).hasActiveTabPermission;
   }
 
   /**
@@ -1600,27 +1600,27 @@ class TabManagerBase {
    * either requested the "tabs" permission or has activeTab permissions for the
    * given tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to check permissions.
    * @returns {boolean}
    *        True if the extension has permissions for this tab.
    */
-  hasTabPermission(tab) {
-    return this.getWrapper(tab).hasTabPermission;
+  hasTabPermission(nativeTab) {
+    return this.getWrapper(nativeTab).hasTabPermission;
   }
 
   /**
    * Returns this extension's TabBase wrapper for the given native tab. This
    * method will always return the same wrapper object for any given native tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The tab for which to return a wrapper.
    *
    * @returns {TabBase}
    *        The wrapper for this tab.
    */
-  getWrapper(tab) {
-    return this._tabs.get(tab);
+  getWrapper(nativeTab) {
+    return this._tabs.get(nativeTab);
   }
 
   /**
@@ -1628,13 +1628,13 @@ class TabManagerBase {
    * requried to be returned by WebExtension APIs, which may be safely passed to
    * extension code.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab to convert.
    *
    * @returns {Object}
    */
-  convert(tab) {
-    return this.getWrapper(tab).convert();
+  convert(nativeTab) {
+    return this.getWrapper(nativeTab).convert();
   }
 
   // The JSDoc validator does not support @returns tags in abstract functions or
@@ -1681,7 +1681,7 @@ class TabManagerBase {
   /**
    * Returns a new TabBase instance wrapping the given native tab.
    *
-   * @param {NativeTab} tab
+   * @param {NativeTab} nativeTab
    *        The native tab for which to return a wrapper.
    *
    * @returns {TabBase}
@@ -1689,7 +1689,7 @@ class TabManagerBase {
    * @abstract
    */
   /* eslint-enable valid-jsdoc */
-  wrapTab(tab) {
+  wrapTab(nativeTab) {
     throw new Error("Not implemented");
   }
 }
