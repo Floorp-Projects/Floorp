@@ -994,35 +994,7 @@ js::TraceLoggerForCurrentThread()
 TraceLoggerThread*
 TraceLoggerThreadState::forThread(const Thread::Id& thread)
 {
-    MOZ_ASSERT(initialized);
-
-    LockGuard<Mutex> guard(lock);
-
-    ThreadLoggerHashMap::AddPtr p = threadLoggers.lookupForAdd(thread);
-    if (p)
-        return p->value();
-
-    TraceLoggerThread* logger = js_new<TraceLoggerThread>();
-    if (!logger)
-        return nullptr;
-
-    if (!logger->init()) {
-        js_delete(logger);
-        return nullptr;
-    }
-
-    if (!threadLoggers.add(p, thread, logger)) {
-        js_delete(logger);
-        return nullptr;
-    }
-
-    if (graphSpewingEnabled)
-        logger->initGraph();
-
-    if (offThreadEnabled)
-        logger->enable();
-
-    return logger;
+    return nullptr;
 }
 
 bool
