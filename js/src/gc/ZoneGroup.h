@@ -21,8 +21,6 @@ class AutoKeepAtoms;
 
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
 
-using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
-
 // Zone groups encapsulate data about a group of zones that are logically
 // related in some way. Currently, each runtime has a single zone group, and
 // all zones except the atoms zone (which has no group) are in that group.
@@ -130,12 +128,6 @@ class ZoneGroup
     ZoneGroupData<mozilla::LinkedList<js::Debugger>> debuggerList_;
   public:
     mozilla::LinkedList<js::Debugger>& debuggerList() { return debuggerList_.ref(); }
-
-    /* If true, new scripts must be created with PC counter information. */
-    ZoneGroupOrIonCompileData<bool> profilingScripts;
-
-    /* Strong references on scripts held for PCCount profiling API. */
-    ZoneGroupData<JS::PersistentRooted<ScriptAndCountsVector>*> scriptAndCountsVector;
 };
 
 class MOZ_RAII AutoAccessZoneGroup

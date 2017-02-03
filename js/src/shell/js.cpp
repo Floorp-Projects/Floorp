@@ -7680,7 +7680,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     printTiming = op.getBoolOption('b');
     enableCodeCoverage = op.getBoolOption("code-coverage");
     enableDisassemblyDumps = op.getBoolOption('D');
-    cx->runtime()->zoneGroupFromMainThread()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
+    cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
     jsCacheDir = op.getStringOption("js-cache");
     if (jsCacheDir) {
@@ -7722,7 +7722,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays);
     cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
-    cx->runtime()->zoneGroupFromMainThread()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
+    cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
 #ifdef JS_GC_ZEAL
     if (gZealBits && gZealFrequency) {

@@ -138,6 +138,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     defaultVersion_(JSVERSION_DEFAULT),
+    profilingScripts(false),
+    scriptAndCountsVector(nullptr),
     lcovOutput_(),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
@@ -303,7 +305,7 @@ JSRuntime::destroyRuntime()
         beingDestroyed_ = true;
 
         /* Allow the GC to release scripts that were being profiled. */
-        zoneGroupFromMainThread()->profilingScripts = false;
+        profilingScripts = false;
 
         /* Set the profiler sampler buffer generation to invalid. */
         profilerSampleBufferGen_ = UINT32_MAX;
