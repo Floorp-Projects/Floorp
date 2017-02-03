@@ -44,6 +44,7 @@ var observer = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsIFormSubmitObserver,
                                           Ci.nsIWebProgressListener,
+                                          Ci.nsIDOMEventListener,
                                           Ci.nsISupportsWeakReference]),
 
   // nsIFormSubmitObserver
@@ -107,6 +108,24 @@ var observer = {
 
     log("onStateChange handled:", channel);
     LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
+  },
+
+  handleEvent(aEvent) {
+    if (!aEvent.isTrusted) {
+      return;
+    }
+
+    if (!gEnabled) {
+      return;
+    }
+
+    switch (aEvent.type) {
+      // Only used for username fields.
+      case "focus": {
+        LoginManagerContent._onUsernameFocus(aEvent);
+        break;
+      }
+    }
   },
 };
 
@@ -535,9 +554,31 @@ var LoginManagerContent = {
     this._fillForm(form, autofillForm, false, false, false, loginsFound, recipes);
   },
 
-  /*
-   * onUsernameInput
-   *
+  /**
+   * Focus event handler for username fields to decide whether to show autocomplete.
+   * @param {FocusEvent} event
+   */
+  _onUsernameFocus(event) {
+    let focusedField = event.target;
+    if (!focusedField.mozIsTextField(true) || focusedField.readOnly) {
+      return;
+    }
+
+    if (this._isLoginAlreadyFilled(focusedField)) {
+      log("_onUsernameFocus: Already filled");
+      return;
+    }
+
+    let formFillFocused = this._formFillService.focusedInput;
+    if (formFillFocused == focusedField) {
+      log("_onUsernameFocus: Opening the autocomplete popup");
+      this._formFillService.showPopup();
+    } else {
+      log("_onUsernameFocus: FormFillController has a different focused input");
+    }
+  },
+
+  /**
    * Listens for DOMAutoComplete and blur events on an input field.
    */
   onUsernameInput(event) {
@@ -996,8 +1037,6 @@ var LoginManagerContent = {
         return;
       }
 
-      this._formFillService.markAsLoginManagerField(passwordField);
-
       // If the password field is disabled or read-only, there's nothing to do.
       if (passwordField.disabled || passwordField.readOnly) {
         log("not filling form, password field disabled or read-only");
@@ -1183,6 +1222,19 @@ var LoginManagerContent = {
       if (!userTriggered) {
         // Ignore fills as a result of user action for this probe.
         Services.telemetry.getHistogramById("PWMGR_FORM_AUTOFILL_RESULT").add(autofillResult);
+
+        if (usernameField) {
+          let focusedElement = this._formFillService.focusedInput;
+          if (usernameField == focusedElement &&
+              autofillResult !== AUTOFILL_RESULT.FILLED) {
+            log("_fillForm: Opening username autocomplete popup since the form wasn't autofilled");
+            this._formFillService.showPopup();
+          }
+        }
+      }
+
+      if (usernameField) {
+        usernameField.addEventListener("focus", observer);
       }
 
       Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
