@@ -299,7 +299,7 @@ private:
 
     void NotifyChannelActive(uint64_t aWindowID, AudioChannel aChannel,
                              bool aActive);
-    void MaybeNotifyMediaBlocked(AudioChannelAgent* aAgent);
+    void MaybeNotifyMediaBlockStart(AudioChannelAgent* aAgent);
 
     void RequestAudioFocus(AudioChannelAgent* aAgent);
     void NotifyAudioCompetingChanged(AudioChannelAgent* aAgent, bool aActive);
