@@ -325,7 +325,7 @@ private:
   virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
                            int64_t aDataSize, int32_t aFetchCount,
                            uint32_t aLastModifiedTime, uint32_t aExpirationTime,
-                           bool aPinned) override
+                           bool aPinned, nsILoadContextInfo* aInfo) override
   {
     nsresult rv;
 
@@ -336,7 +336,8 @@ private:
     }
 
     rv = mCallback->OnCacheEntryInfo(uri, aIdEnhance, aDataSize, aFetchCount,
-                                     aLastModifiedTime, aExpirationTime, aPinned);
+                                     aLastModifiedTime, aExpirationTime,
+                                     aPinned, aInfo);
     if (NS_FAILED(rv)) {
       LOG(("  callback failed, canceling the walk"));
       mCancel = true;
@@ -403,7 +404,7 @@ private:
 
       rv = mWalker->mCallback->OnCacheEntryInfo(
         uri, mIdEnhance, mDataSize, mFetchCount,
-        mLastModifiedTime, mExpirationTime, mPinned);
+        mLastModifiedTime, mExpirationTime, mPinned, mInfo);
       if (NS_FAILED(rv)) {
         mWalker->mCancel = true;
       }
@@ -420,6 +421,7 @@ private:
     uint32_t mLastModifiedTime;
     uint32_t mExpirationTime;
     bool mPinned;
+    nsCOMPtr<nsILoadContextInfo> mInfo;
   };
 
   NS_IMETHOD Run() override
@@ -500,7 +502,7 @@ private:
   virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
                            int64_t aDataSize, int32_t aFetchCount,
                            uint32_t aLastModifiedTime, uint32_t aExpirationTime,
-                           bool aPinned) override
+                           bool aPinned, nsILoadContextInfo* aInfo) override
   {
     // Called directly from CacheFileIOManager::GetEntryInfo.
 
@@ -513,6 +515,7 @@ private:
     info->mLastModifiedTime = aLastModifiedTime;
     info->mExpirationTime = aExpirationTime;
     info->mPinned = aPinned;
+    info->mInfo = aInfo;
 
     NS_DispatchToMainThread(info);
   }
@@ -1988,6 +1991,12 @@ CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
   nsCString const uriSpec = aEntry->GetURI();
   nsCString const enhanceId = aEntry->GetEnhanceID();
 
+  nsAutoCString entryKey;
+  aEntry->HashingKeyWithStorage(entryKey);
+
+  nsCOMPtr<nsILoadContextInfo> info =
+    CacheFileUtils::ParseKey(entryKey);
+
   uint32_t dataSize;
   if (NS_FAILED(aEntry->GetStorageDataSize(&dataSize))) {
     dataSize = 0;
@@ -2007,7 +2016,7 @@ CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
 
   aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize,
                          fetchCount, lastModified, expirationTime,
-                         aEntry->IsPinned());
+                         aEntry->IsPinned(), info);
 }
 
 // static
