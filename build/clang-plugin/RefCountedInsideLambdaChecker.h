@@ -14,6 +14,19 @@ public:
     : BaseCheck(CheckName, Context) {}
   void registerMatchers(MatchFinder* AstMatcher) override;
   void check(const MatchFinder::MatchResult &Result) override;
+
+  void emitDiagnostics(SourceLocation Loc, StringRef Name, QualType Type);
+
+private:
+  class ThisVisitor : public RecursiveASTVisitor<ThisVisitor> {
+  public:
+    explicit ThisVisitor(RefCountedInsideLambdaChecker& Checker)
+      : Checker(Checker) {}
+
+    bool VisitCXXThisExpr(CXXThisExpr *This);
+  private:
+    RefCountedInsideLambdaChecker& Checker;
+  };
 };
 
 #endif
