@@ -2118,7 +2118,11 @@ ServiceWorkerPrivate::ReleaseToken()
   --mTokenCount;
   if (!mTokenCount) {
     TerminateWorker();
-  } else if (IsIdle()) {
+  }
+
+  // mInfo can be nullptr here if NoteDeadServiceWorkerInfo() is called while
+  // the KeepAliveToken is being proxy released as a runnable.
+  else if (mInfo && IsIdle()) {
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       swm->WorkerIsIdle(mInfo);
