@@ -297,10 +297,6 @@ public:
   static uintptr_t GetThreadHandle(PlatformData*);
 #endif
 
-  static const std::vector<ThreadInfo*>& GetRegisteredThreads() {
-    return *sRegisteredThreads;
-  }
-
   static bool RegisterCurrentThread(const char* aName,
                                     PseudoStack* aPseudoStack,
                                     bool aIsMainThread, void* stackTop);
@@ -311,6 +307,7 @@ public:
   static void Shutdown();
 
   static mozilla::UniquePtr<mozilla::Mutex> sRegisteredThreadsMutex;
+  static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
@@ -364,8 +361,6 @@ private:
   void InplaceTick(TickSample* sample);
 
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
-
-  static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   const double interval_;
   Atomic32 paused_;

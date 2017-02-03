@@ -745,10 +745,9 @@ profiler_start(int aProfileEntries, double aInterval,
   gSampler->Start();
   if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
     mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-    const std::vector<ThreadInfo*>& threads = gSampler->GetRegisteredThreads();
 
-    for (uint32_t i = 0; i < threads.size(); i++) {
-      ThreadInfo* info = threads[i];
+    for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
       if (info->IsPendingDelete() || !info->hasProfile()) {
         continue;
       }
