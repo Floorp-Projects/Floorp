@@ -76,7 +76,7 @@ class PropertyTree
     JS::Zone* zone_;
 #endif
 
-    bool insertChild(ExclusiveContext* cx, Shape* parent, Shape* child);
+    bool insertChild(JSContext* cx, Shape* parent, Shape* child);
 
     PropertyTree();
 
@@ -98,7 +98,7 @@ class PropertyTree
     {
     }
 
-    Shape* getChild(ExclusiveContext* cx, Shape* parent, JS::Handle<StackShape> child);
+    Shape* getChild(JSContext* cx, Shape* parent, JS::Handle<StackShape> child);
 };
 
 } /* namespace js */

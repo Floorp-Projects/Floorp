@@ -965,9 +965,9 @@ JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext* cx);
 
 inline uintptr_t
-GetNativeStackLimit(JSContext* cx, StackKind kind, int extraAllowance = 0)
+GetNativeStackLimit(JSContext* cx, JS::StackKind kind, int extraAllowance = 0)
 {
-    uintptr_t limit = ContextFriendFields::get(cx)->nativeStackLimit[kind];
+    uintptr_t limit = JS::RootingContext::get(cx)->nativeStackLimit[kind];
 #if JS_STACK_GROWTH_DIRECTION > 0
     limit += extraAllowance;
 #else
@@ -979,8 +979,8 @@ GetNativeStackLimit(JSContext* cx, StackKind kind, int extraAllowance = 0)
 inline uintptr_t
 GetNativeStackLimit(JSContext* cx, int extraAllowance = 0)
 {
-    StackKind kind = RunningWithTrustedPrincipals(cx) ? StackForTrustedScript
-                                                      : StackForUntrustedScript;
+    JS::StackKind kind = RunningWithTrustedPrincipals(cx) ? JS::StackForTrustedScript
+                                                          : JS::StackForUntrustedScript;
     return GetNativeStackLimit(cx, kind, extraAllowance);
 }
 
@@ -1032,16 +1032,16 @@ GetNativeStackLimit(JSContext* cx, int extraAllowance = 0)
     JS_END_MACRO
 
 #define JS_CHECK_SYSTEM_RECURSION(cx, onerror)                                  \
-    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, js::StackForSystemCode), onerror)
+    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, JS::StackForSystemCode), onerror)
 
 #define JS_CHECK_RECURSION_CONSERVATIVE(cx, onerror)                            \
     JS_CHECK_RECURSION_LIMIT(cx,                                                \
-                             js::GetNativeStackLimit(cx, js::StackForUntrustedScript, -1024 * int(sizeof(size_t))), \
+                             js::GetNativeStackLimit(cx, JS::StackForUntrustedScript, -1024 * int(sizeof(size_t))), \
                              onerror)
 
 #define JS_CHECK_RECURSION_CONSERVATIVE_DONT_REPORT(cx, onerror)                \
     JS_CHECK_RECURSION_LIMIT_DONT_REPORT(cx,                                    \
-                                         js::GetNativeStackLimit(cx, js::StackForUntrustedScript, -1024 * int(sizeof(size_t))), \
+                                         js::GetNativeStackLimit(cx, JS::StackForUntrustedScript, -1024 * int(sizeof(size_t))), \
                                          onerror)
 
 JS_FRIEND_API(void)

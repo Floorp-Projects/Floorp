@@ -91,6 +91,7 @@ PrintTargetWindows::EndPrinting()
 nsresult
 PrintTargetWindows::AbortPrinting()
 {
+  PrintTarget::AbortPrinting();
   int result = ::AbortDoc(mDC);
   return (result <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }
@@ -98,6 +99,7 @@ PrintTargetWindows::AbortPrinting()
 nsresult
 PrintTargetWindows::BeginPage()
 {
+  PrintTarget::BeginPage();
   int result = ::StartPage(mDC);
   return (result <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }
@@ -106,6 +108,7 @@ nsresult
 PrintTargetWindows::EndPage()
 {
   cairo_surface_show_page(mCairoSurface);
+  PrintTarget::EndPage();
   int result = ::EndPage(mDC);
   return (result <= 0) ? NS_ERROR_FAILURE : NS_OK;
 }

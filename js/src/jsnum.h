@@ -67,17 +67,17 @@ namespace js {
  */
 template <AllowGC allowGC>
 extern JSString*
-NumberToString(ExclusiveContext* cx, double d);
+NumberToString(JSContext* cx, double d);
 
 extern JSAtom*
-NumberToAtom(ExclusiveContext* cx, double d);
+NumberToAtom(JSContext* cx, double d);
 
 template <AllowGC allowGC>
 extern JSFlatString*
-Int32ToString(ExclusiveContext* cx, int32_t i);
+Int32ToString(JSContext* cx, int32_t i);
 
 extern JSAtom*
-Int32ToAtom(ExclusiveContext* cx, int32_t si);
+Int32ToAtom(JSContext* cx, int32_t si);
 
 /*
  * Convert an integer or double (contained in the given value) to a string and
@@ -152,7 +152,7 @@ ParseDecimalNumber(const mozilla::Range<const CharT> chars);
  */
 template <typename CharT>
 extern MOZ_MUST_USE bool
-GetPrefixInteger(ExclusiveContext* cx, const CharT* start, const CharT* end, int base,
+GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end, int base,
                  const CharT** endp, double* dp);
 
 /*
@@ -161,10 +161,10 @@ GetPrefixInteger(ExclusiveContext* cx, const CharT* start, const CharT* end, int
  * only contain digits.
  */
 extern MOZ_MUST_USE bool
-GetDecimalInteger(ExclusiveContext* cx, const char16_t* start, const char16_t* end, double* dp);
+GetDecimalInteger(JSContext* cx, const char16_t* start, const char16_t* end, double* dp);
 
 extern MOZ_MUST_USE bool
-StringToNumber(ExclusiveContext* cx, JSString* str, double* result);
+StringToNumber(JSContext* cx, JSString* str, double* result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
 MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
@@ -200,7 +200,7 @@ num_parseInt(JSContext* cx, unsigned argc, Value* vp);
  */
 template <typename CharT>
 extern MOZ_MUST_USE bool
-js_strtod(js::ExclusiveContext* cx, const CharT* begin, const CharT* end,
+js_strtod(JSContext* cx, const CharT* begin, const CharT* end,
           const CharT** dEnd, double* d);
 
 namespace js {
@@ -269,11 +269,8 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
 /* ES6 7.1.15 ToLength, but clamped to the [0,2^32-2] range.  If the
  * return value is false then *overflow will be true iff the value was
  * not clampable to uint32_t range.
- *
- * For JSContext and ExclusiveContext.
  */
-template<typename T>
-MOZ_MUST_USE bool ToLengthClamped(T* cx, HandleValue v, uint32_t* out, bool* overflow);
+MOZ_MUST_USE bool ToLengthClamped(JSContext* cx, HandleValue v, uint32_t* out, bool* overflow);
 
 /* Non-standard convert and range check an index value as for SIMD, and Atomics
  * operations, eg ES7 24.2.1.1, DataView's GetViewValue():
@@ -341,21 +338,6 @@ SafeMul(int32_t one, int32_t two, int32_t* res)
     int64_t ores = (int64_t)one * (int64_t)two;
     return ores == (int64_t)*res;
 #endif
-}
-
-extern MOZ_MUST_USE bool
-ToNumberSlow(ExclusiveContext* cx, HandleValue v, double* dp);
-
-// Variant of ToNumber which takes an ExclusiveContext instead of a JSContext.
-// ToNumber is part of the API and can't use ExclusiveContext directly.
-MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
-ToNumber(ExclusiveContext* cx, HandleValue v, double* out)
-{
-    if (v.isNumber()) {
-        *out = v.toNumber();
-        return true;
-    }
-    return ToNumberSlow(cx, v, out);
 }
 
 void FIX_FPU();

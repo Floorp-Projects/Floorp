@@ -53,7 +53,6 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
     JSContext* cx;
   public:
     explicit AutoCheckRequestDepth(JSContext* cx);
-    explicit AutoCheckRequestDepth(js::ContextFriendFields* cx);
     ~AutoCheckRequestDepth();
 };
 
@@ -108,13 +107,6 @@ class MOZ_RAII AutoVectorRooterBase : protected AutoGCRooter
 
   public:
     explicit AutoVectorRooterBase(JSContext* cx, ptrdiff_t tag
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, tag), vector(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    explicit AutoVectorRooterBase(js::ContextFriendFields* cx, ptrdiff_t tag
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, tag), vector(cx)
     {
@@ -208,13 +200,6 @@ class MOZ_RAII AutoVectorRooter : public AutoVectorRooterBase<T>
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    explicit AutoVectorRooter(js::ContextFriendFields* cx
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooterBase<T>(cx, this->GetTag(T()))
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -223,7 +208,6 @@ class AutoValueVector : public Rooted<GCVector<Value, 8>> {
     using Base = Rooted<Vec>;
   public:
     explicit AutoValueVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-    explicit AutoValueVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
 };
 
 class AutoIdVector : public Rooted<GCVector<jsid, 8>> {
@@ -231,7 +215,6 @@ class AutoIdVector : public Rooted<GCVector<jsid, 8>> {
     using Base = Rooted<Vec>;
   public:
     explicit AutoIdVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-    explicit AutoIdVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
 
     bool appendAll(const AutoIdVector& other) { return this->Base::appendAll(other.get()); }
 };
@@ -241,7 +224,6 @@ class AutoObjectVector : public Rooted<GCVector<JSObject*, 8>> {
     using Base = Rooted<Vec>;
   public:
     explicit AutoObjectVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-    explicit AutoObjectVector(js::ContextFriendFields* cx) : Base(cx, Vec(cx)) {}
 };
 
 using ValueVector = JS::GCVector<JS::Value>;
@@ -1004,25 +986,6 @@ JS_NewContext(uint32_t maxbytes,
 extern JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext* cx);
 
-typedef double (*JS_CurrentEmbedderTimeFunction)();
-
-/**
- * The embedding can specify a time function that will be used in some
- * situations.  The function can return the time however it likes; but
- * the norm is to return times in units of milliseconds since an
- * arbitrary, but consistent, epoch.  If the time function is not set,
- * a built-in default will be used.
- */
-JS_PUBLIC_API(void)
-JS_SetCurrentEmbedderTimeFunction(JS_CurrentEmbedderTimeFunction timeFn);
-
-/**
- * Return the time as computed using the current time function, or a
- * suitable default if one has not been set.
- */
-JS_PUBLIC_API(double)
-JS_GetCurrentEmbedderTime();
-
 JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext* cx);
 
@@ -1044,7 +1007,7 @@ JS_SetFutexCanWait(JSContext* cx);
 namespace js {
 
 void
-AssertHeapIsIdle(JSRuntime* rt);
+AssertHeapIsIdle();
 
 } /* namespace js */
 
@@ -4043,7 +4006,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) final : public ReadOnlyCompi
 
   public:
     explicit CompileOptions(JSContext* cx, JSVersion version = JSVERSION_UNKNOWN);
-    CompileOptions(js::ContextFriendFields* cx, const ReadOnlyCompileOptions& rhs)
+    CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
       : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx),
         introductionScriptRoot(cx)
     {
@@ -4057,7 +4020,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) final : public ReadOnlyCompi
         introductionScriptRoot = rhs.introductionScript();
     }
 
-    CompileOptions(js::ContextFriendFields* cx, const TransitiveCompileOptions& rhs)
+    CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
       : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx),
         introductionScriptRoot(cx)
     {
@@ -5032,8 +4995,6 @@ class MOZ_RAII JSAutoByteString
         return mBytes;
     }
 
-    char* encodeLatin1(js::ExclusiveContext* cx, JSString* str);
-
     char* encodeUtf8(JSContext* cx, JS::HandleString str) {
         MOZ_ASSERT(!mBytes);
         MOZ_ASSERT(cx);
@@ -5847,6 +5808,7 @@ JS_SetOffthreadIonCompilationEnabled(JSContext* cx, bool enabled);
     Register(ION_CHECK_RANGE_ANALYSIS, "ion.check-range-analysis")         \
     Register(BASELINE_ENABLE, "baseline.enable")                           \
     Register(OFFTHREAD_COMPILATION_ENABLE, "offthread-compilation.enable") \
+    Register(FULL_DEBUG_CHECKS, "jit.full-debug-checks")                   \
     Register(JUMP_THRESHOLD, "jump-threshold")                             \
     Register(ASMJS_ATOMICS_ENABLE, "asmjs.atomics.enable")                 \
     Register(WASM_TEST_MODE, "wasm.test-mode")                             \

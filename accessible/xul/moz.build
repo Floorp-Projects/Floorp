@@ -24,6 +24,8 @@ LOCAL_INCLUDES += [
     '/accessible/generic',
     '/accessible/html',
     '/accessible/xpcom',
+    '/dom/base',
+    '/dom/xul',
     '/layout/generic',
     '/layout/xul',
     '/layout/xul/tree',

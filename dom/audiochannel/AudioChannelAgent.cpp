@@ -41,6 +41,9 @@ AudioChannelAgent::AudioChannelAgent()
   , mInnerWindowID(0)
   , mIsRegToService(false)
 {
+  // Init service in the begining, it can help us to know whether there is any
+  // created media component via AudioChannelService::IsServiceStarted().
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
 }
 
 AudioChannelAgent::~AudioChannelAgent()
@@ -180,6 +183,9 @@ AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
   } else {
     mCallback = aCallback;
   }
+
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  service->NotifyCreatedNewAgent(this);
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, InitInternal, this = %p, type = %d, "

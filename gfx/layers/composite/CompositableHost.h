@@ -205,9 +205,6 @@ public:
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                          TextureHost* aTextureOnWhite);
-  virtual void UseOverlaySource(OverlaySource aOverlay,
-                                const gfx::IntRect& aPictureRect) { }
-
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
   // Called every time this is composited

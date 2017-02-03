@@ -13,3 +13,4 @@ jobs-from:
     - python-tests.yml
     - mozlint.yml
     - doc.yml
+    - webidl.yml

@@ -19,12 +19,16 @@ for example - use `all_tests.py` instead.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.transforms.base import TransformSequence, resolve_keyed_by
+from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.transforms.job.common import (
     docker_worker_support_vcs_checkout,
 )
-from taskgraph.transforms.base import validate_schema, optionally_keyed_by
+from taskgraph.util.schema import (
+    validate_schema,
+    optionally_keyed_by,
+)
 from voluptuous import (
     Any,
     Optional,
@@ -564,6 +568,25 @@ def set_retry_exit_status(config, tests):
        scripts to indicate a transient failure that should be retried."""
     for test in tests:
         test['retry-exit-status'] = 4
+        yield test
+
+
+@transforms.add
+def set_profile(config, tests):
+    """Set profiling mode for tests."""
+    for test in tests:
+        if config.config['args'].profile and test['suite'] == 'talos':
+            test['mozharness']['extra-options'].append('--spsProfile')
+        yield test
+
+
+@transforms.add
+def set_tag(config, tests):
+    """Set test for a specific tag."""
+    for test in tests:
+        tag = config.config['args'].tag
+        if tag:
+            test['mozharness']['extra-options'].extend(['--tag', tag])
         yield test
 
 

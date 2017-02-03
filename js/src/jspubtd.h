@@ -41,19 +41,10 @@ class JS_FRIEND_API(OwningCompileOptions);
 class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
 
-struct RootingContext;
 class Value;
 struct Zone;
 
-namespace shadow {
-struct Runtime;
-} // namespace shadow
-
 } // namespace JS
-
-namespace js {
-class RootLists;
-} // namespace js
 
 /*
  * Run-time version enumeration.  For compile-time version checking, please use
@@ -132,6 +123,9 @@ class AutoTraceSession;
 class StoreBuffer;
 } // namespace gc
 
+inline JSCompartment* GetContextCompartment(const JSContext* cx);
+inline JS::Zone* GetContextZone(const JSContext* cx);
+
 // Whether the current thread is permitted access to any part of the specified
 // runtime or zone.
 JS_FRIEND_API(bool)
@@ -160,76 +154,45 @@ enum class HeapState {
     CycleCollecting   // in the "Unlink" phase of cycle collection
 };
 
-namespace shadow {
+JS_PUBLIC_API(HeapState)
+CurrentThreadHeapState();
 
-struct Runtime
+static inline bool
+CurrentThreadIsHeapBusy()
 {
-  private:
-    JS::HeapState heapState_;
+    return CurrentThreadHeapState() != HeapState::Idle;
+}
 
-  protected:
-    void setHeapState(JS::HeapState newState) {
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(asRuntime()));
-        MOZ_ASSERT(heapState_ != newState);
-        heapState_ = newState;
-    }
+static inline bool
+CurrentThreadIsHeapTracing()
+{
+    return CurrentThreadHeapState() == HeapState::Tracing;
+}
 
-    JS::HeapState heapState() const {
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(asRuntime()) ||
-                   js::CurrentThreadIsPerformingGC());
-        return heapState_;
-    }
+static inline bool
+CurrentThreadIsHeapMajorCollecting()
+{
+    return CurrentThreadHeapState() == HeapState::MajorCollecting;
+}
 
-    // In some cases, invoking GC barriers (incremental or otherwise) will break
-    // things. These barriers assert if this flag is set.
-    bool allowGCBarriers_;
-    friend class JS::AutoAssertOnBarrier;
+static inline bool
+CurrentThreadIsHeapMinorCollecting()
+{
+    return CurrentThreadHeapState() == HeapState::MinorCollecting;
+}
 
-    js::gc::StoreBuffer* gcStoreBufferPtr_;
+static inline bool
+CurrentThreadIsHeapCollecting()
+{
+    HeapState state = CurrentThreadHeapState();
+    return state == HeapState::MajorCollecting || state == HeapState::MinorCollecting;
+}
 
-    // The gray bits can become invalid if UnmarkGray overflows the stack. A
-    // full GC will reset this bit, since it fills in all the gray bits.
-    bool gcGrayBitsValid_;
-
-  public:
-    Runtime()
-      : heapState_(JS::HeapState::Idle)
-      , allowGCBarriers_(true)
-      , gcStoreBufferPtr_(nullptr)
-      , gcGrayBitsValid_(false)
-    {}
-
-    bool isHeapBusy() const { return heapState() != JS::HeapState::Idle; }
-    bool isHeapTracing() const { return heapState() == JS::HeapState::Tracing; }
-    bool isHeapMajorCollecting() const { return heapState() == JS::HeapState::MajorCollecting; }
-    bool isHeapMinorCollecting() const { return heapState() == JS::HeapState::MinorCollecting; }
-    bool isHeapCollecting() const { return isHeapMinorCollecting() || isHeapMajorCollecting(); }
-    bool isCycleCollecting() const {
-        return heapState() == JS::HeapState::CycleCollecting;
-    }
-
-    bool allowGCBarriers() const { return allowGCBarriers_; }
-
-    js::gc::StoreBuffer* gcStoreBufferPtr() { return gcStoreBufferPtr_; }
-
-    bool areGCGrayBitsValid() const { return gcGrayBitsValid_; }
-    void setGCGrayBitsValid(bool valid) { gcGrayBitsValid_ = valid; }
-
-    const JSRuntime* asRuntime() const {
-        return reinterpret_cast<const JSRuntime*>(this);
-    }
-
-    static JS::shadow::Runtime* asShadowRuntime(JSRuntime* rt) {
-        return reinterpret_cast<JS::shadow::Runtime*>(rt);
-    }
-
-  protected:
-    void setGCStoreBufferPtr(js::gc::StoreBuffer* storeBuffer) {
-        gcStoreBufferPtr_ = storeBuffer;
-    }
-};
-
-} /* namespace shadow */
+static inline bool
+CurrentThreadIsHeapCycleCollecting()
+{
+    return CurrentThreadHeapState() == HeapState::CycleCollecting;
+}
 
 // Decorates the Unlinking phase of CycleCollection so that accidental use
 // of barriered accessors results in assertions instead of leaks.
@@ -248,11 +211,13 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(AutoEnterCycleCollection)
 #endif
 };
 
+class RootingContext;
+
 class JS_PUBLIC_API(AutoGCRooter)
 {
   public:
     AutoGCRooter(JSContext* cx, ptrdiff_t tag);
-    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag);
+    AutoGCRooter(RootingContext* cx, ptrdiff_t tag);
 
     ~AutoGCRooter() {
         MOZ_ASSERT(this == *stackTop);
@@ -307,11 +272,8 @@ struct MapTypeToRootKind<void*> {
     static const RootKind kind = RootKind::Traceable;
 };
 
-} /* namespace JS */
-
-namespace js {
-
-class ExclusiveContext;
+using RootedListHeads = mozilla::EnumeratedArray<RootKind, RootKind::Limit,
+                                                 Rooted<void*>*>;
 
 /*
  * This list enumerates the different types of conceptual stacks we have in
@@ -326,12 +288,9 @@ enum StackKind
     StackKindCount
 };
 
-using RootedListHeads = mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
-                                                 JS::Rooted<void*>*>;
-
-// Abstracts JS rooting mechanisms so they can be shared between the JSContext
-// and JSRuntime.
-class RootLists
+// Superclass of JSContext which can be used for rooting data in use by the
+// current thread but that does not provide all the functions of a JSContext.
+class RootingContext
 {
     // Stack GC roots for Rooted GC heap pointers.
     RootedListHeads stackRoots_;
@@ -341,83 +300,17 @@ class RootLists
     JS::AutoGCRooter* autoGCRooters_;
     friend class JS::AutoGCRooter;
 
-    // Heap GC roots for PersistentRooted pointers.
-    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
-                             mozilla::LinkedList<JS::PersistentRooted<void*>>> heapRoots_;
-    template <typename T> friend class JS::PersistentRooted;
-
   public:
-    RootLists() : autoGCRooters_(nullptr) {
-        for (auto& stackRootPtr : stackRoots_)
-            stackRootPtr = nullptr;
-    }
-
-    ~RootLists() {
-        // The semantics of PersistentRooted containing pointers and tagged
-        // pointers are somewhat different from those of PersistentRooted
-        // containing a structure with a trace method. PersistentRooted
-        // containing pointers are allowed to outlive the owning RootLists,
-        // whereas those containing a traceable structure are not.
-        //
-        // The purpose of this feature is to support lazy initialization of
-        // global references for the several places in Gecko that do not have
-        // access to a tighter context, but that still need to refer to GC
-        // pointers. For such pointers, FinishPersistentRootedChains ensures
-        // that the contained references are nulled out when the owning
-        // RootLists dies to prevent UAF errors.
-        //
-        // However, for RootKind::Traceable, we do not know the concrete type
-        // of the held thing, so we simply cannot do this without accruing
-        // extra overhead and complexity for all users for a case that is
-        // unlikely to ever be used in practice. For this reason, the following
-        // assertion disallows usage of PersistentRooted<Traceable> that
-        // outlives the RootLists.
-        MOZ_ASSERT(heapRoots_[JS::RootKind::Traceable].isEmpty());
-    }
+    RootingContext();
 
     void traceStackRoots(JSTracer* trc);
     void checkNoGCRooters();
 
-    void tracePersistentRoots(JSTracer* trc);
-    void finishPersistentRoots();
-};
-
-} // namespace js
-
-namespace JS {
-
-/*
- * JS::RootingContext is a base class of ContextFriendFields and JSContext.
- * This class can be used to let code construct a Rooted<> or PersistentRooted<>
- * instance, without giving it full access to the JSContext.
- */
-struct RootingContext
-{
-    js::RootLists roots;
-
-#ifdef DEBUG
-    // Whether the derived class is a JSContext or an ExclusiveContext.
-    bool isJSContext;
-#endif
-
-    explicit RootingContext(bool isJSContextArg)
-#ifdef DEBUG
-      : isJSContext(isJSContextArg)
-#endif
-    {}
-
-    static RootingContext* get(JSContext* cx) {
-        return reinterpret_cast<RootingContext*>(cx);
-    }
-};
-
-} // namespace JS
-
-namespace js {
-
-struct ContextFriendFields : public JS::RootingContext
-{
   protected:
+    // The remaining members in this class should only be accessed through
+    // JSContext pointers. They are unrelated to rooting and are in place so
+    // that inlined API functions can directly access the data.
+
     /* The current compartment. */
     JSCompartment*      compartment_;
 
@@ -426,28 +319,29 @@ struct ContextFriendFields : public JS::RootingContext
 
   public:
     /* Limit pointer for checking native stack consumption. */
-    uintptr_t nativeStackLimit[js::StackKindCount];
+    uintptr_t nativeStackLimit[StackKindCount];
 
-    explicit ContextFriendFields(bool isJSContext);
-
-    static const ContextFriendFields* get(const JSContext* cx) {
-        return reinterpret_cast<const ContextFriendFields*>(cx);
+    static const RootingContext* get(const JSContext* cx) {
+        return reinterpret_cast<const RootingContext*>(cx);
     }
 
-    static ContextFriendFields* get(JSContext* cx) {
-        return reinterpret_cast<ContextFriendFields*>(cx);
+    static RootingContext* get(JSContext* cx) {
+        return reinterpret_cast<RootingContext*>(cx);
     }
 
-    friend JSCompartment* GetContextCompartment(const JSContext* cx);
-    friend JS::Zone* GetContextZone(const JSContext* cx);
-    template <typename T> friend class JS::Rooted;
+    friend JSCompartment* js::GetContextCompartment(const JSContext* cx);
+    friend JS::Zone* js::GetContextZone(const JSContext* cx);
 };
+
+} /* namespace JS */
+
+namespace js {
 
 /*
  * Inlinable accessors for JSContext.
  *
  * - These must not be available on the more restricted superclasses of
- *   JSContext, so we can't simply define them on ContextFriendFields.
+ *   JSContext, so we can't simply define them on RootingContext.
  *
  * - They're perfectly ordinary JSContext functionality, so ought to be
  *   usable without resorting to jsfriendapi.h, and when JSContext is an
@@ -456,13 +350,13 @@ struct ContextFriendFields : public JS::RootingContext
 inline JSCompartment*
 GetContextCompartment(const JSContext* cx)
 {
-    return ContextFriendFields::get(cx)->compartment_;
+    return JS::RootingContext::get(cx)->compartment_;
 }
 
 inline JS::Zone*
 GetContextZone(const JSContext* cx)
 {
-    return ContextFriendFields::get(cx)->zone_;
+    return JS::RootingContext::get(cx)->zone_;
 }
 
 } /* namespace js */

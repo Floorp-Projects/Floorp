@@ -184,7 +184,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eNoAction,
     eNoLiveAttr,
     eList,
-    kNoReqStates
+    states::READONLY
   },
   { // document
     &nsGkAtoms::document,

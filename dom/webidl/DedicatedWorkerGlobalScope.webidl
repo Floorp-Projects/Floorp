@@ -18,5 +18,7 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   [Throws]
   void postMessage(any message, optional sequence<any> transfer);
 
+  void close();
+
   attribute EventHandler onmessage;
 };

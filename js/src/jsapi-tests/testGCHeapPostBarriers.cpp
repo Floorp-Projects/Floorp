@@ -12,6 +12,8 @@
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"
 
+#include "jscntxtinlines.h"
+
 template <typename T>
 static T* CreateGCThing(JSContext* cx)
 {
@@ -159,7 +161,7 @@ BEGIN_TEST(testUnbarrieredEquality)
     // in ObjectPtr without awkward conversations about nursery allocatability.
     JS::RootedObject robj(cx, JS_NewArrayBuffer(cx, 20));
     JS::RootedObject robj2(cx, JS_NewArrayBuffer(cx, 30));
-    cx->gc.evictNursery(); // Need tenured objects
+    cx->zone()->group()->evictNursery(); // Need tenured objects
 
     // Need some bare pointers to compare against.
     JSObject* obj = robj;

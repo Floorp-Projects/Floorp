@@ -51,22 +51,17 @@ interface URL {
 
 partial interface URL {
   [Throws]
-  static DOMString createObjectURL(Blob blob, optional objectURLOptions options);
+  static DOMString createObjectURL(Blob blob);
   [Throws]
-  static DOMString createObjectURL(MediaStream stream, optional objectURLOptions options);
+  static DOMString createObjectURL(MediaStream stream);
   [Throws]
   static void revokeObjectURL(DOMString url);
   [ChromeOnly, Throws]
   static boolean isValidURL(DOMString url);
 };
 
-dictionary objectURLOptions
-{
-/* boolean autoRevoke = true; */ /* not supported yet */
-};
-
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html
 partial interface URL {
   [Throws]
-  static DOMString? createObjectURL(MediaSource source, optional objectURLOptions options);
+  static DOMString? createObjectURL(MediaSource source);
 };

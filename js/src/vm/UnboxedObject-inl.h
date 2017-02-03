@@ -81,10 +81,8 @@ SetUnboxedValueNoTypeChange(JSObject* unboxedObject,
         // the pointer as a HeapPtrObject we will get confused later if the
         // object is converted to its native representation.
         JSObject* obj = v.toObjectOrNull();
-        if (IsInsideNursery(obj) && !IsInsideNursery(unboxedObject)) {
-            JSRuntime* rt = unboxedObject->runtimeFromMainThread();
-            rt->gc.storeBuffer.putWholeCell(unboxedObject);
-        }
+        if (IsInsideNursery(obj) && !IsInsideNursery(unboxedObject))
+            unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
 
         if (preBarrier)
             JSObject::writeBarrierPre(*np);
@@ -98,7 +96,7 @@ SetUnboxedValueNoTypeChange(JSObject* unboxedObject,
 }
 
 static inline bool
-SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
+SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
                 uint8_t* p, JSValueType type, const Value& v, bool preBarrier)
 {
     switch (type) {
@@ -145,10 +143,8 @@ SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
 
             // As above, trigger post barriers on the whole object.
             JSObject* obj = v.toObjectOrNull();
-            if (IsInsideNursery(v.toObjectOrNull()) && !IsInsideNursery(unboxedObject)) {
-                JSRuntime* rt = unboxedObject->runtimeFromMainThread();
-                rt->gc.storeBuffer.putWholeCell(unboxedObject);
-            }
+            if (IsInsideNursery(v.toObjectOrNull()) && !IsInsideNursery(unboxedObject))
+                unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
 
             if (preBarrier)
                 JSObject::writeBarrierPre(*np);
@@ -183,7 +179,7 @@ UnboxedArrayObject::layout() const
 }
 
 inline void
-UnboxedArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
+UnboxedArrayObject::setLength(JSContext* cx, uint32_t length)
 {
     if (length > INT32_MAX) {
         // Track objects with overflowing lengths in type information.
@@ -215,7 +211,7 @@ UnboxedArrayObject::setInitializedLength(uint32_t initlen)
 
 template <JSValueType Type>
 inline bool
-UnboxedArrayObject::setElementSpecific(ExclusiveContext* cx, size_t index, const Value& v)
+UnboxedArrayObject::setElementSpecific(JSContext* cx, size_t index, const Value& v)
 {
     MOZ_ASSERT(index < initializedLength());
     MOZ_ASSERT(Type == elementType());
@@ -235,7 +231,7 @@ UnboxedArrayObject::setElementNoTypeChangeSpecific(size_t index, const Value& v)
 
 template <JSValueType Type>
 inline bool
-UnboxedArrayObject::initElementSpecific(ExclusiveContext* cx, size_t index, const Value& v)
+UnboxedArrayObject::initElementSpecific(JSContext* cx, size_t index, const Value& v)
 {
     MOZ_ASSERT(index < initializedLength());
     MOZ_ASSERT(Type == elementType());
@@ -471,7 +467,7 @@ EnsureBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count)
 
 template <JSValueType Type>
 static inline DenseElementResult
-SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
+SetOrExtendBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
                                        uint32_t start, const Value* vp, uint32_t count,
                                        ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update)
 {
@@ -626,7 +622,7 @@ CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
 
         // Add a store buffer entry if we might have copied a nursery pointer to dst.
         if (UnboxedTypeNeedsPostBarrier(DstType) && !IsInsideNursery(dst))
-            dst->runtimeFromMainThread()->gc.storeBuffer.putWholeCell(dst);
+            dst->zone()->group()->storeBuffer().putWholeCell(dst);
     } else if (DstType == JSVAL_TYPE_DOUBLE && SrcType == JSVAL_TYPE_INT32) {
         uint8_t* dstData = dst->as<UnboxedArrayObject>().elements();
         uint8_t* srcData = src->as<UnboxedArrayObject>().elements();
@@ -817,7 +813,7 @@ struct Signature ## Functor {                                           \
 }
 
 DenseElementResult
-SetOrExtendAnyBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
+SetOrExtendAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
                                           uint32_t start, const Value* vp, uint32_t count,
                                           ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 

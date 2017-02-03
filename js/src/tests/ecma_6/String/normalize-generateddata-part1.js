@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- uses shell load() function
+// |reftest| slow skip-if(!xulRuntime.shell) -- uses shell load() function
 
 var BUGNUMBER = 918987;
 var summary = 'String.prototype.normalize - part1';

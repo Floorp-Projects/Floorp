@@ -1226,7 +1226,7 @@ CacheIRCompiler::emitGuardClass()
         clasp = &UnmappedArgumentsObject::class_;
         break;
       case GuardClassKind::WindowProxy:
-        clasp = cx_->maybeWindowProxyClass();
+        clasp = cx_->runtime()->maybeWindowProxyClass();
         break;
       case GuardClassKind::JSFunction:
         clasp = &JSFunction::class_;

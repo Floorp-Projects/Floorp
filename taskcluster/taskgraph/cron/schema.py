@@ -7,7 +7,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from voluptuous import Schema, Any, Required, All, MultipleInvalid
+from voluptuous import Schema, Any, Required, All
+from taskgraph.util.schema import (
+    optionally_keyed_by,
+    validate_schema,
+)
 
 
 def even_15_minutes(minutes):
@@ -38,21 +42,21 @@ cron_yml_schema = Schema({
         # when to run it
 
         # Optional set of projects on which this job should run; if omitted, this will
-        # run on all projects for which cron tasks are set up
-        'projects': [basestring],
+        # run on all projects for which cron tasks are set up.  This works just like the
+        # `run_on_projects` attribute, where strings like "release" and "integration" are
+        # expanded to cover multiple repositories.  (taskcluster/docs/attributes.rst)
+        'run-on-projects': [basestring],
 
-        # Array of times at which this task should run.  These *must* be a multiple of
-        # 15 minutes, the minimum scheduling interval.
-        'when': [{'hour': int, 'minute': All(int, even_15_minutes)}],
+        # Array of times at which this task should run.  These *must* be a
+        # multiple of 15 minutes, the minimum scheduling interval.  This field
+        # can be keyed by project so that each project has a different schedule
+        # for the same job.
+        'when': optionally_keyed_by(
+            'project',
+            [{'hour': int, 'minute': All(int, even_15_minutes)}]),
     }],
 })
 
 
 def validate(cron_yml):
-    try:
-        cron_yml_schema(cron_yml)
-    except MultipleInvalid as exc:
-        msg = ["Invalid .cron.yml:"]
-        for error in exc.errors:
-            msg.append(str(error))
-        raise Exception('\n'.join(msg))
+    validate_schema(cron_yml_schema, cron_yml, "Invalid .cron.yml:")

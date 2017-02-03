@@ -35,7 +35,6 @@
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
-#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
@@ -1070,21 +1069,11 @@ ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* a
   return true;
 }
 
-PContentBridgeChild*
-ContentChild::AllocPContentBridgeChild(mozilla::ipc::Transport* aTransport,
-                                       base::ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentChild::RecvInitContentBridgeChild(Endpoint<PContentBridgeChild>&& aEndpoint)
 {
-  return ContentBridgeChild::Create(aTransport, aOtherProcess);
-}
-
-PContentBridgeParent*
-ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
-                                        base::ProcessId aOtherProcess)
-{
-  MOZ_ASSERT(!mLastBridge);
-  mLastBridge = static_cast<ContentBridgeParent*>(
-    ContentBridgeParent::Create(aTransport, aOtherProcess));
-  return mLastBridge;
+  ContentBridgeChild::Create(Move(aEndpoint));
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -3048,20 +3037,6 @@ mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
   nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
-                                             const nsString& aKey,
-                                             const nsString& aOldValue,
-                                             const nsString& aNewValue,
-                                             const IPC::Principal& aPrincipal,
-                                             const bool& aIsPrivate)
-{
-  Storage::DispatchStorageEvent(Storage::LocalStorage,
-                                aDocumentURI, aKey, aOldValue, aNewValue,
-                                aPrincipal, aIsPrivate, nullptr, true);
   return IPC_OK();
 }
 

@@ -53,8 +53,6 @@ public:
 
   MediaKeyStatusMap* KeyStatuses() const;
 
-  void GetKeySystem(nsString& aRetval) const;
-
   void GetSessionId(nsString& aRetval) const;
 
   const nsString& GetSessionId() const;

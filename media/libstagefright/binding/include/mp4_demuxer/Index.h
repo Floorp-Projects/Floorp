@@ -32,6 +32,9 @@ public:
 
 private:
   Sample* Get();
+
+  CencSampleEncryptionInfoEntry* GetSampleEncryptionEntry();
+
   void Next();
   RefPtr<Index> mIndex;
   size_t mCurrentMoof;
