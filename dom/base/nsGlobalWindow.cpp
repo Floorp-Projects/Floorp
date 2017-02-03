@@ -8807,18 +8807,17 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 void
 nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                const nsAString& aTargetOrigin,
-                               const Optional<Sequence<JS::Value>>& aTransfer,
+                               const Sequence<JS::Value>& aTransfer,
                                nsIPrincipal& aSubjectPrincipal,
                                ErrorResult& aError)
 {
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
-  if (aTransfer.WasPassed()) {
-    const Sequence<JS::Value >& values = aTransfer.Value();
-
+  if (!aTransfer.IsEmpty()) {
     // The input sequence only comes from the generated bindings code, which
     // ensures it is rooted.
     JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(values.Length(), values.Elements());
+      JS::HandleValueArray::fromMarkedLocation(aTransfer.Length(),
+                                               aTransfer.Elements());
 
     transferArray = JS::ObjectOrNullValue(JS_NewArrayObject(aCx, elements));
     if (transferArray.isNull()) {
