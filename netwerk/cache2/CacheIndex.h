@@ -264,6 +264,8 @@ public:
   static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
                                            nsILoadContextInfo *aInfo)
   {
+    MOZ_ASSERT(aInfo);
+
     if (!aInfo->IsPrivate() &&
         GetOriginAttrsHash(*aInfo->OriginAttributesPtr()) == aRec->mOriginAttrsHash &&
         aInfo->IsAnonymous() == !!(aRec->mFlags & kAnonymousMask)) {
@@ -666,7 +668,8 @@ public:
   static nsresult GetEntryFileCount(uint32_t *_retval);
 
   // Synchronously returns the disk occupation and number of entries per-context.
-  // Callable on any thread.
+  // Callable on any thread. It will ignore loadContextInfo and get stats for
+  // all entries if the aInfo is a nullptr.
   static nsresult GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize, uint32_t *aCount);
 
   // Asynchronously gets the disk cache size, used for display in the UI.
