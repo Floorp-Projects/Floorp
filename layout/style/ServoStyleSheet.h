@@ -87,7 +87,6 @@ private:
 
   RefPtr<RawServoStyleSheet> mSheet;
   RefPtr<ServoCSSRuleList> mRuleList;
-  StyleSheetInfo mSheetInfo;
 
   friend class StyleSheet;
 };
