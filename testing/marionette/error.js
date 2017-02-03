@@ -7,8 +7,9 @@
 const {interfaces: Ci, utils: Cu} = Components;
 
 const ERRORS = new Set([
+  "ElementClickInterceptedError",
   "ElementNotAccessibleError",
-  "ElementNotVisibleError",
+  "ElementNotInteractableError",
   "InsecureCertificateError",
   "InvalidArgumentError",
   "InvalidElementStateError",
@@ -204,10 +205,38 @@ class ElementNotAccessibleError extends WebDriverError {
   }
 }
 
-class ElementNotVisibleError extends WebDriverError {
+/**
+ * An element click could not be completed because the element receiving
+ * the events is obscuring the element that was requested clicked.
+ *
+ * @param {Element=} obscuredEl
+ *     Element obscuring the element receiving the click.  Providing this
+ *     is not required, but will produce a nicer error message.
+ * @param {Map.<string, number>} coords
+ *     Original click location.  Providing this is not required, but
+ *     will produce a nicer error message.
+ */
+class ElementClickInterceptedError extends WebDriverError {
+  constructor (obscuredEl = undefined, coords = undefined) {
+    let msg = "";
+    if (obscuredEl && coords) {
+      const doc = obscuredEl.ownerDocument;
+      const overlayingEl = doc.elementFromPoint(coords.x, coords.y);
+      msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+          `at point (${coords.x},${coords.y}) ` +
+          error.pprint`because another element ${overlayingEl} ` +
+          `obscures it`;
+    }
+
+    super(msg);
+    this.status = "element click intercepted";
+  }
+}
+
+class ElementNotInteractableError extends WebDriverError {
   constructor (message) {
     super(message);
-    this.status = "element not visible";
+    this.status = "element not interactable";
   }
 }
 
@@ -395,7 +424,8 @@ class UnsupportedOperationError extends WebDriverError {
 
 const STATUSES = new Map([
   ["element not accessible", ElementNotAccessibleError],
-  ["element not visible", ElementNotVisibleError],
+  ["element not interactable", ElementNotInteractableError],
+  ["element click intercepted", ElementClickInterceptedError],
   ["insecure certificate", InsecureCertificateError],
   ["invalid argument", InvalidArgumentError],
   ["invalid element state", InvalidElementStateError],
