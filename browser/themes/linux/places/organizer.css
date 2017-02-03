@@ -20,6 +20,10 @@
   color: ButtonText;
 }
 
+#placesToolbar > toolbarbutton[disabled=true] {
+  color: GrayText;
+}
+
 /* back button */
 
 #back-button {
