@@ -9,6 +9,7 @@ fuzzy(1,246) fuzzy-if(skiaContent,2,160) fuzzy-if(browserIsRemote&&d2d,53,185) s
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
+skip-if(!asyncPan) == bg-fixed-child-no-culling-3.html bg-fixed-child-no-culling-3-ref.html
 fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,1,3528) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
 pref(layers.force-active,true) skip-if(!asyncPan) == iframe-1.html iframe-1-ref.html
