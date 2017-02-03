@@ -6,7 +6,6 @@
 #include "nsIDOMElement.idl"
 
 interface nsIRDFCompositeDataSource;
-interface nsIXULTemplateBuilder;
 interface nsIRDFResource;
 interface nsIControllers;
 interface nsIBoxObject;
@@ -15,69 +14,4 @@ interface nsIBoxObject;
 [uuid(75435ab3-6863-42a1-ade3-025393d9e80e)]
 interface nsIDOMXULElement : nsIDOMElement
 {
-  // Layout properties
-  attribute DOMString align;
-  attribute DOMString dir;
-  attribute DOMString flex;
-  attribute DOMString flexGroup;
-  attribute DOMString ordinal;
-  attribute DOMString orient;
-  attribute DOMString pack;
-  
-  // Properties for hiding elements.
-  attribute boolean hidden;
-  attribute boolean collapsed;
-  
-  // Property for hooking up to broadcasters
-  attribute DOMString observes;
-  
-  // Properties for hooking up to popups
-  attribute DOMString menu;
-  attribute DOMString contextMenu;
-  attribute DOMString tooltip;
-  
-  // Width/height properties
-  attribute DOMString width;
-  attribute DOMString height;
-  attribute DOMString minWidth;
-  attribute DOMString minHeight;
-  attribute DOMString maxWidth;
-  attribute DOMString maxHeight;
-
-  // Persistence 
-  attribute DOMString persist;
-
-  // Position properties for
-  // * popups - these are screen coordinates
-  // * other elements - these are client coordinates relative to parent stack. 
-  attribute DOMString left;
-  attribute DOMString top;
-  
-  // XUL Template Builder 
-  attribute DOMString datasources;
-  attribute DOMString ref;
-
-  // Tooltip and status info
-  attribute DOMString tooltipText;
-  attribute DOMString statusText;
-  
-  attribute boolean allowEvents;
-
-  readonly attribute nsIRDFCompositeDataSource database;
-  readonly attribute nsIXULTemplateBuilder     builder;
-  readonly attribute nsIRDFResource            resource;
-  readonly attribute nsIControllers            controllers;
-  readonly attribute nsIBoxObject              boxObject;
-
-  void                      focus();
-  void                      blur();
-  void                      click();
-  void                      doCommand();
-
-  nsIDOMNodeList            getElementsByAttribute(in DOMString name,
-                                                   in DOMString value);
-
-  nsIDOMNodeList            getElementsByAttributeNS(in DOMString namespaceURI,
-                                                     in DOMString name,
-                                                     in DOMString value);
 };
