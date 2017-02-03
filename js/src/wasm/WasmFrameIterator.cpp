@@ -435,7 +435,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
         masm.loadWasmGlobalPtr(sigId.globalDataOffset(), scratch);
-        masm.branch32(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
+        masm.branchPtr(Assembler::Condition::NotEqual, WasmTableCallSigReg, scratch, trap);
         break;
       }
       case SigIdDesc::Kind::Immediate:
