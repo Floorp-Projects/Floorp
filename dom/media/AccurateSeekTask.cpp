@@ -417,42 +417,43 @@ AccurateSeekTask::SetCallbacks()
 {
   AssertOwnerThread();
 
+  RefPtr<AccurateSeekTask> self = this;
   mAudioCallback = mReader->AudioCallback().Connect(
-    OwnerThread(), [this] (AudioCallbackData aData) {
+    OwnerThread(), [self] (AudioCallbackData aData) {
     if (aData.is<MediaData*>()) {
-      OnAudioDecoded(aData.as<MediaData*>());
+      self->OnAudioDecoded(aData.as<MediaData*>());
     } else {
-      OnNotDecoded(MediaData::AUDIO_DATA,
+      self->OnNotDecoded(MediaData::AUDIO_DATA,
         aData.as<MediaResult>());
     }
   });
 
   mVideoCallback = mReader->VideoCallback().Connect(
-    OwnerThread(), [this] (VideoCallbackData aData) {
+    OwnerThread(), [self] (VideoCallbackData aData) {
     typedef Tuple<MediaData*, TimeStamp> Type;
     if (aData.is<Type>()) {
-      OnVideoDecoded(Get<0>(aData.as<Type>()));
+      self->OnVideoDecoded(Get<0>(aData.as<Type>()));
     } else {
-      OnNotDecoded(MediaData::VIDEO_DATA,
+      self->OnNotDecoded(MediaData::VIDEO_DATA,
         aData.as<MediaResult>());
     }
   });
 
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
+    OwnerThread(), [self] (WaitCallbackData aData) {
     // Ignore pending requests from video-only seek.
-    if (mTarget.IsVideoOnly()) {
+    if (self->mTarget.IsVideoOnly()) {
       return;
     }
     if (aData.is<MediaData::Type>()) {
-      RequestAudioData();
+      self->RequestAudioData();
     }
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
-    OwnerThread(), [this] (WaitCallbackData aData) {
+    OwnerThread(), [self] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      RequestVideoData();
+      self->RequestVideoData();
     }
   });
 }
