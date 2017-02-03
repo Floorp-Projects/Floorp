@@ -3,8 +3,11 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.AnimRes;
 import android.support.customtabs.CustomTabsIntent;
 
@@ -12,8 +15,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
+
+import java.util.Objects;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -28,6 +34,46 @@ public class TestIntentUtil {
     public void setUp() {
         spyContext = spy(RuntimeEnvironment.application);
         doReturn(THIRD_PARTY_PACKAGE_NAME).when(spyContext).getPackageName();
+    }
+
+    @Test
+    public void testIntentWithActionButton() {
+        // create properties for CustomTabsIntent
+        final String description = "Description";
+        final boolean tinted = true;
+        final Intent actionIntent = new Intent(Intent.ACTION_VIEW);
+        final int reqCode = 0x123;
+        final PendingIntent pendingIntent = PendingIntent.getActivities(spyContext,
+                reqCode,
+                new Intent[]{actionIntent},
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
+        final Bitmap bitmap = BitmapFactory.decodeResource(
+                spyContext.getResources(),
+                R.drawable.ic_action_settings); // arbitrary icon resource
+
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        builder.setActionButton(bitmap, description, pendingIntent, tinted);
+
+        Intent intent = builder.build().intent;
+        Assert.assertTrue(IntentUtil.hasActionButton(intent));
+        Assert.assertEquals(tinted, IntentUtil.isActionButtonTinted(intent));
+        Assert.assertEquals(bitmap, IntentUtil.getActionButtonIcon(intent));
+        Assert.assertEquals(description, IntentUtil.getActionButtonDescription(intent));
+        Assert.assertTrue(
+                Objects.equals(pendingIntent, IntentUtil.getActionButtonPendingIntent(intent)));
+    }
+
+    @Test
+    public void testIntentWithoutActionButton() {
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+
+        Intent intent = builder.build().intent;
+        Assert.assertFalse(IntentUtil.hasActionButton(intent));
+        Assert.assertFalse(IntentUtil.isActionButtonTinted(intent));
+        Assert.assertNull(IntentUtil.getActionButtonIcon(intent));
+        Assert.assertNull(IntentUtil.getActionButtonDescription(intent));
+        Assert.assertNull(IntentUtil.getActionButtonPendingIntent(intent));
     }
 
     @Test

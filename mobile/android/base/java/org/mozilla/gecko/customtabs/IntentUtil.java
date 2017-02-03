@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,6 +28,75 @@ class IntentUtil {
     private static final String KEY_PACKAGE_NAME = PREFIX + "packageName";
     private static final String KEY_ANIM_ENTER_RES_ID = PREFIX + "animEnterRes";
     private static final String KEY_ANIM_EXIT_RES_ID = PREFIX + "animExitRes";
+
+    /**
+     * To determine whether the intent has necessary information to build an Action-Button.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return true, if intent has all necessary information.
+     */
+    static boolean hasActionButton(@NonNull Intent intent) {
+        return (getActionButtonBundle(intent) != null)
+                && (getActionButtonIcon(intent) != null)
+                && (getActionButtonDescription(intent) != null)
+                && (getActionButtonPendingIntent(intent) != null);
+    }
+
+    /**
+     * To extract bitmap icon from intent for Action-Button.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return bitmap icon, if any. Otherwise, null.
+     */
+    static Bitmap getActionButtonIcon(@NonNull Intent intent) {
+        final Bundle bundle = getActionButtonBundle(intent);
+        return (bundle == null) ? null : (Bitmap) bundle.getParcelable(CustomTabsIntent.KEY_ICON);
+    }
+
+    /**
+     * To extract description from intent for Action-Button. This description is used for
+     * accessibility.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return description, if any. Otherwise, null.
+     */
+    static String getActionButtonDescription(@NonNull Intent intent) {
+        final Bundle bundle = getActionButtonBundle(intent);
+        return (bundle == null) ? null : bundle.getString(CustomTabsIntent.KEY_DESCRIPTION);
+    }
+
+    /**
+     * To extract pending-intent from intent for Action-Button.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return PendingIntent, if any. Otherwise, null.
+     */
+    static PendingIntent getActionButtonPendingIntent(@NonNull Intent intent) {
+        final Bundle bundle = getActionButtonBundle(intent);
+        return (bundle == null)
+                ? null
+                : (PendingIntent) bundle.getParcelable(CustomTabsIntent.KEY_PENDING_INTENT);
+    }
+
+    /**
+     * To know whether the Action-Button should be tinted.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return true, if Action-Button should be tinted. Default value is false.
+     */
+    static boolean isActionButtonTinted(@NonNull Intent intent) {
+        return intent.getBooleanExtra(CustomTabsIntent.EXTRA_TINT_ACTION_BUTTON, false);
+    }
+
+    /**
+     * To extract extra Action-button bundle from an intent.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return bundle for Action-Button, if any. Otherwise, null.
+     */
+    private static Bundle getActionButtonBundle(@NonNull Intent intent) {
+        return intent.getBundleExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE);
+    }
 
     /**
      * To get package name of 3rd-party-app from an intent.
