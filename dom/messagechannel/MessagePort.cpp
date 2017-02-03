@@ -393,19 +393,18 @@ MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 void
 MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                         const Optional<Sequence<JS::Value>>& aTransferable,
+                         const Sequence<JS::Value>& aTransferable,
                          ErrorResult& aRv)
 {
   // We *must* clone the data here, or the JS::Value could be modified
   // by script
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
-  if (aTransferable.WasPassed()) {
-    const Sequence<JS::Value>& realTransferable = aTransferable.Value();
 
+  if (!aTransferable.IsEmpty()) {
     // Here we want to check if the transerable object list contains
     // this port. No other checks are done.
-    for (const JS::Value& value : realTransferable) {
+    for (const JS::Value& value : aTransferable) {
       if (!value.isObject()) {
         continue;
       }
@@ -425,8 +424,8 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     // The input sequence only comes from the generated bindings code, which
     // ensures it is rooted.
     JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(realTransferable.Length(),
-                                               realTransferable.Elements());
+      JS::HandleValueArray::fromMarkedLocation(aTransferable.Length(),
+                                               aTransferable.Elements());
 
     JSObject* array =
       JS_NewArrayObject(aCx, elements);
