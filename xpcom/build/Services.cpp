@@ -48,11 +48,6 @@ using namespace mozilla::services;
     }                                                                   \
     nsCOMPtr<TYPE> ret = g##NAME;                                       \
     return ret.forget();                                                \
-  }                                                                     \
-  NS_EXPORT_(already_AddRefed<TYPE>)                                    \
-  mozilla::services::_external_Get##NAME()                              \
-  {                                                                     \
-    return Get##NAME();                                                 \
   }
 
 #include "ServiceList.h"

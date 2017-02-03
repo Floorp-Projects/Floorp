@@ -22,18 +22,7 @@ namespace services {
 
 #ifdef MOZILLA_INTERNAL_API
 #define MOZ_SERVICE(NAME, TYPE, SERVICE_CID)                        \
-    already_AddRefed<TYPE> Get##NAME();                             \
-    NS_EXPORT_(already_AddRefed<TYPE>) _external_Get##NAME();
-
-#include "ServiceList.h"
-#undef MOZ_SERVICE
-#else
-#define MOZ_SERVICE(NAME, TYPE, SERVICE_CID)                        \
-    NS_IMPORT_(already_AddRefed<TYPE>) _external_Get##NAME();       \
-    inline already_AddRefed<TYPE> Get##NAME()                       \
-    {                                                               \
-        return _external_Get##NAME();                               \
-    }
+    already_AddRefed<TYPE> Get##NAME();
 
 #include "ServiceList.h"
 #undef MOZ_SERVICE
