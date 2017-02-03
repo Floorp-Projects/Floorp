@@ -871,9 +871,11 @@ JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
     MOZ_ASSERT(trc->runtime()->gc.isHeapCompacting());
 
     for (CompartmentsIter comp(trc->runtime(), SkipAtoms); !comp.done(); comp.next()) {
-        // Sweep the wrapper map to update its pointers to the wrappers.
+        // Sweep the wrapper map to update keys (wrapped values) in other
+        // compartments that may have been moved.
         comp->sweepCrossCompartmentWrappers();
-        // Trace the wrappers in the map to update their edges to their referents.
+        // Trace the wrappers in the map to update their cross-compartment edges
+        // to wrapped values in other compartments that may have been moved.
         comp->traceOutgoingCrossCompartmentWrappers(trc);
     }
 }
@@ -881,10 +883,16 @@ JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
 void
 JSCompartment::fixupAfterMovingGC()
 {
+    MOZ_ASSERT(zone()->isGCCompacting());
+
     purge();
     fixupGlobal();
     objectGroups.fixupTablesAfterMovingGC();
     fixupScriptMapsAfterMovingGC();
+
+    // Sweep the wrapper map to update values (wrapper objects) in this
+    // compartment that may have been moved.
+    sweepCrossCompartmentWrappers();
 }
 
 void

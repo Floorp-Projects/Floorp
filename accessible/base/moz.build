@@ -63,6 +63,8 @@ LOCAL_INCLUDES += [
     '/accessible/generic',
     '/accessible/html',
     '/accessible/ipc',
+    '/dom/base',
+    '/dom/xul',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

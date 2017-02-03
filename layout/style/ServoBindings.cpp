@@ -73,10 +73,24 @@ Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
   return aNode->IsInComposedDoc();
 }
 
+#ifdef DEBUG
+bool
+Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed aNode)
+{
+  // Servo calls this in debug builds to verify the result of its own
+  // flattened_tree_parent_is_parent() function.
+  return FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode);
+}
+#endif
+
 RawGeckoNodeBorrowedOrNull
 Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
 {
-  return aNode->GetFlattenedTreeParentNodeForStyle();
+  MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
+             "Should have taken the inline path");
+  MOZ_ASSERT(aNode->IsContent(), "Slow path only applies to content");
+  const nsIContent* c = aNode->AsContent();
+  return c->GetFlattenedTreeParentNodeInternal(nsIContent::eForStyle);
 }
 
 RawGeckoNodeBorrowedOrNull
@@ -168,12 +182,6 @@ EventStates::ServoType
 Gecko_ElementState(RawGeckoElementBorrowed aElement)
 {
   return aElement->StyleState().ServoValue();
-}
-
-bool
-Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed aElement)
-{
-  return aElement->IsHTMLElement() && aElement->OwnerDoc()->IsHTMLDocument();
 }
 
 bool
