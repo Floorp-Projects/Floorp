@@ -490,8 +490,9 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, 
     ma_b(SecondScratchReg, imm, label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, Label* label)
+MacroAssembler::branchPtr(Condition cond, Register lhs, Register rhs, L label)
 {
     ma_b(lhs, rhs, label, cond);
 }
