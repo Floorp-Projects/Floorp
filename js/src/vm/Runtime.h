@@ -253,6 +253,8 @@ CanUseExtraThreads()
 
 void DisableExtraThreads();
 
+using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
+
 class AutoLockForExclusiveAccess;
 } // namespace js
 
@@ -570,6 +572,12 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     /* Default JSVersion. */
     js::ActiveThreadData<JSVersion> defaultVersion_;
+
+    /* If true, new scripts must be created with PC counter information. */
+    js::ActiveThreadOrIonCompileData<bool> profilingScripts;
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ActiveThreadData<JS::PersistentRooted<js::ScriptAndCountsVector>*> scriptAndCountsVector;
 
   private:
     /* Code coverage output. */
