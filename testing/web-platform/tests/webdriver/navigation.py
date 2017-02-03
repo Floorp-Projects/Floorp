@@ -104,10 +104,10 @@ def test_get_current_url_nested_browsing_contexts(session):
     session.url = two_frames_doc
     top_level_url = session.url
 
-    outer_frame = session.find("iframe", all=False)
+    outer_frame = session.find.css("iframe", all=False)
     session.switch_frame(outer_frame)
 
-    inner_frame = session.find("iframe", all=False)
+    inner_frame = session.find.css("iframe", all=False)
     session.switch_frame(frame)
 
     assert session.url == top_level_url
