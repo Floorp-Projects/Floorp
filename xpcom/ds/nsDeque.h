@@ -8,18 +8,18 @@
  * MODULE NOTES:
  *
  * The Deque is a very small, very efficient container object
- * than can hold elements of type void*, offering the following features:
- *    Its interface supports pushing and popping of elements.
- *    It can iterate (via an interator class) its elements.
- *    When full, it can efficiently resize dynamically.
- *
+ * than can hold items of type void*, offering the following features:
+ * - Its interface supports pushing, popping, and peeking of items at the back
+ *   or front, and retrieval from any position.
+ * - It can iterate over items via a ForEach method, range-for, or an iterator
+ *   class.
+ * - When full, it can efficiently resize dynamically.
  *
  * NOTE: The only bit of trickery here is that this deque is
  * built upon a ring-buffer. Like all ring buffers, the first
- * element may not be at index[0]. The mOrigin member determines
+ * item may not be at index[0]. The mOrigin member determines
  * where the first child is. This point is quietly hidden from
  * customers of this class.
- *
  */
 
 #ifndef _NSDEQUE
@@ -34,10 +34,8 @@
 /**
  * The nsDequeFunctor class is used when you want to create
  * callbacks between the deque and your generic code.
- * Use these objects in a call to ForEach();
- *
+ * Use these objects in a call to ForEach(), and as custom deallocators.
  */
-
 class nsDequeFunctor
 {
 public:
@@ -58,26 +56,37 @@ public:
  *
  * The deque stores pointers to items.
  */
-
 class nsDeque
 {
   typedef mozilla::fallible_t fallible_t;
 public:
+  /**
+   * Constructs an empty deque.
+   *
+   * @param   aDeallocator Optional deallocator functor that will be called from
+   *                       Erase() and the destructor on any remaining item.
+   *                       The deallocator is owned by the deque and will be
+   *                       deleted at destruction time.
+   */
   explicit nsDeque(nsDequeFunctor* aDeallocator = nullptr);
+
+  /**
+   * Deque destructor. Erases all items, deletes the deallocator.
+   */
   ~nsDeque();
 
   /**
-   * Returns the number of elements currently stored in
+   * Returns the number of items currently stored in
    * this deque.
    *
-   * @return  number of elements currently in the deque
+   * @return  number of items currently in the deque
    */
   inline size_t GetSize() const { return mSize; }
 
   /**
    * Appends new member at the end of the deque.
    *
-   * @param   item to store in deque
+   * @param   aItem item to store in deque
    */
   void Push(void* aItem)
   {
@@ -86,12 +95,18 @@ public:
     }
   }
 
+  /**
+   * Appends new member at the end of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
   MOZ_MUST_USE bool Push(void* aItem, const fallible_t&);
 
   /**
    * Inserts new member at the front of the deque.
    *
-   * @param   item to store in deque
+   * @param   aItem item to store in deque
    */
   void PushFront(void* aItem)
   {
@@ -100,6 +115,12 @@ public:
     }
   }
 
+  /**
+   * Inserts new member at the front of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
   MOZ_MUST_USE bool PushFront(void* aItem, const fallible_t&);
 
   /**
@@ -117,14 +138,14 @@ public:
   void* PopFront();
 
   /**
-   * Retrieve the bottom item without removing it.
+   * Retrieve the last item without removing it.
    *
-   * @return  the first item in container
+   * @return  the last item in container
    */
-
   void* Peek() const;
+
   /**
-   * Return topmost item without removing it.
+   * Retrieve the first item without removing it.
    *
    * @return  the first item in container
    */
@@ -134,7 +155,7 @@ public:
    * Retrieve a member from the deque without removing it.
    *
    * @param   index of desired item
-   * @return  element in list
+   * @return  item in list, or nullptr if index is outside the deque
    */
   void* ObjectAt(size_t aIndex) const;
 
@@ -146,8 +167,8 @@ public:
   void Erase();
 
   /**
-   * Call this method when you want to iterate all the
-   * members of the container, passing a functor along
+   * Call this method when you want to iterate through all
+   * items in the container, passing a functor along
    * to call your code.
    *
    * @param   aFunctor object to call for each member
@@ -183,19 +204,19 @@ protected:
 private:
 
   /**
-   * Copy constructor (PRIVATE)
+   * Copy constructor (deleted)
    *
    * @param aOther another deque
    */
-  nsDeque(const nsDeque& aOther);
+  nsDeque(const nsDeque& aOther) = delete;
 
   /**
-   * Deque assignment operator (PRIVATE)
+   * Deque assignment operator (deleted)
    *
    * @param aOther another deque
    * @return *this
    */
-  nsDeque& operator=(const nsDeque& aOther);
+  nsDeque& operator=(const nsDeque& aOther) = delete;
 
   bool GrowCapacity();
   void SetDeallocator(nsDequeFunctor* aDeallocator);
