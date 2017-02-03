@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cursor should not be lost after prompt</title>
+  <script type="application/javascript">
+  function init() {
+    document.getElementById("edit").contentWindow.document.designMode = "on";
+  }
+  </script>
+</head>
+
+<body onload="init()">
+  <div id="clickMeDiv" onclick="prompt('This is a dummy prompt!');"
+                       onmousedown="return false;">Click me!</div>
+  <iframe id="edit"></iframe>
+</body>
+</html>
