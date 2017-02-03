@@ -8,7 +8,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
-  REMOVE_DEVICE,
+  REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
 } = require("../actions/index");
@@ -64,7 +64,7 @@ let reducers = {
     });
   },
 
-  [REMOVE_DEVICE](viewports, { id }) {
+  [REMOVE_DEVICE_ASSOCIATION](viewports, { id }) {
     return viewports.map(viewport => {
       if (viewport.id !== id) {
         return viewport;

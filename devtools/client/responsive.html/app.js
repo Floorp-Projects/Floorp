@@ -21,7 +21,7 @@ const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
   changeDevice,
   changePixelRatio,
-  removeDevice,
+  removeDeviceAssociation,
   resizeViewport,
   rotateViewport,
 } = require("./actions/viewports");
@@ -99,12 +99,12 @@ let App = createClass({
     window.postMessage({ type: "exit" }, "*");
   },
 
-  onRemoveDevice(id) {
+  onRemoveDeviceAssociation(id) {
     // TODO: Bug 1332754: Move messaging and logic into the action creator.
     window.postMessage({
-      type: "remove-device",
+      type: "remove-device-association",
     }, "*");
-    this.props.dispatch(removeDevice(id));
+    this.props.dispatch(removeDeviceAssociation(id));
     this.props.dispatch(changeTouchSimulation(false));
     this.props.dispatch(changePixelRatio(id, 0));
   },
@@ -149,7 +149,7 @@ let App = createClass({
       onContentResize,
       onDeviceListUpdate,
       onExit,
-      onRemoveDevice,
+      onRemoveDeviceAssociation,
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
@@ -196,7 +196,7 @@ let App = createClass({
         onBrowserMounted,
         onChangeDevice,
         onContentResize,
-        onRemoveDevice,
+        onRemoveDeviceAssociation,
         onRotateViewport,
         onResizeViewport,
         onUpdateDeviceModal,

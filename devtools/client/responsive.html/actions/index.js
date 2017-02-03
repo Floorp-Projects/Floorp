@@ -54,7 +54,7 @@ createEnum([
   "LOAD_DEVICE_LIST_END",
 
   // Remove the viewport's device assocation.
-  "REMOVE_DEVICE",
+  "REMOVE_DEVICE_ASSOCIATION",
 
   // Resize the viewport.
   "RESIZE_VIEWPORT",
