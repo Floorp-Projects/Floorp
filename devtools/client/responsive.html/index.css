@@ -496,10 +496,27 @@ select > option.divider {
   padding-bottom: 3px;
   display: flex;
   align-items: center;
+  /* Largest size without horizontal scrollbars */
+  max-width: 181px;
 }
 
 .device-input-checkbox {
   margin-right: 5px;
+}
+
+.device-name {
+  flex: 1;
+}
+
+.device-remove-button,
+.device-remove-button::before {
+  width: 12px;
+  height: 12px;
+}
+
+.device-remove-button::before {
+  background-image: url("./images/close.svg");
+  margin: -6px 0 0 -6px;
 }
 
 #device-submit-button {
