@@ -938,6 +938,8 @@ public:
   // Converts an nsStyleCoord::CalcValue back into a CSSValue
   void SetCalcValue(const nsStyleCoord::CalcValue* aCalc);
 
+  nsStyleCoord::CalcValue GetCalcValue() const;
+
   // These are a little different - they allocate storage for you and
   // return a handle.
   nsCSSRect& SetRectValue();
