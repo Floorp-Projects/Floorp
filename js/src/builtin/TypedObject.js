@@ -866,7 +866,7 @@ function SimdFormatString(descr, typedObj) {
       }
   }
   assert(false, "unexpected SIMD kind");
-  return '?';
+  return "?";
 }
 
 ///////////////////////////////////////////////////////////////////////////

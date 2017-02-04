@@ -504,7 +504,7 @@ function TypedArrayForEach(callbackfn/*, thisArg*/) {
 
     // Step 5.
     if (arguments.length === 0)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "TypedArray.prototype.forEach");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
@@ -702,7 +702,7 @@ function TypedArrayMap(callbackfn/*, thisArg*/) {
 
     // Step 4.
     if (arguments.length === 0)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, '%TypedArray%.prototype.map');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.map");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
