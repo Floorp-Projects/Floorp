@@ -13,15 +13,8 @@
     "gcc_dir": "/home/worker/workspace/build/src/gcc",
     "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
     "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
-    "patches": {
-        "macosx64": [
-          "llvm-debug-frame.patch"
-        ],
-        "linux64": [
-          "llvm-debug-frame.patch"
-        ],
-        "linux32": [
-          "llvm-debug-frame.patch"
-        ]
-    }
+    "as": "/home/worker/workspace/build/src/gcc/bin/gcc",
+    "patches": [
+      "llvm-debug-frame.patch"
+    ]
 }

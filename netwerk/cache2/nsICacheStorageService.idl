@@ -9,6 +9,7 @@ interface nsILoadContextInfo;
 interface nsIApplicationCache;
 interface nsIEventTarget;
 interface nsICacheStorageConsumptionObserver;
+interface nsICacheStorageVisitor;
 
 /**
  * Provides access to particual cache storages of the network URI cache.
@@ -109,6 +110,17 @@ interface nsICacheStorageService : nsISupports
    *    NOTE: the observer MUST implement nsISupportsWeakReference.
    */
   void asyncGetDiskConsumption(in nsICacheStorageConsumptionObserver aObserver);
+
+  /**
+   * Asynchronously visits all storages of the disk cache and memory cache.
+   * @see nsICacheStorageVisitor
+   * @param aVisitor
+   *   A visitor callback.
+   * @param aVisitEntries
+   *   A boolean indicates whether visits entries.
+   */
+  void asyncVisitAllStorages(in nsICacheStorageVisitor aVisitor,
+                             in boolean aVisitEntries);
 };
 
 [scriptable, uuid(7728ab5b-4c01-4483-a606-32bf5b8136cb)]

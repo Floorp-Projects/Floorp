@@ -64,8 +64,7 @@ public:
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<Sequence<JS::Value>>& aTransferable,
-              ErrorResult& aRv);
+              const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
 private:
   // This class can only be created from ServiceWorkerInfo::GetOrCreateInstance().

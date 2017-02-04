@@ -14,5 +14,6 @@
     "python_path": "/usr/bin/python2.7",
     "gcc_dir": "/home/worker/workspace/build/src/gcc",
     "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
-    "cxx": "/home/worker/workspace/build/src/gcc/bin/g++"
+    "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
+    "as": "/home/worker/workspace/build/src/gcc/bin/gcc"
 }

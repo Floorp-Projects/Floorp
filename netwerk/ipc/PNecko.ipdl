@@ -82,10 +82,10 @@ parent:
 
   /* Predictor Methods */
   async PredPredict(OptionalURIParams targetURI, OptionalURIParams sourceURI,
-                    uint32_t reason, SerializedLoadContext loadContext,
+                    uint32_t reason, OriginAttributes originAttributes,
                     bool hasVerifier);
   async PredLearn(URIParams targetURI, OptionalURIParams sourceURI,
-                  uint32_t reason, SerializedLoadContext loadContext);
+                  uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
   async SpeculativeConnect(URIParams uri, Principal principal, bool anonymous);

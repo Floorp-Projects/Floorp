@@ -33,7 +33,7 @@ function* testSelectorHighlight(view, name) {
   info("Test creating selector highlighter");
 
   info("Clicking on a selector icon");
-  let icon = getRuleViewSelectorHighlighterIcon(view, name);
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, name);
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);

@@ -91,3 +91,23 @@ linux64-binutils/opt:
             - 'build/unix/build-binutils/**'
             - 'taskcluster/scripts/misc/build-binutils-linux.sh'
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+
+linux64-cctools-port/opt:
+    description: "cctools-port toolchain build"
+    treeherder:
+        kind: build
+        platform: linux64/opt
+        symbol: Cc(cctools-port)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-cctools-port.sh
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'taskcluster/scripts/misc/build-cctools-port.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'

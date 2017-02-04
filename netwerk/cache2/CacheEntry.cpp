@@ -1552,6 +1552,18 @@ NS_IMETHODIMP CacheEntry::GetDiskStorageSizeInKB(uint32_t *aDiskStorageSize)
   return mFile->GetDiskStorageSizeInKB(aDiskStorageSize);
 }
 
+NS_IMETHODIMP CacheEntry::GetLoadContextInfo(nsILoadContextInfo** aInfo)
+{
+  nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(mStorageID);
+  if (!info) {
+    return NS_ERROR_FAILURE;
+  }
+
+  info.forget(aInfo);
+
+  return NS_OK;
+}
+
 // nsIRunnable
 
 NS_IMETHODIMP CacheEntry::Run()
