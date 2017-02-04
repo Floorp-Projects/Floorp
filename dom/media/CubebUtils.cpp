@@ -111,6 +111,11 @@ const int CUBEB_BACKEND_UNKNOWN = CUBEB_BACKEND_INIT_FAILURE_FIRST + 2;
 // visible on the querying thread/CPU.
 uint32_t sPreferredSampleRate;
 
+// We only support SMPTE layout in cubeb for now. If the value is
+// CUBEB_LAYOUT_UNDEFINED, then it implies that the preferred layout is
+// non-SMPTE format.
+cubeb_channel_layout sPreferredChannelLayout;
+
 } // namespace
 
 extern LazyLogModule gAudioStreamLog;
@@ -214,6 +219,61 @@ uint32_t PreferredSampleRate()
   }
   MOZ_ASSERT(sPreferredSampleRate);
   return sPreferredSampleRate;
+}
+
+bool InitPreferredChannelLayout()
+{
+  StaticMutexAutoLock lock(sMutex);
+  if (sPreferredChannelLayout != 0) {
+    return true;
+  }
+  cubeb* context = GetCubebContextUnlocked();
+  if (!context) {
+    return false;
+  }
+  return cubeb_get_preferred_channel_layout(context,
+                                            &sPreferredChannelLayout) == CUBEB_OK
+         ? true : false;
+}
+
+uint32_t PreferredChannelMap(uint32_t aChannels)
+{
+  // The first element of the following mapping table is channel counts,
+  // and the second one is its bit mask. It will be used in many times,
+  // so we shoule avoid to allocate it in stack, or it will be created
+  // and removed repeatedly. Use static to allocate this local variable
+  // in data space instead of stack.
+  static uint32_t layoutInfo[CUBEB_LAYOUT_MAX][2] = {
+    { 0, 0 },               // CUBEB_LAYOUT_UNDEFINED
+    { 2, MASK_STEREO },     // CUBEB_LAYOUT_DUAL_MONO
+    { 3, MASK_STEREO_LFE }, // CUBEB_LAYOUT_DUAL_MONO_LFE
+    { 1, MASK_MONO },       // CUBEB_LAYOUT_MONO
+    { 2, MASK_MONO_LFE },   // CUBEB_LAYOUT_MONO_LFE
+    { 2, MASK_STEREO },     // CUBEB_LAYOUT_STEREO
+    { 3, MASK_STEREO_LFE }, // CUBEB_LAYOUT_STEREO_LFE
+    { 3, MASK_3F },         // CUBEB_LAYOUT_3F
+    { 4, MASK_3F_LFE },     // CUBEB_LAYOUT_3F_LFE
+    { 3, MASK_2F1 },        // CUBEB_LAYOUT_2F1
+    { 4, MASK_2F1_LFE },    // CUBEB_LAYOUT_2F1_LFE
+    { 4, MASK_3F1 },        // CUBEB_LAYOUT_3F1
+    { 5, MASK_3F1_LFE },    // CUBEB_LAYOUT_3F1_LFE
+    { 4, MASK_2F2 },        // CUBEB_LAYOUT_2F2
+    { 5, MASK_2F2_LFE },    // CUBEB_LAYOUT_2F2_LFE
+    { 5, MASK_3F2 },        // CUBEB_LAYOUT_3F2
+    { 6, MASK_3F2_LFE },    // CUBEB_LAYOUT_3F2_LFE
+    { 7, MASK_3F3R_LFE },   // CUBEB_LAYOUT_3F3R_LFE
+    { 8, MASK_3F4_LFE },    // CUBEB_LAYOUT_3F4_LFE
+  };
+
+  // Use SMPTE default channel map if we can't get preferred layout
+  // or the channel counts of preferred layout is different from input's one
+  if (!InitPreferredChannelLayout()
+      || layoutInfo[sPreferredChannelLayout][0] != aChannels) {
+    AudioConfig::ChannelLayout smpteLayout(aChannels);
+    return smpteLayout.Map();
+  }
+
+  return layoutInfo[sPreferredChannelLayout][1];
 }
 
 void InitBrandName()
