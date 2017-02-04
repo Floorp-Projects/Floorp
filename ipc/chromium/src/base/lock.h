@@ -1,39 +1,60 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
-// Copyright (c) 2006-2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #ifndef BASE_LOCK_H_
 #define BASE_LOCK_H_
 
+#include "base/basictypes.h"
 #include "base/lock_impl.h"
+#include "base/platform_thread.h"
+#include "build/build_config.h"
 
 // A convenient wrapper for an OS specific critical section.
-
 class Lock {
  public:
+   // Optimized wrapper implementation
   Lock() : lock_() {}
   ~Lock() {}
   void Acquire() { lock_.Lock(); }
   void Release() { lock_.Unlock(); }
+
   // If the lock is not held, take it and return true. If the lock is already
-  // held by another thread, immediately return false.
+  // held by another thread, immediately return false. This must not be called
+  // by a thread already holding the lock (what happens is undefined and an
+  // assertion may fail).
   bool Try() { return lock_.Try(); }
 
-  // In debug builds this method checks that the lock has been acquired by the
-  // calling thread.  If the lock has not been acquired, then the method
-  // will DCHECK().  In non-debug builds, the LockImpl's implementation of
-  // AssertAcquired() is an empty inline method.
-  void AssertAcquired() const { return lock_.AssertAcquired(); }
+  // Null implementation if not debug.
+  void AssertAcquired() const {}
 
-  // Return the underlying lock implementation.
-  // TODO(awalker): refactor lock and condition variables so that this is
-  // unnecessary.
-  LockImpl* lock_impl() { return &lock_; }
+  // Whether Lock mitigates priority inversion when used from different thread
+  // priorities.
+  static bool HandlesMultipleThreadPriorities() {
+#if defined(OS_POSIX)
+    // POSIX mitigates priority inversion by setting the priority of a thread
+    // holding a Lock to the maximum priority of any other thread waiting on it.
+    return base::internal::LockImpl::PriorityInheritanceAvailable();
+#elif defined(OS_WIN)
+    // Windows mitigates priority inversion by randomly boosting the priority of
+    // ready threads.
+    // https://msdn.microsoft.com/library/windows/desktop/ms684831.aspx
+    return true;
+#else
+#error Unsupported platform
+#endif
+  }
+
+#if defined(OS_POSIX) || defined(OS_WIN)
+  // Both Windows and POSIX implementations of ConditionVariable need to be
+  // able to see our lock and tweak our debugging counters, as they release and
+  // acquire locks inside of their condition variable APIs.
+  friend class ConditionVariable;
+#endif
 
  private:
-  LockImpl lock_;  // Platform specific underlying lock implementation.
+  // Platform specific underlying lock implementation.
+  ::base::internal::LockImpl lock_;
 
   DISALLOW_COPY_AND_ASSIGN(Lock);
 };
@@ -41,8 +62,14 @@ class Lock {
 // A helper class that acquires the given Lock while the AutoLock is in scope.
 class AutoLock {
  public:
+  struct AlreadyAcquired {};
+
   explicit AutoLock(Lock& lock) : lock_(lock) {
     lock_.Acquire();
+  }
+
+  AutoLock(Lock& lock, const AlreadyAcquired&) : lock_(lock) {
+    lock_.AssertAcquired();
   }
 
   ~AutoLock() {

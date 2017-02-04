@@ -170,24 +170,6 @@ def svn_update(directory, revision):
     run_in(directory, ["svn", "revert", "-q", "-R", revision])
 
 
-def get_platform():
-    p = platform.system()
-    if p == "Darwin":
-        return "macosx64"
-    elif p == "Linux":
-        if platform.architecture() == "AMD64":
-            return "linux64"
-        else:
-            return "linux32"
-    elif p == "Windows":
-        if platform.architecture() == "AMD64":
-            return "win64"
-        else:
-            return "win32"
-    else:
-        raise NotImplementedError("Not supported platform")
-
-
 def is_darwin():
     return platform.system() == "Darwin"
 
@@ -200,7 +182,7 @@ def is_windows():
     return platform.system() == "Windows"
 
 
-def build_one_stage(cc, cxx, ld, ar, ranlib,
+def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                     src_dir, stage_dir, build_libcxx,
                     osx_cross_compile, build_type, assertions,
                     python_path, gcc_dir, libcxx_include_dir):
@@ -225,11 +207,12 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
     cmake_args = ["-GNinja",
                   "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
                   "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
-                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(cc[0]),
+                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(asm[0]),
                   "-DCMAKE_LINKER=%s" % slashify_path(ld[0]),
                   "-DCMAKE_AR=%s" % slashify_path(ar),
                   "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
                   "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
+                  "-DCMAKE_ASM_FLAGS=%s" % ' '.join(asm[1:]),
                   "-DCMAKE_EXE_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
                   "-DCMAKE_SHARED_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
@@ -245,6 +228,8 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
         cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
     if ranlib is not None:
         cmake_args += ["-DCMAKE_RANLIB=%s" % slashify_path(ranlib)]
+    if libtool is not None:
+        cmake_args += ["-DCMAKE_LIBTOOL=%s" % slashify_path(libtool)]
     if osx_cross_compile:
         cmake_args += ["-DCMAKE_SYSTEM_NAME=Darwin",
                        "-DCMAKE_SYSTEM_VERSION=10.10",
@@ -258,7 +243,7 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
                        "-DCMAKE_MACOSX_RPATH=@executable_path",
                        "-DCMAKE_OSX_ARCHITECTURES=x86_64",
                        "-DDARWIN_osx_ARCHS=x86_64",
-                       "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin10"]
+                       "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin11"]
     build_package(build_dir, cmake_args)
 
     if is_linux():
@@ -464,9 +449,13 @@ if __name__ == "__main__":
         raise ValueError("Config file needs to set gcc_dir")
     cc = get_tool(config, "cc")
     cxx = get_tool(config, "cxx")
+    asm = get_tool(config, "ml" if is_windows() else "as")
     ld = get_tool(config, "link" if is_windows() else "ld")
     ar = get_tool(config, "lib" if is_windows() else "ar")
     ranlib = None if is_windows() else get_tool(config, "ranlib")
+    libtool = None
+    if "libtool" in config:
+        libtool = get_tool(config, "libtool")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -485,7 +474,7 @@ if __name__ == "__main__":
         checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
     if extra_repo:
         checkout_or_update(extra_repo, extra_source_dir)
-    for p in config.get("patches", {}).get(get_platform(), []):
+    for p in config.get("patches", []):
         patch(p, source_dir)
 
     symlinks = [(source_dir + "/clang",
@@ -525,12 +514,14 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cflags2 = []
         extra_cxxflags2 = ["-stdlib=libc++"]
+        extra_asmflags = []
         extra_ldflags = []
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
         extra_cflags2 = ["-fPIC"]
         extra_cxxflags2 = ["-fPIC", "-static-libstdc++"]
+        extra_asmflags = []
         extra_ldflags = []
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -545,6 +536,7 @@ if __name__ == "__main__":
         # Force things on.
         extra_cflags2 = []
         extra_cxxflags2 = ['-fms-compatibility-version=19.00.24213', '-Xclang', '-std=c++14']
+        extra_asmflags = []
         extra_ldflags = []
 
     if osx_cross_compile:
@@ -554,7 +546,7 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cxxflags2 = ["-stdlib=libc++"]
 
-        extra_flags = ["-target", "x86_64-apple-darwin10", "-mlinker-version=136",
+        extra_flags = ["-target", "x86_64-apple-darwin11", "-mlinker-version=137",
                        "-B", "%s/bin" %  os.getenv("CROSS_CCTOOLS_PATH"),
                        "-isysroot", os.getenv("CROSS_SYSROOT"),
                        # technically the sysroot flag there should be enough to deduce this,
@@ -565,14 +557,16 @@ if __name__ == "__main__":
         extra_cxxflags += extra_flags
         extra_cflags2 += extra_flags
         extra_cxxflags2 += extra_flags
+        extra_asmflags += extra_flags
         extra_ldflags = ["-Wl,-syslibroot,%s" % os.getenv("CROSS_SYSROOT"),
                          "-Wl,-dead_strip"]
 
     build_one_stage(
         [cc] + extra_cflags,
         [cxx] + extra_cxxflags,
+        [asm] + extra_asmflags,
         [ld] + extra_ldflags,
-        ar, ranlib,
+        ar, ranlib, libtool,
         llvm_source_dir, stage1_dir, build_libcxx, osx_cross_compile,
         build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
@@ -585,8 +579,10 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage1_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_asmflags,
             [ld] + extra_ldflags,
-            ar, ranlib,
+            ar, ranlib, libtool,
             llvm_source_dir, stage2_dir, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
@@ -598,8 +594,10 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage2_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_asmflags,
             [ld] + extra_ldflags,
-            ar, ranlib,
+            ar, ranlib, libtool,
             llvm_source_dir, stage3_dir, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 

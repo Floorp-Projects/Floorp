@@ -8373,30 +8373,43 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 5>
     }
 };
 
-class LWasmLoadGlobalVar : public LInstructionHelper<1, 0, 0>
+class LWasmLoadGlobalVar : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(WasmLoadGlobalVar);
+    explicit LWasmLoadGlobalVar(const LAllocation& tlsPtr) {
+        setOperand(0, tlsPtr);
+    }
     MWasmLoadGlobalVar* mir() const {
         return mir_->toWasmLoadGlobalVar();
     }
+    const LAllocation* tlsPtr() {
+        return getOperand(0);
+    }
 };
 
-class LWasmLoadGlobalVarI64 : public LInstructionHelper<INT64_PIECES, 0, 0>
+class LWasmLoadGlobalVarI64 : public LInstructionHelper<INT64_PIECES, 1, 0>
 {
   public:
     LIR_HEADER(WasmLoadGlobalVarI64);
+    explicit LWasmLoadGlobalVarI64(const LAllocation& tlsPtr) {
+        setOperand(0, tlsPtr);
+    }
     MWasmLoadGlobalVar* mir() const {
         return mir_->toWasmLoadGlobalVar();
     }
+    const LAllocation* tlsPtr() {
+        return getOperand(0);
+    }
 };
 
-class LWasmStoreGlobalVar : public LInstructionHelper<0, 1, 0>
+class LWasmStoreGlobalVar : public LInstructionHelper<0, 2, 0>
 {
   public:
     LIR_HEADER(WasmStoreGlobalVar);
-    explicit LWasmStoreGlobalVar(const LAllocation& value) {
+    explicit LWasmStoreGlobalVar(const LAllocation& value, const LAllocation& tlsPtr) {
         setOperand(0, value);
+        setOperand(1, tlsPtr);
     }
     MWasmStoreGlobalVar* mir() const {
         return mir_->toWasmStoreGlobalVar();
@@ -8404,22 +8417,27 @@ class LWasmStoreGlobalVar : public LInstructionHelper<0, 1, 0>
     const LAllocation* value() {
         return getOperand(0);
     }
+    const LAllocation* tlsPtr() {
+        return getOperand(1);
+    }
 };
 
-class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES, 0>
+class LWasmStoreGlobalVarI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0>
 {
   public:
     LIR_HEADER(WasmStoreGlobalVarI64);
-    explicit LWasmStoreGlobalVarI64(const LInt64Allocation& value) {
+    explicit LWasmStoreGlobalVarI64(const LInt64Allocation& value, const LAllocation& tlsPtr) {
         setInt64Operand(0, value);
+        setOperand(INT64_PIECES, tlsPtr);
     }
     MWasmStoreGlobalVar* mir() const {
         return mir_->toWasmStoreGlobalVar();
     }
-    static const uint32_t InputIndex = 0;
-
     const LInt64Allocation value() {
-        return getInt64Operand(InputIndex);
+        return getInt64Operand(0);
+    }
+    const LAllocation* tlsPtr() {
+        return getOperand(INT64_PIECES);
     }
 };
 

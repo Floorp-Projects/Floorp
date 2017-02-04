@@ -465,6 +465,7 @@ CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper, Re
 
     // Get an equivalent RegExpShared associated with the current compartment.
     RegExpShared* re = wrapperGuard.re();
+    cx->markAtom(re->getSource());
     return cx->compartment()->regExps.get(cx, re->getSource(), re->getFlags(), g);
 }
 

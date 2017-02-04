@@ -903,12 +903,17 @@ Module::instantiate(JSContext* cx,
     if (!codeSegment)
         return false;
 
+    auto globalSegment = GlobalSegment::create(linkData_.globalDataLength);
+    if (!globalSegment)
+        return false;
+
     auto code = cx->make_unique<Code>(Move(codeSegment), *metadata_, maybeBytecode);
     if (!code)
         return false;
 
     instance.set(WasmInstanceObject::create(cx,
                                             Move(code),
+                                            Move(globalSegment),
                                             memory,
                                             Move(tables),
                                             funcImports,

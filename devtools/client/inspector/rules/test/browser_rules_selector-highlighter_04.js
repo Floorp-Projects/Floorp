@@ -39,7 +39,7 @@ add_task(function* () {
 
   info("Checking that the right NodeFront reference and options are passed");
   yield selectNode("p", inspector);
-  let icon = getRuleViewSelectorHighlighterIcon(view, "element");
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, "element");
 
   yield clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "P",

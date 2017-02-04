@@ -403,7 +403,7 @@ CheckForInterrupt(JSContext* cx)
 inline js::LifoAlloc&
 JSContext::typeLifoAlloc()
 {
-    return zone()->types.typeLifoAlloc.ref();
+    return zone()->types.typeLifoAlloc();
 }
 
 inline js::Nursery&
