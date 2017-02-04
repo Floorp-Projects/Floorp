@@ -1,0 +1,263 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test interaction between autocomplete and focus on username fields</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+let pwmgrCommonScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+let readyPromise = registerRunTests();
+let chromeScript = runInParent(function chromeSetup() {
+  const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+  let pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
+  let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login2C  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+
+  login1A.init("http://mochi.test:8888", "http://username-focus-1", null,
+               "testuser1A", "testpass1A", "", "");
+
+  login2A.init("http://mochi.test:8888", "http://username-focus-2", null,
+               "testuser2A", "testpass2A", "", "");
+  login2B.init("http://mochi.test:8888", "http://username-focus-2", null,
+               "testuser2B", "testpass2B", "", "");
+
+  pwmgr.addLogin(login1A);
+  pwmgr.addLogin(login2A);
+  pwmgr.addLogin(login2B);
+});
+</script>
+
+<p id="display"></p>
+<div id="content">
+  <!-- first 3 forms have a matching user+pass login -->
+
+  <!-- user+pass form. -->
+  <form id="form-autofilled" action="http://username-focus-1">
+    <input  type="text"     name="uname">
+    <input  type="password" name="pword">
+    <button type="submit" name="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form, username prefilled -->
+  <form id="form-autofilled-prefilled-un" action="http://username-focus-1">
+    <input  type="text"     name="uname" value="testuser1A">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form. -->
+  <form id="form-autofilled-focused-dynamic" action="http://username-focus-1">
+    <input  type="text"             name="uname">
+    <input  type="not-yet-password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+
+  <!-- next 5 forms have matching user+pass (2x) logins -->
+
+  <!-- user+pass form. -->
+  <form id="form-multiple" action="http://username-focus-2">
+    <input  type="text"     name="uname">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form dynamic with existing focus -->
+  <form id="form-multiple-dynamic" action="http://username-focus-2">
+    <input  type="text"             name="uname">
+    <input  type="not-yet-password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form, username prefilled -->
+  <form id="form-multiple-prefilled-un1" action="http://username-focus-2">
+    <input  type="text"     name="uname" value="testuser2A">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form, different username prefilled -->
+  <form id="form-multiple-prefilled-un2" action="http://username-focus-2">
+    <input  type="text"     name="uname" value="testuser2B">
+    <input  type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- user+pass form, username prefilled with existing focus -->
+  <form id="form-multiple-prefilled-focused-dynamic" action="http://username-focus-2">
+    <input  type="text"             name="uname" value="testuser2B">
+    <input  type="not-yet-password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function removeFocus() {
+  $_("-autofilled", "submit").focus();
+}
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["security.insecure_field_warning.contextual.enabled", false],
+  ]});
+
+  ok(readyPromise, "check promise is available");
+  yield readyPromise;
+});
+
+add_task(function* test_autofilled() {
+  let usernameField = $_("-autofilled", "uname");
+  info("Username and password already filled so don't show autocomplete");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+
+  removeFocus();
+  usernameField.value = "testuser";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* test_autofilled_prefilled_un() {
+  let usernameField = $_("-autofilled-prefilled-un", "uname");
+  info("Username and password already filled so don't show autocomplete");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+
+  removeFocus();
+  usernameField.value = "testuser";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* test_autofilled_focused_dynamic() {
+  let usernameField = $_("-autofilled-focused-dynamic", "uname");
+  let passwordField = $_("-autofilled-focused-dynamic", "pword");
+  info("Username and password will be filled while username focused");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+  info("triggering autofill");
+  noPopupPromise = promiseNoUnexpectedPopupShown();
+  passwordField.type = "password";
+  yield noPopupPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.open, false, "Check popup is closed");
+
+  removeFocus();
+  passwordField.value = "test";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+// Begin testing forms that have multiple saved logins
+
+add_task(function* test_multiple() {
+  let usernameField = $_("-multiple", "uname");
+  info("Fields not filled due to multiple so autocomplete upon focus");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* test_multiple_dynamic() {
+  let usernameField = $_("-multiple-dynamic", "uname");
+  let passwordField = $_("-multiple-dynamic", "pword");
+  info("Fields not filled but username is focused upon marking so open");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+
+  info("triggering _fillForm code");
+  let shownPromise = promiseACShown();
+  passwordField.type = "password";
+  yield shownPromise;
+});
+
+add_task(function* test_multiple_prefilled_un1() {
+  let usernameField = $_("-multiple-prefilled-un1", "uname");
+  info("Username and password already filled so don't show autocomplete");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+
+  removeFocus();
+  usernameField.value = "testuser";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* test_multiple_prefilled_un2() {
+  let usernameField = $_("-multiple-prefilled-un2", "uname");
+  info("Username and password already filled so don't show autocomplete");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+
+  removeFocus();
+  usernameField.value = "testuser";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* test_multiple_prefilled_focused_dynamic() {
+  let usernameField = $_("-multiple-prefilled-focused-dynamic", "uname");
+  let passwordField = $_("-multiple-prefilled-focused-dynamic", "pword");
+  info("Username and password will be filled while username focused");
+  let noPopupPromise = promiseNoUnexpectedPopupShown();
+  usernameField.focus();
+  yield noPopupPromise;
+  info("triggering autofill");
+  noPopupPromise = promiseNoUnexpectedPopupShown();
+  passwordField.type = "password";
+  yield noPopupPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.open, false, "Check popup is closed");
+
+  removeFocus();
+  passwordField.value = "test";
+  info("Focus when we don't have an exact match");
+  shownPromise = promiseACShown();
+  usernameField.focus();
+  yield shownPromise;
+});
+
+add_task(function* cleanup() {
+  removeFocus();
+});
+</script>
+</pre>
+</body>
+</html>
