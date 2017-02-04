@@ -182,6 +182,7 @@ struct MappedYCbCrTextureData {
 };
 
 class ReadLockDescriptor;
+class NonBlockingTextureReadLock;
 
 // A class to help implement copy-on-write semantics for shared textures.
 //
@@ -211,11 +212,7 @@ public:
 
   virtual int32_t ReadLock() = 0;
   virtual int32_t ReadUnlock() = 0;
-  virtual int32_t GetReadCount() = 0;
   virtual bool IsValid() const = 0;
-
-  static already_AddRefed<TextureReadLock>
-  Create(LayersIPCChannel* aAllocator);
 
   static already_AddRefed<TextureReadLock>
   Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
@@ -223,13 +220,25 @@ public:
   virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
 
   enum LockType {
-    TYPE_MEMORY,
-    TYPE_SHMEM
+    TYPE_NONBLOCKING_MEMORY,
+    TYPE_NONBLOCKING_SHMEM
   };
   virtual LockType GetType() = 0;
 
+  virtual NonBlockingTextureReadLock* AsNonBlockingLock() { return nullptr; }
+
 protected:
   NS_DECL_OWNINGTHREAD
+};
+
+class NonBlockingTextureReadLock : public TextureReadLock {
+public:
+  virtual int32_t GetReadCount() = 0;
+
+  static already_AddRefed<TextureReadLock>
+  Create(LayersIPCChannel* aAllocator);
+
+  virtual NonBlockingTextureReadLock* AsNonBlockingLock() override { return this; }
 };
 
 #ifdef XP_WIN

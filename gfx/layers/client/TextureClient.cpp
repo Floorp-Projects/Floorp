@@ -475,7 +475,11 @@ TextureClient::UnlockActor() const
 bool
 TextureClient::IsReadLocked() const
 {
-  return mReadLock && mReadLock->GetReadCount() > 1;
+  if (!mReadLock) {
+    return false;
+  }
+  MOZ_ASSERT(mReadLock->AsNonBlockingLock(), "Can only check locked for non-blocking locks!");
+  return mReadLock->AsNonBlockingLock()->GetReadCount() > 1;
 }
 
 bool
@@ -571,7 +575,7 @@ void
 TextureClient::EnableReadLock()
 {
   if (!mReadLock) {
-    mReadLock = TextureReadLock::Create(mAllocator);
+    mReadLock = NonBlockingTextureReadLock::Create(mAllocator);
   }
 }
 
@@ -1364,7 +1368,7 @@ TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 #endif
 }
 
-class MemoryTextureReadLock : public TextureReadLock {
+class MemoryTextureReadLock : public NonBlockingTextureReadLock {
 public:
   MemoryTextureReadLock();
 
@@ -1376,7 +1380,7 @@ public:
 
   virtual int32_t GetReadCount() override;
 
-  virtual LockType GetType() override { return TYPE_MEMORY; }
+  virtual LockType GetType() override { return TYPE_NONBLOCKING_MEMORY; }
 
   virtual bool IsValid() const override { return true; };
 
@@ -1393,7 +1397,7 @@ public:
 // lock is not "held" (the texture is writable), when the counter is equal to 0
 // it means that we can safely deallocate the shmem section without causing a race
 // condition with the other process.
-class ShmemTextureReadLock : public TextureReadLock {
+class ShmemTextureReadLock : public NonBlockingTextureReadLock {
 public:
   struct ShmReadLockInfo {
     int32_t readCount;
@@ -1411,7 +1415,7 @@ public:
 
   virtual bool IsValid() const override { return mAllocSuccess; };
 
-  virtual LockType GetType() override { return TYPE_SHMEM; }
+  virtual LockType GetType() override { return TYPE_NONBLOCKING_SHMEM; }
 
   virtual bool Serialize(ReadLockDescriptor& aOutput) override;
 
@@ -1476,7 +1480,7 @@ TextureReadLock::Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllo
 }
 // static
 already_AddRefed<TextureReadLock>
-TextureReadLock::Create(LayersIPCChannel* aAllocator)
+NonBlockingTextureReadLock::Create(LayersIPCChannel* aAllocator)
 {
   if (aAllocator->IsSameProcess()) {
     // If our compositor is in the same process, we can save some cycles by not
