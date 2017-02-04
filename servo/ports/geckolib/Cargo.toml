@@ -1,12 +1,32 @@
 [package]
 name = "geckoservo"
-version = "0.0.0"
-authors = ["nobody@mozilla.org"]
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
 license = "MPL-2.0"
-description = "Dummy geckoservo package for build-time bindgen to land turned off"
-
-[features]
-bindgen = []
 
 [lib]
+name = "geckoservo"
 path = "lib.rs"
+crate-type = ["staticlib", "rlib"]
+
+[features]
+bindgen = ["style/use_bindgen"]
+
+[dependencies]
+app_units = "0.3"
+atomic_refcell = "0.1"
+cssparser = {version = "0.7"}
+env_logger = {version = "0.4", default-features = false} # disable `regex` to reduce code size
+euclid = "0.10.1"
+lazy_static = "0.2"
+libc = "0.2"
+log = {version = "0.3.5", features = ["release_max_level_info"]}
+num_cpus = "1.1.0"
+parking_lot = "0.3"
+selectors = "0.15.1"
+servo_url = {path = "../../components/url"}
+style = {path = "../../components/style", features = ["gecko"]}
+style_traits = {path = "../../components/style_traits"}
+
+[dev-dependencies]
+stylo_tests = {path = "../../tests/unit/stylo"}

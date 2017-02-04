@@ -1,0 +1,78 @@
+[package]
+
+name = "libservo"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+publish = false
+
+[lib]
+name = "servo"
+path = "lib.rs"
+crate-type = ["rlib"]
+
+[features]
+default = ["webdriver", "max_log_level"]
+max_log_level = ["log/release_max_level_info"]
+webdriver = ["webdriver_server"]
+energy-profiling = ["profile_traits/energy-profiling"]
+testing = ["style/testing"]
+clippy = ["plugins/clippy"]
+debugmozjs = ["script/debugmozjs"]
+
+[dependencies]
+backtrace = "0.3"
+bluetooth_traits = {path = "../bluetooth_traits"}
+bluetooth = {path = "../bluetooth"}
+canvas = {path = "../canvas"}
+canvas_traits = {path = "../canvas_traits"}
+compositing = {path = "../compositing"}
+constellation = {path = "../constellation"}
+debugger = {path = "../debugger"}
+devtools = {path = "../devtools"}
+devtools_traits = {path = "../devtools_traits"}
+env_logger = "0.4"
+euclid = "0.10.1"
+gfx = {path = "../gfx"}
+gleam = "0.2"
+ipc-channel = "0.5"
+layout = {path = "../layout"}
+layout_thread = {path = "../layout_thread"}
+libc = "0.2"
+log = "0.3"
+msg = {path = "../msg"}
+net = {path = "../net"}
+net_traits = {path = "../net_traits"}
+plugins = {path = "../plugins", optional = true}
+profile = {path = "../profile"}
+profile_traits = {path = "../profile_traits"}
+script = {path = "../script"}
+script_layout_interface = {path = "../script_layout_interface"}
+script_traits = {path = "../script_traits"}
+servo_config = {path = "../config"}
+servo_url = {path = "../url"}
+style = {path = "../style", features = ["servo"]}
+url = "1.2"
+webvr = {path = "../webvr"}
+webvr_traits = {path = "../webvr_traits"}
+webdriver_server = {path = "../webdriver_server", optional = true}
+
+[dependencies.webrender]
+git = "https://github.com/servo/webrender"
+default-features = false
+features = ["serde_derive"]
+
+[dependencies.webrender_traits]
+git = "https://github.com/servo/webrender"
+default-features = false
+features = ["serde_derive", "ipc"]
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+sig = "0.1"
+
+[target.'cfg(target_os = "android")'.dependencies]
+log = "0.3"
+android_glue = "0.2"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+gaol = {git = "https://github.com/servo/gaol"}

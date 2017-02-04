@@ -11,6 +11,7 @@ import android.util.Log;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.util.HardwareUtils;
 
 /**
  * Processor implementation to extract the dominant color from the icon and attach it to the icon
@@ -26,6 +27,19 @@ public class ColorProcessor implements Processor {
             return;
         }
 
+        if (HardwareUtils.isX86System()) {
+            // (Bug 1318667) We are running into crashes when using the palette library with
+            // specific icons on x86 devices. They take down the whole VM and are not recoverable.
+            // Unfortunately our release icon is triggering this crash. Until we can switch to a
+            // newer version of the support library where this does not happen, we are using our
+            // own slower implementation.
+            extractColorUsingCustomImplementation(response);
+        } else {
+            extractColorUsingPaletteSupportLibrary(response);
+        }
+    }
+
+    private void extractColorUsingPaletteSupportLibrary(final IconResponse response) {
         try {
             final Palette palette = Palette.from(response.getBitmap()).generate();
             response.updateColor(palette.getVibrantColor(DEFAULT_COLOR));
@@ -37,5 +51,11 @@ public class ColorProcessor implements Processor {
 
             response.updateColor(DEFAULT_COLOR);
         }
+    }
+
+    private void extractColorUsingCustomImplementation(final IconResponse response) {
+        final int dominantColor = BitmapUtils.getDominantColor(response.getBitmap());
+
+        response.updateColor(dominantColor);
     }
 }

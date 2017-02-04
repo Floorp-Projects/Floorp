@@ -60,9 +60,20 @@ AccessCheck::subsumes(JSObject* a, JSObject* b)
 bool
 AccessCheck::subsumesConsideringDomain(JSCompartment* a, JSCompartment* b)
 {
+    MOZ_ASSERT(OriginAttributes::IsRestrictOpenerAccessForFPI());
     nsIPrincipal* aprin = GetCompartmentPrincipal(a);
     nsIPrincipal* bprin = GetCompartmentPrincipal(b);
     return aprin->SubsumesConsideringDomain(bprin);
+}
+
+bool
+AccessCheck::subsumesConsideringDomainIgnoringFPD(JSCompartment* a,
+                                                  JSCompartment* b)
+{
+    MOZ_ASSERT(!OriginAttributes::IsRestrictOpenerAccessForFPI());
+    nsIPrincipal* aprin = GetCompartmentPrincipal(a);
+    nsIPrincipal* bprin = GetCompartmentPrincipal(b);
+    return aprin->SubsumesConsideringDomainIgnoringFPD(bprin);
 }
 
 // Does the compartment of the wrapper subsumes the compartment of the wrappee?
