@@ -14,6 +14,10 @@
                     android:negativeButtonText="@string/button_cancel"
                     android:persistent="false" />
 
+    <SwitchPreference android:key="android.not_a_preference.font.size.use_system_font_size"
+                      android:title="@string/pref_use_system_font_size"
+                      android:summary="@string/pref_use_system_font_size_summary" />
+
     <SwitchPreference android:key="browser.ui.zoom.force-user-scalable"
                       android:title="@string/pref_zoom_force_enabled"
                       android:summary="@string/pref_zoom_force_enabled_summary" />
