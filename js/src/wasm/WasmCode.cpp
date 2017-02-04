@@ -63,12 +63,11 @@ AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
     if (wasmCodeAllocations >= MaxWasmCodeAllocations)
         return nullptr;
 
-    // Allocate RW memory. DynamicallyLinkModule will reprotect the code as RX.
-    unsigned permissions =
-        ExecutableAllocator::initialProtectionFlags(ExecutableAllocator::Writable);
+    // codeLength is a multiple of the system's page size, but not necessarily
+    // a multiple of ExecutableCodePageSize.
+    totalLength = JS_ROUNDUP(totalLength, ExecutableCodePageSize);
 
-    void* p = AllocateExecutableMemory(totalLength, permissions, "wasm-code-segment",
-                                       gc::SystemPageSize());
+    void* p = AllocateExecutableMemory(totalLength, ProtectionSetting::Writable);
     if (!p) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -261,7 +260,10 @@ CodeSegment::~CodeSegment()
     wasmCodeAllocations--;
 
     MOZ_ASSERT(totalLength() > 0);
-    DeallocateExecutableMemory(bytes_, totalLength(), gc::SystemPageSize());
+
+    // Match AllocateCodeSegment.
+    uint32_t size = JS_ROUNDUP(totalLength(), ExecutableCodePageSize);
+    DeallocateExecutableMemory(bytes_, size);
 }
 
 void
