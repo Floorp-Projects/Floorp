@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* () {
+add_task(function* test_create_options() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   gBrowser.selectedTab = tab;
 
@@ -164,3 +164,35 @@ add_task(function* () {
   yield BrowserTestUtils.removeTab(tab);
 });
 
+add_task(function* test_urlbar_focus() {
+  const extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.onMessage.addListener(async (cmd, ...args) => {
+        const result = await browser.tabs[cmd](...args);
+        browser.test.sendMessage("result", result);
+      });
+    },
+  });
+
+  yield extension.startup();
+
+  // Test content is focused after opening a regular url
+  extension.sendMessage("create", {url: "https://example.com"});
+  const tab1 = yield extension.awaitMessage("result");
+
+  is(document.activeElement.tagName, "browser", "Content focused after opening a web page");
+
+  extension.sendMessage("remove", tab1.id);
+  yield extension.awaitMessage("result");
+
+  // Test urlbar is focused after opening an empty tab
+  extension.sendMessage("create", {});
+  const tab2 = yield extension.awaitMessage("result");
+
+  ok(gURLBar.focused, "Urlbar focused after opening an empty tab");
+
+  extension.sendMessage("remove", tab2.id);
+  yield extension.awaitMessage("result");
+
+  yield extension.unload();
+});
