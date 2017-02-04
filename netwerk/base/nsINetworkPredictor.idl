@@ -6,11 +6,12 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsILoadContext;
 interface nsINetworkPredictorVerifier;
 
 typedef unsigned long PredictorPredictReason;
 typedef unsigned long PredictorLearnReason;
+
+[ref] native OriginAttributes(const mozilla::OriginAttributes);
 
 /**
  * nsINetworkPredictor - learn about pages users visit, and allow us to take
@@ -58,17 +59,25 @@ interface nsINetworkPredictor : nsISupports
    *   is being loaded and sourceURI should be null.
    *   In the case of PREDICT_STARTUP, both targetURI and sourceURI should be
    *   null.
-   * @param loadContext - The nsILoadContext of the page load we are predicting
-   *   about.
+   * @param originAttributes - The originAttributes of the page load we are
+   *   predicting about.
    * @param verifier - An nsINetworkPredictorVerifier used in testing to ensure
    *   we're predicting the way we expect to. Not necessary (or desired) for
    *   normal operation.
    */
+  [implicit_jscontext]
   void predict(in nsIURI targetURI,
                in nsIURI sourceURI,
                in PredictorPredictReason reason,
-               in nsILoadContext loadContext,
+               in jsval originAttributes,
                in nsINetworkPredictorVerifier verifier);
+
+  [notxpcom]
+  nsresult predictNative(in nsIURI targetURI,
+                         in nsIURI sourceURI,
+                         in PredictorPredictReason reason,
+                         in OriginAttributes originAttributes,
+                         in nsINetworkPredictorVerifier verifier);
 
 
   /*
@@ -107,13 +116,20 @@ interface nsINetworkPredictor : nsISupports
    *   In the case of LEARN_STARTUP, targetURI should be the URI of a page
    *   that was loaded immediately after browser startup, and sourceURI should
    *   be null.
-   * @param loadContext - The nsILoadContext for the page load that we are
-   *   learning about.
+   * @param originAttributes - The originAttributes for the page load that we
+   *   are learning about.
    */
+  [implicit_jscontext]
   void learn(in nsIURI targetURI,
              in nsIURI sourceURI,
              in PredictorLearnReason reason,
-             in nsILoadContext loadContext);
+             in jsval originAttributes);
+
+  [notxpcom]
+  nsresult learnNative(in nsIURI targetURI,
+                       in nsIURI sourceURI,
+                       in PredictorLearnReason reason,
+                       in OriginAttributes originAttributes);
 
   /**
    * Clear out all our learned knowledge
@@ -138,13 +154,13 @@ namespace net {
 nsresult PredictorPredict(nsIURI *targetURI,
                           nsIURI *sourceURI,
                           PredictorPredictReason reason,
-                          nsILoadContext *loadContext,
+                          const OriginAttributes& originAttributes,
                           nsINetworkPredictorVerifier *verifier);
 
 nsresult PredictorLearn(nsIURI *targetURI,
                         nsIURI *sourceURI,
                         PredictorLearnReason reason,
-                        nsILoadContext *loadContext);
+                        const OriginAttributes& originAttributes);
 
 nsresult PredictorLearn(nsIURI *targetURI,
                         nsIURI *sourceURI,
@@ -158,7 +174,7 @@ nsresult PredictorLearn(nsIURI *targetURI,
 
 nsresult PredictorLearnRedirect(nsIURI *targetURI,
                                 nsIChannel *channel,
-                                nsILoadContext *loadContext);
+                                const OriginAttributes& originAttributes);
 
 } // mozilla::net
 } // mozilla

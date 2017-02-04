@@ -22,8 +22,8 @@ fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
 != layerize-over-fixed-bg-1.html about:blank
-!= fixed-pos-scrolled-clip-layerize.html about:blank
-== fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
+skip-if(!asyncPan) != fixed-pos-scrolled-clip-layerize.html about:blank
+skip-if(!asyncPan) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
 
 # These tests check whether the GPU process is working. We expect it to work if:
 #   E10S is enabled, and

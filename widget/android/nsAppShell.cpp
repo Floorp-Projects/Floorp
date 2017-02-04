@@ -135,7 +135,10 @@ public:
         if (!uri) {
             return;
         }
-        specConn->SpeculativeConnect(uri, nullptr);
+
+        OriginAttributes attrs;
+        nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+        specConn->SpeculativeConnect2(uri, principal, nullptr);
     }
 
     static void WaitOnGecko()

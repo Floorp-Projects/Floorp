@@ -1,0 +1,15 @@
+Add `-target x86_64-apple-darwin11' to the compiler-rt overridden CFLAGS
+
+diff --git a/compiler-rt/cmake/Modules/CompilerRTDarwinUtils.cmake b/compiler-rt/cmake/Modules/CompilerRTDarwinUtils.cmake
+index 28d398672..aac68bf36 100644
+--- a/compiler-rt/cmake/Modules/CompilerRTDarwinUtils.cmake
++++ b/compiler-rt/cmake/Modules/CompilerRTDarwinUtils.cmake
+@@ -265,7 +265,7 @@ endfunction()
+ macro(darwin_add_builtin_libraries)
+   set(DARWIN_EXCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Darwin-excludes)
+ 
+-  set(CFLAGS "-fPIC -O3 -fvisibility=hidden -DVISIBILITY_HIDDEN -Wall -fomit-frame-pointer")
++  set(CFLAGS "-fPIC -O3 -fvisibility=hidden -DVISIBILITY_HIDDEN -Wall -fomit-frame-pointer -target x86_64-apple-darwin11 -isysroot ${CMAKE_OSX_SYSROOT} -I${CMAKE_OSX_SYSROOT}/usr/include")
+   set(CMAKE_C_FLAGS "")
+   set(CMAKE_CXX_FLAGS "")
+   set(CMAKE_ASM_FLAGS "")
