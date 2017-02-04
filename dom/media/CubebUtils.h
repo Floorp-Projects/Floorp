@@ -30,6 +30,9 @@ uint32_t MaxNumberOfChannels();
 // Get the sample rate the hardware/mixer runs at. Thread safe.
 uint32_t PreferredSampleRate();
 
+// Get the bit mask of the connected audio device's preferred layout.
+uint32_t PreferredChannelMap(uint32_t aChannels);
+
 void PrefChanged(const char* aPref, void* aClosure);
 double GetVolumeScale();
 bool GetFirstStream();
