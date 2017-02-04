@@ -42,6 +42,7 @@
 #endif
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
+#include "jit/ProcessExecutableMemory.h"
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
@@ -160,15 +161,11 @@ struct JitPoisonRange
 
 typedef Vector<JitPoisonRange, 0, SystemAllocPolicy> JitPoisonRangeVector;
 
-#define NON_WRITABLE_JIT_CODE 1
-
 class ExecutableAllocator
 {
     JSRuntime* rt_;
 
   public:
-    enum ProtectionSetting { Writable, Executable };
-
     explicit ExecutableAllocator(JSRuntime* rt);
     ~ExecutableAllocator();
 
@@ -183,12 +180,7 @@ class ExecutableAllocator
 
     void addSizeOfCode(JS::CodeSizes* sizes) const;
 
-    static void initStatic();
-
   private:
-    static size_t pageSize;
-    static size_t largeAllocSize;
-
     static const size_t OVERSIZE_ALLOCATION = size_t(-1);
 
     static size_t roundUpAllocationSize(size_t request, size_t granularity);
@@ -206,31 +198,21 @@ class ExecutableAllocator
     MOZ_MUST_USE
     static bool makeWritable(void* start, size_t size)
     {
-#ifdef NON_WRITABLE_JIT_CODE
-        return reprotectRegion(start, size, Writable);
-#else
-        return true;
-#endif
+        return ReprotectRegion(start, size, ProtectionSetting::Writable);
     }
 
     MOZ_MUST_USE
     static bool makeExecutable(void* start, size_t size)
     {
-#ifdef NON_WRITABLE_JIT_CODE
-        return reprotectRegion(start, size, Executable);
-#else
-        return true;
-#endif
+        return ReprotectRegion(start, size, ProtectionSetting::Executable);
     }
 
     void makeAllWritable() {
-        reprotectAll(Writable);
+        reprotectAll(ProtectionSetting::Writable);
     }
     void makeAllExecutable() {
-        reprotectAll(Executable);
+        reprotectAll(ProtectionSetting::Executable);
     }
-
-    static unsigned initialProtectionFlags(ProtectionSetting protection);
 
     static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
 
@@ -311,11 +293,6 @@ class ExecutableAllocator
     ExecutableAllocator(const ExecutableAllocator&) = delete;
     void operator=(const ExecutableAllocator&) = delete;
 
-#ifdef NON_WRITABLE_JIT_CODE
-    MOZ_MUST_USE
-    static bool reprotectRegion(void*, size_t, ProtectionSetting);
-#endif
-
     void reprotectAll(ProtectionSetting);
 
     // These are strong references;  they keep pools alive.
@@ -329,38 +306,7 @@ class ExecutableAllocator
     typedef js::HashSet<ExecutablePool*, js::DefaultHasher<ExecutablePool*>, js::SystemAllocPolicy>
             ExecPoolHashSet;
     ExecPoolHashSet m_pools;    // All pools, just for stats purposes.
-
-    static size_t determinePageSize();
 };
-
-extern void*
-AllocateExecutableMemory(size_t bytes, unsigned permissions, const char* tag,
-                         size_t pageSize);
-
-extern void
-DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize);
-
-// These functions are called by the platform-specific definitions of
-// (Allocate|Deallocate)ExecutableMemory and should not otherwise be
-// called directly.
-
-extern MOZ_MUST_USE bool
-AddAllocatedExecutableBytes(size_t bytes);
-
-extern void
-SubAllocatedExecutableBytes(size_t bytes);
-
-extern void
-AssertAllocatedExecutableBytesIsZero();
-
-// Returns true if we can allocate a few more MB of executable code without
-// hitting our code limit. This function can be used to stop compiling things
-// that are optional (like Baseline and Ion code) when we're about to reach the
-// limit, so we are less likely to OOM or crash. Note that the limit is
-// per-process, so other threads can also allocate code after we call this
-// function.
-extern bool
-CanLikelyAllocateMoreExecutableMemory();
 
 } // namespace jit
 } // namespace js
