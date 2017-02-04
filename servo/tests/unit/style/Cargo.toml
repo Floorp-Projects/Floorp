@@ -1,0 +1,30 @@
+[package]
+name = "style_tests"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "style_tests"
+path = "lib.rs"
+doctest = false
+
+[features]
+testing = ["style/testing"]
+
+[dependencies]
+app_units = "0.3"
+cssparser = {version = "0.7", features = ["heap_size"]}
+euclid = "0.10.1"
+html5ever-atoms = "0.1"
+matches = "0.1"
+owning_ref = "0.2.2"
+parking_lot = "0.3"
+rayon = "0.6"
+rustc-serialize = "0.3"
+selectors = "0.15.1"
+servo_atoms = {path = "../../../components/atoms"}
+servo_config = {path = "../../../components/config"}
+style = {path = "../../../components/style"}
+style_traits = {path = "../../../components/style_traits"}
+servo_url = {path = "../../../components/url"}
