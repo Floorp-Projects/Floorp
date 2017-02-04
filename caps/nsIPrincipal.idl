@@ -94,6 +94,12 @@ interface nsIPrincipal : nsISerializable
      */
     boolean subsumesConsideringDomain(in nsIPrincipal other);
 
+    /**
+     * Same as the subsumesConsideringDomain(), but ignores the first party
+     * domain in its originAttributes.
+     */
+    boolean subsumesConsideringDomainIgnoringFPD(in nsIPrincipal other);
+
     %{C++
     inline bool Subsumes(nsIPrincipal* aOther) {
       bool subsumes = false;
@@ -103,6 +109,11 @@ interface nsIPrincipal : nsISerializable
     inline bool SubsumesConsideringDomain(nsIPrincipal* aOther) {
       bool subsumes = false;
       return NS_SUCCEEDED(SubsumesConsideringDomain(aOther, &subsumes)) && subsumes;
+    }
+
+    inline bool SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther) {
+      bool subsumes = false;
+      return NS_SUCCEEDED(SubsumesConsideringDomainIgnoringFPD(aOther, &subsumes)) && subsumes;
     }
     %}
 
