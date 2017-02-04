@@ -73,7 +73,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
       NS_WARNING("Failed to generate transition property values");
       return StyleAnimationValue();
     }
-    return mProperties[0].mSegments[0].mToValue;
+    return mProperties[0].mSegments[0].mToValue.mGecko;
   }
 
   // This is the start value to be used for a check for whether a
