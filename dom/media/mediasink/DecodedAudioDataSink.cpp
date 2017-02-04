@@ -197,13 +197,15 @@ nsresult
 DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 {
   mAudioStream = new AudioStream(*this);
+  // When AudioQueue is empty, there is no way to know the channel layout of
+  // the coming audio data, so we use the predefined channel map instead.
+  uint32_t channelMap = mConverter
+                        ? mConverter->OutputConfig().Layout().Map()
+                        : AudioStream::GetPreferredChannelMap(mOutputChannels);
   // The layout map used here is already processed by mConverter with
   // mOutputChannels into SMPTE format, so there is no need to worry if
   // MediaPrefs::MonoAudio() or MediaPrefs::AudioSinkForceStereo() is applied.
-  nsresult rv = mAudioStream->Init(mOutputChannels,
-                                   mConverter->OutputConfig().Layout().Map(),
-                                   mOutputRate,
-                                   mChannel);
+  nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate, mChannel);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
