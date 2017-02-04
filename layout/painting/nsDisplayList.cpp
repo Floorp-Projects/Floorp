@@ -557,11 +557,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
     AnimationSegment* animSegment = animation->segments().AppendElement();
     SetAnimatable(aProperty.mProperty,
-                  segment.mFromValue,
+                  segment.mFromValue.mGecko,
                   aFrame, refBox,
                   animSegment->startState());
     SetAnimatable(aProperty.mProperty,
-                  segment.mToValue,
+                  segment.mToValue.mGecko,
                   aFrame, refBox,
                   animSegment->endState());
 
