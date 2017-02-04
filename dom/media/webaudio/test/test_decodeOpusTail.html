@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Regression test to check that opus files don't have a tail at the end.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+// This gets a 1 second Opus file and decodes it to a buffer. The opus file is
+// decoded at 48kHz, and the OfflineAudioContext is also at 48kHz, no resampling
+// is taking place.
+fetch('sweep-300-330-1sec.opus')
+.then(function(response) { return response.arrayBuffer(); })
+.then(function(buffer) {
+  var off = new OfflineAudioContext(1, 128, 48000);
+  off.decodeAudioData(buffer, function(decoded) {
+    var pcm = decoded.getChannelData(0);
+    is(pcm.length, 48000, "The length of the decoded file is correct.");
+    SimpleTest.finish();
+  });
+});
+
+</script>

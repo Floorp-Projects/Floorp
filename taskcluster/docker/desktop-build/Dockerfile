@@ -67,5 +67,8 @@ ADD           buildprops.json /home/worker/
 # Install bison to build binutils.
 RUN yum install -y bison screen
 
+# Install libtool.
+RUN yum install -y libtool
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

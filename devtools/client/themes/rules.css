@@ -366,8 +366,8 @@
 .ruleview-swatch {
   cursor: pointer;
   border-radius: 50%;
-  width: 0.9em;
-  height: 0.9em;
+  width: 1em;
+  height: 1em;
   vertical-align: middle;
   /* align the swatch with its value */
   margin-top: -1px;

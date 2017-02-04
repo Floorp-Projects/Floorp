@@ -244,17 +244,17 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             status = func()
         return status
 
-    def _run_with_timeout(self, timeout, cmd):
+    def _run_with_timeout(self, timeout, cmd, quiet=False):
         timeout_cmd = ['timeout', '%s' % timeout] + cmd
-        return self._run_proc(timeout_cmd)
+        return self._run_proc(timeout_cmd, quiet=quiet)
 
-    def _run_proc(self, cmd):
+    def _run_proc(self, cmd, quiet=False):
         self.info('Running %s' % subprocess.list2cmdline(cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         out, err = p.communicate()
-        if out:
+        if out and not quiet:
             self.info('%s' % str(out.strip()))
-        if err:
+        if err and not quiet:
             self.info('stderr: %s' % str(err.strip()))
         return out
 
@@ -617,6 +617,47 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 break
         self.emulator_proc = self._launch_emulator()
 
+    def _dump_perf_info(self):
+        '''
+        Dump some host and emulator performance-related information
+        to an artifact file, to help understand why jobs run slowly
+        sometimes. This is hopefully a temporary diagnostic.
+        See bug 1321605.
+        '''
+        dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        perf_path = os.path.join(dir, "android-performance.log")
+        with open(perf_path, "w") as f:
+
+            f.write('\n\nHost /proc/cpuinfo:\n')
+            out = self._run_proc(['cat', '/proc/cpuinfo'], quiet=True)
+            f.write(out)
+
+            f.write('\n\nHost /proc/meminfo:\n')
+            out = self._run_proc(['cat', '/proc/meminfo'], quiet=True)
+            f.write(out)
+
+            f.write('\n\nHost process list:\n')
+            out = self._run_proc(['ps', '-ef'], quiet=True)
+            f.write(out)
+
+            f.write('\n\nEmulator /proc/cpuinfo:\n')
+            cmd = [self.adb_path, '-s', self.emulator['device_id'],
+                    'shell', 'cat', '/proc/cpuinfo']
+            out = self._run_with_timeout(30, cmd, quiet=True)
+            f.write(out)
+
+            f.write('\n\nEmulator /proc/meminfo:\n')
+            cmd = [self.adb_path, '-s', self.emulator['device_id'],
+                    'shell', 'cat', '/proc/meminfo']
+            out = self._run_with_timeout(30, cmd, quiet=True)
+            f.write(out)
+
+            f.write('\n\nEmulator process list:\n')
+            cmd = [self.adb_path, '-s', self.emulator['device_id'],
+                    'shell', 'ps']
+            out = self._run_with_timeout(30, cmd, quiet=True)
+            f.write(out)
+
     def verify_emulator(self):
         '''
         Check to see if the emulator can be contacted via adb and telnet.
@@ -628,6 +669,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if not emulator_ok:
             self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts' % max_restarts,
                 EXIT_STATUS_DICT[TBPL_RETRY])
+        self._dump_perf_info()
         # Start logcat for the emulator. The adb process runs until the
         # corresponding emulator is killed. Output is written directly to
         # the blobber upload directory so that it is uploaded automatically

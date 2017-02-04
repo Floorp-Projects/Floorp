@@ -597,6 +597,7 @@ protected:
   public:
     virtual ~DelayedEvent() { }
     virtual void Dispatch() { }
+    virtual bool IsKeyPressEvent() { return false; }
   };
 
   class DelayedInputEvent : public DelayedEvent
@@ -621,6 +622,7 @@ protected:
   {
   public:
     explicit DelayedKeyEvent(mozilla::WidgetKeyboardEvent* aEvent);
+    virtual bool IsKeyPressEvent() override;
   };
 
   // Check if aEvent is a mouse event and record the mouse location for later
@@ -897,6 +899,8 @@ protected:
 
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
+
+  bool                      mIsLastKeyDownCanceled : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

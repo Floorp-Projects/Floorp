@@ -470,6 +470,9 @@ NativeObject::growSlots(JSContext* cx, uint32_t oldCount, uint32_t newCount)
 /* static */ bool
 NativeObject::growSlotsDontReportOOM(JSContext* cx, NativeObject* obj, uint32_t newCount)
 {
+    // IC code calls this directly.
+    AutoCheckCannotGC nogc;
+
     if (!obj->growSlots(cx, obj->numDynamicSlots(), newCount)) {
         cx->recoverFromOutOfMemory();
         return false;
