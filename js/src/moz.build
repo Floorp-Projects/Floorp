@@ -251,6 +251,7 @@ UNIFIED_SOURCES += [
     'jit/MoveResolver.cpp',
     'jit/OptimizationTracking.cpp',
     'jit/PerfSpewer.cpp',
+    'jit/ProcessExecutableMemory.cpp',
     'jit/RangeAnalysis.cpp',
     'jit/Recover.cpp',
     'jit/RegisterAllocator.cpp',
@@ -578,7 +579,6 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
-        'jit/ExecutableAllocatorWin.cpp',
         'threading/windows/ConditionVariable.cpp',
         'threading/windows/MutexImpl.cpp',
         'threading/windows/Thread.cpp',
@@ -587,7 +587,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
-        'jit/ExecutableAllocatorPosix.cpp',
         'threading/posix/ConditionVariable.cpp',
         'threading/posix/MutexImpl.cpp',
         'threading/posix/Thread.cpp',
