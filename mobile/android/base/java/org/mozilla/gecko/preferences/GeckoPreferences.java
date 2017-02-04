@@ -1271,9 +1271,6 @@ public class GeckoPreferences
         } else if (preference instanceof LinkPreference) {
             setResult(RESULT_CODE_EXIT_SETTINGS);
             finishChoosingTransition();
-        } else if (preference instanceof FontSizePreference) {
-            final FontSizePreference fontSizePref = (FontSizePreference) preference;
-            fontSizePref.setSummary(fontSizePref.getSavedFontSizeName());
         }
 
         return true;
@@ -1497,16 +1494,6 @@ public class GeckoPreferences
                         // Set the summary string to the current entry
                         CharSequence selectedEntry = ((ListPreference) pref).getEntry();
                         ((ListPreference) pref).setSummary(selectedEntry);
-                    }
-                });
-            } else if (pref instanceof FontSizePreference) {
-                final FontSizePreference fontSizePref = (FontSizePreference) pref;
-                fontSizePref.setSavedFontSize(value);
-                final String fontSizeName = fontSizePref.getSavedFontSizeName();
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        fontSizePref.setSummary(fontSizeName); // Ex: "Small".
                     }
                 });
             }
