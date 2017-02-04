@@ -36,8 +36,12 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.global = aGlobal;
   this.closedWithEnter = false;
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
+  this._selectBackgroundColor = null;
+  this._selectColor = null;
   this._uaBackgroundColor = null;
   this._uaColor = null;
+  this._uaSelectBackgroundColor = null;
+  this._uaSelectColor = null;
   this.init();
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
@@ -88,14 +92,21 @@ this.SelectContentHelper.prototype = {
   showDropDown() {
     this.element.openInParentProcess = true;
     let rect = this._getBoundingContentRect();
+    let computedStyles = getComputedStyles(this.element);
+    this._selectBackgroundColor = computedStyles.backgroundColor;
+    this._selectColor = computedStyles.color;
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
-      rect,
-      options: this._buildOptionList(),
-      selectedIndex: this.element.selectedIndex,
-      direction: getComputedStyles(this.element).direction,
+      direction: computedStyles.direction,
       isOpenedViaTouch: this.isOpenedViaTouch,
+      options: this._buildOptionList(),
+      rect,
+      selectedIndex: this.element.selectedIndex,
+      selectBackgroundColor: this._selectBackgroundColor,
+      selectColor: this._selectColor,
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
+      uaSelectBackgroundColor: this.uaSelectBackgroundColor,
+      uaSelectColor: this.uaSelectColor
     });
     gOpen = true;
   },
@@ -114,8 +125,12 @@ this.SelectContentHelper.prototype = {
     this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
+      selectBackgroundColor: this._selectBackgroundColor,
+      selectColor: this._selectColor,
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
+      uaSelectBackgroundColor: this.uaSelectBackgroundColor,
+      uaSelectColor: this.uaSelectColor
     });
   },
 
@@ -123,12 +138,18 @@ this.SelectContentHelper.prototype = {
   // This is used to skip applying the custom color if it matches
   // the user agent values.
   _calculateUAColors() {
-    let dummy = this.element.ownerDocument.createElement("option");
-    dummy.style.color = "-moz-comboboxtext";
-    dummy.style.backgroundColor = "-moz-combobox";
-    let dummyCS = this.element.ownerGlobal.getComputedStyle(dummy);
-    this._uaBackgroundColor = dummyCS.backgroundColor;
-    this._uaColor = dummyCS.color;
+    let dummyOption = this.element.ownerDocument.createElement("option");
+    dummyOption.style.color = "-moz-comboboxtext";
+    dummyOption.style.backgroundColor = "-moz-combobox";
+    let optionCS = this.element.ownerGlobal.getComputedStyle(dummyOption);
+    this._uaBackgroundColor = optionCS.backgroundColor;
+    this._uaColor = optionCS.color;
+    let dummySelect = this.element.ownerDocument.createElement("select");
+    dummySelect.style.color = "-moz-fieldtext";
+    dummySelect.style.backgroundColor = "-moz-field";
+    let selectCS = this.element.ownerGlobal.getComputedStyle(dummySelect);
+    this._uaSelectBackgroundColor = selectCS.backgroundColor;
+    this._uaSelectColor = selectCS.color;
   },
 
   get uaBackgroundColor() {
@@ -143,6 +164,20 @@ this.SelectContentHelper.prototype = {
       this._calculateUAColors();
     }
     return this._uaColor;
+  },
+
+  get uaSelectBackgroundColor() {
+    if (!this._selectBackgroundColor) {
+      this._calculateUAColors();
+    }
+    return this._uaSelectBackgroundColor;
+  },
+
+  get uaSelectColor() {
+    if (!this._selectBackgroundColor) {
+      this._calculateUAColors();
+    }
+    return this._uaSelectColor;
   },
 
   dispatchMouseEvent(win, target, eventName) {
