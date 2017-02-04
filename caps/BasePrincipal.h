@@ -103,6 +103,11 @@ public:
   // check if "privacy.firstparty.isolate" is enabled.
   static bool IsFirstPartyEnabled();
 
+  // check if the access of window.opener across different FPDs is restricted.
+  // We only restrict the access of window.opener when first party isolation
+  // is enabled and "privacy.firstparty.isolate.restrict_opener_access" is on.
+  static bool IsRestrictOpenerAccessForFPI();
+
   // returns true if the originAttributes suffix has mPrivateBrowsingId value
   // different than 0.
   static bool IsPrivateBrowsing(const nsACString& aOrigin);
@@ -210,6 +215,7 @@ public:
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final;
+  NS_IMETHOD SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD EnsureCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;

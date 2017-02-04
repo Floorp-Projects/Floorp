@@ -1,0 +1,49 @@
+language: python
+
+matrix:
+  fast_finish: true
+  include:
+    - sudo: false
+      script:
+         - ./mach test-tidy --no-progress --all
+         - ./mach test-tidy --no-progress --self-test
+      cache: false
+    - sudo: 9000
+      dist: trusty
+      script:
+         - ./mach build -d --verbose
+         - ./mach test-compiletest
+         # disabled due to #15076
+         #- ./mach test-unit
+         # disabled due to #14723
+         #- ./mach build-geckolib
+         #- ./mach test-stylo
+         - bash etc/ci/check_no_panic.sh
+         - bash etc/ci/lockfile_changed.sh
+         - bash etc/ci/manifest_changed.sh
+      cache:
+        directories:
+          - .cargo
+          - .servo
+          - $HOME/.ccache
+      env: CCACHE=/usr/bin/ccache
+      addons:
+        apt:
+          packages:
+            - cmake
+            - freeglut3-dev
+            - gperf
+            - libosmesa6-dev
+            - libgles2-mesa-dev
+            - python-virtualenv
+            - xorg-dev
+            - ccache
+            - libdbus-glib-1-dev
+            - libavformat-dev
+            - libavcodec-dev
+            - libavutil-dev
+            - libedit-dev
+
+branches:
+  only:
+    - master
