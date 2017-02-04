@@ -4946,12 +4946,17 @@ Parser<FullParseHandler>::exportDeclaration()
             // Handle the forms |export {}| and |export { ..., }| (where ...
             // is non empty), by escaping the loop early if the next token
             // is }.
-            if (!tokenStream.peekToken(&tt))
+            if (!tokenStream.getToken(&tt))
                 return null();
+
             if (tt == TOK_RC)
                 break;
 
-            MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
+            if (tt != TOK_NAME) {
+                error(JSMSG_NO_BINDING_NAME);
+                return null();
+            }
+
             Node bindingName = newName(tokenStream.currentName());
             if (!bindingName)
                 return null();
@@ -4975,14 +4980,18 @@ Parser<FullParseHandler>::exportDeclaration()
 
             handler.addList(kid, exportSpec);
 
-            bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_COMMA))
+            TokenKind next;
+            if (!tokenStream.getToken(&next))
                 return null();
-            if (!matched)
-                break;
-        }
 
-        MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
+            if (next == TOK_RC)
+                break;
+
+            if (next != TOK_COMMA) {
+                error(JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
+                return null();
+            }
+        }
 
         // Careful!  If |from| follows, even on a new line, it must start a
         // FromClause:
