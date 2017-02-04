@@ -810,6 +810,19 @@ class MacroAssemblerX86Shared : public Assembler
         vcvtsd2ss(src, dest, dest);
     }
 
+    void loadInt32x4(const Address& addr, FloatRegister dest) {
+        vmovdqa(Operand(addr), dest);
+    }
+    void loadFloat32x4(const Address& addr, FloatRegister dest) {
+        vmovaps(Operand(addr), dest);
+    }
+    void storeInt32x4(FloatRegister src, const Address& addr) {
+        vmovdqa(src, Operand(addr));
+    }
+    void storeFloat32x4(FloatRegister src, const Address& addr) {
+        vmovaps(src, Operand(addr));
+    }
+
     void convertFloat32x4ToInt32x4(FloatRegister src, FloatRegister dest) {
         // Note that if the conversion failed (because the converted
         // result is larger than the maximum signed int32, or less than the

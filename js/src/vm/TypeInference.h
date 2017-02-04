@@ -34,9 +34,9 @@ namespace jit {
     class TempAllocator;
 } // namespace jit
 
-struct TypeZone;
 class TypeConstraint;
 class TypeNewScript;
+class TypeZone;
 class CompilerConstraintList;
 class HeapTypeSetKey;
 
@@ -1315,14 +1315,15 @@ typedef Vector<RecompileInfo, 1, SystemAllocPolicy> RecompileInfoVector;
 
 struct AutoEnterAnalysis;
 
-struct TypeZone
+class TypeZone
 {
     JS::Zone* const zone_;
 
     /* Pool for type information in this zone. */
     static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
-    ZoneGroupData<LifoAlloc> typeLifoAlloc;
+    ZoneGroupData<LifoAlloc> typeLifoAlloc_;
 
+  public:
     // Current generation for sweeping.
     ZoneGroupOrGCTaskOrIonCompileData<uint32_t> generation;
 
@@ -1355,6 +1356,13 @@ struct TypeZone
     ~TypeZone();
 
     JS::Zone* zone() const { return zone_; }
+
+    LifoAlloc& typeLifoAlloc() {
+#ifdef JS_CRASH_DIAGNOSTICS
+        MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone_));
+#endif
+        return typeLifoAlloc_.ref();
+    }
 
     void beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom);
     void endSweep(JSRuntime* rt);

@@ -119,7 +119,7 @@ Table::set(uint32_t index, void* code, Instance& instance)
             JSObject::writeBarrierPre(elem.tls->instance->objectUnbarriered());
 
         elem.code = code;
-        elem.tls = &instance.tlsData();
+        elem.tls = instance.tlsData();
 
         MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(), "no writeBarrierPost");
     } else {

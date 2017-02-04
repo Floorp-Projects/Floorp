@@ -19,7 +19,7 @@ interface Worker : EventTarget {
   void terminate();
 
   [Throws]
-  void postMessage(any message, optional sequence<any> transfer);
+  void postMessage(any message, optional sequence<object> transfer = []);
 
   attribute EventHandler onmessage;
 };

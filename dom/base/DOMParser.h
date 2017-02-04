@@ -112,12 +112,12 @@ private:
 
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIPrincipal> mOriginalPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
   nsWeakPtr mScriptHandlingObject;
-  
+
   bool mAttemptedInit;
+  bool mOriginalPrincipalWasSystem;
 };
 
 } // namespace dom
