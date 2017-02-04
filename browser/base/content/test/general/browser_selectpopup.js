@@ -162,6 +162,38 @@ function getClickEvents() {
   });
 }
 
+function testOptionColors(index, item, menulist) {
+  let expected = JSON.parse(item.label);
+
+  for (let color of Object.keys(expected)) {
+    if (color.toLowerCase().includes("color") &&
+        !expected[color].startsWith("rgb")) {
+      // Need to convert system color to RGB color.
+      let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
+      textarea.style.color = expected[color];
+      expected[color] = getComputedStyle(textarea).color;
+    }
+  }
+
+  // Press Down to move the selected item to the next item in the
+  // list and check the colors of this item when it's not selected.
+  EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+
+  if (expected.end) {
+    return;
+  }
+
+  if (expected.unstyled) {
+    ok(!item.hasAttribute("customoptionstyling"),
+      `Item ${index} should not have any custom option styling`);
+  } else {
+    is(getComputedStyle(item).color, expected.color,
+       "Item " + (index) + " has correct foreground color");
+    is(getComputedStyle(item).backgroundColor, expected.backgroundColor,
+       "Item " + (index) + " has correct background color");
+  }
+}
+
 function* doSelectTests(contentType, dtd) {
   const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
@@ -777,32 +809,7 @@ add_task(function* test_colors_applied_to_popup_items() {
 
   ok(!child.selected, "The first child should not be selected");
   while (child) {
-    let expected = JSON.parse(child.label);
-
-    for (let color of Object.keys(expected)) {
-      if (color.toLowerCase().includes("color") &&
-          !expected[color].startsWith("rgb")) {
-        // Need to convert system color to RGB color.
-        let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
-        textarea.style.color = expected[color];
-        expected[color] = getComputedStyle(textarea).color;
-      }
-    }
-
-    // Press Down to move the selected item to the next item in the
-    // list and check the colors of this item when it's not selected.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
-
-    if (expected.unstyled) {
-      ok(!child.hasAttribute("customoptionstyling"),
-        `Item ${idx} should not have any custom option styling`);
-    } else {
-      is(getComputedStyle(child).color, expected.color,
-         "Item " + (idx) + " has correct foreground color");
-      is(getComputedStyle(child).backgroundColor, expected.backgroundColor,
-         "Item " + (idx) + " has correct background color");
-    }
-
+    testOptionColors(idx, child, menulist);
     idx++;
     child = child.nextSibling;
   }
@@ -836,36 +843,7 @@ add_task(function* test_colors_applied_to_popup() {
 
   ok(!child.selected, "The first child should not be selected");
   while (child) {
-    let expected = JSON.parse(child.label);
-
-    for (let color of Object.keys(expected)) {
-      if (color.toLowerCase().includes("color") &&
-          !expected[color].startsWith("rgb")) {
-        // Need to convert system color to RGB color.
-        let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
-        textarea.style.color = expected[color];
-        expected[color] = getComputedStyle(textarea).color;
-      }
-    }
-
-    // Press Down to move the selected item to the next item in the
-    // list and check the colors of this item when it's not selected.
-    EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
-
-    if (expected.end) {
-      break;
-    }
-
-    if (expected.unstyled) {
-      ok(!child.hasAttribute("customoptionstyling"),
-        `Item ${idx} should not have any custom option styling`);
-    } else {
-      is(getComputedStyle(child).color, expected.color,
-         "Item " + (idx) + " has correct foreground color");
-      is(getComputedStyle(child).backgroundColor, expected.backgroundColor,
-         "Item " + (idx) + " has correct background color");
-    }
-
+    testOptionColors(idx, child, menulist);
     idx++;
     child = child.nextSibling;
   }
