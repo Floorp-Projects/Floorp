@@ -1,0 +1,15 @@
+[package]
+name = "profile_tests"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "profile_tests"
+path = "lib.rs"
+doctest = false
+
+[dependencies]
+profile = {path = "../../../components/profile"}
+profile_traits = {path = "../../../components/profile_traits"}
+ipc-channel = "0.5"

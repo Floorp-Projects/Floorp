@@ -224,20 +224,34 @@ ToolSidebar.prototype = {
 
     let previousTool = this._currentTool;
     if (previousTool) {
-      if (this._telemetry) {
-        this._telemetry.toolClosed(previousTool);
-      }
       this.emit(previousTool + "-unselected");
     }
 
     this._currentTool = id;
 
-    if (this._telemetry) {
-      this._telemetry.toolOpened(this._currentTool);
-    }
-
+    this.updateTelemetryOnChange(id, previousTool);
     this.emit(this._currentTool + "-selected");
     this.emit("select", this._currentTool);
+  },
+
+  /**
+   * Log toolClosed and toolOpened events on telemetry.
+   *
+   * @param  {String} currentToolId
+   *         id of the tool being selected.
+   * @param  {String} previousToolId
+   *         id of the previously selected tool.
+   */
+  updateTelemetryOnChange: function (currentToolId, previousToolId) {
+    if (currentToolId === previousToolId || !this._telemetry) {
+      // Skip telemetry if the tool id did not change or telemetry is unavailable.
+      return;
+    }
+
+    if (previousToolId) {
+      this._telemetry.toolClosed(previousToolId);
+    }
+    this._telemetry.toolOpened(currentToolId);
   },
 
   /**
@@ -249,14 +263,9 @@ ToolSidebar.prototype = {
   show: function (id) {
     this._tabbox.removeAttribute("hidden");
 
-    // If an id is given, select the corresponding sidebar tab and record the
-    // tool opened.
+    // If an id is given, select the corresponding sidebar tab.
     if (id) {
-      this._currentTool = id;
-
-      if (this._telemetry) {
-        this._telemetry.toolOpened(this._currentTool);
-      }
+      this.select(id);
     }
 
     this.emit("show");

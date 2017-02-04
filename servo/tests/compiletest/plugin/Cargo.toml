@@ -1,0 +1,15 @@
+[package]
+name = "plugin_compiletest"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "plugin_compiletest"
+path = "lib.rs"
+doctest = false
+
+[dependencies]
+compiletest_helper = {path = "../helper"}
+plugins = {path = "../../../components/plugins"}
+script = {path = "../../../components/script"}

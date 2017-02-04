@@ -1,0 +1,17 @@
+[package]
+name = "script_tests"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+
+[lib]
+name = "script_tests"
+path = "lib.rs"
+doctest = false
+
+[dependencies]
+euclid = "0.10.2"
+msg = {path = "../../../components/msg"}
+plugins = {path = "../../../components/plugins"}
+script = {path = "../../../components/script"}
+servo_url = {path = "../../../components/url"}

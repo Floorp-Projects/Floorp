@@ -46,10 +46,6 @@ class SecretsMixin(object):
         secret is required.  For lower levels, the value of the 'default` key
         is used, or no secret is written.
         """
-        if self.config.get('forced_artifact_build'):
-            self.info('Skipping due to forced artifact build.')
-            return
-
         secret_files = self.config.get('secret_files', [])
 
         scm_level = self.config.get('scm_level', 1)

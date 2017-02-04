@@ -442,17 +442,14 @@ class SymbolTable:
         self.scopes = [ { } ]   # stack({})
         self.currentScope = self.scopes[0]
 
-    def enterScope(self, node):
+    def enterScope(self):
         assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
 
-        if not hasattr(node, 'symtab'):
-            node.symtab = { }
-
-        self.scopes.append(node.symtab)
+        self.scopes.append({ })
         self.currentScope = self.scopes[-1]
 
-    def exitScope(self, node):
+    def exitScope(self):
         symtab = self.scopes.pop()
         assert self.currentScope is symtab
 
@@ -492,13 +489,11 @@ class SymbolTable:
 
 
 class TypeCheck:
-    '''This pass sets the .type attribute of every AST node.  For some
-nodes, the type is meaningless and it is set to "VOID."  This pass
-also sets the .decl attribute of AST nodes for which that is relevant;
+    '''This pass sets the .decl attribute of AST nodes for which that is relevant;
 a decl says where, with what type, and under what name(s) a node was
 declared.
 
-With this information, it finally type checks the AST.'''
+With this information, it type checks the AST.'''
 
     def __init__(self):
         # NB: no IPDL compile will EVER print a warning.  A program has
@@ -530,12 +525,20 @@ With this information, it finally type checks the AST.'''
 
 
 class TcheckVisitor(Visitor):
-    def __init__(self, symtab, errors):
-        self.symtab = symtab
+    def __init__(self, errors):
         self.errors = errors
 
     def error(self, loc, fmt, *args):
         self.errors.append(errormsg(loc, fmt, *args))
+
+class GatherDecls(TcheckVisitor):
+    def __init__(self, builtinUsing, errors):
+        TcheckVisitor.__init__(self, errors)
+
+        # |self.symtab| is the symbol table for the translation unit
+        # currently being visited
+        self.symtab = None
+        self.builtinUsing = builtinUsing
 
     def declare(self, loc, type, shortname=None, fullname=None, progname=None):
         d = Decl(loc)
@@ -546,20 +549,13 @@ class TcheckVisitor(Visitor):
         self.symtab.declare(d)
         return d
 
-class GatherDecls(TcheckVisitor):
-    def __init__(self, builtinUsing, errors):
-        # |self.symtab| is the symbol table for the translation unit
-        # currently being visited
-        TcheckVisitor.__init__(self, None, errors)
-        self.builtinUsing = builtinUsing
-
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
-        if hasattr(tu, 'symtab'):
+        if hasattr(tu, 'visited'):
             return
-        tu.symtab = SymbolTable(self.errors)
+        tu.visited = True
         savedSymtab = self.symtab
-        self.symtab = tu.symtab
+        self.symtab = SymbolTable(self.errors)
 
         # pretend like the translation unit "using"-ed these for the
         # sake of type checking and C++ code generation
@@ -635,9 +631,6 @@ class GatherDecls(TcheckVisitor):
             # grab symbols in the protocol itself
             p.accept(self)
 
-
-        tu.type = VOID
-
         self.symtab = savedSymtab
 
     def declareStructOrUnion(self, su):
@@ -689,12 +682,13 @@ class GatherDecls(TcheckVisitor):
 
     def visitStructDecl(self, sd):
         # If we've already processed this struct, don't do it again.
-        if hasattr(sd, 'symtab'):
+        if hasattr(sd, 'visited'):
             return
 
         stype = sd.decl.type
 
-        self.symtab.enterScope(sd)
+        self.symtab.enterScope()
+        sd.visited = True
 
         for f in sd.fields:
             ftypedecl = self.symtab.lookup(str(f.typespec))
@@ -710,7 +704,7 @@ class GatherDecls(TcheckVisitor):
                 fullname=None)
             stype.fields.append(f.decl.type)
 
-        self.symtab.exitScope(sd)
+        self.symtab.exitScope()
 
     def visitUnionDecl(self, ud):
         utype = ud.decl.type
@@ -749,7 +743,7 @@ class GatherDecls(TcheckVisitor):
 
     def visitProtocol(self, p):
         # protocol scope
-        self.symtab.enterScope(p)
+        self.symtab.enterScope()
 
         seenmgrs = set()
         for mgr in p.managers:
@@ -801,7 +795,7 @@ class GatherDecls(TcheckVisitor):
         # IPDL spec, and we'd like to catch those before C++ compilers
         # are allowed to obfuscate the error
 
-        self.symtab.exitScope(p)
+        self.symtab.exitScope()
 
 
     def visitManager(self, mgr):
@@ -874,7 +868,7 @@ class GatherDecls(TcheckVisitor):
 
 
         # enter message scope
-        self.symtab.enterScope(md)
+        self.symtab.enterScope()
 
         msgtype = MessageType(md.nested, md.prio, md.sendSemantics, md.direction,
                               ctor=isctor, dtor=isdtor, cdtype=cdtype,
@@ -907,7 +901,7 @@ class GatherDecls(TcheckVisitor):
             msgtype.returns.append(pdecl.type)
             md.outParams[i] = pdecl
 
-        self.symtab.exitScope(md)
+        self.symtab.exitScope()
 
         md.decl = self.declare(
             loc=loc,
@@ -1003,8 +997,7 @@ def fullyDefined(t, exploring=None):
 
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
-        # don't need the symbol table, we just want the error reporting
-        TcheckVisitor.__init__(self, None, errors)
+        TcheckVisitor.__init__(self, errors)
         self.visited = set()
         self.ptype = None
 
