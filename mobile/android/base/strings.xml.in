@@ -257,15 +257,6 @@
   <string name="pref_plugins_enabled">&pref_plugins_enabled;</string>
   <string name="pref_plugins_tap_to_play">&pref_plugins_tap_to_play2;</string>
   <string name="pref_plugins_disabled">&pref_plugins_disabled;</string>
-  <string name="pref_text_size">&pref_text_size;</string>
-  <string name="pref_font_size_tiny">&pref_font_size_tiny;</string>
-  <string name="pref_font_size_small">&pref_font_size_small;</string>
-  <string name="pref_font_size_medium">&pref_font_size_medium;</string>
-  <string name="pref_font_size_large">&pref_font_size_large;</string>
-  <string name="pref_font_size_xlarge">&pref_font_size_xlarge;</string>
-  <string name="pref_font_size_set">&pref_font_size_set;</string>
-  <string name="pref_font_size_adjust_char">&pref_font_size_adjust_char;</string>
-  <string name="pref_font_size_preview_text">&pref_font_size_preview_text;</string>
   <string name="pref_use_system_font_size">&pref_use_system_font_size;</string>
   <string name="pref_use_system_font_size_summary">&pref_use_system_font_size_summary;</string>
   <string name="pref_media_autoplay_enabled">&pref_media_autoplay_enabled;</string>
