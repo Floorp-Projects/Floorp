@@ -222,6 +222,19 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                             L"Section");
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "With these static arguments AddRule should never fail, what happened?");
+
+  // The content process needs to be able to duplicate semaphore handles,
+  // to the broker process and other child processes.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_BROKER,
+                            L"Semaphore");
+  MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                     "With these static arguments AddRule should never fail, what happened?");
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_ANY,
+                            L"Semaphore");
+  MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                     "With these static arguments AddRule should never fail, what happened?");
 }
 #endif
 
