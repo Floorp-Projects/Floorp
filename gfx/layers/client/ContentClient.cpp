@@ -426,6 +426,36 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   mFrontAndBackBufferDiffer = true;
 }
 
+bool
+ContentClientRemoteBuffer::LockBuffers()
+{
+  if (mTextureClient) {
+    bool locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+    if (!locked) {
+      return false;
+    }
+  }
+  if (mTextureClientOnWhite) {
+    bool locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    if (!locked) {
+      UnlockBuffers();
+      return false;
+    }
+  }
+  return true;
+}
+
+void
+ContentClientRemoteBuffer::UnlockBuffers()
+{
+  if (mTextureClient && mTextureClient->IsLocked()) {
+    mTextureClient->Unlock();
+  }
+  if (mTextureClientOnWhite && mTextureClientOnWhite->IsLocked()) {
+    mTextureClientOnWhite->Unlock();
+  }
+}
+
 void
 ContentClientRemoteBuffer::Dump(std::stringstream& aStream,
                                 const char* aPrefix,
@@ -529,15 +559,6 @@ ContentClientDoubleBuffered::BeginPaint()
 void
 ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 {
-  if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-  if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-
   if (!mFrontAndBackBufferDiffer) {
     MOZ_ASSERT(!mDidSelfCopy, "If we have to copy the world, then our buffers are different, right?");
     return;
@@ -653,19 +674,6 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
       destDT->Flush();
       ReturnDrawTargetToBuffer(destDT);
     }
-  }
-}
-
-void
-ContentClientSingleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
-{
-  if (mTextureClient) {
-    DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
-  }
-  if (mTextureClientOnWhite) {
-    DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
-    MOZ_ASSERT(locked);
   }
 }
 

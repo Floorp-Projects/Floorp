@@ -297,6 +297,9 @@ protected:
     mIsNewBuffer = false;
   }
 
+  virtual bool LockBuffers() override;
+  virtual void UnlockBuffers() override;
+
   RefPtr<TextureClient> mTextureClient;
   RefPtr<TextureClient> mTextureClientOnWhite;
   // keep a record of texture clients we have created and need to keep around
@@ -396,8 +399,6 @@ public:
   {
   }
   virtual ~ContentClientSingleBuffered() {}
-
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {
