@@ -833,6 +833,9 @@ add_task(function* test_form12_open_on_trusted_focus() {
   uname.value = "";
   pword.value = "";
 
+  // Move focus to the password field so we can test the first click on the
+  // username field.
+  pword.focus();
   checkACForm("", "");
   const firePrivEventPromise = new Promise((resolve) => {
     uname.addEventListener("click", (e) => {
