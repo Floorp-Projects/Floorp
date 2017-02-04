@@ -598,10 +598,12 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
         // In case of add or accumulate composite, StyleAnimationValue does
         // not have a valid value.
         if (segment.mFromComposite == dom::CompositeOperation::Replace) {
-          UpdateMinMaxScale(aFrame, segment.mFromValue, aMinScale, aMaxScale);
+          UpdateMinMaxScale(aFrame, segment.mFromValue.mGecko, aMinScale,
+                            aMaxScale);
         }
         if (segment.mToComposite == dom::CompositeOperation::Replace) {
-          UpdateMinMaxScale(aFrame, segment.mToValue, aMinScale, aMaxScale);
+          UpdateMinMaxScale(aFrame, segment.mToValue.mGecko, aMinScale,
+                            aMaxScale);
         }
       }
     }

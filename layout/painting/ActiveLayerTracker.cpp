@@ -488,11 +488,11 @@ ContainsAnimatedScale(EffectSet& aEffects, nsIFrame* aFrame)
         continue;
       }
       for (AnimationPropertySegment segment : prop.mSegments) {
-        gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
+        gfxSize from = segment.mFromValue.mGecko.GetScaleValue(aFrame);
         if (from != gfxSize(1.0f, 1.0f)) {
           return true;
         }
-        gfxSize to = segment.mToValue.GetScaleValue(aFrame);
+        gfxSize to = segment.mToValue.mGecko.GetScaleValue(aFrame);
         if (to != gfxSize(1.0f, 1.0f)) {
           return true;
         }

@@ -120,7 +120,7 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
         StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
                                             startValue,
                                             cssValue);
-      mProperties[0].mSegments[0].mFromValue = Move(startValue);
+      mProperties[0].mSegments[0].mFromValue.mGecko = Move(startValue);
       MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
       MOZ_ASSERT(mKeyframes.Length() == 2,
           "Transitions should have exactly two animation keyframes");
@@ -989,8 +989,8 @@ nsTransitionManager::ConsiderInitiatingTransition(
           oldPT->GetAnimation()->PlaybackRate(),
           oldPT->SpecifiedTiming(),
           segment.mTimingFunction,
-          segment.mFromValue,
-          segment.mToValue
+          segment.mFromValue.mGecko,
+          segment.mToValue.mGecko
         })
       );
     }

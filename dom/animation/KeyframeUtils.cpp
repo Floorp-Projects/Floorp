@@ -1166,7 +1166,7 @@ AppendInitialSegment(AnimationProperty* aAnimationProperty,
   segment->mFromKey        = 0.0f;
   segment->mFromComposite  = dom::CompositeOperation::Add;
   segment->mToKey          = aFirstEntry.mOffset;
-  segment->mToValue        = aFirstEntry.mValue.mGecko;
+  segment->mToValue        = aFirstEntry.mValue;
   segment->mToComposite    = aFirstEntry.mComposite;
 }
 
@@ -1177,7 +1177,7 @@ AppendFinalSegment(AnimationProperty* aAnimationProperty,
   AnimationPropertySegment* segment =
     aAnimationProperty->mSegments.AppendElement();
   segment->mFromKey        = aLastEntry.mOffset;
-  segment->mFromValue      = aLastEntry.mValue.mGecko;
+  segment->mFromValue      = aLastEntry.mValue;
   segment->mFromComposite  = aLastEntry.mComposite;
   segment->mToKey          = 1.0f;
   segment->mToComposite    = dom::CompositeOperation::Add;
@@ -1400,10 +1400,8 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
       animationProperty->mSegments.AppendElement();
     segment->mFromKey        = aEntries[i].mOffset;
     segment->mToKey          = aEntries[j].mOffset;
-    segment->mFromValue      = aEntries[i].mValue.mGecko;
-    segment->mToValue        = aEntries[j].mValue.mGecko;
-    segment->mServoFromValue = aEntries[i].mValue.mServo;
-    segment->mServoToValue   = aEntries[j].mValue.mServo;
+    segment->mFromValue      = aEntries[i].mValue;
+    segment->mToValue        = aEntries[j].mValue;
     segment->mTimingFunction = aEntries[i].mTimingFunction;
     segment->mFromComposite  = aEntries[i].mComposite;
     segment->mToComposite    = aEntries[j].mComposite;
