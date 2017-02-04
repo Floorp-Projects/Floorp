@@ -604,11 +604,11 @@ def remove_linux_pgo_try_talos(config, tests):
 
 
 @transforms.add
-def remove_native_non_try(config, tests):
-    """Remove native-engine jobs if they are not in try branch."""
+def remove_native(config, tests):
+    """Remove native-engine jobs if -w is not given."""
     for test in tests:
         if test['worker-implementation'] != 'native-engine' \
-                or config.params['project'] == 'try':
+                or config.config['args'].taskcluster_worker:
             yield test
 
 

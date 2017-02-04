@@ -1,0 +1,34 @@
+[package]
+name = "servo_config"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+publish = false
+
+[lib]
+name = "servo_config"
+path = "lib.rs"
+
+[features]
+# servo as opposed to geckolib
+servo = ["serde", "serde_derive", "url/heap_size", "url/serde", "plugins"]
+
+[dependencies]
+euclid = "0.10.1"
+getopts = "0.2.11"
+lazy_static = "0.2"
+log = "0.3.5"
+num_cpus = "1.1.0"
+rustc-serialize = "0.3"
+serde = {version = "0.8", optional = true}
+serde_derive = {version = "0.8", optional = true}
+servo_geometry = {path = "../geometry"}
+servo_url = {path = "../url"}
+plugins = {path = "../plugins", optional = true}
+url = "1.2"
+
+[dev-dependencies]
+env_logger = "0.4"
+
+[target.'cfg(all(unix, not(target_os = "macos"), not(target_os = "ios"), not(target_os = "android")))'.dependencies]
+xdg = "2.0"

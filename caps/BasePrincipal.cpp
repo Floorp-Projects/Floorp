@@ -286,6 +286,31 @@ OriginAttributes::IsFirstPartyEnabled()
 
 /* static */
 bool
+OriginAttributes::IsRestrictOpenerAccessForFPI()
+{
+  bool isFirstPartyEnabled = IsFirstPartyEnabled();
+
+  // Cache the privacy.firstparty.isolate.restrict_opener_access pref.
+  static bool sRestrictedOpenerAccess = false;
+  static bool sCachedRestrictedAccessPref = false;
+  if (!sCachedRestrictedAccessPref) {
+    MOZ_ASSERT(NS_IsMainThread());
+    sCachedRestrictedAccessPref = true;
+    Preferences::AddBoolVarCache(&sRestrictedOpenerAccess,
+                                 "privacy.firstparty.isolate.restrict_opener_access");
+  }
+
+  // We always want to restrict window.opener if first party isolation is
+  // disabled.
+  if (!isFirstPartyEnabled) {
+    return true;
+  }
+
+  return isFirstPartyEnabled && sRestrictedOpenerAccess;
+}
+
+/* static */
+bool
 OriginAttributes::IsPrivateBrowsing(const nsACString& aOrigin)
 {
   nsAutoCString dummy;
@@ -385,6 +410,24 @@ BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
   *aResult = Subsumes(aOther, ConsiderDocumentDomain);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal *aOther,
+                                                    bool *aResult)
+{
+  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  if (Kind() == eCodebasePrincipal &&
+      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+            OriginAttributesRef(), aOther->OriginAttributesRef())) {
+    *aResult = false;
+    return NS_OK;
+  }
+
+  *aResult = SubsumesInternal(aOther, ConsiderDocumentDomain);
+
   return NS_OK;
 }
 

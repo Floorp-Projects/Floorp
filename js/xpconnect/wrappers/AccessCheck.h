@@ -21,6 +21,8 @@ class AccessCheck {
     static bool subsumes(JSObject* a, JSObject* b);
     static bool wrapperSubsumes(JSObject* wrapper);
     static bool subsumesConsideringDomain(JSCompartment* a, JSCompartment* b);
+    static bool subsumesConsideringDomainIgnoringFPD(JSCompartment* a,
+                                                     JSCompartment* b);
     static bool isChrome(JSCompartment* compartment);
     static bool isChrome(JSObject* obj);
     static nsIPrincipal* getPrincipal(JSCompartment* compartment);

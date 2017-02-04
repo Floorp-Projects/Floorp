@@ -1,0 +1,78 @@
+[configs]
+skip-check-length = false
+skip-check-licenses = false
+check-ordered-json-keys = [
+  "./resources/prefs.json",
+]
+lint-scripts = [
+  "./python/servo/lints/wpt_lint.py",
+]
+
+# Packages which we avoid using in Servo.
+# For each blocked package, we can list the exceptions,
+# which are packages allowed to use the blocked package.
+[blocked-packages]
+rand = [
+  "deque",
+  "gaol",
+  "ipc-channel",
+  "num-bigint",
+  "parking_lot_core",
+  "phf_generator",
+  "rayon",
+  "servo_rand",
+  "tempdir",
+  "tempfile",
+  "uuid",
+  "websocket",
+  "ws",
+]
+num = []
+
+[ignore]
+# Ignored packages with duplicated versions
+packages = ["bitflags", "byteorder", "lazy_static", "semver"]
+# Files that are ignored for all tidy and lint checks.
+files = [
+  # Generated and upstream code combined with our own. Could use cleanup
+  "./components/style/gecko_bindings/bindings.rs",
+  "./components/style/gecko_bindings/structs_debug.rs",
+  "./components/style/gecko_bindings/structs_release.rs",
+  "./components/style/gecko_string_cache/atom_macro.rs",
+  "./resources/hsts_preload.json",
+  "./tests/wpt/metadata/MANIFEST.json",
+  "./tests/wpt/metadata-css/MANIFEST.json",
+  "./components/script/dom/webidls/ForceTouchEvent.webidl",
+  "./support/android/openssl.sh",
+  # Ignore those files since the issues reported are on purpose
+  "./tests/html/bad-line-ends.html",
+  "./tests/unit/net/parsable_mime/text",
+  "./tests/wpt/mozilla/tests/css/fonts",
+  "./tests/wpt/mozilla/tests/css/pre_with_tab.html",
+  "./tests/wpt/mozilla/tests/mozilla/textarea_placeholder.html",
+]
+# Directories that are ignored for the non-WPT tidy check.
+directories = [
+  # Upstream
+  "./support/android/apk",
+  "./tests/wpt/css-tests",
+  "./tests/wpt/harness",
+  "./tests/wpt/update",
+  "./tests/wpt/web-platform-tests",
+  "./tests/wpt/mozilla/tests/mozilla/referrer-policy",
+  "./tests/wpt/sync",
+  "./tests/wpt/sync_css",
+  "./python/tidy/servo_tidy_tests",
+  "./components/script/dom/bindings/codegen/parser",
+  "./components/script/dom/bindings/codegen/ply",
+  "./python/_virtualenv",
+  # Generated and upstream code combined with our own. Could use cleanup
+  "./target",
+  "./ports/cef",
+  "./components/style/gecko_bindings/nsstring_vendor/",
+]
+
+# Directories that are checked for correct file extension
+[check_ext]
+# directory, list of expected file extensions
+"./components/script/dom/webidls" = [".webidl"]

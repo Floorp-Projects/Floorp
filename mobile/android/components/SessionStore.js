@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel", "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition", "resource://gre/modules/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
@@ -49,10 +50,6 @@ const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = -1;
 const STATE_QUITTING_FLUSHED = -2;
-
-const PRIVACY_NONE = 0;
-const PRIVACY_ENCRYPTED = 1;
-const PRIVACY_FULL = 2;
 
 const PREFS_RESTORE_FROM_CRASH = "browser.sessionstore.resume_from_crash";
 const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
@@ -787,7 +784,7 @@ SessionStore.prototype = {
     // If the main content document has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
-    if (!this.checkPrivacyLevel(content.document.documentURI)) {
+    if (!PrivacyLevel.check(content.document.documentURI)) {
       return;
     }
 
@@ -798,7 +795,7 @@ SessionStore.prototype = {
     let children = [];
     for (let i = 0; i < content.frames.length; i++) {
       let frame = content.frames[i];
-      if (!this.checkPrivacyLevel(frame.document.documentURI)) {
+      if (!PrivacyLevel.check(frame.document.documentURI)) {
         continue;
       }
 
@@ -1504,16 +1501,6 @@ SessionStore.prototype = {
       tab.browser.__SS_extdata = tabData.extData;
       this._restoreTab(tabData, tab.browser);
     }
-  },
-
-  /**
-   * Don't save sensitive data if the user doesn't want to
-   * (distinguishes between encrypted and non-encrypted sites)
-   */
-  checkPrivacyLevel: function ss_checkPrivacyLevel(aURL) {
-    let isHTTPS = aURL.startsWith("https:");
-    let pref = "browser.sessionstore.privacy_level";
-    return Services.prefs.getIntPref(pref) < (isHTTPS ? PRIVACY_ENCRYPTED : PRIVACY_FULL);
   },
 
   /**
