@@ -543,10 +543,20 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
     return result;
 
   if (HaveBuffer()) {
-    // Do not modify result.mRegionToDraw or result.mContentType after this call.
-    // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
-    // or call CreateBuffer before this call.
-    FinalizeFrame(result.mRegionToDraw);
+    if (LockBuffers()) {
+      // Do not modify result.mRegionToDraw or result.mContentType after this call.
+      // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
+      // or call CreateBuffer before this call.
+      FinalizeFrame(result.mRegionToDraw);
+    } else {
+      // Abandon everything and redraw it all. Ideally we'd reallocate and copy
+      // the old to the new and then call FinalizeFrame on the new buffer so that
+      // we only need to draw the latest bits, but we need a big refactor to support
+      // that ordering.
+      result.mRegionToDraw = neededRegion;
+      canReuseBuffer = false;
+      Clear();
+    }
   }
 
   IntRect drawBounds = result.mRegionToDraw.GetBounds();
