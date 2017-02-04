@@ -8,6 +8,7 @@
 
 #include "jit/JSONPrinter.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/SizePrintfMacros.h"
 
 #include <stdarg.h>
