@@ -676,10 +676,10 @@ TabActor.prototype = {
     // (chrome-)webnavigation-create is fired very early during docshell
     // construction. In new root docshells within child processes, involving
     // TabChild, this event is from within this call:
-    //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l912
+    //   https://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l912
     // whereas the chromeEventHandler (and most likely other stuff) is set
     // later:
-    //   http://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l944
+    //   https://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l944
     // So wait a tick before watching it:
     DevToolsUtils.executeSoon(() => {
       // Bug 1142752: sometimes, the docshell appears to be immediately
