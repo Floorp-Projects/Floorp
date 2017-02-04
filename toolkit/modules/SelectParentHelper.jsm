@@ -25,7 +25,8 @@ var closedWithEnter = false;
 var selectRect;
 
 this.SelectParentHelper = {
-  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor) {
+  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
+           uaSelectBackgroundColor, uaSelectColor, selectBackgroundColor, selectColor) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
     let stylesheet = menulist.querySelector("#ContentSelectDropdownScopedStylesheet");
@@ -33,10 +34,29 @@ this.SelectParentHelper = {
       stylesheet.remove();
     }
 
+    let doc = menulist.ownerDocument;
+    stylesheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    stylesheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
+    stylesheet.scoped = true;
+    stylesheet.hidden = true;
+    stylesheet = menulist.appendChild(stylesheet);
+
+    let sheet = stylesheet.sheet;
+    if (selectBackgroundColor != uaSelectBackgroundColor ||
+        selectColor != uaSelectColor) {
+      sheet.insertRule(`menupopup {
+        background-color: ${selectBackgroundColor};
+        color: ${selectColor};
+      }`, 0);
+      menulist.menupopup.setAttribute("customoptionstyling", "true");
+    } else {
+      menulist.menupopup.removeAttribute("customoptionstyling");
+    }
+
     currentZoom = zoom;
     currentMenulist = menulist;
     populateChildren(menulist, items, selectedIndex, zoom,
-                     uaBackgroundColor, uaColor);
+                     uaBackgroundColor, uaColor, sheet);
   },
 
   open(browser, menulist, rect, isOpenedViaTouch) {
@@ -147,8 +167,11 @@ this.SelectParentHelper = {
       let selectedIndex = msg.data.selectedIndex;
       let uaBackgroundColor = msg.data.uaBackgroundColor;
       let uaColor = msg.data.uaColor;
+      let selectBackgroundColor = msg.data.selectBackgroundColor;
+      let selectColor = msg.data.selectColor;
       this.populate(currentMenulist, options, selectedIndex,
-                    currentZoom, uaBackgroundColor, uaColor);
+                    currentZoom, uaBackgroundColor, uaColor,
+                    selectBackgroundColor, selectColor);
     }
   },
 
@@ -177,20 +200,11 @@ this.SelectParentHelper = {
 };
 
 function populateChildren(menulist, options, selectedIndex, zoom,
-                          uaBackgroundColor, uaColor,
+                          uaBackgroundColor, uaColor, sheet,
                           parentElement = null, isGroupDisabled = false,
                           adjustedTextSize = -1, addSearch = true, nthChildIndex = 1) {
   let element = menulist.menupopup;
   let win = element.ownerGlobal;
-  let scopedStyleSheet = menulist.querySelector("#ContentSelectDropdownScopedStylesheet");
-  if (!scopedStyleSheet) {
-    let doc = element.ownerDocument;
-    scopedStyleSheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
-    scopedStyleSheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
-    scopedStyleSheet.scoped = true;
-    scopedStyleSheet.hidden = true;
-    scopedStyleSheet = menulist.appendChild(scopedStyleSheet);
-  }
 
   // -1 just means we haven't calculated it yet. When we recurse through this function
   // we will pass in adjustedTextSize to save on recalculations.
@@ -228,7 +242,6 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     }
 
     if (ruleBody) {
-      let sheet = scopedStyleSheet.sheet;
       sheet.insertRule(`${item.localName}:nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
         ${ruleBody}
       }`, 0);
@@ -250,7 +263,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     if (isOptGroup) {
       nthChildIndex =
         populateChildren(menulist, option.children, selectedIndex, zoom,
-                         uaBackgroundColor, uaColor,
+                         uaBackgroundColor, uaColor, sheet,
                          item, isDisabled, adjustedTextSize, false);
     } else {
       if (option.index == selectedIndex) {
