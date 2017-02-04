@@ -149,19 +149,34 @@ RuleEditor.prototype = {
     }
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
-      let selector = this.rule.domRule.selectors
-               ? this.rule.domRule.selectors.join(", ")
-               : this.ruleView.inspector.selectionCssSelector;
+      Task.spawn(function* () {
+        let selector;
 
-      let selectorHighlighter = createChild(header, "span", {
-        class: "ruleview-selectorhighlighter" +
-               (this.ruleView.highlighters.selectorHighlighterShown === selector ?
-                " highlighted" : ""),
-        title: l10n("rule.selectorHighlighter.tooltip")
-      });
-      selectorHighlighter.addEventListener("click", () => {
-        this.ruleView.toggleSelectorHighlighter(selectorHighlighter, selector);
-      });
+        if (this.rule.domRule.selectors) {
+          // This is a "normal" rule with a selector.
+          selector = this.rule.domRule.selectors.join(", ");
+        } else if (this.rule.inherited) {
+          // This is an inline style from an inherited rule. Need to resolve the unique
+          // selector from the node which rule this is inherited from.
+          selector = yield this.rule.inherited.getUniqueSelector();
+        } else {
+          // This is an inline style from the current node.
+          selector = this.ruleView.inspector.selectionCssSelector;
+        }
+
+        let selectorHighlighter = createChild(header, "span", {
+          class: "ruleview-selectorhighlighter" +
+                 (this.ruleView.highlighters.selectorHighlighterShown === selector ?
+                  " highlighted" : ""),
+          title: l10n("rule.selectorHighlighter.tooltip")
+        });
+        selectorHighlighter.addEventListener("click", () => {
+          this.ruleView.toggleSelectorHighlighter(selectorHighlighter, selector);
+        });
+
+        this.uniqueSelector = selector;
+        this.emit("selector-icon-created");
+      }.bind(this));
     }
 
     this.openBrace = createChild(header, "span", {

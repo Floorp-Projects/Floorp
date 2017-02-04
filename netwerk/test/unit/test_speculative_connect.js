@@ -143,9 +143,13 @@ TestFailedStreamCallback.prototype = {
  */
 function test_speculative_connect() {
     serv = new TestServer();
+    var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                .getService(Ci.nsIScriptSecurityManager);
     var URI = ios.newURI("http://localhost:" + serv.listener.port + "/just/a/test");
+    var principal = ssm.createCodebasePrincipal(URI, {});
+
     ios.QueryInterface(Ci.nsISpeculativeConnect)
-        .speculativeConnect(URI, null);
+       .speculativeConnect2(URI, principal, null);
 }
 
 /* Speculative connections should not be allowed for hosts with local IP

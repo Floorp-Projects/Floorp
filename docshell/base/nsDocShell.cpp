@@ -3594,9 +3594,8 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
   // it. So we get the firstPartyDomain from the nodePrincipal of the document
   // before we compare the originAttributes.
   if (OriginAttributes::IsFirstPartyEnabled()) {
-    if (accessingDS == accessingRootDS &&
-        aAccessingItem->ItemType() == nsIDocShellTreeItem::typeContent &&
-        !accessingDS->GetIsMozBrowser()) {
+    if (aAccessingItem->ItemType() == nsIDocShellTreeItem::typeContent &&
+        (accessingDS == accessingRootDS || accessingDS->GetIsMozBrowser())) {
 
       nsCOMPtr<nsIDocument> accessingDoc = aAccessingItem->GetDocument();
 
@@ -3608,9 +3607,8 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
       }
     }
 
-    if (targetDS == targetRootDS &&
-        aTargetItem->ItemType() == nsIDocShellTreeItem::typeContent &&
-        !targetDS->GetIsMozBrowser()) {
+    if (aTargetItem->ItemType() == nsIDocShellTreeItem::typeContent &&
+        (targetDS == targetRootDS || targetDS->GetIsMozBrowser())) {
 
       nsCOMPtr<nsIDocument> targetDoc = aAccessingItem->GetDocument();
 
@@ -7942,7 +7940,9 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     }
   } else if (url && NS_SUCCEEDED(aStatus)) {
     // If we have a host
-    mozilla::net::PredictorLearnRedirect(url, aChannel, this);
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    mozilla::net::PredictorLearnRedirect(url, aChannel,
+                                         loadInfo->GetOriginAttributes());
   }
 
   return NS_OK;
@@ -9873,6 +9873,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       nsIContentPolicy::TYPE_INTERNAL_IFRAME : nsIContentPolicy::TYPE_INTERNAL_FRAME;
   } else {
     contentType = nsIContentPolicy::TYPE_DOCUMENT;
+    isTargetTopLevelDocShell = true;
   }
 
   // If there's no targetDocShell, that means we are about to create a new window,
@@ -10728,10 +10729,17 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     srcdoc = NullString();
   }
 
+  OriginAttributes attrs;
+  bool isTopLevelDoc = mItemType == typeContent &&
+                       (isTargetTopLevelDocShell ||
+                        GetIsMozBrowser());
+  attrs.Inherit(GetOriginAttributes());
+  attrs.SetFirstPartyDomain(isTopLevelDoc, aURI);
+
   net::PredictorLearn(aURI, nullptr,
-                      nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, this);
+                      nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, attrs);
   net::PredictorPredict(aURI, nullptr,
-                        nsINetworkPredictor::PREDICT_LOAD, this, nullptr);
+                        nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,
@@ -10963,9 +10971,9 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // We have to do this in case our OriginAttributes are different from the
   // OriginAttributes of the parent document. Or in case there isn't a
   // parent document.
-  bool isTopLevelDoc = aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT &&
-                       mItemType == typeContent &&
-                       !GetIsMozBrowser();
+  bool isTopLevelDoc = mItemType == typeContent &&
+                       (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+                        GetIsMozBrowser());
 
   OriginAttributes attrs;
   attrs.Inherit(GetOriginAttributes());
@@ -14193,9 +14201,12 @@ nsDocShell::OnOverLink(nsIContent* aContent,
   rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  OriginAttributes attrs;
+  attrs.Inherit(aContent->NodePrincipal()->OriginAttributesRef());
+
   mozilla::net::PredictorPredict(aURI, mCurrentURI,
                                  nsINetworkPredictor::PREDICT_LINK,
-                                 this, nullptr);
+                                 attrs, nullptr);
 
   if (browserChrome2) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);

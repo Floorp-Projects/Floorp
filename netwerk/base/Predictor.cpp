@@ -588,15 +588,8 @@ Predictor::Init()
     mDNSListener = new DNSListener();
   }
 
-  nsCOMPtr<nsICacheStorageService> cacheStorageService =
+  mCacheStorageService =
     do_GetService("@mozilla.org/netwerk/cache-storage-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<LoadContextInfo> lci =
-    new LoadContextInfo(false, OriginAttributes());
-
-  rv = cacheStorageService->DiskCacheStorage(lci, false,
-                                             getter_AddRefs(mCacheDiskStorage));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIOService = do_GetService("@mozilla.org/network/io-service;1", &rv);
@@ -773,11 +766,29 @@ Predictor::Create(nsISupports *aOuter, const nsIID& aIID,
   return rv;
 }
 
-// Called from the main thread to initiate predictive actions
 NS_IMETHODIMP
 Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
-                   PredictorPredictReason reason, nsILoadContext *loadContext,
-                   nsINetworkPredictorVerifier *verifier)
+                   PredictorPredictReason reason,
+                   JS::HandleValue originAttributes,
+                   nsINetworkPredictorVerifier *verifier,
+                   JSContext* aCx)
+{
+  OriginAttributes attrs;
+
+  if (!originAttributes.isObject() ||
+      !attrs.Init(aCx, originAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return PredictNative(targetURI, sourceURI, reason, attrs, verifier);
+}
+
+// Called from the main thread to initiate predictive actions
+NS_IMETHODIMP
+Predictor::PredictNative(nsIURI *targetURI, nsIURI *sourceURI,
+                         PredictorPredictReason reason,
+                         const OriginAttributes& originAttributes,
+                         nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Predictor interface methods must be called on the main thread");
@@ -793,9 +804,6 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
     SerializeURI(targetURI, serTargetURI);
     SerializeURI(sourceURI, serSourceURI);
 
-    IPC::SerializedLoadContext serLoadContext;
-    serLoadContext.Init(loadContext);
-
     // If two different threads are predicting concurently, this will be
     // overwritten. Thankfully, we only use this in tests, which will
     // overwrite mVerifier perhaps multiple times for each individual test;
@@ -807,7 +815,7 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
     }
     PREDICTOR_LOG(("    forwarding to parent process"));
     gNeckoChild->SendPredPredict(serTargetURI, serSourceURI,
-                                 reason, serLoadContext, verifier);
+                                 reason, originAttributes, verifier);
     return NS_OK;
   }
 
@@ -823,7 +831,7 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
     return NS_OK;
   }
 
-  if (loadContext && loadContext->UsePrivateBrowsing()) {
+  if (originAttributes.mPrivateBrowsingId > 0) {
     // Don't want to do anything in PB mode
     PREDICTOR_LOG(("    in PB mode"));
     return NS_OK;
@@ -847,7 +855,8 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
       }
       // Link hover is a special case where we can predict without hitting the
       // db, so let's go ahead and fire off that prediction here.
-      PredictForLink(targetURI, sourceURI, verifier);
+      PredictForLink(targetURI, sourceURI,
+                     originAttributes, verifier);
       return NS_OK;
     case nsINetworkPredictor::PREDICT_LOAD:
       if (!targetURI || sourceURI) {
@@ -881,15 +890,26 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
   uriKey->GetAsciiSpec(uriKeyStr);
   PREDICTOR_LOG(("    Predict uri=%s reason=%d action=%p", uriKeyStr.get(),
                  reason, uriAction.get()));
+
+  nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+  RefPtr<LoadContextInfo> lci =
+    new LoadContextInfo(false, originAttributes);
+
+  nsresult rv = mCacheStorageService->DiskCacheStorage(lci, false,
+                                                       getter_AddRefs(cacheDiskStorage));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
   uint32_t openFlags = nsICacheStorage::OPEN_READONLY |
                        nsICacheStorage::OPEN_SECRETLY |
                        nsICacheStorage::OPEN_PRIORITY |
                        nsICacheStorage::CHECK_MULTITHREADED;
-  mCacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), openFlags, uriAction);
+  cacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), openFlags, uriAction);
 
   // Now we do the origin-only (and therefore predictor-only) entry
   nsCOMPtr<nsIURI> targetOrigin;
-  nsresult rv = ExtractOrigin(uriKey, getter_AddRefs(targetOrigin), mIOService);
+  rv = ExtractOrigin(uriKey, getter_AddRefs(targetOrigin), mIOService);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!originKey) {
     originKey = targetOrigin;
@@ -906,9 +926,9 @@ Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
   openFlags = nsICacheStorage::OPEN_READONLY |
               nsICacheStorage::OPEN_SECRETLY |
               nsICacheStorage::CHECK_MULTITHREADED;
-  mCacheDiskStorage->AsyncOpenURI(originKey,
-                                  NS_LITERAL_CSTRING(PREDICTOR_ORIGIN_EXTENSION),
-                                  openFlags, originAction);
+  cacheDiskStorage->AsyncOpenURI(originKey,
+                                 NS_LITERAL_CSTRING(PREDICTOR_ORIGIN_EXTENSION),
+                                 openFlags, originAction);
 
   PREDICTOR_LOG(("    predict returning"));
   return NS_OK;
@@ -925,8 +945,16 @@ Predictor::PredictInternal(PredictorPredictReason reason, nsICacheEntry *entry,
   PREDICTOR_LOG(("Predictor::PredictInternal"));
   bool rv = false;
 
+  nsCOMPtr<nsILoadContextInfo> lci;
+  entry->GetLoadContextInfo(getter_AddRefs(lci));
+
+  if (!lci) {
+    return rv;
+  }
+
   if (reason == nsINetworkPredictor::PREDICT_LOAD) {
-    MaybeLearnForStartup(targetURI, fullUri);
+    MaybeLearnForStartup(targetURI, fullUri,
+                         *lci->OriginAttributesPtr());
   }
 
   if (isNew) {
@@ -952,6 +980,7 @@ Predictor::PredictInternal(PredictorPredictReason reason, nsICacheEntry *entry,
 
 void
 Predictor::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
+                          const OriginAttributes& originAttributes,
                           nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -972,7 +1001,10 @@ Predictor::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
     }
   }
 
-  mSpeculativeService->SpeculativeConnect2(targetURI, nullptr, nullptr);
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(targetURI, originAttributes);
+
+  mSpeculativeService->SpeculativeConnect2(targetURI, principal, nullptr);
   if (verifier) {
     PREDICTOR_LOG(("    sending verification"));
     verifier->OnPredictPreconnect(targetURI);
@@ -1006,6 +1038,11 @@ Predictor::PredictForPageload(nsICacheEntry *entry, nsIURI *targetURI,
   rv = entry->GetFetchCount(&loadCount);
   NS_ENSURE_SUCCESS(rv, false);
 
+  nsCOMPtr<nsILoadContextInfo> lci;
+
+  rv = entry->GetLoadContextInfo(getter_AddRefs(lci));
+  NS_ENSURE_SUCCESS(rv, false);
+
   nsCOMPtr<nsIURI> redirectURI;
   if (WouldRedirect(entry, loadCount, lastLoad, globalDegradation,
                     getter_AddRefs(redirectURI))) {
@@ -1018,20 +1055,27 @@ Predictor::PredictForPageload(nsICacheEntry *entry, nsIURI *targetURI,
                             nullptr, verifier, this, stackCount + 1);
     nsAutoCString redirectUriString;
     redirectURI->GetAsciiSpec(redirectUriString);
+
+    nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+    rv = mCacheStorageService->DiskCacheStorage(lci, false,
+                                               getter_AddRefs(cacheDiskStorage));
+    NS_ENSURE_SUCCESS(rv, false);
+
     PREDICTOR_LOG(("    Predict redirect uri=%s action=%p", redirectUriString.get(),
                    redirectAction.get()));
     uint32_t openFlags = nsICacheStorage::OPEN_READONLY |
                          nsICacheStorage::OPEN_SECRETLY |
                          nsICacheStorage::OPEN_PRIORITY |
                          nsICacheStorage::CHECK_MULTITHREADED;
-    mCacheDiskStorage->AsyncOpenURI(redirectURI, EmptyCString(), openFlags,
+    cacheDiskStorage->AsyncOpenURI(redirectURI, EmptyCString(), openFlags,
                                     redirectAction);
-    return RunPredictions(nullptr, verifier);
+    return RunPredictions(nullptr, *lci->OriginAttributesPtr(), verifier);
   }
 
   CalculatePredictions(entry, targetURI, lastLoad, loadCount, globalDegradation, fullUri);
 
-  return RunPredictions(targetURI, verifier);
+  return RunPredictions(targetURI, *lci->OriginAttributesPtr(), verifier);
 }
 
 // This is the driver for predicting at browser startup time based on pages that
@@ -1043,10 +1087,16 @@ Predictor::PredictForStartup(nsICacheEntry *entry, bool fullUri,
   MOZ_ASSERT(NS_IsMainThread());
 
   PREDICTOR_LOG(("Predictor::PredictForStartup"));
+
+  nsCOMPtr<nsILoadContextInfo> lci;
+
+  nsresult rv = entry->GetLoadContextInfo(getter_AddRefs(lci));
+  NS_ENSURE_SUCCESS(rv, false);
+
   int32_t globalDegradation = CalculateGlobalDegradation(mLastStartupTime);
   CalculatePredictions(entry, nullptr, mLastStartupTime, mStartupCount,
                        globalDegradation, fullUri);
-  return RunPredictions(nullptr, verifier);
+  return RunPredictions(nullptr, *lci->OriginAttributesPtr(), verifier);
 }
 
 // This calculates how much to degrade our confidence in our data based on
@@ -1279,6 +1329,7 @@ Predictor::SetupPrediction(int32_t confidence, uint32_t flags, nsIURI *uri)
 
 nsresult
 Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
+                    const OriginAttributes& originAttributes,
                     nsINetworkPredictorVerifier *verifier)
 {
   nsAutoCString strUri, strReferrer;
@@ -1297,6 +1348,14 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
 
   if (NS_FAILED(rv)) {
     PREDICTOR_LOG(("    NS_NewChannel failed rv=0x%X", rv));
+    return rv;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  rv = loadInfo->SetOriginAttributes(originAttributes);
+
+  if (NS_FAILED(rv)) {
+    PREDICTOR_LOG(("    Set originAttributes into loadInfo failed rv=0x%X", rv));
     return rv;
   }
 
@@ -1324,7 +1383,9 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
 
 // Runs predictions that have been set up.
 bool
-Predictor::RunPredictions(nsIURI *referrer, nsINetworkPredictorVerifier *verifier)
+Predictor::RunPredictions(nsIURI *referrer,
+                          const OriginAttributes& originAttributes,
+                          nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Running prediction off main thread");
 
@@ -1347,7 +1408,8 @@ Predictor::RunPredictions(nsIURI *referrer, nsINetworkPredictorVerifier *verifie
   for (i = 0; i < len; ++i) {
     PREDICTOR_LOG(("    doing prefetch"));
     nsCOMPtr<nsIURI> uri = prefetches[i];
-    if (NS_SUCCEEDED(Prefetch(uri, referrer, verifier))) {
+    if (NS_SUCCEEDED(Prefetch(uri, referrer,
+                              originAttributes, verifier))) {
       ++totalPredictions;
       ++totalPrefetches;
       predicted = true;
@@ -1360,7 +1422,9 @@ Predictor::RunPredictions(nsIURI *referrer, nsINetworkPredictorVerifier *verifie
     nsCOMPtr<nsIURI> uri = preconnects[i];
     ++totalPredictions;
     ++totalPreconnects;
-    mSpeculativeService->SpeculativeConnect2(uri, nullptr, this);
+    nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateCodebasePrincipal(uri, originAttributes);
+    mSpeculativeService->SpeculativeConnect2(uri, principal, this);
     predicted = true;
     if (verifier) {
       PREDICTOR_LOG(("    sending preconnect verification"));
@@ -1405,11 +1469,27 @@ Predictor::WouldRedirect(nsICacheEntry *entry, uint32_t loadCount,
   return false;
 }
 
-// Called from the main thread to update the database
 NS_IMETHODIMP
 Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
                  PredictorLearnReason reason,
-                 nsILoadContext *loadContext)
+                 JS::HandleValue originAttributes,
+                 JSContext* aCx)
+{
+  OriginAttributes attrs;
+
+  if (!originAttributes.isObject() ||
+      !attrs.Init(aCx, originAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return LearnNative(targetURI, sourceURI, reason, attrs);
+}
+
+// Called from the main thread to update the database
+NS_IMETHODIMP
+Predictor::LearnNative(nsIURI *targetURI, nsIURI *sourceURI,
+                       PredictorLearnReason reason,
+                       const OriginAttributes& originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Predictor interface methods must be called on the main thread");
@@ -1427,12 +1507,9 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
     ipc::OptionalURIParams serSourceURI;
     SerializeURI(sourceURI, serSourceURI);
 
-    IPC::SerializedLoadContext serLoadContext;
-    serLoadContext.Init(loadContext);
-
     PREDICTOR_LOG(("    forwarding to parent"));
     gNeckoChild->SendPredLearn(serTargetURI, serSourceURI, reason,
-                               serLoadContext);
+                               originAttributes);
     return NS_OK;
   }
 
@@ -1448,7 +1525,7 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
     return NS_OK;
   }
 
-  if (loadContext && loadContext->UsePrivateBrowsing()) {
+  if (originAttributes.mPrivateBrowsingId > 0) {
     // Don't want to do anything in PB mode
     PREDICTOR_LOG(("    in PB mode"));
     return NS_OK;
@@ -1525,6 +1602,16 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
   PREDICTOR_LOG(("    Learn uriKey=%s targetURI=%s sourceURI=%s reason=%d "
                  "action=%p", uriKeyStr.get(), targetUriStr.get(),
                  sourceUriStr.get(), reason, uriAction.get()));
+
+  nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+  RefPtr<LoadContextInfo> lci =
+    new LoadContextInfo(false, originAttributes);
+
+  rv = mCacheStorageService->DiskCacheStorage(lci, false,
+                                              getter_AddRefs(cacheDiskStorage));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // For learning full URI things, we *always* open readonly and secretly, as we
   // rely on actual pageloads to update the entry's metadata for us.
   uint32_t uriOpenFlags = nsICacheStorage::OPEN_READONLY |
@@ -1536,7 +1623,7 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
     // opened ASAP.
     uriOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
   }
-  mCacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), uriOpenFlags,
+  cacheDiskStorage->AsyncOpenURI(uriKey, EmptyCString(), uriOpenFlags,
                                   uriAction);
 
   // Now we open the origin-only (and therefore predictor-only) entry
@@ -1565,7 +1652,7 @@ Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
                       nsICacheStorage::OPEN_SECRETLY |
                       nsICacheStorage::CHECK_MULTITHREADED;
   }
-  mCacheDiskStorage->AsyncOpenURI(originKey,
+  cacheDiskStorage->AsyncOpenURI(originKey,
                                   NS_LITERAL_CSTRING(PREDICTOR_ORIGIN_EXTENSION),
                                   originOpenFlags, originAction);
 
@@ -1816,7 +1903,8 @@ Predictor::LearnForRedirect(nsICacheEntry *entry, nsIURI *targetURI)
 // This will add a page to our list of startup pages if it's being loaded
 // before our startup window has expired.
 void
-Predictor::MaybeLearnForStartup(nsIURI *uri, bool fullUri)
+Predictor::MaybeLearnForStartup(nsIURI *uri, bool fullUri,
+                                const OriginAttributes& originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1928,7 +2016,7 @@ Predictor::Reset()
 
   RefPtr<Predictor::Resetter> reset = new Predictor::Resetter(this);
   PREDICTOR_LOG(("    created a resetter"));
-  mCacheDiskStorage->AsyncVisitStorage(reset, true);
+  mCacheStorageService->AsyncVisitAllStorages(reset, true);
   PREDICTOR_LOG(("    Cache async launched, returning now"));
 
   return NS_OK;
@@ -2020,16 +2108,25 @@ NS_IMETHODIMP
 Predictor::Resetter::OnCacheEntryInfo(nsIURI *uri, const nsACString &idEnhance,
                                       int64_t dataSize, int32_t fetchCount,
                                       uint32_t lastModifiedTime, uint32_t expirationTime,
-                                      bool aPinned)
+                                      bool aPinned, nsILoadContextInfo* aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
 
   // The predictor will only ever touch entries with no idEnhance ("") or an
   // idEnhance of PREDICTOR_ORIGIN_EXTENSION, so we filter out any entries that
   // don't match that to avoid doing extra work.
   if (idEnhance.EqualsLiteral(PREDICTOR_ORIGIN_EXTENSION)) {
     // This is an entry we own, so we can just doom it entirely
-    mPredictor->mCacheDiskStorage->AsyncDoomURI(uri, idEnhance, nullptr);
+    nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+    rv = mPredictor->mCacheStorageService
+                   ->DiskCacheStorage(aInfo, false,
+                                      getter_AddRefs(cacheDiskStorage));
+
+    NS_ENSURE_SUCCESS(rv, rv);
+    cacheDiskStorage->AsyncDoomURI(uri, idEnhance, nullptr);
   } else if (idEnhance.IsEmpty()) {
     // This is an entry we don't own, so we have to be a little more careful and
     // just get rid of our own metadata entries. Append it to an array of things
@@ -2037,6 +2134,7 @@ Predictor::Resetter::OnCacheEntryInfo(nsIURI *uri, const nsACString &idEnhance,
     // Complete() multiple times/too soon.
     ++mEntriesToVisit;
     mURIsToVisit.AppendElement(uri);
+    mInfosToVisit.AppendElement(aInfo);
   }
 
   return NS_OK;
@@ -2047,10 +2145,18 @@ Predictor::Resetter::OnCacheEntryVisitCompleted()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsresult rv;
+
   nsTArray<nsCOMPtr<nsIURI>> urisToVisit;
   urisToVisit.SwapElements(mURIsToVisit);
 
   MOZ_ASSERT(mEntriesToVisit == urisToVisit.Length());
+
+  nsTArray<nsCOMPtr<nsILoadContextInfo>> infosToVisit;
+  infosToVisit.SwapElements(mInfosToVisit);
+
+  MOZ_ASSERT(mEntriesToVisit == infosToVisit.Length());
+
   if (!mEntriesToVisit) {
     Complete();
     return NS_OK;
@@ -2059,8 +2165,16 @@ Predictor::Resetter::OnCacheEntryVisitCompleted()
   uint32_t entriesToVisit = urisToVisit.Length();
   for (uint32_t i = 0; i < entriesToVisit; ++i) {
     nsCString u;
+    nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+    rv = mPredictor->mCacheStorageService
+                   ->DiskCacheStorage(infosToVisit[i], false,
+                                      getter_AddRefs(cacheDiskStorage));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+
     urisToVisit[i]->GetAsciiSpec(u);
-    mPredictor->mCacheDiskStorage->AsyncOpenURI(
+    cacheDiskStorage->AsyncOpenURI(
         urisToVisit[i], EmptyCString(),
         nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY | nsICacheStorage::CHECK_MULTITHREADED,
         this);
@@ -2102,7 +2216,8 @@ EnsureGlobalPredictor(nsINetworkPredictor **aPredictor)
 
 nsresult
 PredictorPredict(nsIURI *targetURI, nsIURI *sourceURI,
-                 PredictorPredictReason reason, nsILoadContext *loadContext,
+                 PredictorPredictReason reason,
+                 const OriginAttributes& originAttributes,
                  nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2115,14 +2230,14 @@ PredictorPredict(nsIURI *targetURI, nsIURI *sourceURI,
   nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return predictor->Predict(targetURI, sourceURI, reason,
-                            loadContext, verifier);
+  return predictor->PredictNative(targetURI, sourceURI, reason,
+                                  originAttributes, verifier);
 }
 
 nsresult
 PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
                PredictorLearnReason reason,
-               nsILoadContext *loadContext)
+               const OriginAttributes& originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2134,7 +2249,7 @@ PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
   nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->LearnNative(targetURI, sourceURI, reason, originAttributes);
 }
 
 nsresult
@@ -2153,16 +2268,24 @@ PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadContext> loadContext;
+  OriginAttributes originAttributes;
 
   if (loadGroup) {
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
     if (callbacks) {
       loadContext = do_GetInterface(callbacks);
+
+      if (loadContext) {
+        OriginAttributes dAttrs;
+        loadContext->GetOriginAttributes(dAttrs);
+
+        originAttributes.Inherit(dAttrs);
+      }
     }
   }
 
-  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->LearnNative(targetURI, sourceURI, reason, originAttributes);
 }
 
 nsresult
@@ -2180,18 +2303,23 @@ PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
   nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadContext> loadContext;
+  OriginAttributes originAttributes;
 
   if (document) {
-    loadContext = document->GetLoadContext();
+    nsCOMPtr<nsIPrincipal> docPrincipal = document->NodePrincipal();
+
+    if (docPrincipal) {
+      originAttributes.Inherit(docPrincipal->OriginAttributesRef());
+    }
+
   }
 
-  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->LearnNative(targetURI, sourceURI, reason, originAttributes);
 }
 
 nsresult
 PredictorLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
-                       nsILoadContext *loadContext)
+                       const OriginAttributes& originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2215,9 +2343,9 @@ PredictorLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
   rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return predictor->Learn(targetURI, sourceURI,
-                          nsINetworkPredictor::LEARN_LOAD_REDIRECT,
-                          loadContext);
+  return predictor->LearnNative(targetURI, sourceURI,
+                                nsINetworkPredictor::LEARN_LOAD_REDIRECT,
+                                originAttributes);
 }
 
 // nsINetworkPredictorVerifier
@@ -2418,16 +2546,19 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
     nsAutoCString method;
     requestHead.Method(method);
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
-                                     method);
+                                     method, *lci->OriginAttributesPtr());
   }
 }
 
 void
 Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
                                       uint32_t httpStatus,
-                                      const nsCString &method)
+                                      const nsCString &method,
+                                      const OriginAttributes& originAttributes)
 {
   PREDICTOR_LOG(("Predictor::UpdateCacheability httpStatus=%u", httpStatus));
+
+  nsresult rv;
 
   if (!mInitialized) {
     PREDICTOR_LOG(("    not initialized"));
@@ -2444,6 +2575,18 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
     return;
   }
 
+  nsCOMPtr<nsICacheStorage> cacheDiskStorage;
+
+  RefPtr<LoadContextInfo> lci =
+    new LoadContextInfo(false, originAttributes);
+
+  rv = mCacheStorageService->DiskCacheStorage(lci, false,
+                                             getter_AddRefs(cacheDiskStorage));
+  if (NS_FAILED(rv)) {
+    PREDICTOR_LOG(("    cannot get disk cache storage"));
+    return;
+  }
+
   uint32_t openFlags = nsICacheStorage::OPEN_READONLY |
                        nsICacheStorage::OPEN_SECRETLY |
                        nsICacheStorage::CHECK_MULTITHREADED;
@@ -2452,7 +2595,7 @@ Predictor::UpdateCacheabilityInternal(nsIURI *sourceURI, nsIURI *targetURI,
   nsAutoCString uri;
   targetURI->GetAsciiSpec(uri);
   PREDICTOR_LOG(("    uri=%s action=%p", uri.get(), action.get()));
-  mCacheDiskStorage->AsyncOpenURI(sourceURI, EmptyCString(), openFlags, action);
+  cacheDiskStorage->AsyncOpenURI(sourceURI, EmptyCString(), openFlags, action);
 }
 
 NS_IMPL_ISUPPORTS(Predictor::CacheabilityAction,

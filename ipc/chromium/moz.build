@@ -13,7 +13,6 @@ UNIFIED_SOURCES += [
     'src/base/file_path.cc',
     'src/base/file_util.cc',
     'src/base/histogram.cc',
-    'src/base/lock.cc',
     'src/base/logging.cc',
     'src/base/message_loop.cc',
     'src/base/message_pump_default.cc',

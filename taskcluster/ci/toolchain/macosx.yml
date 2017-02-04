@@ -2,6 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+macosx64-clang/opt:
+    description: "Clang toolchain build"
+    treeherder:
+        kind: build
+        platform: osx-10-10/opt
+        symbol: Cc(Clang)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-clang-macosx.sh
+        tooltool-downloads: internal
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-macosx.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+
 macosx64-clang-tidy/opt:
     description: "Clang-tidy build"
     index:
@@ -28,3 +50,23 @@ macosx64-clang-tidy/opt:
             - 'taskcluster/scripts/misc/build-clang-tidy-macosx.sh'
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
+macosx64-cctools-port/opt:
+    description: "cctools-port toolchain build"
+    treeherder:
+        kind: build
+        platform: osx-10-10/opt
+        symbol: Cc(cctools-port)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-cctools-port-macosx.sh
+        tooltool-downloads: internal
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'taskcluster/scripts/misc/build-cctools-port-macosx.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'

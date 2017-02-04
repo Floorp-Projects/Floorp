@@ -39,10 +39,12 @@ build-clang.py accepts a JSON config format with the following fields:
 * gcc_dir: Path to the gcc toolchain installation, only required on Linux.
 * cc: Path to the bootsraping C Compiler.
 * cxx: Path to the bootsraping C++ Compiler.
+* as: Path to the assembler tool.
 * ar: Path to the library archiver tool.
-* ranlib: Path to the ranlib tool.
+* ranlib: Path to the ranlib tool (optional).
+* libtool: Path to the libtool tool (optional).
 * ld: Path to the linker.
-* patches: Optional list of patches to apply per platform.  Supported platforms: macosx64, linux32, linux64.  The default is Release.
+* patches: Optional list of patches to apply.
 * build_type: The type of build to make.  Supported types: Release, Debug, RelWithDebInfo or MinSizeRel.
 * build_libcxx: Whether to build with libcxx.  The default is false.
 * build_clang_tidy: Whether to build clang-tidy with the Mozilla checks imported.  The default is false.

@@ -330,6 +330,9 @@ struct AutoEnterAnalysis
 
   private:
     void init(FreeOp* fop, Zone* zone) {
+#ifdef JS_CRASH_DIAGNOSTICS
+        MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
+#endif
         this->freeOp = fop;
         this->zone = zone;
 

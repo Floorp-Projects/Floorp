@@ -85,7 +85,15 @@ template<class T>
 class Maybe
 {
   bool mIsSome;
-  AlignedStorage2<T> mStorage;
+
+  // To support |Maybe<const Type>| we give |mStorage| the type |T| with any
+  // const-ness removed.  That allows us to |emplace()| an object into
+  // |mStorage|.  Since we treat the contained object as having type |T|
+  // everywhere else (both internally, and when exposed via public methods) the
+  // contained object is still treated as const once stored since |const| is
+  // part of |T|'s type signature.
+  typedef typename RemoveCV<T>::Type StorageType;
+  AlignedStorage2<StorageType> mStorage;
 
 public:
   typedef T ValueType;

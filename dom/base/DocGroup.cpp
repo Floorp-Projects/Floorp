@@ -8,8 +8,6 @@
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
-#include "nsIEffectiveTLDService.h"
-#include "nsIURI.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,31 +15,19 @@ namespace dom {
 /* static */ nsresult
 DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey)
 {
-  aKey.Truncate();
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  // Use GetBaseDomain() to handle things like file URIs, IP address URIs,
+  // etc. correctly.
+  nsresult rv = aPrincipal->GetBaseDomain(aKey);
   if (NS_FAILED(rv)) {
-    return NS_OK;   // aKey is the empty string
-  }
-
-  // GetBaseDomain works fine if |uri| is null, but it outputs a warning
-  // which ends up cluttering the logs.
-  if (!uri) {
-    return NS_OK;   // aKey is the empty string
-  }
-
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (!tldService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = tldService->GetBaseDomain(uri, 0, aKey);
-  if (NS_FAILED(rv)) {
+    // We don't really know what to do here.  But we should be conservative,
+    // otherwise it would be possible to reorder two events incorrectly in the
+    // future if we interrupt at the DocGroup level, so to be safe, use an
+    // empty string to classify all such documents as belonging to the same
+    // DocGroup.
     aKey.Truncate();
   }
 
-  return NS_OK;   // aKey may be the empty string
+  return rv;
 }
 
 void
