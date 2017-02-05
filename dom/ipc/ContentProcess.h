@@ -34,12 +34,22 @@ public:
   ~ContentProcess()
   { }
 
-  virtual bool Init(int aArgc, char* aArgv[]) override;
+  virtual bool Init() override;
   virtual void CleanUp() override;
+
+  void SetAppDir(const nsACString& aPath);
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  void SetProfile(const nsACString& aProfile);
+#endif
 
 private:
   ContentChild mContent;
   mozilla::ipc::ScopedXREEmbed mXREEmbed;
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  nsCOMPtr<nsIFile> mProfileDir;
+#endif
 
 #if defined(XP_WIN)
   // This object initializes and configures COM.

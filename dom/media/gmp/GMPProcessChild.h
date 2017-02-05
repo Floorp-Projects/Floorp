@@ -22,7 +22,7 @@ public:
   explicit GMPProcessChild(ProcessId aParentPid);
   ~GMPProcessChild();
 
-  bool Init(int aArgc, char* aArgv[]) override;
+  bool Init() override;
   void CleanUp() override;
 
 private:

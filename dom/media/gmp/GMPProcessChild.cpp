@@ -25,7 +25,7 @@ GMPProcessChild::~GMPProcessChild()
 }
 
 bool
-GMPProcessChild::Init(int aArgc, char* aArgv[])
+GMPProcessChild::Init()
 {
   nsAutoString pluginFilename;
 
