@@ -898,6 +898,7 @@ protected:
   void RefreshMediaElementsVolume();
   void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
   bool IsDisposableSuspend(SuspendTypes aSuspend) const;
+  void MaybeNotifyMediaResumedFromBlock(SuspendTypes aSuspend);
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)

@@ -25,6 +25,7 @@ pub type rlim_t = ::c_ulong;
 pub type dev_t = ::c_ulong;
 pub type ino_t = ::c_ulong;
 pub type __CPU_BITTYPE = ::c_ulong;
+pub type idtype_t = ::c_int;
 
 s! {
     pub struct dirent {
@@ -73,6 +74,12 @@ s! {
         pub msg_control: *mut ::c_void,
         pub msg_controllen: ::size_t,
         pub msg_flags: ::c_int,
+    }
+
+    pub struct cmsghdr {
+        pub cmsg_len: ::size_t,
+        pub cmsg_level: ::c_int,
+        pub cmsg_type: ::c_int,
     }
 
     pub struct termios {
@@ -130,6 +137,34 @@ s! {
         unused: [::c_char; 20],
     }
 }
+
+pub const O_TRUNC: ::c_int = 512;
+
+pub const O_CLOEXEC: ::c_int = 0x80000;
+
+pub const EBFONT: ::c_int = 59;
+pub const ENOSTR: ::c_int = 60;
+pub const ENODATA: ::c_int = 61;
+pub const ETIME: ::c_int = 62;
+pub const ENOSR: ::c_int = 63;
+pub const ENONET: ::c_int = 64;
+pub const ENOPKG: ::c_int = 65;
+pub const EREMOTE: ::c_int = 66;
+pub const ENOLINK: ::c_int = 67;
+pub const EADV: ::c_int = 68;
+pub const ESRMNT: ::c_int = 69;
+pub const ECOMM: ::c_int = 70;
+pub const EPROTO: ::c_int = 71;
+pub const EDOTDOT: ::c_int = 73;
+
+pub const SA_NODEFER: ::c_int = 0x40000000;
+pub const SA_RESETHAND: ::c_int = 0x80000000;
+pub const SA_RESTART: ::c_int = 0x10000000;
+pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
+
+pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
+
+pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
 pub const USER_PROCESS: ::c_short = 7;
 
@@ -221,7 +256,6 @@ pub const FIOCLEX: ::c_int = 0x5451;
 pub const SA_ONSTACK: ::c_ulong = 0x08000000;
 pub const SA_SIGINFO: ::c_ulong = 0x00000004;
 pub const SA_NOCLDWAIT: ::c_ulong = 0x00000002;
-
 pub const SIGCHLD: ::c_int = 17;
 pub const SIGBUS: ::c_int = 7;
 pub const SIGUSR1: ::c_int = 10;

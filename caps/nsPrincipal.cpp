@@ -32,7 +32,6 @@
 
 using namespace mozilla;
 
-static bool gIsWhitelistingTestDomains = false;
 static bool gCodeBasePrincipalSupport = false;
 
 static bool URIIsImmutable(nsIURI* aURI)
@@ -58,10 +57,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
 /* static */ void
 nsPrincipal::InitializeStatics()
 {
-  Preferences::AddBoolVarCache(
-    &gIsWhitelistingTestDomains,
-    "layout.css.unprefixing-service.include-test-domains");
-
   Preferences::AddBoolVarCache(&gCodeBasePrincipalSupport,
                                "signed.applets.codebase_principal_support",
                                false);
@@ -464,196 +459,6 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   return NS_OK;
 }
 
-// Helper-function to indicate whether the CSS Unprefixing Service
-// whitelist should include dummy domains that are only intended for
-// use in testing. (Controlled by a pref.)
-static inline bool
-IsWhitelistingTestDomains()
-{
-  return gIsWhitelistingTestDomains;
-}
-
-// Checks if the given URI's host is on our "full domain" whitelist
-// (i.e. if it's an exact match against a domain that needs unprefixing)
-static bool
-IsOnFullDomainWhitelist(nsIURI* aURI)
-{
-  nsAutoCString hostStr;
-  nsresult rv = aURI->GetHost(hostStr);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // NOTE: This static whitelist is expected to be short. If that changes,
-  // we should consider a different representation; e.g. hash-set, prefix tree.
-  static const nsLiteralCString sFullDomainsOnWhitelist[] = {
-    // 0th entry only active when testing:
-    NS_LITERAL_CSTRING("test1.example.org"),
-    NS_LITERAL_CSTRING("map.baidu.com"),
-    NS_LITERAL_CSTRING("3g.163.com"),
-    NS_LITERAL_CSTRING("3glogo.gtimg.com"), // for 3g.163.com
-    NS_LITERAL_CSTRING("info.3g.qq.com"), // for 3g.qq.com
-    NS_LITERAL_CSTRING("3gimg.qq.com"), // for 3g.qq.com
-    NS_LITERAL_CSTRING("img.m.baidu.com"), // for [shucheng|ks].baidu.com
-    NS_LITERAL_CSTRING("m.mogujie.com"),
-    NS_LITERAL_CSTRING("touch.qunar.com"),
-    NS_LITERAL_CSTRING("mjs.sinaimg.cn"), // for sina.cn
-    NS_LITERAL_CSTRING("static.qiyi.com"), // for m.iqiyi.com
-    NS_LITERAL_CSTRING("cdn.kuaidi100.com"), // for m.kuaidi100.com
-    NS_LITERAL_CSTRING("m.pc6.com"),
-    NS_LITERAL_CSTRING("m.haosou.com"),
-    NS_LITERAL_CSTRING("m.mi.com"),
-    NS_LITERAL_CSTRING("wappass.baidu.com"),
-    NS_LITERAL_CSTRING("m.video.baidu.com"),
-    NS_LITERAL_CSTRING("m.video.baidu.com"),
-    NS_LITERAL_CSTRING("imgcache.gtimg.cn"), // for m.v.qq.com
-    NS_LITERAL_CSTRING("s.tabelog.jp"),
-    NS_LITERAL_CSTRING("s.yimg.jp"), // for s.tabelog.jp
-    NS_LITERAL_CSTRING("i.yimg.jp"), // for *.yahoo.co.jp
-    NS_LITERAL_CSTRING("ai.yimg.jp"), // for *.yahoo.co.jp
-    NS_LITERAL_CSTRING("m.finance.yahoo.co.jp"),
-    NS_LITERAL_CSTRING("daily.c.yimg.jp"), // for sp.daily.co.jp
-    NS_LITERAL_CSTRING("stat100.ameba.jp"), // for ameblo.jp
-    NS_LITERAL_CSTRING("user.ameba.jp"), // for ameblo.jp
-    NS_LITERAL_CSTRING("www.goo.ne.jp"),
-    NS_LITERAL_CSTRING("x.gnst.jp"), // for mobile.gnavi.co.jp
-    NS_LITERAL_CSTRING("c.x.gnst.jp"), // for mobile.gnavi.co.jp
-    NS_LITERAL_CSTRING("www.smbc-card.com"),
-    NS_LITERAL_CSTRING("static.card.jp.rakuten-static.com"), // for rakuten-card.co.jp
-    NS_LITERAL_CSTRING("img.travel.rakuten.co.jp"), // for travel.rakuten.co.jp
-    NS_LITERAL_CSTRING("img.mixi.net"), // for mixi.jp
-    NS_LITERAL_CSTRING("girlschannel.net"),
-    NS_LITERAL_CSTRING("www.fancl.co.jp"),
-    NS_LITERAL_CSTRING("s.cosme.net"),
-    NS_LITERAL_CSTRING("www.sapporobeer.jp"),
-    NS_LITERAL_CSTRING("www.mapion.co.jp"),
-    NS_LITERAL_CSTRING("touch.navitime.co.jp"),
-    NS_LITERAL_CSTRING("sp.mbga.jp"),
-    NS_LITERAL_CSTRING("ava-a.sp.mbga.jp"), // for sp.mbga.jp
-    NS_LITERAL_CSTRING("www.ntv.co.jp"),
-    NS_LITERAL_CSTRING("mobile.suntory.co.jp"), // for suntory.jp
-    NS_LITERAL_CSTRING("www.aeonsquare.net"),
-    NS_LITERAL_CSTRING("mw.nikkei.com"),
-    NS_LITERAL_CSTRING("www.nhk.or.jp"),
-    NS_LITERAL_CSTRING("www.tokyo-sports.co.jp"),
-    NS_LITERAL_CSTRING("www.bellemaison.jp"),
-    NS_LITERAL_CSTRING("www.kuronekoyamato.co.jp"),
-    NS_LITERAL_CSTRING("formassist.jp"), // for orico.jp
-    NS_LITERAL_CSTRING("sp.m.reuters.co.jp"),
-    NS_LITERAL_CSTRING("www.atre.co.jp"),
-    NS_LITERAL_CSTRING("www.jtb.co.jp"),
-    NS_LITERAL_CSTRING("www.sharp.co.jp"),
-    NS_LITERAL_CSTRING("www.biccamera.com"),
-    NS_LITERAL_CSTRING("weathernews.jp"),
-    NS_LITERAL_CSTRING("cache.ymail.jp"), // for www.yamada-denkiweb.com
-  };
-  static const size_t sNumFullDomainsOnWhitelist =
-    MOZ_ARRAY_LENGTH(sFullDomainsOnWhitelist);
-
-  // Skip 0th (dummy) entry in whitelist, unless a pref is enabled.
-  const size_t firstWhitelistIdx = IsWhitelistingTestDomains() ? 0 : 1;
-
-  for (size_t i = firstWhitelistIdx; i < sNumFullDomainsOnWhitelist; ++i) {
-    if (hostStr == sFullDomainsOnWhitelist[i]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Checks if the given URI's host is on our "base domain" whitelist
-// (i.e. if it's a subdomain of some host that we've whitelisted as needing
-// unprefixing for all its subdomains)
-static bool
-IsOnBaseDomainWhitelist(nsIURI* aURI)
-{
-  static const nsLiteralCString sBaseDomainsOnWhitelist[] = {
-    // 0th entry only active when testing:
-    NS_LITERAL_CSTRING("test2.example.org"),
-    NS_LITERAL_CSTRING("tbcdn.cn"), // for m.taobao.com
-    NS_LITERAL_CSTRING("alicdn.com"), // for m.taobao.com
-    NS_LITERAL_CSTRING("dpfile.com"), // for m.dianping.com
-    NS_LITERAL_CSTRING("hao123img.com"), // for hao123.com
-    NS_LITERAL_CSTRING("tabelog.k-img.com"), // for s.tabelog.com
-    NS_LITERAL_CSTRING("tsite.jp"), // for *.tsite.jp
-  };
-  static const size_t sNumBaseDomainsOnWhitelist =
-    MOZ_ARRAY_LENGTH(sBaseDomainsOnWhitelist);
-
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-
-  if (tldService) {
-    // Skip 0th test-entry in whitelist, unless the testing pref is enabled.
-    const size_t firstWhitelistIdx = IsWhitelistingTestDomains() ? 0 : 1;
-
-    // Right now, the test base-domain "test2.example.org" is the only entry in
-    // its whitelist with a nonzero "depth". So we'll only bother going beyond
-    // 0 depth (to 1) if that entry is enabled. (No point in slowing down the
-    // normal codepath, for the benefit of a disabled test domain.)  If we add a
-    // "real" base-domain with a depth of >= 1 to our whitelist, we can get rid
-    // of this conditional & just make this a static variable.
-    const uint32_t maxSubdomainDepth = IsWhitelistingTestDomains() ? 1 : 0;
-
-    for (uint32_t subdomainDepth = 0;
-         subdomainDepth <= maxSubdomainDepth; ++subdomainDepth) {
-
-      // Get the base domain (to depth |subdomainDepth|) from passed-in URI:
-      nsAutoCString baseDomainStr;
-      nsresult rv = tldService->GetBaseDomain(aURI, subdomainDepth,
-                                              baseDomainStr);
-      if (NS_FAILED(rv)) {
-        // aURI doesn't have |subdomainDepth| levels of subdomains. If we got
-        // here without a match yet, then aURI is not on our whitelist.
-        return false;
-      }
-
-      // Compare the base domain against each entry in our whitelist:
-      for (size_t i = firstWhitelistIdx; i < sNumBaseDomainsOnWhitelist; ++i) {
-        if (baseDomainStr == sBaseDomainsOnWhitelist[i]) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-// The actual (non-cached) implementation of IsOnCSSUnprefixingWhitelist():
-static bool
-IsOnCSSUnprefixingWhitelistImpl(nsIURI* aURI)
-{
-  // Check scheme, so we can drop any non-HTTP/HTTPS URIs right away
-  nsAutoCString schemeStr;
-  nsresult rv = aURI->GetScheme(schemeStr);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  // Only proceed if scheme is "http" or "https"
-  if (!(StringBeginsWith(schemeStr, NS_LITERAL_CSTRING("http")) &&
-        (schemeStr.Length() == 4 ||
-         (schemeStr.Length() == 5 && schemeStr[4] == 's')))) {
-    return false;
-  }
-
-  return (IsOnFullDomainWhitelist(aURI) ||
-          IsOnBaseDomainWhitelist(aURI));
-}
-
-
-bool
-nsPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  if (mIsOnCSSUnprefixingWhitelist.isNothing()) {
-    // Value not cached -- perform our lazy whitelist-check.
-    // (NOTE: If our URI is mutable, we just assume it's not on the whitelist,
-    // since our caching strategy won't work. This isn't expected to be common.)
-    mIsOnCSSUnprefixingWhitelist.emplace(
-      mCodebaseImmutable &&
-      IsOnCSSUnprefixingWhitelistImpl(mCodebase));
-  }
-
-  return *mIsOnCSSUnprefixingWhitelist;
-}
-
 /************************************************************************************************************************/
 
 NS_IMPL_CLASSINFO(nsExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -817,15 +622,6 @@ nsExpandedPrincipal::AddonHasPermission(const nsAString& aPerm)
   }
   return false;
 }
-
-bool
-nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  // CSS Unprefixing Whitelist is a per-origin thing; doesn't really make sense
-  // for an expanded principal. (And probably shouldn't be needed.)
-  return false;
-}
-
 
 nsresult
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)

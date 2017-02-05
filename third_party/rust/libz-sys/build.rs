@@ -5,6 +5,7 @@ use std::env;
 use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::prelude::*;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -63,10 +64,10 @@ fn build_zlib() {
                 .current_dir(&build)
                 .env("CC", compiler.path())
                 .env("CFLAGS", cflags)
-                .arg(format!("--prefix={}", dst.display())));
+                .arg(format!("--prefix={}", dst.display())), "sh");
     run(Command::new("make")
                 .current_dir(&build)
-                .arg("libz.a"));
+                .arg("libz.a"), "make");
 
     t!(fs::create_dir_all(dst.join("lib/pkgconfig")));
     t!(fs::create_dir_all(dst.join("include")));
@@ -99,6 +100,7 @@ fn build_zlib_mingw() {
        .current_dir(&build)
        .arg("install")
        .arg(format!("prefix={}", dst.display()))
+       .arg("IMPLIB=")
        .arg(format!("INCLUDE_PATH={}", dst.join("include").display()))
        .arg(format!("LIBRARY_PATH={}", dst.join("lib").display()))
        .arg(format!("BINARY_PATH={}", dst.join("bin").display()));
@@ -112,7 +114,7 @@ fn build_zlib_mingw() {
             None => {}
         }
     }
-    run(&mut cmd);
+    run(&mut cmd, "make");
 
     t!(fs::create_dir_all(dst.join("lib/pkgconfig")));
 
@@ -161,7 +163,7 @@ fn build_msvc_zlib(target: &str) {
              .arg("/nologo")
              .arg("/f")
              .arg(dst.join("build/win32/Makefile.msc"))
-             .arg("zlib.lib"));
+             .arg("zlib.lib"), "nmake.exe");
 
     for file in t!(fs::read_dir(&dst.join("build"))) {
         let file = t!(file).path();
@@ -179,13 +181,24 @@ fn build_msvc_zlib(target: &str) {
     println!("cargo:include={}/include", dst.to_string_lossy());
 }
 
-fn run(cmd: &mut Command) {
+fn run(cmd: &mut Command, program: &str) {
     println!("running: {:?}", cmd);
     let status = match cmd.status() {
-        Ok(s) => s,
-        Err(e) => panic!("failed to run: {}", e),
+        Ok(status) => status,
+        Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
+            fail(&format!("failed to execute command: {}\nIs `{}` \
+                           not installed?",
+                          e,
+                          program));
+        }
+        Err(e) => fail(&format!("failed to execute command: {}", e)),
     };
     if !status.success() {
-        panic!("failed to run successfully: {}", status);
+        fail(&format!("command did not execute successfully, got: {}", status));
     }
+}
+
+fn fail(s: &str) -> ! {
+    println!("\n\n{}\n\n", s);
+    std::process::exit(1);
 }

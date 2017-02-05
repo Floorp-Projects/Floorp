@@ -64,6 +64,8 @@ child:
 
   async NotifyFlushComplete();
 
+  async NotifyAsyncScrollbarDragRejected(ViewID aScrollId);
+
   async Destroy();
 };
 
