@@ -7,6 +7,7 @@
 #include "vm/TypeInference-inl.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SizePrintfMacros.h"
@@ -2605,6 +2606,20 @@ TypeZone::addPendingRecompile(JSContext* cx, JSScript* script)
     if (script->functionNonDelazifying() && !script->functionNonDelazifying()->hasLazyGroup())
         ObjectStateChange(cx, script->functionNonDelazifying()->group(), false);
 }
+
+#ifdef JS_CRASH_DIAGNOSTICS
+static char sCrashReason[256];
+
+MOZ_NORETURN MOZ_COLD MOZ_NEVER_INLINE void
+js::ReportMagicWordFailure(uintptr_t actual, uintptr_t expected)
+{
+    SprintfLiteral(sCrashReason,
+                   "MOZ_CRASH(Got 0x%" PRIxPTR " expected magic word 0x%" PRIxPTR ")",
+                   actual, expected);
+    MOZ_CRASH_ANNOTATE(sCrashReason);
+    MOZ_REALLY_CRASH();
+}
+#endif
 
 void
 js::PrintTypes(JSContext* cx, JSCompartment* comp, bool force)
