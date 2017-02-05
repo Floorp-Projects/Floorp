@@ -11,14 +11,7 @@ class TestCapabilities(MarionetteTestCase):
 
     def setUp(self):
         super(TestCapabilities, self).setUp()
-
-        # Force default webdriver capabilities by default to test
-        # Marionette server.
-        self.marionette.delete_session()
-        self.marionette.start_session({"desiredCapabilities": {}})
-
         self.caps = self.marionette.session_capabilities
-
         with self.marionette.using_context("chrome"):
             self.appinfo = self.marionette.execute_script(
                 "return Services.appinfo")
@@ -40,8 +33,10 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["platformName"], self.os_name)
         self.assertEqual(self.caps["platformVersion"], self.os_version)
         self.assertFalse(self.caps["acceptInsecureCerts"])
-        self.assertEqual(self.caps["timeouts"],
-                         {"implicit": 0, "page load": 300000, "script": 30000})
+        self.assertDictEqual(self.caps["timeouts"],
+                             {"implicit": 0,
+                              "page load": 300000,
+                              "script": 30000})
 
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
@@ -64,14 +59,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertFalse(self.caps["moz:accessibilityChecks"])
         self.assertIn("specificationLevel", self.caps)
         self.assertEqual(self.caps["specificationLevel"], 0)
-
-    def test_default_client_capabilities(self):
-        self.marionette.delete_session()
-        self.marionette.start_session()
-        caps = self.marionette.session_capabilities
-
-        self.assertEqual(caps["timeouts"],
-                         {"implicit": 0, "page load": 60000, "script": 30000})
 
     def test_set_specification_level(self):
         self.marionette.delete_session()
@@ -135,8 +122,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         for typ in self.allowed:
             self.marionette.delete_session()
             self.marionette.start_session({"desiredCapabilities": {"browserName": typ}})
-            self.assertEqual(self.marionette.session_capabilities["browserName"],
-                             self.browser_name)
+            self.assertEqual(self.marionette.session_capabilities["browserName"], self.browser_name)
 
     def test_browser_name_desired_disallowed_types(self):
         for typ in self.disallowed:
@@ -147,8 +133,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         for typ in self.allowed:
             self.marionette.delete_session()
             self.marionette.start_session({"requiredCapabilities": {"browserName": typ}})
-            self.assertEqual(self.marionette.session_capabilities["browserName"],
-                             self.browser_name)
+            self.assertEqual(self.marionette.session_capabilities["browserName"], self.browser_name)
 
     def test_browser_name_requried_disallowed_types(self):
         for typ in self.disallowed:
@@ -157,33 +142,30 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_browser_name_prefers_required(self):
         caps = {"desiredCapabilities": {"browserName": "invalid"},
-                "requiredCapabilities": {"browserName": "*"}}
+                    "requiredCapabilities": {"browserName": "*"}}
         self.marionette.start_session(caps)
 
     def test_browser_name_error_on_invalid_required(self):
         with self.assertRaises(SessionNotCreatedException):
             caps = {"desiredCapabilities": {"browserName": "*"},
-                    "requiredCapabilities": {"browserName": "invalid"}}
+                        "requiredCapabilities": {"browserName": "invalid"}}
             self.marionette.start_session(caps)
 
     # TODO(ato): browser version comparison not implemented yet
 
     def test_platform_name_desired(self):
-        self.marionette.start_session(
-            {"desiredCapabilities": {"platformName": self.platform_name}})
+        self.marionette.start_session({"desiredCapabilities": {"platformName": self.platform_name}})
         self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
     def test_platform_name_required(self):
-        self.marionette.start_session(
-            {"requiredCapabilities": {"platformName": self.platform_name}})
+        self.marionette.start_session({"requiredCapabilities": {"platformName": self.platform_name}})
         self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
     def test_platform_name_desired_allowed_types(self):
         for typ in self.allowed:
             self.marionette.delete_session()
             self.marionette.start_session({"desiredCapabilities": {"platformName": typ}})
-            self.assertEqual(self.marionette.session_capabilities["platformName"],
-                             self.platform_name)
+            self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
     def test_platform_name_desired_disallowed_types(self):
         for typ in self.disallowed:
@@ -194,8 +176,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         for typ in self.allowed:
             self.marionette.delete_session()
             self.marionette.start_session({"requiredCapabilities": {"platformName": typ}})
-            self.assertEqual(self.marionette.session_capabilities["platformName"],
-                             self.platform_name)
+            self.assertEqual(self.marionette.session_capabilities["platformName"], self.platform_name)
 
     def test_platform_name_requried_disallowed_types(self):
         for typ in self.disallowed:
@@ -204,13 +185,13 @@ class TestCapabilityMatching(MarionetteTestCase):
 
     def test_platform_name_prefers_required(self):
         caps = {"desiredCapabilities": {"platformName": "invalid"},
-                "requiredCapabilities": {"platformName": "*"}}
+                    "requiredCapabilities": {"platformName": "*"}}
         self.marionette.start_session(caps)
 
     def test_platform_name_error_on_invalid_required(self):
         with self.assertRaises(SessionNotCreatedException):
             caps = {"desiredCapabilities": {"platformName": "*"},
-                    "requiredCapabilities": {"platformName": "invalid"}}
+                        "requiredCapabilities": {"platformName": "invalid"}}
             self.marionette.start_session(caps)
 
     # TODO(ato): platform version comparison not imlpemented yet
@@ -221,8 +202,7 @@ class TestCapabilityMatching(MarionetteTestCase):
             for value in ["", 42, {}, []]:
                 print("  type {}".format(type(value)))
                 with self.assertRaises(SessionNotCreatedException):
-                    self.marionette.start_session(
-                        {capability_type: {"acceptInsecureCerts": value}})
+                    self.marionette.start_session({capability_type: {"acceptInsecureCerts": value}})
 
         self.marionette.delete_session()
         self.marionette.start_session({"desiredCapabilities": {"acceptInsecureCerts": True}})
@@ -261,9 +241,9 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.assertEqual(self.marionette.get_pref("network.proxy.type"), 1)
 
     def test_timeouts(self):
-        timeouts = {"implicit": 123, "page load": 456, "script": 789}
+        timeouts = {u"implicit": 123, u"page load": 456, u"script": 789}
         caps = {"desiredCapabilities": {"timeouts": timeouts}}
         self.marionette.start_session(caps)
         self.assertIn("timeouts", self.marionette.session_capabilities)
-        self.assertEqual(self.marionette.session_capabilities["timeouts"], timeouts)
-        self.assertEqual(self.marionette._send_message("getTimeouts"), timeouts)
+        self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)
+        self.assertDictEqual(self.marionette._send_message("getTimeouts"), timeouts)
