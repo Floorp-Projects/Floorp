@@ -51,22 +51,8 @@ public:
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
 
-  NS_IMETHOD SetPaperSizeUnit(int16_t aPaperSizeUnit) override;
-
-  NS_IMETHOD SetScaling(double aScaling) override;
-  NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;
-
-  NS_IMETHOD GetOrientation(int32_t *aOrientation) override;
-  NS_IMETHOD SetOrientation(int32_t aOrientation) override;
-
-  NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop) override;
-  NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) override;
-  NS_IMETHOD SetUnwriteableMarginBottom(double aUnwriteableMarginBottom) override;
-  NS_IMETHOD SetUnwriteableMarginRight(double aUnwriteableMarginRight) override;
-
   void SetAdjustedPaperSize(double aWidth, double aHeight);
   void GetAdjustedPaperSize(double *aWidth, double *aHeight);
-  nsresult SetCocoaPaperSize(double aWidth, double aHeight);
 
 protected:
   virtual ~nsPrintSettingsX();
@@ -76,8 +62,6 @@ protected:
 
   nsresult _Clone(nsIPrintSettings **_retval) override;
   nsresult _Assign(nsIPrintSettings *aPS) override;
-
-  int GetCocoaUnit(int16_t aGeckoUnit);
 
   // The out param has a ref count of 1 on return so caller needs to PMRelase() when done.
   OSStatus CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat);
