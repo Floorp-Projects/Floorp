@@ -82,7 +82,7 @@ function LegacyGeneratorNext(val) {
 
     try {
         return resumeGenerator(this, val, "next");
-    } catch(e) {
+    } catch (e) {
         if (!LegacyGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
         throw e;
@@ -102,7 +102,7 @@ function LegacyGeneratorThrow(val) {
 
     try {
         return resumeGenerator(this, val, "throw");
-    } catch(e) {
+    } catch (e) {
         if (!LegacyGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
         throw e;

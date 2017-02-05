@@ -791,7 +791,7 @@ function ArrayKeys() {
 }
 
 // ES 2017 draft 0f10dba4ad18de92d47d421f378233a2eae8f077 22.1.2.1
-function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
+function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
     // Step 1.
     var C = this;
 
