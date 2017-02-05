@@ -334,6 +334,22 @@ struct GMPCapabilityData
     GMPAPITags[] capabilities;
 };
 
+struct XPCOMInitData
+{
+    bool isOffline;
+    bool isConnected;
+    int32_t captivePortalState;
+    bool isLangRTL;
+    bool haveBidiKeyboards;
+    nsString[] dictionaries;
+    ClipboardCapabilities clipboardCaps;
+    DomainPolicyClone domainPolicy;
+    /* used on MacOSX only */
+    FontFamilyListEntry[] fontFamilies;
+    OptionalURIParams userContentSheetURL;
+    PrefSetting[] prefs;
+};
+
 struct GfxInfoFeatureStatus
 {
     int32_t feature;
@@ -527,6 +543,8 @@ child:
      */
     async InitBlobURLs(BlobURLRegistrationData[] registrations);
 
+    async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit, StructuredCloneData initialData, LookAndFeelInt[] lookAndFeelIntCache);
+
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
 
@@ -649,30 +667,6 @@ child:
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
-
-    /**
-     * Tell the content process some attributes of itself.  This is
-     * among the first information queried by content processes after
-     * startup.  (The message is sync to allow the content process to
-     * control when it receives the information.)
-     *
-     * |id| is a unique ID among all subprocesses. When
-     * |isForBrowser|, we're loading <browser> or <xul:browser remote>.
-     *
-     * Keep the return values in sync with PBrowser()!
-     */
-    sync GetProcessAttributes()
-        returns (ContentParentId cpId, bool isForBrowser);
-    sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, bool isConnected, int32_t captivePortalState,
-                 bool isLangRTL,
-                 bool haveBidiKeyboards, nsString[] dictionaries,
-                 ClipboardCapabilities clipboardCaps,
-                 DomainPolicyClone domainPolicy,
-                 StructuredCloneData initialData,
-                 FontFamilyListEntry[] fontFamilies /* used on MacOSX only */,
-                 OptionalURIParams userContentSheetURL,
-                 LookAndFeelInt[] lookAndFeelIntCache);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
@@ -817,7 +811,6 @@ parent:
     async ExtProtocolChannelConnectParent(uint32_t registrarId);
 
     // PrefService message
-    sync ReadPrefsArray() returns (PrefSetting[] prefs) verify;
     sync GetGfxVars() returns (GfxVarUpdate[] vars);
 
     sync ReadFontList() returns (FontListEntry[] retValue);
