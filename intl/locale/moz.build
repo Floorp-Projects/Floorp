@@ -19,6 +19,7 @@ else:
     DIRS += ['unix']
 
 XPIDL_SOURCES += [
+    'mozILocaleService.idl',
     'nsICollation.idl',
     'nsILocale.idl',
     'nsILocaleService.idl',
