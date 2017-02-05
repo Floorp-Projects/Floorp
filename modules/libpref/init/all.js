@@ -2574,16 +2574,6 @@ pref("layout.css.prefixes.webkit", true);
 // pref is set to false.)
 pref("layout.css.prefixes.device-pixel-ratio-webkit", false);
 
-// Is the CSS Unprefixing Service enabled? (This service emulates support
-// for certain vendor-prefixed properties & values, for sites on a "fixlist".)
-pref("layout.css.unprefixing-service.enabled", true);
-#ifdef NIGHTLY_BUILD
-// Is the CSS Unprefixing Service whitelisted for all domains?
-// (This pref is only honored in Nightly builds and can be removed when
-// Bug 1177263 is fixed.)
-pref("layout.css.unprefixing-service.globally-whitelisted", false);
-#endif
-
 // Is support for the :scope selector enabled?
 pref("layout.css.scope-pseudo.enabled", true);
 

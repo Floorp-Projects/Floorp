@@ -240,8 +240,6 @@ public:
 
   virtual bool AddonHasPermission(const nsAString& aPerm);
 
-  virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
-
   virtual bool IsCodebasePrincipal() const { return false; };
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }

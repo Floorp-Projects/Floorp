@@ -17,6 +17,7 @@ pub type msgqnum_t = ::c_ulong;
 pub type msglen_t = ::c_ulong;
 pub type nfds_t = ::c_ulong;
 pub type nl_item = ::c_int;
+pub type idtype_t = ::c_uint;
 
 pub enum fpos64_t {} // TODO: fill this out with a struct
 
@@ -87,10 +88,12 @@ s! {
 
     pub struct pthread_mutexattr_t {
         #[cfg(any(target_arch = "x86_64", target_arch = "powerpc64",
-                  target_arch = "mips64", target_arch = "s390x"))]
+                  target_arch = "mips64", target_arch = "s390x",
+                  target_arch = "sparc64"))]
         __align: [::c_int; 0],
         #[cfg(not(any(target_arch = "x86_64", target_arch = "powerpc64",
-                      target_arch = "mips64", target_arch = "s390x")))]
+                      target_arch = "mips64", target_arch = "s390x",
+                      target_arch = "sparc64")))]
         __align: [::c_long; 0],
         size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
     }
@@ -247,8 +250,6 @@ pub const ABMON_9: ::nl_item = 0x20016;
 pub const ABMON_10: ::nl_item = 0x20017;
 pub const ABMON_11: ::nl_item = 0x20018;
 pub const ABMON_12: ::nl_item = 0x20019;
-
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
 
 pub const MON_1: ::nl_item = 0x2001A;
 pub const MON_2: ::nl_item = 0x2001B;
@@ -500,11 +501,7 @@ pub const EPOLLONESHOT: ::c_int = 0x40000000;
 pub const QFMT_VFS_OLD: ::c_int = 1;
 pub const QFMT_VFS_V0: ::c_int = 2;
 
-pub const SFD_CLOEXEC: ::c_int = 0x080000;
-
 pub const EFD_SEMAPHORE: ::c_int = 0x1;
-
-pub const NCCS: usize = 32;
 
 pub const LOG_NFACILITIES: ::c_int = 24;
 
@@ -517,6 +514,31 @@ pub const RB_DISABLE_CAD: ::c_int = 0x00000000u32 as i32;
 pub const RB_POWER_OFF: ::c_int = 0x4321fedcu32 as i32;
 pub const RB_SW_SUSPEND: ::c_int = 0xd000fce2u32 as i32;
 pub const RB_KEXEC: ::c_int = 0x45584543u32 as i32;
+
+pub const AI_PASSIVE: ::c_int = 0x0001;
+pub const AI_CANONNAME: ::c_int = 0x0002;
+pub const AI_NUMERICHOST: ::c_int = 0x0004;
+pub const AI_V4MAPPED: ::c_int = 0x0008;
+pub const AI_ALL: ::c_int = 0x0010;
+pub const AI_ADDRCONFIG: ::c_int = 0x0020;
+
+pub const AI_NUMERICSERV: ::c_int = 0x0400;
+
+pub const EAI_BADFLAGS: ::c_int = -1;
+pub const EAI_NONAME: ::c_int = -2;
+pub const EAI_AGAIN: ::c_int = -3;
+pub const EAI_FAIL: ::c_int = -4;
+pub const EAI_FAMILY: ::c_int = -6;
+pub const EAI_SOCKTYPE: ::c_int = -7;
+pub const EAI_SERVICE: ::c_int = -8;
+pub const EAI_MEMORY: ::c_int = -10;
+pub const EAI_OVERFLOW: ::c_int = -12;
+
+pub const NI_NUMERICHOST: ::c_int = 1;
+pub const NI_NUMERICSERV: ::c_int = 2;
+pub const NI_NOFQDN: ::c_int = 4;
+pub const NI_NAMEREQD: ::c_int = 8;
+pub const NI_DGRAM: ::c_int = 16;
 
 pub const SYNC_FILE_RANGE_WAIT_BEFORE: ::c_uint = 1;
 pub const SYNC_FILE_RANGE_WRITE: ::c_uint = 2;
@@ -532,6 +554,129 @@ pub const LIO_WRITE: ::c_int = 1;
 pub const LIO_NOP: ::c_int = 2;
 pub const LIO_WAIT: ::c_int = 0;
 pub const LIO_NOWAIT: ::c_int = 1;
+
+pub const MREMAP_MAYMOVE: ::c_int = 1;
+pub const MREMAP_FIXED: ::c_int = 2;
+
+pub const PR_SET_PDEATHSIG: ::c_int = 1;
+pub const PR_GET_PDEATHSIG: ::c_int = 2;
+
+pub const PR_GET_DUMPABLE: ::c_int = 3;
+pub const PR_SET_DUMPABLE: ::c_int = 4;
+
+pub const PR_GET_UNALIGN: ::c_int = 5;
+pub const PR_SET_UNALIGN: ::c_int = 6;
+pub const PR_UNALIGN_NOPRINT: ::c_int = 1;
+pub const PR_UNALIGN_SIGBUS: ::c_int = 2;
+
+pub const PR_GET_KEEPCAPS: ::c_int = 7;
+pub const PR_SET_KEEPCAPS: ::c_int = 8;
+
+pub const PR_GET_FPEMU: ::c_int = 9;
+pub const PR_SET_FPEMU: ::c_int = 10;
+pub const PR_FPEMU_NOPRINT: ::c_int = 1;
+pub const PR_FPEMU_SIGFPE: ::c_int = 2;
+
+pub const PR_GET_FPEXC: ::c_int = 11;
+pub const PR_SET_FPEXC: ::c_int = 12;
+pub const PR_FP_EXC_SW_ENABLE: ::c_int = 0x80;
+pub const PR_FP_EXC_DIV: ::c_int = 0x010000;
+pub const PR_FP_EXC_OVF: ::c_int = 0x020000;
+pub const PR_FP_EXC_UND: ::c_int = 0x040000;
+pub const PR_FP_EXC_RES: ::c_int = 0x080000;
+pub const PR_FP_EXC_INV: ::c_int = 0x100000;
+pub const PR_FP_EXC_DISABLED: ::c_int = 0;
+pub const PR_FP_EXC_NONRECOV: ::c_int = 1;
+pub const PR_FP_EXC_ASYNC: ::c_int = 2;
+pub const PR_FP_EXC_PRECISE: ::c_int = 3;
+
+pub const PR_GET_TIMING: ::c_int = 13;
+pub const PR_SET_TIMING: ::c_int = 14;
+pub const PR_TIMING_STATISTICAL: ::c_int = 0;
+pub const PR_TIMING_TIMESTAMP: ::c_int = 1;
+
+pub const PR_SET_NAME: ::c_int = 15;
+pub const PR_GET_NAME: ::c_int = 16;
+
+pub const PR_GET_ENDIAN: ::c_int = 19;
+pub const PR_SET_ENDIAN: ::c_int = 20;
+pub const PR_ENDIAN_BIG: ::c_int = 0;
+pub const PR_ENDIAN_LITTLE: ::c_int = 1;
+pub const PR_ENDIAN_PPC_LITTLE: ::c_int = 2;
+
+pub const PR_GET_SECCOMP: ::c_int = 21;
+pub const PR_SET_SECCOMP: ::c_int = 22;
+
+pub const PR_CAPBSET_READ: ::c_int = 23;
+pub const PR_CAPBSET_DROP: ::c_int = 24;
+
+pub const PR_GET_TSC: ::c_int = 25;
+pub const PR_SET_TSC: ::c_int = 26;
+pub const PR_TSC_ENABLE: ::c_int = 1;
+pub const PR_TSC_SIGSEGV: ::c_int = 2;
+
+pub const PR_GET_SECUREBITS: ::c_int = 27;
+pub const PR_SET_SECUREBITS: ::c_int = 28;
+
+pub const PR_SET_TIMERSLACK: ::c_int = 29;
+pub const PR_GET_TIMERSLACK: ::c_int = 30;
+
+pub const PR_TASK_PERF_EVENTS_DISABLE: ::c_int = 31;
+pub const PR_TASK_PERF_EVENTS_ENABLE: ::c_int = 32;
+
+pub const PR_MCE_KILL: ::c_int = 33;
+pub const PR_MCE_KILL_CLEAR: ::c_int = 0;
+pub const PR_MCE_KILL_SET: ::c_int = 1;
+
+pub const PR_MCE_KILL_LATE: ::c_int = 0;
+pub const PR_MCE_KILL_EARLY: ::c_int = 1;
+pub const PR_MCE_KILL_DEFAULT: ::c_int = 2;
+
+pub const PR_MCE_KILL_GET: ::c_int = 34;
+
+pub const PR_SET_MM: ::c_int = 35;
+pub const PR_SET_MM_START_CODE: ::c_int = 1;
+pub const PR_SET_MM_END_CODE: ::c_int = 2;
+pub const PR_SET_MM_START_DATA: ::c_int = 3;
+pub const PR_SET_MM_END_DATA: ::c_int = 4;
+pub const PR_SET_MM_START_STACK: ::c_int = 5;
+pub const PR_SET_MM_START_BRK: ::c_int = 6;
+pub const PR_SET_MM_BRK: ::c_int = 7;
+pub const PR_SET_MM_ARG_START: ::c_int = 8;
+pub const PR_SET_MM_ARG_END: ::c_int = 9;
+pub const PR_SET_MM_ENV_START: ::c_int = 10;
+pub const PR_SET_MM_ENV_END: ::c_int = 11;
+pub const PR_SET_MM_AUXV: ::c_int = 12;
+pub const PR_SET_MM_EXE_FILE: ::c_int = 13;
+pub const PR_SET_MM_MAP: ::c_int = 14;
+pub const PR_SET_MM_MAP_SIZE: ::c_int = 15;
+
+pub const PR_SET_PTRACER: ::c_int = 0x59616d61;
+
+pub const PR_SET_CHILD_SUBREAPER: ::c_int = 36;
+pub const PR_GET_CHILD_SUBREAPER: ::c_int = 37;
+
+pub const PR_SET_NO_NEW_PRIVS: ::c_int = 38;
+pub const PR_GET_NO_NEW_PRIVS: ::c_int = 39;
+
+pub const PR_GET_TID_ADDRESS: ::c_int = 40;
+
+pub const PR_SET_THP_DISABLE: ::c_int = 41;
+pub const PR_GET_THP_DISABLE: ::c_int = 42;
+
+pub const PR_MPX_ENABLE_MANAGEMENT: ::c_int = 43;
+pub const PR_MPX_DISABLE_MANAGEMENT: ::c_int = 44;
+
+pub const PR_SET_FP_MODE: ::c_int = 45;
+pub const PR_GET_FP_MODE: ::c_int = 46;
+pub const PR_FP_MODE_FR: ::c_int = 1 << 0;
+pub const PR_FP_MODE_FRE: ::c_int = 1 << 1;
+
+pub const PR_CAP_AMBIENT: ::c_int = 47;
+pub const PR_CAP_AMBIENT_IS_SET: ::c_int = 1;
+pub const PR_CAP_AMBIENT_RAISE: ::c_int = 2;
+pub const PR_CAP_AMBIENT_LOWER: ::c_int = 3;
+pub const PR_CAP_AMBIENT_CLEAR_ALL: ::c_int = 4;
 
 f! {
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
@@ -748,6 +893,12 @@ extern {
                            nbytes: ::off64_t, flags: ::c_uint) -> ::c_int;
     pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
     pub fn freeifaddrs(ifa: *mut ::ifaddrs);
+
+    pub fn mremap(addr: *mut ::c_void,
+                  len: ::size_t,
+                  new_len: ::size_t,
+                  flags: ::c_int,
+                  ...) -> *mut ::c_void;
 }
 
 cfg_if! {

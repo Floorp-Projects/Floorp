@@ -83,6 +83,7 @@ ccov-code-coverage-tests:
 jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
+    - xpcshell
 
 ##
 # Test sets still being greened up in various ways

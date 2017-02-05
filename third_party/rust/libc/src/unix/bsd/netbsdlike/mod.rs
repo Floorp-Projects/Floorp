@@ -392,6 +392,7 @@ pub const SO_RCVLOWAT: ::c_int = 0x1004;
 pub const SO_ERROR: ::c_int = 0x1007;
 pub const SO_TYPE: ::c_int = 0x1008;
 
+pub const MSG_PEEK: ::c_int = 0x2;
 pub const MSG_NOSIGNAL: ::c_int = 0x400;
 
 pub const IFF_LOOPBACK: ::c_int = 0x8;
@@ -472,6 +473,8 @@ extern {
     pub fn clock_getres(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__clock_gettime50")]
     pub fn clock_gettime(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__clock_settime50")]
+    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
     pub fn __errno() -> *mut ::c_int;
     pub fn shm_open(name: *const ::c_char, oflag: ::c_int, mode: ::mode_t)
                     -> ::c_int;
