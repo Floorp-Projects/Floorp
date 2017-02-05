@@ -22,7 +22,7 @@ GPUProcessImpl::~GPUProcessImpl()
 }
 
 bool
-GPUProcessImpl::Init()
+GPUProcessImpl::Init(int aArgc, char* aArgv[])
 {
   return mGPU.Init(ParentPid(),
                    IOThreadChild::message_loop(),
