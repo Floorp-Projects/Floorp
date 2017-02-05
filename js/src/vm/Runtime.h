@@ -313,7 +313,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<size_t> activeContextChangeProhibited_;
 
   public:
-    JSContext* activeContext() { return activeContext_; }
+    JSContext* activeContext() const { return activeContext_; }
     const void* addressOfActiveContext() { return &activeContext_; }
 
     void setActiveContext(JSContext* cx);
