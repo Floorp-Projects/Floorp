@@ -5134,7 +5134,7 @@ public:
   ~AutoSavepoint();
 
   nsresult
-  Start(const TransactionBase* aConnection);
+  Start(const TransactionBase* aTransaction);
 
   nsresult
   Commit();

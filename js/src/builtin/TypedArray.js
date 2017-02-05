@@ -1094,7 +1094,7 @@ function TypedArrayCompare(x, y) {
 
     // Steps 8-9.
     if (x === 0 && y === 0)
-        return (1/x > 0 ? 1 : 0) - (1/y > 0 ? 1 : 0);
+        return ((1 / x) > 0 ? 1 : 0) - ((1 / y) > 0 ? 1 : 0);
 
     // Steps 3-4.
     if (Number_isNaN(x))
@@ -1109,7 +1109,7 @@ function TypedArrayCompareInt(x, y) {
     // Step 1.
     assert(typeof x === "number" && typeof y === "number",
            "x and y are not numbers.");
-    assert((x === (x|0) || x === (x>>>0)) && (y === (y|0) || y === (y>>>0)),
+    assert((x === (x | 0) || x === (x >>> 0)) && (y === (y | 0) || y === (y >>> 0)),
            "x and y are not int32/uint32 numbers.");
 
     // Step 2 (Implemented in TypedArraySort).
