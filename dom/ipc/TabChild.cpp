@@ -119,8 +119,6 @@
 #include "GroupedSHistory.h"
 #include "nsIHttpChannel.h"
 #include "mozilla/dom/DocGroup.h"
-#include "nsISupportsPrimitives.h"
-#include "mozilla/Telemetry.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"

@@ -502,24 +502,10 @@ NS_INTERFACE_MAP_BEGIN(ContentChild)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
 NS_INTERFACE_MAP_END
 
-
-mozilla::ipc::IPCResult
-ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
-                                            const StructuredCloneData& aInitialData,
-                                            nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
-{
-  mLookAndFeelCache = aLookAndFeelIntCache;
-  InitXPCOM(aXPCOMInit, aInitialData);
-  InitGraphicsDeviceData();
-  return IPC_OK();
-}
-
 bool
 ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessId aParentPid,
-                   IPC::Channel* aChannel,
-                   uint64_t aChildID,
-                   bool aIsForBrowser)
+                   IPC::Channel* aChannel)
 {
 #ifdef MOZ_WIDGET_GTK
   // We need to pass a display down to gtk_init because it's not going to
@@ -585,8 +571,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
                                 XRE_GetProcessType());
 #endif
 
-  mID = aChildID;
-  mIsForBrowser = aIsForBrowser;
+  SendGetProcessAttributes(&mID, &mIsForBrowser);
 
 #ifdef NS_PRINTING
   // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
@@ -948,14 +933,8 @@ ContentChild::InitGraphicsDeviceData()
 }
 
 void
-ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
-                        const mozilla::dom::ipc::StructuredCloneData& aInitialData)
+ContentChild::InitXPCOM()
 {
-  SET_PREF_PHASE(pref_initPhase::BEGIN_ALL_PREFS);
-  for (unsigned int i = 0; i < aXPCOMInit.prefs().Length(); i++) {
-    Preferences::SetPreference(aXPCOMInit.prefs().ElementAt(i));
-  }
-  SET_PREF_PHASE(pref_initPhase::END_ALL_PREFS);
   // Do this as early as possible to get the parent process to initialize the
   // background thread since we'll likely need database information very soon.
   BackgroundChild::Startup();
@@ -978,29 +957,42 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
     NS_WARNING("Couldn't register console listener for child process");
 
-  mAvailableDictionaries = aXPCOMInit.dictionaries();
+  bool isOffline, isLangRTL, haveBidiKeyboards;
+  bool isConnected;
+  int32_t captivePortalState;
+  ClipboardCapabilities clipboardCaps;
+  DomainPolicyClone domainPolicy;
+  StructuredCloneData initialData;
+  OptionalURIParams userContentSheetURL;
 
-  RecvSetOffline(aXPCOMInit.isOffline());
-  RecvSetConnectivity(aXPCOMInit.isConnected());
-  RecvSetCaptivePortalState(aXPCOMInit.captivePortalState());
-  RecvBidiKeyboardNotify(aXPCOMInit.isLangRTL(), aXPCOMInit.haveBidiKeyboards());
+  SendGetXPCOMProcessAttributes(&isOffline, &isConnected, &captivePortalState,
+                                &isLangRTL, &haveBidiKeyboards,
+                                &mAvailableDictionaries,
+                                &clipboardCaps, &domainPolicy, &initialData,
+                                &mFontFamilies, &userContentSheetURL,
+                                &mLookAndFeelCache);
+
+  RecvSetOffline(isOffline);
+  RecvSetConnectivity(isConnected);
+  RecvSetCaptivePortalState(captivePortalState);
+  RecvBidiKeyboardNotify(isLangRTL, haveBidiKeyboards);
 
   // Create the CPOW manager as soon as possible.
   SendPJavaScriptConstructor();
 
-  if (aXPCOMInit.domainPolicy().active()) {
+  if (domainPolicy.active()) {
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);
     ssm->ActivateDomainPolicyInternal(getter_AddRefs(mPolicy));
     if (!mPolicy) {
       MOZ_CRASH("Failed to activate domain policy.");
     }
-    mPolicy->ApplyClone(&aXPCOMInit.domainPolicy());
+    mPolicy->ApplyClone(&domainPolicy);
   }
 
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
   if (nsCOMPtr<nsIClipboardProxy> clipboardProxy = do_QueryInterface(clipboard)) {
-    clipboardProxy->SetCapabilities(aXPCOMInit.clipboardCaps());
+    clipboardProxy->SetCapabilities(clipboardCaps);
   }
 
   {
@@ -1010,9 +1002,7 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
     }
     ErrorResult rv;
     JS::RootedValue data(jsapi.cx());
-    mozilla::dom::ipc::StructuredCloneData id;
-    id.Copy(aInitialData);
-    id.Read(jsapi.cx(), &data, rv);
+    initialData.Read(jsapi.cx(), &data, rv);
     if (NS_WARN_IF(rv.Failed())) {
       MOZ_CRASH();
     }
@@ -1021,7 +1011,7 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   }
 
   // The stylesheet cache is not ready yet. Store this URL for future use.
-  nsCOMPtr<nsIURI> ucsURL = DeserializeURI(aXPCOMInit.userContentSheetURL());
+  nsCOMPtr<nsIURI> ucsURL = DeserializeURI(userContentSheetURL);
   nsLayoutStylesheetCache::SetUserContentCSSURL(ucsURL);
 
   // This will register cross-process observer.
