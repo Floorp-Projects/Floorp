@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver import Actions, By
+from marionette_driver import Actions, By, Wait
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
 
 
 class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
@@ -91,7 +91,9 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.empty_page)
+            Wait(self.marionette).until(
+                lambda _: self.marionette.get_url() == self.empty_page,
+                message="{} has been loaded in the newly opened tab.".format(self.empty_page))
 
         self.marionette.switch_to_window(self.start_tab, focus=True)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
@@ -134,3 +136,36 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
         with self.marionette.using_context("content"):
             self.assertEqual(self.marionette.get_url(), self.test_page)
+
+    def test_switch_from_content_to_chrome_window_should_not_change_selected_tab(self):
+        new_tab = self.open_tab(self.open_tab_in_foreground)
+
+        self.marionette.switch_to_window(new_tab)
+        self.assertEqual(self.marionette.current_window_handle, new_tab)
+        new_tab_index = self.get_selected_tab_index()
+
+        self.marionette.switch_to_window(self.start_window)
+        self.assertEqual(self.marionette.current_window_handle, new_tab)
+        self.assertEqual(self.get_selected_tab_index(), new_tab_index)
+
+    @skip_if_mobile("New windows not supported in Fennec")
+    def test_switch_to_new_private_browsing_window_has_to_register_browsers(self):
+        # Test that tabs (browsers) are correctly registered for a newly opened
+        # private browsing window. This has to also happen without explicitely
+        # switching to the tab itself before using any commands in content scope.
+        #
+        # Note: Not sure why this only affects private browsing windows only.
+
+        def open_private_browsing_window():
+            with self.marionette.using_context("content"):
+                self.marionette.navigate("about:privatebrowsing")
+                button = self.marionette.find_element(By.ID, "startPrivateBrowsing")
+                button.click()
+
+        new_window = self.open_window(open_private_browsing_window)
+        self.marionette.switch_to_window(new_window)
+        self.assertEqual(self.marionette.current_chrome_window_handle, new_window)
+        self.assertNotEqual(self.marionette.current_window_handle, self.start_tab)
+
+        with self.marionette.using_context("content"):
+            self.marionette.execute_script(" return true; ")
