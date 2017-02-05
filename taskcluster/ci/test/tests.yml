@@ -426,10 +426,6 @@ mochitest-browser-chrome:
             default: mochitest/browser-chrome-chunked
     treeherder-symbol: tc-M(bc)
     loopback-video: true
-    run-on-projects:
-        by-test-platform:
-            linux64-jsdcov/opt: []
-            default: ['all']
     chunks:
         by-test-platform:
             linux64-jsdcov/opt: 35
@@ -603,7 +599,6 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
-            linux64-jsdcov/opt: []
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     e10s:
@@ -1230,10 +1225,6 @@ xpcshell:
             linux64-jsdcov/opt: xpcshell-coverage
             default: xpcshell
     treeherder-symbol: tc-X()
-    run-on-projects:
-        by-test-platform:
-            linux64-jsdcov/opt: []
-            default: ['all']
     chunks:
         by-test-platform:
             linux64/debug: 10
