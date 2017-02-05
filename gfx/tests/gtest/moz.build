@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
+    'MockWidget.cpp',
     'PolygonTestUtils.cpp',
     'TestArena.cpp',
     'TestArrayView.cpp',
