@@ -3,9 +3,9 @@
 const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
 
-const PAGE = `${BASE}/file_install_extensions.html`;
-const PERMS_XPI = `${BASE}/browser_webext_permissions.xpi`;
-const NO_PERMS_XPI = `${BASE}/browser_webext_nopermissions.xpi`;
+const INSTALL_PAGE = `${BASE}/file_install_extensions.html`;
+const PERMS_XPI = "browser_webext_permissions.xpi";
+const NO_PERMS_XPI = "browser_webext_nopermissions.xpi";
 const ID = "permissions@test.mozilla.org";
 
 const DEFAULT_EXTENSION_ICON = "chrome://browser/content/extension.svg";
@@ -36,13 +36,13 @@ function promiseGetAddonByID(id) {
   });
 }
 
-function checkNotification(panel, url) {
+function checkNotification(panel, filename) {
   let icon = panel.getAttribute("icon");
 
   let ul = document.getElementById("addon-webext-perm-list");
   let header = document.getElementById("addon-webext-perm-intro");
 
-  if (url == PERMS_XPI) {
+  if (filename == PERMS_XPI) {
     // The icon should come from the extension, don't bother with the precise
     // path, just make sure we've got a jar url pointing to the right path
     // inside the jar.
@@ -52,7 +52,7 @@ function checkNotification(panel, url) {
     is(header.getAttribute("hidden"), "", "Permission list header is visible");
     is(ul.childElementCount, 4, "Permissions list has 4 entries");
     // Real checking of the contents here is deferred until bug 1316996 lands
-  } else if (url == NO_PERMS_XPI) {
+  } else if (filename == NO_PERMS_XPI) {
     // This extension has no icon, it should have the default
     is(icon, DEFAULT_EXTENSION_ICON, "Icon is the default extension icon");
 
@@ -61,18 +61,48 @@ function checkNotification(panel, url) {
   }
 }
 
+// Navigate the current tab to the given url and return a Promise
+// that resolves when the page is loaded.
+function load(url) {
+  gBrowser.selectedBrowser.loadURI(INSTALL_PAGE);
+  return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+}
+
 const INSTALL_FUNCTIONS = [
-  function installMozAM(url) {
-    return ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
-      yield content.wrappedJSObject.installMozAM(cUrl);
+  async function installMozAM(filename) {
+    await load(INSTALL_PAGE);
+
+    await ContentTask.spawn(gBrowser.selectedBrowser, `${BASE}/${filename}`, function*(url) {
+      yield content.wrappedJSObject.installMozAM(url);
     });
   },
 
-  function installTrigger(url) {
-    ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
-      content.wrappedJSObject.installTrigger(cUrl);
+  async function installTrigger(filename) {
+    await load(INSTALL_PAGE);
+
+    ContentTask.spawn(gBrowser.selectedBrowser, `${BASE}/${filename}`, function*(url) {
+      content.wrappedJSObject.installTrigger(url);
     });
-    return Promise.resolve();
+  },
+
+  async function installFile(filename) {
+    const ChromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                                       .getService(Ci.nsIChromeRegistry);
+    let chromeUrl = Services.io.newURI(gTestPath);
+    let fileUrl = ChromeRegistry.convertChromeURL(chromeUrl);
+    let file = fileUrl.QueryInterface(Ci.nsIFileURL).file;
+    file.leafName = filename;
+
+    let MockFilePicker = SpecialPowers.MockFilePicker;
+    MockFilePicker.init(window);
+    MockFilePicker.returnFiles = [file];
+
+    await BrowserOpenAddonsMgr("addons://list/extension");
+    let contentWin = gBrowser.selectedTab.linkedBrowser.contentWindow;
+
+    // Do the install...
+    contentWin.gViewController.doCommand("cmd_installFromFile");
+    MockFilePicker.cleanup();
   },
 ];
 
@@ -85,8 +115,8 @@ add_task(function* () {
     ["extensions.webextPermissionPrompts", true],
   ]});
 
-  function* runOnce(installFn, url, cancel) {
-    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  function* runOnce(installFn, filename, cancel) {
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
     let installPromise = new Promise(resolve => {
       let listener = {
@@ -118,10 +148,10 @@ add_task(function* () {
       AddonManager.addInstallListener(listener);
     });
 
-    let installMethodPromise = installFn(url);
+    let installMethodPromise = installFn(filename);
 
     let panel = yield promisePopupNotificationShown("addon-webext-permissions");
-    checkNotification(panel, url);
+    checkNotification(panel, filename);
 
     if (cancel) {
       panel.secondaryButton.click();
@@ -139,7 +169,6 @@ add_task(function* () {
 
       yield installMethodPromise;
     }
-
 
     let result = yield installPromise;
     let addon = yield promiseGetAddonByID(ID);
