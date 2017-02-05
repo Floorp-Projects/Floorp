@@ -4,12 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LocaleService.h"
+
+#include "jsapi.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsIToolkitChromeRegistry.h"
 
 using namespace mozilla::intl;
+
+NS_IMPL_ISUPPORTS(LocaleService, mozILocaleService)
+
+mozilla::StaticRefPtr<LocaleService> LocaleService::sInstance;
 
 /**
  * This function performs the actual language negotiation for the API.
@@ -35,9 +41,8 @@ ReadAppLocales(nsTArray<nsCString>& aRetVal)
   }
 }
 
-mozilla::StaticAutoPtr<LocaleService> LocaleService::sInstance;
-
-LocaleService* LocaleService::GetInstance()
+LocaleService*
+LocaleService::GetInstance()
 {
   if (!sInstance) {
     sInstance = new LocaleService();
@@ -77,4 +82,37 @@ LocaleService::Refresh()
       obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
     }
   }
+}
+
+/**
+ * mozILocaleService methods
+ */
+NS_IMETHODIMP
+LocaleService::GetAppLocales(JSContext* aCtx, JS::MutableHandleValue aRetVal)
+{
+  if (mAppLocales.IsEmpty()) {
+    ReadAppLocales(mAppLocales);
+  }
+
+  uint32_t appLocalesNum = mAppLocales.Length();
+
+  JS::RootedObject locales(aCtx, JS_NewArrayObject(aCtx, appLocalesNum));
+  JS::Rooted<JS::Value> value(aCtx);
+
+  for (size_t i = 0; i < appLocalesNum; i++) {
+    const nsCString& loc = mAppLocales[i];
+    JSString* str = JS_NewStringCopyN(aCtx, loc.get(), loc.Length());
+    value.setString(str);
+    JS_DefineElement(aCtx, locales, i, value, JSPROP_ENUMERATE);
+  }
+
+  aRetVal.setObject(*locales);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LocaleService::GetAppLocale(JSContext* aCtx, nsACString& aRetVal)
+{
+  GetAppLocale(aRetVal);
+  return NS_OK;
 }
