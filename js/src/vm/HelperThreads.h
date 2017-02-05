@@ -241,7 +241,7 @@ class GlobalHelperThreadState
     }
 
     JSScript* finishParseTask(JSContext* cx, ParseTaskKind kind, void* token);
-    void cancelParseTask(JSContext* cx, ParseTaskKind kind, void* token);
+    void cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void* token);
 
     void mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
                                    Handle<GlobalObject*> global,

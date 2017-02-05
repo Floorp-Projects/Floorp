@@ -536,7 +536,7 @@ JSRuntime::setDefaultLocale(const char* locale)
     if (!locale)
         return false;
     resetDefaultLocale();
-    defaultLocale = JS_strdup(contextFromMainThread(), locale);
+    defaultLocale = JS_strdup(activeContextFromOwnThread(), locale);
     return defaultLocale != nullptr;
 }
 
@@ -563,7 +563,7 @@ JSRuntime::getDefaultLocale()
     if (!locale || !strcmp(locale, "C"))
         locale = "und";
 
-    char* lang = JS_strdup(contextFromMainThread(), locale);
+    char* lang = JS_strdup(activeContextFromOwnThread(), locale);
     if (!lang)
         return nullptr;
 
@@ -791,7 +791,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone* zone)
 bool
 js::CurrentThreadCanAccessRuntime(const JSRuntime* rt)
 {
-    return rt->unsafeContextFromAnyThread() == TlsContext.get();
+    return rt->activeContext() == TlsContext.get();
 }
 
 bool
