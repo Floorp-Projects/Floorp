@@ -30,3 +30,8 @@ EXTRA_JS_MODULES += [
     'SSLExceptions.jsm',
     'WebsiteMetadata.jsm'
 ]
+
+# GeckoView-sepcific modules added separately.
+EXTRA_JS_MODULES += [
+    'GeckoViewContent.jsm'
+]

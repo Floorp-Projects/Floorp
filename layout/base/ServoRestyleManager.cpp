@@ -143,12 +143,9 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
 {
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
-  // FIXME(bholley): Once we transfer ownership of the styles to the frame, we
-  // can fast-reject without the FFI call by checking mServoData for null.
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
-  if (changeHint & ~nsChangeHint_NeutralChange) {
-    aChangeListToProcess.AppendChange(
-      primaryFrame, aElement, changeHint & ~nsChangeHint_NeutralChange);
+  if (changeHint) {
+    aChangeListToProcess.AppendChange(primaryFrame, aElement, changeHint);
   }
 
   // If our change hint is reconstruct, we delegate to the frame constructor,
@@ -161,19 +158,35 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     return;
   }
 
-  // If we have a frame and a non-zero + non-reconstruct change hint, we need to
-  // attach a new style context.
-  bool recreateContext = primaryFrame && changeHint;
+  // TODO(emilio): We could avoid some refcount traffic here, specially in the
+  // ServoComputedValues case, which uses atomic refcounting.
+  //
+  // Hold the old style context alive, because it could become a dangling
+  // pointer during the replacement. In practice it's not a huge deal (on
+  // GetNextContinuationWithSameStyle the pointer is not dereferenced, only
+  // compared), but better not playing with dangling pointers if not needed.
+  RefPtr<nsStyleContext> oldStyleContext =
+    primaryFrame ? primaryFrame->StyleContext() : nullptr;
+
+  RefPtr<ServoComputedValues> computedValues =
+    aStyleSet->ResolveServoStyle(aElement);
+
+  // Note that we rely in the fact that we don't cascade pseudo-element styles
+  // separately right now (that is, if a pseudo style changes, the normal style
+  // changes too).
+  //
+  // Otherwise we should probably encode that information somehow to avoid
+  // expensive checks in the common case.
+  //
+  // Also, we're going to need to check for pseudos of display: contents
+  // elements, though that is buggy right now even in non-stylo mode, see
+  // bug 1251799.
+  const bool recreateContext = oldStyleContext &&
+    oldStyleContext->StyleSource().AsServoComputedValues() != computedValues;
+
+  MOZ_ASSERT_IF(changeHint, recreateContext);
+
   if (recreateContext) {
-    RefPtr<ServoComputedValues> computedValues = aStyleSet->ResolveServoStyle(aElement);
-
-    // Hold the old style context alive, because it could become a dangling
-    // pointer during the replacement. In practice it's not a huge deal (on
-    // GetNextContinuationWithSameStyle the pointer is not dereferenced, only
-    // compared), but better not playing with dangling pointers if not needed.
-    RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
-    MOZ_ASSERT(oldStyleContext);
-
     RefPtr<nsStyleContext> newContext =
       aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,
                             CSSPseudoElementType::NotPseudo, aElement);

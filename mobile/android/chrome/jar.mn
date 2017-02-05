@@ -29,6 +29,7 @@ chrome.jar:
   content/browser.js                   (content/browser.js)
   content/geckoview.xul                (content/geckoview.xul)
   content/geckoview.js                 (content/geckoview.js)
+  content/GeckoViewContent.js          (content/GeckoViewContent.js)
   content/PresentationView.xul         (content/PresentationView.xul)
   content/PresentationView.js          (content/PresentationView.js)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
