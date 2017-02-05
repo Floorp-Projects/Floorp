@@ -545,6 +545,10 @@ public:
     return sSecurityManager;
   }
 
+  // Returns the subject principal from the JSContext. May only be called
+  // from the main thread and assumes an existing compartment.
+  static nsIPrincipal* SubjectPrincipal(JSContext* aCx);
+
   // Returns the subject principal. Guaranteed to return non-null. May only
   // be called when nsContentUtils is initialized.
   static nsIPrincipal* SubjectPrincipal();
