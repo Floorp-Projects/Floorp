@@ -95,6 +95,10 @@ public:
   static bool
   IsOriginAttributesEqualIgnoringAddonId(const dom::OriginAttributesDictionary& aA,
                                          const dom::OriginAttributesDictionary& aB);
+
+  static bool
+  IsOriginAttributesEqualIgnoringFPD(const dom::OriginAttributesDictionary& aA,
+                                     const dom::OriginAttributesDictionary& aB);
 };
 
 } // namespace dom

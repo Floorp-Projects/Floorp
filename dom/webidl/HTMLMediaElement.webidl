@@ -157,17 +157,14 @@ partial interface HTMLMediaElement {
 
 // Encrypted Media Extensions
 partial interface HTMLMediaElement {
-  [Pref="media.eme.apiVisible"]
   readonly attribute MediaKeys? mediaKeys;
 
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
-  [Pref="media.eme.apiVisible", NewObject]
+  [NewObject]
   Promise<void> setMediaKeys(MediaKeys? mediaKeys);
 
-  [Pref="media.eme.apiVisible"]
   attribute EventHandler onencrypted;
 
-  [Pref="media.eme.apiVisible"]
   attribute EventHandler onwaitingforkey;
 };
 

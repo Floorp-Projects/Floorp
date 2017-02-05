@@ -481,6 +481,8 @@ public:
    * caller should look for an ancestor to scroll.
    */
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) = 0;
+
+  virtual void AsyncScrollbarDragRejected() = 0;
 };
 
 #endif

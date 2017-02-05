@@ -22,128 +22,6 @@ using namespace js;
 using namespace js::jit;
 
 void
-JSONSpewer::indent()
-{
-    MOZ_ASSERT(indentLevel_ >= 0);
-    out_.printf("\n");
-    for (int i = 0; i < indentLevel_; i++)
-        out_.printf("  ");
-}
-
-void
-JSONSpewer::property(const char* name)
-{
-    if (!first_)
-        out_.printf(",");
-    indent();
-    out_.printf("\"%s\":", name);
-    first_ = false;
-}
-
-void
-JSONSpewer::beginObject()
-{
-    if (!first_) {
-        out_.printf(",");
-        indent();
-    }
-    out_.printf("{");
-    indentLevel_++;
-    first_ = true;
-}
-
-void
-JSONSpewer::beginObjectProperty(const char* name)
-{
-    property(name);
-    out_.printf("{");
-    indentLevel_++;
-    first_ = true;
-}
-
-void
-JSONSpewer::beginListProperty(const char* name)
-{
-    property(name);
-    out_.printf("[");
-    first_ = true;
-}
-
-void
-JSONSpewer::beginStringProperty(const char* name)
-{
-    property(name);
-    out_.printf("\"");
-}
-
-void
-JSONSpewer::endStringProperty()
-{
-    out_.printf("\"");
-}
-
-void
-JSONSpewer::stringProperty(const char* name, const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-
-    beginStringProperty(name);
-    out_.vprintf(format, ap);
-    endStringProperty();
-
-    va_end(ap);
-}
-
-void
-JSONSpewer::stringValue(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-
-    if (!first_)
-        out_.printf(",");
-    out_.printf("\"");
-    out_.vprintf(format, ap);
-    out_.printf("\"");
-
-    va_end(ap);
-    first_ = false;
-}
-
-void
-JSONSpewer::integerProperty(const char* name, int value)
-{
-    property(name);
-    out_.printf("%d", value);
-}
-
-void
-JSONSpewer::integerValue(int value)
-{
-    if (!first_)
-        out_.printf(",");
-    out_.printf("%d", value);
-    first_ = false;
-}
-
-void
-JSONSpewer::endObject()
-{
-    indentLevel_--;
-    indent();
-    out_.printf("}");
-    first_ = false;
-}
-
-void
-JSONSpewer::endList()
-{
-    out_.printf("]");
-    first_ = false;
-}
-
-void
 JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
@@ -172,16 +50,15 @@ JSONSpewer::spewMResumePoint(MResumePoint* rp)
     if (rp->caller())
         integerProperty("caller", rp->caller()->block()->id());
 
-    property("mode");
     switch (rp->mode()) {
       case MResumePoint::ResumeAt:
-        out_.printf("\"At\"");
+        stringProperty("mode", "%s", "At");
         break;
       case MResumePoint::ResumeAfter:
-        out_.printf("\"After\"");
+        stringProperty("mode", "%s", "After");
         break;
       case MResumePoint::Outer:
-        out_.printf("\"Outer\"");
+        stringProperty("mode", "%s", "Outer");
         break;
     }
 
@@ -374,8 +251,7 @@ JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
                     LiveRange* range = LiveRange::get(*iter);
 
                     beginObject();
-                    property("allocation");
-                    out_.printf("\"%s\"", range->bundle()->allocation().toString().get());
+                    stringProperty("allocation", "%s", range->bundle()->allocation().toString().get());
                     integerProperty("start", range->from().bits());
                     integerProperty("end", range->to().bits());
                     endObject();

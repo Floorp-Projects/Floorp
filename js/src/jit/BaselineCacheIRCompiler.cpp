@@ -40,7 +40,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
                                        Register scratch, LiveGeneralRegisterSet saveRegs);
 
     MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
-    MOZ_MUST_USE bool emitAddAndStoreSlotShared(bool isFixed);
+    MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
   public:
     friend class AutoStubFrame;
@@ -773,7 +773,7 @@ BaselineCacheIRCompiler::emitStoreDynamicSlot()
 }
 
 bool
-BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
+BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
 {
     ObjOperandId objId = reader.objOperandId();
     Address offsetAddr = stubAddress(reader.stubOffset());
@@ -788,6 +788,42 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
     bool changeGroup = reader.readBool();
     Address newGroupAddr = stubAddress(reader.stubOffset());
     Address newShapeAddr = stubAddress(reader.stubOffset());
+
+    if (op == CacheOp::AllocateAndStoreDynamicSlot) {
+        // We have to (re)allocate dynamic slots. Do this first, as it's the
+        // only fallible operation here. This simplifies the callTypeUpdateIC
+        // call below: it does not have to worry about saving registers used by
+        // failure paths.
+        Address numNewSlotsAddr = stubAddress(reader.stubOffset());
+
+        FailurePath* failure;
+        if (!addFailurePath(&failure))
+            return false;
+
+        AllocatableRegisterSet regs(RegisterSet::Volatile());
+        LiveRegisterSet save(regs.asLiveSet());
+
+        // Use ICStubReg as second scratch.
+        if (!save.has(ICStubReg))
+            save.add(ICStubReg);
+
+        masm.PushRegsInMask(save);
+
+        masm.setupUnalignedABICall(scratch);
+        masm.loadJSContext(scratch);
+        masm.passABIArg(scratch);
+        masm.passABIArg(obj);
+        masm.load32(numNewSlotsAddr, ICStubReg);
+        masm.passABIArg(ICStubReg);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsDontReportOOM));
+        masm.mov(ReturnReg, scratch);
+
+        LiveRegisterSet ignore;
+        ignore.add(scratch);
+        masm.PopRegsInMaskIgnore(save, ignore);
+
+        masm.branchIfFalseBool(scratch, failure->label());
+    }
 
     LiveGeneralRegisterSet saveRegs;
     saveRegs.add(obj);
@@ -825,10 +861,12 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
     // Perform the store. No pre-barrier required since this is a new
     // initialization.
     masm.load32(offsetAddr, scratch);
-    if (isFixed) {
+    if (op == CacheOp::AddAndStoreFixedSlot) {
         BaseIndex slot(obj, scratch, TimesOne);
         masm.storeValue(val, slot);
     } else {
+        MOZ_ASSERT(op == CacheOp::AddAndStoreDynamicSlot ||
+                   op == CacheOp::AllocateAndStoreDynamicSlot);
         // To avoid running out of registers on x86, use ICStubReg as scratch.
         // We don't need it anymore.
         Register slots = ICStubReg;
@@ -845,13 +883,19 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(bool isFixed)
 bool
 BaselineCacheIRCompiler::emitAddAndStoreFixedSlot()
 {
-    return emitAddAndStoreSlotShared(true);
+    return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot);
 }
 
 bool
 BaselineCacheIRCompiler::emitAddAndStoreDynamicSlot()
 {
-    return emitAddAndStoreSlotShared(false);
+    return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot);
+}
+
+bool
+BaselineCacheIRCompiler::emitAllocateAndStoreDynamicSlot()
+{
+    return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot);
 }
 
 bool

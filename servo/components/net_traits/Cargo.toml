@@ -1,0 +1,35 @@
+[package]
+name = "net_traits"
+version = "0.0.1"
+authors = ["The Servo Project Developers"]
+license = "MPL-2.0"
+publish = false
+
+[lib]
+name = "net_traits"
+path = "lib.rs"
+
+[dependencies]
+msg = {path = "../msg"}
+ipc-channel = "0.5"
+heapsize = "0.3.0"
+heapsize_derive = "0.1"
+hyper = "0.9.9"
+hyper_serde = "0.1.4"
+image = "0.12"
+lazy_static = "0.2"
+log = "0.3.5"
+num-traits = "0.1.32"
+serde = "0.8"
+serde_derive = "0.8"
+servo_config = {path = "../config", features = ["servo"]}
+servo_url = {path = "../url", features = ["servo"]}
+url = {version = "1.2", features = ["heap_size"]}
+websocket = "0.17"
+uuid = { version = "0.3.1", features = ["v4", "serde"] }
+cookie = {version = "0.2.5", features = ["serialize-rustc"]}
+
+[dependencies.webrender_traits]
+git = "https://github.com/servo/webrender"
+default-features = false
+features = ["serde_derive", "ipc"]

@@ -40,11 +40,20 @@ class TestServoFilter(unittest.TestCase):
             'c': TestTask(kind='desktop-test', label='c', attributes={}),
         }, graph=Graph(nodes={'a', 'b', 'c'}, edges=set()))
 
-        # Missing servo/ directory should prune tasks requiring Servo.
+        shared = os.path.join(self._tmpdir, 'toolkit', 'library', 'rust', 'shared')
+        cargo = os.path.join(shared, 'Cargo.toml')
+        os.makedirs(shared)
+        with open(cargo, 'a'):
+            pass
+
+        # Default Cargo.toml should result in Servo tasks being pruned.
         self.assertEqual(set(filter_tasks.filter_servo(graph, {})), {'a', 'c'})
 
-        # Servo tasks should be retained if servo/components/style/ present.
-        os.makedirs(os.path.join(self._tmpdir, 'servo', 'components', 'style'))
+        # Servo tasks should be retained if real geckolib is present.
+        with open(cargo, 'wb') as fh:
+            fh.write(b'[dependencies]\n')
+            fh.write(b'geckoservo = { path = "../../../../servo/ports/geckolib" }\n')
+
         self.assertEqual(set(filter_tasks.filter_servo(graph, {})),
                          {'a', 'b', 'c'})
 

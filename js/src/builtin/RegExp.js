@@ -54,7 +54,7 @@ function RegExpToString()
     var flags = ToString(R.flags);
 
     // Steps 5-6.
-    return '/' + pattern + '/' + flags;
+    return "/" + pattern + "/" + flags;
 }
 _SetCanonicalName(RegExpToString, "toString");
 

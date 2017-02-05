@@ -1060,20 +1060,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "aEpYcIBr8I8C+vbe6LCQkA==",
   },
   {
-    // CN=TÜRKTRUST Elektronik Sertifika Hizmet Sağlayıcısı H6,O=TÜRKTRUST Bilgi İletişim ve Bilişim Güvenliği Hizmetleri A...,L=Ankara,C=TR
-    "2.16.792.3.0.3.1.1.5",
-    "TurkTrust EV OID",
-    SEC_OID_UNKNOWN,
-    { 0x8D, 0xE7, 0x86, 0x55, 0xE1, 0xBE, 0x7F, 0x78, 0x47, 0x80, 0x0B,
-      0x93, 0xF6, 0x94, 0xD2, 0x1D, 0x36, 0x8C, 0xC0, 0x6E, 0x03, 0x3E,
-      0x7F, 0xAB, 0x04, 0xBB, 0x5E, 0xB9, 0x9D, 0xA6, 0xB7, 0x00 },
-    "MIGxMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMU0wSwYDVQQKDERUw5xS"
-    "S1RSVVNUIEJpbGdpIMSwbGV0acWfaW0gdmUgQmlsacWfaW0gR8O8dmVubGnEn2kg"
-    "SGl6bWV0bGVyaSBBLsWeLjFCMEAGA1UEAww5VMOcUktUUlVTVCBFbGVrdHJvbmlr"
-    "IFNlcnRpZmlrYSBIaXptZXQgU2HEn2xhecSxY8Sxc8SxIEg2",
-    "faHyZeyK",
-  },
-  {
     // OU=Security Communication RootCA2,O="SECOM Trust Systems CO.,LTD.",C=JP
     "1.2.392.200091.100.721.1",
     "SECOM EV OID",

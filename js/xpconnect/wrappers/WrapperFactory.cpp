@@ -140,9 +140,16 @@ ShouldWaiveXray(JSContext* cx, JSObject* originalObj)
     // in transactions between same-origin compartments.
     JSCompartment* oldCompartment = js::GetObjectCompartment(originalObj);
     JSCompartment* newCompartment = js::GetContextCompartment(cx);
-    bool sameOrigin =
-        AccessCheck::subsumesConsideringDomain(oldCompartment, newCompartment) &&
-        AccessCheck::subsumesConsideringDomain(newCompartment, oldCompartment);
+    bool sameOrigin = false;
+    if (OriginAttributes::IsRestrictOpenerAccessForFPI()) {
+        sameOrigin =
+            AccessCheck::subsumesConsideringDomain(oldCompartment, newCompartment) &&
+            AccessCheck::subsumesConsideringDomain(newCompartment, oldCompartment);
+    } else {
+        sameOrigin =
+            AccessCheck::subsumesConsideringDomainIgnoringFPD(oldCompartment, newCompartment) &&
+            AccessCheck::subsumesConsideringDomainIgnoringFPD(newCompartment, oldCompartment);
+    }
     return sameOrigin;
 }
 
@@ -337,7 +344,9 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
         MOZ_ASSERT(!handler->hasSecurityPolicy());
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
-        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumesConsideringDomain(target, origin));
+        MOZ_ASSERT(handler->hasSecurityPolicy() == !(OriginAttributes::IsRestrictOpenerAccessForFPI() ?
+                                                       AccessCheck::subsumesConsideringDomain(target, origin) :
+                                                       AccessCheck::subsumesConsideringDomainIgnoringFPD(target, origin)));
     }
 }
 #else
@@ -435,8 +444,12 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
     JSCompartment* target = js::GetContextCompartment(cx);
     bool originIsChrome = AccessCheck::isChrome(origin);
     bool targetIsChrome = AccessCheck::isChrome(target);
-    bool originSubsumesTarget = AccessCheck::subsumesConsideringDomain(origin, target);
-    bool targetSubsumesOrigin = AccessCheck::subsumesConsideringDomain(target, origin);
+    bool originSubsumesTarget = OriginAttributes::IsRestrictOpenerAccessForFPI() ?
+                                  AccessCheck::subsumesConsideringDomain(origin, target) :
+                                  AccessCheck::subsumesConsideringDomainIgnoringFPD(origin, target);
+    bool targetSubsumesOrigin = OriginAttributes::IsRestrictOpenerAccessForFPI() ?
+                                  AccessCheck::subsumesConsideringDomain(target, origin) :
+                                  AccessCheck::subsumesConsideringDomainIgnoringFPD(target, origin);
     bool sameOrigin = targetSubsumesOrigin && originSubsumesTarget;
     XrayType xrayType = GetXrayType(obj);
 

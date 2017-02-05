@@ -22,12 +22,6 @@ with Files('nsDOM*'):
 DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'nsICSSUnprefixingService.idl',
-]
-
-XPIDL_MODULE = 'layout_base'
-
 EXPORTS += [
     '!nsStyleStructList.h',
     'AnimationCommon.h',
@@ -233,11 +227,6 @@ SOURCES += [
     'BindingStyleRule.cpp',
     'nsCSSRuleProcessor.cpp',
     'nsLayoutStylesheetCache.cpp',
-]
-
-EXTRA_COMPONENTS += [
-    'CSSUnprefixingService.js',
-    'CSSUnprefixingService.manifest',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
