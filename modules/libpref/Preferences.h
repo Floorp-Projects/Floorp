@@ -28,6 +28,20 @@ typedef void (*PrefChangedFunc)(const char *, void *);
 #define have_PrefChangedFunc_typedef
 #endif
 
+#ifdef DEBUG
+enum pref_initPhase {
+  START,
+  BEGIN_INIT_PREFS,
+  END_INIT_PREFS,
+  BEGIN_ALL_PREFS,
+  END_ALL_PREFS
+};
+
+#define SET_PREF_PHASE(p) Preferences::SetInitPhase(p)
+#else
+#define SET_PREF_PHASE(p) do { } while (0)
+#endif
+
 namespace mozilla {
 
 namespace dom {
@@ -365,6 +379,12 @@ public:
   static void GetPreferences(InfallibleTArray<PrefSetting>* aPrefs);
   static void GetPreference(PrefSetting* aPref);
   static void SetPreference(const PrefSetting& aPref);
+
+  static void SetInitPreferences(nsTArray<PrefSetting>* aPrefs);
+
+#ifdef DEBUG
+  static void SetInitPhase(pref_initPhase phase);
+#endif
 
   static int64_t SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeOf);
 

@@ -27,7 +27,7 @@ public:
   explicit ProcessChild(ProcessId aParentPid);
   virtual ~ProcessChild();
 
-  virtual bool Init() = 0;
+  virtual bool Init(int aArgc, char* aArgv[]) = 0;
   virtual void CleanUp()
   { }
 
