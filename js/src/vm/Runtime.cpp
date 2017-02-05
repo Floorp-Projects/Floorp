@@ -375,12 +375,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     // Several tables in the runtime enumerated below can be used off thread.
     AutoLockForExclusiveAccess lock(this);
 
-    // For now, measure the size of the derived class (JSContext).
-    // TODO (bug 1281529): make memory reporting reflect the new
-    // JSContext/JSRuntime world better.
-    JSContext* cx = unsafeContextFromAnyThread();
-    rtSizes->object += mallocSizeOf(cx);
-
+    rtSizes->object += mallocSizeOf(this);
     rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
 
     if (!parentRuntime) {
@@ -389,11 +384,13 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
-
-    rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
-
-    rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
+    for (const CooperatingContext& target : cooperatingContexts()) {
+        JSContext* cx = target.context();
+        rtSizes->contexts += mallocSizeOf(cx);
+        rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
+        rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+        rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
+    }
 
     for (ZoneGroupsIter group(this); !group.done(); group.next()) {
         ZoneGroupCaches& caches = group->caches();
