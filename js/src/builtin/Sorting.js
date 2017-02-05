@@ -75,7 +75,7 @@ function SortByColumn(array, len, aux, col) {
 
     // Transform counts to indices.
     for (let r = 0; r < R; r++) {
-        counts[r+1] += counts[r];
+        counts[r + 1] += counts[r];
     }
 
     // Distribute
@@ -212,13 +212,13 @@ function Merge(list, start, mid, end, lBuffer, rBuffer, comparefn) {
 
     // Empty out any remaining elements in the buffer.
     while (i < sizeLeft) {
-        list[k] =lBuffer[i];
+        list[k] = lBuffer[i];
         i++;
         k++;
     }
 
     while (j < sizeRight) {
-        list[k] =rBuffer[j];
+        list[k] = rBuffer[j];
         j++;
         k++;
     }
