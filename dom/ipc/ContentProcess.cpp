@@ -7,6 +7,7 @@
 #include "mozilla/ipc/IOThreadChild.h"
 
 #include "ContentProcess.h"
+#include "ContentPrefs.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
 #include <stdlib.h>
@@ -103,46 +104,143 @@ SetUpSandboxEnvironment()
 }
 #endif
 
-void
-ContentProcess::SetAppDir(const nsACString& aPath)
+bool
+ContentProcess::Init(int aArgc, char* aArgv[])
 {
-  mXREEmbed.SetAppDir(aPath);
-}
+  // If passed in grab the application path for xpcom init
+  bool foundAppdir = false;
+  bool foundChildID = false;
+  bool foundIsForBrowser = false;
+  bool foundIntPrefs = false;
+  bool foundBoolPrefs = false;
+  bool foundStringPrefs = false;
+
+  uint64_t childID;
+  bool isForBrowser;
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-void
-ContentProcess::SetProfile(const nsACString& aProfile)
-{
-  bool flag;
-  nsresult rv =
-    XRE_GetFileFromPath(aProfile.BeginReading(), getter_AddRefs(mProfileDir));
-  if (NS_FAILED(rv) ||
-      NS_FAILED(mProfileDir->Exists(&flag)) || !flag) {
-    NS_WARNING("Invalid profile directory passed to content process.");
-    mProfileDir = nullptr;
-  }
-}
+  // If passed in grab the profile path for sandboxing
+  bool foundProfile = false;
+  nsCOMPtr<nsIFile> profileDir;
 #endif
 
-bool
-ContentProcess::Init()
-{
-    mContent.Init(IOThreadChild::message_loop(),
-                  ParentPid(),
-                  IOThreadChild::channel());
-    mXREEmbed.Start();
-    mContent.InitXPCOM();
-    mContent.InitGraphicsDeviceData();
+  InfallibleTArray<PrefSetting> prefsArray;
+  for (int idx = aArgc; idx > 0; idx--) {
+    if (!aArgv[idx]) {
+      continue;
+    }
 
+    if (!strcmp(aArgv[idx], "-appdir")) {
+      MOZ_ASSERT(!foundAppdir);
+      if (foundAppdir) {
+        continue;
+      }
+      nsCString appDir;
+      appDir.Assign(nsDependentCString(aArgv[idx+1]));
+      mXREEmbed.SetAppDir(appDir);
+      foundAppdir = true;
+    } else if (!strcmp(aArgv[idx], "-childID")) {
+      MOZ_ASSERT(!foundChildID);
+      if (foundChildID) {
+        continue;
+      }
+      if (idx + 1 < aArgc) {
+        childID = strtoull(aArgv[idx + 1], nullptr, 10);
+        foundChildID = true;
+      }
+    } else if (!strcmp(aArgv[idx], "-isForBrowser") || !strcmp(aArgv[idx], "-notForBrowser")) {
+      MOZ_ASSERT(!foundIsForBrowser);
+      if (foundIsForBrowser) {
+        continue;
+      }
+      isForBrowser = strcmp(aArgv[idx], "-notForBrowser");
+      foundIsForBrowser = true;
+    } else if (!strcmp(aArgv[idx], "-intPrefs")) {
+      SET_PREF_PHASE(BEGIN_INIT_PREFS);
+      char* str = aArgv[idx + 1];
+      while (*str) {
+        int32_t index = strtol(str, &str, 10);
+        str++;
+        MaybePrefValue value(PrefValue(static_cast<int32_t>(strtol(str, &str, 10))));
+        str++;
+        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        prefsArray.AppendElement(pref);
+      }
+      SET_PREF_PHASE(END_INIT_PREFS);
+      foundIntPrefs = true;
+    } else if (!strcmp(aArgv[idx], "-boolPrefs")) {
+      SET_PREF_PHASE(BEGIN_INIT_PREFS);
+      char* str = aArgv[idx + 1];
+      while (*str) {
+        int32_t index = strtol(str, &str, 10);
+        str++;
+        MaybePrefValue value(PrefValue(!!strtol(str, &str, 10)));
+        str++;
+        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        prefsArray.AppendElement(pref);
+      }
+      SET_PREF_PHASE(END_INIT_PREFS);
+      foundBoolPrefs = true;
+    } else if (!strcmp(aArgv[idx], "-stringPrefs")) {
+      SET_PREF_PHASE(BEGIN_INIT_PREFS);
+      char* str = aArgv[idx + 1];
+      while (*str) {
+        int32_t index = strtol(str, &str, 10);
+        str++;
+        int32_t length = strtol(str, &str, 10);
+        str++;
+        MaybePrefValue value(PrefValue(nsCString(str, length)));
+        PrefSetting pref(nsCString(ContentPrefs::GetContentPref(index)), value, MaybePrefValue());
+        prefsArray.AppendElement(pref);
+        str += length + 1;
+      }
+      SET_PREF_PHASE(END_INIT_PREFS);
+      foundStringPrefs = true;
+    }
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+    else if (!strcmp(aArgv[idx], "-profile")) {
+      MOZ_ASSERT(!foundProfile);
+      if (foundProfile) {
+        continue;
+      }
+      bool flag;
+      nsresult rv = XRE_GetFileFromPath(aArgv[idx+1], getter_AddRefs(profileDir));
+      if (NS_FAILED(rv) ||
+          NS_FAILED(profileDir->Exists(&flag)) || !flag) {
+        NS_WARNING("Invalid profile directory passed to content process.");
+        profileDir = nullptr;
+      }
+      foundProfile = true;
+    }
+#endif /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
+
+    bool allFound = foundAppdir && foundChildID && foundIsForBrowser && foundIntPrefs && foundBoolPrefs && foundStringPrefs;
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+    allFound &= foundProfile;
+#endif
+
+    if (allFound) {
+      break;
+    }
+  }
+  Preferences::SetInitPreferences(&prefsArray);
+  mContent.Init(IOThreadChild::message_loop(),
+                ParentPid(),
+                IOThreadChild::channel(),
+                childID,
+                isForBrowser);
+  mXREEmbed.Start();
 #if (defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-    mContent.SetProfileDir(mProfileDir);
+  mContent.SetProfileDir(profileDir);
 #endif
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-    SetUpSandboxEnvironment();
+  SetUpSandboxEnvironment();
 #endif
 
-    return true;
+  return true;
 }
 
 // Note: CleanUp() never gets called in non-debug builds because we exit early
@@ -150,7 +248,7 @@ ContentProcess::Init()
 void
 ContentProcess::CleanUp()
 {
-    mXREEmbed.Stop();
+  mXREEmbed.Stop();
 }
 
 } // namespace dom
