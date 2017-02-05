@@ -4,6 +4,7 @@
 
 import sys
 import json
+import copy
 
 engines = []
 
@@ -16,8 +17,27 @@ with open(sys.argv[1]) as f:
   searchinfo = json.load(f)
 
 if locale in searchinfo["locales"]:
-  output.write(json.dumps(searchinfo["locales"][locale]))
+  localeSearchInfo = searchinfo["locales"][locale]
 else:
-  output.write(json.dumps(searchinfo["default"]))
+  localeSearchInfo = {}
+  localeSearchInfo["default"] = searchinfo["default"]
+
+# If we have region overrides, enumerate through them
+# and add the additional regions to the locale information.
+if "regionOverrides" in searchinfo:
+  regionOverrides = searchinfo["regionOverrides"]
+
+  for region in regionOverrides:
+    if not region in localeSearchInfo:
+      # Only add the region if it has engines that need to be overridden
+      if set(localeSearchInfo["default"]["visibleDefaultEngines"]) & set(regionOverrides[region].keys()):
+        localeSearchInfo[region] = copy.deepcopy(localeSearchInfo["default"])
+      else:
+        continue
+    for i, engine in enumerate(localeSearchInfo[region]["visibleDefaultEngines"]):
+      if engine in regionOverrides[region]:
+        localeSearchInfo[region]["visibleDefaultEngines"][i] = regionOverrides[region][engine]
+
+output.write(json.dumps(localeSearchInfo))
 
 output.close();

@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
-  "resource:///modules/sessionstore/PrivacyLevel.jsm");
+  "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 
 // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision.
 const MAX_EXPIRY = Math.pow(2, 62);

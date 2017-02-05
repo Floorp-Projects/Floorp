@@ -3400,8 +3400,10 @@ var PrintPreviewListener = {
     return gBrowser.getBrowserForTab(this._printPreviewTab);
   },
   createSimplifiedBrowser() {
+    let browser = this._tabBeforePrintPreview.linkedBrowser;
     this._simplifyPageTab = gBrowser.loadOneTab("about:blank",
-                                                { inBackground: true });
+                                                { inBackground: true,
+                                                  relatedBrowser: browser });
     return this.getSimplifiedSourceBrowser();
   },
   getSourceBrowser() {

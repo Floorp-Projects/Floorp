@@ -10,7 +10,7 @@
 [Exposed=(Window,Worker,System)]
 interface MessagePort : EventTarget {
   [Throws]
-  void postMessage(any message, optional sequence<Transferable> transferable);
+  void postMessage(any message, optional sequence<object> transferable = []);
 
   void start();
   void close();

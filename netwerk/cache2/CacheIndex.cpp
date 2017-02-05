@@ -1332,16 +1332,12 @@ CacheIndex::GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize, uint32_t *
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!aInfo) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   *aSize = 0;
   *aCount = 0;
 
   for (auto iter = index->mFrecencyArray.Iter(); !iter.Done(); iter.Next()) {
     CacheIndexRecord *record = iter.Get();
-    if (!CacheIndexEntry::RecordMatchesLoadContextInfo(record, aInfo))
+    if (aInfo && !CacheIndexEntry::RecordMatchesLoadContextInfo(record, aInfo))
       continue;
 
     *aSize += CacheIndexEntry::GetFileSize(record);

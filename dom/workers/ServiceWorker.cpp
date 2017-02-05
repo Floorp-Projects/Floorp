@@ -80,7 +80,7 @@ ServiceWorker::GetScriptURL(nsString& aURL) const
 
 void
 ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                           const Optional<Sequence<JS::Value>>& aTransferable,
+                           const Sequence<JSObject*>& aTransferable,
                            ErrorResult& aRv)
 {
   if (State() == ServiceWorkerState::Redundant) {

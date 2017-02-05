@@ -959,8 +959,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 #undef GET_UNIQUE_STYLE_DATA
 }
 
-template<class StyleContextLike,
-         nsStyleContext::NeutralChangeHandling aNeutralChangeHandling>
+template<class StyleContextLike>
 nsChangeHint
 nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
                                             nsChangeHint aParentHintsNotHandledForDescendants,
@@ -969,11 +968,6 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
 {
   PROFILER_LABEL("nsStyleContext", "CalcStyleDifference",
     js::ProfileEntry::Category::CSS);
-
-  // See the comment in CalcStyleDifference(ServoComputedValues*, ...) to
-  // understand why we need to manually handle the neutral change in Servo.
-  MOZ_ASSERT_IF(mSource.IsServoComputedValues(),
-                aNeutralChangeHandling == NeutralChangeHandling::Retain);
   MOZ_ASSERT(NS_IsHintSubset(aParentHintsNotHandledForDescendants,
                              nsChangeHint_Hints_NotHandledForDescendants),
              "caller is passing inherited hints, but shouldn't be");
@@ -1219,9 +1213,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
 
   MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
              "Added a new hint without bumping AllHints?");
-  return aNeutralChangeHandling == NeutralChangeHandling::Strip
-           ? (hint & ~nsChangeHint_NeutralChange)
-           : hint;
+  return hint & ~nsChangeHint_NeutralChange;
 }
 
 nsChangeHint
@@ -1230,9 +1222,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                     uint32_t* aEqualStructs,
                                     uint32_t* aSamePointerStructs)
 {
-  return CalcStyleDifferenceInternal<nsStyleContext, NeutralChangeHandling::Strip>
-    (aNewContext, aParentHintsNotHandledForDescendants, aEqualStructs,
-     aSamePointerStructs);
+  return CalcStyleDifferenceInternal(aNewContext,
+                                     aParentHintsNotHandledForDescendants,
+                                     aEqualStructs,
+                                     aSamePointerStructs);
 }
 
 class MOZ_STACK_CLASS FakeStyleContext
@@ -1268,15 +1261,11 @@ nsStyleContext::CalcStyleDifference(const ServoComputedValues* aNewComputedValue
                                     uint32_t* aEqualStructs,
                                     uint32_t* aSamePointerStructs)
 {
-  // NB: Servo uses the presence of a change hint to determine whether it should
-  // generate a new nsStyleContext.
-  //
-  // Given that, we can't strip the neutral change hint here, since it may
-  // provoke errors like bug 1330874.
   FakeStyleContext newContext(aNewComputedValues);
-  return CalcStyleDifferenceInternal<FakeStyleContext, NeutralChangeHandling::Retain>(
-      &newContext, aParentHintsNotHandledForDescendants, aEqualStructs,
-      aSamePointerStructs);
+  return CalcStyleDifferenceInternal(&newContext,
+                                     aParentHintsNotHandledForDescendants,
+                                     aEqualStructs,
+                                     aSamePointerStructs);
 }
 
 #ifdef DEBUG

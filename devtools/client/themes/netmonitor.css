@@ -107,13 +107,6 @@
   --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
 }
 
-#network-table {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-flex: 1;
-  overflow: hidden;
-}
-
 .request-list-container {
   display: -moz-box;
   -moz-box-orient: vertical;
@@ -845,19 +838,13 @@
 
 /* Performance analysis view */
 
-#network-statistics-view {
-  display: -moz-box;
+.statistics-panel {
+  display: flex;
+  height: 100vh;
 }
 
-#network-statistics-toolbar {
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-#network-statistics-back-button {
+.statistics-panel .devtools-toolbarbutton.back-button {
   min-width: 4em;
-  min-height: 100vh;
   margin: 0;
   padding: 0;
   border-radius: 0;
@@ -866,26 +853,30 @@
   border-inline-start: none;
 }
 
-#network-statistics-view-splitter {
+.statistics-panel .splitter {
   border-color: rgba(0,0,0,0.2);
   cursor: default;
   pointer-events: none;
+  height: 100vh;
 }
 
-#network-statistics-charts {
-  min-height: 1px;
+.statistics-panel .charts-container {
+  display: flex;
+  width: 100%;
 }
 
-#network-statistics-charts {
-  background-color: var(--theme-sidebar-background);
+.statistics-panel .charts,
+.statistics-panel .pie-table-chart-container {
+  width: 100%;
+  height: 100%;
 }
 
-#network-statistics-charts .pie-chart-container {
+.statistics-panel .pie-chart-container {
   margin-inline-start: 3vw;
   margin-inline-end: 1vw;
 }
 
-#network-statistics-charts .table-chart-container {
+.statistics-panel .table-chart-container {
   margin-inline-start: 1vw;
   margin-inline-end: 3vw;
 }
@@ -1049,6 +1040,15 @@
 
   .requests-menu-waterfall {
     display: none;
+  }
+
+  .statistics-panel .charts-container {
+    flex-direction: column;
+  }
+
+  .statistics-panel .splitter {
+    width: 100vw;
+    height: 0;
   }
 }
 
@@ -1290,13 +1290,19 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
  */
+#network-table {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+  overflow: hidden;
+}
 
+#statistics-panel,
 #react-details-panel-hook {
   display: flex;
   flex-direction: column;
 }
 
-#network-statistics-charts,
 #primed-cache-chart,
 #empty-cache-chart {
   display: -moz-box;

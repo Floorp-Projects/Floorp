@@ -4226,10 +4226,23 @@ nsPIDOMWindowOuter::SetMediaSuspend(SuspendTypes aSuspend)
   }
 
   if (!IsDisposableSuspend(aSuspend)) {
+    MaybeNotifyMediaResumedFromBlock(aSuspend);
     mMediaSuspend = aSuspend;
   }
 
   RefreshMediaElementsSuspend(aSuspend);
+}
+
+void
+nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(SuspendTypes aSuspend)
+{
+  if (mMediaSuspend == nsISuspendedTypes::SUSPENDED_BLOCK &&
+      aSuspend == nsISuspendedTypes::NONE_SUSPENDED) {
+    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+    if (service) {
+      service->NotifyMediaResumedFromBlock(GetOuterWindow());
+    }
+  }
 }
 
 bool
@@ -8846,28 +8859,20 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 void
 nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                const nsAString& aTargetOrigin,
-                               const Optional<Sequence<JS::Value>>& aTransfer,
+                               const Sequence<JSObject*>& aTransfer,
                                nsIPrincipal& aSubjectPrincipal,
-                               ErrorResult& aError)
+                               ErrorResult& aRv)
 {
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
-  if (aTransfer.WasPassed()) {
-    const Sequence<JS::Value >& values = aTransfer.Value();
 
-    // The input sequence only comes from the generated bindings code, which
-    // ensures it is rooted.
-    JS::HandleValueArray elements =
-      JS::HandleValueArray::fromMarkedLocation(values.Length(), values.Elements());
-
-    transferArray = JS::ObjectOrNullValue(JS_NewArrayObject(aCx, elements));
-    if (transferArray.isNull()) {
-      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
+  aRv = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransfer,
+                                                          &transferArray);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   PostMessageMoz(aCx, aMessage, aTargetOrigin, transferArray,
-                 aSubjectPrincipal, aError);
+                 aSubjectPrincipal, aRv);
 }
 
 class nsCloseEvent : public Runnable {
@@ -9205,7 +9210,7 @@ nsGlobalWindow::EnterModalState()
 
     topWin->mSuspendedDoc = topDoc;
     if (topDoc) {
-      topDoc->SuppressEventHandling(nsIDocument::eAnimationsOnly);
+      topDoc->SuppressEventHandling(nsIDocument::eEvents);
     }
 
     nsGlobalWindow* inner = topWin->GetCurrentInnerWindowInternal();
@@ -9242,7 +9247,7 @@ nsGlobalWindow::LeaveModalState()
 
     if (topWin->mSuspendedDoc) {
       nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
-      topWin->mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eAnimationsOnly,
+      topWin->mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents,
                                                                   currentDoc == topWin->mSuspendedDoc);
       topWin->mSuspendedDoc = nullptr;
     }

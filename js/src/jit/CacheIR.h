@@ -174,6 +174,7 @@ enum class CacheKind : uint8_t
     _(StoreDynamicSlot)                   \
     _(AddAndStoreFixedSlot)               \
     _(AddAndStoreDynamicSlot)             \
+    _(AllocateAndStoreDynamicSlot)        \
     _(StoreTypedObjectReferenceProperty)  \
     _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
@@ -595,6 +596,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(changeGroup);
         addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
         addStubField(uintptr_t(newShape), StubField::Type::Shape);
+    }
+    void allocateAndStoreDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
+                                     Shape* newShape, bool changeGroup, ObjectGroup* newGroup,
+                                     uint32_t numNewSlots)
+    {
+        writeOpWithOperandId(CacheOp::AllocateAndStoreDynamicSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+        buffer_.writeByte(changeGroup);
+        addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
+        addStubField(uintptr_t(newShape), StubField::Type::Shape);
+        addStubField(numNewSlots, StubField::Type::RawWord);
     }
 
     void storeTypedObjectReferenceProperty(ObjOperandId obj, uint32_t offset,

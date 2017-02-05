@@ -7109,14 +7109,6 @@
             this.removeAttribute("blocked");
             modifiedAttrs.push("blocked");
 
-            // We don't want sound icon flickering between "blocked", "none" and
-            // "sound-playing", here adding the "soundplaying" is to keep the
-            // transition smoothly.
-            if (!this.hasAttribute("soundplaying")) {
-              this.setAttribute("soundplaying", true);
-              modifiedAttrs.push("soundplaying");
-            }
-
             browser.resumeMedia();
             hist.add(3 /* unblockByClickingIcon */);
             this.finishMediaBlockTimer();
