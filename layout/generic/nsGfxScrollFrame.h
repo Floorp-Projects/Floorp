@@ -461,6 +461,8 @@ public:
 
   bool DragScroll(WidgetEvent* aEvent);
 
+  void AsyncScrollbarDragRejected();
+
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
   nsCOMPtr<nsIContent> mVScrollbarContent;
@@ -1039,6 +1041,10 @@ public:
     return mHelper.DragScroll(aEvent);
   }
 
+  virtual void AsyncScrollbarDragRejected() override {
+    return mHelper.AsyncScrollbarDragRejected();
+  }
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -1467,6 +1473,10 @@ public:
 
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
     return mHelper.DragScroll(aEvent);
+  }
+
+  virtual void AsyncScrollbarDragRejected() override {
+    return mHelper.AsyncScrollbarDragRejected();
   }
 
 #ifdef DEBUG_FRAME_DUMP

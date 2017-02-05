@@ -534,7 +534,8 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 pref("privacy.panicButton.enabled",         true);
 
-pref("privacy.firstparty.isolate",          false);
+pref("privacy.firstparty.isolate",                        false);
+pref("privacy.firstparty.isolate.restrict_opener_access", true);
 
 // Time until temporary permissions expire, in ms
 pref("privacy.temporary_permission_expire_time_ms",  3600000);
@@ -1375,7 +1376,6 @@ pref("media.eme.enabled", false);
 #else
 pref("media.eme.enabled", true);
 #endif
-pref("media.eme.apiVisible", true);
 
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
 // decode H.264.

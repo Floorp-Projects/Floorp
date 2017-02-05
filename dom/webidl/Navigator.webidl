@@ -364,7 +364,7 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Pref="media.eme.apiVisible", NewObject]
+  [NewObject]
   Promise<MediaKeySystemAccess>
   requestMediaKeySystemAccess(DOMString keySystem,
                               sequence<MediaKeySystemConfiguration> supportedConfigurations);

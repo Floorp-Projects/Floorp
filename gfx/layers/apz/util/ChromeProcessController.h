@@ -63,6 +63,7 @@ public:
   virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
                                          const nsString& aEvent) override;
   virtual void NotifyFlushComplete() override;
+  virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
   RefPtr<APZEventState> mAPZEventState;

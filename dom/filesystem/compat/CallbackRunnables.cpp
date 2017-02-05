@@ -51,11 +51,6 @@ ErrorCallbackRunnable::ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
 NS_IMETHODIMP
 ErrorCallbackRunnable::Run()
 {
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (NS_WARN_IF(!window)) {
-    return NS_ERROR_FAILURE;
-  }
-
   RefPtr<DOMException> exception = DOMException::Create(mError);
   mCallback->HandleEvent(*exception);
   return NS_OK;

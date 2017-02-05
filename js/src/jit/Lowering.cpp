@@ -4214,20 +4214,22 @@ LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins)
 void
 LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins)
 {
+    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
     if (ins->type() == MIRType::Int64)
-        defineInt64(new(alloc()) LWasmLoadGlobalVarI64, ins);
+        defineInt64(new(alloc()) LWasmLoadGlobalVarI64(tlsPtr), ins);
     else
-        define(new(alloc()) LWasmLoadGlobalVar, ins);
+        define(new(alloc()) LWasmLoadGlobalVar(tlsPtr), ins);
 }
 
 void
 LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins)
 {
     MDefinition* value = ins->value();
+    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
     if (value->type() == MIRType::Int64)
-        add(new(alloc()) LWasmStoreGlobalVarI64(useInt64RegisterAtStart(value)), ins);
+        add(new(alloc()) LWasmStoreGlobalVarI64(useInt64RegisterAtStart(value), tlsPtr), ins);
     else
-        add(new(alloc()) LWasmStoreGlobalVar(useRegisterAtStart(value)), ins);
+        add(new(alloc()) LWasmStoreGlobalVar(useRegisterAtStart(value), tlsPtr), ins);
 }
 
 void

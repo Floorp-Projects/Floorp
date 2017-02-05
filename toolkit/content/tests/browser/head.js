@@ -39,6 +39,7 @@ function* waitForTabBlockEvent(tab, expectBlocked) {
   if (tab.soundBlocked == expectBlocked) {
     ok(true, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");
   } else {
+    info("Block state doens't match, wait for attributes changes.");
     yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
       if (event.detail.changed.indexOf("blocked") >= 0) {
         is(tab.soundBlocked, expectBlocked, "The tab should " + (expectBlocked ? "" : "not ") + "be blocked");

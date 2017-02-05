@@ -99,13 +99,13 @@ CoverageCollector.prototype._getUncoveredLines = function() {
     let scriptName = s.url;
     let scriptOffsets = s.getAllOffsets();
 
-    if (!uncoveredLines[scriptName]){
+    if (!uncoveredLines[scriptName]) {
       uncoveredLines[scriptName] = new Set();
     }
 
     // Get all lines in the script
     scriptOffsets.forEach( function(element, index) {
-      if (!element){
+      if (!element) {
         return;
       }
       uncoveredLines[scriptName].add(index);
@@ -113,8 +113,8 @@ CoverageCollector.prototype._getUncoveredLines = function() {
   });
 
   // For all covered lines, delete their entry
-  for (let scriptName in this._allCoverage){
-    for (let key in this._allCoverage[scriptName]){
+  for (let scriptName in this._allCoverage) {
+    for (let key in this._allCoverage[scriptName]) {
       let [lineNumber, columnNumber, offset] = key.split('#');
       uncoveredLines[scriptName].delete(parseInt(lineNumber, 10));
     }
@@ -128,7 +128,7 @@ CoverageCollector.prototype._getMethodNames = function() {
   this._scripts.forEach(s => {
     let method = s.displayName;
     // If the method name is undefined, we return early
-    if (!method){
+    if (!method) {
       return;
     }
 
@@ -136,7 +136,7 @@ CoverageCollector.prototype._getMethodNames = function() {
     let tempMethodCov = [];
     let scriptOffsets = s.getAllOffsets();
 
-    if (!methodNames[scriptName]){
+    if (!methodNames[scriptName]) {
       methodNames[scriptName] = {};
     }
 
@@ -145,8 +145,8 @@ CoverageCollector.prototype._getMethodNames = function() {
     * push a record of the form:
     * <method name> : <lines covered>
     */
-    scriptOffsets.forEach(function (element, index){
-      if (!element){
+    scriptOffsets.forEach( function (element, index) {
+      if (!element) {
         return;
       }
       tempMethodCov.push(index);
@@ -156,6 +156,18 @@ CoverageCollector.prototype._getMethodNames = function() {
 
   return methodNames;
 }
+
+/**
+ * Implements an iterator for objects. It is
+ * used to iterate over the elements of the object obtained
+ * from the function _getMethodNames.
+ */
+Object.prototype[Symbol.iterator] = function * () {
+  for (var [key, value] of Object.entries(this)) {
+    yield [key, value];
+  }
+};
+
 
 /**
  * Records lines covered since the last time coverage was recorded,
@@ -180,15 +192,17 @@ CoverageCollector.prototype.recordTestCoverage = function (testName) {
       uncovered: []
     };
 
-    for (let methodName in methods[scriptName]){
-      rec.methods[methodName] = methods[scriptName][methodName];
+    if (typeof(methods[scriptName]) != 'undefined' && methods[scriptName] != null) {
+      for (let [methodName, methodLines] of methods[scriptName]) {
+        rec.methods[methodName] = methodLines;
+      }
     }
 
     for (let line of rawLines[scriptName]) {
       rec.covered.push(line);
     }
 
-    for (let line of uncoveredLines[scriptName]){
+    for (let line of uncoveredLines[scriptName]) {
       rec.uncovered.push(line);
     }
 

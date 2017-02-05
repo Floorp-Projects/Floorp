@@ -42,8 +42,6 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     dnl --cxxflags. We use sed to remove this argument so that builds work on OSX
     LLVM_CXXFLAGS=`$LLVMCONFIG --cxxflags | sed -e 's/-isysroot [[^ ]]*//'`
 
-    dnl We are loaded into clang, so we don't need to link to very many things,
-    dnl we just need to link to clangASTMatchers because it is not used by clang
     LLVM_LDFLAGS=`$LLVMCONFIG --ldflags | tr '\n' ' '`
 
     if test "${HOST_OS_ARCH}" = "Darwin"; then
@@ -54,7 +52,14 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         dnl access to all of the symbols which are undefined in our dylib as we
         dnl are building it right now, and also that we don't fail the build
         dnl due to undefined symbols (which will be provided by clang).
-        CLANG_LDFLAGS="-Wl,-flat_namespace -Wl,-undefined,suppress -lclangASTMatchers"
+        CLANG_LDFLAGS="-Wl,-flat_namespace -Wl,-undefined,suppress"
+        dnl We are loaded into clang, so we don't need to link to very many things,
+        dnl we just need to link to clangASTMatchers because it is not used by clang
+        CLANG_LDFLAGS="$CLANG_LDFLAGS `$LLVMCONFIG --prefix`/lib/libclangASTMatchers.a"
+        dnl We need to remove -L/path/to/clang/lib from LDFLAGS to ensure that we
+        dnl don't accidentally link against the libc++ there which is a newer
+        dnl version that what our build machines have installed.
+        LLVM_LDFLAGS=`echo "$LLVM_LDFLAGS" | sed -E 's/-L[[^ ]]+\/clang\/lib//'`
     elif test "${HOST_OS_ARCH}" = "WINNT"; then
         CLANG_LDFLAGS="clang.lib"
     else

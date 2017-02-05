@@ -3047,42 +3047,10 @@ AsyncPanZoomController::GetOverscrollTransform(AsyncMode aMode) const
     return AsyncTransformComponentMatrix();
   }
 
-  // The overscroll effect is a uniform stretch along the overscrolled axis,
-  // with the edge of the content where we have reached the end of the
-  // scrollable area pinned into place.
-
-  // The kStretchFactor parameter determines how much overscroll can stretch the
-  // content.
-  const float kStretchFactor = gfxPrefs::APZOverscrollStretchFactor();
-
-  // Compute the amount of the stretch along each axis. The stretch is
-  // proportional to the amount by which we are overscrolled along that axis.
-  ParentLayerSize compositionSize(mX.GetCompositionLength(), mY.GetCompositionLength());
-  float scaleX = 1 + kStretchFactor * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
-  float scaleY = 1 + kStretchFactor * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
-
-  // The scale is applied relative to the origin of the composition bounds, i.e.
-  // it keeps the top-left corner of the content in place. This is fine if we
-  // are overscrolling at the top or on the left, but if we are overscrolling
-  // at the bottom or on the right, we want the bottom or right edge of the
-  // content to stay in place instead, so we add a translation to compensate.
-  ParentLayerPoint translation;
-  bool overscrolledOnRight = mX.GetOverscroll() > 0;
-  if (overscrolledOnRight) {
-    ParentLayerCoord overscrolledCompositionWidth = scaleX * compositionSize.width;
-    ParentLayerCoord extraCompositionWidth = overscrolledCompositionWidth - compositionSize.width;
-    translation.x = -extraCompositionWidth;
-  }
-  bool overscrolledAtBottom = mY.GetOverscroll() > 0;
-  if (overscrolledAtBottom) {
-    ParentLayerCoord overscrolledCompositionHeight = scaleY * compositionSize.height;
-    ParentLayerCoord extraCompositionHeight = overscrolledCompositionHeight - compositionSize.height;
-    translation.y = -extraCompositionHeight;
-  }
-
-  // Combine the transformations into a matrix.
-  return AsyncTransformComponentMatrix::Scaling(scaleX, scaleY, 1)
-                    .PostTranslate(translation.x, translation.y, 0);
+  // The overscroll effect is a simple translation by the overscroll offset.
+  ParentLayerPoint overscrollOffset(-mX.GetOverscroll(), -mY.GetOverscroll());
+  return AsyncTransformComponentMatrix()
+      .PostTranslate(overscrollOffset.x, overscrollOffset.y, 0);
 }
 
 bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)

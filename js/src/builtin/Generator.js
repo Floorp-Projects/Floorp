@@ -19,7 +19,7 @@ function StarGeneratorNext(val) {
     }
 
     try {
-        return resumeGenerator(this, val, 'next');
+        return resumeGenerator(this, val, "next");
     } catch (e) {
         if (!StarGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -40,7 +40,7 @@ function StarGeneratorThrow(val) {
     }
 
     try {
-        return resumeGenerator(this, val, 'throw');
+        return resumeGenerator(this, val, "throw");
     } catch (e) {
         if (!StarGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -62,7 +62,7 @@ function StarGeneratorReturn(val) {
 
     try {
         var rval = { value: val, done: true };
-        return resumeGenerator(this, rval, 'close');
+        return resumeGenerator(this, rval, "close");
     } catch (e) {
         if (!StarGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -81,7 +81,7 @@ function LegacyGeneratorNext(val) {
         ThrowTypeError(JSMSG_NESTING_GENERATOR);
 
     try {
-        return resumeGenerator(this, val, 'next');
+        return resumeGenerator(this, val, "next");
     } catch(e) {
         if (!LegacyGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -101,7 +101,7 @@ function LegacyGeneratorThrow(val) {
         ThrowTypeError(JSMSG_NESTING_GENERATOR);
 
     try {
-        return resumeGenerator(this, val, 'throw');
+        return resumeGenerator(this, val, "throw");
     } catch(e) {
         if (!LegacyGeneratorObjectIsClosed(this))
             GeneratorSetClosed(this);
@@ -118,7 +118,7 @@ function LegacyGeneratorCloseInternal() {
     if (GeneratorIsRunning(this))
         ThrowTypeError(JSMSG_NESTING_GENERATOR);
 
-    resumeGenerator(this, undefined, 'close');
+    resumeGenerator(this, undefined, "close");
     if (!LegacyGeneratorObjectIsClosed(this))
         CloseClosingLegacyGeneratorObject(this);
 }

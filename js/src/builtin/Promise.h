@@ -44,6 +44,8 @@ class PromiseObject : public NativeObject
     static PromiseObject* create(JSContext* cx, HandleObject executor,
                                  HandleObject proto = nullptr, bool needsWrapping = false);
 
+    static PromiseObject* createSkippingExecutor(JSContext* cx);
+
     static JSObject* unforgeableResolve(JSContext* cx, HandleValue value);
     static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
 

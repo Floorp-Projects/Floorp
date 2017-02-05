@@ -1536,6 +1536,104 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
 }
 
 void
+CodeGeneratorShared::visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+
+    MIRType type = mir->type();
+    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
+
+    Register tls = ToRegister(ins->tlsPtr());
+    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
+    switch (type) {
+      case MIRType::Int32:
+        masm.load32(addr, ToRegister(ins->output()));
+        break;
+      case MIRType::Float32:
+        masm.loadFloat32(addr, ToFloatRegister(ins->output()));
+        break;
+      case MIRType::Double:
+        masm.loadDouble(addr, ToFloatRegister(ins->output()));
+        break;
+      // Aligned access: code is aligned on PageSize + there is padding
+      // before the global data section.
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
+      case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        masm.loadInt32x4(addr, ToFloatRegister(ins->output()));
+        break;
+      case MIRType::Float32x4:
+        masm.loadFloat32x4(addr, ToFloatRegister(ins->output()));
+        break;
+      default:
+        MOZ_CRASH("unexpected type in visitWasmLoadGlobalVar");
+    }
+}
+
+void
+CodeGeneratorShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
+{
+    MWasmStoreGlobalVar* mir = ins->mir();
+
+    MIRType type = mir->value()->type();
+    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
+
+    Register tls = ToRegister(ins->tlsPtr());
+    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
+    switch (type) {
+      case MIRType::Int32:
+        masm.store32(ToRegister(ins->value()), addr);
+        break;
+      case MIRType::Float32:
+        masm.storeFloat32(ToFloatRegister(ins->value()), addr);
+        break;
+      case MIRType::Double:
+        masm.storeDouble(ToFloatRegister(ins->value()), addr);
+        break;
+      // Aligned access: code is aligned on PageSize + there is padding
+      // before the global data section.
+      case MIRType::Int32x4:
+      case MIRType::Bool32x4:
+        masm.storeInt32x4(ToFloatRegister(ins->value()), addr);
+        break;
+      case MIRType::Float32x4:
+        masm.storeFloat32x4(ToFloatRegister(ins->value()), addr);
+        break;
+      default:
+        MOZ_CRASH("unexpected type in visitWasmStoreGlobalVar");
+    }
+}
+
+void
+CodeGeneratorShared::visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins)
+{
+    MWasmLoadGlobalVar* mir = ins->mir();
+    MOZ_ASSERT(mir->type() == MIRType::Int64);
+
+    Register tls = ToRegister(ins->tlsPtr());
+    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
+
+    Register64 output = ToOutRegister64(ins);
+    masm.load64(addr, output);
+}
+
+void
+CodeGeneratorShared::visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins)
+{
+    MWasmStoreGlobalVar* mir = ins->mir();
+    MOZ_ASSERT(mir->value()->type() == MIRType::Int64);
+
+    Register tls = ToRegister(ins->tlsPtr());
+    Address addr(tls, offsetof(wasm::TlsData, globalArea) + mir->globalDataOffset());
+
+    Register64 value = ToRegister64(ins->value());
+    masm.store64(value, addr);
+}
+
+void
 CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment)
 {
     if (index->isConstant()) {
