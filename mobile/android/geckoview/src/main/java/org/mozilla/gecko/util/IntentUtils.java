@@ -6,12 +6,14 @@
 
 package org.mozilla.gecko.util;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.SafeIntent;
 
 import java.util.HashMap;
@@ -105,5 +107,25 @@ public class IntentUtils {
     public static boolean getIsInAutomationFromEnvironment(final SafeIntent intent) {
         final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
         return !TextUtils.isEmpty(envVars.get(IntentUtils.ENV_VAR_IN_AUTOMATION));
+    }
+
+    /**
+     * Checks whether the target of the passed intent will result in us opening one
+     * of our own activities or not.
+     *
+     * @param intent The intent to be checked.
+     * @return True if the intent target is within our app.
+     */
+    public static boolean checkIfGeckoActivity(Intent intent) {
+        // Whenever we call our own activity, either the component and its package name is set,
+        // or else the intent is for an action where we know that we'll stay within our app.
+        // If we call an activity from another package, or an open intent (leaving android to resolve)
+        // component has a different package name or it is null.
+        ComponentName component = intent.getComponent();
+        String action = intent.getAction();
+        return (component != null &&
+                AppConstants.ANDROID_PACKAGE_NAME.equals(component.getPackageName()) ||
+                action != null &&
+                action.startsWith(AppConstants.ANDROID_PACKAGE_NAME + ".ACTION_FXA_"));
     }
 }
