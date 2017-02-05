@@ -1016,8 +1016,10 @@ var AudioPlaybackListener = {
     if (topic === "audio-playback") {
       if (subject && subject.top == global.content) {
         let name = "AudioPlayback:";
-        if (data === "block") {
-          name += "Block";
+        if (data === "blockStart") {
+          name += "BlockStart";
+        } else if (data === "blockStop") {
+          name += "BlockStop";
         } else {
           name += (data === "active") ? "Start" : "Stop";
         }

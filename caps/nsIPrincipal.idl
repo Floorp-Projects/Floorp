@@ -25,7 +25,7 @@ interface nsIDOMDocument;
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 [ref] native const_OriginAttributes(const mozilla::OriginAttributes);
 
-[scriptable, builtinclass, uuid(3da7b133-f1a0-4de9-a2bc-5c49014c1077)]
+[scriptable, builtinclass, uuid(f75f502d-79fd-48be-a079-e5a7b8f80c8b)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -350,15 +350,6 @@ interface nsIPrincipal : nsISerializable
      * Returns true iff this is the system principal.
      */
     [infallible] readonly attribute boolean isSystemPrincipal;
-
-    /**
-     * Returns true if this principal's origin is recognized as being on the
-     * whitelist of sites that can use the CSS Unprefixing Service.
-     *
-     * (This interface provides a trivial implementation, just returning false;
-     * subclasses can implement something more complex as-needed.)
-     */
-    [noscript,notxpcom,nostdcall] bool IsOnCSSUnprefixingWhitelist();
 };
 
 /**

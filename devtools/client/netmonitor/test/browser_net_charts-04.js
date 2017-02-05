@@ -14,8 +14,8 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { Chart } = NetMonitorView.Statistics;
+  let { document, windowRequire } = monitor.panelWin;
+  let { Chart } = windowRequire("devtools/client/shared/widgets/Chart");
 
   let table = Chart.Table(document, {
     title: "Table title",

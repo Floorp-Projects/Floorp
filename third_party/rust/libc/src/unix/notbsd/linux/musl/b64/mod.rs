@@ -114,6 +114,13 @@ s! {
         pub msg_flags: ::c_int,
     }
 
+    pub struct cmsghdr {
+        pub cmsg_len: ::socklen_t,
+        pub __pad1: ::c_int,
+        pub cmsg_level: ::c_int,
+        pub cmsg_type: ::c_int,
+    }
+
     pub struct sem_t {
         __val: [::c_int; 8],
     }

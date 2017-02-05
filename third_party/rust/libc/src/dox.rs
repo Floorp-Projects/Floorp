@@ -40,6 +40,12 @@ mod imp {
             $mac!(u32);
             $mac!(u64);
             $mac!(usize);
+            each_signed_int!($mac);
+        )
+    }
+
+    macro_rules! each_signed_int {
+        ($mac:ident) => (
             $mac!(i8);
             $mac!(i16);
             $mac!(i32);
@@ -127,6 +133,38 @@ mod imp {
         )*)
     }
     each_int!(impl_bitor);
+
+    #[lang = "neg"]
+    pub trait Neg {
+        type Output;
+        fn neg(self) -> Self::Output;
+    }
+
+    macro_rules! impl_neg {
+        ($($i:ident)*) => ($(
+            impl Neg for $i {
+                type Output = $i;
+                fn neg(self) -> $i { -self }
+            }
+        )*)
+    }
+    each_signed_int!(impl_neg);
+
+    #[lang = "not"]
+    pub trait Not {
+        type Output;
+        fn not(self) -> Self::Output;
+    }
+
+    macro_rules! impl_not {
+        ($($i:ident)*) => ($(
+            impl Not for $i {
+                type Output = $i;
+                fn not(self) -> $i { !self }
+            }
+        )*)
+    }
+    each_int!(impl_not);
 
     pub mod mem {
         pub fn size_of_val<T>(_: &T) -> usize { 4 }

@@ -156,11 +156,11 @@ Ping
   NOTE: Slow SQL debugging is enabled. Full SQL strings may be displayed below but they will not be submitted to Telemetry.
 ">
 
-<!ENTITY aboutTelemetry.fetchSymbols "
+<!ENTITY aboutTelemetry.fetchStackSymbols "
   Fetch function names for stacks
 ">
 
-<!ENTITY aboutTelemetry.hideSymbols "
+<!ENTITY aboutTelemetry.hideStackSymbols "
   Show raw stack data
 ">
 

@@ -1213,6 +1213,10 @@ class XPCShellTests(object):
 
         mozinfo.update(self.mozInfo)
 
+        # Add a flag to mozinfo to indicate that code coverage is enabled.
+        if self.jscovdir:
+            mozinfo.update({"coverage": True})
+
         self.stack_fixer_function = None
         if self.utility_path and os.path.exists(self.utility_path):
             self.stack_fixer_function = get_stack_fixer_function(self.utility_path, self.symbolsPath)

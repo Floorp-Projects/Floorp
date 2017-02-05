@@ -62,6 +62,7 @@
 #include "ScrollSnap.h"
 #include "UnitTransforms.h"
 #include "nsPluginFrame.h"
+#include "nsSliderFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
@@ -6214,4 +6215,31 @@ ScrollFrameHelper::DragScroll(WidgetEvent* aEvent)
   }
 
   return willScroll;
+}
+
+static void
+AsyncScrollbarDragRejected(nsIFrame* aScrollbar)
+{
+  if (!aScrollbar) {
+    return;
+  }
+
+  for (nsIFrame::ChildListIterator childLists(aScrollbar);
+       !childLists.IsDone();
+       childLists.Next()) {
+    for (nsIFrame* frame : childLists.CurrentList()) {
+      if (nsSliderFrame* sliderFrame = do_QueryFrame(frame)) {
+        sliderFrame->AsyncScrollbarDragRejected();
+      }
+    }
+  }
+}
+
+void
+ScrollFrameHelper::AsyncScrollbarDragRejected()
+{
+  // We don't get told which scrollbar requested the async drag,
+  // so we notify both.
+  ::AsyncScrollbarDragRejected(mHScrollbarBox);
+  ::AsyncScrollbarDragRejected(mVScrollbarBox);
 }
