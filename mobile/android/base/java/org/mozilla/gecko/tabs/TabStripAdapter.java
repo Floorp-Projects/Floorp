@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.JavaUtil;
 
 import java.util.ArrayList;
@@ -88,8 +89,11 @@ class TabStripAdapter extends RecyclerView.Adapter<TabStripAdapter.TabStripViewH
     }
 
     /* package */ boolean moveTab(int fromPosition, int toPosition) {
+        final int fromTabId = tabs.get(fromPosition).getId();
+        final int toTabId = tabs.get(toPosition).getId();
         JavaUtil.moveInList(tabs, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
+        Tabs.getInstance().moveTab(fromTabId, fromPosition, toTabId, toPosition);
         return true;
     }
 
