@@ -50,16 +50,6 @@ def validate(config, jobs):
 
 
 @transforms.add
-def skip_unsigned_beets(config, jobs):
-    for job in jobs:
-        if ('signing' not in job['dependent-task'].label and
-                'beetmover-repackage' not in job['dependent-task'].label):
-            # Skip making a balrog task for this
-            continue
-        yield job
-
-
-@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
