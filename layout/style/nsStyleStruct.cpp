@@ -1590,9 +1590,14 @@ nsStylePosition::CalcDifference(const nsStylePosition& aNewData,
       // also have percentage bsizes. This is handled via
       // nsChangeHint_UpdateComputedBSize which clears intrinsic sizes
       // for frames that have such replaced elements.
+      //
+      // We need to use nsChangeHint_ClearAncestorIntrinsics for
+      // block-size changes so we clear results of cached CSS Flex
+      // measuring reflows.
       hint |= nsChangeHint_NeedReflow |
               nsChangeHint_UpdateComputedBSize |
-              nsChangeHint_ReflowChangesSizeOrPosition;
+              nsChangeHint_ReflowChangesSizeOrPosition |
+              nsChangeHint_ClearAncestorIntrinsics;
     }
 
     if (isVertical ? heightChanged : widthChanged) {
