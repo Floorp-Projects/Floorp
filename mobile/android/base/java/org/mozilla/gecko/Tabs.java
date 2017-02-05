@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.accounts.Account;
@@ -39,6 +41,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Browser;
+import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -46,7 +49,7 @@ public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
-    private final CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
+    private volatile CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
 
     // All writes to mSelectedTab must be synchronized on the Tabs instance.
     // In general, it's preferred to always use selectTab()).
@@ -1071,5 +1074,75 @@ public class Tabs implements BundleEventListener {
         }
 
         return Color.WHITE;
+    }
+
+    /**
+     * Search for {@code tabId} in {@code mOrder}, starting from position {@code positionHint}.
+     * Callers must be synchronized.
+     * @param tabId The tab id of the tab being searched for.
+     * @param positionHint Must be less than or equal to the actual position in mOrder if searching
+     *                     forward, otherwise must be greater than or equal to the actual position.
+     * @param searchForward Search forward from {@code positionHint} if true, otherwise search
+     *                      backward from {@code positionHint}.
+     * @return The position in mOrder of the tab with tab id {@code tabId}.
+     */
+    private int getOrderPositionForTab(int tabId, int positionHint, boolean searchForward) {
+        final int step = searchForward ? 1 : -1;
+        final int stopPosition = searchForward ? mOrder.size() : -1;
+        for (int i = positionHint; i != stopPosition; i += step) {
+            if (mOrder.get(i).getId() == tabId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @param fromTabId Id of the tab to move.
+     * @param fromPositionHint Position of the from tab amongst either all non-private tabs or all
+     *                         private tabs, whichever the caller happens to be moving in.
+     * @param toTabId Id of the tab in the position the from tab should be moved to.
+     * @param toPositionHint Position of the to tab amongst either all non-private tabs or all
+     *                       private tabs, whichever the caller happens to be moving in.
+     */
+    @UiThread
+    public void moveTab(int fromTabId, int fromPositionHint, int toTabId, int toPositionHint) {
+        if (fromPositionHint == toPositionHint) {
+            return;
+        }
+
+        // The provided position hints index into either all private tabs or all non-private tabs,
+        // but we need the indices with respect to mOrder, which lists all tabs, both private and
+        // non-private, in the order in which they were added.
+
+        synchronized (this) {
+            final int fromPosition = getOrderPositionForTab(fromTabId, fromPositionHint, true);
+            // Start the toPosition search from the mOrder from position.
+            final int adjustedToPositionHint = fromPosition + (toPositionHint - fromPositionHint);
+            final int toPosition = getOrderPositionForTab(toTabId, adjustedToPositionHint, fromPositionHint < toPositionHint);
+
+            if (fromPosition == -1 || toPosition == -1) {
+                throw new IllegalStateException("Tabs search failed: (" + fromPositionHint + ", " + toPositionHint + ")" +
+                        " --> (" + fromPosition + ", " + toPosition + ")");
+            }
+
+            // Updating mOrder requires the creation of two new tabs arrays, one for newTabsArray,
+            // and one when mOrder is reassigned - note that that's the best we can ever do (as long
+            // as mOrder is a CopyOnWriteArrayList) even if fromPosition and toPosition only differ
+            // by one, which is the common case.
+            final Tab[] newTabsArray = new Tab[mOrder.size()];
+            mOrder.toArray(newTabsArray);
+            // Creates a List backed by newTabsArray.
+            final List<Tab> newTabsList = Arrays.asList(newTabsArray);
+            JavaUtil.moveInList(newTabsList, fromPosition, toPosition);
+            // (Note that there's no way to atomically update the current mOrder with our new list,
+            // and hence no way (short of synchronizing all readers of mOrder) to prevent readers on
+            // other threads from possibly choosing to start iterating mOrder in between when we
+            // might mOrder.clear() and then mOrder.addAll(newTabsArray) if we were to repopulate
+            // mOrder in place.)
+            mOrder = new CopyOnWriteArrayList<>(newTabsList);
+        }
+
+        queuePersistAllTabs();
     }
 }

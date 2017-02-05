@@ -6,6 +6,7 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.JavaUtil;
 
 import android.content.Context;
@@ -99,8 +100,11 @@ public class TabsLayoutAdapter
     }
 
     /* package */ boolean moveTab(int fromPosition, int toPosition) {
+        final int fromTabId = tabs.get(fromPosition).getId();
+        final int toTabId = tabs.get(toPosition).getId();
         JavaUtil.moveInList(tabs, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
+        Tabs.getInstance().moveTab(fromTabId, fromPosition, toTabId, toPosition);
         return true;
     }
 
