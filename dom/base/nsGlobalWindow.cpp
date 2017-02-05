@@ -612,9 +612,11 @@ IdleRequestExecutor::SetDeadline(TimeStamp aDeadline)
 void
 IdleRequestExecutor::MaybeDispatch()
 {
-  MOZ_DIAGNOSTIC_ASSERT(mWindow);
-
-  if (mDispatched) {
+  // If we've already dispatched the executor we don't want to do it
+  // again. Also, if we've called IdleRequestExecutor::Cancel mWindow
+  // will be null, which indicates that we shouldn't dispatch this
+  // executor either.
+  if (mDispatched || !mWindow) {
     return;
   }
 
