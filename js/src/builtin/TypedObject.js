@@ -967,7 +967,7 @@ function TypeOfTypedObject(obj) {
 // TypedObject surface API methods (sequential implementations).
 
 // Warning: user exposed!
-function TypedObjectArrayTypeBuild(a,b,c) {
+function TypedObjectArrayTypeBuild(a, b, c) {
   // Arguments : [depth], func
 
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
