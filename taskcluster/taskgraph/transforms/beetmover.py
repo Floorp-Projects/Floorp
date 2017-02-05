@@ -222,6 +222,7 @@ def make_task_description(config, jobs):
 
         attributes = {
             'nightly': dep_job.attributes.get('nightly', False),
+            'signed': dep_job.attributes.get('signed', False),
             'build_platform': dep_job.attributes.get('build_platform'),
             'build_type': dep_job.attributes.get('build_type'),
         }
