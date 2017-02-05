@@ -56,7 +56,7 @@ function Number_isNaN(num) {
 // ES6 draft ES6 20.1.2.5
 function Number_isSafeInteger(number) {
     // Step 1.
-    if (typeof number !== 'number')
+    if (typeof number !== "number")
         return false;
 
     // Step 2.

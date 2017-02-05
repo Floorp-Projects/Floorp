@@ -454,7 +454,6 @@ function SetupEME(test, token, params)
 function SetupEMEPref(callback) {
   var prefs = [
     [ "media.mediasource.enabled", true ],
-    [ "media.eme.apiVisible", true ],
     [ "media.mediasource.webm.enabled", true ],
   ];
 
