@@ -12,7 +12,6 @@
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/Result.h"
 #include "mozilla/StyleBackendType.h"
-#include "mozilla/StyleSheet.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPreloadedStyleSheet.h"
@@ -20,6 +19,7 @@
 class nsIURI;
 
 namespace mozilla {
+class StyleSheet;
 
 class PreloadedStyleSheet : public nsIPreloadedStyleSheet
 {

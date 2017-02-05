@@ -37,7 +37,6 @@
   "browser.download.panel.shown": true,
   "general.useragent.updates.enabled": false,
   "media.eme.enabled": true,
-  "media.eme.apiVisible": true,
   "dom.ipc.tabs.shutdownTimeoutSecs": 0,
   "general.useragent.locale": "en-US",
   "intl.locale.matchOS": "en-US",

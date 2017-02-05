@@ -17,7 +17,7 @@ enum MediaKeyMessageType {
   "individualization-request"
 };
 
-[Pref="media.eme.apiVisible", Constructor(DOMString type, MediaKeyMessageEventInit eventInitDict)]
+[Constructor(DOMString type, MediaKeyMessageEventInit eventInitDict)]
 interface MediaKeyMessageEvent : Event {
   readonly attribute MediaKeyMessageType messageType;
   [Throws]
