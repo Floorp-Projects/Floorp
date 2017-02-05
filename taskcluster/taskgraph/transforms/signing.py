@@ -101,6 +101,7 @@ def make_task_description(config, jobs):
             'nightly': dep_job.attributes.get('nightly', False),
             'build_platform': dep_job.attributes.get('build_platform'),
             'build_type': dep_job.attributes.get('build_type'),
+            'signed': True,
         }
         if dep_job.attributes.get('chunk_locales'):
             # Used for l10n attribute passthrough
