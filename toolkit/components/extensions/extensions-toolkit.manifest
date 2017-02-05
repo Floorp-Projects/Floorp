@@ -4,6 +4,7 @@ category webextension-scripts backgroundPage chrome://extensions/content/ext-bac
 category webextension-scripts contextualIdentities chrome://extensions/content/ext-contextualIdentities.js
 category webextension-scripts cookies chrome://extensions/content/ext-cookies.js
 category webextension-scripts downloads chrome://extensions/content/ext-downloads.js
+category webextension-scripts geolocation chrome://extensions/content/ext-geolocation.js
 category webextension-scripts management chrome://extensions/content/ext-management.js
 category webextension-scripts notifications chrome://extensions/content/ext-notifications.js
 category webextension-scripts i18n chrome://extensions/content/ext-i18n.js
