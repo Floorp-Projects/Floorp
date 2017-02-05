@@ -1504,7 +1504,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
     }
     void loadWasmActivationFromSymbolicAddress(Register dest) {
-        movePtr(wasm::SymbolicAddress::Context, dest);
+        movePtr(wasm::SymbolicAddress::ContextPtr, dest);
+        loadPtr(Address(dest, 0), dest);
         loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
     }
 
