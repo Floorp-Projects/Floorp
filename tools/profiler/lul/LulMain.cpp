@@ -15,6 +15,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
@@ -34,6 +35,7 @@ namespace lul {
 using std::string;
 using std::vector;
 using std::pair;
+using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 
 
@@ -1014,13 +1016,30 @@ TaggedUWord DerefTUW(TaggedUWord aAddr, const StackImage* aStackImg)
   if (!aAddr.Valid()) {
     return TaggedUWord();
   }
+
+  // Lower limit check.  |aAddr.Value()| is the lowest requested address
+  // and |aStackImg->mStartAvma| is the lowest address we actually have,
+  // so the comparison is straightforward.
   if (aAddr.Value() < aStackImg->mStartAvma) {
     return TaggedUWord();
   }
-  if (aAddr.Value() + sizeof(uintptr_t) > aStackImg->mStartAvma
-                                          + aStackImg->mLen) {
+
+  // Upper limit check.  We must compute the highest requested address
+  // and the highest address we actually have, but being careful to
+  // avoid overflow.  In particular if |aAddr| is 0xFFF...FFF or the
+  // 3/7 values below that, then we will get overflow.  See bug #1245477.
+  typedef CheckedInt<uintptr_t> CheckedUWord;
+  CheckedUWord highest_requested_plus_one
+    = CheckedUWord(aAddr.Value()) + CheckedUWord(sizeof(uintptr_t));
+  CheckedUWord highest_available_plus_one
+    = CheckedUWord(aStackImg->mStartAvma) + CheckedUWord(aStackImg->mLen);
+  if (!highest_requested_plus_one.isValid()     // overflow?
+      || !highest_available_plus_one.isValid()  // overflow?
+      || (highest_requested_plus_one.value()
+          > highest_available_plus_one.value())) { // in range?
     return TaggedUWord();
   }
+
   return TaggedUWord(*(uintptr_t*)(aStackImg->mContents + aAddr.Value()
                                    - aStackImg->mStartAvma));
 }
