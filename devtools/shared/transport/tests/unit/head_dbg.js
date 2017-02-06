@@ -3,6 +3,10 @@
 
 "use strict";
 
+/* exported Cr, CC, NetUtil, defer, errorCount, initTestDebuggerServer,
+            writeTestTempFile, socket_transport, local_transport, really_long
+*/
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -17,7 +21,6 @@ const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // We do not want to log packets by default, because in some tests,
 // we can be sending large amounts of data. The test harness has
@@ -31,27 +34,21 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
 
-function testExceptionHook(ex) {
-  try {
-    do_report_unexpected_exception(ex);
-  } catch (ex) {
-    return {throw: ex};
-  }
-  return undefined;
-}
-
-// Convert an nsIScriptError 'aFlags' value into an appropriate string.
-function scriptErrorFlagsToKind(aFlags) {
-  var kind;
-  if (aFlags & Ci.nsIScriptError.warningFlag)
+// Convert an nsIScriptError 'flags' value into an appropriate string.
+function scriptErrorFlagsToKind(flags) {
+  let kind;
+  if (flags & Ci.nsIScriptError.warningFlag) {
     kind = "warning";
-  if (aFlags & Ci.nsIScriptError.exceptionFlag)
+  }
+  if (flags & Ci.nsIScriptError.exceptionFlag) {
     kind = "exception";
-  else
+  } else {
     kind = "error";
+  }
 
-  if (aFlags & Ci.nsIScriptError.strictFlag)
+  if (flags & Ci.nsIScriptError.strictFlag) {
     kind = "strict " + kind;
+  }
 
   return kind;
 }
@@ -60,23 +57,24 @@ function scriptErrorFlagsToKind(aFlags) {
 // into the ether.
 var errorCount = 0;
 var listener = {
-  observe: function (aMessage) {
+  observe: function (message) {
     errorCount++;
+    let string = "";
     try {
       // If we've been given an nsIScriptError, then we can print out
       // something nicely formatted, for tools like Emacs to pick up.
-      var scriptError = aMessage.QueryInterface(Ci.nsIScriptError);
-      dump(aMessage.sourceName + ":" + aMessage.lineNumber + ": " +
-           scriptErrorFlagsToKind(aMessage.flags) + ": " +
-           aMessage.errorMessage + "\n");
-      var string = aMessage.errorMessage;
+      message.QueryInterface(Ci.nsIScriptError);
+      dump(message.sourceName + ":" + message.lineNumber + ": " +
+           scriptErrorFlagsToKind(message.flags) + ": " +
+           message.errorMessage + "\n");
+      string = message.errorMessage;
     } catch (x) {
       // Be a little paranoid with message, as the whole goal here is to lose
       // no information.
       try {
-        var string = "" + aMessage.message;
-      } catch (x) {
-        var string = "<error converting error message to string>";
+        string = message.message;
+      } catch (e) {
+        string = "<error converting error message to string>";
       }
     }
 
@@ -86,7 +84,7 @@ var listener = {
     }
 
     // Throw in most cases, but ignore the "strict" messages
-    if (!(aMessage.flags & Ci.nsIScriptError.strictFlag)) {
+    if (!(message.flags & Ci.nsIScriptError.strictFlag)) {
       do_throw("head_dbg.js got console message: " + string + "\n");
     }
   }
@@ -95,80 +93,6 @@ var listener = {
 var consoleService = Cc["@mozilla.org/consoleservice;1"]
                      .getService(Ci.nsIConsoleService);
 consoleService.registerListener(listener);
-
-function check_except(func) {
-  try {
-    func();
-  } catch (e) {
-    do_check_true(true);
-    return;
-  }
-  dump("Should have thrown an exception: " + func.toString());
-  do_check_true(false);
-}
-
-function testGlobal(aName) {
-  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
-    .createInstance(Ci.nsIPrincipal);
-
-  let sandbox = Cu.Sandbox(systemPrincipal);
-  sandbox.__name = aName;
-  return sandbox;
-}
-
-function addTestGlobal(aName)
-{
-  let global = testGlobal(aName);
-  DebuggerServer.addTestGlobal(global);
-  return global;
-}
-
-// List the DebuggerClient |aClient|'s tabs, look for one whose title is
-// |aTitle|, and apply |aCallback| to the packet's entry for that tab.
-function getTestTab(aClient, aTitle, aCallback) {
-  aClient.listTabs(function (aResponse) {
-    for (let tab of aResponse.tabs) {
-      if (tab.title === aTitle) {
-        aCallback(tab);
-        return;
-      }
-    }
-    aCallback(null);
-  });
-}
-
-// Attach to |aClient|'s tab whose title is |aTitle|; pass |aCallback| the
-// response packet and a TabClient instance referring to that tab.
-function attachTestTab(aClient, aTitle, aCallback) {
-  getTestTab(aClient, aTitle, function (aTab) {
-    aClient.attachTab(aTab.actor, aCallback);
-  });
-}
-
-// Attach to |aClient|'s tab whose title is |aTitle|, and then attach to
-// that tab's thread. Pass |aCallback| the thread attach response packet, a
-// TabClient referring to the tab, and a ThreadClient referring to the
-// thread.
-function attachTestThread(aClient, aTitle, aCallback) {
-  attachTestTab(aClient, aTitle, function (aResponse, aTabClient) {
-    function onAttach(aResponse, aThreadClient) {
-      aCallback(aResponse, aTabClient, aThreadClient);
-    }
-    aTabClient.attachThread({ useSourceMaps: true }, onAttach);
-  });
-}
-
-// Attach to |aClient|'s tab whose title is |aTitle|, attach to the tab's
-// thread, and then resume it. Pass |aCallback| the thread's response to
-// the 'resume' packet, a TabClient for the tab, and a ThreadClient for the
-// thread.
-function attachTestTabAndResume(aClient, aTitle, aCallback) {
-  attachTestThread(aClient, aTitle, function (aResponse, aTabClient, aThreadClient) {
-    aThreadClient.resume(function (aResponse) {
-      aCallback(aResponse, aTabClient, aThreadClient);
-    });
-  });
-}
 
 /**
  * Initialize the testing debugger server.
@@ -184,35 +108,6 @@ function initTestDebuggerServer() {
   DebuggerServer.init();
 }
 
-function finishClient(aClient) {
-  aClient.close().then(function () {
-    do_test_finished();
-  });
-}
-
-/**
- * Takes a relative file path and returns the absolute file url for it.
- */
-function getFileUrl(aName, aAllowMissing = false) {
-  let file = do_get_file(aName, aAllowMissing);
-  return Services.io.newFileURI(file).spec;
-}
-
-/**
- * Returns the full path of the file with the specified name in a
- * platform-independent and URL-like form.
- */
-function getFilePath(aName, aAllowMissing = false) {
-  let file = do_get_file(aName, aAllowMissing);
-  let path = Services.io.newFileURI(file).spec;
-  let filePrePath = "file://";
-  if ("nsILocalFileWin" in Ci &&
-      file instanceof Ci.nsILocalFileWin) {
-    filePrePath += "/";
-  }
-  return path.slice(filePrePath.length);
-}
-
 /**
  * Wrapper around do_get_file to prefix files with the name of current test to
  * avoid collisions when running in parallel.
@@ -224,16 +119,16 @@ function getTestTempFile(fileName, allowMissing) {
   return do_get_file(fileName + "-" + thisTest, allowMissing);
 }
 
-function writeTestTempFile(aFileName, aContent) {
-  let file = getTestTempFile(aFileName, true);
+function writeTestTempFile(fileName, content) {
+  let file = getTestTempFile(fileName, true);
   let stream = Cc["@mozilla.org/network/file-output-stream;1"]
     .createInstance(Ci.nsIFileOutputStream);
   stream.init(file, -1, -1, 0);
   try {
     do {
-      let numWritten = stream.write(aContent, aContent.length);
-      aContent = aContent.slice(numWritten);
-    } while (aContent.length > 0);
+      let numWritten = stream.write(content, content.length);
+      content = content.slice(numWritten);
+    } while (content.length > 0);
   } finally {
     stream.close();
   }
@@ -248,10 +143,10 @@ var socket_transport = Task.async(function* () {
     authenticator.allowConnection = () => {
       return DebuggerServer.AuthenticationResult.ALLOW;
     };
-    let listener = DebuggerServer.createListener();
-    listener.portOrPath = -1;
-    listener.authenticator = authenticator;
-    yield listener.open();
+    let debuggerListener = DebuggerServer.createListener();
+    debuggerListener.portOrPath = -1;
+    debuggerListener.authenticator = authenticator;
+    yield debuggerListener.open();
   }
   let port = DebuggerServer._listeners[0].port;
   do_print("Debugger server port is " + port);
