@@ -5613,7 +5613,7 @@ if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "border-box" ],
     other_values: [ "fill-box", "view-box" ],
-    invalid_values: []
+    invalid_values: ["content-box", "padding-box", "stroke-box", "margin-box"]
   };
 }
 
