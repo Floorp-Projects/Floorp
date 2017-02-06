@@ -56,16 +56,6 @@ void* GetCdmHost(int aHostInterfaceVersion, void* aUserData)
 GMPErr
 WidevineAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
 {
-#ifdef ENABLE_WIDEVINE_LOG
-  if (getenv("GMP_LOG_FILE")) {
-    // Clear log file.
-    FILE* f = fopen(getenv("GMP_LOG_FILE"), "w");
-    if (f) {
-      fclose(f);
-    }
-  }
-#endif
-
   sPlatform = aPlatformAPI;
   if (!mLib) {
     return GMPGenericErr;
