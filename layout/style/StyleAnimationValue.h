@@ -599,6 +599,13 @@ struct AnimationValue
     return mServo ? Servo_AnimationValues_GetOpacity(mServo)
                   : mGecko.GetFloatValue();
   }
+
+  // Returns the scale for mGecko or mServo, which are calculated with
+  // reference to aFrame.
+  gfxSize GetScaleValue(const nsIFrame* aFrame) const {
+    // TODO: GetScaleValue for mServo.
+    return mGecko.GetScaleValue(aFrame);
+  }
 };
 
 struct PropertyStyleAnimationValuePair
