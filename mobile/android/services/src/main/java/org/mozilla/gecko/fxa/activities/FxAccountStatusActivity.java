@@ -27,6 +27,9 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoActivityStatus;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.Locales.LocaleAwareAppCompatActivity;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -39,8 +42,11 @@ import org.mozilla.gecko.sync.Utils;
 /**
  * Activity which displays account status.
  */
-public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
+public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity implements GeckoActivityStatus {
   private static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
+
+  // Has this activity recently started another Gecko activity?
+  private boolean mGeckoActivityOpened;
 
   protected FxAccountStatusFragment statusFragment;
 
@@ -81,8 +87,22 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
   }
 
   @Override
+  public void onPause() {
+    super.onPause();
+
+    if (getApplication() instanceof GeckoApplication) {
+      ((GeckoApplication) getApplication()).onActivityPause(this);
+    }
+  }
+
+  @Override
   public void onResume() {
     super.onResume();
+
+    if (getApplication() instanceof GeckoApplication) {
+      ((GeckoApplication) getApplication()).onActivityResume(this);
+      mGeckoActivityOpened = false;
+    }
 
     final AndroidFxAccount fxAccount = getAndroidFxAccount();
     if (fxAccount == null) {
@@ -100,6 +120,18 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
       return;
     }
     statusFragment.refresh(fxAccount);
+  }
+
+  @Override
+  public void startActivity(Intent intent) {
+    mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
+    super.startActivity(intent);
+  }
+
+  @Override
+  public void startActivityForResult(Intent intent, int request) {
+    mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
+    super.startActivityForResult(intent, request);
   }
 
   /**
@@ -205,7 +237,7 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
       }
     }
     return super.onCreateOptionsMenu(menu);
-  };
+  }
 
   @Override
   public void openOptionsMenu() {
@@ -224,5 +256,10 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
       final Toolbar toolbar = (Toolbar) view;
       toolbar.showOverflowMenu();
     }
+  }
+
+  @Override
+  public boolean isGeckoActivityOpened() {
+    return mGeckoActivityOpened;
   }
 }
