@@ -27,9 +27,15 @@
 //   this will also likely require setting LSAN_OPTIONS with a suppression
 //   file, as in build/sanitizers/lsan_suppressions.txt.
 //
+//   allocator_may_return_null=1 - Tell ASan to return NULL when an allocation
+//   fails instead of aborting the program. This allows us to handle failing
+//   allocations the same way we would handle them with a regular allocator and
+//   also uncovers potential bugs that might occur in these situations.
+//
 extern "C" MOZ_ASAN_BLACKLIST
 const char* __asan_default_options() {
-    return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0";
+    return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0"
+           ":allocator_may_return_null=1";
 }
 
 #endif
