@@ -17,6 +17,7 @@ this.CrashTestUtils = {
   CRASH_OOM:                   3,
   CRASH_MOZ_CRASH:             4,
   CRASH_ABORT:                 5,
+  CRASH_UNCAUGHT_EXCEPTION:    6,
 
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h
