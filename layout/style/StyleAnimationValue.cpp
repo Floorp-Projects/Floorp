@@ -14,7 +14,6 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
-#include "nsStyleTransformMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"

@@ -18,6 +18,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
+#include "nsStyleTransformMatrix.h"
 #include "ServoBindings.h"
 
 class nsIFrame;
@@ -603,7 +604,11 @@ struct AnimationValue
   // Returns the scale for mGecko or mServo, which are calculated with
   // reference to aFrame.
   gfxSize GetScaleValue(const nsIFrame* aFrame) const {
-    // TODO: GetScaleValue for mServo.
+    if (mServo) {
+      RefPtr<nsCSSValueSharedList> list;
+      Servo_AnimationValues_GetTransform(mServo, &list);
+      return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+    }
     return mGecko.GetScaleValue(aFrame);
   }
 };
