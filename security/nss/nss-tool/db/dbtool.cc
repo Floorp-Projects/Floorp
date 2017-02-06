@@ -7,6 +7,7 @@
 #include "scoped_ptrs.h"
 
 #include <dirent.h>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -51,28 +52,50 @@ static std::string PrintFlags(unsigned int flags) {
   return ss.str();
 }
 
+static std::vector<char> ReadFromIstream(std::istream &is) {
+  std::vector<char> certData;
+  while (is) {
+    char buf[1024];
+    is.read(buf, sizeof(buf));
+    certData.insert(certData.end(), buf, buf + is.gcount());
+  }
+
+  return certData;
+}
+
 void DBTool::Usage() {
-  std::cerr << "Usage: nss db [--path <directory>] [--create] --list-certs"
+  std::cerr << "Usage: nss db [--path <directory>]" << std::endl;
+  std::cerr << "  --create" << std::endl;
+  std::cerr << "  --list-certs" << std::endl;
+  std::cerr << "  --import-cert [<path>] --name <name> [--trusts <trusts>]"
             << std::endl;
 }
 
 bool DBTool::Run(const std::vector<std::string> &arguments) {
   ArgParser parser(arguments);
 
+  if (!parser.Has("--create") && !parser.Has("--list-certs") &&
+      !parser.Has("--import-cert")) {
+    return false;
+  }
+
+  PRAccessHow how = PR_ACCESS_READ_OK;
+  bool readOnly = true;
+  if (parser.Has("--create") || parser.Has("--import-cert")) {
+    how = PR_ACCESS_WRITE_OK;
+    readOnly = false;
+  }
+
   std::string initDir(".");
   if (parser.Has("--path")) {
     initDir = parser.Get("--path");
-    if (PR_Access(initDir.c_str(), PR_ACCESS_READ_OK) != PR_SUCCESS) {
-      std::cerr << "Directory '" << initDir
-                << "' does not exist or you don't have permissions!"
-                << std::endl;
-      return false;
-    }
   }
-
-  if (!parser.Has("--list-certs") && !parser.Has("--create")) {
+  if (PR_Access(initDir.c_str(), how) != PR_SUCCESS) {
+    std::cerr << "Directory '" << initDir
+              << "' does not exist or you don't have permissions!" << std::endl;
     return false;
   }
+
   std::cout << "Using database directory: " << initDir << std::endl
             << std::endl;
 
@@ -93,18 +116,19 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
 
   // init NSS
   const char *certPrefix = "";  // certutil -P option  --- can leave this empty
-  SECStatus rv =
-      NSS_Initialize(initDir.c_str(), certPrefix, certPrefix, "secmod.db", 0);
+  SECStatus rv = NSS_Initialize(initDir.c_str(), certPrefix, certPrefix,
+                                "secmod.db", readOnly ? NSS_INIT_READONLY : 0);
   if (rv != SECSuccess) {
     std::cerr << "NSS init failed!" << std::endl;
     return false;
   }
 
+  bool ret = true;
   if (parser.Has("--list-certs")) {
     ListCertificates();
-  }
-
-  if (parser.Has("--create")) {
+  } else if (parser.Has("--import-cert")) {
+    ret = ImportCertificate(parser);
+  } else if (parser.Has("--create")) {
     std::cout << "DB files created successfully." << std::endl;
   }
 
@@ -114,7 +138,7 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
     return false;
   }
 
-  return true;
+  return ret;
 }
 
 bool DBTool::PathHasDBFiles(std::string path) {
@@ -184,4 +208,74 @@ void DBTool::ListCertificates() {
     std::cout << std::setw(60) << std::left << name << " " << trusts
               << std::endl;
   }
+}
+
+bool DBTool::ImportCertificate(const ArgParser &parser) {
+  if (!parser.Has("--name")) {
+    std::cerr << "A name (--name) is required to import a certificate."
+              << std::endl;
+    return false;
+  }
+
+  std::string derFilePath = parser.Get("--import-cert");
+  std::string certName = parser.Get("--name");
+  std::string trustString("TCu,Cu,Tu");
+  if (parser.Has("--trusts")) {
+    trustString = parser.Get("--trusts");
+  }
+
+  CERTCertTrust trust;
+  SECStatus rv = CERT_DecodeTrustString(&trust, trustString.c_str());
+  if (rv != SECSuccess) {
+    std::cerr << "Cannot decode trust string!" << std::endl;
+    return false;
+  }
+
+  ScopedPK11SlotInfo slot = ScopedPK11SlotInfo(PK11_GetInternalKeySlot());
+  if (slot.get() == nullptr) {
+    std::cerr << "Error: Init PK11SlotInfo failed!\n";
+    return false;
+  }
+
+  std::vector<char> certData;
+  if (derFilePath.empty()) {
+    std::cout << "No Certificate file path given, using stdin." << std::endl;
+    certData = ReadFromIstream(std::cin);
+  } else {
+    std::ifstream is(derFilePath, std::ifstream::binary);
+    if (!is.good()) {
+      std::cerr << "IO Error when opening " << derFilePath << std::endl;
+      std::cerr
+          << "Certificate file does not exist or you don't have permissions."
+          << std::endl;
+      return false;
+    }
+    certData = ReadFromIstream(is);
+  }
+
+  ScopedCERTCertificate cert(
+      CERT_DecodeCertFromPackage(certData.data(), certData.size()));
+  if (cert.get() == nullptr) {
+    std::cerr << "Error: Could not decode certificate!" << std::endl;
+    return false;
+  }
+
+  rv = PK11_ImportCert(slot.get(), cert.get(), CK_INVALID_HANDLE,
+                       certName.c_str(), PR_FALSE);
+  if (rv != SECSuccess) {
+    // TODO handle authentication -> PK11_Authenticate (see certutil.c line
+    // 134)
+    std::cerr << "Error: Could not add certificate to database!" << std::endl;
+    return false;
+  }
+
+  rv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), cert.get(), &trust);
+  if (rv != SECSuccess) {
+    std::cerr << "Cannot change cert's trust" << std::endl;
+    return false;
+  }
+
+  std::cout << "Certificate import was successful!" << std::endl;
+  // TODO show information about imported certificate
+  return true;
 }
