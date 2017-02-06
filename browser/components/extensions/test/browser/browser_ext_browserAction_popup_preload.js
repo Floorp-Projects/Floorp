@@ -5,6 +5,8 @@
 let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
 
 add_task(function* testBrowserActionClickCanceled() {
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -27,7 +29,6 @@ add_task(function* testBrowserActionClickCanceled() {
   let browserAction = browserActionFor(ext);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
-  let tab = window.gBrowser.selectedTab;
 
   // Test canceled click.
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);
@@ -76,6 +77,8 @@ add_task(function* testBrowserActionClickCanceled() {
   yield closeBrowserAction(extension);
 
   yield extension.unload();
+
+  yield BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function* testBrowserActionDisabled() {
