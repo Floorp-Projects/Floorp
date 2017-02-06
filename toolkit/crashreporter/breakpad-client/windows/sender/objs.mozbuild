@@ -8,7 +8,7 @@ lobjs_sender = [
     'crash_report_sender.cc',
 ]
 
-subdir = 'toolkit/crashreporter/google-breakpad/src/client/windows/sender'
+subdir = 'toolkit/crashreporter/breakpad-client/windows/sender'
 objs_sender = [
     '/%s/%s' % (subdir, s) for s in lobjs_sender
 ]
