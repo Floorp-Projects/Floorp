@@ -705,8 +705,8 @@ private:
   {
     MOZ_ASSERT(mRecorder->mAudioNode != nullptr);
     nsIDocument* doc = mRecorder->mAudioNode->GetOwner()
-                     ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
-                     : nullptr;
+                       ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
+                       : nullptr;
     nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
     return PrincipalSubsumes(principal);
   }

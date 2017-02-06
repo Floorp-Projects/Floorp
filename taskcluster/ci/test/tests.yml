@@ -14,6 +14,7 @@ cppunit:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
         by-test-platform:
@@ -51,6 +52,10 @@ crashtest:
             android.*: xlarge
             default: default
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics', 'mozilla-central']
+            default: ['all']
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
@@ -198,6 +203,10 @@ gtest:
     e10s: false
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -220,6 +229,10 @@ jittest:
     treeherder-symbol: tc(Jit)
     e10s: false
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     chunks:
         by-test-platform:
             windows.*: 1
@@ -269,6 +282,7 @@ jsreftest:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     mozharness:
         by-test-platform:
@@ -401,6 +415,10 @@ mochitest-a11y:
     loopback-video: true
     e10s: false
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -871,6 +889,10 @@ reftest:
     suite: reftest/reftest
     treeherder-symbol: tc-R(R)
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics', 'mozilla-central']
+            default: ['all']
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -921,6 +943,10 @@ reftest-no-accel:
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics', 'mozilla-central']
+            default: ['all']
     chunks:
       by-test-platform:
         macosx.*: 1
@@ -1233,6 +1259,7 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             linux64-jsdcov/opt: []
+            linux64-qr/.*: ['graphics']
             default: ['all']
     chunks:
         by-test-platform:

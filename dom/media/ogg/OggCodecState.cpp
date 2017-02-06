@@ -363,8 +363,8 @@ TheoraState::Init()
   int64_t n = mTheoraInfo.aspect_numerator;
   int64_t d = mTheoraInfo.aspect_denominator;
 
-  float aspectRatio = (n == 0 || d == 0)
-    ? 1.0f : static_cast<float>(n) / static_cast<float>(d);
+  float aspectRatio =
+    (n == 0 || d == 0) ? 1.0f : static_cast<float>(n) / static_cast<float>(d);
 
   // Ensure the frame and picture regions aren't larger than our prescribed
   // maximum, or zero sized.

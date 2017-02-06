@@ -82,6 +82,6 @@ function Global_isNaN(number) {
     return Number_isNaN(ToNumber(number));
 }
 
-function Global_isFinite(number){
+function Global_isFinite(number) {
     return Number_isFinite(ToNumber(number));
 }

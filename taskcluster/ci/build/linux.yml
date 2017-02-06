@@ -383,7 +383,7 @@ linux64-qr/debug:
     treeherder:
         platform: linux64-qr/debug
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -399,6 +399,7 @@ linux64-qr/debug:
         custom-build-variant-cfg: qr-debug
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: [ 'mozilla-central', 'graphics' ]
 
 linux64-qr/opt:
     description: "Linux64 Opt QuantumRender"
@@ -408,7 +409,7 @@ linux64-qr/opt:
     treeherder:
         platform: linux64-qr/opt
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -424,3 +425,4 @@ linux64-qr/opt:
         custom-build-variant-cfg: qr-opt
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: [ 'mozilla-central', 'graphics' ]

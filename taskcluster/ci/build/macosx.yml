@@ -53,7 +53,7 @@ macosx64-qr/debug:
     treeherder:
         platform: osx-10-7-qr/debug
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
         implementation: docker-worker
@@ -68,6 +68,7 @@ macosx64-qr/debug:
         secrets: true
         custom-build-variant-cfg: cross-qr-debug
         tooltool-downloads: internal
+    run-on-projects: [ 'graphics' ]
 
 macosx64-qr/opt:
     description: "MacOS X x64 QuantumRender"
@@ -77,7 +78,7 @@ macosx64-qr/opt:
     treeherder:
         platform: osx-10-7-qr/opt
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
         implementation: docker-worker
@@ -92,3 +93,4 @@ macosx64-qr/opt:
         secrets: true
         custom-build-variant-cfg: cross-qr-opt
         tooltool-downloads: internal
+    run-on-projects: [ 'graphics' ]

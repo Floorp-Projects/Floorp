@@ -122,7 +122,7 @@ win64-qr/debug:
     treeherder:
         platform: windows2012-64-qr/debug
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker
@@ -132,6 +132,7 @@ win64-qr/debug:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win64_qr_debug.py
+    run-on-projects: [ 'graphics' ]
 
 win64-qr/opt:
     description: "Win64 Opt QuantumRender"
@@ -141,7 +142,7 @@ win64-qr/opt:
     treeherder:
         platform: windows2012-64-qr/opt
         symbol: tc(B)
-        tier: 1
+        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         implementation: generic-worker
@@ -151,4 +152,4 @@ win64-qr/opt:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_win64_qr_opt.py
-
+    run-on-projects: [ 'graphics' ]
