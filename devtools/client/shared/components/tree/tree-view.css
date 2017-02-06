@@ -77,6 +77,23 @@
   display: none;
 }
 
+.treeTable .treeValueCellDivider {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* Learn More link */
+.treeTable .treeValueCell .learn-more-link {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.treeTable .treeValueCell .learn-more-link:hover {
+  text-decoration: underline;
+}
+
 /******************************************************************************/
 /* Toggle Icon */
 
