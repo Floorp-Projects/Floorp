@@ -12,20 +12,6 @@ ifndef TEST_PACKAGE_NAME
 TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
 endif
 
-# Linking xul-gtest.dll takes too long, so we disable GTest on
-# Windows PGO builds (bug 1028035).
-ifneq (1_WINNT,$(MOZ_PGO)_$(OS_ARCH))
-BUILD_GTEST=1
-endif
-
-ifneq (browser,$(MOZ_BUILD_APP))
-BUILD_GTEST=
-endif
-
-ifndef COMPILE_ENVIRONMENT
-BUILD_GTEST=
-endif
-
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
   @errors=`grep 'TEST-UNEXPECTED-' $@.log` ;\
@@ -152,7 +138,7 @@ TEST_PKGS := \
   xpcshell \
   $(NULL)
 
-ifdef BUILD_GTEST
+ifdef LINK_GTEST_DURING_COMPILE
 stage-all: stage-gtest
 TEST_PKGS += gtest
 endif
@@ -218,8 +204,6 @@ stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
 stage-gtest: make-stage-dir
-# FIXME: (bug 1200311) We should be generating the gtest xul as part of the build.
-	$(MAKE) -C $(DEPTH)/testing/gtest gtest
 	$(NSINSTALL) -D $(PKG_STAGE)/gtest/gtest_bin
 	cp -RL $(DIST)/bin/gtest $(PKG_STAGE)/gtest/gtest_bin
 	cp -RL $(DEPTH)/_tests/gtest $(PKG_STAGE)

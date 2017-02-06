@@ -5,11 +5,11 @@
 # Enforce that the clean/distclean rules removes everything that needs
 # to be removed from this directory.
 ifneq (,$(filter clean distclean,$(MAKECMDGOALS)))
-LINK_GTEST = 1
+LINK_GTEST_DURING_COMPILE = 1
 endif
 
-ifndef LINK_GTEST
-# Force to not include backend.mk unless LINK_GTEST is defined.
+ifndef LINK_GTEST_DURING_COMPILE
+# Force to not include backend.mk unless LINK_GTEST_DURING_COMPILE is set.
 # Not including backend.mk makes traversing this directory do nothing.
 STANDALONE_MAKEFILE = 1
 
