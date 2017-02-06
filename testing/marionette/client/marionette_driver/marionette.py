@@ -544,9 +544,14 @@ class Marionette(object):
 
     CONTEXT_CHROME = "chrome"  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = "content"  # browser content: iframes, divs, etc.
-    DEFAULT_SOCKET_TIMEOUT = 60
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
+
+    # Bug 1336953 - Until we can remove the socket timeout parameter it has to be
+    # set a default value which is larger than the longest timeout as defined by the
+    # WebDriver spec. In that case its 300s for page load. Also add another minute
+    # so that slow builds have enough time to send the timeout error to the client.
+    DEFAULT_SOCKET_TIMEOUT = 360
 
     def __init__(self, host="localhost", port=2828, app=None, bin=None,
                  baseurl=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
