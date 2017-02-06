@@ -102,7 +102,7 @@ enum class DefinitionKind
     Global                               = 0x03
 };
 
-enum class GlobalTypeImmediate
+enum class GlobalFlags
 {
     IsMutable                            = 0x1,
     AllowedMask                          = 0x1
