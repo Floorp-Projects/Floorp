@@ -138,6 +138,21 @@ def target_tasks_graphics(full_task_graph, parameters):
     return [l for l in filtered_for_project if filter(full_task_graph[l])]
 
 
+@_target_task('mochitest_valgrind')
+def target_tasks_valgrind(full_task_graph, parameters):
+    """Target tasks that only run on the cedar branch."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        # only select platforms
+        if platform not in ['linux64']:
+            return False
+        if task.attributes.get('unittest_suite'):
+            if not (task.attributes['unittest_suite'].startswith('mochitest-valgrind')):
+                return False
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
 @_target_task('nightly_fennec')
 def target_tasks_nightly(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of fennec. The
