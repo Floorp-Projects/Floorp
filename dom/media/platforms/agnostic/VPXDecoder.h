@@ -25,16 +25,17 @@ public:
   ~VPXDecoder();
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   const char* GetDescriptionName() const override
   {
     return "libvpx video decoder";
   }
 
-  enum Codec: uint8_t {
+  enum Codec: uint8_t
+  {
     VP8 = 1 << 0,
     VP9 = 1 << 1
   };
@@ -47,16 +48,11 @@ public:
   static bool IsVP9(const nsACString& aMimeType);
 
 private:
-  void ProcessDecode(MediaRawData* aSample);
-  MediaResult DoDecode(MediaRawData* aSample);
-  void ProcessDrain();
-  MediaResult DecodeAlpha(vpx_image_t** aImgAlpha,
-                          MediaRawData* aSample);
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
+  MediaResult DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample);
 
   const RefPtr<ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
-  MediaDataDecoderCallback* mCallback;
-  Atomic<bool> mIsFlushing;
 
   // VPx decoder state
   vpx_codec_ctx_t mVPX;

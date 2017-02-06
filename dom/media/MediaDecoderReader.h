@@ -29,13 +29,16 @@ class MediaDecoderReader;
 
 struct WaitForDataRejectValue
 {
-  enum Reason {
+  enum Reason
+  {
     SHUTDOWN,
     CANCELED
   };
 
   WaitForDataRejectValue(MediaData::Type aType, Reason aReason)
-    :mType(aType), mReason(aReason) {}
+    :mType(aType), mReason(aReason)
+  {
+  }
   MediaData::Type mType;
   Reason mReason;
 };
@@ -43,11 +46,11 @@ struct WaitForDataRejectValue
 struct SeekRejectValue
 {
   MOZ_IMPLICIT SeekRejectValue(const MediaResult& aError)
-    : mType(MediaData::NULL_DATA), mError(aError) {}
+    : mType(MediaData::NULL_DATA), mError(aError) { }
   MOZ_IMPLICIT SeekRejectValue(nsresult aResult)
-    : mType(MediaData::NULL_DATA), mError(aResult) {}
+    : mType(MediaData::NULL_DATA), mError(aResult) { }
   SeekRejectValue(MediaData::Type aType, const MediaResult& aError)
-    : mType(aType), mError(aError) {}
+    : mType(aType), mError(aError) { }
   MediaData::Type mType;
   MediaResult mError;
 };
@@ -60,7 +63,7 @@ public:
   nsAutoPtr<MetadataTags> mTags;
 
 private:
-  virtual ~MetadataHolder() {}
+  virtual ~MetadataHolder() { }
 };
 
 // Encapsulates the decoding and reading of media data. Reading can either
@@ -69,7 +72,8 @@ private:
 // callback.
 // Unless otherwise specified, methods and fields of this class can only
 // be accessed on the decode task queue.
-class MediaDecoderReader {
+class MediaDecoderReader
+{
   friend class ReRequestVideoWithSkipTask;
   friend class ReRequestAudioTask;
 
@@ -104,7 +108,7 @@ public:
   // Called by MDSM in dormant state to release resources allocated by this
   // reader. The reader can resume decoding by calling Seek() to a specific
   // position.
-  virtual void ReleaseResources() {}
+  virtual void ReleaseResources() { }
 
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as it is irreversable,
@@ -128,8 +132,9 @@ public:
   //
   // aParam is a set of TrackInfo::TrackType enums specifying which
   // queues need to be reset, defaulting to both audio and video tracks.
-  virtual nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
-                                                           TrackInfo::kVideoTrack));
+  virtual nsresult ResetDecode(
+    TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                TrackInfo::kVideoTrack));
 
   // Requests one audio sample from the reader.
   //
@@ -230,7 +235,7 @@ public:
     return mTimedMetadataEvent;
   }
 
-  // Notified by the OggReader during playback when chained ogg is detected.
+  // Notified by the OggDemuxer during playback when chained ogg is detected.
   MediaEventSource<void>& OnMediaNotSeekable() { return mOnMediaNotSeekable; }
 
   TimedMetadataEventProducer& TimedMetadataProducer()
@@ -243,10 +248,22 @@ public:
     return mOnMediaNotSeekable;
   }
 
+  // Notified if the reader can't decode a sample due to a missing decryption
+  // key.
+  MediaEventSource<TrackInfo::TrackType>& OnTrackWaitingForKey()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
+  MediaEventProducer<TrackInfo::TrackType>& OnTrackWaitingForKeyProducer()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
   // Switch the video decoder to BlankDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
-  virtual void SetVideoBlankDecode(bool aIsBlankDecode) {}
+  virtual void SetVideoBlankDecode(bool aIsBlankDecode) { }
 
 protected:
   virtual ~MediaDecoderReader();
@@ -305,6 +322,9 @@ protected:
 
   // Notify if this media is not seekable.
   MediaEventProducer<void> mOnMediaNotSeekable;
+
+  // Notify if we are waiting for a decryption key.
+  MediaEventProducer<TrackInfo::TrackType> mOnTrackWaitingForKey;
 
 private:
   virtual nsresult InitInternal() { return NS_OK; }

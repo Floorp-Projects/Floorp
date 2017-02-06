@@ -11,7 +11,8 @@
 
 namespace mozilla {
 
-class WMFDecoderModule : public PlatformDecoderModule {
+class WMFDecoderModule : public PlatformDecoderModule
+{
 public:
   WMFDecoderModule();
   virtual ~WMFDecoderModule();

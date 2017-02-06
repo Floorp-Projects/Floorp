@@ -17,14 +17,13 @@
 #include "nsDataHashtable.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-namespace layers
-{
-  class ImageContainer;
-  class KnowsCompositor;
+namespace layers {
+class ImageContainer;
+class KnowsCompositor;
 } // namespace layers
+
 class AbstractThread;
 class MediaResource;
 class ReentrantMonitor;
@@ -35,7 +34,8 @@ class GMPCrashHelper;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
-static inline bool IsCurrentThread(nsIThread* aThread) {
+static inline bool IsCurrentThread(nsIThread* aThread)
+{
   return NS_GetCurrentThread() == aThread;
 }
 
@@ -59,7 +59,10 @@ public:
   // Can be called on any thread.
   virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) = 0;
 
-  virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() { return nullptr; };
+  virtual AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull()
+  {
+    return nullptr;
+  };
 
   // Return an event that will be notified when data arrives in MediaResource.
   // MediaDecoderReader will register with this event to receive notifications
@@ -74,7 +77,8 @@ public:
   // and we might have a new compositor. If this new compositor requires us to
   // recreate our decoders, then we expect the existing decoderis to return an
   // error independently of this.
-  virtual MediaEventSource<RefPtr<layers::KnowsCompositor>>* CompositorUpdatedEvent()
+  virtual MediaEventSource<RefPtr<layers::KnowsCompositor>>*
+  CompositorUpdatedEvent()
   {
     return nullptr;
   }
@@ -82,7 +86,7 @@ public:
   // Notify the media decoder that a decryption key is required before emitting
   // further output. This only needs to be overridden for decoders that expect
   // encryption, such as the MediaSource decoder.
-  virtual void NotifyWaitingForKey() {}
+  virtual void NotifyWaitingForKey() { }
 
   // Return an event that will be notified when a decoder is waiting for a
   // decryption key before it can return more output.
@@ -95,13 +99,12 @@ public:
   virtual AbstractThread* AbstractMainThread() const = 0;
 
 protected:
-  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) {};
+  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) { };
 public:
   void DispatchUpdateEstimatedMediaDuration(int64_t aDuration)
   {
-    NS_DispatchToMainThread(NewRunnableMethod<int64_t>(this,
-                                                       &AbstractMediaDecoder::UpdateEstimatedMediaDuration,
-                                                       aDuration));
+    NS_DispatchToMainThread(NewRunnableMethod<int64_t>(
+      this, &AbstractMediaDecoder::UpdateEstimatedMediaDuration, aDuration));
   }
 
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
@@ -112,19 +115,22 @@ public:
   virtual MediaDecoderOwner* GetOwner() const = 0;
 
   // Set by Reader if the current audio track can be offloaded
-  virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}
+  virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) { }
 
   virtual already_AddRefed<GMPCrashHelper> GetCrashHelper() { return nullptr; }
 
   // Stack based class to assist in notifying the frame statistics of
   // parsed and decoded frames. Use inside video demux & decode functions
   // to ensure all parsed and decoded frames are reported on all return paths.
-  class AutoNotifyDecoded {
+  class AutoNotifyDecoded
+  {
   public:
     explicit AutoNotifyDecoded(AbstractMediaDecoder* aDecoder)
       : mDecoder(aDecoder)
-    {}
-    ~AutoNotifyDecoded() {
+    {
+    }
+    ~AutoNotifyDecoded()
+    {
       if (mDecoder) {
         mDecoder->NotifyDecodedFrames(mStats);
       }
@@ -138,8 +144,12 @@ public:
 
   // Classes directly inheriting from AbstractMediaDecoder do not support
   // Observe and it should never be called directly.
-  NS_IMETHOD Observe(nsISupports *aSubject, const char * aTopic, const char16_t * aData) override
-  { MOZ_CRASH("Forbidden method"); return NS_OK; }
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override
+  {
+    MOZ_CRASH("Forbidden method");
+    return NS_OK;
+  }
 };
 
 } // namespace mozilla

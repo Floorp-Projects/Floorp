@@ -329,24 +329,6 @@ TextEditor::InitRules()
   return mRules->Init(this);
 }
 
-
-NS_IMETHODIMP
-TextEditor::GetIsDocumentEditable(bool* aIsDocumentEditable)
-{
-  NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
-
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
-  *aIsDocumentEditable = doc && IsModifiable();
-
-  return NS_OK;
-}
-
-bool
-TextEditor::IsModifiable()
-{
-  return !IsReadonly();
-}
-
 nsresult
 TextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 {

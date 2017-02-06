@@ -134,7 +134,8 @@ public:
     : mTaskQueue(aTaskQueue)
     , mPromiseLayer(aPromiseLayer)
     , mClient(aDataDecoder)
-  {}
+  {
+  }
 
 protected:
   RefPtr<TaskQueue> mTaskQueue;
