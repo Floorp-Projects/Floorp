@@ -194,8 +194,8 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
         if (arguments.length === 0) {
             if (newTarget !== undefined)
                 return bind_constructFunctionN(fun, newTarget, boundArgs);
-            else
-                return bind_applyFunctionN(fun, thisArg, boundArgs);
+
+            return bind_applyFunctionN(fun, thisArg, boundArgs);
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
         return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);

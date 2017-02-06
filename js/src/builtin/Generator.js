@@ -128,7 +128,7 @@ function LegacyGeneratorClose() {
         return callFunction(CallLegacyGeneratorMethodIfWrapped, this, "LegacyGeneratorClose");
 
     if (LegacyGeneratorObjectIsClosed(this))
-        return;
+        return undefined;
 
     callFunction(LegacyGeneratorCloseInternal, this);
 }
