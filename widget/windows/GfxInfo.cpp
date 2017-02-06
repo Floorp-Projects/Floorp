@@ -593,7 +593,7 @@ GfxInfo::Init()
       if (driverNumericVersion < knownSafeMismatchVersion ||
           std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion) {
         mHasDriverVersionMismatch = true;
-        gfxWarningOnce() << "Mismatched driver versions between the registry " << mDriverVersion[mActiveGPUIndex].get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
+        gfxCriticalNoteOnce << "Mismatched driver versions between the registry " << mDriverVersion[mActiveGPUIndex].get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
       }
     } else if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
       // Leave it as an asserting error for now, to see if we can find
