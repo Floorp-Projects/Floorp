@@ -350,6 +350,8 @@ class BuildOptionParser(object):
         'cross-debug': 'builds/releng_sub_%s_configs/%s_cross_debug.py',
         'cross-opt-st-an': 'builds/releng_sub_%s_configs/%s_cross_opt_st_an.py',
         'cross-universal': 'builds/releng_sub_%s_configs/%s_cross_universal.py',
+        'cross-qr-debug': 'builds/releng_sub_%s_configs/%s_cross_qr_debug.py',
+        'cross-qr-opt': 'builds/releng_sub_%s_configs/%s_cross_qr_opt.py',
         'debug': 'builds/releng_sub_%s_configs/%s_debug.py',
         'asan-and-debug': 'builds/releng_sub_%s_configs/%s_asan_and_debug.py',
         'asan-tc-and-debug': 'builds/releng_sub_%s_configs/%s_asan_tc_and_debug.py',
