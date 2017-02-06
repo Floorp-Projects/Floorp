@@ -95,6 +95,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
     updateChildRuntimeCount(parentRuntime),
 #endif
+    activeContext(nullptr),
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
     telemetryCallback(nullptr),
@@ -190,6 +191,8 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
     if (CanUseExtraThreads() && !EnsureHelperThreadsInitialized())
         return false;
+
+    activeContext = cx;
 
     singletonContext = cx;
 
