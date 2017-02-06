@@ -510,15 +510,12 @@ action.InputState.Null = class Null extends InputState {
  *
  * @param {string} subtype
  *     Kind of pointing device: mouse, pen, touch.
- * @param {boolean} primary
- *     Whether the pointing device is primary.
  */
 action.InputState.Pointer = class Pointer extends InputState {
-  constructor(subtype, primary) {
+  constructor(subtype) {
     super();
     this.pressed = new Set();
     this.subtype = subtype;
-    this.primary = primary;
     this.x = 0;
     this.y = 0;
   }
@@ -739,19 +736,14 @@ action.Sequence = class extends Array {
  *
  * @param {string=} pointerType
  *     Type of pointing device. If the parameter is undefined, "mouse" is used.
- * @param {boolean=} primary
- *     Whether the input source is the primary pointing device.
- *     If the parameter is undefined, true is used.
  */
 action.PointerParameters = class {
-  constructor(pointerType = "mouse", primary = true) {
+  constructor(pointerType = "mouse") {
     this.pointerType = action.PointerType.get(pointerType);
-    assert.boolean(primary);
-    this.primary = primary;
   }
 
   toString() {
-    return `[pointerParameters ${this.pointerType}, primary=${this.primary}]`;
+    return `[pointerParameters ${this.pointerType}]`;
   }
 
   /**
@@ -765,13 +757,13 @@ action.PointerParameters = class {
     if (typeof parametersData == "undefined") {
       return new action.PointerParameters();
     } else {
-      return new action.PointerParameters(parametersData.pointerType, parametersData.primary);
+      return new action.PointerParameters(parametersData.pointerType);
     }
   }
 };
 
 /**
- * Adds |pointerType| and |primary| attributes to Action |act|. Helper function
+ * Adds |pointerType| attribute to Action |act|. Helper function
  * for |action.Action.fromJson|.
  *
  * @param {string} id
@@ -793,7 +785,6 @@ action.processPointerAction = function processPointerAction(id, pointerParams, a
         `${action.inputStateMap.get(id).subtype}, got: ${subtype}`);
   }
   act.pointerType = pointerParams.pointerType;
-  act.primary = pointerParams.primary;
 };
 
 /** Collect properties associated with KeyboardEvent */
