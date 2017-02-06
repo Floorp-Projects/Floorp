@@ -19,6 +19,7 @@ let lastTab = null;
 
 this.PermissionPrompts = {
   init(libDir) {
+    Services.prefs.setBoolPref("browser.storageManager.enabled", true);
     Services.prefs.setBoolPref("media.navigator.permission.fake", true);
     Services.prefs.setCharPref("media.getusermedia.screensharing.allowed_domains",
                                "test1.example.com");
@@ -62,17 +63,24 @@ this.PermissionPrompts = {
       }),
     },
 
+    persistentStorage: {
+      applyConfig: Task.async(function*() {
+        yield closeLastTab();
+        yield clickOn("#persistent-storage");
+      }),
+    },
+
     loginCapture: {
       applyConfig: Task.async(function*() {
         yield closeLastTab();
-        yield clickOn("#login-capture", URL);
+        yield clickOn("#login-capture");
       }),
     },
 
     notifications: {
       applyConfig: Task.async(function*() {
         yield closeLastTab();
-        yield clickOn("#web-notifications", URL);
+        yield clickOn("#web-notifications");
       }),
     },
 
@@ -81,7 +89,7 @@ this.PermissionPrompts = {
         Services.prefs.setBoolPref("xpinstall.whitelist.required", true);
 
         yield closeLastTab();
-        yield clickOn("#addons", URL);
+        yield clickOn("#addons");
       }),
     },
 
@@ -93,7 +101,7 @@ this.PermissionPrompts = {
         let notification = browserWindow.document.getElementById("addon-install-confirmation-notification");
 
         yield closeLastTab();
-        yield clickOn("#addons", URL);
+        yield clickOn("#addons");
 
         // We want to skip the progress-notification, so we wait for
         // the install-confirmation screen to be "not hidden" = shown.
@@ -104,7 +112,7 @@ this.PermissionPrompts = {
   },
 };
 
-function* closeLastTab(selector) {
+function* closeLastTab() {
   if (!lastTab) {
     return;
   }
