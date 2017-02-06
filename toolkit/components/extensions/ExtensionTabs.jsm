@@ -33,11 +33,11 @@ class TabBase {
     this.tabManager = extension.tabManager;
     this.id = id;
     this.tab = tab;
-    this.activeTabWindowId = null;
+    this.activeTabWindowID = null;
   }
 
-  get innerWindowId() {
-    return this.browser.innerWindowId;
+  get innerWindowID() {
+    return this.browser.innerWindowID;
   }
 
   get hasTabPermission() {
@@ -46,8 +46,8 @@ class TabBase {
 
   get hasActiveTabPermission() {
     return (this.extension.hasPermission("activeTab") &&
-            this.activeTabWindowId !== null &&
-            this.activeTabWindowId === this.innerWindowId);
+            this.activeTabWindowID != null &&
+            this.activeTabWindowID === this.innerWindowID);
   }
 
   get incognito() {
@@ -604,12 +604,12 @@ class TabManagerBase {
       // we've granted this permission to a new inner window, the extension
       // maintains its permissions for it.
       tab = this.getWrapper(tab);
-      tab.activeTabWindowId = tab.innerWindowId;
+      tab.activeTabWindowID = tab.innerWindowID;
     }
   }
 
   revokeActiveTabPermission(tab) {
-    this.getWrapper(tab).activeTabWindowId = null;
+    this.getWrapper(tab).activeTabWindowID = null;
   }
 
   // Returns true if the extension has the "activeTab" permission for this tab.
