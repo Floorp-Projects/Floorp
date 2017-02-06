@@ -16,7 +16,8 @@ extern const GUID CLSID_WebmMfVpxDec;
 
 namespace mozilla {
 
-class WMFAudioMFTManager : public MFTManager {
+class WMFAudioMFTManager : public MFTManager
+{
 public:
   explicit WMFAudioMFTManager(const AudioInfo& aConfig);
   ~WMFAudioMFTManager();
@@ -28,12 +29,12 @@ public:
   // Note WMF's AAC decoder sometimes output negatively timestamped samples,
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.
-  HRESULT Output(int64_t aStreamOffset,
-                         RefPtr<MediaData>& aOutput) override;
+  HRESULT Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutput) override;
 
   void Shutdown() override;
 
-  TrackInfo::TrackType GetType() override {
+  TrackInfo::TrackType GetType() override
+  {
     return TrackInfo::kAudioTrack;
   }
 
@@ -43,7 +44,6 @@ public:
   }
 
 private:
-
   HRESULT UpdateOutputType();
 
   uint32_t mAudioChannels;
@@ -57,7 +57,8 @@ private:
   // discontinuity.
   int64_t mAudioFrameSum;
 
-  enum StreamType {
+  enum StreamType
+  {
     Unknown,
     AAC,
     MP3

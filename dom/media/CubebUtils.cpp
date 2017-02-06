@@ -24,6 +24,23 @@
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 #define PREF_CUBEB_LOG_LEVEL "media.cubeb.log_level"
 
+#define MASK_MONO       (1 << AudioConfig::CHANNEL_MONO)
+#define MASK_MONO_LFE   (MASK_MONO | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_STEREO     ((1 << AudioConfig::CHANNEL_LEFT) | (1 << AudioConfig::CHANNEL_RIGHT))
+#define MASK_STEREO_LFE (MASK_STEREO | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F         (MASK_STEREO | (1 << AudioConfig::CHANNEL_CENTER))
+#define MASK_3F_LFE     (MASK_3F | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_2F1        (MASK_STEREO | (1 << AudioConfig::CHANNEL_RCENTER))
+#define MASK_2F1_LFE    (MASK_2F1 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F1        (MASK_3F | (1 < AudioConfig::CHANNEL_RCENTER))
+#define MASK_3F1_LFE    (MASK_3F1 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_2F2        (MASK_STEREO | (1 << AudioConfig::CHANNEL_LS) | (1 << AudioConfig::CHANNEL_RS))
+#define MASK_2F2_LFE    (MASK_2F2 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F2        (MASK_3F | (1 << AudioConfig::CHANNEL_LS) | (1 << AudioConfig::CHANNEL_RS))
+#define MASK_3F2_LFE    (MASK_3F2 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F3R_LFE   (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RCENTER))
+#define MASK_3F4_LFE    (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RLS) | (1 << AudioConfig::CHANNEL_RRS))
+
 namespace mozilla {
 
 namespace {
@@ -93,6 +110,11 @@ const int CUBEB_BACKEND_UNKNOWN = CUBEB_BACKEND_INIT_FAILURE_FIRST + 2;
 // sufficient memory barriers have occurred to ensure the correct value is
 // visible on the querying thread/CPU.
 uint32_t sPreferredSampleRate;
+
+// We only support SMPTE layout in cubeb for now. If the value is
+// CUBEB_LAYOUT_UNDEFINED, then it implies that the preferred layout is
+// non-SMPTE format.
+cubeb_channel_layout sPreferredChannelLayout;
 
 } // namespace
 
@@ -197,6 +219,61 @@ uint32_t PreferredSampleRate()
   }
   MOZ_ASSERT(sPreferredSampleRate);
   return sPreferredSampleRate;
+}
+
+bool InitPreferredChannelLayout()
+{
+  StaticMutexAutoLock lock(sMutex);
+  if (sPreferredChannelLayout != 0) {
+    return true;
+  }
+  cubeb* context = GetCubebContextUnlocked();
+  if (!context) {
+    return false;
+  }
+  return cubeb_get_preferred_channel_layout(context,
+                                            &sPreferredChannelLayout) == CUBEB_OK
+         ? true : false;
+}
+
+uint32_t PreferredChannelMap(uint32_t aChannels)
+{
+  // The first element of the following mapping table is channel counts,
+  // and the second one is its bit mask. It will be used in many times,
+  // so we shoule avoid to allocate it in stack, or it will be created
+  // and removed repeatedly. Use static to allocate this local variable
+  // in data space instead of stack.
+  static uint32_t layoutInfo[CUBEB_LAYOUT_MAX][2] = {
+    { 0, 0 },               // CUBEB_LAYOUT_UNDEFINED
+    { 2, MASK_STEREO },     // CUBEB_LAYOUT_DUAL_MONO
+    { 3, MASK_STEREO_LFE }, // CUBEB_LAYOUT_DUAL_MONO_LFE
+    { 1, MASK_MONO },       // CUBEB_LAYOUT_MONO
+    { 2, MASK_MONO_LFE },   // CUBEB_LAYOUT_MONO_LFE
+    { 2, MASK_STEREO },     // CUBEB_LAYOUT_STEREO
+    { 3, MASK_STEREO_LFE }, // CUBEB_LAYOUT_STEREO_LFE
+    { 3, MASK_3F },         // CUBEB_LAYOUT_3F
+    { 4, MASK_3F_LFE },     // CUBEB_LAYOUT_3F_LFE
+    { 3, MASK_2F1 },        // CUBEB_LAYOUT_2F1
+    { 4, MASK_2F1_LFE },    // CUBEB_LAYOUT_2F1_LFE
+    { 4, MASK_3F1 },        // CUBEB_LAYOUT_3F1
+    { 5, MASK_3F1_LFE },    // CUBEB_LAYOUT_3F1_LFE
+    { 4, MASK_2F2 },        // CUBEB_LAYOUT_2F2
+    { 5, MASK_2F2_LFE },    // CUBEB_LAYOUT_2F2_LFE
+    { 5, MASK_3F2 },        // CUBEB_LAYOUT_3F2
+    { 6, MASK_3F2_LFE },    // CUBEB_LAYOUT_3F2_LFE
+    { 7, MASK_3F3R_LFE },   // CUBEB_LAYOUT_3F3R_LFE
+    { 8, MASK_3F4_LFE },    // CUBEB_LAYOUT_3F4_LFE
+  };
+
+  // Use SMPTE default channel map if we can't get preferred layout
+  // or the channel counts of preferred layout is different from input's one
+  if (!InitPreferredChannelLayout()
+      || layoutInfo[sPreferredChannelLayout][0] != aChannels) {
+    AudioConfig::ChannelLayout smpteLayout(aChannels);
+    return smpteLayout.Map();
+  }
+
+  return layoutInfo[sPreferredChannelLayout][1];
 }
 
 void InitBrandName()
@@ -357,6 +434,31 @@ uint32_t MaxNumberOfChannels()
   }
 
   return 0;
+}
+
+cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap)
+{
+  switch(aChannelMap) {
+    case MASK_MONO: return CUBEB_LAYOUT_MONO;
+    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
+    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
+    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
+    case MASK_3F: return CUBEB_LAYOUT_3F;
+    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
+    case MASK_2F1: return CUBEB_LAYOUT_2F1;
+    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
+    case MASK_3F1: return CUBEB_LAYOUT_3F1;
+    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
+    case MASK_2F2: return CUBEB_LAYOUT_2F2;
+    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
+    case MASK_3F2: return CUBEB_LAYOUT_3F2;
+    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
+    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
+    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
+    default:
+      NS_ERROR("The channel map is unsupported");
+      return CUBEB_LAYOUT_UNDEFINED;
+  }
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)

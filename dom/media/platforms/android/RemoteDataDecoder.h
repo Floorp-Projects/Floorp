@@ -14,33 +14,26 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Maybe.h"
 
-#include <deque>
-
 namespace mozilla {
 
-class RemoteDataDecoder : public MediaDataDecoder {
+class RemoteDataDecoder : public MediaDataDecoder
+{
 public:
-  static MediaDataDecoder* CreateAudioDecoder(const AudioInfo& aConfig,
-                                              java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback,
-                                              const nsString& aDrmStubId,
-                                              CDMProxy* aProxy,
-                                              TaskQueue* aTaskQueue);
+  static already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+    const AudioInfo& aConfig, java::sdk::MediaFormat::Param aFormat,
+    const nsString& aDrmStubId, CDMProxy* aProxy, TaskQueue* aTaskQueue);
 
-  static MediaDataDecoder* CreateVideoDecoder(const VideoInfo& aConfig,
-                                              java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback,
-                                              layers::ImageContainer* aImageContainer,
-                                              const nsString& aDrmStubId,
-                                              CDMProxy* aProxy,
-                                              TaskQueue* aTaskQueue);
+  static already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+    const VideoInfo& aConfig, java::sdk::MediaFormat::Param aFormat,
+    layers::ImageContainer* aImageContainer, const nsString& aDrmStubId,
+    CDMProxy* aProxy, TaskQueue* aTaskQueue);
 
-  virtual ~RemoteDataDecoder() {}
+  virtual ~RemoteDataDecoder() { }
 
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
-  void Input(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   const char* GetDescriptionName() const override
   {
     return "android remote decoder";
@@ -50,19 +43,34 @@ protected:
   RemoteDataDecoder(MediaData::Type aType,
                     const nsACString& aMimeType,
                     java::sdk::MediaFormat::Param aFormat,
-                    MediaDataDecoderCallback* aCallback,
-                    const nsString& aDrmStubId);
+                    const nsString& aDrmStubId, TaskQueue* aTaskQueue);
+
+  // Methods only called on mTaskQueue.
+  RefPtr<ShutdownPromise> ProcessShutdown();
+  void Output(MediaData* aSample);
+  void InputExhausted();
+  void DrainComplete();
+  void Error(const MediaResult& aError);
+  void AssertOnTaskQueue()
+  {
+    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  }
 
   MediaData::Type mType;
 
   nsAutoCString mMimeType;
   java::sdk::MediaFormat::GlobalRef mFormat;
 
-  MediaDataDecoderCallback* mCallback;
-
   java::CodecProxy::GlobalRef mJavaDecoder;
   java::CodecProxy::NativeCallbacks::GlobalRef mJavaCallbacks;
   nsString mDrmStubId;
+
+  RefPtr<TaskQueue> mTaskQueue;
+  // Only ever accessed on mTaskqueue.
+  bool mShutdown = false;
+  MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseHolder<DecodePromise> mDrainPromise;
+  DecodedData mDecodedData;
 };
 
 } // namespace mozilla

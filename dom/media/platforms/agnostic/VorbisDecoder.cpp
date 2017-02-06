@@ -33,10 +33,8 @@ ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
 VorbisDataDecoder::VorbisDataDecoder(const CreateDecoderParams& aParams)
   : mInfo(aParams.AudioConfig())
   , mTaskQueue(aParams.mTaskQueue)
-  , mCallback(aParams.mCallback)
   , mPacketCount(0)
   , mFrames(0)
-  , mIsFlushing(false)
 {
   // Zero these member vars to avoid crashes in Vorbis clear functions when
   // destructor is called before |Init|.
@@ -54,9 +52,13 @@ VorbisDataDecoder::~VorbisDataDecoder()
   vorbis_comment_clear(&mVorbisComment);
 }
 
-void
+RefPtr<ShutdownPromise>
 VorbisDataDecoder::Shutdown()
 {
+  RefPtr<VorbisDataDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -122,32 +124,15 @@ VorbisDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   return r == 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void
-VorbisDataDecoder::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+VorbisDataDecoder::Decode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                       this, &VorbisDataDecoder::ProcessDecode, aSample));
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &VorbisDataDecoder::ProcessDecode, aSample);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  if (mIsFlushing) {
-    return;
-  }
-
-  MediaResult rv = DoDecode(aSample);
-  if (NS_FAILED(rv)) {
-    mCallback->Error(rv);
-  } else {
-    mCallback->InputExhausted();
-  }
-}
-
-MediaResult
-VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
@@ -170,27 +155,34 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 
   int err = vorbis_synthesis(&mVorbisBlock, &pkt);
   if (err) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("vorbis_synthesis:%d", err));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("vorbis_synthesis:%d", err)),
+      __func__);
   }
 
   err = vorbis_synthesis_blockin(&mVorbisDsp, &mVorbisBlock);
   if (err) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("vorbis_synthesis_blockin:%d", err));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("vorbis_synthesis_blockin:%d", err)),
+      __func__);
   }
 
   VorbisPCMValue** pcm = 0;
   int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   if (frames == 0) {
-    return NS_OK;
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
+
+  DecodedData results;
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
     uint32_t rate = mVorbisDsp.vi->rate;
     AlignedAudioBuffer buffer(frames*channels);
     if (!buffer) {
-      return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
@@ -201,21 +193,26 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 
     CheckedInt64 duration = FramesToUsecs(frames, rate);
     if (!duration.isValid()) {
-      return MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-                         RESULT_DETAIL("Overflow converting audio duration"));
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                    RESULT_DETAIL("Overflow converting audio duration")),
+        __func__);
     }
     CheckedInt64 total_duration = FramesToUsecs(mFrames, rate);
     if (!total_duration.isValid()) {
-      return MediaResult(
-        NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-        RESULT_DETAIL("Overflow converting audio total_duration"));
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                    RESULT_DETAIL("Overflow converting audio total_duration")),
+        __func__);
     }
 
     CheckedInt64 time = total_duration + aTstampUsecs;
     if (!time.isValid()) {
-      return MediaResult(
-        NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-        RESULT_DETAIL("Overflow adding total_duration and aTstampUsecs"));
+      return DecodePromise::CreateAndReject(
+        MediaResult(
+          NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+          RESULT_DETAIL("Overflow adding total_duration and aTstampUsecs")),
+        __func__);
     };
 
     if (!mAudioConverter) {
@@ -223,9 +220,10 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                      rate);
       AudioConfig out(channels, rate);
       if (!in.IsValid() || !out.IsValid()) {
-        return MediaResult(
-          NS_ERROR_DOM_MEDIA_FATAL_ERR,
-          RESULT_DETAIL("Invalid channel layout:%u", channels));
+        return DecodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      RESULT_DETAIL("Invalid channel layout:%u", channels)),
+          __func__);
       }
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
@@ -234,54 +232,43 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
     data = mAudioConverter->Process(Move(data));
 
     aTotalFrames += frames;
-    mCallback->Output(new AudioData(aOffset,
-                                    time.value(),
-                                    duration.value(),
-                                    frames,
-                                    data.Forget(),
-                                    channels,
-                                    rate));
+
+    results.AppendElement(new AudioData(aOffset, time.value(), duration.value(),
+                                        frames, data.Forget(), channels, rate));
     mFrames += frames;
     err = vorbis_synthesis_read(&mVorbisDsp, frames);
     if (err) {
-      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                         RESULT_DETAIL("vorbis_synthesis_read:%d", err));
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                    RESULT_DETAIL("vorbis_synthesis_read:%d", err)),
+        __func__);
     }
 
     frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
   }
-
-  return NS_OK;
+  return DecodePromise::CreateAndResolve(Move(results), __func__);
 }
 
-void
-VorbisDataDecoder::ProcessDrain()
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  mCallback->DrainComplete();
-}
-
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 VorbisDataDecoder::Drain()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::ProcessDrain));
+  return InvokeAsync(mTaskQueue, __func__, [] {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  });
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 VorbisDataDecoder::Flush()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+  RefPtr<VorbisDataDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     // Ignore failed results from vorbis_synthesis_restart. They
     // aren't fatal and it fails when ResetDecode is called at a
     // time when no vorbis data has been read.
     vorbis_synthesis_restart(&mVorbisDsp);
     mLastFrameTime.reset();
+    return FlushPromise::CreateAndResolve(true, __func__);
   });
-  SyncRunnable::DispatchToThread(mTaskQueue, r);
-  mIsFlushing = false;
 }
 
 /* static */

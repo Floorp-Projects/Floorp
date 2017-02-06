@@ -21,18 +21,15 @@ namespace mozilla
 
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
-  FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
-                                                  TaskQueue* aTaskQueue,
-                                                  MediaDataDecoderCallback* aCallback,
-                                                  AVCodecID aCodecID)
+FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
+                                                TaskQueue* aTaskQueue,
+                                                AVCodecID aCodecID)
   : mLib(aLib)
-  , mCallback(aCallback)
   , mCodecContext(nullptr)
   , mFrame(NULL)
   , mExtraData(nullptr)
   , mCodecID(aCodecID)
   , mTaskQueue(aTaskQueue)
-  , mIsFlushing(false)
 {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -90,67 +87,49 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
   return NS_OK;
 }
 
-void
+RefPtr<ShutdownPromise>
 FFmpegDataDecoder<LIBAV_VER>::Shutdown()
 {
   if (mTaskQueue) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown);
-    mTaskQueue->Dispatch(runnable.forget());
-  } else {
-    ProcessShutdown();
+    RefPtr<FFmpegDataDecoder<LIBAV_VER>> self = this;
+    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+      ProcessShutdown();
+      return ShutdownPromise::CreateAndResolve(true, __func__);
+    });
   }
+  ProcessShutdown();
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-void
-FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+FFmpegDataDecoder<LIBAV_VER>::Decode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  if (mIsFlushing) {
-    return;
-  }
-  MediaResult rv = DoDecode(aSample);
-  if (NS_FAILED(rv)) {
-    mCallback->Error(rv);
-  } else {
-    mCallback->InputExhausted();
-  }
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &FFmpegDataDecoder::ProcessDecode, aSample);
 }
 
-void
-FFmpegDataDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
-{
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-    this, &FFmpegDataDecoder::ProcessDecode, aSample));
-}
-
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::Flush()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
-  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
-  mIsFlushing = false;
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::Drain()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
-  mTaskQueue->Dispatch(runnable.forget());
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mCodecContext) {
     mLib->avcodec_flush_buffers(mCodecContext);
   }
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
 void

@@ -9,7 +9,6 @@
 
 #include <AudioToolbox/AudioToolbox.h>
 #include "PlatformDecoderModule.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Vector.h"
 #include "nsIThread.h"
 #include "AudioConverter.h"
@@ -17,20 +16,18 @@
 namespace mozilla {
 
 class TaskQueue;
-class MediaDataDecoderCallback;
 
 class AppleATDecoder : public MediaDataDecoder {
 public:
   AppleATDecoder(const AudioInfo& aConfig,
-                 TaskQueue* aTaskQueue,
-                 MediaDataDecoderCallback* aCallback);
-  virtual ~AppleATDecoder();
+                 TaskQueue* aTaskQueue);
+  ~AppleATDecoder();
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
 
   const char* GetDescriptionName() const override
   {
@@ -46,9 +43,9 @@ public:
   // the magic cookie property.
   bool mFileStreamError;
 
-private:
   const RefPtr<TaskQueue> mTaskQueue;
-  MediaDataDecoderCallback* mCallback;
+
+private:
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
@@ -56,11 +53,11 @@ private:
   nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
   UniquePtr<AudioConfig::ChannelLayout> mChannelLayout;
   UniquePtr<AudioConverter> mAudioConverter;
-  Atomic<bool> mIsFlushing;
+  DecodedData mDecodedSamples;
 
-  void ProcessFlush();
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
+  RefPtr<FlushPromise> ProcessFlush();
   void ProcessShutdown();
-  void SubmitSample(MediaRawData* aSample);
   MediaResult DecodeSample(MediaRawData* aSample);
   MediaResult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
                                        const nsTArray<uint8_t>& aExtraData);

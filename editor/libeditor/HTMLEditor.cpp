@@ -974,23 +974,6 @@ HTMLEditor::IsVisBreak(nsINode* aNode)
 }
 
 NS_IMETHODIMP
-HTMLEditor::GetIsDocumentEditable(bool* aIsDocumentEditable)
-{
-  NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
-
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
-  *aIsDocumentEditable = doc && IsModifiable();
-
-  return NS_OK;
-}
-
-bool
-HTMLEditor::IsModifiable()
-{
-  return !IsReadonly();
-}
-
-NS_IMETHODIMP
 HTMLEditor::UpdateBaseURL()
 {
   nsCOMPtr<nsIDocument> doc = GetDocument();

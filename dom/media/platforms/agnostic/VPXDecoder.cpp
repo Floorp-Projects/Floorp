@@ -69,8 +69,6 @@ InitContext(vpx_codec_ctx_t* aCtx,
 VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
   : mImageContainer(aParams.mImageContainer)
   , mTaskQueue(aParams.mTaskQueue)
-  , mCallback(aParams.mCallback)
-  , mIsFlushing(false)
   , mInfo(aParams.VideoConfig())
   , mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType))
 {
@@ -84,11 +82,15 @@ VPXDecoder::~VPXDecoder()
   MOZ_COUNT_DTOR(VPXDecoder);
 }
 
-void
+RefPtr<ShutdownPromise>
 VPXDecoder::Shutdown()
 {
-  vpx_codec_destroy(&mVPX);
-  vpx_codec_destroy(&mVPXAlpha);
+  RefPtr<VPXDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    vpx_codec_destroy(&mVPX);
+    vpx_codec_destroy(&mVPXAlpha);
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -108,22 +110,19 @@ VPXDecoder::Init()
                                                    __func__);
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 VPXDecoder::Flush()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
-    // nothing to do for now.
+  return InvokeAsync(mTaskQueue, __func__, []() {
+    return FlushPromise::CreateAndResolve(true, __func__);
   });
-  SyncRunnable::DispatchToThread(mTaskQueue, r);
-  mIsFlushing = false;
 }
 
-MediaResult
-VPXDecoder::DoDecode(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+VPXDecoder::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
 #if defined(DEBUG)
   vpx_codec_stream_info_t si;
   PodZero(&si);
@@ -139,15 +138,17 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
 
   if (vpx_codec_err_t r = vpx_codec_decode(&mVPX, aSample->Data(), aSample->Size(), nullptr, 0)) {
     LOG("VPX Decode error: %s", vpx_codec_err_to_string(r));
-    return MediaResult(
-      NS_ERROR_DOM_MEDIA_DECODE_ERR,
-      RESULT_DETAIL("VPX error: %s", vpx_codec_err_to_string(r)));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("VPX error: %s", vpx_codec_err_to_string(r))),
+      __func__);
   }
 
   vpx_codec_iter_t iter = nullptr;
   vpx_image_t *img;
   vpx_image_t *img_alpha = nullptr;
   bool alpha_decoded = false;
+  DecodedData results;
 
   while ((img = vpx_codec_get_frame(&mVPX, &iter))) {
     NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420 ||
@@ -157,10 +158,10 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
                  "Multiple frames per packet that contains alpha");
 
     if (aSample->AlphaSize() > 0) {
-      if(!alpha_decoded){
+      if (!alpha_decoded){
         MediaResult rv = DecodeAlpha(&img_alpha, aSample);
         if (NS_FAILED(rv)) {
-          return(rv);
+          return DecodePromise::CreateAndReject(rv, __func__);
         }
         alpha_decoded = true;
       }
@@ -195,8 +196,10 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
       b.mPlanes[2].mWidth = img->d_w;
     } else {
       LOG("VPX Unknown image format");
-      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                         RESULT_DETAIL("VPX Unknown image format"));
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                    RESULT_DETAIL("VPX Unknown image format")),
+        __func__);
     }
 
     RefPtr<VideoData> v;
@@ -233,56 +236,35 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
     }
 
     if (!v) {
-      LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
-          img->d_w, img->d_h, mInfo.mDisplay.width, mInfo.mDisplay.height,
-          mInfo.mImage.width, mInfo.mImage.height);
-      return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+      LOG(
+        "Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
+        img->d_w, img->d_h, mInfo.mDisplay.width, mInfo.mDisplay.height,
+        mInfo.mImage.width, mInfo.mImage.height);
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
-    mCallback->Output(v);
+    results.AppendElement(Move(v));
   }
-  return NS_OK;
+  return DecodePromise::CreateAndResolve(Move(results), __func__);
 }
 
-void
-VPXDecoder::ProcessDecode(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+VPXDecoder::Decode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  if (mIsFlushing) {
-    return;
-  }
-  MediaResult rv = DoDecode(aSample);
-  if (NS_FAILED(rv)) {
-    mCallback->Error(rv);
-  } else {
-    mCallback->InputExhausted();
-  }
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &VPXDecoder::ProcessDecode, aSample);
 }
 
-void
-VPXDecoder::Input(MediaRawData* aSample)
-{
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                       this, &VPXDecoder::ProcessDecode, aSample));
-}
-
-void
-VPXDecoder::ProcessDrain()
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  mCallback->DrainComplete();
-}
-
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 VPXDecoder::Drain()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::ProcessDrain));
+  return InvokeAsync(mTaskQueue, __func__, [] {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  });
 }
 
 MediaResult
-VPXDecoder::DecodeAlpha(vpx_image_t** aImgAlpha,
-                        MediaRawData* aSample)
+VPXDecoder::DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample)
 {
   vpx_codec_err_t r = vpx_codec_decode(&mVPXAlpha,
                                        aSample->AlphaData(),
