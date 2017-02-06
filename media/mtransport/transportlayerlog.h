@@ -20,7 +20,7 @@ public:
   TransportLayerLogging() {}
 
   // Overrides for TransportLayer
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len);
+  TransportResult SendPacket(const unsigned char *data, size_t len) override;
 
   // Signals (forwarded to upper layer)
   void StateChange(TransportLayer *layer, State state);
@@ -30,7 +30,7 @@ public:
   TRANSPORT_LAYER_ID("log")
 
 protected:
-  virtual void WasInserted();
+  void WasInserted() override;
 
 private:
   DISALLOW_COPY_ASSIGN(TransportLayerLogging);
