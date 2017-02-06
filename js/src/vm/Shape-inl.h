@@ -15,7 +15,7 @@
 
 #include "gc/Allocator.h"
 #include "vm/Interpreter.h"
-#include "vm/TypedArrayCommon.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"

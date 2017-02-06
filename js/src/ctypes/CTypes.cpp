@@ -44,6 +44,7 @@
 #include "ctypes/Library.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
+#include "jit/AtomicOperations.h"
 #include "js/Vector.h"
 
 #include "jsatominlines.h"
