@@ -17,7 +17,7 @@
 #include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
 #include "vm/ReceiverGuard.h"
-#include "vm/TypedArrayCommon.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 namespace jit {

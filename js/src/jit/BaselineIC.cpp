@@ -32,7 +32,6 @@
 #include "js/GCVector.h"
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
-#include "vm/TypedArrayCommon.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jsboolinlines.h"
