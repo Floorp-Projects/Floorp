@@ -7,50 +7,54 @@
 #ifndef SamplesWaitingForKey_h_
 #define SamplesWaitingForKey_h_
 
-#include "mozilla/TaskQueue.h"
-
-#include "PlatformDecoderModule.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "MediaInfo.h"
 
 namespace mozilla {
 
 typedef nsTArray<uint8_t> CencKeyId;
 
 class CDMProxy;
+template <typename... Es> class MediaEventProducer;
+class MediaRawData;
 
 // Encapsulates the task of waiting for the CDMProxy to have the necessary
 // keys to decrypt a given sample.
-class SamplesWaitingForKey {
+class SamplesWaitingForKey
+{
 public:
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SamplesWaitingForKey)
 
-  explicit SamplesWaitingForKey(MediaDataDecoder* aDecoder,
-                                MediaDataDecoderCallback* aCallback,
-                                TaskQueue* aTaskQueue,
-                                CDMProxy* aProxy);
+  typedef MozPromise<RefPtr<MediaRawData>, bool, /* IsExclusive = */ true>
+    WaitForKeyPromise;
 
-  // Returns true if we need to wait for a key to become usable.
-  // Will callback MediaDataDecoder::Input(aSample) on mDecoder once the
-  // sample is ready to be decrypted. The order of input samples is
-  // preserved.
-  bool WaitIfKeyNotUsable(MediaRawData* aSample);
+  SamplesWaitingForKey(CDMProxy* aProxy, TrackInfo::TrackType aType,
+                       MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey);
+
+  // Returns a promise that will be resolved if or when a key for decoding the
+  // sample becomes usable.
+  RefPtr<WaitForKeyPromise> WaitIfKeyNotUsable(MediaRawData* aSample);
 
   void NotifyUsable(const CencKeyId& aKeyId);
 
   void Flush();
-
-  void BreakCycles();
 
 protected:
   ~SamplesWaitingForKey();
 
 private:
   Mutex mMutex;
-  RefPtr<MediaDataDecoder> mDecoder;
-  MediaDataDecoderCallback* mDecoderCallback;
-  RefPtr<TaskQueue> mTaskQueue;
   RefPtr<CDMProxy> mProxy;
-  nsTArray<RefPtr<MediaRawData>> mSamples;
+  struct SampleEntry
+  {
+    RefPtr<MediaRawData> mSample;
+    MozPromiseHolder<WaitForKeyPromise> mPromise;
+  };
+  nsTArray<SampleEntry> mSamples;
+  const TrackInfo::TrackType mType;
+  MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };
 
 } // namespace mozilla

@@ -18,7 +18,8 @@ namespace mozilla {
 // H264Converter will monitor the input data, and will delay creation of the
 // MediaDataDecoder until a SPS and PPS NALs have been extracted.
 
-class H264Converter : public MediaDataDecoder {
+class H264Converter : public MediaDataDecoder
+{
 public:
 
   H264Converter(PlatformDecoderModule* aPDM,
@@ -26,10 +27,10 @@ public:
   virtual ~H264Converter();
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   const char* GetDescriptionName() const override
   {
@@ -59,21 +60,24 @@ private:
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
 
   void OnDecoderInitDone(const TrackType aTrackType);
-  void OnDecoderInitFailed(MediaResult aError);
+  void OnDecoderInitFailed(const MediaResult& aError);
 
   RefPtr<PlatformDecoderModule> mPDM;
   VideoInfo mCurrentConfig;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
-  nsTArray<RefPtr<MediaRawData>> mMediaRawSamples;
-  MediaDataDecoderCallback* mCallback;
+  RefPtr<MediaRawData> mPendingSample;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
+  MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
+  MozPromiseHolder<DecodePromise> mDecodePromise;
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   bool mNeedAVCC;
   nsresult mLastError;
   bool mNeedKeyframe = true;
+  const TrackInfo::TrackType mType;
+  MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };
 
 } // namespace mozilla

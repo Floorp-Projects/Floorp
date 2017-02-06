@@ -545,7 +545,7 @@ EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  *aIsDocumentEditable = !!doc;
+  *aIsDocumentEditable = doc && IsModifiable();
 
   return NS_OK;
 }

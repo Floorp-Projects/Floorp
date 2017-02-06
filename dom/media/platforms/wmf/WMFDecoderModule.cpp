@@ -95,7 +95,7 @@ WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue, aParams.mCallback);
+    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue);
 
   return decoder.forget();
 }
@@ -110,7 +110,7 @@ WMFDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue, aParams.mCallback);
+    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue);
   return decoder.forget();
 }
 

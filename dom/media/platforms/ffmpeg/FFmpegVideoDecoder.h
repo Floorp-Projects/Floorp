@@ -28,7 +28,6 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 
 public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
                      const VideoInfo& aConfig,
                      ImageContainer* aImageContainer);
   virtual ~FFmpegVideoDecoder();
@@ -46,11 +45,11 @@ public:
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  MediaResult DoDecode(MediaRawData* aSample) override;
-  MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame);
-  MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame);
-  void ProcessDrain() override;
-  void ProcessFlush() override;
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> ProcessDrain() override;
+  RefPtr<FlushPromise> ProcessFlush() override;
+  MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame, DecodedData& aResults);
+  MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame, DecodedData& aResults);
   void OutputDelayedFrames();
 
   /**
