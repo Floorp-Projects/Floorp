@@ -22,6 +22,7 @@ namespace gfx {
 VRManagerParent::VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild)
   : HostIPCAllocator()
   , mHaveEventListener(false)
+  , mHaveControllerListener(false)
   , mIsContentChild(aIsContentChild)
 {
   MOZ_COUNT_CTOR(VRManagerParent);
@@ -285,6 +286,12 @@ VRManagerParent::HaveEventListener()
   return mHaveEventListener;
 }
 
+bool
+VRManagerParent::HaveControllerListener()
+{
+  return mHaveControllerListener;
+}
+
 mozilla::ipc::IPCResult
 VRManagerParent::RecvSetHaveEventListener(const bool& aHaveEventListener)
 {
@@ -296,6 +303,7 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvControllerListenerAdded()
 {
   VRManager* vm = VRManager::Get();
+  mHaveControllerListener = true;
   // Ask the connected gamepads to be added to GamepadManager
   vm->ScanForControllers();
   return IPC_OK();
@@ -305,6 +313,7 @@ mozilla::ipc::IPCResult
 VRManagerParent::RecvControllerListenerRemoved()
 {
   VRManager* vm = VRManager::Get();
+  mHaveControllerListener = false;
   vm->RemoveControllers();
   return IPC_OK();
 }
