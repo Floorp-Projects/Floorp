@@ -62,7 +62,8 @@ class MediaDecoder : public AbstractMediaDecoder
 public:
   // Used to register with MediaResource to receive notifications which will
   // be forwarded to MediaDecoder.
-  class ResourceCallback : public MediaResourceCallback {
+  class ResourceCallback : public MediaResourceCallback
+  {
     // Throttle calls to MediaDecoder::NotifyDataArrived()
     // to be at most once per 500ms.
     static const uint32_t sDelay = 500;
@@ -96,12 +97,15 @@ public:
     const RefPtr<AbstractThread> mAbstractMainThread;
   };
 
-  typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */,
+                     /* IsExclusive = */ true>
+    SeekPromise;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // Enumeration for the valid play states (see mPlayState)
-  enum PlayState {
+  enum PlayState
+  {
     PLAY_STATE_START,
     PLAY_STATE_LOADING,
     PLAY_STATE_PAUSED,
@@ -207,7 +211,8 @@ public:
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
-  virtual void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
+  virtual void AddOutputStream(ProcessedMediaStream* aStream,
+                               bool aFinishWhenEnded);
   // Remove an output stream added with AddOutputStream.
   virtual void RemoveOutputStream(MediaStream* aStream);
 
@@ -430,7 +435,9 @@ private:
     return mAbstractMainThread;
   }
 
-  typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
+  typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */,
+                     /* IsExclusive = */ true>
+    CDMProxyPromise;
 
   // Resolved when a CDMProxy is available and the capabilities are known or
   // rejected when this decoder is about to shut down.
@@ -476,12 +483,15 @@ private:
     GetOwner()->UpdateReadyState();
   }
 
-  virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
+  virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus()
+  {
+    return mNextFrameStatus;
+  }
   virtual MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus();
 
   // Returns a string describing the state of the media player internal
   // data. Used for debugging purposes.
-  virtual void GetMozDebugReaderData(nsACString& aString) {}
+  virtual void GetMozDebugReaderData(nsACString& aString) { }
 
   virtual void DumpDebugInfo();
 
@@ -787,45 +797,46 @@ protected:
 
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
-  AbstractCanonical<double>* CanonicalVolume() {
-    return &mVolume;
-  }
-  AbstractCanonical<bool>* CanonicalPreservesPitch() {
+  AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
+  AbstractCanonical<bool>* CanonicalPreservesPitch()
+  {
     return &mPreservesPitch;
   }
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalEstimatedDuration() {
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalEstimatedDuration()
+  {
     return &mEstimatedDuration;
   }
-  AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration() {
+  AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration()
+  {
     return &mExplicitDuration;
   }
-  AbstractCanonical<PlayState>* CanonicalPlayState() {
-    return &mPlayState;
-  }
-  AbstractCanonical<PlayState>* CanonicalNextPlayState() {
-    return &mNextState;
-  }
-  AbstractCanonical<bool>* CanonicalLogicallySeeking() {
+  AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
+  AbstractCanonical<PlayState>* CanonicalNextPlayState() { return &mNextState; }
+  AbstractCanonical<bool>* CanonicalLogicallySeeking()
+  {
     return &mLogicallySeeking;
   }
-  AbstractCanonical<bool>* CanonicalSameOriginMedia() {
+  AbstractCanonical<bool>* CanonicalSameOriginMedia()
+  {
     return &mSameOriginMedia;
   }
-  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle() {
+  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle()
+  {
     return &mMediaPrincipalHandle;
   }
-  AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond() {
+  AbstractCanonical<double>* CanonicalPlaybackBytesPerSecond()
+  {
     return &mPlaybackBytesPerSecond;
   }
-  AbstractCanonical<bool>* CanonicalPlaybackRateReliable() {
+  AbstractCanonical<bool>* CanonicalPlaybackRateReliable()
+  {
     return &mPlaybackRateReliable;
   }
-  AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
+  AbstractCanonical<int64_t>* CanonicalDecoderPosition()
+  {
     return &mDecoderPosition;
   }
-  AbstractCanonical<bool>* CanonicalIsVisible() {
-    return &mIsVisible;
-  }
+  AbstractCanonical<bool>* CanonicalIsVisible() { return &mIsVisible; }
 
 private:
   // Notify owner when the audible state changed

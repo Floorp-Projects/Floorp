@@ -724,7 +724,7 @@ DOMMediaStream::CloneInternal(TrackForwardingOption aForwarding)
   LOG(LogLevel::Info, ("DOMMediaStream %p created clone %p, forwarding %s tracks",
                        this, newStream.get(),
                        aForwarding == TrackForwardingOption::ALL
-                         ? "all" : "current"));
+                       ? "all" : "current"));
 
   MOZ_RELEASE_ASSERT(mPlaybackStream);
   MOZ_RELEASE_ASSERT(mPlaybackStream->Graph());

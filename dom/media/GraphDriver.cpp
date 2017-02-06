@@ -67,8 +67,8 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
   STREAM_LOG(LogLevel::Debug, ("Setting previous driver: %p (%s)",
                                aPreviousDriver,
                                aPreviousDriver->AsAudioCallbackDriver()
-                                 ? "AudioCallbackDriver"
-                                 : "SystemClockDriver"));
+                               ? "AudioCallbackDriver"
+                               : "SystemClockDriver"));
   SetPreviousDriver(aPreviousDriver);
 }
 
