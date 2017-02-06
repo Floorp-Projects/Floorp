@@ -36,6 +36,9 @@
 
 #include "jsalloc.h"
 
+#ifdef JS_CODEGEN_ARM
+#include "jit/arm/Architecture-arm.h"
+#endif
 #include "jit/arm/Simulator-arm.h"
 #if defined(JS_CODEGEN_ARM64)
 #include "jit/arm64/vixl/Cpu-vixl.h"
