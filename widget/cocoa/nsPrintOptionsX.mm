@@ -9,19 +9,6 @@
 #include "nsPrintOptionsX.h"
 #include "nsPrintSettingsX.h"
 
-// The constants for paper orientation were renamed in 10.9. __MAC_10_9 is
-// defined on OS X 10.9 and later. Although 10.8 and earlier are not supported
-// at this time, this allows for building on those older OS versions. The
-// values are consistent across OS versions so the rename does not affect
-// runtime, just compilation.
-#ifdef __MAC_10_9
-#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPaperOrientationPortrait)
-#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSPaperOrientationLandscape)
-#else
-#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPortraitOrientation)
-#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSLandscapeOrientation)
-#endif
-
 using namespace mozilla::embedding;
 
 nsPrintOptionsX::nsPrintOptionsX()

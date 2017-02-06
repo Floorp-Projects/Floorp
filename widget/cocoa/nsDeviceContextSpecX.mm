@@ -64,6 +64,19 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
   if (!settings)
     return NS_ERROR_NO_INTERFACE;
 
+  bool toFile;
+  settings->GetPrintToFile(&toFile);
+
+  bool toPrinter = !toFile && !aIsPrintPreview;
+  if (!toPrinter) {
+    double width, height;
+    settings->GetEffectivePageSize(&width, &height);
+    width /= TWIPS_PER_POINT_FLOAT;
+    height /= TWIPS_PER_POINT_FLOAT;
+
+    settings->SetCocoaPaperSize(width, height);
+  }
+
   mPrintSession = settings->GetPMPrintSession();
   ::PMRetain(mPrintSession);
   mPageFormat = settings->GetPMPageFormat();

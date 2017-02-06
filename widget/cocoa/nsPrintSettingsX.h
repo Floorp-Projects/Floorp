@@ -9,6 +9,19 @@
 #include "nsPrintSettingsImpl.h"  
 #import <Cocoa/Cocoa.h>
 
+// The constants for paper orientation were renamed in 10.9. __MAC_10_9 is
+// defined on OS X 10.9 and later. Although 10.8 and earlier are not supported
+// at this time, this allows for building on those older OS versions. The
+// values are consistent across OS versions so the rename does not affect
+// runtime, just compilation.
+#ifdef __MAC_10_9
+#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPaperOrientationPortrait)
+#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSPaperOrientationLandscape)
+#else
+#define NS_PAPER_ORIENTATION_PORTRAIT   (NSPortraitOrientation)
+#define NS_PAPER_ORIENTATION_LANDSCAPE  (NSLandscapeOrientation)
+#endif
+
 #define NS_PRINTSETTINGSX_IID \
 { 0x0DF2FDBD, 0x906D, 0x4726, \
   { 0x9E, 0x4D, 0xCF, 0xE0, 0x87, 0x8D, 0x70, 0x7C } }
@@ -51,8 +64,22 @@ public:
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
 
+  NS_IMETHOD SetPaperSizeUnit(int16_t aPaperSizeUnit) override;
+
+  NS_IMETHOD SetScaling(double aScaling) override;
+  NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;
+
+  NS_IMETHOD GetOrientation(int32_t *aOrientation) override;
+  NS_IMETHOD SetOrientation(int32_t aOrientation) override;
+
+  NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop) override;
+  NS_IMETHOD SetUnwriteableMarginLeft(double aUnwriteableMarginLeft) override;
+  NS_IMETHOD SetUnwriteableMarginBottom(double aUnwriteableMarginBottom) override;
+  NS_IMETHOD SetUnwriteableMarginRight(double aUnwriteableMarginRight) override;
+
   void SetAdjustedPaperSize(double aWidth, double aHeight);
   void GetAdjustedPaperSize(double *aWidth, double *aHeight);
+  nsresult SetCocoaPaperSize(double aWidth, double aHeight);
 
 protected:
   virtual ~nsPrintSettingsX();
@@ -62,6 +89,8 @@ protected:
 
   nsresult _Clone(nsIPrintSettings **_retval) override;
   nsresult _Assign(nsIPrintSettings *aPS) override;
+
+  int GetCocoaUnit(int16_t aGeckoUnit);
 
   // The out param has a ref count of 1 on return so caller needs to PMRelase() when done.
   OSStatus CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat);
