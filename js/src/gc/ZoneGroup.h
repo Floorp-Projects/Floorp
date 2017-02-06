@@ -54,7 +54,7 @@ class ZoneGroup
 
     // All zones in the group.
   private:
-    UnprotectedData<ZoneVector> zones_;
+    ActiveThreadOrGCTaskData<ZoneVector> zones_;
   public:
     ZoneVector& zones() { return zones_.ref(); }
 
@@ -64,7 +64,7 @@ class ZoneGroup
     bool init(size_t maxNurseryBytes);
 
   private:
-    UnprotectedData<Nursery> nursery_;
+    ZoneGroupData<Nursery> nursery_;
     ZoneGroupData<gc::StoreBuffer> storeBuffer_;
   public:
     Nursery& nursery() { return nursery_.ref(); }
@@ -72,7 +72,7 @@ class ZoneGroup
 
     // Free LIFO blocks are transferred to this allocator before being freed
     // after minor GC.
-    UnprotectedData<LifoAlloc> blocksToFreeAfterMinorGC;
+    ActiveThreadData<LifoAlloc> blocksToFreeAfterMinorGC;
 
     void minorGC(JS::gcreason::Reason reason,
                  gcstats::Phase phase = gcstats::PHASE_MINOR_GC) JS_HAZ_GC_CALL;

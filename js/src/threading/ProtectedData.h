@@ -202,6 +202,28 @@ enum class AllowedBackgroundThread
 };
 
 template <AllowedBackgroundThread Background>
+class CheckActiveThread
+{
+  public:
+    void check() const;
+};
+
+// Data which may only be accessed by the runtime's cooperatively scheduled
+// active thread.
+template <typename T>
+using ActiveThreadData =
+    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedBackgroundThread::None>, T>;
+
+// Data which may only be accessed by the runtime's cooperatively scheduled
+// active thread, or by various helper thread tasks.
+template <typename T>
+using ActiveThreadOrGCTaskData =
+    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedBackgroundThread::GCTask>, T>;
+template <typename T>
+using ActiveThreadOrIonCompileData =
+    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedBackgroundThread::IonCompile>, T>;
+
+template <AllowedBackgroundThread Background>
 class CheckZoneGroup
 {
 #ifdef DEBUG
@@ -223,19 +245,13 @@ using ZoneGroupData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedBackgroundThread::None>, T>;
 
 // Data which may only be accessed by threads with exclusive access to the
-// associated zone group, or by GC helper thread tasks.
+// associated zone group, or by various helper thread tasks.
 template <typename T>
 using ZoneGroupOrGCTaskData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedBackgroundThread::GCTask>, T>;
-
-// Data which may only be accessed by threads with exclusive access to the
-// associated zone group, or by Ion compilation helper thread tasks.
 template <typename T>
 using ZoneGroupOrIonCompileData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedBackgroundThread::IonCompile>, T>;
-
-// Data which may only be accessed by threads with exclusive access to the
-// associated zone group, or by either GC helper or Ion compilation tasks.
 template <typename T>
 using ZoneGroupOrGCTaskOrIonCompileData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedBackgroundThread::GCTaskOrIonCompile>, T>;

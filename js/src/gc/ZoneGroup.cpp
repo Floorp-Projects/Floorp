@@ -17,7 +17,7 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
     context(TlsContext.get()),
     enterCount(this, 1),
     zones_(),
-    nursery_(this),
+    nursery_(this, this),
     storeBuffer_(this, runtime, nursery()),
     blocksToFreeAfterMinorGC((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     caches_(this),
