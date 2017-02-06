@@ -680,7 +680,8 @@ ConnectionData.prototype = Object.freeze({
     }
 
     function bindParam(obj, key, val) {
-      let isBlob = Array.isArray(val);
+      let isBlob = val && typeof val == "object" &&
+                   val.constructor.name == "Uint8Array";
       let args = [key, val].concat(isBlob ? [val.length] : []);
       let methodName =
         `bind${isBlob ? "Blob" : ""}By${typeof key == "number" ? "Index" : "Name"}`;
