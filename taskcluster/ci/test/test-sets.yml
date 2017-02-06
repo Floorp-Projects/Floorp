@@ -71,6 +71,17 @@ stylo-tests:
     - reftest-stylo
     - mochitest-style
 
+qr-tests:
+    - cppunit
+    - crashtest
+    - gtest
+    - jittest
+    - jsreftest
+    - mochitest-a11y
+    - reftest
+    - reftest-no-accel
+    - xpcshell
+
 ccov-code-coverage-tests:
     - crashtest
     - jsreftest
