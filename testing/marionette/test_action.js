@@ -25,7 +25,7 @@ add_test(function test_createAction() {
 });
 
 add_test(function test_defaultPointerParameters() {
-  let defaultParameters = {pointerType: action.PointerType.Mouse, primary: true};
+  let defaultParameters = {pointerType: action.PointerType.Mouse};
   deepEqual(action.PointerParameters.fromJson(), defaultParameters);
 
   run_next_test();
@@ -34,16 +34,12 @@ add_test(function test_defaultPointerParameters() {
 add_test(function test_processPointerParameters() {
   let check = (regex, message, arg) => checkErrors(
       regex, action.PointerParameters.fromJson, [arg], message);
-  let parametersData = {pointerType: "foo", primary: undefined};
-  let message = `parametersData: [pointerType: ${parametersData.pointerType}, ` +
-      `primary: ${parametersData.primary}]`;
+  let parametersData = {pointerType: "foo"};
+  let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
   check(/Unknown pointerType/, message, parametersData);
   parametersData.pointerType = "pen";
-  parametersData.primary = "a";
-  check(/Expected \[object String\] "a" to be boolean/, message, parametersData);
-  parametersData.primary = false;
   deepEqual(action.PointerParameters.fromJson(parametersData),
-      {pointerType: action.PointerType.Pen, primary: false});
+      {pointerType: action.PointerType.Pen});
 
   run_next_test();
 });
@@ -154,8 +150,7 @@ add_test(function test_processPointerAction() {
     type: "pointer",
     id: "some_id",
     parameters: {
-      pointerType: "touch",
-      primary: false,
+      pointerType: "touch"
     },
   };
   let actionItems = [
@@ -183,7 +178,6 @@ add_test(function test_processPointerAction() {
       equal(actual.duration, expected.duration);
     }
     if (expected.type !== "pause") {
-      equal(actual.primary, actionSequence.parameters.primary);
       equal(actual.pointerType, actionSequence.parameters.pointerType);
     }
   }
@@ -293,14 +287,12 @@ add_test(function test_processInputSourceActionSequencePointer() {
     id: "9",
     actions: [actionItem],
     parameters: {
-      pointerType: "pen",
-      primary: false,
+      pointerType: "pen"
     },
   };
   let expectedAction = new action.Action(
       actionSequence.id, actionSequence.type, actionItem.type);
   expectedAction.pointerType = actionSequence.parameters.pointerType;
-  expectedAction.primary = actionSequence.parameters.primary;
   expectedAction.button = actionItem.button;
   let actions = action.Sequence.fromJson(actionSequence);
   equal(actions.length, 1);
@@ -349,7 +341,7 @@ add_test(function test_processInputSourceActionSequenceInputStateMap() {
 add_test(function test_processPointerActionInputStateMap() {
   let actionItem = {type: "pointerDown"};
   let id = "1";
-  let parameters = {pointerType: "mouse", primary: false};
+  let parameters = {pointerType: "mouse"};
   let a = new action.Action(id, "pointer", actionItem.type);
   let wrongInputState = new action.InputState.Pointer("pause", true);
   action.inputStateMap.set(id, wrongInputState);
@@ -361,7 +353,6 @@ add_test(function test_processPointerActionInputStateMap() {
   let rightInputState = new action.InputState.Pointer("pointerDown", false);
   action.inputStateMap.set(id, rightInputState);
   action.processPointerAction(id, parameters, a);
-  equal(a.primary, parameters.primary);
   action.inputStateMap.clear();
   run_next_test();
 });
@@ -427,8 +418,7 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
     id: "7",
     actions: mouseActionItems,
     parameters: {
-      pointerType: "touch",
-      primary: false,
+      pointerType: "touch"
     },
   };
   let keyActionItems = [
