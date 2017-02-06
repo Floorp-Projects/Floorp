@@ -20,7 +20,6 @@
 
 #include "nsTArray.h"
 #include "nsCollationCID.h"
-#include "nsILocaleService.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsPromiseFlatString.h"
@@ -4479,18 +4478,11 @@ nsNavHistory::GetCollation()
   if (mCollation)
     return mCollation;
 
-  // locale
-  nsCOMPtr<nsILocale> locale;
-  nsCOMPtr<nsILocaleService> ls(do_GetService(NS_LOCALESERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(ls, nullptr);
-  nsresult rv = ls->GetApplicationLocale(getter_AddRefs(locale));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
   // collation
   nsCOMPtr<nsICollationFactory> cfact =
     do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
   NS_ENSURE_TRUE(cfact, nullptr);
-  rv = cfact->CreateCollation(locale, getter_AddRefs(mCollation));
+  nsresult rv = cfact->CreateCollation(getter_AddRefs(mCollation));
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return mCollation;
