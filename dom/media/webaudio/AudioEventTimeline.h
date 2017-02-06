@@ -193,7 +193,7 @@ public:
       }
       for (uint32_t i = 0; i < aEvent.mCurveLength; ++i) {
         if (!IsValid(aEvent.mCurve[i])) {
-          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          aRv.Throw(NS_ERROR_TYPE_ERR);
           return false;
         }
       }
