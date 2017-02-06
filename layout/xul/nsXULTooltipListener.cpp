@@ -728,7 +728,8 @@ nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
 
   nsCOMPtr<nsIContent> sourceNode = do_QueryReferent(mSourceNode);
   if (mIsSourceTree && sourceNode) {
-    RefPtr<nsXULElement> xulEl = nsXULElement::FromContent(sourceNode);
+    RefPtr<nsXULElement> xulEl =
+      nsXULElement::FromContentOrNull(sourceNode->GetParent());
     if (xulEl) {
       IgnoredErrorResult ignored;
       nsCOMPtr<nsIBoxObject> bx = xulEl->GetBoxObject(ignored);
