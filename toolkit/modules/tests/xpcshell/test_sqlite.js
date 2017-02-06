@@ -1104,7 +1104,7 @@ add_task(function* test_datatypes() {
       null_col: null,
       integer_col: 12345,
       text_col: "qwerty",
-      blob_col: new Array(256).fill(undefined).map( (value, index) => index % 256 ),
+      blob_col: new Uint8Array(256).map( (value, index) => index % 256 ),
       real_col: 3.14159265359,
       numeric_col: true
     },
@@ -1112,7 +1112,7 @@ add_task(function* test_datatypes() {
       null_col: null,
       integer_col: -12345,
       text_col: "",
-      blob_col: new Array(256 * 2).fill(undefined).map( (value, index) => index % 256 ),
+      blob_col: new Uint8Array(256 * 2).map( (value, index) => index % 256 ),
       real_col: Number.NEGATIVE_INFINITY,
       numeric_col: false
     }
