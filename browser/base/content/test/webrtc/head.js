@@ -407,12 +407,14 @@ function* closeStream(aAlreadyClosed, aFrameId, aStreamCount = 1) {
 
 function* reloadAndAssertClosedStreams() {
   info("reloading the web page");
-  let promise = promiseObserverCalled("recording-device-events");
+  let promises = [
+    promiseObserverCalled("recording-device-events"),
+    promiseObserverCalled("recording-window-ended")
+  ];
   yield ContentTask.spawn(gBrowser.selectedBrowser, null,
                           "() => content.location.reload()");
-  yield promise;
+  yield Promise.all(promises);
 
-  yield expectObserverCalled("recording-window-ended");
   yield expectNoObserverCalled();
   yield checkNotSharing();
 }
