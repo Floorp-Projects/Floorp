@@ -297,6 +297,12 @@ var snapshotFormatters = {
           windowUtils.terminateGPUProcess();
         });
 
+        let listener = function(subject, topic) {
+          gpuProcessKillButton.disabled = true;
+          Services.obs.removeObserver(listener, "gpu-process:disabled");
+        };
+        Services.obs.addObserver(listener, "gpu-process:disabled", false);
+
         gpuProcessKillButton.textContent = strings.GetStringFromName("gpuProcessKillButton");
         addRow("diagnostics", "GPUProcessPid", gpuProcessPid);
         addRow("diagnostics", "GPUProcess", [gpuProcessKillButton]);
