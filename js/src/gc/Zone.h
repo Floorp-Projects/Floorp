@@ -341,7 +341,7 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // The set of compartments in this zone.
-    js::UnprotectedData<CompartmentVector> compartments_;
+    js::ActiveThreadOrGCTaskData<CompartmentVector> compartments_;
   public:
     CompartmentVector& compartments() { return compartments_.ref(); }
 
@@ -410,7 +410,7 @@ struct Zone : public JS::shadow::Zone,
     mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> gcMallocBytes;
 
     // GC trigger threshold for allocations on the C heap.
-    js::UnprotectedData<size_t> gcMaxMallocBytes;
+    js::ActiveThreadData<size_t> gcMaxMallocBytes;
 
     // Whether a GC has been triggered as a result of gcMallocBytes falling
     // below zero.
@@ -582,7 +582,7 @@ struct Zone : public JS::shadow::Zone,
     js::ZoneGroupData<js::jit::JitZone*> jitZone_;
 
     js::UnprotectedData<GCState> gcState_;
-    js::UnprotectedData<bool> gcScheduled_;
+    js::ActiveThreadData<bool> gcScheduled_;
     js::ZoneGroupData<bool> gcPreserveCode_;
     js::ZoneGroupData<bool> jitUsingBarriers_;
     js::ZoneGroupData<bool> keepShapeTables_;
