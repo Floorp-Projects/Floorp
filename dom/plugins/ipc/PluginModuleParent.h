@@ -213,7 +213,7 @@ protected:
 
     virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile) override { return IPC_OK(); }
 
-    virtual mozilla::ipc::IPCResult AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
+    virtual mozilla::ipc::IPCResult RecvGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
     virtual mozilla::ipc::IPCResult RecvReturnClearSiteData(const NPError& aRv,
                                                             const uint64_t& aCallbackId) override;
@@ -507,7 +507,7 @@ class PluginModuleChromeParent
     RecvProfile(const nsCString& aProfile) override;
 
     virtual mozilla::ipc::IPCResult
-    AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
+    RecvGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
 private:
     virtual void
