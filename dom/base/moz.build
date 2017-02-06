@@ -193,6 +193,7 @@ EXPORTS.mozilla.dom += [
     'ImportManager.h',
     'Link.h',
     'Location.h',
+    'MultipartBlobImpl.h',
     'MutableBlobStorage.h',
     'MutableBlobStreamListener.h',
     'NameSpaceConstants.h',
