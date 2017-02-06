@@ -32,8 +32,8 @@ function updateTabsPanel() {
 // functions.
 let mockedInternal = {
   get isConfiguredToSyncTabs() { return true; },
-  getTabClients() { return []; },
-  syncTabs() {},
+  getTabClients() { return Promise.resolve([]); },
+  syncTabs() { return Promise.resolve(); },
   hasSyncedThisSession: false,
 };
 
@@ -73,7 +73,9 @@ function* openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   let syncButton = document.getElementById("sync-button");
   ok(syncButton, "The Sync button was added to the Panel Menu");
 
+  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
   syncButton.click();
+  yield tabsUpdatedPromise;
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
@@ -105,10 +107,14 @@ function* openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   ok(!isPanelUIOpen(), "The panel closed");
 
   if (isPanelUIOpen()) {
-    let panelHidePromise = promisePanelHidden(window);
-    PanelUI.hide();
-    yield panelHidePromise;
+    yield panelUIHide();
   }
+}
+
+function panelUIHide() {
+  let panelHidePromise = promisePanelHidden(window);
+  PanelUI.hide();
+  return panelHidePromise;
 }
 
 function* asyncCleanup() {
@@ -124,7 +130,12 @@ function* asyncCleanup() {
 }
 
 // When Sync is not setup.
-add_task(() => openPrefsFromMenuPanel("PanelUI-remotetabs-setupsync", "synced-tabs"));
+add_task(function* () {
+  document.getElementById("sync-reauth-state").hidden = true;
+  document.getElementById("sync-setup-state").hidden = false;
+  document.getElementById("sync-syncnow-state").hidden = true;
+  yield openPrefsFromMenuPanel("PanelUI-remotetabs-setupsync", "synced-tabs")
+});
 add_task(asyncCleanup);
 
 // When Sync is configured in a "needs reauthentication" state.
@@ -141,9 +152,6 @@ add_task(function* () {
   // change the preferences for the mobile links.
   Services.prefs.setCharPref("identity.mobilepromo.android", "http://example.com/?os=android&tail=");
   Services.prefs.setCharPref("identity.mobilepromo.ios", "http://example.com/?os=ios&tail=");
-
-  mockedInternal.getTabClients = () => [];
-  mockedInternal.syncTabs = () => Promise.resolve();
 
   document.getElementById("sync-reauth-state").hidden = true;
   document.getElementById("sync-setup-state").hidden = true;
@@ -190,7 +198,7 @@ add_task(function* () {
     ok(isPanelUIOpen(), "panel remains open after right-click");
     is(gBrowser.tabs.length, 1, "no new tab was opened");
   }
-  PanelUI.hide();
+  yield panelUIHide();
 
   Services.prefs.clearUserPref("identity.mobilepromo.android");
   Services.prefs.clearUserPref("identity.mobilepromo.ios");
@@ -198,18 +206,15 @@ add_task(function* () {
 
 // Test the "Sync Now" button
 add_task(function* () {
-  mockedInternal.getTabClients = () => [];
-  mockedInternal.syncTabs = () => {
-    return Promise.resolve();
-  }
-
   // configure our broadcasters so we are in the right state.
   document.getElementById("sync-reauth-state").hidden = true;
   document.getElementById("sync-setup-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
   yield PanelUI.show();
+  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
   document.getElementById("sync-button").click();
+  yield tabsUpdatedPromise;
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
 
@@ -334,4 +339,89 @@ add_task(function* () {
 
   node = node.nextSibling;
   is(node, null, "no more entries");
+
+  yield panelUIHide();
+});
+
+// Test the pagination capabilities (Show More/All tabs)
+add_task(function* () {
+  mockedInternal.getTabClients = () => {
+    return Promise.resolve([
+      {
+        id: "guid_desktop",
+        type: "client",
+        name: "My Desktop",
+        tabs: function() {
+          let allTabsDesktop = [];
+          // We choose 77 tabs, because TABS_PER_PAGE is 25, which means
+          // on the second to last page we should have 22 items shown
+          // (because we have to show at least NEXT_PAGE_MIN_TABS=5 tabs on the last page)
+          for (let i = 1; i <= 77; i++) {
+            allTabsDesktop.push({ title: "Tab #" + i });
+          }
+          return allTabsDesktop;
+        }(),
+      }
+    ]);
+  };
+
+  // configure our broadcasters so we are in the right state.
+  document.getElementById("sync-reauth-state").hidden = true;
+  document.getElementById("sync-setup-state").hidden = true;
+  document.getElementById("sync-syncnow-state").hidden = false;
+
+  yield PanelUI.show();
+  let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+  document.getElementById("sync-button").click();
+  yield tabsUpdatedPromise;
+
+  // Check pre-conditions
+  let syncPanel = document.getElementById("PanelUI-remotetabs");
+  ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
+  let subpanel = document.getElementById("PanelUI-remotetabs-main")
+  ok(!subpanel.hidden, "main pane is visible");
+  let deck = document.getElementById("PanelUI-remotetabs-deck");
+  is(deck.selectedIndex, DECKINDEX_TABS, "we should be showing tabs");
+
+  function checkTabsPage(tabsShownCount, showMoreLabel) {
+    let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
+    let node = tabList.firstChild;
+    is(node.getAttribute("itemtype"), "client", "node is a client entry");
+    is(node.textContent, "My Desktop", "correct client");
+    for (let i = 0; i < tabsShownCount; i++) {
+      node = node.nextSibling;
+      is(node.getAttribute("itemtype"), "tab", "node is a tab");
+      is(node.getAttribute("label"), "Tab #" + (i + 1), "the tab is the correct one");
+    }
+    let showMoreButton;
+    if (showMoreLabel) {
+      node = showMoreButton = node.nextSibling;
+      is(node.getAttribute("itemtype"), "showmorebutton", "node is a show more button");
+      is(node.getAttribute("label"), showMoreLabel);
+    }
+    node = node.nextSibling;
+    is(node, null, "no more entries");
+
+    return showMoreButton;
+  }
+
+  let showMoreButton;
+  function clickShowMoreButton() {
+    let promise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
+    showMoreButton.click();
+    return promise;
+  }
+
+  showMoreButton = checkTabsPage(25, "Show More");
+  yield clickShowMoreButton();
+
+  showMoreButton = checkTabsPage(50, "Show More");
+  yield clickShowMoreButton();
+
+  showMoreButton = checkTabsPage(72, "Show All");
+  yield clickShowMoreButton();
+
+  checkTabsPage(77, null);
+
+  yield panelUIHide();
 });
