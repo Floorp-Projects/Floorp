@@ -2076,10 +2076,10 @@ public:
   GetName(nsAString& aName) const override;
 
   virtual void
-  GetPath(nsAString& aPath) const override;
+  GetDOMPath(nsAString& aPath) const override;
 
   virtual void
-  SetPath(const nsAString& aPath) override;
+  SetDOMPath(const nsAString& aPath) override;
 
   virtual int64_t
   GetLastModified(ErrorResult& aRv) override;
@@ -2179,7 +2179,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
                                BlobImpl* aRemoteBlobImpl,
                                const nsAString& aName,
                                const nsAString& aContentType,
-                               const nsAString& aPath,
+                               const nsAString& aDOMPath,
                                uint64_t aLength,
                                int64_t aModDate,
                                BlobImplIsDirectory aIsDirectory,
@@ -2189,7 +2189,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
   , mMutex("BlobChild::RemoteBlobImpl::mMutex")
   , mIsSlice(false), mIsDirectory(aIsDirectory == eDirectory)
 {
-  SetPath(aPath);
+  SetDOMPath(aDOMPath);
 
   if (aIsSameProcessBlob) {
     MOZ_ASSERT(aRemoteBlobImpl);
@@ -2847,16 +2847,16 @@ RemoteBlobImpl::GetName(nsAString& aName) const
 
 void
 BlobParent::
-RemoteBlobImpl::GetPath(nsAString& aPath) const
+RemoteBlobImpl::GetDOMPath(nsAString& aPath) const
 {
-  mBlobImpl->GetPath(aPath);
+  mBlobImpl->GetDOMPath(aPath);
 }
 
 void
 BlobParent::
-RemoteBlobImpl::SetPath(const nsAString& aPath)
+RemoteBlobImpl::SetDOMPath(const nsAString& aPath)
 {
-  mBlobImpl->SetPath(aPath);
+  mBlobImpl->SetDOMPath(aPath);
 }
 
 int64_t
@@ -3198,8 +3198,8 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
     nsAutoString name;
     otherImpl->GetName(name);
 
-    nsAutoString path;
-    otherImpl->GetPath(path);
+    nsAutoString domPath;
+    otherImpl->GetDOMPath(domPath);
 
     int64_t modDate = otherImpl->GetLastModified(rv);
     MOZ_ASSERT(!rv.Failed());
@@ -3209,7 +3209,7 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
       RemoteBlobImpl::BlobImplIsDirectory::eNotDirectory;
 
     remoteBlob =
-      new RemoteBlobImpl(this, otherImpl, name, contentType, path,
+      new RemoteBlobImpl(this, otherImpl, name, contentType, domPath,
                          length, modDate, directory,
                          false /* SameProcessBlobImpl */);
   } else {
@@ -3293,8 +3293,8 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
         nsAutoString name;
         blobImpl->GetName(name);
 
-        nsAutoString path;
-        blobImpl->GetPath(path);
+        nsAutoString domPath;
+        blobImpl->GetDOMPath(domPath);
 
         int64_t lastModifiedDate = blobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
@@ -3309,7 +3309,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
                              blobImpl,
                              name,
                              contentType,
-                             path,
+                             domPath,
                              size,
                              lastModifiedDate,
                              directory,
@@ -3492,14 +3492,14 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
       nsAutoString name;
       aBlobImpl->GetName(name);
 
-      nsAutoString path;
-      aBlobImpl->GetPath(path);
+      nsAutoString domPath;
+      aBlobImpl->GetDOMPath(domPath);
 
       int64_t modDate = aBlobImpl->GetLastModified(rv);
       MOZ_ASSERT(!rv.Failed());
 
       blobParams =
-        FileBlobConstructorParams(name, contentType, path, length, modDate,
+        FileBlobConstructorParams(name, contentType, domPath, length, modDate,
                                   aBlobImpl->IsDirectory(), blobData);
     } else {
       blobParams = NormalBlobConstructorParams(contentType, length, blobData);
@@ -4045,14 +4045,14 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
         nsAutoString name;
         aBlobImpl->GetName(name);
 
-        nsAutoString path;
-        aBlobImpl->GetPath(path);
+        nsAutoString domPath;
+        aBlobImpl->GetDOMPath(domPath);
 
         int64_t modDate = aBlobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
 
         blobParams =
-          FileBlobConstructorParams(name, contentType, path, length, modDate,
+          FileBlobConstructorParams(name, contentType, domPath, length, modDate,
                                     aBlobImpl->IsDirectory(), void_t());
       } else {
         blobParams = NormalBlobConstructorParams(contentType, length, void_t());

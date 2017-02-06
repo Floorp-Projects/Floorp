@@ -252,7 +252,7 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
       nsAutoString name;
       blobImpl->GetName(name);
       filePath.Append(name);
-      blobImpl->SetPath(filePath);
+      blobImpl->SetDOMPath(filePath);
 
       fileData.blobParent() =
         BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);

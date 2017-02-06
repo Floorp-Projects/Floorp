@@ -511,11 +511,11 @@ FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
 
     RefPtr<File> file = aBlob->ToFile();
     if (file) {
-      nsAutoString path;
-      file->GetPath(path);
+      nsAutoString relativePath;
+      file->GetRelativePath(relativePath);
       if (Directory::WebkitBlinkDirectoryPickerEnabled(nullptr, nullptr) &&
-          !path.IsEmpty()) {
-        filename16 = path;
+          !relativePath.IsEmpty()) {
+        filename16 = relativePath;
       }
 
       if (filename16.IsEmpty()) {
