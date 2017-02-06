@@ -92,7 +92,9 @@ class SubtestResultRecorder(object):
         self.record(report.nodeid, "ERROR", message, report.longrepr)
 
     def record_skip(self, report):
-        self.record(report.nodeid, "PASS")
+        self.record(report.nodeid, "ERROR",
+                    "In-test skip decorators are disallowed, "
+                    "please use WPT metadata to ignore tests.")
 
     def record(self, test, status, message=None, stack=None):
         if stack is not None:

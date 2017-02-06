@@ -36,7 +36,6 @@ Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
-Cu.import("chrome://marionette/content/wait.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
@@ -1157,11 +1156,7 @@ GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
  *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
-  let win = this.getCurrentWindow();
-  return {
-    x: win.screenX,
-    y: win.screenY,
-  };
+  return this.curBrowser.position;
 };
 
 /**
@@ -1177,7 +1172,7 @@ GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
  * @return {Object.<string, number>}
  *     Object with |x| and |y| coordinates.
  */
-GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
+GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
   assert.firefox()
 
   let {x, y} = cmd.parameters;
@@ -1185,17 +1180,7 @@ GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
   assert.positiveInteger(y);
 
   let win = this.getCurrentWindow();
-  let orig = {screenX: win.screenX, screenY: win.screenY};
-
   win.moveTo(x, y);
-  yield wait.until((resolve, reject) => {
-    if ((x == win.screenX && y == win.screenY) ||
-      (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
-      resolve();
-    } else {
-      reject();
-    }
-  });
 
   return this.curBrowser.position;
 };
@@ -2416,10 +2401,8 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
  */
 GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
   let win = this.getCurrentWindow();
-  return {
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
+  resp.body.width = win.outerWidth;
+  resp.body.height = win.outerHeight;
 };
 
 /**
@@ -2429,20 +2412,13 @@ GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
  * the window outerWidth and outerHeight values, which include scroll
  * bars, title bars, etc.
  */
-GeckoDriver.prototype.setWindowSize = function* (cmd, resp) {
+GeckoDriver.prototype.setWindowSize = function (cmd, resp) {
   assert.firefox()
 
   let {width, height} = cmd.parameters;
-
   let win = this.getCurrentWindow();
-  yield new Promise(resolve => {
-    win.addEventListener("resize", resolve, {once: true});
-    win.resizeTo(width, height);
-  });
-  return {
-    width: win.outerWidth,
-    height: win.outerHeight,
-  };
+  win.resizeTo(width, height);
+  this.getWindowSize(cmd, resp);
 };
 
 /**
