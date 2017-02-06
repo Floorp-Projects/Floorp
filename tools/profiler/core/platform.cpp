@@ -73,7 +73,12 @@ Sampler* gSampler;
 bool stack_key_initialized;
 
 static mozilla::TimeStamp   sLastTracerEvent; // is raced on
-mozilla::TimeStamp   sStartTime;
+
+// XXX: This is set by profiler_init() and profiler_start() on the main thread.
+// It is read off the main thread, e.g. by InplaceTick(). It might require more
+// inter-thread synchronization than it currently has.
+mozilla::TimeStamp sStartTime;
+
 int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
 int         sInitCount = 0; // Each init must have a matched shutdown.
