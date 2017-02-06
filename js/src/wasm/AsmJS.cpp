@@ -33,6 +33,7 @@
 #include "builtin/SIMD.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
+#include "jit/AtomicOperations.h"
 #include "js/MemoryMetrics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
