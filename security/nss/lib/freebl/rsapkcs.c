@@ -85,6 +85,25 @@ rsa_modulusLen(SECItem *modulus)
     return modLen;
 }
 
+static unsigned int
+rsa_modulusBits(SECItem *modulus)
+{
+    unsigned char byteZero = modulus->data[0];
+    unsigned int numBits = (modulus->len - 1) * 8;
+
+    if (byteZero == 0) {
+        numBits -= 8;
+        byteZero = modulus->data[1];
+    }
+
+    while (byteZero > 0) {
+        numBits++;
+        byteZero >>= 1;
+    }
+
+    return numBits;
+}
+
 /*
  * Format one block of data for public/private key encryption using
  * the rules defined in PKCS #1.
@@ -962,12 +981,11 @@ failure:
  * We use mHash instead of M as input.
  * emBits from the RFC is just modBits - 1, see section 8.1.1.
  * We only support MGF1 as the MGF.
- *
- * NOTE: this code assumes modBits is a multiple of 8.
  */
 static SECStatus
 emsa_pss_encode(unsigned char *em,
                 unsigned int emLen,
+                unsigned int emBits,
                 const unsigned char *mHash,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
@@ -1032,7 +1050,7 @@ emsa_pss_encode(unsigned char *em,
     PORT_Free(dbMask);
 
     /* Step 11 */
-    em[0] &= 0x7f;
+    em[0] &= 0xff >> (8 * emLen - emBits);
 
     /* Step 12 */
     em[emLen - 1] = 0xbc;
@@ -1046,13 +1064,12 @@ emsa_pss_encode(unsigned char *em,
  * We use mHash instead of M as input.
  * emBits from the RFC is just modBits - 1, see section 8.1.2.
  * We only support MGF1 as the MGF.
- *
- * NOTE: this code assumes modBits is a multiple of 8.
  */
 static SECStatus
 emsa_pss_verify(const unsigned char *mHash,
                 const unsigned char *em,
                 unsigned int emLen,
+                unsigned int emBits,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
                 unsigned int saltLen)
@@ -1063,15 +1080,22 @@ emsa_pss_verify(const unsigned char *mHash,
     unsigned char *H_; /* H' from the RFC */
     unsigned int i;
     unsigned int dbMaskLen;
+    unsigned int zeroBits;
     SECStatus rv;
 
     hash = HASH_GetRawHashObject(hashAlg);
     dbMaskLen = emLen - hash->length - 1;
 
-    /* Step 3 + 4 + 6 */
+    /* Step 3 + 4 */
     if ((emLen < (hash->length + saltLen + 2)) ||
-        (em[emLen - 1] != 0xbc) ||
-        ((em[0] & 0x80) != 0)) {
+        (em[emLen - 1] != 0xbc)) {
+        PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+        return SECFailure;
+    }
+
+    /* Step 6 */
+    zeroBits = 8 * emLen - emBits;
+    if (em[0] >> (8 - zeroBits)) {
         PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
         return SECFailure;
     }
@@ -1091,7 +1115,7 @@ emsa_pss_verify(const unsigned char *mHash,
     }
 
     /* Step 9 */
-    db[0] &= 0x7f;
+    db[0] &= 0xff >> zeroBits;
 
     /* Step 10 */
     for (i = 0; i < (dbMaskLen - saltLen - 1); i++) {
@@ -1156,7 +1180,9 @@ RSA_SignPSS(RSAPrivateKey *key,
 {
     SECStatus rv = SECSuccess;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char *pssEncoded = NULL;
+    unsigned int modulusBits = rsa_modulusBits(&key->modulus);
+    unsigned int emLen = modulusLen;
+    unsigned char *pssEncoded, *em;
 
     if (maxOutputLen < modulusLen) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -1168,12 +1194,19 @@ RSA_SignPSS(RSAPrivateKey *key,
         return SECFailure;
     }
 
-    pssEncoded = (unsigned char *)PORT_Alloc(modulusLen);
+    pssEncoded = em = (unsigned char *)PORT_Alloc(modulusLen);
     if (pssEncoded == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return SECFailure;
     }
-    rv = emsa_pss_encode(pssEncoded, modulusLen, input, hashAlg,
+
+    /* len(em) == ceil((modulusBits - 1) / 8). */
+    if (modulusBits % 8 == 1) {
+        em[0] = 0;
+        emLen--;
+        em++;
+    }
+    rv = emsa_pss_encode(em, emLen, modulusBits - 1, input, hashAlg,
                          maskHashAlg, salt, saltLength);
     if (rv != SECSuccess)
         goto done;
@@ -1198,7 +1231,9 @@ RSA_CheckSignPSS(RSAPublicKey *key,
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char *buffer;
+    unsigned int modulusBits = rsa_modulusBits(&key->modulus);
+    unsigned int emLen = modulusLen;
+    unsigned char *buffer, *em;
 
     if (sigLen != modulusLen) {
         PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
@@ -1210,7 +1245,7 @@ RSA_CheckSignPSS(RSAPublicKey *key,
         return SECFailure;
     }
 
-    buffer = (unsigned char *)PORT_Alloc(modulusLen);
+    buffer = em = (unsigned char *)PORT_Alloc(modulusLen);
     if (!buffer) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return SECFailure;
@@ -1223,10 +1258,15 @@ RSA_CheckSignPSS(RSAPublicKey *key,
         return SECFailure;
     }
 
-    rv = emsa_pss_verify(hash, buffer, modulusLen, hashAlg,
+    /* len(em) == ceil((modulusBits - 1) / 8). */
+    if (modulusBits % 8 == 1) {
+        emLen--;
+        em++;
+    }
+    rv = emsa_pss_verify(hash, em, emLen, modulusBits - 1, hashAlg,
                          maskHashAlg, saltLength);
-    PORT_Free(buffer);
 
+    PORT_Free(buffer);
     return rv;
 }
 
