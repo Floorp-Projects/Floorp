@@ -161,19 +161,6 @@ static void* setup_atfork() {
 }
 #endif /* !defined(ANDROID) */
 
-struct SamplerRegistry {
-  static void AddActiveSampler(Sampler *sampler) {
-    MOZ_ASSERT(!SamplerRegistry::sampler);
-    SamplerRegistry::sampler = sampler;
-  }
-  static void RemoveActiveSampler(Sampler *sampler) {
-    SamplerRegistry::sampler = NULL;
-  }
-  static Sampler *sampler;
-};
-
-Sampler *SamplerRegistry::sampler = NULL;
-
 static mozilla::Atomic<ThreadInfo*> sCurrentThreadInfo;
 static sem_t sSignalHandlingDone;
 
@@ -304,18 +291,16 @@ static void* SignalSender(void* arg) {
 
   TimeDuration lastSleepOverhead = 0;
   TimeStamp sampleStart = TimeStamp::Now();
-  while (SamplerRegistry::sampler->IsActive()) {
+  // XXX: this loop is an off-main-thread use of gSampler
+  while (gSampler->IsActive()) {
+    gSampler->DeleteExpiredMarkers();
 
-    SamplerRegistry::sampler->DeleteExpiredMarkers();
-
-    if (!SamplerRegistry::sampler->IsPaused()) {
-      MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      const std::vector<ThreadInfo*>& threads =
-        SamplerRegistry::sampler->GetRegisteredThreads();
+    if (!gSampler->IsPaused()) {
+      StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
+      for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
+        ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
 
         // This will be null if we're not interested in profiling this thread.
         if (!info->hasProfile() || info->IsPendingDelete()) {
@@ -371,7 +356,8 @@ static void* SignalSender(void* arg) {
       }
     }
 
-    TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(SamplerRegistry::sampler->interval() * 1000);
+    TimeStamp targetSleepEndTime =
+      sampleStart + TimeDuration::FromMicroseconds(gSampler->interval() * 1000);
     TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
@@ -394,8 +380,6 @@ void Sampler::Start() {
      sLUL_initialization_routine();
   }
 #endif
-
-  SamplerRegistry::AddActiveSampler(this);
 
   // Initialize signal handler communication
   sCurrentThreadInfo = nullptr;
@@ -451,8 +435,6 @@ void Sampler::Stop() {
     pthread_join(signal_sender_thread_, NULL);
     signal_sender_launched_ = false;
   }
-
-  SamplerRegistry::RemoveActiveSampler(this);
 
   // Restore old signal handler
   if (signal_handler_installed_) {
