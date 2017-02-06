@@ -68,37 +68,19 @@ function mergeChanges(collection, localRecords, changes) {
 }
 
 
-function fetchCollectionMetadata(collection) {
-  const client = new KintoHttpClient(collection.api.remote);
+function fetchCollectionMetadata(remote, collection) {
+  const client = new KintoHttpClient(remote);
   return client.bucket(collection.bucket).collection(collection.name).getData()
     .then(result => {
       return result.signature;
     });
 }
 
-function fetchRemoteCollection(collection) {
-  const client = new KintoHttpClient(collection.api.remote);
+function fetchRemoteCollection(remote, collection) {
+  const client = new KintoHttpClient(remote);
   return client.bucket(collection.bucket)
            .collection(collection.name)
            .listRecords({sort: "id"});
-}
-
-/**
- * Helper to instantiate a Kinto client based on preferences for remote server
- * URL and bucket name. It uses the `FirefoxAdapter` which relies on SQLite to
- * persist the local DB.
- */
-function kintoClient(connection, bucket) {
-  const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-
-  const config = {
-    remote,
-    bucket,
-    adapter: FirefoxAdapter,
-    adapterOptions: {sqliteHandle: connection},
-  };
-
-  return new Kinto(config);
 }
 
 
@@ -110,12 +92,19 @@ class BlocklistClient {
     this.processCallback = processCallback;
     this.bucketName = bucketName;
     this.signerName = signerName;
+
+    this._kinto = new Kinto({
+      bucket: bucketName,
+      adapter: FirefoxAdapter,
+    });
   }
 
-  validateCollectionSignature(payload, collection, ignoreLocal) {
+  validateCollectionSignature(remote, payload, collection, options = {}) {
+    const {ignoreLocal} = options;
+
     return Task.spawn((function* () {
       // this is a content-signature field from an autograph response.
-      const {x5u, signature} = yield fetchCollectionMetadata(collection);
+      const {x5u, signature} = yield fetchCollectionMetadata(remote, collection);
       const certChain = yield fetch(x5u).then((res) => res.text());
 
       const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
@@ -157,25 +146,31 @@ class BlocklistClient {
    * @return {Promise}          which rejects on sync or process failure.
    */
   maybeSync(lastModified, serverTime) {
-    const opts = {};
-    const enforceCollectionSigning =
+    const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
+    let enforceCollectionSigning =
       Services.prefs.getBoolPref(PREF_BLOCKLIST_ENFORCE_SIGNING);
 
     // if there is a signerName and collection signing is enforced, add a
     // hook for incoming changes that validates the signature
+    let hooks;
     if (this.signerName && enforceCollectionSigning) {
-      opts.hooks = {
-        "incoming-changes": [this.validateCollectionSignature.bind(this)]
+      hooks = {
+        "incoming-changes": [(payload, collection) => {
+          return this.validateCollectionSignature(remote, payload, collection);
+        }]
       }
     }
 
-
     return Task.spawn((function* syncCollection() {
-      let connection;
+      let sqliteHandle;
       try {
-        connection = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
-        const db = kintoClient(connection, this.bucketName);
-        const collection = db.collection(this.collectionName, opts);
+        // Synchronize remote data into a local Sqlite DB.
+        sqliteHandle = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
+        const options = {
+          hooks,
+          adapterOptions: {sqliteHandle},
+        };
+        const collection = this._kinto.collection(this.collectionName, options);
 
         const collectionLastModified = yield collection.db.getLastModified();
         // If the data is up to date, there's no need to sync. We still need
@@ -186,7 +181,7 @@ class BlocklistClient {
         }
         // Fetch changes from server.
         try {
-          const {ok} = yield collection.sync();
+          const {ok} = yield collection.sync({remote});
           if (!ok) {
             throw new Error("Sync failed");
           }
@@ -196,8 +191,8 @@ class BlocklistClient {
             // local data has been modified in some way.
             // We will attempt to fix this by retrieving the whole
             // remote collection.
-            const payload = yield fetchRemoteCollection(collection);
-            yield this.validateCollectionSignature(payload, collection, true);
+            const payload = yield fetchRemoteCollection(remote, collection);
+            yield this.validateCollectionSignature(remote, payload, collection, {ignoreLocal: true});
             // if the signature is good (we haven't thrown), and the remote
             // last_modified is newer than the local last_modified, replace the
             // local data
@@ -218,7 +213,7 @@ class BlocklistClient {
         // Track last update.
         this.updateLastCheck(serverTime);
       } finally {
-        yield connection.close();
+        yield sqliteHandle.close();
       }
     }).bind(this));
   }
