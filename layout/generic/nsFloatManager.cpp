@@ -657,7 +657,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 
-  const StyleShapeOutside& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+  const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
   if (shapeOutside.GetType() == StyleShapeSourceType::None) {
     return;
@@ -674,21 +674,24 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
   LogicalRect rect = aMarginRect;
 
   switch (shapeOutside.GetReferenceBox()) {
-    case StyleShapeOutsideShapeBox::Content:
+    case StyleGeometryBox::Content:
       rect.Deflate(aWM, mFrame->GetLogicalUsedPadding(aWM));
       MOZ_FALLTHROUGH;
-    case StyleShapeOutsideShapeBox::Padding:
+    case StyleGeometryBox::Padding:
       rect.Deflate(aWM, mFrame->GetLogicalUsedBorder(aWM));
       MOZ_FALLTHROUGH;
-    case StyleShapeOutsideShapeBox::Border:
+    case StyleGeometryBox::Border:
       rect.Deflate(aWM, mFrame->GetLogicalUsedMargin(aWM));
       break;
-    case StyleShapeOutsideShapeBox::Margin:
+    case StyleGeometryBox::Margin:
       // Do nothing. rect is already a margin rect.
       break;
-    case StyleShapeOutsideShapeBox::NoBox:
+    case StyleGeometryBox::NoBox:
       MOZ_ASSERT(shapeOutside.GetType() != StyleShapeSourceType::Box,
                  "Box source type must have <shape-box> specified!");
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected box value");
       break;
   }
 
