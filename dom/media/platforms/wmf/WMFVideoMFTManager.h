@@ -43,8 +43,8 @@ public:
   const char* GetDescriptionName() const override
   {
     nsCString failureReason;
-    return IsHardwareAccelerated(failureReason)
-      ? "wmf hardware video decoder" : "wmf software video decoder";
+    return IsHardwareAccelerated(failureReason) ? "wmf hardware video decoder"
+                                                : "wmf software video decoder";
   }
 
   void Flush() override

@@ -47,13 +47,17 @@ DecodeULawSample(uint8_t aValue)
 
 WaveDataDecoder::WaveDataDecoder(const CreateDecoderParams& aParams)
   : mInfo(aParams.AudioConfig())
-  , mCallback(aParams.mCallback)
+  , mTaskQueue(aParams.mTaskQueue)
 {
 }
 
-void
+RefPtr<ShutdownPromise>
 WaveDataDecoder::Shutdown()
 {
+  RefPtr<WaveDataDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -62,19 +66,15 @@ WaveDataDecoder::Init()
   return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
 }
 
-void
-WaveDataDecoder::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+WaveDataDecoder::Decode(MediaRawData* aSample)
 {
-  MediaResult rv = DoDecode(aSample);
-  if (NS_FAILED(rv)) {
-    mCallback->Error(rv);
-  } else {
-    mCallback->InputExhausted();
-  }
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &WaveDataDecoder::ProcessDecode, aSample);
 }
 
-MediaResult
-WaveDataDecoder::DoDecode(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   size_t aLength = aSample->Size();
   ByteReader aReader(aSample->Data(), aLength);
@@ -85,7 +85,8 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 
   AlignedAudioBuffer buffer(frames * mInfo.mChannels);
   if (!buffer) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
   }
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mInfo.mChannels; ++j) {
@@ -119,26 +120,26 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 
   int64_t duration = frames / mInfo.mRate;
 
-  mCallback->Output(new AudioData(aOffset,
-                                  aTstampUsecs,
-                                  duration,
-                                  frames,
-                                  Move(buffer),
-                                  mInfo.mChannels,
-                                  mInfo.mRate));
-
-  return NS_OK;
+  return DecodePromise::CreateAndResolve(
+    DecodedData{ new AudioData(aOffset, aTstampUsecs, duration, frames,
+                               Move(buffer), mInfo.mChannels, mInfo.mRate) },
+    __func__);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 WaveDataDecoder::Drain()
 {
-  mCallback->DrainComplete();
+  return InvokeAsync(mTaskQueue, __func__, [] {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  });
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 WaveDataDecoder::Flush()
 {
+  return InvokeAsync(mTaskQueue, __func__, []() {
+    return FlushPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 /* static */

@@ -124,9 +124,8 @@ public:
     // 1- coded sample number if blocksize is variable or
     // 2- coded frame number if blocksize is known.
     // A frame is made of Blocksize sample.
-    mIndex = mVariableBlockSize
-      ? frame_or_sample_num
-      : frame_or_sample_num * mBlocksize;
+    mIndex = mVariableBlockSize ? frame_or_sample_num
+                                : frame_or_sample_num * mBlocksize;
 
     // Sample rate.
     if (sr_code < 12) {

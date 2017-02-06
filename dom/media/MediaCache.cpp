@@ -1526,8 +1526,8 @@ MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream, const void* aData,
       bo->mLastUseTime = now;
       stream->mBlocks[streamBlockIndex] = blockIndex;
       if (streamBlockIndex*BLOCK_SIZE < stream->mStreamOffset) {
-        bo->mClass = aMode == MediaCacheStream::MODE_PLAYBACK
-          ? PLAYED_BLOCK : METADATA_BLOCK;
+        bo->mClass = aMode == MediaCacheStream::MODE_PLAYBACK ? PLAYED_BLOCK
+                                                              : METADATA_BLOCK;
         // This must be the most-recently-used block, since we
         // marked it as used now (which may be slightly bogus, but we'll
         // treat it as used for simplicity).
@@ -1648,7 +1648,8 @@ MediaCache::NoteBlockUsage(MediaCacheStream* aStream, int32_t aBlockIndex,
   GetListForBlock(bo)->RemoveBlock(aBlockIndex);
   bo->mClass =
     (aMode == MediaCacheStream::MODE_METADATA || bo->mClass == METADATA_BLOCK)
-    ? METADATA_BLOCK : PLAYED_BLOCK;
+    ? METADATA_BLOCK
+    : PLAYED_BLOCK;
   // Since this is just being used now, it can definitely be at the front
   // of mMetadataBlocks or mPlayedBlocks
   GetListForBlock(bo)->AddFirstBlock(aBlockIndex);

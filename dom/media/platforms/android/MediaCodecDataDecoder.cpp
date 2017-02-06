@@ -34,13 +34,6 @@ using media::TimeUnit;
 
 namespace mozilla {
 
-#define INVOKE_CALLBACK(Func, ...) \
-  if (mCallback) { \
-    mCallback->Func(__VA_ARGS__); \
-  } else { \
-    NS_WARNING("Callback not set"); \
-  }
-
 static MediaCodec::LocalRef
 CreateDecoder(const nsACString& aMimeType)
 {
@@ -55,11 +48,10 @@ class VideoDataDecoder : public MediaCodecDataDecoder
 public:
   VideoDataDecoder(const VideoInfo& aConfig,
                    MediaFormat::Param aFormat,
-                   MediaDataDecoderCallback* aCallback,
                    layers::ImageContainer* aImageContainer,
                    const nsString& aDrmStubId)
     : MediaCodecDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
-                            aFormat, aCallback, aDrmStubId)
+                            aFormat, aDrmStubId)
     , mImageContainer(aImageContainer)
     , mConfig(aConfig)
   {
@@ -119,11 +111,18 @@ public:
                                  gfx::IntRect(0, 0,
                                               mConfig.mDisplay.width,
                                               mConfig.mDisplay.height));
-    INVOKE_CALLBACK(Output, v);
+    if (!v) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    MonitorAutoLock mon(mMonitor);
+    mDecodedData.AppendElement(Move(v));
     return NS_OK;
   }
 
-  bool SupportDecoderRecycling() const override { return mIsCodecSupportAdaptivePlayback; }
+  bool SupportDecoderRecycling() const override
+  {
+    return mIsCodecSupportAdaptivePlayback;
+  }
 
 protected:
   layers::ImageContainer* mImageContainer;
@@ -131,56 +130,13 @@ protected:
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
 };
 
-
-
-class EMEVideoDataDecoder : public VideoDataDecoder {
-public:
-  EMEVideoDataDecoder(const VideoInfo& aConfig,
-                      MediaFormat::Param aFormat,
-                      MediaDataDecoderCallback* aCallback,
-                      layers::ImageContainer* aImageContainer,
-                      const nsString& aDrmStubId,
-                      CDMProxy* aProxy,
-                      TaskQueue* aTaskQueue)
-    : VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId)
-    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
-                                                     aTaskQueue, aProxy))
-  {
-  }
-
-  void Input(MediaRawData* aSample) override;
-  void Shutdown() override;
-
-private:
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
-};
-
-void
-EMEVideoDataDecoder::Input(MediaRawData* aSample)
-{
-  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
-    return;
-  }
-  VideoDataDecoder::Input(aSample);
-}
-
-void
-EMEVideoDataDecoder::Shutdown()
-{
-  VideoDataDecoder::Shutdown();
-
-  mSamplesWaitingForKey->BreakCycles();
-  mSamplesWaitingForKey = nullptr;
-}
-
 class AudioDataDecoder : public MediaCodecDataDecoder
 {
 public:
   AudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
-                   MediaDataDecoderCallback* aCallback,
                    const nsString& aDrmStubId)
     : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType,
-                            aFormat, aCallback, aDrmStubId)
+                            aFormat, aDrmStubId)
   {
     JNIEnv* const env = jni::GetEnvForThread();
 
@@ -203,7 +159,7 @@ public:
   }
 
   nsresult Output(BufferInfo::Param aInfo, void* aBuffer,
-                  MediaFormat::Param aFormat, const TimeUnit& aDuration)
+                  MediaFormat::Param aFormat, const TimeUnit& aDuration) override
   {
     // The output on Android is always 16-bit signed
     nsresult rv;
@@ -250,104 +206,59 @@ public:
                                            Move(audio),
                                            numChannels,
                                            sampleRate);
-    INVOKE_CALLBACK(Output, data);
+    MonitorAutoLock mon(mMonitor);
+    mDecodedData.AppendElement(Move(data));
     return NS_OK;
   }
 };
 
-class EMEAudioDataDecoder : public AudioDataDecoder {
-public:
-  EMEAudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
-                      MediaDataDecoderCallback* aCallback, const nsString& aDrmStubId,
-                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
-    : AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId)
-    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
-                                                     aTaskQueue, aProxy))
-  {
-  }
-
-  void Input(MediaRawData* aSample) override;
-  void Shutdown() override;
-
-private:
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
-};
-
-void
-EMEAudioDataDecoder::Input(MediaRawData* aSample)
-{
-  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
-    return;
-  }
-  AudioDataDecoder::Input(aSample);
-}
-
-void
-EMEAudioDataDecoder::Shutdown()
-{
-  AudioDataDecoder::Shutdown();
-
-  mSamplesWaitingForKey->BreakCycles();
-  mSamplesWaitingForKey = nullptr;
-}
-
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 MediaCodecDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
                                           java::sdk::MediaFormat::Param aFormat,
-                                          MediaDataDecoderCallback* aCallback,
                                           const nsString& aDrmStubId,
-                                          CDMProxy* aProxy,
-                                          TaskQueue* aTaskQueue)
+                                          CDMProxy* aProxy)
 {
+  RefPtr<MediaDataDecoder> decoder;
   if (!aProxy) {
-    return new AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId);
+    decoder = new AudioDataDecoder(aConfig, aFormat, aDrmStubId);
   } else {
-    return new EMEAudioDataDecoder(aConfig,
-                                   aFormat,
-                                   aCallback,
-                                   aDrmStubId,
-                                   aProxy,
-                                   aTaskQueue);
+    // TODO in bug 1334061.
   }
+  return decoder.forget();
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 MediaCodecDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
                                           java::sdk::MediaFormat::Param aFormat,
-                                          MediaDataDecoderCallback* aCallback,
                                           layers::ImageContainer* aImageContainer,
                                           const nsString& aDrmStubId,
-                                          CDMProxy* aProxy,
-                                          TaskQueue* aTaskQueue)
+                                          CDMProxy* aProxy)
 {
+  RefPtr<MediaDataDecoder> decoder;
   if (!aProxy) {
-    return new VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId);
+    decoder = new VideoDataDecoder(aConfig, aFormat, aImageContainer, aDrmStubId);
   } else {
-    return new EMEVideoDataDecoder(aConfig,
-                                   aFormat,
-                                   aCallback,
-                                   aImageContainer,
-                                   aDrmStubId,
-                                   aProxy,
-                                   aTaskQueue);
+    // TODO in bug 1334061.
   }
+  return decoder.forget();
 }
 
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
                                              const nsACString& aMimeType,
                                              MediaFormat::Param aFormat,
-                                             MediaDataDecoderCallback* aCallback,
                                              const nsString& aDrmStubId)
   : mType(aType)
   , mMimeType(aMimeType)
   , mFormat(aFormat)
-  , mCallback(aCallback)
   , mInputBuffers(nullptr)
   , mOutputBuffers(nullptr)
+  , mError(false)
   , mMonitor("MediaCodecDataDecoder::mMonitor")
   , mState(ModuleState::kDecoding)
   , mDrmStubId(aDrmStubId)
 {
+  mDecodePromise.SetMonitor(&mMonitor);
+  mDrainPromise.SetMonitor(&mMonitor);
 }
 
 MediaCodecDataDecoder::~MediaCodecDataDecoder()
@@ -364,10 +275,9 @@ MediaCodecDataDecoder::Init()
     (mType == MediaData::AUDIO_DATA ? TrackInfo::TrackType::kAudioTrack
                                     : TrackInfo::TrackType::kVideoTrack);
 
-  return NS_SUCCEEDED(rv) ?
-           InitPromise::CreateAndResolve(type, __func__) :
-           InitPromise::CreateAndReject(
-               NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+  return NS_SUCCEEDED(rv) ? InitPromise::CreateAndResolve(type, __func__)
+                          : InitPromise::CreateAndReject(
+                              NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 nsresult
@@ -376,8 +286,6 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
   mDecoder = CreateDecoder(mMimeType);
 
   if (!mDecoder) {
-    INVOKE_CALLBACK(Error,
-                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return NS_ERROR_FAILURE;
   }
 
@@ -395,7 +303,8 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
 
   MediaCrypto::LocalRef crypto = MediaDrmProxy::GetMediaCrypto(mDrmStubId);
   bool hascrypto = !!crypto;
-  LOG("Has(%d) MediaCrypto (%s)", hascrypto, NS_ConvertUTF16toUTF8(mDrmStubId).get());
+  LOG("Has(%d) MediaCrypto (%s)", hascrypto,
+      NS_ConvertUTF16toUTF8(mDrmStubId).get());
   nsresult rv;
   NS_ENSURE_SUCCESS(rv = mDecoder->Configure(mFormat, aSurface, crypto, 0), rv);
   NS_ENSURE_SUCCESS(rv = mDecoder->Start(), rv);
@@ -403,7 +312,8 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
   NS_ENSURE_SUCCESS(rv = ResetInputBuffers(), rv);
   NS_ENSURE_SUCCESS(rv = ResetOutputBuffers(), rv);
 
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop);
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop);
   rv = NS_NewNamedThread("MC Decoder", getter_AddRefs(mThread), r);
 
   return rv;
@@ -412,15 +322,36 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
 // This is in usec, so that's 10ms.
 static const int64_t kDecoderTimeout = 10000;
 
-#define BREAK_ON_DECODER_ERROR() \
-  if (NS_FAILED(res)) { \
-    NS_WARNING("Exiting decoder loop due to exception"); \
-    if (mState == ModuleState::kDrainDecoder) { \
-      INVOKE_CALLBACK(DrainComplete); \
-      SetState(ModuleState::kDecoding); \
-    } \
-    INVOKE_CALLBACK(Error, MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__)); \
-    break; \
+#define BREAK_ON_DECODER_ERROR_LOCKED()                                        \
+  if (NS_FAILED(res)) {                                                        \
+    mError = true;                                                             \
+    mMonitor.AssertCurrentThreadOwns();                                        \
+    NS_WARNING("Exiting decoder loop due to exception");                       \
+    if (mState == ModuleState::kDrainDecoder) {                                \
+      mDrainPromise.RejectIfExists(                                            \
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__), __func__);        \
+      SetState(ModuleState::kDecoding);                                        \
+      break;                                                                   \
+    }                                                                          \
+    mDecodePromise.RejectIfExists(                                             \
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__), __func__);          \
+    break;                                                                     \
+  }
+
+#define BREAK_ON_DECODER_ERROR()                                               \
+  if (NS_FAILED(res)) {                                                        \
+    mError = true;                                                             \
+    MonitorAutoLock mon(mMonitor);                                             \
+    NS_WARNING("Exiting decoder loop due to exception");                       \
+    if (mState == ModuleState::kDrainDecoder) {                                \
+      mDrainPromise.RejectIfExists(                                            \
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__), __func__);        \
+      SetState(ModuleState::kDecoding);                                        \
+      break;                                                                   \
+    }                                                                          \
+    mDecodePromise.RejectIfExists(                                             \
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__), __func__);          \
+    break;                                                                     \
   }
 
 nsresult
@@ -451,9 +382,10 @@ MediaCodecDataDecoder::WaitForInput()
 {
   MonitorAutoLock lock(mMonitor);
 
-  while (mState ==  ModuleState::kDecoding && mQueue.empty()) {
-    // Signal that we require more input.
-    INVOKE_CALLBACK(InputExhausted);
+  while (mState == ModuleState::kDecoding && mQueue.empty()) {
+    // We're done processing the current sample.
+    mDecodePromise.ResolveIfExists(mDecodedData, __func__);
+    mDecodedData.Clear();
     lock.Wait();
   }
 
@@ -562,9 +494,10 @@ MediaCodecDataDecoder::HandleEOS(int32_t aOutputStatus)
 
   if (mState ==  ModuleState::kDrainWaitEOS) {
     SetState(ModuleState::kDecoding);
-    mMonitor.Notify();
 
-    INVOKE_CALLBACK(DrainComplete);
+    mDrainPromise.ResolveIfExists(mDecodedData, __func__);
+    mDecodedData.Clear();
+    mMonitor.Notify();
   }
 
   mDecoder->ReleaseOutputBuffer(aOutputStatus, false);
@@ -606,9 +539,7 @@ MediaCodecDataDecoder::ProcessOutput(
 
   // The Surface will be updated at this point (for video).
   mDecoder->ReleaseOutputBuffer(aStatus, true);
-  PostOutput(aInfo, aFormat, duration.value());
-
-  return NS_OK;
+  return PostOutput(aInfo, aFormat, duration.value());
 }
 
 void
@@ -627,7 +558,7 @@ MediaCodecDataDecoder::DecoderLoop()
       if (mState == ModuleState::kDrainDecoder) {
         MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
         res = QueueEOS();
-        BREAK_ON_DECODER_ERROR();
+        BREAK_ON_DECODER_ERROR_LOCKED();
       }
     }
 
@@ -656,8 +587,6 @@ MediaCodecDataDecoder::DecoderLoop()
     BREAK_ON_DECODER_ERROR();
 
     if (outputStatus == MediaCodec::INFO_TRY_AGAIN_LATER) {
-      // We might want to call mCallback->InputExhausted() here, but there seems
-      // to be some possible bad interactions here with the threading.
     } else if (outputStatus == MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
       res = ResetOutputBuffers();
       BREAK_ON_DECODER_ERROR();
@@ -666,9 +595,13 @@ MediaCodecDataDecoder::DecoderLoop()
       BREAK_ON_DECODER_ERROR();
     } else if (outputStatus < 0) {
       NS_WARNING("Unknown error from decoder!");
-      INVOKE_CALLBACK(Error,
-                      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                       __func__));
+      {
+        const auto result =
+          MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+        MonitorAutoLock mon(mMonitor);
+        mDecodePromise.RejectIfExists(result, __func__);
+        mDrainPromise.RejectIfExists(result, __func__);
+      }
       // Don't break here just in case it's recoverable. If it's not, other
       // stuff will fail later and we'll bail out.
     } else {
@@ -715,6 +648,8 @@ MediaCodecDataDecoder::ModuleStateStr(ModuleState aState) {
 bool
 MediaCodecDataDecoder::SetState(ModuleState aState)
 {
+  mMonitor.AssertCurrentThreadOwns();
+
   bool ok = true;
 
   if (mState == ModuleState::kShutdown) {
@@ -744,14 +679,21 @@ MediaCodecDataDecoder::ClearQueue()
 
   mQueue.clear();
   mDurations.clear();
+  mDecodedData.Clear();
 }
 
-void
-MediaCodecDataDecoder::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+MediaCodecDataDecoder::Decode(MediaRawData* aSample)
 {
+  if (mError) {
+    return DecodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
+  }
   MonitorAutoLock lock(mMonitor);
+  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
   mQueue.push_back(aSample);
   lock.NotifyAll();
+  return p;
 }
 
 nsresult
@@ -766,35 +708,41 @@ MediaCodecDataDecoder::ResetOutputBuffers()
   return mDecoder->GetOutputBuffers(ReturnTo(&mOutputBuffers));
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
+  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   if (!SetState(ModuleState::kFlushing)) {
-    return;
+    return FlushPromise::CreateAndResolve(true, __func__);
   }
   lock.Notify();
 
   while (mState == ModuleState::kFlushing) {
     lock.Wait();
   }
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 MediaCodecDataDecoder::Drain()
 {
-  MonitorAutoLock lock(mMonitor);
-  if (mState == ModuleState::kDrainDecoder ||
-      mState == ModuleState::kDrainQueue) {
-    return;
+  if (mError) {
+    return DecodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
   }
+  MonitorAutoLock lock(mMonitor);
+  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
+  MOZ_ASSERT(mState != ModuleState::kDrainDecoder
+             && mState != ModuleState::kDrainQueue, "Already draining");
 
   SetState(ModuleState::kDrainQueue);
   lock.Notify();
+  return p;
 }
 
-
-void
+RefPtr<ShutdownPromise>
 MediaCodecDataDecoder::Shutdown()
 {
   MonitorAutoLock lock(mMonitor);
@@ -816,6 +764,8 @@ MediaCodecDataDecoder::Shutdown()
     mDecoder->Release();
     mDecoder = nullptr;
   }
+
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 } // mozilla

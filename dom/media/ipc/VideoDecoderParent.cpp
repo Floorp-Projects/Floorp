@@ -72,7 +72,6 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
 
   CreateDecoderParams params(aVideoInfo);
   params.mTaskQueue = mDecodeTaskQueue;
-  params.mCallback = this;
   params.mKnowsCompositor = mKnowsCompositor;
   params.mImageContainer = new layers::ImageContainer();
 
@@ -134,8 +133,56 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 
   DeallocShmem(aData.buffer());
 
-  mDecoder->Input(data);
+  RefPtr<VideoDecoderParent> self = this;
+  mDecoder->Decode(data)->Then(
+    mManagerTaskQueue, __func__,
+    [self, this](const MediaDataDecoder::DecodedData& aResults) {
+      if (mDestroyed) {
+        return;
+      }
+      ProcessDecodedData(aResults);
+      Unused << SendInputExhausted();
+    },
+    [self, this](const MediaResult& aError) { Error(aError); });
   return IPC_OK();
+}
+
+void
+VideoDecoderParent::ProcessDecodedData(
+  const MediaDataDecoder::DecodedData& aData)
+{
+  MOZ_ASSERT(OnManagerThread());
+
+  for (const auto& data : aData) {
+    MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
+                "Can only decode videos using VideoDecoderParent!");
+    VideoData* video = static_cast<VideoData*>(data.get());
+
+    MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to "
+                              "be used with VideoDecoderParent");
+
+    RefPtr<TextureClient> texture =
+      video->mImage->GetTextureClient(mKnowsCompositor);
+
+    if (!texture) {
+      texture = ImageClient::CreateTextureClientForImage(video->mImage,
+                                                          mKnowsCompositor);
+    }
+
+    if (texture && !texture->IsAddedToCompositableClient()) {
+      texture->InitIPDLActor(mKnowsCompositor);
+      texture->SetAddedToCompositableClient();
+    }
+
+    VideoDataIPDL output(
+      MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
+                    data->mDuration, data->mFrames, data->mKeyframe),
+      video->mDisplay,
+      texture ? mParent->StoreImage(video->mImage, texture)
+              : SurfaceDescriptorGPUVideo(0),
+      video->mFrameID);
+    Unused << SendOutput(output);
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -143,19 +190,16 @@ VideoDecoderParent::RecvFlush()
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
-  if (mDecoder) {
-    mDecoder->Flush();
-  }
-
-  // Dispatch a runnable to our own event queue so that
-  // it will be processed after anything that got dispatched
-  // during the Flush call.
   RefPtr<VideoDecoderParent> self = this;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self]() {
-    if (!self->mDestroyed) {
-      Unused << self->SendFlushComplete();
-    }
-  }));
+  mDecoder->Flush()->Then(
+    mManagerTaskQueue, __func__,
+    [self, this]() {
+      if (!mDestroyed) {
+        Unused << SendFlushComplete();
+      }
+    },
+    [self, this](const MediaResult& aError) { Error(aError); });
+
   return IPC_OK();
 }
 
@@ -164,7 +208,16 @@ VideoDecoderParent::RecvDrain()
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
-  mDecoder->Drain();
+  RefPtr<VideoDecoderParent> self = this;
+  mDecoder->Drain()->Then(
+    mManagerTaskQueue, __func__,
+    [self, this](const MediaDataDecoder::DecodedData& aResults) {
+      if (!mDestroyed) {
+        ProcessDecodedData(aResults);
+        Unused << SendDrainComplete();
+      }
+    },
+    [self, this](const MediaResult& aError) { Error(aError); });
   return IPC_OK();
 }
 
@@ -204,90 +257,12 @@ VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
-VideoDecoderParent::Output(MediaData* aData)
-{
-  MOZ_ASSERT(mDecodeTaskQueue->IsCurrentThreadIn());
-  RefPtr<VideoDecoderParent> self = this;
-  RefPtr<KnowsCompositor> knowsCompositor = mKnowsCompositor;
-  RefPtr<MediaData> data = aData;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self, knowsCompositor, data]() {
-    if (self->mDestroyed) {
-      return;
-    }
-
-    MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA, "Can only decode videos using VideoDecoderParent!");
-    VideoData* video = static_cast<VideoData*>(data.get());
-
-    MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to be used with VideoDecoderParent");
-
-    RefPtr<TextureClient> texture = video->mImage->GetTextureClient(knowsCompositor);
-
-    if (!texture) {
-      texture = ImageClient::CreateTextureClientForImage(video->mImage, knowsCompositor);
-    }
-
-    if (texture && !texture->IsAddedToCompositableClient()) {
-      texture->InitIPDLActor(knowsCompositor);
-      texture->SetAddedToCompositableClient();
-    }
-
-    VideoDataIPDL output(MediaDataIPDL(data->mOffset,
-                                       data->mTime,
-                                       data->mTimecode,
-                                       data->mDuration,
-                                       data->mFrames,
-                                       data->mKeyframe),
-                         video->mDisplay,
-                         texture ? self->mParent->StoreImage(video->mImage, texture) : SurfaceDescriptorGPUVideo(0),
-                         video->mFrameID);
-    Unused << self->SendOutput(output);
-  }));
-}
-
-void
 VideoDecoderParent::Error(const MediaResult& aError)
 {
-  MOZ_ASSERT(mDecodeTaskQueue->IsCurrentThreadIn());
-  RefPtr<VideoDecoderParent> self = this;
-  MediaResult error = aError;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self, error]() {
-    if (!self->mDestroyed) {
-      Unused << self->SendError(error);
-    }
-  }));
-}
-
-void
-VideoDecoderParent::InputExhausted()
-{
-  MOZ_ASSERT(mDecodeTaskQueue->IsCurrentThreadIn());
-  RefPtr<VideoDecoderParent> self = this;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self]() {
-    if (!self->mDestroyed) {
-      Unused << self->SendInputExhausted();
-    }
-  }));
-}
-
-void
-VideoDecoderParent::DrainComplete()
-{
-  MOZ_ASSERT(mDecodeTaskQueue->IsCurrentThreadIn());
-  RefPtr<VideoDecoderParent> self = this;
-  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self]() {
-    if (!self->mDestroyed) {
-      Unused << self->SendDrainComplete();
-    }
-  }));
-}
-
-bool
-VideoDecoderParent::OnReaderTaskQueue()
-{
-  // Most of our calls into mDecoder come directly from IPDL so are on
-  // the right thread, but not actually on the task queue. We only ever
-  // run a single thread, not a pool, so this should work fine.
-  return OnManagerThread();
+  MOZ_ASSERT(OnManagerThread());
+  if (!mDestroyed) {
+    Unused << SendError(aError);
+  }
 }
 
 bool

@@ -114,7 +114,8 @@ class TaskQueue;
 extern LazyLogModule gMediaDecoderLog;
 extern LazyLogModule gMediaSampleLog;
 
-enum class MediaEventType : int8_t {
+enum class MediaEventType : int8_t
+{
   PlaybackStarted,
   PlaybackStopped,
   PlaybackEnded,
@@ -150,7 +151,8 @@ public:
   nsresult Init(MediaDecoder* aDecoder);
 
   // Enumeration for the valid decoding states
-  enum State {
+  enum State
+  {
     DECODER_STATE_DECODING_METADATA,
     DECODER_STATE_WAIT_FOR_CDM,
     DECODER_STATE_DORMANT,
@@ -430,7 +432,8 @@ protected:
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
   // not start at 0. Note this is different than the "current playback position",
   // which is in the range [0,duration].
-  int64_t GetMediaTime() const {
+  int64_t GetMediaTime() const
+  {
     MOZ_ASSERT(OnTaskQueue());
     return mCurrentPosition;
   }
@@ -494,7 +497,11 @@ private:
 
   UniquePtr<StateObject> mStateObj;
 
-  media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
+  media::TimeUnit Duration() const
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    return mDuration.Ref().ref();
+  }
 
   // Recomputes the canonical duration from various sources.
   void RecomputeDuration();
@@ -515,8 +522,8 @@ private:
   bool IsLogicallyPlaying()
   {
     MOZ_ASSERT(OnTaskQueue());
-    return mPlayState == MediaDecoder::PLAY_STATE_PLAYING ||
-           mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
+    return mPlayState == MediaDecoder::PLAY_STATE_PLAYING
+           || mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
   }
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
@@ -751,22 +758,25 @@ private:
 public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
 
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration()
+  {
     return &mDuration;
   }
-  AbstractCanonical<bool>* CanonicalIsShutdown() {
-    return &mIsShutdown;
-  }
-  AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() {
+  AbstractCanonical<bool>* CanonicalIsShutdown() { return &mIsShutdown; }
+  AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus()
+  {
     return &mNextFrameStatus;
   }
-  AbstractCanonical<int64_t>* CanonicalCurrentPosition() {
+  AbstractCanonical<int64_t>* CanonicalCurrentPosition()
+  {
     return &mCurrentPosition;
   }
-  AbstractCanonical<int64_t>* CanonicalPlaybackOffset() {
+  AbstractCanonical<int64_t>* CanonicalPlaybackOffset()
+  {
     return &mPlaybackOffset;
   }
-  AbstractCanonical<bool>* CanonicalIsAudioDataAudible() {
+  AbstractCanonical<bool>* CanonicalIsAudioDataAudible()
+  {
     return &mIsAudioDataAudible;
   }
 };

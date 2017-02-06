@@ -8,6 +8,7 @@
 #define MediaDataDecoderProxy_h_
 
 #include "PlatformDecoderModule.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
@@ -15,118 +16,15 @@
 
 namespace mozilla {
 
-class InputTask : public Runnable {
+class MediaDataDecoderProxy : public MediaDataDecoder
+{
 public:
-  InputTask(MediaDataDecoder* aDecoder,
-            MediaRawData* aSample)
-   : mDecoder(aDecoder)
-   , mSample(aSample)
-  {}
-
-  NS_IMETHOD Run() override {
-    mDecoder->Input(mSample);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<MediaRawData> mSample;
-};
-
-template<typename T>
-class Condition {
-public:
-  explicit Condition(T aValue)
-   : mMonitor("Condition")
-   , mCondition(aValue)
-  {}
-
-  void Set(T aValue) {
-    MonitorAutoLock mon(mMonitor);
-    mCondition = aValue;
-    mon.NotifyAll();
-  }
-
-  void WaitUntil(T aValue) {
-    MonitorAutoLock mon(mMonitor);
-    while (mCondition != aValue) {
-      mon.Wait();
-    }
-  }
-
-private:
-  Monitor mMonitor;
-  T mCondition;
-};
-
-class MediaDataDecoderProxy;
-
-class MediaDataDecoderCallbackProxy : public MediaDataDecoderCallback {
-public:
-  MediaDataDecoderCallbackProxy(MediaDataDecoderProxy* aProxyDecoder,
-                                MediaDataDecoderCallback* aCallback)
-   : mProxyDecoder(aProxyDecoder)
-   , mProxyCallback(aCallback)
-  {
-  }
-
-  void Output(MediaData* aData) override {
-    mProxyCallback->Output(aData);
-  }
-
-  void Error(const MediaResult& aError) override;
-
-  void InputExhausted() override {
-    mProxyCallback->InputExhausted();
-  }
-
-  void DrainComplete() override {
-    mProxyCallback->DrainComplete();
-  }
-
-  void ReleaseMediaResources() override {
-    mProxyCallback->ReleaseMediaResources();
-  }
-
-  void FlushComplete();
-
-  bool OnReaderTaskQueue() override
-  {
-    return mProxyCallback->OnReaderTaskQueue();
-  }
-
-  void WaitingForKey() override
-  {
-    mProxyCallback->WaitingForKey();
-  }
-
-private:
-  MediaDataDecoderProxy* mProxyDecoder;
-  MediaDataDecoderCallback* mProxyCallback;
-};
-
-class MediaDataDecoderProxy : public MediaDataDecoder {
-public:
-  MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread,
-                        MediaDataDecoderCallback* aCallback)
+  explicit MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread)
    : mProxyThread(aProxyThread)
-   , mProxyCallback(this, aCallback)
-   , mFlushComplete(false)
 #if defined(DEBUG)
    , mIsShutdown(false)
 #endif
   {
-  }
-
-  // Ideally, this would return a regular MediaDataDecoderCallback pointer
-  // to retain the clean abstraction, but until MediaDataDecoderCallback
-  // supports the FlushComplete interface, this will have to do.  When MDDC
-  // supports FlushComplete, this, the GMP*Decoders, and the
-  // *CallbackAdapters can be reverted to accepting a regular
-  // MediaDataDecoderCallback pointer.
-  MediaDataDecoderCallbackProxy* Callback()
-  {
-    return &mProxyCallback;
   }
 
   void SetProxyTarget(MediaDataDecoder* aProxyDecoder)
@@ -136,43 +34,33 @@ public:
   }
 
   // These are called from the decoder thread pool.
-  // Init and Shutdown run synchronously on the proxy thread, all others are
-  // asynchronously and responded to via the MediaDataDecoderCallback.
-  // Note: the nsresults returned by the proxied decoder are lost.
+  // Shutdown run synchronously on the proxy thread, all others are
+  // asynchronous.
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
 
   const char* GetDescriptionName() const override
   {
     return "GMP proxy data decoder";
   }
 
-  // Called by MediaDataDecoderCallbackProxy.
-  void FlushComplete();
-
 private:
-  RefPtr<InitPromise> InternalInit();
 
 #ifdef DEBUG
-  bool IsOnProxyThread() {
+  bool IsOnProxyThread()
+  {
     return mProxyThread && mProxyThread->IsCurrentThreadIn();
   }
 #endif
 
-  friend class InputTask;
-  friend class InitTask;
-
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;
 
-  MediaDataDecoderCallbackProxy mProxyCallback;
-
-  Condition<bool> mFlushComplete;
 #if defined(DEBUG)
-  bool mIsShutdown;
+  Atomic<bool> mIsShutdown;
 #endif
 };
 

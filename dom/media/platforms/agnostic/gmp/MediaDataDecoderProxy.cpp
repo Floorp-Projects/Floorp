@@ -6,85 +6,68 @@
 
 #include "MediaDataDecoderProxy.h"
 #include "MediaData.h"
+#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
-
-void
-MediaDataDecoderCallbackProxy::Error(const MediaResult& aError)
-{
-  mProxyCallback->Error(aError);
-}
-
-void
-MediaDataDecoderCallbackProxy::FlushComplete()
-{
-  mProxyDecoder->FlushComplete();
-}
-
-RefPtr<MediaDataDecoder::InitPromise>
-MediaDataDecoderProxy::InternalInit()
-{
-  return mProxyDecoder->Init();
-}
 
 RefPtr<MediaDataDecoder::InitPromise>
 MediaDataDecoderProxy::Init()
 {
   MOZ_ASSERT(!mIsShutdown);
 
-  return InvokeAsync(mProxyThread, this, __func__,
-                     &MediaDataDecoderProxy::InternalInit);
+  RefPtr<MediaDataDecoderProxy> self = this;
+  return InvokeAsync(mProxyThread, __func__,
+                     [self, this]() { return mProxyDecoder->Init(); });
 }
 
-void
-MediaDataDecoderProxy::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+MediaDataDecoderProxy::Decode(MediaRawData* aSample)
 {
   MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  nsCOMPtr<nsIRunnable> task(new InputTask(mProxyDecoder, aSample));
-  mProxyThread->Dispatch(task.forget());
+  RefPtr<MediaDataDecoderProxy> self = this;
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(mProxyThread, __func__, [self, this, sample]() {
+    return mProxyDecoder->Decode(sample);
+  });
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 MediaDataDecoderProxy::Flush()
 {
   MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  mFlushComplete.Set(false);
-
-  mProxyThread->Dispatch(NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Flush));
-
-  mFlushComplete.WaitUntil(true);
+  RefPtr<MediaDataDecoderProxy> self = this;
+  return InvokeAsync(mProxyThread, __func__,
+                     [self, this]() { return mProxyDecoder->Flush(); });
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 MediaDataDecoderProxy::Drain()
 {
   MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
-  mProxyThread->Dispatch(NewRunnableMethod(mProxyDecoder, &MediaDataDecoder::Drain));
+  RefPtr<MediaDataDecoderProxy> self = this;
+  return InvokeAsync(mProxyThread, __func__,
+                     [self, this]() { return mProxyDecoder->Drain(); });
 }
 
-void
+RefPtr<ShutdownPromise>
 MediaDataDecoderProxy::Shutdown()
 {
+  MOZ_ASSERT(!IsOnProxyThread());
   // Note that this *may* be called from the proxy thread also.
   MOZ_ASSERT(!mIsShutdown);
 #if defined(DEBUG)
   mIsShutdown = true;
 #endif
-  mProxyThread->AsEventTarget()->Dispatch(NewRunnableMethod(mProxyDecoder,
-                                                            &MediaDataDecoder::Shutdown),
-                                          NS_DISPATCH_SYNC);
-}
 
-void
-MediaDataDecoderProxy::FlushComplete()
-{
-  mFlushComplete.Set(true);
+  RefPtr<MediaDataDecoderProxy> self = this;
+  return InvokeAsync(mProxyThread, __func__,
+                     [self, this]() { return mProxyDecoder->Shutdown(); });
 }
 
 } // namespace mozilla

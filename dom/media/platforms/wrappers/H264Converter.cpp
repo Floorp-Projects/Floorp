@@ -23,12 +23,13 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mKnowsCompositor(aParams.mKnowsCompositor)
   , mImageContainer(aParams.mImageContainer)
   , mTaskQueue(aParams.mTaskQueue)
-  , mCallback(aParams.mCallback)
   , mDecoder(nullptr)
   , mGMPCrashHelper(aParams.mCrashHelper)
   , mNeedAVCC(aPDM->DecoderNeedsConversion(aParams.mConfig)
       == PlatformDecoderModule::ConversionRequired::kNeedAVCC)
   , mLastError(NS_OK)
+  , mType(aParams.mType)
+  , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
 {
   CreateDecoder(aParams.mDiagnostics);
 }
@@ -49,28 +50,19 @@ H264Converter::Init()
            TrackType::kVideoTrack, __func__);
 }
 
-void
-H264Converter::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+H264Converter::Decode(MediaRawData* aSample)
 {
+  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists() &&
+                     !mInitPromiseRequest.Exists(),
+                     "Can't request a new decode until previous one completed");
+
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
     // We need AVCC content to be able to later parse the SPS.
     // This is a no-op if the data is already AVCC.
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                                 RESULT_DETAIL("ConvertSampleToAVCC")));
-    return;
-  }
-
-  if (mInitPromiseRequest.Exists()) {
-    if (mNeedKeyframe) {
-      if (!aSample->mKeyframe) {
-        // Frames dropped, we need a new one.
-        mCallback->InputExhausted();
-        return;
-      }
-      mNeedKeyframe = false;
-    }
-    mMediaRawSamples.AppendElement(aSample);
-    return;
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY, RESULT_DETAIL("ConvertSampleToAVCC")),
+      __func__);
   }
 
   nsresult rv;
@@ -82,71 +74,74 @@ H264Converter::Input(MediaRawData* aSample)
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // We are missing the required SPS to create the decoder.
       // Ignore for the time being, the MediaRawData will be dropped.
-      mCallback->InputExhausted();
-      return;
+      return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
   } else {
     rv = CheckForSPSChange(aSample);
-    if (rv == NS_ERROR_NOT_INITIALIZED) {
-      // The decoder is pending initialization.
-      mCallback->InputExhausted();
-      return;
-    }
   }
+
+  if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
+    // The decoder is pending initialization.
+    RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
+    return p;
+  }
+
   if (NS_FAILED(rv)) {
-    mCallback->Error(
+    return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("Unable to create H264 decoder")));
-    return;
+                  RESULT_DETAIL("Unable to create H264 decoder")),
+      __func__);
   }
 
   if (mNeedKeyframe && !aSample->mKeyframe) {
-    mCallback->InputExhausted();
-    return;
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
 
   if (!mNeedAVCC &&
       !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
-    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                                 RESULT_DETAIL("ConvertSampleToAnnexB")));
-    return;
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("ConvertSampleToAnnexB")),
+      __func__);
   }
 
   mNeedKeyframe = false;
 
   aSample->mExtraData = mCurrentConfig.mExtraData;
 
-  mDecoder->Input(aSample);
+  return mDecoder->Decode(aSample);
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 H264Converter::Flush()
 {
   mNeedKeyframe = true;
   if (mDecoder) {
-    mDecoder->Flush();
+    return mDecoder->Flush();
   }
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 H264Converter::Drain()
 {
   mNeedKeyframe = true;
   if (mDecoder) {
-    mDecoder->Drain();
-    return;
+    return mDecoder->Drain();
   }
-  mCallback->DrainComplete();
+  return DecodePromise::CreateAndResolve(DecodedData(), __func__);
 }
 
-void
+RefPtr<ShutdownPromise>
 H264Converter::Shutdown()
 {
   if (mDecoder) {
-    mDecoder->Shutdown();
     mInitPromiseRequest.DisconnectIfExists();
-    mDecoder = nullptr;
+    mDecodePromiseRequest.DisconnectIfExists();
+    RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
+    return decoder->Shutdown();
   }
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 bool
@@ -198,11 +193,12 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   mDecoder = mPDM->CreateVideoDecoder({
     mCurrentConfig,
     mTaskQueue,
-    mCallback,
     aDiagnostics,
     mImageContainer,
     mKnowsCompositor,
-    mGMPCrashHelper
+    mGMPCrashHelper,
+    mType,
+    mOnWaitingForKeyEvent
   });
 
   if (!mDecoder) {
@@ -229,14 +225,14 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 
   if (NS_SUCCEEDED(rv)) {
     // Queue the incoming sample.
-    mMediaRawSamples.AppendElement(aSample);
+    mPendingSample = aSample;
 
     mDecoder->Init()
       ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__, this,
              &H264Converter::OnDecoderInitDone,
              &H264Converter::OnDecoderInitFailed)
       ->Track(mInitPromiseRequest);
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
   }
   return rv;
 }
@@ -245,37 +241,41 @@ void
 H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 {
   mInitPromiseRequest.Complete();
-  bool gotInput = false;
-  for (uint32_t i = 0 ; i < mMediaRawSamples.Length(); i++) {
-    const RefPtr<MediaRawData>& sample = mMediaRawSamples[i];
-    if (mNeedKeyframe) {
-      if (!sample->mKeyframe) {
-        continue;
-      }
-      mNeedKeyframe = false;
-    }
-    if (!mNeedAVCC &&
-        !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
-      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                                   RESULT_DETAIL("ConvertSampleToAnnexB")));
-      mMediaRawSamples.Clear();
-      return;
-    }
-    mDecoder->Input(sample);
+  RefPtr<MediaRawData> sample = mPendingSample.forget();
+  if (mNeedKeyframe && !sample->mKeyframe) {
+    mDecodePromise.ResolveIfExists(DecodedData(), __func__);
   }
-  if (!gotInput) {
-    mCallback->InputExhausted();
+  mNeedKeyframe = false;
+  if (!mNeedAVCC &&
+      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
+    mDecodePromise.RejectIfExists(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("ConvertSampleToAnnexB")),
+      __func__);
+    return;
   }
-  mMediaRawSamples.Clear();
+  RefPtr<H264Converter> self = this;
+  mDecoder->Decode(sample)
+    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
+           [self, this](const MediaDataDecoder::DecodedData& aResults) {
+             mDecodePromiseRequest.Complete();
+             mDecodePromise.ResolveIfExists(aResults, __func__);
+           },
+           [self, this](const MediaResult& aError) {
+             mDecodePromiseRequest.Complete();
+             mDecodePromise.RejectIfExists(aError, __func__);
+           })
+    ->Track(mDecodePromiseRequest);
 }
 
 void
-H264Converter::OnDecoderInitFailed(MediaResult aError)
+H264Converter::OnDecoderInitFailed(const MediaResult& aError)
 {
   mInitPromiseRequest.Complete();
-  mCallback->Error(
+  mDecodePromise.RejectIfExists(
     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                RESULT_DETAIL("Unable to initialize H264 decoder")));
+                RESULT_DETAIL("Unable to initialize H264 decoder")),
+    __func__);
 }
 
 nsresult
