@@ -13,12 +13,12 @@ class ArgParser {
  public:
   ArgParser(const std::vector<std::string>& arguments);
 
-  bool Has(std::string arg) { return programArgs_.count(arg) > 0; }
+  bool Has(std::string arg) const { return programArgs_.count(arg) > 0; }
 
-  std::string Get(std::string arg) { return programArgs_[arg]; }
+  std::string Get(std::string arg) const { return programArgs_.at(arg); }
 
-  size_t GetPositionalArgumentCount() { return positionalArgs_.size(); }
-  std::string GetPositionalArgument(size_t pos) {
+  size_t GetPositionalArgumentCount() const { return positionalArgs_.size(); }
+  std::string GetPositionalArgument(size_t pos) const {
     return positionalArgs_.at(pos);
   }
 

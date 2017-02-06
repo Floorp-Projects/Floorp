@@ -23,7 +23,7 @@ function parseOptions(opts) {
 
   // Parse platforms.
   let allPlatforms = ["linux", "linux64", "linux64-asan", "win64", "arm",
-                      "linux64-gyp", "linux64-gyp-asan", "linux64-fuzz"];
+                      "linux64-gyp", "linux64-fuzz"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
@@ -108,7 +108,6 @@ function filter(opts) {
         "linux64-asan": "linux64",
         "linux64-fuzz": "linux64",
         "linux64-gyp": "linux64",
-        "linux64-gyp-asan": "linux64",
         "win64": "windows2012-64",
         "arm": "linux32"
       };
@@ -123,8 +122,6 @@ function filter(opts) {
         keep &= coll("arm-opt") || coll("arm-debug");
       } else if (platform == "linux64-gyp") {
         keep &= coll("gyp");
-      } else if (platform == "linux64-gyp-asan") {
-        keep &= coll("gyp-asan");
       } else if (platform == "linux64-fuzz") {
         keep &= coll("fuzz");
       } else {
