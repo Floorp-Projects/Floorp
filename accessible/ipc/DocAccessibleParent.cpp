@@ -461,8 +461,6 @@ DocAccessibleParent::Destroy()
     return;
   }
 
-  NS_ASSERTION(mChildDocs.IsEmpty(),
-               "why weren't the child docs destroyed already?");
   mShutdown = true;
 
   uint32_t childDocCount = mChildDocs.Length();
