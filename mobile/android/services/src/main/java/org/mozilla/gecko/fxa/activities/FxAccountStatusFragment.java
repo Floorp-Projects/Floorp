@@ -229,6 +229,11 @@ public class FxAccountStatusFragment
     super.onResume();
   }
 
+  /**
+   * Note: If we ever start doing anything more fancy here with the application context
+   * than just opening new tabs in Fennec, we need to revisit FxAccountStatusActivity's
+   * GeckoActivityStatus implementation (see bug 1336734 for history).
+   */
   @Override
   public boolean onPreferenceClick(Preference preference) {
     if (preference == profilePreference) {
