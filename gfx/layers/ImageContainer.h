@@ -147,7 +147,6 @@ class ImageClient;
 class ImageCompositeNotification;
 class ImageContainer;
 class ImageContainerChild;
-class PImageContainerChild;
 class SharedPlanarYCbCrImage;
 class PlanarYCbCrImage;
 class TextureClient;
@@ -582,8 +581,6 @@ public:
   }
 
   void NotifyComposite(const ImageCompositeNotification& aNotification);
-
-  PImageContainerChild* GetPImageContainerChild();
 
   ImageContainerListener* GetImageContainerListener()
   {

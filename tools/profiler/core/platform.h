@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <math.h>
 #include "MainThreadUtils.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "ThreadResponsiveness.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -297,10 +297,6 @@ public:
   static uintptr_t GetThreadHandle(PlatformData*);
 #endif
 
-  static const std::vector<ThreadInfo*>& GetRegisteredThreads() {
-    return *sRegisteredThreads;
-  }
-
   static bool RegisterCurrentThread(const char* aName,
                                     PseudoStack* aPseudoStack,
                                     bool aIsMainThread, void* stackTop);
@@ -310,7 +306,8 @@ public:
   // Should only be called on shutdown
   static void Shutdown();
 
-  static mozilla::UniquePtr<mozilla::Mutex> sRegisteredThreadsMutex;
+  static mozilla::StaticMutex sRegisteredThreadsMutex;
+  static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
@@ -364,8 +361,6 @@ private:
   void InplaceTick(TickSample* sample);
 
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
-
-  static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   const double interval_;
   Atomic32 paused_;
