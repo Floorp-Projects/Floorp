@@ -72,11 +72,11 @@ class TransportLayerDummy : public TransportLayer {
     *destroyed_ = true;
   }
 
-  virtual nsresult InitInternal() {
+  nsresult InitInternal() override {
     return allow_init_ ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
+  TransportResult SendPacket(const unsigned char *data, size_t len) override {
     MOZ_CRASH();  // Should never be called.
     return 0;
   }
@@ -102,7 +102,7 @@ class TransportLayerLossy : public TransportLayer {
   TransportLayerLossy() : loss_mask_(0), packet_(0), inspector_(nullptr) {}
   ~TransportLayerLossy () {}
 
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
+  TransportResult SendPacket(const unsigned char *data, size_t len) override {
     MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "SendPacket(" << len << ")");
 
     if (loss_mask_ & (1 << (packet_ % 32))) {
@@ -139,7 +139,7 @@ class TransportLayerLossy : public TransportLayer {
   TRANSPORT_LAYER_ID("lossy")
 
  protected:
-  virtual void WasInserted() {
+  void WasInserted() override {
     downward_->SignalPacketReceived.
         connect(this,
                 &TransportLayerLossy::PacketReceived);
