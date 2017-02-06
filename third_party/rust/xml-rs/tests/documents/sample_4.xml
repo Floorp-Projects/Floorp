@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE data SYSTEM "abcd.dtd">
+<p:data xmlns:p="urn:x" z=">">
+    <!-- abcd &lt; &gt; &amp; -->
+    <a>test</a>
+    <b>kkss" = ddd' ></b>
+    <![CDATA[
+            <a>ddddd</b>!e3--><!-- ddckx
+    ]]>
+    <c/>
+    <![CDATA[
+    <![CDATA[zzzz]]]]><![CDATA[>]]>
+</p:data>
+
+
