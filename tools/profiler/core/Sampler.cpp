@@ -199,7 +199,7 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 }
 
 std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-mozilla::UniquePtr<mozilla::Mutex> Sampler::sRegisteredThreadsMutex;
+StaticMutex Sampler::sRegisteredThreadsMutex;
 
 Sampler::Sampler(double aInterval, int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
@@ -251,7 +251,7 @@ Sampler::Sampler(double aInterval, int aEntrySize,
   sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
 
   {
-    MutexAutoLock lock(*sRegisteredThreadsMutex);
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
     // Set up profiling for each registered thread, if appropriate
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
@@ -279,7 +279,7 @@ Sampler::~Sampler()
 
   // Destroy ThreadInfo for all threads
   {
-    MutexAutoLock lock(*sRegisteredThreadsMutex);
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
       ThreadInfo* info = sRegisteredThreads->at(i);
@@ -307,8 +307,9 @@ Sampler::~Sampler()
 void
 Sampler::Startup()
 {
+  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
   sRegisteredThreads = new std::vector<ThreadInfo*>();
-  sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
 
   // We could create the sLUL object and read unwind info into it at
   // this point.  That would match the lifetime implied by destruction
@@ -321,17 +322,16 @@ Sampler::Startup()
 void
 Sampler::Shutdown()
 {
+  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
   while (sRegisteredThreads->size() > 0) {
     delete sRegisteredThreads->back();
     sRegisteredThreads->pop_back();
   }
 
-  sRegisteredThreadsMutex = nullptr;
-  delete sRegisteredThreads;
-
   // UnregisterThread can be called after shutdown in XPCShell. Thus
   // we need to point to null to ignore such a call after shutdown.
-  sRegisteredThreadsMutex = nullptr;
+  delete sRegisteredThreads;
   sRegisteredThreads = nullptr;
 
 #if defined(USE_LUL_STACKWALK)
@@ -348,11 +348,11 @@ Sampler::RegisterCurrentThread(const char* aName,
                                PseudoStack* aPseudoStack,
                                bool aIsMainThread, void* stackTop)
 {
-  if (!sRegisteredThreadsMutex) {
+  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+  if (!sRegisteredThreads) {
     return false;
   }
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
 
   Thread::tid_t id = Thread::GetCurrentId();
 
@@ -382,11 +382,11 @@ Sampler::RegisterCurrentThread(const char* aName,
 void
 Sampler::UnregisterCurrentThread()
 {
-  if (!sRegisteredThreadsMutex) {
+  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+  if (!sRegisteredThreads) {
     return;
   }
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
 
   Thread::tid_t id = Thread::GetCurrentId();
 
@@ -426,11 +426,14 @@ Sampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
   aWriter.EndArray();
 
   aWriter.StartArrayProperty("threads");
-    MutexAutoLock lock(*sRegisteredThreadsMutex);
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
     for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
       // Thread meta data
       ThreadInfo* info = sRegisteredThreads->at(i);
       aWriter.StartObjectElement();
+      {
         if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
           // TODO Add the proper plugin name
           aWriter.StringProperty("name", "Plugin");
@@ -438,8 +441,10 @@ Sampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
           aWriter.StringProperty("name", info->Name());
         }
         aWriter.IntProperty("tid", static_cast<int>(info->ThreadId()));
+      }
       aWriter.EndObject();
     }
+  }
   aWriter.EndArray();
 
   aWriter.DoubleProperty("start", static_cast<double>(mozilla::tasktracer::GetStartTime()));
@@ -665,7 +670,7 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
       SetPaused(true);
 
       {
-        MutexAutoLock lock(*sRegisteredThreadsMutex);
+        StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
         for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
           // Thread not being profiled, skip it
@@ -721,7 +726,7 @@ Sampler::FlushOnJSShutdown(JSContext* aContext)
   SetPaused(true);
 
   {
-    MutexAutoLock lock(*sRegisteredThreadsMutex);
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
     for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
       // Thread not being profiled, skip it.

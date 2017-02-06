@@ -96,10 +96,9 @@ class SamplerThread
  public:
   // Initialize a Win32 thread object. The thread has an invalid thread
   // handle until it is started.
-  SamplerThread(double interval, Sampler* sampler)
+  explicit SamplerThread(double interval)
     : mStackSize(0)
     , mThread(kNoThread)
-    , mSampler(sampler)
     , mInterval(interval)
   {
     mInterval = floor(interval + 0.5);
@@ -140,12 +139,14 @@ class SamplerThread
     }
   }
 
-  static void StartSampler(Sampler* sampler) {
+  static void StartSampler() {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
     if (mInstance == NULL) {
-      mInstance = new SamplerThread(sampler->interval(), sampler);
+      mInstance = new SamplerThread(gSampler->interval());
       mInstance->Start();
     } else {
-      MOZ_ASSERT(mInstance->mInterval == sampler->interval());
+      MOZ_ASSERT(mInstance->mInterval == gSampler->interval());
     }
   }
 
@@ -162,16 +163,16 @@ class SamplerThread
     if (mInterval < 10)
         ::timeBeginPeriod(mInterval);
 
-    while (mSampler->IsActive()) {
-      mSampler->DeleteExpiredMarkers();
+    // XXX: this loop is an off-main-thread use of gSampler
+    while (gSampler->IsActive()) {
+      gSampler->DeleteExpiredMarkers();
 
-      if (!mSampler->IsPaused()) {
-        mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-        const std::vector<ThreadInfo*>& threads =
-          mSampler->GetRegisteredThreads();
+      if (!gSampler->IsPaused()) {
+        mozilla::StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+
         bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < threads.size(); i++) {
-          ThreadInfo* info = threads[i];
+        for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
+          ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
           if (!info->hasProfile() || info->IsPendingDelete()) {
@@ -186,7 +187,7 @@ class SamplerThread
 
           info->UpdateThreadResponsiveness();
 
-          SampleContext(mSampler, info, isFirstProfiledThread);
+          SampleContext(info, isFirstProfiledThread);
           isFirstProfiledThread = false;
         }
       }
@@ -198,8 +199,7 @@ class SamplerThread
         ::timeEndPeriod(mInterval);
   }
 
-  void SampleContext(Sampler* sampler, ThreadInfo* aThreadInfo,
-                     bool isFirstProfiledThread)
+  void SampleContext(ThreadInfo* aThreadInfo, bool isFirstProfiledThread)
   {
     uintptr_t thread = Sampler::GetThreadHandle(aThreadInfo->GetPlatformData());
     HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
@@ -281,7 +281,9 @@ class SamplerThread
 #endif
 
     sample->context = &context;
-    sampler->Tick(sample);
+
+    // XXX: this is an off-main-thread use of gSampler
+    gSampler->Tick(sample);
 
     ResumeThread(profiled_thread);
   }
@@ -291,7 +293,6 @@ private:
   HANDLE mThread;
   Thread::tid_t mThreadId;
 
-  Sampler* mSampler;
   int mInterval; // units: ms
 
   // Protects the process wide state below.
@@ -305,7 +306,7 @@ SamplerThread* SamplerThread::mInstance = NULL;
 void Sampler::Start() {
   MOZ_ASSERT(!IsActive());
   SetActive(true);
-  SamplerThread::StartSampler(this);
+  SamplerThread::StartSampler();
 }
 
 void Sampler::Stop() {
