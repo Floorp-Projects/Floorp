@@ -230,6 +230,9 @@ namespace nsStyleTransformMatrix {
 
   mozilla::gfx::Matrix CSSValueArrayTo2DMatrix(nsCSSValue::Array* aArray);
   mozilla::gfx::Matrix4x4 CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray);
+
+  gfxSize GetScaleValue(const nsCSSValueSharedList* aList,
+                        const nsIFrame* aForFrame);
 } // namespace nsStyleTransformMatrix
 
 #endif
