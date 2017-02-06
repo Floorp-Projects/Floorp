@@ -126,6 +126,12 @@ def gen_list(output, lib):
     deps = dependentlibs(lib, libpaths, func)
     deps[lib] = mozpath.join(libpaths[0], lib)
     output.write('\n'.join(deps.keys()) + '\n')
+
+    with open(output.name + ".gtest", 'w') as gtest_out:
+        libs = deps.keys()
+        libs[-1] = 'gtest/' + libs[-1]
+        gtest_out.write('\n'.join(libs) + '\n')
+
     return set(deps.values())
 
 def main():
