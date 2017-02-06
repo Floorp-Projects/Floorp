@@ -73,11 +73,14 @@ stylo-tests:
 
 ccov-code-coverage-tests:
     - crashtest
+    - gtest
     - jsreftest
+    - marionette
     - mochitest
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - reftest
+    - web-platform-tests
     - xpcshell
 
 jsdcov-code-coverage-tests:

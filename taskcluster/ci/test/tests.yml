@@ -308,6 +308,7 @@ marionette:
     instance-size:
         by-test-platform:
             android.*: xlarge
+            linux64-ccov/opt: xlarge
             default: default
     docker-image: {"in-tree": "desktop1604-test"}
     tier:
@@ -318,6 +319,10 @@ marionette:
         by-test-platform:
             android.*: 10
             default: 1
+    e10s:
+        by-test-platform:
+            linux64-ccov/opt: false
+            default: both
     mozharness:
         by-test-platform:
             android.*:
@@ -1146,6 +1151,10 @@ web-platform-tests:
       by-test-platform:
         macosx.*: 5
         default: 12
+    e10s:
+        by-test-platform:
+            linux64-ccov/opt: false
+            default: both
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
