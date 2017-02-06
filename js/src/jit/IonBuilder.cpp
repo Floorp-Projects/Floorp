@@ -9339,6 +9339,9 @@ IonBuilder::jsop_rest()
     // checking here.
     MConstant* index = nullptr;
     for (unsigned i = numFormals; i < numActuals; i++) {
+        if (!alloc().ensureBallast())
+            return abort(AbortReason::Alloc);
+
         index = MConstant::New(alloc(), Int32Value(i - numFormals));
         current->add(index);
 
