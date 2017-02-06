@@ -40,13 +40,8 @@ namespace net {
 
 /**
  * Class that provides an nsILoadInfo implementation.
- *
- * Note that there is no reason why this class should be MOZ_EXPORT, but
- * Thunderbird relies on some insane hacks which require this, so we'll leave it
- * as is for now, but hopefully we'll be able to remove the MOZ_EXPORT keyword
- * from this class at some point.  See bug 1149127 for the discussion.
  */
-class MOZ_EXPORT LoadInfo final : public nsILoadInfo
+class LoadInfo final : public nsILoadInfo
 {
 public:
   NS_DECL_ISUPPORTS
