@@ -1772,31 +1772,50 @@ nsFlexContainerFrame::
 /**
  * A cached result for a measuring reflow.
  *
- * Right now we only need to cache the available size, the height and the
- * ascent. This can be extended later if needed.
+ * Right now we only need to cache the available size and the computed height
+ * for checking that the reflow input is valid, and the height and the ascent
+ * to be used. This can be extended later if needed.
  *
  * The assumption here is that a given flex item measurement won't change until
- * either the available size changes, or the flex container intrinsic size is
- * marked as dirty (due to a style or DOM change).
+ * either the available size or computed height changes, or the flex container
+ * intrinsic size is marked as dirty (due to a style or DOM change).
+ *
+ * In particular the computed height may change between measuring reflows due to
+ * how the mIsFlexContainerMeasuringReflow flag affects size computation (see
+ * bug 1336708).
  *
  * Caching it prevents us from doing exponential reflows in cases of deeply
  * nested flex and scroll frames.
  *
  * We store them in the frame property table for simplicity.
  */
-struct nsFlexContainerFrame::CachedMeasuringReflowResult
+class nsFlexContainerFrame::CachedMeasuringReflowResult
 {
-  LogicalSize mAvailableSize;
+  // Members that are part of the cache key:
+  const LogicalSize mAvailableSize;
+  const nscoord mComputedHeight;
+
+  // Members that are part of the cache value:
   const nscoord mHeight;
   const nscoord mAscent;
 
-  CachedMeasuringReflowResult(const LogicalSize& aAvailableSize,
-                              nscoord aHeight,
-                              nscoord aAscent)
-    : mAvailableSize(aAvailableSize)
-    , mHeight(aHeight)
-    , mAscent(aAscent)
+public:
+  CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
+                              const ReflowOutput& aDesiredSize)
+    : mAvailableSize(aReflowInput.AvailableSize())
+    , mComputedHeight(aReflowInput.ComputedHeight())
+    , mHeight(aDesiredSize.Height())
+    , mAscent(aDesiredSize.BlockStartAscent())
   {}
+
+  bool IsValidFor(const ReflowInput& aReflowInput) const {
+    return mAvailableSize == aReflowInput.AvailableSize() &&
+      mComputedHeight == aReflowInput.ComputedHeight();
+  }
+
+  nscoord Height() const { return mHeight; }
+
+  nscoord Ascent() const { return mAscent; }
 };
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
@@ -1808,10 +1827,9 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
   nsPresContext* aPresContext,
   ReflowInput& aChildReflowInput)
 {
-  const auto availableSize = aChildReflowInput.AvailableSize();
   const FrameProperties props = aItem.Frame()->Properties();
   if (const auto* cachedResult = props.Get(CachedFlexMeasuringReflow())) {
-    if (cachedResult->mAvailableSize == availableSize) {
+    if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
   }
@@ -1838,9 +1856,7 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
                     childDesiredSize, &aChildReflowInput, 0, 0, flags);
 
   auto result =
-    new CachedMeasuringReflowResult(availableSize,
-                                    childDesiredSize.Height(),
-                                    childDesiredSize.BlockStartAscent());
+    new CachedMeasuringReflowResult(aChildReflowInput, childDesiredSize);
 
   props.Set(CachedFlexMeasuringReflow(), result);
   return *result;
@@ -1885,11 +1901,11 @@ nsFlexContainerFrame::
     MeasureAscentAndHeightForFlexItem(aFlexItem, aPresContext,
                                       childRIForMeasuringHeight);
 
-  aFlexItem.SetAscent(reflowResult.mAscent);
+  aFlexItem.SetAscent(reflowResult.Ascent());
 
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
-  nscoord childDesiredHeight = reflowResult.mHeight -
+  nscoord childDesiredHeight = reflowResult.Height() -
     childRIForMeasuringHeight.ComputedPhysicalBorderPadding().TopBottom();
 
   return std::max(0, childDesiredHeight);
@@ -4060,7 +4076,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // so we don't bother with making aAxisTracker pick the cross-axis component
   // for us.)
   nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
-  if (reflowResult.mHeight < crossAxisBorderPadding) {
+  if (reflowResult.Height() < crossAxisBorderPadding) {
     // Child's requested size isn't large enough for its border/padding!
     // This is OK for the trivial nsFrame::Reflow() impl, but other frame
     // classes should know better. So, if we get here, the child had better be
@@ -4073,10 +4089,10 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(0);
   } else {
     // (normal case)
-    aItem.SetCrossSize(reflowResult.mHeight - crossAxisBorderPadding);
+    aItem.SetCrossSize(reflowResult.Height() - crossAxisBorderPadding);
   }
 
-  aItem.SetAscent(reflowResult.mAscent);
+  aItem.SetAscent(reflowResult.Ascent());
 }
 
 void

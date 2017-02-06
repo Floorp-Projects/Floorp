@@ -56,7 +56,7 @@ public:
   class FlexLine;
   class FlexboxAxisTracker;
   struct StrutInfo;
-  struct CachedMeasuringReflowResult;
+  class CachedMeasuringReflowResult;
 
   // nsIFrame overrides
   void Init(nsIContent*       aContent,
