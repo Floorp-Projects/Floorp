@@ -1259,4 +1259,29 @@ CSSValueArrayTo3DMatrix(nsCSSValue::Array* aArray)
   return m;
 }
 
+gfxSize
+GetScaleValue(const nsCSSValueSharedList* aList,
+              const nsIFrame* aForFrame)
+{
+  MOZ_ASSERT(aList && aList->mHead);
+  MOZ_ASSERT(aForFrame);
+
+  RuleNodeCacheConditions dontCare;
+  bool dontCareBool;
+  TransformReferenceBox refBox(aForFrame);
+  Matrix4x4 transform = ReadTransforms(
+                          aList->mHead,
+                          aForFrame->StyleContext(),
+                          aForFrame->PresContext(), dontCare, refBox,
+                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
+                          &dontCareBool);
+  Matrix transform2d;
+  bool canDraw2D = transform.CanDraw2D(&transform2d);
+  if (!canDraw2D) {
+    return gfxSize();
+  }
+
+  return ThebesMatrix(transform2d).ScaleFactors(true);
+}
+
 } // namespace nsStyleTransformMatrix
