@@ -42,7 +42,7 @@ class TransportLayerIce : public TransportLayer {
   void RestoreOldStream(); // called after unsuccessful ice restart
 
   // Transport layer overrides.
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len);
+  TransportResult SendPacket(const unsigned char *data, size_t len) override;
 
   // Slots for ICE
   void IceCandidate(NrIceMediaStream *stream, const std::string&);
