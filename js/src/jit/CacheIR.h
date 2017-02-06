@@ -135,6 +135,7 @@ enum class CacheKind : uint8_t
     GetElem,
     GetName,
     SetProp,
+    SetElem,
 };
 
 #define CACHE_IR_OPS(_)                   \
@@ -841,6 +842,8 @@ class MOZ_RAII IRGenerator
     bool maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                               uint32_t* int32Index, Int32OperandId* int32IndexId);
 
+    void emitIdGuard(ValOperandId valId, jsid id);
+
   public:
     explicit IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind);
 
@@ -966,6 +969,21 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
         updateStubGroup_ = group;
         updateStubId_ = id;
     }
+
+    ValOperandId setElemKeyValueId() const {
+        MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+        return ValOperandId(1);
+    }
+    ValOperandId rhsValueId() const {
+        if (cacheKind_ == CacheKind::SetProp)
+            return ValOperandId(1);
+        MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+        return ValOperandId(2);
+    }
+
+    // If this is a SetElem cache, emit instructions to guard the incoming Value
+    // matches |id|.
+    void maybeEmitIdGuard(jsid id);
 
     bool tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
                                  ValOperandId rhsId);

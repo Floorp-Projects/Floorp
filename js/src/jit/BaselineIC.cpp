@@ -1130,7 +1130,44 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
     if (!obj)
         return false;
 
+    bool isTemporarilyUnoptimizable = false;
+
+    bool attached = false;
+    if (stub->numOptimizedStubs() < ICSetElem_Fallback::MAX_OPTIMIZED_STUBS &&
+        !JitOptions.disableCacheIR)
+    {
+        SetPropIRGenerator gen(cx, pc, CacheKind::SetElem, &isTemporarilyUnoptimizable,
+                               objv, index, rhs);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        ICStubEngine::Baseline, frame->script(), stub);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                attached = true;
+
+                if (gen.needUpdateStub()) {
+                    newStub->toCacheIR_Updated()->updateStubGroup() = gen.updateStubGroup();
+                    newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
+                }
+
+                if (gen.shouldNotePreliminaryObjectStub())
+                    newStub->toCacheIR_Updated()->notePreliminaryObject();
+                else if (gen.shouldUnlinkPreliminaryObjectStubs())
+                    StripPreliminaryObjectStubs(cx, stub);
+            }
+        }
+    }
+
     RootedShape oldShape(cx, obj->maybeShape());
+    RootedObjectGroup oldGroup(cx, JSObject::getGroup(cx, obj));
+    if (!oldGroup)
+        return false;
+
+    if (obj->is<UnboxedPlainObject>()) {
+        MOZ_ASSERT(!oldShape);
+        if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
+            oldShape = expando->lastProperty();
+    }
 
     // Check the old capacity
     uint32_t oldCapacity = 0;
@@ -1172,10 +1209,29 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
     if (stub.invalid())
         return true;
 
+    if (attached)
+        return true;
+
     if (stub->numOptimizedStubs() >= ICSetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
         // But for now we just bail.
         return true;
+    }
+
+    if (!JitOptions.disableCacheIR) {
+        SetPropIRGenerator gen(cx, pc, CacheKind::SetElem, &isTemporarilyUnoptimizable,
+                               objv, index, rhs);
+        if (gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        ICStubEngine::Baseline, frame->script(), stub);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                attached = true;
+                newStub->toCacheIR_Updated()->updateStubGroup() = gen.updateStubGroup();
+                newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
+                return true;
+            }
+        }
     }
 
     // Try to generate new stubs.
