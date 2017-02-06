@@ -378,12 +378,13 @@ if CONFIG['COMPILE_ENVIRONMENT']:
             LIBRARY_NAME,
             CONFIG['DLL_SUFFIX']
         )
-    GENERATED_FILES += ['dependentlibs.list']
-    GENERATED_FILES['dependentlibs.list'].script = 'dependentlibs.py:gen_list'
-    GENERATED_FILES['dependentlibs.list'].inputs = [
+    GENERATED_FILES += [('dependentlibs.list', 'dependentlibs.list.gtest')]
+    dep_libs_list = GENERATED_FILES[('dependentlibs.list', 'dependentlibs.list.gtest')]
+    dep_libs_list.script = 'dependentlibs.py:gen_list'
+    dep_libs_list.inputs = [
         '!%s' % full_libname,
     ]
-    FINAL_TARGET_FILES += ['!dependentlibs.list']
+    FINAL_TARGET_FILES += ['!dependentlibs.list', '!dependentlibs.list.gtest']
 
 # WebRender dependencies
 if CONFIG['MOZ_ENABLE_WEBRENDER']:
