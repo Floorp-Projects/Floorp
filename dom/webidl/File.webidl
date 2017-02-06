@@ -33,7 +33,7 @@ partial interface File {
   [GetterThrows, Deprecated="FileLastModifiedDate"]
   readonly attribute Date lastModifiedDate;
 
-  [BinaryName="path", Func="mozilla::dom::Directory::WebkitBlinkDirectoryPickerEnabled"]
+  [BinaryName="relativePath", Func="mozilla::dom::Directory::WebkitBlinkDirectoryPickerEnabled"]
   readonly attribute USVString webkitRelativePath;
 
   [GetterThrows, ChromeOnly, NeedsCallerType]
