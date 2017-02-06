@@ -198,7 +198,16 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
             ssl_sig_ecdsa_secp384r1_sha384);
 }
 
-TEST_P(TlsConnectTls12Plus, SignatureSchemeCurveMismatch) {
+// In TLS 1.2, curve and hash aren't bound together.
+TEST_P(TlsConnectTls12, SignatureSchemeCurveMismatch) {
+  Reset(TlsAgent::kServerEcdsa256);
+  client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  Connect();
+}
+
+// In TLS 1.3, curve and hash are coupled.
+TEST_P(TlsConnectTls13, SignatureSchemeCurveMismatch) {
   Reset(TlsAgent::kServerEcdsa256);
   client_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
                                PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
@@ -207,7 +216,16 @@ TEST_P(TlsConnectTls12Plus, SignatureSchemeCurveMismatch) {
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
 
-TEST_P(TlsConnectTls12Plus, SignatureSchemeBadConfig) {
+// Configuring a P-256 cert with only SHA-384 signatures is OK in TLS 1.2.
+TEST_P(TlsConnectTls12, SignatureSchemeBadConfig) {
+  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert can't be used.
+  server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
+                               PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
+  Connect();
+}
+
+// A P-256 certificate in TLS 1.3 needs a SHA-256 signature scheme.
+TEST_P(TlsConnectTls13, SignatureSchemeBadConfig) {
   Reset(TlsAgent::kServerEcdsa256);  // P-256 cert can't be used.
   server_->SetSignatureSchemes(SignatureSchemeEcdsaSha384,
                                PR_ARRAY_SIZE(SignatureSchemeEcdsaSha384));
