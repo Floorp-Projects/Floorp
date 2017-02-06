@@ -341,12 +341,16 @@ bool is_main_thread_name(const char* aName) {
 void
 profiler_log(const char* str)
 {
+  // This function runs both on and off the main thread.
+
   profiler_tracing("log", str, TRACING_EVENT);
 }
 
 void
 profiler_log(const char* fmt, va_list args)
 {
+  // This function runs both on and off the main thread.
+
   if (profiler_is_active()) {
     // nsAutoCString AppendPrintf would be nicer but
     // this is mozilla external code
@@ -654,6 +658,11 @@ profiler_save_profile_to_file(const char* aFilename)
 const char**
 profiler_get_features()
 {
+  // This function currently only used on the main thread, but that restriction
+  // (and this assertion) could be removed trivially because it doesn't touch
+  // data that requires locking.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   static const char* features[] = {
 #if defined(MOZ_PROFILING) && defined(HAVE_NATIVE_UNWIND)
     // Walk the C++ stack.
@@ -916,6 +925,8 @@ profiler_resume()
 bool
 profiler_feature_active(const char* aName)
 {
+  // This function runs both on and off the main thread.
+
   if (!profiler_is_active()) {
     return false;
   }
@@ -942,24 +953,32 @@ profiler_feature_active(const char* aName)
 bool
 profiler_is_active()
 {
+  // This function runs both on and off the main thread.
+
   return sIsProfiling;
 }
 
 void
 profiler_responsiveness(const mozilla::TimeStamp& aTime)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   sLastTracerEvent = aTime;
 }
 
 void
 profiler_set_frame_number(int frameNumber)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   sFrameNumber = frameNumber;
 }
 
 void
 profiler_lock()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   profiler_stop();
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
@@ -969,6 +988,8 @@ profiler_lock()
 void
 profiler_unlock()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
@@ -977,6 +998,8 @@ profiler_unlock()
 void
 profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
+  // This function runs both on and off the main thread.
+
   if (sInitCount == 0) {
     return;
   }
@@ -1001,6 +1024,8 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
 void
 profiler_unregister_thread()
 {
+  // This function runs both on and off the main thread.
+
   // Don't check sInitCount count here -- we may be unregistering the
   // thread after the sampler was shut down.
   if (!stack_key_initialized) {
@@ -1020,6 +1045,8 @@ profiler_unregister_thread()
 void
 profiler_sleep_start()
 {
+  // This function runs both on and off the main thread.
+
   if (sInitCount == 0) {
     return;
   }
@@ -1034,6 +1061,8 @@ profiler_sleep_start()
 void
 profiler_sleep_end()
 {
+  // This function runs both on and off the main thread.
+
   if (sInitCount == 0) {
     return;
   }
@@ -1048,6 +1077,10 @@ profiler_sleep_end()
 bool
 profiler_is_sleeping()
 {
+  // This function currently only used on the main thread, but that restriction
+  // (and this assertion) could be removed without too much difficulty.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   if (sInitCount == 0) {
     return false;
   }
@@ -1061,6 +1094,8 @@ profiler_is_sleeping()
 void
 profiler_js_operation_callback()
 {
+  // This function runs both on and off the main thread.
+
   PseudoStack *stack = tlsPseudoStack.get();
   if (!stack) {
     return;
@@ -1072,6 +1107,8 @@ profiler_js_operation_callback()
 double
 profiler_time(const mozilla::TimeStamp& aTime)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   mozilla::TimeDuration delta = aTime - sStartTime;
   return delta.ToMilliseconds();
 }
@@ -1079,12 +1116,16 @@ profiler_time(const mozilla::TimeStamp& aTime)
 double
 profiler_time()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   return profiler_time(mozilla::TimeStamp::Now());
 }
 
 bool
 profiler_in_privacy_mode()
 {
+  // This function runs both on and off the main thread.
+
   PseudoStack *stack = tlsPseudoStack.get();
   if (!stack) {
     return false;
@@ -1130,6 +1171,8 @@ ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace)
 void
 profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(outputSize >= 2);
   char *bound = output + outputSize - 2;
   output[0] = output[1] = '\0';
@@ -1156,6 +1199,8 @@ void
 profiler_tracing(const char* aCategory, const char* aInfo,
                  TracingMetadata aMetaData)
 {
+  // This function runs both on and off the main thread.
+
   // Don't insert a marker if we're not profiling, to avoid the heap copy
   // (malloc).
   if (!stack_key_initialized || !profiler_is_active()) {
@@ -1169,6 +1214,8 @@ void
 profiler_tracing(const char* aCategory, const char* aInfo,
                  UniqueProfilerBacktrace aCause, TracingMetadata aMetaData)
 {
+  // This function runs both on and off the main thread.
+
   // Don't insert a marker if we're not profiling, to avoid the heap copy
   // (malloc).
   if (!stack_key_initialized || !profiler_is_active()) {
@@ -1182,6 +1229,8 @@ profiler_tracing(const char* aCategory, const char* aInfo,
 void
 profiler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
 {
+  // This function runs both on and off the main thread.
+
   // Note that aPayload may be allocated by the caller, so we need to make sure
   // that we free it at some point.
   mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
