@@ -36,6 +36,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsThreadUtils.h"
@@ -470,15 +471,18 @@ File::GetName(nsAString& aFileName) const
 }
 
 void
-File::GetPath(nsAString& aPath) const
+File::GetRelativePath(nsAString& aPath) const
 {
-  mImpl->GetPath(aPath);
-}
+  aPath.Truncate();
 
-void
-File::SetPath(const nsAString& aPath)
-{
-  mImpl->SetPath(aPath);
+  nsAutoString path;
+  mImpl->GetDOMPath(path);
+
+  // WebkitRelativePath doesn't start with '/'
+  if (!path.IsEmpty()) {
+    MOZ_ASSERT(path[0] == FILESYSTEM_DOM_PATH_SEPARATOR_CHAR);
+    aPath.Assign(Substring(path, 1));
+  }
 }
 
 Date
@@ -670,14 +674,14 @@ BlobImplBase::GetName(nsAString& aName) const
 }
 
 void
-BlobImplBase::GetPath(nsAString& aPath) const
+BlobImplBase::GetDOMPath(nsAString& aPath) const
 {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   aPath = mPath;
 }
 
 void
-BlobImplBase::SetPath(const nsAString& aPath)
+BlobImplBase::SetDOMPath(const nsAString& aPath)
 {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
   mPath = aPath;
