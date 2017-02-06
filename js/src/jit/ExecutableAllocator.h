@@ -264,6 +264,7 @@ class ExecutableAllocator
 #elif defined(JS_CODEGEN_ARM) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
     static void cacheFlush(void* code, size_t size)
     {
+        void* end = (void*)(reinterpret_cast<char*>(code) + size);
         asm volatile (
             "push    {r7}\n"
             "mov     r0, %0\n"
@@ -274,8 +275,24 @@ class ExecutableAllocator
             "svc     0x0\n"
             "pop     {r7}\n"
             :
-            : "r" (code), "r" (reinterpret_cast<char*>(code) + size)
+            : "r" (code), "r" (end)
             : "r0", "r1", "r2");
+
+        if (ForceDoubleCacheFlush()) {
+            void* start = (void*)((uintptr_t)code + 1);
+            asm volatile (
+                "push    {r7}\n"
+                "mov     r0, %0\n"
+                "mov     r1, %1\n"
+                "mov     r7, #0xf0000\n"
+                "add     r7, r7, #0x2\n"
+                "mov     r2, #0x0\n"
+                "svc     0x0\n"
+                "pop     {r7}\n"
+                :
+                : "r" (start), "r" (end)
+                : "r0", "r1", "r2");
+        }
     }
 #elif defined(JS_CODEGEN_ARM64) && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
     static void cacheFlush(void* code, size_t size)
