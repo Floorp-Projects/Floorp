@@ -33,7 +33,7 @@ function FunctionBind(thisArg, ...boundArgs) {
 
     // Ensure that the apply intrinsic has been cloned so it can be baked into
     // JIT code.
-    var funApply = std_Function_apply;
+    void std_Function_apply;
 
     // Step 12.
     return F;
