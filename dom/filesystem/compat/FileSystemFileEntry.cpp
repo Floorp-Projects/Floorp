@@ -7,6 +7,7 @@
 #include "FileSystemFileEntry.h"
 #include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/MultipartBlobImpl.h"
 #include "mozilla/dom/FileSystemFileEntryBinding.h"
 
 namespace mozilla {
@@ -17,8 +18,10 @@ namespace {
 class FileCallbackRunnable final : public Runnable
 {
 public:
-  FileCallbackRunnable(FileCallback* aCallback, File* aFile)
+  FileCallbackRunnable(FileCallback* aCallback, ErrorCallback* aErrorCallback,
+                       File* aFile)
     : mCallback(aCallback)
+    , mErrorCallback(aErrorCallback)
     , mFile(aFile)
   {
     MOZ_ASSERT(aCallback);
@@ -28,12 +31,40 @@ public:
   NS_IMETHOD
   Run() override
   {
-    mCallback->HandleEvent(*mFile);
+    // Here we clone the File object.
+
+    nsAutoString name;
+    mFile->GetName(name);
+
+    nsAutoString type;
+    mFile->GetType(type);
+
+    nsTArray<RefPtr<BlobImpl>> blobImpls;
+    blobImpls.AppendElement(mFile->Impl());
+
+    ErrorResult rv;
+    RefPtr<BlobImpl> blobImpl =
+      MultipartBlobImpl::Create(Move(blobImpls), name, type, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      if (mErrorCallback) {
+        RefPtr<DOMException> exception =
+          DOMException::Create(rv.StealNSResult());
+        mErrorCallback->HandleEvent(*exception);
+      }
+
+      return NS_OK;
+    }
+
+    RefPtr<File> file = File::Create(mFile->GetParentObject(), blobImpl);
+    MOZ_ASSERT(file);
+
+    mCallback->HandleEvent(*file);
     return NS_OK;
   }
 
 private:
   RefPtr<FileCallback> mCallback;
+  RefPtr<ErrorCallback> mErrorCallback;
   RefPtr<File> mFile;
 };
 
@@ -77,7 +108,7 @@ FileSystemFileEntry::GetName(nsAString& aName, ErrorResult& aRv) const
 void
 FileSystemFileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
-  mFile->GetPath(aPath);
+  mFile->Impl()->GetDOMPath(aPath);
   if (aPath.IsEmpty()) {
     // We're under the root directory. webkitRelativePath
     // (implemented as GetPath) is for cases when file is selected because its
@@ -95,7 +126,10 @@ FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
                              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
   RefPtr<FileCallbackRunnable> runnable =
-    new FileCallbackRunnable(&aSuccessCallback, mFile);
+    new FileCallbackRunnable(&aSuccessCallback,
+                             aErrorCallback.WasPassed()
+                               ? &aErrorCallback.Value() : nullptr,
+                             mFile);
   DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
 }
