@@ -12,29 +12,13 @@
 
 namespace mozilla {
 
-#ifdef ENABLE_WIDEVINE_LOG
-void
-Log(const char* aFormat, ...)
+namespace detail {
+LogModule* GetCDMLog()
 {
-  va_list ap;
-  va_start(ap, aFormat);
-  const size_t len = 1024;
-  char buf[len];
-  vsnprintf(buf, len, aFormat, ap);
-  va_end(ap);
-  if (getenv("GMP_LOG_FILE")) {
-    FILE* f = fopen(getenv("GMP_LOG_FILE"), "a");
-    if (f) {
-      fprintf(f, "%s\n", buf);
-      fflush(f);
-      fclose(f);
-      f = nullptr;
-    }
-  } else {
-    printf("LOG: %s\n", buf);
-  }
+  static LazyLogModule sLog("CDM");
+  return sLog;
 }
-#endif // ENABLE_WIDEVINE_LOG
+} // namespace detail
 
 GMPErr
 ToGMPErr(cdm::Status aStatus)

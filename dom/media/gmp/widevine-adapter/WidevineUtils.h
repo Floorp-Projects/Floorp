@@ -12,18 +12,15 @@
 #include "gmp-api/gmp-platform.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
-// Uncomment for logging...
-//#define ENABLE_WIDEVINE_LOG 1
-#ifdef ENABLE_WIDEVINE_LOG
-void
-Log(const char* aFormat, ...);
-#else
-#define Log(...)
-#endif // ENABLE_WIDEVINE_LOG
+namespace detail {
+LogModule* GetCDMLog();
+} // namespace detail
 
+#define Log(...) MOZ_LOG(detail::GetCDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #define ENSURE_TRUE(condition, rv) { \
   if (!(condition)) {\
