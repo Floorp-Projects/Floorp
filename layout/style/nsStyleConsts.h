@@ -144,15 +144,6 @@ enum class StyleHyphens : uint8_t {
   Auto,
 };
 
-// shape-box for shape-outside
-enum class StyleShapeOutsideShapeBox : uint8_t {
-  NoBox,
-  Content,
-  Padding,
-  Border,
-  Margin
-};
-
 // <shape-radius> for <basic-shape>
 enum class StyleShapeRadius : uint8_t {
   ClosestSide,
