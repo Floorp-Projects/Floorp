@@ -273,12 +273,6 @@ interface nsIPermissionManager : nsISupports
                         in boolean exactHost,
                         in uint64_t sessionExpireTime,
                         in uint64_t persistentExpireTime);
-
-  /**
-   * Remove all current permission settings and get permission settings from
-   * chrome process.
-   */
-  void refreshPermission();
 };
 
 %{ C++

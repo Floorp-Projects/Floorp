@@ -818,18 +818,6 @@ nsPermissionManager::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPermissionManager::RefreshPermission() {
-  NS_ENSURE_TRUE(IsChildProcess(), NS_ERROR_FAILURE);
-
-  nsresult rv = RemoveAllFromMemory();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = FetchPermissions();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult
 nsPermissionManager::OpenDatabase(nsIFile* aPermissionsFile)
 {

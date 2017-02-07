@@ -109,6 +109,7 @@ def rust_triple_alias(host_or_target):
             # NetBSD
             ('x86_64', 'NetBSD'): 'x86_64-unknown-netbsd',
             # OpenBSD
+            ('x86', 'OpenBSD'): 'i686-unknown-openbsd',
             ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
             # Linux
             ('x86', 'Linux'): 'i686-unknown-linux-gnu',

@@ -24,7 +24,7 @@ public:
   explicit GPUProcessImpl(ProcessId aParentPid);
   ~GPUProcessImpl();
 
-  bool Init() override;
+  bool Init(int aArgc, char* aArgv[]) override;
   void CleanUp() override;
 
 private:

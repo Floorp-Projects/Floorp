@@ -259,14 +259,23 @@ DecommitPages(void* addr, size_t bytes)
 static void*
 ComputeRandomAllocationAddress()
 {
-    // Return a random, page-aligned address. x64 CPUs have a 48-bit address
-    // space and on some platforms the OS will give us access to 47 bits, so
-    // to be safe we right shift by 18 to leave 46 bits.
-
     uint64_t rand = js::GenerateRandomSeed();
+
 # ifdef HAVE_64BIT_BUILD
+    // x64 CPUs have a 48-bit address space and on some platforms the OS will
+    // give us access to 47 bits, so to be safe we right shift by 18 to leave
+    // 46 bits.
     rand >>= 18;
+# else
+    // On 32-bit, right shift by 34 to leave 30 bits, range [0, 1GiB). Then add
+    // 512MiB to get range [512MiB, 1.5GiB), or [0x20000000, 0x60000000). This
+    // is based on V8 comments in platform-posix.cc saying this range is
+    // relatively unpopulated across a variety of kernels.
+    rand >>= 34;
+    rand += 512 * 1024 * 1024;
 # endif
+
+    // Ensure page alignment.
     uintptr_t mask = ~uintptr_t(gc::SystemPageSize() - 1);
     return (void*) uintptr_t(rand & mask);
 }
