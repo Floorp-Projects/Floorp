@@ -13,7 +13,7 @@
 
 static void Usage() {
   std::cerr << "Usage: nss <command> <subcommand> [options]" << std::endl;
-  std::cerr << "       nss db [--path <directory>] --list-certs" << std::endl;
+  std::cerr << "       nss db [--path <directory>] <commands>" << std::endl;
 }
 
 int main(int argc, char **argv) {

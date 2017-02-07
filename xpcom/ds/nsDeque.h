@@ -8,18 +8,18 @@
  * MODULE NOTES:
  *
  * The Deque is a very small, very efficient container object
- * than can hold elements of type void*, offering the following features:
- *    Its interface supports pushing and popping of elements.
- *    It can iterate (via an interator class) its elements.
- *    When full, it can efficiently resize dynamically.
- *
+ * than can hold items of type void*, offering the following features:
+ * - Its interface supports pushing, popping, and peeking of items at the back
+ *   or front, and retrieval from any position.
+ * - It can iterate over items via a ForEach method, range-for, or an iterator
+ *   class.
+ * - When full, it can efficiently resize dynamically.
  *
  * NOTE: The only bit of trickery here is that this deque is
  * built upon a ring-buffer. Like all ring buffers, the first
- * element may not be at index[0]. The mOrigin member determines
+ * item may not be at index[0]. The mOrigin member determines
  * where the first child is. This point is quietly hidden from
  * customers of this class.
- *
  */
 
 #ifndef _NSDEQUE
@@ -34,10 +34,8 @@
 /**
  * The nsDequeFunctor class is used when you want to create
  * callbacks between the deque and your generic code.
- * Use these objects in a call to ForEach();
- *
+ * Use these objects in a call to ForEach(), and as custom deallocators.
  */
-
 class nsDequeFunctor
 {
 public:
@@ -58,26 +56,37 @@ public:
  *
  * The deque stores pointers to items.
  */
-
 class nsDeque
 {
   typedef mozilla::fallible_t fallible_t;
 public:
+  /**
+   * Constructs an empty deque.
+   *
+   * @param   aDeallocator Optional deallocator functor that will be called from
+   *                       Erase() and the destructor on any remaining item.
+   *                       The deallocator is owned by the deque and will be
+   *                       deleted at destruction time.
+   */
   explicit nsDeque(nsDequeFunctor* aDeallocator = nullptr);
+
+  /**
+   * Deque destructor. Erases all items, deletes the deallocator.
+   */
   ~nsDeque();
 
   /**
-   * Returns the number of elements currently stored in
+   * Returns the number of items currently stored in
    * this deque.
    *
-   * @return  number of elements currently in the deque
+   * @return  number of items currently in the deque
    */
   inline size_t GetSize() const { return mSize; }
 
   /**
    * Appends new member at the end of the deque.
    *
-   * @param   item to store in deque
+   * @param   aItem item to store in deque
    */
   void Push(void* aItem)
   {
@@ -86,12 +95,18 @@ public:
     }
   }
 
+  /**
+   * Appends new member at the end of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
   MOZ_MUST_USE bool Push(void* aItem, const fallible_t&);
 
   /**
    * Inserts new member at the front of the deque.
    *
-   * @param   item to store in deque
+   * @param   aItem item to store in deque
    */
   void PushFront(void* aItem)
   {
@@ -100,6 +115,12 @@ public:
     }
   }
 
+  /**
+   * Inserts new member at the front of the deque.
+   *
+   * @param   aItem item to store in deque
+   * @return  true if succeeded, false if failed to resize deque as needed
+   */
   MOZ_MUST_USE bool PushFront(void* aItem, const fallible_t&);
 
   /**
@@ -117,14 +138,14 @@ public:
   void* PopFront();
 
   /**
-   * Retrieve the bottom item without removing it.
+   * Retrieve the last item without removing it.
    *
-   * @return  the first item in container
+   * @return  the last item in container
    */
-
   void* Peek() const;
+
   /**
-   * Return topmost item without removing it.
+   * Retrieve the first item without removing it.
    *
    * @return  the first item in container
    */
@@ -134,7 +155,7 @@ public:
    * Retrieve a member from the deque without removing it.
    *
    * @param   index of desired item
-   * @return  element in list
+   * @return  item in list, or nullptr if index is outside the deque
    */
   void* ObjectAt(size_t aIndex) const;
 
@@ -146,28 +167,122 @@ public:
   void Erase();
 
   /**
-   * Call this method when you want to iterate all the
-   * members of the container, passing a functor along
+   * Call this method when you want to iterate through all
+   * items in the container, passing a functor along
    * to call your code.
+   * If the deque is modified during ForEach, iteration will continue based on
+   * item indices; meaning that front operations may effectively skip over
+   * items or visit some items multiple times.
    *
    * @param   aFunctor object to call for each member
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
 
-  class ConstIterator
+  // This iterator assumes that the deque itself is const, i.e., it cannot be
+  // modified while the iterator is used.
+  // Also it is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  class ConstDequeIterator
   {
   public:
-    ConstIterator(const nsDeque& aDeque, size_t aIndex) : mDeque(aDeque), mIndex(aIndex) { }
-    ConstIterator& operator++() { ++mIndex; return *this; }
-    bool operator==(const ConstIterator& aOther) const { return mIndex == aOther.mIndex; }
-    bool operator!=(const ConstIterator& aOther) const { return mIndex != aOther.mIndex; }
-    void* operator*() const { return mDeque.ObjectAt(mIndex); }
+    ConstDequeIterator(const nsDeque& aDeque, size_t aIndex)
+      : mDeque(aDeque)
+      , mIndex(aIndex)
+    {
+    }
+    ConstDequeIterator& operator++()
+    {
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstDequeIterator& aOther) const
+    {
+      return mIndex == aOther.mIndex;
+    }
+    bool operator!=(const ConstDequeIterator& aOther) const
+    {
+      return mIndex != aOther.mIndex;
+    }
+    void* operator*() const
+    {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
   private:
     const nsDeque& mDeque;
     size_t mIndex;
   };
-  ConstIterator begin() const { return ConstIterator(*this, 0); }
-  ConstIterator end() const { return ConstIterator(*this, mSize); }
+  // If this deque is const, we can provide ConstDequeIterator's.
+  ConstDequeIterator begin() const
+  {
+    return ConstDequeIterator(*this, 0);
+  }
+  ConstDequeIterator end() const
+  {
+    return ConstDequeIterator(*this, mSize);
+  }
+
+  // It is a 'const' iterator in that it provides copies of the deque's
+  // elements, and therefore it is not possible to modify the deque's contents
+  // by assigning to a dereference of this iterator.
+  // If the deque is modified in other ways, this iterator will stay at the same
+  // index, and will handle past-the-end comparisons, but not dereferencing.
+  class ConstIterator
+  {
+  public:
+    // Special index for the end iterator, to track the possibly-shifting
+    // deque size.
+    static const size_t EndIteratorIndex = size_t(-1);
+
+    ConstIterator(const nsDeque& aDeque, size_t aIndex)
+      : mDeque(aDeque)
+      , mIndex(aIndex)
+    {
+    }
+    ConstIterator& operator++()
+    {
+      // End-iterator shouldn't be modified.
+      MOZ_ASSERT(mIndex != EndIteratorIndex);
+      ++mIndex;
+      return *this;
+    }
+    bool operator==(const ConstIterator& aOther) const
+    {
+      return EffectiveIndex() == aOther.EffectiveIndex();
+    }
+    bool operator!=(const ConstIterator& aOther) const
+    {
+      return EffectiveIndex() != aOther.EffectiveIndex();
+    }
+    void* operator*() const
+    {
+      // Don't allow out-of-deque dereferences.
+      MOZ_RELEASE_ASSERT(mIndex < mDeque.GetSize());
+      return mDeque.ObjectAt(mIndex);
+    }
+  private:
+    // 0 <= index < deque.GetSize() inside the deque, deque.GetSize() otherwise.
+    // Only used when comparing indices, not to actually access items.
+    size_t EffectiveIndex() const
+    {
+      return (mIndex < mDeque.GetSize()) ? mIndex : mDeque.GetSize();
+    }
+
+    const nsDeque& mDeque;
+    size_t mIndex; // May point outside the deque!
+  };
+  // If this deque is *not* const, we provide ConstIterator's that can handle
+  // deque size changes.
+  ConstIterator begin()
+  {
+    return ConstIterator(*this, 0);
+  }
+  ConstIterator end()
+  {
+    return ConstIterator(*this, ConstIterator::EndIteratorIndex);
+  }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -183,19 +298,19 @@ protected:
 private:
 
   /**
-   * Copy constructor (PRIVATE)
+   * Copy constructor (deleted)
    *
    * @param aOther another deque
    */
-  nsDeque(const nsDeque& aOther);
+  nsDeque(const nsDeque& aOther) = delete;
 
   /**
-   * Deque assignment operator (PRIVATE)
+   * Deque assignment operator (deleted)
    *
    * @param aOther another deque
    * @return *this
    */
-  nsDeque& operator=(const nsDeque& aOther);
+  nsDeque& operator=(const nsDeque& aOther) = delete;
 
   bool GrowCapacity();
   void SetDeallocator(nsDequeFunctor* aDeallocator);

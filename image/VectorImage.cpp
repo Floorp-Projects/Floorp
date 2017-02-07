@@ -855,9 +855,8 @@ VectorImage::Draw(gfxContext* aContext,
     Maybe<SVGPreserveAspectRatio> aspectRatio =
       Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
                                   SVG_MEETORSLICE_UNKNOWN));
-    svgContext =
-      Some(SVGImageContext(aSVGContext->GetViewportSize(),
-                           aspectRatio));
+    svgContext = Some(SVGImageContext(*aSVGContext)); // copy
+    svgContext->SetPreserveAspectRatio(aspectRatio);
   } else {
     svgContext = aSVGContext;
   }
@@ -878,6 +877,13 @@ VectorImage::Draw(gfxContext* aContext,
   if (svgDrawable) {
     Show(svgDrawable, params);
     return DrawResult::SUCCESS;
+  }
+
+  Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
+  if (aSVGContext &&
+      aSVGContext->GetContextPaint()) {
+    autoContextPaint.emplace(aSVGContext->GetContextPaint(),
+                             mSVGDocumentWrapper->GetDocument());
   }
 
   // We didn't get a hit in the surface cache, so we'll need to rerasterize.

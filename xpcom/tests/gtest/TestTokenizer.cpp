@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Tokenizer.h"
+#include "mozilla/IncrementalTokenizer.h"
+#include "mozilla/Unused.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla;
@@ -731,4 +733,402 @@ TEST(Tokenizer, SkipUntil)
     EXPECT_TRUE(p.CheckWord("test2"));
     EXPECT_TRUE(p.CheckEOF());
   }
+}
+
+TEST(Tokenizer, Custom)
+{
+  Tokenizer p("aaaaaacustom-1\r,custom-1,Custom-1,Custom-1,00custom-2xxxx,CUSTOM-2");
+
+  Tokenizer::Token c1 = p.AddCustomToken("custom-1", Tokenizer::CASE_INSENSITIVE);
+  Tokenizer::Token c2 = p.AddCustomToken("custom-2", Tokenizer::CASE_SENSITIVE);
+
+  // It's expected to NOT FIND the custom token if it's not on an edge
+  // between other recognizable tokens.
+  EXPECT_TRUE(p.CheckWord("aaaaaacustom"));
+  EXPECT_TRUE(p.CheckChar('-'));
+  EXPECT_TRUE(p.Check(Tokenizer::Token::Number(1)));
+  EXPECT_TRUE(p.CheckEOL());
+  EXPECT_TRUE(p.CheckChar(','));
+
+  EXPECT_TRUE(p.Check(c1));
+  EXPECT_TRUE(p.CheckChar(','));
+
+  EXPECT_TRUE(p.Check(c1));
+  EXPECT_TRUE(p.CheckChar(','));
+
+  p.EnableCustomToken(c1, false);
+  EXPECT_TRUE(p.CheckWord("Custom"));
+  EXPECT_TRUE(p.CheckChar('-'));
+  EXPECT_TRUE(p.Check(Tokenizer::Token::Number(1)));
+  EXPECT_TRUE(p.CheckChar(','));
+
+  EXPECT_TRUE(p.Check(Tokenizer::Token::Number(0)));
+  EXPECT_TRUE(p.Check(c2));
+  EXPECT_TRUE(p.CheckWord("xxxx"));
+  EXPECT_TRUE(p.CheckChar(','));
+
+  EXPECT_TRUE(p.CheckWord("CUSTOM"));
+  EXPECT_TRUE(p.CheckChar('-'));
+  EXPECT_TRUE(p.Check(Tokenizer::Token::Number(2)));
+
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, CustomRaw)
+{
+  Tokenizer p("aaaaaacustom-1\r,custom-1,Custom-1,Custom-1,00custom-2xxxx,CUSTOM-2");
+
+  Tokenizer::Token c1 = p.AddCustomToken("custom-1", Tokenizer::CASE_INSENSITIVE);
+  Tokenizer::Token c2 = p.AddCustomToken("custom-2", Tokenizer::CASE_SENSITIVE);
+
+  // In this mode it's expected to find all custom tokens among any kind of input.
+  p.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+
+  Tokenizer::Token t;
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral("aaaaaa"));
+
+  EXPECT_TRUE(p.Check(c1));
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral("\r,"));
+
+  EXPECT_TRUE(p.Check(c1));
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral(","));
+
+  EXPECT_TRUE(p.Check(c1));
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral(","));
+
+  EXPECT_TRUE(p.Check(c1));
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral(",00"));
+
+  EXPECT_TRUE(p.Check(c2));
+
+  EXPECT_TRUE(p.Next(t));
+  EXPECT_TRUE(t.Type() == Tokenizer::TOKEN_RAW);
+  EXPECT_TRUE(t.Fragment().EqualsLiteral("xxxx,CUSTOM-2"));
+
+  EXPECT_TRUE(p.CheckEOF());
+}
+
+TEST(Tokenizer, Incremental)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test1")))); break;
+      case 2: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 3: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2")))); break;
+      case 4: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 5: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 6: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 7: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test3")))); break;
+      case 8: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    return NS_OK;
+  });
+
+  NS_NAMED_LITERAL_CSTRING(input, "test1,test2,,,test3");
+  auto cur = input.BeginReading();
+  auto end = input.EndReading();
+  for (; cur < end; ++cur) {
+    i.FeedInput(nsDependentCSubstring(cur, 1));
+  }
+
+  EXPECT_TRUE(test == 6);
+  i.FinishInput();
+  EXPECT_TRUE(test == 8);
+}
+
+TEST(Tokenizer, IncrementalRollback)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test1")))); break;
+      case 2: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 3: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2"))));
+        i.Rollback(); // so that we get the token again
+        break;
+      case 4: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test2")))); break;
+      case 5: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 6: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 7: EXPECT_TRUE(t.Equals(Token::Char(','))); break;
+      case 8: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("test3")))); break;
+      case 9: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    return NS_OK;
+  });
+
+  NS_NAMED_LITERAL_CSTRING(input, "test1,test2,,,test3");
+  auto cur = input.BeginReading();
+  auto end = input.EndReading();
+  for (; cur < end; ++cur) {
+    i.FeedInput(nsDependentCSubstring(cur, 1));
+  }
+
+  EXPECT_TRUE(test == 7);
+  i.FinishInput();
+  EXPECT_TRUE(test == 9);
+}
+
+TEST(Tokenizer, IncrementalNeedMoreInput)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    Token t2;
+    switch (++test) {
+    case 1:
+      EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("a"))));
+      break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      EXPECT_TRUE(t.Equals(Token::Whitespace()));
+      if (i.Next(t2)) {
+        EXPECT_TRUE(test == 5);
+        EXPECT_TRUE(t2.Equals(Token::Word(NS_LITERAL_CSTRING("bb"))));
+      } else {
+        EXPECT_TRUE(test < 5);
+        i.NeedMoreInput();
+      }
+      break;
+    case 6:
+      EXPECT_TRUE(t.Equals(Token::Char(',')));
+      break;
+    case 7:
+      EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("c"))));
+      return NS_ERROR_FAILURE;
+    default:
+      EXPECT_TRUE(false);
+      break;
+    }
+
+    return NS_OK;
+  });
+
+  NS_NAMED_LITERAL_CSTRING(input, "a bb,c");
+  auto cur = input.BeginReading();
+  auto end = input.EndReading();
+
+  nsresult rv;
+  for (; cur < end; ++cur) {
+    rv = i.FeedInput(nsDependentCSubstring(cur, 1));
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
+
+  EXPECT_TRUE(rv == NS_OK);
+  EXPECT_TRUE(test == 6);
+
+  rv = i.FinishInput();
+  EXPECT_TRUE(rv == NS_ERROR_FAILURE);
+  EXPECT_TRUE(test == 7);
+}
+
+TEST(Tokenizer, IncrementalCustom)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  Token custom;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Equals(custom)); break;
+      case 2: EXPECT_TRUE(t.Equals(Token::Word(NS_LITERAL_CSTRING("bla")))); break;
+      case 3: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    return NS_OK;
+  }, nullptr, "-");
+
+  custom = i.AddCustomToken("some-test", Tokenizer::CASE_SENSITIVE);
+  i.FeedInput(NS_LITERAL_CSTRING("some-"));
+  EXPECT_TRUE(test == 0);
+  i.FeedInput(NS_LITERAL_CSTRING("tes"));
+  EXPECT_TRUE(test == 0);
+  i.FeedInput(NS_LITERAL_CSTRING("tbla"));
+  EXPECT_TRUE(test == 1);
+  i.FinishInput();
+  EXPECT_TRUE(test == 3);
+}
+
+TEST(Tokenizer, IncrementalCustomRaw)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  Token custom;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Fragment().EqualsLiteral("test1,")); break;
+      case 2: EXPECT_TRUE(t.Equals(custom)); break;
+      case 3: EXPECT_TRUE(t.Fragment().EqualsLiteral("!,,test3"));
+        i.Rollback();
+        i.SetTokenizingMode(Tokenizer::Mode::FULL);
+        break;
+      case 4: EXPECT_TRUE(t.Equals(Token::Char('!')));
+        i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+        break;
+      case 5: EXPECT_TRUE(t.Fragment().EqualsLiteral(",,test3")); break;
+      case 6: EXPECT_TRUE(t.Equals(custom)); break;
+      case 7: EXPECT_TRUE(t.Fragment().EqualsLiteral("tes")); break;
+      case 8: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    return NS_OK;
+  });
+
+  custom = i.AddCustomToken("test2", Tokenizer::CASE_SENSITIVE);
+  i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+
+  NS_NAMED_LITERAL_CSTRING(input, "test1,test2!,,test3test2tes");
+  auto cur = input.BeginReading();
+  auto end = input.EndReading();
+  for (; cur < end; ++cur) {
+    i.FeedInput(nsDependentCSubstring(cur, 1));
+  }
+
+  EXPECT_TRUE(test == 6);
+  i.FinishInput();
+  EXPECT_TRUE(test == 8);
+}
+
+TEST(Tokenizer, IncrementalCustomRemove)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  Token custom;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Equals(custom));
+        i.RemoveCustomToken(custom);
+        break;
+      case 2: EXPECT_FALSE(t.Equals(custom)); break;
+      case 3: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    return NS_OK;
+  });
+
+  custom = i.AddCustomToken("custom1", Tokenizer::CASE_SENSITIVE);
+
+  NS_NAMED_LITERAL_CSTRING(input, "custom1custom1");
+  i.FeedInput(input);
+  EXPECT_TRUE(test == 1);
+  i.FinishInput();
+  EXPECT_TRUE(test == 3);
+}
+
+TEST(Tokenizer, IncrementalBuffering1)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  Token custom;
+  nsDependentCSubstring observedFragment;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Fragment().EqualsLiteral("012")); break;
+      case 2: EXPECT_TRUE(t.Fragment().EqualsLiteral("3456789")); break;
+      case 3: EXPECT_TRUE(t.Equals(custom)); break;
+      case 4: EXPECT_TRUE(t.Fragment().EqualsLiteral("qwe")); break;
+      case 5: EXPECT_TRUE(t.Fragment().EqualsLiteral("rt")); break;
+      case 6: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+
+    observedFragment.Rebind(t.Fragment().BeginReading(),
+                            t.Fragment().Length());
+    return NS_OK;
+  }, nullptr, nullptr, 3);
+
+  custom = i.AddCustomToken("aaa", Tokenizer::CASE_SENSITIVE);
+  // This externally unused token is added only to check the internal algorithm
+  // does work correctly as expected when there are two different length tokens.
+  Unused << i.AddCustomToken("bb", Tokenizer::CASE_SENSITIVE);
+  i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+
+  i.FeedInput(NS_LITERAL_CSTRING("01234"));
+  EXPECT_TRUE(test == 1);
+  EXPECT_TRUE(observedFragment.EqualsLiteral("012"));
+
+  i.FeedInput(NS_LITERAL_CSTRING("5"));
+  EXPECT_TRUE(test == 1);
+  i.FeedInput(NS_LITERAL_CSTRING("6789aa"));
+  EXPECT_TRUE(test == 2);
+  EXPECT_TRUE(observedFragment.EqualsLiteral("3456789"));
+
+  i.FeedInput(NS_LITERAL_CSTRING("aqwert"));
+  EXPECT_TRUE(test == 4);
+  EXPECT_TRUE(observedFragment.EqualsLiteral("qwe"));
+
+  i.FinishInput();
+  EXPECT_TRUE(test == 6);
+}
+
+TEST(Tokenizer, IncrementalBuffering2)
+{
+  typedef TokenizerBase::Token Token;
+
+  int test = 0;
+  Token custom;
+  IncrementalTokenizer i([&](Token const& t, IncrementalTokenizer& i) -> nsresult
+  {
+    switch (++test) {
+      case 1: EXPECT_TRUE(t.Fragment().EqualsLiteral("01")); break;
+      case 2: EXPECT_TRUE(t.Fragment().EqualsLiteral("234567")); break;
+      case 3: EXPECT_TRUE(t.Fragment().EqualsLiteral("89")); break;
+      case 4: EXPECT_TRUE(t.Equals(custom)); break;
+      case 5: EXPECT_TRUE(t.Fragment().EqualsLiteral("qwert")); break;
+      case 6: EXPECT_TRUE(t.Equals(Token::EndOfFile())); break;
+    }
+    return NS_OK;
+  }, nullptr, nullptr, 3);
+
+  custom = i.AddCustomToken("aaa", Tokenizer::CASE_SENSITIVE);
+  // This externally unused token is added only to check the internal algorithm
+  // does work correctly as expected when there are two different length tokens.
+  Unused << i.AddCustomToken("bbbbb", Tokenizer::CASE_SENSITIVE);
+  i.SetTokenizingMode(Tokenizer::Mode::CUSTOM_ONLY);
+
+  i.FeedInput(NS_LITERAL_CSTRING("01234"));
+  EXPECT_TRUE(test == 0);
+  i.FeedInput(NS_LITERAL_CSTRING("5"));
+  EXPECT_TRUE(test == 1);
+  i.FeedInput(NS_LITERAL_CSTRING("6789aa"));
+  EXPECT_TRUE(test == 2);
+  i.FeedInput(NS_LITERAL_CSTRING("aqwert"));
+  EXPECT_TRUE(test == 4);
+  i.FinishInput();
+  EXPECT_TRUE(test == 6);
 }

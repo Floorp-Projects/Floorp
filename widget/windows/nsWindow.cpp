@@ -455,8 +455,10 @@ private:
                                ::GetCurrentThreadId());
     MOZ_ASSERT(mHook);
 
-    if (!IsWin10OrLater() && !sProcessCaretEventsStub) {
-      // tiptsf loads when STA COM is first initialized, so it should be present
+    // On touchscreen devices, tiptsf.dll will have been loaded when STA COM was
+    // first initialized.
+    if (!IsWin10OrLater() && GetModuleHandle(L"tiptsf.dll") &&
+        !sProcessCaretEventsStub) {
       sTipTsfInterceptor.Init("tiptsf.dll");
       DebugOnly<bool> ok = sTipTsfInterceptor.AddHook("ProcessCaretEvents",
           reinterpret_cast<intptr_t>(&ProcessCaretEventsHook),
@@ -777,6 +779,7 @@ nsWindow::Create(nsIWidget* aParent,
   }
 
   mIsRTL = aInitData->mRTL;
+  mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
 
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
@@ -846,6 +849,12 @@ nsWindow::Create(nsIWidget* aParent,
   if (mIsRTL && WinUtils::dwmSetWindowAttributePtr) {
     DWORD dwAttribute = TRUE;    
     WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+  }
+
+  if (mOpeningAnimationSuppressed && WinUtils::dwmSetWindowAttributePtr) {
+    DWORD dwAttribute = TRUE;
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                                       &dwAttribute, sizeof dwAttribute);
   }
 
   if (!IsPlugin() &&
@@ -1622,6 +1631,12 @@ nsWindow::Show(bool bState)
     }
   }
 #endif
+
+  if (mOpeningAnimationSuppressed && WinUtils::dwmSetWindowAttributePtr) {
+    DWORD dwAttribute = FALSE;
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                                       &dwAttribute, sizeof dwAttribute);
+  }
 }
 
 /**************************************************************

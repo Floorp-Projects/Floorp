@@ -10,9 +10,7 @@
 #include "nsXPCOMStrings.h"
 #include "nsReadableUtils.h"
 #include "nsWin32Locale.h"
-#include "prprf.h"
 #include <windows.h>
-#include "nsCRT.h"
 
 using namespace mozilla;
 
@@ -28,103 +26,6 @@ struct iso_map
 	DWORD       win_code;
 	iso_pair    sublang_list[20];
 };
-
-nsWin32Locale::LocaleNameToLCIDPtr nsWin32Locale::localeNameToLCID = nullptr;
-nsWin32Locale::LCIDToLocaleNamePtr nsWin32Locale::lcidToLocaleName = nullptr;
-
-// Older versions of VC++ and Win32 SDK  and mingw don't have 
-// macros for languages and sublanguages recently added to Win32. 
-// see http://www.tug.org/ftp/tex/texinfo/intl/localename.c
-
-#ifndef LANG_URDU
-#define LANG_URDU                           0x20
-#endif
-#ifndef LANG_ARMENIAN
-#define LANG_ARMENIAN                       0x2b
-#endif
-#ifndef LANG_AZERI
-#define LANG_AZERI                          0x2c
-#endif
-#ifndef LANG_MACEDONIAN
-#define LANG_MACEDONIAN                     0x2f
-#endif
-#ifndef LANG_GEORGIAN
-#define LANG_GEORGIAN                       0x37
-#endif
-#ifndef LANG_HINDI
-#define LANG_HINDI                          0x39
-#endif
-#ifndef LANG_MALAY
-#define LANG_MALAY                          0x3e
-#endif
-#ifndef LANG_KAZAK
-#define LANG_KAZAK                          0x3f
-#endif
-#ifndef LANG_KYRGYZ
-#define LANG_KYRGYZ                         0x40
-#endif
-#ifndef LANG_SWAHILI
-#define LANG_SWAHILI                        0x41
-#endif
-#ifndef LANG_UZBEK
-#define LANG_UZBEK                          0x43
-#endif
-#ifndef LANG_TATAR
-#define LANG_TATAR                          0x44
-#endif
-#ifndef LANG_PUNJABI
-#define LANG_PUNJABI                        0x46
-#endif
-#ifndef LANG_GUJARAT
-#define LANG_GUJARAT                        0x47
-#endif
-#ifndef LANG_TAMIL
-#define LANG_TAMIL                          0x49
-#endif
-#ifndef LANG_TELUGU
-#define LANG_TELUGU                         0x4a
-#endif
-#ifndef LANG_KANNADA
-#define LANG_KANNADA                        0x4b
-#endif
-#ifndef LANG_MARATHI
-#define LANG_MARATHI                        0x4e
-#endif
-#ifndef LANG_SANSKRIT
-#define LANG_SANSKRIT                       0x4f
-#endif
-#ifndef LANG_MONGOLIAN
-#define LANG_MONGOLIAN                      0x50
-#endif
-#ifndef LANG_GALICIAN
-#define LANG_GALICIAN                       0x56
-#endif
-#ifndef LANG_KONKANI
-#define LANG_KONKANI                        0x57
-#endif
-#ifndef LANG_DIVEHI
-#define LANG_DIVEHI                         0x65
-#endif
-
-#ifndef SUBLANG_MALAY_MALAYSIA
-#define SUBLANG_MALAY_MALAYSIA              0x01
-#endif
-#ifndef SUBLANG_MALAY_BRUNEI_DARUSSALAM
-#define SUBLANG_MALAY_BRUNEI_DARUSSALAM     0x02
-#endif
-#ifndef SUBLANG_CHINESE_MACAU
-#define SUBLANG_CHINESE_MACAU               0x05
-#endif
-#ifndef SUBLANG_FRENCH_MONACO
-#define SUBLANG_FRENCH_MONACO               0x06
-#endif
-#ifndef SUBLANG_ENGLISH_ZIMBABWE
-#define SUBLANG_ENGLISH_ZIMBABWE            0x0c
-#endif
-#ifndef SUBLANG_ENGLISH_PHILIPPINES
-#define SUBLANG_ENGLISH_PHILIPPINES         0x0d
-#endif
-
 
 //
 // This list is used to map between ISO language
@@ -574,21 +475,6 @@ iso_pair dbg_list[] =
 #define CROATIAN_ISO_CODE "hr"
 #define SERBIAN_ISO_CODE "sr"
 
-void
-nsWin32Locale::initFunctionPointers(void)
-{
-  static bool sInitialized = false;
-  // We use the Vista and above functions if we have them
-  if (!sInitialized) {
-    HMODULE kernelDLL = GetModuleHandleW(L"kernel32.dll");
-    if (kernelDLL) {
-      localeNameToLCID = (LocaleNameToLCIDPtr) GetProcAddress(kernelDLL, "LocaleNameToLCID");
-      lcidToLocaleName = (LCIDToLocaleNamePtr) GetProcAddress(kernelDLL, "LCIDToLocaleName");
-    }
-    sInitialized = true;
-  }
-}
-
 //
 // the mapping routines are a first approximation to get us going on
 // the tier-1 languages.  we are making an assumption that we can map
@@ -597,18 +483,12 @@ nsWin32Locale::initFunctionPointers(void)
 nsresult
 nsWin32Locale::GetPlatformLocale(const nsAString& locale, LCID* winLCID)
 {
-  initFunctionPointers ();
-
-  if (localeNameToLCID) {
-    nsAutoString locale_autostr(locale);
-    LCID lcid = localeNameToLCID(locale_autostr.get(), 0);
-    // The function returning 0 means that the locale name couldn't be matched,
-    // so we fallback to the old function
-    if (lcid != 0)
-    {
-      *winLCID = lcid;
-      return NS_OK;
-    }
+  LCID lcid = LocaleNameToLCID(PromiseFlatString(locale).get(), 0);
+  // The function returning 0 means that the locale name couldn't be matched,
+  // so we fallback to the old function
+  if (lcid != 0) {
+    *winLCID = lcid;
+    return NS_OK;
   }
 
   char    locale_string[9] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0'};
@@ -644,26 +524,19 @@ nsWin32Locale::GetPlatformLocale(const nsAString& locale, LCID* winLCID)
   return NS_ERROR_FAILURE;
 }
 
-#ifndef LOCALE_NAME_MAX_LENGTH
-#define LOCALE_NAME_MAX_LENGTH 85
-#endif
-
 void
 nsWin32Locale::GetXPLocale(LCID winLCID, nsAString& locale)
 {
-  initFunctionPointers ();
-
-  if (lcidToLocaleName)
-  {
-    WCHAR ret_locale[LOCALE_NAME_MAX_LENGTH];
-    int rv = lcidToLocaleName(winLCID, ret_locale, LOCALE_NAME_MAX_LENGTH, 0);
-    // rv 0 means that the function failed to match up the LCID, so we fallback
-    // to the old function
-    if (rv != 0)
-    {
-      locale.Assign(ret_locale);
-      return;
-    }
+  locale.SetCapacity(LOCALE_NAME_MAX_LENGTH);
+  int length = LCIDToLocaleName(winLCID,
+                                reinterpret_cast<LPWSTR>(locale.BeginWriting()),
+                                LOCALE_NAME_MAX_LENGTH, 0);
+  // 0 length means that the function failed to match up the LCID,
+  // so we fallback to the old function
+  if (length) {
+    // length contains null terminate.
+    locale.SetLength(length - 1);
+    return;
   }
 
   DWORD    lang_id, sublang_id;

@@ -28,17 +28,46 @@ const BrowserStatusFilter = Components.Constructor(
 let tabTracker;
 let windowTracker;
 
+/**
+ * A nsIWebProgressListener for a specific XUL browser, which delegates the
+ * events that it receives to a tab progress listener, and prepends the browser
+ * to their arguments list.
+ *
+ * @param {XULElement} browser
+ *        A XUL browser element.
+ * @param {object} listener
+ *        A tab progress listener object.
+ * @param {integer} flags
+ *        The web progress notification flags with which to filter events.
+ */
 class BrowserProgressListener {
   constructor(browser, listener, flags) {
     this.listener = listener;
     this.browser = browser;
     this.filter = new BrowserStatusFilter(this, flags);
+    this.browser.addProgressListener(this.filter, flags);
   }
 
+  /**
+   * Destroy the listener, and perform any necessary cleanup.
+   */
   destroy() {
+    this.browser.removeProgressListener(this.filter);
     this.filter.removeProgressListener(this);
   }
 
+  /**
+   * Calls the appropriate listener in the wrapped tab progress listener, with
+   * the wrapped XUL browser object as its first argument, and the additional
+   * arguments in `args`.
+   *
+   * @param {string} method
+   *        The name of the nsIWebProgressListener method which is being
+   *        delegated.
+   * @param {*} args
+   *        The arguments to pass to the delegated listener.
+   * @private
+   */
   delegate(method, ...args) {
     if (this.listener[method]) {
       this.listener[method](this.browser, ...args);
@@ -57,6 +86,16 @@ class BrowserProgressListener {
   onSecurityChange(webProgress, request, state) {}
 }
 
+/**
+ * Handles wrapping a tab progress listener in browser-specific
+ * BrowserProgressListener instances, an attaching them to each tab in a given
+ * browser window.
+ *
+ * @param {DOMWindow} window
+ *        The browser window to which to attach the listeners.
+ * @param {object} listener
+ *        The tab progress listener to wrap.
+ */
 class ProgressListenerWrapper {
   constructor(window, listener) {
     this.window = window;
@@ -66,39 +105,61 @@ class ProgressListenerWrapper {
     this.flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                  Ci.nsIWebProgress.NOTIFY_LOCATION;
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      this.addBrowserProgressListener(tab.browser);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      this.addBrowserProgressListener(nativeTab.browser);
     }
 
     this.window.BrowserApp.deck.addEventListener("TabOpen", this);
   }
 
+  /**
+   * Destroy the wrapper, removing any remaining listeners it has added.
+   */
   destroy() {
     this.window.BrowserApp.deck.removeEventListener("TabOpen", this);
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      this.removeProgressListener(tab.browser);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      this.removeProgressListener(nativeTab.browser);
     }
   }
 
+  /**
+   * Adds a progress listener to the given XUL browser element.
+   *
+   * @param {XULElement} browser
+   *        The XUL browser to add the listener to.
+   * @private
+   */
   addBrowserProgressListener(browser) {
     this.removeProgressListener(browser);
 
     let listener = new BrowserProgressListener(browser, this.listener, this.flags);
     this.listeners.set(browser, listener);
-
-    browser.addProgressListener(listener.filter, this.flags);
   }
 
+  /**
+   * Removes a progress listener from the given XUL browser element.
+   *
+   * @param {XULElement} browser
+   *        The XUL browser to remove the listener from.
+   * @private
+   */
   removeProgressListener(browser) {
     let listener = this.listeners.get(browser);
     if (listener) {
-      browser.removeProgressListener(listener.filter);
       listener.destroy();
       this.listeners.delete(browser);
     }
   }
 
+  /**
+   * Handles tab open events, and adds the necessary progress listeners to the
+   * new tabs.
+   *
+   * @param {Event} event
+   *        The DOM event to handle.
+   * @private
+   */
   handleEvent(event) {
     if (event.type === "TabOpen") {
       this.addBrowserProgressListener(event.originalTarget);
@@ -106,7 +167,6 @@ class ProgressListenerWrapper {
   }
 
 }
-
 
 class WindowTracker extends WindowTrackerBase {
   constructor(...args) {
@@ -132,6 +192,24 @@ class WindowTracker extends WindowTrackerBase {
     }
   }
 }
+
+/**
+ * An event manager API provider which listens for an event in the Android
+ * global EventDispatcher, and calls the given listener function whenever an event
+ * is received. That listener function receives a `fire` object, which it can
+ * use to dispatch events to the extension, and an object detailing the
+ * EventDispatcher event that was received.
+ *
+ * @param {BaseContext} context
+ *        The extension context which the event manager belongs to.
+ * @param {string} name
+ *        The API name of the event manager, e.g.,"runtime.onMessage".
+ * @param {string} event
+ *        The name of the EventDispatcher event to listen for.
+ * @param {function} listener
+ *        The listener function to call when an EventDispatcher event is
+ *        recieved.
+ */
 global.GlobalEventManager = class extends SingletonEventManager {
   constructor(context, name, event, listener) {
     super(context, name, fire => {
@@ -149,6 +227,21 @@ global.GlobalEventManager = class extends SingletonEventManager {
   }
 };
 
+/**
+ * An event manager API provider which listens for a DOM event in any browser
+ * window, and calls the given listener function whenever an event is received.
+ * That listener function receives a `fire` object, which it can use to dispatch
+ * events to the extension, and a DOM event object.
+ *
+ * @param {BaseContext} context
+ *        The extension context which the event manager belongs to.
+ * @param {string} name
+ *        The API name of the event manager, e.g.,"runtime.onMessage".
+ * @param {string} event
+ *        The name of the DOM event to listen for.
+ * @param {function} listener
+ *        The listener function to call when a DOM event is received.
+ */
 global.WindowEventManager = class extends SingletonEventManager {
   constructor(context, name, event, listener) {
     super(context, name, fire => {
@@ -173,16 +266,16 @@ class TabTracker extends TabTrackerBase {
     windowTracker.addListener("TabOpen", this);
   }
 
-  getId(tab) {
-    return tab.id;
+  getId(nativeTab) {
+    return nativeTab.id;
   }
 
   getTab(id, default_ = undefined) {
     let win = windowTracker.topWindow;
     if (win) {
-      let tab = win.BrowserApp.getTabForId(id);
-      if (tab) {
-        return tab;
+      let nativeTab = win.BrowserApp.getTabForId(id);
+      if (nativeTab) {
+        return nativeTab;
       }
     }
     if (default_ !== undefined) {
@@ -191,31 +284,56 @@ class TabTracker extends TabTrackerBase {
     throw new ExtensionError(`Invalid tab ID: ${id}`);
   }
 
+  /**
+   * Handles tab open and close events, and emits the appropriate internal
+   * events for them.
+   *
+   * @param {Event} event
+   *        A DOM event to handle.
+   * @private
+   */
   handleEvent(event) {
     const {BrowserApp} = event.target.ownerGlobal;
-    let tab = BrowserApp.getTabForBrowser(event.target);
+    let nativeTab = BrowserApp.getTabForBrowser(event.target);
 
     switch (event.type) {
       case "TabOpen":
-        this.emitCreated(tab);
+        this.emitCreated(nativeTab);
         break;
 
       case "TabClose":
-        this.emitRemoved(tab, false);
+        this.emitRemoved(nativeTab, false);
         break;
     }
   }
 
-  emitCreated(tab) {
-    this.emit("tab-created", {tab});
+  /**
+   * Emits a "tab-created" event for the given tab element.
+   *
+   * @param {NativeTab} nativeTab
+   *        The tab element which is being created.
+   * @private
+   */
+  emitCreated(nativeTab) {
+    this.emit("tab-created", {nativeTab});
   }
 
-  emitRemoved(tab, isWindowClosing) {
-    let windowId = windowTracker.getId(tab.browser.ownerGlobal);
-    let tabId = this.getId(tab);
+  /**
+   * Emits a "tab-removed" event for the given tab element.
+   *
+   * @param {NativeTab} nativeTab
+   *        The tab element which is being removed.
+   * @param {boolean} isWindowClosing
+   *        True if the tab is being removed because the browser window is
+   *        closing.
+   * @private
+   */
+  emitRemoved(nativeTab, isWindowClosing) {
+    let windowId = windowTracker.getId(nativeTab.browser.ownerGlobal);
+    let tabId = this.getId(nativeTab);
 
     Services.tm.mainThread.dispatch(() => {
-      this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+      this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
     }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 
@@ -229,9 +347,9 @@ class TabTracker extends TabTrackerBase {
     if (BrowserApp) {
       result.windowId = windowTracker.getId(browser.ownerGlobal);
 
-      let tab = BrowserApp.getTabForBrowser(browser);
-      if (tab) {
-        result.tabId = this.getId(tab);
+      let nativeTab = BrowserApp.getTabForBrowser(browser);
+      if (nativeTab) {
+        result.tabId = this.getId(nativeTab);
       }
     }
 
@@ -258,15 +376,15 @@ class Tab extends TabBase {
   }
 
   get audible() {
-    return this.tab.playingAudio;
+    return this.nativeTab.playingAudio;
   }
 
   get browser() {
-    return this.tab.browser;
+    return this.nativeTab.browser;
   }
 
   get cookieStoreId() {
-    return getCookieStoreIdForTab(this, this.tab);
+    return getCookieStoreIdForTab(this, this.nativeTab);
   }
 
   get height() {
@@ -278,7 +396,7 @@ class Tab extends TabBase {
   }
 
   get index() {
-    return this.window.BrowserApp.tabs.indexOf(this.tab);
+    return this.window.BrowserApp.tabs.indexOf(this.nativeTab);
   }
 
   get mutedInfo() {
@@ -290,11 +408,11 @@ class Tab extends TabBase {
   }
 
   get active() {
-    return this.tab.getActive();
+    return this.nativeTab.getActive();
   }
 
   get selected() {
-    return this.tab.getActive();
+    return this.nativeTab.getActive();
   }
 
   get status() {
@@ -357,8 +475,8 @@ class Window extends WindowBase {
   * getTabs() {
     let {tabManager} = this.extension;
 
-    for (let tab of this.window.BrowserApp.tabs) {
-      yield tabManager.getWrapper(tab);
+    for (let nativeTab of this.window.BrowserApp.tabs) {
+      yield tabManager.getWrapper(nativeTab);
     }
   }
 }
@@ -367,24 +485,24 @@ Object.assign(global, {Tab, Window});
 
 class TabManager extends TabManagerBase {
   get(tabId, default_ = undefined) {
-    let tab = tabTracker.getTab(tabId, default_);
+    let nativeTab = tabTracker.getTab(tabId, default_);
 
-    if (tab) {
-      return this.getWrapper(tab);
+    if (nativeTab) {
+      return this.getWrapper(nativeTab);
     }
     return default_;
   }
 
-  addActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.addActiveTabPermission(tab);
+  addActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.addActiveTabPermission(nativeTab);
   }
 
-  revokeActiveTabPermission(tab = tabTracker.activeTab) {
-    return super.revokeActiveTabPermission(tab);
+  revokeActiveTabPermission(nativeTab = tabTracker.activeTab) {
+    return super.revokeActiveTabPermission(nativeTab);
   }
 
-  wrapTab(tab) {
-    return new Tab(this.extension, tab, tab.id);
+  wrapTab(nativeTab) {
+    return new Tab(this.extension, nativeTab, nativeTab.id);
   }
 }
 

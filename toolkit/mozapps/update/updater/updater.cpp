@@ -3501,10 +3501,25 @@ int NS_main(int argc, NS_tchar **argv)
       *d = NS_T('\0');
       ++d;
 
+      const size_t callbackBackupPathBufSize =
+        sizeof(gCallbackBackupPath)/sizeof(gCallbackBackupPath[0]);
+      const int callbackBackupPathLen =
+        NS_tsnprintf(gCallbackBackupPath, callbackBackupPathBufSize,
+                     NS_T("%s" CALLBACK_BACKUP_EXT), argv[callbackIndex]);
+
+      if (callbackBackupPathLen < 0 ||
+          callbackBackupPathLen >= static_cast<int>(callbackBackupPathBufSize)) {
+        LOG(("NS_main: callback backup path truncated"));
+        LogFinish();
+        WriteStatusFile(USAGE_ERROR);
+
+        // Don't attempt to launch the callback when the callback path is
+        // longer than expected.
+        EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
+        return 1;
+      }
+
       // Make a copy of the callback executable so it can be read when patching.
-      NS_tsnprintf(gCallbackBackupPath,
-                   sizeof(gCallbackBackupPath)/sizeof(gCallbackBackupPath[0]),
-                   NS_T("%s" CALLBACK_BACKUP_EXT), argv[callbackIndex]);
       NS_tremove(gCallbackBackupPath);
       if(!CopyFileW(argv[callbackIndex], gCallbackBackupPath, true)) {
         DWORD copyFileError = GetLastError();

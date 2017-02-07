@@ -8,9 +8,9 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
     "security/sandbox/test/browser_content_sandbox_utils.js", this);
 
 /*
- * This test exercises file I/O from the content process using OS.File
- * methods to validate that calls that are meant to be blocked by content
- * sandboxing are blocked.
+ * This test exercises file I/O from web and file content processes using
+ * OS.File methods to validate that calls that are meant to be blocked by
+ * content sandboxing are blocked.
  */
 
 // Creates file at |path| and returns a promise that resolves with true
@@ -39,6 +39,38 @@ function deleteFile(path) {
   });
 }
 
+// Reads the directory at |path| and returns a promise that resolves when
+// iteration over the directory finishes or encounters an error. The promise
+// resolves with an object where .ok indicates success or failure and
+// .numEntries is the number of directory entries found.
+function readDir(path) {
+  Components.utils.import("resource://gre/modules/osfile.jsm");
+  let numEntries = 0;
+  let iterator = new OS.File.DirectoryIterator(path);
+  let promise = iterator.forEach(function (dirEntry) {
+    numEntries++;
+  }).then(function () {
+    iterator.close();
+    return {ok: true, numEntries: numEntries};
+  }).catch(function () {
+    return {ok: false, numEntries: numEntries};
+  });
+  return promise;
+}
+
+// Reads the file at |path| and returns a promise that resolves when
+// reading is completed. Returned object has boolean .ok to indicate
+// success or failure.
+function readFile(path) {
+  Components.utils.import("resource://gre/modules/osfile.jsm");
+  let promise = OS.File.read(path).then(function (binaryData) {
+    return {ok: true};
+  }).catch(function (error) {
+    return {ok: false};
+  });
+  return promise;
+}
+
 // Returns true if the current content sandbox level, passed in
 // the |level| argument, supports filesystem sandboxing.
 function isContentFileIOSandboxed(level) {
@@ -64,8 +96,24 @@ function isContentFileIOSandboxed(level) {
   return (level >= fileIOSandboxMinLevel);
 }
 
+// Returns the lowest sandbox level where blanket reading of the profile
+// directory from the content process should be blocked by the sandbox.
+function minProfileReadSandboxLevel(level) {
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      return 3;
+    case "Darwin":
+      return 2;
+    case "Linux":
+      return 3;
+    default:
+      Assert.ok(false, "Unknown OS");
+  }
+}
+
 //
-// Drive tests for a single content process.
+// Checks that sandboxing is enabled and at the appropriate level
+// setting before triggering tests that do the file I/O.
 //
 // Tests attempting to write to a file in the home directory from the
 // content process--expected to fail.
@@ -74,6 +122,9 @@ function isContentFileIOSandboxed(level) {
 // from the content process--expected to succeed. On Mac and Windows,
 // use "ContentTmpD", but on Linux use "TmpD" until Linux uses the
 // content temp dir key.
+//
+// Tests reading various files and directories from file and web
+// content processes.
 //
 add_task(function*() {
   // This test is only relevant in e10s
@@ -137,33 +188,164 @@ add_task(function*() {
     return;
   }
 
+  // Test creating a file in the home directory from a web content process
+  add_task(createFileInHome);
+
+  // Test creating a file content temp from a web content process
+  add_task(createTempFile);
+
+  // Test reading files/dirs from web and file content processes
+  add_task(testFileAccess);
+});
+
+// Test if the content process can create in $HOME, this should fail
+function* createFileInHome() {
   let browser = gBrowser.selectedBrowser;
-
-  {
-    // test if the content process can create in $HOME, this should fail
-    let homeFile = fileInHomeDir();
-    let path = homeFile.path;
-    let fileCreated = yield ContentTask.spawn(browser, path, createFile);
-    ok(fileCreated == false, "creating a file in home dir is not permitted");
-    if (fileCreated == true) {
-      // content process successfully created the file, now remove it
-      homeFile.remove(false);
-    }
+  let homeFile = fileInHomeDir();
+  let path = homeFile.path;
+  let fileCreated = yield ContentTask.spawn(browser, path, createFile);
+  ok(fileCreated == false, "creating a file in home dir is not permitted");
+  if (fileCreated == true) {
+    // content process successfully created the file, now remove it
+    homeFile.remove(false);
   }
+}
 
-  {
-    // test if the content process can create a temp file, should pass
-    let path = fileInTempDir().path;
-    let fileCreated = yield ContentTask.spawn(browser, path, createFile);
-    if (!fileCreated && isWin()) {
-      // TODO: fix 1329294 and enable this test for Windows.
-      // Not using todo() because this only fails on automation.
-      info("ignoring failure to write to content temp due to 1329294\n");
-      return;
-    }
+// Test if the content process can create a temp file, should pass
+function* createTempFile() {
+  let browser = gBrowser.selectedBrowser;
+  let path = fileInTempDir().path;
+  let fileCreated = yield ContentTask.spawn(browser, path, createFile);
+  if (!fileCreated && isWin()) {
+    // TODO: fix 1329294 and enable this test for Windows.
+    // Not using todo() because this only fails on automation.
+    info("ignoring failure to write to content temp due to 1329294\n");
+  } else {
     ok(fileCreated == true, "creating a file in content temp is permitted");
     // now delete the file
     let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
     ok(fileDeleted == true, "deleting a file in content temp is permitted");
   }
-});
+}
+
+// Test reading files and dirs from web and file content processes.
+function* testFileAccess() {
+  // for tests that run in a web content process
+  let webBrowser = gBrowser.selectedBrowser;
+
+  // For now, we'll only test file access from the file content process if
+  // the file content process is enabled. Once the file content process is
+  // ready to ride the trains, this test should be changed to always test
+  // file content process access. We use todo() to cause failures
+  // if the file process is enabled on a non-Nightly release so that we'll
+  // know to update this test to always run the tests. i.e., we'll want to
+  // catch bugs that accidentally disable file content process.
+  let fileContentProcessEnabled =
+    prefs.getBoolPref("browser.tabs.remote.separateFileUriProcess");
+  if (isNightly()) {
+    ok(fileContentProcessEnabled, "separate file content process is enabled");
+  } else {
+    todo(fileContentProcessEnabled, "separate file content process is enabled");
+  }
+
+  // for tests that run in a file content process
+  let fileBrowser = undefined;
+  if (fileContentProcessEnabled) {
+    // open a tab in a file content process
+    gBrowser.selectedTab =
+      gBrowser.addTab("about:blank", {preferredRemoteType: "file"});
+    // get the browser for the file content process tab
+    fileBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+  }
+
+  // Directories/files to test accessing from content processes.
+  // For directories, we test whether a directory listing is allowed
+  // or blocked. For files, we test if we can read from the file.
+  // Each entry in the array represents a test file or directory
+  // that will be read from either a web or file process.
+  let tests = [];
+
+  let profileDir = GetProfileDir();
+  tests.push({
+    desc:     "profile dir",                // description
+    ok:       false,                        // expected to succeed?
+    browser:  webBrowser,                   // browser to run test in
+    file:     profileDir,                   // nsIFile object
+    minLevel: minProfileReadSandboxLevel(), // min level to enable test
+  });
+  if (fileContentProcessEnabled) {
+    tests.push({
+      desc:     "profile dir",
+      ok:       true,
+      browser:  fileBrowser,
+      file:     profileDir,
+      minLevel: 0,
+    });
+  }
+
+  let extensionsDir = GetProfileEntry("extensions");
+  if (extensionsDir.exists() && extensionsDir.isDirectory()) {
+    tests.push({
+      desc:     "extensions dir",
+      ok:       true,
+      browser:  webBrowser,
+      file:     extensionsDir,
+      minLevel: 0,
+    });
+  } else {
+    ok(false, `${extensionsDir.path} is a valid dir`);
+  }
+
+  let chromeDir = GetProfileEntry("chrome");
+  if (chromeDir.exists() && chromeDir.isDirectory()) {
+    tests.push({
+      desc:     "chrome dir",
+      ok:       true,
+      browser:  webBrowser,
+      file:     chromeDir,
+      minLevel: 0,
+    });
+  } else {
+    ok(false, `${chromeDir.path} is valid dir`);
+  }
+
+  let cookiesFile = GetProfileEntry("cookies.sqlite");
+  if (cookiesFile.exists() && !cookiesFile.isDirectory()) {
+    tests.push({
+      desc:     "cookies file",
+      ok:       false,
+      browser:  webBrowser,
+      file:     cookiesFile,
+      minLevel: minProfileReadSandboxLevel(),
+    });
+  } else {
+    ok(false, `${cookiesFile.path} is a valid file`);
+  }
+
+  // remove tests not enabled by the current sandbox level
+  let level = prefs.getIntPref("security.sandbox.content.level");
+  tests = tests.filter((test) => { return (test.minLevel <= level); });
+
+  for (let test of tests) {
+    let testFunc = test.file.isDirectory? readDir : readFile;
+    let okString = test.ok? "allowed" : "blocked";
+    let processType = test.browser === webBrowser ? "web" : "file";
+
+    let result = yield ContentTask.spawn(test.browser, test.file.path,
+        testFunc);
+
+    ok(result.ok == test.ok,
+        `reading ${test.desc} from a ${processType} process ` +
+        `is ${okString} (${test.file.path})`);
+
+    // if the directory is not expected to be readable,
+    // ensure the listing has zero entries
+    if (test.file.isDirectory() && !test.ok) {
+      ok(result.numEntries == 0, `directory list is empty (${test.file.path})`);
+    }
+  }
+
+  if (fileContentProcessEnabled) {
+    gBrowser.removeTab(gBrowser.selectedTab);
+  }
+}

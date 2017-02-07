@@ -100,7 +100,7 @@ class MainThreadFetchResolver final : public FetchDriverObserver
   RefPtr<Promise> mPromise;
   RefPtr<Response> mResponse;
 
-  nsCOMPtr<nsIDocument> mDocument;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   NS_DECL_OWNINGTHREAD
 public:
@@ -109,9 +109,9 @@ public:
   void
   OnResponseAvailableInternal(InternalResponse* aResponse) override;
 
-  void SetDocument(nsIDocument* aDocument)
+  void SetLoadGroup(nsILoadGroup* aLoadGroup)
   {
-    mDocument = aDocument;
+    mLoadGroup = aLoadGroup;
   }
 
   virtual void OnResponseEnd() override
@@ -124,7 +124,7 @@ private:
 
   void FlushConsoleReport() override
   {
-    mReporter->FlushConsoleReports(mDocument);
+    mReporter->FlushConsoleReports(mLoadGroup);
   }
 };
 
@@ -238,7 +238,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
     RefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
     fetch->SetDocument(doc);
-    resolver->SetDocument(doc);
+    resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -453,7 +453,7 @@ WorkerFetchResolver::FlushConsoleReport()
 
   workers::WorkerPrivate* worker = mPromiseProxy->GetWorkerPrivate();
   if (!worker) {
-    mReporter->FlushConsoleReports((nsIDocument*)nullptr);
+    mReporter->FlushReportsToConsole(0);
     return;
   }
 
@@ -461,7 +461,7 @@ WorkerFetchResolver::FlushConsoleReport()
     // Flush to service worker
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (!swm) {
-      mReporter->FlushConsoleReports((nsIDocument*)nullptr);
+      mReporter->FlushReportsToConsole(0);
       return;
     }
 
@@ -476,7 +476,7 @@ WorkerFetchResolver::FlushConsoleReport()
   }
 
   // Flush to dedicated worker
-  mReporter->FlushConsoleReports(worker->GetDocument());
+  mReporter->FlushConsoleReports(worker->GetLoadGroup());
 }
 
 nsresult

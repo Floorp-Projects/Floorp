@@ -55,3 +55,17 @@ function fileInTempDir() {
   Assert.ok(!tempFile.exists(), tempFile.path + " does not exist");
   return (tempFile);
 }
+
+function GetProfileDir() {
+  // get profile directory
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  return (profileDir);
+}
+
+// Returns a file object for the file or directory named |name| in the
+// profile directory.
+function GetProfileEntry(name) {
+  let entry = GetProfileDir();
+  entry.append(name);
+  return (entry);
+}
