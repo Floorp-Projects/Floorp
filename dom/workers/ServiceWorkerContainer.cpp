@@ -49,7 +49,7 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   }
 
   nsIDocument* doc = window->GetExtantDoc();
-  if (!doc || doc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId) {
+  if (!doc || nsContentUtils::IsInPrivateBrowsing(doc)) {
     return false;
   }
 

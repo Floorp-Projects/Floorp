@@ -2,6 +2,12 @@ function createPath(parentDir, dirOrFile) {
   return parentDir.path + (parentDir.path == '/' ? '' : '/') + dirOrFile.name;
 }
 
+function createRelativePath(parentDir, dirOrFile) {
+  let path = createPath(parentDir, dirOrFile);
+  is(path[0], "/", "The full path should start with '/'");
+  return path.substring(1);
+}
+
 function setup_tests(aNext) {
   SimpleTest.requestLongerTimeout(2);
   SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
@@ -29,7 +35,7 @@ function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
           }
 
           if (data[i] instanceof File) {
-            is(data[i].webkitRelativePath, createPath(dir, data[i]), "File.webkitRelativePath should be called: parentdir.path + '/' + file.name: " + data[i].webkitRelativePath);
+            is(data[i].webkitRelativePath, createRelativePath(dir, data[i]), "File.webkitRelativePath should be called: parentdir.path + '/' + file.name: " + data[i].webkitRelativePath);
           }
         }
       }
@@ -51,7 +57,7 @@ function test_getFilesAndDirectories(aDirectory, aRecursive, aNext) {
         }
 
         if (data[i] instanceof File) {
-          is(data[i].webkitRelativePath, createPath(aDirectory, data[i]), "File.webkitRelativePath should be called '/' + file.name: " + data[i].webkitRelativePath);
+          is(data[i].webkitRelativePath, createRelativePath(aDirectory, data[i]), "File.webkitRelativePath should be called file.name: " + data[i].webkitRelativePath);
         }
       }
 
@@ -68,7 +74,8 @@ function test_getFiles(aDirectory, aRecursive, aNext) {
     function(data) {
       for (var i = 0; i < data.length; ++i) {
         ok(data[i] instanceof File, "File: " + data[i].name);
-        ok(data[i].webkitRelativePath.indexOf(aDirectory.path) == 0 &&
+        is(aDirectory.path[0], '/', "Directory path must start with '/'");
+        ok(data[i].webkitRelativePath.indexOf(aDirectory.path.substring(1)) == 0 &&
            data[i].webkitRelativePath.indexOf('/' + data[i].name) + ('/' + data[i].name).length == data[i].webkitRelativePath.length,
            "File.webkitRelativePath should be called dir.path + '/' + file.name: " + data[i].webkitRelativePath);
       }

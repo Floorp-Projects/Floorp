@@ -818,6 +818,16 @@ public:
   GetOriginAttributes(nsILoadGroup* aLoadGroup);
 
   /**
+   * Returns true if this document is in a Private Browsing window.
+   */
+  static bool IsInPrivateBrowsing(nsIDocument* aDoc);
+
+  /**
+   * Returns true if this loadGroup uses Private Browsing.
+   */
+  static bool IsInPrivateBrowsing(nsILoadGroup* aLoadGroup);
+
+  /**
    * If aNode is not an element, return true exactly when aContent's binding
    * parent is null.
    *
@@ -883,6 +893,37 @@ public:
                                               uint32_t aColumnNumber = 0,
                                               MissingErrorLocationMode aLocationMode
                                                 = eUSE_CALLING_LOCATION);
+
+  /**
+   * Report a non-localized error message to the error console base on the
+   * innerWindowID.
+   *   @param aErrorText the error message
+   *   @param aErrorFlags See nsIScriptError.
+   *   @param aCategory Name of module reporting error.
+   *   @param [aInnerWindowID] Inner window ID for document which triggered the
+   *          message.
+   *   @param [aURI=nullptr] (Optional) URI of resource containing error.
+   *   @param [aSourceLine=EmptyString()] (Optional) The text of the line that
+              contains the error (may be empty).
+   *   @param [aLineNumber=0] (Optional) Line number within resource
+              containing error.
+   *   @param [aColumnNumber=0] (Optional) Column number within resource
+              containing error.
+              If aURI is null, then aDocument->GetDocumentURI() is used.
+   *   @param [aLocationMode] (Optional) Specifies the behavior if
+              error location information is omitted.
+   */
+  static nsresult ReportToConsoleByWindowID(const nsAString& aErrorText,
+                                            uint32_t aErrorFlags,
+                                            const nsACString& aCategory,
+                                            uint64_t aInnerWindowID,
+                                            nsIURI* aURI = nullptr,
+                                            const nsAFlatString& aSourceLine
+                                              = EmptyString(),
+                                            uint32_t aLineNumber = 0,
+                                            uint32_t aColumnNumber = 0,
+                                            MissingErrorLocationMode aLocationMode
+                                              = eUSE_CALLING_LOCATION);
 
   /**
    * Report a localized error message to the error console.
@@ -2447,9 +2488,14 @@ public:
   static bool IsForbiddenResponseHeader(const nsACString& aHeader);
 
   /**
-   * Returns the inner window ID for the window associated with a request,
+   * Returns the inner window ID for the window associated with a request.
    */
   static uint64_t GetInnerWindowID(nsIRequest* aRequest);
+
+  /**
+   * Returns the inner window ID for the window associated with a load group.
+   */
+  static uint64_t GetInnerWindowID(nsILoadGroup* aLoadGroup);
 
   /**
    * If the hostname for aURI is an IPv6 it encloses it in brackets,

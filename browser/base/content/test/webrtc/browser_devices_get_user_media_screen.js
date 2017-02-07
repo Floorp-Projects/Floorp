@@ -321,7 +321,7 @@ var gTests = [
 
 {
   desc: "getUserMedia screen: clicking through without selecting a screen denies",
-  run: function* checkReloading() {
+  run: function* checkClickThroughDenies() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(false, true, null, "screen");
     yield promise;
