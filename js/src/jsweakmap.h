@@ -277,7 +277,15 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
 
     JSObject* getDelegate(JSObject* key) const {
         JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
-        return op ? op(key) : nullptr;
+        if (!op)
+            return nullptr;
+
+        JSObject* obj = op(key);
+        if (!obj)
+            return nullptr;
+
+        MOZ_ASSERT(obj->runtimeFromMainThread() == zone->runtimeFromMainThread());
+        return obj;
     }
 
     JSObject* getDelegate(JSScript* script) const {
