@@ -9,22 +9,22 @@
 #include <stdint.h>
 
 #include "MP4Demuxer.h"
-#include "mp4_demuxer/MoofParser.h"
-#include "mp4_demuxer/MP4Metadata.h"
-#include "mp4_demuxer/ResourceStream.h"
-#include "mp4_demuxer/BufferStream.h"
-#include "mp4_demuxer/Index.h"
-#include "nsPrintfCString.h"
 
 // Used for telemetry
 #include "mozilla/Telemetry.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
-
+#include "mp4_demuxer/MoofParser.h"
+#include "mp4_demuxer/MP4Metadata.h"
+#include "mp4_demuxer/ResourceStream.h"
+#include "mp4_demuxer/BufferStream.h"
+#include "mp4_demuxer/Index.h"
 #include "nsAutoPtr.h"
+#include "nsPrintfCString.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
-mozilla::LogModule* GetDemuxerLog() {
+mozilla::LogModule* GetDemuxerLog()
+{
   return gMediaDemuxerLog;
 }
 
@@ -82,12 +82,12 @@ AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 {
   mp4_demuxer::SPSData spsdata;
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
-    uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0) |
-                          (spsdata.constraint_set1_flag ? (1 << 1) : 0) |
-                          (spsdata.constraint_set2_flag ? (1 << 2) : 0) |
-                          (spsdata.constraint_set3_flag ? (1 << 3) : 0) |
-                          (spsdata.constraint_set4_flag ? (1 << 4) : 0) |
-                          (spsdata.constraint_set5_flag ? (1 << 5) : 0);
+    uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0)
+                          | (spsdata.constraint_set1_flag ? (1 << 1) : 0)
+                          | (spsdata.constraint_set2_flag ? (1 << 2) : 0)
+                          | (spsdata.constraint_set3_flag ? (1 << 3) : 0)
+                          | (spsdata.constraint_set4_flag ? (1 << 4) : 0)
+                          | (spsdata.constraint_set5_flag ? (1 << 5) : 0);
     Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG,
                           constraints);
 
@@ -98,8 +98,9 @@ AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
     // Make sure level_idc represents a value between levels 1 and 5.2,
     // otherwise collect 0 for unknown level.
     Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_LEVEL,
-                          (spsdata.level_idc >= 10 && spsdata.level_idc <= 52) ?
-                          spsdata.level_idc : 0);
+                          (spsdata.level_idc >= 10 && spsdata.level_idc <= 52)
+                          ? spsdata.level_idc
+                          : 0);
 
     // max_num_ref_frames should be between 0 and 16, anything larger will
     // be treated as invalid.
@@ -126,13 +127,15 @@ MP4Demuxer::Init()
 
   // Check that we have enough data to read the metadata.
   if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                        __func__);
   }
 
   mInitData = mp4_demuxer::MP4Metadata::Metadata(stream);
   if (!mInitData) {
     // OOM
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                        __func__);
   }
 
   RefPtr<mp4_demuxer::BufferStream> bufferstream =
@@ -140,9 +143,10 @@ MP4Demuxer::Init()
 
   mMetadata = MakeUnique<mp4_demuxer::MP4Metadata>(bufferstream);
 
-  if (!mMetadata->GetNumberTracks(mozilla::TrackInfo::kAudioTrack) &&
-      !mMetadata->GetNumberTracks(mozilla::TrackInfo::kVideoTrack)) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
+  if (!mMetadata->GetNumberTracks(mozilla::TrackInfo::kAudioTrack)
+      && !mMetadata->GetNumberTracks(mozilla::TrackInfo::kVideoTrack)) {
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                        __func__);
   }
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
@@ -243,16 +247,16 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
 
   VideoInfo* videoInfo = mInfo->GetAsVideoInfo();
   // Collect telemetry from h264 AVCC SPS.
-  if (videoInfo &&
-      (mInfo->mMimeType.EqualsLiteral("video/mp4") ||
-       mInfo->mMimeType.EqualsLiteral("video/avc"))) {
+  if (videoInfo
+      && (mInfo->mMimeType.EqualsLiteral("video/mp4")
+          || mInfo->mMimeType.EqualsLiteral("video/avc"))) {
     mIsH264 = true;
     RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
     mNeedSPSForTelemetry = AccumulateSPSTelemetry(extraData);
     mp4_demuxer::SPSData spsdata;
-    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
-        spsdata.pic_width > 0 && spsdata.pic_height > 0 &&
-        mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
+    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata)
+        && spsdata.pic_width > 0 && spsdata.pic_height > 0
+        && mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
       videoInfo->mImage.width = spsdata.pic_width;
       videoInfo->mImage.height = spsdata.pic_height;
       videoInfo->mDisplay.width = spsdata.display_width;
@@ -299,7 +303,8 @@ MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
   do {
     sample = GetNextSample();
     if (!sample) {
-      return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+      return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
+                                          __func__);
     }
     if (!sample->Size()) {
       // This sample can't be decoded, continue searching.
@@ -313,7 +318,8 @@ MP4TrackDemuxer::Seek(const media::TimeUnit& aTime)
 
   SetNextKeyFrameTime();
 
-  return SeekPromise::CreateAndResolve(media::TimeUnit::FromMicroseconds(seekTime), __func__);
+  return SeekPromise::CreateAndResolve(
+    media::TimeUnit::FromMicroseconds(seekTime), __func__);
 }
 
 already_AddRefed<MediaRawData>
@@ -334,20 +340,20 @@ MP4TrackDemuxer::GetNextSample()
         {
           bool keyframe = type == mp4_demuxer::H264::FrameType::I_FRAME;
           if (sample->mKeyframe != keyframe) {
-            NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe @ pts:%lld dur:%u dts:%lld",
-                                       keyframe ? "" : "non-",
-                                       sample->mTime,
-                                       sample->mDuration,
-                                       sample->mTimecode).get());
+            NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe "
+                                       "@ pts:%lld dur:%u dts:%lld",
+                                       keyframe ? "" : "non-", sample->mTime,
+                                       sample->mDuration, sample->mTimecode)
+                         .get());
             sample->mKeyframe = keyframe;
           }
           break;
         }
         case mp4_demuxer::H264::FrameType::INVALID:
-          NS_WARNING(nsPrintfCString("Invalid H264 frame @ pts:%lld dur:%u dts:%lld",
-                                     sample->mTime,
-                                     sample->mDuration,
-                                     sample->mTimecode).get());
+          NS_WARNING(
+            nsPrintfCString("Invalid H264 frame @ pts:%lld dur:%u dts:%lld",
+                            sample->mTime, sample->mDuration, sample->mTimecode)
+              .get());
           // We could reject the sample now, however demuxer errors are fatal.
           // So we keep the invalid frame, relying on the H264 decoder to
           // handle the error later.
@@ -377,7 +383,8 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   EnsureUpToDateIndex();
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   if (!aNumSamples) {
-    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
+    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                           __func__);
   }
 
   if (mQueuedSample) {
@@ -397,7 +404,8 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   }
 
   if (samples->mSamples.IsEmpty()) {
-    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+    return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
+                                           __func__);
   } else {
     for (const auto& sample : samples->mSamples) {
       // Collect telemetry from h264 Annex B SPS.
@@ -408,8 +416,9 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
       }
     }
 
-    if (mNextKeyframeTime.isNothing() ||
-        samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value().ToMicroseconds()) {
+    if (mNextKeyframeTime.isNothing()
+        || samples->mSamples.LastElement()->mTime
+           >= mNextKeyframeTime.value().ToMicroseconds()) {
       SetNextKeyFrameTime();
     }
     return SamplesPromise::CreateAndResolve(samples, __func__);
@@ -450,7 +459,8 @@ MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 }
 
 RefPtr<MP4TrackDemuxer::SkipAccessPointPromise>
-MP4TrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
+MP4TrackDemuxer::SkipToNextRandomAccessPoint(
+  const media::TimeUnit& aTimeThreshold)
 {
   mQueuedSample = nullptr;
   // Loop until we reach the next keyframe after the threshold.
