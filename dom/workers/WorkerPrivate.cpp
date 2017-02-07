@@ -1851,6 +1851,45 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mOriginAttributes = aOther.mOriginAttributes;
 }
 
+void
+WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
+                                         nsILoadGroup* aLoadGroup)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadGroup, aPrincipal));
+  MOZ_ASSERT(!mPrincipalInfo);
+
+  mPrincipal = aPrincipal;
+  mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
+
+  aPrincipal->GetCsp(getter_AddRefs(mCSP));
+
+  if (mCSP) {
+    mCSP->GetAllowsEval(&mReportCSPViolations, &mEvalAllowed);
+    // Set ReferrerPolicy
+    bool hasReferrerPolicy = false;
+    uint32_t rp = mozilla::net::RP_Unset;
+
+    nsresult rv = mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (hasReferrerPolicy) {
+      mReferrerPolicy = static_cast<net::ReferrerPolicy>(rp);
+    }
+  } else {
+    mEvalAllowed = true;
+    mReportCSPViolations = false;
+  }
+
+  mLoadGroup = aLoadGroup;
+
+  mPrincipalInfo = new PrincipalInfo();
+  mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
+
+  MOZ_ALWAYS_SUCCEEDS(
+    PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo));
+}
+
 template <class Derived>
 class WorkerPrivateParent<Derived>::EventTarget final
   : public nsIEventTarget
@@ -3659,40 +3698,7 @@ void
 WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
                                            nsILoadGroup* aLoadGroup)
 {
-  AssertIsOnMainThread();
-  MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadGroup, aPrincipal));
-  MOZ_ASSERT(!mLoadInfo.mPrincipalInfo);
-
-  mLoadInfo.mPrincipal = aPrincipal;
-  mLoadInfo.mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
-
-  aPrincipal->GetCsp(getter_AddRefs(mLoadInfo.mCSP));
-
-  if (mLoadInfo.mCSP) {
-    mLoadInfo.mCSP->GetAllowsEval(&mLoadInfo.mReportCSPViolations,
-                                  &mLoadInfo.mEvalAllowed);
-    // Set ReferrerPolicy
-    bool hasReferrerPolicy = false;
-    uint32_t rp = mozilla::net::RP_Unset;
-
-    nsresult rv = mLoadInfo.mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    if (hasReferrerPolicy) {
-      mLoadInfo.mReferrerPolicy = static_cast<net::ReferrerPolicy>(rp);
-    }
-  } else {
-    mLoadInfo.mEvalAllowed = true;
-    mLoadInfo.mReportCSPViolations = false;
-  }
-
-  mLoadInfo.mLoadGroup = aLoadGroup;
-
-  mLoadInfo.mPrincipalInfo = new PrincipalInfo();
-  mLoadInfo.mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
-
-  MOZ_ALWAYS_SUCCEEDS(
-    PrincipalToPrincipalInfo(aPrincipal, mLoadInfo.mPrincipalInfo));
+  mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
 }
 
 template <class Derived>
