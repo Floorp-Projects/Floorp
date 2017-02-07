@@ -87,10 +87,10 @@ class JitRuntime
 
     // Executable allocator for all code except wasm code and Ion code with
     // patchable backedges (see below).
-    ActiveThreadData<ExecutableAllocator> execAlloc_;
+    UnprotectedData<ExecutableAllocator> execAlloc_;
 
     // Executable allocator for Ion scripts with patchable backedges.
-    ActiveThreadData<ExecutableAllocator> backedgeExecAlloc_;
+    UnprotectedData<ExecutableAllocator> backedgeExecAlloc_;
 
     // Shared exception-handler tail.
     ExclusiveAccessLockWriteOnceData<JitCode*> exceptionTail_;
@@ -152,7 +152,7 @@ class JitRuntime
     mozilla::Atomic<bool> preventBackedgePatching_;
 
     // Global table of jitcode native address => bytecode address mappings.
-    ActiveThreadData<JitcodeGlobalTable*> jitcodeGlobalTable_;
+    UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
 
   private:
     JitCode* generateLazyLinkStub(JSContext* cx);

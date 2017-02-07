@@ -1183,10 +1183,10 @@ void
 js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
 {
     JSContext cx(runtime(), JS::ContextOptions());
-    gc::AutoSetThreadIsPerformingGC performingGC;
 
     {
         AutoUnlockHelperThreadState parallelSection(locked);
+        gc::AutoSetThreadIsPerformingGC performingGC;
         mozilla::TimeStamp timeStart = mozilla::TimeStamp::Now();
         cx.heapState = JS::HeapState::MajorCollecting;
         run();
