@@ -1176,10 +1176,12 @@ public:
         RefPtr<UiCompositorControllerChild> child = UiCompositorControllerChild::Get();
 
         if (!child) {
-            return;
+            // When starting, sometimes the UiCompositorControllerChild is still initializing
+            // so cache the resized surface dimensions until it has initialized.
+            UiCompositorControllerChild::CacheSurfaceResize(id, aWidth, aHeight);
+        } else {
+            child->SendResumeAndResize(id, aWidth, aHeight);
         }
-
-        child->SendResumeAndResize(id, aWidth, aHeight);
 
         mCompositorPaused = false;
 
