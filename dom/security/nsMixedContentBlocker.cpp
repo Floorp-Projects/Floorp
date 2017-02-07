@@ -375,12 +375,16 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     nsCOMPtr<nsILoadInfo> newLoadInfo;
     rv = aNewChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = nsMixedContentBlocker::MarkLoadInfoForPriming(newUri,
-                                                       requestingContext,
-                                                       newLoadInfo);
-    if (NS_FAILED(rv)) {
+    if (newLoadInfo) {
+      rv = nsMixedContentBlocker::MarkLoadInfoForPriming(newUri,
+                                                         requestingContext,
+                                                         newLoadInfo);
+      if (NS_FAILED(rv)) {
+        decision = REJECT_REQUEST;
+        newLoadInfo->ClearHSTSPriming();
+      }
+    } else {
       decision = REJECT_REQUEST;
-      newLoadInfo->ClearHSTSPriming();
     }
   }
 
