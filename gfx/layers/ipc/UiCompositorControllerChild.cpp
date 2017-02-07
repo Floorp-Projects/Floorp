@@ -18,6 +18,50 @@ static bool sInitialized = false;
 static StaticRefPtr<UiCompositorControllerChild> sChild;
 static StaticRefPtr<UiCompositorControllerParent> sParent;
 
+namespace {
+
+struct SurfaceResizeCache {
+  int32_t mSurfaceWidth;
+  int32_t mSurfaceHeight;
+
+  SurfaceResizeCache(int32_t aWidth, int32_t aHeight) :
+    mSurfaceWidth(aWidth),
+    mSurfaceHeight(aHeight) {}
+
+  SurfaceResizeCache(const SurfaceResizeCache& value)
+  {
+    *this = value;
+  }
+
+  SurfaceResizeCache& operator=(const SurfaceResizeCache& value)
+  {
+    mSurfaceWidth = value.mSurfaceWidth;
+    mSurfaceHeight = value.mSurfaceHeight;
+    return *this;
+  }
+
+  SurfaceResizeCache() :
+    mSurfaceWidth(0),
+    mSurfaceHeight(0) {}
+};
+
+static std::map<int64_t, SurfaceResizeCache> sResizeCache;
+
+static void
+DoCachedResize()
+{
+  MOZ_ASSERT(sChild);
+  MOZ_ASSERT(sChild->IsOnUiThread());
+
+  for (auto& cache : sResizeCache) {
+    sChild->SendResumeAndResize(cache.first, cache.second.mSurfaceWidth, cache.second.mSurfaceHeight);
+  }
+
+  sResizeCache.empty();
+}
+
+} // namespace
+
 UiCompositorControllerChild::UiCompositorControllerChild(RefPtr<nsThread> aThread, const uint64_t& aProcessToken)
  : mUiThread(aThread),
    mProcessToken(aProcessToken)
@@ -83,6 +127,16 @@ UiCompositorControllerChild::InitWithGPUProcess(RefPtr<nsThread> aThread,
   aThread->Dispatch(task.forget(), nsIThread::DISPATCH_NORMAL);
 }
 
+/* static */ void
+UiCompositorControllerChild::CacheSurfaceResize(int64_t aId, int32_t aWidth, int32_t aHeight)
+{
+  // This should only be called if the sChild has not been set yet.
+  // It should also only be called from the UI thread but since the sChild hasn't been set
+  // yet, there isn't a good way to verify this.
+  MOZ_ASSERT(!sChild);
+  sResizeCache[aId] = SurfaceResizeCache{aWidth, aHeight};
+}
+
 void
 UiCompositorControllerChild::OpenForSameProcess()
 {
@@ -99,6 +153,7 @@ UiCompositorControllerChild::OpenForSameProcess()
 
   AddRef();
   sChild = this;
+  DoCachedResize();
 }
 
 void
@@ -118,6 +173,7 @@ UiCompositorControllerChild::OpenForGPUProcess(Endpoint<PUiCompositorControllerC
 
   AddRef();
   sChild = this;
+  DoCachedResize();
 }
 
 void
