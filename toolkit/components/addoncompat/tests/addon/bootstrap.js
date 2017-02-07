@@ -1,3 +1,6 @@
+// This file also defines a frame script.
+/* eslint-env mozilla/frame-script */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -627,4 +630,3 @@ function install(aData, aReason) {
 
 function uninstall(aData, aReason) {
 }
-
