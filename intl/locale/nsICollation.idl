@@ -11,18 +11,17 @@ interface nsICollation;
 interface nsICollationFactory : nsISupports
 {
     /**
-     * Create a new collation for the current application locale.
+     * Create the collation for a given locale.
      *
-     * @return A new collation.
-     */
-    nsICollation CreateCollation();
-
-    /**
-     * Create a new collation for a given locale.
+     * Use NULL as the locale parameter to use the user's locale preference
+     * from the operating system.
      *
-     * @return A new collation.
+     * @param locale
+     *        The locale for which to create the collation or null to use
+     *        user preference.
+     * @return A collation for the given locale.
      */
-    nsICollation CreateCollationForLocale(in ACString locale);
+    nsICollation CreateCollation(in nsILocale locale);
 };
 
 [scriptable, uuid(b0132cc0-3786-4557-9874-910d7def5f93)]
@@ -44,7 +43,7 @@ interface nsICollation : nsISupports {
   const long kCollationCaseInSensitive = (kCollationCaseInsensitiveAscii | kCollationAccentInsenstive);
 
   // init this interface to a specified locale (should only be called by collation factory)
-  void initialize(in ACString locale);
+  void initialize(in nsILocale locale);
 
   // compare two strings
   // result is same as strcmp

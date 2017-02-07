@@ -10,7 +10,6 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/intl/LocaleService.h"
 
 using mozilla::dom::EncodingUtils;
 
@@ -20,29 +19,19 @@ NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, nsICollationFactory)
 
-nsresult nsCollationFactory::CreateCollation(nsICollation** instancePtr)
-{
-  nsAutoCString appLocale;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocale(appLocale);
-
-  return CreateCollationForLocale(appLocale, instancePtr);
-}
-
-nsresult
-nsCollationFactory::CreateCollationForLocale(const nsACString& locale, nsICollation** instancePtr)
+nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** instancePtr)
 {
   // Create a collation interface instance.
   //
   nsICollation *inst;
   nsresult res;
-
+  
   res = CallCreateInstance(kCollationCID, &inst);
   if (NS_FAILED(res)) {
     return res;
   }
 
   inst->Initialize(locale);
-
   *instancePtr = inst;
 
   return res;

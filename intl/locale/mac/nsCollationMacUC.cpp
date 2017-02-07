@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCollationMacUC.h"
+#include "nsILocaleService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -15,6 +16,7 @@ NS_IMPL_ISUPPORTS(nsCollationMacUC, nsICollation)
 nsCollationMacUC::nsCollationMacUC()
   : mInit(false)
   , mHasCollator(false)
+  , mLocaleICU(nullptr)
   , mLastStrength(-1)
   , mCollatorICU(nullptr)
 { }
@@ -26,6 +28,10 @@ nsCollationMacUC::~nsCollationMacUC()
 #endif
     CleanUpCollator();
   NS_ASSERTION(NS_SUCCEEDED(res), "CleanUpCollator failed");
+  if (mLocaleICU) {
+    free(mLocaleICU);
+    mLocaleICU = nullptr;
+  }
 }
 
 nsresult nsCollationMacUC::ConvertStrength(const int32_t aNSStrength,
@@ -62,6 +68,28 @@ nsresult nsCollationMacUC::ConvertStrength(const int32_t aNSStrength,
   return NS_OK;
 }
 
+nsresult nsCollationMacUC::ConvertLocaleICU(nsILocale* aNSLocale, char** aICULocale)
+{
+  NS_ENSURE_ARG_POINTER(aNSLocale);
+  NS_ENSURE_ARG_POINTER(aICULocale);
+
+  nsAutoString localeString;
+  nsresult res = aNSLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), localeString);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(res) && !localeString.IsEmpty(),
+                 NS_ERROR_FAILURE);
+  NS_LossyConvertUTF16toASCII tmp(localeString);
+  tmp.ReplaceChar('-', '_');
+  char* locale = (char*)malloc(tmp.Length() + 1);
+  if (!locale) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  strcpy(locale, tmp.get());
+
+  *aICULocale = locale;
+
+  return NS_OK;
+}
+
 nsresult nsCollationMacUC::EnsureCollator(const int32_t newStrength)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
@@ -72,9 +100,11 @@ nsresult nsCollationMacUC::EnsureCollator(const int32_t newStrength)
   res = CleanUpCollator();
   NS_ENSURE_SUCCESS(res, res);
 
+  NS_ENSURE_TRUE(mLocaleICU, NS_ERROR_NOT_INITIALIZED);
+
   UErrorCode status;
   status = U_ZERO_ERROR;
-  mCollatorICU = ucol_open(mLocale.get(), &status);
+  mCollatorICU = ucol_open(mLocaleICU, &status);
   NS_ENSURE_TRUE(U_SUCCESS(status), NS_ERROR_FAILURE);
 
   UCollationStrength strength;
@@ -112,12 +142,22 @@ nsresult nsCollationMacUC::CleanUpCollator(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCollationMacUC::Initialize(const nsACString& locale)
+NS_IMETHODIMP nsCollationMacUC::Initialize(nsILocale* locale) 
 {
   NS_ENSURE_TRUE((!mInit), NS_ERROR_ALREADY_INITIALIZED);
   nsCOMPtr<nsILocale> appLocale;
 
-  mLocale = locale;
+  nsresult rv;
+  if (!locale) {
+    nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+    NS_ENSURE_SUCCESS(rv, rv);
+    locale = appLocale;
+  }
+
+  rv = ConvertLocaleICU(locale, &mLocaleICU);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mInit = true;
   return NS_OK;
