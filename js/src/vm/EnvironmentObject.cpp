@@ -2315,8 +2315,9 @@ DebugEnvironmentProxy::isOptimizedOut() const
 
 /*****************************************************************************/
 
-DebugEnvironments::DebugEnvironments(JSContext* cx)
- : proxiedEnvs(cx),
+DebugEnvironments::DebugEnvironments(JSContext* cx, Zone* zone)
+ : zone_(zone),
+   proxiedEnvs(cx),
    missingEnvs(cx->runtime()),
    liveEnvs(cx->runtime())
 {}
@@ -2430,7 +2431,7 @@ DebugEnvironments::ensureCompartmentData(JSContext* cx)
     if (c->debugEnvs)
         return c->debugEnvs;
 
-    auto debugEnvs = cx->make_unique<DebugEnvironments>(cx);
+    auto debugEnvs = cx->make_unique<DebugEnvironments>(cx, cx->zone());
     if (!debugEnvs || !debugEnvs->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
