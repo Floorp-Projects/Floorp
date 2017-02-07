@@ -108,6 +108,7 @@ Var PreviousInstallArch
 Var ControlHeightPX
 Var ControlRightPX
 Var ControlTopAdjustment
+Var OptionsItemWidthPX
 
 ; Uncomment the following to prevent pinging the metrics server when testing
 ; the stub installer
@@ -905,6 +906,16 @@ Function createOptions
   StrCpy $ExistingTopDir ""
   StrCpy $ControlTopAdjustment 0
 
+  ; Convert the options item width to pixels, so we can tell when a text string
+  ; exceeds this width and needs multiple lines.
+  StrCpy $2 "${OPTIONS_ITEM_WIDTH_DU}" -1
+  IntOp $2 $2 - 14 ; subtract approximate width of a checkbox
+  System::Call "*(i r2,i,i,i) p .r3"
+  System::Call "user32::MapDialogRect(p $HWNDPARENT, p r3)"
+  System::Call "*$3(i .s,i,i,i)"
+  Pop $OptionsItemWidthPX
+  System::Free $3
+
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
   ; Since the text color for controls is set in this Dialog the foreground and
@@ -999,7 +1010,7 @@ Function createOptions
   ; In that case, we'll need to give the control two lines worth of height.
   StrCpy $1 12 ; single line height
   ${GetTextExtent} $0 $FontNormal $R1 $R2
-  ${If} $R1 > ${OPTIONS_ITEM_WIDTH_DU}
+  ${If} $R1 > $OptionsItemWidthPX
     ; Add a second line to the control height.
     IntOp $1 $1 + 12
     ; The rest of the controls will have to be lower to account for this label
@@ -1021,14 +1032,14 @@ Function createOptions
   ; In that case, we'll need to give the control two lines worth of height.
   StrCpy $1 12 ; single line height
   ${GetTextExtent} "$(SEND_PING)" $FontNormal $R1 $R2
-  ${If} $R1 > ${OPTIONS_ITEM_WIDTH_DU}
+  ${If} $R1 > $OptionsItemWidthPX
     ; Add a second line to the control height.
     IntOp $1 $1 + 12
     ; The rest of the controls will have to be lower to account for this label
     ; needing two lines worth of height.
     IntOp $ControlTopAdjustment $ControlTopAdjustment + 12
   ${EndIf}
-  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} "$0u" ${OPTIONS_SUBITEM_WIDTH_DU} \
+  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} "$0u" ${OPTIONS_ITEM_WIDTH_DU} \
                         "$1u" "$(SEND_PING)"
   Pop $CheckboxSendPing
   ; The uxtheme must be disabled on checkboxes in order to override the system
@@ -1058,8 +1069,19 @@ Function createOptions
       ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
       ${If} ${Errors}
         IntOp $0 132 + $ControlTopAdjustment
+        ; In some locales, this string may be too long to fit on one line.
+        ; In that case, we'll need to give the control two lines worth of height.
+        StrCpy $1 12 ; single line height
+        ${GetTextExtent} "$(INSTALL_MAINT_SERVICE)" $FontNormal $R1 $R2
+        ${If} $R1 > $OptionsItemWidthPX
+          ; Add a second line to the control height.
+          IntOp $1 $1 + 12
+          ; The rest of the controls will have to be lower to account for this label
+          ; needing two lines worth of height.
+          IntOp $ControlTopAdjustment $ControlTopAdjustment + 12
+        ${EndIf}
         ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} "$0u" ${OPTIONS_ITEM_WIDTH_DU} \
-                              12u "$(INSTALL_MAINT_SERVICE)"
+                              "$1u" "$(INSTALL_MAINT_SERVICE)"
         Pop $CheckboxInstallMaintSvc
         System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
         SetCtlColors $CheckboxInstallMaintSvc ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
