@@ -36,14 +36,21 @@ namespace mozilla {
 
 class OpusParser;
 
+struct OggPacketDeletePolicy
+{
+  void operator()(ogg_packet* aPacket) const
+  {
+    delete [] aPacket->packet;
+    delete aPacket;
+  }
+};
+
 // Deallocates a packet, used in OggPacketQueue below.
 class OggPacketDeallocator : public nsDequeFunctor
 {
-  virtual void* operator() (void* aPacket)
+  virtual void* operator()(void* aPacket)
   {
-    ogg_packet* p = static_cast<ogg_packet*>(aPacket);
-    delete [] p->packet;
-    delete p;
+    OggPacketDeletePolicy()(static_cast<ogg_packet*>(aPacket));
     return nullptr;
   }
 };

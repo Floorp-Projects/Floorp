@@ -205,9 +205,8 @@ void
 OggCodecState::ReleasePacket(ogg_packet* aPacket)
 {
   if (aPacket) {
-    delete [] aPacket->packet;
+    OggPacketDeletePolicy()(aPacket);
   }
-  delete aPacket;
 }
 
 void
