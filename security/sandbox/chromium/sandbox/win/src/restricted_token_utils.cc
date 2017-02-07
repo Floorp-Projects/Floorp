@@ -27,6 +27,7 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
 
   std::vector<base::string16> privilege_exceptions;
   std::vector<Sid> sid_exceptions;
+  std::vector<Sid> deny_only_sids;
 
   bool deny_sids = true;
   bool remove_privileges = true;
@@ -48,10 +49,16 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
       break;
     }
     case USER_NON_ADMIN: {
-      sid_exceptions.push_back(WinBuiltinUsersSid);
-      sid_exceptions.push_back(WinWorldSid);
-      sid_exceptions.push_back(WinInteractiveSid);
-      sid_exceptions.push_back(WinAuthenticatedUserSid);
+      deny_sids = false;
+      deny_only_sids.push_back(WinBuiltinAdministratorsSid);
+      deny_only_sids.push_back(WinAccountAdministratorSid);
+      deny_only_sids.push_back(WinAccountDomainAdminsSid);
+      deny_only_sids.push_back(WinAccountCertAdminsSid);
+      deny_only_sids.push_back(WinAccountSchemaAdminsSid);
+      deny_only_sids.push_back(WinAccountEnterpriseAdminsSid);
+      deny_only_sids.push_back(WinAccountPolicyAdminsSid);
+      deny_only_sids.push_back(WinBuiltinHyperVAdminsSid);
+      deny_only_sids.push_back(WinLocalAccountAndAdministratorSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
       break;
     }
@@ -107,6 +114,11 @@ DWORD CreateRestrictedToken(TokenLevel security_level,
     err_code = restricted_token.AddAllSidsForDenyOnly(&sid_exceptions);
     if (ERROR_SUCCESS != err_code)
       return err_code;
+  } else if (!deny_only_sids.empty()) {
+    err_code = restricted_token.AddDenyOnlySids(deny_only_sids);
+    if (ERROR_SUCCESS != err_code) {
+      return err_code;
+    }
   }
 
   if (remove_privileges) {
