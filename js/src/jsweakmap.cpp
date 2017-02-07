@@ -145,7 +145,7 @@ ObjectValueMap::findZoneEdges()
         if (!delegate)
             continue;
         Zone* delegateZone = delegate->zone();
-        if (delegateZone == zone || !delegateZone->isGCMarking())
+        if (delegateZone == zone)
             continue;
         if (!delegateZone->gcZoneGroupEdges().put(key->zone()))
             return false;
