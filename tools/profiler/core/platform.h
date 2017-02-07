@@ -373,7 +373,6 @@ private:
 #if defined(SPS_OS_linux) || defined(SPS_OS_android)
   bool signal_handler_installed_;
   struct sigaction old_sigprof_signal_handler_;
-  struct sigaction old_sigsave_signal_handler_;
   bool signal_sender_launched_;
   pthread_t signal_sender_thread_;
 #endif

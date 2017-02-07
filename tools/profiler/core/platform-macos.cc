@@ -29,14 +29,8 @@
 #include <errno.h>
 #include <math.h>
 
-#include "ThreadResponsiveness.h"
-#include "nsThreadUtils.h"
-
 // Memory profile
 #include "nsMemoryReporterManager.h"
-
-#include "platform.h"
-#include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
