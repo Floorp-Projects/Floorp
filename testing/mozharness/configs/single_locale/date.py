@@ -5,7 +5,6 @@ config = {
     "branch": "date",
     "en_us_binary_url": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central",
     "update_channel": "nightly-date",
-    "latest_mar_dir": '/pub/firefox/nightly/latest-date-l10n',
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",

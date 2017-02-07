@@ -23,7 +23,6 @@ config = {
     "branch": "ash",
     "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/",
     "update_channel": "nightly",
-    "latest_mar_dir": '/pub/mozilla.org/firefox/nightly/latest-mozilla-central-l10n',
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
