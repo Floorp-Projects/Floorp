@@ -191,13 +191,13 @@ module.exports = createClass({
                 );
               })
             );
-          }),
-          DeviceAdder({
-            devices,
-            viewportTemplate: deviceAdderViewportTemplate,
-            onAddCustomDevice,
           })
         ),
+        DeviceAdder({
+          devices,
+          viewportTemplate: deviceAdderViewportTemplate,
+          onAddCustomDevice,
+        }),
         dom.button(
           {
             id: "device-submit-button",
