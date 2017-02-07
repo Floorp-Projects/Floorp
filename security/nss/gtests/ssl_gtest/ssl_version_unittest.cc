@@ -123,6 +123,18 @@ TEST_F(TlsConnectTest, TestFallbackFromTls13) {
 }
 #endif
 
+TEST_P(TlsConnectGeneric, TestFallbackSCSVVersionMatch) {
+  client_->SetFallbackSCSVEnabled(true);
+  Connect();
+}
+
+TEST_P(TlsConnectGenericPre13, TestFallbackSCSVVersionMismatch) {
+  client_->SetFallbackSCSVEnabled(true);
+  server_->SetVersionRange(version_, version_ + 1);
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT);
+}
+
 // The TLS v1.3 spec section C.4 states that 'Implementations MUST NOT send or
 // accept any records with a version less than { 3, 0 }'. Thus we will not
 // allow version ranges including both SSL v3 and TLS v1.3.

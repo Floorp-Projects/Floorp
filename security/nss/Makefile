@@ -96,15 +96,6 @@ NSPR_CONFIGURE_ENV := $(filter-out -arch x86_64,$(NSPR_CONFIGURE_ENV))
 NSPR_CONFIGURE_ENV := $(filter-out -arch i386,$(NSPR_CONFIGURE_ENV))
 NSPR_CONFIGURE_ENV := $(filter-out -arch ppc,$(NSPR_CONFIGURE_ENV))
 
-ifdef SANITIZER_CFLAGS
-ifdef BUILD_OPT
-NSPR_CONFIGURE_OPTS += --enable-debug-symbols
-endif
-NSPR_CONFIGURE_ENV += CFLAGS='$(SANITIZER_CFLAGS)' \
-                      CXXFLAGS='$(SANITIZER_CFLAGS)' \
-                      LDFLAGS='$(SANITIZER_LDFLAGS)'
-endif
-
 #
 # Some pwd commands on Windows (for example, the pwd
 # command in Cygwin) return a pathname that begins

@@ -297,8 +297,9 @@ OrientedImage::Draw(gfxContext* aContext,
     if (mOrientation.SwapsWidthAndHeight()) {
       swap(viewportSize.width, viewportSize.height);
     }
-    return SVGImageContext(viewportSize,
-                           aOldContext.GetPreserveAspectRatio());
+    SVGImageContext context(aOldContext);
+    context.SetViewportSize(viewportSize);
+    return context;
   };
 
   return InnerImage()->Draw(aContext, size, region, aWhichFrame,

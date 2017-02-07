@@ -74,6 +74,15 @@ public:
     Save
   };
 
+  // Flush all pending reports to the console.  May be called from any thread.
+  //
+  // aInnerWindowID A inner window ID representing where to flush the reports.
+  // aAction        An action to determine whether to reserve the pending
+  //                reports. Defalut action is to forget the report.
+  virtual void
+  FlushReportsToConsole(uint64_t aInnerWindowID,
+                        ReportAction aAction = ReportAction::Forget) = 0;
+
   // Flush all pending reports to the console.  Main thread only.
   //
   // aDocument      An optional document representing where to flush the
@@ -86,6 +95,19 @@ public:
   FlushConsoleReports(nsIDocument* aDocument,
                       ReportAction aAction = ReportAction::Forget) = 0;
 
+  // Flush all pending reports to the console.  May be called from any thread.
+  //
+  // aLoadGroup     An optional loadGroup representing where to flush the
+  //                reports.  If provided, then the corresponding window's
+  //                web console will get the reports.  Otherwise the reports
+  //                go to the browser console.
+  // aAction        An action to determine whether to reserve the pending
+  //                reports. Defalut action is to forget the report.
+  virtual void
+  FlushConsoleReports(nsILoadGroup* aLoadGroup,
+                      ReportAction aAction = ReportAction::Forget) = 0;
+
+
   // Flush all pending reports to another collector.  May be called from any
   // thread.
   //
@@ -93,17 +115,6 @@ public:
   //                ownership of our currently console reports.
   virtual void
   FlushConsoleReports(nsIConsoleReportCollector* aCollector) = 0;
-
-  // Flush all pending reports to the console accroding to window ID. Main
-  // thread only.
-  //
-  // aWindowId      A window ID representing where to flush the reports and it's
-  //                typically the inner window ID.
-  //
-  // aAction        An action to decide whether free the pending reports or not.
-  virtual void
-  FlushReportsByWindowId(uint64_t aWindowId,
-                         ReportAction aAction = ReportAction::Forget) = 0;
 
   // Clear all pending reports.
   virtual void

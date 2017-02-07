@@ -12,7 +12,7 @@
 # OS_TARGET	User defined, or set to OS_ARCH
 # CPU_ARCH  	(from unmame -m or -p, ONLY on WINNT)
 # OS_CONFIG	OS_TARGET + OS_RELEASE
-# OBJDIR_TAG    (uses ASAN_TAG, GCOV_TAG, 64BIT_TAG)
+# OBJDIR_TAG    (uses GCOV_TAG, 64BIT_TAG)
 # OBJDIR_NAME
 #######################################################################
 
@@ -268,11 +268,6 @@ OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
 # to distinguish between debug and release builds.
 #
 
-ifeq ($(USE_ASAN), 1)
-    ASAN_TAG = _ASAN
-else
-    ASAN_TAG =
-endif
 ifeq ($(USE_GCOV), 1)
     GCOV_TAG = _GCOV
 else
@@ -283,7 +278,7 @@ ifeq ($(USE_64), 1)
 else
     64BIT_TAG =
 endif
-OBJDIR_TAG_BASE=$(ASAN_TAG)$(GCOV_TAG)$(64BIT_TAG)
+OBJDIR_TAG_BASE=$(GCOV_TAG)$(64BIT_TAG)
 
 ifdef BUILD_OPT
     OBJDIR_TAG = $(OBJDIR_TAG_BASE)_OPT

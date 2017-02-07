@@ -268,7 +268,7 @@ function MergeSort(array, len, comparefn) {
     var lBuffer = new List();
     var rBuffer = new List();
 
-    var mid, end, endOne, endTwo;
+    var mid, end;
     for (var windowSize = 1; windowSize < denseLen; windowSize = 2 * windowSize) {
         for (var start = 0; start < denseLen - 1; start += 2 * windowSize) {
             assert(windowSize < denseLen, "The window size is larger than the array denseLength!");
@@ -337,7 +337,7 @@ function QuickSort(array, len, comparefn) {
     var start = 0;
     var end   = len - 1;
 
-    var pivotIndex, i, j, leftLen, rightLen;
+    var pivotIndex, leftLen, rightLen;
 
     for (;;) {
         // Insertion sort for the first N elements where N is some value
