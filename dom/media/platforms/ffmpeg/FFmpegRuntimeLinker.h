@@ -9,8 +9,7 @@
 
 #include "PlatformDecoderModule.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 class FFmpegRuntimeLinker
 {
