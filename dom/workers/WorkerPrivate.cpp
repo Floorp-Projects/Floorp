@@ -395,15 +395,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    nsCOMPtr<nsILoadGroup> loadGroupToCancel;
-    mFinishedWorker->ForgetOverridenLoadGroup(loadGroupToCancel);
-
-    nsTArray<nsCOMPtr<nsISupports>> doomed;
-    mFinishedWorker->ForgetMainThreadObjects(doomed);
-
-    RefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
-    if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable.forget()))) {
+    if (!mFinishedWorker->ProxyReleaseMainThreadObjects()) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
@@ -447,15 +439,7 @@ private:
 
     runtime->UnregisterWorker(mFinishedWorker);
 
-    nsCOMPtr<nsILoadGroup> loadGroupToCancel;
-    mFinishedWorker->ForgetOverridenLoadGroup(loadGroupToCancel);
-
-    nsTArray<nsCOMPtr<nsISupports> > doomed;
-    mFinishedWorker->ForgetMainThreadObjects(doomed);
-
-    RefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
-    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
+    if (!mFinishedWorker->ProxyReleaseMainThreadObjects()) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
 
@@ -2004,26 +1988,38 @@ WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 }
 #endif // defined(DEBUG) || !defined(RELEASE_OR_BETA)
 
-void
-WorkerLoadInfo::ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
+bool
+WorkerLoadInfo::ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate)
 {
+  nsCOMPtr<nsILoadGroup> nullLoadGroup;
+  return ProxyReleaseMainThreadObjects(aWorkerPrivate, nullLoadGroup);
+}
+
+bool
+WorkerLoadInfo::ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
+                                              nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel)
+{
+
   static const uint32_t kDoomedCount = 10;
+  nsTArray<nsCOMPtr<nsISupports>> doomed(kDoomedCount);
 
-  aDoomed.SetCapacity(kDoomedCount);
-
-  SwapToISupportsArray(mWindow, aDoomed);
-  SwapToISupportsArray(mScriptContext, aDoomed);
-  SwapToISupportsArray(mBaseURI, aDoomed);
-  SwapToISupportsArray(mResolvedScriptURI, aDoomed);
-  SwapToISupportsArray(mPrincipal, aDoomed);
-  SwapToISupportsArray(mChannel, aDoomed);
-  SwapToISupportsArray(mCSP, aDoomed);
-  SwapToISupportsArray(mLoadGroup, aDoomed);
-  SwapToISupportsArray(mLoadFailedAsyncRunnable, aDoomed);
-  SwapToISupportsArray(mInterfaceRequestor, aDoomed);
+  SwapToISupportsArray(mWindow, doomed);
+  SwapToISupportsArray(mScriptContext, doomed);
+  SwapToISupportsArray(mBaseURI, doomed);
+  SwapToISupportsArray(mResolvedScriptURI, doomed);
+  SwapToISupportsArray(mPrincipal, doomed);
+  SwapToISupportsArray(mChannel, doomed);
+  SwapToISupportsArray(mCSP, doomed);
+  SwapToISupportsArray(mLoadGroup, doomed);
+  SwapToISupportsArray(mLoadFailedAsyncRunnable, doomed);
+  SwapToISupportsArray(mInterfaceRequestor, doomed);
   // Before adding anything here update kDoomedCount above!
 
-  MOZ_ASSERT(aDoomed.Length() == kDoomedCount);
+  MOZ_ASSERT(doomed.Length() == kDoomedCount);
+
+  RefPtr<MainThreadReleaseRunnable> runnable =
+    new MainThreadReleaseRunnable(doomed, aLoadGroupToCancel);
+  return NS_SUCCEEDED(aWorkerPrivate->DispatchToMainThread(runnable.forget()));
 }
 
 template <class Derived>
@@ -3206,32 +3202,25 @@ WorkerPrivateParent<Derived>::ModifyBusyCount(bool aIncrease)
 }
 
 template <class Derived>
-void
-WorkerPrivateParent<Derived>::ForgetOverridenLoadGroup(
-                                          nsCOMPtr<nsILoadGroup>& aLoadGroupOut)
-{
-  AssertIsOnParentThread();
-
-  // If we're not overriden, then do nothing here.  Let the load group get
-  // handled in ForgetMainThreadObjects().
-  if (!mLoadInfo.mInterfaceRequestor) {
-    return;
-  }
-
-  mLoadInfo.mLoadGroup.swap(aLoadGroupOut);
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
-                                      nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
+bool
+WorkerPrivateParent<Derived>::ProxyReleaseMainThreadObjects()
 {
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
-  mLoadInfo.ForgetMainThreadObjects(aDoomed);
+  nsCOMPtr<nsILoadGroup> loadGroupToCancel;
+  // If we're not overriden, then do nothing here.  Let the load group get
+  // handled in ForgetMainThreadObjects().
+  if (mLoadInfo.mInterfaceRequestor) {
+    mLoadInfo.mLoadGroup.swap(loadGroupToCancel);
+  }
+
+  bool result = mLoadInfo.ProxyReleaseMainThreadObjects(ParentAsWorkerPrivate(),
+                                                        loadGroupToCancel);
 
   mMainThreadObjectsForgotten = true;
+
+  return result;
 }
 
 template <class Derived>
@@ -4594,12 +4583,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     rv = ChannelFromScriptURLWorkerThread(aCx, aParent, aScriptURL,
                                           loadInfo);
     if (NS_FAILED(rv)) {
-      nsTArray<nsCOMPtr<nsISupports>> doomed;
-      loadInfo.ForgetMainThreadObjects(doomed);
-      nsCOMPtr<nsILoadGroup> loadGroupToCancel;
-      RefPtr<MainThreadReleaseRunnable> runnable =
-        new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
-      MOZ_ALWAYS_SUCCEEDS(aParent->DispatchToMainThread(runnable.forget()));
+      MOZ_ALWAYS_TRUE(loadInfo.ProxyReleaseMainThreadObjects(aParent));
       return rv;
     }
 
@@ -4611,12 +4595,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     if (parentStatus > Running) {
-      nsTArray<nsCOMPtr<nsISupports>> doomed;
-      loadInfo.ForgetMainThreadObjects(doomed);
-      nsCOMPtr<nsILoadGroup> loadGroupToCancel;
-      RefPtr<MainThreadReleaseRunnable> runnable =
-        new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
-      MOZ_ALWAYS_SUCCEEDS(aParent->DispatchToMainThread(runnable.forget()));
+      MOZ_ALWAYS_TRUE(loadInfo.ProxyReleaseMainThreadObjects(aParent));
       return NS_ERROR_FAILURE;
     }
 
