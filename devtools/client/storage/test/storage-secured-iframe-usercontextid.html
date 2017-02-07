@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+"use strict";
+document.cookie = "sc1uc1=foobar;";
+localStorage.setItem("iframe-s-ls1uc1", "foobar");
+sessionStorage.setItem("iframe-s-ss1uc1", "foobar-2");
+dump("added cookies and storage from secured iframe\n");
+
+let idbGenerator = function*() {
+  let request = indexedDB.open("idb-s1uc1", 1);
+  request.onerror = function() {
+    throw new Error("error opening db connection");
+  };
+  let db = yield new Promise(done => {
+    request.onupgradeneeded = event => {
+      let db = event.target.result;
+      let store1 = db.createObjectStore("obj-s1uc1", { keyPath: "id" });
+      store1.transaction.oncomplete = () => {
+        done(db);
+      };
+    };
+  });
+  yield new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  let transaction = db.transaction(["obj-s1uc1"], "readwrite");
+  let store1 = transaction.objectStore("obj-s1uc1");
+  store1.add({id: 6, name: "foo", email: "foo@bar.com"});
+  store1.add({id: 7, name: "foo2", email: "foo2@bar.com"});
+  yield new Promise(success => {
+    transaction.oncomplete = success;
+  });
+
+  db.close();
+
+  request = indexedDB.open("idb-s2uc1", 1);
+  let db2 = yield new Promise(done => {
+    request.onupgradeneeded = event => {
+      let db2 = event.target.result;
+      let store3 =
+        db2.createObjectStore("obj-s2uc1", { keyPath: "id3", autoIncrement: true });
+      store3.createIndex("name2", "name2", { unique: true });
+      store3.transaction.oncomplete = () => {
+        done(db2);
+      };
+    };
+  });
+  yield new Promise(done => {
+    request.onsuccess = done;
+  });
+
+  transaction = db2.transaction(["obj-s2uc1"], "readwrite");
+  let store3 = transaction.objectStore("obj-s2uc1");
+  store3.add({id3: 16, name2: "foo", email: "foo@bar.com"});
+  yield new Promise(success => {
+    transaction.oncomplete = success;
+  });
+
+  db2.close();
+  dump("added indexedDB from secured iframe\n");
+};
+
+function deleteDB(dbName) {
+  return new Promise(resolve => {
+    dump("removing database " + dbName + " from " + document.location + "\n");
+    indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+  });
+}
+
+window.setup = function*() {
+  yield idbGenerator();
+};
+
+window.clear = function*() {
+  yield deleteDB("idb-s1uc1");
+  yield deleteDB("idb-s2uc1");
+
+  dump("removed indexedDB data from " + document.location + "\n");
+};
+</script>
+</body>
+</html>

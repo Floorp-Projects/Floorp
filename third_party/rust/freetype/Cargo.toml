@@ -1,0 +1,19 @@
+[package]
+description = "Bindings for Freetype used by Servo"
+license = "Apache-2.0 / MIT"
+name = "freetype"
+version = "0.2.0"
+authors = ["The Servo Project Developers"]
+documentation = "http://doc.servo.org/freetype/"
+repository = "https://github.com/servo/rust-freetype"
+
+[features]
+default = ["servo-freetype-sys"]
+
+[lib]
+name = "freetype"
+crate-type = ["rlib"]
+
+[dependencies]
+servo-freetype-sys = { version = "4.0.2", optional = true }
+libc = "0.2"

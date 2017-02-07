@@ -1,0 +1,8 @@
+os: osx
+language: rust
+sudo: false
+branches:
+  except:
+    - master
+notifications:
+  webhooks: http://build.servo.org:54856/travis

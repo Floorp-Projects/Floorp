@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<project name="project-name">
+    <libraries>
+        <library groupId="org.example" artifactId="&lt;name&gt;" version="0.1"/>
+        <library groupId="com.example" artifactId="&quot;cool-lib&amp;" version="999"/>
+    </libraries>
+    <module name="module-1">
+        <files>
+            <file name="somefile.java" type="java">
+                Some &lt;java&gt; class
+            </file>
+            <file name="another_file.java" type="java">
+                Another &quot;java&quot; class
+            </file>
+            <file name="config.xml" type="xml">
+                Weird &apos;XML&apos; config
+            </file>
+        </files>
+        <libraries>
+            <library groupId="junit" artifactId="junit" version="1.9.5"/>
+        </libraries>
+    </module>
+    <module name="module-2">
+        <files>
+            <file name="program.js" type="javascript">
+                JavaScript &amp; program
+            </file>
+            <file name="style.css" type="css">
+                Cascading style sheet: &#xA9; - &#1161;
+            </file>
+        </files>
+    </module>
+</project>
+
