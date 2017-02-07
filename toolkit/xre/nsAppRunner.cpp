@@ -809,6 +809,11 @@ nsXULAppInfo::SetLogConsoleErrors(bool aValue)
 NS_IMETHODIMP
 nsXULAppInfo::GetInSafeMode(bool *aResult)
 {
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    *aResult = cc->GetAppInfo().safeMode;
+    return NS_OK;
+  }
   *aResult = gSafeMode;
   return NS_OK;
 }
