@@ -52,13 +52,8 @@ function checkAvailability()
     ["time", true],
     ["month", true],
     ["week", true],
-    ["color", false],
-  ];
-
-  var todoList =
-  [
-    ["datetime", true],
     ["datetime-local", true],
+    ["color", false],
   ];
 
   var element = document.createElement("input");
@@ -81,27 +76,6 @@ function checkAvailability()
       exceptionCaught = true;
     }
     is(exceptionCaught, !data[1], "stepUp() availability is not correct");
-  }
-
-  for (data of todoList) {
-    var exceptionCaught = false;
-    element.type = data[0];
-    try {
-      element.stepDown();
-    } catch (e) {
-      exceptionCaught = true;
-    }
-    todo_is(exceptionCaught, !data[1],
-            "stepDown() availability is not correct");
-
-    exceptionCaught = false;
-    try {
-      element.stepUp();
-    } catch (e) {
-      exceptionCaught = true;
-    }
-    todo_is(exceptionCaught, !data[1],
-            "stepUp() availability is not correct");
   }
 }
 
@@ -508,6 +482,80 @@ function checkStepDown()
     [ '2016-W01',  'ANY',  null,  null,  1,  null,  true ],
     [ '2016-W01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2016-W01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'datetime-local', data: [
+    // Regular case.
+    [ '2017-02-07T09:30',  null,  null,  null,  null, '2017-02-07T09:29',   false ],
+    // Argument testing.
+    [ '2017-02-07T09:30',  null,  null,  null,  1,    '2017-02-07T09:29',   false ],
+    [ '2017-02-07T09:30',  null,  null,  null,  5,    '2017-02-07T09:25',   false ],
+    [ '2017-02-07T09:30',  null,  null,  null,  -1,   '2017-02-07T09:31',   false ],
+    [ '2017-02-07T09:30',  null,  null,  null,  0,    '2017-02-07T09:30',   false ],
+    // hour/minutes/seconds wrapping.
+    [ '2000-01-01T05:00',    null,  null, null, null,  '2000-01-01T04:59',        false ],
+    [ '2000-01-01T05:00:00', 1,     null, null, null,  '2000-01-01T04:59:59',     false ],
+    [ '2000-01-01T05:00:00', 0.1,   null, null, null,  '2000-01-01T04:59:59.900', false ],
+    [ '2000-01-01T05:00:00', 0.01,  null, null, null,  '2000-01-01T04:59:59.990', false ],
+    [ '2000-01-01T05:00:00', 0.001, null, null, null,  '2000-01-01T04:59:59.999', false ],
+    // month/year wrapping.
+    [ '2012-08-01T12:00',  null,  null,  null,  1440,  '2012-07-31T12:00',   false ],
+    [ '1969-01-02T12:00',  null,  null,  null,  5760,  '1968-12-29T12:00',   false ],
+    [ '1969-12-31T00:00',  null,  null,  null,  -1440, '1970-01-01T00:00',   false ],
+    [ '2012-02-29T00:00',  null,  null,  null,  -1440, '2012-03-01T00:00',   false ],
+    // stepDown() on '00:00' gives '23:59'.
+    [ '2017-02-07T00:00',  null,  null,  null,  1,    '2017-02-06T23:59',   false ],
+    [ '2017-02-07T00:00',  null,  null,  null,  3,    '2017-02-06T23:57',   false ],
+    // Some random step values..
+    [ '2017-02-07T16:07',  '0.5',    null,               null,  null, '2017-02-07T16:06:59.500', false ],
+    [ '2017-02-07T16:07',  '2',      null,               null,  null, '2017-02-07T16:06:58',     false ],
+    [ '2017-02-07T16:07',  '0.25',   null,               null,  4,    '2017-02-07T16:06:59',     false ],
+    [ '2017-02-07T16:07',  '1.1',    '2017-02-07T16:00', null,  1,    '2017-02-07T16:06:59.100', false ],
+    [ '2017-02-07T16:07',  '1.1',    '2017-02-07T16:00', null,  2,    '2017-02-07T16:06:58',     false ],
+    [ '2017-02-07T16:07',  '1.1',    '2017-02-07T16:00', null,  10,   '2017-02-07T16:06:49.200', false ],
+    [ '2017-02-07T16:07',  '129600', '2017-02-01T00:00', null,  2,    '2017-02-05T12:00',        false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2017-02-07T10:15',  '0',   null,  null,  null, '2017-02-07T10:14',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2017-02-07T10:15',  '-1',  null,  null,  null, '2017-02-07T10:14',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2017-02-07T10:15',  'foo', null,  null,  null, '2017-02-07T10:14',   false ],
+    // Min values testing.
+    [ '2012-02-02T17:02',  '60',     'foo',              null,  2,     '2012-02-02T17:00',  false ],
+    [ '2012-02-02T17:10',  '60',     '2012-02-02T17:09', null,  null,  '2012-02-02T17:09',  false ],
+    [ '2012-02-02T17:10',  '60',     '2012-02-02T17:10', null,  null,  '2012-02-02T17:10',  false ],
+    [ '2012-02-02T17:10',  '60',     '2012-02-02T17:30', null,  1,     '2012-02-02T17:10',  false ],
+    [ '2012-02-02T17:10',  '180',    '2012-02-02T17:05', null,  null,  '2012-02-02T17:08',  false ],
+    [ '2012-02-03T20:05',  '86400',  '2012-02-02T17:05', null,  null,  '2012-02-03T17:05',  false ],
+    [ '2012-02-03T18:00',  '129600', '2012-02-01T00:00', null,  null,  '2012-02-02T12:00',  false ],
+    // Max values testing.
+    [ '2012-02-02T17:15',  '60',     null,  'foo',               null,  '2012-02-02T17:14',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:20',  null,  '2012-02-02T17:14',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:15',  null,  '2012-02-02T17:14',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:13',  4,     '2012-02-02T17:11',  false ],
+    [ '2012-02-02T17:15',  '120',    null,  '2012-02-02T17:13',  3,     '2012-02-02T17:09',  false ],
+    [ '2012-02-03T20:05',  '86400',  null,  '2012-02-03T20:05',  null,  '2012-02-02T20:05',  false ],
+    [ '2012-02-03T18:00',  '129600', null,  '2012-02-03T20:00',  null,  '2012-02-02T06:00',  false ],
+    // Step mismatch.
+    [ '2017-02-07T17:19',  '120',    '2017-02-07T17:10',  null,               null,  '2017-02-07T17:18',  false ],
+    [ '2017-02-07T17:19',  '120',    '2017-02-07T17:10',  null,               2,     '2017-02-07T17:16',  false ],
+    [ '2017-02-07T17:19',  '120',    '2017-02-07T17:18',  '2017-02-07T17:25', null,  '2017-02-07T17:18',  false ],
+    [ '2017-02-07T17:19',  '120',    null,                null,               null,  '2017-02-07T17:17',  false ],
+    [ '2017-02-07T17:19',  '180',    null,                null,               null,  '2017-02-07T17:16',  false ],
+    [ '2017-02-07T17:19',  '172800', '2017-02-02T17:19', '2017-02-10T17:19',  null,  '2017-02-06T17:19',  false ],
+    // Clamping.
+    [ '2017-02-07T17:22',  null,   null,                '2017-02-07T17:11', null,  '2017-02-07T17:11',  false ],
+    [ '2017-02-07T17:22',  '120',  '2017-02-07T17:20',  '2017-02-07T17:22', null,  '2017-02-07T17:20',  false ],
+    [ '2017-02-07T17:22',  '300',  '2017-02-07T17:12',  '2017-02-07T17:20', 10,    '2017-02-07T17:12',  false ],
+    [ '2017-02-07T17:22',  '300',  '2017-02-07T17:18',  '2017-02-07T17:20', 2,     '2017-02-07T17:18',  false ],
+    [ '2017-02-07T17:22',  '600',  '2017-02-02T17:00',  '2017-02-07T17:00', 15,    '2017-02-07T15:00',  false ],
+    [ '2017-02-07T17:22',  '600',  '2017-02-02T17:00',  '2017-02-07T17:00', 2,     '2017-02-07T17:00',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1969-12-31T23:59',    false ],
+    // With step = 'any'.
+    [ '2017-02-07T15:20',  'any',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T15:20',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T15:20',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T15:20',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 
@@ -957,6 +1005,78 @@ function checkStepUp()
     [ '2016-W01',  'ANY',  null,  null,  1,  null,  true ],
     [ '2016-W01',  'AnY',  null,  null,  1,  null,  true ],
     [ '2016-W01',  'aNy',  null,  null,  1,  null,  true ],
+  ]},
+  { type: 'datetime-local', data: [
+    // Regular case.
+    [ '2017-02-07T17:09',  null,  null,  null,  null, '2017-02-07T17:10',   false ],
+    // Argument testing.
+    [ '2017-02-07T17:10',  null,  null,  null,  1,    '2017-02-07T17:11',   false ],
+    [ '2017-02-07T17:10',  null,  null,  null,  5,    '2017-02-07T17:15',   false ],
+    [ '2017-02-07T17:10',  null,  null,  null,  -1,   '2017-02-07T17:09',   false ],
+    [ '2017-02-07T17:10',  null,  null,  null,  0,    '2017-02-07T17:10',   false ],
+    // hour/minutes/seconds wrapping.
+    [ '2000-01-01T04:59',        null,  null,  null, null, '2000-01-01T05:00',  false ],
+    [ '2000-01-01T04:59:59',     1,     null,  null, null, '2000-01-01T05:00',  false ],
+    [ '2000-01-01T04:59:59.900', 0.1,   null,  null, null, '2000-01-01T05:00',  false ],
+    [ '2000-01-01T04:59:59.990', 0.01,  null,  null, null, '2000-01-01T05:00',  false ],
+    [ '2000-01-01T04:59:59.999', 0.001, null,  null, null, '2000-01-01T05:00',  false ],
+    // month/year wrapping.
+    [ '2012-07-31T12:00',  null,  null,  null,  1440,  '2012-08-01T12:00',   false ],
+    [ '1968-12-29T12:00',  null,  null,  null,  5760,  '1969-01-02T12:00',   false ],
+    [ '1970-01-01T00:00',  null,  null,  null,  -1440, '1969-12-31T00:00',   false ],
+    [ '2012-03-01T00:00',  null,  null,  null,  -1440, '2012-02-29T00:00',   false ],
+    // stepUp() on '23:59' gives '00:00'.
+    [ '2017-02-07T23:59',  null,  null,  null,  1,    '2017-02-08T00:00',   false ],
+    [ '2017-02-07T23:59',  null,  null,  null,  3,    '2017-02-08T00:02',   false ],
+    // Some random step values..
+    [ '2017-02-07T17:40',  '0.5',    null,               null,  null, '2017-02-07T17:40:00.500', false ],
+    [ '2017-02-07T17:40',  '2',      null,               null,  null, '2017-02-07T17:40:02',     false ],
+    [ '2017-02-07T17:40',  '0.25',   null,               null,  4,    '2017-02-07T17:40:01',     false ],
+    [ '2017-02-07T17:40',  '1.1',    '2017-02-07T17:00', null,  1,    '2017-02-07T17:40:00.200', false ],
+    [ '2017-02-07T17:40',  '1.1',    '2017-02-07T17:00', null,  2,    '2017-02-07T17:40:01.300', false ],
+    [ '2017-02-07T17:40',  '1.1',    '2017-02-07T17:00', null,  10,   '2017-02-07T17:40:10.100', false ],
+    [ '2017-02-07T17:40',  '129600', '2017-02-01T00:00', null,  2,    '2017-02-10T00:00',        false ],
+    // step = 0 isn't allowed (-> step = 1).
+    [ '2017-02-07T17:39',  '0',   null,  null,  null, '2017-02-07T17:40',   false ],
+    // step < 0 isn't allowed (-> step = 1).
+    [ '2017-02-07T17:39',  '-1',  null,  null,  null, '2017-02-07T17:40',   false ],
+    // step = NaN isn't allowed (-> step = 1).
+    [ '2017-02-07T17:39',  'foo', null,  null,  null, '2017-02-07T17:40',   false ],
+    // Min values testing.
+    [ '2012-02-02T17:00',  '60',     'foo',              null,  2,     '2012-02-02T17:02',  false ],
+    [ '2012-02-02T17:10',  '60',     '2012-02-02T17:10', null,  null,  '2012-02-02T17:11',  false ],
+    [ '2012-02-02T17:10',  '60',     '2012-02-02T17:30', null,  1,     '2012-02-02T17:30',  false ],
+    [ '2012-02-02T17:10',  '180',    '2012-02-02T17:05', null,  null,  '2012-02-02T17:11',  false ],
+    [ '2012-02-02T17:10',  '86400',  '2012-02-02T17:05', null,  null,  '2012-02-03T17:05',  false ],
+    [ '2012-02-02T17:10',  '129600', '2012-02-01T00:00', null,  null,  '2012-02-04T00:00',  false ],
+    // Max values testing.
+    [ '2012-02-02T17:15',  '60',     null,  'foo',               null,  '2012-02-02T17:16',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:20',  null,  '2012-02-02T17:16',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:15',  null,  '2012-02-02T17:15',  false ],
+    [ '2012-02-02T17:15',  null,     null,  '2012-02-02T17:13',  4,     '2012-02-02T17:15',  false ],
+    [ '2012-02-02T20:05',  '86400',  null,  '2012-02-03T20:05',  null,  '2012-02-03T20:05',  false ],
+    [ '2012-02-02T18:00',  '129600', null,  '2012-02-04T20:00',  null,  '2012-02-04T06:00',  false ],
+    // Step mismatch.
+    [ '2017-02-07T17:19',  '120',  '2017-02-07T17:10',   null,               null,  '2017-02-07T17:20',  false ],
+    [ '2017-02-07T17:19',  '120',  '2017-02-07T17:10',   null,               2,     '2017-02-07T17:22',  false ],
+    [ '2017-02-07T17:19',  '120',  '2017-02-07T17:18',   '2017-02-07T17:25', null,  '2017-02-07T17:20',  false ],
+    [ '2017-02-07T17:19',  '120',  null,                 null,               null,  '2017-02-07T17:21',  false ],
+    [ '2017-02-07T17:19',  '180',  null,                 null,               null,  '2017-02-07T17:22',  false ],
+    [ '2017-02-03T17:19',  '172800', '2017-02-02T17:19', '2017-02-10T17:19', null,  '2017-02-04T17:19',  false ],
+    // Clamping.
+    [ '2017-02-07T17:22',  null,   null,                '2017-02-07T17:11', null,  '2017-02-07T17:22',  false ],
+    [ '2017-02-07T17:22',  '120',  '2017-02-07T17:20',  '2017-02-07T17:22', null,  '2017-02-07T17:22',  false ],
+    [ '2017-02-07T17:22',  '300',  '2017-02-07T17:12',  '2017-02-07T17:20', 10,    '2017-02-07T17:22',  false ],
+    [ '2017-02-07T17:22',  '300',  '2017-02-07T17:18',  '2017-02-07T17:20', 2,     '2017-02-07T17:22',  false ],
+    [ '2017-02-06T17:22',  '600',  '2017-02-02T17:00',  '2017-02-07T17:20', 15,    '2017-02-06T19:50',  false ],
+    [ '2017-02-06T17:22',  '600',  '2017-02-02T17:10',  '2017-02-07T17:20', 2,     '2017-02-06T17:40',  false ],
+    // value = "" (NaN).
+    [ '',   null,   null,  null,  null, '1970-01-01T00:01',    false ],
+    // With step = 'any'.
+    [ '2017-02-07T17:30',  'any',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T17:30',  'ANY',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T17:30',  'AnY',  null,  null,  1,  null,  true ],
+    [ '2017-02-07T17:30',  'aNy',  null,  null,  1,  null,  true ],
   ]},
   ];
 
