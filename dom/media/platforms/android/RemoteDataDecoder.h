@@ -48,7 +48,7 @@ protected:
   // Methods only called on mTaskQueue.
   RefPtr<ShutdownPromise> ProcessShutdown();
   void Output(MediaData* aSample);
-  void InputExhausted();
+  void ReturnDecodedData();
   void DrainComplete();
   void Error(const MediaResult& aError);
   void AssertOnTaskQueue()
@@ -70,6 +70,13 @@ protected:
   bool mShutdown = false;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
+  enum class DrainStatus
+  {
+    DRAINED,
+    DRAINABLE,
+    DRAINING,
+  };
+  DrainStatus mDrainStatus = DrainStatus::DRAINED;
   DecodedData mDecodedData;
 };
 
