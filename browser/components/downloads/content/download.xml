@@ -46,9 +46,37 @@
                              min="0"
                              max="100"
                              xbl:inherits="mode=progressmode,value=progress,paused=progresspaused"/>
-          <xul:description class="downloadDetails"
+          <xul:description class="downloadDetails downloadDetailsNormal"
                            crop="end"
-                           xbl:inherits="value=status,tooltiptext=statusTip"/>
+                           xbl:inherits="value=status"/>
+          <xul:description class="downloadDetails downloadDetailsHover"
+                           crop="end"
+                           xbl:inherits="value=hoverStatus"/>
+          <xul:description class="downloadDetails downloadDetailsFull"
+                           crop="end"
+                           xbl:inherits="value=fullStatus,tooltiptext=fullStatus"/>
+          <xul:description class="downloadDetails downloadOpenFile"
+                           crop="end"
+                           value="&openFile.label;"/>
+          <xul:description class="downloadDetails downloadShowMoreInfo"
+                           crop="end"
+                           value="&showMoreInformation.label;"/>
+          <xul:stack class="downloadButtonLabels">
+            <xul:description class="downloadDetails downloadShow"
+                             crop="end"
+#ifdef XP_MACOSX
+                             value="&cmd.showMac.label;"
+#else
+                             value="&cmd.show.label;"
+#endif
+                             />
+            <xul:description class="downloadDetails downloadCancel"
+                             crop="end"
+                             value="&cancelDownload.label;"/>
+            <xul:description class="downloadDetails downloadRetry"
+                             crop="end"
+                             value="&retryDownload.label;"/>
+          </xul:stack>
         </xul:vbox>
       </xul:hbox>
       <xul:toolbarseparator />

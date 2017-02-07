@@ -120,6 +120,8 @@ LookupCacheV4::IsHashEntryConfirmed(const Completion& aEntry,
 nsresult
 LookupCacheV4::Build(PrefixStringMap& aPrefixMap)
 {
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_CONSTRUCT_TIME> timer;
+
   return mVLPrefixSet->SetPrefixes(aPrefixMap);
 }
 

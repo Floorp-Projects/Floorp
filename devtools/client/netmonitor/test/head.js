@@ -426,9 +426,13 @@ function testFilterButtonsCustom(aMonitor, aIsChecked) {
     if (aIsChecked[i]) {
       is(button.classList.contains("checked"), true,
         "The " + button.id + " button should have a 'checked' class.");
+      is(button.getAttribute("aria-pressed"), "true",
+        "The " + button.id + " button should set 'aria-pressed' = true.");
     } else {
       is(button.classList.contains("checked"), false,
         "The " + button.id + " button should not have a 'checked' class.");
+      is(button.getAttribute("aria-pressed"), "false",
+        "The " + button.id + " button should set 'aria-pressed' = false.");
     }
   }
 }

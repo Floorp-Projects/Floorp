@@ -30,7 +30,8 @@ static const uint16_t DATA_CHUNK_SIZE = 768;
 
 class WAVTrackDemuxer;
 
-class WAVDemuxer : public MediaDataDemuxer {
+class WAVDemuxer : public MediaDataDemuxer
+{
 public:
   // MediaDataDemuxer interface.
   explicit WAVDemuxer(MediaResource* aSource);
@@ -38,7 +39,7 @@ public:
   bool HasTrackType(TrackInfo::TrackType aType) const override;
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
-      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+    TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
   bool IsSeekable() const override;
 
 private:
@@ -49,7 +50,8 @@ private:
   RefPtr<WAVTrackDemuxer> mTrackDemuxer;
 };
 
-class RIFFParser {
+class RIFFParser
+{
 private:
   class RIFFHeader;
 public:
@@ -60,7 +62,8 @@ public:
   void Reset();
 
 private:
-  class RIFFHeader {
+  class RIFFHeader
+  {
   public:
     RIFFHeader();
     void Reset();
@@ -81,7 +84,8 @@ private:
   RIFFHeader mRiffHeader;
 };
 
-class HeaderParser {
+class HeaderParser
+{
 private:
   class ChunkHeader;
 public:
@@ -92,7 +96,8 @@ public:
   void Reset();
 
 private:
-  class ChunkHeader {
+  class ChunkHeader
+  {
   public:
     ChunkHeader();
     void Reset();
@@ -115,7 +120,8 @@ private:
   ChunkHeader mHeader;
 };
 
-class FormatParser {
+class FormatParser
+{
 private:
   class FormatChunk;
 public:
@@ -126,7 +132,8 @@ public:
   void Reset();
 
 private:
-  class FormatChunk {
+  class FormatChunk
+  {
   public:
     FormatChunk();
     void Reset();
@@ -151,7 +158,8 @@ private:
   FormatChunk mFmtChunk;
 };
 
-class DataParser {
+class DataParser
+{
 private:
   class DataChunk;
 public:
@@ -162,7 +170,8 @@ public:
   void Reset();
 
 private:
-  class DataChunk {
+  class DataChunk
+  {
   public:
     void Reset();
   private:
@@ -172,7 +181,8 @@ private:
   DataChunk mChunk;
 };
 
-class WAVTrackDemuxer : public MediaTrackDemuxer {
+class WAVTrackDemuxer : public MediaTrackDemuxer
+{
 public:
   explicit WAVTrackDemuxer(MediaResourceIndex aSource);
 
@@ -199,7 +209,7 @@ public:
   media::TimeIntervals GetBuffered() override;
 
 private:
-  ~WAVTrackDemuxer() {}
+  ~WAVTrackDemuxer() { }
 
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
