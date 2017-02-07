@@ -49,7 +49,7 @@ tasks:
       deadline: '{{#from_now}}1 day{{/from_now}}'
       expires: '{{#from_now}}365 day{{/from_now}}'
       metadata:
-        owner: {{owner}}
+        owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
         name: "Gecko Decision Task"
         description: |
