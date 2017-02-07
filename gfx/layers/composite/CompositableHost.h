@@ -45,6 +45,11 @@ class TiledContentHost;
 class CompositableParentManager;
 struct EffectChain;
 
+struct ImageCompositeNotificationInfo {
+  base::ProcessId mImageBridgeProcessId;
+  ImageCompositeNotification mNotification;
+};
+
 struct AsyncCompositableRef
 {
   AsyncCompositableRef()

@@ -1841,6 +1841,14 @@ CompositorBridgeParent::NotifyDidComposite(uint64_t aTransactionId, TimeStamp& a
     }
   }
 
+  if (mWrBridge) {
+    nsTArray<ImageCompositeNotificationInfo> notifications;
+    mWrBridge->ExtractImageCompositeNotifications(&notifications);
+    if (!notifications.IsEmpty()) {
+      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+    }
+  }
+
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
     if (lts->mCrossProcessParent) {
