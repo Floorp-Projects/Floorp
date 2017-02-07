@@ -29,7 +29,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerMarkers.cpp',
-        'core/Sampler.cpp',
         'core/StackTop.cpp',
         'core/SyncProfile.cpp',
         'core/ThreadInfo.cpp',

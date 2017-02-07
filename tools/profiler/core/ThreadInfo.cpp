@@ -262,7 +262,7 @@ ThreadInfo::DuplicateLastSample()
 }
 
 size_t
-ThreadInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+ThreadInfo::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 
