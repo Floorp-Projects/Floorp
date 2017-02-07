@@ -1200,47 +1200,48 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   let focus = (cmd.parameters.focus !== undefined) ? cmd.parameters.focus : true;
   let found;
 
-  let byNameOrId = function (name, outerId, contentWindowId) {
-    return switchTo == name ||
-        switchTo == contentWindowId ||
-        switchTo == outerId;
+  let byNameOrId = function (name, windowId) {
+    return switchTo === name || switchTo === windowId;
   };
 
   let winEn = Services.wm.getEnumerator(null);
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     let outerId = getOuterWindowId(win);
-    let tabbrowser = browser.getTabBrowser(win);
+    let tabBrowser = browser.getTabBrowser(win);
 
-    if (tabbrowser) {
-      for (let i = 0; i < tabbrowser.tabs.length; ++i) {
-        let contentBrowser = browser.getBrowserForTab(tabbrowser.tabs[i]);
+    if (byNameOrId(win.name, outerId)) {
+      // In case the wanted window is a chrome window, we are done.
+      found = {win: win, outerId: outerId, hasTabBrowser: !!tabBrowser};
+      break;
+
+    } else if (tabBrowser) {
+      // Otherwise check if the chrome window has a tab browser, and that it
+      // contains a tab with the wanted window handle.
+      for (let i = 0; i < tabBrowser.tabs.length; ++i) {
+        let contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
         let contentWindowId = this.getIdForBrowser(contentBrowser);
 
-        if (byNameOrId(win.name, contentWindowId, outerId)) {
+        if (byNameOrId(win.name, contentWindowId)) {
           found = {
             win: win,
             outerId: outerId,
+            hasTabBrowser: true,
             tabIndex: i,
           };
           break;
         }
       }
-    } else {
-      if (byNameOrId(win.name, outerId)) {
-        found = {win: win, outerId: outerId};
-        break;
-      }
     }
   }
 
   if (found) {
-    // Initialise Marionette if browser has not been seen before,
-    // otherwise switch to known browser and activate the tab if it's a
-    // content browser.
     if (!(found.outerId in this.browsers)) {
+      // Initialise Marionette if the current chrome window has not been seen
+      // before. Also register the initial tab, if one exists.
       let registerBrowsers, browserListening;
-      if ("tabIndex" in found) {
+
+      if (found.hasTabBrowser) {
         registerBrowsers = this.registerPromise();
         browserListening = this.listeningPromise();
       }
@@ -1251,7 +1252,10 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
         yield registerBrowsers;
         yield browserListening;
       }
+
     } else {
+      // Otherwise switch to the known chrome window, and activate the tab
+      // if it's a content browser.
       this.curBrowser = this.browsers[found.outerId];
 
       if ("tabIndex" in found) {
@@ -2167,27 +2171,11 @@ GeckoDriver.prototype.closeChromeWindow = function (cmd, resp) {
   return this.curBrowser.closeWindow().then(() => this.chromeWindowHandles);
 };
 
-/**
- * Deletes the session.
- *
- * If it is a desktop environment, it will close all listeners.
- *
- * If it is a B2G environment, it will make the main content listener
- * sleep, and close all other listeners.  The main content listener
- * persists after disconnect (it's the homescreen), and can safely
- * be reused.
- */
-GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
+/** Delete Marionette session. */
+GeckoDriver.prototype.deleteSession = function (cmd, resp) {
   if (this.curBrowser !== null) {
-    if (this.appName == "B2G") {
-      globalMessageManager.broadcastAsyncMessage(
-          "Marionette:sleepSession" + this.curBrowser.mainContentId, {});
-      this.curBrowser.knownFrames.splice(
-          this.curBrowser.knownFrames.indexOf(this.curBrowser.mainContentId), 1);
-    } else {
-      // don't set this pref for B2G since the framescript can be safely reused
-      Preferences.set(CONTENT_LISTENER_PREF, false);
-    }
+    // frame scripts can be safely reused
+    Preferences.set(CONTENT_LISTENER_PREF, false);
 
     // delete session in each frame in each browser
     for (let win in this.browsers) {
@@ -2201,7 +2189,7 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
     let winEn = Services.wm.getEnumerator(null);
     while (winEn.hasMoreElements()) {
       let win = winEn.getNext();
-      if (win.messageManager){
+      if (win.messageManager) {
         win.messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
       } else {
         logger.error(
@@ -2237,14 +2225,6 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
 
   this.sessionId = null;
   this.capabilities = new session.Capabilities();
-};
-
-/**
- * Processes the "deleteSession" request from the client by tearing down
- * the session and responding "ok".
- */
-GeckoDriver.prototype.deleteSession = function (cmd, resp) {
-  this.sessionTearDown();
 };
 
 /** Returns the current status of the Application Cache. */
@@ -2555,7 +2535,7 @@ GeckoDriver.prototype.quitApplication = function (cmd, resp) {
   this._server.acceptConnections = false;
   resp.send();
 
-  this.sessionTearDown();
+  this.deleteSession();
   Services.startup.quit(flags);
 };
 

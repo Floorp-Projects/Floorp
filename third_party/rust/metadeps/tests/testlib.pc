@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib/x86_64-linux-gnu
+includedir=${prefix}/include/testlib
+
+Name: Test Library
+Description: A fake library to test pkg-config.
+Version: 1.2.3
+Libs: L${libdir} -ltest
+Cflags: -I${includedir}

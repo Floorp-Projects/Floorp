@@ -111,6 +111,7 @@ registerCleanupFunction(function* cleanup() {
  * @param {Object} options Object with various optional fields:
  *   - {Boolean} background If true, open the tab in background
  *   - {ChromeWindow} window Firefox top level window we should use to open the tab
+ *   - {Number} userContextId The userContextId of the tab.
  * @return a promise that resolves to the tab object when the url is loaded
  */
 var addTab = Task.async(function* (url, options = { background: false, window: window }) {
@@ -118,8 +119,9 @@ var addTab = Task.async(function* (url, options = { background: false, window: w
 
   let { background } = options;
   let { gBrowser } = options.window ? options.window : window;
+  let { userContextId } = options;
 
-  let tab = gBrowser.addTab(url);
+  let tab = gBrowser.addTab(url, {userContextId});
   if (!background) {
     gBrowser.selectedTab = tab;
   }

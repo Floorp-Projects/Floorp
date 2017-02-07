@@ -10,11 +10,13 @@ geckoservo = { path = "../../geckolib", optional = true }
 mp4parse_capi = { path = "../../../../media/libstagefright/binding/mp4parse_capi" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
+webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 
 [features]
 default = []
 bindgen = ["geckoservo/bindgen"]
 servo = ["geckoservo"]
+quantum_render = ["webrender_bindings"]
 
 [lib]
 path = "lib.rs"
