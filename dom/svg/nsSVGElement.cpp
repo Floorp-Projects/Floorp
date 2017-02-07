@@ -1131,16 +1131,39 @@ nsSVGElement::ClassName()
 }
 
 bool
-nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool)
+nsSVGElement::IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex)
 {
-  int32_t index = TabIndex();
+  nsIDocument* doc = GetComposedDoc();
+  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+    // In designMode documents we only allow focusing the document.
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
 
-  if (index == -1) {
-    return false;
+    *aIsFocusable = false;
+
+    return true;
   }
 
-  *aTabIndex = index;
-  return true;
+  int32_t tabIndex = TabIndex();
+
+  if (aTabIndex) {
+    *aTabIndex = tabIndex;
+  }
+
+  // If a tabindex is specified at all, or the default tabindex is 0, we're focusable
+  *aIsFocusable =
+    tabIndex >= 0 || HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+
+  return false;
+}
+
+bool
+nsSVGElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse)
+{
+  bool isFocusable = false;
+  IsSVGFocusable(&isFocusable, aTabIndex);
+  return isFocusable;
 }
 
 //------------------------------------------------------------------------

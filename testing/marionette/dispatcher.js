@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/driver.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
@@ -56,7 +57,7 @@ this.Dispatcher = function (connId, transport, driverFactory) {
  * after a connection is closed.
  */
 Dispatcher.prototype.onClosed = function (reason) {
-  this.driver.sessionTearDown();
+  this.driver.deleteSession();
   if (this.onclose) {
     this.onclose(this);
   }
@@ -118,6 +119,10 @@ Dispatcher.prototype.execute = function (cmd) {
     let fn = this.driver.commands[cmd.name];
     if (typeof fn == "undefined") {
       throw new UnknownCommandError(cmd.name);
+    }
+
+    if (cmd.name !== "newSession") {
+      assert.session(this.driver);
     }
 
     let rv = yield fn.bind(this.driver)(cmd, resp);
