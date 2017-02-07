@@ -1123,7 +1123,12 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
                                      offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
-  gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
+  gfxSize scaleFactors = context.CurrentMatrix().ScaleFactors(true);
+  gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
+                        0.0f, scaleFactors.height,
+                        0.0f, 0.0f);
+  gfxMatrix tm =
+    scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
   DrawResult result =
     nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
                                          tm, &callback, &dirtyRegion);
