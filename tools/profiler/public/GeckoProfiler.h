@@ -326,7 +326,6 @@ class ProfilerMarkerPayload;
 //
 extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
 
-extern Sampler* gSampler;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME

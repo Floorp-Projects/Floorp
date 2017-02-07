@@ -65,7 +65,8 @@ public:
 #endif
 
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-Sampler* gSampler;
+
+static Sampler* gSampler;
 
 static std::vector<ThreadInfo*>* sRegisteredThreads = nullptr;
 static mozilla::StaticMutex sRegisteredThreadsMutex;
