@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/wait.js");
@@ -174,11 +175,14 @@ element.Store = class {
     if (container.shadowRoot) {
       wrappedShadowRoot = new XPCNativeWrapper(container.shadowRoot);
     }
-
     let wrappedEl = new XPCNativeWrapper(el);
+    let wrappedContainer = {
+      frame: wrappedFrame,
+      shadowRoot: wrappedShadowRoot,
+    };
     if (!el ||
         !(wrappedEl.ownerDocument == wrappedFrame.document) ||
-        element.isDisconnected(wrappedEl, wrappedFrame, wrappedShadowRoot)) {
+        element.isDisconnected(wrappedEl, wrappedContainer)) {
       throw new StaleElementReferenceError(
           error.pprint`The element reference of ${el} stale: ` +
               "either the element is no longer attached to the DOM " +
@@ -723,18 +727,19 @@ element.toJson = function (obj, seenEls) {
  *
  * @param {nsIDOMElement} el
  *     Element to be checked.
- * @param {nsIDOMWindow} frame
- *     Window object that contains the element or the current host
- *     of the shadow root.
- * @param {ShadowRoot=} shadowRoot
- *     An optional shadow root containing an element.
+ * @param {Container} container
+ *     Container with |frame|, which is the window object that contains
+ *     the element, and an optional |shadowRoot|.
  *
  * @return {boolean}
  *     Flag indicating that the element is disconnected.
  */
-element.isDisconnected = function (el, frame, shadowRoot = undefined) {
+element.isDisconnected = function (el, container = {}) {
+  const {frame, shadowRoot} = container;
+  assert.defined(frame);
+
   // shadow dom
-  if (shadowRoot && frame.ShadowRoot) {
+  if (frame.ShadowRoot && shadowRoot) {
     if (el.compareDocumentPosition(shadowRoot) &
         DOCUMENT_POSITION_DISCONNECTED) {
       return true;
@@ -745,7 +750,9 @@ element.isDisconnected = function (el, frame, shadowRoot = undefined) {
     while (parent && !(parent instanceof frame.ShadowRoot)) {
       parent = parent.parentNode;
     }
-    return element.isDisconnected(shadowRoot.host, frame, parent);
+    return element.isDisconnected(
+        shadowRoot.host,
+        {frame: frame, shadowRoot: parent});
 
   // outside shadow dom
   } else {
@@ -989,7 +996,7 @@ element.getPointerInteractablePaintTree = function (el) {
   const win = doc.defaultView;
 
   // pointer-interactable elements tree, step 1
-  if (element.isDisconnected(el, win)) {
+  if (element.isDisconnected(el, {frame: win})) {
     return [];
   }
 
