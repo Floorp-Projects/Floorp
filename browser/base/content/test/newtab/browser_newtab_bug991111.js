@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+
 add_task(function* () {
   // set max rows to 1, to avoid scroll events by clicking middle button
   yield pushPrefs(["browser.newtabpage.rows", 1]);
