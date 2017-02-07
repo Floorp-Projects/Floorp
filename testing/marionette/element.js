@@ -923,11 +923,6 @@ element.isVisible = function (el, x = undefined, y = undefined) {
   return true;
 };
 
-element.isInteractable = function (el) {
-  return element.isPointerInteractable(el) ||
-      element.isKeyboardInteractable(el);
-};
-
 /**
  * A pointer-interactable element is defined to be the first
  * non-transparent element, defined by the paint order found at the centre
