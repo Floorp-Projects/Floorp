@@ -8,17 +8,16 @@
 
 #include "mozilla/EndianUtils.h"
 #include <stdint.h>
+#include <algorithm>
+#include <opus/opus.h>
 
-#include "nsDebug.h"
 #include "OggCodecState.h"
 #include "OpusDecoder.h"
 #include "OpusParser.h"
 #include "VideoUtils.h"
-#include <algorithm>
-
-#include <opus/opus.h>
-#include "opus/opus_multistream.h"
 #include "XiphExtradata.h"
+#include "nsDebug.h"
+#include "opus/opus_multistream.h"
 
 // On Android JellyBean, the hardware.h header redefines version_major and
 // version_minor, which breaks our build.  See:
@@ -205,8 +204,9 @@ Clone(ogg_packet* aPacket)
 void
 OggCodecState::ReleasePacket(ogg_packet* aPacket)
 {
-  if (aPacket)
+  if (aPacket) {
     delete [] aPacket->packet;
+  }
   delete aPacket;
 }
 
@@ -241,7 +241,7 @@ OggCodecState::PacketPeek()
 }
 
 void
-OggCodecState::PushFront(OggPacketQueue &&aOther)
+OggCodecState::PushFront(OggPacketQueue&& aOther)
 {
   while (!aOther.IsEmpty()) {
     mPackets.PushFront(aOther.Pop());
@@ -256,7 +256,9 @@ OggCodecState::PacketOutAsMediaRawData()
     return nullptr;
   }
 
-  NS_ASSERTION(!IsHeader(packet), "PacketOutAsMediaRawData can only be called on non-header packets");
+  NS_ASSERTION(
+    !IsHeader(packet),
+    "PacketOutAsMediaRawData can only be called on non-header packets");
   RefPtr<MediaRawData> sample = new MediaRawData(packet->packet, packet->bytes);
   if (!sample->Data()) {
     // OOM.
@@ -374,7 +376,8 @@ TheoraState::Init()
   // Ensure the frame and picture regions aren't larger than our prescribed
   // maximum, or zero sized.
   nsIntSize frame(mTheoraInfo.frame_width, mTheoraInfo.frame_height);
-  nsIntRect picture(mTheoraInfo.pic_x, mTheoraInfo.pic_y, mTheoraInfo.pic_width, mTheoraInfo.pic_height);
+  nsIntRect picture(mTheoraInfo.pic_x, mTheoraInfo.pic_y,
+                    mTheoraInfo.pic_width, mTheoraInfo.pic_height);
   nsIntSize display(mTheoraInfo.pic_width, mTheoraInfo.pic_height);
   ScaleDisplayByAspectRatio(display, aspectRatio);
   if (!IsValidVideoRegion(frame, picture, display)) {
@@ -455,9 +458,9 @@ TheoraState::IsHeader(ogg_packet* aPacket)
 }
 
 # define TH_VERSION_CHECK(_info,_maj,_min,_sub) \
- (((_info)->version_major>(_maj)||(_info)->version_major==(_maj))&& \
- (((_info)->version_minor>(_min)||(_info)->version_minor==(_min))&& \
- (_info)->version_subminor>=(_sub)))
+ (((_info)->version_major>(_maj)||(_info)->version_major==(_maj)) \
+  && (((_info)->version_minor>(_min)||(_info)->version_minor==(_min)) \
+  && (_info)->version_subminor>=(_sub)))
 
 int64_t
 TheoraState::Time(th_info* aInfo, int64_t aGranulepos)
@@ -573,9 +576,9 @@ TheoraVersion(th_info* info,
               unsigned char sub)
 {
   ogg_uint32_t ver = (maj << 16) + (min << 8) + sub;
-  ogg_uint32_t th_ver = (info->version_major << 16) +
-                        (info->version_minor << 8) +
-                        info->version_subminor;
+  ogg_uint32_t th_ver = (info->version_major << 16)
+                        + (info->version_minor << 8)
+                        + info->version_subminor;
   return (th_ver >= ver) ? 1 : 0;
 }
 
@@ -594,8 +597,8 @@ TheoraState::ReconstructTheoraGranulepos()
   // the granulepos of the intermediate frames using their frame numbers.
   ogg_int64_t shift = mTheoraInfo.keyframe_granule_shift;
   ogg_int64_t version_3_2_1 = TheoraVersion(&mTheoraInfo,3,2,1);
-  ogg_int64_t lastFrame = th_granule_frame(mCtx,
-                                           lastGranulepos) + version_3_2_1;
+  ogg_int64_t lastFrame =
+    th_granule_frame(mCtx, lastGranulepos) + version_3_2_1;
   ogg_int64_t firstFrame = lastFrame - mUnstamped.Length() + 1;
 
   // Until we encounter a keyframe, we'll assume that the "keyframe"
@@ -620,8 +623,8 @@ TheoraState::ReconstructTheoraGranulepos()
     if (isKeyframe) {
       granulepos = frame << shift;
       keyframe = frame;
-    } else if (frame >= keyframe &&
-                frame - keyframe < ((ogg_int64_t)1 << shift))
+    } else if (frame >= keyframe
+               && frame - keyframe < ((ogg_int64_t)1 << shift))
     {
       // (frame - keyframe) won't overflow the "offset" segment of the
       // granulepos, so it's safe to calculate the granulepos.
@@ -630,7 +633,8 @@ TheoraState::ReconstructTheoraGranulepos()
       // (frame - keyframeno) will overflow the "offset" segment of the
       // granulepos, so we take "keyframe" to be the max possible offset
       // frame instead.
-      ogg_int64_t k = std::max(frame - (((ogg_int64_t)1 << shift) - 1), version_3_2_1);
+      ogg_int64_t k =
+        std::max(frame - (((ogg_int64_t)1 << shift) - 1), version_3_2_1);
       granulepos = (k << shift) + (frame - k);
     }
     // Theora 3.2.1+ granulepos store frame number [1..N], so granulepos
@@ -642,9 +646,10 @@ TheoraState::ReconstructTheoraGranulepos()
 
     // Check that the frame's granule number is one more than the
     // previous frame's.
-    NS_ASSERTION(i == 0 ||
-                 th_granule_frame(mCtx, granulepos) ==
-                 th_granule_frame(mCtx, mUnstamped[i-1]->granulepos) + 1,
+    NS_ASSERTION(i == 0
+                 || th_granule_frame(mCtx, granulepos)
+                    == th_granule_frame(mCtx, mUnstamped[i-1]->granulepos)
+                       + 1,
                  "Granulepos calculation is incorrect!");
 
     packet->granulepos = granulepos;
@@ -653,9 +658,11 @@ TheoraState::ReconstructTheoraGranulepos()
   // Check that the second to last frame's granule number is one less than
   // the last frame's (the known granule number). If not our granulepos
   // recovery missed a beat.
-  NS_ASSERTION(mUnstamped.Length() < 2 ||
-    th_granule_frame(mCtx, mUnstamped[mUnstamped.Length()-2]->granulepos) + 1 ==
-    th_granule_frame(mCtx, lastGranulepos),
+  NS_ASSERTION(
+    mUnstamped.Length() < 2
+    || th_granule_frame(mCtx, mUnstamped[mUnstamped.Length() - 2]->granulepos)
+       + 1
+       == th_granule_frame(mCtx, lastGranulepos),
     "Granulepos recovery should catch up with packet->granulepos!");
 }
 
@@ -960,8 +967,9 @@ VorbisState::ReconstructVorbisGranulepos()
     blockSize = 0;
   }
 
-  long samples = (mPrevVorbisBlockSize == 0) ? 0 :
-                  mPrevVorbisBlockSize / 4 + blockSize / 4;
+  long samples = (mPrevVorbisBlockSize == 0)
+                 ? 0
+                 : mPrevVorbisBlockSize / 4 + blockSize / 4;
   int64_t start = first->granulepos - samples;
   RecordVorbisPacketSamples(first, samples);
 
@@ -1114,7 +1122,8 @@ OpusState::GetTags()
 
   tags = new MetadataTags;
   for (uint32_t i = 0; i < mParser->mTags.Length(); i++) {
-    AddVorbisComment(tags, mParser->mTags[i].Data(), mParser->mTags[i].Length());
+    AddVorbisComment(tags, mParser->mTags[i].Data(),
+                     mParser->mTags[i].Length());
   }
 
   return tags;
@@ -1146,9 +1155,9 @@ OpusState::Time(int aPreSkip, int64_t aGranulepos)
 bool
 OpusState::IsHeader(ogg_packet* aPacket)
 {
-  return aPacket->bytes >= 16 &&
-         (!memcmp(aPacket->packet, "OpusHead", 8) ||
-          !memcmp(aPacket->packet, "OpusTags", 8));
+  return aPacket->bytes >= 16
+         && (!memcmp(aPacket->packet, "OpusHead", 8)
+             || !memcmp(aPacket->packet, "OpusTags", 8));
 }
 
 nsresult
@@ -1432,7 +1441,7 @@ FlacState::ReconstructFlacGranulepos(void)
   // for the current packet.
   for (uint32_t i = mUnstamped.Length() - 1; i > 0; i--) {
     int offset =
-        mParser.BlockDuration(mUnstamped[i]->packet, mUnstamped[i]->bytes);
+      mParser.BlockDuration(mUnstamped[i]->packet, mUnstamped[i]->bytes);
     // Check for error (negative offset) and overflow.
     if (offset >= 0) {
       if (offset <= gp) {
@@ -1516,8 +1525,8 @@ IsSkeletonBOS(ogg_packet* aPacket)
 {
   static_assert(SKELETON_MIN_HEADER_LEN >= 8,
                 "Minimum length of skeleton BOS header incorrect");
-  return aPacket->bytes >= SKELETON_MIN_HEADER_LEN &&
-         memcmp(reinterpret_cast<char*>(aPacket->packet), "fishead", 8) == 0;
+  return aPacket->bytes >= SKELETON_MIN_HEADER_LEN
+         && memcmp(reinterpret_cast<char*>(aPacket->packet), "fishead", 8) == 0;
 }
 
 static bool
@@ -1525,8 +1534,8 @@ IsSkeletonIndex(ogg_packet* aPacket)
 {
   static_assert(SKELETON_4_0_MIN_INDEX_LEN >= 5,
                 "Minimum length of skeleton index header incorrect");
-  return aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN &&
-         memcmp(reinterpret_cast<char*>(aPacket->packet), "index", 5) == 0;
+  return aPacket->bytes >= SKELETON_4_0_MIN_INDEX_LEN
+         && memcmp(reinterpret_cast<char*>(aPacket->packet), "index", 5) == 0;
 }
 
 static bool
@@ -1534,8 +1543,8 @@ IsSkeletonFisbone(ogg_packet* aPacket)
 {
   static_assert(SKELETON_MIN_FISBONE_LEN >= 8,
                 "Minimum length of skeleton fisbone header incorrect");
-  return aPacket->bytes >= SKELETON_MIN_FISBONE_LEN &&
-         memcmp(reinterpret_cast<char*>(aPacket->packet), "fisbone", 8) == 0;
+  return aPacket->bytes >= SKELETON_MIN_FISBONE_LEN
+         && memcmp(reinterpret_cast<char*>(aPacket->packet), "fisbone", 8) == 0;
 }
 
 // Reads a variable length encoded integer at p. Will not read
@@ -1548,9 +1557,9 @@ ReadVariableLengthInt(const unsigned char* p,
   int shift = 0;
   int64_t byte = 0;
   n = 0;
-  while (p < aLimit &&
-         (byte & 0x80) != 0x80 &&
-         shift < 57)
+  while (p < aLimit
+         && (byte & 0x80) != 0x80
+         && shift < 57)
   {
     byte = static_cast<int64_t>(*p);
     n |= ((byte & 0x7f) << shift);
@@ -1569,13 +1578,16 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
     return false;
   }
 
-  uint32_t serialno = LittleEndian::readUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
-  int64_t numKeyPoints = LittleEndian::readInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
+  uint32_t serialno =
+    LittleEndian::readUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
+  int64_t numKeyPoints =
+    LittleEndian::readInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
 
   int64_t endTime = 0, startTime = 0;
   const unsigned char* p = aPacket->packet;
 
-  int64_t timeDenom = LittleEndian::readInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
+  int64_t timeDenom =
+    LittleEndian::readInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
   if (timeDenom == 0) {
     LOG(LogLevel::Debug, ("Ogg Skeleton Index packet for stream %u has 0 "
                        "timestamp denominator.", serialno));
@@ -1611,9 +1623,9 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
 
   int64_t sizeofIndex = aPacket->bytes - INDEX_KEYPOINT_OFFSET;
   int64_t maxNumKeyPoints = sizeofIndex / MIN_KEY_POINT_SIZE;
-  if (aPacket->bytes < minPacketSize.value() ||
-      numKeyPoints > maxNumKeyPoints ||
-      numKeyPoints < 0) {
+  if (aPacket->bytes < minPacketSize.value()
+      || numKeyPoints > maxNumKeyPoints
+      || numKeyPoints < 0) {
     // Packet size is less than the theoretical minimum size, or the packet is
     // claiming to store more keypoints than it's capable of storing. This means
     // that the numKeyPoints field is too large or small for the packet to
@@ -1638,17 +1650,17 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
     int64_t delta = 0;
     p = ReadVariableLengthInt(p, limit, delta);
     offset += delta;
-    if (p == limit ||
-        !offset.isValid() ||
-        offset.value() > mLength ||
-        offset.value() < 0) {
+    if (p == limit
+        || !offset.isValid()
+        || offset.value() > mLength
+        || offset.value() < 0) {
       return (mActive = false);
     }
     p = ReadVariableLengthInt(p, limit, delta);
     time += delta;
-    if (!time.isValid() ||
-        time.value() > endTime ||
-        time.value() < startTime) {
+    if (!time.isValid()
+        || time.value() > endTime
+        || time.value() < startTime) {
       return (mActive = false);
     }
     CheckedInt64 timeUsecs = SaferMultDiv(time.value(), USECS_PER_S, timeDenom);
@@ -1677,8 +1689,10 @@ SkeletonState::IndexedSeekTargetForTrack(uint32_t aSerialno,
   nsKeyFrameIndex* index = nullptr;
   mIndex.Get(aSerialno, &index);
 
-  if (!index || index->Length() == 0 ||
-      aTarget < index->mStartTime || aTarget > index->mEndTime) {
+  if (!index
+      || index->Length() == 0
+      || aTarget < index->mStartTime
+      || aTarget > index->mEndTime) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1717,8 +1731,8 @@ SkeletonState::IndexedSeekTarget(int64_t aTarget,
   nsSeekTarget r;
   for (uint32_t i=0; i<aTracks.Length(); i++) {
     nsKeyPoint k;
-    if (NS_SUCCEEDED(IndexedSeekTargetForTrack(aTracks[i], aTarget, k)) &&
-        k.mOffset < r.mKeyPoint.mOffset) {
+    if (NS_SUCCEEDED(IndexedSeekTargetForTrack(aTracks[i], aTarget, k))
+        && k.mOffset < r.mKeyPoint.mOffset) {
       r.mKeyPoint = k;
       r.mSerial = aTracks[i];
     }
@@ -1736,10 +1750,10 @@ nsresult
 SkeletonState::GetDuration(const nsTArray<uint32_t>& aTracks,
                            int64_t& aDuration)
 {
-  if (!mActive ||
-      mVersion < SKELETON_VERSION(4,0) ||
-      !HasIndex() ||
-      aTracks.Length() == 0) {
+  if (!mActive
+      || mVersion < SKELETON_VERSION(4,0)
+      || !HasIndex()
+      || aTracks.Length() == 0) {
     return NS_ERROR_FAILURE;
   }
   int64_t endTime = INT64_MIN;
@@ -1821,10 +1835,11 @@ SkeletonState::DecodeFisbone(ogg_packet* aPacket)
             EMsgHeaderType eHeaderType = kFieldTypeMaps[i].mMsgHeaderType;
             if (!field->mValuesStore.Contains(eHeaderType)) {
               uint32_t nameLen = strlen(kFieldTypeMaps[i].mPatternToRecognize);
-              field->mValuesStore.Put(eHeaderType, new nsCString(msgHead+nameLen,
-                                                                 msgProbe-msgHead-nameLen));
+              field->mValuesStore.Put(
+                eHeaderType,
+                new nsCString(msgHead + nameLen, msgProbe - msgHead - nameLen));
             }
-            isContentTypeParsed = i==0 ? true : isContentTypeParsed;
+            isContentTypeParsed = i == 0 ? true : isContentTypeParsed;
           }
           break;
         }
@@ -1859,18 +1874,19 @@ SkeletonState::DecodeHeader(ogg_packet* aPacket)
 
     // Read the presentation time. We read this before the version check as the
     // presentation time exists in all versions.
-    int64_t n =
-      LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
-    int64_t d =
-      LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
+    int64_t n = LittleEndian::readInt64(
+      aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
+    int64_t d = LittleEndian::readInt64(
+      aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
     mPresentationTime =
-      d == 0 ? 0 : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
+      d == 0 ? 0
+             : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
     // We can only care to parse Skeleton version 4.0+.
-    if (mVersion < SKELETON_VERSION(4,0) ||
-        mVersion >= SKELETON_VERSION(5,0) ||
-        aPacket->bytes < SKELETON_4_0_MIN_HEADER_LEN) {
+    if (mVersion < SKELETON_VERSION(4,0)
+        || mVersion >= SKELETON_VERSION(5,0)
+        || aPacket->bytes < SKELETON_4_0_MIN_HEADER_LEN) {
       return false;
     }
 

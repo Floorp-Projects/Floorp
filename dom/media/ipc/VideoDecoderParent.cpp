@@ -77,7 +77,8 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
 
   mDecoder = pdm->CreateVideoDecoder(params);
 #else
-  MOZ_ASSERT(false, "Can't use RemoteVideoDecoder on non-Windows platforms yet");
+  MOZ_ASSERT(false,
+             "Can't use RemoteVideoDecoder on non-Windows platforms yet");
 #endif
 
   *aSuccess = !!mDecoder;
@@ -106,7 +107,8 @@ VideoDecoderParent::RecvInit()
     [self] (TrackInfo::TrackType aTrack) {
       if (self->mDecoder) {
         nsCString hardwareReason;
-        bool hardwareAccelerated = self->mDecoder->IsHardwareAccelerated(hardwareReason);
+        bool hardwareAccelerated =
+          self->mDecoder->IsHardwareAccelerated(hardwareReason);
         Unused << self->SendInitComplete(hardwareAccelerated, hardwareReason);
       }
     },
@@ -122,8 +124,8 @@ mozilla::ipc::IPCResult
 VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 {
   MOZ_ASSERT(OnManagerThread());
-  // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally we'd just take ownership
-  // of the shmem.
+  // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
+  // we'd just take ownership of the shmem.
   RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(),
                                                aData.buffer().Size<uint8_t>());
   if (!data->Data()) {
