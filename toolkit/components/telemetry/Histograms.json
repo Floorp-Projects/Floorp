@@ -9341,11 +9341,19 @@
   },
   "VIDEO_AS_CONTENT_SOURCE" : {
     "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "58",
     "description": "Usage of a {visible / invisible} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_VISIBLE, 1 = ALL_INVISIBLE, 2 = drawImage_VISIBLE, 3 = drawImage_INVISIBLE, 4 = createPattern_VISIBLE, 5 = createPattern_INVISIBLE, 6 = createImageBitmap_VISIBLE, 7 = createImageBitmap_INVISIBLE, 8 = captureStream_VISIBLE, 9 = captureStream_INVISIBLE)",
     "kind": "enumerated",
     "n_values": 12,
     "bug_numbers": [1299718]
+  },
+  "VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT" : {
+    "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
+    "expires_in_version": "58",
+    "description": "Usage of an invisible {in tree / not in tree} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_IN_TREE, 1 = ALL_NOT_IN_TREE, 2 = drawImage_IN_TREE, 3 = drawImage_NOT_IN_TREE, 4 = createPattern_IN_TREE, 5 = createPattern_NOT_IN_TREE, 6 = createImageBitmap_IN_TREE, 7 = createImageBitmap_NOT_IN_TREE, 8 = captureStream_IN_TREE, 9 = captureStream_NOT_IN_TREE)",
+    "kind": "enumerated",
+    "n_values": 12,
+    "bug_numbers": [1337301]
   },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
