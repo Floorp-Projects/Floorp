@@ -426,6 +426,10 @@ XRE_API(bool,
 // Used in child processes.
 XRE_API(bool,
         XRE_SetRemoteExceptionHandler, (const char* aPipe))
+
+// Used in child processes.
+XRE_API(bool,
+        XRE_UnsetRemoteExceptionHandler, ())
 #endif
 
 namespace mozilla {
