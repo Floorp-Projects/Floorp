@@ -7104,6 +7104,14 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
   } else {
     // 1 = ALL_INVISIBLE
     Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 1);
+
+    if (IsInUncomposedDoc()) {
+      // 0 = ALL_IN_TREE
+      Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 0);
+    } else {
+      // 1 = ALL_NOT_IN_TREE
+      Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 1);
+    }
   }
 
   switch (aAPI) {
@@ -7114,6 +7122,14 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
       } else {
         // 3 = drawImage_INVISIBLE
         Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 3);
+
+        if (IsInUncomposedDoc()) {
+          // 2 = drawImage_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 2);
+        } else {
+          // 3 = drawImage_NOT_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 3);
+        }
       }
       break;
     }
@@ -7124,6 +7140,14 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
       } else {
         // 5 = createPattern_INVISIBLE
         Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 5);
+
+        if (IsInUncomposedDoc()) {
+          // 4 = createPattern_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 4);
+        } else {
+          // 5 = createPattern_NOT_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 5);
+        }
       }
       break;
     }
@@ -7134,6 +7158,14 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
       } else {
         // 7 = createImageBitmap_INVISIBLE
         Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 7);
+
+        if (IsInUncomposedDoc()) {
+          // 6 = createImageBitmap_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 6);
+        } else {
+          // 7 = createImageBitmap_NOT_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 7);
+        }
       }
       break;
     }
@@ -7144,6 +7176,14 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
       } else {
         // 9 = captureStream_INVISIBLE
         Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 9);
+
+        if (IsInUncomposedDoc()) {
+          // 8 = captureStream_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 8);
+        } else {
+          // 9 = captureStream_NOT_IN_TREE
+          Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 9);
+        }
       }
       break;
     }
@@ -7152,6 +7192,12 @@ HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI)
   LOG(LogLevel::Debug,
       ("%p Log VIDEO_AS_CONTENT_SOURCE: visibility = %u, API: '%d' and 'All'",
        this, isVisible, aAPI));
+
+  if (!isVisible) {
+    LOG(LogLevel::Debug,
+        ("%p Log VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT: inTree = %u, API: '%d' and 'All'",
+         this, IsInUncomposedDoc(), aAPI));
+  }
 }
 
 void
