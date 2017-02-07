@@ -180,8 +180,9 @@ element.Store = class {
         !(wrappedEl.ownerDocument == wrappedFrame.document) ||
         element.isDisconnected(wrappedEl, wrappedFrame, wrappedShadowRoot)) {
       throw new StaleElementReferenceError(
-          "The element reference is stale. Either the element " +
-          "is no longer attached to the DOM or the page has been refreshed.");
+          error.pprint`The element reference of ${el} stale: ` +
+              "either the element is no longer attached to the DOM " +
+              "or the page has been refreshed");
     }
 
     return el;
