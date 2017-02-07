@@ -201,9 +201,6 @@ PROFILER_FUNC(bool profiler_is_active(), false)
 //  * gpu
 PROFILER_FUNC(bool profiler_feature_active(const char*), false)
 
-// Internal-only. Used by the event tracer.
-PROFILER_FUNC_VOID(profiler_responsiveness(const mozilla::TimeStamp& aTime))
-
 // Internal-only.
 PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
 
