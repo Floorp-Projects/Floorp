@@ -1795,17 +1795,17 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 class ChannelGetterRunnable final : public WorkerMainThreadRunnable
 {
   const nsAString& mScriptURL;
-  nsIChannel** mChannel;
+  WorkerLoadInfo& mLoadInfo;
   nsresult mResult;
 
 public:
   ChannelGetterRunnable(WorkerPrivate* aParentWorker,
                         const nsAString& aScriptURL,
-                        nsIChannel** aChannel)
+                        WorkerLoadInfo& aLoadInfo)
     : WorkerMainThreadRunnable(aParentWorker,
                                NS_LITERAL_CSTRING("ScriptLoader :: ChannelGetter"))
     , mScriptURL(aScriptURL)
-    , mChannel(aChannel)
+    , mLoadInfo(aLoadInfo)
     , mResult(NS_ERROR_FAILURE)
   {
     MOZ_ASSERT(aParentWorker);
@@ -1840,7 +1840,7 @@ public:
                                                    true,
                                                    getter_AddRefs(channel));
     if (NS_SUCCEEDED(mResult)) {
-      channel.forget(mChannel);
+      mLoadInfo.mChannel = channel.forget();
     }
 
     return true;
@@ -2178,12 +2178,12 @@ nsresult
 ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                  WorkerPrivate* aParent,
                                  const nsAString& aScriptURL,
-                                 nsIChannel** aChannel)
+                                 WorkerLoadInfo& aLoadInfo)
 {
   aParent->AssertIsOnWorkerThread();
 
   RefPtr<ChannelGetterRunnable> getter =
-    new ChannelGetterRunnable(aParent, aScriptURL, aChannel);
+    new ChannelGetterRunnable(aParent, aScriptURL, aLoadInfo);
 
   ErrorResult rv;
   getter->Dispatch(Terminating, rv);
