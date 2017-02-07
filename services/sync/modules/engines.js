@@ -733,7 +733,8 @@ Engine.prototype = {
   },
 
   finalize() {
-    // Ensure the tracker finishes persisting changed IDs to disk.
+    // Persist all pending tracked changes to disk.
+    this._tracker._saveChangedIDs();
     Async.promiseSpinningly(this._tracker._storage.finalize());
   },
 };
