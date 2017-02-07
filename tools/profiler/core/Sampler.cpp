@@ -198,9 +198,6 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-StaticMutex Sampler::sRegisteredThreadsMutex;
-
 Sampler::Sampler(double aInterval, int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
                  const char** aThreadNameFilters, uint32_t aFilterCount)

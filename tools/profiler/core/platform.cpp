@@ -67,6 +67,9 @@ public:
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 Sampler* gSampler;
 
+static std::vector<ThreadInfo*>* sRegisteredThreads = nullptr;
+static mozilla::StaticMutex sRegisteredThreadsMutex;
+
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -759,10 +762,10 @@ profiler_start(int aProfileEntries, double aInterval,
 
   gSampler->Start();
   if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
-    mozilla::StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+    mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
-    for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
-      ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = (*sRegisteredThreads)[i];
       if (info->IsPendingDelete() || !info->hasProfile()) {
         continue;
       }
