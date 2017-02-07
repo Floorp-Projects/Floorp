@@ -33,7 +33,8 @@ function SteamTracker(name, engine) {
 }
 
 SteamTracker.prototype = {
-  __proto__: Tracker.prototype
+  __proto__: Tracker.prototype,
+  persistChangedIDs: false,
 };
 
 function SteamEngine(service) {
