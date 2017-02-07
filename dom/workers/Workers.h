@@ -277,6 +277,9 @@ struct WorkerLoadInfo
   ~WorkerLoadInfo();
 
   void StealFrom(WorkerLoadInfo& aOther);
+
+  void
+  SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
 };
 
 // All of these are implemented in RuntimeService.cpp
