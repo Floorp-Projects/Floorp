@@ -419,6 +419,10 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             window.gBrowser.pinTab(nativeTab);
           }
 
+          if (active && !url) {
+            window.focusAndSelectUrlBar();
+          }
+
           if (createProperties.url && createProperties.url !== window.BROWSER_NEW_TAB_URL) {
             // We can't wait for a location change event for about:newtab,
             // since it may be pre-rendered, in which case its initial

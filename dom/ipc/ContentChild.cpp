@@ -1275,6 +1275,7 @@ StartMacOSContentSandbox()
   cc->GetProfileDir(getter_AddRefs(profileDir));
   nsCString profileDirPath;
   if (profileDir) {
+    profileDir->Normalize();
     rv = profileDir->GetNativePath(profileDirPath);
     if (NS_FAILED(rv) || profileDirPath.IsEmpty()) {
       MOZ_CRASH("Failed to get profile path");

@@ -37,6 +37,7 @@ const FilterButton = createClass({
     }
 
     return dom.button({
+      "aria-pressed": active === true,
       className: classList.join(" "),
       onClick: this.onClick
     }, label);

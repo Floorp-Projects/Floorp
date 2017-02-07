@@ -156,6 +156,7 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   const double kVRDisplayRefreshMaxDuration = 5000; // milliseconds
 
   bool bHaveEventListener = false;
+  bool bHaveControllerListener = false;
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
@@ -163,6 +164,7 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
       Unused << vmp->SendNotifyVSync();
     }
     bHaveEventListener |= vmp->HaveEventListener();
+    bHaveControllerListener |= vmp->HaveControllerListener();
   }
 
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
@@ -180,7 +182,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
     if (mLastRefreshTime.IsNull()) {
       // This is the first vsync, must refresh VR displays
       RefreshVRDisplays();
-      RefreshVRControllers();
+      if (bHaveControllerListener) {
+        RefreshVRControllers();
+      }
       mLastRefreshTime = TimeStamp::Now();
     } else {
       // We don't have to do this every frame, so check if we

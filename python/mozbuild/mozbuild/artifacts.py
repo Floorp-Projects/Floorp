@@ -128,6 +128,7 @@ class ArtifactJob(object):
         ('bin/pk12util', ('bin', 'bin')),
         ('bin/ssltunnel', ('bin', 'bin')),
         ('bin/xpcshell', ('bin', 'bin')),
+        ('bin/plugins/gmp-*/*/*', ('bin/plugins', 'bin')),
         ('bin/plugins/*', ('bin/plugins', 'plugins')),
         ('bin/components/*', ('bin/components', 'bin/components')),
     }
@@ -197,6 +198,7 @@ class ArtifactJob(object):
                     mode = entry['external_attr'] >> 16
                     writer.add(destpath.encode('utf-8'), reader[filename], mode=mode)
                     added_entry = True
+                    break
                 for files_entry in OBJDIR_TEST_FILES.values():
                     origin_pattern = files_entry['pattern']
                     leaf_filename = filename
@@ -420,6 +422,7 @@ class WinArtifactJob(ArtifactJob):
         ('bin/pk12util.exe', ('bin', 'bin')),
         ('bin/ssltunnel.exe', ('bin', 'bin')),
         ('bin/xpcshell.exe', ('bin', 'bin')),
+        ('bin/plugins/gmp-*/*/*', ('bin/plugins', 'bin')),
         ('bin/plugins/*', ('bin/plugins', 'plugins')),
         ('bin/components/*', ('bin/components', 'bin/components')),
     }

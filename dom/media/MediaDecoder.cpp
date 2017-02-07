@@ -464,6 +464,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   mWatchManager.Watch(mIsAudioDataAudible,
                       &MediaDecoder::NotifyAudibleStateChanged);
 
+  MediaShutdownManager::InitStatics();
   MediaShutdownManager::Instance().Register(this);
 }
 
@@ -520,6 +521,22 @@ MediaDecoder::Shutdown()
 
   ChangeState(PLAY_STATE_SHUTDOWN);
   mOwner = nullptr;
+}
+
+void
+MediaDecoder::NotifyXPCOMShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (auto owner = GetOwner()) {
+    owner->NotifyXPCOMShutdown();
+  }
+  MOZ_DIAGNOSTIC_ASSERT(IsShutdown());
+
+  // Don't cause grief to release builds by ensuring Shutdown()
+  // is always called during shutdown phase.
+  if (!IsShutdown()) {
+    Shutdown();
+  }
 }
 
 MediaDecoder::~MediaDecoder()
