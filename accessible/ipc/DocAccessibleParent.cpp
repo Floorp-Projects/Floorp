@@ -545,6 +545,7 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
   IAccessibleHolder::COMPtrType ptr(rawNative);
   IAccessibleHolder holder(Move(ptr));
 
+  IAccessibleHolder hWndAccHolder;
   if (nsWinUtils::IsWindowEmulationStarted()) {
     RootAccessible* rootDocument = outerDoc->RootAccessible();
     MOZ_ASSERT(rootDocument);
@@ -568,10 +569,16 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
       // Attach accessible document to the emulated native window
       ::SetPropW(hWnd, kPropNameDocAccParent, (HANDLE)this);
       SetEmulatedWindowHandle(hWnd);
+      IAccessible* rawHWNDAcc = nullptr;
+      if (SUCCEEDED(::AccessibleObjectFromWindow(hWnd, OBJID_WINDOW,
+                                                 IID_IAccessible,
+                                                 (void**)&rawHWNDAcc))) {
+        hWndAccHolder.Set(IAccessibleHolder::COMPtrType(rawHWNDAcc));
+      }
     }
   }
   Unused << SendParentCOMProxy(holder, reinterpret_cast<uintptr_t>(
-                               mEmulatedWindowHandle));
+                               mEmulatedWindowHandle), hWndAccHolder);
 }
 
 void
