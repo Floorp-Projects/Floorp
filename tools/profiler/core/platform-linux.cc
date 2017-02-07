@@ -285,6 +285,8 @@ Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
 }
 
 static void* SignalSender(void* arg) {
+  // This function runs on its own thread.
+
   // Taken from platform_thread_posix.cc
   prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
 
@@ -360,8 +362,11 @@ static void* SignalSender(void* arg) {
       }
     }
 
+    // This off-main-thread use of gInterval is safe due to implicit
+    // synchronization -- this function cannot run at the same time as
+    // profiler_{start,stop}(), where gInterval is set.
     TimeStamp targetSleepEndTime =
-      sampleStart + TimeDuration::FromMicroseconds(gSampler->interval() * 1000);
+      sampleStart + TimeDuration::FromMicroseconds(gInterval * 1000);
     TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
