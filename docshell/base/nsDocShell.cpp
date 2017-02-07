@@ -7990,6 +7990,15 @@ nsDocShell::EnsureContentViewer()
                  "succeeded!");
 
     doc->SetIsInitialDocument(true);
+
+    // Documents created using EnsureContentViewer may be transient
+    // placeholders created by framescripts before content has a chance to
+    // load. In some cases, window.open(..., "noopener") will create such a
+    // document (in a new TabGroup) and then synchronously tear it down, firing
+    // a "pagehide" event. Doing so violates our assertions about
+    // DocGroups. It's easier to silence the assertion here than to avoid
+    // creating the extra document.
+    doc->IgnoreDocGroupMismatches();
   }
 
   return rv;
@@ -9058,6 +9067,12 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
                                 nsIStreamListener** aContentHandler)
 {
   *aContentHandler = nullptr;
+
+  if (!mTreeOwner) {
+    // If we don't have a tree owner, then we're in the process of being
+    // destroyed. Rather than continue trying to load something, just give up.
+    return NS_ERROR_DOCSHELL_DYING;
+  }
 
   // Can we check the content type of the current content viewer
   // and reuse it without destroying it and re-creating it?
