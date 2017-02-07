@@ -19,6 +19,7 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPtr.h"
 #include "PseudoStack.h"
 #include "ThreadInfo.h"
 #include "nsIObserverService.h"
@@ -28,6 +29,7 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ProfileGatherer.h"
 #include "ProfilerMarkers.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -72,6 +74,9 @@ static Sampler* gSampler;
 
 static std::vector<ThreadInfo*>* sRegisteredThreads = nullptr;
 static mozilla::StaticMutex sRegisteredThreadsMutex;
+
+// All accesses to gGatherer are on the main thread, so no locking is needed.
+static mozilla::StaticRefPtr<mozilla::ProfileGatherer> gGatherer;
 
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
@@ -624,11 +629,11 @@ profiler_get_profile_jsobject_async(double aSinceTime,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(!gSampler)) {
+  if (!gGatherer) {
     return;
   }
 
-  gSampler->ToJSObjectAsync(aSinceTime, aPromise);
+  gGatherer->Start(aSinceTime, aPromise);
 }
 
 void
@@ -638,11 +643,11 @@ profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-    if (NS_WARN_IF(!gSampler)) {
+    if (!gGatherer) {
       return;
     }
 
-    gSampler->ToFileAsync(filename, aSinceTime);
+    gGatherer->Start(aSinceTime, filename);
   }));
 }
 
@@ -694,12 +699,12 @@ profiler_get_gatherer(nsISupports** aRetVal)
     return;
   }
 
-  if (NS_WARN_IF(!gSampler)) {
+  if (NS_WARN_IF(!gGatherer)) {
     *aRetVal = nullptr;
     return;
   }
 
-  gSampler->GetGatherer(aRetVal);
+  NS_ADDREF(*aRetVal = gGatherer);
 }
 
 void
@@ -824,6 +829,7 @@ profiler_start(int aProfileEntries, double aInterval,
     new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                 aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
                 aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
+  gGatherer = new mozilla::ProfileGatherer(gSampler);
 
   gSampler->Start();
   if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
@@ -915,6 +921,10 @@ profiler_stop()
   gSampler->Stop();
   delete gSampler;
   gSampler = nullptr;
+
+  // Cancel any in-flight async profile gatherering requests.
+  gGatherer->Cancel();
+  gGatherer = nullptr;
 
   if (disableJS) {
     PseudoStack *stack = tlsPseudoStack.get();
