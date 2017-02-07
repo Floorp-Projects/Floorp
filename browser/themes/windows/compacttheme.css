@@ -112,6 +112,20 @@
   }
 }
 
+/* Override tab close icon (to disable inversion) for better contrast with
+   light theme on Windows 7 Classic theme. */
+@media not all and (min-resolution: 1.1dppx) {
+  #TabsToolbar[brighttext] .tab-close-button:-moz-lwtheme-darktext:not([selected="true"]) {
+    list-style-image: url("chrome://global/skin/icons/close.png");
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #TabsToolbar[brighttext] .tab-close-button:-moz-lwtheme-darktext:not([selected="true"]) {
+    list-style-image: url("chrome://global/skin/icons/close@2x.png");
+  }
+}
+
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   :root {
