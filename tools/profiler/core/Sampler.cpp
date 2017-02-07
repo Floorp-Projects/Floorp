@@ -38,7 +38,6 @@
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/ProfileGatherer.h"
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "FennecJNIWrappers.h"
@@ -263,8 +262,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
     mozilla::tasktracer::StartLogging();
   }
 #endif
-
-  mGatherer = new mozilla::ProfileGatherer(this);
 }
 
 Sampler::~Sampler()
@@ -291,10 +288,6 @@ Sampler::~Sampler()
       }
     }
   }
-
-  // Cancel any in-flight async profile gatherering
-  // requests
-  mGatherer->Cancel();
 
 #ifdef MOZ_TASK_TRACER
   if (mTaskTracer) {
@@ -431,41 +424,12 @@ Sampler::ToJSObject(JSContext *aCx, double aSinceTime)
   return &val.toObject();
 }
 
-void
-Sampler::GetGatherer(nsISupports** aRetVal)
-{
-  if (!aRetVal || NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-  NS_ADDREF(*aRetVal = mGatherer);
-}
-
 UniquePtr<char[]>
 Sampler::ToJSON(double aSinceTime)
 {
   SpliceableChunkedJSONWriter b;
   StreamJSON(b, aSinceTime);
   return b.WriteFunc()->CopyData();
-}
-
-void
-Sampler::ToJSObjectAsync(double aSinceTime, mozilla::dom::Promise* aPromise)
-{
-  if (NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-
-  mGatherer->Start(aSinceTime, aPromise);
-}
-
-void
-Sampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
-{
-  if (NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-
-  mGatherer->Start(aSinceTime, aFileName);
 }
 
 struct SubprocessClosure {
