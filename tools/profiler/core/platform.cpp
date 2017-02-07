@@ -13,6 +13,7 @@
 #include "PlatformMacros.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 #include "GeckoProfiler.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/StaticPtr.h"
@@ -77,6 +78,14 @@ static mozilla::StaticMutex sRegisteredThreadsMutex;
 
 // All accesses to gGatherer are on the main thread, so no locking is needed.
 static mozilla::StaticRefPtr<mozilla::ProfileGatherer> gGatherer;
+
+// gThreadNameFilters is accessed from multiple threads. All accesses to it
+// must be guarded by gThreadNameFiltersMutex.
+static Vector<std::string> gThreadNameFilters;
+static mozilla::StaticMutex gThreadNameFiltersMutex;
+
+// All accesses to gFeatures are on the main thread, so no locking is needed.
+static Vector<std::string> gFeatures;
 
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
@@ -671,17 +680,18 @@ profiler_get_start_params(int* aEntrySize,
   *aEntrySize = gSampler->EntrySize();
   *aInterval = gSampler->interval();
 
-  const ThreadNameFilterList& threadNameFilterList =
-    gSampler->ThreadNameFilters();
-  MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilterList.length()));
-  for (uint32_t i = 0; i < threadNameFilterList.length(); ++i) {
-    (*aFilters)[i] = threadNameFilterList[i].c_str();
+  {
+    StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+
+    MOZ_ALWAYS_TRUE(aFilters->resize(gThreadNameFilters.length()));
+    for (uint32_t i = 0; i < gThreadNameFilters.length(); ++i) {
+      (*aFilters)[i] = gThreadNameFilters[i].c_str();
+    }
   }
 
-  const FeatureList& featureList = gSampler->Features();
-  MOZ_ALWAYS_TRUE(aFeatures->resize(featureList.length()));
-  for (size_t i = 0; i < featureList.length(); ++i) {
-    (*aFeatures)[i] = featureList[i].c_str();
+  MOZ_ALWAYS_TRUE(aFeatures->resize(gFeatures.length()));
+  for (size_t i = 0; i < gFeatures.length(); ++i) {
+    (*aFeatures)[i] = gFeatures[i].c_str();
   }
 }
 
@@ -825,10 +835,27 @@ profiler_start(int aProfileEntries, double aInterval,
   // Reset the current state if the profiler is running
   profiler_stop();
 
+  // Deep copy aThreadNameFilters. Must happen before Sampler's constructor
+  // calls RegisterThread().
+  {
+    StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+
+    MOZ_ALWAYS_TRUE(gThreadNameFilters.resize(aFilterCount));
+    for (uint32_t i = 0; i < aFilterCount; ++i) {
+      gThreadNameFilters[i] = aThreadNameFilters[i];
+    }
+  }
+
+  // Deep copy aFeatures.
+  MOZ_ALWAYS_TRUE(gFeatures.resize(aFeatureCount));
+  for (uint32_t i = 0; i < aFeatureCount; ++i) {
+    gFeatures[i] = aFeatures[i];
+  }
+
   gSampler =
     new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                 aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
+                aFeatures, aFeatureCount, aFilterCount);
   gGatherer = new mozilla::ProfileGatherer(gSampler);
 
   gSampler->Start();
@@ -917,6 +944,12 @@ profiler_stop()
   }
 
   bool disableJS = gSampler->ProfileJS();
+
+  {
+    StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+    gThreadNameFilters.clear();
+  }
+  gFeatures.clear();
 
   gSampler->Stop();
   delete gSampler;
