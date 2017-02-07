@@ -306,9 +306,6 @@ public:
   // Should only be called on shutdown
   static void Shutdown();
 
-  static mozilla::StaticMutex sRegisteredThreadsMutex;
-  static std::vector<ThreadInfo*>* sRegisteredThreads;
-
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
     // We use profile.sh on b2g to manually select threads and options per process.
