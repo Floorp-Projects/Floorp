@@ -10,6 +10,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
+#include "Preferences.h"
 
 extern PLDHashTable* gHashTable;
 
@@ -24,6 +25,11 @@ pref_savePrefs(PLDHashTable* aTable, uint32_t* aPrefCount);
 
 nsresult
 pref_SetPref(const mozilla::dom::PrefSetting& aPref);
+
+#ifdef DEBUG
+void
+pref_SetInitPhase(pref_initPhase phase);
+#endif
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 PrefHashEntry* pref_HashTableLookup(const char *key);

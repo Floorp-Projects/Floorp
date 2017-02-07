@@ -4525,13 +4525,7 @@ pref("webgl.max-acceptable-fb-status-invals", 0);
 
 pref("webgl.enable-webgl2", true);
 
-#ifdef RELEASE_OR_BETA
-// Keep this disabled on Release and Beta for now. (see bug 1171228)
-pref("webgl.enable-debug-renderer-info", false);
-#else
 pref("webgl.enable-debug-renderer-info", true);
-#endif
-
 pref("webgl.renderer-string-override", "");
 pref("webgl.vendor-string-override", "");
 

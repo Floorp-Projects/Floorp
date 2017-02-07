@@ -40,7 +40,7 @@ namespace plugins {
 
 
 bool
-PluginProcessChild::Init()
+PluginProcessChild::Init(int aArgc, char* aArgv[])
 {
     nsDebugImpl::SetMultiprocessMode("NPAPI");
 

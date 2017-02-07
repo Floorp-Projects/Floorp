@@ -58,9 +58,9 @@ extensions.on("page-shutdown", (type, context) => {
     }
     let {BrowserApp} = context.xulBrowser.ownerGlobal;
     if (BrowserApp) {
-      let tab = BrowserApp.getTabForBrowser(context.xulBrowser);
-      if (tab) {
-        BrowserApp.closeTab(tab);
+      let nativeTab = BrowserApp.getTabForBrowser(context.xulBrowser);
+      if (nativeTab) {
+        BrowserApp.closeTab(nativeTab);
       }
     }
   }
@@ -89,16 +89,16 @@ let tabListener = {
   onLocationChange(browser, webProgress, request, locationURI, flags) {
     if (webProgress.isTopLevel) {
       let {BrowserApp} = browser.ownerGlobal;
-      let tab = BrowserApp.getTabForBrowser(browser);
+      let nativeTab = BrowserApp.getTabForBrowser(browser);
 
       // Now we are certain that the first page in the tab was loaded.
-      this.initializingTabs.delete(tab);
+      this.initializingTabs.delete(nativeTab);
 
       // browser.innerWindowID is now set, resolve the promises if any.
-      let deferred = this.tabReadyPromises.get(tab);
+      let deferred = this.tabReadyPromises.get(nativeTab);
       if (deferred) {
-        deferred.resolve(tab);
-        this.tabReadyPromises.delete(tab);
+        deferred.resolve(nativeTab);
+        this.tabReadyPromises.delete(nativeTab);
       }
     }
   },
@@ -109,19 +109,20 @@ let tabListener = {
    * changes to the requested URL. Other tabs are assumed to be ready once their
    * inner window ID is known.
    *
-   * @param {XULElement} tab The <tab> element.
+   * @param {NativeTab} nativeTab The native tab object.
    * @returns {Promise} Resolves with the given tab once ready.
    */
-  awaitTabReady(tab) {
-    let deferred = this.tabReadyPromises.get(tab);
+  awaitTabReady(nativeTab) {
+    let deferred = this.tabReadyPromises.get(nativeTab);
     if (!deferred) {
       deferred = PromiseUtils.defer();
-      if (!this.initializingTabs.has(tab) && (tab.browser.innerWindowID ||
-                                              tab.browser.currentURI.spec === "about:blank")) {
-        deferred.resolve(tab);
+      if (!this.initializingTabs.has(nativeTab) &&
+          (nativeTab.browser.innerWindowID ||
+           nativeTab.browser.currentURI.spec === "about:blank")) {
+        deferred.resolve(nativeTab);
       } else {
         this.initTabReady();
-        this.tabReadyPromises.set(tab, deferred);
+        this.tabReadyPromises.set(nativeTab, deferred);
       }
     }
     return deferred.promise;
@@ -148,7 +149,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
       tab = tabManager.getWrapper(tabTracker.activeTab);
     }
 
-    await tabListener.awaitTabReady(tab.tab);
+    await tabListener.awaitTabReady(tab.nativeTab);
 
     return tab;
   }
@@ -163,7 +164,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
       onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
         let listener = (eventName, event) => {
-          fire.async(tabManager.convert(event.tab));
+          fire.async(tabManager.convert(event.nativeTab));
         };
 
         tabTracker.on("tab-created", listener);
@@ -233,12 +234,12 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
         let listener = event => {
           let needed = [];
-          let tab;
+          let nativeTab;
           switch (event.type) {
             case "DOMTitleChanged": {
               let {BrowserApp} = getBrowserWindow(event.target.ownerGlobal);
 
-              tab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
+              nativeTab = BrowserApp.getTabForWindow(event.target.ownerGlobal);
               needed.push("title");
               break;
             }
@@ -246,17 +247,17 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             case "DOMAudioPlaybackStarted":
             case "DOMAudioPlaybackStopped": {
               let {BrowserApp} = event.target.ownerGlobal;
-              tab = BrowserApp.getTabForBrowser(event.originalTarget);
+              nativeTab = BrowserApp.getTabForBrowser(event.originalTarget);
               needed.push("audible");
               break;
             }
           }
 
-          if (!tab) {
+          if (!nativeTab) {
             return;
           }
 
-          tab = tabManager.getWrapper(tab);
+          let tab = tabManager.getWrapper(nativeTab);
           let changeInfo = {};
           for (let prop of needed) {
             changeInfo[prop] = tab[prop];
@@ -267,14 +268,14 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
         let statusListener = ({browser, status, url}) => {
           let {BrowserApp} = browser.ownerGlobal;
-          let tab = BrowserApp.getTabForBrowser(browser);
-          if (tab) {
+          let nativeTab = BrowserApp.getTabForBrowser(browser);
+          if (nativeTab) {
             let changed = {status};
             if (url) {
               changed.url = url;
             }
 
-            fireForTab(tabManager.wrapTab(tab), changed);
+            fireForTab(tabManager.wrapTab(nativeTab), changed);
           }
         };
 
@@ -319,13 +320,13 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         options.disallowInheritPrincipal = true;
 
         tabListener.initTabReady();
-        let tab = BrowserApp.addTab(url, options);
+        let nativeTab = BrowserApp.addTab(url, options);
 
         if (createProperties.url) {
-          tabListener.initializingTabs.add(tab);
+          tabListener.initializingTabs.add(nativeTab);
         }
 
-        return tabManager.convert(tab);
+        return tabManager.convert(nativeTab);
       },
 
       async remove(tabs) {
@@ -334,15 +335,15 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         }
 
         for (let tabId of tabs) {
-          let tab = tabTracker.getTab(tabId);
-          tab.browser.ownerGlobal.BrowserApp.closeTab(tab);
+          let nativeTab = tabTracker.getTab(tabId);
+          nativeTab.browser.ownerGlobal.BrowserApp.closeTab(nativeTab);
         }
       },
 
       async update(tabId, updateProperties) {
-        let tab = getTabOrActive(tabId);
+        let nativeTab = getTabOrActive(tabId);
 
-        let {BrowserApp} = tab.browser.ownerGlobal;
+        let {BrowserApp} = nativeTab.browser.ownerGlobal;
 
         if (updateProperties.url !== null) {
           let url = context.uri.resolve(updateProperties.url);
@@ -351,29 +352,29 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             return Promise.reject({message: `Illegal URL: ${url}`});
           }
 
-          tab.browser.loadURI(url);
+          nativeTab.browser.loadURI(url);
         }
 
         if (updateProperties.active !== null) {
           if (updateProperties.active) {
-            BrowserApp.selectTab(tab);
+            BrowserApp.selectTab(nativeTab);
           } else {
             // Not sure what to do here? Which tab should we select?
           }
         }
         // FIXME: highlighted/selected, muted, pinned, openerTabId
 
-        return tabManager.convert(tab);
+        return tabManager.convert(nativeTab);
       },
 
       async reload(tabId, reloadProperties) {
-        let tab = getTabOrActive(tabId);
+        let nativeTab = getTabOrActive(tabId);
 
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
         if (reloadProperties && reloadProperties.bypassCache) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
         }
-        tab.browser.reloadWithFlags(flags);
+        nativeTab.browser.reloadWithFlags(flags);
       },
 
       async get(tabId) {
@@ -400,41 +401,15 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
                           tab => tab.convert());
       },
 
-      captureVisibleTab(windowId, options) {
-        if (!extension.hasPermission("<all_urls>")) {
-          return Promise.reject({message: "The <all_urls> permission is required to use the captureVisibleTab API"});
-        }
-
+      async captureVisibleTab(windowId, options) {
         let window = windowId == null ?
           windowTracker.topWindow :
           windowTracker.getWindow(windowId, context);
 
-        let tab = window.BrowserApp.selectedTab;
-        return tabListener.awaitTabReady(tab).then(() => {
-          let {browser} = tab;
-          let recipient = {
-            innerWindowID: browser.innerWindowID,
-          };
+        let tab = tabManager.wrapTab(window.BrowserApp.selectedTab);
+        await tabListener.awaitTabReady(tab.nativeTab);
 
-          if (!options) {
-            options = {};
-          }
-          if (options.format == null) {
-            options.format = "png";
-          }
-          if (options.quality == null) {
-            options.quality = 92;
-          }
-
-          let message = {
-            options,
-            width: browser.clientWidth,
-            height: browser.clientHeight,
-          };
-
-          return context.sendMessage(browser.messageManager, "Extension:Capture",
-                                     message, {recipient});
-        });
+        return tab.capture(context, options);
       },
 
       async executeScript(tabId, details) {
