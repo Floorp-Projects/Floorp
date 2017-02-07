@@ -4034,6 +4034,15 @@
     "bug_numbers": [1283007],
     "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
   },
+  "URLCLASSIFIER_VLPS_CONSTRUCT_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 15,
+    "bug_numbers": [1336865],
+    "description": "Time spent constructing Variable-Length PrefixSet from file (ms)"
+  },
   "URLCLASSIFIER_VLPS_LOAD_CORRUPT": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "58",
