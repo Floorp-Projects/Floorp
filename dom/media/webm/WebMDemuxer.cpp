@@ -29,6 +29,7 @@
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
+#include <numeric>
 
 #define WEBM_DEBUG(arg, ...) MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug, ("WebMDemuxer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 extern mozilla::LazyLogModule gMediaDemuxerLog;
@@ -735,7 +736,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     }
 
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED
-        || packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED) {
+        || packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED
+        || packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
       nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
       unsigned char const* iv;
       size_t ivLength;
@@ -754,8 +756,72 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         for (uint32_t i = 0; i < 8; i++) {
           writer->mCrypto.mIV.AppendElement(0);
         }
-        writer->mCrypto.mPlainSizes.AppendElement(0);
-        writer->mCrypto.mEncryptedSizes.AppendElement(length);
+
+        if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED) {
+          writer->mCrypto.mPlainSizes.AppendElement(0);
+          writer->mCrypto.mEncryptedSizes.AppendElement(length);
+        } else if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
+          uint8_t numPartitions = 0;
+          const uint32_t* partitions = NULL;
+          nestegg_packet_offsets(holder->Packet(), &partitions, &numPartitions);
+
+          // WebM stores a list of 'partitions' in the data, which alternate
+          // clear, encrypted. The data in the first partition is always clear.
+          // So, and sample might look as follows:
+          // 00|XXXX|000|XX, where | represents a partition, 0 a clear byte and
+          // X an encrypted byte. If the first bytes in sample are unencrypted,
+          // the first partition will be at zero |XXXX|000|XX.
+          //
+          // As GMP expects the lengths of the clear and encrypted chunks of
+          // data, we calculate these from the difference between the last two
+          // partitions.
+          uint32_t lastOffset = 0;
+          bool encrypted = false;
+
+          for (uint8_t i = 0; i < numPartitions; i++) {
+            uint32_t partition = partitions[i];
+            uint32_t currentLength = partition - lastOffset;
+
+            if (encrypted) {
+              writer->mCrypto.mEncryptedSizes.AppendElement(currentLength);
+            } else {
+              writer->mCrypto.mPlainSizes.AppendElement(currentLength);
+            }
+
+            encrypted = !encrypted;
+            lastOffset = partition;
+
+            assert(lastOffset <= length);
+          }
+
+          // Add the data between the last offset and the end of the data.
+          // 000|XXX|000
+          //        ^---^
+          if (encrypted) {
+            writer->mCrypto.mEncryptedSizes.AppendElement(length - lastOffset);
+          } else {
+            writer->mCrypto.mPlainSizes.AppendElement(length - lastOffset);
+          }
+
+          // Make sure we have an equal number of encrypted and plain sizes (GMP
+          // expects this). This simple check is sufficient as there are two
+          // possible cases at this point:
+          // 1. The number of samples are even (so we don't need to do anything)
+          // 2. There is one more clear sample than encrypted samples, so add a
+          // zero length encrypted chunk.
+          // There can never be more encrypted partitions than clear partitions
+          // due to the alternating structure of the WebM samples and the
+          // restriction that the first chunk is always clear.
+          if (numPartitions % 2 == 0) {
+            writer->mCrypto.mEncryptedSizes.AppendElement(0);
+          }
+
+          // Assert that the lengths of the encrypted and plain samples add to
+          // the length of the data.
+          assert(((size_t)(std::accumulate(writer->mCrypto.mPlainSizes.begin(), writer->mCrypto.mPlainSizes.end(), 0) \
+                 + std::accumulate(writer->mCrypto.mEncryptedSizes.begin(), writer->mCrypto.mEncryptedSizes.end(), 0)) \
+                 == length));
+        }
       }
     }
     if (aType == TrackInfo::kVideoTrack) {
