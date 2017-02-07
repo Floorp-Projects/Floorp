@@ -2318,7 +2318,9 @@ BrowserGlue.prototype = {
       "chrome://browser/locale/accounts.properties"
     );
     let title = accountsBundle.GetStringFromName("deviceConnectedTitle");
-    let body = accountsBundle.formatStringFromName("deviceConnectedBody", [deviceName], 1);
+    let body = accountsBundle.formatStringFromName("deviceConnectedBody" +
+                                                   (deviceName ? "" : ".noDeviceName"),
+                                                   [deviceName], 1);
     let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.devices.uri");
 
     function clickCallback(subject, topic, data) {

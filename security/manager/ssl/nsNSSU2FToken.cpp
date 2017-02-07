@@ -351,7 +351,7 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
 
 // Set up the context for the soft U2F Token. This is called by NSS
 // initialization.
-NS_IMETHODIMP
+nsresult
 nsNSSU2FToken::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());

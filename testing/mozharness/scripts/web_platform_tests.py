@@ -17,11 +17,15 @@ from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options, TOOLTOOL_PLATFORM_DIR
+from mozharness.mozilla.testing.codecoverage import (
+    CodeCoverageMixin,
+    code_coverage_config_options
+)
 
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO
 
-class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
+class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCoverageMixin):
     config_options = [
         [['--test-type'], {
             "action": "extend",
@@ -50,7 +54,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             "default": False,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}]
     ] + copy.deepcopy(testing_config_options) + \
-        copy.deepcopy(blobupload_config_options)
+        copy.deepcopy(blobupload_config_options) + \
+        copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, require_config_file=True):
         super(WebPlatformTest, self).__init__(

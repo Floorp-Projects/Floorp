@@ -232,8 +232,8 @@ test_finalizer_acq_string_t(int i)
 {
   gFinalizerTestResources[i] = 1;
   if (!gFinalizerTestNames[i]) {
-    char* buf = new char[10];
-    snprintf(buf, 10, "%d", i);
+    char* buf = new char[12];
+    snprintf(buf, 12, "%d", i);
     gFinalizerTestNames[i] = buf;
     return buf;
   }
