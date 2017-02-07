@@ -1,15 +1,14 @@
 config = {
     "nightly_build": True,
-    "branch": "mozilla-esr45",
-    "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-esr45/",
+    "branch": "mozilla-esr52",
+    "en_us_binary_url": "https://archive.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-esr52/",
     "update_channel": "esr",
-    "latest_mar_dir": '/pub/mozilla.org/firefox/nightly/latest-mozilla-esr45-l10n',
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",
 
     # repositories
-    "mozilla_dir": "mozilla-esr45",
+    "mozilla_dir": "mozilla-esr52",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",
@@ -17,9 +16,9 @@ config = {
         "dest": "tools",
     }, {
         "vcs": "hg",
-        "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
+        "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
         "revision": "%(revision)s",
-        "dest": "mozilla-esr45",
+        "dest": "mozilla-esr52",
     }],
     # purge options
     'purge_minsize': 12,
