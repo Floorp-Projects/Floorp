@@ -156,6 +156,10 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
 
   DestroyProcess();
   ShutdownVsyncIOThread();
+
+  if (nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService()) {
+    obs->NotifyObservers(nullptr, "gpu-process:disabled", nullptr);
+  }
 }
 
 void
