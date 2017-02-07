@@ -7,11 +7,10 @@
 #ifndef __FFmpegAACDecoder_h__
 #define __FFmpegAACDecoder_h__
 
-#include "FFmpegLibWrapper.h"
 #include "FFmpegDataDecoder.h"
+#include "FFmpegLibWrapper.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 template <int V> class FFmpegAudioDecoder
 {

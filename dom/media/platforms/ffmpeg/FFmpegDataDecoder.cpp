@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/SyncRunnable.h"
-#include "mozilla/TaskQueue.h"
 
 #include <string.h>
 #ifdef __GNUC__
@@ -14,10 +12,10 @@
 
 #include "FFmpegLog.h"
 #include "FFmpegDataDecoder.h"
+#include "mozilla/TaskQueue.h"
 #include "prsystem.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
