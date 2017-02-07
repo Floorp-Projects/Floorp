@@ -110,9 +110,6 @@ GPUParent::Init(base::ProcessId aParentPid,
     return false;
   }
 
-#ifdef MOZ_ENABLE_WEBRENDER
-  wr::RenderThread::Start();
-#endif
   CompositorThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   APZCTreeManager::InitializeGlobalState();
@@ -194,6 +191,11 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     gtk_init(nullptr, nullptr);
   }
 #endif
+
+  // Make sure to do this *after* we update gfxVars above.
+  if (gfxVars::UseWebRender()) {
+    wr::RenderThread::Start();
+  }
 
   VRManager::ManagerInit();
   // Send a message to the UI process that we're done.
@@ -415,9 +417,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   dom::VideoDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
-#ifdef MOZ_ENABLE_WEBRENDER
-  wr::RenderThread::ShutDown();
-#endif
+  if (gfxVars::UseWebRender()) {
+    wr::RenderThread::ShutDown();
+  }
   Factory::ShutDown();
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();
