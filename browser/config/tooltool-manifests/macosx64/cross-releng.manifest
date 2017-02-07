@@ -8,12 +8,12 @@
 "unpack": true
 },
 {
-"size": 3008804,
+"size": 6075028,
 "visibility": "public",
-"digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c",
+"digest": "0b962ba55a5a2fbae44218683bdf6ea0dfe8165aba436173a065f7190976184586b9acf4c23478bc5b6d81a3e00f681bf16df0536c9c9718ad0570d064f69027",
 "algorithm": "sha512",
 "unpack": true,
-"filename": "cctools.tar.gz"
+"filename": "cctools.tar.xz"
 },
 {
 "size": 35215976,
