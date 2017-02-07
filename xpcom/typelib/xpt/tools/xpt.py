@@ -142,7 +142,7 @@ class Type(object):
         # WideStringWithSizeTypeDescriptor
         'WideStringWithSize',
         # XXX: These are also SimpleTypes (but not in the spec)
-        # http://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/tools/xpt_dump.c#l69
+        # https://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/tools/xpt_dump.c#l69
         'UTF8String',
         'CString',
         'AString',
@@ -619,7 +619,7 @@ class Param(object):
                 'shared': bool(byte & 0x10),
                 'dipper': bool(byte & 0x08),
                 # XXX: Not in the spec, see:
-                # http://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/public/xpt_struct.h#l456
+                # https://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/public/xpt_struct.h#l456
                 'optional': bool(byte & 0x04),
                 }
 
@@ -780,7 +780,7 @@ class Method(object):
                 'constructor': bool(byte & 0x10),
                 'hidden': bool(byte & 0x08),
                 # Not in the spec, see
-                # http://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/public/xpt_struct.h#l489
+                # https://hg.mozilla.org/mozilla-central/annotate/0e0e2516f04e/xpcom/typelib/xpt/public/xpt_struct.h#l489
                 'optargc': bool(byte & 0x04),
                 'implicit_jscontext': bool(byte & 0x02),
                 }
@@ -865,7 +865,7 @@ class Constant(object):
     _descriptorstart = struct.Struct(">I")
     # Actual value is restricted to this set of types
     # XXX: the spec lies, the source allows a bunch more
-    # http://hg.mozilla.org/mozilla-central/annotate/9c85f9aaec8c/xpcom/typelib/xpt/src/xpt_struct.c#l689
+    # https://hg.mozilla.org/mozilla-central/annotate/9c85f9aaec8c/xpcom/typelib/xpt/src/xpt_struct.c#l689
     typemap = {Type.Tags.int16: '>h',
                Type.Tags.uint16: '>H',
                Type.Tags.int32: '>i',
