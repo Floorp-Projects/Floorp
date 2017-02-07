@@ -1165,7 +1165,7 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
   return ShowPopup();
 }
 
-NS_IMETHODIMP
+nsresult
 nsFormFillController::ShowPopup()
 {
   bool isOpen = false;

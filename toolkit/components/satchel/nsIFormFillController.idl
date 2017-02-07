@@ -56,9 +56,4 @@ interface nsIFormFillController : nsISupports
    * @param aInput - The HTML <input> element to mark
    */
   void markAsAutofillField(in nsIDOMHTMLInputElement aInput);
-
-  /*
-   * Open the autocomplete popup, if possible.
-   */
-  void showPopup();
 };
