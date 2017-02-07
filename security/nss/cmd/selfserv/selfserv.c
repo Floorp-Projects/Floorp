@@ -159,7 +159,7 @@ static void
 PrintUsageHeader(const char *progName)
 {
     fprintf(stderr,
-            "Usage: %s -n rsa_nickname -p port [-BDENRbjlmrsuvx] [-w password]\n"
+            "Usage: %s -n rsa_nickname -p port [-BDENRZbjlmrsuvx] [-w password]\n"
             "         [-t threads] [-i pid_file] [-c ciphers] [-Y] [-d dbdir] [-g numblocks]\n"
             "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
             "         [-V [min-version]:[max-version]] [-a sni_name]\n"
@@ -219,7 +219,7 @@ PrintParameterUsage()
         "-A <ca> Nickname of a CA used to sign a stapled cert status\n"
         "-U override default ECDHE ephemeral key reuse, 0: refresh, 1: reuse\n"
         "-H override default DHE server support, 0: disable, 1: enable, "
-        " 2: require DH named groups\n"
+        "   2: require DH named groups\n"
         "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"
@@ -227,7 +227,8 @@ PrintParameterUsage()
         "-Q enables ALPN for HTTP/1.1 [RFC7301]\n"
         "-I comma separated list of enabled groups for TLS key exchange.\n"
         "   The following values are valid:\n"
-        "   P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n",
+        "   P256, P384, P521, x25519, FF2048, FF3072, FF4096, FF6144, FF8192\n"
+        "-Z enable 0-RTT (for TLS 1.3; also use -u)\n",
         stderr);
 }
 

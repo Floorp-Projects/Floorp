@@ -258,6 +258,7 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
       }
       case CacheKind::GetName:
       case CacheKind::SetProp:
+      case CacheKind::SetElem:
         MOZ_CRASH("Baseline-specific for now");
     }
     MOZ_CRASH();

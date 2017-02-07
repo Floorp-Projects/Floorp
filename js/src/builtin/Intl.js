@@ -1743,8 +1743,8 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 
     // Step 10.
     var r = ResolveLocale(callFunction(NumberFormat.availableLocales, NumberFormat),
-                          lazyNumberFormatData.requestedLocales,
-                          lazyNumberFormatData.opt,
+                          requestedLocales,
+                          opt,
                           NumberFormat.relevantExtensionKeys,
                           localeData);
 
@@ -2404,6 +2404,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options) {
     var formatMatcher =
         GetOption(options, "formatMatcher", "string", ["basic", "best fit"],
                   "best fit");
+    void formatMatcher;
 
     // Steps 23-25 provided by ICU, more or less - see comment after this function.
 
@@ -2930,8 +2931,6 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
     assert(IsObject(lazyPluralRulesData), "lazy data not an object?");
 
     var internalProps = std_Object_create(null);
-
-    var requestedLocales = lazyPluralRulesData.requestedLocales;
 
     var PluralRules = pluralRulesInternalProperties;
 
