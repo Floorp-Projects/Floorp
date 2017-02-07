@@ -17,7 +17,8 @@ namespace mp3 {
 
 class MP3TrackDemuxer;
 
-class MP3Demuxer : public MediaDataDemuxer {
+class MP3Demuxer : public MediaDataDemuxer
+{
 public:
   // MediaDataDemuxer interface.
   explicit MP3Demuxer(MediaResource* aSource);
@@ -42,10 +43,12 @@ private:
 // The header contains the following format (one byte per term):
 // 'I' 'D' '3' MajorVersion MinorVersion Flags Size1 Size2 Size3 Size4
 // For more details see http://id3.org/id3v2.3.0.
-class ID3Parser {
+class ID3Parser
+{
 public:
   // Holds the ID3 header and its parsing state.
-  class ID3Header {
+  class ID3Header
+  {
   public:
     // The header size is static, see class comment.
     static const int SIZE = 10;
@@ -130,10 +133,12 @@ private:
 //   T          - Copyright (0->disabled, 1->enabled)
 //   O          - Original (0->copy, 1->original)
 //   HH         - Emphasis (0->none, 1->50/15 ms, 2->reserved, 3->CCIT J.17)
-class FrameParser {
+class FrameParser
+{
 public:
   // Holds the frame header and its parsing state.
-  class FrameHeader {
+  class FrameHeader
+  {
   public:
     // The header size is static, see class comments.
     static const int SIZE = 4;
@@ -200,10 +205,12 @@ public:
 
   // VBR frames may contain Xing or VBRI headers for additional info, we use
   // this class to parse them and access this info.
-  class VBRHeader {
+  class VBRHeader
+  {
   public:
     // Synchronize with vbr_header TYPE_STR on change.
-    enum VBRHeaderType {
+    enum VBRHeaderType
+    {
       NONE = 0,
       XING,
       VBRI
@@ -231,7 +238,8 @@ public:
     // Returns whether the header is valid (type XING or VBRI).
     bool IsValid() const;
 
-    // Returns whether the header is valid and contains reasonable non-zero field values.
+    // Returns whether the header is valid and contains reasonable non-zero
+    // field values.
     bool IsComplete() const;
 
     // Returns the byte offset for the given duration percentage as a factor
@@ -239,9 +247,9 @@ public:
     int64_t Offset(float aDurationFac) const;
 
     // Parses contents of given ByteReader for a valid VBR header.
-    // The offset of the passed ByteReader needs to point to an MPEG frame begin,
-    // as a VBRI-style header is searched at a fixed offset relative to frame begin.
-    // Returns whether a valid VBR header was found in the range.
+    // The offset of the passed ByteReader needs to point to an MPEG frame
+    // begin, as a VBRI-style header is searched at a fixed offset relative to
+    // frame begin. Returns whether a valid VBR header was found in the range.
     bool Parse(mp4_demuxer::ByteReader* aReader);
 
   private:
@@ -274,7 +282,8 @@ public:
   };
 
   // Frame meta container used to parse and hold a frame header and side info.
-  class Frame {
+  class Frame
+  {
   public:
     // Returns the length of the frame excluding the header in bytes.
     int32_t Length() const;
@@ -325,16 +334,16 @@ public:
   // - resets ID3Header if no valid header was parsed yet
   void EndFrameSession();
 
-  // Parses contents of given ByteReader for a valid frame header and returns true
-  // if one was found. After returning, the variable passed to 'aBytesToSkip' holds
-  // the amount of bytes to be skipped (if any) in order to jump across a large
-  // ID3v2 tag spanning multiple buffers.
+  // Parses contents of given ByteReader for a valid frame header and returns
+  // true if one was found. After returning, the variable passed to
+  // 'aBytesToSkip' holds the amount of bytes to be skipped (if any) in order to
+  // jump across a large ID3v2 tag spanning multiple buffers.
   bool Parse(mp4_demuxer::ByteReader* aReader, uint32_t* aBytesToSkip);
 
   // Parses contents of given ByteReader for a valid VBR header.
   // The offset of the passed ByteReader needs to point to an MPEG frame begin,
-  // as a VBRI-style header is searched at a fixed offset relative to frame begin.
-  // Returns whether a valid VBR header was found.
+  // as a VBRI-style header is searched at a fixed offset relative to frame
+  // begin. Returns whether a valid VBR header was found.
   bool ParseVBRHeader(mp4_demuxer::ByteReader* aReader);
 
 private:
@@ -353,7 +362,8 @@ private:
 
 // The MP3 demuxer used to extract MPEG frames and side information out of
 // MPEG streams.
-class MP3TrackDemuxer : public MediaTrackDemuxer {
+class MP3TrackDemuxer : public MediaTrackDemuxer
+{
 public:
   // Constructor, expecting a valid media resource.
   explicit MP3TrackDemuxer(MediaResource* aSource);
