@@ -10,8 +10,7 @@
 #include "FFmpegLog.h"
 #include "prlink.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
   LinkStatus_INIT;
@@ -59,7 +58,8 @@ FFmpegRuntimeLinker::Init()
     PRLibSpec lspec;
     lspec.type = PR_LibSpec_Pathname;
     lspec.value.pathname = lib;
-    sLibAV.mAVCodecLib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+    sLibAV.mAVCodecLib =
+      PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
     if (sLibAV.mAVCodecLib) {
       sLibAV.mAVUtilLib = sLibAV.mAVCodecLib;
       switch (sLibAV.Link()) {
