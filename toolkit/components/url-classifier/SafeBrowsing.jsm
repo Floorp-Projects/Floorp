@@ -70,6 +70,7 @@ this.SafeBrowsing = {
     Services.prefs.addObserver("browser.safebrowsing", this, false);
     Services.prefs.addObserver("privacy.trackingprotection", this, false);
     Services.prefs.addObserver("urlclassifier", this, false);
+    Services.prefs.addObserver("plugins.flashBlock.enabled", this, false);
 
     this.readPrefs();
     this.addMozEntries();
