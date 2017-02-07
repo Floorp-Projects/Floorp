@@ -65,12 +65,16 @@ transferSimulcastProperties: function(offer_sdp, answer_sdp) {
   if (!offer_sdp.includes("a=simulcast:")) {
     return answer_sdp;
   }
+  ok(offer_sdp.includes("a=simulcast: send rid"), "Offer contains simulcast attribute");
   var o_simul = offer_sdp.match(/simulcast: send rid=(.*)([\n$])*/i);
-  var o_rids = offer_sdp.match(/a=rid:(.*)/ig);
   var new_answer_sdp = answer_sdp + "a=simulcast: recv rid=" + o_simul[1] + "\r\n";
+  ok(offer_sdp.includes("a=rid:"), "Offer contains RID attribute");
+  var o_rids = offer_sdp.match(/a=rid:(.*)/ig);
   o_rids.forEach((o_rid) => {
     new_answer_sdp = new_answer_sdp + o_rid.replace(/send/, "recv") + "\r\n";
   });
+  ok(offer_sdp.includes("a=extmap:1/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id"), "Offer contains RID RTP header extension");
+  new_answer_sdp = new_answer_sdp + "a=extmap:1/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n";
   return new_answer_sdp;
 },
 
