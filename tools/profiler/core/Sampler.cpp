@@ -204,7 +204,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
   : interval_(aInterval)
   , paused_(false)
   , active_(false)
-  , entrySize_(aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
 {
   MOZ_COUNT_CTOR(Sampler);
@@ -1262,7 +1261,7 @@ Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
                        uint32_t *aGeneration)
 {
   *aCurrentPosition = mBuffer->mWritePos;
-  *aTotalSize = mBuffer->mEntrySize;
+  *aTotalSize = gEntrySize;
   *aGeneration = mBuffer->mGeneration;
 }
 
