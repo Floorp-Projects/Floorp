@@ -245,7 +245,7 @@ sndio_stream_init(cubeb * context,
   s->data_cb = data_callback;
   s->state_cb = state_callback;
   s->arg = user_ptr;
-  s->mtx = PTHREAD_MUTEX_INITIALIZER;
+  s->mtx = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
   s->rdpos = s->wrpos = 0;
   if (output_stream_params->format == CUBEB_SAMPLE_FLOAT32LE) {
     s->conv = 1;
