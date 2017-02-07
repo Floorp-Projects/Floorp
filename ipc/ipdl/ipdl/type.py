@@ -185,7 +185,7 @@ class MessageType(IPDLType):
                  ctor=False, dtor=False, cdtype=None, compress=False,
                  verify=False):
         assert not (ctor and dtor)
-        assert not (ctor or dtor) or type is not None
+        assert not (ctor or dtor) or cdtype is not None
 
         self.nested = nested
         self.prio = prio
