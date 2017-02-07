@@ -1037,6 +1037,16 @@ const DownloadsView = {
    * Mouse listeners to handle selection on hover.
    */
   onDownloadMouseOver(aEvent) {
+    if (aEvent.originalTarget.classList.contains("downloadButton")) {
+      aEvent.target.classList.add("downloadHoveringButton");
+
+      let button = aEvent.originalTarget;
+      let tooltip = button.getAttribute("tooltiptext");
+      if (tooltip) {
+        button.setAttribute("aria-label", tooltip);
+        button.removeAttribute("tooltiptext");
+      }
+    }
     if (!(this.contextMenuOpen || this.subViewOpen) &&
         aEvent.target.parentNode == this.richListBox) {
       this.richListBox.selectedItem = aEvent.target;
@@ -1044,6 +1054,9 @@ const DownloadsView = {
   },
 
   onDownloadMouseOut(aEvent) {
+    if (aEvent.originalTarget.classList.contains("downloadButton")) {
+      aEvent.target.classList.remove("downloadHoveringButton");
+    }
     if (!(this.contextMenuOpen || this.subViewOpen) &&
         aEvent.target.parentNode == this.richListBox) {
       // If the destination element is outside of the richlistitem, clear the

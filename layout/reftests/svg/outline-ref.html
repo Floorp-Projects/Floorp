@@ -31,6 +31,11 @@
     <svg x="300" y="250">
       <rect id="innerRect" x="30" y="10" height="50" width="50" style="fill: red"/>
     </svg>
+    <a xlink:href="#" id="link">
+      <text x="300" y="350" font-family="Verdana" font-size="20">
+        link
+      </text>
+    </a>
   </g>
 </svg>
 <script>
@@ -45,7 +50,7 @@ function createOutline(boundingRect) {
   var height = boundingRect.height;
 
   var lines = document.createElement("div");
-  var styles = 'border: 1px solid;'
+  var styles = 'border: 1px solid black;'
                + 'width: ' + width + 'px;'
                + 'height: ' + height + 'px;'
                + 'position: absolute;'
@@ -60,7 +65,7 @@ window.onload = function drawOutline() {
   var elements = ['rect', 'foreignObject', 'circle',
                   'ellipse', 'image', 'line', 'path',
                   'polygon', 'polyline', 'text','gCircle',
-                  'innerRect'];
+                  'innerRect', 'link'];
   elements.forEach(id => {
     var element = document.getElementById(id);
     createOutline(element.getBoundingClientRect());

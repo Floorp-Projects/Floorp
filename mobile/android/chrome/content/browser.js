@@ -1259,9 +1259,9 @@ var BrowserApp = {
     evt.initUIEvent("TabClose", true, false, window, tabIndex);
     aTab.browser.dispatchEvent(evt);
 
-    if (aShowUndoSnackbar) {
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    if (aShowUndoSnackbar && ss.canUndoLastCloseTab) {
       // Get a title for the undo close snackbar. Fall back to the URL if there is no title.
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
       let closedTabData = ss.getClosedTabs(window)[0];
 
       if (closedTabData) {
@@ -4374,7 +4374,7 @@ Tab.prototype = {
     // If reader mode, get the base domain for the original url.
     let strippedURI = this._stripAboutReaderURL(documentURI);
 
-    // Borrowed from desktop Firefox: http://hg.mozilla.org/mozilla-central/annotate/72835344333f/browser/base/content/urlbarBindings.xml#l236
+    // Borrowed from desktop Firefox: https://hg.mozilla.org/mozilla-central/annotate/72835344333f/browser/base/content/urlbarBindings.xml#l236
     let matchedURL = strippedURI.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
     let baseDomain = "";
     if (matchedURL) {

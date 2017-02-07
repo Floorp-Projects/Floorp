@@ -8558,12 +8558,13 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
   const nsRect bounds(nsPoint(0, 0),
                       aSizeOverride ? *aSizeOverride : aFrame->GetSize());
 
-  // The SVG container frames do not maintain an accurate mRect.
-  // It will make the outline be larger than we expect, we need
-  // to make them narrow to their children's outline.
+  // The SVG container frames besides SVGTextFrame do not maintain
+  // an accurate mRect. It will make the outline be larger than
+  // we expect, we need to make them narrow to their children's outline.
   // aOutValid is set to false if the returned nsRect is not valid
   // and should not be included in the outline rectangle.
-  aOutValid = !aFrame->IsFrameOfType(nsIFrame::eSVGContainer);
+  aOutValid = !aFrame->IsFrameOfType(nsIFrame::eSVGContainer)
+              || aFrame->GetType() == nsGkAtoms::svgTextFrame;
 
   // Start from our border-box, transformed.  See comment below about
   // transform of children.
