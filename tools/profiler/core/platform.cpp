@@ -72,8 +72,6 @@ Sampler* gSampler;
 // it as the flag itself.
 bool stack_key_initialized;
 
-static mozilla::TimeStamp   sLastTracerEvent; // is raced on
-
 // XXX: This is set by profiler_init() and profiler_start() on the main thread.
 // It is read off the main thread, e.g. by InplaceTick(). It might require more
 // inter-thread synchronization than it currently has.
@@ -956,14 +954,6 @@ profiler_is_active()
   // This function runs both on and off the main thread.
 
   return sIsProfiling;
-}
-
-void
-profiler_responsiveness(const mozilla::TimeStamp& aTime)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  sLastTracerEvent = aTime;
 }
 
 void
