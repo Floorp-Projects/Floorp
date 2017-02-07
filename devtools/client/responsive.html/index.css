@@ -426,7 +426,7 @@ select > option.divider {
   left: 0;
   right: 0;
   width: 642px;
-  height: 612px;
+  height: 650px;
   z-index: 1;
 }
 
@@ -459,9 +459,9 @@ select > option.divider {
   flex-direction: column;
   flex-wrap: wrap;
   overflow: auto;
-  height: 550px;
+  height: 515px;
   width: 600px;
-  margin: 20px;
+  margin: 20px 20px 0;
 }
 
 #device-close-button,
@@ -528,6 +528,8 @@ select > option.divider {
   color: var(--theme-body-color);
   width: 100%;
   height: 20px;
+  position: absolute;
+  bottom: 0;
 }
 
 #device-submit-button:hover {
@@ -546,6 +548,20 @@ select > option.divider {
 #device-adder {
   display: flex;
   flex-direction: column;
+  margin: 0 20px;
+}
+
+#device-adder-content {
+  display: flex;
+}
+
+#device-adder-column-1 {
+  flex: 1;
+  margin-right: 10px;
+}
+
+#device-adder-column-2 {
+  flex: 2;
 }
 
 #device-adder button {
@@ -564,13 +580,13 @@ select > option.divider {
 
 #device-adder label > input,
 #device-adder label > .viewport-dimension {
-  width: 130px;
+  flex: 1;
   margin: 0;
 }
 
 #device-adder input {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   text-align: center;
   color: var(--theme-body-color-inactive);
   transition: all 0.25s ease;
@@ -589,7 +605,7 @@ select > option.divider {
 .device-adder-label {
   display: inline-block;
   margin-right: 5px;
-  width: 35px;
+  min-width: 35px;
 }
 
 #device-adder #device-adder-save {
