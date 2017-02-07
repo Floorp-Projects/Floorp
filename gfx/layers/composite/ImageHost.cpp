@@ -16,6 +16,9 @@
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsString.h"                   // for nsAutoCString
 
+// this is also defined in ImageComposite.cpp
+#define BIAS_TIME_MS 1.0
+
 namespace mozilla {
 
 using namespace gfx;
@@ -487,3 +490,5 @@ ImageHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
 
 } // namespace layers
 } // namespace mozilla
+
+#undef BIAS_TIME_MS

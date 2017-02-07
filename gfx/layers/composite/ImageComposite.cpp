@@ -5,6 +5,7 @@
 
 #include "ImageComposite.h"
 
+// this is also defined in ImageHost.cpp
 #define BIAS_TIME_MS 1.0
 
 namespace mozilla {
@@ -119,3 +120,5 @@ ImageComposite::TimedImage* ImageComposite::ChooseImage()
 
 } // namespace layers
 } // namespace mozilla
+
+#undef BIAS_TIME_MS
