@@ -115,6 +115,20 @@ private:
   class RefCountedInsideLambdaChecker : public MatchFinder::MatchCallback {
   public:
     virtual void run(const MatchFinder::MatchResult &Result);
+    void emitDiagnostics(SourceLocation Loc, StringRef Name, QualType Type);
+
+  private:
+    class ThisVisitor : public RecursiveASTVisitor<ThisVisitor> {
+    public:
+      explicit ThisVisitor(RefCountedInsideLambdaChecker& Checker)
+        : Checker(Checker) {}
+
+      bool VisitCXXThisExpr(CXXThisExpr *This);
+    private:
+      RefCountedInsideLambdaChecker& Checker;
+    };
+
+    ASTContext *Context;
   };
 
   class ExplicitOperatorBoolChecker : public MatchFinder::MatchCallback {
@@ -1598,14 +1612,8 @@ void DiagnosticsMatcher::NoAddRefReleaseOnReturnChecker::run(
 
 void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
     const MatchFinder::MatchResult &Result) {
+  Context = Result.Context;
   static DenseSet<const CXXRecordDecl*> CheckedDecls;
-
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error,
-      "Refcounted variable %0 of type %1 cannot be captured by a lambda");
-  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "Please consider using a smart pointer");
 
   const CXXRecordDecl *Lambda = Result.Nodes.getNodeAs<CXXRecordDecl>("decl");
 
@@ -1628,18 +1636,102 @@ void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
   }
   CheckedDecls.insert(Lambda);
 
-  for (const LambdaCapture Capture : Lambda->captures()) {
-    if (Capture.capturesVariable() && Capture.getCaptureKind() != LCK_ByRef) {
+  bool StrongRefToThisCaptured = false;
+
+  for (const LambdaCapture& Capture : Lambda->captures()) {
+    // Check if any of the captures are ByRef. If they are, we have nothing to
+    // report, as it's OK to capture raw pointers to refcounted objects so long as
+    // the Lambda doesn't escape the current scope, which is required by ByRef
+    // captures already.
+    if (Capture.getCaptureKind() == LCK_ByRef) {
+      return;
+    }
+
+    // Check if this capture is byvalue, and captures a strong reference to this.
+    // XXX: Do we want to make sure that this type which we are capturing is a "Smart Pointer" somehow?
+    if (!StrongRefToThisCaptured &&
+        Capture.capturesVariable() &&
+        Capture.getCaptureKind() == LCK_ByCopy) {
+      const VarDecl *Var = Capture.getCapturedVar();
+      if (Var->hasInit()) {
+        const Stmt *Init = Var->getInit();
+
+        // Ignore single argument constructors, and trivial nodes.
+        while (true) {
+          auto NewInit = IgnoreImplicit(Init);
+          if (auto ConstructExpr = dyn_cast<CXXConstructExpr>(NewInit)) {
+            if (ConstructExpr->getNumArgs() == 1) {
+              NewInit = ConstructExpr->getArg(0);
+            }
+          }
+          if (Init == NewInit) {
+            break;
+          }
+          Init = NewInit;
+        }
+
+        if (isa<CXXThisExpr>(Init)) {
+          StrongRefToThisCaptured = true;
+        }
+      }
+    }
+  }
+
+  // Now we can go through and produce errors for any captured variables or this pointers.
+  for (const LambdaCapture& Capture : Lambda->captures()) {
+    if (Capture.capturesVariable()) {
       QualType Pointee = Capture.getCapturedVar()->getType()->getPointeeType();
 
       if (!Pointee.isNull() && isClassRefCounted(Pointee)) {
-        Diag.Report(Capture.getLocation(), ErrorID) << Capture.getCapturedVar()
-                                                    << Pointee;
-        Diag.Report(Capture.getLocation(), NoteID);
+        emitDiagnostics(Capture.getLocation(), Capture.getCapturedVar()->getName(), Pointee);
+        return;
+      }
+    }
+
+    // The situation with captures of `this` is more complex. All captures of
+    // `this` look the same-ish (they are LCK_This). We want to complain about
+    // captures of `this` where `this` is a refcounted type, and the capture is
+    // actually used in the body of the lambda (if the capture isn't used, then
+    // we don't care, because it's only being captured in order to give access
+    // to private methods).
+    //
+    // In addition, we don't complain about this, even if it is used, if it was
+    // captured implicitly when the LambdaCaptureDefault was LCD_ByRef, as that
+    // expresses the intent that the lambda won't leave the enclosing scope.
+    bool ImplicitByRefDefaultedCapture =
+      Capture.isImplicit() && Lambda->getLambdaCaptureDefault() == LCD_ByRef;
+    if (Capture.capturesThis() &&
+        !ImplicitByRefDefaultedCapture &&
+        !StrongRefToThisCaptured) {
+      ThisVisitor V(*this);
+      bool NotAborted = V.TraverseDecl(const_cast<CXXMethodDecl *>(Lambda->getLambdaCallOperator()));
+      if (!NotAborted) {
         return;
       }
     }
   }
+}
+
+void DiagnosticsMatcher::RefCountedInsideLambdaChecker::emitDiagnostics(
+    SourceLocation Loc, StringRef Name, QualType Type) {
+  DiagnosticsEngine& Diag = Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Refcounted variable '%0' of type %1 cannot be captured by a lambda");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please consider using a smart pointer");
+
+  Diag.Report(Loc, ErrorID) << Name << Type;
+  Diag.Report(Loc, NoteID);
+}
+
+bool DiagnosticsMatcher::RefCountedInsideLambdaChecker::ThisVisitor::VisitCXXThisExpr(CXXThisExpr *This) {
+  QualType Pointee = This->getType()->getPointeeType();
+  if (!Pointee.isNull() && isClassRefCounted(Pointee)) {
+    Checker.emitDiagnostics(This->getLocStart(), "this", Pointee);
+    return false;
+  }
+
+  return true;
 }
 
 void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
