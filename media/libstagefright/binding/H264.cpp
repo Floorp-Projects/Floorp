@@ -753,8 +753,11 @@ H264::DecodePPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     }
 
     PPSData ppsData;
-    if(DecodePPS(pps, aSPSes, ppsData)) {
+    if (!DecodePPS(pps, aSPSes, ppsData)) {
       return false;
+    }
+    if (ppsData.pic_parameter_set_id >= aDest.Length()) {
+      aDest.SetLength(ppsData.pic_parameter_set_id + 1);
     }
     aDest[ppsData.pic_parameter_set_id] = Move(ppsData);
   }
@@ -778,6 +781,10 @@ H264::DecodePPS(const mozilla::MediaByteBuffer* aPPS, const SPSDataSet& aSPSes,
   READUE(pic_parameter_set_id, MAX_PPS_COUNT - 1);
   READUE(seq_parameter_set_id, MAX_SPS_COUNT - 1);
 
+  if (aDest.seq_parameter_set_id >= aSPSes.Length()) {
+    // Invalid SPS id.
+    return false;
+  }
   const SPSData& sps = aSPSes[aDest.seq_parameter_set_id];
 
   memcpy(aDest.scaling_matrix4x4, sps.scaling_matrix4x4,
