@@ -291,6 +291,29 @@ add_task(function* fetchAndCacheProfileOnce() {
   do_check_eq(got.avatar, "myimg");
 });
 
+add_test(function fetchAndCacheProfile_alreadyCached() {
+  let cachedUrl = "cachedurl";
+  let fxa = mockFxa();
+  fxa.profileCache = { profile: { avatar: cachedUrl }, etag: "bogusETag" };
+  let client = mockClient(fxa);
+  client.fetchProfile = function(etag) {
+    do_check_eq(etag, "bogusETag");
+    return Promise.resolve(null);
+  };
+
+  let profile = CreateFxAccountsProfile(fxa, client);
+  profile._cacheProfile = function(toCache) {
+    do_throw("This method should not be called.");
+  };
+
+  return profile._fetchAndCacheProfile()
+    .then(result => {
+      do_check_eq(result, null);
+      do_check_eq(fxa.profileCache.profile.avatar, cachedUrl);
+      run_next_test();
+    });
+});
+
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one doesn't kick off a new request to check the cached copy is fresh.
 add_task(function* fetchAndCacheProfileAfterThreshold() {
