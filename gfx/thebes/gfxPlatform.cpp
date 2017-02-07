@@ -689,6 +689,18 @@ gfxPlatform::Init()
 #endif
     gPlatform->InitAcceleration();
 
+#ifdef MOZ_ENABLE_WEBRENDER
+    if (XRE_IsParentProcess()) {
+      // XXX: right now this is just based on the pref. But we may want to
+      // do other runtime detection of hardware support etc.
+      // This pref defaults to true, so builds with --enable-webrender have it
+      // turned on by default, but can have it disabled via pref. The ifdef
+      // guards this entire block, so builds without --enable-webrender will
+      // always have the gfxVar default to false.
+      gfxVars::SetUseWebRender(Preferences::GetBool("gfx.webrender.enabled", true));
+    }
+#endif
+
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
       gpu->LaunchGPUProcess();
