@@ -247,6 +247,9 @@
   ERROR(NS_ERROR_REMOTE_XUL,           FAILURE(75)),
   /* The request resulted in an error page being displayed. */
   ERROR(NS_ERROR_LOAD_SHOWED_ERRORPAGE, FAILURE(77)),
+  /* The request occurred in docshell that lacks a treeowner, so it is
+   * probably in the process of being torn down. */
+  ERROR(NS_ERROR_DOCSHELL_DYING,       FAILURE(78)),
 
 
   /* FTP specific error codes: */
