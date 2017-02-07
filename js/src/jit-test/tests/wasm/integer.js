@@ -127,6 +127,7 @@ testBinary32('xor', 42, 2, 40);
 testBinary32('shl', 40, 2, 160);
 testBinary32('shr_s', -40, 2, -10);
 testBinary32('shr_u', -40, 2, 1073741814);
+testBinary32('shr_u', -40, 0, -40);
 
 testTrap32('div_s', 42, 0, /integer divide by zero/);
 testTrap32('div_s', 0x80000000 | 0, -1, /integer overflow/);

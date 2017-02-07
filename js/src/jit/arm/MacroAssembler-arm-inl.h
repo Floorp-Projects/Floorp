@@ -716,7 +716,8 @@ void
 MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
 {
     MOZ_ASSERT(0 <= imm.value && imm.value < 32);
-    ma_lsr(imm, dest, dest);
+    if (imm.value)
+        ma_lsr(imm, dest, dest);
 }
 
 void
