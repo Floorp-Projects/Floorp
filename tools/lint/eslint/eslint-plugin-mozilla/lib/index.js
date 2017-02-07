@@ -15,6 +15,7 @@
 module.exports = {
   processors: {
     ".xml": require("../lib/processors/xbl-bindings"),
+    ".js": require("../lib/processors/self-hosted"),
   },
   rules: {
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
