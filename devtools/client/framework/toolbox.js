@@ -34,8 +34,6 @@ const { BrowserLoader } =
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-loader.lazyRequireGetter(this, "CommandUtils",
-  "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "Selection",
@@ -1202,15 +1200,6 @@ Toolbox.prototype = {
         "serviceWorkersTestingEnabled": serviceWorkersTestingEnabled
       });
     }
-  },
-
- /**
-  * Get the toolbar spec for toolbox
-  */
-  getToolbarSpec: function () {
-    let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
-
-    return spec;
   },
 
  /**
