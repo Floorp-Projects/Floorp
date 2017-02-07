@@ -2892,7 +2892,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
 #endif
 }
 
-static const char* detectDisplay(void)
+const char* DetectDisplay(void)
 {
   bool tryX11 = false;
   bool tryWayland = false;
@@ -3750,7 +3750,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   if (display_name) {
     saveDisplayArg = true;
   } else {
-    display_name = detectDisplay();
+    display_name = DetectDisplay();
     if (!display_name) {
       return 1;
     }
