@@ -90,6 +90,13 @@ static Vector<std::string> gFeatures;
 // All accesses to gEntrySize are on the main thread, so no locking is needed.
 static int gEntrySize = 0;
 
+// This variable is set on the main thread in profiler_{start,stop}(), and
+// mostly read on the main thread. There is one read off the main thread in
+// SignalSender() in platform-linux.cc which is safe because there is implicit
+// synchronization between that function and the set points in
+// profiler_{start,stop}().
+static double gInterval = 0;
+
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -680,12 +687,8 @@ profiler_get_start_params(int* aEntrySize,
     return;
   }
 
-  if (NS_WARN_IF(!gSampler)) {
-    return;
-  }
-
   *aEntrySize = gEntrySize;
-  *aInterval = gSampler->interval();
+  *aInterval = gInterval;
 
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
@@ -860,9 +863,8 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 
   gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
-  gSampler =
-    new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL, gEntrySize,
-                aFeatures, aFeatureCount, aFilterCount);
+  gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
+  gSampler = new Sampler(gEntrySize, aFeatures, aFeatureCount, aFilterCount);
   gGatherer = new mozilla::ProfileGatherer(gSampler);
 
   gSampler->Start();
@@ -962,6 +964,7 @@ profiler_stop()
   delete gSampler;
   gSampler = nullptr;
   gEntrySize = 0;
+  gInterval = 0;
 
   // Cancel any in-flight async profile gatherering requests.
   gGatherer->Cancel();

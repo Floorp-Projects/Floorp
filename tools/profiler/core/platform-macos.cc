@@ -136,7 +136,7 @@ public:
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
     if (mInstance == NULL) {
-      mInstance = new SamplerThread(gSampler->interval());
+      mInstance = new SamplerThread(gInterval);
       mInstance->Start();
     }
   }
@@ -148,6 +148,8 @@ public:
   }
 
   void Run() {
+    // This function runs on the sampler thread.
+
     TimeDuration lastSleepOverhead = 0;
     TimeStamp sampleStart = TimeStamp::Now();
 

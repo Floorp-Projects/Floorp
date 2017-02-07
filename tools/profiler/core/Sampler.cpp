@@ -197,12 +197,11 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-Sampler::Sampler(double aInterval, int aEntrySize,
+Sampler::Sampler(int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
                  uint32_t aFilterCount)
 
-  : interval_(aInterval)
-  , paused_(false)
+  : paused_(false)
   , active_(false)
   , mBuffer(new ProfileBuffer(aEntrySize))
 {
@@ -332,7 +331,7 @@ void
 Sampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
 {
   aWriter.IntProperty("version", 3);
-  aWriter.DoubleProperty("interval", interval());
+  aWriter.DoubleProperty("interval", gInterval);
   aWriter.IntProperty("stackwalk", mUseStackWalk);
 
 #ifdef DEBUG
