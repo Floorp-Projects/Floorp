@@ -3868,9 +3868,12 @@ SearchService.prototype = {
         alphaEngines.push(this._engines[engine.name]);
     }
 
+    let locale = Cc["@mozilla.org/intl/nslocaleservice;1"]
+                   .getService(Ci.nsILocaleService)
+                   .newLocale(getLocale());
     let collation = Cc["@mozilla.org/intl/collation-factory;1"]
                       .createInstance(Ci.nsICollationFactory)
-                      .CreateCollation();
+                      .CreateCollation(locale);
     const strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
     let comparator = (a, b) => collation.compareString(strength, a.name, b.name);
     alphaEngines.sort(comparator);

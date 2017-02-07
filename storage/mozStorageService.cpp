@@ -14,6 +14,8 @@
 #include "nsEmbedCID.h"
 #include "nsThreadUtils.h"
 #include "mozStoragePrivateHelpers.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
 #include "nsIXPConnect.h"
 #include "nsIObserverService.h"
 #include "nsIPropertyBag2.h"
@@ -606,6 +608,19 @@ Service::getLocaleCollation()
   if (mLocaleCollation)
     return mLocaleCollation;
 
+  nsCOMPtr<nsILocaleService> svc(do_GetService(NS_LOCALESERVICE_CONTRACTID));
+  if (!svc) {
+    NS_WARNING("Could not get locale service");
+    return nullptr;
+  }
+
+  nsCOMPtr<nsILocale> appLocale;
+  nsresult rv = svc->GetApplicationLocale(getter_AddRefs(appLocale));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Could not get application locale");
+    return nullptr;
+  }
+
   nsCOMPtr<nsICollationFactory> collFact =
     do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
   if (!collFact) {
@@ -613,7 +628,7 @@ Service::getLocaleCollation()
     return nullptr;
   }
 
-  nsresult rv = collFact->CreateCollation(getter_AddRefs(mLocaleCollation));
+  rv = collFact->CreateCollation(appLocale, getter_AddRefs(mLocaleCollation));
   if (NS_FAILED(rv)) {
     NS_WARNING("Could not create collation");
     return nullptr;
