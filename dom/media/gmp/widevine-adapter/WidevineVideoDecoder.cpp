@@ -127,18 +127,22 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   const GMPEncryptedBufferMetadata* crypto = aInputFrame->GetDecryptionData();
   nsTArray<SubsampleEntry> subsamples;
-  InitInputBuffer(crypto, aInputFrame->TimeStamp(), raw->Data(), raw->Size(), sample, subsamples);
+  InitInputBuffer(crypto, aInputFrame->TimeStamp(), raw->Data(), raw->Size(),
+                  sample, subsamples);
 
   // For keyframes, ConvertSampleToAnnexB will stick the AnnexB extra data
   // at the start of the input. So we need to account for that as clear data
   // in the subsamples.
-  if (raw->mKeyframe && !subsamples.IsEmpty() && mCodecType == kGMPVideoCodecH264) {
+  if (raw->mKeyframe
+      && !subsamples.IsEmpty()
+      && mCodecType == kGMPVideoCodecH264) {
     subsamples[0].clear_bytes += mAnnexB->Length();
   }
 
   WidevineVideoFrame frame;
   Status rv = CDM()->DecryptAndDecodeFrame(sample, &frame);
-  Log("WidevineVideoDecoder::Decode(timestamp=%lld) rv=%d", sample.timestamp, rv);
+  Log("WidevineVideoDecoder::Decode(timestamp=%lld) rv=%d", sample.timestamp,
+      rv);
 
   // Destroy frame, so that the shmem is now free to be used to return
   // output to the Gecko process.
@@ -166,7 +170,8 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
   } else {
     mCallback->Error(ToGMPErr(rv));
   }
-  // Finish a drain if pending and we have no pending ReturnOutput calls on the stack.
+  // Finish a drain if pending and we have no pending ReturnOutput calls on the
+  // stack.
   if (mDrainPending && mReturnOutputCallDepth == 0) {
     Drain();
   }
@@ -195,12 +200,10 @@ private:
 // Util class to make sure GMP frames are freed. Holds a GMPVideoi420Frame*
 // and will destroy it when the helper is destroyed unless the held frame
 // if forgotten with ForgetFrame.
-class FrameDestroyerHelper {
+class FrameDestroyerHelper
+{
 public:
-  explicit FrameDestroyerHelper(GMPVideoi420Frame*& frame)
-    : frame(frame)
-  {
-  }
+  explicit FrameDestroyerHelper(GMPVideoi420Frame*& frame) : frame(frame) { }
 
   // RAII, destroy frame if held.
   ~FrameDestroyerHelper()
@@ -267,11 +270,13 @@ WidevineVideoDecoder::ReturnOutput(WidevineVideoFrame& aCDMFrame)
                                      yStride,
                                      uStride,
                                      vStride);
-    // Assert possible reentrant calls or resets haven't altered level unexpectedly.
+    // Assert possible reentrant calls or resets haven't altered level
+    // unexpectedly.
     MOZ_ASSERT(mReturnOutputCallDepth == 1);
     ENSURE_GMP_SUCCESS(err, false);
 
-    // If a reset started we need to dump the current frame and complete the reset.
+    // If a reset started we need to dump the current frame and complete the
+    // reset.
     if (mResetInProgress) {
       MOZ_ASSERT(mCDMWrapper);
       MOZ_ASSERT(mFrameAllocationQueue.empty());
