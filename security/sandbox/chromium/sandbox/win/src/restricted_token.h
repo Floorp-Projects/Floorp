@@ -88,6 +88,17 @@ class RestrictedToken {
   // access to any resource. It can only be used to deny access.
   DWORD AddAllSidsForDenyOnly(std::vector<Sid> *exceptions);
 
+  // Lists all sids in the token and mark them as Deny Only if present in the
+  // deny_only_sids parameter.
+  //
+  // If the function succeeds, the return value is ERROR_SUCCESS. If the
+  // function fails, the return value is the win32 error code corresponding to
+  // the error.
+  //
+  // Note: A Sid marked for Deny Only in a token cannot be used to grant
+  // access to any resource. It can only be used to deny access.
+  DWORD AddDenyOnlySids(const std::vector<Sid>& deny_only_sids);
+
   // Adds a user or group SID for Deny Only in the restricted token.
   // Parameter: sid is the SID to add in the Deny Only list.
   // The return value is always ERROR_SUCCESS.
