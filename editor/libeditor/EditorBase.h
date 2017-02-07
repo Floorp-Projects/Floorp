@@ -1003,7 +1003,9 @@ protected:
             AutoActionListenerArray;
   AutoActionListenerArray mActionListeners;
   // Just notify once per high level change.
-  nsTArray<OwningNonNull<nsIEditorObserver>> mEditorObservers;
+  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 3>
+            AutoEditorObserverArray;
+  AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
   nsTArray<OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
 
