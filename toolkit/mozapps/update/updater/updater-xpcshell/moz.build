@@ -4,10 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests'
+
 Program('updater-xpcshell')
 
 updater_rel_path = '../'
-DIST_INSTALL = False
 DEFINES['TEST_UPDATER'] = True
 include('../updater-common.build')
 

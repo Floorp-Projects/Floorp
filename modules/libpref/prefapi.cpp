@@ -29,6 +29,7 @@
 #include "prprf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ContentPrefs.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
@@ -736,13 +737,48 @@ static PrefTypeFlags pref_SetValue(PrefValue* existingValue, PrefTypeFlags flags
     }
     return flags;
 }
+#ifdef DEBUG
+static pref_initPhase gPhase = START;
+
+void
+pref_SetInitPhase(pref_initPhase phase)
+{
+    gPhase = phase;
+}
+
+struct StringComparator
+{
+    const char* mKey;
+    explicit StringComparator(const char* aKey) : mKey(aKey) {}
+    int operator()(const char* string) const {
+        return strcmp(mKey, string);
+    }
+};
+
+bool
+inInitArray(const char* key)
+{
+    size_t prefsLen;
+    size_t found;
+    const char** list = mozilla::dom::ContentPrefs::GetContentPrefs(&prefsLen);
+    return BinarySearchIf(list, 0, prefsLen,
+                          StringComparator(key), &found);
+}
+#endif
 
 PrefHashEntry* pref_HashTableLookup(const char *key)
 {
 #ifndef MOZ_B2G
     MOZ_ASSERT(NS_IsMainThread());
 #endif
-
+    MOZ_ASSERT((!XRE_IsContentProcess() || gPhase != START),
+               "pref access before commandline prefs set");
+    /* If you're hitting this assertion, you've added a pref access to start up.
+     * Consider moving it later or add it to the whitelist in ContentPrefs.cpp
+     * and get review from a DOM peer
+     */
+    MOZ_ASSERT((!XRE_IsContentProcess() || gPhase > END_INIT_PREFS || inInitArray(key)),
+               "accessing non-init pref before the rest of the prefs are sent");
     return static_cast<PrefHashEntry*>(gHashTable->Search(key));
 }
 
