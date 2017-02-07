@@ -120,7 +120,13 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 {
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally we'd just take ownership
   // of the shmem.
-  RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(), aData.buffer().Size<uint8_t>());
+  RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(),
+                                               aData.buffer().Size<uint8_t>());
+  if (!data->Data()) {
+    // OOM
+    Error(NS_ERROR_OUT_OF_MEMORY);
+    return IPC_OK();
+  }
   data->mOffset = aData.base().offset();
   data->mTime = aData.base().time();
   data->mTimecode = aData.base().timecode();
