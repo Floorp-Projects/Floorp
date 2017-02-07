@@ -71,12 +71,6 @@ add_task(function* () {
   // data: URLs don't correctly propagate to their referring document yet.
   //yield check_use_counter_direct("file_use_counter_svg_fill_pattern_data.svg",
   //                               "PROPERTY_FILL_OPACITY");
-
-  // Check that use counters are incremented by SVGs loaded as CSS images in
-  // pages loaded in iframes.  Again, SVG images in CSS aren't permitted to
-  // execute script, so we need to use properties here.
-  yield check_use_counter_iframe("file_use_counter_svg_list_style_image.html",
-                                 "PROPERTY_FILL");
 });
 
 add_task(function* () {
