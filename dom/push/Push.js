@@ -98,23 +98,43 @@ Push.prototype = {
       this.createPromise((resolve, reject) => {
         let callback = new PushSubscriptionCallback(this, resolve, reject);
 
-        if (!options || !options.applicationServerKey) {
+        if (!options || options.applicationServerKey === null) {
           PushService.subscribe(this._scope, this._principal, callback);
           return;
         }
 
-        let appServerKey = options.applicationServerKey;
-        let keyView = new this._window.Uint8Array(ArrayBuffer.isView(appServerKey) ?
-                                                  appServerKey.buffer : appServerKey);
+        let keyView = this._normalizeAppServerKey(options.applicationServerKey);
         if (keyView.byteLength === 0) {
           callback._rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
           return;
         }
         PushService.subscribeWithKey(this._scope, this._principal,
-                                     appServerKey.length, appServerKey,
+                                     keyView.byteLength, keyView,
                                      callback);
       })
     );
+  },
+
+  _normalizeAppServerKey: function(appServerKey) {
+    let key;
+    if (typeof appServerKey == "string") {
+      try {
+        key = Cu.cloneInto(ChromeUtils.base64URLDecode(appServerKey, {
+          padding: "reject",
+        }), this._window);
+      } catch (e) {
+        throw new this._window.DOMException(
+          "String contains an invalid character",
+          "InvalidCharacterError"
+        );
+      }
+    } else if (this._window.ArrayBuffer.isView(appServerKey)) {
+      key = appServerKey.buffer;
+    } else {
+      // `appServerKey` is an array buffer.
+      key = appServerKey;
+    }
+    return new this._window.Uint8Array(key);
   },
 
   getSubscription: function() {
