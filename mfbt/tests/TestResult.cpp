@@ -26,6 +26,28 @@ static_assert(sizeof(Result<char*, Failed*>) > sizeof(char*),
 static_assert(sizeof(Result<int*, char*>) > sizeof(char*),
               "Result with unaligned error type `char*` must not be pointer-sized");
 
+enum Foo8 : uint8_t {};
+enum Foo16 : uint16_t {};
+enum Foo32 : uint32_t {};
+static_assert(sizeof(Result<Ok, Foo8>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+static_assert(sizeof(Result<Ok, Foo16>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
+              sizeof(Result<Ok, Foo32>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+
+static_assert(sizeof(Result<Foo16, Foo8>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+static_assert(sizeof(Result<Foo8, Foo16>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
+              sizeof(Result<Foo32, Foo16>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
+              sizeof(Result<Foo16, Foo32>) <= sizeof(uintptr_t),
+              "Result with small types should be pointer-sized");
+
 static GenericErrorResult<Failed&>
 Fail()
 {
