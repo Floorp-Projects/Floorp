@@ -123,8 +123,6 @@ nsICollation*
 nsXULContentUtils::GetCollation()
 {
     if (!gCollation) {
-        nsresult rv;
-
         nsCOMPtr<nsICollationFactory> colFactory =
             do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
         if (colFactory) {
