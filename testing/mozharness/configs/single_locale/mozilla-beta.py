@@ -3,7 +3,6 @@ config = {
     "branch": "mozilla-beta",
     "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-beta/",
     "update_channel": "beta",
-    "latest_mar_dir": '/pub/mozilla.org/firefox/nightly/latest-mozilla-beta-l10n',
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
