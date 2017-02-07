@@ -1205,8 +1205,8 @@ HttpChannelChild::RecvFinishInterceptedRedirect()
   RefPtr<HttpChannelChild> self(this);
   Send__delete__(this);
 
-  // Reset the event target to which queued messages are delivered. Otherwise
-  // we'll get an assertion when we re-use the channel later on.
+  // Reset the event target since the IPC actor is about to be destroyed.
+  // Following channel event should be handled on main thread.
   mEventQ->ResetDeliveryTarget();
 
   // The IPDL connection was torn down by a interception logic in
