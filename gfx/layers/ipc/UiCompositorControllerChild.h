@@ -26,6 +26,7 @@ public:
                                  const uint64_t& aProcessToken,
                                  Endpoint<PUiCompositorControllerChild>&& aEndpoint);
 
+  static void CacheSurfaceResize(int64_t aId, int32_t aWidth, int32_t aHeight);
   void Close();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -34,12 +35,12 @@ public:
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
+  bool IsOnUiThread() const;
 private:
   UiCompositorControllerChild(RefPtr<nsThread> aThread, const uint64_t& aProcessToken);
   ~UiCompositorControllerChild();
   void OpenForSameProcess();
   void OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint);
-  bool IsOnUiThread() const;
 
   RefPtr<nsThread> mUiThread;
   uint64_t mProcessToken;
