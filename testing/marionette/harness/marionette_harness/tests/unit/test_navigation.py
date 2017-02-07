@@ -36,7 +36,14 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
 
     @property
     def location_href(self):
-        return self.marionette.execute_script("return window.location.href")
+        # Windows 8 has recently seen a proliferation of intermittent
+        # test failures to do with failing to compare "about:blank" ==
+        # u"about:blank". For the sake of consistenty, we encode the
+        # returned URL as Unicode here to ensure that the values are
+        # absolutely of the same type.
+        #
+        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1322862)
+        return self.marionette.execute_script("return window.location.href").encode("utf-8")
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script(
@@ -71,6 +78,7 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.marionette.get_url())
 
+    # TODO(ato): Remove wait conditions when fixing bug 1330348
     def test_go_back(self):
         self.marionette.navigate(self.test_doc)
         self.assertNotEqual("about:blank", self.location_href)
@@ -78,9 +86,11 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.location_href)
         self.marionette.go_back()
+        Wait(self.marionette).until(lambda m: self.location_href == self.test_doc)
         self.assertNotEqual("about:blank", self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
+    # TODO(ato): Remove wait conditions when fixing bug 1330348
     def test_go_forward(self):
         self.marionette.navigate(self.test_doc)
         self.assertNotEqual("about:blank", self.location_href)
@@ -88,9 +98,11 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.location_href)
         self.marionette.go_back()
+        Wait(self.marionette).until(lambda m: self.location_href == self.test_doc)
         self.assertEqual(self.test_doc, self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
         self.marionette.go_forward()
+        Wait(self.marionette).until(lambda m: self.location_href == "about:blank")
         self.assertEqual("about:blank", self.location_href)
 
     def test_refresh(self):

@@ -464,7 +464,9 @@ promise_test(function(t) {
     return watcher.wait_for('transitionend');
   }).then(function(evt) {
     transition.cancel();
-    return watcher.wait_for('transitioncancel');
+
+    // Then wait a couple of frames and check that no event was dispatched
+    return waitForAnimationFrames(2);
   });
 }, 'Cancel the transition after clearing the target effect');
 

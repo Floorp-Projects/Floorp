@@ -5613,9 +5613,19 @@ if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "border-box" ],
     other_values: [ "fill-box", "view-box" ],
-    invalid_values: []
+    invalid_values: ["content-box", "padding-box", "stroke-box", "margin-box"]
   };
 }
+
+var basicShapeSVGBoxValues = [
+  "fill-box",
+  "stroke-box",
+  "view-box",
+
+  "polygon(evenodd, 20pt 20cm) fill-box",
+  "polygon(evenodd, 20ex 20pc) stroke-box",
+  "polygon(evenodd, 20rem 20in) view-box",
+];
 
 var basicShapeOtherValues = [
   "polygon(20px 20px)",
@@ -5793,15 +5803,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-shapes.enabled")) {
     other_values: [
       // SVG reference clip-path
       "url(#my-clip-path)",
-
-      "fill-box",
-      "stroke-box",
-      "view-box",
-
-      "polygon(evenodd, 20pt 20cm) fill-box",
-      "polygon(evenodd, 20ex 20pc) stroke-box",
-      "polygon(evenodd, 20rem 20in) view-box",
-    ].concat(basicShapeOtherValues),
+    ].concat(basicShapeSVGBoxValues).concat(basicShapeOtherValues),
     invalid_values: basicShapeInvalidValues,
     unbalanced_values: basicShapeUnbalancedValues,
   };
@@ -5816,7 +5818,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.shape-outside.enabled")) {
     other_values: [
       "url(#my-shape-outside)",
     ].concat(basicShapeOtherValues),
-    invalid_values: basicShapeInvalidValues,
+    invalid_values: basicShapeSVGBoxValues.concat(basicShapeInvalidValues),
     unbalanced_values: basicShapeUnbalancedValues,
   };
 }

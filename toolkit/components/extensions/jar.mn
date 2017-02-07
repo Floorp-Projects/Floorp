@@ -10,6 +10,7 @@ toolkit.jar:
     content/extensions/ext-contextualIdentities.js
     content/extensions/ext-cookies.js
     content/extensions/ext-downloads.js
+    content/extensions/ext-geolocation.js
     content/extensions/ext-management.js
     content/extensions/ext-notifications.js
     content/extensions/ext-i18n.js

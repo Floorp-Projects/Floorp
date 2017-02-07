@@ -7,6 +7,6 @@ module.exports = {
 
   "rules": {
     "no-shadow": "error",
-    "no-undef": "off"
+    "no-undef": "error"
   }
 };
