@@ -126,22 +126,60 @@ error.stringify = function (err) {
  *
  * Usage:
  *
- *     let input = {value: true};
- *     error.pprint`Expected boolean, got ${input}`;
- *     => "Expected boolean, got [object Object] {"value": true}"
+ *     let bool = {value: true};
+ *     error.pprint`Expected boolean, got ${bool}`;
+ *     => 'Expected boolean, got [object Object] {"value": true}'
+ *
+ *     let htmlElement = document.querySelector("input#foo");
+ *     error.pprint`Expected element ${htmlElement}`;
+ *     => 'Expected element <input id="foo" class="bar baz">'
  */
-error.pprint = function (strings, ...values) {
+error.pprint = function (ss, ...values) {
+  function prettyObject (obj) {
+    let proto = Object.prototype.toString.call(obj);
+    let s = "";
+    try {
+      s = JSON.stringify(obj);
+    } catch (e if e instanceof TypeError) {
+      s = `<${e.message}>`;
+    }
+    return proto + " " + s;
+  }
+
+  function prettyElement (el) {
+    let ident = [];
+    if (el.id) {
+      ident.push(`id="${el.id}"`);
+    }
+    if (el.classList.length > 0) {
+      ident.push(`class="${el.className}"`);
+    }
+
+    let idents = "";
+    if (ident.length > 0) {
+      idents = " " + ident.join(" ");
+    }
+
+    return `<${el.localName}${idents}>`;
+  }
+
   let res = [];
-  for (let i = 0; i < strings.length; i++) {
-    res.push(strings[i]);
+  for (let i = 0; i < ss.length; i++) {
+    res.push(ss[i]);
     if (i < values.length) {
       let val = values[i];
-      res.push(Object.prototype.toString.call(val));
-      let s = JSON.stringify(val);
-      if (s && s.length > 0) {
-        res.push(" ");
-        res.push(s);
+      let typ = Object.prototype.toString.call(val);
+      let s;
+      try {
+        if (val && val.nodeType === 1) {
+          s = prettyElement(val);
+        } else {
+          s = prettyObject(val);
+        }
+      } catch (e) {
+        s = typeof val;
       }
+      res.push(s);
     }
   }
   return res.join("");
