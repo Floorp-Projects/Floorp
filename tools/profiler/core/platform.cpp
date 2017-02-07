@@ -87,6 +87,9 @@ static mozilla::StaticMutex gThreadNameFiltersMutex;
 // All accesses to gFeatures are on the main thread, so no locking is needed.
 static Vector<std::string> gFeatures;
 
+// All accesses to gEntrySize are on the main thread, so no locking is needed.
+static int gEntrySize = 0;
+
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -677,7 +680,7 @@ profiler_get_start_params(int* aEntrySize,
     return;
   }
 
-  *aEntrySize = gSampler->EntrySize();
+  *aEntrySize = gEntrySize;
   *aInterval = gSampler->interval();
 
   {
@@ -852,9 +855,9 @@ profiler_start(int aProfileEntries, double aInterval,
     gFeatures[i] = aFeatures[i];
   }
 
+  gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
   gSampler =
-    new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
-                aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
+    new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL, gEntrySize,
                 aFeatures, aFeatureCount, aFilterCount);
   gGatherer = new mozilla::ProfileGatherer(gSampler);
 
@@ -954,6 +957,7 @@ profiler_stop()
   gSampler->Stop();
   delete gSampler;
   gSampler = nullptr;
+  gEntrySize = 0;
 
   // Cancel any in-flight async profile gatherering requests.
   gGatherer->Cancel();
