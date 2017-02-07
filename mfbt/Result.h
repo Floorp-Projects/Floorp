@@ -34,6 +34,7 @@ enum class PackingStrategy {
   Variant,
   NullIsOk,
   LowBitTagIsError,
+  PackedVariant,
 };
 
 template <typename V, typename E, PackingStrategy Strategy>
@@ -123,6 +124,55 @@ public:
   E& unwrapErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
 };
 
+// Return true if any of the struct can fit in a word.
+template<typename V, typename E>
+struct IsPackableVariant
+{
+  struct VEbool {
+      V v;
+      E e;
+      bool ok;
+  };
+  struct EVbool {
+      E e;
+      V v;
+      bool ok;
+  };
+
+  using Impl = typename Conditional<sizeof(VEbool) <= sizeof(EVbool),
+                                    VEbool, EVbool>::Type;
+
+  static const bool value = sizeof(Impl) <= sizeof(uintptr_t);
+};
+
+/**
+ * Specialization for when both type are not using all the bytes, in order to
+ * use one byte as a tag.
+ */
+template <typename V, typename E>
+class ResultImplementation<V, E, PackingStrategy::PackedVariant>
+{
+  using Impl = typename IsPackableVariant<V, E>::Impl;
+  Impl data;
+
+public:
+  explicit ResultImplementation(V aValue)
+  {
+    data.v = aValue;
+    data.ok = true;
+  }
+  explicit ResultImplementation(E aErrorValue)
+  {
+    data.e = aErrorValue;
+    data.ok = false;
+  }
+
+  bool isOk() const { return data.ok; }
+
+  V unwrap() const { return data.v; }
+  E unwrapErr() const { return data.e; }
+};
+
 // To use nullptr as a special value, we need the counter part to exclude zero
 // from its range of valid representations.
 //
@@ -168,6 +218,9 @@ struct SelectResultImpl
     ? PackingStrategy::NullIsOk
     : (detail::HasFreeLSB<V>::value && detail::HasFreeLSB<E>::value)
     ? PackingStrategy::LowBitTagIsError
+    : (IsDefaultConstructible<V>::value && IsDefaultConstructible<E>::value &&
+       IsPackableVariant<V, E>::value)
+    ? PackingStrategy::PackedVariant
     : PackingStrategy::Variant;
 
   using Type = detail::ResultImplementation<V, E, value>;
