@@ -4593,7 +4593,15 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     // method uses a sync runnable to get the channel from the main thread.
     rv = ChannelFromScriptURLWorkerThread(aCx, aParent, aScriptURL,
                                           loadInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      nsTArray<nsCOMPtr<nsISupports>> doomed;
+      loadInfo.ForgetMainThreadObjects(doomed);
+      nsCOMPtr<nsILoadGroup> loadGroupToCancel;
+      RefPtr<MainThreadReleaseRunnable> runnable =
+        new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
+      MOZ_ALWAYS_SUCCEEDS(aParent->DispatchToMainThread(runnable.forget()));
+      return rv;
+    }
 
     // Now that we've spun the loop there's no guarantee that our parent is
     // still alive.  We may have received control messages initiating shutdown.
@@ -4603,7 +4611,12 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     if (parentStatus > Running) {
-      NS_ReleaseOnMainThread(loadInfo.mChannel.forget());
+      nsTArray<nsCOMPtr<nsISupports>> doomed;
+      loadInfo.ForgetMainThreadObjects(doomed);
+      nsCOMPtr<nsILoadGroup> loadGroupToCancel;
+      RefPtr<MainThreadReleaseRunnable> runnable =
+        new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
+      MOZ_ALWAYS_SUCCEEDS(aParent->DispatchToMainThread(runnable.forget()));
       return NS_ERROR_FAILURE;
     }
 
