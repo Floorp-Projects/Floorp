@@ -60,6 +60,8 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     typedef Vector<Property, 0, SystemAllocPolicy> PropertyVector;
 
   private:
+    Zone* zone_;
+
     // If objects in this group have ever been converted to native objects,
     // these store the corresponding native group and initial shape for such
     // objects. Type information for this object is reflected in nativeGroup.
@@ -103,12 +105,14 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     JSValueType elementType_;
 
   public:
-    UnboxedLayout()
-      : nativeGroup_(nullptr), nativeShape_(nullptr),
+    explicit UnboxedLayout(Zone* zone)
+      : zone_(zone), nativeGroup_(nullptr), nativeShape_(nullptr),
         allocationScript_(nullptr), allocationPc_(nullptr), replacementGroup_(nullptr),
         size_(0), newScript_(nullptr), traceList_(nullptr), constructorCode_(nullptr),
         elementType_(JSVAL_TYPE_MAGIC)
     {}
+
+    Zone* zone() const { return zone_; }
 
     bool initProperties(const PropertyVector& properties, size_t size) {
         size_ = size;

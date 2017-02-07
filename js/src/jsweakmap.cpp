@@ -24,7 +24,7 @@ using namespace js::gc;
 
 WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
   : memberOf(memOf),
-    zone(zone),
+    zone_(zone),
     marked(false)
 {
     MOZ_ASSERT_IF(memberOf, memberOf->compartment()->zone() == zone);
@@ -122,7 +122,7 @@ WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps)
 {
     for (WeakMapSet::Range r = markedWeakMaps.all(); !r.empty(); r.popFront()) {
         WeakMapBase* map = r.front();
-        MOZ_ASSERT(map->zone->isGCMarking());
+        MOZ_ASSERT(map->zone()->isGCMarking());
         MOZ_ASSERT(!map->marked);
         map->marked = true;
     }
@@ -145,7 +145,7 @@ ObjectValueMap::findZoneEdges()
         if (!delegate)
             continue;
         Zone* delegateZone = delegate->zone();
-        if (delegateZone == zone || !delegateZone->isGCMarking())
+        if (delegateZone == zone() || !delegateZone->isGCMarking())
             continue;
         if (!delegateZone->gcZoneGroupEdges().put(key->zone()))
             return false;

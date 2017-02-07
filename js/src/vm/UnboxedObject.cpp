@@ -2019,7 +2019,7 @@ js::TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter, Shape* te
 
     UniquePtr<UnboxedLayout>& layout = enter.unboxedLayoutToCleanUp;
     MOZ_ASSERT(!layout);
-    layout = group->zone()->make_unique<UnboxedLayout>();
+    layout = group->zone()->make_unique<UnboxedLayout>(group->zone());
     if (!layout)
         return false;
 
