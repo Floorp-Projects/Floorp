@@ -62,6 +62,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'nsExceptionHandler.cpp',
+    'ThreadAnnotation.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
