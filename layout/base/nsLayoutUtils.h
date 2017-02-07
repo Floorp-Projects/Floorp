@@ -31,6 +31,7 @@
 #include "ImageContainer.h"
 #include "gfx2DGlue.h"
 #include "nsStyleConsts.h"
+#include "SVGImageContext.h"
 #include <limits>
 #include <algorithm>
 
@@ -65,7 +66,6 @@ struct nsOverflowAreas;
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 class EventListenerManager;
-class SVGImageContext;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
 class WritingMode;
@@ -160,6 +160,7 @@ public:
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
+  typedef mozilla::SVGImageContext SVGImageContext;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -1864,10 +1865,14 @@ public:
    *   @param aImage            The image.
    *   @param aDest             The area that the image should fill.
    *   @param aDirty            Pixels outside this area may be skipped.
-   *   @param aSVGContext       If non-null, SVG-related rendering context
-   *                            such as overridden attributes on the image
-   *                            document's root <svg> node. Ignored for
-   *                            raster images.
+   *   @param aSVGContext       Optionally provides an SVGImageContext.
+   *                            Callers should pass an SVGImageContext with at
+   *                            least the viewport size set if aImage may be of
+   *                            type imgIContainer::TYPE_VECTOR, or pass
+   *                            Nothing() if it is of type
+   *                            imgIContainer::TYPE_RASTER (to save cycles
+   *                            constructing an SVGImageContext, since this
+   *                            argument will be ignored for raster images).
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_*
    *                            variety.
    *   @param aAnchor           If non-null, a point which we will ensure
@@ -1883,7 +1888,7 @@ public:
                                     const SamplingFilter aSamplingFilter,
                                     const nsRect&       aDest,
                                     const nsRect&       aDirty,
-                                    const mozilla::SVGImageContext* aSVGContext,
+                                    const mozilla::Maybe<const SVGImageContext>& aSVGContext,
                                     uint32_t            aImageFlags,
                                     const nsPoint*      aAnchorPoint = nullptr,
                                     const nsRect*       aSourceArea = nullptr);

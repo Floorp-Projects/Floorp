@@ -1,0 +1,15 @@
+language: rust
+matrix:
+  include:
+    - rust: "nightly"
+      env: TEST_SUITE=suite_nightly
+    - rust: "beta"
+      env: TEST_SUITE=suite_beta
+    - rust: "stable"
+      env: TEST_SUITE=suite_stable
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - if [ "$TEST_SUITE" = "suite_nightly" ]; then
+      cargo bench --verbose;
+    fi

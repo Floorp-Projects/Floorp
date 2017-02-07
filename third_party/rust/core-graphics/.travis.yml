@@ -1,0 +1,13 @@
+language: rust
+os: osx
+rust:
+  - nightly
+  - beta
+  - stable
+
+script:
+  - cargo test
+  - cargo test --features="elcapitan"
+
+notifications:
+  webhooks: http://build.servo.org:54856/travis

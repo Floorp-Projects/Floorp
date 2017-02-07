@@ -1,0 +1,14 @@
+[package]
+name = "osmesa-sys"
+version = "0.1.2"
+authors = ["Daggerbot <daggerbot@gmail.com>"]
+description = "OSMesa library bindings for Rust"
+license = "CC0-1.0"
+repository = "https://github.com/Daggerbot/osmesa-rs.git"
+
+[lib]
+name = "osmesa_sys"
+path = "lib.rs"
+
+[dependencies]
+shared_library = "0.1"

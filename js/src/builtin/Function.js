@@ -33,7 +33,7 @@ function FunctionBind(thisArg, ...boundArgs) {
 
     // Ensure that the apply intrinsic has been cloned so it can be baked into
     // JIT code.
-    var funApply = std_Function_apply;
+    void std_Function_apply;
 
     // Step 12.
     return F;
@@ -194,8 +194,8 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
         if (arguments.length === 0) {
             if (newTarget !== undefined)
                 return bind_constructFunctionN(fun, newTarget, boundArgs);
-            else
-                return bind_applyFunctionN(fun, thisArg, boundArgs);
+
+            return bind_applyFunctionN(fun, thisArg, boundArgs);
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
         return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);

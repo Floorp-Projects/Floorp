@@ -278,15 +278,19 @@ public:
                    const nsTArray<nsString>& aStringParams) override;
 
   void
+  FlushReportsToConsole(uint64_t aInnerWindowID,
+                        ReportAction aAction = ReportAction::Forget) override;
+
+  void
   FlushConsoleReports(nsIDocument* aDocument,
                       ReportAction aAction = ReportAction::Forget) override;
 
   void
-  FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
+  FlushConsoleReports(nsILoadGroup* aLoadGroup,
+                      ReportAction aAction = ReportAction::Forget) override;
 
   void
-  FlushReportsByWindowId(uint64_t aWindowId,
-                         ReportAction aAction = ReportAction::Forget) override;
+  FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
 
   void
   ClearConsoleReports() override;

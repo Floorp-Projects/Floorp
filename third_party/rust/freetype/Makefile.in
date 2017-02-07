@@ -1,0 +1,37 @@
+VPATH=%VPATH%
+
+RUSTC ?= rustc
+RUSTFLAGS ?=
+EXT_DEPS ?=
+RUSTDOC ?= rustdoc
+RUSTDOC_FLAGS ?=
+RUSTDOC_TARGET ?= doc
+
+ifeq ($(CFG_OSTYPE),linux-androideabi)
+RUSTFLAGS += -L./../../android/libfreetype2/.libs
+endif
+
+RUST_SRC=$(shell find $(VPATH)/src -type f -name '*.rs')
+
+.PHONY: all clean
+all:	libfreetype-servo.dummy
+
+libfreetype-servo.dummy: src/lib.rs $(RUST_SRC) $(EXT_DEPS)
+	$(RUSTC) $(RUSTFLAGS) $< --out-dir . -C extra-filename=-servo
+	touch $@
+
+freetype-test: src/lib.rs $(RUST_SRC)
+	$(RUSTC) $(RUSTFLAGS) $< -o $@ --test
+
+check: freetype-test
+	./freetype-test
+
+.PHONY: doc
+doc: $(RUSTDOC_TARGET)/freetype/index.html
+
+$(RUSTDOC_TARGET)/freetype/index.html: src/lib.rs $(RUST_SRC) $(EXT_DEPS)
+	$(RUSTDOC) $(RUSTDOC_FLAGS) $< -o $(RUSTDOC_TARGET)
+
+clean:
+	rm -f *.o *.a *.so *.dylib *.rlib *.dll *.dummy *-test
+

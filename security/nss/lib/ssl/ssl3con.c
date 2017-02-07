@@ -8554,7 +8554,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
     /* If the ClientHello version is less than our maximum version, check for a
      * TLS_FALLBACK_SCSV and reject the connection if found. */
-    if (ss->vrange.max > ss->clientHelloVersion) {
+    if (ss->vrange.max > ss->version) {
         for (i = 0; i + 1 < suites.len; i += 2) {
             PRUint16 suite_i = (suites.data[i] << 8) | suites.data[i + 1];
             if (suite_i != TLS_FALLBACK_SCSV)

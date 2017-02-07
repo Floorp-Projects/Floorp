@@ -7,8 +7,11 @@
 #define MOZILLA_SVGCONTEXT_H_
 
 #include "mozilla/Maybe.h"
+#include "mozilla/SVGContextPaint.h"
 #include "SVGPreserveAspectRatio.h"
 #include "Units.h"
+
+class nsIFrame;
 
 namespace mozilla {
 
@@ -26,26 +29,40 @@ public:
 
   // Note: 'aIsPaintingSVGImageElement' should be used to indicate whether
   // the SVG image in question is being painted for an SVG <image> element.
-  SVGImageContext(CSSIntSize aViewportSize,
-                  Maybe<SVGPreserveAspectRatio> aPreserveAspectRatio,
-                  gfxFloat aOpacity = 1.0,
-                  bool aIsPaintingSVGImageElement = false)
+  explicit SVGImageContext(const CSSIntSize& aViewportSize,
+                           Maybe<SVGPreserveAspectRatio> aPreserveAspectRatio = Nothing(),
+                           gfxFloat aOpacity = 1.0,
+                           bool aIsPaintingSVGImageElement = false)
     : mViewportSize(aViewportSize)
     , mPreserveAspectRatio(aPreserveAspectRatio)
     , mGlobalOpacity(aOpacity)
     , mIsPaintingSVGImageElement(aIsPaintingSVGImageElement)
   { }
 
+  bool MaybeStoreContextPaint(nsIFrame* aFromFrame);
+
   const CSSIntSize& GetViewportSize() const {
     return mViewportSize;
+  }
+
+  void SetViewportSize(const CSSIntSize& aSize) {
+    mViewportSize = aSize;
   }
 
   const Maybe<SVGPreserveAspectRatio>& GetPreserveAspectRatio() const {
     return mPreserveAspectRatio;
   }
 
+  void SetPreserveAspectRatio(const Maybe<SVGPreserveAspectRatio>& aPAR) {
+    mPreserveAspectRatio = aPAR;
+  }
+
   gfxFloat GetGlobalOpacity() const {
     return mGlobalOpacity;
+  }
+
+  const SVGContextPaint* GetContextPaint() const {
+    return mContextPaint.get();
   }
 
   bool IsPaintingForSVGImageElement() const {
@@ -64,10 +81,15 @@ public:
   }
 
   uint32_t Hash() const {
-    return HashGeneric(mViewportSize.width,
+    uint32_t hash = 0;
+    if (mContextPaint) {
+      hash = HashGeneric(hash, mContextPaint->Hash());
+    }
+    return HashGeneric(hash,
+                       mViewportSize.width,
                        mViewportSize.height,
                        mPreserveAspectRatio.map(HashPAR).valueOr(0),
-                       HashBytes(&mGlobalOpacity, sizeof(gfxFloat)),
+                       HashBytes(&mGlobalOpacity, sizeof(mGlobalOpacity)),
                        mIsPaintingSVGImageElement);
   }
 
@@ -77,6 +99,7 @@ private:
   }
 
   // NOTE: When adding new member-vars, remember to update Hash() & operator==.
+  RefPtr<SVGContextPaint>       mContextPaint;
   CSSIntSize                    mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
   gfxFloat                      mGlobalOpacity;
