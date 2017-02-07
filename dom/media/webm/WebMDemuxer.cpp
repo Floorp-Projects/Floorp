@@ -666,6 +666,10 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     WEBM_DEBUG("push sample tstamp: %ld next_tstamp: %ld length: %ld kf: %d",
                tstamp, next_tstamp, length, isKeyframe);
     RefPtr<MediaRawData> sample = new MediaRawData(data, length);
+    if (!sample->Data()) {
+      // OOM.
+      return false;
+    }
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;
     sample->mDuration = next_tstamp - tstamp;
