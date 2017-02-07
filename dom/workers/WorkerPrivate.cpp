@@ -2004,6 +2004,28 @@ WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 }
 #endif // defined(DEBUG) || !defined(RELEASE_OR_BETA)
 
+void
+WorkerLoadInfo::ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed)
+{
+  static const uint32_t kDoomedCount = 10;
+
+  aDoomed.SetCapacity(kDoomedCount);
+
+  SwapToISupportsArray(mWindow, aDoomed);
+  SwapToISupportsArray(mScriptContext, aDoomed);
+  SwapToISupportsArray(mBaseURI, aDoomed);
+  SwapToISupportsArray(mResolvedScriptURI, aDoomed);
+  SwapToISupportsArray(mPrincipal, aDoomed);
+  SwapToISupportsArray(mChannel, aDoomed);
+  SwapToISupportsArray(mCSP, aDoomed);
+  SwapToISupportsArray(mLoadGroup, aDoomed);
+  SwapToISupportsArray(mLoadFailedAsyncRunnable, aDoomed);
+  SwapToISupportsArray(mInterfaceRequestor, aDoomed);
+  // Before adding anything here update kDoomedCount above!
+
+  MOZ_ASSERT(aDoomed.Length() == kDoomedCount);
+}
+
 template <class Derived>
 class WorkerPrivateParent<Derived>::EventTarget final
   : public nsIEventTarget
@@ -3207,23 +3229,7 @@ WorkerPrivateParent<Derived>::ForgetMainThreadObjects(
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
 
-  static const uint32_t kDoomedCount = 10;
-
-  aDoomed.SetCapacity(kDoomedCount);
-
-  SwapToISupportsArray(mLoadInfo.mWindow, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mScriptContext, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mBaseURI, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mResolvedScriptURI, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mPrincipal, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mChannel, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mCSP, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mLoadGroup, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mLoadFailedAsyncRunnable, aDoomed);
-  SwapToISupportsArray(mLoadInfo.mInterfaceRequestor, aDoomed);
-  // Before adding anything here update kDoomedCount above!
-
-  MOZ_ASSERT(aDoomed.Length() == kDoomedCount);
+  mLoadInfo.ForgetMainThreadObjects(aDoomed);
 
   mMainThreadObjectsForgotten = true;
 }
