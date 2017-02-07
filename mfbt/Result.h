@@ -114,7 +114,7 @@ public:
   bool isOk() const { return (mBits & 1) == 0; }
 
   V* unwrap() const { return reinterpret_cast<V*>(mBits); }
-  E& unwrapErr() const { return *reinterpret_cast<E*>(mBits & ~uintptr_t(1)); }
+  E& unwrapErr() const { return *reinterpret_cast<E*>(mBits ^ 1); }
 };
 
 // A bit of help figuring out which of the above specializations to use.
