@@ -41,6 +41,8 @@ JOB_NAME_WHITELIST = set([
     'linux64-nightly-l10n-opt',
     'linux64-opt',
     'linux64-pgo',
+    'linux64-qr-debug',
+    'linux64-qr-opt',
     'linux64-st-an-opt',
     'linux64-stylo-debug',
     'linux64-stylo-opt',
@@ -55,6 +57,8 @@ JOB_NAME_WHITELIST = set([
     'macosx64-clang-tidy',
     'macosx64-debug',
     'macosx64-opt',
+    'macosx64-qr-debug',
+    'macosx64-qr-opt',
     'macosx64-st-an-opt',
     'nexus-5-l-eng-debug',
     'nexus-5-l-eng-opt',
@@ -84,6 +88,8 @@ JOB_NAME_WHITELIST = set([
     'win64-debug',
     'win64-opt',
     'win64-pgo',
+    'win64-qr-debug',
+    'win64-qr-opt',
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\

@@ -371,6 +371,14 @@ void TlsAgent::Set0RttEnabled(bool en) {
   EXPECT_EQ(SECSuccess, rv);
 }
 
+void TlsAgent::SetFallbackSCSVEnabled(bool en) {
+  EXPECT_TRUE(role_ == CLIENT && EnsureTlsSetup());
+
+  SECStatus rv =
+      SSL_OptionSet(ssl_fd_, SSL_ENABLE_FALLBACK_SCSV, en ? PR_TRUE : PR_FALSE);
+  EXPECT_EQ(SECSuccess, rv);
+}
+
 void TlsAgent::SetShortHeadersEnabled() {
   EXPECT_TRUE(EnsureTlsSetup());
 

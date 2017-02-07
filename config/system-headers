@@ -489,6 +489,7 @@ gdk/gdkkeysyms.h
 gdk/gdkprivate.h
 gdk/gdkx.h
 gdk/gdkdirectfb.h
+gdk/gdkwayland.h
 gdk-pixbuf/gdk-pixbuf.h
 Gestalt.h
 getopt.h

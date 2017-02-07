@@ -1,0 +1,14 @@
+*~
+*#
+*.o
+*.a
+*.so
+*.dylib
+*.dSYM
+*.dll
+*.dummy
+cocoa-test
+build
+/target
+/doc
+/Cargo.lock

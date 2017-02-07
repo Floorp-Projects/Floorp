@@ -74,9 +74,9 @@ var test_bulk_transfer_transport = Task.async(function* (transportFactory) {
 
   // Client
   transport.hooks = {
-    onPacket: function (aPacket) {
+    onPacket: function (packet) {
       // We've received the initial start up packet
-      do_check_eq(aPacket.from, "root");
+      do_check_eq(packet.from, "root");
 
       // Server
       do_check_eq(Object.keys(DebuggerServer._connections).length, 1);

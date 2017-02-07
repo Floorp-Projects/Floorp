@@ -703,6 +703,7 @@
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="sharing-icon" mousethrough="always"/>
+                <image id="tracking-protection-icon"/>
                 <box id="blocked-permissions-container" align="center">
                   <image data-permission-id="geo" class="blocked-permission-icon geo-icon" role="button"
                          tooltiptext="&urlbar.geolocationBlocked.tooltip;"/>
@@ -751,7 +752,6 @@
                   <image id="eme-notification-icon" class="notification-anchor-icon drm-icon" role="button"
                          tooltiptext="&urlbar.emeNotificationAnchor.tooltip;"/>
                 </box>
-                <image id="tracking-protection-icon"/>
                 <image id="connection-icon"/>
                 <hbox id="identity-icon-labels">
                   <label id="identity-icon-label" class="plain" flex="1"/>

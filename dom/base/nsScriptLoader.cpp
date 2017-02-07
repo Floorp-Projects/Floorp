@@ -2488,7 +2488,12 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
     rv = aSRIDataVerifier->Verify(aRequest->mIntegrity, channel, sourceUri,
                                   mReporter);
-    mReporter->FlushConsoleReports(mDocument);
+    if (channelRequest) {
+      mReporter->FlushReportsToConsole(
+        nsContentUtils::GetInnerWindowID(channelRequest));
+    } else {
+      mReporter->FlushConsoleReports(mDocument);
+    }
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_SRI_CORRUPT;
     }

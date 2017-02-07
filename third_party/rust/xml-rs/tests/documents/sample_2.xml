@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:data xmlns:d="urn:example:double" xmlns:h="urn:example:header" xmlns:p="urn:example:namespace">
+  <p:datum id="34">
+    <p:name>Name</p:name>
+    <d:name>Another name</d:name>
+    <d:arg>0.3</d:arg>
+    <d:arg>0.2</d:arg>
+    <p:arg>0.1</p:arg>
+    <p:arg>0.01</p:arg>
+    <h:header name="Header-1">header 1 value</h:header>
+    <h:header name="Header-2">
+      Some bigger value
+    </h:header>
+  </p:datum>
+</p:data>
