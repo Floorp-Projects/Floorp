@@ -7,6 +7,7 @@
 "use strict";
 
 const { getRootBindingParent } = require("devtools/shared/layout/utils");
+const { getTabPrefs } = require("devtools/shared/indentation");
 
 /*
  * About the objects defined in this file:
@@ -130,6 +131,7 @@ exports.shortSource = function (sheet) {
 };
 
 const TAB_CHARS = "\t";
+const SPACE_CHARS = " ";
 
 /**
  * Prettify minified CSS text.
@@ -283,12 +285,20 @@ function prettifyCSS(text, ruleCount) {
       }
     }
 
+    // Get preference of the user regarding what to use for indentation,
+    // spaces or tabs.
+    let tabPrefs = getTabPrefs();
+
     if (isCloseBrace) {
       // Even if the stylesheet contains extra closing braces, the indent level should
       // remain > 0.
       indentLevel = Math.max(0, indentLevel - 1);
 
-      indent = TAB_CHARS.repeat(indentLevel);
+      if (tabPrefs.indentWithTabs) {
+        indent = TAB_CHARS.repeat(indentLevel);
+      } else {
+        indent = SPACE_CHARS.repeat(indentLevel);
+      }
       result = result + indent + "}";
     }
 
@@ -301,7 +311,11 @@ function prettifyCSS(text, ruleCount) {
         result += " ";
       }
       result += "{";
-      indent = TAB_CHARS.repeat(++indentLevel);
+      if (tabPrefs.indentWithTabs) {
+        indent = TAB_CHARS.repeat(++indentLevel);
+      } else {
+        indent = SPACE_CHARS.repeat(++indentLevel);
+      }
     }
 
     // Now it is time to insert a newline.  However first we want to
