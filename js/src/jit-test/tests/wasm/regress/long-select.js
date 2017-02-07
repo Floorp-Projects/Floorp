@@ -24,3 +24,19 @@ wasmFullPassI64(`
     i64.const 0x1000000012
     i64.lt_s
     select) (export "run" 0))`, createI64("0x9900000044"));
+
+wasmFullPassI64(`
+(module
+    (func (export "run") (result i64) (param f32)
+        i64.const 0x13100000001
+        i64.const 0x23370000002
+        i64.const 0x34480000003
+        i32.const 1
+        select
+        i32.const 1
+        select
+        i64.const 0x45590000004
+        i32.const 1
+        select
+    )
+)`, createI64("0x13100000001"));
