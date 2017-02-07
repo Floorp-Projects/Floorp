@@ -45,6 +45,8 @@ struct OggPacketDeletePolicy
   }
 };
 
+using OggPacketPtr = UniquePtr<ogg_packet, OggPacketDeletePolicy>;
+
 // Deallocates a packet, used in OggPacketQueue below.
 class OggPacketDeallocator : public nsDequeFunctor
 {

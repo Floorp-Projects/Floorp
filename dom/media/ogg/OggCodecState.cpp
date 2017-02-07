@@ -191,14 +191,14 @@ VorbisState::AssertHasRecordedPacketSamples(ogg_packet* aPacket)
 #endif
 }
 
-static ogg_packet*
+static OggPacketPtr
 Clone(ogg_packet* aPacket)
 {
   ogg_packet* p = new ogg_packet();
   memcpy(p, aPacket, sizeof(ogg_packet));
   p->packet = new unsigned char[p->bytes];
   memcpy(p->packet, aPacket->packet, p->bytes);
-  return p;
+  return OggPacketPtr(p);
 }
 
 void
@@ -298,7 +298,7 @@ OggCodecState::PageIn(ogg_page* aPage)
     ogg_packet packet;
     r = ogg_stream_packetout(&mState, &packet);
     if (r == 1) {
-      mPackets.Append(Clone(&packet));
+      mPackets.Append(Clone(&packet).release());
     }
   } while (r != 0);
   if (ogg_stream_check(&mState)) {
@@ -319,15 +319,15 @@ OggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos)
     ogg_packet packet;
     r = ogg_stream_packetout(&mState, &packet);
     if (r == 1) {
-      ogg_packet* clone = Clone(&packet);
+      OggPacketPtr clone = Clone(&packet);
       if (IsHeader(&packet)) {
         // Header packets go straight into the packet queue.
-        mPackets.Append(clone);
+        mPackets.Append(clone.release());
       } else {
         // We buffer data packets until we encounter a granulepos. We'll
         // then use the granulepos to figure out the granulepos of the
         // preceeding packets.
-        mUnstamped.AppendElement(clone);
+        mUnstamped.AppendElement(clone.release());
         aFoundGranulepos = packet.granulepos > 0;
       }
     }
