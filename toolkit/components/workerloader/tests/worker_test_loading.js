@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/chrome-worker */
+
 "use strict";
 
 importScripts("utils_worker.js"); // Test suite code
@@ -116,6 +118,3 @@ self.onmessage = function(message) {
   }
   finish();
 };
-
-
-

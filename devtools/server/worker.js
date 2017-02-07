@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* eslint-env worker */
+/* eslint-env mozilla/chrome-worker */
 /* global worker, loadSubScript, global */
 
 // This function is used to do remote procedure calls from the worker to the
