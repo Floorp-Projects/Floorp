@@ -170,7 +170,22 @@ function* testContainer(browser) {
   testAccessibleTree(acc, tree);
 }
 
+function* waitForImageMap(browser, accDoc) {
+  const id = 'imgmap';
+  const acc = findAccessibleChildByID(accDoc, id);
+  if (acc.firstChild) {
+    return;
+  }
+
+  const onReorder = waitForEvent(EVENT_REORDER, id);
+  // Wave over image map
+  yield BrowserTestUtils.synthesizeMouse(`#${id}`, 10, 10,
+                                         { type: 'mousemove' }, browser);
+  yield onReorder;
+}
+
 addAccessibleTask('doc_treeupdate_imagemap.html', function*(browser, accDoc) {
+  yield waitForImageMap(browser, accDoc);
   yield testImageMap(browser, accDoc);
   yield testContainer(browser);
 });
