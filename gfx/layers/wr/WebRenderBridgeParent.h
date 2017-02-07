@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_WebRenderBridgeParent_h
 #define mozilla_layers_WebRenderBridgeParent_h
 
+#include "CompositableHost.h"           // for CompositableHost, ImageCompositeNotificationInfo
 #include "GLContextProvider.h"
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
@@ -32,7 +33,6 @@ class WebRenderAPI;
 
 namespace layers {
 
-class CompositableHost;
 class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
@@ -125,6 +125,18 @@ public:
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
+  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
+  {
+    MOZ_ASSERT(mWidget);
+    mImageCompositeNotifications.AppendElement(aNotification);
+  }
+
+  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
+  {
+    MOZ_ASSERT(mWidget);
+    aNotifications->AppendElements(Move(mImageCompositeNotifications));
+  }
+
 private:
   virtual ~WebRenderBridgeParent();
 
@@ -152,6 +164,7 @@ private:
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<wr::ImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
+  nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
   // These fields keep track of the latest layer observer epoch values in the child and the
   // parent. mChildLayerObserverEpoch is the latest epoch value received from the child.

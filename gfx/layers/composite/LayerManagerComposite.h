@@ -7,6 +7,7 @@
 #define GFX_LayerManagerComposite_H
 
 #include <stdint.h>                     // for int32_t, uint32_t
+#include "CompositableHost.h"           // for CompositableHost, ImageCompositeNotificationInfo
 #include "GLDefs.h"                     // for GLenum
 #include "Layers.h"
 #include "Units.h"                      // for ParentLayerIntRect
@@ -49,7 +50,6 @@ namespace layers {
 
 class CanvasLayerComposite;
 class ColorLayerComposite;
-class CompositableHost;
 class Compositor;
 class ContainerLayerComposite;
 struct EffectChain;
@@ -64,11 +64,6 @@ struct FPSState;
 class PaintCounter;
 
 static const int kVisualWarningDuration = 150; // ms
-
-struct ImageCompositeNotificationInfo {
-  base::ProcessId mImageBridgeProcessId;
-  ImageCompositeNotification mNotification;
-};
 
 // An implementation of LayerManager that acts as a pair with ClientLayerManager
 // and is mirrored across IPDL. This gets managed/updated by LayerTransactionParent.
