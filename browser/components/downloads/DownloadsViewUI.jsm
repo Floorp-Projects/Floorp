@@ -169,41 +169,36 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       this._progressElement.dispatchEvent(event);
     }
 
-    let status = this.statusTextAndTip;
-    this.element.setAttribute("status", status.text);
-    this.element.setAttribute("statusTip", status.tip);
+    let labels = this.statusLabels;
+    this.element.setAttribute("status", labels.status);
+    this.element.setAttribute("hoverStatus", labels.hoverStatus);
+    this.element.setAttribute("fullStatus", labels.fullStatus);
   },
 
   lastEstimatedSecondsLeft: Infinity,
 
   /**
-   * Returns the text for the status line and the associated tooltip. These are
-   * returned by a single property because they are computed together. The
-   * result may be overridden by derived objects.
+   * Returns the labels for the status of normal, full, and hovering cases. These
+   * are returned by a single property because they are computed together.
    */
-  get statusTextAndTip() {
-    return this.rawStatusTextAndTip;
-  },
-
-  /**
-   * Derived objects may call this to get the status text.
-   */
-  get rawStatusTextAndTip() {
+  get statusLabels() {
     let s = DownloadsCommon.strings;
 
-    let text = "";
-    let tip = "";
+    let status = "";
+    let hoverStatus = "";
+    let fullStatus = "";
 
     if (!this.download.stopped) {
       let totalBytes = this.download.hasProgress ? this.download.totalBytes
                                                  : -1;
       let newEstimatedSecondsLeft;
-      [text, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
+      [status, newEstimatedSecondsLeft] = DownloadUtils.getDownloadStatus(
                                           this.download.currentBytes,
                                           totalBytes,
                                           this.download.speed,
                                           this.lastEstimatedSecondsLeft);
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
+      hoverStatus = status;
     } else if (this.download.canceled && this.download.hasPartialData) {
       let totalBytes = this.download.hasProgress ? this.download.totalBytes
                                                  : -1;
@@ -212,14 +207,19 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
 
       // We use the same XUL label to display both the state and the amount
       // transferred, for example "Paused -  1.1 MB".
-      text = s.statusSeparatorBeforeNumber(s.statePaused, transfer);
+      status = s.statusSeparatorBeforeNumber(s.statePaused, transfer);
+      hoverStatus = status;
     } else if (!this.download.succeeded && !this.download.canceled &&
                !this.download.error) {
-      text = s.stateStarting;
+      status = s.stateStarting;
+      hoverStatus = status;
     } else {
       let stateLabel;
 
-      if (this.download.succeeded) {
+      if (this.download.succeeded && !this.download.target.exists) {
+        stateLabel = s.fileMovedOrMissing;
+        hoverStatus = stateLabel;
+      } else if (this.download.succeeded) {
         // For completed downloads, show the file size (e.g. "1.5 MB").
         if (this.download.target.size !== undefined) {
           let [size, unit] =
@@ -229,6 +229,8 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           // History downloads may not have a size defined.
           stateLabel = s.sizeUnknown;
         }
+        status = s.stateCompleted;
+        hoverStatus = status;
       } else if (this.download.canceled) {
         stateLabel = s.stateCanceled;
       } else if (this.download.error.becauseBlockedByParentalControls) {
@@ -246,11 +248,15 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       let [displayDate, fullDate] = DownloadUtils.getReadableDates(date);
 
       let firstPart = s.statusSeparator(stateLabel, displayHost);
-      text = s.statusSeparator(firstPart, displayDate);
-      tip = s.statusSeparator(fullHost, fullDate);
+      fullStatus = s.statusSeparator(firstPart, displayDate);
+      status = status || stateLabel;
     }
 
-    return { text, tip: tip || text };
+    return {
+      status,
+      hoverStatus: hoverStatus || fullStatus,
+      fullStatus: fullStatus || status,
+    };
   },
 
   /**

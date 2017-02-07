@@ -269,8 +269,8 @@ MediaSourceDecoder::NextFrameBufferedStatus()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mMediaSource ||
-      mMediaSource->ReadyState() == dom::MediaSourceReadyState::Closed) {
+  if (!mMediaSource
+      || mMediaSource->ReadyState() == dom::MediaSourceReadyState::Closed) {
     return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
   }
 
@@ -304,7 +304,8 @@ MediaSourceDecoder::CanPlayThrough()
   TimeUnit duration = TimeUnit::FromSeconds(mMediaSource->Duration());
   TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
   if (duration.IsInfinite()) {
-    // We can't make an informed decision and just assume that it's a live stream
+    // We can't make an informed decision and just assume that it's a live
+    // stream
     return true;
   } else if (duration <= currentPosition) {
     return true;

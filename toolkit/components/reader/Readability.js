@@ -39,6 +39,7 @@ function Readability(uri, doc, options) {
   this._uri = uri;
   this._doc = doc;
   this._biggestFrame = false;
+  this._articleTitle = null;
   this._articleByline = null;
   this._articleDir = null;
 
@@ -119,7 +120,7 @@ Readability.prototype = {
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
-    unlikelyCandidates: /banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|foot|header|legends|menu|modal|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|ad-break|agegate|pagination|pager|popup|yom-remote/i,
+    unlikelyCandidates: /banner|breadcrumbs|combx|comment|community|cover-wrap|disqus|extra|foot|header|legends|menu|modal|related|remark|replies|rss|shoutbox|sidebar|skyscraper|social|sponsor|supplemental|ad-break|agegate|pagination|pager|popup|yom-remote/i,
     okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
     positive: /article|body|content|entry|hentry|h-entry|main|page|pagination|post|text|blog|story/i,
     negative: /hidden|^hid$| hid$| hid |^hid |banner|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|modal|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
@@ -489,10 +490,18 @@ Readability.prototype = {
       this._cleanMatchedNodes(topCandidate, /share/);
     });
 
-    // If there is only one h2, they are probably using it as a header
-    // and not a subheader, so remove it since we already have a header.
-    if (articleContent.getElementsByTagName('h2').length === 1)
-      this._clean(articleContent, "h2");
+    // If there is only one h2 and its text content substantially equals article title,
+    // they are probably using it as a header and not a subheader,
+    // so remove it since we already extract the title separately.
+    var h2 = articleContent.getElementsByTagName('h2');
+    if (h2.length === 1) {
+      var lengthSimilarRate = (h2[0].textContent.length - this._articleTitle.length) / this._articleTitle.length;
+      if (Math.abs(lengthSimilarRate) < 0.5 &&
+          (lengthSimilarRate > 0 ? h2[0].textContent.includes(this._articleTitle) :
+                                   this._articleTitle.includes(h2[0].textContent))) {
+        this._clean(articleContent, "h2");
+      }
+    }
 
     this._clean(articleContent, "iframe");
     this._clean(articleContent, "input");
@@ -714,6 +723,15 @@ Readability.prototype = {
           }
         }
 
+        // Remove empty DIV, SECTION, and HEADER nodes
+        if ((node.tagName === "DIV" || node.tagName === "SECTION" || node.tagName === "HEADER" ||
+             node.tagName === "H1" || node.tagName === "H2" || node.tagName === "H3" ||
+             node.tagName === "H4" || node.tagName === "H5" || node.tagName === "H6") &&
+            this._isEmptyElement(node)) {
+          node = this._removeAndGetNext(node);
+          continue;
+        }
+
         if (this.DEFAULT_TAGS_TO_SCORE.indexOf(node.tagName) !== -1) {
           elementsToScore.push(node);
         }
@@ -734,7 +752,7 @@ Readability.prototype = {
           } else {
             // EXPERIMENTAL
             this._forEachNode(node.childNodes, function(childNode) {
-              if (childNode.nodeType === Node.TEXT_NODE) {
+              if (childNode.nodeType === Node.TEXT_NODE && childNode.textContent.trim().length > 0) {
                 var p = doc.createElement('p');
                 p.textContent = childNode.textContent;
                 p.style.display = 'inline';
@@ -904,6 +922,17 @@ Readability.prototype = {
           }
           lastScore = parentOfTopCandidate.readability.contentScore;
           parentOfTopCandidate = parentOfTopCandidate.parentNode;
+        }
+
+        // If the top candidate is the only child, use parent instead. This will help sibling
+        // joining logic when adjacent content is actually located in parent's sibling node.
+        parentOfTopCandidate = topCandidate.parentNode;
+        while (parentOfTopCandidate.tagName != "BODY" && parentOfTopCandidate.children.length == 1) {
+          topCandidate = parentOfTopCandidate;
+          parentOfTopCandidate = topCandidate.parentNode;
+        }
+        if (!topCandidate.readability) {
+          this._initializeNode(topCandidate);
         }
       }
 
@@ -1155,6 +1184,12 @@ Readability.prototype = {
       return node.nodeType === Node.TEXT_NODE &&
              this.REGEXPS.hasContent.test(node.textContent);
     });
+  },
+
+  _isEmptyElement: function(node) {
+    return node.nodeType === Node.ELEMENT_NODE &&
+      node.children.length == 0 &&
+      node.textContent.trim().length == 0;
   },
 
   /**
@@ -1744,7 +1779,7 @@ Readability.prototype = {
         var contentLength = this._getInnerText(node).length;
 
         var haveToRemove =
-          (img > 1 && img > p && !this._hasAncestorTag(node, "figure")) ||
+          (img > 1 && p / img < 0.5 && !this._hasAncestorTag(node, "figure")) ||
           (!isList && li > p) ||
           (input > Math.floor(p/3)) ||
           (!isList && contentLength < 25 && (img === 0 || img > 2) && !this._hasAncestorTag(node, "figure")) ||
@@ -1901,7 +1936,7 @@ Readability.prototype = {
     this._prepDocument();
 
     var metadata = this._getArticleMetadata();
-    var articleTitle = metadata.title;
+    this._articleTitle = metadata.title;
 
     var articleContent = this._grabArticle();
     if (!articleContent)
@@ -1932,7 +1967,7 @@ Readability.prototype = {
     var textContent = articleContent.textContent;
     return {
       uri: this._uri,
-      title: articleTitle,
+      title: this._articleTitle,
       byline: metadata.byline || this._articleByline,
       dir: this._articleDir,
       content: articleContent.innerHTML,

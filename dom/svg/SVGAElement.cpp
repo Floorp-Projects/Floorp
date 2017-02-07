@@ -187,23 +187,76 @@ SVGAElement::IsAttributeMapped(const nsIAtom* name) const
     SVGAElementBase::IsAttributeMapped(name);
 }
 
-bool
-SVGAElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
+int32_t
+SVGAElement::TabIndexDefault()
 {
-  nsCOMPtr<nsIURI> uri;
-  if (IsLink(getter_AddRefs(uri))) {
-    if (aTabIndex) {
-      *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
+  return 0;
+}
+
+static bool
+IsNodeInEditableRegion(nsINode* aNode)
+{
+  while (aNode) {
+    if (aNode->IsEditable()) {
+      return true;
     }
-    return true;
+    aNode = aNode->GetParent();
   }
-  if (nsSVGElement::IsFocusableInternal(aTabIndex, aWithMouse)) {
+  return false;
+}
+
+bool
+SVGAElement::IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex)
+{
+  if (nsSVGElement::IsSVGFocusable(aIsFocusable, aTabIndex)) {
     return true;
   }
 
-  if (aTabIndex) {
+  // cannot focus links if there is no link handler
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    nsIPresShell* presShell = doc->GetShell();
+    if (presShell) {
+      nsPresContext* presContext = presShell->GetPresContext();
+      if (presContext && !presContext->GetLinkHandler()) {
+        *aIsFocusable = false;
+        return false;
+      }
+    }
+  }
+
+  // Links that are in an editable region should never be focusable, even if
+  // they are in a contenteditable="false" region.
+  if (IsNodeInEditableRegion(this)) {
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
+
+    *aIsFocusable = false;
+
+    return true;
+  }
+
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
+    // check whether we're actually a link
+    if (!Link::HasURI()) {
+      // Not tabbable or focusable without href (bug 17605), unless
+      // forced to be via presence of nonnegative tabindex attribute
+      if (aTabIndex) {
+        *aTabIndex = -1;
+      }
+
+      *aIsFocusable = false;
+
+      return false;
+    }
+  }
+
+  if (aTabIndex && (sTabFocusModel & eTabFocus_linksMask) == 0) {
     *aTabIndex = -1;
   }
+
+  *aIsFocusable = true;
 
   return false;
 }

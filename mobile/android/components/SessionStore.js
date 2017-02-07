@@ -627,14 +627,15 @@ SessionStore.prototype = {
   },
 
   onTabClose: function ss_onTabClose(aWindow, aBrowser, aTabIndex) {
-    if (this._maxTabsUndo == 0) {
+    let data = aBrowser.__SS_data || {};
+    if (this._maxTabsUndo == 0 || this._sessionDataIsEmpty(data)) {
+      this._lastClosedTabIndex = -1;
       return;
     }
 
     if (aWindow.BrowserApp.tabs.length > 0) {
       // Bundle this browser's data and extra data and save in the closedTabs
       // window property
-      let data = aBrowser.__SS_data || {};
       data.extData = aBrowser.__SS_extdata || {};
 
       this._windows[aWindow.__SSID].closedTabs.unshift(data);
@@ -653,6 +654,17 @@ SessionStore.prototype = {
       let evt = new Event("SSTabCloseProcessed", {"bubbles":true, "cancelable":false});
       aBrowser.dispatchEvent(evt);
     }
+  },
+
+  _sessionDataIsEmpty: function ss_sessionDataIsEmpty(aData) {
+    if (!aData || !aData.entries || aData.entries.length == 0) {
+      return true;
+    }
+
+    let entries = aData.entries;
+
+    return (entries.length == 1 &&
+            (entries[0].url == "about:home" || entries[0].url == "about:privatebrowsing"));
   },
 
   onTabLoad: function ss_onTabLoad(aWindow, aBrowser) {
@@ -1747,6 +1759,10 @@ SessionStore.prototype = {
     if (this._notifyClosedTabs) {
       this._sendClosedTabsToJava(aWindow);
     }
+  },
+
+  get canUndoLastCloseTab() {
+    return this._lastClosedTabIndex > -1;
   },
 
   _sendClosedTabsToJava: function ss_sendClosedTabsToJava(aWindow) {

@@ -254,7 +254,7 @@ promise_test(function(t) {
 
           // we have to wait at least 200ms because this animation is
           // unthrottled on every 200ms.
-          // See http://hg.mozilla.org/mozilla-central/file/cafb1c90f794/layout/style/AnimationCommon.cpp#l863
+          // See https://hg.mozilla.org/mozilla-central/file/cafb1c90f794/layout/style/AnimationCommon.cpp#l863
           if (window.performance.now() - timeAtStart > 200) {
             resolve();
             return;

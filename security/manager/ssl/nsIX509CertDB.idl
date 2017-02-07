@@ -241,11 +241,11 @@ interface nsIX509CertDB : nsISupports {
    *  as input, to encourage users of the API to verify the signature as the
    *  first step in opening the JAR.
    */
-  const AppTrustedRoot AppMarketplaceProdPublicRoot = 1;
-  const AppTrustedRoot AppMarketplaceProdReviewersRoot = 2;
-  const AppTrustedRoot AppMarketplaceDevPublicRoot = 3;
-  const AppTrustedRoot AppMarketplaceDevReviewersRoot = 4;
-  const AppTrustedRoot AppMarketplaceStageRoot = 5;
+  // 1 used to be AppMarketplaceProdPublicRoot.
+  // 2 used to be AppMarketplaceProdReviewersRoot.
+  // 3 used to be AppMarketplaceDevPublicRoot.
+  // 4 used to be AppMarketplaceDevReviewersRoot.
+  // 5 used to be AppMarketplaceStageRoot.
   const AppTrustedRoot AppXPCShellRoot = 6;
   const AppTrustedRoot AddonsPublicRoot = 7;
   const AppTrustedRoot AddonsStageRoot = 8;
