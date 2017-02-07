@@ -20,3 +20,6 @@ FINAL_TARGET_PP_FILES.features['webcompat-reporter@mozilla.org'] += [
 JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+with Files('**'):
+    BUG_COMPONENT = ('Web Compatibility', 'General')
