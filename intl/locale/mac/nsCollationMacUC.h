@@ -6,10 +6,9 @@
 #ifndef nsCollationMacUC_h_
 #define nsCollationMacUC_h_
 
-#include "mozilla/Attributes.h"
 #include "nsICollation.h"
 #include "nsCollation.h"
-#include "nsString.h"
+#include "mozilla/Attributes.h"
 
 #include "unicode/ucol.h"
 
@@ -27,6 +26,7 @@ public:
 protected:
   ~nsCollationMacUC();
 
+  nsresult ConvertLocaleICU(nsILocale* aNSLocale, char** aICULocale);
   nsresult ConvertStrength(const int32_t aStrength,
                            UCollationStrength* aStrengthOut,
                            UColAttributeValue* aCaseLevelOut);
@@ -36,7 +36,7 @@ protected:
 private:
   bool mInit;
   bool mHasCollator;
-  nsCString mLocale;
+  char* mLocaleICU;
   int32_t mLastStrength;
   UCollator* mCollatorICU;
 };

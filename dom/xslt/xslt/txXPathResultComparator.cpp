@@ -9,6 +9,8 @@
 #include "txExpr.h"
 #include "txCore.h"
 #include "nsCollationCID.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
 #include "nsIServiceManager.h"
 #include "prmem.h"
 
@@ -33,16 +35,25 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 {
     nsresult rv;
 
+    nsCOMPtr<nsILocaleService> localeService =
+                    do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILocale> locale;
+    if (!aLanguage.IsEmpty()) {
+        rv = localeService->NewLocale(aLanguage,
+                                      getter_AddRefs(locale));
+    }
+    else {
+        rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsICollationFactory> colFactory =
                     do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aLanguage.IsEmpty()) {
-      rv = colFactory->CreateCollation(getter_AddRefs(mCollation));
-    } else {
-      rv = colFactory->CreateCollationForLocale(NS_ConvertUTF16toUTF8(aLanguage), getter_AddRefs(mCollation));
-    }
-
+    rv = colFactory->CreateCollation(locale, getter_AddRefs(mCollation));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

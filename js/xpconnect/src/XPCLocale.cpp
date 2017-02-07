@@ -126,11 +126,21 @@ private:
     nsresult rv;
 
     if (!mCollation) {
-      nsCOMPtr<nsICollationFactory> colFactory =
-        do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
+      nsCOMPtr<nsILocaleService> localeService =
+        do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
 
       if (NS_SUCCEEDED(rv)) {
-        rv = colFactory->CreateCollation(getter_AddRefs(mCollation));
+        nsCOMPtr<nsILocale> locale;
+        rv = localeService->GetApplicationLocale(getter_AddRefs(locale));
+
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsICollationFactory> colFactory =
+            do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID, &rv);
+
+          if (NS_SUCCEEDED(rv)) {
+            rv = colFactory->CreateCollation(locale, getter_AddRefs(mCollation));
+          }
+        }
       }
 
       if (NS_FAILED(rv)) {

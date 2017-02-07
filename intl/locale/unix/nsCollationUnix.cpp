@@ -8,6 +8,7 @@
 #include "nsCollationUnix.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsPosixLocale.h"
 #include "nsCOMPtr.h"
@@ -43,7 +44,7 @@ nsCollationUnix::~nsCollationUnix()
 
 NS_IMPL_ISUPPORTS(nsCollationUnix, nsICollation)
 
-nsresult nsCollationUnix::Initialize(const nsACString& locale) 
+nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {
 #define kPlatformLocaleLength 64
   NS_ASSERTION(!mCollation, "Should only be initialized once");
@@ -52,12 +53,46 @@ nsresult nsCollationUnix::Initialize(const nsACString& locale)
 
   mCollation = new nsCollation;
 
-  nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res)) {
-    nsAutoCString mappedCharset;
-    res = platformCharset->GetDefaultCharsetForLocale(NS_ConvertUTF8toUTF16(locale), mappedCharset);
+  // default platform locale
+  mLocale.Assign('C');
+
+  nsAutoString localeStr;
+  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_COLLATE##PLATFORM");
+
+  // get locale string, use app default if no locale specified
+  if (locale == nullptr) {
+    nsCOMPtr<nsILocaleService> localeService = 
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      mCollation->SetCharset(mappedCharset.get());
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(aCategory, localeStr);
+        NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
+      }
+    }
+  }
+  else {
+    res = locale->GetCategory(aCategory, localeStr);
+    NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
+  }
+
+  // Get platform locale and charset name from locale, if available
+  if (NS_SUCCEEDED(res)) {
+    // keep the same behavior as 4.x as well as avoiding Linux collation key problem
+    if (localeStr.LowerCaseEqualsLiteral("en_us")) { // note: locale is in platform format
+      localeStr.Assign('C');
+    }
+
+    nsPosixLocale::GetPlatformLocale(localeStr, mLocale);
+
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
+    if (NS_SUCCEEDED(res)) {
+      nsAutoCString mappedCharset;
+      res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
+      if (NS_SUCCEEDED(res)) {
+        mCollation->SetCharset(mappedCharset.get());
+      }
     }
   }
 

@@ -7,6 +7,7 @@
 #include "nsCollationWin.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsWin32Locale.h"
 #include "nsCOMPtr.h"
@@ -29,7 +30,7 @@ nsCollationWin::~nsCollationWin()
     delete mCollation;
 }
 
-nsresult nsCollationWin::Initialize(const nsACString& locale)
+nsresult nsCollationWin::Initialize(nsILocale* locale) 
 {
   NS_ASSERTION(!mCollation, "Should only be initialized once.");
 
@@ -37,14 +38,32 @@ nsresult nsCollationWin::Initialize(const nsACString& locale)
 
   mCollation = new nsCollation;
 
-  NS_ConvertASCIItoUTF16 wideLocale(locale);
-
   // default LCID (en-US)
   mLCID = 1033;
 
+  nsAutoString localeStr;
+
+  // get locale string, use app default if no locale specified
+  if (!locale) {
+    nsCOMPtr<nsILocaleService> localeService = 
+             do_GetService(NS_LOCALESERVICE_CONTRACTID);
+    if (localeService) {
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                                     localeStr);
+      }
+    }
+  }
+  else {
+    res = locale->GetCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"), 
+                              localeStr);
+  }
+
   // Get LCID and charset name from locale, if available
   LCID lcid;
-  res = nsWin32Locale::GetPlatformLocale(wideLocale, &lcid);
+  res = nsWin32Locale::GetPlatformLocale(localeStr, &lcid);
   if (NS_SUCCEEDED(res)) {
     mLCID = lcid;
   }
@@ -53,7 +72,7 @@ nsresult nsCollationWin::Initialize(const nsACString& locale)
       do_GetService(NS_PLATFORMCHARSET_CONTRACTID);
   if (platformCharset) {
     nsAutoCString mappedCharset;
-    res = platformCharset->GetDefaultCharsetForLocale(wideLocale, mappedCharset);
+    res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
     if (NS_SUCCEEDED(res)) {
       mCollation->SetCharset(mappedCharset.get());
     }
