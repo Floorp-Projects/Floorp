@@ -79,7 +79,7 @@ add_test(function test_reset_SyncScheduler() {
   // Some non-default values for SyncScheduler's attributes.
   Service.scheduler.idle = true;
   Service.scheduler.hasIncomingItems = true;
-  Service.scheduler.numClients = 42;
+  Svc.Prefs.set("clients.devices.desktop", 42);
   Service.scheduler.nextSync = Date.now();
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   Service.scheduler.syncInterval = Service.scheduler.activeInterval;

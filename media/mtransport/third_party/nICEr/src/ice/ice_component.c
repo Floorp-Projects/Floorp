@@ -549,6 +549,14 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if ((r=nr_transport_addr_copy(&addr, &addrs[i].addr)))
           ABORT(r);
         addr.protocol = IPPROTO_TCP;
+
+        /* If we're going to use TLS, make sure that's recorded */
+        if (ctx->turn_servers[j].turn_server.tls) {
+          strncpy(addr.tls_host,
+                  ctx->turn_servers[j].turn_server.u.dnsname.host,
+                  sizeof(addr.tls_host) - 1);
+        }
+
         if ((r=nr_transport_addr_fmt_addr_string(&addr)))
           ABORT(r);
         /* Create a local socket */

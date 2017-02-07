@@ -324,7 +324,7 @@ nsUrlClassifierDBServiceWorker::HandlePendingLookups()
       DoLookup(lookup.mKey, lookup.mTables, lookup.mCallback);
     }
     double lookupTime = (TimeStamp::Now() - lookup.mStartTime).ToMilliseconds();
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LOOKUP_TIME,
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LOOKUP_TIME_2,
                           static_cast<uint32_t>(lookupTime));
   }
 
@@ -996,20 +996,11 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
           mDBService->GetCompleter(result.mTableName,
                                    getter_AddRefs(completer))) {
 
-        // TODO: Figure out how long the partial hash should be sent
-        //       for completion. See Bug 1323953.
+        // Bug 1323953 - Send the first 4 bytes for completion no matter how
+        // long we matched the prefix.
         nsAutoCString partialHash;
-        if (StringEndsWith(result.mTableName, NS_LITERAL_CSTRING("-proto"))) {
-          // We send the complete partial hash for v4 at the moment.
-          partialHash = result.PartialHash();
-        } else {
-          // We always send the first 4 bytes of the partial hash for
-          // non-v4 tables. This matters when we have 32-byte prefix
-          // in "test-xxx-simple" test data.
-          partialHash.Assign(reinterpret_cast<char*>(&result.hash.fixedLengthPrefix),
-                             PREFIX_SIZE);
-        }
-
+        partialHash.Assign(reinterpret_cast<char*>(&result.hash.fixedLengthPrefix),
+                           PREFIX_SIZE);
         nsresult rv = completer->Complete(partialHash,
                                           gethashUrl,
                                           result.mTableName,
@@ -1892,6 +1883,11 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     Shutdown();
     LOG(("joining background thread"));
     mWorkerProxy = nullptr;
+
+    if (!gDbBackgroundThread) {
+      return NS_OK;
+    }
+
     nsIThread *backgroundThread = gDbBackgroundThread;
     gDbBackgroundThread = nullptr;
     backgroundThread->Shutdown();
