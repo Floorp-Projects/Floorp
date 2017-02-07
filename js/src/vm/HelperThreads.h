@@ -409,6 +409,10 @@ EnsureHelperThreadsInitialized();
 void
 SetFakeCPUCount(size_t count);
 
+// Get the current helper thread, or null.
+HelperThread*
+CurrentHelperThread();
+
 // Pause the current thread until it's pause flag is unset.
 void
 PauseCurrentHelperThread();

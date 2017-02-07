@@ -126,7 +126,6 @@ class CodeGeneratorShared : public LElementVisitor
             : offset(offset), event(event)
         {}
     };
-    js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTraceLoggers_;
     js::Vector<PatchableTLEvent, 0, SystemAllocPolicy> patchableTLEvents_;
     js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif

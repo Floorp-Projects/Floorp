@@ -2298,11 +2298,7 @@ jit::AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAn
 
     // If needed, update alias analysis dependencies.
     if (updateAliasAnalysis) {
-        TraceLoggerThread* logger;
-        if (GetJitContext()->onMainThread())
-            logger = TraceLoggerForMainThread(GetJitContext()->runtime);
-        else
-            logger = TraceLoggerForCurrentThread();
+        TraceLoggerThread* logger = TraceLoggerForCurrentThread();
         AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
 
         if (JitOptions.disableFlowAA) {
@@ -4179,8 +4175,8 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
     if (script->length() > MAX_SCRIPT_SIZE)
         return true;
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+    TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logCompile(logger, TraceLogger_IonAnalysis);
 
@@ -4429,8 +4425,8 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     if (!script->ensureHasTypes(cx))
         return false;
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+    TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logCompile(logger, TraceLogger_IonAnalysis);
 

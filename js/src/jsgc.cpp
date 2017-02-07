@@ -6363,7 +6363,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
 
-    AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
+    AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
     AutoScheduleZonesForGC asz(rt);
@@ -6597,7 +6597,7 @@ ZoneGroup::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
     gcstats::AutoPhase ap(runtime->gc.stats(), phase);
 
     runtime->gc.minorGCTriggerReason = JS::gcreason::NO_REASON;
-    TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery().collect(reason);
     MOZ_ASSERT(nursery().isEmpty());
