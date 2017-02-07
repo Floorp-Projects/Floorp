@@ -1885,6 +1885,11 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     Shutdown();
     LOG(("joining background thread"));
     mWorkerProxy = nullptr;
+
+    if (!gDbBackgroundThread) {
+      return NS_OK;
+    }
+
     nsIThread *backgroundThread = gDbBackgroundThread;
     gDbBackgroundThread = nullptr;
     backgroundThread->Shutdown();
