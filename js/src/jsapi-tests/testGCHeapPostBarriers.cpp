@@ -28,7 +28,7 @@ struct TestStruct<js::GCPtr<T>>
 {
     js::GCPtr<T> wrapper;
 
-    JS::Zone* zone() { return wrapper->zone(); }
+    JS::Zone* zone() const { return wrapper->zone(); }
 };
 
 // Give the GCPtr version GCManagedDeletePolicy as required.

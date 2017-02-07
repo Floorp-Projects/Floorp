@@ -2721,7 +2721,7 @@ IsMarkedInternal(JSRuntime* rt, JSObject** thingp)
 
     if (IsInsideNursery(*thingp)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        return rt->zoneGroupFromMainThread()->nursery().getForwardedPointer(thingp);
+        return Nursery::getForwardedPointer(thingp);
     }
     return IsMarkedInternalCommon(thingp);
 }
