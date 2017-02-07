@@ -1,0 +1,397 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1337525",
+    title: "webRtc Stats composition and sanity"
+  });
+var statsExpectedByType = {
+  "inbound-rtp": {
+    expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
+      "packetsReceived", "packetsLost", "bytesReceived", "jitter",],
+    optional: ["mozRtt", "remoteId",],
+    videoOnly: ["discardedPackets", "framerateStdDev", "framerateMean",
+      "bitrateMean", "bitrateStdDev",],
+    unimplemented: ["mediaTrackId", "transportId", "codecId", "framesDecoded",
+      "packetsDiscarded", "associateStatsId", "firCount", "pliCount",
+      "nackCount", "sliCount", "qpSum", "packetsRepaired", "fractionLost",
+      "burstPacketsLost", "burstLossCount", "burstDiscardCount",
+      "gapDiscardRate", "gapLossRate",],
+  },
+  "outbound-rtp": {
+    expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
+      "packetsSent", "bytesSent", "remoteId",],
+    optional: ["remoteId",],
+    videoOnly: ["droppedFrames", "bitrateMean", "bitrateStdDev",
+      "framerateMean", "framerateStdDev",],
+    unimplemented: ["mediaTrackId", "transportId", "codecId",
+      "framesEncoded", "firCount", "pliCount", "nackCount", "sliCount",
+      "qpSum", "roundTripTime", "targetBitrate",],
+  },
+  "codec": { skip: true },
+  "peer-connection": { skip: true },
+  "data-channel": { skip: true },
+  "track": { skip: true },
+  "transport": { skip: true },
+  "candidate-pair": { skip : true },
+  "local-candidate": { skip: true },
+  "remote-candidate": { skip: true },
+  "certificate": { skip: true },
+};
+["in", "out"].forEach(pre => {
+  let s = statsExpectedByType[pre + "bound-rtp"];
+  s.optional = [...s.optional, ...s.videoOnly];
+});
+
+//
+//  Checks that the fields in a report conform to the expectations in
+// statExpectedByType
+//
+var checkExpectedFields = report => report.forEach(stat => {
+  let expectations = statsExpectedByType[stat.type];
+  ok(expectations, "Stats type " + stat.type + " was expected");
+  // If the type is not expected or if it is flagged for skipping continue to
+  // the next
+  if (!expectations || expectations.skip) {
+    return;
+  }
+  // Check that all required fields exist
+  expectations.expected.forEach(field => {
+    ok(field in stat, "Expected stat field " + stat.type + "." + field
+      + " exists");
+  });
+  // Check that each field is either expected or optional
+  let allowed = [...expectations.expected, ...expectations.optional];
+  Object.keys(stat).forEach(field => {
+    ok(allowed.includes(field), "Stat field " + stat.type + "." + field
+      + " is allowed");
+  });
+
+  //
+  // Ensure that unimplemented fields are not implemented
+  //   note: if a field is implemented it should be moved to expected or
+  //   optional.
+  //
+  expectations.unimplemented.forEach(field => {
+    ok(!Object.keys(stat).includes(field), "Unimplemented field " + stat.type
+      + "." + field + " does not exist.");
+  });
+});
+
+var pedanticChecks = report => {
+  report.forEach((statObj, mapKey) => {
+    let tested = {};
+    // Record what fields get tested.
+    // To access a field foo without marking it as tested use stat.inner.foo
+    let stat = new Proxy(statObj, {
+      get(stat, key) {
+        if (key == "inner") return stat;
+        tested[key] = true;
+        return stat[key];
+      }
+    });
+
+    let expectations = statsExpectedByType[stat.type];
+
+    if (expectations.skip) {
+      return;
+    }
+
+    // All stats share the following attributes inherited from RTCStats
+    is(stat.id, mapKey, stat.type + ".id is the same as the report key.");
+
+    // timestamp
+    ok(stat.timestamp >= 0, stat.type + ".timestamp is not less than 0");
+
+    //
+    // RTCStreamStats attributes with common behavior
+    //
+    // inbound-rtp and outbound-rtp inherit from RTCStreamStats
+    if (["inbound-rtp", "outbound-rtp"].includes(stat.type)) {
+      //
+      // Common RTCStreamStats fields
+      //
+
+      // SSRC
+      ok(stat.ssrc, stat.type + ".ssrc has a value");
+
+      // isRemote
+      ok(stat.isRemote !== undefined, stat.type + ".isRemote exists.");
+
+      // mediaType
+      ok(["audio", "video"].includes(stat.mediaType),
+        stat.type + ".mediaType is 'audio' or 'video'");
+
+      // remote id
+      if (stat.remoteId) {
+        ok(report.has(stat.remoteId), "remoteId exists in report.");
+        is(report.get(stat.remoteId).ssrc, stat.ssrc,
+          "remote ssrc and local ssrc match.");
+        is(report.get(stat.remoteId).remoteId, stat.id,
+          "remote object has local object as it's own remote object.");
+      }
+
+    }
+
+    if (stat.type == "inbound-rtp") {
+      //
+      // Required fields
+      //
+
+      // packetsReceived
+      ok(stat.packetsReceived >= 0
+        && stat.packetsReceived < 10 ** 5,
+        stat.type + ".packetsReceived is a sane number for a short test. value="
+        + stat.packetsReceived);
+
+      // bytesReceived
+      ok(stat.bytesReceived >= 0
+        && stat.bytesReceived < 10 ** 9, // Not a magic number, just a guess
+        stat.type + ".bytesReceived is a sane number for a short test. value="
+        + stat.bytesReceived);
+
+      // packetsLost
+      ok(stat.packetsLost < 100,
+        stat.type + ".packetsLost is a sane number for a short test. value="
+        + stat.packetsLost);
+
+      // jitter
+      ok(stat.jitter < 10, // This should be much lower, TODO: Bug 1330575
+        stat.type + ".jitter is sane number for a local only test. value="
+        + stat.jitter);
+
+      // packetsDiscarded
+      // special exception for, TODO: Bug 1335967
+      // if (!stat.inner.isRemote && stat.discardedPackets !== undefined) {
+      //   ok(stat.packetsDiscarded < 100, stat.type
+      //     + ".packetsDiscarded is a sane number for a short test. value="
+      //     + stat.packetsDiscarded);
+      // }
+      // if (stat.packetsDiscarded !== undefined) {
+      //   ok(!stat.inner.isRemote,
+      //     stat.type + ".packetsDiscarded is only set when isRemote is "
+      //     + "false");
+      // }
+
+      //
+      // Optional fields
+      //
+
+      // mozRtt
+      if (stat.inner.isRemote) {
+        ok(stat.mozRtt >= 0, stat.type + ".mozRtt is sane.");
+      } else {
+        is(stat.mozRtt, undefined, stat.type
+          + ".mozRtt is only set when isRemote is true");
+      }
+
+      //
+      // Local video only stats
+      //
+      if (stat.inner.isRemote || stat.inner.mediaType != "video") {
+        expectations.videoOnly.forEach(field => {
+          if (stat.inner.isRemote) {
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when isRemote is true");
+          } else { // mediaType != video
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when mediaType is not 'video'");
+          }
+        });
+      } else {
+        expectations.videoOnly.forEach(field => {
+          ok(stat[field] !== undefined, stat.type + " has field " + field
+            + " when mediaType is video");
+        });
+        // discardedPackets
+        ok(stat.discardedPackets < 100, stat.type
+          + ".discardedPackets is a sane number for a short test. value="
+          + stat.discardedPackets);
+
+        // bitrateMean
+        // special exception, TODO: Bug 1341533
+        if (stat.bitrateMean !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.bitrateMean >= 0 && stat.bitrateMean < 2 ** 25,
+          //   stat.type + ".bitrateMean is sane. value="
+          //   + stat.bitrateMean);
+        }
+
+        // bitrateStdDev
+        // special exception, TODO Bug 1341533
+        if (stat.bitrateStdDev !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.bitrateStdDev >= 0 && stat.bitrateStdDev < 2 ** 25,
+          //   stat.type + ".bitrateStdDev is sane. value="
+          //   + stat.bitrateStdDev);
+        }
+
+        // framerateMean
+        // special exception, TODO: Bug 1341533
+        if (stat.framerateMean !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.framerateMean >= 0 && stat.framerateMean < 120,
+          //   stat.type + ".framerateMean is sane. value="
+          //   + stat.framerateMean);
+        }
+
+        // framerateStdDev
+        // special exception, TODO: Bug 1341533
+        if (stat.framerateStdDev !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.framerateStdDev >= 0 && stat.framerateStdDev < 120,
+          //   stat.type + ".framerateStdDev is sane. value="
+          //   + stat.framerateStdDev);
+        }
+      }
+    } else if (stat.type == "outbound-rtp") {
+      //
+      // Required fields
+      //
+
+      // packetsSent
+      ok(stat.packetsSent > 0 && stat.packetsSent < 10000,
+        stat.type + ".packetsSent is a sane number for a short test. value="
+        + stat.packetsSent);
+
+      // bytesSent
+      ok(stat.bytesSent, stat.type + ".bytesSent has a value."
+        + " Value not expected to be sane, bug 1339104. value="
+        + stat.bytesSent);
+
+      //
+      // Optional fields
+      //
+
+      //
+      // Local video only stats
+      //
+      if (stat.inner.isRemote || stat.inner.mediaType != "video") {
+        expectations.videoOnly.forEach(field => {
+          if (stat.inner.isRemote) {
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when isRemote is true");
+          } else { // mediaType != video
+            ok(stat[field] === undefined, stat.type + " does not have field "
+              + field + " when mediaType is not 'video'");
+          }
+        });
+      } else {
+        expectations.videoOnly.forEach(field => {
+          ok(stat[field] !== undefined, stat.type + " has field " + field
+            + " when mediaType is video");
+        });
+
+        // bitrateMean
+        if (stat.bitrateMean !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.bitrateMean >= 0 && stat.bitrateMean < 2 ** 25,
+          //   stat.type + ".bitrateMean is sane. value="
+          //   + stat.bitrateMean);
+        }
+
+        // bitrateStdDev
+        if (stat.bitrateStdDev !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.bitrateStdDev >= 0 && stat.bitrateStdDev < 2 ** 25,
+          //   stat.type + ".bitrateStdDev is sane. value="
+          //   + stat.bitrateStdDev);
+        }
+
+        // framerateMean
+        if (stat.framerateMean !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.framerateMean >= 0 && stat.framerateMean < 120,
+          //   stat.type + ".framerateMean is sane. value="
+          //   + stat.framerateMean);
+        }
+
+        // framerateStdDev
+        if (stat.framerateStdDev !== undefined) {
+          // TODO: uncomment when Bug 1341533 lands
+          // ok(stat.framerateStdDev >= 0 && stat.framerateStdDev < 120,
+          //   stat.type + ".framerateStdDev is sane. value="
+          //   + stat.framerateStdDev);
+        }
+
+        // droppedFrames
+        ok(stat.droppedFrames >= 0,
+          stat.type + ".droppedFrames is not negative. value="
+          + stat.droppedFrames);
+      }
+    }
+
+    //
+    // Ensure everything was tested
+    //
+    [...expectations.expected, ...expectations.optional].forEach(field => {
+      ok(Object.keys(tested).includes(field), stat.type + "." + field
+        + " was tested.");
+    });
+  });
+}
+
+// This MUST be run after PC_*_WAIT_FOR_MEDIA_FLOW to ensure that we have RTP
+// before checking for RTCP.
+var waitForRtcp = async pc => {
+  // Ensures that RTCP is present
+  let ensureRtcp = async () => pc.getStats().then(stats => {
+    for (let [k, v] of stats) {
+      if (v.type.endsWith("bound-rtp") && !v.remoteId) {
+        throw new Error(v.id + " is missing remoteId: "
+          + JSON.stringify(v));
+      }
+    }
+    return stats;
+  });
+
+  const waitPeriod = 500;
+  for (let totalTime = 10000; totalTime > 0; totalTime -= waitPeriod) {
+    try {
+      return await ensureRtcp();
+    } catch (e) {
+      info(e);
+      await wait(waitPeriod);
+    }
+  }
+  throw new Error("Waiting for RTCP timed out after at least " + totalTime
+    + "ms");
+}
+
+var PC_LOCAL_TEST_LOCAL_STATS = test => {
+  return waitForRtcp(test.pcLocal).then(stats => {
+    checkExpectedFields(stats);
+    pedanticChecks(stats);
+  });
+}
+
+var PC_REMOTE_TEST_REMOTE_STATS = test => {
+  return waitForRtcp(test.pcRemote).then(stats => {
+    checkExpectedFields(stats);
+    pedanticChecks(stats);
+  });
+}
+
+var test;
+runNetworkTest(function (options) {
+  test = new PeerConnectionTest(options);
+
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW",
+    [PC_LOCAL_TEST_LOCAL_STATS]);
+
+  test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+    [PC_REMOTE_TEST_REMOTE_STATS]);
+
+  test.setMediaConstraints([{audio: true}, {video: true}],
+                           [{audio: true}, {video: true}]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>
