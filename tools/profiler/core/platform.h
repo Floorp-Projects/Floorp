@@ -297,15 +297,6 @@ public:
   static uintptr_t GetThreadHandle(PlatformData*);
 #endif
 
-  static bool RegisterCurrentThread(const char* aName,
-                                    PseudoStack* aPseudoStack,
-                                    bool aIsMainThread, void* stackTop);
-  static void UnregisterCurrentThread();
-
-  static void Startup();
-  // Should only be called on shutdown
-  static void Shutdown();
-
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
     // We use profile.sh on b2g to manually select threads and options per process.

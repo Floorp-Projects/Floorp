@@ -48,6 +48,8 @@
 # include "lul/platform-linux-lul.h"
 #endif
 
+using namespace mozilla;
+
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
 class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
@@ -414,6 +416,39 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
+static void
+RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
+                      bool aIsMainThread, void* stackTop)
+{
+  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+  if (!sRegisteredThreads) {
+    return;
+  }
+
+  Thread::tid_t id = Thread::GetCurrentId();
+
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      // Thread already registered. This means the first unregister will be
+      // too early.
+      MOZ_ASSERT(false);
+      return;
+    }
+  }
+
+  ThreadInfo* info =
+    new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
+
+  // XXX: this is an off-main-thread use of gSampler
+  if (gSampler) {
+    gSampler->RegisterThread(info);
+  }
+
+  sRegisteredThreads->push_back(info);
+}
+
 void
 profiler_init(void* stackTop)
 {
@@ -438,14 +473,23 @@ profiler_init(void* stackTop)
 
   stack_key_initialized = true;
 
-  Sampler::Startup();
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    sRegisteredThreads = new std::vector<ThreadInfo*>();
+  }
+
+  // (Linux-only) We could create the sLUL object and read unwind info into it
+  // at this point. That would match the lifetime implied by destruction of it
+  // in profiler_shutdown() just below. However, that gives a big delay on
+  // startup, even if no profiling is actually to be done. So, instead, sLUL is
+  // created on demand at the first call to Sampler::Start.
 
   PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
 
   bool isMainThread = true;
-  Sampler::RegisterCurrentThread(gGeckoThreadName, stack, isMainThread,
-                                 stackTop);
+  RegisterCurrentThread(gGeckoThreadName, stack, isMainThread, stackTop);
 
   // Read interval settings from MOZ_PROFILER_INTERVAL and stack-scan
   // threshhold from MOZ_PROFILER_STACK_SCAN.
@@ -518,10 +562,30 @@ profiler_shutdown()
 
   set_stderr_callback(nullptr);
 
-  Sampler::Shutdown();
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
-  // We just called Sampler::Shutdown() which kills all the ThreadInfos in
-  // sRegisteredThreads, so it is safe the delete the PseudoStack.
+    while (sRegisteredThreads->size() > 0) {
+      delete sRegisteredThreads->back();
+      sRegisteredThreads->pop_back();
+    }
+
+    // UnregisterThread can be called after shutdown in XPCShell. Thus we need
+    // to point to null to ignore such a call after shutdown.
+    delete sRegisteredThreads;
+    sRegisteredThreads = nullptr;
+  }
+
+#if defined(USE_LUL_STACKWALK)
+  // Delete the sLUL object, if it actually got created.
+  if (sLUL) {
+    delete sLUL;
+    sLUL = nullptr;
+  }
+#endif
+
+  // We just destroyed all the ThreadInfos in sRegisteredThreads, so it is safe
+  // the delete the PseudoStack.
   delete tlsPseudoStack.get();
   tlsPseudoStack.set(nullptr);
 
@@ -1013,7 +1077,7 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
   tlsPseudoStack.set(stack);
   bool isMainThread = is_main_thread_name(aName);
   void* stackTop = GetStackTop(aGuessStackTop);
-  Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
+  RegisterCurrentThread(aName, stack, isMainThread, stackTop);
 }
 
 void
@@ -1027,12 +1091,33 @@ profiler_unregister_thread()
     return;
   }
 
-  Sampler::UnregisterCurrentThread();
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
-  // We just called Sampler::UnregisterCurrentThread() which cuts the
-  // ThreadInfo's PseudoStack pointer (either nulling it via SetPendingDelete()
-  // or by deleting the ThreadInfo altogether), so it is safe to delete the
-  // PseudoStack.
+    if (sRegisteredThreads) {
+      Thread::tid_t id = Thread::GetCurrentId();
+
+      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+        ThreadInfo* info = sRegisteredThreads->at(i);
+        if (info->ThreadId() == id && !info->IsPendingDelete()) {
+          if (profiler_is_active()) {
+            // We still want to show the results of this thread if you
+            // save the profile shortly after a thread is terminated.
+            // For now we will defer the delete to profile stop.
+            info->SetPendingDelete();
+          } else {
+            delete info;
+            sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // We just cut the ThreadInfo's PseudoStack pointer (either nulling it via
+  // SetPendingDelete() or by deleting the ThreadInfo altogether), so it is
+  // safe to delete the PseudoStack.
   delete tlsPseudoStack.get();
   tlsPseudoStack.set(nullptr);
 }
