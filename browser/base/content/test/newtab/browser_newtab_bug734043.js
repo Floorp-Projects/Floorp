@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+
 add_task(function* () {
   yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");

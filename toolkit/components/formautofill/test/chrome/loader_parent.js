@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+// assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
+/* global assert */
+
 /*
  * Infrastructure for the mochitest-chrome tests located in this folder, always
  * executed in the parent process.

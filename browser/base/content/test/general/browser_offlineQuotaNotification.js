@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint-env mozilla/frame-script */
+
 // Test offline quota warnings - must be run as a mochitest-browser test or
 // else the test runner gets in the way of notifications due to bug 857897.
 
