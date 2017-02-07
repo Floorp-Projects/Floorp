@@ -1207,9 +1207,9 @@ Sampler::InplaceTick(TickSample* sample)
     currThreadInfo.addTag(ProfileEntry::UnsharedMemory(static_cast<double>(sample->ussMemory)));
   }
 
-  if (sLastFrameNumber != sFrameNumber) {
-    currThreadInfo.addTag(ProfileEntry::FrameNumber(sFrameNumber));
-    sLastFrameNumber = sFrameNumber;
+  if (gLastFrameNumber != gFrameNumber) {
+    currThreadInfo.addTag(ProfileEntry::FrameNumber(gFrameNumber));
+    gLastFrameNumber = gFrameNumber;
   }
 }
 
