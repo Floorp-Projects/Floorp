@@ -6433,6 +6433,7 @@ BaseCompiler::emitSelect()
         masm.branch32(Assembler::Equal, tmp, Imm32(0), &trueValue);
         moveI64(r1, r0);
         masm.bind(&trueValue);
+        freeI32(tmp);
         freeI64(r1);
         pushI64(r0);
 #else
