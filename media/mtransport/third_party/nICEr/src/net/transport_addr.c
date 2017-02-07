@@ -62,7 +62,11 @@ int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
 
     switch(addr->protocol){
       case IPPROTO_TCP:
-        protocol = "TCP";
+        if (addr->tls_host[0]) {
+          protocol = "TLS";
+        } else {
+          protocol = "TCP";
+        }
         break;
       case IPPROTO_UDP:
         protocol = "UDP";

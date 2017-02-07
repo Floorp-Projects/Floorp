@@ -88,7 +88,7 @@ const DISALLOWED = {
     flag: Ci.nsIWebBrowserChrome.CHROME_WINDOW_RAISED,
     defaults_to: false,
   },
-  "macsuppressanimation": {
+  "suppressanimation": {
     flag: Ci.nsIWebBrowserChrome.CHROME_MAC_SUPPRESS_ANIMATION,
     defaults_to: false,
   },

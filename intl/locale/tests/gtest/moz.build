@@ -8,6 +8,9 @@ UNIFIED_SOURCES += [
     'TestLocaleService.cpp',
 ]
 
+if CONFIG['ENABLE_INTL_API']:
+    UNIFIED_SOURCES += ['TestOSPreferences.cpp']
+
 LOCAL_INCLUDES += [
     '/intl/locale',
 ]

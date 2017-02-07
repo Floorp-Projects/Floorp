@@ -185,7 +185,7 @@ nsAppShellService::DestroyHiddenWindow()
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
-                                        nsIURI *aUrl, 
+                                        nsIURI *aUrl,
                                         uint32_t aChromeMask,
                                         int32_t aInitialWidth,
                                         int32_t aInitialHeight,
@@ -658,7 +658,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)
     widgetInitData.mWindowType = eWindowType_popup;
 
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_MAC_SUPPRESS_ANIMATION)
+  if (aChromeMask & nsIWebBrowserChrome::CHROME_SUPPRESS_ANIMATION)
     widgetInitData.mIsAnimationSuppressed = true;
 
 #ifdef XP_MACOSX
@@ -710,7 +710,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     // but anyone can explicitly ask for a minimize button
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_MIN) {
       widgetInitData.mBorderStyle = static_cast<enum nsBorderStyle>(widgetInitData.mBorderStyle | eBorderStyle_minimize);
-    }  
+    }
   }
 
   if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||

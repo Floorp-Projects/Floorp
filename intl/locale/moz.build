@@ -6,6 +6,9 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
+if CONFIG['ENABLE_INTL_API']:
+    SOURCES += ['OSPreferences.cpp']
+
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit == 'windows':
@@ -16,6 +19,7 @@ else:
     DIRS += ['unix']
 
 XPIDL_SOURCES += [
+    'mozILocaleService.idl',
     'nsICollation.idl',
     'nsILocale.idl',
     'nsILocaleService.idl',

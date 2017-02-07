@@ -214,6 +214,10 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
     server->transport = IPPROTO_TCP;
   } else if (transport_ == kNrIceTransportTls) {
     server->transport = IPPROTO_TCP;
+    if (has_addr_) {
+      // Refuse to try TLS without an FQDN
+      return NS_ERROR_INVALID_ARG;
+    }
     server->tls = 1;
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported STUN server transport: " << transport_);

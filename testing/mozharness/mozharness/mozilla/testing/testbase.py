@@ -465,10 +465,23 @@ You can set this by:
             for file_name in target_packages:
                 target_dir = test_install_dir
                 unpack_dirs = extract_dirs
+
+                if "common.tests" in file_name and isinstance(unpack_dirs, list):
+                    # Ensure that the following files are always getting extracted
+                    required_files = ["mach",
+                                      "mozinfo.json",
+                                      ]
+                    for req_file in required_files:
+                        if req_file not in unpack_dirs:
+                            self.info("Adding '{}' for extraction from common.tests zip file"
+                                      .format(req_file))
+                            unpack_dirs.append(req_file)
+
                 if "jsshell-" in file_name or file_name == "target.jsshell.zip":
                     self.info("Special-casing the jsshell zip file")
                     unpack_dirs = None
                     target_dir = dirs['abs_test_bin_dir']
+
                 url = self.query_build_dir_url(file_name)
                 self.download_unpack(url, target_dir,
                                      extract_dirs=unpack_dirs)

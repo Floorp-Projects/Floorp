@@ -420,6 +420,34 @@ VRDisplayOpenVR::NotifyVSync()
   PollEvents();
 }
 
+VRControllerOpenVR::VRControllerOpenVR()
+  : VRControllerHost(VRDeviceType::OpenVR)
+{
+  MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
+  mControllerInfo.mControllerName.AssignLiteral("OpenVR Controller");
+  mControllerInfo.mMappingType = GamepadMappingType::_empty;
+  mControllerInfo.mHand = GamepadHand::_empty;
+  mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
+  mControllerInfo.mNumAxes = gNumOpenVRAxis;
+}
+
+VRControllerOpenVR::~VRControllerOpenVR()
+{
+  MOZ_COUNT_DTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
+}
+
+void
+VRControllerOpenVR::SetTrackedIndex(uint32_t aTrackedIndex)
+{
+  mTrackedIndex = aTrackedIndex;
+}
+
+uint32_t
+VRControllerOpenVR::GetTrackedIndex()
+{
+  return mTrackedIndex;
+}
+
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()
   : mVRSystem(nullptr), mOpenVRInstalled(false)
 {
@@ -463,6 +491,7 @@ VRSystemManagerOpenVR::Destroy()
       mOpenVRHMD = nullptr;
     }
     RemoveControllers();
+    mVRSystem = nullptr;
     mOpenVRInstalled = false;
   }
 }
@@ -707,11 +736,11 @@ VRSystemManagerOpenVR::ScanForControllers()
       RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
       openVRController->SetIndex(mControllerCount);
       openVRController->SetTrackedIndex(trackedDevice);
+      openVRController->SetHand(hand);
       mOpenVRController.AppendElement(openVRController);
 
       // Not already present, add it.
-      AddGamepad("OpenVR Gamepad", GamepadMappingType::_empty,
-                 hand, gNumOpenVRButtonMask, gNumOpenVRAxis);
+      AddGamepad(openVRController->GetControllerInfo());
       ++mControllerCount;
     }
   }
@@ -722,31 +751,4 @@ VRSystemManagerOpenVR::RemoveControllers()
 {
   mOpenVRController.Clear();
   mControllerCount = 0;
-}
-
-VRControllerOpenVR::VRControllerOpenVR()
-  : VRControllerHost(VRDeviceType::OpenVR)
-{
-  MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
-  mControllerInfo.mMappingType = GamepadMappingType::_empty;
-  mControllerInfo.mNumButtons = gNumOpenVRButtonMask;
-  mControllerInfo.mNumAxes = gNumOpenVRAxis;
-}
-
-VRControllerOpenVR::~VRControllerOpenVR()
-{
-  MOZ_COUNT_DTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
-}
-
-void
-VRControllerOpenVR::SetTrackedIndex(uint32_t aTrackedIndex)
-{
-  mTrackedIndex = aTrackedIndex;
-}
-
-uint32_t
-VRControllerOpenVR::GetTrackedIndex()
-{
-  return mTrackedIndex;
 }
