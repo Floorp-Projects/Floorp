@@ -101,9 +101,13 @@ bool stack_key_initialized;
 // inter-thread synchronization than it currently has.
 mozilla::TimeStamp sStartTime;
 
-int         sFrameNumber = 0;
-int         sLastFrameNumber = 0;
-int         sInitCount = 0; // Each init must have a matched shutdown.
+// XXX: These are accessed by multiple threads and might require more
+// inter-thread synchronization than they currently have.
+static int gFrameNumber = 0;
+static int gLastFrameNumber = 0;
+
+int sInitCount = 0; // Each init must have a matched shutdown.
+
 static bool sIsProfiling = false; // is raced on
 static bool sIsGPUProfiling = false; // is raced on
 static bool sIsLayersDump = false; // is raced on
@@ -1077,7 +1081,7 @@ profiler_set_frame_number(int frameNumber)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  sFrameNumber = frameNumber;
+  gFrameNumber = frameNumber;
 }
 
 void
