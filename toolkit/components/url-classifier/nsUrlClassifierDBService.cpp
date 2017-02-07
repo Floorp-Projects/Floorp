@@ -324,7 +324,7 @@ nsUrlClassifierDBServiceWorker::HandlePendingLookups()
       DoLookup(lookup.mKey, lookup.mTables, lookup.mCallback);
     }
     double lookupTime = (TimeStamp::Now() - lookup.mStartTime).ToMilliseconds();
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LOOKUP_TIME_2,
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LOOKUP_TIME,
                           static_cast<uint32_t>(lookupTime));
   }
 
