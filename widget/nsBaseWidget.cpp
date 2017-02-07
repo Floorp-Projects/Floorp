@@ -64,6 +64,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
@@ -1300,11 +1301,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-  // For now we decide whether or not to enable WR on this widget by the current
-  // value of the pref (this is the only place in the code allowed to check the
-  // value of the pref). We might want to change this eventually and drop the
-  // pref entirely.
-  bool enableWR = Preferences::GetBool("gfx.webrender.enabled", false);
+  bool enableWR = gfx::gfxVars::UseWebRender();
   bool enableAPZ = UseAPZ();
   if (enableWR && !gfxPrefs::APZAllowWithWebRender()) {
     // Disable APZ on widgets using WebRender, since it doesn't work yet. Allow
