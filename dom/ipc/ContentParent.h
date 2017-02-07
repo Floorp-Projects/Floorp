@@ -354,6 +354,10 @@ public:
 
   bool RequestRunToCompletion();
 
+  bool IsAvailable() const
+  {
+    return mIsAvailable;
+  }
   bool IsAlive() const override;
 
   virtual bool IsForBrowser() const override
@@ -615,6 +619,14 @@ protected:
   void OnCompositorUnexpectedShutdown() override;
 
 private:
+  /**
+   * A map of the remote content process type to a list of content parents
+   * currently available to host *new* tabs/frames of that type.
+   *
+   * If a content process is identified as troubled or dead, it will be
+   * removed from this list, but will still be in the sContentParents list for
+   * the GetAll/GetAllEvenIfDead APIs.
+   */
   static nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* sBrowserContentParents;
   static nsTArray<ContentParent*>* sPrivateContent;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
@@ -693,6 +705,12 @@ private:
    * be shut down, for example when all its tabs are closed.
    */
   bool ShouldKeepProcessAlive() const;
+
+  /**
+   * Mark this ContentParent as "troubled". This means that it is still alive,
+   * but it won't be returned for new tabs in GetNewOrUsedBrowserProcess.
+   */
+  void MarkAsTroubled();
 
   /**
    * Mark this ContentParent as dead for the purposes of Get*().
@@ -1138,10 +1156,12 @@ private:
   // sequence.  Precisely, how many TabParents have called
   // NotifyTabDestroying() but not called NotifyTabDestroyed().
   int32_t mNumDestroyingTabs;
-  // True only while this is ready to be used to host remote tabs.
-  // This must not be used for new purposes after mIsAlive goes to
-  // false, but some previously scheduled IPC traffic may still pass
-  // through.
+  // True only while this process is in "good health" and may be used for
+  // new remote tabs.
+  bool mIsAvailable;
+  // True only while remote content is being actively used from this process.
+  // After mIsAlive goes to false, some previously scheduled IPC traffic may
+  // still pass through.
   bool mIsAlive;
 
   bool mSendPermissionUpdates;
