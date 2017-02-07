@@ -199,7 +199,8 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 
 Sampler::Sampler(double aInterval, int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
-                 const char** aThreadNameFilters, uint32_t aFilterCount)
+                 uint32_t aFilterCount)
+
   : interval_(aInterval)
   , paused_(false)
   , active_(false)
@@ -230,18 +231,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
 #else
   mProfileJava = false;
 #endif
-
-  // Deep copy aThreadNameFilters
-  MOZ_ALWAYS_TRUE(mThreadNameFilters.resize(aFilterCount));
-  for (uint32_t i = 0; i < aFilterCount; ++i) {
-    mThreadNameFilters[i] = aThreadNameFilters[i];
-  }
-
-  // Deep copy aFeatures
-  MOZ_ALWAYS_TRUE(mFeatures.resize(aFeatureCount));
-  for (uint32_t i = 0; i < aFeatureCount; ++i) {
-    mFeatures[i] = aFeatures[i];
-  }
 
   bool ignore;
   sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
@@ -1278,18 +1267,19 @@ Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
 }
 
 static bool
-ThreadSelected(const char* aThreadName,
-               const ThreadNameFilterList &aThreadNameFilters)
+ThreadSelected(const char* aThreadName)
 {
-  if (aThreadNameFilters.empty()) {
+  StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+
+  if (gThreadNameFilters.empty()) {
     return true;
   }
 
   std::string name = aThreadName;
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-  for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
-    std::string filter = aThreadNameFilters[i];
+  for (uint32_t i = 0; i < gThreadNameFilters.length(); ++i) {
+    std::string filter = gThreadNameFilters[i];
     std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
 
     // Crude, non UTF-8 compatible, case insensitive substring search
@@ -1308,7 +1298,7 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
     return;
   }
 
-  if (!ThreadSelected(aInfo->Name(), mThreadNameFilters)) {
+  if (!ThreadSelected(aInfo->Name())) {
     return;
   }
 
