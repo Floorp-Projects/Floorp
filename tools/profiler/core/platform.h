@@ -343,14 +343,6 @@ private:
   Atomic32 paused_;
   Atomic32 active_;
 
-  // Refactor me!
-#if defined(SPS_OS_linux) || defined(SPS_OS_android)
-  bool signal_handler_installed_;
-  struct sigaction old_sigprof_signal_handler_;
-  bool signal_sender_launched_;
-  pthread_t signal_sender_thread_;
-#endif
-
   RefPtr<ProfileBuffer> mBuffer;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
