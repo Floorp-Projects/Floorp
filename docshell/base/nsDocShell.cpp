@@ -7947,8 +7947,10 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   } else if (url && NS_SUCCEEDED(aStatus)) {
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    mozilla::net::PredictorLearnRedirect(url, aChannel,
-                                         loadInfo->GetOriginAttributes());
+    if (loadInfo) {
+      mozilla::net::PredictorLearnRedirect(url, aChannel,
+                                           loadInfo->GetOriginAttributes());
+    }
   }
 
   return NS_OK;
