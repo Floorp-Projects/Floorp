@@ -127,7 +127,8 @@ this.FxAccountsProfileClient.prototype = {
    * @param {String} token
    * @param {String} etag
    * @return Promise
-   *         Resolves: {body: Object, etag: Object} Successful response from the Profile server.
+   *         Resolves: {body: Object, etag: Object} Successful response from the Profile server
+                        or null if 304 is hit (same ETag).
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
@@ -154,6 +155,9 @@ this.FxAccountsProfileClient.prototype = {
 
         let body = null;
         try {
+          if (request.response.status == 304) {
+            return resolve(null);
+          }
           body = JSON.parse(request.response.body);
         } catch (e) {
           return reject(new FxAccountsProfileClientError({
