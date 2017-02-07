@@ -501,9 +501,11 @@ class BaseCompiler
     MacroAssembler&             masm;            // No '_' suffix - too tedious...
 
     AllocatableGeneralRegisterSet availGPR_;
-    AllocatableFloatRegisterSet availFPU_;
+    AllocatableFloatRegisterSet   availFPU_;
 #ifdef DEBUG
-    bool                        scratchRegisterTaken_;
+    bool                          scratchRegisterTaken_;
+    AllocatableGeneralRegisterSet allGPR_;       // The registers available to the compiler
+    AllocatableFloatRegisterSet   allFPU_;       //   after removing ScratchReg, HeapReg, etc
 #endif
 
     Vector<Local, 8, SystemAllocPolicy> localInfo_;
@@ -2027,6 +2029,50 @@ class BaseCompiler
     Stk& peek(uint32_t relativeDepth) {
         return stk_[stk_.length()-1-relativeDepth];
     }
+
+#ifdef DEBUG
+    // Check that we're not leaking registers by comparing the
+    // state of the stack + available registers with the set of
+    // all available registers.
+
+    // Call this before compiling any code.
+    void setupRegisterLeakCheck() {
+        allGPR_ = availGPR_;
+        allFPU_ = availFPU_;
+    }
+
+    // Call this between opcodes.
+    void performRegisterLeakCheck() {
+        AllocatableGeneralRegisterSet knownGPR_ = availGPR_;
+        AllocatableFloatRegisterSet knownFPU_ = availFPU_;
+        for (size_t i = 0 ; i < stk_.length() ; i++) {
+	    Stk& item = stk_[i];
+	    switch (item.kind_) {
+	      case Stk::RegisterI32:
+		knownGPR_.add(item.i32reg());
+		break;
+	      case Stk::RegisterI64:
+#ifdef JS_PUNBOX64
+		knownGPR_.add(item.i64reg().reg);
+#else
+		knownGPR_.add(item.i64reg().high);
+		knownGPR_.add(item.i64reg().low);
+#endif
+		break;
+	      case Stk::RegisterF32:
+		knownFPU_.add(item.f32reg());
+		break;
+	      case Stk::RegisterF64:
+		knownFPU_.add(item.f64reg());
+		break;
+	      default:
+		break;
+	    }
+	}
+	MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
+	MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
+    }
+#endif
 
     ////////////////////////////////////////////////////////////
     //
@@ -6626,6 +6672,10 @@ BaseCompiler::emitBody()
 
         Nothing unused_a, unused_b;
 
+#ifdef DEBUG
+        performRegisterLeakCheck();
+#endif
+
 #define emitBinary(doEmit, type) \
         iter_.readBinary(type, &unused_a, &unused_b) && (deadCode_ || (doEmit(), true))
 
@@ -7366,6 +7416,10 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
     availGPR_.take(ScratchRegX86);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     availGPR_.take(HeapReg);
+#endif
+
+#ifdef DEBUG
+    setupRegisterLeakCheck();
 #endif
 }
 
