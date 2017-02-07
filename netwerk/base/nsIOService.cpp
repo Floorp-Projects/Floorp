@@ -791,7 +791,9 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
         // creating a new channel by calling NewChannel().
         if (NS_FAILED(rv)) {
             rv = handler->NewChannel(aURI, getter_AddRefs(channel));
-            NS_ENSURE_SUCCESS(rv, rv);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
             // The protocol handler does not implement NewChannel2, so
             // maybe we need to wrap the channel (see comment in MaybeWrap
             // function).
