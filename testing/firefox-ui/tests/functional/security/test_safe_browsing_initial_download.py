@@ -48,6 +48,8 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         'browser.safebrowsing.malware.enabled': True,
         'privacy.trackingprotection.enabled': True,
         'privacy.trackingprotection.pbmode.enabled': True,
+        'urlclassifier.malwareTable': 'goog-malware-shavar,goog-unwanted-shavar,test-malware-simple,test-unwanted-simple',
+        'urlclassifier.phishTable': 'googpub-phish-shavar,test-phish-simple',
     }
 
     def get_safebrowsing_files(self, is_v4):
