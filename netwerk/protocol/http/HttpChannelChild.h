@@ -164,6 +164,14 @@ protected:
   NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
 
 private:
+  // this section is for main-thread-only object
+  // all the references need to be proxy released on main thread.
+  nsCOMPtr<nsISupports> mCacheKey;
+
+  // Proxy release all members above on main thread.
+  void ReleaseMainThreadOnlyReferences();
+
+private:
 
   class OverrideRunnable : public Runnable {
   public:
@@ -212,6 +220,10 @@ private:
 
   void ForceIntercepted(nsIInputStream* aSynthesizedInput);
 
+  // Try send DeletingChannel message to parent side. Dispatch an async task to
+  // main thread if invoking on non-main thread.
+  void TrySendDeletingChannel();
+
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
   RefPtr<InterceptStreamListener> mInterceptListener;
@@ -223,7 +235,6 @@ private:
   bool mCacheEntryAvailable;
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
-  nsCOMPtr<nsISupports> mCacheKey;
 
   nsCString mProtocolVersion;
 
