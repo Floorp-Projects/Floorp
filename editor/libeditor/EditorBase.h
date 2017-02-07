@@ -1007,7 +1007,9 @@ protected:
             AutoEditorObserverArray;
   AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
-  nsTArray<OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
+  typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
+            AutoDocumentStateListenerArray;
+  AutoDocumentStateListenerArray mDocStateListeners;
 
   // Cached selection for AutoSelectionRestorer.
   SelectionState mSavedSel;
