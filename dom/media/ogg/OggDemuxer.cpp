@@ -1342,6 +1342,9 @@ OggTrackDemuxer::NextSample()
   bool eos = packet->e_o_s;
   OggCodecState* state = mParent->GetTrackCodecState(mType);
   RefPtr<MediaRawData> data = state->PacketOutAsMediaRawData();
+  if (!data) {
+    return nullptr;
+  }
   if (mType == TrackInfo::kAudioTrack) {
     data->mTrackInfo = mParent->mSharedAudioTrackInfo;
   }
