@@ -2524,7 +2524,7 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   } else {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
 
-    if (loadInfo->GetEnforceSRI()) {
+    if (loadInfo && loadInfo->GetEnforceSRI()) {
       MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
               ("nsScriptLoader::OnStreamComplete, required SRI not found"));
       nsCOMPtr<nsIContentSecurityPolicy> csp;
