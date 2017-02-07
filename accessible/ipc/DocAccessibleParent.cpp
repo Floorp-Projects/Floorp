@@ -461,11 +461,15 @@ DocAccessibleParent::Destroy()
     return;
   }
 
-  NS_ASSERTION(mChildDocs.IsEmpty(),
-               "why weren't the child docs destroyed already?");
   mShutdown = true;
 
   uint32_t childDocCount = mChildDocs.Length();
+  for (uint32_t i = 0; i < childDocCount; i++) {
+    for (uint32_t j = i + 1; j < childDocCount; j++) {
+      MOZ_DIAGNOSTIC_ASSERT(mChildDocs[i] != mChildDocs[j]);
+    }
+  }
+
   for (uint32_t i = childDocCount - 1; i < childDocCount; i--)
     mChildDocs[i]->Destroy();
 
