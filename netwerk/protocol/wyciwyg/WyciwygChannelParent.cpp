@@ -127,7 +127,9 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-  rv = loadInfo->SetPrincipalToInherit(principalToInherit);
+  if (loadInfo) {
+    rv = loadInfo->SetPrincipalToInherit(principalToInherit);
+  }
   if (NS_FAILED(rv)) {
     if (!SendCancelEarly(rv)) {
       return IPC_FAIL_NO_REASON(this);

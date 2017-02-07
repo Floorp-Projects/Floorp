@@ -349,7 +349,9 @@ FetchDriver::HttpFetch()
     AutoTArray<nsCString, 5> unsafeHeaders;
     mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);
     nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-    loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
+    if (loadInfo) {
+      loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
+    }
   }
 
   rv = chan->AsyncOpen2(this);
