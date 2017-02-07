@@ -131,6 +131,7 @@ class TlsAgent : public PollTarget {
   void SetSessionTicketsEnabled(bool en);
   void SetSessionCacheEnabled(bool en);
   void Set0RttEnabled(bool en);
+  void SetFallbackSCSVEnabled(bool en);
   void SetShortHeadersEnabled();
   void SetVersionRange(uint16_t minver, uint16_t maxver);
   void GetVersionRange(uint16_t* minver, uint16_t* maxver);

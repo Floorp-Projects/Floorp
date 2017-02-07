@@ -421,10 +421,11 @@ function ArrayStaticReduce(list, callbackfn) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.reduce");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+
     if (arguments.length > 2)
         return callFunction(ArrayReduce, list, callbackfn, arguments[2]);
-    else
-        return callFunction(ArrayReduce, list, callbackfn);
+
+    return callFunction(ArrayReduce, list, callbackfn);
 }
 
 /* ES5 15.4.4.22. */
@@ -488,10 +489,11 @@ function ArrayStaticReduceRight(list, callbackfn) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.reduceRight");
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+
     if (arguments.length > 2)
         return callFunction(ArrayReduceRight, list, callbackfn, arguments[2]);
-    else
-        return callFunction(ArrayReduceRight, list, callbackfn);
+
+    return callFunction(ArrayReduceRight, list, callbackfn);
 }
 
 /* ES6 draft 2013-05-14 15.4.3.23. */
@@ -826,7 +828,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
             */
 
             // Steps 5.e.vi-vii.
-            var mappedValue = mapping ? callContentFunction(mapfn, thisArg, nextValue, k) : nextValue;
+            var mappedValue = mapping ? callContentFunction(mapfn, T, nextValue, k) : nextValue;
 
             // Steps 5.e.ii (reordered), 5.e.viii.
             _DefineDataProperty(A, k++, mappedValue);
@@ -855,7 +857,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
         var kValue = items[k];
 
         // Steps 16.d-e.
-        var mappedValue = mapping ? callContentFunction(mapfn, thisArg, kValue, k) : kValue;
+        var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
         // Steps 16.f-g.
         _DefineDataProperty(A, k, mappedValue);

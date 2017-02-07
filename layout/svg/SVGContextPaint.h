@@ -11,7 +11,9 @@
 #include "gfxPattern.h"
 #include "gfxTypes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/gfx/2D.h"
+#include "nsColor.h"
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
 
@@ -32,8 +34,17 @@ namespace mozilla {
  * computed style for the text that is being drawn, for example, or for color
  * in an SVG embedded by an <img> element to come from the embedding <img>
  * element.
+ *
+ * This class is reference counted so that it can be shared among many similar
+ * SVGImageContext objects. (SVGImageContext objects are frequently
+ * copy-constructed with small modifications, and we'd like for those copies to
+ * be able to share their context-paint data cheaply.)  However, in most cases,
+ * SVGContextPaint instances are stored in a local RefPtr and only last for the
+ * duration of a function call.
+ * XXX Note: SVGImageContext doesn't actually have a SVGContextPaint member yet,
+ * but it will in a later patch in the patch series that added this comment.
  */
-class SVGContextPaint
+class SVGContextPaint : public RefCounted<SVGContextPaint>
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -41,6 +52,8 @@ protected:
   SVGContextPaint() {}
 
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SVGContextPaint)
+
   virtual ~SVGContextPaint() {}
 
   virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
@@ -81,6 +94,13 @@ public:
     return mStrokeWidth;
   }
 
+  virtual uint32_t Hash() const {
+    MOZ_ASSERT_UNREACHABLE("Only VectorImage needs to hash, and that should "
+                           "only be operating on our SVGEmbeddingContextPaint "
+                           "subclass");
+    return 0;
+  }
+
 private:
   // Member-vars are initialized in InitStrokeGeometry.
   FallibleTArray<gfxFloat> mDashes;
@@ -98,7 +118,7 @@ private:
 class MOZ_RAII AutoSetRestoreSVGContextPaint
 {
 public:
-  AutoSetRestoreSVGContextPaint(SVGContextPaint* aContextPaint,
+  AutoSetRestoreSVGContextPaint(const SVGContextPaint* aContextPaint,
                                 nsIDocument* aSVGDocument);
   ~AutoSetRestoreSVGContextPaint();
 private:
@@ -189,6 +209,50 @@ public:
 
   float mFillOpacity;
   float mStrokeOpacity;
+};
+
+/**
+ * This class is used to pass context paint to an SVG image when an element
+ * references that image (e.g. via HTML <img> or SVG <image>, or by referencing
+ * it from a CSS property such as 'background-image').  In this case we only
+ * support context colors and not paint servers.
+ */
+class SVGEmbeddingContextPaint : public SVGContextPaint
+{
+public:
+  SVGEmbeddingContextPaint() {}
+
+  void SetFill(nscolor aFill);
+  void SetStroke(nscolor aStroke);
+
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
+                                              const gfxMatrix& aCTM) override {
+    return do_AddRef(mFill);
+  }
+
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
+                                                const gfxMatrix& aCTM) override {
+    return do_AddRef(mStroke);
+  }
+
+  float GetFillOpacity() const override {
+    // Always 1.0f since we don't currently allow 'context-fill-opacity'
+    return 1.0f;
+  };
+
+  float GetStrokeOpacity() const override {
+    // Always 1.0f since we don't currently allow 'context-stroke-opacity'
+    return 1.0f;
+  };
+
+  uint32_t Hash() const override;
+
+private:
+  // Note: if these are set at all, they'll have type PatternType::COLOR.
+  RefPtr<gfxPattern> mFill;
+  RefPtr<gfxPattern> mStroke;
 };
 
 } // namespace mozilla
