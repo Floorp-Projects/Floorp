@@ -684,8 +684,16 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     RefPtr<MediaRawData> sample;
     if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {
       sample = new MediaRawData(data, length, alphaData, alphaLength);
+      if (!sample->Data() || !sample->AlphaData()) {
+        // OOM.
+        return false;
+      }
     } else {
       sample = new MediaRawData(data, length);
+      if (!sample->Data()) {
+        // OOM.
+        return false;
+      }
     }
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;

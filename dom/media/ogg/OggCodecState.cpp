@@ -258,6 +258,11 @@ OggCodecState::PacketOutAsMediaRawData()
 
   NS_ASSERTION(!IsHeader(packet), "PacketOutAsMediaRawData can only be called on non-header packets");
   RefPtr<MediaRawData> sample = new MediaRawData(packet->packet, packet->bytes);
+  if (!sample->Data()) {
+    // OOM.
+    ReleasePacket(packet);
+    return nullptr;
+  }
 
   int64_t end_tstamp = Time(packet->granulepos);
   NS_ASSERTION(end_tstamp >= 0, "timestamp invalid");
