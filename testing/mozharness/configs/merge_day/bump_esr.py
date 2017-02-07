@@ -11,7 +11,7 @@ config = {
     ],
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
     "tools_repo_branch": "default",
-    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-esr45",
+    "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-esr52",
 
     "migration_behavior": "bump_second_digit",
     "require_remove_locales": False,
