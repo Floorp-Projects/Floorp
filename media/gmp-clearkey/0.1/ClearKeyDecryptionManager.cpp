@@ -21,8 +21,14 @@
 #include <assert.h>
 #include <string.h>
 #include <vector>
+#include <algorithm>
 
 using namespace cdm;
+
+bool AllZero(const std::vector<uint32_t>& aBytes)
+{
+  return all_of(aBytes.begin(), aBytes.end(), [](uint32_t b) { return b == 0; });
+}
 
 class ClearKeyDecryptor : public RefCounted
 {
@@ -226,7 +232,13 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
     memcpy(&tmp[0], aBuffer, aBufferSize);
   }
 
-  assert(aMetadata.mIV.size() == 8 || aMetadata.mIV.size() == 16);
+  // It is possible that we could be passed an unencrypted sample, if all
+  // encrypted sample lengths are zero, and in this case, a zero length
+  // IV is allowed.
+  assert(aMetadata.mIV.size() == 8 \
+         || aMetadata.mIV.size() == 16 \
+         || (aMetadata.mIV.size() == 0 && AllZero(aMetadata.mCipherBytes)));
+
   std::vector<uint8_t> iv(aMetadata.mIV);
   iv.insert(iv.end(), CENC_KEY_LEN - aMetadata.mIV.size(), 0);
 
