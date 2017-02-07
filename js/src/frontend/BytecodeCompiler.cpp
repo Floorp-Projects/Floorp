@@ -111,9 +111,8 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
 AutoCompilationTraceLogger::AutoCompilationTraceLogger(JSContext* cx,
         const TraceLoggerTextId id, const ReadOnlyCompileOptions& options)
-  : logger(!cx->helperThread() ? TraceLoggerForMainThread(cx->runtime())
-                               : TraceLoggerForCurrentThread()),
-    event(logger, TraceLogger_AnnotateScripts, options),
+  : logger(TraceLoggerForCurrentThread(cx)),
+    event(TraceLogger_AnnotateScripts, options),
     scriptLogger(logger, event),
     typeLogger(logger, id)
 {}

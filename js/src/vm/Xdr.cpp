@@ -121,11 +121,7 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeFunction(MutableHandleFunction funp, HandleScriptSource sourceObject)
 {
-    TraceLoggerThread* logger = nullptr;
-    if (!cx()->helperThread())
-        logger = TraceLoggerForMainThread(cx()->runtime());
-    else
-        logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
     TraceLoggerTextId event =
         mode == XDR_DECODE ? TraceLogger_DecodeFunction : TraceLogger_EncodeFunction;
     AutoTraceLog tl(logger, event);
@@ -160,11 +156,7 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeScript(MutableHandleScript scriptp)
 {
-    TraceLoggerThread* logger = nullptr;
-    if (!cx()->helperThread())
-        logger = TraceLoggerForMainThread(cx()->runtime());
-    else
-        logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx());
     TraceLoggerTextId event =
         mode == XDR_DECODE ? TraceLogger_DecodeScript : TraceLogger_EncodeScript;
     AutoTraceLog tl(logger, event);
