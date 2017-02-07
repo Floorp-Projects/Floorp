@@ -21,23 +21,13 @@ onmessage = function(event) {
   }
 
   // We shouldn't be able to make a ChromeWorker to a non-chrome URL.
-  let worker = new ChromeWorker(mochitestURL);
-  worker.onmessage = function(event) {
-    throw event.data;
-  };
-  worker.onerror = function(event) {
-    event.preventDefault();
-
-    // And we shouldn't be able to make a regular Worker to a non-chrome URL.
-    worker = new Worker(mochitestURL);
-    worker.onmessage = function(event) {
-      throw event.data;
-    };
-    worker.onerror = function(event) {
-      event.preventDefault();
+  try{
+    new ChromeWorker(mochitestURL);
+  } catch(e) {
+    if (e.name === 'SecurityError') {
       postMessage("Done");
-    };
-    worker.postMessage("Hi");
-  };
-  worker.postMessage("Hi");
+      return;
+    }
+  }
+  throw('creating a chrome worker with a bad URL should throw a SecurityError');
 };
