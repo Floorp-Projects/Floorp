@@ -1891,6 +1891,7 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
     return;
   }
   decoder.mNeedDraining = false;
+  decoder.mDraining = true;
   if (!decoder.mDecoder ||
       decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
     // No frames to drain.
@@ -1898,15 +1899,20 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
     NotifyDrainComplete(aTrack);
     return;
   }
-  decoder.mDraining = true;
   RefPtr<MediaFormatReader> self = this;
   decoder.mDecoder->Drain()
     ->Then(mTaskQueue, __func__,
            [self, this, aTrack, &decoder]
            (const MediaDataDecoder::DecodedData& aResults) {
              decoder.mDrainRequest.Complete();
-             NotifyNewOutput(aTrack, aResults);
-             NotifyDrainComplete(aTrack);
+             if (aResults.IsEmpty()) {
+               NotifyDrainComplete(aTrack);
+             } else {
+               NotifyNewOutput(aTrack, aResults);
+               // Let's see if we have any more data available to drain.
+               decoder.mNeedDraining = true;
+               decoder.mDraining = false;
+             }
            },
            [self, this, aTrack, &decoder](const MediaResult& aError) {
              decoder.mDrainRequest.Complete();
@@ -2027,15 +2033,13 @@ MediaFormatReader::Update(TrackType aTrack)
       decoder.RejectPromise(decoder.mError.ref(), __func__);
       return;
     } else if (decoder.mDrainComplete) {
-      bool wasDraining = decoder.mDraining;
       decoder.mDrainComplete = false;
       decoder.mDraining = false;
       if (decoder.mDemuxEOS) {
         LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
       } else if (decoder.mWaitingForData) {
-        if (wasDraining && decoder.mLastSampleTime &&
-            !decoder.mNextStreamSourceID) {
+        if (decoder.mLastSampleTime && !decoder.mNextStreamSourceID) {
           // We have completed draining the decoder following WaitingForData.
           // Set up the internal seek machinery to be able to resume from the
           // last sample decoded.
