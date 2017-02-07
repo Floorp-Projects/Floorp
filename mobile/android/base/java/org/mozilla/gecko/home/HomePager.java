@@ -13,6 +13,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
@@ -559,7 +560,17 @@ public class HomePager extends ViewPager implements HomeScreen {
         stopCurrentPanelTelemetrySession();
 
         mCurrentPanelSession = TelemetryContract.Session.HOME_PANEL;
-        mCurrentPanelSessionSuffix = panelId;
+
+        if (HomeConfig.TOP_SITES_PANEL_ID.equals(panelId) &&
+                ActivityStream.isEnabled(getContext())) {
+            // Override the panel ID for Activity Stream: we're reusing the topsites panel to show
+            // Activity Stream, i.e. AS ends up havin the same panel ID. We override this for telemetry
+            // to distinguish between topsites and AS:
+            mCurrentPanelSessionSuffix = "activity_stream";
+        } else {
+            mCurrentPanelSessionSuffix = panelId;
+        }
+
         Telemetry.startUISession(mCurrentPanelSession, mCurrentPanelSessionSuffix);
     }
 
