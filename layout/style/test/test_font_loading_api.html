@@ -1124,14 +1124,18 @@ function runTest() {
     var p = Promise.resolve();
     sources.forEach(function({ win, doc, what}, i) {
       p = p.then(function() {
+        return setTimeoutZero();  // wait for any previous events to be dispatched
+      }).then(function() {
         var events = [], face, face2;
 
-        doc.fonts.onloadingdone = function(e) {
-          events.push(e);
-        };
-        doc.fonts.onloadingerror = function(e) {
-          events.push(e);
-        };
+        var awaitEvents = new Promise(function(aResolve, aReject) {
+          doc.fonts.onloadingdone = doc.fonts.onloadingerror = function(e) {
+            events.push(e);
+            if (events.length == 2) {
+              aResolve();
+            }
+          };
+        });
 
         is(doc.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 37) (" + what + ")");
 
@@ -1151,6 +1155,8 @@ function runTest() {
             is(doc.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 37) (" + what + ")");
 
             return doc.fonts.ready;
+          }).then(function() {
+            return awaitEvents;
           }).then(function() {
             is(doc.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font loaded (TEST 37) (" + what + ")");
             is(face2.status, "loaded", "second FontFace should have status \"loaded\" (TEST 37) (" + what + ")");
@@ -1182,14 +1188,18 @@ function runTest() {
     var p = Promise.resolve();
     sources.forEach(function({ win, doc, what }) {
       p = p.then(function() {
+        return setTimeoutZero();  // wait for any previous events to be dispatched
+      }).then(function() {
         var events = [], face, face2;
 
-        doc.fonts.onloadingdone = function(e) {
-          events.push(e);
-        };
-        doc.fonts.onloadingerror = function(e) {
-          events.push(e);
-        };
+        var awaitEvents = new Promise(function(aResolve, aReject) {
+          doc.fonts.onloadingdone = doc.fonts.onloadingerror = function(e) {
+            events.push(e);
+            if (events.length == 4) {
+              aResolve();
+            }
+          };
+        });
 
         is(doc.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 38) (" + what + ")");
 
@@ -1209,6 +1219,8 @@ function runTest() {
             is(doc.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 38) (" + what + ")");
 
             return doc.fonts.ready;
+          }).then(function() {
+            return awaitEvents;
           }).then(function() {
             is(doc.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font failed to load (TEST 38) (" + what + ")");
             is(face2.status, "error", "second FontFace should have status \"error\" (TEST 38) (" + what + ")");
@@ -1243,29 +1255,35 @@ function runTest() {
     // (TEST 39) Test that a FontFace for an @font-face rule only has one
     // loadingdone event dispatched at the FontFaceSet containing it.
 
-    var style = document.querySelector("style");
-    var ruleText = "@font-face { font-family: test; src: url(BitPattern.woff?test39a); } " +
-                   "@font-face { font-family: test2; src: url(BitPattern.woff?test39b); }";
+    var style, all, events, awaitEvents;
 
-    style.textContent = ruleText;
-
-    var all = Array.from(document.fonts);
-    var events = [];
-
-    document.fonts.onloadingdone = function(e) {
-      events.push(e);
-    };
-    document.fonts.onloadingerror = function(e) {
-      events.push(e);
-    };
-
-    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 39)");
-
-    all[0].load();
-    is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font loading (TEST 39)");
-
-    return document.fonts.ready
+    return setTimeoutZero()  // wait for any previous events to be dispatched
       .then(function() {
+        style = document.querySelector("style");
+        var ruleText = "@font-face { font-family: test; src: url(BitPattern.woff?test39a); } " +
+                       "@font-face { font-family: test2; src: url(BitPattern.woff?test39b); }";
+
+        style.textContent = ruleText;
+
+        all = Array.from(document.fonts);
+        events = [];
+
+        awaitEvents = new Promise(function(aResolve, aReject) {
+          document.fonts.onloadingdone = document.fonts.onloadingerror = function(e) {
+            events.push(e);
+            if (events.length == 2) {
+              aResolve();
+            }
+          };
+        });
+
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 39)");
+
+        all[0].load();
+        is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font loading (TEST 39)");
+
+        return document.fonts.ready
+      }).then(function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font loaded (TEST 39)");
         is(all[0].status, "loaded", "first FontFace should have status \"loaded\" (TEST 39)");
         is(all[1].status, "unloaded", "second FontFace should have status \"unloaded\" (TEST 39)");
@@ -1274,6 +1292,8 @@ function runTest() {
         is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font loading (TEST 39)");
 
         return document.fonts.ready;
+      }).then(function() {
+        return awaitEvents;
       }).then(function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font loaded (TEST 39)");
         is(all[1].status, "loaded", "second FontFace should have status \"loaded\" (TEST 39)");
