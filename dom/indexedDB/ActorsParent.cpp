@@ -6671,6 +6671,13 @@ class DatabaseFile final
 {
   friend class Database;
 
+  // mBlobImpl's ownership lifecycle:
+  // - Initialized on the background thread at creation time.  Then
+  //   responsibility is handed off to the connection thread.
+  // - Checked and used by the connection thread to generate a stream to write
+  //   the blob to disk by an add/put operation.
+  // - Cleared on the connection thread once the file has successfully been
+  //   written to disk.
   RefPtr<BlobImpl> mBlobImpl;
   RefPtr<FileInfo> mFileInfo;
 
@@ -6683,16 +6690,6 @@ public:
     AssertIsOnBackgroundThread();
 
     return mFileInfo;
-  }
-
-  /**
-   * Is there a blob available to provide an input stream?  This may be called
-   * on any thread under current lifecycle constraints.
-   */
-  bool
-  HasBlobImpl() const
-  {
-    return (bool)mBlobImpl;
   }
 
   /**
@@ -6734,10 +6731,17 @@ public:
   already_AddRefed<nsIInputStream>
   GetBlockingInputStream(ErrorResult &rv) const;
 
+  /**
+   * To be called upon successful copying of the stream GetBlockingInputStream()
+   * returned so that we won't try and redundantly write the file to disk in the
+   * future.  This is a separate step from GetBlockingInputStream() because
+   * the write could fail due to quota errors that happen now but that might
+   * not happen in a future attempt.
+   */
   void
-  ClearInputStream()
+  WriteSucceededClearBlobImpl()
   {
-    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(!IsOnBackgroundThread());
 
     mBlobImpl = nullptr;
   }
@@ -6773,8 +6777,8 @@ private:
 already_AddRefed<nsIInputStream>
 DatabaseFile::GetBlockingInputStream(ErrorResult &rv) const
 {
-  // We should only be called from a database I/O thread, not the background
-  // thread.  The background thread should call HasBlobImpl().
+  // We should only be called from our DB connection thread, not the background
+  // thread.
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   if (!mBlobImpl) {
@@ -8320,8 +8324,6 @@ class ObjectStoreAddOrPutRequestOp final
 
   FallibleTArray<StoredFileInfo> mStoredFileInfos;
 
-  RefPtr<FileManager> mFileManager;
-
   Key mResponse;
   const nsCString mGroup;
   const nsCString mOrigin;
@@ -8361,11 +8363,9 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
   // still have a stream for us to write.
   nsCOMPtr<nsIInputStream> mInputStream;
   StructuredCloneFile::FileType mType;
-  bool mCopiedSuccessfully;
 
   StoredFileInfo()
     : mType(StructuredCloneFile::eBlob)
-    , mCopiedSuccessfully(false)
   {
     AssertIsOnBackgroundThread();
 
@@ -26155,10 +26155,6 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
       return false;
     }
 
-    RefPtr<FileManager> fileManager =
-      aTransaction->GetDatabase()->GetFileManager();
-    MOZ_ASSERT(fileManager);
-
     for (uint32_t index = 0; index < count; index++) {
       const FileAddInfo& fileAddInfo = fileAddInfos[index];
 
@@ -26184,10 +26180,6 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
 
           storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
-
-          if (storedFileInfo->mFileActor->HasBlobImpl() && !mFileManager) {
-            mFileManager = fileManager;
-          }
 
           storedFileInfo->mType = StructuredCloneFile::eBlob;
           break;
@@ -26222,10 +26214,6 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
-          if (storedFileInfo->mFileActor->HasBlobImpl() && !mFileManager) {
-            mFileManager = fileManager;
-          }
-
           storedFileInfo->mType = fileAddInfo.type();
           break;
         }
@@ -26240,12 +26228,11 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
     StoredFileInfo* storedFileInfo = mStoredFileInfos.AppendElement(fallible);
     MOZ_ASSERT(storedFileInfo);
 
-    if (!mFileManager) {
-      mFileManager = aTransaction->GetDatabase()->GetFileManager();
-      MOZ_ASSERT(mFileManager);
-    }
+    RefPtr<FileManager> fileManager =
+      aTransaction->GetDatabase()->GetFileManager();
+    MOZ_ASSERT(fileManager);
 
-    storedFileInfo->mFileInfo = mFileManager->GetNewFileInfo();
+    storedFileInfo->mFileInfo = fileManager->GetNewFileInfo();
 
     storedFileInfo->mInputStream =
       new SCInputStream(mParams.cloneInfo().data().data);
@@ -26262,7 +26249,6 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aConnection->GetStorageConnection());
-  MOZ_ASSERT_IF(mFileManager, !mStoredFileInfos.IsEmpty());
 
   PROFILER_LABEL("IndexedDB",
                  "ObjectStoreAddOrPutRequestOp::DoDatabaseWork",
@@ -26439,19 +26425,10 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   }
 
-  Maybe<FileHelper> fileHelper;
-
-  if (mFileManager) {
-    fileHelper.emplace(mFileManager);
-
-    rv = fileHelper->Init();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      IDB_REPORT_INTERNAL_ERR();
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-  }
-
   if (!mStoredFileInfos.IsEmpty()) {
+    // Moved outside the loop to allow it to be cached when demanded by the
+    // first write.  (We may have mStoredFileInfos without any required writes.)
+    Maybe<FileHelper> fileHelper;
     nsAutoString fileIds;
 
     for (uint32_t count = mStoredFileInfos.Length(), index = 0;
@@ -26465,8 +26442,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       //   MUST be non-null.
       // - This is a reference to a Blob that may or may not have already been
       //   written to disk.  storedFileInfo.mFileActor MUST be non-null, but
-      //   its HasBlobImpl() may return false and so GetBlockingInputStream may
-      //   return null (so don't assert on them).
+      //   its GetBlockingInputStream may return null (so don't assert on them).
       // - It's a mutable file.  No writing will be performed.
       MOZ_ASSERT(storedFileInfo.mInputStream || storedFileInfo.mFileActor ||
                  storedFileInfo.mType == StructuredCloneFile::eMutableFile);
@@ -26485,6 +26461,19 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       }
 
       if (inputStream) {
+        if (fileHelper.isNothing()) {
+          RefPtr<FileManager> fileManager =
+            Transaction()->GetDatabase()->GetFileManager();
+          MOZ_ASSERT(fileManager);
+
+          fileHelper.emplace(fileManager);
+          rv = fileHelper->Init();
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            IDB_REPORT_INTERNAL_ERR();
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+        }
+
         RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;
 
         nsCOMPtr<nsIFile> file = fileHelper->GetFile(fileInfo);
@@ -26521,7 +26510,9 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
           return rv;
         }
 
-        storedFileInfo.mCopiedSuccessfully = true;
+        if (storedFileInfo.mFileActor) {
+          storedFileInfo.mFileActor->WriteSucceededClearBlobImpl();
+        }
       }
 
       if (index) {
@@ -26605,23 +26596,7 @@ ObjectStoreAddOrPutRequestOp::Cleanup()
 {
   AssertIsOnOwningThread();
 
-  if (!mStoredFileInfos.IsEmpty()) {
-    for (uint32_t count = mStoredFileInfos.Length(), index = 0;
-         index < count;
-         index++) {
-      StoredFileInfo& storedFileInfo = mStoredFileInfos[index];
-
-      MOZ_ASSERT_IF(storedFileInfo.mType == StructuredCloneFile::eMutableFile,
-                    !storedFileInfo.mCopiedSuccessfully);
-
-      RefPtr<DatabaseFile>& fileActor = storedFileInfo.mFileActor;
-      if (fileActor && storedFileInfo.mCopiedSuccessfully) {
-        fileActor->ClearInputStream();
-      }
-    }
-
-    mStoredFileInfos.Clear();
-  }
+  mStoredFileInfos.Clear();
 
   NormalTransactionOp::Cleanup();
 }
