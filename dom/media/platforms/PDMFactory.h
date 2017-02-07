@@ -18,7 +18,8 @@ class DecoderDoctorDiagnostics;
 class PDMFactoryImpl;
 template<class T> class StaticAutoPtr;
 
-class PDMFactory final {
+class PDMFactory final
+{
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDMFactory)
 
