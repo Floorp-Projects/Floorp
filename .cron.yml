@@ -25,3 +25,13 @@ jobs:
           - date
       when: []  # never (temporary)
 
+    - name: nightly-mochitest-valgrind
+      job:
+          type: decision-task
+          treeherder-symbol: Vg
+          target-tasks-method: mochitest_valgrind
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 16, minute: 0}
+          - {hour: 4, minute: 0}

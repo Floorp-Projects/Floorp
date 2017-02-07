@@ -145,6 +145,3 @@ ifeq (3,$(SYS_SQLITE3_VERSION_MAJOR))
         NSS_USE_SYSTEM_SQLITE = 1
     endif
 endif
-
-include $(CORE_DEPTH)/coreconf/sanitizers.mk
-DARWIN_SDK_SHLIBFLAGS += $(SANITIZER_LDFLAGS)

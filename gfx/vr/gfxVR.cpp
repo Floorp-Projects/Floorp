@@ -59,12 +59,15 @@ VRFieldOfView::ConstructProjectionMatrix(float zNear, float zFar,
 }
 
 void
-VRSystemManager::AddGamepad(const char* aID, dom::GamepadMappingType aMapping,
-                            dom::GamepadHand aHand, uint32_t aNumButtons, uint32_t aNumAxes)
+VRSystemManager::AddGamepad(const VRControllerInfo& controllerInfo)
 {
-  dom::GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), mControllerCount,
-                     aMapping, aHand, dom::GamepadServiceType::VR, aNumButtons,
-                     aNumAxes);
+  dom::GamepadAdded a(NS_ConvertUTF8toUTF16(controllerInfo.GetControllerName()),
+                      mControllerCount,
+                      controllerInfo.GetMappingType(),
+                      controllerInfo.GetHand(),
+                      dom::GamepadServiceType::VR,
+                      controllerInfo.GetNumButtons(),
+                      controllerInfo.GetNumAxes());
 
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);

@@ -150,6 +150,18 @@ var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, re
     client.listTabs(clientDeferred.resolve);
   });
 
+  function bulkSendReadyCallback({copyFrom}) {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(getTestTempFile("bulk-input")),
+      loadUsingSystemPrincipal: true
+    }, input => {
+      copyFrom(input).then(() => {
+        input.close();
+        bulkCopyDeferred.resolve();
+      });
+    });
+  }
+
   clientDeferred.promise.then(response => {
     let request = client.startBulkRequest({
       actor: response.testBulk,
@@ -158,17 +170,7 @@ var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, re
     });
 
     // Send bulk data to server
-    request.on("bulk-send-ready", ({copyFrom}) => {
-      NetUtil.asyncFetch({
-        uri: NetUtil.newURI(getTestTempFile("bulk-input")),
-        loadUsingSystemPrincipal: true
-      }, input => {
-        copyFrom(input).then(() => {
-          input.close();
-          bulkCopyDeferred.resolve();
-        });
-      });
-    });
+    request.on("bulk-send-ready", bulkSendReadyCallback);
 
     // Set up reply handling for this type
     replyHandlers[replyType](request).then(() => {

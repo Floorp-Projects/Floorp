@@ -62,7 +62,6 @@
 # -------------------------------------------------------
 #   BUILT_OPT    - use optimized/debug build
 #   USE_64       - use 64bit/32bit build
-#   USE_ASAN     - use Address Sanitizer build
 #
 # Optional environment variables to enable specific NSS features:
 # ---------------------------------------------------------------

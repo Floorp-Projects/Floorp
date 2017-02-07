@@ -1115,14 +1115,15 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
                                      offsetToUserSpace);
   nsRegion dirtyRegion = aParams.dirtyRect - offsetToBoundingBox;
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
-  nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
-                                       tm, &callback, &dirtyRegion);
+  DrawResult result =
+    nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
+                                         tm, &callback, &dirtyRegion);
 
   if (opacity != 1.0f) {
     context.PopGroupAndBlend();
   }
 
-  return DrawResult::SUCCESS;
+  return result;
 }
 
 gfxMatrix

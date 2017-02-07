@@ -12,6 +12,7 @@ Cu.importGlobalProperties(["fetch"]);
 const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const PREF_SETTINGS_SERVER              = "services.settings.server";
+const PREF_SETTINGS_SERVER_BACKOFF      = "services.settings.server.backoff";
 const PREF_BLOCKLIST_CHANGES_PATH       = "services.blocklist.changes.path";
 const PREF_BLOCKLIST_LAST_UPDATE        = "services.blocklist.last_update_seconds";
 const PREF_BLOCKLIST_LAST_ETAG          = "services.blocklist.last_etag";
@@ -29,10 +30,23 @@ const gBlocklistClients = {
 // Add a blocklist client for testing purposes. Do not use for any other purpose
 this.addTestBlocklistClient = (name, client) => { gBlocklistClients[name] = client; }
 
+
 // This is called by the ping mechanism.
 // returns a promise that rejects if something goes wrong
 this.checkVersions = function() {
   return Task.spawn(function* syncClients() {
+
+    // Check if the server backoff time is elapsed.
+    if (Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
+      const backoffReleaseTime = Services.prefs.getCharPref(PREF_SETTINGS_SERVER_BACKOFF);
+      const remainingMilliseconds = parseInt(backoffReleaseTime, 10) - Date.now();
+      if (remainingMilliseconds > 0) {
+        throw new Error(`Server is asking clients to back off; retry in ${Math.ceil(remainingMilliseconds / 1000)}s.`);
+      } else {
+        Services.prefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
+      }
+    }
+
     // Fetch a versionInfo object that looks like:
     // {"data":[
     //   {
@@ -55,6 +69,15 @@ this.checkVersions = function() {
     }
 
     const response = yield fetch(changesEndpoint, {headers});
+
+    // Check if the server asked the clients to back off.
+    if (response.headers.has("Backoff")) {
+      const backoffSeconds = parseInt(response.headers.get("Backoff"), 10);
+      if (!isNaN(backoffSeconds)) {
+        const backoffReleaseTime = Date.now() + backoffSeconds * 1000;
+        Services.prefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, backoffReleaseTime);
+      }
+    }
 
     let versionInfo;
     // No changes since last time. Go on with empty list of changes.

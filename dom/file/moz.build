@@ -23,6 +23,7 @@ EXPORTS.mozilla.dom += [
     'File.h',
     'FileList.h',
     'FileReader.h',
+    'MultipartBlobImpl.h',
     'MutableBlobStorage.h',
     'MutableBlobStreamListener.h',
 ]

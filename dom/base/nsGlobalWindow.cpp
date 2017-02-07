@@ -13239,6 +13239,14 @@ nsGlobalWindow::NotifyVREventListenerAdded()
   EnableVRUpdates();
 }
 
+bool
+nsGlobalWindow::HasUsedVR() const
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  return mHasVREvents;
+}
+
 void
 nsGlobalWindow::EnableTimeChangeNotifications()
 {

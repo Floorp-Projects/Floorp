@@ -83,12 +83,14 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'IncrementalTokenizer.h',
     'Observer.h',
     'StickyTimeDuration.h',
     'Tokenizer.h',
 ]
 
 UNIFIED_SOURCES += [
+    'IncrementalTokenizer.cpp',
     'nsArray.cpp',
     'nsArrayEnumerator.cpp',
     'nsArrayUtils.cpp',

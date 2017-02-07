@@ -92,7 +92,7 @@ this.ExtensionsUI = {
     let info = {
       addon,
       permissions: addon.userPermissions,
-      icon: addon.iconURL || DEFAULT_EXTENSION_ICON,
+      icon: addon.iconURL,
       type: "sideload",
     };
     this.showAddonsManager(browser, info).then(answer => {
@@ -101,6 +101,7 @@ this.ExtensionsUI = {
   },
 
   showUpdate(browser, info) {
+    info.icon = info.addon.iconURL;
     info.type = "update";
     this.showAddonsManager(browser, info).then(answer => {
       if (answer) {
@@ -268,7 +269,7 @@ this.ExtensionsUI = {
 
     let popupOptions = {
       hideClose: true,
-      popupIconURL: info.icon,
+      popupIconURL: info.icon || DEFAULT_EXTENSION_ICON,
       persistent: true,
 
       eventCallback(topic) {

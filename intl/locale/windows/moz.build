@@ -10,6 +10,9 @@ SOURCES += [
     'nsWinCharset.cpp',
 ]
 
+if CONFIG['ENABLE_INTL_API']:
+    SOURCES += ['OSPreferences_win.cpp']
+
 FINAL_LIBRARY = 'xul'
 
 GENERATED_FILES = [
