@@ -59,7 +59,8 @@ namespace mozilla {
 extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
-class PDMFactoryImpl final {
+class PDMFactoryImpl final
+{
 public:
   PDMFactoryImpl()
   {
@@ -98,7 +99,8 @@ public:
                          MediaResult aResult = MediaResult(NS_OK))
       : mReason(aReason),
         mMediaResult(mozilla::Move(aResult))
-    {}
+    {
+    }
     CheckResult(const CheckResult& aOther) = default;
     CheckResult(CheckResult&& aOther) = default;
     CheckResult& operator=(const CheckResult& aOther) = default;
@@ -119,25 +121,24 @@ public:
   AddMediaFormatChecker(const TrackInfo& aTrackConfig)
   {
     if (aTrackConfig.IsVideo()) {
-    auto mimeType = aTrackConfig.GetAsVideoInfo()->mMimeType;
-    RefPtr<MediaByteBuffer> extraData = aTrackConfig.GetAsVideoInfo()->mExtraData;
-    AddToCheckList(
-      [mimeType, extraData]() {
+      auto mimeType = aTrackConfig.GetAsVideoInfo()->mMimeType;
+      RefPtr<MediaByteBuffer> extraData =
+        aTrackConfig.GetAsVideoInfo()->mExtraData;
+      AddToCheckList([mimeType, extraData]() {
         if (MP4Decoder::IsH264(mimeType)) {
           mp4_demuxer::SPSData spsdata;
           // WMF H.264 Video Decoder and Apple ATDecoder
           // do not support YUV444 format.
           // For consistency, all decoders should be checked.
-          if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
-              (spsdata.profile_idc == 244 /* Hi444PP */ ||
-               spsdata.chroma_format_idc == PDMFactory::kYUV444)) {
+          if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata)
+              && (spsdata.profile_idc == 244 /* Hi444PP */
+                  || spsdata.chroma_format_idc == PDMFactory::kYUV444)) {
             return CheckResult(
               SupportChecker::Reason::kVideoFormatNotSupported,
-              MediaResult(
-                NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                RESULT_DETAIL("Decoder may not have the capability to handle"
-                              " the requested video format"
-                              " with YUV444 chroma subsampling.")));
+              MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                          RESULT_DETAIL("Decoder may not have the capability "
+                                        "to handle the requested video format "
+                                        "with YUV444 chroma subsampling.")));
           }
         }
         return CheckResult(SupportChecker::Reason::kSupported);
@@ -262,14 +263,16 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   auto checkResult = supportChecker.Check();
   if (checkResult.mReason != SupportChecker::Reason::kSupported) {
     DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
-    if (checkResult.mReason == SupportChecker::Reason::kVideoFormatNotSupported) {
+    if (checkResult.mReason
+        == SupportChecker::Reason::kVideoFormatNotSupported) {
       if (diagnostics) {
         diagnostics->SetVideoNotSupported();
       }
       if (result) {
         *result = checkResult.mMediaResult;
       }
-    } else if (checkResult.mReason == SupportChecker::Reason::kAudioFormatNotSupported) {
+    } else if (checkResult.mReason
+               == SupportChecker::Reason::kAudioFormatNotSupported) {
       if (diagnostics) {
         diagnostics->SetAudioNotSupported();
       }
@@ -286,8 +289,9 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   }
 
   if (!config.IsVideo()) {
-    *result = MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                          RESULT_DETAIL("Decoder configuration error, expected audio or video."));
+    *result = MediaResult(
+      NS_ERROR_DOM_MEDIA_FATAL_ERR,
+      RESULT_DETAIL("Decoder configuration error, expected audio or video."));
     return nullptr;
   }
 
