@@ -30,7 +30,7 @@ public:
     virtual ~PluginProcessChild()
     { }
 
-    virtual bool Init() override;
+    virtual bool Init(int aArgc, char* aArgv[]) override;
     virtual void CleanUp() override;
 
 protected:

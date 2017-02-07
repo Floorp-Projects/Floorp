@@ -17,6 +17,7 @@ class DomainPolicyClone;
 %}
 
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
+[ptr] native DomainPolicyCloneConstPtr(const mozilla::dom::DomainPolicyClone);
 
 /*
  * When a domain policy is instantiated by invoking activateDomainPolicy() on
@@ -41,7 +42,7 @@ interface nsIDomainPolicy : nsISupports
     void deactivate();
 
     [noscript, notxpcom] void cloneDomainPolicy(in DomainPolicyClonePtr aClone);
-    [noscript, notxpcom] void applyClone(in DomainPolicyClonePtr aClone);
+    [noscript, notxpcom] void applyClone(in DomainPolicyCloneConstPtr aClone);
 };
 
 [scriptable, builtinclass, uuid(665c981b-0a0f-4229-ac06-a826e02d4f69)]

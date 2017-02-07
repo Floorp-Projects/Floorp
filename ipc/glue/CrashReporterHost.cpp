@@ -109,8 +109,11 @@ public:
     int32_t processType = mProcessType;
     int32_t crashType = mCrashType;
     nsString childDumpID(mChildDumpID);
+    nsCOMPtr<nsIAsyncShutdownBlocker> self(this);
 
-    NS_DispatchToMainThread(NS_NewRunnableFunction([=] () -> void {
+    NS_DispatchToMainThread(NS_NewRunnableFunction([
+      self, processType, crashType, childDumpID
+    ] {
       nsCOMPtr<nsICrashService> crashService =
         do_GetService("@mozilla.org/crashservice;1");
       if (crashService) {
@@ -120,7 +123,7 @@ public:
       nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
 
       if (barrier) {
-        barrier->RemoveBlocker(this);
+        barrier->RemoveBlocker(self);
       }
     }));
 

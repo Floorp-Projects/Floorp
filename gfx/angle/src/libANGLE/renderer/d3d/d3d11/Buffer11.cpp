@@ -692,6 +692,7 @@ gl::ErrorOrResult<Buffer11::BufferStorage *> Buffer11::getBufferStorage(BufferUs
         ANGLE_TRY(newStorage->resize(mSize, true));
     }
 
+    mIdleness[usage] = 0;
     ANGLE_TRY(updateBufferStorage(newStorage, 0, mSize));
     ANGLE_TRY(markBufferUsage(usage));
 
