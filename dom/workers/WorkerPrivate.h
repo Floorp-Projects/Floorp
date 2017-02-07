@@ -616,6 +616,11 @@ public:
   nsresult
   SetPrincipalFromChannel(nsIChannel* aChannel);
 
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+  bool
+  FinalChannelPrincipalIsValid(nsIChannel* aChannel);
+#endif
+
   bool
   UsesSystemPrincipal() const
   {
