@@ -964,8 +964,8 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   *d++ = 0x30; *d++ = totalLen - 10u; //         reqCert (CertID SEQUENCE)
 
   // reqCert.hashAlgorithm
-  for (size_t i = 0; i < sizeof(hashAlgorithm); ++i) {
-    *d++ = hashAlgorithm[i];
+  for (const uint8_t hashAlgorithmByte : hashAlgorithm) {
+    *d++ = hashAlgorithmByte;
   }
 
   // reqCert.issuerNameHash (OCTET STRING)
