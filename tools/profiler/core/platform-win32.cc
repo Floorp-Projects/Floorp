@@ -29,10 +29,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <process.h>
-#include "platform.h"
 #include "ProfileEntry.h"
-#include "ThreadInfo.h"
-#include "ThreadResponsiveness.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
