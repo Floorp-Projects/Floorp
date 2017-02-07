@@ -48,7 +48,7 @@ protected:
   // Methods only called on mTaskQueue.
   RefPtr<ShutdownPromise> ProcessShutdown();
   void Output(MediaData* aSample);
-  void InputExhausted();
+  void ReturnDecodedData();
   void DrainComplete();
   void Error(const MediaResult& aError);
   void AssertOnTaskQueue()
@@ -68,6 +68,10 @@ protected:
   RefPtr<TaskQueue> mTaskQueue;
   // Only ever accessed on mTaskqueue.
   bool mShutdown = false;
+  // Indicates if the decoder has already been drained.
+  bool mDrained = true;
+  // Indicates if there's a draining operation pending.
+  bool mDraining = false;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
   DecodedData mDecodedData;

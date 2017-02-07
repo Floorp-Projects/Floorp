@@ -145,7 +145,7 @@ public:
 
     void HandleInputExhausted() override
     {
-      mDecoder->InputExhausted();
+      mDecoder->ReturnDecodedData();
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -318,7 +318,8 @@ private:
   };
 
   layers::ImageContainer* mImageContainer;
-  const VideoInfo mConfig;
+  // This must be a reference until bug 1336431 is resolved.
+  const VideoInfo& mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
   DurationQueue mInputDurations;
   bool mIsCodecSupportAdaptivePlayback = false;
@@ -343,7 +344,7 @@ public:
     if (!formatHasCSD && aConfig.mCodecSpecificConfig->Length() >= 2) {
       jni::ByteBuffer::LocalRef buffer(env);
       buffer = jni::ByteBuffer::New(aConfig.mCodecSpecificConfig->Elements(),
-          aConfig.mCodecSpecificConfig->Length());
+                                    aConfig.mCodecSpecificConfig->Length());
       NS_ENSURE_SUCCESS_VOID(
         aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer));
     }
@@ -376,7 +377,7 @@ private:
 
     void HandleInputExhausted() override
     {
-      mDecoder->InputExhausted();
+      mDecoder->ReturnDecodedData();
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -511,6 +512,9 @@ RemoteDataDecoder::Flush()
 {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mDrained = true;
+    mDraining = false;
+    mDecodedData.Clear();
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mJavaDecoder->Flush();
@@ -523,15 +527,27 @@ RemoteDataDecoder::Drain()
 {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
+    if (mDrained) {
+      // There's no operation to perform other than returning any already
+      // decoded data.
+      ReturnDecodedData();
+      return p;
+    }
+
+    if (mDraining) {
+      // Draining operation already pending, let it complete its course.
+      return p;
+    }
+
     BufferInfo::LocalRef bufferInfo;
     nsresult rv = BufferInfo::New(&bufferInfo);
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-
-    RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
     mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
+    mDraining = true;
     return p;
   });
 }
@@ -586,6 +602,7 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
 
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
     mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(sample));
+    mDrained = false;
     return p;
   });
 }
@@ -603,22 +620,29 @@ RemoteDataDecoder::Output(MediaData* aSample)
     return;
   }
   mDecodedData.AppendElement(aSample);
+  ReturnDecodedData();
 }
 
 void
-RemoteDataDecoder::InputExhausted()
+RemoteDataDecoder::ReturnDecodedData()
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod(this, &RemoteDataDecoder::InputExhausted));
+      NewRunnableMethod(this, &RemoteDataDecoder::ReturnDecodedData));
     return;
   }
   AssertOnTaskQueue();
   if (mShutdown) {
     return;
   }
-  mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  // We only want to clear mDecodedData when we have resolved the promises.
+  if (!mDecodePromise.IsEmpty()) {
+    mDecodePromise.Resolve(mDecodedData, __func__);
+    mDecodedData.Clear();
+  } else if (!mDrainPromise.IsEmpty()) {
+    mDrainPromise.Resolve(mDecodedData, __func__);
+    mDecodedData.Clear();
+  }
 }
 
 void
@@ -633,8 +657,9 @@ RemoteDataDecoder::DrainComplete()
   if (mShutdown) {
     return;
   }
-  mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDraining = false;
+  mDrained = true;
+  ReturnDecodedData();
 }
 
 void
