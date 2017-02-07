@@ -461,6 +461,12 @@ public class HomePager extends ViewPager implements HomeScreen {
                 adapter.setCanLoadHint(true);
             }
         });
+
+        // We need to fire telemetry on the initial load: we will subsequently send telemetry whenever
+        // the user switches between homepanels, but the first load doesn't involve any switching hence
+        // we need to send telemetry now:
+        final String panelType = ((HomeAdapter) getAdapter()).getPanelIdAtPosition(mDefaultPageIndex);
+        startNewPanelTelemetrySession(panelType);
     }
 
     @Override
