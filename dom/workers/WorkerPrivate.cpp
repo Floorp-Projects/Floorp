@@ -4735,6 +4735,9 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     rv = NS_GetFinalChannelURI(loadInfo.mChannel,
                                getter_AddRefs(loadInfo.mResolvedScriptURI));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = loadInfo.SetPrincipalFromChannel(loadInfo.mChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   aLoadInfo->StealFrom(loadInfo);

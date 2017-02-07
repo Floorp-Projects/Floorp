@@ -1129,9 +1129,6 @@ private:
       // Store the channel info if needed.
       mWorkerPrivate->InitChannelInfo(channel);
 
-      rv = mWorkerPrivate->SetPrincipalFromChannel(channel);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
       if (!mWorkerPrivate->GetCSP() && CSPService::sCSPEnabled) {
@@ -1784,10 +1781,12 @@ public:
                                                    // Nested workers use default uri encoding.
                                                    true,
                                                    getter_AddRefs(channel));
-    if (NS_SUCCEEDED(mResult)) {
-      mLoadInfo.mChannel = channel.forget();
-    }
+    NS_ENSURE_SUCCESS(mResult, true);
 
+    mResult = mLoadInfo.SetPrincipalFromChannel(channel);
+    NS_ENSURE_SUCCESS(mResult, true);
+
+    mLoadInfo.mChannel = channel.forget();
     return true;
   }
 
