@@ -202,13 +202,6 @@ private:
    */
   nsRect ComputeSourceNeededRect();
 
-  /**
-   * Returns the transform from filter space to outer-<svg> device space.
-   */
-  gfxMatrix GetFilterSpaceToDeviceSpaceTransform() const {
-    return mFilterSpaceToDeviceSpaceTransform;
-  }
-
   struct SourceInfo {
     // Specifies which parts of the source need to be rendered.
     // Set by ComputeNeededBoxes().
@@ -336,11 +329,6 @@ private:
    * The SVG bbox of the element that is being filtered, in filter space.
    */
   nsIntRect mTargetBBoxInFilterSpace;
-
-  /**
-   * The transform from filter space to outer-<svg> device space.
-   */
-  gfxMatrix mFilterSpaceToDeviceSpaceTransform;
 
   /**
    * Transform rects between filter space and frame space in CSS pixels.
