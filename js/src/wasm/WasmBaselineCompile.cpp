@@ -6411,6 +6411,31 @@ BaseCompiler::emitSelect()
         break;
       }
       case ValType::I64: {
+#ifdef JS_CODEGEN_X86
+        // There may be as many as four Int64 values in registers at a time: two
+        // for the latent branch operands, and two for the true/false values we
+        // normally pop before executing the branch.  On x86 this is one value
+        // too many, so we need to generate more complicated code here, and for
+        // simplicity's sake we do so even if the branch operands are not Int64.
+        // However, the resulting control flow diamond is complicated since the
+        // arms of the diamond will have to stay synchronized with respect to
+        // their evaluation stack and regalloc state.  To simplify further, we
+        // use a double branch and a temporary boolean value for now.
+        RegI32 tmp = needI32();
+        loadConstI32(tmp, 0);
+        emitBranchPerform(&b);
+        loadConstI32(tmp, 1);
+        masm.bind(&done);
+
+        Label trueValue;
+        RegI64 r0, r1;
+        pop2xI64(&r0, &r1);
+        masm.branch32(Assembler::Equal, tmp, Imm32(0), &trueValue);
+        moveI64(r1, r0);
+        masm.bind(&trueValue);
+        freeI64(r1);
+        pushI64(r0);
+#else
         RegI64 r0, r1;
         pop2xI64(&r0, &r1);
         emitBranchPerform(&b);
@@ -6418,6 +6443,7 @@ BaseCompiler::emitSelect()
         masm.bind(&done);
         freeI64(r1);
         pushI64(r0);
+#endif
         break;
       }
       case ValType::F32: {
