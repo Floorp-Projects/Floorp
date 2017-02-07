@@ -32,6 +32,8 @@
 // These methods are alternatives to the methods on nsIThreadManager, provided
 // for convenience.
 
+extern void NS_SetCurrentThreadName(const char* aName);
+
 /**
  * Create a new thread, and optionally provide an initial event for the thread.
  *
