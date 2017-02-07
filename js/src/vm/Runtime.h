@@ -297,11 +297,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     AutoUpdateChildRuntimeCount updateChildRuntimeCount;
 #endif
 
-    // The context for the thread which currently has exclusive access to most
-    // contents of the runtime. When execution on the runtime is cooperatively
-    // scheduled, this is the thread which is currently running.
-    mozilla::Atomic<JSContext*, mozilla::ReleaseAcquire> activeContext;
-
     /*
      * The profiler sampler generation after the latest sample.
      *
@@ -359,7 +354,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
     /* Call this to accumulate telemetry data. */
-    js::ActiveThreadData<JSAccumulateTelemetryDataCallback> telemetryCallback;
+    js::UnprotectedData<JSAccumulateTelemetryDataCallback> telemetryCallback;
   public:
     // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
     // histogram. |key| provides an additional key to identify the histogram.
@@ -369,14 +364,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void setTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
 
   public:
-    js::ActiveThreadData<JSGetIncumbentGlobalCallback> getIncumbentGlobalCallback;
-    js::ActiveThreadData<JSEnqueuePromiseJobCallback> enqueuePromiseJobCallback;
-    js::ActiveThreadData<void*> enqueuePromiseJobCallbackData;
+    js::UnprotectedData<JSGetIncumbentGlobalCallback> getIncumbentGlobalCallback;
+    js::UnprotectedData<JSEnqueuePromiseJobCallback> enqueuePromiseJobCallback;
+    js::UnprotectedData<void*> enqueuePromiseJobCallbackData;
 
-    js::ActiveThreadData<JSPromiseRejectionTrackerCallback> promiseRejectionTrackerCallback;
-    js::ActiveThreadData<void*> promiseRejectionTrackerCallbackData;
+    js::UnprotectedData<JSPromiseRejectionTrackerCallback> promiseRejectionTrackerCallback;
+    js::UnprotectedData<void*> promiseRejectionTrackerCallbackData;
 
-    js::ActiveThreadData<JS::StartAsyncTaskCallback> startAsyncTaskCallback;
+    js::UnprotectedData<JS::StartAsyncTaskCallback> startAsyncTaskCallback;
     js::UnprotectedData<JS::FinishAsyncTaskCallback> finishAsyncTaskCallback;
     js::ExclusiveData<js::PromiseTaskPtrVector> promiseTasksToDestroy;
 
@@ -393,35 +388,35 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * Allow relazifying functions in compartments that are active. This is
      * only used by the relazifyFunctions() testing function.
      */
-    js::ActiveThreadData<bool> allowRelazificationForTesting;
+    js::UnprotectedData<bool> allowRelazificationForTesting;
 
     /* Compartment destroy callback. */
-    js::ActiveThreadData<JSDestroyCompartmentCallback> destroyCompartmentCallback;
+    js::UnprotectedData<JSDestroyCompartmentCallback> destroyCompartmentCallback;
 
     /* Compartment memory reporting callback. */
-    js::ActiveThreadData<JSSizeOfIncludingThisCompartmentCallback> sizeOfIncludingThisCompartmentCallback;
+    js::UnprotectedData<JSSizeOfIncludingThisCompartmentCallback> sizeOfIncludingThisCompartmentCallback;
 
     /* Zone destroy callback. */
-    js::ActiveThreadData<JSZoneCallback> destroyZoneCallback;
+    js::UnprotectedData<JSZoneCallback> destroyZoneCallback;
 
     /* Zone sweep callback. */
-    js::ActiveThreadData<JSZoneCallback> sweepZoneCallback;
+    js::UnprotectedData<JSZoneCallback> sweepZoneCallback;
 
     /* Call this to get the name of a compartment. */
-    js::ActiveThreadData<JSCompartmentNameCallback> compartmentNameCallback;
+    js::UnprotectedData<JSCompartmentNameCallback> compartmentNameCallback;
 
     /* Callback for doing memory reporting on external strings. */
-    js::ActiveThreadData<JSExternalStringSizeofCallback> externalStringSizeofCallback;
+    js::UnprotectedData<JSExternalStringSizeofCallback> externalStringSizeofCallback;
 
-    js::ActiveThreadData<mozilla::UniquePtr<js::SourceHook>> sourceHook;
+    js::UnprotectedData<mozilla::UniquePtr<js::SourceHook>> sourceHook;
 
-    js::ActiveThreadData<const JSSecurityCallbacks*> securityCallbacks;
-    js::ActiveThreadData<const js::DOMCallbacks*> DOMcallbacks;
-    js::ActiveThreadData<JSDestroyPrincipalsOp> destroyPrincipals;
-    js::ActiveThreadData<JSReadPrincipalsOp> readPrincipals;
+    js::UnprotectedData<const JSSecurityCallbacks*> securityCallbacks;
+    js::UnprotectedData<const js::DOMCallbacks*> DOMcallbacks;
+    js::UnprotectedData<JSDestroyPrincipalsOp> destroyPrincipals;
+    js::UnprotectedData<JSReadPrincipalsOp> readPrincipals;
 
     /* Optional warning reporter. */
-    js::ActiveThreadData<JS::WarningReporter> warningReporter;
+    js::UnprotectedData<JS::WarningReporter> warningReporter;
 
   private:
     /* Gecko profiling metadata */
@@ -430,7 +425,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::GeckoProfiler& geckoProfiler() { return geckoProfiler_.ref(); }
 
     // Heap GC roots for PersistentRooted pointers.
-    js::ActiveThreadData<mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
+    js::UnprotectedData<mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
                                                  mozilla::LinkedList<JS::PersistentRooted<void*>>>> heapRoots;
 
     void tracePersistentRoots(JSTracer* trc);
@@ -450,15 +445,15 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void setTrustedPrincipals(const JSPrincipals* p) { trustedPrincipals_ = p; }
     const JSPrincipals* trustedPrincipals() const { return trustedPrincipals_; }
 
-    js::ActiveThreadData<const JSWrapObjectCallbacks*> wrapObjectCallbacks;
-    js::ActiveThreadData<js::PreserveWrapperCallback> preserveWrapperCallback;
+    js::UnprotectedData<const JSWrapObjectCallbacks*> wrapObjectCallbacks;
+    js::UnprotectedData<js::PreserveWrapperCallback> preserveWrapperCallback;
 
-    js::ActiveThreadData<js::ScriptEnvironmentPreparer*> scriptEnvironmentPreparer;
+    js::UnprotectedData<js::ScriptEnvironmentPreparer*> scriptEnvironmentPreparer;
 
-    js::ActiveThreadData<js::CTypesActivityCallback> ctypesActivityCallback;
+    js::UnprotectedData<js::CTypesActivityCallback> ctypesActivityCallback;
 
   private:
-    js::WriteOnceData<const js::Class*> windowProxyClass_;
+    js::UnprotectedData<const js::Class*> windowProxyClass_;
 
   public:
     const js::Class* maybeWindowProxyClass() const {
@@ -473,7 +468,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * Head of circular list of all enabled Debuggers that have
      * onNewGlobalObject handler methods established.
      */
-    js::ActiveThreadData<JSCList> onNewGlobalObjectWatchers_;
+    js::UnprotectedData<JSCList> onNewGlobalObjectWatchers_;
   public:
     JSCList& onNewGlobalObjectWatchers() { return onNewGlobalObjectWatchers_.ref(); }
 
@@ -513,16 +508,16 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // How many compartments there are across all zones. This number includes
     // off main thread context compartments, so it isn't necessarily equal to the
     // number of compartments visited by CompartmentsIter.
-    js::ActiveThreadData<size_t> numCompartments;
+    js::UnprotectedData<size_t> numCompartments;
 
     /* Locale-specific callbacks for string conversion. */
-    js::ActiveThreadData<const JSLocaleCallbacks*> localeCallbacks;
+    js::UnprotectedData<const JSLocaleCallbacks*> localeCallbacks;
 
     /* Default locale for Internationalization API */
-    js::ActiveThreadData<char*> defaultLocale;
+    js::UnprotectedData<char*> defaultLocale;
 
     /* Default JSVersion. */
-    js::ActiveThreadData<JSVersion> defaultVersion_;
+    js::UnprotectedData<JSVersion> defaultVersion_;
 
   private:
     /* Code coverage output. */
@@ -531,7 +526,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::coverage::LCovRuntime& lcovOutput() { return lcovOutput_.ref(); }
 
   private:
-    js::ActiveThreadOrIonCompileData<js::jit::JitRuntime*> jitRuntime_;
+    js::UnprotectedData<js::jit::JitRuntime*> jitRuntime_;
 
     /*
      * Self-hosting state cloned on demand into other compartments. Shared with the parent
@@ -785,7 +780,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::WriteOnceData<js::WellKnownSymbols*> wellKnownSymbols;
 
     /* Shared Intl data for this runtime. */
-    js::ActiveThreadData<js::SharedIntlData> sharedIntlData;
+    js::UnprotectedData<js::SharedIntlData> sharedIntlData;
 
     void traceSharedIntlData(JSTracer* trc);
 
@@ -856,7 +851,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     mozilla::Atomic<bool> offthreadIonCompilationEnabled_;
     mozilla::Atomic<bool> parallelParsingEnabled_;
 
-    js::ActiveThreadData<bool> autoWritableJitCodeActive_;
+    js::UnprotectedData<bool> autoWritableJitCodeActive_;
 
   public:
 
@@ -881,12 +876,12 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
     /* See comment for JS::SetLargeAllocationFailureCallback in jsapi.h. */
-    js::ActiveThreadData<JS::LargeAllocationFailureCallback> largeAllocationFailureCallback;
-    js::ActiveThreadData<void*> largeAllocationFailureCallbackData;
+    js::UnprotectedData<JS::LargeAllocationFailureCallback> largeAllocationFailureCallback;
+    js::UnprotectedData<void*> largeAllocationFailureCallbackData;
 
     /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
-    js::ActiveThreadData<JS::OutOfMemoryCallback> oomCallback;
-    js::ActiveThreadData<void*> oomCallbackData;
+    js::UnprotectedData<JS::OutOfMemoryCallback> oomCallback;
+    js::UnprotectedData<void*> oomCallbackData;
 
     /*
      * These variations of malloc/calloc/realloc will call the
@@ -924,13 +919,13 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * Debugger.Memory functions like takeCensus use this embedding-provided
      * function to assess the size of malloc'd blocks of memory.
      */
-    js::ActiveThreadData<mozilla::MallocSizeOf> debuggerMallocSizeOf;
+    js::UnprotectedData<mozilla::MallocSizeOf> debuggerMallocSizeOf;
 
     /* Last time at which an animation was played for this runtime. */
     mozilla::Atomic<int64_t> lastAnimationTime;
 
   private:
-    js::ActiveThreadData<js::PerformanceMonitoring> performanceMonitoring_;
+    js::UnprotectedData<js::PerformanceMonitoring> performanceMonitoring_;
   public:
     js::PerformanceMonitoring& performanceMonitoring() { return performanceMonitoring_.ref(); }
 
