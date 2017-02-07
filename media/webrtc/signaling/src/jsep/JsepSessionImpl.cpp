@@ -332,9 +332,6 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
   if (addVideoExt != SdpDirectionAttribute::kInactive) {
     AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addVideoExt);
   }
-  if (addAudioExt != SdpDirectionAttribute::kInactive) {
-    AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addAudioExt);
-  }
 
   it->mTrack->SetJsConstraints(constraints);
 
