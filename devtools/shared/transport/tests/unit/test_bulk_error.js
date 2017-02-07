@@ -73,8 +73,8 @@ function json_reply(client, response) {
   // Send bulk data to server
   let copyDeferred = defer();
   request.on("bulk-send-ready", ({writer, done}) => {
-    let input = Cc["@mozilla.org/io/string-input-stream;1"].
-                  createInstance(Ci.nsIStringInputStream);
+    let input = Cc["@mozilla.org/io/string-input-stream;1"]
+                  .createInstance(Ci.nsIStringInputStream);
     input.setData(reallyLong, reallyLong.length);
     try {
       writer.copyFrom(input, () => {

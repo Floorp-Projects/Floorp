@@ -51,6 +51,7 @@ public:
 
   virtual bool IsSameProcess() const override;
   bool HaveEventListener();
+  bool HaveControllerListener();
 
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
@@ -109,6 +110,7 @@ private:
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
   bool mHaveEventListener;
+  bool mHaveControllerListener;
   bool mIsContentChild;
 };
 

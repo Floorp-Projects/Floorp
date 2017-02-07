@@ -67,11 +67,12 @@ add_task(function* test_relative() {
 });
 
 add_task(function* test_invalid() {
-  gBrowser.selectedTab = AddSearchProvider("z://foobar");
+  let url = "z://foobar";
+  gBrowser.selectedTab = AddSearchProvider(url);
 
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
-  is(dialog.args.text, getString("error_invalid_engine_msg", brandName),
+  is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 
@@ -85,6 +86,19 @@ add_task(function* test_missing() {
   let dialog = yield promiseDialogOpened();
   is(dialog.args.promptType, "alert", "Should see the alert dialog.");
   is(dialog.args.text, getString("error_loading_engine_msg2", brandName, url),
+     "Should have seen the right error message")
+  dialog.document.documentElement.acceptDialog();
+
+  gBrowser.removeCurrentTab();
+});
+
+add_task(function* test_missing_namespace() {
+  let url = ROOT + "testEngine_missing_namespace.xml";
+  gBrowser.selectedTab = AddSearchProvider(url);
+
+  let dialog = yield promiseDialogOpened();
+  is(dialog.args.promptType, "alert", "Should see the alert dialog.");
+  is(dialog.args.text, getString("error_invalid_engine_msg2", brandName, url),
      "Should have seen the right error message")
   dialog.document.documentElement.acceptDialog();
 

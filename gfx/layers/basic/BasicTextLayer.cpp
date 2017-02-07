@@ -17,6 +17,7 @@
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/layers/LayersMessages.h" // for GlyphArray
 
 using namespace mozilla::gfx;
 

@@ -3735,15 +3735,16 @@ WorkerPrivateParent<Derived>::FlushReportsToSharedWorkers(
   for (uint32_t index = 0; index < windowActions.Length(); index++) {
     WindowAction& windowAction = windowActions[index];
 
-    aReporter->FlushConsoleReports(windowAction.mWindow->GetExtantDoc(),
-                                   nsIConsoleReportCollector::ReportAction::Save);
+    aReporter->FlushReportsToConsole(
+      windowAction.mWindow->WindowID(),
+      nsIConsoleReportCollector::ReportAction::Save);
     reportErrorToBrowserConsole = false;
   }
 
   // Finally report to broswer console if there is no any window or shared
   // worker.
   if (reportErrorToBrowserConsole) {
-    aReporter->FlushConsoleReports((nsIDocument*)nullptr);
+    aReporter->FlushReportsToConsole(0);
     return;
   }
 

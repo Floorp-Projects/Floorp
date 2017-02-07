@@ -115,7 +115,6 @@ devtools/server/tests/browser/**
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
 devtools/shared/heapsnapshot/**
-devtools/shared/transport/tests/unit/**
 devtools/shared/webconsole/test/**
 
 # Ignore devtools pre-processed files

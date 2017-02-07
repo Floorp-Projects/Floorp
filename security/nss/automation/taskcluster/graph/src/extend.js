@@ -18,8 +18,7 @@ const WINDOWS_CHECKOUT_CMD =
 queue.filter(task => {
   if (task.group == "Builds") {
     // Remove extra builds on {A,UB}San and ARM.
-    if (task.collection == "asan" || task.collection == "arm-debug" ||
-        task.collection == "gyp-asan") {
+    if (task.collection == "asan" || task.collection == "arm-debug") {
       return false;
     }
 
@@ -48,7 +47,7 @@ queue.filter(task => {
   }
 
   // GYP builds with -Ddisable_libpkix=1 by default.
-  if ((task.collection == "gyp" || task.collection == "gyp-asan") &&
+  if ((task.collection == "gyp" || task.collection == "asan") &&
       task.tests == "chains") {
     return false;
   }
@@ -57,7 +56,7 @@ queue.filter(task => {
 });
 
 queue.map(task => {
-  if (task.collection == "asan" || task.collection == "gyp-asan") {
+  if (task.collection == "asan") {
     // CRMF and FIPS tests still leak, unfortunately.
     if (task.tests == "crmf" || task.tests == "fips") {
       task.env.ASAN_OPTIONS = "detect_leaks=0";
@@ -118,7 +117,7 @@ export default async function main() {
     image: LINUX_IMAGE
   });
 
-  await scheduleLinux("Linux 64 (debug, gyp, asan, ubsan)", {
+  await scheduleLinux("Linux 64 (GYP, ASan, debug)", {
     command: [
       "/bin/bash",
       "-c",
@@ -129,23 +128,7 @@ export default async function main() {
       NSS_DISABLE_ARENA_FREE_LIST: "1",
       NSS_DISABLE_UNLOAD: "1",
       CC: "clang",
-      CCC: "clang++"
-    },
-    platform: "linux64",
-    collection: "gyp-asan",
-    image: LINUX_IMAGE
-  });
-
-  await scheduleLinux("Linux 64 (ASan, debug)", {
-    env: {
-      UBSAN_OPTIONS: "print_stacktrace=1",
-      NSS_DISABLE_ARENA_FREE_LIST: "1",
-      NSS_DISABLE_UNLOAD: "1",
-      CC: "clang",
       CCC: "clang++",
-      USE_UBSAN: "1",
-      USE_ASAN: "1",
-      USE_64: "1"
     },
     platform: "linux64",
     collection: "asan",

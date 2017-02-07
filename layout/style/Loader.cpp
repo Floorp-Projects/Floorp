@@ -966,7 +966,15 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     }
     nsresult rv = SRICheck::VerifyIntegrity(sriMetadata, aLoader, aBuffer,
                                             sourceUri, mLoader->mReporter);
-    mLoader->mReporter->FlushConsoleReports(mLoader->mDocument);
+
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    channel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup) {
+      mLoader->mReporter->FlushConsoleReports(loadGroup);
+    } else {
+      mLoader->mReporter->FlushConsoleReports(mLoader->mDocument);
+    }
+
     if (NS_FAILED(rv)) {
       LOG(("  Load was blocked by SRI"));
       MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,

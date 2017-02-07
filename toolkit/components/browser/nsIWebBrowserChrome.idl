@@ -83,9 +83,9 @@ interface nsIWebBrowserChrome : nsISupports
     // Whether this window should use remote (out-of-process) tabs.
     const unsigned long CHROME_REMOTE_WINDOW          = 0x00100000;
 
-    // Prevents new window animations on Mac OS X Lion.  Ignored on other
-    // platforms.
-    const unsigned long CHROME_MAC_SUPPRESS_ANIMATION = 0x01000000;
+    // Prevents new window animations on MacOS and Windows. Currently
+    // ignored for Linux.
+    const unsigned long CHROME_SUPPRESS_ANIMATION     = 0x01000000;
 
     const unsigned long CHROME_WINDOW_RAISED          = 0x02000000;
     const unsigned long CHROME_WINDOW_LOWERED         = 0x04000000;

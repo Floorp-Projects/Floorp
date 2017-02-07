@@ -9,11 +9,6 @@
  */
 [scriptable, uuid(d9104a00-140b-4f86-a4b0-4998878ef4e6 )]
 interface nsINSSU2FToken : nsIU2FToken {
-  /**
-   * Initializes the token and constructs and persists keys, if needed. Asserts
-   * that it is only called by the main thread.
-   */
-  void init();
 };
 
 %{C++
