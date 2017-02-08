@@ -39,6 +39,7 @@ add_task(function* checkReturnToAboutHome() {
   yield ContentTask.spawn(browser, null, function* () {
     let doc = content.document;
     let returnButton = doc.getElementById("returnButton");
+    is(returnButton.getAttribute("autofocus"), "true", "returnButton has autofocus");
     returnButton.click();
   });
   yield pageshowPromise;
