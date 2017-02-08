@@ -31,6 +31,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -39,9 +40,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileStorage",
                                   "resource://formautofill/ProfileStorage.jsm");
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
+const ENABLED_PREF = "browser.formautofill.enabled";
 
-let FormAutofillParent = {
+function FormAutofillParent() {
+}
+
+FormAutofillParent.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
+
   _profileStore: null,
+
+  _enabled: false,
 
   /**
    * Initializes ProfileStorage and registers the message handler.
@@ -53,10 +62,51 @@ let FormAutofillParent = {
     this._profileStore = new ProfileStorage(storePath);
     this._profileStore.initialize();
 
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
-               .getService(Ci.nsIMessageListenerManager);
-    mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
-    mm.addMessageListener("FormAutofill:GetProfiles", this);
+    // Observing the pref (and storage) changes
+    Services.prefs.addObserver(ENABLED_PREF, this, false);
+    this._enabled = this._getStatus();
+    // Force to trigger the onStatusChanged function for setting listeners properly
+    // while initizlization
+    this._onStatusChanged();
+    Services.mm.addMessageListener("FormAutofill:getEnabledStatus", this);
+  },
+
+  /**
+   * Observe the pref changes and update _enabled cache if status is changed.
+   */
+  observe() {
+    let currentStatus = this._getStatus();
+
+    if (currentStatus !== this._enabled) {
+      this._enabled = currentStatus;
+      this._onStatusChanged();
+    }
+  },
+
+  /**
+   * Add/remove message listener and broadcast the status to frames while the
+   * form autofill status changed.
+   */
+  _onStatusChanged() {
+    if (this._enabled) {
+      Services.mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
+      Services.mm.addMessageListener("FormAutofill:GetProfiles", this);
+    } else {
+      Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
+      Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
+    }
+
+    Services.mm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+  },
+
+  /**
+   * Query pref (and storage) status to determine the overall status for
+   * form autofill feature.
+   *
+   * @returns {boolean} status of form autofill feature
+   */
+  _getStatus() {
+    return Services.prefs.getBoolPref(ENABLED_PREF);
   },
 
   /**
@@ -73,6 +123,10 @@ let FormAutofillParent = {
         break;
       case "FormAutofill:GetProfiles":
         this._getProfiles(data, target);
+        break;
+      case "FormAutofill:getEnabledStatus":
+        target.messageManager.sendAsyncMessage("FormAutofill:enabledStatus",
+                                               this._enabled);
         break;
     }
   },
@@ -99,10 +153,8 @@ let FormAutofillParent = {
       this._profileStore = null;
     }
 
-    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
-               .getService(Ci.nsIMessageListenerManager);
-    mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
-    mm.removeMessageListener("FormAutofill:GetProfiles", this);
+    Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
+    Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
   },
 
   /**
