@@ -4,24 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
-    'injector.cpp',
+UNIFIED_SOURCES += [
+    'crash_generation_client.cc',
+    'crash_generation_server.cc',
 ]
 
-SharedLibrary('breakpadinjector')
-
-include('/ipc/chromium/chromium-config.mozbuild')
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/toolkit/crashreporter/breakpad-client',
     '/toolkit/crashreporter/google-breakpad/src',
 ]
 
-USE_STATIC_LIBS = True
-
-if CONFIG['GNU_CC']:
-    LDFLAGS += ['-Wl,-e,_DummyEntryPoint@12']
-else:
-    LDFLAGS += ['-ENTRY:DummyEntryPoint']
-
-DISABLE_STL_WRAPPING = True
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wno-shadow']

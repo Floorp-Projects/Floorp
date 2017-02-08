@@ -20,7 +20,7 @@
 #include <set>
 #include <algorithm>
 #include "resource.h"
-#include "client/windows/sender/crash_report_sender.h"
+#include "windows/sender/crash_report_sender.h"
 #include "common/windows/string_utils-inl.h"
 
 #define CRASH_REPORTER_VALUE L"Enabled"

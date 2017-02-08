@@ -6,7 +6,7 @@
 #include "InjectCrashReporter.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "client/windows/crash_generation/crash_generation_client.h"
+#include "windows/crash_generation/crash_generation_client.h"
 #include "nsExceptionHandler.h"
 #include "LoadLibraryRemote.h"
 #include "nsWindowsHelpers.h"
