@@ -49,7 +49,7 @@ TEST_F(TlsConnectTest, DamageSecretHandleServerFinished) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-  server_->SetPacketFilter(new AfterRecordN(
+  server_->SetPacketFilter(std::make_shared<AfterRecordN>(
       server_, client_,
       0,  // ServerHello.
       [this]() { SSLInt_DamageServerHsTrafficSecret(client_->ssl_fd()); }));

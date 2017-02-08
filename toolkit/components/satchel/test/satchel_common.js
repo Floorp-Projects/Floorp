@@ -229,11 +229,18 @@ function getPopupState(then = null) {
 }
 
 function listenForUnexpectedPopupShown() {
-  gChromeScript.addMessageListener("onpopupshown", function onPopupShown() {
+  gPopupShownListener = function onPopupShown() {
     if (!gPopupShownExpected) {
       ok(false, "Unexpected autocomplete popupshown event");
     }
-  });
+  };
+}
+
+function* promiseNoUnexpectedPopupShown() {
+  gPopupShownExpected = false;
+  listenForUnexpectedPopupShown();
+  SimpleTest.requestFlakyTimeout("Giving a chance for an unexpected popupshown to occur");
+  yield new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 /**
@@ -243,10 +250,10 @@ function listenForUnexpectedPopupShown() {
 function promiseACShown() {
   gPopupShownExpected = true;
   return new Promise(resolve => {
-    gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
+    gPopupShownListener = ({ results }) => {
       gPopupShownExpected = false;
       resolve(results);
-    });
+    };
   });
 }
 
@@ -256,7 +263,7 @@ function satchelCommonSetup() {
   gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
     gLastAutoCompleteResults = results;
     if (gPopupShownListener)
-      gPopupShownListener();
+      gPopupShownListener({results});
   });
 
   SimpleTest.registerCleanupFunction(() => {

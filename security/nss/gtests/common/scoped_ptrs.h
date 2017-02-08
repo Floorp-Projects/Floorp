@@ -25,6 +25,7 @@ struct ScopedDelete {
   }
   void operator()(PK11SlotInfo* slot) { PK11_FreeSlot(slot); }
   void operator()(PK11SymKey* key) { PK11_FreeSymKey(key); }
+  void operator()(PRFileDesc* fd) { PR_Close(fd); }
   void operator()(SECAlgorithmID* id) { SECOID_DestroyAlgorithmID(id, true); }
   void operator()(SECItem* item) { SECITEM_FreeItem(item, true); }
   void operator()(SECKEYPublicKey* key) { SECKEY_DestroyPublicKey(key); }
@@ -49,6 +50,7 @@ SCOPED(CERTCertList);
 SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(PK11SlotInfo);
 SCOPED(PK11SymKey);
+SCOPED(PRFileDesc);
 SCOPED(SECAlgorithmID);
 SCOPED(SECItem);
 SCOPED(SECKEYPublicKey);
