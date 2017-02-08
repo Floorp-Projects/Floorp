@@ -77,7 +77,7 @@ Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
 }
 
 uintptr_t
-Sampler::GetThreadHandle(PlatformData* aData)
+GetThreadHandle(PlatformData* aData)
 {
   return (uintptr_t) aData->profiled_thread();
 }
@@ -201,7 +201,7 @@ class SamplerThread
 
   void SampleContext(ThreadInfo* aThreadInfo, bool isFirstProfiledThread)
   {
-    uintptr_t thread = Sampler::GetThreadHandle(aThreadInfo->GetPlatformData());
+    uintptr_t thread = GetThreadHandle(aThreadInfo->GetPlatformData());
     HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
     if (profiled_thread == NULL)
       return;
@@ -281,8 +281,7 @@ class SamplerThread
 
     sample->context = &context;
 
-    // XXX: this is an off-main-thread use of gSampler
-    gSampler->Tick(sample);
+    Tick(sample);
 
     ResumeThread(profiled_thread);
   }
