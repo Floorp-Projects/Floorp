@@ -18,7 +18,6 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
-ifdef COMPILE_ENVIRONMENT
 tools::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	# Copy for xpcshell tests
@@ -38,4 +37,3 @@ else
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTROOT)/data/updater$(BIN_SUFFIX)
 endif
-endif # COMPILE_ENVIRONMENT
