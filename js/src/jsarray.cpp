@@ -2892,8 +2892,7 @@ SliceSparse(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
         return SliceSlowly(cx, obj, begin, end, result);
 
     RootedValue value(cx);
-    for (size_t i = 0, len = indexes.length(); i < len; i++) {
-        uint32_t index = indexes[i];
+    for (size_t index : indexes) {
         MOZ_ASSERT(begin <= index && index < end);
 
         bool hole;
