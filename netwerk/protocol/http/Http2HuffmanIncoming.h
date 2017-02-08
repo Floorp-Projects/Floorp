@@ -10,8 +10,8 @@ namespace net {
 struct HuffmanIncomingTable;
 
 struct HuffmanIncomingEntry {
-  const uint16_t mValue:9;      // 9 bits so it can hold 0..256
-  const uint16_t mPrefixLen:7;  // only holds 1..8
+  uint16_t mValue:9;      // 9 bits so it can hold 0..256
+  uint16_t mPrefixLen:7;  // only holds 1..8
 };
 
 // The data members are public only so they can be statically constructed. All
