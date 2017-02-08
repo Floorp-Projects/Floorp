@@ -493,11 +493,11 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-namespace {
 
 // This function is borrowed from Chromium's ImeInput::IsCtrlShiftPressed
-bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
+bool IsCtrlShiftPressed(const WidgetKeyboardEvent* aKeyboardEvent, bool& isRTL)
 {
+  MOZ_ASSERT(aKeyboardEvent);
   // To check if a user is pressing only a control key and a right-shift key
   // (or a left-shift key), we use the steps below:
   // 1. Check if a user is pressing a control key and a right-shift key (or
@@ -506,16 +506,12 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
   //    keys pressed at the same time.
   //    To ignore the keys checked in 1, we set their status to 0 before
   //    checking the key status.
-  WidgetKeyboardEvent* keyboardEvent =
-    aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-  MOZ_ASSERT(keyboardEvent,
-             "DOM key event's internal event must be WidgetKeyboardEvent");
 
-  if (!keyboardEvent->IsControl()) {
+  if (!aKeyboardEvent->IsControl()) {
     return false;
   }
 
-  switch (keyboardEvent->mLocation) {
+  switch (aKeyboardEvent->mLocation) {
     case eKeyLocationRight:
       isRTL = true;
       break;
@@ -528,13 +524,11 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
 
   // Scan the key status to find pressed keys. We should abandon changing the
   // text direction when there are other pressed keys.
-  if (keyboardEvent->IsAlt() || keyboardEvent->IsOS()) {
+  if (aKeyboardEvent->IsAlt() || aKeyboardEvent->IsOS()) {
     return false;
   }
 
   return true;
-}
-
 }
 
 // This logic is mostly borrowed from Chromium's
@@ -580,7 +574,9 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   aKeyEvent->GetKeyCode(&keyCode);
   if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
     bool switchToRTL;
-    if (IsCtrlShiftPressed(aKeyEvent, switchToRTL)) {
+    WidgetKeyboardEvent* keydownEvent =
+      aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+    if (IsCtrlShiftPressed(keydownEvent, switchToRTL)) {
       mShouldSwitchTextDirection = true;
       mSwitchToRTL = switchToRTL;
     }
@@ -590,7 +586,8 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   }
   return NS_OK;
 }
-#endif
+
+#endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 
 nsresult
 EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent)
