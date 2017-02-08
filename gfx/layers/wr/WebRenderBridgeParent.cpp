@@ -464,10 +464,6 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   if (mDestroyed) {
     return IPC_OK();
   }
-  if (MOZ_USE_RENDER_THREAD) {
-    // TODO(bug 1328602)
-    return IPC_OK();
-  }
 
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
