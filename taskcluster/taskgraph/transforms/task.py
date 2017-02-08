@@ -296,10 +296,6 @@ task_description_schema = Schema({
         # the maximum time to spend signing, in seconds
         Required('max-run-time', default=600): int,
 
-        # taskid of task with artifacts to beetmove
-        # beetmover template key
-        Required('update_manifest'): bool,
-
         # locale key, if this is a locale beetmover job
         Optional('locale'): basestring,
 
@@ -366,6 +362,8 @@ GROUP_NAMES = {
     'tc-L10n': 'Localised Repacks executed by Taskcluster',
     'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
     'tc-Up': 'Balrog submission of updates, executed by Taskcluster',
+    'tc-cs': 'Checksum signing executed by Taskcluster',
+    'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
     'Cc': 'Toolchain builds',
@@ -564,7 +562,6 @@ def build_beetmover_payload(config, task, task_def):
     task_def['payload'] = {
         'maxRunTime': worker['max-run-time'],
         'upload_date': config.params['build_date'],
-        'update_manifest': worker['update_manifest'],
         'upstreamArtifacts':  worker['upstream-artifacts']
     }
     if worker.get('locale'):

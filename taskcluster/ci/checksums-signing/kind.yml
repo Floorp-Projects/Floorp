@@ -2,11 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-implementation: taskgraph.task.beetmover:BeetmoverTask
+implementation: taskgraph.task.checksums_signing:ChecksumsSigningTask
 
 transforms:
-   - taskgraph.transforms.beetmover:transforms
+   - taskgraph.transforms.checksums_signing:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - build-signing
+  - beetmover
+  - beetmover-l10n
