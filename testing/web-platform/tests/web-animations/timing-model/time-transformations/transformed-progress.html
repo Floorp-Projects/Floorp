@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Tests for the transformed progress</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#calculating-the-transformed-progress">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../../testcommon.js"></script>
+<script src="../../resources/effect-easing-tests.js"></script>
+<body>
+<div id="log"></div>
+<div id="target"></div>
+<script>
+'use strict';
+
+gEffectEasingTests.forEach(params => {
+  test(function(t) {
+    const target = createDiv(t);
+    const anim   = target.animate(null, { duration: 1000,
+                                          fill: 'forwards',
+                                          easing: params.easing });
+
+    [ 0, 250, 500, 750, 1000 ].forEach(sampleTime => {
+      anim.currentTime = sampleTime;
+      const portion = sampleTime / anim.effect.getComputedTiming().duration;
+      const expectedProgress = params.easingFunction(portion);
+      assert_approx_equals(anim.effect.getComputedTiming().progress,
+                           expectedProgress,
+                           0.01,
+                           'The progress should be approximately ' +
+                           expectedProgress + ` at ${sampleTime}ms`);
+    });
+  }, 'Transformed progress for ' + params.desc);
+});
+
+</script>
+</body>
