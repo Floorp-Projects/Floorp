@@ -1260,6 +1260,10 @@ xpcshell:
             linux64-jsdcov/opt: xpcshell-coverage
             default: xpcshell
     treeherder-symbol: tc-X()
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     chunks:
         by-test-platform:
             linux64/debug: 10
