@@ -12,6 +12,7 @@
 #include "jsobj.h"
 
 #include "gc/Barrier.h"
+#include "gc/Zone.h"
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/SharedArrayObject.h"
@@ -79,11 +80,6 @@ class TypedArrayObject : public NativeObject
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
-
-    typedef TypedArrayObject SomeTypedArray;
-    typedef ArrayBufferObject BufferType;
-
-    template<typename T> struct OfType;
 
     static bool sameBuffer(Handle<TypedArrayObject*> a, Handle<TypedArrayObject*> b) {
         // Inline buffers.
@@ -307,6 +303,9 @@ class TypedArrayObject : public NativeObject
     static bool is(HandleValue v);
 
     static bool set(JSContext* cx, unsigned argc, Value* vp);
+
+  private:
+    static bool set_impl(JSContext* cx, const CallArgs& args);
 };
 
 MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp);

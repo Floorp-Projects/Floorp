@@ -34,6 +34,8 @@ class ThreadInfo {
 
   bool CanInvokeJS() const;
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
  private:
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;

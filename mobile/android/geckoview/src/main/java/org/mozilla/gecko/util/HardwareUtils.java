@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
 
 import android.content.Context;
@@ -80,22 +81,28 @@ public final class HardwareUtils {
     }
 
     public static boolean isARMSystem() {
-        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
+        return Build.CPU_ABI != null && Build.CPU_ABI.equals("armeabi-v7a");
     }
 
     public static boolean isX86System() {
-        return Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
+        return Build.CPU_ABI != null && Build.CPU_ABI.equals("x86");
     }
 
     /**
      * @return false if the current system is not supported (e.g. APK/system ABI mismatch).
      */
     public static boolean isSupportedSystem() {
+        // We've had crash reports from users on API 10 (with minSDK==15). That shouldn't even install,
+        // but since it does we need to protect against it:
+        if (Build.VERSION.SDK_INT < AppConstants.Versions.MIN_SDK_VERSION) {
+            return false;
+        }
+
         // See http://developer.android.com/ndk/guides/abis.html
         final boolean isSystemARM = isARMSystem();
         final boolean isSystemX86 = isX86System();
 
-        boolean isAppARM = BuildConfig.ANDROID_CPU_ARCH.startsWith("arm");
+        boolean isAppARM = BuildConfig.ANDROID_CPU_ARCH.startsWith("armeabi-v7a");
         boolean isAppX86 = BuildConfig.ANDROID_CPU_ARCH.startsWith("x86");
 
         // Only reject known incompatible ABIs. Better safe than sorry.

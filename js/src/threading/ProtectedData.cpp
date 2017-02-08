@@ -36,6 +36,27 @@ OnBackgroundThread()
 
 template <AllowedBackgroundThread Background>
 void
+CheckActiveThread<Background>::check() const
+{
+    // When interrupting a thread on Windows, changes are made to the runtime
+    // and active thread's state from another thread while the active thread is
+    // suspended. We need a way to mark these accesses as being tantamount to
+    // accesses by the active thread. See bug 1323066.
+#ifndef XP_WIN
+    if (OnBackgroundThread<Background>())
+        return;
+
+    JSContext* cx = TlsContext.get();
+    MOZ_ASSERT(cx == cx->runtime()->activeContext);
+#endif // XP_WIN
+}
+
+template class CheckActiveThread<AllowedBackgroundThread::None>;
+template class CheckActiveThread<AllowedBackgroundThread::GCTask>;
+template class CheckActiveThread<AllowedBackgroundThread::IonCompile>;
+
+template <AllowedBackgroundThread Background>
+void
 CheckZoneGroup<Background>::check() const
 {
     if (OnBackgroundThread<Background>())

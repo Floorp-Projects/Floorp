@@ -131,6 +131,9 @@
       <li><a href="about:license#nrappkit">nrappkit License</a></li>
       <li><a href="about:license#openaes">OpenAES License</a></li>
       <li><a href="about:license#openvision">OpenVision License</a></li>
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+      <li><a href="about:license#openvr">OpenVR License</a></li>
+#endif
       <li><a href="about:license#pbkdf2-sha256">pbkdf2_sha256 License</a></li>
 #ifdef MOZ_WEBSPEECH_POCKETSPHINX
       <li><a href="about:license#pocketsphinx">Pocketsphinx License</a></li>
@@ -155,9 +158,6 @@
       <li><a href="about:license#ucal">University of California License</a></li>
       <li><a href="about:license#hunspell-en-US">US English Spellchecking Dictionary Licenses</a></li>
       <li><a href="about:license#v8">V8 License</a></li>
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-      <li><a href="about:license#valve">Valve BSD License</a></li>
-#endif
       <li><a href="about:license#vtune">VTune License</a></li>
       <li><a href="about:license#webrtc">WebRTC License</a></li>
       <li><a href="about:license#x264">x264 License</a></li>
@@ -4337,6 +4337,46 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 </pre>
 
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+
+    <hr>
+
+    <h1><a id="openvr"></a>OpenVR License</h1>
+
+    <p>This license applies to certain files in the directory
+    <span class="path">gfx/vr/openvr</span>.</p>
+<pre>
+Copyright (c) 2015, Valve Corporation
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</pre>
+
+#endif
+
 <hr>
 
     <h1><a id="node-md5"></a>node-md5 License</h1>
@@ -5819,48 +5859,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
-
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-
     <hr>
 
-    <h1><a id="valve"></a>Valve BSD License</h1>
-
-    <p>This license applies to certain files in the directory
-    <span class="path">gfx/vr/openvr</span>.</p>
-<pre>
-Copyright (c) 2015, Valve Corporation
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software without
-specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-#endif
-
-    <hr>
 
     <h1><a id="vtune"></a>VTune License</h1>
 

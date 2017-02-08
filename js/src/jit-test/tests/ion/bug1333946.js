@@ -1,6 +1,8 @@
-// |jit-test| exitstatus: 6;
+// |jit-test| error: 42;
 
 for (var x of [0]) {
-    timeout(0.001);
-    for (;;) {}
+  for (var i = 0; ; i++) {
+    if (i === 20000)
+      throw 42;
+  }
 }

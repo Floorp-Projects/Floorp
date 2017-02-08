@@ -45,15 +45,17 @@ const StackTrace = createClass({
     } = this.props;
 
     let frames = [];
-    stacktrace.forEach(s => {
+    stacktrace.forEach((s, i) => {
       if (s.asyncCause) {
         frames.push("\t", AsyncFrame({
+          key: `${i}-asyncframe`,
           asyncCause: s.asyncCause
         }), "\n");
       }
 
       let source = s.filename.split(" -> ").pop();
       frames.push("\t", Frame({
+        key: `${i}-frame`,
         frame: {
           functionDisplayName: s.functionName,
           source,

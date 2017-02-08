@@ -7,6 +7,8 @@ const kUrlPref = "geoSpecificDefaults.url";
 const BROWSER_SEARCH_PREF = "browser.search.";
 
 var originalGeoURL;
+var originalCountryCode;
+var originalRegion;
 
 /**
  * Clean the profile of any cache file left from a previous run.
@@ -89,15 +91,21 @@ add_task(function* preparation() {
 
     removeCacheFile();
 
+    // Make sure we get the new country/region values, but save the old
+    originalCountryCode = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "countryCode");
+    originalRegion = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "region");
+    Services.prefs.clearUserPref(BROWSER_SEARCH_PREF + "countryCode");
+    Services.prefs.clearUserPref(BROWSER_SEARCH_PREF + "region");
+
     // Geo specific defaults won't be fetched if there's no country code.
     Services.prefs.setCharPref("browser.search.geoip.url",
-                               'data:application/json,{"country_code": "US"}');
+                               'data:application/json,{"country_code": "DE"}');
 
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 
-    // Make the new Google the only engine
+    // Avoid going to the server for the geo lookup. We take the defaults
     originalGeoURL = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + kUrlPref);
-    let geoUrl = 'data:application/json,{"interval": 31536000, "settings": {"searchDefault": "Google", "visibleDefaultEngines": ["google"]}}';
+    let geoUrl = "data:application/json,{}";
     Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, geoUrl);
   });
 
@@ -109,10 +117,6 @@ add_task(function* preparation() {
 });
 
 add_task(function* tests() {
-  let engines = Services.search.getEngines();
-  is(Services.search.currentEngine.name, "Google", "Search engine should be Google");
-  is(engines.length, 1, "There should only be one engine");
-
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
@@ -147,6 +151,9 @@ add_task(function* cleanup() {
     removeCacheFile();
 
     Services.prefs.clearUserPref("browser.search.geoip.url");
+
+    Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "countryCode", originalCountryCode)
+    Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "region", originalRegion)
 
     // We can't clear the pref because it's set to false by testing/profiles/prefs_general.js
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);

@@ -511,8 +511,8 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
   // Create the Compositing Frame
   if (!mCompositingFrame) {
     RefPtr<imgFrame> newFrame = new imgFrame;
-    nsresult rv = newFrame->InitForDecoder(mSize,
-                                           SurfaceFormat::B8G8R8A8);
+    nsresult rv = newFrame->InitForAnimator(mSize,
+                                            SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
       mCompositingFrame.reset();
       return false;
@@ -652,8 +652,8 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
     // overwrite.
     if (!mCompositingPrevFrame) {
       RefPtr<imgFrame> newFrame = new imgFrame;
-      nsresult rv = newFrame->InitForDecoder(mSize,
-                                             SurfaceFormat::B8G8R8A8);
+      nsresult rv = newFrame->InitForAnimator(mSize,
+                                              SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {
         mCompositingPrevFrame.reset();
         return false;

@@ -24,7 +24,6 @@ hal/**
 image/**
 intl/**
 ipc/**
-js/**
 layout/**
 media/**
 memory/**
@@ -153,6 +152,17 @@ devtools/client/debugger/test/mochitest/code_worker-source-map.js
 devtools/client/framework/test/code_ugly*
 devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
+
+# Exclude everything but self-hosted JS
+js/ductwork/**
+js/examples/**
+js/ipc/**
+js/public/**
+js/xpconnect/**
+js/src/devtools/**
+js/src/octane/**
+js/src/jit-test/**
+js/src/tests/**
 
 # mobile/android/ exclusions
 mobile/android/tests/

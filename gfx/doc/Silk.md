@@ -130,9 +130,9 @@ If touch events were not dispatched, and since the **Compositor** is not listeni
 The **GeckoTouchDispatcher** handles this case by always forcing the **Compositor** to listen to vsync events while touch events are occurring.
 
 ###Widget, Compositor, CompositorVsyncDispatcher, GeckoTouchDispatcher Shutdown Procedure
-When the [nsBaseWidget shuts down](http://hg.mozilla.org/mozilla-central/file/0df249a0e4d3/widget/nsBaseWidget.cpp#l182) - It calls nsBaseWidget::DestroyCompositor on the *Gecko Main Thread*.
+When the [nsBaseWidget shuts down](https://hg.mozilla.org/mozilla-central/file/0df249a0e4d3/widget/nsBaseWidget.cpp#l182) - It calls nsBaseWidget::DestroyCompositor on the *Gecko Main Thread*.
 During nsBaseWidget::DestroyCompositor, it first destroys the CompositorBridgeChild.
-CompositorBridgeChild sends a sync IPC call to CompositorBridgeParent::RecvStop, which calls [CompositorBridgeParent::Destroy](http://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorBridgeParent.cpp#l509).
+CompositorBridgeChild sends a sync IPC call to CompositorBridgeParent::RecvStop, which calls [CompositorBridgeParent::Destroy](https://hg.mozilla.org/mozilla-central/file/ab0490972e1e/gfx/layers/ipc/CompositorBridgeParent.cpp#l509).
 During this time, the *main thread* is blocked on the parent process.
 CompositorBridgeParent::RecvStop runs on the *Compositor thread* and cleans up some resources, including setting the **CompositorVsyncScheduler::Observer** to nullptr.
 CompositorBridgeParent::RecvStop also explicitly keeps the CompositorBridgeParent alive and posts another task to run CompositorBridgeParent::DeferredDestroy on the Compositor loop so that all ipdl code can finish executing.
@@ -141,7 +141,7 @@ Once CompositorBridgeParent::RecvStop finishes, the *main thread* in the parent 
 
 At the same time, the *Compositor thread* is executing tasks until CompositorBridgeParent::DeferredDestroy runs, which flushes the compositor message loop.
 Now we have two tasks as both the nsBaseWidget releases a reference to the Compositor on the *main thread* during destruction and the CompositorBridgeParent::DeferredDestroy releases a reference to the CompositorBridgeParent on the *Compositor Thread*.
-Finally, the CompositorBridgeParent itself is destroyed on the *main thread* once both references are gone due to explicit [main thread destruction](http://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorBridgeParent.h#l148).
+Finally, the CompositorBridgeParent itself is destroyed on the *main thread* once both references are gone due to explicit [main thread destruction](https://hg.mozilla.org/mozilla-central/file/50b95032152c/gfx/layers/ipc/CompositorBridgeParent.h#l148).
 
 With the **CompositorVsyncScheduler::Observer**, any accesses to the widget after nsBaseWidget::DestroyCompositor executes are invalid.
 Any accesses to the compositor between the time the nsBaseWidget::DestroyCompositor runs and the CompositorVsyncScheduler::Observer's destructor runs aren't safe yet a hardware vsync event could occur between these times.
@@ -152,11 +152,11 @@ Thus, we explicitly shut down vsync events in the **CompositorVsyncDispatcher** 
 
 The **CompositorVsyncDispatcher** may be destroyed on either the *main thread* or *Compositor Thread*, since both the nsBaseWidget and **CompositorVsyncScheduler::Observer** race to destroy on different threads.
 nsBaseWidget is destroyed on the *main thread* and releases a reference to the **CompositorVsyncDispatcher** during destruction.
-The **CompositorVsyncScheduler::Observer** has a race to be destroyed either during CompositorBridgeParent shutdown or from the **GeckoTouchDispatcher** which is destroyed on the main thread with [ClearOnShutdown](http://hg.mozilla.org/mozilla-central/file/21567e9a6e40/xpcom/base/ClearOnShutdown.h#l15).
+The **CompositorVsyncScheduler::Observer** has a race to be destroyed either during CompositorBridgeParent shutdown or from the **GeckoTouchDispatcher** which is destroyed on the main thread with [ClearOnShutdown](https://hg.mozilla.org/mozilla-central/file/21567e9a6e40/xpcom/base/ClearOnShutdown.h#l15).
 Whichever object, the CompositorBridgeParent or the **GeckoTouchDispatcher** is destroyed last will hold the last reference to the **CompositorVsyncDispatcher**, which destroys the object.
 
 #Refresh Driver
-The Refresh Driver is ticked from a [single active timer](http://hg.mozilla.org/mozilla-central/file/ab0490972e1e/layout/base/nsRefreshDriver.cpp#l11).
+The Refresh Driver is ticked from a [single active timer](https://hg.mozilla.org/mozilla-central/file/ab0490972e1e/layout/base/nsRefreshDriver.cpp#l11).
 The assumption is that there are multiple **RefreshDrivers** connected to a single **RefreshTimer**.
 There are two **RefreshTimers**: an active and an inactive **RefreshTimer**.
 Each Tab has its own **RefreshDriver**, which connects to one of the global **RefreshTimers**.
