@@ -32,7 +32,7 @@ async function setTooltipImageContent(tooltip, itemEl, requestItem) {
   let options = { maxDim, naturalWidth, naturalHeight };
   setImageTooltip(tooltip, tooltip.doc, src, options);
 
-  return itemEl.querySelector(".requests-menu-icon");
+  return itemEl.querySelector(".requests-list-icon");
 }
 
 async function setTooltipStackTraceContent(tooltip, requestItem) {

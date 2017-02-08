@@ -64,13 +64,13 @@ add_task(function* () {
 
   info("Sorting by size, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-size-button"));
+    document.querySelector("#requests-list-size-button"));
   testFilterButtons(monitor, "all");
   testContents([6, 4, 5, 0, 1, 2, 3], 7, 6);
 
   info("Testing html filtering.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-html-button"));
+    document.querySelector("#requests-list-filter-html-button"));
   testFilterButtons(monitor, "html");
   testContents([6, 4, 5, 0, 1, 2, 3], 1, 6);
 
@@ -98,9 +98,9 @@ add_task(function* () {
 
   function resetSorting() {
     EventUtils.sendMouseEvent({ type: "click" },
-      document.querySelector("#requests-menu-waterfall-button"));
+      document.querySelector("#requests-list-waterfall-button"));
     EventUtils.sendMouseEvent({ type: "click" },
-      document.querySelector("#requests-menu-size-button"));
+      document.querySelector("#requests-list-size-button"));
   }
 
   function getSelectedIndex(state) {

@@ -166,7 +166,7 @@ add_task(function* () {
 
   info("Testing html filtering.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-html-button"));
+    document.querySelector("#requests-list-filter-html-button"));
   testFilterButtons(monitor, "html");
   testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -191,7 +191,7 @@ add_task(function* () {
 
   info("Resetting filters.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-all-button"));
+    document.querySelector("#requests-list-filter-all-button"));
   testFilterButtons(monitor, "all");
   testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
