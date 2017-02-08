@@ -1470,6 +1470,20 @@ CacheIRCompiler::emitLoadUndefinedResult()
     return true;
 }
 
+bool
+CacheIRCompiler::emitLoadBooleanResult()
+{
+    AutoOutputRegister output(*this);
+    if (output.hasValue()) {
+        Value val = BooleanValue(reader.readBool());
+        masm.moveValue(val, output.valueReg());
+    }
+    else {
+        MOZ_CRASH("NYI: Typed LoadBooleanResult");
+    }
+    return true;
+}
+
 static void
 EmitStoreResult(MacroAssembler& masm, Register reg, JSValueType type,
                 const AutoOutputRegister& output)
@@ -1745,6 +1759,32 @@ CacheIRCompiler::emitLoadDenseElementHoleResult()
     masm.moveValue(UndefinedValue(), output.valueReg());
 
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadDenseElementExistsResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Bounds check. Unsigned compare sends negative indices to next IC.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, failure->label());
+
+    // Hole check.
+    BaseObjectElementIndex element(scratch, index);
+    masm.branchTestMagic(Assembler::Equal, element, failure->label());
+    masm.moveValue(BooleanValue(true), output.valueReg());
     return true;
 }
 

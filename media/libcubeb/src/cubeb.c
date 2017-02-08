@@ -108,11 +108,11 @@ int
 cubeb_init(cubeb ** context, char const * context_name)
 {
   int (* init[])(cubeb **, char const *) = {
-#if defined(USE_JACK)
-    jack_init,
-#endif
 #if defined(USE_PULSE)
     pulse_init,
+#endif
+#if defined(USE_JACK)
+    jack_init,
 #endif
 #if defined(USE_ALSA)
     alsa_init,
@@ -570,9 +570,3 @@ int cubeb_set_log_callback(cubeb_log_level log_level,
   return CUBEB_OK;
 }
 
-void
-cubeb_crash()
-{
-  abort();
-  *((volatile int *) NULL) = 0;
-}

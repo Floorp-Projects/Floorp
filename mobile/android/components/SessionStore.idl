@@ -50,6 +50,11 @@ interface nsISessionStore : nsISupports
   nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
 
   /**
+   * Whether the "Undo close tab" message should be shown or not after a tab has been closed.
+   */
+ readonly attribute boolean canUndoLastCloseTab;
+
+  /**
    * @param aTab is the browser tab to get the value for.
    * @param aKey is the value's name.
    * 
