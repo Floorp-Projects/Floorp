@@ -10,5 +10,4 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - nightly-l10n
   - nightly-l10n-signing

@@ -174,31 +174,27 @@ def make_task_description(config, jobs):
         dep_job = job['dependent-task']
 
         treeherder = job.get('treeherder', {})
+        treeherder.setdefault('symbol', 'tc(BM-S)')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
                               "{}/opt".format(dep_th_platform))
         treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
-
         label = job.get('label', "beetmover-{}".format(dep_job.label))
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
-        # taskid_of_manifest always refers to the unsigned task
-        if "signing" in dependent_kind:
-            if len(dep_job.dependencies) > 1:
-                raise NotImplementedError(
-                    "can't beetmove a signing task with multiple dependencies")
-            signing_dependencies = dep_job.dependencies
-            dependencies.update(signing_dependencies)
-            treeherder.setdefault('symbol', 'tc(BM-S)')
-        else:
-            treeherder.setdefault('symbol', 'tc(BM)')
+
+        if len(dep_job.dependencies) > 1:
+            raise NotImplementedError(
+                "Can't beetmove a signing task with multiple dependencies")
+        signing_dependencies = dep_job.dependencies
+        dependencies.update(signing_dependencies)
 
         attributes = {
-                'nightly': dep_job.attributes.get('nightly', False),
-                'build_platform': dep_job.attributes.get('build_platform'),
-                'build_type': dep_job.attributes.get('build_type'),
+            'nightly': dep_job.attributes.get('nightly', False),
+            'build_platform': dep_job.attributes.get('build_platform'),
+            'build_type': dep_job.attributes.get('build_type'),
         }
         if job.get('locale'):
             attributes['locale'] = job['locale']
@@ -207,9 +203,7 @@ def make_task_description(config, jobs):
             'label': label,
             'description': "{} Beetmover".format(
                 dep_job.task["metadata"]["description"]),
-            # do we have to define worker type somewhere?
             'worker-type': 'scriptworker-prov-v1/beetmoverworker-v1',
-            # bump this to nightly / release when applicable+permitted
             'scopes': ["project:releng:beetmover:nightly"],
             'dependencies': dependencies,
             'attributes': attributes,
@@ -220,12 +214,10 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(taskid_to_beetmove, platform, locale=None, signing=False):
-    task_type = "build"
-    mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
-    if signing:
-        task_type = "signing"
-        mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
+def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
+                                locale=None):
+    build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
+    signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
 
     artifact_prefix = 'public/build'
     if locale:
@@ -233,92 +225,67 @@ def generate_upstream_artifacts(taskid_to_beetmove, platform, locale=None, signi
         platform = "{}-l10n".format(platform)
 
     upstream_artifacts = [{
-        "taskId": {"task-reference": taskid_to_beetmove},
-        "taskType": task_type,
-        "paths": ["{}/{}".format(artifact_prefix, p) for p in mapping[platform]],
+        "taskId": {"task-reference": build_task_ref},
+        "taskType": "build",
+        "paths": ["{}/{}".format(artifact_prefix, p)
+                  for p in build_mapping[platform]],
+        "locale": locale or "en-US",
+        }, {
+        "taskId": {"task-reference": signing_task_ref},
+        "taskType": "signing",
+        "paths": ["{}/{}".format(artifact_prefix, p)
+                  for p in signing_mapping[platform]],
         "locale": locale or "en-US",
     }]
+
     if not locale and "android" in platform:
         # edge case to support 'multi' locale paths
         multi_platform = "{}-multi".format(platform)
-        upstream_artifacts.append({
-            "taskId": {"task-reference": taskid_to_beetmove},
-            "taskType": task_type,
-            "paths": ["{}/{}".format(artifact_prefix, p) for p in mapping[multi_platform]],
+        upstream_artifacts.extend([{
+            "taskId": {"task-reference": build_task_ref},
+            "taskType": "build",
+            "paths": ["{}/{}".format(artifact_prefix, p)
+                      for p in build_mapping[multi_platform]],
             "locale": "multi",
-        })
+            }, {
+            "taskId": {"task-reference": signing_task_ref},
+            "taskType": "signing",
+            "paths": ["{}/{}".format(artifact_prefix, p)
+                      for p in signing_mapping[multi_platform]],
+            "locale": "multi",
+        }])
 
-    return upstream_artifacts
-
-
-def generate_signing_upstream_artifacts(taskid_to_beetmove, taskid_of_manifest, platform,
-                                        locale=None):
-    upstream_artifacts = generate_upstream_artifacts(taskid_to_beetmove, platform, locale,
-                                                     signing=True)
-    if locale:
-        artifact_prefix = 'public/build/{}'.format(locale)
-    else:
-        artifact_prefix = 'public/build'
-    manifest_path = "{}/balrog_props.json".format(artifact_prefix)
-    upstream_artifacts.append({
-        "taskId": {"task-reference": taskid_of_manifest},
-        "taskType": "build",
-        "paths": [manifest_path],
-        "locale": locale or "en-US",
-    })
-
-    return upstream_artifacts
-
-
-def generate_build_upstream_artifacts(taskid_to_beetmove, platform, locale=None):
-    upstream_artifacts = generate_upstream_artifacts(taskid_to_beetmove, platform, locale,
-                                                     signing=False)
     return upstream_artifacts
 
 
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_signing_job = (len(job["dependencies"]) == 2 and
-                                       any(['signing' in j for j in job['dependencies']]))
-        valid_beetmover_build_job = len(job["dependencies"]) == 1
-        if not valid_beetmover_build_job and not valid_beetmover_signing_job:
-            raise NotImplementedError(
-                "beetmover tasks must have either 1 or 2 dependencies. "
-                "If 2, one of those must be a signing task"
-            )
+        valid_beetmover_job = (len(job["dependencies"]) == 2 and
+                               any(['signing' in j for j in job['dependencies']]))
+        if not valid_beetmover_job:
+            raise NotImplementedError("Beetmover must have two dependencies.")
 
-        build_kind = None
-        signing_kind = None
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
+        build_task = None
+        signing_task = None
         for dependency in job["dependencies"].keys():
             if 'signing' in dependency:
-                signing_kind = dependency
+                signing_task = dependency
             else:
-                build_kind = dependency
+                build_task = dependency
 
-        if signing_kind:
-            taskid_to_beetmove = "<" + str(signing_kind) + ">"
-            taskid_of_manifest = "<" + str(build_kind) + ">"
-            update_manifest = True
-            upstream_artifacts = generate_signing_upstream_artifacts(
-                taskid_to_beetmove, taskid_of_manifest, platform, locale
-            )
-        else:
-            taskid_to_beetmove = "<" + str(build_kind) + ">"
-            update_manifest = False
-            upstream_artifacts = generate_build_upstream_artifacts(
-                taskid_to_beetmove, platform, locale
-            )
+        signing_task_ref = "<" + str(signing_task) + ">"
+        build_task_ref = "<" + str(build_task) + ">"
+        upstream_artifacts = generate_upstream_artifacts(
+            signing_task_ref, build_task_ref, platform, locale
+        )
 
         worker = {'implementation': 'beetmover',
-                  'update_manifest': update_manifest,
                   'upstream-artifacts': upstream_artifacts}
-
         if locale:
             worker["locale"] = locale
-
         job["worker"] = worker
 
         yield job
