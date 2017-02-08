@@ -251,6 +251,12 @@ RootActor.prototype = {
     }
 
     /*
+     * Now that a client has requested the list of tabs, we reattach the onListChanged
+     * listener in order to be notified if the list of tabs changes again in the future.
+     */
+    tabList.onListChanged = this._onTabListChanged;
+
+    /*
      * Walk the tab list, accumulating the array of tab actors for the
      * reply, and moving all the actors to a new ActorPool. We'll
      * replace the old tab actor pool with the one we build here, thus
@@ -299,13 +305,6 @@ RootActor.prototype = {
 
       /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
       this._appendExtraActors(reply);
-
-      /*
-       * Now that we're actually going to report the contents of tabList to
-       * the client, we're responsible for letting the client know if it
-       * changes.
-       */
-      tabList.onListChanged = this._onTabListChanged;
 
       return reply;
     });
