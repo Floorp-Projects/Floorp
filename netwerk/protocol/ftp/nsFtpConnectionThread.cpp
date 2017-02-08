@@ -1412,7 +1412,7 @@ nsFtpState::R_pasv() {
         //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
         int32_t h0, h1, h2, h3, p0, p1;
 
-        uint32_t fields = 0;
+        int32_t fields = 0;
         // First try with parens
         while (*ptr && *ptr != '(')
             ++ptr;
