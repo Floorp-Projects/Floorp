@@ -218,6 +218,15 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler)
 }
 
 void
+MacroAssemblerCompat::profilerEnterFrame(Register framePtr, Register scratch)
+{
+    asMasm().loadJSContext(scratch);
+    loadPtr(Address(scratch, offsetof(JSContext, profilingActivation_)), scratch);
+    storePtr(framePtr, Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
+}
+
+void
 MacroAssemblerCompat::breakpoint()
 {
     static int code = 0xA77;
