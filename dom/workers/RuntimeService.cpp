@@ -1033,7 +1033,7 @@ Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
   }
 
   if (existing) {
-    js::Wrapper::Renew(cx, existing, obj, wrapper);
+    js::Wrapper::Renew(existing, obj, wrapper);
   }
   return js::Wrapper::New(cx, obj, wrapper);
 }

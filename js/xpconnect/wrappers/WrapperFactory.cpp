@@ -564,7 +564,7 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
     DEBUG_CheckUnwrapSafety(obj, wrapper, origin, target);
 
     if (existing)
-        return Wrapper::Renew(cx, existing, obj, wrapper);
+        return Wrapper::Renew(existing, obj, wrapper);
 
     return Wrapper::New(cx, obj, wrapper);
 }
