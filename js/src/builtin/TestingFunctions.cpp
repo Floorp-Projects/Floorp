@@ -4166,7 +4166,7 @@ DisRegExp(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    if (!reobj->dumpBytecode(cx, match_only, input))
+    if (!RegExpObject::dumpBytecode(cx, reobj, match_only, input))
         return false;
 
     args.rval().setUndefined();
