@@ -235,8 +235,9 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = textToSubURI->UnEscapeNonAsciiURI(urlCharset, urlSpec, utf16Spec);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(textToSubURI->UnEscapeNonAsciiURI(urlCharset, urlSpec, utf16Spec))) {
+      CopyASCIItoUTF16(urlSpec, utf16Spec);
+    }
 
     static const wchar_t cmdVerb[] = L"open";
     SHELLEXECUTEINFOW sinfo;
