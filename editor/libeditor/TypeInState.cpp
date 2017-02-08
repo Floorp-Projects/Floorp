@@ -193,7 +193,7 @@ TypeInState::ClearProp(nsIAtom* aProp,
  * TakeClearProperty() hands back next property item on the clear list.
  * Caller assumes ownership of PropItem and must delete it.
  */
-PropItem*
+UniquePtr<PropItem>
 TypeInState::TakeClearProperty()
 {
   size_t count = mClearedArray.Length();
@@ -204,14 +204,14 @@ TypeInState::TakeClearProperty()
   --count; // indices are zero based
   PropItem* propItem = mClearedArray[count];
   mClearedArray.RemoveElementAt(count);
-  return propItem;
+  return UniquePtr<PropItem>(propItem);
 }
 
 /**
  * TakeSetProperty() hands back next poroperty item on the set list.
  * Caller assumes ownership of PropItem and must delete it.
  */
-PropItem*
+UniquePtr<PropItem>
 TypeInState::TakeSetProperty()
 {
   size_t count = mSetArray.Length();
@@ -221,7 +221,7 @@ TypeInState::TakeSetProperty()
   count--; // indices are zero based
   PropItem* propItem = mSetArray[count];
   mSetArray.RemoveElementAt(count);
-  return propItem;
+  return UniquePtr<PropItem>(propItem);
 }
 
 /**
