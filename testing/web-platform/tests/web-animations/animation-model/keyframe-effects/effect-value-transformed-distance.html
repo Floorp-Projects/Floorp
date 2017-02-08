@@ -5,7 +5,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="../../testcommon.js"></script>
-<script src="../../resources/effect-easing-tests.js"></script>
+<script src="../../resources/easing-tests.js"></script>
 <body>
 <div id="log"></div>
 <div id="target"></div>
@@ -15,7 +15,7 @@
 // Test that a linear-equivalent cubic-bezier easing applied to a keyframe does
 // not alter (including clamping) the result.
 
-gEffectEasingTests.forEach(params => {
+gEasingTests.forEach(params => {
   const linearEquivalentEasings = [ 'cubic-bezier(0, 0, 0, 0)',
                                     'cubic-bezier(1, 1, 1, 1)' ];
   test(function(t) {
