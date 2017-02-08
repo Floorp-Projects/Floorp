@@ -1211,7 +1211,7 @@ profiler_init(void* stackTop)
   // at this point. That would match the lifetime implied by destruction of it
   // in profiler_shutdown() just below. However, that gives a big delay on
   // startup, even if no profiling is actually to be done. So, instead, sLUL is
-  // created on demand at the first call to Sampler::Start.
+  // created on demand at the first call to PlatformStart().
 
   PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
@@ -1532,6 +1532,10 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
+// Platform-specific start/stop actions.
+static void PlatformStart();
+static void PlatformStop();
+
 // Values are only honored on the first start
 void
 profiler_start(int aProfileEntries, double aInterval,
@@ -1606,8 +1610,8 @@ profiler_start(int aProfileEntries, double aInterval,
   gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
-  gSampler->Start();
-  MOZ_ASSERT(gIsActive && !gIsPaused);  // Start() sets gIsActive.
+  PlatformStart();
+  MOZ_ASSERT(gIsActive && !gIsPaused);  // PlatformStart() sets gIsActive.
 
   if (gProfileJS || privacyMode) {
     mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
@@ -1697,8 +1701,8 @@ profiler_stop()
   }
   gFeatures.clear();
 
-  gSampler->Stop();
-  MOZ_ASSERT(!gIsActive && !gIsPaused);   // Stop() clears these.
+  PlatformStop();
+  MOZ_ASSERT(!gIsActive && !gIsPaused);   // PlatformStop() clears these.
 
   gProfileJava      = false;
   gProfileJS        = false;

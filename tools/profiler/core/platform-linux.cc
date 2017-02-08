@@ -90,7 +90,7 @@ static pthread_t gSignalSenderThread;
 
 #if defined(USE_LUL_STACKWALK)
 // A singleton instance of the library.  It is initialised at first
-// use.  Currently only the main thread can call Sampler::Start, so
+// use.  Currently only the main thread can call PlatformStart(), so
 // there is no need for a mechanism to ensure that it is only
 // created once in a multi-thread-use situation.
 lul::LUL* sLUL = nullptr;
@@ -358,7 +358,9 @@ static void* SignalSender(void* arg) {
   return 0;
 }
 
-void Sampler::Start() {
+static void
+PlatformStart()
+{
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   LOG("Sampler started");
@@ -366,7 +368,7 @@ void Sampler::Start() {
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
 #elif defined(USE_LUL_STACKWALK)
-  // NOTE: this isn't thread-safe.  But we expect Sampler::Start to be
+  // NOTE: this isn't thread-safe.  But we expect PlatformStart() to be
   // called only from the main thread, so this is OK in general.
   if (!sLUL) {
      sLUL_initialization_routine();
@@ -417,8 +419,9 @@ void Sampler::Start() {
   LOG("Profiler thread started");
 }
 
-
-void Sampler::Stop() {
+static void
+PlatformStop()
+{
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(gIsActive);

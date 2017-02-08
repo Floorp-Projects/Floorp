@@ -266,13 +266,17 @@ private:
 
 SamplerThread* SamplerThread::mInstance = NULL;
 
-void Sampler::Start() {
+static void
+PlatformStart()
+{
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
   SamplerThread::AddActiveSampler();
 }
 
-void Sampler::Stop() {
+static void
+PlatformStop()
+{
   MOZ_ASSERT(gIsActive);
   gIsActive = false;
   SamplerThread::RemoveActiveSampler();
