@@ -152,6 +152,15 @@ def target_tasks_valgrind(full_task_graph, parameters):
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
+@_target_task('nightly_code_coverage')
+def target_tasks_code_coverage(full_task_graph, parameters):
+    """Target tasks that generate coverage data."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        if platform not in ('linux64-ccov/opt', 'linux64-jsdcov/opt'):
+            return False
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 @_target_task('nightly_fennec')
 def target_tasks_nightly(full_task_graph, parameters):
