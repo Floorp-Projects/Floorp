@@ -84,6 +84,8 @@ JOB_NAME_WHITELIST = set([
     'win32-debug',
     'win32-opt',
     'win32-pgo',
+    'win32-qr-debug',
+    'win32-qr-opt',
     'win64-st-an-debug',
     'win64-st-an-opt',
     'win64-clang-tidy',
