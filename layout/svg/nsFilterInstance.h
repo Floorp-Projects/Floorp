@@ -119,7 +119,6 @@ public:
                                     const gfxRect *aOverrideBBox = nullptr,
                                     const nsRect *aPreFilterBounds = nullptr);
 
-private:
   /**
    * @param aTargetFrame The frame of the filtered element under consideration,
    *   may be null.
@@ -202,6 +201,15 @@ private:
    */
   nsRect ComputeSourceNeededRect();
 
+
+  /**
+   * Returns the transform from filter space to outer-<svg> device space.
+   */
+  gfxMatrix GetFilterSpaceToDeviceSpaceTransform() const {
+    return mFilterSpaceToDeviceSpaceTransform;
+  }
+
+private:
   struct SourceInfo {
     // Specifies which parts of the source need to be rendered.
     // Set by ComputeNeededBoxes().
@@ -220,20 +228,21 @@ private:
    * Creates a SourceSurface for either the FillPaint or StrokePaint graph
    * nodes
    */
-  DrawResult BuildSourcePaint(SourceInfo *aPrimitive);
+  DrawResult BuildSourcePaint(SourceInfo *aPrimitive,
+                            DrawTarget* aTargetDT);
 
   /**
    * Creates a SourceSurface for either the FillPaint and StrokePaint graph
    * nodes, fills its contents and assigns it to mFillPaint.mSourceSurface and
    * mStrokePaint.mSourceSurface respectively.
    */
-  DrawResult BuildSourcePaints();
+  DrawResult BuildSourcePaints(DrawTarget* aTargetDT);
 
   /**
    * Creates the SourceSurface for the SourceGraphic graph node, paints its
    * contents, and assigns it to mSourceGraphic.mSourceSurface.
    */
-  DrawResult BuildSourceImage();
+  DrawResult BuildSourceImage(DrawTarget* aTargetDT);
 
   /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's
@@ -329,6 +338,11 @@ private:
    * The SVG bbox of the element that is being filtered, in filter space.
    */
   nsIntRect mTargetBBoxInFilterSpace;
+
+  /**
+   * The transform from filter space to outer-<svg> device space.
+   */
+  gfxMatrix mFilterSpaceToDeviceSpaceTransform;
 
   /**
    * Transform rects between filter space and frame space in CSS pixels.
