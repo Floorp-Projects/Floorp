@@ -106,8 +106,6 @@ bool profiler_verbose();
 #define ENABLE_LEAF_DATA
 #endif
 
-typedef int32_t Atomic32;
-
 extern mozilla::TimeStamp sStartTime;
 
 typedef uint8_t* Address;
@@ -260,13 +258,6 @@ public:
   void Start();
   void Stop();
 
-  // Whether the sampler is running (that is, consumes resources).
-  bool IsActive() const { return active_; }
-
-  // Low overhead way to stop the sampler from ticking
-  bool IsPaused() const { return paused_; }
-  void SetPaused(bool value) { NoBarrier_Store(&paused_, value); }
-
   // We can't new/delete the type safely without defining it
   // (-Wdelete-incomplete).  Use these to hide the details from
   // clients.
@@ -331,11 +322,6 @@ private:
 
   // Called within a signal. This function must be reentrant
   void InplaceTick(TickSample* sample);
-
-  void SetActive(bool value) { NoBarrier_Store(&active_, value); }
-
-  Atomic32 paused_;
-  Atomic32 active_;
 
   RefPtr<ProfileBuffer> mBuffer;
   bool mAddLeafAddresses;

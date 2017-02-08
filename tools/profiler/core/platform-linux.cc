@@ -135,27 +135,21 @@ Thread::GetCurrentId()
 // doesn't have pthread_atfork.
 
 // This records the current state at the time we paused it.
-static bool was_paused = false;
+static bool gWasPaused = false;
 
 // In the parent, just before the fork, record the pausedness state,
 // and then pause.
 static void paf_prepare(void) {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (gSampler) {
-    was_paused = gSampler->IsPaused();
-    gSampler->SetPaused(true);
-  } else {
-    was_paused = false;
-  }
+  // This function can run off the main thread.
+  gWasPaused = gIsPaused;
+  gIsPaused = true;
 }
 
 // In the parent, just after the fork, return pausedness to the
 // pre-fork state.
 static void paf_parent(void) {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (gSampler) {
-    gSampler->SetPaused(was_paused);
-  }
+  // This function can run off the main thread.
+  gIsPaused = gWasPaused;
 }
 
 // Set up the fork handlers.
@@ -298,10 +292,10 @@ static void* SignalSender(void* arg) {
   TimeDuration lastSleepOverhead = 0;
   TimeStamp sampleStart = TimeStamp::Now();
   // XXX: this loop is an off-main-thread use of gSampler
-  while (gSampler->IsActive()) {
+  while (gIsActive) {
     gSampler->DeleteExpiredMarkers();
 
-    if (!gSampler->IsPaused()) {
+    if (!gIsPaused) {
       StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
@@ -428,7 +422,8 @@ void Sampler::Start() {
   // Start a thread that sends SIGPROF signal to VM thread.
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
-  SetActive(true);
+  MOZ_ASSERT(!gIsActive);
+  gIsActive = true;
   if (pthread_create(&gSignalSenderThread, NULL, SignalSender, NULL) == 0) {
     gHasSignalSenderLaunched = true;
   }
@@ -439,7 +434,8 @@ void Sampler::Start() {
 void Sampler::Stop() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  SetActive(false);
+  MOZ_ASSERT(gIsActive);
+  gIsActive = false;
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).

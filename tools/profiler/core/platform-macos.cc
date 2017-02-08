@@ -142,6 +142,8 @@ public:
   }
 
   static void RemoveActiveSampler() {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
     mInstance->Join();
     delete mInstance;
     mInstance = NULL;
@@ -154,10 +156,10 @@ public:
     TimeStamp sampleStart = TimeStamp::Now();
 
     // XXX: this loop is an off-main-thread use of gSampler
-    while (gSampler->IsActive()) {
+    while (gIsActive) {
       gSampler->DeleteExpiredMarkers();
 
-      if (!gSampler->IsPaused()) {
+      if (!gIsPaused) {
         StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
@@ -268,14 +270,14 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
-  MOZ_ASSERT(!IsActive());
-  SetActive(true);
+  MOZ_ASSERT(!gIsActive);
+  gIsActive = true;
   SamplerThread::AddActiveSampler();
 }
 
 void Sampler::Stop() {
-  MOZ_ASSERT(IsActive());
-  SetActive(false);
+  MOZ_ASSERT(gIsActive);
+  gIsActive = false;
   SamplerThread::RemoveActiveSampler();
 }
 
