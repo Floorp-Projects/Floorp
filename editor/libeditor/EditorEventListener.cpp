@@ -519,13 +519,15 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
     return false;
   }
 
-  uint32_t location = keyboardEvent->mLocation;
-  if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT) {
-    isRTL = true;
-  } else if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT) {
-    isRTL = false;
-  } else {
-    return false;
+  switch (keyboardEvent->mLocation) {
+    case eKeyLocationRight:
+      isRTL = true;
+      break;
+    case eKeyLocationLeft:
+      isRTL = false;
+      break;
+    default:
+      return false;
   }
 
   // Scan the key status to find pressed keys. We should abandon changing the
