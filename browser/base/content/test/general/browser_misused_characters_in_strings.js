@@ -18,14 +18,6 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "netError.dtd",
-    key: "weakCryptoAdvanced.longDesc",
-    type: "single-quote"
-  }, {
-    file: "netError.dtd",
-    key: "weakCryptoAdvanced.override",
-    type: "single-quote"
-  }, {
-    file: "netError.dtd",
     key: "inadequateSecurityError.longDesc",
     type: "single-quote"
   }, {

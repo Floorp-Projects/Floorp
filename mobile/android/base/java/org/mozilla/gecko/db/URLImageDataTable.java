@@ -13,8 +13,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 // Holds metadata info about urls. Supports some helper functions for getting back a HashMap of key value data.
-public class URLMetadataTable extends BaseTable {
-    private static final String LOGTAG = "GeckoURLMetadataTable";
+public class URLImageDataTable extends BaseTable {
+    private static final String LOGTAG = "GeckoURLImageDataTable";
 
     private static final String TABLE = "metadata"; // Name of the table in the db
     private static final int TABLE_ID_NUMBER = BrowserProvider.METADATA;
@@ -29,7 +29,7 @@ public class URLMetadataTable extends BaseTable {
     public static final String TILE_COLOR_COLUMN = "tileColor";
     public static final String TOUCH_ICON_COLUMN = "touchIcon";
 
-    URLMetadataTable() { }
+    URLImageDataTable() { }
 
     @Override
     protected String getTable() {
