@@ -400,10 +400,8 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return KeyDown(keyEvent);
     }
     // keyup
-    case eKeyUp: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyUp(keyEvent);
-    }
+    case eKeyUp:
+      return KeyUp(internalEvent->AsKeyboardEvent());
 #endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keypress
     case eKeyPress:
@@ -543,9 +541,9 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
 // RenderWidgetHostViewWin::OnKeyEvent.
 
 nsresult
-EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyUp(const WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+  if (NS_WARN_IF(!aKeyboardEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
@@ -555,10 +553,8 @@ EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 
   // XXX Why doesn't this method check if it's consumed?
   RefPtr<EditorBase> editorBase(mEditorBase);
-  uint32_t keyCode = 0;
-  aKeyEvent->GetKeyCode(&keyCode);
-  if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
-       keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) &&
+  if ((aKeyboardEvent->mKeyCode == NS_VK_SHIFT ||
+       aKeyboardEvent->mKeyCode == NS_VK_CONTROL) &&
       mShouldSwitchTextDirection && editorBase->IsPlaintextEditor()) {
     editorBase->SwitchTextDirectionTo(mSwitchToRTL ?
       nsIPlaintextEditor::eEditorRightToLeft :
