@@ -6,6 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryArchive.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -74,14 +75,16 @@ this.EnvExpressions = {
 
   eval(expr, extraContext = {}) {
     // First clone the extra context
-    const context = Object.assign({}, extraContext);
+    const context = Object.assign({normandy: {}}, extraContext);
     // jexl handles promises, so it is fine to include them in this data.
     context.telemetry = EnvExpressions.getLatestTelemetry();
-    context.normandy = context.normandy || {};
-    context.normandy.userId = EnvExpressions.getUserId();
+
+    context.normandy = Object.assign(context.normandy, {
+      userId: EnvExpressions.getUserId(),
+      distribution: Preferences.get("distribution.id", "default"),
+    });
 
     const onelineExpr = expr.replace(/[\t\n\r]/g, " ");
-
     return jexl.eval(onelineExpr, context);
   },
 };
