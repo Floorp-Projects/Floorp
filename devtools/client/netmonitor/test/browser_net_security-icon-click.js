@@ -32,7 +32,7 @@ add_task(function* () {
 
   info("Sorting the items by filename.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-file-button"));
+    document.querySelector("#requests-list-file-button"));
 
   info("Testing that security icon can be clicked after the items were sorted.");
 

@@ -94,8 +94,8 @@ function asExpected(wrapper, expectTypes, description) {
     let className = expectTypes[type] ?
         "devtools-button checked" : "devtools-button";
     it(`'${type}' button is ${checked} ${description}`, () => {
-      expect(wrapper.find(`#requests-menu-filter-${type}-button`).html())
-      .toBe(`<button id="requests-menu-filter-${type}-button" class="` + className +
+      expect(wrapper.find(`#requests-list-filter-${type}-button`).html())
+      .toBe(`<button id="requests-list-filter-${type}-button" class="` + className +
             `" data-key="${type}">netmonitor.toolbar.filter.${type}</button>`);
     });
   }

@@ -35,7 +35,7 @@ add_task(function* () {
 
     let buttons = ["html", "css", "js", "xhr", "fonts", "images", "media", "flash"];
     for (let button of buttons) {
-      let buttonEl = document.querySelector(`#requests-menu-filter-${button}-button`);
+      let buttonEl = document.querySelector(`#requests-list-filter-${button}-button`);
       EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
       testStatus();
     }
@@ -44,7 +44,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    let value = document.querySelector("#requests-menu-network-summary-button").textContent;
+    let value = document.querySelector("#requests-list-network-summary-button").textContent;
     info("Current summary: " + value);
 
     let state = gStore.getState();
