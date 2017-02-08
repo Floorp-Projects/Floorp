@@ -92,10 +92,16 @@ add_task(function* test_something() {
               .getService(Ci.nsISiteSecurityService);
 
   // ensure our pins are all missing before we start
-  ok(!sss.isSecureHost(sss.HEADER_HPKP, "one.example.com", 0));
-  ok(!sss.isSecureHost(sss.HEADER_HPKP, "two.example.com", 0));
-  ok(!sss.isSecureHost(sss.HEADER_HPKP, "three.example.com", 0));
-  ok(!sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
+  ok(!sss.isSecureURI(sss.HEADER_HPKP,
+                      Services.io.newURI("https://one.example.com"), 0));
+  ok(!sss.isSecureURI(sss.HEADER_HPKP,
+                      Services.io.newURI("https://two.example.com"), 0));
+  ok(!sss.isSecureURI(sss.HEADER_HPKP,
+                      Services.io.newURI("https://three.example.com"), 0));
+  ok(!sss.isSecureURI(sss.HEADER_HSTS,
+                      Services.io.newURI("https://four.example.com"), 0));
+  ok(!sss.isSecureURI(sss.HEADER_HSTS,
+                      Services.io.newURI("https://five.example.com"), 0));
 
   // Test an empty db populates
   yield PinningPreloadClient.maybeSync(2000, Date.now());
@@ -109,7 +115,8 @@ add_task(function* test_something() {
   do_check_eq(list.data.length, 1);
 
   // check that a pin exists for one.example.com
-  ok(sss.isSecureHost(sss.HEADER_HPKP, "one.example.com", 0));
+  ok(sss.isSecureURI(sss.HEADER_HPKP,
+                     Services.io.newURI("https://one.example.com"), 0));
 
   // Test the db is updated when we call again with a later lastModified value
   yield PinningPreloadClient.maybeSync(4000, Date.now());
@@ -122,12 +129,15 @@ add_task(function* test_something() {
   yield connection.close();
 
   // check that a pin exists for two.example.com and three.example.com
-  ok(sss.isSecureHost(sss.HEADER_HPKP, "two.example.com", 0));
-  ok(sss.isSecureHost(sss.HEADER_HPKP, "three.example.com", 0));
+  ok(sss.isSecureURI(sss.HEADER_HPKP,
+                     Services.io.newURI("https://two.example.com"), 0));
+  ok(sss.isSecureURI(sss.HEADER_HPKP,
+                     Services.io.newURI("https://three.example.com"), 0));
 
   // check that a pin does not exist for four.example.com - it's in the
   // collection but the version should not match
-  ok(!sss.isSecureHost(sss.HEADER_HPKP, "four.example.com", 0));
+  ok(!sss.isSecureURI(sss.HEADER_HPKP,
+                      Services.io.newURI("https://four.example.com"), 0));
 
   // Try to maybeSync with the current lastModified value - no connection
   // should be attempted.
@@ -146,9 +156,12 @@ add_task(function* test_something() {
   do_check_neq(newValue, 0);
 
   // Check that the HSTS preload added to the collection works...
-  ok(sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
+  ok(sss.isSecureURI(sss.HEADER_HSTS,
+                     Services.io.newURI("https://five.example.com"), 0));
   // ...and that includeSubdomains is honored
-  ok(!sss.isSecureHost(sss.HEADER_HSTS, "subdomain.five.example.com", 0));
+  ok(!sss.isSecureURI(sss.HEADER_HSTS,
+                      Services.io.newURI("https://subdomain.five.example.com"),
+                      0));
 
   // Check that a sync completes even when there's bad data in the
   // collection. This will throw on fail, so just calling maybeSync is an
@@ -159,7 +172,9 @@ add_task(function* test_something() {
 
   // The STS entry for five.example.com now has includeSubdomains set;
   // ensure that the new includeSubdomains value is honored.
-  ok(sss.isSecureHost(sss.HEADER_HSTS, "subdomain.five.example.com", 0));
+  ok(sss.isSecureURI(sss.HEADER_HSTS,
+                     Services.io.newURI("https://subdomain.five.example.com"),
+                     0));
 });
 
 function run_test() {

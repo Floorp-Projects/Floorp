@@ -19,41 +19,55 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "expired.example.com", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "notexpired.example.com", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "bugzilla.mozilla.org", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "sub.bugzilla.mozilla.org", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "incsubdomain.example.com", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "sub.incsubdomain.example.com", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "login.persona.org", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "sub.login.persona.org", 0));
+  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             Services.io.newURI("https://expired.example.com"),
+                             0));
+  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            Services.io.newURI("https://notexpired.example.com"),
+                            0));
+  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            Services.io.newURI("https://bugzilla.mozilla.org"),
+                            0));
+  ok(!gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://sub.bugzilla.mozilla.org"), 0));
+  ok(gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://incsubdomain.example.com"), 0));
+  ok(gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
+  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             Services.io.newURI("https://login.persona.org"),
+                             0));
+  ok(!gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://sub.login.persona.org"), 0));
 
   // Clearing the data should make everything go back to default.
   gSSService.clearAll();
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "expired.example.com", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "notexpired.example.com", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "bugzilla.mozilla.org", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "sub.bugzilla.mozilla.org", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "incsubdomain.example.com", 0));
-  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                              "sub.incsubdomain.example.com", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "login.persona.org", 0));
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "sub.login.persona.org", 0));
+  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             Services.io.newURI("https://expired.example.com"),
+                             0));
+  ok(!gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://notexpired.example.com"), 0));
+  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            Services.io.newURI("https://bugzilla.mozilla.org"),
+                            0));
+  ok(gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://sub.bugzilla.mozilla.org"), 0));
+  ok(!gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://incsubdomain.example.com"), 0));
+  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://sub.incsubdomain.example.com"), 0));
+  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            Services.io.newURI("https://login.persona.org"), 0));
+  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            Services.io.newURI("https://sub.login.persona.org"),
+                            0));
   do_test_finished();
 }
 
