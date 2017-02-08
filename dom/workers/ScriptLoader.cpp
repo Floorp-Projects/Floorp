@@ -872,17 +872,9 @@ private:
 
     WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
 
-    // Figure out which principal to use.
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
     nsCOMPtr<nsILoadGroup> loadGroup = mWorkerPrivate->GetLoadGroup();
-    if (!principal) {
-      NS_ASSERTION(parentWorker, "Must have a principal!");
-      NS_ASSERTION(mIsMainScript, "Must have a principal for importScripts!");
-
-      principal = parentWorker->GetPrincipal();
-      loadGroup = parentWorker->GetLoadGroup();
-    }
-    NS_ASSERTION(principal, "This should never be null here!");
+    MOZ_DIAGNOSTIC_ASSERT(principal);
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
 
     // Figure out our base URI.
@@ -1137,61 +1129,7 @@ private:
       // Store the channel info if needed.
       mWorkerPrivate->InitChannelInfo(channel);
 
-      // Now to figure out which principal to give this worker.
-      WorkerPrivate* parent = mWorkerPrivate->GetParent();
-
-      NS_ASSERTION(mWorkerPrivate->GetPrincipal() || parent,
-                   "Must have one of these!");
-
-      nsCOMPtr<nsIPrincipal> loadPrincipal = mWorkerPrivate->GetPrincipal() ?
-                                             mWorkerPrivate->GetPrincipal() :
-                                             parent->GetPrincipal();
-
-      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-      NS_ASSERTION(ssm, "Should never be null!");
-
-      nsCOMPtr<nsIPrincipal> channelPrincipal;
-      rv = ssm->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsILoadGroup> channelLoadGroup;
-      rv = channel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
-      NS_ENSURE_SUCCESS(rv, rv);
-      MOZ_ASSERT(channelLoadGroup);
-
-      // If the load principal is the system principal then the channel
-      // principal must also be the system principal (we do not allow chrome
-      // code to create workers with non-chrome scripts, and if we ever decide
-      // to change this we need to make sure we don't always set
-      // mPrincipalIsSystem to true in WorkerPrivate::GetLoadInfo()). Otherwise
-      // this channel principal must be same origin with the load principal (we
-      // check again here in case redirects changed the location of the script).
-      if (nsContentUtils::IsSystemPrincipal(loadPrincipal)) {
-        if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
-          // See if this is a resource URI. Since JSMs usually come from
-          // resource:// URIs we're currently considering all URIs with the
-          // URI_IS_UI_RESOURCE flag as valid for creating privileged workers.
-          bool isResource;
-          rv = NS_URIChainHasFlags(finalURI,
-                                   nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                                   &isResource);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          if (isResource) {
-            // Assign the system principal to the resource:// worker only if it
-            // was loaded from code using the system principal.
-            channelPrincipal = loadPrincipal;
-          } else {
-            return NS_ERROR_DOM_BAD_URI;
-          }
-        }
-      }
-
-      // The principal can change, but it should still match the original
-      // load group's appId and browser element flag.
-      MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(channelLoadGroup, channelPrincipal));
-
-      mWorkerPrivate->SetPrincipal(channelPrincipal, channelLoadGroup);
+      MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->FinalChannelPrincipalIsValid(channel));
 
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
@@ -1239,6 +1177,7 @@ private:
           }
         }
       }
+      WorkerPrivate* parent = mWorkerPrivate->GetParent();
       if (parent) {
         // XHR Params Allowed
         mWorkerPrivate->SetXHRParamsAllowed(parent->XHRParamsAllowed());
@@ -1308,7 +1247,7 @@ private:
       MOZ_ASSERT(equal);
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
-      mWorkerPrivate->SetPrincipal(responsePrincipal, loadGroup);
+      mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -1795,17 +1734,17 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 class ChannelGetterRunnable final : public WorkerMainThreadRunnable
 {
   const nsAString& mScriptURL;
-  nsIChannel** mChannel;
+  WorkerLoadInfo& mLoadInfo;
   nsresult mResult;
 
 public:
   ChannelGetterRunnable(WorkerPrivate* aParentWorker,
                         const nsAString& aScriptURL,
-                        nsIChannel** aChannel)
+                        WorkerLoadInfo& aLoadInfo)
     : WorkerMainThreadRunnable(aParentWorker,
                                NS_LITERAL_CSTRING("ScriptLoader :: ChannelGetter"))
     , mScriptURL(aScriptURL)
-    , mChannel(aChannel)
+    , mLoadInfo(aLoadInfo)
     , mResult(NS_ERROR_FAILURE)
   {
     MOZ_ASSERT(aParentWorker);
@@ -1817,8 +1756,12 @@ public:
   {
     AssertIsOnMainThread();
 
-    nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
-    MOZ_ASSERT(principal);
+    // Initialize the WorkerLoadInfo principal to our triggering principal
+    // before doing anything else.  Normally we do this in the WorkerPrivate
+    // Constructor, but we can't do so off the main thread when creating
+    // a nested worker.  So do it here instead.
+    mLoadInfo.mPrincipal = mWorkerPrivate->GetPrincipal();
+    MOZ_ASSERT(mLoadInfo.mPrincipal);
 
     // Figure out our base URI.
     nsCOMPtr<nsIURI> baseURI = mWorkerPrivate->GetBaseURI();
@@ -1827,22 +1770,25 @@ public:
     // May be null.
     nsCOMPtr<nsIDocument> parentDoc = mWorkerPrivate->GetDocument();
 
-    nsCOMPtr<nsILoadGroup> loadGroup = mWorkerPrivate->GetLoadGroup();
+    mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
 
     nsCOMPtr<nsIChannel> channel;
     mResult =
-      scriptloader::ChannelFromScriptURLMainThread(principal, baseURI,
-                                                   parentDoc, loadGroup,
+      scriptloader::ChannelFromScriptURLMainThread(mLoadInfo.mPrincipal,
+                                                   baseURI, parentDoc,
+                                                   mLoadInfo.mLoadGroup,
                                                    mScriptURL,
                                                    // Nested workers are always dedicated.
                                                    nsIContentPolicy::TYPE_INTERNAL_WORKER,
                                                    // Nested workers use default uri encoding.
                                                    true,
                                                    getter_AddRefs(channel));
-    if (NS_SUCCEEDED(mResult)) {
-      channel.forget(mChannel);
-    }
+    NS_ENSURE_SUCCESS(mResult, true);
 
+    mResult = mLoadInfo.SetPrincipalFromChannel(channel);
+    NS_ENSURE_SUCCESS(mResult, true);
+
+    mLoadInfo.mChannel = channel.forget();
     return true;
   }
 
@@ -2178,12 +2124,12 @@ nsresult
 ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                  WorkerPrivate* aParent,
                                  const nsAString& aScriptURL,
-                                 nsIChannel** aChannel)
+                                 WorkerLoadInfo& aLoadInfo)
 {
   aParent->AssertIsOnWorkerThread();
 
   RefPtr<ChannelGetterRunnable> getter =
-    new ChannelGetterRunnable(aParent, aScriptURL, aChannel);
+    new ChannelGetterRunnable(aParent, aScriptURL, aLoadInfo);
 
   ErrorResult rv;
   getter->Dispatch(Terminating, rv);

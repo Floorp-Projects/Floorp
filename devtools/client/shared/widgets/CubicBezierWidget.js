@@ -418,7 +418,7 @@ CubicBezierWidget.prototype = {
     this.bezierCanvas.plot();
     this.emit("updated", this.bezierCanvas.bezier);
 
-    this.timingPreview.preview(this.bezierCanvas.bezier + "");
+    this.timingPreview.preview(this.bezierCanvas.bezier.toString());
   },
 
   /**
@@ -721,7 +721,6 @@ CubicBezierPresetWidget.prototype = {
  */
 function TimingFunctionPreviewWidget(parent) {
   this.previousValue = null;
-  this.autoRestartAnimation = null;
 
   this.parent = parent;
   this._initMarkup();
@@ -748,7 +747,7 @@ TimingFunctionPreviewWidget.prototype = {
   },
 
   destroy: function () {
-    clearTimeout(this.autoRestartAnimation);
+    this.dot.getAnimations().forEach(anim => anim.cancel());
     this.parent.querySelector(".timing-function-preview").remove();
     this.parent = this.dot = null;
   },
@@ -765,35 +764,42 @@ TimingFunctionPreviewWidget.prototype = {
       return;
     }
 
-    clearTimeout(this.autoRestartAnimation);
-
     if (parseTimingFunction(value)) {
-      this.dot.style.animationTimingFunction = value;
-      this.restartAnimation();
+      this.restartAnimation(value);
     }
 
     this.previousValue = value;
   },
 
   /**
-   * Re-start the preview animation from the beginning
+   * Re-start the preview animation from the beginning.
+   * @param {String} timingFunction The value for the timing-function.
    */
-  restartAnimation: function () {
-    // Just toggling the class won't do it unless there's a sync reflow
-    this.dot.animate([
-      { left: "-7px", offset: 0 },
-      { left: "143px", offset: 0.25 },
-      { left: "143px", offset: 0.5 },
-      { left: "-7px", offset: 0.75 },
-      { left: "-7px", offset: 1 }
-    ], {
-      duration: (this.PREVIEW_DURATION * 2),
-      fill: "forwards"
-    });
+  restartAnimation: function (timingFunction) {
+    // Cancel the previous animation if there was any.
+    this.dot.getAnimations().forEach(anim => anim.cancel());
 
-    // Restart it again after a while
-    this.autoRestartAnimation = setTimeout(this.restartAnimation.bind(this),
-      this.PREVIEW_DURATION * 2);
+    // And start the new one.
+    // The animation consists of a few keyframes that move the dot to the right of the
+    // container, and then move it back to the left.
+    // It also contains some pause where the dot is semi transparent, before it moves to
+    // the right, and once again, before it comes back to the left.
+    // The timing function passed to this function is applied to the keyframes that
+    // actually move the dot. This way it can be previewed in both direction, instead of
+    // being spread over the whole animation.
+    this.dot.animate([
+      { left: "-7px", opacity: .5, offset: 0 },
+      { left: "-7px", opacity: .5, offset: .19 },
+      { left: "-7px", opacity: 1, offset: .2, easing: timingFunction },
+      { left: "143px", opacity: 1, offset: .5 },
+      { left: "143px", opacity: .5, offset: .51 },
+      { left: "143px", opacity: .5, offset: .7 },
+      { left: "143px", opacity: 1, offset: .71, easing: timingFunction },
+      { left: "-7px", opacity: 1, offset: 1 }
+    ], {
+      duration: this.PREVIEW_DURATION * 2,
+      iterations: Infinity
+    });
   }
 };
 
