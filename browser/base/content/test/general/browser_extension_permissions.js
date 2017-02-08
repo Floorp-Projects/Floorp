@@ -8,8 +8,6 @@ const PERMS_XPI = "browser_webext_permissions.xpi";
 const NO_PERMS_XPI = "browser_webext_nopermissions.xpi";
 const ID = "permissions@test.mozilla.org";
 
-const DEFAULT_EXTENSION_ICON = "chrome://browser/content/extension.svg";
-
 Services.perms.add(makeURI("https://example.com/"), "install",
                    Services.perms.ALLOW_ACTION);
 
@@ -20,6 +18,14 @@ registerCleanupFunction(async function() {
     addon.uninstall();
   }
 });
+
+function isDefaultIcon(icon) {
+  // These are basically the same icon, but code within webextensions
+  // generates references to the former and generic add-ons manager code
+  // generates referces to the latter.
+  return (icon == "chrome://browser/content/extension.svg" ||
+          icon == "chrome://mozapps/skin/extensions/extensionGeneric.svg");
+}
 
 function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
@@ -56,7 +62,7 @@ function checkNotification(panel, filename) {
     // Real checking of the contents here is deferred until bug 1316996 lands
   } else if (filename == NO_PERMS_XPI) {
     // This extension has no icon, it should have the default
-    is(icon, DEFAULT_EXTENSION_ICON, "Icon is the default extension icon");
+    ok(isDefaultIcon(icon), "Icon is the default extension icon");
 
     is(header.getAttribute("hidden"), "true", "Permission list header is hidden");
     is(ul.childElementCount, 0, "Permissions list has 0 entries");
@@ -105,6 +111,45 @@ const INSTALL_FUNCTIONS = [
     // Do the install...
     contentWin.gViewController.doCommand("cmd_installFromFile");
     MockFilePicker.cleanup();
+  },
+
+  async function installSearch(filename) {
+    await SpecialPowers.pushPrefEnv({set: [
+      ["extensions.getAddons.maxResults", 10],
+      ["extensions.getAddons.search.url", `${BASE}/browser_webext_search.xml`],
+    ]});
+
+    let win = await BrowserOpenAddonsMgr("addons://list/extension");
+
+    let searchResultsPromise = new Promise(resolve => {
+      win.document.addEventListener("ViewChanged", resolve, {once: true});
+    });
+    let search = win.document.getElementById("header-search");
+    search.focus();
+    search.value = "search text";
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+
+    await searchResultsPromise;
+    ok(win.gViewController.currentViewId.startsWith("addons://search"),
+       "about:addons is displaying search results");
+
+    let list = win.document.getElementById("search-list");
+    let item = null;
+    for (let child of list.childNodes) {
+      if (child.nodeName == "richlistitem" &&
+          child.mAddon.install.sourceURI.path.endsWith(filename)) {
+            item = child;
+            break;
+      }
+    }
+    ok(item, `Found ${filename} in search results`);
+
+    // abracadabara XBL
+    item.clientTop;
+
+    let install = win.document.getAnonymousElementByAttribute(item, "anonid", "install-status");
+    let button = win.document.getAnonymousElementByAttribute(install, "anonid", "install-remote-btn");
+    EventUtils.synthesizeMouseAtCenter(button, {}, win);
   },
 ];
 
