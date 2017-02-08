@@ -37,8 +37,6 @@ gEasingTests.forEach(params => {
 var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -56,8 +54,6 @@ var gStepTimingFunctionTests = [
   },
   {
     description: 'Test bounds point of step-start easing with reverse direction',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -77,8 +73,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing ' +
                  'with iterationStart not at a transition point',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -101,8 +95,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing ' +
                  'with iterationStart and delay',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -122,8 +114,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing ' +
                  'with iterationStart and reverse direction',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -146,8 +136,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step(4, start) easing ' +
                  'with iterationStart 0.75 and delay',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   duration: 1000,
                   fill: 'both',
@@ -166,8 +154,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing ' +
                  'with alternate direction',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   duration: 1000,
                   fill: 'both',
@@ -189,8 +175,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-start easing ' +
                  'with alternate-reverse direction',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   duration: 1000,
                   fill: 'both',
@@ -210,29 +194,8 @@ var gStepTimingFunctionTests = [
                 ]
   },
   {
-    description: 'Test bounds point of step-start easing in keyframe',
-    keyframe:   [ { width: '0px', easing: 'steps(2, start)' },
-                  { width: '100px' } ],
-    effect:     {
-                  delay: 1000,
-                  duration: 1000,
-                  fill: 'both',
-                },
-    conditions: [
-                  { currentTime: 0,    progress: 0,     width: '0px' },
-                  { currentTime: 999,  progress: 0,     width: '0px' },
-                  { currentTime: 1000, progress: 0,     width: '50px' },
-                  { currentTime: 1499, progress: 0.499, width: '50px' },
-                  { currentTime: 1500, progress: 0.5,   width: '100px' },
-                  { currentTime: 2000, progress: 1,     width: '100px' },
-                  { currentTime: 2500, progress: 1,     width: '100px' }
-                ]
-  },
-  {
     description: 'Test bounds point of step-end easing ' +
                  'with iterationStart and delay',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   duration: 1000,
                   fill: 'both',
@@ -254,8 +217,6 @@ var gStepTimingFunctionTests = [
   {
     description: 'Test bounds point of step-end easing ' +
                  'with iterationStart not at a transition point',
-    keyframe:   [ { width: '0px' },
-                  { width: '100px' } ],
     effect:     {
                   delay: 1000,
                   duration: 1000,
@@ -280,19 +241,12 @@ var gStepTimingFunctionTests = [
 gStepTimingFunctionTests.forEach(function(options) {
   test(function(t) {
     var target = createDiv(t);
-    var animation = target.animate(options.keyframe, options.effect);
+    var animation = target.animate(null, options.effect);
     options.conditions.forEach(function(condition) {
       animation.currentTime = condition.currentTime;
-      if (typeof condition.progress !== 'undefined') {
-        assert_equals(animation.effect.getComputedTiming().progress,
-                      condition.progress,
-                      'Progress at ' + animation.currentTime + 'ms');
-      }
-      if (typeof condition.width !== 'undefined') {
-        assert_equals(getComputedStyle(target).width,
-                      condition.width,
-                      'Progress at ' + animation.currentTime + 'ms');
-      }
+      assert_equals(animation.effect.getComputedTiming().progress,
+                    condition.progress,
+                    'Progress at ' + animation.currentTime + 'ms');
     });
   }, options.description);
 });
