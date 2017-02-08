@@ -15,7 +15,7 @@ add_task(function* () {
 
   let wait = waitForNetworkEvents(monitor, 1);
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-reload-notice-button"));
+    document.querySelector("#requests-list-reload-notice-button"));
   yield wait;
 
   is(document.querySelectorAll(".request-list-item").length, 1,

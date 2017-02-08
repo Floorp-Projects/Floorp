@@ -31,14 +31,14 @@ const RequestListEmptyNotice = createClass({
   render() {
     return div(
       {
-        id: "requests-menu-empty-notice",
+        id: "requests-list-empty-notice",
         className: "request-list-empty-notice",
       },
       div({ id: "notice-reload-message" },
         span(null, L10N.getStr("netmonitor.reloadNotice1")),
         button(
           {
-            id: "requests-menu-reload-notice-button",
+            id: "requests-list-reload-notice-button",
             className: "devtools-button",
             "data-standalone": true,
             onClick: this.props.onReloadClick,
@@ -50,7 +50,7 @@ const RequestListEmptyNotice = createClass({
       div({ id: "notice-perf-message" },
         span(null, L10N.getStr("netmonitor.perfNotice1")),
         button({
-          id: "requests-menu-perf-notice-button",
+          id: "requests-list-perf-notice-button",
           title: L10N.getStr("netmonitor.perfNotice3"),
           className: "devtools-button",
           "data-standalone": true,

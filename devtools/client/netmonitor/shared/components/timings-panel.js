@@ -40,20 +40,20 @@ function TimingsPanel({
       span({ className: "tabpanel-summary-label timings-label" },
         L10N.getStr(`netmonitor.timings.${type}`)
       ),
-      div({ className: "requests-menu-timings-container" },
+      div({ className: "requests-list-timings-container" },
         span({
-          className: "requests-menu-timings-offset",
+          className: "requests-list-timings-offset",
           style: {
             width: `calc(${offsetScale} * (100% - ${TIMINGS_END_PADDING})`,
           },
         }),
         span({
-          className: `requests-menu-timings-box ${type}`,
+          className: `requests-list-timings-box ${type}`,
           style: {
             width: `calc(${timelineScale} * (100% - ${TIMINGS_END_PADDING}))`,
           },
         }),
-        span({ className: "requests-menu-timings-total" },
+        span({ className: "requests-list-timings-total" },
           L10N.getFormatStr("networkMenu.totalMS", timings[type])
         )
       ),
