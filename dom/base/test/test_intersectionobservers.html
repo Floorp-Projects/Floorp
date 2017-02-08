@@ -721,6 +721,7 @@ limitations under the License.
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
               expect(records[0].intersectionRatio).to.be(0);
+              expect(records[0].isIntersecting).to.be.ok();
               expect(records[0].target).to.be(targetEl1);
               expect(records[1].intersectionRatio).to.be(0);
               expect(records[1].target).to.be(targetEl2);
@@ -753,6 +754,7 @@ limitations under the License.
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(2);
               expect(records[0].intersectionRatio).to.be(0);
+              expect(records[0].isIntersecting).to.be.ok();
               expect(records[0].target).to.be(targetEl3);
               expect(records[1].intersectionRatio).to.be(0);
               expect(records[1].target).to.be(targetEl4);
@@ -767,17 +769,35 @@ limitations under the License.
       it('handles zero-size targets within the root coordinate space',
           function(done) {
 
-        io = new IntersectionObserver(function(records) {
-          expect(records.length).to.be(1);
-          expect(records[0].intersectionRatio).to.be(0);
-          done();
-        }, {root: rootEl});
+        var spy = sinon.spy();
+        io = new IntersectionObserver(spy, {root: rootEl});
 
-        targetEl1.style.top = '0px';
-        targetEl1.style.left = '0px';
-        targetEl1.style.width = '0px';
-        targetEl1.style.height = '0px';
-        io.observe(targetEl1);
+        runSequence([
+          function(done) {
+            targetEl1.style.top = '0px';
+            targetEl1.style.left = '0px';
+            targetEl1.style.width = '0px';
+            targetEl1.style.height = '0px';
+            io.observe(targetEl1);
+            spy.waitForNotification(function() {
+              var records = sortRecords(spy.lastCall.args[0]);
+              expect(records.length).to.be(1);
+              expect(records[0].intersectionRatio).to.be(0);
+              expect(records[0].isIntersecting).to.be.ok();
+              done();
+            }, ASYNC_TIMEOUT);
+          },
+          function(done) {
+            targetEl1.style.top = '-1px';
+            spy.waitForNotification(function() {
+              var records = sortRecords(spy.lastCall.args[0]);
+              expect(records.length).to.be(1);
+              expect(records[0].intersectionRatio).to.be(0);
+              expect(records[0].isIntersecting).to.be(false);
+              done();
+            }, ASYNC_TIMEOUT);
+          }
+        ], done);
       });
 
 
