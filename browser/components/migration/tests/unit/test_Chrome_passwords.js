@@ -80,7 +80,7 @@ var crypto = new OSCrypto();
 var dbConn;
 
 function promiseSetPassword(login) {
-  let passwordValue = crypto.stringToArray(crypto.encryptData(login.password));
+  let passwordValue = new Uint8Array(crypto.stringToArray(crypto.encryptData(login.password)));
   return dbConn.execute(`UPDATE logins
                          SET password_value = :password_value
                          WHERE rowid = :rowid

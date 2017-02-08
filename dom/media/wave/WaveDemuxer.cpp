@@ -197,7 +197,8 @@ WAVTrackDemuxer::FmtChunkParserInit()
   if (!fmtChunk) {
     return false;
   }
-  ByteReader fmtReader(fmtChunk->Data(), mHeaderParser.GiveHeader().ChunkSize());
+  ByteReader fmtReader(fmtChunk->Data(),
+                       mHeaderParser.GiveHeader().ChunkSize());
   mFmtParser.Parse(fmtReader);
   return true;
 }
@@ -260,16 +261,20 @@ WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize)
 
     switch (id) {
       case 0x49415254:                // IART
-        mInfo->mTags.AppendElement(MetadataTag(NS_LITERAL_CSTRING("artist"), val));
+        mInfo->mTags.AppendElement(
+          MetadataTag(NS_LITERAL_CSTRING("artist"), val));
         break;
       case 0x49434d54:                // ICMT
-        mInfo->mTags.AppendElement(MetadataTag(NS_LITERAL_CSTRING("comments"), val));
+        mInfo->mTags.AppendElement(
+          MetadataTag(NS_LITERAL_CSTRING("comments"), val));
         break;
       case 0x49474e52:                // IGNR
-        mInfo->mTags.AppendElement(MetadataTag(NS_LITERAL_CSTRING("genre"), val));
+        mInfo->mTags.AppendElement(
+          MetadataTag(NS_LITERAL_CSTRING("genre"), val));
         break;
       case 0x494e414d:                // INAM
-        mInfo->mTags.AppendElement(MetadataTag(NS_LITERAL_CSTRING("name"), val));
+        mInfo->mTags.AppendElement(
+          MetadataTag(NS_LITERAL_CSTRING("name"), val));
         break;
     }
 
@@ -357,7 +362,7 @@ WAVTrackDemuxer::GetSamples(int32_t aNumSamples)
 
   if (datachunks->mSamples.IsEmpty()) {
     return SamplesPromise::CreateAndReject(
-        NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+      NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
   }
 
   return SamplesPromise::CreateAndResolve(datachunks, __func__);
@@ -430,9 +435,8 @@ WAVTrackDemuxer::Duration(int64_t aNumDataChunks) const
   if (!mSamplesPerSecond || !mSamplesPerChunk) {
     return TimeUnit();
   }
-  const double usPerDataChunk = USECS_PER_S *
-                                static_cast<double>(mSamplesPerChunk) /
-                                mSamplesPerSecond;
+  const double usPerDataChunk =
+    USECS_PER_S * static_cast<double>(mSamplesPerChunk) / mSamplesPerSecond;
   return TimeUnit::FromMicroseconds(aNumDataChunks * usPerDataChunk);
 }
 
@@ -516,9 +520,8 @@ WAVTrackDemuxer::GetNextChunk(const MediaByteRange& aRange)
     return nullptr;
   }
 
-  const uint32_t read = Read(chunkWriter->Data(),
-                             datachunk->mOffset,
-                             datachunk->Size());
+  const uint32_t read =
+    Read(chunkWriter->Data(), datachunk->mOffset, datachunk->Size());
 
   if (read != aRange.Length()) {
     return nullptr;
@@ -561,9 +564,8 @@ WAVTrackDemuxer::GetFileHeader(const MediaByteRange& aRange)
     return nullptr;
   }
 
-  const uint32_t read = Read(headerWriter->Data(),
-                             fileHeader->mOffset,
-                             fileHeader->Size());
+  const uint32_t read =
+    Read(headerWriter->Data(), fileHeader->mOffset, fileHeader->Size());
 
   if (read != aRange.Length()) {
     return nullptr;
@@ -757,15 +759,19 @@ HeaderParser::ChunkHeader::IsValid() const
 uint32_t
 HeaderParser::ChunkHeader::ChunkName() const
 {
-  return ((mRaw[0] << 24) | (mRaw[1] << 16) |
-          (mRaw[2] << 8 ) | (mRaw[3]));
+  return ((mRaw[0] << 24)
+          | (mRaw[1] << 16)
+          | (mRaw[2] << 8 )
+          | (mRaw[3]));
 }
 
 uint32_t
 HeaderParser::ChunkHeader::ChunkSize() const
 {
-  return ((mRaw[7] << 24) | (mRaw[6] << 16) |
-          (mRaw[5] << 8 ) | (mRaw[4]));
+  return ((mRaw[7] << 24)
+          | (mRaw[6] << 16)
+          | (mRaw[5] << 8 )
+          | (mRaw[4]));
 }
 
 void
@@ -831,8 +837,10 @@ FormatParser::FormatChunk::Channels() const
 uint32_t
 FormatParser::FormatChunk::SampleRate() const
 {
-  return (mRaw[7] << 24) | (mRaw[6] << 16) |
-         (mRaw[5] << 8 ) | (mRaw[4]);
+  return (mRaw[7] << 24)
+         | (mRaw[6] << 16)
+         | (mRaw[5] << 8)
+         | (mRaw[4]);
 }
 
 uint16_t
@@ -857,8 +865,8 @@ FormatParser::FormatChunk::ParseNext(uint8_t c)
 bool
 FormatParser::FormatChunk::IsValid() const
 {
-  return (FrameSize() == SampleRate() * Channels() / 8) &&
-         (mPos >= FMT_CHUNK_MIN_SIZE);
+  return (FrameSize() == SampleRate() * Channels() / 8)
+         && (mPos >= FMT_CHUNK_MIN_SIZE);
 }
 
 void
