@@ -131,8 +131,8 @@ FUZZ_P(TlsConnectGeneric, DeterministicTranscript) {
     DisableECDHEServerKeyReuse();
 
     DataBuffer buffer;
-    client_->SetPacketFilter(new TlsConversationRecorder(buffer));
-    server_->SetPacketFilter(new TlsConversationRecorder(buffer));
+    client_->SetPacketFilter(std::make_shared<TlsConversationRecorder>(buffer));
+    server_->SetPacketFilter(std::make_shared<TlsConversationRecorder>(buffer));
 
     // Reset the RNG state.
     EXPECT_EQ(SECSuccess, RNG_ResetForFuzzing());
@@ -158,9 +158,9 @@ FUZZ_P(TlsConnectGeneric, ConnectSendReceive_NullCipher) {
   EnsureTlsSetup();
 
   // Set up app data filters.
-  auto client_recorder = new TlsApplicationDataRecorder();
+  auto client_recorder = std::make_shared<TlsApplicationDataRecorder>();
   client_->SetPacketFilter(client_recorder);
-  auto server_recorder = new TlsApplicationDataRecorder();
+  auto server_recorder = std::make_shared<TlsApplicationDataRecorder>();
   server_->SetPacketFilter(server_recorder);
 
   Connect();
@@ -186,7 +186,7 @@ FUZZ_P(TlsConnectGeneric, ConnectSendReceive_NullCipher) {
 FUZZ_P(TlsConnectGeneric, BogusClientFinished) {
   EnsureTlsSetup();
 
-  auto i1 = new TlsInspectorReplaceHandshakeMessage(
+  auto i1 = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
       kTlsHandshakeFinished,
       DataBuffer(kShortEmptyFinished, sizeof(kShortEmptyFinished)));
   client_->SetPacketFilter(i1);
@@ -198,7 +198,7 @@ FUZZ_P(TlsConnectGeneric, BogusClientFinished) {
 FUZZ_P(TlsConnectGeneric, BogusServerFinished) {
   EnsureTlsSetup();
 
-  auto i1 = new TlsInspectorReplaceHandshakeMessage(
+  auto i1 = std::make_shared<TlsInspectorReplaceHandshakeMessage>(
       kTlsHandshakeFinished,
       DataBuffer(kLongEmptyFinished, sizeof(kLongEmptyFinished)));
   server_->SetPacketFilter(i1);
@@ -212,7 +212,7 @@ FUZZ_P(TlsConnectGeneric, BogusServerAuthSignature) {
   uint8_t msg_type = version_ == SSL_LIBRARY_VERSION_TLS_1_3
                          ? kTlsHandshakeCertificateVerify
                          : kTlsHandshakeServerKeyExchange;
-  server_->SetPacketFilter(new TlsSignatureDamager(msg_type));
+  server_->SetPacketFilter(std::make_shared<TlsSignatureDamager>(msg_type));
   Connect();
   SendReceive();
 }
@@ -223,7 +223,7 @@ FUZZ_P(TlsConnectGeneric, BogusClientAuthSignature) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   client_->SetPacketFilter(
-      new TlsSignatureDamager(kTlsHandshakeCertificateVerify));
+      std::make_shared<TlsSignatureDamager>(kTlsHandshakeCertificateVerify));
   Connect();
 }
 }

@@ -177,14 +177,14 @@ class TlsPreCCSHeaderInjector : public TlsRecordFilter {
 };
 
 TEST_P(TlsConnectStreamPre13, ClientFinishedHeaderBeforeCCS) {
-  client_->SetPacketFilter(new TlsPreCCSHeaderInjector());
+  client_->SetPacketFilter(std::make_shared<TlsPreCCSHeaderInjector>());
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
   server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER);
 }
 
 TEST_P(TlsConnectStreamPre13, ServerFinishedHeaderBeforeCCS) {
-  server_->SetPacketFilter(new TlsPreCCSHeaderInjector());
+  server_->SetPacketFilter(std::make_shared<TlsPreCCSHeaderInjector>());
   client_->StartConnect();
   server_->StartConnect();
   Handshake();

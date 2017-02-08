@@ -20,7 +20,7 @@ struct HuffmanOutgoingEntry {
   uint8_t mLength;
 };
 
-static HuffmanOutgoingEntry HuffmanOutgoing[] = {
+static const HuffmanOutgoingEntry HuffmanOutgoing[] = {
 ''')
 
 entries = []
