@@ -23,7 +23,9 @@ add_task(function* testWindowCreate() {
       }
 
       async function createWindow(params, expected, keep = false) {
-        let window = await browser.windows.create(params);
+        let window = await browser.windows.create(...params);
+        // params is null when testing create without createData
+        params = params[0] || {};
 
         for (let key of Object.keys(params)) {
           if (key == "state" && os == "mac" && params.state == "normal") {
@@ -54,13 +56,19 @@ add_task(function* testWindowCreate() {
       try {
         ({os} = await browser.runtime.getPlatformInfo());
 
-        await createWindow({state: "maximized"}, {state: "STATE_MAXIMIZED"});
-        await createWindow({state: "minimized"}, {state: "STATE_MINIMIZED"});
-        await createWindow({state: "normal"}, {state: "STATE_NORMAL", hiddenChrome: []});
-        await createWindow({state: "fullscreen"}, {state: "STATE_FULLSCREEN"});
+        // Set the current window to state: "normal" because the test is failing on Windows
+        // where the current window is maximized.
+        let currentWindow = await browser.windows.getCurrent();
+        await browser.windows.update(currentWindow.id, {state: "normal"});
+
+        await createWindow([], {state: "STATE_NORMAL"});
+        await createWindow([{state: "maximized"}], {state: "STATE_MAXIMIZED"});
+        await createWindow([{state: "minimized"}], {state: "STATE_MINIMIZED"});
+        await createWindow([{state: "normal"}], {state: "STATE_NORMAL", hiddenChrome: []});
+        await createWindow([{state: "fullscreen"}], {state: "STATE_FULLSCREEN"});
 
         let window = await createWindow(
-          {type: "popup"},
+          [{type: "popup"}],
           {hiddenChrome: ["menubar", "toolbar", "location", "directories", "status", "extrachrome"],
            chromeFlags: ["CHROME_OPENAS_DIALOG"]},
           true);
