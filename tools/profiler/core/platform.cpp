@@ -78,7 +78,11 @@ static std::vector<ThreadInfo*>* sRegisteredThreads = nullptr;
 static mozilla::StaticMutex sRegisteredThreadsMutex;
 
 // All accesses to gGatherer are on the main thread, so no locking is needed.
-static mozilla::StaticRefPtr<mozilla::ProfileGatherer> gGatherer;
+static StaticRefPtr<mozilla::ProfileGatherer> gGatherer;
+
+// XXX: gBuffer is used on multiple threads -- including via copies in
+// ThreadInfo::mBuffer -- without any apparent synchronization(!)
+static StaticRefPtr<ProfileBuffer> gBuffer;
 
 // gThreadNameFilters is accessed from multiple threads. All accesses to it
 // must be guarded by gThreadNameFiltersMutex.
@@ -435,6 +439,13 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     MOZ_COLLECT_REPORT(
       "explicit/profiler/sampler", KIND_HEAP, UNITS_BYTES, n,
       "Memory used by the Gecko Profiler's Sampler object.");
+  }
+
+  if (gBuffer) {
+    size_t n = gBuffer->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+    MOZ_COLLECT_REPORT(
+      "explicit/profiler/profile-buffer", KIND_HEAP, UNITS_BYTES, n,
+      "Memory used by the Gecko Profiler's ProfileBuffer object.");
   }
 
 #if defined(USE_LUL_STACKWALK)
@@ -819,11 +830,13 @@ profiler_get_buffer_info_helper(uint32_t *aCurrentPosition,
   if (!stack_key_initialized)
     return;
 
-  if (!gSampler) {
+  if (!gBuffer) {
     return;
   }
 
-  gSampler->GetBufferInfo(aCurrentPosition, aTotalSize, aGeneration);
+  *aCurrentPosition = gBuffer->mWritePos;
+  *aTotalSize = gEntrySize;
+  *aGeneration = gBuffer->mGeneration;
 }
 
 // Values are only honored on the first start
@@ -871,7 +884,8 @@ profiler_start(int aProfileEntries, double aInterval,
 
   gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
   gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
-  gSampler = new Sampler(gEntrySize, aFeatures, aFeatureCount, aFilterCount);
+  gBuffer = new ProfileBuffer(gEntrySize);
+  gSampler = new Sampler(aFeatures, aFeatureCount, aFilterCount);
   gGatherer = new mozilla::ProfileGatherer(gSampler);
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
@@ -974,6 +988,7 @@ profiler_stop()
   MOZ_ASSERT(!gIsActive && !gIsPaused);   // Stop() clears these.
   delete gSampler;
   gSampler = nullptr;
+  gBuffer = nullptr;
   gEntrySize = 0;
   gInterval = 0;
 
