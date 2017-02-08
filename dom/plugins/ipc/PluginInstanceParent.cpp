@@ -2086,17 +2086,6 @@ PluginInstanceParent::RecvRedrawPlugin()
     return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginInstanceParent::RecvNegotiatedCarbon()
-{
-    nsNPAPIPluginInstance *inst = static_cast<nsNPAPIPluginInstance*>(mNPP->ndata);
-    if (!inst) {
-        return IPC_FAIL_NO_REASON(this);
-    }
-    inst->CarbonNPAPIFailure();
-    return IPC_OK();
-}
-
 nsPluginInstanceOwner*
 PluginInstanceParent::GetOwner()
 {
