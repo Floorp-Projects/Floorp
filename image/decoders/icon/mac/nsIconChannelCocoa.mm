@@ -230,11 +230,17 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
 
   nsCOMPtr<nsIInputStream> inStream;
   nsresult rv = MakeInputStream(getter_AddRefs(inStream), true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+      mCallbacks = nullptr;
+      return rv;
+  }
 
   // Init our stream pump
   rv = mPump->Init(inStream, int64_t(-1), int64_t(-1), 0, 0, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+      mCallbacks = nullptr;
+      return rv;
+  }
 
   rv = mPump->AsyncRead(this, ctxt);
   if (NS_SUCCEEDED(rv)) {
@@ -244,6 +250,8 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener,
     if (mLoadGroup) {
       mLoadGroup->AddRequest(this, nullptr);
     }
+  } else {
+      mCallbacks = nullptr;
   }
 
   return rv;
@@ -254,7 +262,10 @@ nsIconChannel::AsyncOpen2(nsIStreamListener* aListener)
 {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+      mCallbacks = nullptr;
+      return rv;
+  }
   return AsyncOpen(listener, nullptr);
 }
 
