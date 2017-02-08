@@ -582,11 +582,16 @@ private:
   }
 };
 
+struct AnimationValue
+{
+  StyleAnimationValue mGecko;
+  RefPtr<RawServoAnimationValue> mServo;
+};
+
 struct PropertyStyleAnimationValuePair
 {
   nsCSSPropertyID mProperty;
-  StyleAnimationValue mValue;
-  RefPtr<RawServoAnimationValue> mServoValue;
+  AnimationValue mValue;
 };
 } // namespace mozilla
 

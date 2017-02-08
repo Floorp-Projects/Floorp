@@ -3458,7 +3458,7 @@ ComputeValuesFromStyleContext(
       PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
       pair->mProperty = *p;
       if (!StyleAnimationValue::ExtractComputedValue(*p, aStyleContext,
-                                                     pair->mValue)) {
+                                                     pair->mValue.mGecko)) {
         return false;
       }
     }
@@ -3468,7 +3468,7 @@ ComputeValuesFromStyleContext(
   PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
   pair->mProperty = aProperty;
   return StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
-                                                   pair->mValue);
+                                                   pair->mValue.mGecko);
 }
 
 static bool
@@ -3583,7 +3583,7 @@ StyleAnimationValue::ComputeValue(nsCSSPropertyID aProperty,
   MOZ_ASSERT(values.Length() == 1);
   MOZ_ASSERT(values[0].mProperty == aProperty);
 
-  aComputedValue = values[0].mValue;
+  aComputedValue = values[0].mValue.mGecko;
   return true;
 }
 
