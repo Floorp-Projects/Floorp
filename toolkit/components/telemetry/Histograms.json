@@ -11119,5 +11119,59 @@
     "n_buckets": 20,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+  },
+  "MOUSE_MOVE_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the mouse move event to dispatch, but before handlers executing."
+  },
+  "MOUSE_CLICK_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the mouse click event to dispatch, but before handlers executing."
+  },
+  "KEYBOARD_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the keyboard event to dispatch, but before handlers executing."
+  },
+  "APZ_HANDLED_TOUCH_MOVE_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the APZ handled touch move event to dispatch, but before handlers executing."
+  },
+  "APZ_HANDLED_MOUSE_MOVE_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the APZ handled mouse move event to dispatch, but before handlers executing."
+  },
+  "APZ_HANDLED_WHEEL_EVENT_RECEIVED_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1341531],
+    "description": "Time (ms) for the APZ handled wheel event to dispatch, but before handlers executing."
   }
 }

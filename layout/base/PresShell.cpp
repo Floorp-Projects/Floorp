@@ -8059,16 +8059,28 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
             nsPresContext::InteractionType::eKeyInteraction,
             aEvent->mTimeStamp);
         }
+
+        Telemetry::AccumulateTimeDelta(Telemetry::KEYBOARD_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
         break;
       }
       case eMouseDown:
       case eMouseUp:
+        Telemetry::AccumulateTimeDelta(Telemetry::MOUSE_CLICK_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        MOZ_FALLTHROUGH;
       case ePointerDown:
       case ePointerUp:
         isHandlingUserInput = true;
         mPresContext->RecordInteractionTime(
           nsPresContext::InteractionType::eClickInteraction,
           aEvent->mTimeStamp);
+        break;
+
+      case eMouseMove:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_MOUSE_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        } else {
+          Telemetry::AccumulateTimeDelta(Telemetry::MOUSE_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
         break;
 
       case eDrop: {
@@ -8082,6 +8094,18 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
         }
         break;
       }
+
+      case eWheel:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_WHEEL_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
+        break;
+
+      case eTouchMove:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(Telemetry::APZ_HANDLED_TOUCH_MOVE_EVENT_RECEIVED_MS, aEvent->mTimeStamp);
+        }
+        break;
 
       default:
         break;
