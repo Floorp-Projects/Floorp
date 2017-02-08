@@ -82,9 +82,9 @@ fails-if(webrender) == snap-perspective-1.html snap-perspective-1-ref.html
 fails-if(webrender) == mask-layer-1.html mask-layer-ref.html
 skip-if(webrender) == mask-layer-2.html mask-layer-ref.html
 skip-if(webrender) == mask-layer-3.html mask-layer-ref.html
-fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-intersect1.html split-intersect1-ref.html # Bug 1323791: implement DirectX compositor polygon support
-fuzzy(255,150) fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-intersect2.html split-intersect2-ref.html # Bug 1323791
-fuzzy(255,100) fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html # Bug 1323791
+fails-if(webrender) == split-intersect1.html split-intersect1-ref.html
+fuzzy(255,150) fails-if(webrender) == split-intersect2.html split-intersect2-ref.html
+fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,150,120) fails-if(webrender) == component-alpha-1.html component-alpha-1-ref.html
 fails-if(webrender) == nested-transform-1.html nested-transform-1-ref.html
 fails-if(webrender) == transform-geometry-1.html transform-geometry-1-ref.html
