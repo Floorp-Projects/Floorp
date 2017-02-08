@@ -191,36 +191,6 @@ bool is_native_unwinding_avail();
 
 class ThreadInfo;
 
-// TickSample captures the information collected for each sample.
-class TickSample {
- public:
-  TickSample()
-      : pc(NULL)
-      , sp(NULL)
-      , fp(NULL)
-      , lr(NULL)
-      , context(NULL)
-      , isSamplingCurrentThread(false)
-      , threadInfo(nullptr)
-      , rssMemory(0)
-      , ussMemory(0)
-  {}
-
-  void PopulateContext(void* aContext);
-
-  Address pc;  // Instruction pointer.
-  Address sp;  // Stack pointer.
-  Address fp;  // Frame pointer.
-  Address lr;  // ARM link register
-  void*   context;   // The context from the signal handler, if available. On
-                     // Win32 this may contain the windows thread context.
-  bool    isSamplingCurrentThread;
-  ThreadInfo* threadInfo;
-  mozilla::TimeStamp timestamp;
-  int64_t rssMemory;
-  int64_t ussMemory;
-};
-
 struct JSContext;
 class JSObject;
 class PlatformData;
@@ -241,10 +211,6 @@ public:
   Sampler();
   ~Sampler();
 
-  // This method is called for each sampling period with the current
-  // program counter. This function must be re-entrant.
-  void Tick(TickSample* sample);
-
   // Start and stop sampler.
   void Start();
   void Stop();
@@ -259,13 +225,6 @@ public:
   typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
     UniquePlatformData;
   static UniquePlatformData AllocPlatformData(int aThreadId);
-
-  // If we move the backtracing code into the platform files we won't
-  // need to have these hacks
-#ifdef XP_WIN
-  // xxxehsan sucky hack :(
-  static uintptr_t GetThreadHandle(PlatformData*);
-#endif
 
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
@@ -291,13 +250,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-  // Not implemented on platforms which do not support backtracing
-  void doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample);
-
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
-
-  // Called within a signal. This function must be reentrant
-  void InplaceTick(TickSample* sample);
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

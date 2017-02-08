@@ -70,16 +70,6 @@
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
 
-#if defined(__ARM_EABI__) && defined(ANDROID)
- // Should also work on other Android and ARM Linux, but not tested there yet.
-# define USE_EHABI_STACKWALK
-# include "EHABIStackWalk.h"
-#elif defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
-# define USE_LUL_STACKWALK
-# include "lul/LulMain.h"
-# include "lul/platform-linux-lul.h"
-#endif
-
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
@@ -226,8 +216,7 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sample->rssMemory = sample->threadInfo->mRssMemory;
   sample->ussMemory = sample->threadInfo->mUssMemory;
 
-  // XXX: this is an off-main-thread(?) use of gSampler
-  gSampler->Tick(sample);
+  Tick(sample);
 
   sCurrentThreadInfo = NULL;
   sem_post(&sSignalHandlingDone);
