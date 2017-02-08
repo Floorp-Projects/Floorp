@@ -16,7 +16,23 @@ var multipartBody = "--boundary\r\n\r\nSome text\r\n--boundary\r\nContent-Type: 
 function contentHandler(metadata, response)
 {
   response.setHeader("Content-Type", 'multipart/mixed; boundary="boundary"');
-  response.bodyOutputStream.write(multipartBody, multipartBody.length);
+  response.processAsync();
+
+  var body = multipartBody;
+  function byteByByte()
+  {
+    if (!body.length) {
+      response.finish();
+      return;
+    }
+
+    var onebyte = body[0];
+    response.bodyOutputStream.write(onebyte, 1);
+    body = body.substring(1);
+    do_timeout(1, byteByByte);
+  }
+
+  do_timeout(1, byteByByte);
 }
 
 var numTests = 2;
