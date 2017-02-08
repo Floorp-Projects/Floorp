@@ -526,9 +526,14 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.End();
 }
 
-void
-Sampler::FlushOnJSShutdown(JSContext* aContext)
+void PseudoStack::flushSamplerOnJSShutdown()
 {
+  MOZ_ASSERT(mContext);
+
+  if (!gIsActive) {
+    return;
+  }
+
   gIsPaused = true;
 
   {
@@ -542,7 +547,7 @@ Sampler::FlushOnJSShutdown(JSContext* aContext)
       }
 
       // Thread not profiling the context that's going away, skip it.
-      if (info->Stack()->mContext != aContext) {
+      if (info->Stack()->mContext != mContext) {
         continue;
       }
 
@@ -552,21 +557,6 @@ Sampler::FlushOnJSShutdown(JSContext* aContext)
   }
 
   gIsPaused = false;
-}
-
-void PseudoStack::flushSamplerOnJSShutdown()
-{
-  MOZ_ASSERT(mContext);
-
-  // XXX: this function should handle being called by any thread, but it
-  // currently doesn't because it accesses gSampler, which is main-thread-only.
-  if (!NS_IsMainThread()) {
-    return;
-  }
-
-  if (gSampler) {
-    gSampler->FlushOnJSShutdown(mContext);
-  }
 }
 
 // END SaveProfileTask et al
