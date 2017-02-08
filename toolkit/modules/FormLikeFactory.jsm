@@ -68,13 +68,16 @@ let FormLikeFactory = {
       throw new Error("createFromField requires a field in a document");
     }
 
-    if (aField.form) {
-      return this.createFromForm(aField.form);
+    let rootElement = this.findRootForField(aField);
+    if (rootElement instanceof Ci.nsIDOMHTMLFormElement) {
+      return this.createFromForm(rootElement);
     }
 
     let doc = aField.ownerDocument;
     let elements = [];
-    for (let el of doc.documentElement.querySelectorAll("input")) {
+    for (let el of rootElement.querySelectorAll("input")) {
+      // Exclude elements inside the rootElement that are already in a <form> as
+      // they will be handled by their own FormLike.
       if (!el.form) {
         elements.push(el);
       }
@@ -82,15 +85,31 @@ let FormLikeFactory = {
     let formLike = {
       action: doc.baseURI,
       autocomplete: "on",
-      // Exclude elements inside the rootElement that are already in a <form> as
-      // they will be handled by their own FormLike.
       elements,
       ownerDocument: doc,
-      rootElement: doc.documentElement,
+      rootElement,
     };
 
     this._addToJSONProperty(formLike);
     return formLike;
+  },
+
+  /**
+   * Determine the Element that encapsulates the related fields. For example, if
+   * a page contains a login form and a checkout form which are "submitted"
+   * separately, and the username field is passed in, ideally this would return
+   * an ancestor Element of the username and password fields which doesn't
+   * include any of the checkout fields.
+   *
+   * @param {HTMLInputElement} aField - a field in a document
+   * @return {HTMLElement} - the root element surrounding related fields
+   */
+  findRootForField(aField) {
+    if (aField.form) {
+      return aField.form;
+    }
+
+    return aField.ownerDocument.documentElement;
   },
 
   /**

@@ -501,9 +501,11 @@ class BaseCompiler
     MacroAssembler&             masm;            // No '_' suffix - too tedious...
 
     AllocatableGeneralRegisterSet availGPR_;
-    AllocatableFloatRegisterSet availFPU_;
+    AllocatableFloatRegisterSet   availFPU_;
 #ifdef DEBUG
-    bool                        scratchRegisterTaken_;
+    bool                          scratchRegisterTaken_;
+    AllocatableGeneralRegisterSet allGPR_;       // The registers available to the compiler
+    AllocatableFloatRegisterSet   allFPU_;       //   after removing ScratchReg, HeapReg, etc
 #endif
 
     Vector<Local, 8, SystemAllocPolicy> localInfo_;
@@ -2027,6 +2029,50 @@ class BaseCompiler
     Stk& peek(uint32_t relativeDepth) {
         return stk_[stk_.length()-1-relativeDepth];
     }
+
+#ifdef DEBUG
+    // Check that we're not leaking registers by comparing the
+    // state of the stack + available registers with the set of
+    // all available registers.
+
+    // Call this before compiling any code.
+    void setupRegisterLeakCheck() {
+        allGPR_ = availGPR_;
+        allFPU_ = availFPU_;
+    }
+
+    // Call this between opcodes.
+    void performRegisterLeakCheck() {
+        AllocatableGeneralRegisterSet knownGPR_ = availGPR_;
+        AllocatableFloatRegisterSet knownFPU_ = availFPU_;
+        for (size_t i = 0 ; i < stk_.length() ; i++) {
+	    Stk& item = stk_[i];
+	    switch (item.kind_) {
+	      case Stk::RegisterI32:
+		knownGPR_.add(item.i32reg());
+		break;
+	      case Stk::RegisterI64:
+#ifdef JS_PUNBOX64
+		knownGPR_.add(item.i64reg().reg);
+#else
+		knownGPR_.add(item.i64reg().high);
+		knownGPR_.add(item.i64reg().low);
+#endif
+		break;
+	      case Stk::RegisterF32:
+		knownFPU_.add(item.f32reg());
+		break;
+	      case Stk::RegisterF64:
+		knownFPU_.add(item.f64reg());
+		break;
+	      default:
+		break;
+	    }
+	}
+	MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
+	MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
+    }
+#endif
 
     ////////////////////////////////////////////////////////////
     //
@@ -6411,6 +6457,32 @@ BaseCompiler::emitSelect()
         break;
       }
       case ValType::I64: {
+#ifdef JS_CODEGEN_X86
+        // There may be as many as four Int64 values in registers at a time: two
+        // for the latent branch operands, and two for the true/false values we
+        // normally pop before executing the branch.  On x86 this is one value
+        // too many, so we need to generate more complicated code here, and for
+        // simplicity's sake we do so even if the branch operands are not Int64.
+        // However, the resulting control flow diamond is complicated since the
+        // arms of the diamond will have to stay synchronized with respect to
+        // their evaluation stack and regalloc state.  To simplify further, we
+        // use a double branch and a temporary boolean value for now.
+        RegI32 tmp = needI32();
+        loadConstI32(tmp, 0);
+        emitBranchPerform(&b);
+        loadConstI32(tmp, 1);
+        masm.bind(&done);
+
+        Label trueValue;
+        RegI64 r0, r1;
+        pop2xI64(&r0, &r1);
+        masm.branch32(Assembler::Equal, tmp, Imm32(0), &trueValue);
+        moveI64(r1, r0);
+        masm.bind(&trueValue);
+        freeI32(tmp);
+        freeI64(r1);
+        pushI64(r0);
+#else
         RegI64 r0, r1;
         pop2xI64(&r0, &r1);
         emitBranchPerform(&b);
@@ -6418,6 +6490,7 @@ BaseCompiler::emitSelect()
         masm.bind(&done);
         freeI64(r1);
         pushI64(r0);
+#endif
         break;
       }
       case ValType::F32: {
@@ -6598,6 +6671,10 @@ BaseCompiler::emitBody()
     for (;;) {
 
         Nothing unused_a, unused_b;
+
+#ifdef DEBUG
+        performRegisterLeakCheck();
+#endif
 
 #define emitBinary(doEmit, type) \
         iter_.readBinary(type, &unused_a, &unused_b) && (deadCode_ || (doEmit(), true))
@@ -7339,6 +7416,10 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
     availGPR_.take(ScratchRegX86);
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     availGPR_.take(HeapReg);
+#endif
+
+#ifdef DEBUG
+    setupRegisterLeakCheck();
 #endif
 }
 

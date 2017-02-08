@@ -19,7 +19,8 @@ class FrameParser;
 class FlacTrackDemuxer;
 
 
-class FlacDemuxer : public MediaDataDemuxer {
+class FlacDemuxer : public MediaDataDemuxer
+{
 public:
   // MediaDataDemuxer interface.
   explicit FlacDemuxer(MediaResource* aSource);
@@ -40,7 +41,8 @@ private:
   RefPtr<FlacTrackDemuxer> mTrackDemuxer;
 };
 
-class FlacTrackDemuxer : public MediaTrackDemuxer {
+class FlacTrackDemuxer : public MediaTrackDemuxer
+{
 public:
   explicit FlacTrackDemuxer(MediaResource* aSource);
 
@@ -71,7 +73,8 @@ private:
   // Fast approximate seeking to given time.
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);
 
-  // Seeks by scanning the stream up to the given time for more accurate results.
+  // Seeks by scanning the stream up to the given time for more accurate
+  // results.
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
 
   // Finds the next valid frame and return it.

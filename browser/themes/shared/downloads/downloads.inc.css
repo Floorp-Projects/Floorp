@@ -232,6 +232,48 @@ richlistitem[type="download"]:last-child {
   margin: 4px 0 calc(1em / var(--downloads-item-font-size-factor) - 1em);
 }
 
+/* The following rules control which message is shown under the name of the
+   download, using a set of elements that share the class ".downloadDetails".
+   At any given time, only one of these elements is displayed. We use a set of
+   rules to hide the elements that shouldn't be displayed in each case. */
+
+/* The full status message is only displayed in the Downloads View. */
+.downloadDetailsFull {
+  display: none;
+}
+
+/* When hovering the mouse pointer over the item, instead of the normal message
+   we display a more detailed one. */
+@item@:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+@item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover {
+  display: none;
+}
+
+/* When hovering the action button in particular, instead of the usual hover
+   message we display the command associated with the button. */
+@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+@item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadButtonLabels {
+  display: none;
+}
+
+/* When hovering the main area of a finished download whose target exists,
+   instead of the usual hover message we display the "Open File" command. */
+@itemFinished@[exists] > .downloadMainArea:hover > .downloadContainer > .downloadDetailsHover,
+@itemNotFinished@ > .downloadMainArea > .downloadContainer > .downloadOpenFile,
+@item@:not([exists]) > .downloadMainArea > .downloadContainer > .downloadOpenFile,
+.downloadMainArea:not(:hover) > .downloadContainer > .downloadOpenFile {
+  display: none;
+}
+
+/* When hovering items blocked by Application Reputation, instead of the other
+   hover messages we display the "Show more information" label. */
+@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+@item@[verdict] > .downloadMainArea > .downloadContainer > .downloadButtonLabels,
+@item@:not([verdict]) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo,
+@item@:not(:hover) > .downloadMainArea > .downloadContainer > .downloadShowMoreInfo {
+  display: none;
+}
+
 @item@[verdict] > toolbarseparator {
   visibility: hidden;
 }

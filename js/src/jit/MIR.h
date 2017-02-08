@@ -30,7 +30,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/SharedMem.h"
-#include "vm/TypedArrayCommon.h"
+#include "vm/TypedArrayObject.h"
 #include "vm/UnboxedObject.h"
 
 // Undo windows.h damage on Win64

@@ -22,8 +22,8 @@
 # include <valgrind/memcheck.h>
 #endif
 
+#include "jit/AtomicOperations.h"
 #include "vm/SharedMem.h"
-#include "vm/TypedArrayCommon.h"
 #include "wasm/AsmJS.h"
 #include "wasm/WasmTypes.h"
 

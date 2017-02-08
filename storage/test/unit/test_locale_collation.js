@@ -232,11 +232,9 @@ function setup() {
   gUtf16Conn = createUtf16Database();
   initTableWithStrings(gStrings, gUtf16Conn);
 
-  let localeSvc = Cc["@mozilla.org/intl/nslocaleservice;1"].
-                  getService(Ci.nsILocaleService);
   let collFact = Cc["@mozilla.org/intl/collation-factory;1"].
                  createInstance(Ci.nsICollationFactory);
-  gLocaleCollation = collFact.CreateCollation(localeSvc.getApplicationLocale());
+  gLocaleCollation = collFact.CreateCollation();
 }
 
 // Test Runs

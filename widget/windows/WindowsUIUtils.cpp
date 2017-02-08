@@ -5,7 +5,8 @@
 
 #include <windows.h>
 #include <winsdkver.h>
-#include "mozwrlbase.h"
+#include <wrl.h>
+
 #include "nsServiceManagerUtils.h"
 
 #include "WindowsUIUtils.h"
@@ -179,4 +180,3 @@ WindowsUIUtils::UpdateTabletModeState()
 
   return NS_OK;
 }
-

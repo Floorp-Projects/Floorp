@@ -2318,6 +2318,11 @@ SeekingState::SeekCompleted()
     // need to set these flags explicitly when seeking to the end.
     mMaster->mAudioCompleted = true;
     mMaster->mVideoCompleted = true;
+
+    // There might still be a pending audio request when doing video-only or
+    // next-frame seek. Discard it so we won't break the invariants of the
+    // COMPLETED state by adding audio samples to a finished queue.
+    mMaster->mAudioDataRequest.DisconnectIfExists();
   }
 
   // Cache mTarget for mSeekJob.Resolve() below will reset it.

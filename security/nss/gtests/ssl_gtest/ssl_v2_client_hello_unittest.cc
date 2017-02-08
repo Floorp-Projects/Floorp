@@ -23,7 +23,7 @@ namespace nss_test {
 // Replaces the client hello with an SSLv2 version once.
 class SSLv2ClientHelloFilter : public PacketFilter {
  public:
-  SSLv2ClientHelloFilter(TlsAgent* client, uint16_t version)
+  SSLv2ClientHelloFilter(std::shared_ptr<TlsAgent>& client, uint16_t version)
       : replaced_(false),
         client_(client),
         version_(version),
@@ -121,7 +121,7 @@ class SSLv2ClientHelloFilter : public PacketFilter {
 
     // Update the client random so that the handshake succeeds.
     SECStatus rv = SSLInt_UpdateSSLv2ClientRandom(
-        client_->ssl_fd(), challenge.data(), challenge.size(),
+        client_.lock()->ssl_fd(), challenge.data(), challenge.size(),
         output->data() + hdr_len, output->len() - hdr_len);
     EXPECT_EQ(SECSuccess, rv);
 
@@ -130,7 +130,7 @@ class SSLv2ClientHelloFilter : public PacketFilter {
 
  private:
   bool replaced_;
-  TlsAgent* client_;
+  std::weak_ptr<TlsAgent> client_;
   uint16_t version_;
   uint8_t pad_len_;
   uint8_t reported_pad_len_;
@@ -148,7 +148,7 @@ class SSLv2ClientHelloTestF : public TlsConnectTestBase {
 
   void SetUp() {
     TlsConnectTestBase::SetUp();
-    filter_ = new SSLv2ClientHelloFilter(client_, version_);
+    filter_ = std::make_shared<SSLv2ClientHelloFilter>(client_, version_);
     client_->SetPacketFilter(filter_);
   }
 
@@ -185,7 +185,7 @@ class SSLv2ClientHelloTestF : public TlsConnectTestBase {
   void SetSendEscape(bool send_escape) { filter_->SetSendEscape(send_escape); }
 
  private:
-  SSLv2ClientHelloFilter* filter_;
+  std::shared_ptr<SSLv2ClientHelloFilter> filter_;
 };
 
 // Parameterized version of SSLv2ClientHelloTestF we can

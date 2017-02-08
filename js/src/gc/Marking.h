@@ -57,13 +57,13 @@ class MarkStack
 {
     friend class GCMarker;
 
-    UnprotectedData<uintptr_t*> stack_;
-    UnprotectedData<uintptr_t*> tos_;
-    UnprotectedData<uintptr_t*> end_;
+    ActiveThreadData<uintptr_t*> stack_;
+    ActiveThreadData<uintptr_t*> tos_;
+    ActiveThreadData<uintptr_t*> end_;
 
     // The capacity we start with and reset() to.
-    UnprotectedData<size_t> baseCapacity_;
-    UnprotectedData<size_t> maxCapacity_;
+    ActiveThreadData<size_t> baseCapacity_;
+    ActiveThreadData<size_t> maxCapacity_;
 
   public:
     explicit MarkStack(size_t maxCapacity)
@@ -336,29 +336,29 @@ class GCMarker : public JSTracer
     MarkStack stack;
 
     /* The color is only applied to objects and functions. */
-    UnprotectedData<uint32_t> color;
+    ActiveThreadData<uint32_t> color;
 
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
-    UnprotectedData<js::gc::Arena*> unmarkedArenaStackTop;
+    ActiveThreadData<js::gc::Arena*> unmarkedArenaStackTop;
 
     /*
      * If the weakKeys table OOMs, disable the linear algorithm and fall back
      * to iterating until the next GC.
      */
-    UnprotectedData<bool> linearWeakMarkingDisabled_;
+    ActiveThreadData<bool> linearWeakMarkingDisabled_;
 
 #ifdef DEBUG
     /* Count of arenas that are currently in the stack. */
-    UnprotectedData<size_t> markLaterArenas;
+    ActiveThreadData<size_t> markLaterArenas;
 
     /* Assert that start and stop are called with correct ordering. */
-    UnprotectedData<bool> started;
+    ActiveThreadData<bool> started;
 
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
      */
-    UnprotectedData<bool> strictCompartmentChecking;
+    ActiveThreadData<bool> strictCompartmentChecking;
 #endif // DEBUG
 };
 

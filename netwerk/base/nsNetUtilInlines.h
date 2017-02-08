@@ -177,7 +177,9 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
          aSecurityFlags,
          aContentPolicyType,
          getter_AddRefs(channel));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (aLoadGroup) {
     rv = channel->SetLoadGroup(aLoadGroup);

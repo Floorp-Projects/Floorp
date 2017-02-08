@@ -140,7 +140,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) override;
 
     // EncodingDeclarationHandler
-    // http://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
+    // https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
     /**
      * Tree builder uses this to report a late <meta charset>
      */

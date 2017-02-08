@@ -311,9 +311,15 @@ nsPluginArray::Observe(nsISupports *aSubject, const char *aTopic,
 bool
 nsPluginArray::AllowPlugins() const
 {
-  nsCOMPtr<nsIDocShell> docShell = mWindow ? mWindow->GetDocShell() : nullptr;
+  if (!mWindow) {
+    return false;
+  }
+  nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+  if (!doc) {
+    return false;
+  }
 
-  return docShell && docShell->PluginsAllowedInCurrentDoc();
+  return doc->GetAllowPlugins();
 }
 
 static bool

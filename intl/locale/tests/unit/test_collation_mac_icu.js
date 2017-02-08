@@ -20,11 +20,9 @@ function run_test()
   ];
 
   function test(locale, expected) {
-    var localeSvc = Cc["@mozilla.org/intl/nslocaleservice;1"].
-      getService(Ci.nsILocaleService);
     var collator = Cc["@mozilla.org/intl/collation-factory;1"].
       createInstance(Ci.nsICollationFactory).
-      CreateCollation(localeSvc.newLocale(locale));
+      CreateCollationForLocale(locale);
     var strength = Ci.nsICollation.kCollationStrengthDefault;
     var actual = input.sort((x, y) => collator.compareString(strength, x,y));
     deepEqual(actual, expected, locale);

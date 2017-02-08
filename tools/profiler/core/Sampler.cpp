@@ -767,9 +767,9 @@ void PseudoStack::flushSamplerOnJSShutdown()
 ////////////////////////////////////////////////////////////////////////
 
 static
-void addDynamicTag(ThreadInfo& aInfo, char aTagName, const char* aStr)
+void addDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
 {
-  aInfo.addTag(ProfileEntry(aTagName, ""));
+  aInfo.addTag(ProfileEntry::CodeLocation(""));
   // Add one to store the null termination
   size_t strLen = strlen(aStr) + 1;
   for (size_t j = 0; j < strLen;) {
@@ -782,7 +782,7 @@ void addDynamicTag(ThreadInfo& aInfo, char aTagName, const char* aStr)
     memcpy(text, &aStr[j], len);
     j += sizeof(void*)/sizeof(char);
     // Cast to *((void**) to pass the text data to a void*
-    aInfo.addTag(ProfileEntry('d', *((void**)(&text[0]))));
+    aInfo.addTag(ProfileEntry::EmbeddedString(*((void**)(&text[0]))));
   }
 }
 
@@ -797,14 +797,14 @@ void addPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
 
   int lineno = -1;
 
-  // First entry has tagName 's' (start)
+  // First entry has kind CodeLocation
   // Check for magic pointer bit 1 to indicate copy
   const char* sampleLabel = entry.label();
   if (entry.isCopyLabel()) {
-    // Store the string using 1 or more 'd' (dynamic) tags
+    // Store the string using 1 or more EmbeddedString tags
     // that will happen to the preceding tag
 
-    addDynamicTag(aInfo, 'c', sampleLabel);
+    addDynamicCodeLocationTag(aInfo, sampleLabel);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -827,7 +827,7 @@ void addPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
       lineno = entry.line();
     }
   } else {
-    aInfo.addTag(ProfileEntry('c', sampleLabel));
+    aInfo.addTag(ProfileEntry::CodeLocation(sampleLabel));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the
     // line for js entries as well.
@@ -837,7 +837,7 @@ void addPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
   }
 
   if (lineno != -1) {
-    aInfo.addTag(ProfileEntry('n', lineno));
+    aInfo.addTag(ProfileEntry::LineNumber(lineno));
   }
 
   uint32_t category = entry.category();
@@ -845,7 +845,7 @@ void addPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
   MOZ_ASSERT(!(category & StackEntry::FRAME_LABEL_COPY));
 
   if (category) {
-    aInfo.addTag(ProfileEntry('y', (int)category));
+    aInfo.addTag(ProfileEntry::Category((int)category));
   }
 }
 
@@ -928,7 +928,7 @@ mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 
   // Start the sample with a root entry.
-  aInfo.addTag(ProfileEntry('s', "(root)"));
+  aInfo.addTag(ProfileEntry::Sample("(root)"));
 
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to
@@ -1012,7 +1012,7 @@ mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
 
       // Stringifying non-wasm JIT frames is delayed until streaming
       // time. To re-lookup the entry in the JitcodeGlobalTable, we need to
-      // store the JIT code address ('J') in the circular buffer.
+      // store the JIT code address (OptInfoAddr) in the circular buffer.
       //
       // Note that we cannot do this when we are sychronously sampling the
       // current thread; that is, when called from profiler_get_backtrace. The
@@ -1020,16 +1020,16 @@ mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
       // amount of time, such as in nsRefreshDriver. Problematically, the
       // stored backtrace may be alive across a GC during which the profiler
       // itself is disabled. In that case, the JS engine is free to discard
-      // its JIT code. This means that if we inserted such 'J' entries into
-      // the buffer, nsRefreshDriver would now be holding on to a backtrace
-      // with stale JIT code return addresses.
+      // its JIT code. This means that if we inserted such OptInfoAddr entries
+      // into the buffer, nsRefreshDriver would now be holding on to a
+      // backtrace with stale JIT code return addresses.
       if (aSample->isSamplingCurrentThread ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        addDynamicTag(aInfo, 'c', jsFrame.label);
+        addDynamicCodeLocationTag(aInfo, jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aInfo.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
+        aInfo.addTag(ProfileEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
       }
 
       jsIndex--;
@@ -1041,7 +1041,7 @@ mergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
       aInfo
-        .addTag(ProfileEntry('l', (void*)aNativeStack.pc_array[nativeIndex]));
+        .addTag(ProfileEntry::NativeLeafAddr((void*)aNativeStack.pc_array[nativeIndex]));
     }
     if (nativeIndex >= 0) {
       nativeIndex--;
@@ -1299,7 +1299,7 @@ doSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
 
 #ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
-    aInfo.addTag(ProfileEntry('l', (void*)aSample->pc));
+    aInfo.addTag(ProfileEntry::NativeLeafAddr((void*)aSample->pc));
   }
 #endif
 }
@@ -1316,10 +1316,10 @@ Sampler::InplaceTick(TickSample* sample)
 {
   ThreadInfo& currThreadInfo = *sample->threadInfo;
 
-  currThreadInfo.addTag(ProfileEntry('T', currThreadInfo.ThreadId()));
+  currThreadInfo.addTag(ProfileEntry::ThreadId(currThreadInfo.ThreadId()));
 
   mozilla::TimeDuration delta = sample->timestamp - sStartTime;
-  currThreadInfo.addTag(ProfileEntry('t', delta.ToMilliseconds()));
+  currThreadInfo.addTag(ProfileEntry::Time(delta.ToMilliseconds()));
 
   PseudoStack* stack = currThreadInfo.Stack();
 
@@ -1341,27 +1341,27 @@ Sampler::InplaceTick(TickSample* sample)
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
       currThreadInfo.addStoredMarker(marker);
-      currThreadInfo.addTag(ProfileEntry('m', marker));
+      currThreadInfo.addTag(ProfileEntry::Marker(marker));
     }
   }
 
   if (currThreadInfo.GetThreadResponsiveness()->HasData()) {
     mozilla::TimeDuration delta = currThreadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
-    currThreadInfo.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+    currThreadInfo.addTag(ProfileEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
   if (sample->rssMemory != 0) {
-    currThreadInfo.addTag(ProfileEntry('R', static_cast<double>(sample->rssMemory)));
+    currThreadInfo.addTag(ProfileEntry::ResidentMemory(static_cast<double>(sample->rssMemory)));
   }
 
   // ussMemory is equal to 0 when we are not recording.
   if (sample->ussMemory != 0) {
-    currThreadInfo.addTag(ProfileEntry('U', static_cast<double>(sample->ussMemory)));
+    currThreadInfo.addTag(ProfileEntry::UnsharedMemory(static_cast<double>(sample->ussMemory)));
   }
 
   if (sLastFrameNumber != sFrameNumber) {
-    currThreadInfo.addTag(ProfileEntry('f', sFrameNumber));
+    currThreadInfo.addTag(ProfileEntry::FrameNumber(sFrameNumber));
     sLastFrameNumber = sFrameNumber;
   }
 }
@@ -1456,3 +1456,28 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
   aInfo->SetProfile(mBuffer);
 }
 
+size_t
+Sampler::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+
+      n += info->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - memory pointed to by the elements within mBuffer
+  // - sRegisteredThreads
+  // - mThreadNameFilters
+  // - mFeatures
+
+  return n;
+}

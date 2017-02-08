@@ -9,6 +9,7 @@
 
 #include "LulPlatformMacros.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/MemoryReporting.h"
 
 // LUL: A Lightweight Unwind Library.
 // This file provides the end-user (external) interface for LUL.
@@ -352,6 +353,8 @@ public:
   // Possibly show the statistics.  This may not be called from any
   // registered sampling thread, since it involves I/O.
   void MaybeShowStats();
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const;
 
 private:
   // The statistics counters at the point where they were last printed.
