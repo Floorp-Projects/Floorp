@@ -9,7 +9,9 @@
 #include "mozilla/Array.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TaggedAnonymousMemory.h"
+#include "mozilla/XorShift128PlusRNG.h"
 
 #include "jsfriendapi.h"
 #include "jsmath.h"
@@ -417,11 +419,17 @@ class ProcessExecutableMemory
     // ExecutableCodePageSize.
     uint8_t* base_;
 
-    // These fields should only be accessed while we hold the lock.
-    // pagesAllocated_ is an Atomic so that bytesAllocated does not have to
-    // take this lock.
+    // The fields below should only be accessed while we hold the lock.
     Mutex lock_;
+
+    // pagesAllocated_ is an Atomic so that bytesAllocated does not have to
+    // take the lock.
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> pagesAllocated_;
+
+    // Page where we should try to allocate next.
+    size_t cursor_;
+
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> rng_;
     PageBitSet<MaxCodePages> pages_;
 
   public:
@@ -429,6 +437,8 @@ class ProcessExecutableMemory
       : base_(nullptr),
         lock_(mutexid::ProcessExecutableRegion),
         pagesAllocated_(0),
+        cursor_(0),
+        rng_(),
         pages_()
     {}
 
@@ -443,6 +453,10 @@ class ProcessExecutableMemory
             return false;
 
         base_ = static_cast<uint8_t*>(p);
+
+        mozilla::Array<uint64_t, 2> seed;
+        GenerateXorShift128PlusSeed(seed);
+        rng_.emplace(seed[0], seed[1]);
         return true;
     }
 
@@ -461,6 +475,7 @@ class ProcessExecutableMemory
         MOZ_ASSERT(pagesAllocated_ == 0);
         DeallocateProcessExecutableMemory(base_, MaxCodeBytesPerProcess);
         base_ = nullptr;
+        rng_.reset();
         MOZ_ASSERT(!initialized());
     }
 
@@ -479,12 +494,8 @@ ProcessExecutableMemory::allocate(size_t bytes, ProtectionSetting protection)
     MOZ_ASSERT(initialized());
     MOZ_ASSERT(bytes > 0);
     MOZ_ASSERT((bytes % ExecutableCodePageSize) == 0);
-    MOZ_ASSERT(bytes <= MaxCodeBytesPerProcess);
 
     size_t numPages = bytes / ExecutableCodePageSize;
-
-    // Generate the seed before taking the lock.
-    uint64_t seed = js::GenerateRandomSeed();
 
     // Take the lock and try to allocate.
     void* p = nullptr;
@@ -496,9 +507,10 @@ ProcessExecutableMemory::allocate(size_t bytes, ProtectionSetting protection)
         if (pagesAllocated_ + numPages >= MaxCodePages)
             return nullptr;
 
-        // Start at a random location, for less predictable addresses. It also
-        // makes it more likely we will land on a free page.
-        size_t page = seed % MaxCodePages;
+        MOZ_ASSERT(bytes <= MaxCodeBytesPerProcess);
+
+        // Maybe skip a page to make allocations less predictable.
+        size_t page = cursor_ + (rng_.ref().next() % 2);
 
         for (size_t i = 0; i < MaxCodePages; i++) {
             // Make sure page + numPages - 1 is a valid index.
@@ -523,6 +535,12 @@ ProcessExecutableMemory::allocate(size_t bytes, ProtectionSetting protection)
 
             pagesAllocated_ += numPages;
             MOZ_ASSERT(pagesAllocated_ <= MaxCodePages);
+
+            // If we allocated a small number of pages, move cursor_ to the
+            // next page. We don't do this for larger allocations to avoid
+            // skipping a large number of small holes.
+            if (numPages <= 2)
+                cursor_ = page + numPages;
 
             p = base_ + page * ExecutableCodePageSize;
             break;
@@ -559,6 +577,11 @@ ProcessExecutableMemory::deallocate(void* addr, size_t bytes)
 
     for (size_t i = 0; i < numPages; i++)
         pages_.remove(firstPage + i);
+
+    // Move the cursor back so we can reuse pages instead of fragmenting the
+    // whole region.
+    if (firstPage < cursor_)
+        cursor_ = firstPage;
 }
 
 static ProcessExecutableMemory execMemory;
