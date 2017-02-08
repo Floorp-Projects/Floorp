@@ -39,6 +39,7 @@ public:
   SetAnimations(AnimationArray& aAnimations,
                 InfallibleTArray<AnimData>& aAnimData,
                 StyleAnimationValue& aBaseAnimationStyle);
+  static uint64_t GetNextCompositorAnimationsId();
 };
 
 } // namespace layers

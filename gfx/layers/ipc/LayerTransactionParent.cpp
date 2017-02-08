@@ -528,7 +528,7 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
   } else {
     layer->SetMaskLayer(nullptr);
   }
-  layer->SetAnimations(common.animations());
+  layer->SetCompositorAnimations(common.compositorAnimations());
   layer->SetScrollMetadata(common.scrollMetadata());
   layer->SetDisplayListLog(common.displayListLog().get());
 
