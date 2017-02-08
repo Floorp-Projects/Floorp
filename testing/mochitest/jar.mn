@@ -42,5 +42,6 @@ mochikit.jar:
   content/tests/SimpleTest/paint_listener.js (tests/SimpleTest/paint_listener.js)
   content/tests/SimpleTest/docshell_helpers.js (../../docshell/test/chrome/docshell_helpers.js)
   content/tests/BrowserTestUtils/content-task.js (BrowserTestUtils/content/content-task.js)
+  content/tests/BrowserTestUtils/content-about-page-utils.js (BrowserTestUtils/content/content-about-page-utils.js)
   content/tests/BrowserTestUtils/content-utils.js (BrowserTestUtils/content/content-utils.js)
 
