@@ -197,11 +197,8 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-Sampler::Sampler(int aEntrySize,
-                 const char** aFeatures, uint32_t aFeatureCount,
+Sampler::Sampler(const char** aFeatures, uint32_t aFeatureCount,
                  uint32_t aFilterCount)
-
-  : mBuffer(new ProfileBuffer(aEntrySize))
 {
   MOZ_COUNT_CTOR(Sampler);
 
@@ -279,12 +276,6 @@ Sampler::~Sampler()
     mozilla::tasktracer::StopLogging();
   }
 #endif
-}
-
-void
-Sampler::DeleteExpiredMarkers()
-{
-  mBuffer->deleteExpiredStoredMarkers();
 }
 
 void
@@ -1255,15 +1246,6 @@ Sampler::GetBacktrace()
   return profile;
 }
 
-void
-Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
-                       uint32_t *aGeneration)
-{
-  *aCurrentPosition = mBuffer->mWritePos;
-  *aTotalSize = gEntrySize;
-  *aGeneration = mBuffer->mGeneration;
-}
-
 static bool
 ThreadSelected(const char* aThreadName)
 {
@@ -1300,14 +1282,13 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
     return;
   }
 
-  aInfo->SetProfile(mBuffer);
+  aInfo->SetProfile(gBuffer);
 }
 
 size_t
 Sampler::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
 
   {
     StaticMutexAutoLock lock(sRegisteredThreadsMutex);
