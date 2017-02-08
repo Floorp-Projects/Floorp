@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title>Keyframe handling tests</title>
+<title>Effect value computation tests when keyframes overlap</title>
 <link rel="help" href="https://w3c.github.io/web-animations/#the-effect-value-of-a-keyframe-animation-effect">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -69,46 +69,5 @@ test(function(t) {
 }, 'Overlapping keyframes between 0 and 1 use the appropriate value on each'
    + ' side of the overlap point');
 
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ visibility: ['hidden','visible'] },
-                         { duration: 100 * MS_PER_SEC, fill: 'both' });
-
-  anim.currentTime = 0;
-  assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress = 0.');
-
-  anim.currentTime = 10 * MS_PER_SEC + 1;
-  assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress > 0 due to linear easing.');
-
-  anim.finish();
-  assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress = 1.');
-
-}, "Test visibility clamping behavior.");
-
-test(function(t) {
-  var div = createDiv(t);
-  var anim = div.animate({ visibility: ['hidden', 'visible'] },
-                         { duration: 100 * MS_PER_SEC, fill: 'both',
-                           easing: 'cubic-bezier(0.25, -0.6, 0, 0.5)' });
-
-  anim.currentTime = 0;
-  assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress = 0.');
-
-  // Timing function is below zero. So we expected visibility is hidden.
-  anim.currentTime = 10 * MS_PER_SEC + 1;
-  assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress < 0 due to cubic-bezier easing.');
-
-  anim.currentTime = 60 * MS_PER_SEC;
-  assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress > 0 due to cubic-bezier easing.');
-
-}, "Test visibility clamping behavior with an easing that has a negative component");
-
-done();
 </script>
 </body>

@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsIWebVTTParserWrapper.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,6 +78,7 @@ WebVTTListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   if (mElement) {
     mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
   }
+  cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 

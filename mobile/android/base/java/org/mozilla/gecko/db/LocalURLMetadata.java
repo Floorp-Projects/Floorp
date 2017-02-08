@@ -34,17 +34,17 @@ public class LocalURLMetadata implements URLMetadata {
     private final Uri uriWithProfile;
 
     public LocalURLMetadata(String mProfile) {
-        uriWithProfile = DBUtils.appendProfileWithDefault(mProfile, URLMetadataTable.CONTENT_URI);
+        uriWithProfile = DBUtils.appendProfileWithDefault(mProfile, URLImageDataTable.CONTENT_URI);
     }
 
     // A list of columns in the table. It's used to simplify some loops for reading/writing data.
     private static final Set<String> COLUMNS;
     static {
         final HashSet<String> tempModel = new HashSet<>(4);
-        tempModel.add(URLMetadataTable.URL_COLUMN);
-        tempModel.add(URLMetadataTable.TILE_IMAGE_URL_COLUMN);
-        tempModel.add(URLMetadataTable.TILE_COLOR_COLUMN);
-        tempModel.add(URLMetadataTable.TOUCH_ICON_COLUMN);
+        tempModel.add(URLImageDataTable.URL_COLUMN);
+        tempModel.add(URLImageDataTable.TILE_IMAGE_URL_COLUMN);
+        tempModel.add(URLImageDataTable.TILE_COLOR_COLUMN);
+        tempModel.add(URLImageDataTable.TOUCH_ICON_COLUMN);
         COLUMNS = Collections.unmodifiableSet(tempModel);
     }
 
@@ -88,7 +88,7 @@ public class LocalURLMetadata implements URLMetadata {
                 final int bestSize = LoadFaviconResult.selectBestSizeFromList(sizes, preferredSize);
                 final String iconURL = icons.getString(Integer.toString(bestSize));
 
-                data.put(URLMetadataTable.TOUCH_ICON_COLUMN, iconURL);
+                data.put(URLImageDataTable.TOUCH_ICON_COLUMN, iconURL);
             }
         } catch (JSONException e) {
             Log.w(LOGTAG, "Exception processing touchIconList for LocalURLMetadata; ignoring.", e);
@@ -169,14 +169,14 @@ public class LocalURLMetadata implements URLMetadata {
             return Collections.unmodifiableMap(data);
         }
 
-        final String selection = DBUtils.computeSQLInClause(urlsToQuery.size(), URLMetadataTable.URL_COLUMN);
+        final String selection = DBUtils.computeSQLInClause(urlsToQuery.size(), URLImageDataTable.URL_COLUMN);
         List<String> columns = requestedColumns;
         // We need the url to build our final HashMap, so we force it to be included in the query.
-        if (!columns.contains(URLMetadataTable.URL_COLUMN)) {
+        if (!columns.contains(URLImageDataTable.URL_COLUMN)) {
             // The requestedColumns may be immutable (e.g. if the caller used Collections.singletonList), hence
             // we have to create a copy.
             columns = new ArrayList<String>(columns);
-            columns.add(URLMetadataTable.URL_COLUMN);
+            columns.add(URLImageDataTable.URL_COLUMN);
         }
 
         final Cursor cursor = cr.query(uriWithProfile,
@@ -191,7 +191,7 @@ public class LocalURLMetadata implements URLMetadata {
 
             do {
                 final Map<String, Object> metadata = fromCursor(cursor);
-                final String url = cursor.getString(cursor.getColumnIndexOrThrow(URLMetadataTable.URL_COLUMN));
+                final String url = cursor.getString(cursor.getColumnIndexOrThrow(URLImageDataTable.URL_COLUMN));
 
                 data.put(url, metadata);
                 cache.put(url, metadata);
@@ -230,8 +230,8 @@ public class LocalURLMetadata implements URLMetadata {
             Uri uri = uriWithProfile.buildUpon()
                                  .appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true")
                                  .build();
-            cr.update(uri, values, URLMetadataTable.URL_COLUMN + "=?", new String[] {
-                (String) data.get(URLMetadataTable.URL_COLUMN)
+            cr.update(uri, values, URLImageDataTable.URL_COLUMN + "=?", new String[] {
+                (String) data.get(URLImageDataTable.URL_COLUMN)
             });
         } catch (Exception ex) {
             Log.e(LOGTAG, "error saving", ex);

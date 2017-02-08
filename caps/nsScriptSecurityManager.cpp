@@ -732,14 +732,48 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         currentOtherURI->GetScheme(otherScheme);
 
         bool schemesMatch = scheme.Equals(otherScheme, stringComparator);
-        bool isSamePage;
+        bool isSamePage = false;
         // about: URIs are special snowflakes.
-        if (scheme.EqualsLiteral("about")) {
-            nsAutoCString module, otherModule;
-            isSamePage = schemesMatch &&
-                NS_SUCCEEDED(NS_GetAboutModuleName(currentURI, module)) &&
-                NS_SUCCEEDED(NS_GetAboutModuleName(currentOtherURI, otherModule)) &&
-                module.Equals(otherModule);
+        if (scheme.EqualsLiteral("about") && schemesMatch) {
+            nsAutoCString moduleName, otherModuleName;
+            // about: pages can always link to themselves:
+            isSamePage =
+              NS_SUCCEEDED(NS_GetAboutModuleName(currentURI, moduleName)) &&
+              NS_SUCCEEDED(NS_GetAboutModuleName(currentOtherURI, otherModuleName)) &&
+              moduleName.Equals(otherModuleName);
+            if (!isSamePage) {
+                // We will have allowed the load earlier if the source page has
+                // system principal. So we know the source has a content
+                // principal, and it's trying to link to something else.
+                // Linkable about: pages are always reachable, even if we hit
+                // the CheckLoadURIFlags call below.
+                // We punch only 1 other hole: iff the source is unlinkable,
+                // we let them link to other pages explicitly marked SAFE
+                // for content. This avoids world-linkable about: pages linking
+                // to non-world-linkable about: pages.
+                nsCOMPtr<nsIAboutModule> module, otherModule;
+                bool knowBothModules =
+                    NS_SUCCEEDED(NS_GetAboutModule(currentURI, getter_AddRefs(module))) &&
+                    NS_SUCCEEDED(NS_GetAboutModule(currentOtherURI, getter_AddRefs(otherModule)));
+                uint32_t aboutModuleFlags = 0;
+                uint32_t otherAboutModuleFlags = 0;
+                knowBothModules = knowBothModules &&
+                    NS_SUCCEEDED(module->GetURIFlags(currentURI, &aboutModuleFlags)) &&
+                    NS_SUCCEEDED(otherModule->GetURIFlags(currentOtherURI, &otherAboutModuleFlags));
+                if (knowBothModules) {
+                    isSamePage =
+                        !(aboutModuleFlags & nsIAboutModule::MAKE_LINKABLE) &&
+                        (otherAboutModuleFlags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT);
+                    if (isSamePage && otherAboutModuleFlags & nsIAboutModule::MAKE_LINKABLE) {
+                        //XXXgijs: this is a hack. The target will be nested
+                        // (with innerURI of moz-safe-about:whatever), and
+                        // the source isn't, so we won't pass if we finish
+                        // the loop. We *should* pass, though, so return here.
+                        // This hack can go away when bug 1228118 is fixed.
+                        return NS_OK;
+                    }
+                }
+            }
         } else {
             bool equalExceptRef = false;
             rv = currentURI->EqualsExceptRef(currentOtherURI, &equalExceptRef);

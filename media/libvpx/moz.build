@@ -39,7 +39,10 @@ elif CONFIG['CPU_ARCH'] == 'x86':
         CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.vpx += files['ARM_EXPORTS']
-    ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]
+    ASFLAGS += [
+        '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR,
+        '-I%s/libvpx' % OBJDIR,
+    ]
     CFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]
 
     arm_asm_files = files['ARM_SOURCES']
@@ -87,8 +90,6 @@ if CONFIG['OS_TARGET'] == 'Android':
         SOURCES += [
             '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
-
-    ASFLAGS += ['-I%s/libvpx' % OBJDIR]
 
 if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
     for f in SOURCES:
