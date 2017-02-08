@@ -271,8 +271,7 @@ struct AdditionalProperty
 struct KeyframeValueEntry
 {
   nsCSSPropertyID mProperty;
-  StyleAnimationValue mValue;
-  RefPtr<RawServoAnimationValue> mServoValue;
+  AnimationValue mValue;
 
   float mOffset;
   Maybe<ComputedTimingFunction> mTimingFunction;
@@ -704,7 +703,6 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       entry->mOffset = frame.mComputedOffset;
       entry->mProperty = value.mProperty;
       entry->mValue = value.mValue;
-      entry->mServoValue = value.mServoValue;
       entry->mTimingFunction = frame.mTimingFunction;
       entry->mComposite =
         frame.mComposite ? frame.mComposite.value() : aEffectComposite;
@@ -1168,7 +1166,7 @@ AppendInitialSegment(AnimationProperty* aAnimationProperty,
   segment->mFromKey        = 0.0f;
   segment->mFromComposite  = dom::CompositeOperation::Add;
   segment->mToKey          = aFirstEntry.mOffset;
-  segment->mToValue        = aFirstEntry.mValue;
+  segment->mToValue        = aFirstEntry.mValue.mGecko;
   segment->mToComposite    = aFirstEntry.mComposite;
 }
 
@@ -1179,7 +1177,7 @@ AppendFinalSegment(AnimationProperty* aAnimationProperty,
   AnimationPropertySegment* segment =
     aAnimationProperty->mSegments.AppendElement();
   segment->mFromKey        = aLastEntry.mOffset;
-  segment->mFromValue      = aLastEntry.mValue;
+  segment->mFromValue      = aLastEntry.mValue.mGecko;
   segment->mFromComposite  = aLastEntry.mComposite;
   segment->mToKey          = 1.0f;
   segment->mToComposite    = dom::CompositeOperation::Add;
@@ -1402,10 +1400,10 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
       animationProperty->mSegments.AppendElement();
     segment->mFromKey        = aEntries[i].mOffset;
     segment->mToKey          = aEntries[j].mOffset;
-    segment->mFromValue      = aEntries[i].mValue;
-    segment->mToValue        = aEntries[j].mValue;
-    segment->mServoFromValue = aEntries[i].mServoValue;
-    segment->mServoToValue   = aEntries[j].mServoValue;
+    segment->mFromValue      = aEntries[i].mValue.mGecko;
+    segment->mToValue        = aEntries[j].mValue.mGecko;
+    segment->mServoFromValue = aEntries[i].mValue.mServo;
+    segment->mServoToValue   = aEntries[j].mValue.mServo;
     segment->mTimingFunction = aEntries[i].mTimingFunction;
     segment->mFromComposite  = aEntries[i].mComposite;
     segment->mToComposite    = aEntries[j].mComposite;
@@ -1786,8 +1784,8 @@ GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
           double componentDistance = 0.0;
           if (StyleAnimationValue::ComputeDistance(
                 prop,
-                prevPacedValues[propIdx].mValue,
-                pacedValues[propIdx].mValue,
+                prevPacedValues[propIdx].mValue.mGecko,
+                pacedValues[propIdx].mValue.mGecko,
                 aStyleContext,
                 componentDistance)) {
             dist += componentDistance * componentDistance;
@@ -1800,8 +1798,8 @@ GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
         // no distance between the previous paced value and this value.
         Unused <<
           StyleAnimationValue::ComputeDistance(aPacedProperty,
-                                               prevPacedValues[0].mValue,
-                                               pacedValues[0].mValue,
+                                               prevPacedValues[0].mValue.mGecko,
+                                               pacedValues[0].mValue.mGecko,
                                                aStyleContext,
                                                dist);
       }
