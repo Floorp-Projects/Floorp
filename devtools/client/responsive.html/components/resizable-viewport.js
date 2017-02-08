@@ -30,10 +30,10 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
-    onRemoveDevice: PropTypes.func.isRequired,
+    onRemoveDeviceAssociation: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
+    onUpdateDeviceModal: PropTypes.func.isRequired,
   },
 
   getInitialState() {
@@ -114,7 +114,7 @@ module.exports = createClass({
       // the properties of the device on resize.  However, at the moment, there is no
       // way to edit dPR when a device is selected, and there is no UI at all for editing
       // UA, so it's important to keep doing this for now.
-      this.props.onRemoveDevice();
+      this.props.onRemoveDeviceAssociation();
     }
 
     this.setState({
@@ -135,7 +135,7 @@ module.exports = createClass({
       onContentResize,
       onResizeViewport,
       onRotateViewport,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
@@ -154,11 +154,11 @@ module.exports = createClass({
       },
       ViewportToolbar({
         devices,
-        selectedDevice: viewport.device,
+        viewport,
         onChangeDevice,
         onResizeViewport,
         onRotateViewport,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       }),
       dom.div(
         {

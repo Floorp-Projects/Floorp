@@ -270,6 +270,7 @@ class CommandBase(object):
         self.config["build"].setdefault("debug-mozjs", False)
         self.config["build"].setdefault("ccache", "")
         self.config["build"].setdefault("rustflags", "")
+        self.config["build"].setdefault("incremental", False)
 
         self.config.setdefault("android", {})
         self.config["android"].setdefault("sdk", "")
@@ -400,6 +401,8 @@ class CommandBase(object):
         if is_windows():
             if not os.environ.get("NATIVE_WIN32_PYTHON"):
                 env["NATIVE_WIN32_PYTHON"] = sys.executable
+            # Always build harfbuzz from source
+            env["HARFBUZZ_SYS_NO_PKG_CONFIG"] = "true"
 
         if not self.config["tools"]["system-rust"] \
                 or self.config["tools"]["rust-root"]:
@@ -427,6 +430,8 @@ class CommandBase(object):
             env["PATH"] = "%s%s%s" % (os.pathsep.join(extra_path), os.pathsep, env["PATH"])
 
         env["CARGO_HOME"] = self.config["tools"]["cargo-home-dir"]
+        if self.config["build"]["incremental"]:
+            env["CARGO_INCREMENTAL"] = "1"
 
         if extra_lib:
             if sys.platform == "darwin":

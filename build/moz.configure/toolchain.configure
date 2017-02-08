@@ -763,6 +763,8 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # Set CC_TYPE/CC_VERSION/HOST_CC_TYPE/HOST_CC_VERSION to allow
     # old-configure to do some of its still existing checks.
     if language == 'C':
+        set_config(
+            '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
         add_old_configure_assignment(
             '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
         add_old_configure_assignment(

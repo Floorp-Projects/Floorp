@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// For simd (currently x86_64/aarch64)
-#![cfg_attr(any(target_os = "linux", target_os = "android", target_os = "windows"), feature(heap_api))]
+// For SIMD
+#![feature(cfg_target_feature)]
+#![cfg_attr(any(target_os = "linux", target_os = "android"), feature(heap_api))]
 
-#![feature(alloc)]
+#![cfg_attr(any(target_os = "linux", target_os = "android"), feature(alloc))]
 #![feature(box_syntax)]
 #![feature(plugin)]
 #![feature(range_contains)]
@@ -14,6 +15,9 @@
 #![plugin(plugins)]
 
 #![deny(unsafe_code)]
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+extern crate alloc;
 
 extern crate app_units;
 #[macro_use]
@@ -62,7 +66,7 @@ extern crate serde_derive;
 extern crate servo_geometry;
 extern crate servo_url;
 #[macro_use] extern crate servo_atoms;
-#[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
+#[cfg(any(target_feature = "sse2", target_feature = "neon"))]
 extern crate simd;
 extern crate smallvec;
 extern crate style;

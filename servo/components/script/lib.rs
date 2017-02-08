@@ -7,7 +7,6 @@
 #![feature(const_fn)]
 #![feature(core_intrinsics)]
 #![feature(field_init_shorthand)]
-#![feature(more_struct_aliases)]
 #![feature(mpsc_select)]
 #![feature(nonzero)]
 #![feature(on_unimplemented)]
@@ -32,6 +31,7 @@ extern crate audio_video_metadata;
 #[macro_use]
 extern crate bitflags;
 extern crate bluetooth_traits;
+extern crate byteorder;
 extern crate canvas_traits;
 extern crate caseless;
 extern crate cookie as cookie_rs;
@@ -108,6 +108,7 @@ mod dom;
 pub mod fetch;
 pub mod layout_wrapper;
 mod mem;
+mod microtask;
 mod network_listener;
 pub mod origin;
 pub mod script_runtime;

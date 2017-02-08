@@ -251,8 +251,11 @@ public:
   // it drops the input samples. The decoder may be holding onto samples
   // that are required to decode samples that it expects to get in future.
   // This is called when the demuxer reaches end of stream.
-  // This function is asynchronous. The MediaDataDecoder shall resolve the
-  // pending DecodePromise will all drained samples.
+  // This function is asynchronous.
+  // The MediaDataDecoder shall resolve the pending DecodePromise with drained
+  // samples. Drain will be called multiple times until the resolved
+  // DecodePromise is empty which indicates that there are no more samples to
+  // drain.
   virtual RefPtr<DecodePromise> Drain() = 0;
 
   // Causes all samples in the decoding pipeline to be discarded. When this

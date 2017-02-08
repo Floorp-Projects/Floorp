@@ -27,6 +27,11 @@ function* test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
         });
       }
 
+      info(`BookmarkingUI.status is ${BookmarkingUI.status}`);
+      yield BrowserTestUtils.waitForCondition(
+        () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING,
+        "BookmarkingUI should not be updating");
+
       is(bookmarkStar.hasAttribute("starred"), !isNewBookmark,
          "Page should only be starred prior to popupshown if editing bookmark");
       is(bookmarkPanel.state, "closed", "Panel should be 'closed' to start test");

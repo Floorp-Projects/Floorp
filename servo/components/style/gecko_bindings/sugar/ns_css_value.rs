@@ -4,11 +4,19 @@
 
 //! Little helpers for `nsCSSValue`.
 
+use app_units::Au;
 use gecko_bindings::bindings::Gecko_CSSValue_Drop;
-use gecko_bindings::structs::{nsCSSValue, nsCSSUnit, nsCSSValue_Array};
+use gecko_bindings::bindings::Gecko_CSSValue_GetAbsoluteLength;
+use gecko_bindings::bindings::Gecko_CSSValue_GetCalc;
+use gecko_bindings::bindings::Gecko_CSSValue_GetPercentage;
+use gecko_bindings::bindings::Gecko_CSSValue_SetAbsoluteLength;
+use gecko_bindings::bindings::Gecko_CSSValue_SetCalc;
+use gecko_bindings::bindings::Gecko_CSSValue_SetPercentage;
+use gecko_bindings::structs::{nsCSSValue, nsCSSUnit, nsCSSValue_Array, nscolor};
 use std::mem;
 use std::ops::Index;
 use std::slice;
+use values::computed::LengthOrPercentage;
 
 impl nsCSSValue {
     /// Create a CSSValue with null unit, useful to be used as a return value.
@@ -26,6 +34,28 @@ impl nsCSSValue {
         unsafe { *self.mValue.mInt.as_ref() }
     }
 
+    /// Checks if it is an integer and returns it if so
+    pub fn integer(&self) -> Option<i32> {
+        if self.mUnit == nsCSSUnit::eCSSUnit_Integer ||
+           self.mUnit == nsCSSUnit::eCSSUnit_Enumerated ||
+           self.mUnit == nsCSSUnit::eCSSUnit_EnumColor {
+            Some(unsafe { *self.mValue.mInt.as_ref() })
+        } else {
+            None
+        }
+    }
+
+    /// Checks if it is an RGBA color, returning it if so
+    /// Only use it with colors set by SetColorValue(),
+    /// which always sets RGBA colors
+    pub fn color_value(&self) -> Option<nscolor> {
+        if self.mUnit == nsCSSUnit::eCSSUnit_RGBAColor {
+            Some(unsafe { *self.mValue.mColor.as_ref() })
+        } else {
+            None
+        }
+    }
+
     /// Returns this nsCSSValue value as a floating point value, unchecked in
     /// release builds.
     pub fn float_unchecked(&self) -> f32 {
@@ -41,6 +71,37 @@ impl nsCSSValue {
         let array = *self.mValue.mArray.as_ref();
         debug_assert!(!array.is_null());
         &*array
+    }
+
+    /// Sets LengthOrPercentage value to this nsCSSValue.
+    pub unsafe fn set_lop(&mut self, lop: LengthOrPercentage) {
+        match lop {
+            LengthOrPercentage::Length(au) => {
+                Gecko_CSSValue_SetAbsoluteLength(self, au.0)
+            }
+            LengthOrPercentage::Percentage(pc) => {
+                Gecko_CSSValue_SetPercentage(self, pc)
+            }
+            LengthOrPercentage::Calc(calc) => {
+                Gecko_CSSValue_SetCalc(self, calc.into())
+            }
+        }
+    }
+
+    /// Returns LengthOrPercentage value.
+    pub unsafe fn get_lop(&self) -> LengthOrPercentage {
+        match self.mUnit {
+            nsCSSUnit::eCSSUnit_Pixel => {
+                LengthOrPercentage::Length(Au(Gecko_CSSValue_GetAbsoluteLength(self)))
+            },
+            nsCSSUnit::eCSSUnit_Percent => {
+                LengthOrPercentage::Percentage(Gecko_CSSValue_GetPercentage(self))
+            },
+            nsCSSUnit::eCSSUnit_Calc => {
+                LengthOrPercentage::Calc(Gecko_CSSValue_GetCalc(self).into())
+            },
+            x => panic!("The unit should not be {:?}", x),
+        }
     }
 }
 
