@@ -117,7 +117,7 @@ public class FaviconView extends ImageView {
     @Override
     public void onDraw(Canvas canvas) {
         if (isDominantBorderEnabled) {
-            sBackgroundPaint.setColor(mDominantColor & 0x7FFFFFFF);
+            sBackgroundPaint.setColor(mDominantColor);
 
             if (areRoundCornersEnabled) {
                 canvas.drawRoundRect(mBackgroundRect, mBackgroundCornerRadius, mBackgroundCornerRadius, sBackgroundPaint);
