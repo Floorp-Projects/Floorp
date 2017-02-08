@@ -32,7 +32,6 @@
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
-#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
@@ -396,8 +395,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
     case eKeyDown: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyDown(keyEvent);
+      return KeyDown(internalEvent->AsKeyboardEvent());
     }
     // keyup
     case eKeyUp:
@@ -559,9 +557,9 @@ EditorEventListener::KeyUp(const WidgetKeyboardEvent* aKeyboardEvent)
 }
 
 nsresult
-EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyDown(const WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+  if (NS_WARN_IF(!aKeyboardEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
@@ -570,17 +568,13 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   }
 
   // XXX Why isn't this method check if it's consumed?
-  uint32_t keyCode = 0;
-  aKeyEvent->GetKeyCode(&keyCode);
-  if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
+  if (aKeyboardEvent->mKeyCode == NS_VK_SHIFT) {
     bool switchToRTL;
-    WidgetKeyboardEvent* keydownEvent =
-      aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-    if (IsCtrlShiftPressed(keydownEvent, switchToRTL)) {
+    if (IsCtrlShiftPressed(aKeyboardEvent, switchToRTL)) {
       mShouldSwitchTextDirection = true;
       mSwitchToRTL = switchToRTL;
     }
-  } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
+  } else if (aKeyboardEvent->mKeyCode != NS_VK_CONTROL) {
     // In case the user presses any other key besides Ctrl and Shift
     mShouldSwitchTextDirection = false;
   }
