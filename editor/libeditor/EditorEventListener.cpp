@@ -751,9 +751,11 @@ EditorEventListener::NotifyIMEOfMouseButtonEvent(
 
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, false);
+  WidgetMouseEvent* mouseEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
   return IMEStateManager::OnMouseButtonEventInEditor(presContext,
                                                      GetFocusedRootContent(),
-                                                     aMouseEvent);
+                                                     mouseEvent);
 }
 
 nsresult

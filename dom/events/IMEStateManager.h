@@ -142,7 +142,7 @@ public:
   // Returns true if IME consumes the event.  Otherwise, false.
   static bool OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                          nsIContent* aContent,
-                                         nsIDOMMouseEvent* aMouseEvent);
+                                         WidgetMouseEvent* aMouseEvent);
 
   // This method is called when user clicked in an editor.
   // aContent must be:
