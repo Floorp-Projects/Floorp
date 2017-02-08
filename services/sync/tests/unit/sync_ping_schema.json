@@ -76,7 +76,7 @@
       "additionalProperties": false,
       "properties": {
         "failureReason": { "$ref": "#/definitions/error" },
-        "name": { "enum": ["addons", "bookmarks", "clients", "forms", "history", "passwords", "prefs", "tabs"] },
+        "name": { "enum": ["addons", "bookmarks", "clients", "forms", "history", "passwords", "prefs", "tabs", "extension-storage"] },
         "took": { "type": "integer", "minimum": 1 },
         "status": { "type": "string" },
         "incoming": {

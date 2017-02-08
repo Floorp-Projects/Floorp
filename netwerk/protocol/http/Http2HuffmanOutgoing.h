@@ -12,7 +12,7 @@ struct HuffmanOutgoingEntry {
   uint8_t mLength;
 };
 
-static HuffmanOutgoingEntry HuffmanOutgoing[] = {
+static const HuffmanOutgoingEntry HuffmanOutgoing[] = {
   { 0x00001ff8, 13 },
   { 0x007fffd8, 23 },
   { 0x0fffffe2, 28 },

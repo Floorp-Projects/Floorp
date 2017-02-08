@@ -267,7 +267,6 @@ var AboutNetAndCertErrorListener = {
     chromeGlobal.addEventListener("AboutNetErrorLoad", this, false, true);
     chromeGlobal.addEventListener("AboutNetErrorOpenCaptivePortal", this, false, true);
     chromeGlobal.addEventListener("AboutNetErrorSetAutomatic", this, false, true);
-    chromeGlobal.addEventListener("AboutNetErrorOverride", this, false, true);
     chromeGlobal.addEventListener("AboutNetErrorResetPreferences", this, false, true);
   },
 
@@ -390,9 +389,6 @@ var AboutNetAndCertErrorListener = {
     case "AboutNetErrorSetAutomatic":
       this.onSetAutomatic(aEvent);
       break;
-    case "AboutNetErrorOverride":
-      this.onOverride(aEvent);
-      break;
     case "AboutNetErrorResetPreferences":
       this.onResetPreferences(aEvent);
       break;
@@ -453,11 +449,6 @@ var AboutNetAndCertErrorListener = {
 
     }
   },
-
-  onOverride(evt) {
-    let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
-    sendAsyncMessage("Browser:OverrideWeakCrypto", { uri: {host, port} });
-  }
 }
 
 AboutNetAndCertErrorListener.init(this);

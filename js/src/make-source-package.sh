@@ -184,7 +184,7 @@ INSTALL_EOF
 This directory contains SpiderMonkey ${MOZJS_MAJOR_VERSION}.
 
 This release is based on a revision of Mozilla ${MOZJS_MAJOR_VERSION}:
-  http://hg.mozilla.org/releases/
+  https://hg.mozilla.org/releases/
 The changes in the patches/ directory were applied.
 
 MDN hosts the latest SpiderMonkey ${MOZJS_MAJOR_VERSION} release notes:

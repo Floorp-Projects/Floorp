@@ -17,6 +17,9 @@
 // run_myipaddress_test();
 // run_failed_script_test();
 // run_isresolvable_test();
+
+"use strict";
+
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
@@ -166,7 +169,7 @@ resolveCallback.prototype = {
     return this;
   },
 
-  onProxyAvailable : function (req, uri, pi, status) {
+  onProxyAvailable : function (req, channel, pi, status) {
     this.nextFunction(pi);
   }
 };
@@ -496,14 +499,14 @@ TestResolveCallback.prototype = {
   },
 
   onProxyAvailable:
-  function TestResolveCallback_onProxyAvailable(req, uri, pi, status) {
-    dump("*** uri=" + uri.spec + ", status=" + status + "\n");
+  function TestResolveCallback_onProxyAvailable(req, channel, pi, status) {
+    dump("*** channelURI=" + channel.URI.spec + ", status=" + status + "\n");
 
     if (this.type == null) {
       do_check_eq(pi, null);
     } else {
       do_check_neq(req, null);
-      do_check_neq(uri, null);
+      do_check_neq(channel, null);
       do_check_eq(status, 0);
       do_check_neq(pi, null);
       check_proxy(pi, this.type, "foopy", 8080, 0, -1, true);
@@ -613,11 +616,11 @@ TestResolveCancelationCallback.prototype = {
   },
 
   onProxyAvailable:
-  function TestResolveCancelationCallback_onProxyAvailable(req, uri, pi, status) {
-    dump("*** uri=" + uri.spec + ", status=" + status + "\n");
+  function TestResolveCancelationCallback_onProxyAvailable(req, channel, pi, status) {
+    dump("*** channelURI=" + channel.URI.spec + ", status=" + status + "\n");
 
     do_check_neq(req, null);
-    do_check_neq(uri, null);
+    do_check_neq(channel, null);
     do_check_eq(status, Components.results.NS_ERROR_ABORT);
     do_check_eq(pi, null);
 
@@ -701,6 +704,7 @@ function host_filter_cb(proxy)
 var uriStrUseProxyList;
 var uriStrUseProxyList;
 var hostFilterList;
+var uriStrFilterList;
 
 function run_proxy_host_filters_test() {
   // Get prefs object from DOM

@@ -1,4 +1,4 @@
-// Mozilla has modified this file - see http://hg.mozilla.org/ for details.
+// Mozilla has modified this file - see https://hg.mozilla.org/ for details.
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

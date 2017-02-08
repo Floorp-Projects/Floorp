@@ -59,6 +59,19 @@ void ProfileBuffer::reset() {
   mReadPos = mWritePos = 0;
 }
 
+size_t
+ProfileBuffer::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += aMallocSizeOf(mEntries.get());
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mStoredMarkers
+
+  return n;
+}
+
 #define DYNAMIC_MAX_STRING 8192
 
 char* ProfileBuffer::processDynamicTag(int readPos,

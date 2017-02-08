@@ -53,9 +53,9 @@ class WidgetTouchEvent;
 // "layout.accessiblecaret.use_long_tap_injector" for the fake long-tap events.
 //
 // State transition diagram:
-// http://hg.mozilla.org/mozilla-central/raw-file/default/layout/base/doc/AccessibleCaretEventHubStates.png
+// https://hg.mozilla.org/mozilla-central/raw-file/default/layout/base/doc/AccessibleCaretEventHubStates.png
 // Source code of the diagram:
-// http://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.dot
+// https://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.dot
 //
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret

@@ -59,7 +59,7 @@
       switch (which) {
         case "curpos":
           // Update the time shown in the thumb.
-          this.positionValue = this.Utils.formatTime(newValue);
+          this.positionValue = this.Utils.formatTime(newValue, this.Utils.showHours);
           this.Utils.positionLabel.setAttribute("value", this.positionValue);
           // Update the value bar to match the thumb position.
           let percent = newValue / this.max;
@@ -223,6 +223,7 @@
                      "error", "suspend", "stalled",
                      "mozinterruptbegin", "mozinterruptend" ],
 
+      showHours: false,
       firstFrameShown : false,
       timeUpdateCount : 0,
       maxCurrentTimeSeen : 0,
@@ -245,6 +246,13 @@
           this.video.style.removeProperty("width");
         }
       },
+
+      get isControlBarHidden() {
+        return this.controlBar.hidden ||
+               this.controlBar.hideByAdjustment ||
+               this.controlBar.getAttribute("fadeout") === "true";
+      },
+
       suppressError : false,
 
       setupStatusFader(immediate) {
@@ -384,6 +392,16 @@
               value: true,
               writable: true
             },
+            resized: {
+              value: false,
+              writable: true
+            },
+            resizedHandler: {
+              value: () => {
+                control.minWidth = control.clientWidth;
+              },
+              writable: true
+            },
             hideByAdjustment: {
               set: (v) => {
                 if (v) {
@@ -410,7 +428,11 @@
         this.clickToPlay.minWidth = 48;
 
         if (this.positionDurationBox) {
-          this.positionDurationBox.minWidth -= this.durationSpan.minWidth;
+          this.durationSpan.resized = true;
+          this.positionDurationBox.resized = true;
+          this.positionDurationBox.resizedHandler = () => {
+            this.positionDurationBox.minWidth = this.positionDurationBox.clientWidth - this.durationSpan.clientWidth;
+          };
         }
 
         this.adjustControlSize();
@@ -526,7 +548,6 @@
             }
             break;
           case "loadedmetadata":
-            this.adjustControlSize();
             // If a <video> doesn't have any video data, treat it as <audio>
             // and show the controls (they won't fade back out)
             if (this.video instanceof HTMLVideoElement &&
@@ -536,11 +557,16 @@
               this.startFadeIn(this.controlBar);
               this.setFullscreenButtonState();
             }
-            this.showDuration(Math.round(this.video.duration * 1000));
+            this.showPosition(Math.round(this.video.currentTime * 1000), Math.round(this.video.duration * 1000));
+            if (this.positionDurationBox) {
+              this.positionDurationBox.resized = true;
+              this.durationSpan.resized = true;
+            }
             if (!this.isAudioOnly && !this.video.mozHasAudio) {
               this.muteButton.setAttribute("noAudio", "true");
               this.muteButton.setAttribute("disabled", "true");
             }
+            this.adjustControlSize();
             break;
           case "loadeddata":
             this.firstFrameShown = true;
@@ -735,7 +761,7 @@
         this.statusOverlay.setAttribute("error", error);
       },
 
-      formatTime(aTime) {
+      formatTime(aTime, showHours = false) {
         // Format the duration as "h:mm:ss" or "m:ss"
         aTime = Math.round(aTime / 1000);
         let hours = Math.floor(aTime / 3600);
@@ -745,7 +771,7 @@
         if (secs < 10) {
           secs = "0" + secs;
         }
-        if (hours) {
+        if (hours || showHours) {
           if (mins < 10) {
             mins = "0" + mins;
           }
@@ -808,6 +834,7 @@
         this.scrubber.durationValue = timeString;
 
         // If the duration is over an hour, thumb should show h:mm:ss instead of mm:ss
+        this.showHours = (duration >= 3600000);
 
         this.scrubber.max = duration;
         // XXX Can't set increment here, due to bug 473103. Also, doing so causes
@@ -884,7 +911,7 @@
 
         this.log("time update @ " + currentTime + "ms of " + duration + "ms");
 
-        let positionTime = this.formatTime(currentTime);
+        let positionTime = this.formatTime(currentTime, this.showHours);
 
         this.scrubber.value = currentTime;
         if (this.videocontrols.isTouchControls) {
@@ -1494,6 +1521,7 @@
       onControlBarTransitioned() {
         this.textTrackList.setAttribute("hidden", "true");
         this.video.dispatchEvent(new CustomEvent("controlbarchange"));
+        this.adjustControlSize();
       },
 
       toggleClosedCaption() {
@@ -1611,6 +1639,11 @@
         let preventAppendControl = false;
 
         for (let control of prioritizedControls) {
+          if (!this.isControlBarHidden && control.resized && !control.hideByAdjustment) {
+            control.resizedHandler();
+            control.resized = false;
+          }
+
           if (!control.isWanted) {
             control.hideByAdjustment = true;
             continue;
@@ -1624,12 +1657,6 @@
           } else {
             widthUsed += control.minWidth;
           }
-        }
-
-        if (this.durationSpan.hideByAdjustment) {
-          this.positionDurationBox.setAttribute("positionOnly", "true");
-        } else {
-          this.positionDurationBox.removeAttribute("positionOnly");
         }
 
         if (videoHeight < this.controlBar.minHeight ||

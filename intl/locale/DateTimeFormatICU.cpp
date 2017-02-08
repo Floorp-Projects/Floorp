@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsILocaleService.h"
-#include "unicode/udat.h"
 
 namespace mozilla {
 
@@ -59,6 +58,27 @@ DateTimeFormat::FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
                              const PRTime aPrTime,
                              nsAString& aStringOut)
 {
+  return FormatUDateTime(aDateFormatSelector, aTimeFormatSelector, (aPrTime / PR_USEC_PER_MSEC), nullptr, aStringOut);
+}
+
+// performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+/*static*/ nsresult
+DateTimeFormat::FormatPRExplodedTime(const nsDateFormatSelector aDateFormatSelector,
+                                     const nsTimeFormatSelector aTimeFormatSelector,
+                                     const PRExplodedTime* aExplodedTime,
+                                     nsAString& aStringOut)
+{
+  return FormatUDateTime(aDateFormatSelector, aTimeFormatSelector, (PR_ImplodeTime(aExplodedTime) / PR_USEC_PER_MSEC), &(aExplodedTime->tm_params), aStringOut);
+}
+
+// performs a locale sensitive date formatting operation on the UDate parameter
+/*static*/ nsresult
+DateTimeFormat::FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
+                                const nsTimeFormatSelector aTimeFormatSelector,
+                                const UDate aUDateTime,
+                                const PRTimeParameters* aTimeParameters,
+                                nsAString& aStringOut)
+{
 #define DATETIME_FORMAT_INITIAL_LEN 127
   int32_t dateTimeLen = 0;
   nsresult rv = NS_OK;
@@ -75,8 +95,6 @@ DateTimeFormat::FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  UDate timeUDate = aPrTime / PR_USEC_PER_MSEC;
 
   // Get the date style for the formatter:
   UDateFormatStyle dateStyle;
@@ -116,16 +134,31 @@ DateTimeFormat::FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
 
   UErrorCode status = U_ZERO_ERROR;
 
-  UDateFormat* dateTimeFormat = udat_open(timeStyle, dateStyle, mLocale->get(), nullptr, -1, nullptr, -1, &status);
+  UDateFormat* dateTimeFormat;
+  if (aTimeParameters) {
+    nsAutoString timeZoneID(u"GMT");
+
+    int32_t totalOffsetMinutes = (aTimeParameters->tp_gmt_offset + aTimeParameters->tp_dst_offset) / 60;
+    if (totalOffsetMinutes != 0) {
+      char sign = totalOffsetMinutes < 0 ? '-' : '+';
+      int32_t hours = abs(totalOffsetMinutes) / 60;
+      int32_t minutes = abs(totalOffsetMinutes) % 60;
+      timeZoneID.AppendPrintf("%c%02d:%02d", sign, hours, minutes);
+    }
+
+    dateTimeFormat = udat_open(timeStyle, dateStyle, mLocale->get(), reinterpret_cast<const UChar*>(timeZoneID.BeginReading()), timeZoneID.Length(), nullptr, -1, &status);
+  } else {
+    dateTimeFormat = udat_open(timeStyle, dateStyle, mLocale->get(), nullptr, -1, nullptr, -1, &status);
+  }
 
   if (U_SUCCESS(status) && dateTimeFormat) {
     aStringOut.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-    dateTimeLen = udat_format(dateTimeFormat, timeUDate, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), DATETIME_FORMAT_INITIAL_LEN, nullptr, &status);
+    dateTimeLen = udat_format(dateTimeFormat, aUDateTime, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), DATETIME_FORMAT_INITIAL_LEN, nullptr, &status);
     aStringOut.SetLength(dateTimeLen);
 
     if (status == U_BUFFER_OVERFLOW_ERROR) {
       status = U_ZERO_ERROR;
-      udat_format(dateTimeFormat, timeUDate, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), dateTimeLen, nullptr, &status);
+      udat_format(dateTimeFormat, aUDateTime, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), dateTimeLen, nullptr, &status);
     }
   }
 
@@ -138,16 +171,6 @@ DateTimeFormat::FormatPRTime(const nsDateFormatSelector aDateFormatSelector,
   }
 
   return rv;
-}
-
-// performs a locale sensitive date formatting operation on the PRExplodedTime parameter
-/*static*/ nsresult
-DateTimeFormat::FormatPRExplodedTime(const nsDateFormatSelector aDateFormatSelector,
-                                     const nsTimeFormatSelector aTimeFormatSelector,
-                                     const PRExplodedTime* aExplodedTime,
-                                     nsAString& aStringOut)
-{
-  return FormatPRTime(aDateFormatSelector, aTimeFormatSelector, PR_ImplodeTime(aExplodedTime), aStringOut);
 }
 
 /*static*/ void

@@ -9,7 +9,10 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['ENABLE_INTL_API']:
-    UNIFIED_SOURCES += ['TestOSPreferences.cpp']
+    UNIFIED_SOURCES += [
+        'TestDateTimeFormat.cpp',
+        'TestOSPreferences.cpp',
+    ]
 
 LOCAL_INCLUDES += [
     '/intl/locale',

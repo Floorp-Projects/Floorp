@@ -54,7 +54,7 @@ if __name__ == '__main__':
             "suites": [{
                 "name": "compiler_metrics",
                 "subtests": [{
-                    "name": "num_constructors",
+                    "name": "num_static_constructors",
                     "value": count_ctors(f),
                     "alertThreshold": 0.25
                 }]}

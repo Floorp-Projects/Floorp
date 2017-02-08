@@ -667,11 +667,13 @@ function String_static_localeCompare(str1, str2) {
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "String.localeCompare");
     var locales = arguments.length > 2 ? arguments[2] : undefined;
     var options = arguments.length > 3 ? arguments[3] : undefined;
+/* eslint-disable no-unreachable */
 #if EXPOSE_INTL_API
     return callFunction(String_localeCompare, str1, str2, locales, options);
 #else
     return callFunction(std_String_localeCompare, str1, str2, locales, options);
 #endif
+/* eslint-enable no-unreachable */
 }
 
 // ES6 draft 2014-04-27 B.2.3.3

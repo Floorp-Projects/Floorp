@@ -8,13 +8,13 @@
 
 #include <ogg/ogg.h>
 // For MOZ_SAMPLE_TYPE_*
+#include "FlacFrameParser.h"
+#include "VideoUtils.h"
 #include <nsAutoPtr.h>
 #include <nsAutoRef.h>
 #include <nsDeque.h>
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
-#include "VideoUtils.h"
-#include "FlacFrameParser.h"
 
 #include <theora/theoradec.h>
 #ifdef MOZ_TREMOR
@@ -61,12 +61,18 @@ class OggPacketDeallocator : public nsDequeFunctor
 class OggPacketQueue : private nsDeque
 {
 public:
-  OggPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
+  OggPacketQueue() : nsDeque(new OggPacketDeallocator()) { }
   ~OggPacketQueue() { Erase(); }
   bool IsEmpty() { return nsDeque::GetSize() == 0; }
   void Append(ogg_packet* aPacket);
-  ogg_packet* PopFront() { return static_cast<ogg_packet*>(nsDeque::PopFront()); }
-  ogg_packet* PeekFront() { return static_cast<ogg_packet*>(nsDeque::PeekFront()); }
+  ogg_packet* PopFront()
+  {
+    return static_cast<ogg_packet*>(nsDeque::PopFront());
+  }
+  ogg_packet* PeekFront()
+  {
+    return static_cast<ogg_packet*>(nsDeque::PeekFront());
+  }
   ogg_packet* Pop() { return static_cast<ogg_packet*>(nsDeque::Pop()); }
   ogg_packet* operator[](size_t aIndex) const
   {
@@ -273,7 +279,8 @@ protected:
   // in order to capture granulepos.
   nsTArray<ogg_packet*> mUnstamped;
 
-  bool SetCodecSpecificConfig(MediaByteBuffer* aBuffer, OggPacketQueue& aHeaders);
+  bool SetCodecSpecificConfig(MediaByteBuffer* aBuffer,
+                              OggPacketQueue& aHeaders);
 
 private:
   bool InternalInit();
@@ -397,7 +404,6 @@ private:
   // known granulepos, and the known frame numbers, we recover the granulepos
   // of all frames in the array. This enables us to determine their timestamps.
   void ReconstructTheoraGranulepos();
-
 };
 
 class OpusState : public OggCodecState
@@ -451,7 +457,8 @@ private:
 // version numbers.
 #define SKELETON_VERSION(major, minor) (((major)<<16)|(minor))
 
-enum EMsgHeaderType {
+enum EMsgHeaderType
+{
   eContentType,
   eRole,
   eName,
@@ -522,7 +529,7 @@ public:
   class nsSeekTarget
   {
   public:
-    nsSeekTarget() : mSerial(0) {}
+    nsSeekTarget() : mSerial(0) { }
     nsKeyPoint mKeyPoint;
     uint32_t mSerial;
     bool IsNull()

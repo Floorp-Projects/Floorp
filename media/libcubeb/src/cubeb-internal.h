@@ -9,6 +9,7 @@
 
 #include "cubeb/cubeb.h"
 #include "cubeb_log.h"
+#include "cubeb_assert.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -27,9 +28,6 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
-/* Crash the caller.  */
-void cubeb_crash() CLANG_ANALYZER_NORETURN;
 
 #if defined(__cplusplus)
 }
@@ -84,12 +82,5 @@ struct cubeb_ops {
                                              cubeb_device_collection_changed_callback callback,
                                              void * user_ptr);
 };
-
-#define XASSERT(expr) do {                                                     \
-    if (!(expr)) {                                                             \
-      fprintf(stderr, "%s:%d - fatal error: %s\n", __FILE__, __LINE__, #expr); \
-      cubeb_crash();                                                           \
-    }                                                                          \
-  } while (0)
 
 #endif /* CUBEB_INTERNAL_0eb56756_4e20_4404_a76d_42bf88cd15a5 */

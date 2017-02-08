@@ -187,6 +187,7 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "ContentPrefs.h"
+#include "mozilla/Sprintf.h"
 
 #ifdef MOZ_WEBRTC
 #include "signaling/src/peerconnection/WebrtcGlobalParent.h"

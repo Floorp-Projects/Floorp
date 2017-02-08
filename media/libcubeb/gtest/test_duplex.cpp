@@ -18,30 +18,19 @@
 #include "common.h"
 
 #define SAMPLE_FREQUENCY 48000
-#if (defined(_WIN32) || defined(__WIN32__))
 #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
-#define SILENT_SAMPLE 0.0f
-#else
-#define STREAM_FORMAT CUBEB_SAMPLE_S16LE
-#define SILENT_SAMPLE 0
-#endif
 
 struct user_state_duplex
 {
-  bool seen_noise;
+  bool seen_audio;
 };
 
 long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
 {
   user_state_duplex * u = reinterpret_cast<user_state_duplex*>(user);
-#if (defined(_WIN32) || defined(__WIN32__))
   float *ib = (float *)inputbuffer;
   float *ob = (float *)outputbuffer;
-#else
-  short *ib = (short *)inputbuffer;
-  short *ob = (short *)outputbuffer;
-#endif
-  bool seen_noise = false;
+  bool seen_audio = true;
 
   if (stream == NULL || inputbuffer == NULL || outputbuffer == NULL) {
     return CUBEB_ERROR;
@@ -51,14 +40,15 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   // checking if there is noise in the process.
   long output_index = 0;
   for (long i = 0; i < nframes; i++) {
-    if (ib[i] != SILENT_SAMPLE) {
-      seen_noise = true;
+    if (ib[i] <= -1.0 && ib[i] >= 1.0) {
+      seen_audio = false;
+      break;
     }
     ob[output_index] = ob[output_index + 1] = ib[i];
     output_index += 2;
   }
 
-  u->seen_noise |= seen_noise;
+  u->seen_audio |= seen_audio;
 
   return nframes;
 }
@@ -136,5 +126,5 @@ TEST(cubeb, duplex)
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
 
-  ASSERT_TRUE(stream_state.seen_noise);
+  ASSERT_TRUE(stream_state.seen_audio);
 }

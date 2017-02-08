@@ -77,12 +77,6 @@
         buttonEl.disabled = true;
       }
 
-      function doOverride(buttonEl) {
-        var event = new CustomEvent("AboutNetErrorOverride", {bubbles:true});
-        document.dispatchEvent(event);
-        retryThis(buttonEl);
-      }
-
       function toggleDisplay(node) {
         const toggle = {
           "": "block",
@@ -107,10 +101,9 @@
         });
       }
 
-      function setupAdvancedButton(allowOverride) {
+      function setupAdvancedButton() {
         // Get the hostname and add it to the panel
-        var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel";
-        var panel = document.getElementById(panelId);
+        var panel = document.getElementById("badCertAdvancedPanel");
         for (var span of panel.querySelectorAll("span.hostname")) {
           span.textContent = document.location.hostname;
         }
@@ -137,12 +130,6 @@
             document.dispatchEvent(event);
           }
         });
-
-        if (allowOverride) {
-          document.getElementById("overrideWeakCryptoPanel").style.display = "flex";
-          var overrideLink = document.getElementById("overrideWeakCrypto");
-          overrideLink.addEventListener("click", () => doOverride(overrideLink));
-        }
 
         if (!gIsCertError) {
           return;
@@ -226,10 +213,6 @@
           document.body.className = "certerror";
         }
 
-        if (err == "weakCryptoUsed") {
-          document.body.className = "certerror";
-        }
-
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
         errContainer.remove();
@@ -265,16 +248,13 @@
 
         window.addEventListener("AboutNetErrorOptions", function(evt) {
         // Pinning errors are of type nssFailure2
-          if (getErrorCode() == "nssFailure2" || getErrorCode() == "weakCryptoUsed") {
+          if (getErrorCode() == "nssFailure2") {
             document.getElementById("learnMoreContainer").style.display = "block";
             let learnMoreLink = document.getElementById("learnMoreLink");
             // nssFailure2 also gets us other non-overrideable errors. Choose
             // a "learn more" link based on description:
             if (getDescription().includes("mozilla_pkix_error_key_pinning_failure")) {
               learnMoreLink.href = "https://support.mozilla.org/kb/certificate-pinning-reports";
-            }
-            if (getErrorCode() == "weakCryptoUsed") {
-              learnMoreLink.href = "https://support.mozilla.org/kb/how-resolve-weak-crypto-error-messages-firefox";
             }
 
             var options = JSON.parse(evt.detail);
@@ -305,8 +285,8 @@
               showPrefChangeContainer();
             }
           }
-          if (getErrorCode() == "weakCryptoUsed" || getErrorCode() == "sslv3Used") {
-            setupAdvancedButton(getErrorCode() == "weakCryptoUsed");
+          if (getErrorCode() == "sslv3Used") {
+            setupAdvancedButton();
           }
         }, true, true);
 
@@ -337,7 +317,7 @@
           document.dispatchEvent(event);
         });
 
-        setupAdvancedButton(true);
+        setupAdvancedButton();
 
         addDomainErrorLinks();
 
@@ -355,7 +335,7 @@
           host.textContent = document.location.hostname;
         }
 
-        setupAdvancedButton(true);
+        setupAdvancedButton();
 
         document.getElementById("learnMoreContainer").style.display = "block";
 
@@ -489,8 +469,7 @@
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
         if (link.href && getCSSClass() != "expertBadCert") {
-          var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel"
-          toggleDisplay(document.getElementById(panelId));
+          toggleDisplay(document.getElementById("badCertAdvancedPanel"));
           if (gIsCertError) {
             // Toggling the advanced panel must ensure that the debugging
             // information panel is hidden as well, since it's opened by the
@@ -545,7 +524,6 @@
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentErrorv2">&corruptedContentErrorv2.title;</h1>
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
-        <h1 id="et_weakCryptoUsed">&weakCryptoUsed.title;</h1>
         <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
@@ -575,7 +553,6 @@
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentErrorv2">&corruptedContentErrorv2.longDesc;</div>
         <div id="ed_sslv3Used">&sslv3Used.longDesc2;</div>
-        <div id="ed_weakCryptoUsed">&weakCryptoUsed.longDesc2;</div>
         <div id="ed_inadequateSecurityError">&inadequateSecurityError.longDesc;</div>
       </div>
     </div>
@@ -654,16 +631,6 @@
       </div>
 
       <div id="advancedPanelContainer">
-        <div id="weakCryptoAdvancedPanel" class="advanced-panel">
-          <div id="weakCryptoAdvancedDescription">
-            <p>&weakCryptoAdvanced.longDesc;</p>
-          </div>
-          <div id="advancedLongDesc" />
-          <div id="overrideWeakCryptoPanel">
-            <a id="overrideWeakCrypto" href="#">&weakCryptoAdvanced.override;</a>
-          </div>
-        </div>
-
         <div id="badCertAdvancedPanel" class="advanced-panel">
           <p id="badCertTechnicalInfo"/>
           <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>

@@ -3245,8 +3245,22 @@ nsStandardURL::Init(uint32_t urlType,
 
     mOriginCharset.Truncate();
 
-    //if charset override is absent, use UTF8 as url encoding
-    if (charset != nullptr && *charset != '\0' && !IsUTFCharset(charset)) {
+    if (charset == nullptr || *charset == '\0') {
+        // check if baseURI provides an origin charset and use that.
+        if (baseURI)
+            baseURI->GetOriginCharset(mOriginCharset);
+
+        // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32,
+        // UTF-32-LE, UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if
+        // it starts with "utf" (since an empty mOriginCharset implies
+        // UTF-8, this is safe even if mOriginCharset is UTF-8).
+
+        if (mOriginCharset.Length() > 3 &&
+            IsUTFCharset(mOriginCharset.get())) {
+            mOriginCharset.Truncate();
+        }
+    }
+    else if (!IsUTFCharset(charset)) {
         mOriginCharset = charset;
     }
 

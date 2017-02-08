@@ -3983,6 +3983,15 @@
     "bug_numbers": [1315893],
     "description": "Time spent per classifier update (ms), keyed by the name of the provider."
   },
+  "URLCLASSIFIER_CLASSIFYLOCAL_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1334616],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 30,
+    "description": "Time spent inside ClassifyLocalWithTables (ms)"
+  },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -4024,6 +4033,15 @@
     "n_buckets": 10,
     "bug_numbers": [1283007],
     "description": "Time spent fallocating Variable-Length PrefixSet (ms)"
+  },
+  "URLCLASSIFIER_VLPS_CONSTRUCT_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 15,
+    "bug_numbers": [1336865],
+    "description": "Time spent constructing Variable-Length PrefixSet from file (ms)"
   },
   "URLCLASSIFIER_VLPS_LOAD_CORRUPT": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -9213,11 +9231,19 @@
   },
   "VIDEO_AS_CONTENT_SOURCE" : {
     "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "58",
     "description": "Usage of a {visible / invisible} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_VISIBLE, 1 = ALL_INVISIBLE, 2 = drawImage_VISIBLE, 3 = drawImage_INVISIBLE, 4 = createPattern_VISIBLE, 5 = createPattern_INVISIBLE, 6 = createImageBitmap_VISIBLE, 7 = createImageBitmap_INVISIBLE, 8 = captureStream_VISIBLE, 9 = captureStream_INVISIBLE)",
     "kind": "enumerated",
     "n_values": 12,
     "bug_numbers": [1299718]
+  },
+  "VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT" : {
+    "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
+    "expires_in_version": "58",
+    "description": "Usage of an invisible {in tree / not in tree} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_IN_TREE, 1 = ALL_NOT_IN_TREE, 2 = drawImage_IN_TREE, 3 = drawImage_NOT_IN_TREE, 4 = createPattern_IN_TREE, 5 = createPattern_NOT_IN_TREE, 6 = createImageBitmap_IN_TREE, 7 = createImageBitmap_NOT_IN_TREE, 8 = captureStream_IN_TREE, 9 = captureStream_NOT_IN_TREE)",
+    "kind": "enumerated",
+    "n_values": 12,
+    "bug_numbers": [1337301]
   },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
