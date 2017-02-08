@@ -50,6 +50,8 @@ JOB_NAME_WHITELIST = set([
     'linux-debug',
     'linux-opt',
     'linux-pgo',
+    'linux-qr-debug',
+    'linux-qr-opt',
     'linux32-nightly-opt',
     'linux32-l10n-opt',
     'linux32-nightly-l10n-opt',
