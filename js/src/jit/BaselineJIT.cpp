@@ -49,9 +49,12 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue* stackVal)
 }
 
 void
-ICStubSpace::freeAllAfterMinorGC(JSRuntime* rt)
+ICStubSpace::freeAllAfterMinorGC(Zone* zone)
 {
-    rt->zoneGroupFromMainThread()->freeAllLifoBlocksAfterMinorGC(&allocator_);
+    if (zone->isAtomsZone())
+        MOZ_ASSERT(allocator_.isEmpty());
+    else
+        zone->group()->freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -517,7 +520,7 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
      *
      * Defer freeing any allocated blocks until after the next minor GC.
      */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(fop->runtime());
+    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
 
     fop->delete_(script);
 }
