@@ -104,13 +104,14 @@ test(function(t) {
                               fill: 'forwards',
                               easing: 'cubic-bezier(0, 1.5, 1, 1.5)' });
 
-  // The bezier function produces values greater than 1 in (0.23368794, 1)
+  // The bezier function produces values greater than 1 (but always less than 2)
+  // in (0.23368794, 1)
   anim.currentTime = 0;
   assert_equals(getComputedStyle(target).left, '100px');
   anim.currentTime = 230;
   assert_equals(getComputedStyle(target).left, '100px');
   anim.currentTime = 250;
-  assert_equals(getComputedStyle(target).left, '100px');
+  assert_equals(getComputedStyle(target).left, '200px');
   anim.currentTime = 1000;
   assert_equals(getComputedStyle(target).left, '100px');
 }, 'step-start easing with input progress greater than 1');
@@ -124,7 +125,8 @@ test(function(t) {
                               fill: 'forwards',
                               easing: 'cubic-bezier(0, 1.5, 1, 1.5)' });
 
-  // The bezier function produces values greater than 1 in (0.23368794, 1)
+  // The bezier function produces values greater than 1 (but always less than 2)
+  // in (0.23368794, 1)
   anim.currentTime = 0;
   assert_equals(getComputedStyle(target).left, '0px');
   anim.currentTime = 230;
@@ -138,13 +140,33 @@ test(function(t) {
 test(function(t) {
   var target = createDiv(t);
   target.style.position = 'absolute';
+  var anim = target.animate([ { left: '0px', easing: 'step-end' },
+                              { left: '100px' } ],
+                            { duration: 1000,
+                              fill: 'forwards',
+                              easing: 'cubic-bezier(0, 3, 1, 3)' });
+
+  // The bezier function produces values greater than 2 (but always less than 3)
+  // in the range (~0.245, ~0.882)
+  anim.currentTime = 0;
+  assert_equals(getComputedStyle(target).left, '0px');
+  anim.currentTime = 500;
+  assert_equals(getComputedStyle(target).left, '200px');
+  anim.currentTime = 900;
+  assert_equals(getComputedStyle(target).left, '100px');
+}, 'step-end easing with input progress greater than 2');
+
+test(function(t) {
+  var target = createDiv(t);
+  target.style.position = 'absolute';
   var anim = target.animate([ { left: '0px', easing: 'step-start' },
                               { left: '100px' } ],
                             { duration: 1000,
                               fill: 'forwards',
                               easing: 'cubic-bezier(0, -0.5, 1, -0.5)' });
 
-  // The bezier function produces negative values in (0, 0.766312060)
+  // The bezier function produces negative values (but always greater than -1)
+  // in (0, 0.766312060)
   anim.currentTime = 0;
   assert_equals(getComputedStyle(target).left, '100px');
   anim.currentTime = 750;
@@ -158,17 +180,39 @@ test(function(t) {
 test(function(t) {
   var target = createDiv(t);
   target.style.position = 'absolute';
+  var anim = target.animate([ { left: '0px', easing: 'step-start' },
+                              { left: '100px' } ],
+                            { duration: 1000,
+                              fill: 'forwards',
+                              easing: 'cubic-bezier(0, -2, 1, -2)' });
+
+  // The bezier function produces values less than -1 (but always greater than
+  // -2) in the range (~0.118, ~0.755)
+  anim.currentTime = 0;
+  assert_equals(getComputedStyle(target).left, '100px');
+  anim.currentTime = 100;
+  assert_equals(getComputedStyle(target).left, '0px');
+  anim.currentTime = 500;
+  assert_equals(getComputedStyle(target).left, '-100px');
+  anim.currentTime = 1000;
+  assert_equals(getComputedStyle(target).left, '100px');
+}, 'step-start easing with input progress less than -1');
+
+test(function(t) {
+  var target = createDiv(t);
+  target.style.position = 'absolute';
   var anim = target.animate([ { left: '0px', easing: 'step-end' },
                               { left: '100px' } ],
                             { duration: 1000,
                               fill: 'forwards',
                               easing: 'cubic-bezier(0, -0.5, 1, -0.5)' });
 
-  // The bezier function produces negative values in (0, 0.766312060)
+  // The bezier function produces negative values (but always greater than -1)
+  // in (0, 0.766312060)
   anim.currentTime = 0;
   assert_equals(getComputedStyle(target).left, '0px');
   anim.currentTime = 750;
-  assert_equals(getComputedStyle(target).left, '0px');
+  assert_equals(getComputedStyle(target).left, '-100px');
   anim.currentTime = 800;
   assert_equals(getComputedStyle(target).left, '0px');
   anim.currentTime = 1000;
