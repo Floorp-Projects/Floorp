@@ -19,14 +19,14 @@ add_task(function* () {
   // Disable transferred size column support for this test.
   // Without this, the waterfall only has enough room for one division, which
   // would remove most of the value of this test.
-  // $("#requests-menu-transferred-header-box").hidden = true;
-  // $("#requests-menu-item-template .requests-menu-transferred").hidden = true;
+  // $("#requests-list-transferred-header-box").hidden = true;
+  // $("#requests-list-item-template .requests-list-transferred").hidden = true;
 
   RequestsMenu.lazyUpdate = false;
 
-  ok($("#requests-menu-waterfall-label"),
+  ok($("#requests-list-waterfall-label"),
     "An timeline label should be displayed when the frontend is opened.");
-  ok($all(".requests-menu-timings-division").length == 0,
+  ok($all(".requests-list-timings-division").length == 0,
     "No tick labels should be displayed when the frontend is opened.");
 
   ok(!RequestsMenu._canvas, "No canvas should be created when the frontend is opened.");
@@ -41,12 +41,12 @@ add_task(function* () {
   NetMonitorController.NetworkEventsHandler.clearMarkers();
   RequestsMenu._flushWaterfallViews(true);
 
-  ok(!$("#requests-menu-waterfall-label"),
+  ok(!$("#requests-list-waterfall-label"),
     "The timeline label should be hidden after the first request.");
-  ok($all(".requests-menu-timings-division").length >= 3,
+  ok($all(".requests-list-timings-division").length >= 3,
     "There should be at least 3 tick labels in the network requests header.");
 
-  let timingDivisionEls = $all(".requests-menu-timings-division");
+  let timingDivisionEls = $all(".requests-list-timings-division");
   is(timingDivisionEls[0].textContent, L10N.getFormatStr("networkMenu.millisecond", 0),
     "The first tick label has correct value");
   is(timingDivisionEls[1].textContent, L10N.getFormatStr("networkMenu.millisecond", 80),

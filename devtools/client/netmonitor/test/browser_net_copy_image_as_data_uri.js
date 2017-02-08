@@ -28,8 +28,8 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // toolbox.doc
     monitor.toolbox.doc
-      .querySelector("#request-menu-context-copy-image-as-data-uri").click();
-  }, TEST_IMAGE_DATA_URI);
+      .querySelector("#request-list-context-copy-image-as-data-uri").click();
+ }, TEST_IMAGE_DATA_URI);
 
   ok(true, "Clipboard contains the currently selected image as data uri.");
 
