@@ -88,6 +88,7 @@ class ContainerLayer;
 class ImageLayer;
 class DisplayItemLayer;
 class ColorLayer;
+class CompositorAnimations;
 class CompositorBridgeChild;
 class TextLayer;
 class CanvasLayer;
@@ -1223,7 +1224,7 @@ public:
   void ClearAnimations();
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
-  void SetAnimations(const AnimationArray& aAnimations);
+  void SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations);
   // Go through all animations in this layer and its children and, for
   // any animations with a null start time, update their start time such
   // that at |aReadyTime| the animation's current time corresponds to its
@@ -1415,6 +1416,7 @@ public:
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
   AnimationArray& GetAnimations() { return mAnimations; }
+  uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
 
   uint64_t GetAnimationGeneration() { return mAnimationGeneration; }
@@ -1921,6 +1923,7 @@ protected:
   nsAutoPtr<gfx::Matrix4x4> mPendingTransform;
   gfx::Matrix4x4 mEffectiveTransform;
   AnimationArray mAnimations;
+  uint64_t mCompositorAnimationsId;
   // See mPendingTransform above.
   nsAutoPtr<AnimationArray> mPendingAnimations;
   InfallibleTArray<AnimData> mAnimationData;

@@ -192,6 +192,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mNextSibling(nullptr),
   mPrevSibling(nullptr),
   mImplData(aImplData),
+  mCompositorAnimationsId(0),
   mUseTileSourceRect(false),
 #ifdef DEBUG
   mDebugColorIndex(0),
@@ -207,7 +208,14 @@ Layer::~Layer()
 Animation*
 Layer::AddAnimation()
 {
-  MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) AddAnimation", this));
+  // Here generates a new id when the first animation is added and
+  // this id is used to represent the animations in this layer.
+  if (!mCompositorAnimationsId) {
+    mCompositorAnimationsId = AnimationHelper::GetNextCompositorAnimationsId();
+  }
+
+  MOZ_LAYERS_LOG_IF_SHADOWABLE(
+    this, ("Layer::Mutated(%p) AddAnimation with id=%" PRIu64, this, mCompositorAnimationsId));
 
   MOZ_ASSERT(!mPendingAnimations, "should have called ClearAnimations first");
 
@@ -228,6 +236,7 @@ Layer::ClearAnimations()
 
   MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ClearAnimations", this));
   mAnimations.Clear();
+  mCompositorAnimationsId = 0;
   mAnimationData.Clear();
   Mutated();
 }
@@ -255,11 +264,13 @@ Layer::ClearAnimationsForNextTransaction()
 }
 
 void
-Layer::SetAnimations(const AnimationArray& aAnimations)
+Layer::SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations)
 {
-  MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) SetAnimations", this));
+  MOZ_LAYERS_LOG_IF_SHADOWABLE(
+    this, ("Layer::Mutated(%p) SetCompositorAnimations with id=%" PRIu64, this, mCompositorAnimationsId));
 
-  mAnimations = aAnimations;
+  mAnimations = aCompositorAnimations.animations();
+  mCompositorAnimationsId = aCompositorAnimations.id();
   mAnimationData.Clear();
   AnimationHelper::SetAnimations(mAnimations,
                                  mAnimationData,
@@ -1915,7 +1926,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     }
   }
   if (!mAnimations.IsEmpty()) {
-    aStream << nsPrintfCString(" [%d animations]", (int) mAnimations.Length()).get();
+    aStream << nsPrintfCString(" [%d animations with id=%" PRIu64 " ]",
+                               (int) mAnimations.Length(),
+                               mCompositorAnimationsId).get();
   }
 }
 
