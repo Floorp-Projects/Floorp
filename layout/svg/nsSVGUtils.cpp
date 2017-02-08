@@ -399,7 +399,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   // XXX yuck, we really need a common interface for GetCanvasTM
 
   if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    return GetCSSPxToDevPxMatrix(aFrame);
+    return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
   }
 
   nsIAtom* type = aFrame->GetType();
@@ -407,7 +407,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
     return static_cast<nsSVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
   }
   if (type == nsGkAtoms::svgOuterSVGFrame) {
-    return GetCSSPxToDevPxMatrix(aFrame);
+    return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
   }
 
   nsSVGContainerFrame *containerFrame = do_QueryFrame(aFrame);
@@ -1863,16 +1863,4 @@ nsSVGUtils::ToCanvasBounds(const gfxRect &aUserspaceRect,
   return nsLayoutUtils::RoundGfxRectToAppRect(
                           aToCanvas.TransformBounds(aUserspaceRect),
                           presContext->AppUnitsPerDevPixel());
-}
-
-gfxMatrix
-nsSVGUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
-{
-  int32_t appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
-  float devPxPerCSSPx =
-    1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
-
-  return gfxMatrix(devPxPerCSSPx, 0.0,
-                   0.0, devPxPerCSSPx,
-                   0.0, 0.0);
 }
