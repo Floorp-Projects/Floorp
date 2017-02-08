@@ -1870,6 +1870,10 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   extraArgs.push_back("-stringPrefs");
   extraArgs.push_back(stringPrefs.str());
 
+  if (gSafeMode) {
+    extraArgs.push_back("-safeMode");
+  }
+
   if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
     MarkAsDead();
     return false;
