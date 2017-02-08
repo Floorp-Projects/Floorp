@@ -188,42 +188,9 @@ GetSharedLibraryInfoStringInternal()
   return os.str();
 }
 
-static bool
-hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
-  for(size_t i = 0; i < aFeatureCount; i++) {
-    if (strcmp(aFeatures[i], aFeature) == 0)
-      return true;
-  }
-  return false;
-}
-
-Sampler::Sampler(const char** aFeatures, uint32_t aFeatureCount,
-                 uint32_t aFilterCount)
+Sampler::Sampler()
 {
   MOZ_COUNT_CTOR(Sampler);
-
-  mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
-
-  mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
-  mProfileGPU = hasFeature(aFeatures, aFeatureCount, "gpu");
-  // Users sometimes ask to filter by a list of threads but forget to request
-  // profiling non main threads. Let's make it implificit if we have a filter
-  mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads") || aFilterCount > 0;
-  mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-  mPrivacyMode = hasFeature(aFeatures, aFeatureCount, "privacy");
-  mAddMainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
-  mProfileMemory = hasFeature(aFeatures, aFeatureCount, "memory");
-  mTaskTracer = hasFeature(aFeatures, aFeatureCount, "tasktracer");
-  mLayersDump = hasFeature(aFeatures, aFeatureCount, "layersdump");
-  mDisplayListDump = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
-  mProfileRestyle = hasFeature(aFeatures, aFeatureCount, "restyle");
-
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  mProfileJava = mozilla::jni::IsFennec() &&
-      hasFeature(aFeatures, aFeatureCount, "java");
-#else
-  mProfileJava = false;
-#endif
 
   bool ignore;
   sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
@@ -319,9 +286,11 @@ Sampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 void
 Sampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   aWriter.IntProperty("version", 3);
   aWriter.DoubleProperty("interval", gInterval);
-  aWriter.IntProperty("stackwalk", mUseStackWalk);
+  aWriter.IntProperty("stackwalk", gUseStackWalk);
 
 #ifdef DEBUG
   aWriter.IntProperty("debug", 1);
@@ -495,7 +464,7 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
     aWriter.EndObject();
 
     // Data of TaskTracer doesn't belong in the circular buffer.
-    if (TaskTracer()) {
+    if (gTaskTracer) {
       aWriter.StartObjectProperty("tasktracer");
       StreamTaskTracer(aWriter);
       aWriter.EndObject();
@@ -537,7 +506,7 @@ Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
       }
 
   #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-      if (ProfileJava()) {
+      if (gProfileJava) {
         java::GeckoJavaSampler::Pause();
 
         aWriter.Start();
@@ -1162,13 +1131,13 @@ Sampler::InplaceTick(TickSample* sample)
 
 #if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK) || \
     defined(USE_LUL_STACKWALK)
-  if (mUseStackWalk) {
+  if (gUseStackWalk) {
     doNativeBacktrace(currThreadInfo, sample);
   } else {
-    doSampleStackTrace(currThreadInfo, sample, mAddLeafAddresses);
+    doSampleStackTrace(currThreadInfo, sample, gAddLeafAddresses);
   }
 #else
-  doSampleStackTrace(currThreadInfo, sample, mAddLeafAddresses);
+  doSampleStackTrace(currThreadInfo, sample, gAddLeafAddresses);
 #endif
 
   // Don't process the PeudoStack's markers if we're
@@ -1274,7 +1243,7 @@ ThreadSelected(const char* aThreadName)
 void
 Sampler::RegisterThread(ThreadInfo* aInfo)
 {
-  if (!aInfo->IsMainThread() && !mProfileThreads) {
+  if (!aInfo->IsMainThread() && !gProfileThreads) {
     return;
   }
 

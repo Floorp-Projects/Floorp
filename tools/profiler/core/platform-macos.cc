@@ -205,8 +205,7 @@ public:
     sample->ussMemory = 0;
     sample->rssMemory = 0;
 
-    // XXX: this is an off-main-thread use of gSampler
-    if (isFirstProfiledThread && gSampler->ProfileMemory()) {
+    if (isFirstProfiledThread && gProfileMemory) {
       sample->rssMemory = nsMemoryReporterManager::ResidentFast();
     }
 
