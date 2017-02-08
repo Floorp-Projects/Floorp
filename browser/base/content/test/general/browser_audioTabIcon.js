@@ -158,9 +158,10 @@ function* test_muting_using_menu(tab, expectMuted) {
 
   // Check the menu
   let expectedLabel = expectMuted ? "Unmute Tab" : "Mute Tab";
+  let expectedAccessKey = expectMuted ? "m" : "M";
   let toggleMute = document.getElementById("context_toggleMuteTab");
   is(toggleMute.label, expectedLabel, "Correct label expected");
-  is(toggleMute.accessKey, "M", "Correct accessKey expected");
+  is(toggleMute.accessKey, expectedAccessKey, "Correct accessKey expected");
 
   is(toggleMute.hasAttribute("muted"), expectMuted, "Should have the correct state for the muted attribute");
   ok(!toggleMute.hasAttribute("soundplaying"), "Should not have the soundplaying attribute");

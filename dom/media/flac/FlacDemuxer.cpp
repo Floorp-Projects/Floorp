@@ -41,7 +41,8 @@ namespace flac {
 #define FLAC_MAX_FRAME_SIZE (FLAC_MAX_FRAME_HEADER_SIZE \
                              +FLAC_MAX_BLOCKSIZE*FLAC_MAX_CHANNELS*3)
 
-class FrameHeader {
+class FrameHeader
+{
 public:
   const AudioInfo& Info() const { return mInfo; }
 
@@ -159,7 +160,8 @@ public:
 
 private:
   friend class Frame;
-  enum {
+  enum
+  {
     FLAC_CHMODE_INDEPENDENT = 0,
     FLAC_CHMODE_LEFT_SIDE,
     FLAC_CHMODE_RIGHT_SIDE,
@@ -180,7 +182,8 @@ private:
 };
 
 const int FrameHeader::FlacSampleRateTable[16] =
-{ 0,
+{
+  0,
   88200, 176400, 192000,
   8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000,
   0, 0, 0, 0
@@ -232,7 +235,8 @@ const uint8_t FrameHeader::CRC8Table[256] =
 
 // flac::Frame - Frame meta container used to parse and hold a frame
 // header and side info.
-class Frame {
+class Frame
+{
 public:
 
   // The FLAC signature is made of 14 bits set to 1; however the 15th bit is
@@ -384,7 +388,8 @@ private:
 
 };
 
-class FrameParser {
+class FrameParser
+{
 public:
 
   // Returns the currently parsed frame. Reset via EndFrameSession.
@@ -563,9 +568,7 @@ private:
 
 // FlacDemuxer
 
-FlacDemuxer::FlacDemuxer(MediaResource* aSource)
-  : mSource(aSource)
-{}
+FlacDemuxer::FlacDemuxer(MediaResource* aSource) : mSource(aSource) { }
 
 bool
 FlacDemuxer::InitInternal()
@@ -638,7 +641,8 @@ FlacTrackDemuxer::Init()
 
   // First check if we have a valid Flac start.
   char buffer[BUFFER_SIZE];
-  const uint8_t* ubuffer = reinterpret_cast<uint8_t*>(buffer); // only needed due to type constraints of ReadAt.
+  const uint8_t* ubuffer = // only needed due to type constraints of ReadAt.
+    reinterpret_cast<uint8_t*>(buffer);
   int64_t offset = 0;
 
   do {
@@ -762,7 +766,8 @@ FlacTrackDemuxer::FastSeek(const TimeUnit& aTime)
   int64_t pivot =
     aTime.ToSeconds() * AverageFrameLength() + mParser->FirstFrame().Offset();
 
-  // Time in seconds where we can stop seeking and will continue using ScanUntil.
+  // Time in seconds where we can stop seeking and will continue using
+  // ScanUntil.
   static const int GAP_THRESHOLD = 5;
   int64_t first = mParser->FirstFrame().Offset();
   int64_t last = mSource.GetLength();

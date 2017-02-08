@@ -24,13 +24,6 @@ for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
 test_ssl_path = '/security/manager/ssl/tests/unit'
 
 headers_arrays_certs = [
-    ('marketplace-prod-public.inc', 'marketplaceProdPublicRoot', 'marketplace-prod-public.crt'),
-    ('marketplace-prod-reviewers.inc', 'marketplaceProdReviewersRoot', 'marketplace-prod-reviewers.crt'),
-    ('marketplace-dev-public.inc', 'marketplaceDevPublicRoot', 'marketplace-dev-public.crt'),
-    ('marketplace-dev-reviewers.inc', 'marketplaceDevReviewersRoot', 'marketplace-dev-reviewers.crt'),
-    ('marketplace-stage.inc', 'marketplaceStageRoot', 'marketplace-stage.crt'),
-    ('manifest-signing-root.inc', 'trustedAppPublicRoot', 'trusted-app-public.der'),
-    ('manifest-signing-test-root.inc', 'trustedAppTestRoot', test_ssl_path + '/test_signed_manifest/trusted_ca1.der'),
     ('xpcshell.inc', 'xpcshellRoot', test_ssl_path + '/test_signed_apps/trusted_ca1.der'),
     ('addons-public.inc', 'addonsPublicRoot', 'addons-public.crt'),
     ('addons-stage.inc', 'addonsStageRoot', 'addons-stage.crt'),

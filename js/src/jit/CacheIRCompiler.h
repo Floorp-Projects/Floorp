@@ -35,6 +35,7 @@ namespace jit {
     _(LoadDOMExpandoValue)                \
     _(LoadDOMExpandoValueIgnoreGeneration)\
     _(LoadUndefinedResult)                \
+    _(LoadBooleanResult)                  \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
@@ -44,6 +45,7 @@ namespace jit {
     _(LoadArgumentsObjectArgResult)       \
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
+    _(LoadDenseElementExistsResult)       \
     _(LoadUnboxedArrayElementResult)      \
     _(LoadTypedElementResult)
 

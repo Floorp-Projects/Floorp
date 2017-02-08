@@ -2152,7 +2152,7 @@ SetupImageLayerClip(nsCSSRendering::ImageLayerClipState& aClipState,
 
     if (bgAreaGfx.IsEmpty()) {
       // I think it's become possible to hit this since
-      // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
+      // https://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
       NS_WARNING("converted background area should not be empty");
       // Make our caller not do anything.
       aClipState.mDirtyRectGfx.SizeTo(gfxSize(0.0, 0.0));
@@ -2193,7 +2193,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
 
   if (bgAreaGfx.IsEmpty()) {
     // I think it's become possible to hit this since
-    // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
+    // https://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
     NS_WARNING("converted background area should not be empty");
     // Make our caller not do anything.
     aClipState.mDirtyRectGfx.SizeTo(gfxSize(0.0, 0.0));

@@ -46,6 +46,7 @@ browser.jar:
   skin/classic/browser/Toolbar-inverted.png
   skin/classic/browser/Toolbar-inverted@2x.png
   skin/classic/browser/toolbarbutton-dropmarker.png
+  skin/classic/browser/toolbarbutton-dropmarker@2x.png
   skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker@2x.png
   skin/classic/browser/urlbar-popup-blocked.png
@@ -120,6 +121,7 @@ browser.jar:
   skin/classic/browser/social/services-64.png               (social/services-64.png)
   skin/classic/browser/social/services-64@2x.png            (social/services-64@2x.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
+  skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon@2x.png          (tabbrowser/alltabs-box-bkgnd-icon@2x.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted.png    (tabbrowser/alltabs-box-bkgnd-icon-inverted.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png (tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png)
   skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
@@ -165,11 +167,6 @@ browser.jar:
   skin/classic/browser/syncProgress-horizontalbar.png
   skin/classic/browser/syncProgress-horizontalbar@2x.png
   skin/classic/browser/Toolbar-background-noise.png         (Toolbar-background-noise.png)
-  skin/classic/browser/lion/toolbarbutton-dropmarker.png    (toolbarbutton-dropmarker-lion.png)
-  skin/classic/browser/toolbarbutton-dropmarker@2x.png      (toolbarbutton-dropmarker-lion@2x.png)
-  skin/classic/browser/lion/tabbrowser/alltabs-box-bkgnd-icon.png      (tabbrowser/alltabs-box-bkgnd-icon-lion.png)
-  skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon@2x.png        (tabbrowser/alltabs-box-bkgnd-icon-lion@2x.png)
-  skin/classic/browser/lion/places/toolbar.png                         (places/toolbar-lion.png)
   skin/classic/browser/yosemite/Toolbar.png                            (Toolbar-yosemite.png)
   skin/classic/browser/yosemite/Toolbar@2x.png                         (Toolbar-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-customize.png                (menuPanel-customize-yosemite.png)
@@ -199,9 +196,6 @@ browser.jar:
 % override chrome://browser/skin/feeds/audioFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/videoFeedIcon.png                   chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/videoFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
-% override chrome://browser/skin/toolbarbutton-dropmarker.png              chrome://browser/skin/lion/toolbarbutton-dropmarker.png                 os=Darwin osversion>=10.7
-% override chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png     chrome://browser/skin/lion/tabbrowser/alltabs-box-bkgnd-icon.png        os=Darwin osversion>=10.7
-% override chrome://browser/skin/places/toolbar.png                        chrome://browser/skin/lion/places/toolbar.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/yosemite/Toolbar.png                              os=Darwin osversion>=10.10
 % override chrome://browser/skin/Toolbar@2x.png                            chrome://browser/skin/yosemite/Toolbar@2x.png                           os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize.png                   chrome://browser/skin/yosemite/menuPanel-customize.png                  os=Darwin osversion>=10.10

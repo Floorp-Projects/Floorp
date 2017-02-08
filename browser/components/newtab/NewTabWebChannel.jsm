@@ -145,6 +145,10 @@ NewTabWebChannelImpl.prototype = {
    * Obtains all known browser refs
    */
   _getBrowserRefs() {
+    // Some code may try to emit messages after teardown.
+    if (!this._browsers) {
+      return [];
+    }
     let refs = [];
     for (let bRef of this._browsers) {
       /*

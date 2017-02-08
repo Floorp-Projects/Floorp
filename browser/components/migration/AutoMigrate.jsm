@@ -16,6 +16,9 @@ const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
 const kAutoMigrateLastUndoPromptDateMsPref = "browser.migrate.automigrate.lastUndoPromptDateMs";
 const kAutoMigrateDaysToOfferUndoPref = "browser.migrate.automigrate.daysToOfferUndo";
 
+const kAutoMigrateUndoSurveyPref = "browser.migrate.automigrate.undo-survey";
+const kAutoMigrateUndoSurveyLocalePref = "browser.migrate.automigrate.undo-survey-locales";
+
 const kNotificationId = "automigration-undo";
 
 Cu.import("resource:///modules/MigrationUtils.jsm");
@@ -355,6 +358,7 @@ const AutoMigrate = {
         label: MigrationUtils.getLocalizedString("automigration.undo.dontkeep.label"),
         accessKey: MigrationUtils.getLocalizedString("automigration.undo.dontkeep.accesskey"),
         callback: () => {
+          this._maybeOpenUndoSurveyTab(win);
           this.undo();
         },
       },
@@ -550,6 +554,49 @@ const AutoMigrate = {
       }
     }
   }),
+
+  /**
+   * Maybe open a new tab with a survey. The tab will only be opened if all of
+   * the following are true:
+   * - the 'browser.migrate.automigrate.undo-survey' pref is not empty.
+   *   It should contain the URL of the survey to open.
+   * - the 'browser.migrate.automigrate.undo-survey-locales' pref, a
+   *   comma-separated list of language codes, contains the language code
+   *   that is currently in use for the 'global' chrome pacakge (ie the
+   *   locale in which the user is currently using Firefox).
+   *   The URL will be passed through nsIURLFormatter to allow including
+   *   build ids etc. The special additional formatting variable
+   *   "%IMPORTEDBROWSER" is also replaced with the name of the browser
+   *   from which we imported data.
+   *
+   * @param {Window} chromeWindow   A reference to the window in which to open a link.
+   */
+  _maybeOpenUndoSurveyTab(chromeWindow) {
+    let canDoSurveyInLocale = false;
+    try {
+      let surveyLocales = Preferences.get(kAutoMigrateUndoSurveyLocalePref, "");
+      surveyLocales = surveyLocales.split(",").map(str => str.trim());
+      // Strip out any empty elements, so an empty pref doesn't
+      // lead to a an array with 1 empty string in it.
+      surveyLocales = new Set(surveyLocales.filter(str => !!str));
+      let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                             .getService(Ci.nsIXULChromeRegistry);
+      canDoSurveyInLocale =
+        surveyLocales.has(chromeRegistry.getSelectedLocale("global"));
+    } catch (ex) {
+      /* ignore exceptions and just don't do the survey. */
+    }
+
+    let migrationBrowser = this.getBrowserUsedForMigration();
+    let rawURL = Preferences.get(kAutoMigrateUndoSurveyPref, "");
+    if (!canDoSurveyInLocale || !migrationBrowser || !rawURL) {
+      return;
+    }
+
+    let url = Services.urlFormatter.formatURL(rawURL);
+    url = url.replace("%IMPORTEDBROWSER%", encodeURIComponent(migrationBrowser));
+    chromeWindow.openUILinkIn(url, "tab");
+  },
 
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIObserver, Ci.nsINavBookmarkObserver, Ci.nsISupportsWeakReference]

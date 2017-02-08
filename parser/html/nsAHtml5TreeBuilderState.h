@@ -10,7 +10,7 @@
 /**
  * Interface for exposing the internal state of the HTML5 tree builder.
  * For more documentation, please see
- * http://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/impl/StateSnapshot.java
+ * https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/impl/StateSnapshot.java
  */
 class nsAHtml5TreeBuilderState {
   public:
