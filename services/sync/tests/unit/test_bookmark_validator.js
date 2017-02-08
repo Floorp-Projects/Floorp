@@ -102,7 +102,7 @@ add_task(async function test_isr_duplicatesAndMissingIDs() {
   deepEqual(c.duplicates, ["A"]);
 });
 
-add_task(async function test_isr_duplicateChildren()  {
+add_task(async function test_isr_duplicateChildren() {
   let c = (await inspectServerRecords([
     {id: "A", type: "folder", parentid: "places", children: ["B", "B"]},
     {id: "B", type: "bookmark", parentid: "A"},
