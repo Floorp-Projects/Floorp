@@ -7979,18 +7979,11 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
             return null();
         }
 
-        TokenKind nextSameLine = TOK_EOF;
-        if (!tokenStream.peekTokenSameLine(&nextSameLine, TokenStream::Operand))
+        Node kid = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
+        if (!kid)
             return null();
-        if (nextSameLine != TOK_EOL) {
-            Node kid = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
-            if (!kid)
-                return null();
-            pc->lastAwaitOffset = begin;
-            return newAwaitExpression(begin, kid);
-        }
-        report(ParseError, false, null(), JSMSG_LINE_BREAK_AFTER_AWAIT);
-        return null();
+        pc->lastAwaitOffset = begin;
+        return newAwaitExpression(begin, kid);
       }
 
       default: {
