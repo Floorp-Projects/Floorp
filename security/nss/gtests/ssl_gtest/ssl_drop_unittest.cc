@@ -21,13 +21,13 @@ extern "C" {
 namespace nss_test {
 
 TEST_P(TlsConnectDatagram, DropClientFirstFlightOnce) {
-  client_->SetPacketFilter(new SelectiveDropFilter(0x1));
+  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x1));
   Connect();
   SendReceive();
 }
 
 TEST_P(TlsConnectDatagram, DropServerFirstFlightOnce) {
-  server_->SetPacketFilter(new SelectiveDropFilter(0x1));
+  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x1));
   Connect();
   SendReceive();
 }
@@ -36,32 +36,32 @@ TEST_P(TlsConnectDatagram, DropServerFirstFlightOnce) {
 // flights that they send.  Note: In DTLS 1.3, the shorter handshake means that
 // this will also drop some application data, so we can't call SendReceive().
 TEST_P(TlsConnectDatagram, DropAllFirstTransmissions) {
-  client_->SetPacketFilter(new SelectiveDropFilter(0x15));
-  server_->SetPacketFilter(new SelectiveDropFilter(0x5));
+  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x15));
+  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x5));
   Connect();
 }
 
 // This drops the server's first flight three times.
 TEST_P(TlsConnectDatagram, DropServerFirstFlightThrice) {
-  server_->SetPacketFilter(new SelectiveDropFilter(0x7));
+  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x7));
   Connect();
 }
 
 // This drops the client's second flight once
 TEST_P(TlsConnectDatagram, DropClientSecondFlightOnce) {
-  client_->SetPacketFilter(new SelectiveDropFilter(0x2));
+  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0x2));
   Connect();
 }
 
 // This drops the client's second flight three times.
 TEST_P(TlsConnectDatagram, DropClientSecondFlightThrice) {
-  client_->SetPacketFilter(new SelectiveDropFilter(0xe));
+  client_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0xe));
   Connect();
 }
 
 // This drops the server's second flight three times.
 TEST_P(TlsConnectDatagram, DropServerSecondFlightThrice) {
-  server_->SetPacketFilter(new SelectiveDropFilter(0xe));
+  server_->SetPacketFilter(std::make_shared<SelectiveDropFilter>(0xe));
   Connect();
 }
 
