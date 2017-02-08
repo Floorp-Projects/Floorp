@@ -6377,7 +6377,7 @@ ssl_PickSignatureScheme(sslSocket *ss,
         PRUint32 policy;
 
         if (!ssl_SignatureSchemeValidForKey(!isTLS13 /* allowSha1 */,
-                                            PR_TRUE /* matchGroup */,
+                                            isTLS13 /* matchGroup */,
                                             keyType, group, preferred)) {
             continue;
         }
@@ -8202,6 +8202,20 @@ ssl3_SelectServerCert(sslSocket *ss)
 {
     const ssl3KEADef *kea_def = ss->ssl3.hs.kea_def;
     PRCList *cursor;
+
+    /* If the client didn't include the supported groups extension, assume just
+     * P-256 support and disable all the other ECDHE groups.  This also affects
+     * ECDHE group selection, but this function is called first. */
+    if (!ssl3_ExtensionNegotiated(ss, ssl_supported_groups_xtn)) {
+        unsigned int i;
+        for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+            if (ss->namedGroupPreferences[i] &&
+                ss->namedGroupPreferences[i]->keaType == ssl_kea_ecdh &&
+                ss->namedGroupPreferences[i]->name != ssl_grp_ec_secp256r1) {
+                ss->namedGroupPreferences[i] = NULL;
+            }
+        }
+    }
 
     /* This picks the first certificate that has:
      * a) the right authentication method, and
