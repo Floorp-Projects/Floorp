@@ -264,25 +264,9 @@ PluginInstanceChild::DoNPP_New()
         return rv;
     }
 
-    Initialize();
-
-#if defined(XP_MACOSX) && defined(__i386__)
-    // If an i386 Mac OS X plugin has selected the Carbon event model then
-    // we have to fail. We do not support putting Carbon event model plugins
-    // out of process. Note that Carbon is the default model so out of process
-    // plugins need to actively negotiate something else in order to work
-    // out of process.
-    if (EventModel() == NPEventModelCarbon) {
-      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
-      // users can be notified that restarting the browser in i386 mode may allow
-      // them to use the plugin.
-      SendNegotiatedCarbon();
-
-      // Fail to instantiate.
-      rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+    if (!Initialize()) {
+        rv = NPERR_MODULE_LOAD_FAILED_ERROR;
     }
-#endif
-
     return rv;
 }
 
@@ -389,12 +373,14 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVxDisplay:
         if (!mWsInfo.display) {
             // We are called before Initialize() so we have to call it now.
-           Initialize();
+           if (!Initialize()) {
+               return NPERR_GENERIC_ERROR;
+           }
            NS_ASSERTION(mWsInfo.display, "We should have a valid display!");
         }
         *(void **)aValue = mWsInfo.display;
         return NPERR_NO_ERROR;
-    
+
 #elif defined(OS_WIN)
     case NPNVToolkit:
         return NPERR_GENERIC_ERROR;
@@ -1430,7 +1416,7 @@ PluginInstanceChild::Initialize()
 
     if (mWsInfo.display) {
         // Already initialized
-        return false;
+        return true;
     }
 
     // Request for windowless plugins is set in newp(), before this call.
@@ -1450,7 +1436,18 @@ PluginInstanceChild::Initialize()
     else {
         mWsInfo.display = xt_client_get_display();
     }
-#endif 
+#endif
+
+#if defined(XP_MACOSX) && defined(__i386__)
+    // If an i386 Mac OS X plugin has selected the Carbon event model then
+    // we have to fail. We do not support putting Carbon event model plugins
+    // out of process. Note that Carbon is the default model so out of process
+    // plugins need to actively negotiate something else in order to work
+    // out of process.
+    if (EventModel() == NPEventModelCarbon) {
+        return false;
+    }
+#endif
 
     return true;
 }
