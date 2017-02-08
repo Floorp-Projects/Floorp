@@ -280,7 +280,7 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     }
 
     // Init the HTML-CSS utils
-    mCSSEditUtils = new CSSEditUtils(this);
+    mCSSEditUtils = MakeUnique<CSSEditUtils>(this);
 
     // disable links
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
