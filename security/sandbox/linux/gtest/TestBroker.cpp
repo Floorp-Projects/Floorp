@@ -106,12 +106,12 @@ protected:
   void RunOnManyThreads() {
     static const int kNumThreads = 5;
     pthread_t threads[kNumThreads];
-    for (int i = 0; i < kNumThreads; ++i) {
-      StartThread<C, Main>(&threads[i]);
+    for (pthread_t & thread : threads) {
+      StartThread<C, Main>(&thread);
     }
-    for (int i = 0; i < kNumThreads; ++i) {
+    for (pthread_t thread : threads) {
       void* retval;
-      ASSERT_EQ(pthread_join(threads[i], &retval), 0);
+      ASSERT_EQ(pthread_join(thread, &retval), 0);
       ASSERT_EQ(retval, static_cast<void*>(nullptr));
     }
   }
