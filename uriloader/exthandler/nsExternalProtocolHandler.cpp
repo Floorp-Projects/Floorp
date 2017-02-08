@@ -225,7 +225,10 @@ NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mCallbacks = nullptr;
+    return rv;
+  }
   return AsyncOpen(listener, nullptr);
 }
 
