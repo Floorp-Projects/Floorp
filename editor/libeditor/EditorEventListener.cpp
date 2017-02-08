@@ -406,10 +406,8 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     }
 #endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keypress
-    case eKeyPress: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyPress(keyEvent);
-    }
+    case eKeyPress:
+      return KeyPress(internalEvent->AsKeyboardEvent());
     // mousedown
     case eMouseDown: {
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
@@ -599,34 +597,30 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 #endif
 
 nsresult
-EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent)) {
+  if (NS_WARN_IF(!aKeyboardEvent)) {
     return NS_OK;
   }
 
   RefPtr<EditorBase> editorBase(mEditorBase);
-  WidgetKeyboardEvent* keypressEvent =
-    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-  MOZ_ASSERT(keypressEvent,
-             "DOM key event's internal event must be WidgetKeyboardEvent");
-  if (!editorBase->IsAcceptableInputEvent(keypressEvent) ||
-      DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
+  if (!editorBase->IsAcceptableInputEvent(aKeyboardEvent) ||
+      DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
     return NS_OK;
   }
 
-  nsresult rv = editorBase->HandleKeyPressEvent(keypressEvent);
+  nsresult rv = editorBase->HandleKeyPressEvent(aKeyboardEvent);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
+  if (DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
     return NS_OK;
   }
 
-  if (!ShouldHandleNativeKeyBindings(keypressEvent)) {
+  if (!ShouldHandleNativeKeyBindings(aKeyboardEvent)) {
     return NS_OK;
   }
 
   // Now, ask the native key bindings to handle the event.
-  nsIWidget* widget = keypressEvent->mWidget;
+  nsIWidget* widget = aKeyboardEvent->mWidget;
   // If the event is created by chrome script, the widget is always nullptr.
   if (!widget) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -638,9 +632,9 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
   bool handled = widget->ExecuteNativeKeyBinding(
                            nsIWidget::NativeKeyBindingsForRichTextEditor,
-                           *keypressEvent, DoCommandCallback, doc);
+                           *aKeyboardEvent, DoCommandCallback, doc);
   if (handled) {
-    aKeyEvent->AsEvent()->PreventDefault();
+    aKeyboardEvent->PreventDefault();
   }
   return NS_OK;
 }
