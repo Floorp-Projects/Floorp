@@ -15,8 +15,6 @@
 #include "prlog.h"
 #include "prthread.h"
 
-#include "databuffer.h"
-
 extern bool g_ssl_gtest_verbose;
 
 namespace nss_test {
@@ -34,28 +32,10 @@ static PRDescIdentity test_fd_identity = PR_INVALID_IO_LAYER;
     if (g_ssl_gtest_verbose) LOG(a); \
   } while (false)
 
-class Packet : public DataBuffer {
- public:
-  Packet(const DataBuffer &buf) : DataBuffer(buf), offset_(0) {}
-
-  void Advance(size_t delta) {
-    PR_ASSERT(offset_ + delta <= len());
-    offset_ = std::min(len(), offset_ + delta);
-  }
-
-  size_t offset() const { return offset_; }
-  size_t remaining() const { return len() - offset_; }
-
- private:
-  size_t offset_;
-};
-
 // Implementation of NSPR methods
 static PRStatus DummyClose(PRFileDesc *f) {
-  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
   f->secret = nullptr;
   f->dtor(f);
-  delete io;
   return PR_SUCCESS;
 }
 
@@ -74,7 +54,7 @@ static int32_t DummyAvailable(PRFileDesc *f) {
   return -1;
 }
 
-int64_t DummyAvailable64(PRFileDesc *f) {
+static int64_t DummyAvailable64(PRFileDesc *f) {
   UNIMPLEMENTED();
   return -1;
 }
@@ -132,11 +112,7 @@ static PRStatus DummyListen(PRFileDesc *f, int32_t depth) {
   return PR_FAILURE;
 }
 
-static PRStatus DummyShutdown(PRFileDesc *f, int32_t how) {
-  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
-  io->Reset();
-  return PR_SUCCESS;
-}
+static PRStatus DummyShutdown(PRFileDesc *f, int32_t how) { return PR_SUCCESS; }
 
 // This function does not support peek.
 static int32_t DummyRecv(PRFileDesc *f, void *buf, int32_t buflen,
@@ -258,26 +234,8 @@ static int32_t DummyReserved(PRFileDesc *f) {
   return -1;
 }
 
-DummyPrSocket::~DummyPrSocket() { Reset(); }
-
-void DummyPrSocket::SetPacketFilter(PacketFilter *filter) {
-  if (filter_) {
-    delete filter_;
-  }
+void DummyPrSocket::SetPacketFilter(std::shared_ptr<PacketFilter> filter) {
   filter_ = filter;
-}
-
-void DummyPrSocket::Reset() {
-  delete filter_;
-  if (peer_) {
-    peer_->SetPeer(nullptr);
-    peer_ = nullptr;
-  }
-  while (!input_.empty()) {
-    Packet *front = input_.front();
-    input_.pop();
-    delete front;
-  }
 }
 
 static const struct PRIOMethods DummyMethods = {
@@ -300,23 +258,18 @@ static const struct PRIOMethods DummyMethods = {
     DummyReserved,      DummyReserved,
     DummyReserved,      DummyReserved};
 
-PRFileDesc *DummyPrSocket::CreateFD(const std::string &name, Mode mode) {
+ScopedPRFileDesc DummyPrSocket::CreateFD() {
   if (test_fd_identity == PR_INVALID_IO_LAYER) {
     test_fd_identity = PR_GetUniqueIdentity("testtransportadapter");
   }
 
-  PRFileDesc *fd = (PR_CreateIOLayerStub(test_fd_identity, &DummyMethods));
-  fd->secret = reinterpret_cast<PRFilePrivate *>(new DummyPrSocket(name, mode));
-
+  ScopedPRFileDesc fd(PR_CreateIOLayerStub(test_fd_identity, &DummyMethods));
+  fd->secret = reinterpret_cast<PRFilePrivate *>(this);
   return fd;
 }
 
-DummyPrSocket *DummyPrSocket::GetAdapter(PRFileDesc *fd) {
-  return reinterpret_cast<DummyPrSocket *>(fd->secret);
-}
-
 void DummyPrSocket::PacketReceived(const DataBuffer &packet) {
-  input_.push(new Packet(packet));
+  input_.push(Packet(packet));
 }
 
 int32_t DummyPrSocket::Read(void *data, int32_t len) {
@@ -333,16 +286,15 @@ int32_t DummyPrSocket::Read(void *data, int32_t len) {
     return -1;
   }
 
-  Packet *front = input_.front();
+  auto &front = input_.front();
   size_t to_read =
-      std::min(static_cast<size_t>(len), front->len() - front->offset());
-  memcpy(data, static_cast<const void *>(front->data() + front->offset()),
+      std::min(static_cast<size_t>(len), front.len() - front.offset());
+  memcpy(data, static_cast<const void *>(front.data() + front.offset()),
          to_read);
-  front->Advance(to_read);
+  front.Advance(to_read);
 
-  if (!front->remaining()) {
+  if (!front.remaining()) {
     input_.pop();
-    delete front;
   }
 
   return static_cast<int32_t>(to_read);
@@ -354,24 +306,23 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
     return -1;
   }
 
-  Packet *front = input_.front();
-  if (static_cast<size_t>(buflen) < front->len()) {
+  auto &front = input_.front();
+  if (static_cast<size_t>(buflen) < front.len()) {
     PR_ASSERT(false);
     PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
     return -1;
   }
 
-  size_t count = front->len();
-  memcpy(buf, front->data(), count);
+  size_t count = front.len();
+  memcpy(buf, front.data(), count);
 
   input_.pop();
-  delete front;
-
   return static_cast<int32_t>(count);
 }
 
 int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
-  if (!peer_ || !writeable_) {
+  auto peer = peer_.lock();
+  if (!peer || !writeable_) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }
@@ -387,14 +338,14 @@ int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
     case PacketFilter::CHANGE:
       LOG("Original packet: " << packet);
       LOG("Filtered packet: " << filtered);
-      peer_->PacketReceived(filtered);
+      peer->PacketReceived(filtered);
       break;
     case PacketFilter::DROP:
       LOG("Droppped packet: " << packet);
       break;
     case PacketFilter::KEEP:
       LOGV("Packet: " << packet);
-      peer_->PacketReceived(packet);
+      peer->PacketReceived(packet);
       break;
   }
   // libssl can't handle it if this reports something other than the length
@@ -415,43 +366,31 @@ void Poller::Shutdown() {
   instance = nullptr;
 }
 
-Poller::~Poller() {
-  while (!timers_.empty()) {
-    Timer *timer = timers_.top();
-    timers_.pop();
-    delete timer;
-  }
-}
-
-void Poller::Wait(Event event, DummyPrSocket *adapter, PollTarget *target,
-                  PollCallback cb) {
-  auto it = waiters_.find(adapter);
-  Waiter *waiter;
-
-  if (it == waiters_.end()) {
-    waiter = new Waiter(adapter);
-  } else {
-    waiter = it->second;
-  }
-
+void Poller::Wait(Event event, std::shared_ptr<DummyPrSocket> &adapter,
+                  PollTarget *target, PollCallback cb) {
   assert(event < TIMER_EVENT);
   if (event >= TIMER_EVENT) return;
 
+  std::unique_ptr<Waiter> waiter;
+  auto it = waiters_.find(adapter);
+  if (it == waiters_.end()) {
+    waiter.reset(new Waiter(adapter));
+  } else {
+    waiter = std::move(it->second);
+  }
+
   waiter->targets_[event] = target;
   waiter->callbacks_[event] = cb;
-  waiters_[adapter] = waiter;
+  waiters_[adapter] = std::move(waiter);
 }
 
-void Poller::Cancel(Event event, DummyPrSocket *adapter) {
+void Poller::Cancel(Event event, std::shared_ptr<DummyPrSocket> &adapter) {
   auto it = waiters_.find(adapter);
-  Waiter *waiter;
-
   if (it == waiters_.end()) {
     return;
   }
 
-  waiter = it->second;
-
+  auto &waiter = it->second;
   waiter->targets_[event] = nullptr;
   waiter->callbacks_[event] = nullptr;
 
@@ -460,13 +399,12 @@ void Poller::Cancel(Event event, DummyPrSocket *adapter) {
     if (waiter->callbacks_[i]) return;
   }
 
-  delete waiter;
   waiters_.erase(adapter);
 }
 
 void Poller::SetTimer(uint32_t timer_ms, PollTarget *target, PollCallback cb,
-                      Timer **timer) {
-  Timer *t = new Timer(PR_Now() + timer_ms * 1000, target, cb);
+                      std::shared_ptr<Timer> *timer) {
+  auto t = std::make_shared<Timer>(PR_Now() + timer_ms * 1000, target, cb);
   timers_.push(t);
   if (timer) *timer = t;
 }
@@ -482,7 +420,7 @@ bool Poller::Poll() {
 
   // Figure out the timer for the select.
   if (!timers_.empty()) {
-    Timer *first_timer = timers_.top();
+    auto first_timer = timers_.top();
     if (now >= first_timer->deadline_) {
       // Timer expired.
       timeout = PR_INTERVAL_NO_WAIT;
@@ -493,7 +431,7 @@ bool Poller::Poll() {
   }
 
   for (auto it = waiters_.begin(); it != waiters_.end(); ++it) {
-    Waiter *waiter = it->second;
+    auto &waiter = it->second;
 
     if (waiter->callbacks_[READABLE_EVENT]) {
       if (waiter->io_->readable()) {
@@ -522,12 +460,11 @@ bool Poller::Poll() {
   while (!timers_.empty()) {
     if (now < timers_.top()->deadline_) break;
 
-    Timer *timer = timers_.top();
+    auto timer = timers_.top();
     timers_.pop();
     if (timer->callback_) {
       timer->callback_(timer->target_, TIMER_EVENT);
     }
-    delete timer;
   }
 
   return true;

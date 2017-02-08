@@ -79,7 +79,7 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretResumeWithout) {
 
   Reset();
   server_->EnableExtendedMasterSecret();
-  auto alert_recorder = new TlsAlertRecorder();
+  auto alert_recorder = std::make_shared<TlsAlertRecorder>();
   server_->SetPacketFilter(alert_recorder);
   ConnectExpectFail();
   EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
