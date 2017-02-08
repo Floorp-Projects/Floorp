@@ -297,7 +297,7 @@ var Observer = {
   },
   get_current_test: function(uri) {
     for (let item in test_servers) {
-      let re = RegExp('https?://'+test_servers[item].host);
+      let re = RegExp('https?://'+test_servers[item].host+'.*\/browser/dom/security/test/hsts/file_testserver.sjs');
       if (re.test(uri)) {
         return test_servers[item];
       }
