@@ -164,9 +164,8 @@ class SamplerThread
     if (mInterval < 10)
         ::timeBeginPeriod(mInterval);
 
-    // XXX: this loop is an off-main-thread use of gSampler
     while (gIsActive) {
-      gSampler->DeleteExpiredMarkers();
+      gBuffer->deleteExpiredStoredMarkers();
 
       if (!gIsPaused) {
         mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);

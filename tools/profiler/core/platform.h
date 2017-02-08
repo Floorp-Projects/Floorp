@@ -238,8 +238,7 @@ class Promise;
 class Sampler {
 public:
   // Initialize sampler.
-  Sampler(int aEntrySize,
-          const char** aFeatures, uint32_t aFeatureCount,
+  Sampler(const char** aFeatures, uint32_t aFeatureCount,
           uint32_t aFilterCount);
   ~Sampler();
 
@@ -249,10 +248,6 @@ public:
 
   // Immediately captures the calling thread's call stack and returns it.
   SyncProfile* GetBacktrace();
-
-  // Delete markers which are no longer part of the profile due to buffer
-  // wraparound.
-  void DeleteExpiredMarkers();
 
   // Start and stop sampler.
   void Start();
@@ -310,8 +305,6 @@ public:
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSContext* aContext);
 
-  void GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
@@ -323,7 +316,6 @@ private:
   // Called within a signal. This function must be reentrant
   void InplaceTick(TickSample* sample);
 
-  RefPtr<ProfileBuffer> mBuffer;
   bool mAddLeafAddresses;
   bool mUseStackWalk;
   bool mProfileJS;
