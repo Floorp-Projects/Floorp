@@ -3,10 +3,16 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.AnimRes;
 import android.support.customtabs.CustomTabsIntent;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import junit.framework.Assert;
 
@@ -14,8 +20,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.internal.util.reflection.Whitebox;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.fakes.RoboMenu;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -42,6 +50,7 @@ public class TestCustomTabsActivity {
         doReturn(THIRD_PARTY_PACKAGE_NAME).when(spyContext).getPackageName();
 
         spyActivity = spy(new CustomTabsActivity());
+        doReturn(RuntimeEnvironment.application.getResources()).when(spyActivity).getResources();
 
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setExitAnimations(spyContext, enterRes, exitRes);
@@ -90,5 +99,32 @@ public class TestCustomTabsActivity {
         Whitebox.setInternalState(spyActivity, "usingCustomAnimation", true);
 
         Assert.assertEquals(THIRD_PARTY_PACKAGE_NAME, spyActivity.getPackageName());
+    }
+
+    @Test
+    public void testInsertActionButton() {
+        // create properties for CustomTabsIntent
+        final String description = "Description";
+        final Intent actionIntent = new Intent(Intent.ACTION_VIEW);
+        final int reqCode = 0x123;
+        final PendingIntent pendingIntent = PendingIntent.getActivities(spyContext,
+                reqCode,
+                new Intent[]{actionIntent},
+                PendingIntent.FLAG_CANCEL_CURRENT);
+        final Bitmap bitmap = BitmapFactory.decodeResource(
+                spyContext.getResources(),
+                R.drawable.ic_action_settings); // arbitrary icon resource
+
+        // To create a CustomTabsIntent which is asking for ActionButton.
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        builder.setActionButton(bitmap, description, pendingIntent, true);
+
+        // CustomTabsActivity should return a MenuItem with corresponding attributes.
+        Menu menu = new RoboMenu(spyContext);
+        MenuItem item = spyActivity.insertActionButton(menu, builder.build().intent);
+        Assert.assertNotNull(item);
+        Assert.assertEquals(item.getTitle(), description);
+        Assert.assertEquals(0, item.getOrder()); // should be the first one
+        Assert.assertTrue(item.isVisible());
     }
 }
