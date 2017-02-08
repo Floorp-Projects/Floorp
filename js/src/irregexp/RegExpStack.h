@@ -79,8 +79,8 @@ class RegExpStack
     bool grow();
 
     // Address of allocated memory.
-    const void* addressOfBase() { return &base_; }
-    const void* addressOfLimit() { return &limit_; }
+    static size_t offsetOfBase() { return offsetof(RegExpStack, base_); }
+    static size_t offsetOfLimit() { return offsetof(RegExpStack, limit_); }
 
     void* base() { return base_; }
     void* limit() { return limit_; }

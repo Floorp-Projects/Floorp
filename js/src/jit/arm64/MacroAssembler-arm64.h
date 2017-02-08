@@ -1866,12 +1866,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void handleFailureWithHandlerTail(void* handler);
 
-    void profilerEnterFrame(Register framePtr, Register scratch) {
-        AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
-        loadPtr(activation, scratch);
-        storePtr(framePtr, Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
-        storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
-    }
+    void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame() {
         branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
     }
