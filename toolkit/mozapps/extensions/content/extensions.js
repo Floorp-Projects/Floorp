@@ -2715,6 +2715,27 @@ var gSearchView = {
     this.removeInstall(aInstall);
   },
 
+  onInstallEnded(aInstall) {
+    // If this is a webextension that was installed from this page,
+    // display the post-install notification.
+    if (!WEBEXT_PERMISSION_PROMPTS || !aInstall.addon.isWebExtension) {
+      return;
+    }
+
+    for (let item of this._listBox.childNodes) {
+      if (item.mInstall == aInstall) {
+        let subject = {
+          wrappedJSObject: {
+            target: getBrowserElement(),
+            addon: aInstall.addon,
+          },
+        };
+        Services.obs.notifyObservers(subject, "webextension-install-notify", null);
+        return;
+      }
+    }
+  },
+
   removeInstall(aInstall) {
     for (let item of this._listBox.childNodes) {
       if (item.mInstall == aInstall) {
