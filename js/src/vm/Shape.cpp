@@ -460,15 +460,13 @@ NativeObject::getChildProperty(JSContext* cx,
     return shape;
 }
 
-bool
-js::NativeObject::toDictionaryMode(JSContext* cx)
+/* static */ bool
+js::NativeObject::toDictionaryMode(JSContext* cx, HandleNativeObject obj)
 {
-    MOZ_ASSERT(!inDictionaryMode());
-    MOZ_ASSERT(cx->isInsideCurrentCompartment(this));
+    MOZ_ASSERT(!obj->inDictionaryMode());
+    MOZ_ASSERT(cx->isInsideCurrentCompartment(obj));
 
-    uint32_t span = slotSpan();
-
-    Rooted<NativeObject*> self(cx, this);
+    uint32_t span = obj->slotSpan();
 
     // Clone the shapes into a new dictionary list. Don't update the last
     // property of this object until done, otherwise a GC triggered while
@@ -476,7 +474,7 @@ js::NativeObject::toDictionaryMode(JSContext* cx)
     RootedShape root(cx);
     RootedShape dictionaryShape(cx);
 
-    RootedShape shape(cx, lastProperty());
+    RootedShape shape(cx, obj->lastProperty());
     while (shape) {
         MOZ_ASSERT(!shape->inDictionary());
 
@@ -488,7 +486,7 @@ js::NativeObject::toDictionaryMode(JSContext* cx)
 
         GCPtrShape* listp = dictionaryShape ? &dictionaryShape->parent : nullptr;
         StackShape child(shape);
-        dprop->initDictionaryShape(child, self->numFixedSlots(), listp);
+        dprop->initDictionaryShape(child, obj->numFixedSlots(), listp);
 
         if (!dictionaryShape)
             root = dprop;
@@ -503,18 +501,18 @@ js::NativeObject::toDictionaryMode(JSContext* cx)
         return false;
     }
 
-    if (IsInsideNursery(self) &&
-        !cx->nursery().queueDictionaryModeObjectToSweep(self))
+    if (IsInsideNursery(obj) &&
+        !cx->nursery().queueDictionaryModeObjectToSweep(obj))
     {
         ReportOutOfMemory(cx);
         return false;
     }
 
     MOZ_ASSERT(root->listp == nullptr);
-    root->listp = &self->shape_;
-    self->shape_ = root;
+    root->listp = &obj->shape_;
+    obj->shape_ = root;
 
-    MOZ_ASSERT(self->inDictionaryMode());
+    MOZ_ASSERT(obj->inDictionaryMode());
     root->base()->setSlotSpan(span);
 
     return true;
@@ -592,7 +590,7 @@ NativeObject::addPropertyInternal(JSContext* cx,
         if (allowDictionary &&
             (!stableSlot || ShouldConvertToDictionary(obj)))
         {
-            if (!obj->toDictionaryMode(cx))
+            if (!toDictionaryMode(cx, obj))
                 return nullptr;
             table = obj->lastProperty()->maybeTable(keep);
             entry = &table->search<MaybeAdding::Adding>(id, keep);
@@ -834,7 +832,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
      * addPropertyInternal because a failure under add would lose data.
      */
     if (shape != obj->lastProperty() && !obj->inDictionaryMode()) {
-        if (!obj->toDictionaryMode(cx))
+        if (!toDictionaryMode(cx, obj))
             return nullptr;
         ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
@@ -988,7 +986,7 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
      * be removed, switch to dictionary mode.
      */
     if (!obj->inDictionaryMode() && (shape != obj->lastProperty() || !obj->canRemoveLastProperty())) {
-        if (!obj->toDictionaryMode(cx))
+        if (!toDictionaryMode(cx, obj))
             return false;
         ShapeTable* table = obj->lastProperty()->maybeTable(keep);
         MOZ_ASSERT(table);
@@ -1150,7 +1148,7 @@ NativeObject::replaceWithNewEquivalentShape(JSContext* cx, HandleNativeObject ob
 
     if (!obj->inDictionaryMode()) {
         RootedShape newRoot(cx, newShape);
-        if (!obj->toDictionaryMode(cx))
+        if (!toDictionaryMode(cx, obj))
             return nullptr;
         oldShape = obj->lastProperty();
         newShape = newRoot;
