@@ -565,7 +565,7 @@ nsAboutCache::Channel::FlushBuffer()
 NS_IMETHODIMP
 nsAboutCache::GetURIFlags(nsIURI *aURI, uint32_t *result)
 {
-    *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
+    *result = 0;
     return NS_OK;
 }
 
