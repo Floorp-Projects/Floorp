@@ -23,59 +23,6 @@ function assert_style_left_at(animation, time, easingFunction) {
                        easingFunction(portion) * 100 + ' at ' + time + 'ms');
 }
 
-var gEffectEasingTestsWithKeyframeEasing = [
-  {
-    desc: 'effect easing produces values greater than 1 with keyframe ' +
-          'easing cubic-bezier(0, 0, 0, 0)',
-    easing: 'cubic-bezier(0, 1.5, 1, 1.5)',
-    keyframeEasing: 'cubic-bezier(0, 0, 0, 0)', // linear
-    easingFunction: cubicBezier(0, 1.5, 1, 1.5)
-  },
-  {
-    desc: 'effect easing produces values greater than 1 with keyframe ' +
-          'easing cubic-bezier(1, 1, 1, 1)',
-    easing: 'cubic-bezier(0, 1.5, 1, 1.5)',
-    keyframeEasing: 'cubic-bezier(1, 1, 1, 1)', // linear
-    easingFunction: cubicBezier(0, 1.5, 1, 1.5)
-  },
-  {
-    desc: 'effect easing produces negative values 1 with keyframe ' +
-          'easing cubic-bezier(0, 0, 0, 0)',
-    easing: 'cubic-bezier(0, -0.5, 1, -0.5)',
-    keyframeEasing: 'cubic-bezier(0, 0, 0, 0)', // linear
-    easingFunction: cubicBezier(0, -0.5, 1, -0.5)
-  },
-  {
-    desc: 'effect easing produces negative values 1 with keyframe ' +
-          'easing cubic-bezier(1, 1, 1, 1)',
-    easing: 'cubic-bezier(0, -0.5, 1, -0.5)',
-    keyframeEasing: 'cubic-bezier(1, 1, 1, 1)', // linear
-    easingFunction: cubicBezier(0, -0.5, 1, -0.5)
-  },
-];
-
-gEffectEasingTestsWithKeyframeEasing.forEach(function(options) {
-  test(function(t) {
-    var target = createDiv(t);
-    target.style.position = 'absolute';
-    var anim = target.animate(
-      [ { left: '0px', easing: options.keyframeEasing },
-        { left: '100px' } ],
-        { duration: 1000,
-          fill: 'forwards',
-          easing: options.easing });
-    var easing = options.easingFunction;
-
-    anim.pause();
-
-    assert_style_left_at(anim, 0, easing);
-    assert_style_left_at(anim, 250, easing);
-    assert_style_left_at(anim, 500, easing);
-    assert_style_left_at(anim, 750, easing);
-    assert_style_left_at(anim, 1000, easing);
-  }, options.desc);
-});
-
 // Other test cases that effect easing produces values outside of [0,1].
 test(function(t) {
   var target = createDiv(t);
