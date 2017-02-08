@@ -420,7 +420,7 @@ ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 
 static void
 SetAnimatable(nsCSSPropertyID aProperty,
-              const StyleAnimationValue& aAnimationValue,
+              const AnimationValue& aAnimationValue,
               nsIFrame* aFrame,
               TransformReferenceBox& aRefBox,
               layers::Animatable& aAnimatable)
@@ -434,12 +434,14 @@ SetAnimatable(nsCSSPropertyID aProperty,
 
   switch (aProperty) {
     case eCSSProperty_opacity:
-      aAnimatable = aAnimationValue.GetFloatValue();
+      aAnimatable = aAnimationValue.GetOpacity();
       break;
     case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
+      // TODO: Get transform from RawServoAnimationValue.
       nsCSSValueSharedList* list =
-        aAnimationValue.GetCSSValueSharedListValue();
+        aAnimationValue.mGecko.GetCSSValueSharedListValue();
+      MOZ_ASSERT(list, "Invalid transform list");
       AddTransformFunctions(list->mHead,
                             aFrame->StyleContext(),
                             aFrame->PresContext(),
@@ -465,7 +467,9 @@ SetBaseAnimationStyle(nsCSSPropertyID aProperty,
   MOZ_ASSERT(!baseValue.IsNull(),
              "The base value should be already there");
 
-  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, aBaseStyle);
+  // FIXME: Bug 1311257: We need to get the baseValue for
+  //        RawServoAnimationValue.
+  SetAnimatable(aProperty, { baseValue, nullptr }, aFrame, aRefBox, aBaseStyle);
 }
 
 static void
@@ -557,11 +561,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
     AnimationSegment* animSegment = animation->segments().AppendElement();
     SetAnimatable(aProperty.mProperty,
-                  segment.mFromValue.mGecko,
+                  segment.mFromValue,
                   aFrame, refBox,
                   animSegment->startState());
     SetAnimatable(aProperty.mProperty,
-                  segment.mToValue.mGecko,
+                  segment.mToValue,
                   aFrame, refBox,
                   animSegment->endState());
 
