@@ -159,7 +159,7 @@ MakeCSSAngle(const nsCSSValue& aValue)
   return CSSAngle(aValue.GetAngleValue(), aValue.GetUnit());
 }
 
-static void AddTransformFunctions(nsCSSValueList* aList,
+static void AddTransformFunctions(const nsCSSValueList* aList,
                                   nsStyleContext* aContext,
                                   nsPresContext* aPresContext,
                                   TransformReferenceBox& aRefBox,
@@ -401,6 +401,20 @@ static void AddTransformFunctions(nsCSSValueList* aList,
   }
 }
 
+static void
+AddTransformFunctions(const nsCSSValueSharedList* aList,
+                      const nsIFrame* aFrame,
+                      TransformReferenceBox& aRefBox,
+                      layers::Animatable& aAnimatable)
+{
+  MOZ_ASSERT(aList->mHead);
+  AddTransformFunctions(aList->mHead,
+                        aFrame->StyleContext(),
+                        aFrame->PresContext(),
+                        aRefBox,
+                        aAnimatable.get_ArrayOfTransformFunction());
+}
+
 static TimingFunction
 ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 {
@@ -438,15 +452,15 @@ SetAnimatable(nsCSSPropertyID aProperty,
       break;
     case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      // TODO: Get transform from RawServoAnimationValue.
-      nsCSSValueSharedList* list =
-        aAnimationValue.mGecko.GetCSSValueSharedListValue();
-      MOZ_ASSERT(list, "Invalid transform list");
-      AddTransformFunctions(list->mHead,
-                            aFrame->StyleContext(),
-                            aFrame->PresContext(),
-                            aRefBox,
-                            aAnimatable.get_ArrayOfTransformFunction());
+      if (aAnimationValue.mServo) {
+        RefPtr<nsCSSValueSharedList> list;
+        Servo_AnimationValues_GetTransform(aAnimationValue.mServo, &list);
+        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
+      } else {
+        nsCSSValueSharedList* list =
+          aAnimationValue.mGecko.GetCSSValueSharedListValue();
+        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
+      }
       break;
     }
     default:
