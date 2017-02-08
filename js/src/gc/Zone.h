@@ -834,10 +834,6 @@ struct GCManagedDeletePolicy
 
 namespace JS {
 
-template <typename T>
-struct DeletePolicy<js::GCPtr<T>> : public js::GCManagedDeletePolicy<js::GCPtr<T>>
-{};
-
 // Scope data that contain GCPtrs must use the correct DeletePolicy.
 //
 // This is defined here because vm/Scope.h cannot #include "vm/Runtime.h"

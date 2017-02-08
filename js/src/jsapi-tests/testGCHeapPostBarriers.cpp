@@ -14,6 +14,31 @@
 
 #include "jscntxtinlines.h"
 
+// A heap-allocated structure containing one of our barriered pointer wrappers
+// to test.
+template <typename W>
+struct TestStruct
+{
+    W wrapper;
+};
+
+// A specialized version for GCPtr that adds a zone() method.
+template <typename T>
+struct TestStruct<js::GCPtr<T>>
+{
+    js::GCPtr<T> wrapper;
+
+    JS::Zone* zone() { return wrapper->zone(); }
+};
+
+// Give the GCPtr version GCManagedDeletePolicy as required.
+namespace JS {
+template <typename T>
+struct DeletePolicy<TestStruct<js::GCPtr<T>>>
+    : public js::GCManagedDeletePolicy<TestStruct<js::GCPtr<T>>>
+{};
+} // namespace JS
+
 template <typename T>
 static T* CreateGCThing(JSContext* cx)
 {
@@ -104,25 +129,26 @@ TestHeapPostBarrierUpdate()
     CHECK(js::gc::IsInsideNursery(initialObj));
     uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
-    W* ptr = nullptr;
+    TestStruct<W>* ptr = nullptr;
 
     {
-        auto heapPtr = cx->make_unique<W>();
-        CHECK(heapPtr);
+        auto testStruct = cx->make_unique<TestStruct<W>>();
+        CHECK(testStruct);
 
-        W& wrapper = *heapPtr;
+        W& wrapper = testStruct->wrapper;
         CHECK(wrapper.get() == nullptr);
         wrapper = initialObj;
         CHECK(wrapper == initialObj);
 
-        ptr = heapPtr.release();
+        ptr = testStruct.release();
     }
 
     cx->minorGC(JS::gcreason::API);
 
-    CHECK(uintptr_t(ptr->get()) != initialObjAsInt);
-    CHECK(!js::gc::IsInsideNursery(ptr->get()));
-    CHECK(CanAccessObject(ptr->get()));
+    W& wrapper = ptr->wrapper;
+    CHECK(uintptr_t(wrapper.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper.get()));
+    CHECK(CanAccessObject(wrapper.get()));
 
     return true;
 }
@@ -139,10 +165,10 @@ TestHeapPostBarrierInitFailure()
     CHECK(js::gc::IsInsideNursery(initialObj));
 
     {
-        auto heapPtr = cx->make_unique<W>();
-        CHECK(heapPtr);
+        auto testStruct = cx->make_unique<TestStruct<W>>();
+        CHECK(testStruct);
 
-        W& wrapper = *heapPtr;
+        W& wrapper = testStruct->wrapper;
         CHECK(wrapper.get() == nullptr);
         wrapper = initialObj;
         CHECK(wrapper == initialObj);
