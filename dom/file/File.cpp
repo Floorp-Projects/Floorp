@@ -592,8 +592,10 @@ File::CreateFromNsIFile(const GlobalObject& aGlobal,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+
   RefPtr<Promise> promise =
-    FileCreatorHelper::CreateFile(aGlobal, aData, aBag, true, aRv);
+    FileCreatorHelper::CreateFile(global, aData, aBag, true, aRv);
   return promise.forget();
 }
 
@@ -610,8 +612,10 @@ File::CreateFromFileName(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+
   RefPtr<Promise> promise =
-    FileCreatorHelper::CreateFile(aGlobal, file, aBag, false, aRv);
+    FileCreatorHelper::CreateFile(global, file, aBag, false, aRv);
   return promise.forget();
 }
 

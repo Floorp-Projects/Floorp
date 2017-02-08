@@ -19,13 +19,13 @@
 #endif
 
 class nsIFile;
+class nsIGlobalObject;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
 
 struct ChromeFilePropertyBag;
-class GlobalObject;
 class Promise;
 class File;
 
@@ -35,7 +35,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(FileCreatorHelper);
 
   static already_AddRefed<Promise>
-  CreateFile(const GlobalObject& aGlobal,
+  CreateFile(nsIGlobalObject* aGlobalObject,
              nsIFile* aFile,
              const ChromeFilePropertyBag& aBag,
              bool aIsFromNsIFile,

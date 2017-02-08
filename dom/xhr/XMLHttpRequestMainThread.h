@@ -530,6 +530,9 @@ public:
                           Blob* aBlob,
                           nsresult aResult) override;
 
+  void
+  LocalFileToBlobCompleted(Blob* aBlob);
+
 protected:
   // XHR states are meant to mirror the XHR2 spec:
   //   https://xhr.spec.whatwg.org/#states
@@ -551,7 +554,6 @@ protected:
                                    uint32_t *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   void CreatePartialBlob(ErrorResult& aRv);
-  bool CreateDOMBlob(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(State aState, bool aBroadcast = true);
@@ -639,14 +641,9 @@ protected:
   // It is either a cached blob-response from the last call to GetResponse,
   // but is also explicitly set in OnStopRequest.
   RefPtr<Blob> mResponseBlob;
-  // Non-null only when we are able to get a os-file representation of the
-  // response, i.e. when loading from a file.
-  RefPtr<Blob> mDOMBlob;
-  // We stream data to mBlobStorage when response type is "blob" and mDOMBlob is
-  // null.
+  // We stream data to mBlobStorage when response type is "blob".
   RefPtr<MutableBlobStorage> mBlobStorage;
-  // We stream data to mBlobStorage when response type is "moz-blob" and
-  // mDOMBlob is null.
+  // We stream data to mBlobSet when response type is "moz-blob".
   nsAutoPtr<BlobSet> mBlobSet;
 
   nsString mOverrideMimeType;
