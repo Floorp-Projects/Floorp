@@ -2476,6 +2476,9 @@ InlineFrameIterator::computeEnvironmentChain(const Value& envChainValue,
     if (isFunctionFrame())
         return callee(fallback)->environment();
 
+    if (isModuleFrame())
+        return script()->module()->environment();
+
     // Ion does not handle non-function scripts that have anything other than
     // the global on their env chain.
     MOZ_ASSERT(!script()->isForEval());
@@ -2487,6 +2490,12 @@ bool
 InlineFrameIterator::isFunctionFrame() const
 {
     return !!calleeTemplate_;
+}
+
+bool
+InlineFrameIterator::isModuleFrame() const
+{
+    return script()->module();
 }
 
 MachineState
