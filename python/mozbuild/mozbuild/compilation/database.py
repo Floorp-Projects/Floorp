@@ -118,10 +118,13 @@ class CompileDBBackend(CommonBackend):
 
         db = []
 
-        for (directory, filename), cmd in self._db.iteritems():
+        for (directory, filename, unified), cmd in self._db.iteritems():
             env = self._envs[directory]
             cmd = list(cmd)
-            cmd.append(filename)
+            if unified is None:
+                cmd.append(filename)
+            else:
+                cmd.append(unified)
             local_extra = list(self._extra_includes[directory])
             if directory not in self._gyp_dirs:
                 for var in (
@@ -173,6 +176,9 @@ class CompileDBBackend(CommonBackend):
         for f in obj.unified_source_mapping:
             self._build_db_line(obj.objdir, obj.relativedir, obj.config, f[0],
                                 obj.canonical_suffix)
+            for entry in f[1]:
+                self._build_db_line(obj.objdir, obj.relativedir, obj.config,
+                                    entry, obj.canonical_suffix, unified=f[0])
 
     def _handle_idl_manager(self, idl_manager):
         pass
@@ -204,10 +210,11 @@ class CompileDBBackend(CommonBackend):
         '.mm': 'CXXFLAGS',
     }
 
-    def _build_db_line(self, objdir, reldir, cenv, filename, canonical_suffix):
+    def _build_db_line(self, objdir, reldir, cenv, filename,
+                       canonical_suffix, unified=None):
         if canonical_suffix not in self.COMPILERS:
             return
-        db = self._db.setdefault((objdir, filename),
+        db = self._db.setdefault((objdir, filename, unified),
             cenv.substs[self.COMPILERS[canonical_suffix]].split() +
             ['-o', '/dev/null', '-c'])
         reldir = reldir or mozpath.relpath(objdir, cenv.topobjdir)
