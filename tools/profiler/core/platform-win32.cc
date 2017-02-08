@@ -148,6 +148,8 @@ class SamplerThread
   }
 
   static void StopSampler() {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
     mInstance->Join();
     delete mInstance;
     mInstance = NULL;
@@ -163,10 +165,10 @@ class SamplerThread
         ::timeBeginPeriod(mInterval);
 
     // XXX: this loop is an off-main-thread use of gSampler
-    while (gSampler->IsActive()) {
+    while (gIsActive) {
       gSampler->DeleteExpiredMarkers();
 
-      if (!gSampler->IsPaused()) {
+      if (!gIsPaused) {
         mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
@@ -303,14 +305,14 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
-  MOZ_ASSERT(!IsActive());
-  SetActive(true);
+  MOZ_ASSERT(!gIsActive);
+  gIsActive = true;
   SamplerThread::StartSampler();
 }
 
 void Sampler::Stop() {
-  MOZ_ASSERT(IsActive());
-  SetActive(false);
+  MOZ_ASSERT(gIsActive);
+  gIsActive = false;
   SamplerThread::StopSampler();
 }
 
