@@ -84,8 +84,8 @@
         matchCase.doCommand();
       }
 
-      gFindBar._find();
       yield toggleHighlightAndWait(true);
+      gFindBar._find();
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
