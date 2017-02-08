@@ -565,7 +565,9 @@ public:
   explicit AdjustedTarget(CanvasRenderingContext2D* aCtx,
                           const gfx::Rect *aBounds = nullptr)
   {
-    mTarget = aCtx->mTarget;
+    // There are operations that can invalidate aCtx->mTarget along the way,
+    // so don't cache the pointer to it too soon.
+    mTarget = nullptr;
 
     // All rects in this function are in the device space of ctx->mTarget.
 
@@ -594,7 +596,7 @@ public:
     // are used.
     if (aCtx->NeedToDrawShadow()) {
       mShadowTarget = MakeUnique<AdjustedTargetForShadow>(
-        aCtx, mTarget, boundsAfterFilter, op);
+        aCtx, aCtx->mTarget, boundsAfterFilter, op);
       mTarget = mShadowTarget->DT();
       offsetToFinalDT = mShadowTarget->OffsetToFinalDT();
 
@@ -607,6 +609,9 @@ public:
     if (aCtx->NeedToApplyFilter()) {
       bounds.RoundOut();
 
+      if (!mTarget) {
+        mTarget = aCtx->mTarget;
+      }
       gfx::IntRect intBounds;
       if (!bounds.ToIntRect(&intBounds)) {
         return;
@@ -615,6 +620,9 @@ public:
         aCtx, mTarget, offsetToFinalDT, intBounds,
         gfx::RoundedToInt(boundsAfterFilter), op);
       mTarget = mFilterTarget->DT();
+    }
+    if (!mTarget) {
+      mTarget = aCtx->mTarget;
     }
   }
 
