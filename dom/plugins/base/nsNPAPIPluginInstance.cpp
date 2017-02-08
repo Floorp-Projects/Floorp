@@ -1578,49 +1578,6 @@ nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *c
   }
 }
 
-class CarbonEventModelFailureEvent : public Runnable {
-public:
-  nsCOMPtr<nsIContent> mContent;
-
-  explicit CarbonEventModelFailureEvent(nsIContent* aContent)
-    : mContent(aContent)
-  {}
-
-  ~CarbonEventModelFailureEvent() {}
-
-  NS_IMETHOD Run();
-};
-
-NS_IMETHODIMP
-CarbonEventModelFailureEvent::Run()
-{
-  nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
-  nsContentUtils::DispatchTrustedEvent(mContent->GetComposedDoc(), mContent,
-                                       type, true, true);
-  return NS_OK;
-}
-
-void
-nsNPAPIPluginInstance::CarbonNPAPIFailure()
-{
-  nsCOMPtr<nsIDOMElement> element;
-  GetDOMElement(getter_AddRefs(element));
-  if (!element) {
-    return;
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
-  if (!content) {
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> e = new CarbonEventModelFailureEvent(content);
-  nsresult rv = NS_DispatchToCurrentThread(e);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch CarbonEventModelFailureEvent.");
-  }
-}
-
 static bool
 GetJavaVersionFromMimetype(nsPluginTag* pluginTag, nsCString& version)
 {
