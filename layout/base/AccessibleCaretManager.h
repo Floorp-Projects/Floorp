@@ -226,7 +226,8 @@ protected:
                                    nsIFrame* aEndFrame) const;
 
   // Check if the two carets is overlapping to become tilt.
-  virtual void UpdateCaretsForOverlappingTilt();
+  // @return true if the two carets become tilt; false, otherwise.
+  virtual bool UpdateCaretsForOverlappingTilt();
 
   // Make the two carets always tilt.
   virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
