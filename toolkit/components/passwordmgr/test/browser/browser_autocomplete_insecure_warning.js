@@ -15,6 +15,9 @@ add_task(function* test_clickInsecureFieldWarning() {
 
     let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
 
+    yield SimpleTest.promiseFocus(browser);
+    info("content window focused");
+
     // Focus the username field to open the popup.
     yield ContentTask.spawn(browser, null, function openAutocomplete() {
       content.document.getElementById("form-basic-username").focus();
