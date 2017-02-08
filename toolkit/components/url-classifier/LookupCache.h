@@ -148,6 +148,8 @@ public:
                                     uint32_t aFreshnessGuarantee,
                                     bool* aConfirmed) = 0;
 
+  virtual bool IsEmpty() = 0;
+
   virtual void ClearAll();
 
   template<typename T>
@@ -199,6 +201,8 @@ public:
                                     const TableFreshnessMap& aTableFreshness,
                                     uint32_t aFreshnessGuarantee,
                                     bool* aConfirmed) override;
+
+  virtual bool IsEmpty() override;
 
   nsresult Build(AddPrefixArray& aAddPrefixes,
                  AddCompleteArray& aAddCompletes);
