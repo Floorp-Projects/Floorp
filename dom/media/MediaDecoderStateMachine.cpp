@@ -521,6 +521,13 @@ public:
 
   void Enter();
 
+  void Exit() override
+  {
+    // mPendingSeek is either moved in MaybeFinishDecodeFirstFrame()
+    // or should be rejected here before transition to SHUTDOWN.
+    mPendingSeek.RejectIfExists(__func__);
+  }
+
   State GetState() const override
   {
     return DECODER_STATE_DECODING_FIRSTFRAME;
@@ -592,10 +599,24 @@ public:
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
   }
 
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
+  {
+    if (mMaster->mIsMSE) {
+      return StateObject::HandleSeek(aTarget);
+    }
+    // Delay seek request until decoding first frames for non-MSE media.
+    SLOG("Not Enough Data to seek at this stage, queuing seek");
+    mPendingSeek.RejectIfExists(__func__);
+    mPendingSeek.mTarget.emplace(aTarget);
+    return mPendingSeek.mPromise.Ensure(__func__);
+  }
+
 private:
   // Notify FirstFrameLoaded if having decoded first frames and
   // transition to SEEKING if there is any pending seek, or DECODING otherwise.
   void MaybeFinishDecodeFirstFrame();
+
+  SeekJob mPendingSeek;
 };
 
 /**
@@ -2099,7 +2120,11 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
   }
 
   mMaster->FinishDecodeFirstFrame();
-  SetState<DecodingState>();
+  if (mPendingSeek.Exists()) {
+    SetSeekingState(Move(mPendingSeek), EventVisibility::Observable);
+  } else {
+    SetState<DecodingState>();
+  }
 }
 
 void
@@ -2547,6 +2572,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
+  mIsMSE(aDecoder->IsMSE()),
   INIT_MIRROR(mBuffered, TimeIntervals()),
   INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
   INIT_MIRROR(mExplicitDuration, Maybe<double>()),
