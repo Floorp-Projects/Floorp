@@ -935,11 +935,6 @@ or run without that action (ie: --no-{action})"
                     'stage_ssh_key': c['stage_ssh_key']
                 }
 
-        if self.query_is_nightly():
-            mach_env['LATEST_MAR_DIR'] = c['latest_mar_dir'] % {
-                'branch': self.branch
-            }
-
         # this prevents taskcluster from overwriting the target files with
         # the multilocale files. Put everything from the en-US build in a
         # separate folder.

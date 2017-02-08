@@ -470,6 +470,14 @@ LookupCacheV2::IsHashEntryConfirmed(const Completion& aEntry,
   }
 }
 
+bool
+LookupCacheV2::IsEmpty()
+{
+  bool isEmpty;
+  mPrefixSet->IsEmpty(&isEmpty);
+  return isEmpty;
+}
+
 nsresult
 LookupCacheV2::Build(AddPrefixArray& aAddPrefixes,
                      AddCompleteArray& aAddCompletes)

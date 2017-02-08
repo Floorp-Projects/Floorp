@@ -17,9 +17,10 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
+    viewportId: PropTypes.number.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
+    onUpdateDeviceModal: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -27,20 +28,21 @@ module.exports = createClass({
   onSelectChange({ target }) {
     let {
       devices,
+      viewportId,
       onChangeDevice,
       onResizeViewport,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this.props;
 
     if (target.value === OPEN_DEVICE_MODAL_VALUE) {
-      onUpdateDeviceModalOpen(true);
+      onUpdateDeviceModal(true, viewportId);
       return;
     }
     for (let type of devices.types) {
       for (let device of devices[type]) {
         if (device.name === target.value) {
           onResizeViewport(device.width, device.height);
-          onChangeDevice(device);
+          onChangeDevice(device, type);
           return;
         }
       }

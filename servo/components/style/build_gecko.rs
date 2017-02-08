@@ -4,15 +4,10 @@
 
 mod common {
     use std::env;
-    use std::path::{Path, PathBuf};
-    use std::sync::Mutex;
-    use std::time::SystemTime;
+    use std::path::PathBuf;
 
     lazy_static! {
         pub static ref OUTDIR_PATH: PathBuf = PathBuf::from(env::var("OUT_DIR").unwrap()).join("gecko");
-        pub static ref LAST_MODIFIED: Mutex<SystemTime> =
-            Mutex::new(get_modified_time(&env::current_exe().unwrap())
-                       .expect("Failed to get modified time of executable"));
     }
 
     pub const STRUCTS_DEBUG_FILE: &'static str = "structs_debug.rs";
@@ -31,10 +26,6 @@ mod common {
             BuildType::Release => STRUCTS_RELEASE_FILE
         }
     }
-
-    pub fn get_modified_time(file: &Path) -> Option<SystemTime> {
-        file.metadata().and_then(|m| m.modified()).ok()
-    }
 }
 
 #[cfg(feature = "bindgen")]
@@ -46,8 +37,9 @@ mod bindings {
     use std::env;
     use std::fs::File;
     use std::io::{Read, Write};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::Mutex;
+    use std::time::SystemTime;
     use super::common::*;
 
     lazy_static! {
@@ -64,6 +56,13 @@ mod bindings {
             DISTDIR_PATH.join("include/nspr"),
         ];
         static ref ADDED_PATHS: Mutex<HashSet<PathBuf>> = Mutex::new(HashSet::new());
+        pub static ref LAST_MODIFIED: Mutex<SystemTime> =
+            Mutex::new(get_modified_time(&env::current_exe().unwrap())
+                       .expect("Failed to get modified time of executable"));
+    }
+
+    fn get_modified_time(file: &Path) -> Option<SystemTime> {
+        file.metadata().and_then(|m| m.modified()).ok()
     }
 
     fn search_include(name: &str) -> Option<PathBuf> {
@@ -138,7 +137,12 @@ mod bindings {
             if cfg!(target_os = "linux") {
                 builder = builder.clang_arg("-DOS_LINUX=1");
             } else if cfg!(target_os = "macos") {
-                builder = builder.clang_arg("-DOS_MACOSX=1");
+                builder = builder.clang_arg("-DOS_MACOSX=1")
+                    .clang_arg("-stdlib=libc++")
+                    // To disable the fixup bindgen applies which adds search
+                    // paths from clang command line in order to avoid potential
+                    // conflict with -stdlib=libc++.
+                    .clang_arg("--target=x86_64-apple-darwin");
             } else if cfg!(target_env = "msvc") {
                 builder = builder.clang_arg("-DOS_WIN=1").clang_arg("-DWIN32=1")
                     // For compatibility with MSVC 2015
@@ -235,6 +239,7 @@ mod bindings {
             .include(add_include("mozilla/Keyframe.h"))
             .include(add_include("mozilla/ServoElementSnapshot.h"))
             .include(add_include("mozilla/dom/Element.h"))
+            .include(add_include("mozilla/dom/NameSpaceConstants.h"))
             .include(add_include("mozilla/ServoBindings.h"))
             .include(add_include("nsMediaFeatures.h"))
             .include(add_include("nsMediaList.h"))
@@ -258,6 +263,7 @@ mod bindings {
             "BORDER_COLOR_.*",
             "BORDER_STYLE_.*",
             "mozilla::SERVO_PREF_.*",
+            "kNameSpaceID_.*",
         ];
         let whitelist = [
             "RawGecko.*",
