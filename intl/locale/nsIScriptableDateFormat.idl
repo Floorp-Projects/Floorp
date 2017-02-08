@@ -23,9 +23,7 @@ enum
 {
     kTimeFormatNone = 0,            // don't include the time in the format string
     kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
-    kTimeFormatNoSeconds,           // provides the time format without seconds in the given locale 
-    kTimeFormatSecondsForce24Hour,  // forces the time format to use the 24 clock, regardless of the locale conventions
-    kTimeFormatNoSecondsForce24Hour // forces the time format to use the 24 clock, regardless of the locale conventions
+    kTimeFormatNoSeconds            // provides the time format without seconds in the given locale 
 };
 %}
 
