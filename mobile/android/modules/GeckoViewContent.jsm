@@ -8,25 +8,19 @@ this.EXPORTED_SYMBOLS = ["GeckoViewContent"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/GeckoViewModule.jsm");
+
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewContent");
 
 var DEBUG = false;
 
-class GeckoViewContent {
-  constructor(_window, _browser, _windowEventDispatcher) {
-    this.window = _window;
-    this.browser = _browser;
-    this.windowEventDispatcher = _windowEventDispatcher;
-
+class GeckoViewContent extends GeckoViewModule {
+  init() {
     this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
 
     this.messageManager.loadFrameScript("chrome://browser/content/GeckoViewContent.js", true);
     this.messageManager.addMessageListener("GeckoView:DOMTitleChanged", this);
-  }
-
-  get messageManager() {
-    return this.browser.messageManager;
   }
 
   handleEvent(event) {
@@ -43,7 +37,7 @@ class GeckoViewContent {
 
     switch (msg.name) {
       case "GeckoView:DOMTitleChanged":
-        this.windowEventDispatcher.sendRequest({ type: "GeckoView:DOMTitleChanged", title: msg.data.title });
+        this.eventDispatcher.sendRequest({ type: "GeckoView:DOMTitleChanged", title: msg.data.title });
         break;
     }
   }
