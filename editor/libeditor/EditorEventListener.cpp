@@ -671,9 +671,7 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     return NS_OK;
   }
 
-  int16_t button = -1;
-  aMouseEvent->GetButton(&button);
-  if (button == 1) {
+  if (clickEvent->button == 1) {
     return HandleMiddleClickPaste(aMouseEvent);
   }
   return NS_OK;
@@ -683,8 +681,10 @@ nsresult
 EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
-  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(
-                aMouseEvent->AsEvent()->WidgetEventPtr()));
+
+  WidgetMouseEvent* clickEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(clickEvent));
 
   if (!Preferences::GetBool("middlemouse.paste", false)) {
     // Middle click paste isn't enabled.
@@ -709,11 +709,8 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
   // If the ctrl key is pressed, we'll do paste as quotation.
   // Would've used the alt key, but the kde wmgr treats alt-middle specially.
-  bool ctrlKey = false;
-  aMouseEvent->GetCtrlKey(&ctrlKey);
-
   nsCOMPtr<nsIEditorMailSupport> mailEditor;
-  if (ctrlKey) {
+  if (clickEvent->IsControl()) {
     mailEditor = do_QueryObject(editorBase);
   }
 
@@ -737,8 +734,8 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
   // Prevent the event from propagating up to be possibly handled
   // again by the containing window:
-  aMouseEvent->AsEvent()->StopPropagation();
-  aMouseEvent->AsEvent()->PreventDefault();
+  clickEvent->StopPropagation();
+  clickEvent->PreventDefault();
 
   // We processed the event, whether drop/paste succeeded or not
   return NS_OK;
