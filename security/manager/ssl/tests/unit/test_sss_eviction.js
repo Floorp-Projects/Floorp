@@ -51,8 +51,9 @@ function do_state_read(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             "frequentlyused.example.com", 0));
+  ok(gSSService.isSecureURI(
+       Ci.nsISiteSecurityService.HEADER_HSTS,
+       Services.io.newURI("https://frequentlyused.example.com"), 0));
   let sslStatus = new FakeSSLStatus();
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com");
