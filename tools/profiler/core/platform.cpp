@@ -127,10 +127,22 @@ static int gLastFrameNumber = 0;
 int sInitCount = 0; // Each init must have a matched shutdown.
 
 static bool sIsProfiling = false; // is raced on
-static bool sIsGPUProfiling = false; // is raced on
-static bool sIsLayersDump = false; // is raced on
-static bool sIsDisplayListDump = false; // is raced on
-static bool sIsRestyleProfiling = false; // is raced on
+
+// All accesses to these are on the main thread, so no locking is needed.
+static bool gProfileJava = false;
+static bool gProfileJS = false;
+static bool gTaskTracer = false;
+
+// XXX: These are all accessed by multiple threads and might require more
+// inter-thread synchronization than they currently have.
+static Atomic<bool> gAddLeafAddresses(false);
+static Atomic<bool> gDisplayListDump(false);
+static Atomic<bool> gLayersDump(false);
+static Atomic<bool> gProfileGPU(false);
+static Atomic<bool> gProfileMemory(false);
+static Atomic<bool> gProfileRestyle(false);
+static Atomic<bool> gProfileThreads(false);
+static Atomic<bool> gUseStackWalk(false);
 
 // Environment variables to control the profiler
 const char* PROFILER_HELP = "MOZ_PROFILER_HELP";
@@ -839,6 +851,17 @@ profiler_get_buffer_info_helper(uint32_t *aCurrentPosition,
   *aGeneration = gBuffer->mGeneration;
 }
 
+static bool
+hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
+{
+  for (size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Values are only honored on the first start
 void
 profiler_start(int aProfileEntries, double aInterval,
@@ -885,14 +908,38 @@ profiler_start(int aProfileEntries, double aInterval,
   gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
   gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
   gBuffer = new ProfileBuffer(gEntrySize);
-  gSampler = new Sampler(aFeatures, aFeatureCount, aFilterCount);
+  gSampler = new Sampler();
   gGatherer = new mozilla::ProfileGatherer(gSampler);
+
+  bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+  bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
+
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+  gProfileJava = mozilla::jni::IsFennec() &&
+                      hasFeature(aFeatures, aFeatureCount, "java");
+#else
+  gProfileJava = false;
+#endif
+  gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
+  gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
+
+  gAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+  gDisplayListDump  = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
+  gLayersDump       = hasFeature(aFeatures, aFeatureCount, "layersdump");
+  gProfileGPU       = hasFeature(aFeatures, aFeatureCount, "gpu");
+  gProfileMemory    = hasFeature(aFeatures, aFeatureCount, "memory");
+  gProfileRestyle   = hasFeature(aFeatures, aFeatureCount, "restyle");
+  // Profile non-main threads if we have a filter, because users sometimes ask
+  // to filter by a list of threads but forget to explicitly request.
+  gProfileThreads   = hasFeature(aFeatures, aFeatureCount, "threads") ||
+                      aFilterCount > 0;
+  gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
   gSampler->Start();
   MOZ_ASSERT(gIsActive && !gIsPaused);  // Start() sets gIsActive.
 
-  if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
+  if (gProfileJS || privacyMode) {
     mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
@@ -901,17 +948,17 @@ profiler_start(int aProfileEntries, double aInterval,
         continue;
       }
       info->Stack()->reinitializeOnResume();
-      if (gSampler->ProfileJS()) {
+      if (gProfileJS) {
         info->Stack()->enableJSSampling();
       }
-      if (gSampler->InPrivacyMode()) {
+      if (privacyMode) {
         info->Stack()->mPrivacyMode = true;
       }
     }
   }
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  if (gSampler->ProfileJava()) {
+  if (gProfileJava) {
     int javaInterval = aInterval;
     // Java sampling doesn't accuratly keep up with 1ms sampling
     if (javaInterval < 10) {
@@ -921,7 +968,7 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 #endif
 
-  if (gSampler->AddMainThreadIO()) {
+  if (mainThreadIO) {
     if (!sInterposeObserver) {
       // Lazily create IO interposer observer
       sInterposeObserver = new mozilla::ProfilerIOInterposeObserver();
@@ -931,10 +978,6 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 
   sIsProfiling = true;
-  sIsGPUProfiling = gSampler->ProfileGPU();
-  sIsLayersDump = gSampler->LayersDump();
-  sIsDisplayListDump = gSampler->DisplayListDump();
-  sIsRestyleProfiling = gSampler->ProfileRestyle();
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -976,7 +1019,7 @@ profiler_stop()
     return;
   }
 
-  bool disableJS = gSampler->ProfileJS();
+  bool disableJS = gProfileJS;
 
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
@@ -986,6 +1029,20 @@ profiler_stop()
 
   gSampler->Stop();
   MOZ_ASSERT(!gIsActive && !gIsPaused);   // Stop() clears these.
+
+  gProfileJava      = false;
+  gProfileJS        = false;
+  gTaskTracer       = false;
+
+  gAddLeafAddresses = false;
+  gDisplayListDump  = false;
+  gLayersDump       = false;
+  gProfileGPU       = false;
+  gProfileMemory    = false;
+  gProfileRestyle   = false;
+  gProfileThreads   = false;
+  gUseStackWalk     = false;
+
   delete gSampler;
   gSampler = nullptr;
   gBuffer = nullptr;
@@ -1007,10 +1064,6 @@ profiler_stop()
   sInterposeObserver = nullptr;
 
   sIsProfiling = false;
-  sIsGPUProfiling = false;
-  sIsLayersDump = false;
-  sIsDisplayListDump = false;
-  sIsRestyleProfiling = false;
 
   if (Sampler::CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -1074,24 +1127,24 @@ profiler_feature_active(const char* aName)
 {
   // This function runs both on and off the main thread.
 
-  if (!profiler_is_active()) {
+  if (!sIsProfiling) {
     return false;
   }
 
   if (strcmp(aName, "gpu") == 0) {
-    return sIsGPUProfiling;
+    return gProfileGPU;
   }
 
   if (strcmp(aName, "layersdump") == 0) {
-    return sIsLayersDump;
+    return gLayersDump;
   }
 
   if (strcmp(aName, "displaylistdump") == 0) {
-    return sIsDisplayListDump;
+    return gDisplayListDump;
   }
 
   if (strcmp(aName, "restyle") == 0) {
-    return sIsRestyleProfiling;
+    return gProfileRestyle;
   }
 
   return false;

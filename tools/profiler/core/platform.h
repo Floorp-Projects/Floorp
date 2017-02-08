@@ -238,8 +238,7 @@ class Promise;
 class Sampler {
 public:
   // Initialize sampler.
-  Sampler(const char** aFeatures, uint32_t aFeatureCount,
-          uint32_t aFilterCount);
+  Sampler();
   ~Sampler();
 
   // This method is called for each sampling period with the current
@@ -286,18 +285,6 @@ public:
 
   void RegisterThread(ThreadInfo* aInfo);
 
-  bool ProfileJS() const { return mProfileJS; }
-  bool ProfileJava() const { return mProfileJava; }
-  bool ProfileGPU() const { return mProfileGPU; }
-  bool ProfileThreads() const { return mProfileThreads; }
-  bool InPrivacyMode() const { return mPrivacyMode; }
-  bool AddMainThreadIO() const { return mAddMainThreadIO; }
-  bool ProfileMemory() const { return mProfileMemory; }
-  bool TaskTracer() const { return mTaskTracer; }
-  bool LayersDump() const { return mLayersDump; }
-  bool DisplayListDump() const { return mDisplayListDump; }
-  bool ProfileRestyle() const { return mProfileRestyle; }
-
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
   JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
@@ -315,20 +302,6 @@ private:
 
   // Called within a signal. This function must be reentrant
   void InplaceTick(TickSample* sample);
-
-  bool mAddLeafAddresses;
-  bool mUseStackWalk;
-  bool mProfileJS;
-  bool mProfileGPU;
-  bool mProfileThreads;
-  bool mProfileJava;
-  bool mLayersDump;
-  bool mDisplayListDump;
-  bool mProfileRestyle;
-  bool mPrivacyMode;
-  bool mAddMainThreadIO;
-  bool mProfileMemory;
-  bool mTaskTracer;
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
