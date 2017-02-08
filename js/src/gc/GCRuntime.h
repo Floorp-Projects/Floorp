@@ -849,6 +849,12 @@ class GCRuntime
         Finished
     };
 
+    enum IncrementalResult
+    {
+        Reset = 0,
+        Ok
+    };
+
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
     Chunk* pickChunk(const AutoLockGC& lock,
@@ -883,9 +889,9 @@ class GCRuntime
 
     void requestMajorGC(JS::gcreason::Reason reason);
     SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
-    void budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
-                             AutoLockForExclusiveAccess& lock);
-    void resetIncrementalGC(AbortReason reason, AutoLockForExclusiveAccess& lock);
+    IncrementalResult budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason reason,
+                                          SliceBudget& budget, AutoLockForExclusiveAccess& lock);
+    IncrementalResult resetIncrementalGC(AbortReason reason, AutoLockForExclusiveAccess& lock);
 
     // Assert if the system state is such that we should never
     // receive a request to do GC work.
@@ -897,8 +903,8 @@ class GCRuntime
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
     void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
-    MOZ_MUST_USE bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
-                              JS::gcreason::Reason reason);
+    MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
+                                           JS::gcreason::Reason reason);
     bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                  AutoLockForExclusiveAccess& lock);
