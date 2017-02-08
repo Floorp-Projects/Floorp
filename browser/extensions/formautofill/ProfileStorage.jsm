@@ -132,6 +132,7 @@ ProfileStorage.prototype = {
     this._store.data.profiles.push(profileToSave);
 
     this._store.saveSoon();
+    Services.obs.notifyObservers(null, "formautofill-storage-changed", "add");
   },
 
   /**
@@ -163,6 +164,7 @@ ProfileStorage.prototype = {
     profileFound.timeLastModified = Date.now();
 
     this._store.saveSoon();
+    Services.obs.notifyObservers(null, "formautofill-storage-changed", "update");
   },
 
   /**
@@ -184,6 +186,7 @@ ProfileStorage.prototype = {
     profileFound.timeLastUsed = Date.now();
 
     this._store.saveSoon();
+    Services.obs.notifyObservers(null, "formautofill-storage-changed", "notifyUsed");
   },
 
   /**
@@ -199,6 +202,7 @@ ProfileStorage.prototype = {
     this._store.data.profiles =
       this._store.data.profiles.filter(profile => profile.guid != guid);
     this._store.saveSoon();
+    Services.obs.notifyObservers(null, "formautofill-storage-changed", "remove");
   },
 
   /**
@@ -261,7 +265,7 @@ ProfileStorage.prototype = {
   },
 
   _findByFilter({info, searchString}) {
-    let profiles = MOCK_MODE ? MOCK_STORAGE : this._store.data.profiles;
+    let profiles = this._store.data.profiles;
     let lcSearchString = searchString.toLowerCase();
 
     return profiles.filter(profile => {
@@ -296,7 +300,7 @@ ProfileStorage.prototype = {
   _dataPostProcessor(data) {
     data.version = SCHEMA_VERSION;
     if (!data.profiles) {
-      data.profiles = [];
+      data.profiles = MOCK_MODE ? MOCK_STORAGE : [];
     }
     return data;
   },

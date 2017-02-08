@@ -34,6 +34,24 @@ add_task(function* test_enabledStatus_observe() {
   formAutofillParent._getStatus.returns(false);
   formAutofillParent.observe(null, "nsPref:changed", "browser.formautofill.enabled");
   do_check_eq(formAutofillParent._onStatusChanged.called, true);
+
+  // profile added => Need to trigger onStatusChanged
+  formAutofillParent._getStatus.returns(!formAutofillParent._enabled);
+  formAutofillParent._onStatusChanged.reset();
+  formAutofillParent.observe(null, "formautofill-storage-changed", "add");
+  do_check_eq(formAutofillParent._onStatusChanged.called, true);
+
+  // profile removed => Need to trigger onStatusChanged
+  formAutofillParent._getStatus.returns(!formAutofillParent._enabled);
+  formAutofillParent._onStatusChanged.reset();
+  formAutofillParent.observe(null, "formautofill-storage-changed", "remove");
+  do_check_eq(formAutofillParent._onStatusChanged.called, true);
+
+  // profile updated => no need to trigger onStatusChanged
+  formAutofillParent._getStatus.returns(!formAutofillParent._enabled);
+  formAutofillParent._onStatusChanged.reset();
+  formAutofillParent.observe(null, "formautofill-storage-changed", "update");
+  do_check_eq(formAutofillParent._onStatusChanged.called, false);
 });
 
 add_task(function* test_enabledStatus_getStatus() {
@@ -42,9 +60,25 @@ add_task(function* test_enabledStatus_getStatus() {
     Services.prefs.clearUserPref("browser.formautofill.enabled");
   });
 
+  let fakeStorage = [];
+  formAutofillParent._profileStore = {
+    getAll: () => fakeStorage,
+  };
+
+  // pref is enabled and profile is empty.
+  Services.prefs.setBoolPref("browser.formautofill.enabled", true);
+  do_check_eq(formAutofillParent._getStatus(), false);
+
+  // pref is disabled and profile is empty.
+  Services.prefs.setBoolPref("browser.formautofill.enabled", false);
+  do_check_eq(formAutofillParent._getStatus(), false);
+
+  fakeStorage = ["test-profile"];
+  // pref is enabled and profile is not empty.
   Services.prefs.setBoolPref("browser.formautofill.enabled", true);
   do_check_eq(formAutofillParent._getStatus(), true);
 
+  // pref is disabled and profile is not empty.
   Services.prefs.setBoolPref("browser.formautofill.enabled", false);
   do_check_eq(formAutofillParent._getStatus(), false);
 });

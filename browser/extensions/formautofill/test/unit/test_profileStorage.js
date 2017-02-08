@@ -39,7 +39,10 @@ let prepareTestProfiles = Task.async(function* (path) {
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
   profileStorage.add(TEST_PROFILE_1);
+  yield onChanged;
   profileStorage.add(TEST_PROFILE_2);
   yield profileStorage._saveImmediately();
 });
@@ -174,9 +177,13 @@ add_task(function* test_update() {
   let guid = profiles[1].guid;
   let timeLastModified = profiles[1].timeLastModified;
 
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "update");
+
   do_check_neq(profiles[1].country, undefined);
 
   profileStorage.update(guid, TEST_PROFILE_3);
+  yield onChanged;
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
@@ -211,7 +218,11 @@ add_task(function* test_notifyUsed() {
   let timeLastUsed = profiles[1].timeLastUsed;
   let timesUsed = profiles[1].timesUsed;
 
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "notifyUsed");
+
   profileStorage.notifyUsed(guid);
+  yield onChanged;
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
@@ -236,9 +247,13 @@ add_task(function* test_remove() {
   let profiles = profileStorage.getAll();
   let guid = profiles[1].guid;
 
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "remove");
+
   do_check_eq(profiles.length, 2);
 
   profileStorage.remove(guid);
+  yield onChanged;
   yield profileStorage._saveImmediately();
 
   profileStorage = new ProfileStorage(path);
