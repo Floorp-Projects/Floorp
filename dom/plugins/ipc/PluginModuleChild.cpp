@@ -97,6 +97,17 @@ static HWND sBrowserHwnd = nullptr;
 // sandbox process doesn't get current key states.  So we need get it on chrome.
 typedef SHORT (WINAPI *GetKeyStatePtr)(int);
 static GetKeyStatePtr sGetKeyStatePtrStub = nullptr;
+
+static WindowsDllInterceptor sComDlg32Intercept;
+
+// proxy GetSaveFileName/GetOpenFileName on chrome so that we can know which
+// files the user has given permission to access
+// We count on GetOpenFileNameA/GetSaveFileNameA calling
+// GetOpenFileNameW/GetSaveFileNameW so we don't proxy them explicitly.
+typedef BOOL (WINAPI *GetOpenFileNameWPtr)(LPOPENFILENAMEW lpofn);
+static GetOpenFileNameWPtr sGetOpenFileNameWPtrStub = nullptr;
+typedef BOOL (WINAPI *GetSaveFileNameWPtr)(LPOPENFILENAMEW lpofn);
+static GetSaveFileNameWPtr sGetSaveFileNameWPtrStub = nullptr;
 #endif
 
 /* static */
@@ -2112,6 +2123,124 @@ PMCGetKeyState(int aVirtKey)
     }
     return sGetKeyStatePtrStub(aVirtKey);
 }
+
+BOOL WINAPI PMCGetSaveFileNameW(LPOPENFILENAMEW lpofn);
+BOOL WINAPI PMCGetOpenFileNameW(LPOPENFILENAMEW lpofn);
+
+// Runnable that performs GetOpenFileNameW and GetSaveFileNameW
+// on the main thread so that the call can be
+// synchronously run on the PluginModuleParent via IPC.
+// The task alerts the given semaphore when it is finished.
+class GetFileNameTask : public Runnable
+{
+    BOOL* mReturnValue;
+    void* mLpOpenFileName;
+    HANDLE mSemaphore;
+    GetFileNameFunc mFunc;
+
+public:
+    explicit GetFileNameTask(GetFileNameFunc func, void* aLpOpenFileName,
+                             HANDLE aSemaphore, BOOL* aReturnValue) :
+        mLpOpenFileName(aLpOpenFileName), mSemaphore(aSemaphore),
+        mReturnValue(aReturnValue), mFunc(func)
+    {}
+
+    NS_IMETHOD Run() override
+    {
+        PLUGIN_LOG_DEBUG_METHOD;
+        AssertPluginThread();
+        switch (mFunc) {
+        case OPEN_FUNC:
+            *mReturnValue =
+                PMCGetOpenFileNameW(static_cast<LPOPENFILENAMEW>(mLpOpenFileName));
+            break;
+        case SAVE_FUNC:
+            *mReturnValue =
+                PMCGetSaveFileNameW(static_cast<LPOPENFILENAMEW>(mLpOpenFileName));
+            break;
+        }
+        if (!ReleaseSemaphore(mSemaphore, 1, nullptr)) {
+            return NS_ERROR_FAILURE;
+        }
+        return NS_OK;
+    }
+};
+
+// static
+BOOL
+PostToPluginThread(GetFileNameFunc aFunc, void* aLpofn)
+{
+    MOZ_ASSERT(!IsPluginThread());
+
+    // Synchronously run GetFileNameTask from the main thread.
+    // Start a semaphore at 0.  We release the semaphore (bringing its
+    // count to 1) when the synchronous call is done.
+    nsAutoHandle semaphore(CreateSemaphore(NULL, 0, 1, NULL));
+    if (semaphore == nullptr) {
+        MOZ_ASSERT(semaphore != nullptr);
+        return FALSE;
+    }
+
+    BOOL returnValue = FALSE;
+    RefPtr<GetFileNameTask> task =
+        new GetFileNameTask(aFunc, aLpofn, semaphore, &returnValue);
+    ProcessChild::message_loop()->PostTask(task.forget());
+    DWORD err = WaitForSingleObject(semaphore, INFINITE);
+    if (err != WAIT_FAILED) {
+        return returnValue;
+    }
+    PLUGIN_LOG_DEBUG(("Error while waiting for semaphore: %d",
+                      GetLastError()));
+    MOZ_ASSERT(err != WAIT_FAILED);
+    return FALSE;
+}
+
+// static
+BOOL WINAPI
+PMCGetFileNameW(GetFileNameFunc aFunc, LPOPENFILENAMEW aLpofn)
+{
+    if (!IsPluginThread()) {
+        return PostToPluginThread(aFunc, aLpofn);
+    }
+
+    PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
+    if (chromeInstance) {
+        bool ret = FALSE;
+        OpenFileNameIPC inputOfn;
+        inputOfn.CopyFromOfn(aLpofn);
+        OpenFileNameRetIPC outputOfn;
+        if (chromeInstance->CallGetFileName(aFunc, inputOfn,
+                                            &outputOfn, &ret)) {
+            if (ret) {
+                outputOfn.AddToOfn(aLpofn);
+            }
+        }
+        return ret;
+    }
+
+    switch (aFunc) {
+    case OPEN_FUNC:
+        return sGetOpenFileNameWPtrStub(aLpofn);
+    case SAVE_FUNC:
+        return sGetSaveFileNameWPtrStub(aLpofn);
+    }
+
+    MOZ_ASSERT_UNREACHABLE("Illegal GetFileNameFunc value");
+    return FALSE;
+}
+
+// static
+BOOL WINAPI
+PMCGetSaveFileNameW(LPOPENFILENAMEW aLpofn)
+{
+    return PMCGetFileNameW(SAVE_FUNC, aLpofn);
+}
+// static
+BOOL WINAPI
+PMCGetOpenFileNameW(LPOPENFILENAMEW aLpofn)
+{
+    return PMCGetFileNameW(OPEN_FUNC, aLpofn);
+}
 #endif
 
 PPluginInstanceChild*
@@ -2143,6 +2272,17 @@ PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
         !sGetKeyStatePtrStub) {
         sUser32Intercept.AddHook("GetKeyState", reinterpret_cast<intptr_t>(PMCGetKeyState),
                                  (void**) &sGetKeyStatePtrStub);
+    }
+
+    sComDlg32Intercept.Init("comdlg32.dll");
+    if (!sGetSaveFileNameWPtrStub) {
+        sComDlg32Intercept.AddHook("GetSaveFileNameW", reinterpret_cast<intptr_t>(PMCGetSaveFileNameW),
+                                 (void**) &sGetSaveFileNameWPtrStub);
+    }
+
+    if (!sGetOpenFileNameWPtrStub) {
+        sComDlg32Intercept.AddHook("GetOpenFileNameW", reinterpret_cast<intptr_t>(PMCGetOpenFileNameW),
+                                 (void**) &sGetOpenFileNameWPtrStub);
     }
 #endif
 
