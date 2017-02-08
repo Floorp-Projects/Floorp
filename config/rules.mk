@@ -958,6 +958,7 @@ CARGO_BUILD = env $(rustflags_override) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH) \
 	CLANG_PATH=$(MOZ_CLANG_PATH) \
+	PKG_CONFIG_ALLOW_CROSS=1 \
 	$(CARGO) build $(cargo_build_flags)
 
 ifdef RUST_LIBRARY_FILE
