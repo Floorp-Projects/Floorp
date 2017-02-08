@@ -2056,7 +2056,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     nsCString vendor(gAppData->vendor);
 
     // Sending all information to content process.
-    Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor, gSafeMode);
+    Unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
   }
 
   // Initialize the message manager (and load delayed scripts) now that we
