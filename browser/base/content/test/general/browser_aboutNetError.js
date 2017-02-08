@@ -31,7 +31,10 @@ add_task(function* checkReturnToPreviousPage() {
 
   let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
   yield ContentTask.spawn(browser, null, function* () {
-    content.document.getElementById("prefResetButton").click();
+    let doc = content.document;
+    let prefResetButton = doc.getElementById("prefResetButton");
+    Assert.equal(prefResetButton.getAttribute("autofocus"), "true", "prefResetButton has autofocus");
+    prefResetButton.click();
   });
   yield pageshowPromise;
 
