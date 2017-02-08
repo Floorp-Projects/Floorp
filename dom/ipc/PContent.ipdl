@@ -314,6 +314,22 @@ union GetFilesResponseResult
   GetFilesResponseFailure;
 };
 
+struct FileCreationSuccessResult
+{
+  PBlob blob;
+};
+
+struct FileCreationErrorResult
+{
+  nsresult errorCode;
+};
+
+union FileCreationResult
+{
+  FileCreationSuccessResult;
+  FileCreationErrorResult;
+};
+
 struct BlobURLRegistrationData
 {
     nsCString url;
@@ -664,6 +680,8 @@ child:
 
 
     async GMPsChanged(GMPCapabilityData[] capabilities);
+
+    async FileCreationResponse(nsID aID, FileCreationResult aResult);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
@@ -1140,6 +1158,10 @@ parent:
 
      async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
      async DeleteGetFilesRequest(nsID aID);
+
+     async FileCreationRequest(nsID aID, nsString aFullPath, nsString aType,
+                               nsString aName, bool lastModifiedPassed,
+                               int64_t lastModified, bool aIsFromNsIFile);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, PBlob blob,
                                                 Principal principal);
