@@ -427,7 +427,7 @@ UnboxArrayPrimitive(JSContext* aCx, const jni::Object::LocalRef& aData,
     });
 
     const size_t len = env->GetArrayLength(jarray);
-    elements.initCapacity(len);
+    NS_ENSURE_TRUE(elements.initCapacity(len), NS_ERROR_FAILURE);
 
     for (size_t i = 0; i < len; i++) {
         NS_ENSURE_TRUE(elements.append((*ToValue)(Type(array[i]))),
