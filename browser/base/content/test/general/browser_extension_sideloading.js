@@ -71,25 +71,6 @@ class MockProvider {
   }
 }
 
-function promiseViewLoaded(tab, viewid) {
-  let win = tab.linkedBrowser.contentWindow;
-  if (win.gViewController && !win.gViewController.isLoading &&
-      win.gViewController.currentViewId == viewid) {
-     return Promise.resolve();
-  }
-
-  return new Promise(resolve => {
-    function listener() {
-      if (win.gViewController.currentViewId != viewid) {
-        return;
-      }
-      win.document.removeEventListener("ViewChanged", listener);
-      resolve();
-    }
-    win.document.addEventListener("ViewChanged", listener);
-  });
-}
-
 function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
     function popupshown() {
@@ -169,6 +150,17 @@ add_task(function* () {
     ExtensionsUI.emit("change");
   });
 
+  // Navigate away from the starting page to force about:addons to load
+  // in a new tab during the tests below.
+  gBrowser.selectedBrowser.loadURI("about:robots");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  registerCleanupFunction(function*() {
+    // Return to about:blank when we're done
+    gBrowser.selectedBrowser.loadURI("about:blank");
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  });
+
   let changePromise = new Promise(resolve => {
     ExtensionsUI.on("change", function listener() {
       ExtensionsUI.off("change", listener);
@@ -189,22 +181,20 @@ add_task(function* () {
   is(addons.children.length, 2, "Have 2 menu entries for sideloaded extensions");
 
   // Click the first sideloaded extension
-  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   addons.children[0].click();
 
-  // about:addons should load and go to the list of extensions
-  let tab = yield tabPromise;
-  is(tab.linkedBrowser.currentURI.spec, "about:addons", "Newly opened tab is at about:addons");
+  // When we get the permissions prompt, we should be at the extensions
+  // list in about:addons
+  let panel = yield popupPromise;
+  is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
 
   const VIEW = "addons://list/extension";
-  yield promiseViewLoaded(tab, VIEW);
-  let win = tab.linkedBrowser.contentWindow;
+  let win = gBrowser.selectedBrowser.contentWindow;
   ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
-  // Wait for the permission prompt and cancel it
-  let panel = yield popupPromise;
+  // Check the contents of the notification, then choose "Cancel"
   let icon = panel.getAttribute("icon");
   is(icon, ICON_URL, "Permissions notification has the addon icon");
 
@@ -219,7 +209,7 @@ add_task(function* () {
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
   is(addon2.userDisabled, true, "Addon 2 should still be disabled");
 
-  yield BrowserTestUtils.removeTab(tab);
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Should still have 1 entry in the hamburger menu
   yield PanelUI.show();
@@ -227,23 +217,21 @@ add_task(function* () {
   addons = document.getElementById("PanelUI-footer-addons");
   is(addons.children.length, 1, "Have 1 menu entry for sideloaded extensions");
 
-  // Click the second sideloaded extension
-  tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
+  // Click the second sideloaded extension and wait for the notification
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   addons.children[0].click();
-
-  tab = yield tabPromise;
-  is(tab.linkedBrowser.currentURI.spec, "about:addons", "Newly opened tab is at about:addons");
+  panel = yield popupPromise;
 
   isnot(menuButton.getAttribute("badge-status"), "addon-alert", "Should no longer have addon alert badge");
 
-  yield promiseViewLoaded(tab, VIEW);
-  win = tab.linkedBrowser.contentWindow;
+  // Again we should be at the extentions list in about:addons
+  is(gBrowser.currentURI.spec, "about:addons", "Foreground tab is at about:addons");
+
+  win = gBrowser.selectedBrowser.contentWindow;
   ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
-  // Wait for the permission prompt and accept it this time
-  panel = yield popupPromise;
+  // Check the notification contents, this time accept the install
   icon = panel.getAttribute("icon");
   is(icon, DEFAULT_ICON_URL, "Permissions notification has the default icon");
   disablePromise = promiseSetDisabled(mock2);
@@ -256,5 +244,5 @@ add_task(function* () {
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
   is(addon2.userDisabled, false, "Addon 2 should now be enabled");
 
-  yield BrowserTestUtils.removeTab(tab);
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

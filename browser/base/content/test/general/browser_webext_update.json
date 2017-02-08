@@ -27,6 +27,20 @@
           }
         }
       ]
+    },
+    "update_perms@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/browser/browser/base/content/test/general/browser_webext_update_perms2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "55.0"
+            }
+          }
+        }
+      ]
     }
   }
 }
