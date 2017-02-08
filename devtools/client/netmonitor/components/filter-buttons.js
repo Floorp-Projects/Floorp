@@ -26,6 +26,7 @@ function FilterButtons({
       "data-key": type,
       onClick: toggleRequestFilterType,
       onKeyDown: toggleRequestFilterType,
+      "aria-pressed": checked,
     }, L10N.getStr(`netmonitor.toolbar.filter.${type}`));
   }).toArray();
 
