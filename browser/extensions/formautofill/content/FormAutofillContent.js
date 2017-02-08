@@ -291,7 +291,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   getInputDetails() {
     // TODO: Maybe we'll need to wait for cache ready if detail is empty.
-    return FormAutofillContent.getInputDetails(formFillController.getFocusedInput());
+    return FormAutofillContent.getInputDetails(formFillController.focusedInput);
   },
 
   /**
@@ -302,7 +302,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   getFormDetails() {
     // TODO: Maybe we'll need to wait for cache ready if details is empty.
-    return FormAutofillContent.getFormDetails(formFillController.getFocusedInput());
+    return FormAutofillContent.getFormDetails(formFillController.focusedInput);
   },
 };
 

@@ -677,7 +677,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool                        mActivated : 1;
 
     // Whether content blocking is enabled or not for this object.
-    bool                        mContentBlockingDisabled : 1;
+    bool                        mContentBlockingEnabled : 1;
 
     // Protects DoStopPlugin from reentry (bug 724781).
     bool                        mIsStopping : 1;

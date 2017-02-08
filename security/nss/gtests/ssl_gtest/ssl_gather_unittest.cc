@@ -16,7 +16,7 @@ class GatherV2ClientHelloTest : public TlsConnectTestBase {
   void ConnectExpectMalformedClientHello(const DataBuffer &data) {
     EnsureTlsSetup();
 
-    auto alert_recorder = new TlsAlertRecorder();
+    auto alert_recorder = std::make_shared<TlsAlertRecorder>();
     server_->SetPacketFilter(alert_recorder);
 
     client_->SendDirect(data);
@@ -55,7 +55,7 @@ TEST_F(TlsConnectTest, GatherExcessiveV3Record) {
   (void)buffer.Write(idx, MAX_FRAGMENT_LENGTH + 2048 + 1, 2);  // length=max+1
 
   EnsureTlsSetup();
-  auto alert_recorder = new TlsAlertRecorder();
+  auto alert_recorder = std::make_shared<TlsAlertRecorder>();
   server_->SetPacketFilter(alert_recorder);
   client_->SendDirect(buffer);
   server_->StartConnect();

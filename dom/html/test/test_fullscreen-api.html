@@ -62,19 +62,36 @@ function nextTest() {
   SimpleTest.executeSoon(runNextTest);
 }
 
+function shouldSkipTest(test) {
+  if (test == "file_fullscreen-plugins.html") {
+    if (!SpecialPowers.isMainProcess() &&
+        navigator.platform.indexOf('Linux') >= 0) {
+      // Bug 1330553
+      return true;
+    }
+  }
+  return false;
+}
+
 function runNextTest() {
   if (gTestIndex < gTestWindows.length) {
-    info("Run test " + gTestWindows[gTestIndex]);
-    testWindow = window.open(gTestWindows[gTestIndex], "", "width=500,height=500,scrollbars=yes");
-    // We'll wait for the window to load, then make sure our window is refocused
-    // before starting the test, which will get kicked off on "focus".
-    // This ensures that we're essentially back on the primary "desktop" on
-    // OS X Lion before we run the test.
-    testWindow.addEventListener("load", function() {
-      SimpleTest.waitForFocus(function() {
-        SimpleTest.waitForFocus(testWindow.begin, testWindow);
-      });
-    }, {once: true});
+    let test = gTestWindows[gTestIndex];
+    if (shouldSkipTest(test)) {
+      info(`Skip test ${test}`);
+      SimpleTest.executeSoon(runNextTest);
+    } else {
+      info(`Run test ${test}`);
+      testWindow = window.open(test, "", "width=500,height=500,scrollbars=yes");
+      // We'll wait for the window to load, then make sure our window is refocused
+      // before starting the test, which will get kicked off on "focus".
+      // This ensures that we're essentially back on the primary "desktop" on
+      // OS X Lion before we run the test.
+      testWindow.addEventListener("load", function() {
+        SimpleTest.waitForFocus(function() {
+          SimpleTest.waitForFocus(testWindow.begin, testWindow);
+        });
+      }, {once: true});
+    }
     gTestIndex++;
   } else {
     SimpleTest.finish();

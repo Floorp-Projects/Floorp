@@ -143,13 +143,13 @@ class RecordFragmenter : public PacketFilter {
 };
 
 TEST_P(TlsConnectDatagram, FragmentClientPackets) {
-  client_->SetPacketFilter(new RecordFragmenter());
+  client_->SetPacketFilter(std::make_shared<RecordFragmenter>());
   Connect();
   SendReceive();
 }
 
 TEST_P(TlsConnectDatagram, FragmentServerPackets) {
-  server_->SetPacketFilter(new RecordFragmenter());
+  server_->SetPacketFilter(std::make_shared<RecordFragmenter>());
   Connect();
   SendReceive();
 }

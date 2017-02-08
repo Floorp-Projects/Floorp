@@ -23,9 +23,10 @@ namespace nss_test {
 // by the relevant callbacks on the client.
 class SignedCertificateTimestampsExtractor {
  public:
-  SignedCertificateTimestampsExtractor(TlsAgent* client) : client_(client) {
-    client_->SetAuthCertificateCallback(
-        [&](TlsAgent* agent, bool checksig, bool isServer) -> SECStatus {
+  SignedCertificateTimestampsExtractor(std::shared_ptr<TlsAgent>& client)
+      : client_(client) {
+    client->SetAuthCertificateCallback(
+        [this](TlsAgent* agent, bool checksig, bool isServer) -> SECStatus {
           const SECItem* scts = SSL_PeerSignedCertTimestamps(agent->ssl_fd());
           EXPECT_TRUE(scts);
           if (!scts) {
@@ -34,7 +35,7 @@ class SignedCertificateTimestampsExtractor {
           auth_timestamps_.reset(new DataBuffer(scts->data, scts->len));
           return SECSuccess;
         });
-    client_->SetHandshakeCallback([&](TlsAgent* agent) {
+    client->SetHandshakeCallback([this](TlsAgent* agent) {
       const SECItem* scts = SSL_PeerSignedCertTimestamps(agent->ssl_fd());
       ASSERT_TRUE(scts);
       handshake_timestamps_.reset(new DataBuffer(scts->data, scts->len));
@@ -48,12 +49,13 @@ class SignedCertificateTimestampsExtractor {
     EXPECT_TRUE(handshake_timestamps_);
     EXPECT_EQ(timestamps, *handshake_timestamps_);
 
-    const SECItem* current = SSL_PeerSignedCertTimestamps(client_->ssl_fd());
+    const SECItem* current =
+        SSL_PeerSignedCertTimestamps(client_.lock()->ssl_fd());
     EXPECT_EQ(timestamps, DataBuffer(current->data, current->len));
   }
 
  private:
-  TlsAgent* client_;
+  std::weak_ptr<TlsAgent> client_;
   std::unique_ptr<DataBuffer> auth_timestamps_;
   std::unique_ptr<DataBuffer> handshake_timestamps_;
 };
@@ -185,8 +187,8 @@ TEST_P(TlsConnectGenericPre13, OcspMangled) {
       server_->ConfigServerCert(TlsAgent::kServerRsa, true, &kOcspExtraData));
 
   static const uint8_t val[] = {1};
-  auto replacer = new TlsExtensionReplacer(ssl_cert_status_xtn,
-                                           DataBuffer(val, sizeof(val)));
+  auto replacer = std::make_shared<TlsExtensionReplacer>(
+      ssl_cert_status_xtn, DataBuffer(val, sizeof(val)));
   server_->SetPacketFilter(replacer);
   ConnectExpectFail();
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
@@ -197,7 +199,8 @@ TEST_P(TlsConnectGeneric, OcspSuccess) {
   EnsureTlsSetup();
   EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
                                       SSL_ENABLE_OCSP_STAPLING, PR_TRUE));
-  auto capture_ocsp = new TlsExtensionCapture(ssl_cert_status_xtn);
+  auto capture_ocsp =
+      std::make_shared<TlsExtensionCapture>(ssl_cert_status_xtn);
   server_->SetPacketFilter(capture_ocsp);
 
   // The value should be available during the AuthCertificateCallback

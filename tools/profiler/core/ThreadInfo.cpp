@@ -261,3 +261,25 @@ ThreadInfo::DuplicateLastSample()
   mBuffer->DuplicateLastSample(mThreadId);
 }
 
+size_t
+ThreadInfo::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  n += aMallocSizeOf(mName.get());
+  n += mPseudoStack->SizeOfIncludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mPlatformData
+  // - mSavedStreamedSamples
+  // - mSavedStreamedMarkers
+  // - mUniqueStacks
+  // - mMutex
+  //
+  // The following members are not measured:
+  // - mThread: because it is non-owning
+
+  return n;
+}
+

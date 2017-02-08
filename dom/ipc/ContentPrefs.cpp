@@ -127,6 +127,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "layout.css.scope-pseudo.enabled",
   "layout.css.scroll-behavior.property-enabled",
   "layout.css.scroll-snap.enabled",
+  "layout.css.servo.enabled",
   "layout.css.shape-outside.enabled",
   "layout.css.text-align-unsafe-value.enabled",
   "layout.css.text-combine-upright-digits.enabled",

@@ -34,7 +34,7 @@ class Timeout : public PollTarget {
   bool timed_out() const { return !handle_; }
 
  private:
-  Poller::Timer* handle_;
+  std::shared_ptr<Poller::Timer> handle_;
 };
 
 }  // namespace nss_test

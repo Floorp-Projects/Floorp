@@ -184,8 +184,6 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   const bool recreateContext = oldStyleContext &&
     oldStyleContext->StyleSource().AsServoComputedValues() != computedValues;
 
-  MOZ_ASSERT_IF(changeHint, recreateContext);
-
   if (recreateContext) {
     RefPtr<nsStyleContext> newContext =
       aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,

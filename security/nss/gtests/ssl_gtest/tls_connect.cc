@@ -179,13 +179,8 @@ void TlsConnectTestBase::SetUp() {
 }
 
 void TlsConnectTestBase::TearDown() {
-  delete client_;
-  delete server_;
-  if (client_model_) {
-    ASSERT_NE(server_model_, nullptr);
-    delete client_model_;
-    delete server_model_;
-  }
+  client_ = nullptr;
+  server_ = nullptr;
 
   SSL_ClearSessionCache();
   SSLInt_ClearSessionTicketKey();
@@ -193,9 +188,6 @@ void TlsConnectTestBase::TearDown() {
 }
 
 void TlsConnectTestBase::Init() {
-  EXPECT_TRUE(client_->Init());
-  EXPECT_TRUE(server_->Init());
-
   client_->SetPeer(server_);
   server_->SetPeer(client_);
 
@@ -213,11 +205,8 @@ void TlsConnectTestBase::Reset() {
 
 void TlsConnectTestBase::Reset(const std::string& server_name,
                                const std::string& client_name) {
-  delete client_;
-  delete server_;
-
-  client_ = new TlsAgent(client_name, TlsAgent::CLIENT, mode_);
-  server_ = new TlsAgent(server_name, TlsAgent::SERVER, mode_);
+  client_.reset(new TlsAgent(client_name, TlsAgent::CLIENT, mode_));
+  server_.reset(new TlsAgent(server_name, TlsAgent::SERVER, mode_));
 
   Init();
 }
@@ -387,14 +376,12 @@ void TlsConnectTestBase::ConnectExpectFailOneSide(TlsAgent::Role failing_side) {
   client_->SetServerKeyBits(server_->server_key_bits());
   client_->Handshake();
   server_->Handshake();
-  TlsAgent* fail_agent;
 
+  auto failing_agent = server_;
   if (failing_side == TlsAgent::CLIENT) {
-    fail_agent = client_;
-  } else {
-    fail_agent = server_;
+    failing_agent = client_;
   }
-  ASSERT_TRUE_WAIT(fail_agent->state() == TlsAgent::STATE_ERROR, 5000);
+  ASSERT_TRUE_WAIT(failing_agent->state() == TlsAgent::STATE_ERROR, 5000);
 }
 
 void TlsConnectTestBase::ConfigureVersion(uint16_t version) {
@@ -503,13 +490,11 @@ void TlsConnectTestBase::EnsureModelSockets() {
   // Make sure models agents are available.
   if (!client_model_) {
     ASSERT_EQ(server_model_, nullptr);
-    client_model_ = new TlsAgent(TlsAgent::kClient, TlsAgent::CLIENT, mode_);
-    server_model_ = new TlsAgent(TlsAgent::kServerRsa, TlsAgent::SERVER, mode_);
+    client_model_.reset(
+        new TlsAgent(TlsAgent::kClient, TlsAgent::CLIENT, mode_));
+    server_model_.reset(
+        new TlsAgent(TlsAgent::kServerRsa, TlsAgent::SERVER, mode_));
   }
-
-  // Initialise agents.
-  ASSERT_TRUE(client_model_->Init());
-  ASSERT_TRUE(server_model_->Init());
 }
 
 void TlsConnectTestBase::CheckAlpn(const std::string& val) {
@@ -647,16 +632,17 @@ TlsConnectTls13::TlsConnectTls13()
 
 void TlsKeyExchangeTest::EnsureKeyShareSetup() {
   EnsureTlsSetup();
-  groups_capture_ = new TlsExtensionCapture(ssl_supported_groups_xtn);
-  shares_capture_ = new TlsExtensionCapture(ssl_tls13_key_share_xtn);
-  shares_capture2_ = new TlsExtensionCapture(ssl_tls13_key_share_xtn, true);
-  std::vector<PacketFilter*> captures;
-  captures.push_back(groups_capture_);
-  captures.push_back(shares_capture_);
-  captures.push_back(shares_capture2_);
-  client_->SetPacketFilter(new ChainedPacketFilter(captures));
-  capture_hrr_ =
-      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeHelloRetryRequest);
+  groups_capture_ =
+      std::make_shared<TlsExtensionCapture>(ssl_supported_groups_xtn);
+  shares_capture_ =
+      std::make_shared<TlsExtensionCapture>(ssl_tls13_key_share_xtn);
+  shares_capture2_ =
+      std::make_shared<TlsExtensionCapture>(ssl_tls13_key_share_xtn, true);
+  std::vector<std::shared_ptr<PacketFilter>> captures = {
+      groups_capture_, shares_capture_, shares_capture2_};
+  client_->SetPacketFilter(std::make_shared<ChainedPacketFilter>(captures));
+  capture_hrr_ = std::make_shared<TlsInspectorRecordHandshakeMessage>(
+      kTlsHandshakeHelloRetryRequest);
   server_->SetPacketFilter(capture_hrr_);
 }
 
