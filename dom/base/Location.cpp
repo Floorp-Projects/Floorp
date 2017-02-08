@@ -714,6 +714,23 @@ Location::SetProtocol(const nsAString& aProtocol)
     return rv;
   }
 
+  bool isHttp;
+  rv = uri->SchemeIs("http", &isHttp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool isHttps;
+  rv = uri->SchemeIs("https", &isHttps);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!isHttp && !isHttps) {
+    // No-op, per spec.
+    return NS_OK;
+  }
+
   return SetURI(uri);
 }
 
