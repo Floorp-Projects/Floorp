@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
+const AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS = 250;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -17,6 +18,7 @@ Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/InsecurePasswordUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
@@ -39,6 +41,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 
 // These mirror signon.* prefs.
 var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
+var gLastContextMenuEventTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -124,6 +127,15 @@ var observer = {
       case "focus": {
         LoginManagerContent._onUsernameFocus(aEvent);
         break;
+      }
+
+      case "contextmenu": {
+        gLastContextMenuEventTimeStamp = aEvent.timeStamp;
+        break;
+      }
+
+      default: {
+        throw new Error("Unexpected event");
       }
     }
   },
@@ -569,13 +581,30 @@ var LoginManagerContent = {
       return;
     }
 
-    let formFillFocused = this._formFillService.focusedInput;
-    if (formFillFocused == focusedField) {
-      log("_onUsernameFocus: Opening the autocomplete popup");
-      this._formFillService.showPopup();
-    } else {
-      log("_onUsernameFocus: FormFillController has a different focused input");
-    }
+    /*
+     * A `focus` event is fired before a `contextmenu` event if a user right-clicks into an
+     * unfocused field. In that case we don't want to show both autocomplete and a context menu
+     * overlapping so we spin the event loop to see if a `contextmenu` event is coming next. If no
+     * `contextmenu` event was seen and the focused field is still focused by the form fill
+     * controller then show the autocomplete popup.
+     */
+    setTimeout(function maybeOpenAutocompleteAfterFocus() {
+      // Even though the `focus` event happens first, its .timeStamp is greater in
+      // testing and I don't want to rely on that so the absolute value is used.
+      let timeDiff = Math.abs(gLastContextMenuEventTimeStamp - event.timeStamp);
+      if (timeDiff < AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS) {
+        log("Not opening autocomplete after focus since a context menu was opened within",
+            timeDiff, "ms");
+        return;
+      }
+
+      if (this._formFillService.focusedInput == focusedField) {
+        log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
+        this._formFillService.showPopup();
+      } else {
+        log("maybeOpenAutocompleteAfterFocus: FormFillController has a different focused input");
+      }
+    }.bind(this), 0);
   },
 
   /**
@@ -1234,7 +1263,9 @@ var LoginManagerContent = {
       }
 
       if (usernameField) {
+        log("_fillForm: Attaching event listeners to usernameField");
         usernameField.addEventListener("focus", observer);
+        usernameField.addEventListener("contextmenu", observer);
       }
 
       Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
