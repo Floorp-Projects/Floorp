@@ -27472,6 +27472,11 @@ IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    if (cloneInfo->mHasPreprocessInfo) {
+      IDB_WARNING("Preprocessing for indexes not yet implemented!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -27848,6 +27853,11 @@ CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
+      if (cloneInfo.mHasPreprocessInfo) {
+        IDB_WARNING("Preprocessing for cursors not yet implemented!");
+        return NS_ERROR_NOT_IMPLEMENTED;
+      }
+
       if (aInitializeResponse) {
         mResponse = nsTArray<ObjectStoreCursorResponse>();
       } else {
@@ -27889,6 +27899,11 @@ CursorOpBase::PopulateResponseFromStatement(
                                                    &cloneInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
+      }
+
+      if (cloneInfo.mHasPreprocessInfo) {
+        IDB_WARNING("Preprocessing for cursors not yet implemented!");
+        return NS_ERROR_NOT_IMPLEMENTED;
       }
 
       MOZ_ASSERT(aInitializeResponse);
