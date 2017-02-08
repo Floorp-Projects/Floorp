@@ -853,10 +853,11 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
          */
         bool updateLast = (shape == obj->lastProperty());
         bool accessorShape = getter || setter || (attrs & (JSPROP_GETTER | JSPROP_SETTER));
-        shape = obj->replaceWithNewEquivalentShape(cx, shape, nullptr, accessorShape);
+        shape = NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr,
+                                                            accessorShape);
         if (!shape)
             return nullptr;
-        if (!updateLast && !obj->generateOwnShape(cx))
+        if (!updateLast && !NativeObject::generateOwnShape(cx, obj))
             return nullptr;
 
         /*
@@ -1071,7 +1072,7 @@ NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj, jsid id_)
         }
 
         /* Generate a new shape for the object, infallibly. */
-        JS_ALWAYS_TRUE(obj->generateOwnShape(cx, spare));
+        JS_ALWAYS_TRUE(NativeObject::generateOwnShape(cx, obj, spare));
 
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table->capacity();
@@ -1139,28 +1140,23 @@ NativeObject::rollbackProperties(JSContext* cx, HandleNativeObject obj, uint32_t
     return true;
 }
 
-Shape*
-NativeObject::replaceWithNewEquivalentShape(JSContext* cx, Shape* oldShape, Shape* newShape,
-                                            bool accessorShape)
+/* static */ Shape*
+NativeObject::replaceWithNewEquivalentShape(JSContext* cx, HandleNativeObject obj,
+                                            Shape* oldShape, Shape* newShape, bool accessorShape)
 {
     MOZ_ASSERT(cx->isInsideCurrentZone(oldShape));
-    MOZ_ASSERT_IF(oldShape != lastProperty(),
-                  inDictionaryMode() && lookup(cx, oldShape->propidRef()) == oldShape);
+    MOZ_ASSERT_IF(oldShape != obj->lastProperty(),
+                  obj->inDictionaryMode() && obj->lookup(cx, oldShape->propidRef()) == oldShape);
 
-    NativeObject* self = this;
-
-    if (!inDictionaryMode()) {
-        RootedNativeObject selfRoot(cx, self);
+    if (!obj->inDictionaryMode()) {
         RootedShape newRoot(cx, newShape);
-        if (!toDictionaryMode(cx))
+        if (!obj->toDictionaryMode(cx))
             return nullptr;
-        oldShape = selfRoot->lastProperty();
-        self = selfRoot;
+        oldShape = obj->lastProperty();
         newShape = newRoot;
     }
 
     if (!newShape) {
-        RootedNativeObject selfRoot(cx, self);
         RootedShape oldRoot(cx, oldShape);
         newShape = (oldShape->isAccessorShape() || accessorShape)
                    ? Allocate<AccessorShape>(cx)
@@ -1168,12 +1164,11 @@ NativeObject::replaceWithNewEquivalentShape(JSContext* cx, Shape* oldShape, Shap
         if (!newShape)
             return nullptr;
         new (newShape) Shape(oldRoot->base()->unowned(), 0);
-        self = selfRoot;
         oldShape = oldRoot;
     }
 
     AutoCheckCannotGC nogc;
-    ShapeTable* table = self->lastProperty()->ensureTableForDictionary(cx, nogc);
+    ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, nogc);
     if (!table)
         return nullptr;
 
@@ -1186,12 +1181,12 @@ NativeObject::replaceWithNewEquivalentShape(JSContext* cx, Shape* oldShape, Shap
      * enumeration order (see bug 601399).
      */
     StackShape nshape(oldShape);
-    newShape->initDictionaryShape(nshape, self->numFixedSlots(), oldShape->listp);
+    newShape->initDictionaryShape(nshape, obj->numFixedSlots(), oldShape->listp);
 
     MOZ_ASSERT(newShape->parent == oldShape);
-    oldShape->removeFromDictionary(self);
+    oldShape->removeFromDictionary(obj);
 
-    if (newShape == self->lastProperty())
+    if (newShape == obj->lastProperty())
         oldShape->handoffTableTo(newShape);
 
     if (entry)
@@ -1199,10 +1194,10 @@ NativeObject::replaceWithNewEquivalentShape(JSContext* cx, Shape* oldShape, Shap
     return newShape;
 }
 
-bool
-NativeObject::shadowingShapeChange(JSContext* cx, const Shape& shape)
+/* static */ bool
+NativeObject::shadowingShapeChange(JSContext* cx, HandleNativeObject obj, const Shape& shape)
 {
-    return generateOwnShape(cx);
+    return generateOwnShape(cx, obj);
 }
 
 /* static */ bool
@@ -1213,8 +1208,10 @@ JSObject::setFlags(JSContext* cx, HandleObject obj, BaseShape::Flag flags,
         return true;
 
     if (obj->isNative() && obj->as<NativeObject>().inDictionaryMode()) {
-        if (generateShape == GENERATE_SHAPE && !obj->as<NativeObject>().generateOwnShape(cx))
-            return false;
+        if (generateShape == GENERATE_SHAPE) {
+            if (!NativeObject::generateOwnShape(cx, obj.as<NativeObject>()))
+                return false;
+        }
         StackBaseShape base(obj->as<NativeObject>().lastProperty());
         base.flags |= flags;
         UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
