@@ -76,6 +76,8 @@ public:
 
   MediaEventSource<void>* WaitingForKeyEvent() override;
 
+  bool IsMSE() const override { return true; }
+
 private:
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
