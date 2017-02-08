@@ -511,22 +511,32 @@ CertErrorRunnable::CheckCertOverrides()
     return new SSLServerCertVerificationResult(mInfoObject,
                                                mDefaultErrorCodeToReport);
   }
-  nsresult nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HSTS,
-                                    mInfoObject->GetHostName(),
-                                    mProviderFlags,
-                                    nullptr,
-                                    &strictTransportSecurityEnabled);
+  nsCOMPtr<nsIURI> uri;
+  nsresult nsrv = NS_NewURI(getter_AddRefs(uri),
+                            NS_LITERAL_CSTRING("https://") +
+                            mInfoObject->GetHostName());
+  if (NS_FAILED(nsrv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("[%p][%p] Creating new URI failed\n", mFdForLogging, this));
+    return new SSLServerCertVerificationResult(mInfoObject,
+                                               mDefaultErrorCodeToReport);
+  }
+  nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
+                          uri,
+                          mProviderFlags,
+                          nullptr,
+                          &strictTransportSecurityEnabled);
   if (NS_FAILED(nsrv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p][%p] checking for HSTS failed\n", mFdForLogging, this));
     return new SSLServerCertVerificationResult(mInfoObject,
                                                mDefaultErrorCodeToReport);
   }
-  nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HPKP,
-                           mInfoObject->GetHostName(),
-                           mProviderFlags,
-                           nullptr,
-                           &hasPinningInformation);
+  nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP,
+                          uri,
+                          mProviderFlags,
+                          nullptr,
+                          &hasPinningInformation);
   if (NS_FAILED(nsrv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p][%p] checking for HPKP failed\n", mFdForLogging, this));
