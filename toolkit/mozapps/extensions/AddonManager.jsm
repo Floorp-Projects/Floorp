@@ -329,8 +329,11 @@ function promiseCallProvider(aProvider, aMethod, ...aArgs) {
  */
 function getLocale() {
   try {
-    if (Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE))
-      return Services.locale.getLocaleComponentForUserAgent();
+    if (Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE)) {
+      const osPrefs =
+        Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
+      return osPrefs.getSystemLocale();
+    }
   } catch (e) { }
 
   try {
