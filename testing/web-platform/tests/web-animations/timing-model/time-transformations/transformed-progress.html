@@ -55,25 +55,6 @@ var gStepTimingFunctionTests = [
                 ]
   },
   {
-    description: 'Test bounds point of step-start easing with compositor',
-    keyframe:   [ { opacity: 0 },
-                  { opacity: 1 } ],
-    effect:     {
-                  delay: 1000,
-                  duration: 1000,
-                  fill: 'both',
-                  easing: 'steps(2, start)'
-                },
-    conditions: [
-                  { currentTime: 0,    progress: 0 },
-                  { currentTime: 999,  progress: 0 },
-                  { currentTime: 1000, progress: 0.5 },
-                  { currentTime: 1499, progress: 0.5 },
-                  { currentTime: 1500, progress: 1 },
-                  { currentTime: 2000, progress: 1 }
-                ]
-  },
-  {
     description: 'Test bounds point of step-start easing with reverse direction',
     keyframe:   [ { width: '0px' },
                   { width: '100px' } ],
