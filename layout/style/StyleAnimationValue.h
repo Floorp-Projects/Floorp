@@ -18,6 +18,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
+#include "ServoBindings.h"
 
 class nsIFrame;
 class nsStyleContext;
@@ -590,6 +591,13 @@ struct AnimationValue
   bool operator==(const AnimationValue& aOther) const {
     // FIXME: Bug 1337229: add a deep == impl for RawServoAnimationValue.
     return mGecko == aOther.mGecko && mServo == aOther.mServo;
+  }
+
+  bool IsNull() const { return mGecko.IsNull() && !mServo; }
+
+  float GetOpacity() const {
+    return mServo ? Servo_AnimationValues_GetOpacity(mServo)
+                  : mGecko.GetFloatValue();
   }
 };
 
