@@ -804,6 +804,56 @@
         "visibleDefaultEngines": [
           "baidu", "google", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
         ]
+      },
+      "CN": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "TW": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "HK": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "US": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "CA": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "KZ": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "BY": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "RU": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "TR": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
+      },
+      "UA": {
+        "visibleDefaultEngines": [
+          "baidu", "google-nocodes", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
+        ]
       }
     },
     "zh-TW": {
