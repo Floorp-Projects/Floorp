@@ -46,7 +46,9 @@ add_task(function* checkCaptivePortalCertErrorUI() {
        "Captive portal error page UI is visible.");
 
     info("Clicking the Open Login Page button.");
-    doc.getElementById("openPortalLoginPageButton").click();
+    let loginButton = doc.getElementById("openPortalLoginPageButton");
+    is(loginButton.getAttribute("autofocus"), "true", "openPortalLoginPageButton has autofocus");
+    loginButton.click();
   });
 
   let portalTab = yield portalTabPromise;
