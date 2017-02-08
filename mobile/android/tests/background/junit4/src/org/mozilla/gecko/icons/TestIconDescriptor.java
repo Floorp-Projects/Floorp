@@ -53,4 +53,14 @@ public class TestIconDescriptor {
         Assert.assertEquals(0, descriptor.getSize());
         Assert.assertEquals(IconDescriptor.TYPE_LOOKUP, descriptor.getType());
     }
+
+    @Test
+    public void testBundledTileIconDescriptor() {
+        final IconDescriptor descriptor = IconDescriptor.createBundledTileIcon(ICON_URL);
+
+        Assert.assertEquals(ICON_URL, descriptor.getUrl());
+        Assert.assertNull(descriptor.getMimeType());
+        Assert.assertEquals(0, descriptor.getSize());
+        Assert.assertEquals(IconDescriptor.TYPE_BUNDLED_TILE, descriptor.getType());
+    }
 }
