@@ -49,7 +49,7 @@ apt-get install -y --no-install-recommends ${apt_packages[@]}
 ln -s /usr/include/x86_64-linux-gnu/zconf.h /usr/include
 
 # Install clang-3.9 into /usr/local/.
-curl http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
+curl -L http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
 
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
