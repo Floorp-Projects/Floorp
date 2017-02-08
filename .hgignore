@@ -134,3 +134,6 @@ GPATH
 
 # tup database
 ^\.tup
+
+subinclude:servo/.hgignore
+
