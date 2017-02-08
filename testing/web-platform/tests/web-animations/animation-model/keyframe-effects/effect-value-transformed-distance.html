@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Tests for calculation of the transformed distance when computing an effect value</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#the-effect-value-of-a-keyframe-animation-effect">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../../testcommon.js"></script>
+<script src="../../resources/effect-easing-tests.js"></script>
+<body>
+<div id="log"></div>
+<div id="target"></div>
+<script>
+'use strict';
+
+// Test that a linear-equivalent cubic-bezier easing applied to a keyframe does
+// not alter (including clamping) the result.
+
+gEffectEasingTests.forEach(params => {
+  const linearEquivalentEasings = [ 'cubic-bezier(0, 0, 0, 0)',
+                                    'cubic-bezier(1, 1, 1, 1)' ];
+  test(function(t) {
+    linearEquivalentEasings.forEach(linearEquivalentEasing => {
+      const timing = { duration: 1000,
+                       fill: 'forwards',
+                       easing: params.easing };
+
+      const linearTarget = createDiv(t);
+      const linearAnim = linearTarget.animate([ { width: '0px' },
+                                                { width: '100px' } ],
+                                              timing);
+
+      const equivalentTarget = createDiv(t);
+      const equivalentAnim =
+        equivalentTarget.animate([ { width: '0px',
+                                     easing: linearEquivalentEasing },
+                                   { width: '100px' } ],
+                                 timing);
+
+      [ 0, 250, 500, 750, 1000 ].forEach(sampleTime => {
+        linearAnim.currentTime = sampleTime;
+        equivalentAnim.currentTime = sampleTime;
+
+        assert_equals(getComputedStyle(linearTarget).width,
+                      getComputedStyle(equivalentTarget).width,
+                      `The 'width' of the animated elements should be equal ` +
+                      `at ${sampleTime}ms`);
+      });
+    });
+  }, 'Linear-equivalent cubic-bezier keyframe easing applied to an effect ' +
+     `with a ${params.desc} does not alter the result`);
+});
+
+</script>
+</body>
