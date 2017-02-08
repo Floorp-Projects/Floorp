@@ -1,147 +1,110 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
+ * vim: sw=2 ts=2 sts=2
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>
+"use strict";
 
-#include "gtest/gtest.h"
-#include "nsDependentString.h"
-#include "nsNetUtil.h"
-#include "nsISiteSecurityService.h"
-#include "nsIURI.h"
+// STS parser tests
 
-void
-TestSuccess(const char* hdr, bool extraTokens,
-            uint64_t expectedMaxAge, bool expectedIncludeSubdomains,
-            nsISiteSecurityService* sss)
-{
-  nsCOMPtr<nsIURI> dummyUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(dummyUri), "https://foo.com/bar.html");
-  ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Failed to create URI";
+let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
+let sslStatus = new FakeSSLStatus();
 
-  uint64_t maxAge = 0;
-  bool includeSubdomains = false;
-  rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                nsDependentCString(hdr), 0, &maxAge,
-                                &includeSubdomains, nullptr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Failed to process valid header: " << hdr;
+function testSuccess(header, expectedMaxAge, expectedIncludeSubdomains) {
+  let dummyUri = Services.io.newURI("https://foo.com/bar.html");
+  let maxAge = {};
+  let includeSubdomains = {};
 
-  ASSERT_EQ(maxAge, expectedMaxAge) << "Did not correctly parse maxAge";
-  EXPECT_EQ(includeSubdomains, expectedIncludeSubdomains) <<
-    "Did not correctly parse presence/absence of includeSubdomains";
+  sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, dummyUri, header,
+                    sslStatus, 0, maxAge, includeSubdomains);
 
-  if (extraTokens) {
-    EXPECT_EQ(rv, NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA) <<
-      "Extra tokens were expected when parsing, but were not encountered.";
-  } else {
-    EXPECT_EQ(rv, NS_OK) << "Unexpected tokens found during parsing.";
-  }
-
-  printf("%s\n", hdr);
+  equal(maxAge.value, expectedMaxAge, "Did not correctly parse maxAge");
+  equal(includeSubdomains.value, expectedIncludeSubdomains,
+        "Did not correctly parse presence/absence of includeSubdomains");
 }
 
-void TestFailure(const char* hdr,
-                 nsISiteSecurityService* sss)
-{
-  nsCOMPtr<nsIURI> dummyUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(dummyUri), "https://foo.com/bar.html");
-  ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Failed to create URI";
-
-  rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                nsDependentCString(hdr), 0, nullptr, nullptr,
-                                nullptr);
-  ASSERT_TRUE(NS_FAILED(rv)) << "Parsed invalid header: " << hdr;
-
-  printf("%s\n", hdr);
+function testFailure(header) {
+  let dummyUri = Services.io.newURI("https://foo.com/bar.html");
+  throws(() => {
+    sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, dummyUri, header,
+                      sslStatus, 0, maxAge, includeSubdomains);
+  }, "Parsed invalid header: " + header);
 }
 
-TEST(psm_STSParser, Test)
-{
-    nsresult rv;
-
-    // grab handle to the service
-    nsCOMPtr<nsISiteSecurityService> sss;
-    sss = do_GetService("@mozilla.org/ssservice;1", &rv);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-    // *** parsing tests
-    printf("*** Attempting to parse valid STS headers ...\n");
-
+function run_test() {
     // SHOULD SUCCEED:
-    TestSuccess("max-age=100", false, 100, false, sss);
-    TestSuccess("max-age  =100", false, 100, false, sss);
-    TestSuccess(" max-age=100", false, 100, false, sss);
-    TestSuccess("max-age = 100 ", false, 100, false, sss);
-    TestSuccess(R"(max-age = "100" )", false, 100, false, sss);
-    TestSuccess(R"(max-age="100")", false, 100, false, sss);
-    TestSuccess(R"( max-age ="100" )", false, 100, false, sss);
-    TestSuccess("\tmax-age\t=\t\"100\"\t", false, 100, false, sss);
-    TestSuccess("max-age  =       100             ", false, 100, false, sss);
+    testSuccess("max-age=100", 100, false);
+    testSuccess("max-age  =100", 100, false);
+    testSuccess(" max-age=100", 100, false);
+    testSuccess("max-age = 100 ", 100, false);
+    testSuccess('max-age = "100" ', 100, false);
+    testSuccess('max-age="100"', 100, false);
+    testSuccess(' max-age ="100" ', 100, false);
+    testSuccess("\tmax-age\t=\t\"100\"\t", 100, false);
+    testSuccess("max-age  =       100             ", 100, false);
 
-    TestSuccess("maX-aGe=100", false, 100, false, sss);
-    TestSuccess("MAX-age  =100", false, 100, false, sss);
-    TestSuccess("max-AGE=100", false, 100, false, sss);
-    TestSuccess("Max-Age = 100 ", false, 100, false, sss);
-    TestSuccess("MAX-AGE = 100 ", false, 100, false, sss);
+    testSuccess("maX-aGe=100", 100, false);
+    testSuccess("MAX-age  =100", 100, false);
+    testSuccess("max-AGE=100", 100, false);
+    testSuccess("Max-Age = 100 ", 100, false);
+    testSuccess("MAX-AGE = 100 ", 100, false);
 
-    TestSuccess("max-age=100;includeSubdomains", false, 100, true, sss);
-    TestSuccess("max-age=100\t; includeSubdomains", false, 100, true, sss);
-    TestSuccess(" max-age=100; includeSubdomains", false, 100, true, sss);
-    TestSuccess("max-age = 100 ; includeSubdomains", false, 100, true, sss);
-    TestSuccess("max-age  =       100             ; includeSubdomains",
-                false, 100, true, sss);
+    testSuccess("max-age=100;includeSubdomains", 100, true);
+    testSuccess("max-age=100\t; includeSubdomains", 100, true);
+    testSuccess(" max-age=100; includeSubdomains", 100, true);
+    testSuccess("max-age = 100 ; includeSubdomains", 100, true);
+    testSuccess("max-age  =       100             ; includeSubdomains", 100,
+                true);
 
-    TestSuccess("maX-aGe=100; includeSUBDOMAINS", false, 100, true, sss);
-    TestSuccess("MAX-age  =100; includeSubDomains", false, 100, true, sss);
-    TestSuccess("max-AGE=100; iNcLuDeSuBdoMaInS", false, 100, true, sss);
-    TestSuccess("Max-Age = 100; includesubdomains ", false, 100, true, sss);
-    TestSuccess("INCLUDESUBDOMAINS;MaX-AgE = 100 ", false, 100, true, sss);
+    testSuccess("maX-aGe=100; includeSUBDOMAINS", 100, true);
+    testSuccess("MAX-age  =100; includeSubDomains", 100, true);
+    testSuccess("max-AGE=100; iNcLuDeSuBdoMaInS", 100, true);
+    testSuccess("Max-Age = 100; includesubdomains ", 100, true);
+    testSuccess("INCLUDESUBDOMAINS;MaX-AgE = 100 ", 100, true);
     // Turns out, the actual directive is entirely optional (hence the
     // trailing semicolon)
-    TestSuccess("max-age=100;includeSubdomains;", true, 100, true, sss);
+    testSuccess("max-age=100;includeSubdomains;", 100, true);
 
     // these are weird tests, but are testing that some extended syntax is
     // still allowed (but it is ignored)
-    TestSuccess("max-age=100 ; includesubdomainsSomeStuff",
-                true, 100, false, sss);
-    TestSuccess("\r\n\t\t    \tcompletelyUnrelated = foobar; max-age= 34520103"
-                "\t \t; alsoUnrelated;asIsThis;\tincludeSubdomains\t\t \t",
-                true, 34520103, true, sss);
-    TestSuccess(R"(max-age=100; unrelated="quoted \"thingy\"")",
-                true, 100, false, sss);
+    testSuccess("max-age=100 ; includesubdomainsSomeStuff", 100, false);
+    testSuccess("\r\n\t\t    \tcompletelyUnrelated = foobar; max-age= 34520103"
+                + "\t \t; alsoUnrelated;asIsThis;\tincludeSubdomains\t\t \t",
+                34520103, true);
+    testSuccess('max-age=100; unrelated="quoted \\"thingy\\""', 100, false);
 
     // SHOULD FAIL:
-    printf("* Attempting to parse invalid STS headers (should not parse)...\n");
     // invalid max-ages
-    TestFailure("max-age", sss);
-    TestFailure("max-age ", sss);
-    TestFailure("max-age=p", sss);
-    TestFailure("max-age=*1p2", sss);
-    TestFailure("max-age=.20032", sss);
-    TestFailure("max-age=!20032", sss);
-    TestFailure("max-age==20032", sss);
+    testFailure("max-age");
+    testFailure("max-age ");
+    testFailure("max-age=p");
+    testFailure("max-age=*1p2");
+    testFailure("max-age=.20032");
+    testFailure("max-age=!20032");
+    testFailure("max-age==20032");
 
     // invalid headers
-    TestFailure("foobar", sss);
-    TestFailure("maxage=100", sss);
-    TestFailure("maxa-ge=100", sss);
-    TestFailure("max-ag=100", sss);
-    TestFailure("includesubdomains", sss);
-    TestFailure(";", sss);
-    TestFailure(R"(max-age="100)", sss);
+    testFailure("foobar");
+    testFailure("maxage=100");
+    testFailure("maxa-ge=100");
+    testFailure("max-ag=100");
+    testFailure("includesubdomains");
+    testFailure(";");
+    testFailure('max-age="100');
     // The max-age directive here doesn't conform to the spec, so it MUST
     // be ignored. Consequently, the REQUIRED max-age directive is not
     // present in this header, and so it is invalid.
-    TestFailure("max-age=100, max-age=200; includeSubdomains", sss);
-    TestFailure("max-age=100 includesubdomains", sss);
-    TestFailure("max-age=100 bar foo", sss);
-    TestFailure("max-age=100randomstuffhere", sss);
+    testFailure("max-age=100, max-age=200; includeSubdomains");
+    testFailure("max-age=100 includesubdomains");
+    testFailure("max-age=100 bar foo");
+    testFailure("max-age=100randomstuffhere");
     // All directives MUST appear only once in an STS header field.
-    TestFailure("max-age=100; max-age=200", sss);
-    TestFailure("includeSubdomains; max-age=200; includeSubdomains", sss);
-    TestFailure("max-age=200; includeSubdomains; includeSubdomains", sss);
+    testFailure("max-age=100; max-age=200");
+    testFailure("includeSubdomains; max-age=200; includeSubdomains");
+    testFailure("max-age=200; includeSubdomains; includeSubdomains");
     // The includeSubdomains directive is valueless.
-    TestFailure("max-age=100; includeSubdomains=unexpected", sss);
+    testFailure("max-age=100; includeSubdomains=unexpected");
     // LWS must have at least one space or horizontal tab
-    TestFailure("\r\nmax-age=200", sss);
+    testFailure("\r\nmax-age=200");
 }
