@@ -33,6 +33,8 @@ public:
                                     uint32_t aFreshnessGuarantee,
                                     bool* aConfirmed) override;
 
+  virtual bool IsEmpty() override;
+
   nsresult Build(PrefixStringMap& aPrefixMap);
 
   nsresult GetPrefixes(PrefixStringMap& aPrefixMap);

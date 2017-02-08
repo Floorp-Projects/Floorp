@@ -472,7 +472,9 @@
               let zoom = Services.prefs.getBoolPref("browser.zoom.full") ||
                          this.isSyntheticDocument ? this._fullZoom : this._textZoom;
               this._selectParentHelper.populate(menulist, data.options, data.selectedIndex,
-                                                zoom, data.uaBackgroundColor, data.uaColor);
+                                                zoom, data.uaBackgroundColor, data.uaColor,
+                                                data.uaSelectBackgroundColor, data.uaSelectColor,
+                                                data.selectBackgroundColor, data.selectColor);
               this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
               break;
             }

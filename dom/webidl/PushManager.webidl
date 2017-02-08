@@ -9,7 +9,7 @@
 
 dictionary PushSubscriptionOptionsInit {
   // boolean userVisibleOnly = false;
-  BufferSource? applicationServerKey = null;
+  (BufferSource or DOMString)? applicationServerKey = null;
 };
 
 // The main thread JS implementation. Please see comments in

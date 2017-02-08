@@ -18,6 +18,8 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
+#include "nsStyleTransformMatrix.h"
+#include "ServoBindings.h"
 
 class nsIFrame;
 class nsStyleContext;
@@ -582,11 +584,39 @@ private:
   }
 };
 
+struct AnimationValue
+{
+  StyleAnimationValue mGecko;
+  RefPtr<RawServoAnimationValue> mServo;
+
+  bool operator==(const AnimationValue& aOther) const {
+    // FIXME: Bug 1337229: add a deep == impl for RawServoAnimationValue.
+    return mGecko == aOther.mGecko && mServo == aOther.mServo;
+  }
+
+  bool IsNull() const { return mGecko.IsNull() && !mServo; }
+
+  float GetOpacity() const {
+    return mServo ? Servo_AnimationValues_GetOpacity(mServo)
+                  : mGecko.GetFloatValue();
+  }
+
+  // Returns the scale for mGecko or mServo, which are calculated with
+  // reference to aFrame.
+  gfxSize GetScaleValue(const nsIFrame* aFrame) const {
+    if (mServo) {
+      RefPtr<nsCSSValueSharedList> list;
+      Servo_AnimationValues_GetTransform(mServo, &list);
+      return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
+    }
+    return mGecko.GetScaleValue(aFrame);
+  }
+};
+
 struct PropertyStyleAnimationValuePair
 {
   nsCSSPropertyID mProperty;
-  StyleAnimationValue mValue;
-  RefPtr<RawServoAnimationValue> mServoValue;
+  AnimationValue mValue;
 };
 } // namespace mozilla
 

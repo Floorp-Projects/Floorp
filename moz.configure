@@ -264,14 +264,17 @@ def extra_programs(target):
     if target.kernel == 'Darwin':
         return namespace(
             DSYMUTIL=('dsymutil', 'llvm-dsymutil'),
-            GENISOIMAGE=('genisoimage',),
+            MKFSHFS=('newfs_hfs', 'mkfs.hfsplus'),
+            HFS_TOOL=('hfsplus',)
         )
     if target.os == 'GNU' and target.kernel == 'Linux':
         return namespace(RPMBUILD=('rpmbuild',))
 
 check_prog('DSYMUTIL', delayed_getattr(extra_programs, 'DSYMUTIL'),
            allow_missing=True)
-check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
+check_prog('MKFSHFS', delayed_getattr(extra_programs, 'MKFSHFS'),
+           allow_missing=True)
+check_prog('HFS_TOOL', delayed_getattr(extra_programs, 'HFS_TOOL'),
            allow_missing=True)
 check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
            allow_missing=True)

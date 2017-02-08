@@ -161,6 +161,25 @@ this.PlacesTestUtils = Object.freeze({
   }),
 
   /**
+   * Asynchronously checks the frecency for a specified page.
+   * @param aURI
+   *        nsIURI or address to look for.
+   *
+   * @return {Promise}
+   * @resolves Returns the frecency.
+   * @rejects JavaScript exception.
+   */
+  frecencyInDB: Task.async(function* (aURI) {
+    let url = aURI instanceof Ci.nsIURI ? new URL(aURI.spec) : new URL(aURI);
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(
+      `SELECT frecency FROM moz_places
+       WHERE url_hash = hash(:url) AND url = :url`,
+      { url: url.href });
+    return rows[0].getResultByIndex(0);
+  }),
+
+  /**
    * Marks all syncable bookmarks as synced by setting their sync statuses to
    * "NORMAL", resetting their change counters, and removing all tombstones.
    * Used by tests to avoid calling `PlacesSyncUtils.bookmarks.pullChanges`
