@@ -623,6 +623,9 @@ pref("layers.geometry.opengl.enabled", true);
 // Whether to enable arbitrary layer geometry for Basic compositor
 pref("layers.geometry.basic.enabled", true);
 
+// Whether to enable arbitrary layer geometry for DirectX compositor
+pref("layers.geometry.d3d11.enabled", true);
+
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
