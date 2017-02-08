@@ -622,10 +622,6 @@ class GatherDecls(TcheckVisitor):
         # second pass to check each definition
         for su in tu.structsAndUnions:
             su.accept(self)
-        for inc in tu.includes:
-            if inc.tu.filetype == 'header':
-                for su in inc.tu.structsAndUnions:
-                    su.accept(self)
 
         if tu.protocol:
             # grab symbols in the protocol itself
