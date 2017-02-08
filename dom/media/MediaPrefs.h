@@ -90,7 +90,7 @@ private:
   DECL_MEDIA_PREF("accessibility.monoaudio.enable",           MonoAudio, bool, false);
   DECL_MEDIA_PREF("media.resampling.enabled",                 AudioSinkResampling, bool, false);
   DECL_MEDIA_PREF("media.resampling.rate",                    AudioSinkResampleRate, uint32_t, 48000);
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(LINUX)
   // Enable multiple channel support on Windows.
   DECL_MEDIA_PREF("media.forcestereo.enabled",                AudioSinkForceStereo, bool, false);
 #else
