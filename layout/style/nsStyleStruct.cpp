@@ -3306,6 +3306,31 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
+nsStyleDisplay::~nsStyleDisplay()
+{
+  // We don't allow releasing nsCSSValues with refcounted data in the Servo
+  // traversal, since the refcounts aren't threadsafe. Since Servo may trigger
+  // the deallocation of style structs during styling, we need to handle it
+  // here.
+  if (mSpecifiedTransform && ServoStyleSet::IsInServoTraversal()) {
+    // The default behavior of NS_ReleaseOnMainThread is to only proxy the
+    // release if we're not already on the main thread. This is a nice
+    // optimization for the cases we happen to be doing a sequential traversal
+    // (i.e. a single-core machine), but it trips our assertions which check
+    // whether we're in a Servo traversal, parallel or not. So we
+    // unconditionally proxy in debug builds.
+    bool alwaysProxy =
+#ifdef DEBUG
+      true;
+#else
+      false;
+#endif
+    NS_ReleaseOnMainThread(mSpecifiedTransform.forget(), alwaysProxy);
+  }
+
+  MOZ_COUNT_DTOR(nsStyleDisplay);
+}
+
 nsChangeHint
 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 {
