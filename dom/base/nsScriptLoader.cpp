@@ -1229,15 +1229,27 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest)
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
   nsSecurityFlags securityFlags;
-  // TODO: the spec currently gives module scripts different CORS behaviour to
-  // classic scripts.
-  securityFlags = aRequest->mCORSMode == CORS_NONE
-    ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
-    : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-  if (aRequest->mCORSMode == CORS_ANONYMOUS) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-  } else if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  if (aRequest->IsModuleRequest()) {
+    // According to the spec, module scripts have different behaviour to classic
+    // scripts and always use CORS.
+    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    if (aRequest->mCORSMode == CORS_NONE) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
+    } else if (aRequest->mCORSMode == CORS_ANONYMOUS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    } else {
+      MOZ_ASSERT(aRequest->mCORSMode == CORS_USE_CREDENTIALS);
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+    }
+  } else {
+    securityFlags = aRequest->mCORSMode == CORS_NONE
+      ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+      : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+    if (aRequest->mCORSMode == CORS_ANONYMOUS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    } else if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+    }
   }
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
