@@ -18,17 +18,17 @@ test(function(t) {
 
   anim.currentTime = 0;
   assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress = 0.');
+                'Visibility when progress = 0');
 
   anim.currentTime = 10 * MS_PER_SEC + 1;
   assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress > 0 due to linear easing.');
+                'Visibility when progress > 0 due to linear easing');
 
   anim.finish();
   assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress = 1.');
+                'Visibility when progress = 1');
 
-}, "Test visibility clamping behavior.");
+}, 'Visibility clamping behavior');
 
 test(function(t) {
   var div = createDiv(t);
@@ -38,18 +38,18 @@ test(function(t) {
 
   anim.currentTime = 0;
   assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress = 0.');
+                'Visibility when progress = 0');
 
   // Timing function is below zero. So we expected visibility is hidden.
   anim.currentTime = 10 * MS_PER_SEC + 1;
   assert_equals(getComputedStyle(div).visibility, 'hidden',
-                'Visibility when progress < 0 due to cubic-bezier easing.');
+                'Visibility when progress < 0 due to cubic-bezier easing');
 
   anim.currentTime = 60 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).visibility, 'visible',
-                'Visibility when progress > 0 due to cubic-bezier easing.');
+                'Visibility when progress > 0 due to cubic-bezier easing');
 
-}, "Test visibility clamping behavior with an easing that has a negative component");
+}, 'Visibility clamping behavior with an easing that has a negative component');
 
 </script>
 </body>
