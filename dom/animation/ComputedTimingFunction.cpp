@@ -28,16 +28,11 @@ StepTiming(uint32_t aSteps,
            ComputedTimingFunction::BeforeFlag aBeforeFlag,
            nsTimingFunction::Type aType)
 {
-  MOZ_ASSERT(0.0 <= aPortion && aPortion <= 1.0, "out of range");
   MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
              aType == nsTimingFunction::Type::StepEnd, "invalid type");
 
-  if (aPortion == 1.0) {
-    return 1.0;
-  }
-
   // Calculate current step using step-end behavior
-  uint32_t step = uint32_t(aPortion * aSteps); // floor
+  int32_t step = floor(aPortion * aSteps);
 
   // step-start is one step ahead
   if (aType == nsTimingFunction::Type::StepStart) {
@@ -45,16 +40,26 @@ StepTiming(uint32_t aSteps,
   }
 
   // If the "before flag" is set and we are at a transition point,
-  // drop back a step (but only if we are not already at the zero point--
-  // we do this clamping here since |step| is an unsigned integer)
-  if (step != 0 &&
-      aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
+  // drop back a step
+  if (aBeforeFlag == ComputedTimingFunction::BeforeFlag::Set &&
       fmod(aPortion * aSteps, 1) == 0) {
     step--;
   }
 
   // Convert to a progress value
-  return double(step) / double(aSteps);
+  double result = double(step) / double(aSteps);
+
+  // We should not produce a result outside [0, 1] unless we have an
+  // input outside that range. This takes care of steps that would otherwise
+  // occur at boundaries.
+  if (result < 0.0 && aPortion >= 0.0) {
+    return 0.0;
+  }
+  if (result > 1.0 && aPortion <= 1.0) {
+    return 1.0;
+  }
+
+  return result;
 }
 
 double
@@ -107,18 +112,6 @@ ComputedTimingFunction::GetValue(
 
     return mTimingFunction.GetSplineValue(aPortion);
   }
-
-  // Since we use endpoint-exclusive timing, the output of a steps(start) timing
-  // function when aPortion = 0.0 is the top of the first step. When aPortion is
-  // negative, however, we should use the bottom of the first step. We handle
-  // negative values of aPortion specially here since once we clamp aPortion
-  // to [0,1] below we will no longer be able to distinguish to the two cases.
-  if (aPortion < 0.0) {
-    return 0.0;
-  }
-
-  // Clamp in case of steps(end) and steps(start) for values greater than 1.
-  aPortion = clamped(aPortion, 0.0, 1.0);
 
   return StepTiming(mSteps, aPortion, aBeforeFlag, mType);
 }
