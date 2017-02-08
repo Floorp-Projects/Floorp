@@ -77,7 +77,6 @@ public:
     nsCString UAName;
     nsCString ID;
     nsCString vendor;
-    bool safeMode;
   };
 
   nsresult
@@ -386,8 +385,7 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvAppInfo(const nsCString& version, const nsCString& buildID,
                                               const nsCString& name, const nsCString& UAName,
-                                              const nsCString& ID, const nsCString& vendor,
-                                              const bool& safeMode) override;
+                                              const nsCString& ID, const nsCString& vendor) override;
 
   virtual mozilla::ipc::IPCResult RecvRemoteType(const nsString& aRemoteType) override;
 
