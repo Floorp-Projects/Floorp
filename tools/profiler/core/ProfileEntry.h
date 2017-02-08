@@ -25,6 +25,22 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 
+#define PROFILE_ENTRY_KIND_LIST(_) \
+    _(Category,        int)               \
+    _(CodeLocation,    const char *)      \
+    _(EmbeddedString,  void *)            \
+    _(FrameNumber,     int)               \
+    _(JitReturnAddr,   void *)            \
+    _(LineNumber,      int)               \
+    _(NativeLeafAddr,  void *)            \
+    _(Marker,          ProfilerMarker *)  \
+    _(ResidentMemory,  double)            \
+    _(Responsiveness,  double)            \
+    _(Sample,          const char *)      \
+    _(ThreadId,        int)               \
+    _(Time,            double)            \
+    _(UnsharedMemory,  double)
+
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #ifndef __arm__
 #pragma pack(push, 1)
@@ -33,27 +49,45 @@
 class ProfileEntry
 {
 public:
+  enum class Kind : uint8_t {
+    INVALID = 0,
+#   define DEF_ENUM_(k, t) k,
+    PROFILE_ENTRY_KIND_LIST(DEF_ENUM_)
+#   undef DEF_ENUM_
+    LIMIT
+  };
+
   ProfileEntry();
 
+private:
   // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileEntry(char aTagName, const char *aTagData);
-  ProfileEntry(char aTagName, void *aTagPtr);
-  ProfileEntry(char aTagName, ProfilerMarker *aTagMarker);
-  ProfileEntry(char aTagName, double aTagDouble);
-  ProfileEntry(char aTagName, uintptr_t aTagOffset);
-  ProfileEntry(char aTagName, Address aTagAddress);
-  ProfileEntry(char aTagName, int aTagLine);
-  ProfileEntry(char aTagName, char aTagChar);
-  bool is_ent_hint(char hintChar);
-  bool is_ent_hint();
-  bool is_ent(char tagName);
-  void* get_tagPtr();
+  ProfileEntry(Kind aKind, const char *aTagData);
+  ProfileEntry(Kind aKind, void *aTagPtr);
+  ProfileEntry(Kind aKind, ProfilerMarker *aTagMarker);
+  ProfileEntry(Kind aKind, double aTagDouble);
+  ProfileEntry(Kind aKind, uintptr_t aTagOffset);
+  ProfileEntry(Kind aKind, Address aTagAddress);
+  ProfileEntry(Kind aKind, int aTagLine);
+  ProfileEntry(Kind aKind, char aTagChar);
+
+public:
+# define DEF_MAKE_(k, t) \
+    static ProfileEntry k(t val) { return ProfileEntry(Kind::k, val); }
+  PROFILE_ENTRY_KIND_LIST(DEF_MAKE_)
+# undef DEF_MAKE_
+
+  Kind kind() const { return mKind; }
+  bool hasKind(Kind k) const { return kind() == k; }
+
+# define DEF_METHODS_(k, t) \
+    bool is##k() const { return hasKind(Kind::k); }
+  PROFILE_ENTRY_KIND_LIST(DEF_METHODS_)
+# undef DEF_METHODS_
+
   const ProfilerMarker* getMarker() {
-    MOZ_ASSERT(mTagName == 'm');
+    MOZ_ASSERT(isMarker());
     return mTagMarker;
   }
-
-  char getTagName() const { return mTagName; }
 
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
@@ -73,7 +107,7 @@ private:
     int         mTagInt;
     char        mTagChar;
   };
-  char mTagName;
+  Kind mKind;
 };
 
 #ifndef __arm__

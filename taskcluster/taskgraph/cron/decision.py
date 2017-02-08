@@ -92,6 +92,6 @@ def make_decision_task(params, symbol, arguments=[], head_rev=None):
     task['taskGroupId'] = task_id
 
     # set the schedulerId based on the level
-    task['schedulerId'] = 'gecko-level-{}-cron'.format(params['level'])
+    task['schedulerId'] = 'gecko-level-{}'.format(params['level'])
 
     return (task_id, task)

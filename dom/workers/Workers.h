@@ -277,6 +277,29 @@ struct WorkerLoadInfo
   ~WorkerLoadInfo();
 
   void StealFrom(WorkerLoadInfo& aOther);
+
+  void
+  SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
+
+  nsresult
+  GetPrincipalAndLoadGroupFromChannel(nsIChannel* aChannel,
+                                      nsIPrincipal** aPrincipalOut,
+                                      nsILoadGroup** aLoadGroupOut);
+
+  nsresult
+  SetPrincipalFromChannel(nsIChannel* aChannel);
+
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+  bool
+  FinalChannelPrincipalIsValid(nsIChannel* aChannel);
+#endif
+
+  bool
+  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate);
+
+  bool
+  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
+                                nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel);
 };
 
 // All of these are implemented in RuntimeService.cpp
