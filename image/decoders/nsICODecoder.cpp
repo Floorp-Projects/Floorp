@@ -593,6 +593,13 @@ nsICODecoder::FinishResource()
     return Transition::TerminateFailure();
   }
 
+  // Finalize the frame which we deferred to ensure we could modify the final
+  // result (e.g. to apply the BMP mask).
+  MOZ_ASSERT(!mContainedDecoder->GetFinalizeFrames());
+  if (mCurrentFrame) {
+    mCurrentFrame->FinalizeSurface();
+  }
+
   return Transition::TerminateSuccess();
 }
 
