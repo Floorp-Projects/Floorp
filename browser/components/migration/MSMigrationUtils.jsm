@@ -541,28 +541,32 @@ Cookies.prototype = {
   },
 
   _readCookieFile(aFile, aCallback) {
-    let fileReader = new FileReader();
-    let onLoadEnd = () => {
-      fileReader.removeEventListener("loadend", onLoadEnd);
+    File.createFromNsIFile(aFile).then(aFile => {
+      let fileReader = new FileReader();
+      let onLoadEnd = () => {
+        fileReader.removeEventListener("loadend", onLoadEnd);
 
-      if (fileReader.readyState != fileReader.DONE) {
-        Cu.reportError("Could not read cookie contents: " + fileReader.error);
-        aCallback(false);
-        return;
-      }
+        if (fileReader.readyState != fileReader.DONE) {
+          Cu.reportError("Could not read cookie contents: " + fileReader.error);
+          aCallback(false);
+          return;
+        }
 
-      let success = true;
-      try {
-        this._parseCookieBuffer(fileReader.result);
-      } catch (ex) {
-        Components.utils.reportError("Unable to migrate cookie: " + ex);
-        success = false;
-      } finally {
-        aCallback(success);
-      }
-    };
-    fileReader.addEventListener("loadend", onLoadEnd);
-    fileReader.readAsText(File.createFromNsIFile(aFile));
+        let success = true;
+        try {
+          this._parseCookieBuffer(fileReader.result);
+        } catch (ex) {
+          Components.utils.reportError("Unable to migrate cookie: " + ex);
+          success = false;
+        } finally {
+          aCallback(success);
+        }
+      };
+      fileReader.addEventListener("loadend", onLoadEnd);
+      fileReader.readAsText(aFile);
+    }, () => {
+      aCallback(false);
+    });
   },
 
   /**

@@ -8,10 +8,14 @@ var testFile = Cc["@mozilla.org/file/directory_service;1"]
 testFile.append("prefs.js");
 
 addMessageListener("file.open", function () {
-  sendAsyncMessage("file.opened", {
-    file: File.createFromNsIFile(testFile),
-    mtime: testFile.lastModifiedTime,
-    fileWithDate: File.createFromNsIFile(testFile, { lastModified: 123 }),
-    fileDate: 123,
+  File.createFromNsIFile(testFile).then(function(file) {
+    File.createFromNsIFile(testFile, { lastModified: 123 }).then(function(fileWithDate) {
+      sendAsyncMessage("file.opened", {
+        file,
+        mtime: testFile.lastModifiedTime,
+        fileWithDate,
+        fileDate: 123,
+      });
+    });
   });
 });

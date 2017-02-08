@@ -9,7 +9,7 @@ addMessageListener("file.open", function (e) {
   tmpFile.append('file.txt');
   tmpFile.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
 
-  sendAsyncMessage("file.opened", {
-    data: File.createFromNsIFile(tmpFile)
+  File.createFromNsIFile(tmpFile).then(function(file) {
+    sendAsyncMessage("file.opened", { data: file });
   });
 });

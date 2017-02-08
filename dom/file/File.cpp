@@ -37,6 +37,7 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "nsThreadUtils.h"
@@ -581,7 +582,7 @@ File::Constructor(const GlobalObject& aGlobal,
   return file.forget();
 }
 
-/* static */ already_AddRefed<File>
+/* static */ already_AddRefed<Promise>
 File::CreateFromNsIFile(const GlobalObject& aGlobal,
                         nsIFile* aData,
                         const ChromeFilePropertyBag& aBag,
@@ -603,11 +604,19 @@ File::CreateFromNsIFile(const GlobalObject& aGlobal,
     impl->SetLastModified(aBag.mLastModified.Value());
   }
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   RefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
-  return domFile.forget();
+  promise->MaybeResolve(domFile);
+
+  return promise.forget();
 }
 
-/* static */ already_AddRefed<File>
+/* static */ already_AddRefed<Promise>
 File::CreateFromFileName(const GlobalObject& aGlobal,
                          const nsAString& aData,
                          const ChromeFilePropertyBag& aBag,
@@ -627,8 +636,16 @@ File::CreateFromFileName(const GlobalObject& aGlobal,
     impl->SetLastModified(aBag.mLastModified.Value());
   }
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   RefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
-  return domFile.forget();
+  promise->MaybeResolve(domFile);
+
+  return promise.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////
