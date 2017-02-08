@@ -3403,19 +3403,19 @@ PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
 }
 
 mozilla::ipc::IPCResult
-PluginModuleParent::AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet)
+PluginModuleParent::RecvGetKeyState(const int32_t& aVirtKey, int16_t* aRet)
 {
     return IPC_FAIL_NO_REASON(this);
 }
 
 mozilla::ipc::IPCResult
-PluginModuleChromeParent::AnswerGetKeyState(const int32_t& aVirtKey,
+PluginModuleChromeParent::RecvGetKeyState(const int32_t& aVirtKey,
                                             int16_t* aRet)
 {
 #if defined(XP_WIN)
     *aRet = ::GetKeyState(aVirtKey);
     return IPC_OK();
 #else
-    return PluginModuleParent::AnswerGetKeyState(aVirtKey, aRet);
+    return PluginModuleParent::RecvGetKeyState(aVirtKey, aRet);
 #endif
 }

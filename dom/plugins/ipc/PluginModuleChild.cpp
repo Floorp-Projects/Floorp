@@ -2117,7 +2117,7 @@ PMCGetKeyState(int aVirtKey)
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
         int16_t ret = 0;
-        if (chromeInstance->CallGetKeyState(aVirtKey, &ret)) {
+        if (chromeInstance->SendGetKeyState(aVirtKey, &ret)) {
           return ret;
         }
     }

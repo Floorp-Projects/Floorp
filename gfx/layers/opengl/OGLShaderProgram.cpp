@@ -966,7 +966,7 @@ ShaderProgramOGL::SetBlurRadius(float aRX, float aRY)
 void
 ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace)
 {
-  float* yuvToRgb = gfxUtils::Get3x3YuvColorMatrix(aYUVColorSpace);
+  const float* yuvToRgb = gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);
 }
 

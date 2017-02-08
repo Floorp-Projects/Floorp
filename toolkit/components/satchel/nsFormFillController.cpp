@@ -291,7 +291,6 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
       if (!mFocusedInput) {
         MaybeStartControllingInput(input);
       }
-      ShowPopup();
     }
   }
 
@@ -317,11 +316,9 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
 }
 
 NS_IMETHODIMP
-nsFormFillController::GetFocusedInput(nsIDOMHTMLInputElement** aRetVal) {
-  if (!aRetVal) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *aRetVal = mFocusedInput;
+nsFormFillController::GetFocusedInput(nsIDOMHTMLInputElement **aInput) {
+  *aInput = mFocusedInput;
+  NS_IF_ADDREF(*aInput);
   return NS_OK;
 }
 
@@ -706,6 +703,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
 
   // If the login manager has indicated it's responsible for this field, let it
   // handle the autocomplete. Otherwise, handle with form history.
+  // This method is sometimes called in unit tests and from XUL without a focused node.
   if (mFocusedInputNode && (mPwmgrInputs.Get(mFocusedInputNode) ||
                             formControl->GetType() == NS_FORM_INPUT_PASSWORD)) {
 
@@ -713,6 +711,10 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
     // MarkAsLoginManagerField wasn't called because password manager is disabled.
     if (!mLoginManager) {
       mLoginManager = do_GetService("@mozilla.org/login-manager;1");
+    }
+
+    if (NS_WARN_IF(!mLoginManager)) {
+      return NS_ERROR_FAILURE;
     }
 
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
@@ -992,8 +994,10 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   bool hasList = datalist != nullptr;
 
   bool isPwmgrInput = false;
-  if (mPwmgrInputs.Get(inputNode))
-      isPwmgrInput = true;
+  if (mPwmgrInputs.Get(inputNode) ||
+      formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
+    isPwmgrInput = true;
+  }
 
   if (isPwmgrInput || hasList || autocomplete) {
     StartControllingInput(aInput);
@@ -1013,19 +1017,17 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+#ifndef ANDROID
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
   MOZ_ASSERT(formControl);
 
   // If this focus doesn't immediately follow a contextmenu event then show
-  // the autocomplete popup
-  if (!mContextMenuFiredBeforeFocus &&
-      (mPwmgrInputs.Get(mFocusedInputNode)
-#ifndef ANDROID
-       || formControl->GetType() == NS_FORM_INPUT_PASSWORD
-#endif
-       )) {
+  // the autocomplete popup for all password fields.
+  if (!mContextMenuFiredBeforeFocus
+      && formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
     ShowPopup();
   }
+#endif
 
   mContextMenuFiredBeforeFocus = false;
   return NS_OK;
@@ -1163,7 +1165,7 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
   return ShowPopup();
 }
 
-nsresult
+NS_IMETHODIMP
 nsFormFillController::ShowPopup()
 {
   bool isOpen = false;
