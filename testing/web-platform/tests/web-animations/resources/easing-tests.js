@@ -1,4 +1,4 @@
-var gEffectEasingTests = [
+var gEasingTests = [
   {
     desc: 'step-start function',
     easing: 'step-start',
