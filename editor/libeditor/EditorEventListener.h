@@ -58,7 +58,7 @@ protected:
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
   nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
