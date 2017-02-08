@@ -66,127 +66,127 @@ add_task(function* () {
 
   info("Testing status sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing status sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing status sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-method-button"));
+    document.querySelector("#requests-list-method-button"));
   testHeaders("method", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-method-button"));
+    document.querySelector("#requests-list-method-button"));
   testHeaders("method", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing method sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-method-button"));
+    document.querySelector("#requests-list-method-button"));
   testHeaders("method", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-file-button"));
+    document.querySelector("#requests-list-file-button"));
   testHeaders("file", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-file-button"));
+    document.querySelector("#requests-list-file-button"));
   testHeaders("file", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing file sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-file-button"));
+    document.querySelector("#requests-list-file-button"));
   testHeaders("file", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-type-button"));
+    document.querySelector("#requests-list-type-button"));
   testHeaders("type", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-type-button"));
+    document.querySelector("#requests-list-type-button"));
   testHeaders("type", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing type sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-type-button"));
+    document.querySelector("#requests-list-type-button"));
   testHeaders("type", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-transferred-button"));
+    document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-transferred-button"));
+    document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing transferred sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-transferred-button"));
+    document.querySelector("#requests-list-transferred-button"));
   testHeaders("transferred", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-size-button"));
+    document.querySelector("#requests-list-size-button"));
   testHeaders("size", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-size-button"));
+    document.querySelector("#requests-list-size-button"));
   testHeaders("size", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing size sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-size-button"));
+    document.querySelector("#requests-list-size-button"));
   testHeaders("size", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing waterfall sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-waterfall-button"));
+    document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "ascending");
   testContents([0, 2, 4, 3, 1]);
 
   info("Testing waterfall sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-waterfall-button"));
+    document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "descending");
   testContents([4, 2, 0, 1, 3]);
 
   info("Testing waterfall sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-waterfall-button"));
+    document.querySelector("#requests-list-waterfall-button"));
   testHeaders("waterfall", "ascending");
   testContents([0, 2, 4, 3, 1]);
 
@@ -201,8 +201,8 @@ add_task(function* () {
 
   function testHeaders(sortType, direction) {
     let doc = monitor.panelWin.document;
-    let target = doc.querySelector("#requests-menu-" + sortType + "-button");
-    let headers = doc.querySelectorAll(".requests-menu-header-button");
+    let target = doc.querySelector("#requests-list-" + sortType + "-button");
+    let headers = doc.querySelectorAll(".requests-list-header-button");
 
     for (let header of headers) {
       if (header != target) {

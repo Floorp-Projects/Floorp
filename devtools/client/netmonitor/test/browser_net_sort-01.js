@@ -66,7 +66,7 @@ add_task(function* () {
 
   info("Testing status sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4], 0);
 
@@ -81,7 +81,7 @@ add_task(function* () {
 
   info("Testing status sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
   testContents([9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 9);
 
@@ -96,13 +96,13 @@ add_task(function* () {
 
   info("Testing status sort yet again, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 0);
 
   info("Testing status sort yet again, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-status-button"));
+    document.querySelector("#requests-list-status-button"));
   testHeaders("status", "descending");
   testContents([14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 14);
 
@@ -110,8 +110,8 @@ add_task(function* () {
 
   function testHeaders(sortType, direction) {
     let doc = monitor.panelWin.document;
-    let target = doc.querySelector("#requests-menu-" + sortType + "-button");
-    let headers = doc.querySelectorAll(".requests-menu-header-button");
+    let target = doc.querySelector("#requests-list-" + sortType + "-button");
+    let headers = doc.querySelectorAll(".requests-list-header-button");
 
     for (let header of headers) {
       if (header != target) {

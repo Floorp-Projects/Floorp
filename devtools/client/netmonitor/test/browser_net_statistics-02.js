@@ -17,15 +17,15 @@ add_task(function* () {
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-html-button"));
+    document.querySelector("#requests-list-filter-html-button"));
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-css-button"));
+    document.querySelector("#requests-list-filter-css-button"));
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-js-button"));
+    document.querySelector("#requests-list-filter-js-button"));
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-ws-button"));
+    document.querySelector("#requests-list-filter-ws-button"));
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-filter-other-button"));
+    document.querySelector("#requests-list-filter-other-button"));
   testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1]);
   info("The correct filtering predicates are used before entering perf. analysis mode.");
 

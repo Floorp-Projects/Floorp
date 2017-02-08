@@ -31,7 +31,7 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // toolbox.doc
     monitor.toolbox.doc
-      .querySelector("#request-menu-context-copy-url").click();
+      .querySelector("#request-list-context-copy-url").click();
   }, requestItem.url);
 
   yield teardown(monitor);

@@ -78,7 +78,7 @@ const RequestListHeader = createClass({
     const { sort, scale, waterfallWidth, onHeaderClick } = this.props;
 
     return div(
-      { id: "requests-menu-toolbar", className: "devtools-toolbar" },
+      { id: "requests-list-toolbar", className: "devtools-toolbar" },
       div({ id: "toolbar-labels" },
         HEADERS.map(header => {
           const name = header.name;
@@ -96,8 +96,8 @@ const RequestListHeader = createClass({
 
           return div(
             {
-              id: `requests-menu-${boxName}-header-box`,
-              className: `requests-menu-header requests-menu-${boxName}`,
+              id: `requests-list-${boxName}-header-box`,
+              className: `requests-list-header requests-list-${boxName}`,
               key: name,
               ref: "header",
               // Used to style the next column.
@@ -105,8 +105,8 @@ const RequestListHeader = createClass({
             },
             button(
               {
-                id: `requests-menu-${name}-button`,
-                className: `requests-menu-header-button requests-menu-${name}`,
+                id: `requests-list-${name}-button`,
+                className: `requests-list-header-button requests-list-${name}`,
                 "data-sorted": sorted,
                 title: sortedTitle,
                 onClick: () => onHeaderClick(name),
@@ -163,7 +163,7 @@ function waterfallDivisionLabels(waterfallWidth, scale) {
     labels.push(div(
       {
         key: labels.length,
-        className: "requests-menu-timings-division",
+        className: "requests-list-timings-division",
         "data-division-scale": divisionScale,
         style: { width }
       },
@@ -175,11 +175,11 @@ function waterfallDivisionLabels(waterfallWidth, scale) {
 }
 
 function WaterfallLabel(waterfallWidth, scale, label) {
-  let className = "button-text requests-menu-waterfall-label-wrapper";
+  let className = "button-text requests-list-waterfall-label-wrapper";
 
   if (waterfallWidth != null && scale != null) {
     label = waterfallDivisionLabels(waterfallWidth, scale);
-    className += " requests-menu-waterfall-visible";
+    className += " requests-list-waterfall-visible";
   }
 
   return div({ className }, label);
