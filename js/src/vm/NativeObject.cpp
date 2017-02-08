@@ -1145,7 +1145,7 @@ PurgeProtoChain(JSContext* cx, JSObject* objArg, HandleId id)
 
         shape = obj->as<NativeObject>().lookup(cx, id);
         if (shape)
-            return obj->as<NativeObject>().shadowingShapeChange(cx, *shape);
+            return NativeObject::shadowingShapeChange(cx, obj.as<NativeObject>(), *shape);
 
         obj = obj->staticPrototype();
     }
