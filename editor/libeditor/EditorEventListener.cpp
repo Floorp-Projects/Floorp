@@ -615,7 +615,7 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
     return NS_OK;
   }
 
-  nsresult rv = editorBase->HandleKeyPressEvent(aKeyEvent);
+  nsresult rv = editorBase->HandleKeyPressEvent(keypressEvent);
   NS_ENSURE_SUCCESS(rv, rv);
   if (DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
     return NS_OK;
