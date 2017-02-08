@@ -245,9 +245,6 @@ public:
   // program counter. This function must be re-entrant.
   void Tick(TickSample* sample);
 
-  // Immediately captures the calling thread's call stack and returns it.
-  SyncProfile* GetBacktrace();
-
   // Start and stop sampler.
   void Start();
   void Stop();

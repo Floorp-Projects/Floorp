@@ -52,6 +52,13 @@
 # include "lul/platform-linux-lul.h"
 #endif
 
+#if defined(XP_WIN)
+typedef CONTEXT tickcontext_t;
+#elif defined(LINUX)
+#include <ucontext.h>
+typedef ucontext_t tickcontext_t;
+#endif
+
 using namespace mozilla;
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -1368,8 +1375,35 @@ profiler_get_backtrace()
     return nullptr;
   }
 
-  return UniqueProfilerBacktrace(
-    new ProfilerBacktrace(gSampler->GetBacktrace()));
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
+    MOZ_ASSERT(stack);
+    return nullptr;
+  }
+  Thread::tid_t tid = Thread::GetCurrentId();
+
+  SyncProfile* profile = new SyncProfile(tid, stack);
+
+  TickSample sample;
+  sample.threadInfo = profile;
+
+#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
+#if defined(XP_WIN) || defined(LINUX)
+  tickcontext_t context;
+  sample.PopulateContext(&context);
+#elif defined(XP_MACOSX)
+  sample.PopulateContext(nullptr);
+#endif
+#endif
+
+  sample.isSamplingCurrentThread = true;
+  sample.timestamp = mozilla::TimeStamp::Now();
+
+  profile->BeginUnwind();
+  gSampler->Tick(&sample);
+  profile->EndUnwind();
+
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(profile));
 }
 
 void

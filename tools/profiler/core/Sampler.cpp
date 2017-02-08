@@ -55,13 +55,6 @@
  #define USE_NS_STACKWALK
 #endif
 
-#if defined(XP_WIN)
-typedef CONTEXT tickcontext_t;
-#elif defined(LINUX)
-#include <ucontext.h>
-typedef ucontext_t tickcontext_t;
-#endif
-
 #if defined(__arm__) && defined(ANDROID)
  // Should also work on ARM Linux, but not tested there yet.
  #define USE_EHABI_STACKWALK
@@ -1160,49 +1153,6 @@ Sampler::InplaceTick(TickSample* sample)
     currThreadInfo.addTag(ProfileEntry::FrameNumber(gFrameNumber));
     gLastFrameNumber = gFrameNumber;
   }
-}
-
-namespace {
-
-SyncProfile* NewSyncProfile()
-{
-  PseudoStack* stack = tlsPseudoStack.get();
-  if (!stack) {
-    MOZ_ASSERT(stack);
-    return nullptr;
-  }
-  Thread::tid_t tid = Thread::GetCurrentId();
-
-  return new SyncProfile(tid, stack);
-}
-
-} // namespace
-
-SyncProfile*
-Sampler::GetBacktrace()
-{
-  SyncProfile* profile = NewSyncProfile();
-
-  TickSample sample;
-  sample.threadInfo = profile;
-
-#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
-#if defined(XP_WIN) || defined(LINUX)
-  tickcontext_t context;
-  sample.PopulateContext(&context);
-#elif defined(XP_MACOSX)
-  sample.PopulateContext(nullptr);
-#endif
-#endif
-
-  sample.isSamplingCurrentThread = true;
-  sample.timestamp = mozilla::TimeStamp::Now();
-
-  profile->BeginUnwind();
-  Tick(&sample);
-  profile->EndUnwind();
-
-  return profile;
 }
 
 static bool
