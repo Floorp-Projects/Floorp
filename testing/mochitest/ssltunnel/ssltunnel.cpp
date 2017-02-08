@@ -1028,11 +1028,10 @@ char* password_func(PK11SlotInfo* slot, PRBool retry, void* arg)
 
 server_info_t* findServerInfo(int portnumber)
 {
-  for (vector<server_info_t>::iterator it = servers.begin();
-       it != servers.end(); it++) 
+  for (auto & server : servers)
   {
-    if (it->listen_port == portnumber)
-      return &(*it);
+    if (server.listen_port == portnumber)
+      return &server;
   }
 
   return nullptr;
@@ -1485,10 +1484,10 @@ int freeRC4HashItems(PLHashEntry *he, int i, void *arg)
 int main(int argc, char** argv)
 {
   const char* configFilePath;
-  
+
   const char* logLevelEnv = PR_GetEnv("SSLTUNNEL_LOG_LEVEL");
   gLogLevel = logLevelEnv ? (LogLevel)atoi(logLevelEnv) : LEVEL_INFO;
-  
+
   if (argc == 1)
     configFilePath = "ssltunnel.cfg";
   else
@@ -1590,11 +1589,10 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  for (vector<server_info_t>::iterator it = servers.begin();
-       it != servers.end(); it++) {
+  for (auto & server : servers) {
     // Not actually using this PRJob*...
     // PRJob* server_job =
-    PR_QueueJob(threads, StartServer, &(*it), true);
+    PR_QueueJob(threads, StartServer, &server, true);
   }
   // now wait for someone to tell us to quit
   PR_Lock(shutdown_lock);
@@ -1610,24 +1608,23 @@ int main(int argc, char** argv)
   if (NSS_Shutdown() == SECFailure) {
     LOG_DEBUG(("Leaked NSS objects!\n"));
   }
-  
-  for (vector<server_info_t>::iterator it = servers.begin();
-       it != servers.end(); it++) 
+
+  for (auto & server : servers)
   {
-    PL_HashTableEnumerateEntries(it->host_cert_table, freeHostCertHashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_redir_table, freeHostRedirHashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_ssl3_table, freeSSL3HashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_tls1_table, freeTLS1HashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_rc4_table, freeRC4HashItems, nullptr);
-    PL_HashTableEnumerateEntries(it->host_failhandshake_table, freeRC4HashItems, nullptr);
-    PL_HashTableDestroy(it->host_cert_table);
-    PL_HashTableDestroy(it->host_clientauth_table);
-    PL_HashTableDestroy(it->host_redir_table);
-    PL_HashTableDestroy(it->host_ssl3_table);
-    PL_HashTableDestroy(it->host_tls1_table);
-    PL_HashTableDestroy(it->host_rc4_table);
-    PL_HashTableDestroy(it->host_failhandshake_table);
+    PL_HashTableEnumerateEntries(server.host_cert_table, freeHostCertHashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_clientauth_table, freeClientAuthHashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_redir_table, freeHostRedirHashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_ssl3_table, freeSSL3HashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_tls1_table, freeTLS1HashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_rc4_table, freeRC4HashItems, nullptr);
+    PL_HashTableEnumerateEntries(server.host_failhandshake_table, freeRC4HashItems, nullptr);
+    PL_HashTableDestroy(server.host_cert_table);
+    PL_HashTableDestroy(server.host_clientauth_table);
+    PL_HashTableDestroy(server.host_redir_table);
+    PL_HashTableDestroy(server.host_ssl3_table);
+    PL_HashTableDestroy(server.host_tls1_table);
+    PL_HashTableDestroy(server.host_rc4_table);
+    PL_HashTableDestroy(server.host_failhandshake_table);
   }
 
   PR_Cleanup();
