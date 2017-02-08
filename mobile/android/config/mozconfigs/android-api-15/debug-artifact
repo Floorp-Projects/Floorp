@@ -14,4 +14,6 @@ ac_add_options --enable-marionette
 
 . "$topsrcdir/build/mozconfig.artifact"
 
+ac_add_options --enable-artifact-build-symbols
+
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
