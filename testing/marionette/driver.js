@@ -309,33 +309,41 @@ GeckoDriver.prototype.sendTargettedAsyncMessage_ = function (name, payload) {
 };
 
 /**
- * Gets the current active window.
+ * Get the session's current top-level browsing context.
+ *
+ * It will return the outer {@ChromeWindow} previously selected by window handle
+ * through {@code #switchToWindow}, or the first window that was registered.
  *
  * @param {Context=} forcedContext
- *     Optional name of the context to use for the checks.
- *     Defaults to the current context.
+ *     Optional name of the context to use for finding the window. It will be required
+ *     if a command always needs a specific context, whether which context is
+ *     currently set. Defaults to the current context.
  *
- * @return {nsIDOMWindow}
+ * @return {ChromeWindow}
+ *     The current top-level browsing context.
  */
 GeckoDriver.prototype.getCurrentWindow = function (forcedContext = undefined) {
   let context = typeof forcedContext == "undefined" ? this.context : forcedContext;
   let win = null;
 
-  if (this.curFrame === null) {
-    if (this.curBrowser === null) {
-      let typ = (context === Context.CONTENT) ? "navigator:browser" : null;
-      win = Services.wm.getMostRecentWindow(typ);
-    } else {
-      if (context === Context.CHROME) {
-        win = this.curBrowser.window;
+  switch (context) {
+    case Context.CHROME:
+      if (this.curFrame !== null) {
+        win = this.curFrame;
+
       } else {
-        if (this.curBrowser.tab && browser.getBrowserForTab(this.curBrowser.tab)) {
-          win = this.curBrowser.window;
-        }
+        win = this.curBrowser.window;
       }
-    }
-  } else {
-    win = this.curFrame;
+      break;
+
+    case Context.CONTENT:
+      if (this.curFrame !== null) {
+        win = this.curFrame;
+
+      } else if (this.curBrowser.tab && browser.getBrowserForTab(this.curBrowser.tab)) {
+        win = this.curBrowser.window;
+      }
+      break;
   }
 
   return win;
@@ -603,8 +611,9 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
   let registerBrowsers = this.registerPromise();
   let browserListening = this.listeningPromise();
 
-  let waitForWindow = function() {
-    let win = this.getCurrentWindow();
+  let waitForWindow = function () {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+
     if (!win) {
       // if the window isn't even created, just poll wait for it
       let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -624,10 +633,8 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
       win.addEventListener("load", listener, true);
     } else {
       let clickToStart = Preferences.get(CLICK_TO_START_PREF);
-      if (clickToStart && (this.appName != "B2G")) {
-        let pService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-            .getService(Ci.nsIPromptService);
-        pService.alert(win, "", "Click to start execution of marionette tests");
+      if (clickToStart) {
+        Services.prompt.alert(win, "", "Click to start execution of marionette tests");
       }
       this.startBrowser(win, true);
     }
