@@ -75,7 +75,7 @@ var initTable = [
   ["els", "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService"],
   ["eTLD", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
   ["io", "@mozilla.org/network/io-service;1", "nsIIOService2"],
-  ["locale", "@mozilla.org/intl/nslocaleservice;1", "nsILocaleService"],
+  ["locale", "@mozilla.org/intl/localeservice;1", "mozILocaleService"],
   ["logins", "@mozilla.org/login-manager;1", "nsILoginManager"],
   ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],

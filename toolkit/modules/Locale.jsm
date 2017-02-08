@@ -18,8 +18,11 @@ this.Locale = {
    * @return  the selected locale or "en-US" if none is selected
    */
   getLocale() {
-    if (Preferences.get(PREF_MATCH_OS_LOCALE, false))
-      return Services.locale.getLocaleComponentForUserAgent();
+    if (Preferences.get(PREF_MATCH_OS_LOCALE, false)) {
+      const osPrefs =
+        Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
+      return osPrefs.getSystemLocale();
+    }
     try {
       let locale = Preferences.get(PREF_SELECTED_LOCALE, null, Ci.nsIPrefLocalizedString);
       if (locale)
