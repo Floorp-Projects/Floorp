@@ -54,7 +54,7 @@ def make_checksums_signing_description(config, jobs):
         treeherder.setdefault('kind', 'build')
 
         label = job.get('label', "checksumssigning-{}".format(dep_job.label))
-        dependencies =  {"beetmover": dep_job.label}
+        dependencies = {"beetmover": dep_job.label}
 
         attributes = {
             'nightly': dep_job.attributes.get('nightly', False),

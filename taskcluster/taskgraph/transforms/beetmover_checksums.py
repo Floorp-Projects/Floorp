@@ -135,7 +135,8 @@ def make_beetmover_checksums_worker(config, jobs):
             else:
                 refs['signing'] = "<{}>".format(dependency)
         if None in refs.values():
-            raise NotImplementedError("Beetmover checksums must have a beetmover and signing dependency!")
+            raise NotImplementedError(
+                "Beetmover checksums must have a beetmover and signing dependency!")
 
         upstream_artifacts = generate_upstream_artifacts(refs,
                                                          platform, locale)
