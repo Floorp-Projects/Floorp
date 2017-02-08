@@ -33,6 +33,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsNullPrincipal.h"
 #include "ScriptSettings.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/LocationBinding.h"
 
 namespace mozilla {
@@ -699,7 +700,13 @@ Location::SetProtocol(const nsAString& aProtocol)
     return rv;
   }
 
-  rv = uri->SetScheme(NS_ConvertUTF16toUTF8(aProtocol));
+  nsAString::const_iterator start, end;
+  aProtocol.BeginReading(start);
+  aProtocol.EndReading(end);
+  nsAString::const_iterator iter(start);
+  Unused << FindCharInReadable(':', iter, end);
+
+  rv = uri->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
