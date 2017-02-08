@@ -30,7 +30,7 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // toolbox.doc
     monitor.toolbox.doc
-      .querySelector("#request-menu-context-copy-image-as-data-uri").click();
+      .querySelector("#request-list-context-copy-image-as-data-uri").click();
   }, function check(text) {
     return text.startsWith("data:") && !/undefined/.test(text);
   });

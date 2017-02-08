@@ -59,7 +59,7 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // toolbox.doc
     monitor.toolbox.doc
-      .querySelector("#request-menu-context-copy-as-curl").click();
+      .querySelector("#request-list-context-copy-as-curl").click();
   }, function validate(result) {
     if (typeof result !== "string") {
       return false;
