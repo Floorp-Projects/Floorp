@@ -25,23 +25,20 @@ namespace mozilla {
 namespace dom {
 
 /* static */ already_AddRefed<Promise>
-FileCreatorHelper::CreateFile(const GlobalObject& aGlobal,
+FileCreatorHelper::CreateFile(nsIGlobalObject* aGlobalObject,
                               nsIFile* aFile,
                               const ChromeFilePropertyBag& aBag,
                               bool aIsFromNsIFile,
                               ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(aGlobalObject, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window =
-    do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobalObject);
 
   // Parent process
 
