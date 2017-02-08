@@ -23,7 +23,7 @@
 #include "vm/NumberObject.h"
 #include "vm/Probes.h"
 #include "vm/StringObject.h"
-#include "vm/TypedArrayCommon.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jsatominlines.h"
 #include "jscompartmentinlines.h"

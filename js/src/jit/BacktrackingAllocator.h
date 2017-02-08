@@ -672,6 +672,8 @@ class BacktrackingAllocator : protected RegisterAllocator
     // All allocated slots of each width.
     SpillSlotList normalSlots, doubleSlots, quadSlots;
 
+    Vector<LiveBundle*, 4, SystemAllocPolicy> spilledBundles;
+
   public:
     BacktrackingAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph, bool testbed)
       : RegisterAllocator(mir, lir, graph),
@@ -720,6 +722,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     MOZ_MUST_USE bool splitAndRequeueBundles(LiveBundle* bundle,
                                              const LiveBundleVector& newBundles);
     MOZ_MUST_USE bool spill(LiveBundle* bundle);
+    MOZ_MUST_USE bool tryAllocatingRegistersForSpillBundles();
 
     bool isReusedInput(LUse* use, LNode* ins, bool considerCopy);
     bool isRegisterUse(UsePosition* use, LNode* ins, bool considerCopy = false);

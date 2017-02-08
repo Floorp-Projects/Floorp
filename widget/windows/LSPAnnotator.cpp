@@ -11,11 +11,6 @@
  * on machines with several LSPs.
  */
 
-#if _WIN32_WINNT < 0x0600
-// Redefining _WIN32_WINNT for some Vista APIs that we call
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-#endif
 #include "nsICrashReporter.h"
 #include "nsISupportsImpl.h"
 #include "nsServiceManagerUtils.h"

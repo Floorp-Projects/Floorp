@@ -15,6 +15,9 @@
 #ifndef ENABLE_INTL_API
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
+#else
+#include "gtest/MozGtestFriend.h"
+#include "unicode/udat.h"
 #endif
 
 namespace mozilla {
@@ -47,6 +50,15 @@ private:
   static nsresult Initialize();
 
 #ifdef ENABLE_INTL_API
+  FRIEND_TEST(DateTimeFormat, FormatPRExplodedTime);
+
+  // performs a locale sensitive date formatting operation on the UDate parameter
+  static nsresult FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
+                                  const nsTimeFormatSelector aTimeFormatSelector,
+                                  const UDate aUDateTime,
+                                  const PRTimeParameters* aTimeParameters,
+                                  nsAString& aStringOut);
+
   static nsCString* mLocale;
 #else
   // performs a locale sensitive date formatting operation on the struct tm parameter

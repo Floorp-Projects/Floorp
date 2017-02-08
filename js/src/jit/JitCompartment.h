@@ -87,10 +87,10 @@ class JitRuntime
 
     // Executable allocator for all code except wasm code and Ion code with
     // patchable backedges (see below).
-    UnprotectedData<ExecutableAllocator> execAlloc_;
+    ActiveThreadData<ExecutableAllocator> execAlloc_;
 
     // Executable allocator for Ion scripts with patchable backedges.
-    UnprotectedData<ExecutableAllocator> backedgeExecAlloc_;
+    ActiveThreadData<ExecutableAllocator> backedgeExecAlloc_;
 
     // Shared exception-handler tail.
     ExclusiveAccessLockWriteOnceData<JitCode*> exceptionTail_;

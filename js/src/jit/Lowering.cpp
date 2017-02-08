@@ -4861,6 +4861,9 @@ LIRGenerator::visitBlock(MBasicBlock* block)
         uint32_t position = block->positionInPhiSuccessor();
         size_t lirIndex = 0;
         for (MPhiIterator phi(successor->phisBegin()); phi != successor->phisEnd(); phi++) {
+            if (!gen->ensureBallast())
+                return false;
+
             MDefinition* opd = phi->getOperand(position);
             ensureDefined(opd);
 
