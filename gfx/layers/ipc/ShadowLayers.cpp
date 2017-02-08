@@ -213,8 +213,14 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
   delete mTxn;
   if (mShadowManager) {
     mShadowManager->SetForwarder(nullptr);
-    mShadowManager->Destroy();
+    if (NS_IsMainThread()) {
+      mShadowManager->Destroy();
+    } else {
+      NS_DispatchToMainThread(
+        NewRunnableMethod(mShadowManager, &LayerTransactionChild::Destroy));
+    }
   }
+
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(
       new ReleaseOnMainThreadTask<ActiveResourceTracker>(mActiveResourceTracker));
