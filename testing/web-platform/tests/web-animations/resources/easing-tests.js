@@ -75,29 +75,13 @@ var gEasingTests = [
   }
 ];
 
-var gInvalidEasingTests = [
-  {
-    easing: ''
-  },
-  {
-    easing: 'test'
-  },
-  {
-    easing: 'cubic-bezier(1.1, 0, 1, 1)'
-  },
-  {
-    easing: 'cubic-bezier(0, 0, 1.1, 1)'
-  },
-  {
-    easing: 'cubic-bezier(-0.1, 0, 1, 1)'
-  },
-  {
-    easing: 'cubic-bezier(0, 0, -0.1, 1)'
-  },
-  {
-    easing: 'steps(-1, start)'
-  },
-  {
-    easing: 'steps(0.1, start)'
-  },
+var gInvalidEasings = [
+  '',
+  'test',
+  'cubic-bezier(1.1, 0, 1, 1)',
+  'cubic-bezier(0, 0, 1.1, 1)',
+  'cubic-bezier(-0.1, 0, 1, 1)',
+  'cubic-bezier(0, 0, -0.1, 1)',
+  'steps(-1, start)',
+  'steps(0.1, start)'
 ];
