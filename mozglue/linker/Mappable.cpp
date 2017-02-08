@@ -149,6 +149,10 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
         "not extracting");
     return nullptr;
   }
+
+  // Ensure that the cache dir is private.
+  chmod(cachePath, 0770);
+
   UniquePtr<char[]> path =
     MakeUnique<char[]>(strlen(cachePath) + strlen(name) + 2);
   sprintf(path.get(), "%s/%s", cachePath, name);
