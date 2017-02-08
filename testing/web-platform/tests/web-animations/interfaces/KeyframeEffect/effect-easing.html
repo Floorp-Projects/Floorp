@@ -23,26 +23,6 @@ function assert_style_left_at(animation, time, easingFunction) {
                        easingFunction(portion) * 100 + ' at ' + time + 'ms');
 }
 
-gEffectEasingTests.forEach(function(options) {
-  test(function(t) {
-    var target = createDiv(t);
-    target.style.position = 'absolute';
-    var anim = target.animate([ { left: '0px' }, { left: '100px' } ],
-                              { duration: 1000,
-                                fill: 'forwards',
-                                easing: options.easing });
-    var easing = options.easingFunction;
-
-    anim.pause();
-
-    assert_style_left_at(anim, 0, easing);
-    assert_style_left_at(anim, 250, easing);
-    assert_style_left_at(anim, 500, easing);
-    assert_style_left_at(anim, 750, easing);
-    assert_style_left_at(anim, 1000, easing);
-  }, options.desc);
-});
-
 var gEffectEasingTestsWithKeyframeEasing = [
   {
     desc: 'effect easing produces values greater than 1 with keyframe ' +
