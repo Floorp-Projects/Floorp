@@ -127,6 +127,10 @@ DocAccessibleWrap::GetNativeWindow() const
 
     auto tab = static_cast<dom::TabChild*>(ipcDoc->Manager());
     MOZ_ASSERT(tab);
+    if (!tab) {
+      return nullptr;
+    }
+
     return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());
   } else if (mHWND) {
     return mHWND;

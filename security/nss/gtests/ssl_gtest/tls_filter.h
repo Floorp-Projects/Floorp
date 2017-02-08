@@ -254,18 +254,18 @@ class TlsAlertRecorder : public TlsRecordFilter {
 class ChainedPacketFilter : public PacketFilter {
  public:
   ChainedPacketFilter() {}
-  ChainedPacketFilter(const std::vector<PacketFilter*> filters)
+  ChainedPacketFilter(const std::vector<std::shared_ptr<PacketFilter>> filters)
       : filters_(filters.begin(), filters.end()) {}
-  virtual ~ChainedPacketFilter();
+  virtual ~ChainedPacketFilter() {}
 
   virtual PacketFilter::Action Filter(const DataBuffer& input,
                                       DataBuffer* output);
 
   // Takes ownership of the filter.
-  void Add(PacketFilter* filter) { filters_.push_back(filter); }
+  void Add(std::shared_ptr<PacketFilter> filter) { filters_.push_back(filter); }
 
  private:
-  std::vector<PacketFilter*> filters_;
+  std::vector<std::shared_ptr<PacketFilter>> filters_;
 };
 
 class TlsExtensionFilter : public TlsHandshakeFilter {
@@ -337,8 +337,8 @@ typedef std::function<void(void)> VoidFunction;
 
 class AfterRecordN : public TlsRecordFilter {
  public:
-  AfterRecordN(TlsAgent* src, TlsAgent* dest, unsigned int record,
-               VoidFunction func)
+  AfterRecordN(std::shared_ptr<TlsAgent>& src, std::shared_ptr<TlsAgent>& dest,
+               unsigned int record, VoidFunction func)
       : src_(src), dest_(dest), record_(record), func_(func), counter_(0) {}
 
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
@@ -346,8 +346,8 @@ class AfterRecordN : public TlsRecordFilter {
                                             DataBuffer* out) override;
 
  private:
-  TlsAgent* src_;
-  TlsAgent* dest_;
+  std::weak_ptr<TlsAgent> src_;
+  std::weak_ptr<TlsAgent> dest_;
   unsigned int record_;
   VoidFunction func_;
   unsigned int counter_;
@@ -357,14 +357,15 @@ class AfterRecordN : public TlsRecordFilter {
 // ClientHelloVersion on |server|.
 class TlsInspectorClientHelloVersionChanger : public TlsHandshakeFilter {
  public:
-  TlsInspectorClientHelloVersionChanger(TlsAgent* server) : server_(server) {}
+  TlsInspectorClientHelloVersionChanger(std::shared_ptr<TlsAgent>& server)
+      : server_(server) {}
 
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
                                                DataBuffer* output);
 
  private:
-  TlsAgent* server_;
+  std::weak_ptr<TlsAgent> server_;
 };
 
 // This class selectively drops complete writes.  This relies on the fact that
