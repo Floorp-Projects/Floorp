@@ -562,12 +562,18 @@ IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 bool
 IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                             nsIContent* aContent,
-                                            nsIDOMMouseEvent* aMouseEvent)
+                                            WidgetMouseEvent* aMouseEvent)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("OnMouseButtonEventInEditor(aPresContext=0x%p, "
      "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext.get(), sContent.get()));
+
+  if (NS_WARN_IF(!aMouseEvent)) {
+    MOZ_LOG(sISMLog, LogLevel::Debug,
+      ("  OnMouseButtonEventInEditor(), aMouseEvent is nullptr"));
+    return false;
+  }
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -590,25 +596,15 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  WidgetMouseEvent* internalEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
-  if (NS_WARN_IF(!internalEvent)) {
-    MOZ_LOG(sISMLog, LogLevel::Debug,
-      ("  OnMouseButtonEventInEditor(), "
-       "the internal event of aMouseEvent isn't WidgetMouseEvent"));
-    return false;
-  }
-
   bool consumed =
-    sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
+    sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, aMouseEvent);
 
   if (MOZ_LOG_TEST(sISMLog, LogLevel::Info)) {
     nsAutoString eventType;
-    aMouseEvent->AsEvent()->GetType(eventType);
     MOZ_LOG(sISMLog, LogLevel::Info,
       ("  OnMouseButtonEventInEditor(), "
-       "mouse event (type=%s, button=%d) is %s",
-       NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
+       "mouse event (mMessage=%s, button=%d) is %s",
+       ToChar(aMouseEvent->mMessage), aMouseEvent->button,
        consumed ? "consumed" : "not consumed"));
   }
 
