@@ -21,7 +21,7 @@
 #include "jit/shared/Assembler-shared.h"
 #include "js/TrackedOptimizationInfo.h"
 
-#include "vm/TypedArrayCommon.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 namespace jit {
