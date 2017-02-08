@@ -805,6 +805,7 @@ class InlineFrameIterator
         return si_;
     }
     bool isFunctionFrame() const;
+    bool isModuleFrame() const;
     bool isConstructing() const;
 
     JSObject* environmentChain(MaybeReadFallback& fallback) const {
