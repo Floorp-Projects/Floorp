@@ -186,7 +186,7 @@ Sampler::~Sampler()
   MOZ_COUNT_DTOR(Sampler);
 
   if (gIsActive)
-    Stop();
+    PlatformStop();
 
   // Destroy ThreadInfo for all threads
   {
