@@ -83,7 +83,7 @@ protected:
   bool NotifyIMEOfMouseButtonEvent(nsIDOMMouseEvent* aMouseEvent);
   bool EditorHasFocus();
   bool IsFileControlTextBox();
-  bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
+  bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
   nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
   /**
