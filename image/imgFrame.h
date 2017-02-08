@@ -279,12 +279,15 @@ public:
    * @param aBlendRect       For animation frames, if present, the subrect in
    *                         which @aBlendMethod applies. Outside of this
    *                         subrect, BlendMethod::OVER is always used.
+   * @param aFinalize        Finalize the underlying surface (e.g. so that it
+   *                         may be marked as read only if possible).
    */
   void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
               DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
               FrameTimeout aTimeout = FrameTimeout::FromRawMilliseconds(0),
               BlendMethod aBlendMethod = BlendMethod::OVER,
-              const Maybe<IntRect>& aBlendRect = Nothing());
+              const Maybe<IntRect>& aBlendRect = Nothing(),
+              bool aFinalize = true);
 
   /**
    * Mark this imgFrame as aborted. This informs the imgFrame that if it isn't
@@ -341,6 +344,7 @@ public:
 
   void SetOptimizable();
 
+  void FinalizeSurface();
   already_AddRefed<SourceSurface> GetSourceSurface();
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
@@ -361,6 +365,7 @@ private: // methods
   void GetImageDataInternal(uint8_t** aData, uint32_t* length) const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
+  void FinalizeSurfaceInternal();
   already_AddRefed<SourceSurface> GetSourceSurfaceInternal();
 
   uint32_t PaletteDataLength() const
@@ -616,6 +621,8 @@ private:
 
   RefPtr<imgFrame> mFrame;
 };
+
+void MarkSurfaceShared(gfx::SourceSurface* aSurface);
 
 } // namespace image
 } // namespace mozilla
