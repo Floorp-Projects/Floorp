@@ -57,7 +57,7 @@ protected:
   void UninstallFromEditor();
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyDown(const WidgetKeyboardEvent* aKeyboardEvent);
   nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
   nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
