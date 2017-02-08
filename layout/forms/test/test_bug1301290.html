@@ -35,7 +35,7 @@
                 var textarea = $("textarea");
                 var rect = textarea.getBoundingClientRect();
 
-                synthesizeMouse(textarea, rect.width - 10, rect.height - 10, { type: "mousedown" });
+                synthesizeMouse(textarea, rect.width - 9,  rect.height - 9,  { type: "mousedown" });
                 synthesizeMouse(textarea, rect.width + 40, rect.height + 40, { type: "mousemove" });
                 synthesizeMouse(textarea, rect.width + 40, rect.height + 40, { type: "mouseup" });
 
