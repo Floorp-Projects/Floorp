@@ -406,8 +406,6 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return KeyPress(internalEvent->AsKeyboardEvent());
     // mousedown
     case eMouseDown: {
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // EditorEventListener may receive (1) all mousedown, mouseup and click
       // events, (2) only mousedown event or (3) only mouseup event.
       // mMouseDownOrUpConsumedByIME is used only for ignoring click event if
@@ -415,13 +413,16 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // Therefore, even if case #2 or case #3 occurs,
       // mMouseDownOrUpConsumedByIME is true here.  Therefore, we should always
       // overwrite it here.
-      mMouseDownOrUpConsumedByIME = NotifyIMEOfMouseButtonEvent(mouseEvent);
-      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseDown(mouseEvent);
+      mMouseDownOrUpConsumedByIME =
+        NotifyIMEOfMouseButtonEvent(internalEvent->AsMouseEvent());
+      if (mMouseDownOrUpConsumedByIME) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
     case eMouseUp: {
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // See above comment in the eMouseDown case, first.
       // This code assumes that case #1 is occuring.  However, if case #3 may
       // occurs after case #2 and the mousedown is consumed,
@@ -432,10 +433,14 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // only by eMouseClick case but click event is fired only in case #1.
       // So, before a click event is fired, mMouseDownOrUpConsumedByIME is
       // always initialized in the eMouseDown case if it's referred.
-      if (NotifyIMEOfMouseButtonEvent(mouseEvent)) {
+      if (NotifyIMEOfMouseButtonEvent(internalEvent->AsMouseEvent())) {
         mMouseDownOrUpConsumedByIME = true;
       }
-      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseUp(mouseEvent);
+      if (mMouseDownOrUpConsumedByIME) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case eMouseClick: {
@@ -741,7 +746,7 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
 bool
 EditorEventListener::NotifyIMEOfMouseButtonEvent(
-                       nsIDOMMouseEvent* aMouseEvent)
+                       WidgetMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
@@ -751,11 +756,9 @@ EditorEventListener::NotifyIMEOfMouseButtonEvent(
 
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, false);
-  WidgetMouseEvent* mouseEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
   return IMEStateManager::OnMouseButtonEventInEditor(presContext,
                                                      GetFocusedRootContent(),
-                                                     mouseEvent);
+                                                     aMouseEvent);
 }
 
 nsresult
