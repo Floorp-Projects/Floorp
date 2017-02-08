@@ -194,6 +194,23 @@ var gStepTimingFunctionTests = [
                 ]
   },
   {
+    description: 'Test bounds point of step-end easing',
+    effect:     {
+                  delay: 1000,
+                  duration: 1000,
+                  fill: 'both',
+                  easing: 'steps(2, end)'
+                },
+    conditions: [
+                  { currentTime: 0,    progress: 0 },
+                  { currentTime: 999,  progress: 0 },
+                  { currentTime: 1000, progress: 0 },
+                  { currentTime: 1499, progress: 0 },
+                  { currentTime: 1500, progress: 0.5 },
+                  { currentTime: 2000, progress: 1 }
+                ]
+  },
+  {
     description: 'Test bounds point of step-end easing ' +
                  'with iterationStart and delay',
     effect:     {
