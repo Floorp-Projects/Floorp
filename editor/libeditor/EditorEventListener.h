@@ -60,7 +60,7 @@ protected:
   nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
   nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
 #endif
-  nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
