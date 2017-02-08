@@ -414,5 +414,17 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
   }
 }
 
+uint64_t
+AnimationHelper::GetNextCompositorAnimationsId()
+{
+  static uint32_t sNextId = 0;
+  ++sNextId;
+
+  uint32_t procId = static_cast<uint32_t>(base::GetCurrentProcId());
+  uint64_t nextId = procId;
+  nextId = nextId << 32 | sNextId;
+  return nextId;
+}
+
 } // namespace layers
 } // namespace mozilla

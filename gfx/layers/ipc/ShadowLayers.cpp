@@ -668,7 +668,8 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     } else {
       common.maskLayer() = LayerHandle();
     }
-    common.animations() = mutant->GetAnimations();
+    common.compositorAnimations().id() = mutant->GetCompositorAnimationsId();
+    common.compositorAnimations().animations() = mutant->GetAnimations();
     common.invalidRegion() = mutant->GetInvalidRegion().GetRegion();
     common.scrollMetadata() = mutant->GetAllScrollMetadata();
     for (size_t i = 0; i < mutant->GetAncestorMaskLayerCount(); i++) {
