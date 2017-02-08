@@ -25,6 +25,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/TypeInference-inl.h"
 
 using mozilla::Maybe;
