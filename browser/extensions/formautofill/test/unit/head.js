@@ -2,7 +2,7 @@
  * Provides infrastructure for automated formautofill components tests.
  */
 
-/* exported loadFormAutofillContent, getTempFile */
+/* exported loadFormAutofillContent, getTempFile, sinon */
 
 "use strict";
 
@@ -17,6 +17,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+
+do_get_profile();
+
+// Setup the environment for sinon.
+Cu.import("resource://gre/modules/Timer.jsm");
+let self = {}; // eslint-disable-line no-unused-vars
+var sinon;
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
 
 // Load our bootstrap extension manifest so we can access our chrome/resource URIs.
 const EXTENSION_ID = "formautofill@mozilla.org";
@@ -85,12 +93,12 @@ function getTempFile(leafName) {
   return file;
 }
 
-add_task(function* test_common_initialize() {
+add_task(function* head_initialize() {
   Services.prefs.setBoolPref("browser.formautofill.experimental", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
 
   // Clean up after every test.
-  do_register_cleanup(() => {
+  do_register_cleanup(function head_cleanup() {
     Services.prefs.clearUserPref("browser.formautofill.experimental");
     Services.prefs.clearUserPref("dom.forms.autocomplete.experimental");
   });
