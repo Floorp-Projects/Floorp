@@ -3330,7 +3330,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(uint32_t aInde
   }
   switch (aIndex) {
     case ATT_LIGHTING_SURFACE_SCALE:
-      mSurfaceScale = aValue;
+      mSurfaceScale = std::fpclassify(aValue) == FP_SUBNORMAL ? 0.0 : aValue;
       break;
     default:
       MOZ_CRASH("GFX: FilterNodeLightingSoftware::SetAttribute float");
