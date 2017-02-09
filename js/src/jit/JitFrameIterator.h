@@ -284,7 +284,7 @@ class JitProfilingFrameIterator
     void moveToNextFrame(CommonFrameLayout* frame);
 
   public:
-    JitProfilingFrameIterator(JSRuntime* rt,
+    JitProfilingFrameIterator(JSContext* cx,
                               const JS::ProfilingFrameIterator::RegisterState& state);
     explicit JitProfilingFrameIterator(void* exitFrame);
 
@@ -805,6 +805,7 @@ class InlineFrameIterator
         return si_;
     }
     bool isFunctionFrame() const;
+    bool isModuleFrame() const;
     bool isConstructing() const;
 
     JSObject* environmentChain(MaybeReadFallback& fallback) const {

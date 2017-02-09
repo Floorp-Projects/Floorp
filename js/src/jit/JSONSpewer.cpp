@@ -144,12 +144,14 @@ JSONSpewer::spewMIR(MIRGraph* mir)
             integerProperty("count", block->getHitCount());
 
         beginListProperty("attributes");
-        if (block->isLoopBackedge())
-            stringValue("backedge");
-        if (block->isLoopHeader())
-            stringValue("loopheader");
-        if (block->isSplitEdge())
-            stringValue("splitedge");
+        if (block->hasLastIns()) {
+            if (block->isLoopBackedge())
+                stringValue("backedge");
+            if (block->isLoopHeader())
+                stringValue("loopheader");
+            if (block->isSplitEdge())
+                stringValue("splitedge");
+        }
         endList();
 
         beginListProperty("predecessors");
@@ -158,8 +160,10 @@ JSONSpewer::spewMIR(MIRGraph* mir)
         endList();
 
         beginListProperty("successors");
-        for (size_t i = 0; i < block->numSuccessors(); i++)
-            integerValue(block->getSuccessor(i)->id());
+        if (block->hasLastIns()) {
+            for (size_t i = 0; i < block->numSuccessors(); i++)
+                integerValue(block->getSuccessor(i)->id());
+        }
         endList();
 
         beginListProperty("instructions");

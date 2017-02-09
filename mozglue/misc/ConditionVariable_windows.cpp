@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <windows.h>
 
-#include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
-#include "threading/windows/MutexPlatformData.h"
+#include "mozilla/PlatformConditionVariable.h"
+#include "mozilla/PlatformMutex.h"
+#include "MutexPlatformData_windows.h"
 
 // Some versions of the Windows SDK have a bug where some interlocked functions
 // are not redefined as compiler intrinsics. Fix that for the interlocked
@@ -29,48 +29,41 @@
 #endif
 
 // Wrapper for native condition variable APIs.
-struct js::ConditionVariable::PlatformData
+struct mozilla::detail::ConditionVariableImpl::PlatformData
 {
   CONDITION_VARIABLE cv_;
 };
 
-js::ConditionVariable::ConditionVariable()
+mozilla::detail::ConditionVariableImpl::ConditionVariableImpl()
 {
   InitializeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::notify_one()
+mozilla::detail::ConditionVariableImpl::notify_one()
 {
   WakeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::notify_all()
+mozilla::detail::ConditionVariableImpl::notify_all()
 {
   WakeAllConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
+mozilla::detail::ConditionVariableImpl::wait(MutexImpl& lock)
 {
-  CRITICAL_SECTION* cs = &lock.lock.platformData()->criticalSection;
+  CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
   bool r = SleepConditionVariableCS(&platformData()->cv_, cs, INFINITE);
   MOZ_RELEASE_ASSERT(r);
 }
 
-js::CVStatus
-js::ConditionVariable::wait_until(UniqueLock<Mutex>& lock,
-                                  const mozilla::TimeStamp& abs_time)
+mozilla::detail::CVStatus
+mozilla::detail::ConditionVariableImpl::wait_for(MutexImpl& lock,
+                                                 const mozilla::TimeDuration& rel_time)
 {
-  return wait_for(lock, abs_time - mozilla::TimeStamp::Now());
-}
-
-js::CVStatus
-js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
-                                const mozilla::TimeDuration& rel_time)
-{
-  CRITICAL_SECTION* cs = &lock.lock.platformData()->criticalSection;
+  CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
 
   // Note that DWORD is unsigned, so we have to be careful to clamp at 0.
   // If rel_time is Forever, then ToMilliseconds is +inf, which evaluates as
@@ -89,13 +82,13 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   return CVStatus::Timeout;
 }
 
-js::ConditionVariable::~ConditionVariable()
+mozilla::detail::ConditionVariableImpl::~ConditionVariableImpl()
 {
   // Native condition variables don't require cleanup.
 }
 
-inline js::ConditionVariable::PlatformData*
-js::ConditionVariable::platformData()
+inline mozilla::detail::ConditionVariableImpl::PlatformData*
+mozilla::detail::ConditionVariableImpl::platformData()
 {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");

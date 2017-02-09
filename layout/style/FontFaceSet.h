@@ -232,7 +232,7 @@ private:
    */
   void DispatchLoadingFinishedEvent(
                                 const nsAString& aType,
-                                const nsTArray<FontFace*>& aFontFaces);
+                                nsTArray<OwningNonNull<FontFace>>&& aFontFaces);
 
   // Note: if you add new cycle collected objects to FontFaceRecord,
   // make sure to update FontFaceSet's cycle collection macros

@@ -38,7 +38,6 @@
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/ProfileGatherer.h"
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "FennecJNIWrappers.h"
@@ -198,16 +197,13 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-StaticMutex Sampler::sRegisteredThreadsMutex;
-
 Sampler::Sampler(double aInterval, int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
-                 const char** aThreadNameFilters, uint32_t aFilterCount)
+                 uint32_t aFilterCount)
+
   : interval_(aInterval)
   , paused_(false)
   , active_(false)
-  , entrySize_(aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
 {
   MOZ_COUNT_CTOR(Sampler);
@@ -235,18 +231,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
   mProfileJava = false;
 #endif
 
-  // Deep copy aThreadNameFilters
-  MOZ_ALWAYS_TRUE(mThreadNameFilters.resize(aFilterCount));
-  for (uint32_t i = 0; i < aFilterCount; ++i) {
-    mThreadNameFilters[i] = aThreadNameFilters[i];
-  }
-
-  // Deep copy aFeatures
-  MOZ_ALWAYS_TRUE(mFeatures.resize(aFeatureCount));
-  for (uint32_t i = 0; i < aFeatureCount; ++i) {
-    mFeatures[i] = aFeatures[i];
-  }
-
   bool ignore;
   sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
 
@@ -266,8 +250,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
     mozilla::tasktracer::StartLogging();
   }
 #endif
-
-  mGatherer = new mozilla::ProfileGatherer(this);
 }
 
 Sampler::~Sampler()
@@ -286,6 +268,8 @@ Sampler::~Sampler()
       // We've stopped profiling. We no longer need to retain
       // information for an old thread.
       if (info->IsPendingDelete()) {
+        // The stack was nulled when SetPendingDelete() was called.
+        MOZ_ASSERT(!info->Stack());
         delete info;
         sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
         i--;
@@ -293,119 +277,11 @@ Sampler::~Sampler()
     }
   }
 
-  // Cancel any in-flight async profile gatherering
-  // requests
-  mGatherer->Cancel();
-
 #ifdef MOZ_TASK_TRACER
   if (mTaskTracer) {
     mozilla::tasktracer::StopLogging();
   }
 #endif
-}
-
-void
-Sampler::Startup()
-{
-  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
-
-  sRegisteredThreads = new std::vector<ThreadInfo*>();
-
-  // We could create the sLUL object and read unwind info into it at
-  // this point.  That would match the lifetime implied by destruction
-  // of it in Sampler::Shutdown just below.  However, that gives a big
-  // delay on startup, even if no profiling is actually to be done.
-  // So, instead, sLUL is created on demand at the first call to
-  // Sampler::Start.
-}
-
-void
-Sampler::Shutdown()
-{
-  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
-
-  while (sRegisteredThreads->size() > 0) {
-    delete sRegisteredThreads->back();
-    sRegisteredThreads->pop_back();
-  }
-
-  // UnregisterThread can be called after shutdown in XPCShell. Thus
-  // we need to point to null to ignore such a call after shutdown.
-  delete sRegisteredThreads;
-  sRegisteredThreads = nullptr;
-
-#if defined(USE_LUL_STACKWALK)
-  // Delete the sLUL object, if it actually got created.
-  if (sLUL) {
-    delete sLUL;
-    sLUL = nullptr;
-  }
-#endif
-}
-
-bool
-Sampler::RegisterCurrentThread(const char* aName,
-                               PseudoStack* aPseudoStack,
-                               bool aIsMainThread, void* stackTop)
-{
-  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
-
-  if (!sRegisteredThreads) {
-    return false;
-  }
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      // Thread already registered. This means the first unregister will be
-      // too early.
-      MOZ_ASSERT(false);
-      return false;
-    }
-  }
-
-  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
-    aIsMainThread, aPseudoStack, stackTop);
-
-  // XXX: this is an off-main-thread use of gSampler
-  if (gSampler) {
-    gSampler->RegisterThread(info);
-  }
-
-  sRegisteredThreads->push_back(info);
-
-  return true;
-}
-
-void
-Sampler::UnregisterCurrentThread()
-{
-  StaticMutexAutoLock lock(sRegisteredThreadsMutex);
-
-  if (!sRegisteredThreads) {
-    return;
-  }
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      if (profiler_is_active()) {
-        // We still want to show the results of this thread if you
-        // save the profile shortly after a thread is terminated.
-        // For now we will defer the delete to profile stop.
-        info->SetPendingDelete();
-        break;
-      } else {
-        delete info;
-        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-        break;
-      }
-    }
-  }
 }
 
 void
@@ -536,41 +412,12 @@ Sampler::ToJSObject(JSContext *aCx, double aSinceTime)
   return &val.toObject();
 }
 
-void
-Sampler::GetGatherer(nsISupports** aRetVal)
-{
-  if (!aRetVal || NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-  NS_ADDREF(*aRetVal = mGatherer);
-}
-
 UniquePtr<char[]>
 Sampler::ToJSON(double aSinceTime)
 {
   SpliceableChunkedJSONWriter b;
   StreamJSON(b, aSinceTime);
   return b.WriteFunc()->CopyData();
-}
-
-void
-Sampler::ToJSObjectAsync(double aSinceTime, mozilla::dom::Promise* aPromise)
-{
-  if (NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-
-  mGatherer->Start(aSinceTime, aPromise);
-}
-
-void
-Sampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
-{
-  if (NS_WARN_IF(!mGatherer)) {
-    return;
-  }
-
-  mGatherer->Start(aSinceTime, aFileName);
 }
 
 struct SubprocessClosure {
@@ -1360,9 +1207,9 @@ Sampler::InplaceTick(TickSample* sample)
     currThreadInfo.addTag(ProfileEntry::UnsharedMemory(static_cast<double>(sample->ussMemory)));
   }
 
-  if (sLastFrameNumber != sFrameNumber) {
-    currThreadInfo.addTag(ProfileEntry::FrameNumber(sFrameNumber));
-    sLastFrameNumber = sFrameNumber;
+  if (gLastFrameNumber != gFrameNumber) {
+    currThreadInfo.addTag(ProfileEntry::FrameNumber(gFrameNumber));
+    gLastFrameNumber = gFrameNumber;
   }
 }
 
@@ -1414,23 +1261,24 @@ Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
                        uint32_t *aGeneration)
 {
   *aCurrentPosition = mBuffer->mWritePos;
-  *aTotalSize = mBuffer->mEntrySize;
+  *aTotalSize = gEntrySize;
   *aGeneration = mBuffer->mGeneration;
 }
 
 static bool
-ThreadSelected(const char* aThreadName,
-               const ThreadNameFilterList &aThreadNameFilters)
+ThreadSelected(const char* aThreadName)
 {
-  if (aThreadNameFilters.empty()) {
+  StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+
+  if (gThreadNameFilters.empty()) {
     return true;
   }
 
   std::string name = aThreadName;
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-  for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
-    std::string filter = aThreadNameFilters[i];
+  for (uint32_t i = 0; i < gThreadNameFilters.length(); ++i) {
+    std::string filter = gThreadNameFilters[i];
     std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
 
     // Crude, non UTF-8 compatible, case insensitive substring search
@@ -1449,7 +1297,7 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
     return;
   }
 
-  if (!ThreadSelected(aInfo->Name(), mThreadNameFilters)) {
+  if (!ThreadSelected(aInfo->Name())) {
     return;
   }
 

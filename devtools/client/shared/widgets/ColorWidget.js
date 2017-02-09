@@ -10,6 +10,8 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const {colorUtils} = require("devtools/shared/css/color");
+
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -63,7 +65,34 @@ function ColorWidget(parentEl, rgb) {
         <div class="colorwidget-alpha-handle colorwidget-slider-control"></div>
       </div>
     </div>
+    <div class="colorwidget-value">
+      <select class="colorwidget-select">
+        <option value="hex">Hex</option>
+        <option value="rgba">RGBA</option>
+        <option value="hsla">HSLA</option>
+      </select>
+      <div class="colorwidget-hex">
+        <input class="colorwidget-hex-input"/>
+      </div>
+      <div class="colorwidget-rgba colorwidget-hidden">
+        <input class="colorwidget-rgba-r" data-id="r" />
+        <input class="colorwidget-rgba-g" data-id="g" />
+        <input class="colorwidget-rgba-b" data-id="b" />
+        <input class="colorwidget-rgba-a" data-id="a" />
+      </div>
+      <div class="colorwidget-hsla colorwidget-hidden">
+        <input class="colorwidget-hsla-h" data-id="h" />
+        <input class="colorwidget-hsla-s" data-id="s" />
+        <input class="colorwidget-hsla-l" data-id="l" />
+        <input class="colorwidget-hsla-a" data-id="a" />
+      </div>
+    </div>
   `;
+
+  this.onSelectValueChange = this.onSelectValueChange.bind(this);
+  this.onHexInputChange = this.onHexInputChange.bind(this);
+  this.onRgbaInputChange = this.onRgbaInputChange.bind(this);
+  this.onHslaInputChange = this.onHslaInputChange.bind(this);
 
   this.onElementClick = this.onElementClick.bind(this);
   this.element.addEventListener("click", this.onElementClick);
@@ -82,6 +111,31 @@ function ColorWidget(parentEl, rgb) {
   this.alphaSliderInner = this.element.querySelector(".colorwidget-alpha-inner");
   this.alphaSliderHelper = this.element.querySelector(".colorwidget-alpha-handle");
   ColorWidget.draggable(this.alphaSliderInner, this.onAlphaSliderMove.bind(this));
+
+  this.colorSelect = this.element.querySelector(".colorwidget-select");
+  this.colorSelect.addEventListener("change", this.onSelectValueChange);
+
+  this.hexValue = this.element.querySelector(".colorwidget-hex");
+  this.hexValueInput = this.element.querySelector(".colorwidget-hex-input");
+  this.hexValueInput.addEventListener("input", this.onHexInputChange);
+
+  this.rgbaValue = this.element.querySelector(".colorwidget-rgba");
+  this.rgbaValueInputs = {
+    r: this.element.querySelector(".colorwidget-rgba-r"),
+    g: this.element.querySelector(".colorwidget-rgba-g"),
+    b: this.element.querySelector(".colorwidget-rgba-b"),
+    a: this.element.querySelector(".colorwidget-rgba-a"),
+  };
+  this.rgbaValue.addEventListener("input", this.onRgbaInputChange);
+
+  this.hslaValue = this.element.querySelector(".colorwidget-hsla");
+  this.hslaValueInputs = {
+    h: this.element.querySelector(".colorwidget-hsla-h"),
+    s: this.element.querySelector(".colorwidget-hsla-s"),
+    l: this.element.querySelector(".colorwidget-hsla-l"),
+    a: this.element.querySelector(".colorwidget-hsla-a"),
+  };
+  this.hslaValue.addEventListener("input", this.onHslaInputChange);
 
   if (rgb) {
     this.rgb = rgb;
@@ -135,6 +189,10 @@ ColorWidget.rgbToHsv = function (r, g, b, a) {
     h /= 6;
   }
   return [h, s, v, a];
+};
+
+ColorWidget.hslToCssString = function (h, s, l, a) {
+  return `hsla(${h}, ${s}%, ${l}%, ${a})`;
 };
 
 ColorWidget.draggable = function (element, onmove, onstart, onstop) {
@@ -210,6 +268,9 @@ ColorWidget.draggable = function (element, onmove, onstart, onstop) {
 ColorWidget.prototype = {
   set rgb(color) {
     this.hsv = ColorWidget.rgbToHsv(color[0], color[1], color[2], color[3]);
+
+    let { h, s, l } = new colorUtils.CssColor(this.rgbCssString)._getHSLATuple();
+    this.hsl = [h, s, l, color[3]];
   },
 
   get rgb() {
@@ -250,6 +311,7 @@ ColorWidget.prototype = {
 
   onSliderMove: function (dragX, dragY) {
     this.hsv[0] = (dragY / this.slideHeight);
+    this.hsl[0] = (dragY / this.slideHeight) * 360;
     this.updateUI();
     this.onChange();
   },
@@ -257,12 +319,130 @@ ColorWidget.prototype = {
   onDraggerMove: function (dragX, dragY) {
     this.hsv[1] = dragX / this.dragWidth;
     this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
+
+    this.hsl[2] = ((2 - this.hsv[1]) * this.hsv[2] / 2);
+    if (this.hsl[2] && this.hsl[2] < 1) {
+      this.hsl[1] = this.hsv[1] * this.hsv[2] /
+          (this.hsl[2] < 0.5 ? this.hsl[2] * 2 : 2 - this.hsl[2] * 2);
+      this.hsl[1] = this.hsl[1] * 100;
+    }
+    this.hsl[2] = this.hsl[2] * 100;
+
     this.updateUI();
     this.onChange();
   },
 
   onAlphaSliderMove: function (dragX, dragY) {
     this.hsv[3] = dragX / this.alphaSliderWidth;
+    this.hsl[3] = dragX / this.alphaSliderWidth;
+    this.updateUI();
+    this.onChange();
+  },
+
+  onSelectValueChange: function (event) {
+    const selection = event.target.value;
+    this.colorSelect.classList.remove("colorwidget-select-spacing");
+    this.hexValue.classList.add("colorwidget-hidden");
+    this.rgbaValue.classList.add("colorwidget-hidden");
+    this.hslaValue.classList.add("colorwidget-hidden");
+
+    switch (selection) {
+      case "hex":
+        this.hexValue.classList.remove("colorwidget-hidden");
+        break;
+      case "rgba":
+        this.colorSelect.classList.add("colorwidget-select-spacing");
+        this.rgbaValue.classList.remove("colorwidget-hidden");
+        break;
+      case "hsla":
+        this.colorSelect.classList.add("colorwidget-select-spacing");
+        this.hslaValue.classList.remove("colorwidget-hidden");
+        break;
+    }
+  },
+
+  onHexInputChange: function (event) {
+    const hex = event.target.value;
+    const color = new colorUtils.CssColor(hex, true);
+    if (!color.rgba) {
+      return;
+    }
+
+    const { r, g, b, a } = color._getRGBATuple();
+    this.rgb = [r, g, b, a];
+    this.updateUI();
+    this.onChange();
+  },
+
+  onRgbaInputChange: function (event) {
+    const field = event.target.dataset.id;
+    const value = event.target.value.toString();
+    if (!value || isNaN(value) || value.endsWith(".")) {
+      return;
+    }
+
+    let rgb = this.rgb;
+
+    switch (field) {
+      case "r":
+        rgb[0] = value;
+        break;
+      case "g":
+        rgb[1] = value;
+        break;
+      case "b":
+        rgb[2] = value;
+        break;
+      case "a":
+        rgb[3] = Math.min(value, 1);
+        break;
+    }
+
+    this.rgb = rgb;
+
+    this.updateUI();
+    this.onChange();
+  },
+
+  onHslaInputChange: function (event) {
+    const field = event.target.dataset.id;
+    let value = event.target.value.toString();
+    if ((field === "s" || field === "l") && !value.endsWith("%")) {
+      return;
+    }
+
+    if (value.endsWith("%")) {
+      value = value.substring(0, value.length - 1);
+    }
+
+    if (!value || isNaN(value) || value.endsWith(".")) {
+      return;
+    }
+
+    const hsl = this.hsl;
+
+    switch (field) {
+      case "h":
+        hsl[0] = value;
+        break;
+      case "s":
+        hsl[1] = value;
+        break;
+      case "l":
+        hsl[2] = value;
+        break;
+      case "a":
+        hsl[3] = Math.min(value, 1);
+        break;
+    }
+
+    const cssString = ColorWidget.hslToCssString(hsl[0], hsl[1], hsl[2], hsl[3]);
+    const { r, g, b, a } = new colorUtils.CssColor(cssString)._getRGBATuple();
+
+    this.rgb = [r, g, b, a];
+
+    this.hsl = hsl;
+
     this.updateUI();
     this.onChange();
   },
@@ -307,6 +487,24 @@ ColorWidget.prototype = {
     let alphaSliderX = (this.hsv[3] * this.alphaSliderWidth) -
       (this.alphaSliderHelperWidth / 2);
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
+
+    const color = new colorUtils.CssColor(this.rgbCssString);
+
+    // Updating the hex field
+    this.hexValueInput.value = color.hex;
+
+    // Updating the RGBA fields
+    const rgb = this.rgb;
+    this.rgbaValueInputs.r.value = rgb[0];
+    this.rgbaValueInputs.g.value = rgb[1];
+    this.rgbaValueInputs.b.value = rgb[2];
+    this.rgbaValueInputs.a.value = parseFloat(rgb[3].toFixed(1));
+
+    // Updating the HSLA fields
+    this.hslaValueInputs.h.value = this.hsl[0];
+    this.hslaValueInputs.s.value = this.hsl[1] + "%";
+    this.hslaValueInputs.l.value = this.hsl[2] + "%";
+    this.hslaValueInputs.a.value = parseFloat(this.hsl[3].toFixed(1));
   },
 
   updateUI: function () {
