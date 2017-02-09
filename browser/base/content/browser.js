@@ -7312,6 +7312,11 @@ var gIdentityHandler = {
 
   onPopupShown(event) {
     if (event.target == this._identityPopup) {
+      // Move focus to the next available element in the identity popup.
+      // This is required by role=alertdialog and fixes an issue where
+      // an already open panel would steal focus from the identity popup.
+      document.commandDispatcher.advanceFocusIntoSubtree(this._identityPopup);
+
       window.addEventListener("focus", this, true);
     }
   },
