@@ -221,8 +221,6 @@ public:
   Sampler();
   ~Sampler();
 
-  void RegisterThread(ThreadInfo* aInfo);
-
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
   JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);

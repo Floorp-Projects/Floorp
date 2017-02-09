@@ -1167,6 +1167,40 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
+static bool
+ThreadSelected(const char* aThreadName)
+{
+  StaticMutexAutoLock lock(gThreadNameFiltersMutex);
+
+  if (gThreadNameFilters.empty()) {
+    return true;
+  }
+
+  std::string name = aThreadName;
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+  for (uint32_t i = 0; i < gThreadNameFilters.length(); ++i) {
+    std::string filter = gThreadNameFilters[i];
+    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
+
+    // Crude, non UTF-8 compatible, case insensitive substring search
+    if (name.find(filter) != std::string::npos) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static void
+MaybeSetProfile(ThreadInfo* aInfo)
+{
+  if ((aInfo->IsMainThread() || gProfileThreads) &&
+      ThreadSelected(aInfo->Name())) {
+    aInfo->SetProfile(gBuffer);
+  }
+}
+
 static void
 RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
                       bool aIsMainThread, void* stackTop)
@@ -1192,10 +1226,7 @@ RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
   ThreadInfo* info =
     new ThreadInfo(aName, id, aIsMainThread, aPseudoStack, stackTop);
 
-  // XXX: this is an off-main-thread use of gSampler
-  if (gSampler) {
-    gSampler->RegisterThread(info);
-  }
+  MaybeSetProfile(info);
 
   sRegisteredThreads->push_back(info);
 }
@@ -1586,7 +1617,7 @@ profiler_start(int aProfileEntries, double aInterval,
   profiler_stop();
 
   // Deep copy aThreadNameFilters. Must happen before Sampler's constructor
-  // calls RegisterThread().
+  // calls MaybeSetProfile().
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
 
