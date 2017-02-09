@@ -134,29 +134,37 @@ GetFaceNames(FcPattern* aFont, const nsAString& aFamilyName,
 static uint16_t
 MapFcWeight(int aFcWeight)
 {
-    if (aFcWeight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2) {
-        return 100;
-    } else if (aFcWeight <= (FC_WEIGHT_EXTRALIGHT + FC_WEIGHT_LIGHT) / 2) {
-        return 200;
-    } else if (aFcWeight <= (FC_WEIGHT_LIGHT + FC_WEIGHT_BOOK) / 2) {
-        return 300;
-    } else if (aFcWeight <= (FC_WEIGHT_REGULAR + FC_WEIGHT_MEDIUM) / 2) {
-        // This includes FC_WEIGHT_BOOK
-        return 400;
-    } else if (aFcWeight <= (FC_WEIGHT_MEDIUM + FC_WEIGHT_DEMIBOLD) / 2) {
-        return 500;
-    } else if (aFcWeight <= (FC_WEIGHT_DEMIBOLD + FC_WEIGHT_BOLD) / 2) {
-        return 600;
-    } else if (aFcWeight <= (FC_WEIGHT_BOLD + FC_WEIGHT_EXTRABOLD) / 2) {
-        return 700;
-    } else if (aFcWeight <= (FC_WEIGHT_EXTRABOLD + FC_WEIGHT_BLACK) / 2) {
-        return 800;
-    } else if (aFcWeight <= FC_WEIGHT_BLACK) {
-        return 900;
-    }
+  if (aFcWeight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2) {
+    return 100;
+  }
+  if (aFcWeight <= (FC_WEIGHT_EXTRALIGHT + FC_WEIGHT_LIGHT) / 2) {
+    return 200;
+  }
+  if (aFcWeight <= (FC_WEIGHT_LIGHT + FC_WEIGHT_BOOK) / 2) {
+    return 300;
+  }
+  if (aFcWeight <= (FC_WEIGHT_REGULAR + FC_WEIGHT_MEDIUM) / 2) {
+    // This includes FC_WEIGHT_BOOK
+    return 400;
+  }
+  if (aFcWeight <= (FC_WEIGHT_MEDIUM + FC_WEIGHT_DEMIBOLD) / 2) {
+    return 500;
+  }
+  if (aFcWeight <= (FC_WEIGHT_DEMIBOLD + FC_WEIGHT_BOLD) / 2) {
+    return 600;
+  }
+  if (aFcWeight <= (FC_WEIGHT_BOLD + FC_WEIGHT_EXTRABOLD) / 2) {
+    return 700;
+  }
+  if (aFcWeight <= (FC_WEIGHT_EXTRABOLD + FC_WEIGHT_BLACK) / 2) {
+    return 800;
+  }
+  if (aFcWeight <= FC_WEIGHT_BLACK) {
+    return 900;
+  }
 
-    // including FC_WEIGHT_EXTRABLACK
-    return 901;
+  // including FC_WEIGHT_EXTRABLACK
+  return 901;
 }
 
 static int16_t
