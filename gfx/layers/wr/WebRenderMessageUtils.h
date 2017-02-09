@@ -222,6 +222,28 @@ struct ParamTraits<WrLayoutSize>
 };
 
 template<>
+struct ParamTraits<WrBorderRadius>
+{
+  static void
+  Write(Message* aMsg, const WrBorderRadius& aParam)
+  {
+    WriteParam(aMsg, aParam.top_left);
+    WriteParam(aMsg, aParam.top_right);
+    WriteParam(aMsg, aParam.bottom_left);
+    WriteParam(aMsg, aParam.bottom_right);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WrBorderRadius* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->top_left)
+        && ReadParam(aMsg, aIter, &aResult->top_right)
+        && ReadParam(aMsg, aIter, &aResult->bottom_left)
+        && ReadParam(aMsg, aIter, &aResult->bottom_right);
+  }
+};
+
+template<>
 struct ParamTraits<WrRect>
 {
   static void
