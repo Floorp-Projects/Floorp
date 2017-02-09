@@ -3201,7 +3201,8 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   }
 
   bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
+  if (restricted && !nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
+                                                            NS_LITERAL_STRING("clipboardRead"))) {
     return false;
   }
 

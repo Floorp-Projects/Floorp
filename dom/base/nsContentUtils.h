@@ -503,6 +503,9 @@ public:
   // aWindow can be either outer or inner window.
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
+  // Check if the principal is chrome or an addon with the permission.
+  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsAString& aPerm);
+
   // Check if the JS caller is chrome or an addon with the permission.
   static bool CallerHasPermission(JSContext* aCx, const nsAString& aPerm);
 
