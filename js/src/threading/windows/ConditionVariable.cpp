@@ -29,41 +29,41 @@
 #endif
 
 // Wrapper for native condition variable APIs.
-struct js::ConditionVariable::PlatformData
+struct js::ConditionVariableImpl::PlatformData
 {
   CONDITION_VARIABLE cv_;
 };
 
-js::ConditionVariable::ConditionVariable()
+js::detail::ConditionVariableImpl::ConditionVariableImpl()
 {
   InitializeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::notify_one()
+js::detail::ConditionVariableImpl::notify_one()
 {
   WakeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::notify_all()
+js::detail::ConditionVariableImpl::notify_all()
 {
   WakeAllConditionVariable(&platformData()->cv_);
 }
 
 void
-js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
+js::detail::ConditionVariableImpl::wait(Mutex& lock)
 {
-  CRITICAL_SECTION* cs = &lock.lock.platformData()->criticalSection;
+  CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
   bool r = SleepConditionVariableCS(&platformData()->cv_, cs, INFINITE);
   MOZ_RELEASE_ASSERT(r);
 }
 
 js::CVStatus
-js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
-                                const mozilla::TimeDuration& rel_time)
+js::detail::ConditionVariableImpl::wait_for(Mutex& lock,
+                                              const mozilla::TimeDuration& rel_time)
 {
-  CRITICAL_SECTION* cs = &lock.lock.platformData()->criticalSection;
+  CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
 
   // Note that DWORD is unsigned, so we have to be careful to clamp at 0.
   // If rel_time is Forever, then ToMilliseconds is +inf, which evaluates as
@@ -82,13 +82,13 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   return CVStatus::Timeout;
 }
 
-js::ConditionVariable::~ConditionVariable()
+js::detail::ConditionVariableImpl::~ConditionVariableImpl()
 {
   // Native condition variables don't require cleanup.
 }
 
-inline js::ConditionVariable::PlatformData*
-js::ConditionVariable::platformData()
+inline js::detail::ConditionVariableImpl::PlatformData*
+js::detail::ConditionVariableImpl::platformData()
 {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
