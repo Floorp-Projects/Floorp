@@ -320,8 +320,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushRect: {
         const OpDPPushRect& op = cmd.get_OpDPPushRect();
-        builder.PushRect(op.bounds(), op.clip(),
-                         gfx::Color(op.r(), op.g(), op.b(), op.a()));
+        builder.PushRect(op.bounds(), op.clip(), op.color());
         break;
       }
       case WebRenderCommand::TOpDPPushBorder: {

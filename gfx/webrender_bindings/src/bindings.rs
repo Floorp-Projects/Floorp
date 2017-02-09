@@ -745,14 +745,14 @@ pub extern fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
 
 
 #[no_mangle]
-pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
+pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, color: WrColor) {
     assert!( unsafe { is_in_compositor_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_rect(
                                     rect.to_rect(),
                                     clip_region,
-                                    ColorF::new(r, g, b, a));
+                                    color.to_color());
 }
 
 #[no_mangle]
