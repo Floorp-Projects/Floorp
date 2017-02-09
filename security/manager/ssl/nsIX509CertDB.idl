@@ -82,7 +82,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param aDBkey Database internal key, as obtained using
    *                attribute dbkey in nsIX509Cert.
    */
-  nsIX509Cert findCertByDBKey(in string aDBkey);
+  nsIX509Cert findCertByDBKey(in ACString aDBkey);
 
   /**
    *  Find a certificate by email address.
@@ -92,7 +92,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @return The matching certificate if found.
    */
-  nsIX509Cert findCertByEmailAddress(in string aEmailAddress);
+  nsIX509Cert findCertByEmailAddress(in ACString aEmailAddress);
 
   /**
    *  Use this to import a stream sent down as a mime type into
@@ -220,10 +220,9 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param certDER The raw representation of a certificate,
    *                 encoded as raw DER.
-   *  @param length  The length of the DER string.
    *  @return The new certificate object.
    */
-  nsIX509Cert constructX509(in string certDER, in unsigned long length);
+  nsIX509Cert constructX509(in ACString certDER);
 
   /**
    *  Verifies the signature on the given JAR file to verify that it has a
@@ -337,7 +336,7 @@ interface nsIX509CertDB : nsISupports {
     verifyCertAtTime(in nsIX509Cert aCert,
                      in int64_t /*SECCertificateUsage*/ aUsage,
                      in uint32_t aFlags,
-                     in string aHostname,
+                     in ACString aHostname,
                      in uint64_t aTime,
                      out nsIX509CertList aVerifiedChain,
                      out bool aHasEVPolicy);
@@ -345,7 +344,7 @@ interface nsIX509CertDB : nsISupports {
     verifyCertNow(in nsIX509Cert aCert,
                   in int64_t /*SECCertificateUsage*/ aUsage,
                   in uint32_t aFlags,
-                  in string aHostname,
+                  in ACString aHostname,
                   out nsIX509CertList aVerifiedChain,
                   out bool aHasEVPolicy);
 
@@ -356,7 +355,7 @@ interface nsIX509CertDB : nsISupports {
   void asyncVerifyCertAtTime(in nsIX509Cert aCert,
                              in int64_t /*SECCertificateUsage*/ aUsage,
                              in uint32_t aFlags,
-                             in string aHostname,
+                             in ACString aHostname,
                              in uint64_t aTime,
                              in nsICertVerificationCallback aCallback);
 
