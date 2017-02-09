@@ -49,17 +49,17 @@ SandboxChroot::SendCommand(Command aComm)
     MOZ_RELEASE_ASSERT(aComm == JUST_EXIT);
     MOZ_ALWAYS_ZERO(pthread_mutex_unlock(&mMutex));
     return false;
-  } else {
-    MOZ_ASSERT(mCommand == NO_COMMAND);
-    mCommand = aComm;
-    MOZ_ALWAYS_ZERO(pthread_mutex_unlock(&mMutex));
-    MOZ_ALWAYS_ZERO(pthread_cond_signal(&mWakeup));
-    void *retval;
-    if (pthread_join(mThread, &retval) != 0 || retval != nullptr) {
-      MOZ_CRASH("Failed to stop privileged chroot thread");
-    }
-    MOZ_ASSERT(mCommand == NO_THREAD);
   }
+  MOZ_ASSERT(mCommand == NO_COMMAND);
+  mCommand = aComm;
+  MOZ_ALWAYS_ZERO(pthread_mutex_unlock(&mMutex));
+  MOZ_ALWAYS_ZERO(pthread_cond_signal(&mWakeup));
+  void *retval;
+  if (pthread_join(mThread, &retval) != 0 || retval != nullptr) {
+    MOZ_CRASH("Failed to stop privileged chroot thread");
+  }
+  MOZ_ASSERT(mCommand == NO_THREAD);
+
   return true;
 }
 
