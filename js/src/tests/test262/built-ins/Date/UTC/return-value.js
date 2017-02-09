@@ -14,8 +14,10 @@ info: |
   7. If ms is supplied, let milli be ? ToNumber(ms); else let milli be 0.
   8. If y is not NaN and 0 ≤ ToInteger(y) ≤ 99, let yr be 1900+ToInteger(y);
      otherwise, let yr be y.
-  9. Return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))). 
+  9. Return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))).
 ---*/
+
+assert.sameValue(Date.UTC(1970), 0, '1970');
 
 assert.sameValue(Date.UTC(1970, 0), 0, '1970, 0');
 assert.sameValue(Date.UTC(2016, 0), 1451606400000, '2016, 0');

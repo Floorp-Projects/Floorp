@@ -37,7 +37,6 @@ var currencyDigits = {
     BSD: 2,
     BTN: 2,
     BWP: 2,
-    BYR: 0,
     BZD: 2,
     CAD: 2,
     CDF: 2,
