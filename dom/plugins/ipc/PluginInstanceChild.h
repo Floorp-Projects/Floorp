@@ -79,8 +79,6 @@ protected:
     virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) override;
     virtual mozilla::ipc::IPCResult
-    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv) override;
-    virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result) override;
     virtual mozilla::ipc::IPCResult
@@ -208,11 +206,6 @@ protected:
 
     virtual mozilla::ipc::IPCResult
     RecvNPP_DidComposite() override;
-
-#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-    bool CreateWindow(const NPRemoteWindow& aWindow);
-    void DeleteWindow();
-#endif
 
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface,
@@ -455,7 +448,6 @@ private:
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
 #ifdef MOZ_WIDGET_GTK
-    bool mXEmbed;
     XtClient mXtClient;
 #endif
 #elif defined(OS_WIN)
