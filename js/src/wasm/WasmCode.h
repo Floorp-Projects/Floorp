@@ -393,6 +393,12 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
     const MetadataTier& metadata(Tier t) const;
     MetadataTier& metadata(Tier t);
 
+    UniquePtr<MetadataTier> takeMetadata(Tier tier) {
+        MOZ_ASSERT(!hasTier2());
+        MOZ_ASSERT(metadata1_->tier == tier);
+        return Move(metadata1_);
+    }
+
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
     TableDescVector       tables;

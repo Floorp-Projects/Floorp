@@ -201,6 +201,8 @@ class CompileTask
     }
 };
 
+struct Tier2GeneratorTask;
+
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
 // and destroyed to compile the individual function bodies. After generating all
@@ -268,6 +270,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishCodegen();
     MOZ_MUST_USE bool finishLinkData();
     void generateBytecodeHash(const ShareableBytes& bytecode);
+    MOZ_MUST_USE bool finishMetadata(const ShareableBytes& bytecode);
+    MOZ_MUST_USE bool finishCommon(const ShareableBytes& bytecode);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
     MOZ_MUST_USE bool allocateGlobal(GlobalDesc* global);
@@ -328,7 +332,11 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool addExport(CacheableChars&& fieldChars, uint32_t funcIndex);
 
     // Finish compilation of the given bytecode.
-    SharedModule finish(const ShareableBytes& bytecode);
+    SharedModule finishModule(const ShareableBytes& bytecode);
+
+    // Finish compilation of the given bytecode, installing tier-variant parts
+    // for Tier 2 into module.
+    MOZ_MUST_USE bool finishTier2(const ShareableBytes& bytecode, SharedModule module);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
