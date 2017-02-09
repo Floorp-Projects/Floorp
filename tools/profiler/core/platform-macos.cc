@@ -29,14 +29,8 @@
 #include <errno.h>
 #include <math.h>
 
-#include "ThreadResponsiveness.h"
-#include "nsThreadUtils.h"
-
 // Memory profile
 #include "nsMemoryReporterManager.h"
-
-#include "platform.h"
-#include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -162,11 +156,11 @@ public:
       gSampler->DeleteExpiredMarkers();
 
       if (!gSampler->IsPaused()) {
-        StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+        StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
+        for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+          ThreadInfo* info = (*sRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
           if (!info->hasProfile() || info->IsPendingDelete()) {

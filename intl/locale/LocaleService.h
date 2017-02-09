@@ -57,29 +57,12 @@ public:
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    *
    * Usage:
-   * nsTArray<nsCString> appLocales;
-   * LocaleService::GetInstance()->GetAppLocales(appLocales);
+   *   nsTArray<nsCString> appLocales;
+   *   LocaleService::GetInstance()->GetAppLocales(appLocales);
+   *
+   * (See mozILocaleService.idl for a JS-callable version of this.)
    */
   void GetAppLocales(nsTArray<nsCString>& aRetVal);
-
-  /**
-   * Returns the best locale that the application should be localized to.
-   *
-   * The result is a valid locale IDs and it should be
-   * used for all APIs that do not handle language negotiation.
-   *
-   * Where possible, GetAppLocales should be preferred over this API and
-   * all callsites should handle some form of "best effort" language
-   * negotiation to respect user preferences in case the use case does
-   * not have data for the first locale in the list.
-   *
-   * Example: "zh-Hans-HK"
-   *
-   * Usage:
-   * nsAutoCString appLocale;
-   * LocaleService::GetInstance()->GetAppLocale(appLocale);
-   */
-  void GetAppLocale(nsACString& aRetVal);
 
   /**
    * Triggers a refresh of the language negotiation process.

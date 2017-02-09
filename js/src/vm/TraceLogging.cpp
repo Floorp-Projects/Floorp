@@ -417,6 +417,8 @@ TraceLoggerThreadState::getOrCreateEventPayload(const char* text)
     if (!pointerMap.add(p, text, payload))
         return nullptr;
 
+    payload->incPointerCount();
+
     return payload;
 }
 
@@ -484,6 +486,8 @@ TraceLoggerThreadState::getOrCreateEventPayload(TraceLoggerTextId type, const ch
     if (ptr) {
         if (!pointerMap.add(p, ptr, payload))
             return nullptr;
+
+        payload->incPointerCount();
     }
 
     return payload;
@@ -511,21 +515,18 @@ TraceLoggerThreadState::purgeUnusedPayloads()
     // zero (but not the other way around; see TraceLoggerEventPayload::use()).
     LockGuard<Mutex> guard(lock);
 
-    // Remove the item in the pointerMap for which the payloads
-    // have no uses anymore
+    // Remove all the pointers to payloads that have no uses anymore
+    // and decrease the pointer count of that payload.
     for (PointerHashMap::Enum e(pointerMap); !e.empty(); e.popFront()) {
         if (e.front().value()->uses() == 0) {
-            TextIdHashMap::Ptr p = textIdPayloads.lookup(e.front().value()->textId());
-            MOZ_ASSERT(p);
-            textIdPayloads.remove(p);
-            js_delete(e.front().value());
+            e.front().value()->decPointerCount();
             e.removeFront();
         }
     }
 
     // Free all other payloads that have no uses anymore.
     for (TextIdHashMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
-        if (e.front().value()->uses() == 0) {
+        if (e.front().value()->uses() == 0 && e.front().value()->pointerCount() == 0) {
             js_delete(e.front().value());
             e.removeFront();
         }
@@ -568,7 +569,7 @@ TraceLoggerThread::startEvent(uint32_t id)
 #endif
 
     if (graph.get()) {
-        for (uint32_t otherId = graph->nextTextId(); otherId <= id; id++)
+        for (uint32_t otherId = graph->nextTextId(); otherId <= id; otherId++)
             graph->addTextId(otherId, maybeEventText(id));
     }
 

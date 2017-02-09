@@ -2846,6 +2846,8 @@ protected:
 
   mozilla::Array<mozilla::gfx::Color, 4> mColors;
   mozilla::Array<mozilla::LayerCoord, 4> mWidths;
+  mozilla::Array<mozilla::LayerSize, 4> mCorners;
+  mozilla::Array<uint8_t, 4> mBorderStyles;
   mozilla::LayerRect mRect;
 
   nsRect mBounds;

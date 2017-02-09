@@ -16,6 +16,8 @@
 #include "nsIContent.h" // for GetParent()
 #include "nsTextFrame.h" // for nsTextFrame::ShouldSuppressLineBreak
 
+#include "mozilla/ServoStyleSet.h"
+
 inline void
 nsStyleImage::EnsureCachedBIData() const
 {
@@ -151,10 +153,25 @@ nsStyleDisplay::HasFixedPosContainingBlockStyleInternal(
   // should have the CSS_PROPERTY_FIXPOS_CB set on them.
   NS_ASSERTION(aStyleContext->StyleDisplay() == this,
                "unexpected aStyleContext");
-  return IsContainPaint() ||
-         HasPerspectiveStyle() ||
-         (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) ||
-         aStyleContext->StyleEffects()->HasFilters();
+
+  if (IsContainPaint() || HasPerspectiveStyle()) {
+    return true;
+  }
+
+  if (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
+    return true;
+  }
+
+  if (mozilla::ServoStyleSet::IsInServoTraversal()) {
+    // We want to avoid calling StyleEffects() during the Servo traversal,
+    // since that has side-effects which may be unsafe from concurrent
+    // worker threads.
+    const ServoComputedValues* values =
+      aStyleContext->StyleSource().AsServoComputedValues();
+    return Servo_GetStyleEffects(values)->HasFilters();
+  } else {
+    return aStyleContext->StyleEffects()->HasFilters();
+  }
 }
 
 template<class StyleContextLike>
