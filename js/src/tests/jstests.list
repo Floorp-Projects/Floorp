@@ -609,6 +609,11 @@ skip script test262/intl402/Collator/10.1.1_1.js
 skip script test262/intl402/NumberFormat/11.1.1_1.js
 skip script test262/intl402/DateTimeFormat/12.1.1_1.js
 
+# Waiting on https://github.com/tc39/ecma402/issues/122
+skip script test262/intl402/DateTimeFormat/prototype/12.3_a.js
+skip script test262/intl402/Collator/prototype/10.3_a.js
+skip script test262/intl402/NumberFormat/prototype/11.3_a.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
 skip script test262/language/statements/do-while/cptn-abrupt-empty.js
 skip script test262/language/statements/do-while/cptn-normal.js
