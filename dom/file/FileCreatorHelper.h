@@ -72,7 +72,7 @@ private:
                  BlobImpl** aBlobImpl);
 
   FileCreatorHelper(Promise* aPromise, nsPIDOMWindowInner* aWindow);
-  ~FileCreatorHelper() = default;
+  ~FileCreatorHelper();
 
   void
   SendRequest(nsIFile* aFile, const ChromeFilePropertyBag& aBag,
