@@ -613,7 +613,7 @@ class Marionette(object):
             return self.instance.profile.profile
 
     def cleanup(self):
-        if self.session:
+        if self.session is not None:
             try:
                 self.delete_session()
             except (errors.MarionetteException, IOError):
@@ -713,7 +713,7 @@ class Marionette(object):
         try:
             if self.protocol < 3:
                 data = {"name": name}
-                if params:
+                if params is not None:
                     data["parameters"] = params
                 self.client.send(data)
                 msg = self.client.receive()
