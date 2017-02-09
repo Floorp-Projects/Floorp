@@ -215,20 +215,13 @@ typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
   UniquePlatformData;
 UniquePlatformData AllocPlatformData(int aThreadId);
 
+mozilla::UniquePtr<char[]> ToJSON(double aSinceTime);
+
 class Sampler {
 public:
   // Initialize sampler.
   Sampler();
   ~Sampler();
-
-  void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
-  JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
-  mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
-  void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
-  void StreamTaskTracer(SpliceableJSONWriter& aWriter);
-
-private:
-  void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
