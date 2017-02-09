@@ -57,6 +57,7 @@ struct DefaultJitOptions
     bool disableInlining;
     bool disableLicm;
     bool disableLoopUnrolling;
+    bool disableOptimizationTracking;
     bool disablePgo;
     bool disableInstructionReordering;
     bool disableRangeAnalysis;
