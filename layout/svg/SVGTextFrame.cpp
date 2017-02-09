@@ -3446,7 +3446,7 @@ SVGTextFrame::FindCloserFrameForSelection(
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods
+// nsSVGDisplayableFrame methods
 
 void
 SVGTextFrame::NotifySVGChanged(uint32_t aFlags)
@@ -3846,7 +3846,7 @@ SVGTextFrame::ReflowSVG()
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
-  // XXX nsSVGContainerFrame::ReflowSVG only looks at its nsISVGChildFrame
+  // XXX nsSVGContainerFrame::ReflowSVG only looks at its nsSVGDisplayableFrame
   // children, and calls ConsiderChildOverflow on them.  Does it matter
   // that ConsiderChildOverflow won't be called on our children?
   nsSVGDisplayContainerFrame::ReflowSVG();
@@ -5263,7 +5263,7 @@ SVGTextFrame::MaybeReflowAnonymousBlockChild()
   if (NS_SUBTREE_DIRTY(this)) {
     if (mState & NS_FRAME_IS_DIRTY) {
       // If we require a full reflow, ensure our kid is marked fully dirty.
-      // (Note that our anonymous nsBlockFrame is not an nsISVGChildFrame, so
+      // (Note that our anonymous nsBlockFrame is not an nsSVGDisplayableFrame, so
       // even when we are called via our ReflowSVG this will not be done for us
       // by nsSVGDisplayContainerFrame::ReflowSVG.)
       kid->AddStateBits(NS_FRAME_IS_DIRTY);

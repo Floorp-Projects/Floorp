@@ -13,7 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIFrame.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "mozilla/dom/SVGRect.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
@@ -178,7 +178,7 @@ SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsISVGChildFrame* svgframe = do_QueryFrame(frame);
+  nsSVGDisplayableFrame* svgframe = do_QueryFrame(frame);
   if (!svgframe) {
     rv.Throw(NS_ERROR_NOT_IMPLEMENTED); // XXX: outer svg
     return nullptr;

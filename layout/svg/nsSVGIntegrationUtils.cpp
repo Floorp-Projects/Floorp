@@ -597,8 +597,8 @@ ValidateSVGFrame(nsIFrame* aFrame)
   bool hasSVGLayout = (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
   if (hasSVGLayout) {
 #ifdef DEBUG
-    nsISVGChildFrame *svgChildFrame = do_QueryFrame(aFrame);
-    MOZ_ASSERT(svgChildFrame && aFrame->GetContent()->IsSVGElement(),
+    nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
+    MOZ_ASSERT(svgFrame && aFrame->GetContent()->IsSVGElement(),
                "A non-SVG frame carries NS_FRAME_SVG_LAYOUT flag?");
 #endif
 

@@ -65,7 +65,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  // nsISVGChildFrame interface:
+  // nsSVGDisplayableFrame interface:
   virtual DrawResult PaintSVG(gfxContext& aContext,
                               const gfxMatrix& aTransform,
                               const nsIntRect* aDirtyRect = nullptr) override;
@@ -323,7 +323,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods:
+// nsSVGDisplayableFrame methods:
 DrawResult
 nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                           const gfxMatrix& aTransform,

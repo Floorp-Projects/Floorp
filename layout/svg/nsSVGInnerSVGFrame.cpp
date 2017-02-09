@@ -10,7 +10,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "nsIFrame.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -56,7 +56,7 @@ nsSVGInnerSVGFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods
+// nsSVGDisplayableFrame methods
 
 DrawResult
 nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
