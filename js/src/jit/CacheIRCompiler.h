@@ -355,6 +355,7 @@ class MOZ_RAII CacheRegisterAllocator
     void releaseRegister(Register reg) {
         MOZ_ASSERT(currentOpRegs_.has(reg));
         availableRegs_.add(reg);
+        currentOpRegs_.take(reg);
     }
     void releaseValueRegister(ValueOperand reg) {
 #ifdef JS_NUNBOX32
