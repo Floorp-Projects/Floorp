@@ -878,7 +878,7 @@ public:
   // window.
   void SyncStateFromParentWindow();
 
-  bool HasAudioContexts() const;
+  bool IsPlayingAudio();
 
   mozilla::dom::TimeoutManager& TimeoutManager();
 
