@@ -1697,5 +1697,32 @@ KeyframeEffectReadOnly::NeedsBaseStyle(nsCSSPropertyID aProperty) const
   return false;
 }
 
+bool
+KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
+{
+  if (!IsCurrent()) {
+    return false;
+  }
+
+  for (const AnimationProperty& prop : mProperties) {
+    if (prop.mProperty != eCSSProperty_transform) {
+      continue;
+    }
+
+    for (const AnimationPropertySegment& segment : prop.mSegments) {
+      gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
+      if (from != gfxSize(1.0f, 1.0f)) {
+        return true;
+      }
+      gfxSize to = segment.mToValue.GetScaleValue(aFrame);
+      if (to != gfxSize(1.0f, 1.0f)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla

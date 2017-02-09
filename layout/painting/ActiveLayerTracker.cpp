@@ -4,8 +4,8 @@
 
 #include "ActiveLayerTracker.h"
 
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/PodOperations.h"
@@ -473,36 +473,6 @@ ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
   return false;
 }
 
-// A helper function for IsScaleSubjectToAnimation which returns true if the
-// given EffectSet contains a current effect that animates scale.
-static bool
-ContainsAnimatedScale(EffectSet& aEffects, nsIFrame* aFrame)
-{
-  for (dom::KeyframeEffectReadOnly* effect : aEffects) {
-    if (!effect->IsCurrent()) {
-      continue;
-    }
-
-    for (const AnimationProperty& prop : effect->Properties()) {
-      if (prop.mProperty != eCSSProperty_transform) {
-        continue;
-      }
-      for (AnimationPropertySegment segment : prop.mSegments) {
-        gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
-        if (from != gfxSize(1.0f, 1.0f)) {
-          return true;
-        }
-        gfxSize to = segment.mToValue.GetScaleValue(aFrame);
-        if (to != gfxSize(1.0f, 1.0f)) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
 /* static */ bool
 ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame)
 {
@@ -515,7 +485,8 @@ ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame)
   // Check if any animations, transitions, etc. associated with this frame may
   // animate its scale.
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (effects && ContainsAnimatedScale(*effects, aFrame)) {
+  if (effects &&
+      AnimationUtils::EffectSetContainsAnimatedScale(*effects, aFrame)) {
     return true;
   }
 
