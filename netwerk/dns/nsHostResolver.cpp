@@ -6,7 +6,7 @@
 #if defined(HAVE_RES_NINIT)
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>   
+#include <arpa/inet.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
 #define RES_RETRY_ON_FAILURE
@@ -294,7 +294,8 @@ nsHostRecord::CheckExpiration(const mozilla::TimeStamp& now) const {
     if (!mGraceStart.IsNull() && now >= mGraceStart
             && !mValidEnd.IsNull() && now < mValidEnd) {
         return nsHostRecord::EXP_GRACE;
-    } else if (!mValidEnd.IsNull() && now < mValidEnd) {
+    }
+    if (!mValidEnd.IsNull() && now < mValidEnd) {
         return nsHostRecord::EXP_VALID;
     }
 
@@ -362,7 +363,8 @@ nsHostRecord::GetPriority(uint16_t aFlags)
 {
     if (IsHighPriority(aFlags)){
         return nsHostRecord::DNS_PRIORITY_HIGH;
-    } else if (IsMediumPriority(aFlags)) {
+    }
+    if (IsMediumPriority(aFlags)) {
         return nsHostRecord::DNS_PRIORITY_MEDIUM;
     }
 
