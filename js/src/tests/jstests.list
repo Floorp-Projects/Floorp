@@ -744,8 +744,8 @@ skip script test262/built-ins/Simd/any_true.js
 skip script test262/annexB/built-ins/Date/prototype/setYear/time-clip.js
 
 # Only works for time zones west of Greenwich.
-skip script test262/annexB/built-ins/Date/prototype/setFullYear/new-value-time-clip.js
-skip script test262/annexB/built-ins/Date/prototype/setMonth/new-value-time-clip.js
+skip script test262/built-ins/Date/prototype/setFullYear/new-value-time-clip.js
+skip script test262/built-ins/Date/prototype/setMonth/new-value-time-clip.js
 
 # ES2017: https://github.com/tc39/ecma262/pull/453
 skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration-n.js
