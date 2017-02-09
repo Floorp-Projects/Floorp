@@ -430,7 +430,8 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
 static uint32_t
 DurationToMs(const Duration& aDuration)
 {
-  return aDuration.seconds() * 1000 + aDuration.nanos() / 1000;
+  // Seconds precision is good enough. Ignore nanoseconds like Chrome does.
+  return aDuration.seconds() * 1000;
 }
 
 NS_IMETHODIMP
