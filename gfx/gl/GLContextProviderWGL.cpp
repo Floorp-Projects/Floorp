@@ -68,15 +68,7 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
         pfd.cGreenBits = 8;
         pfd.cBlueBits = 8;
         pfd.cAlphaBits = 8;
-#ifdef MOZ_ENABLE_WEBRENDER
-        // XXX We might need to set this to 0 if the compositor that requires
-        // this context is not a WebRender compositor. Getting the
-        // CompositorOptions here is nontrivial though so for now we just use
-        // the ifdef guard.
-        pfd.cDepthBits = 24;
-#else
-        pfd.cDepthBits = 0;
-#endif
+        pfd.cDepthBits = gfxVars::UseWebRender() ? 24 : 0;
         pfd.iLayerType = PFD_MAIN_PLANE;
 
         mWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
