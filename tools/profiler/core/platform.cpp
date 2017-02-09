@@ -25,7 +25,11 @@
 #include "mozilla/StaticPtr.h"
 #include "PseudoStack.h"
 #include "ThreadInfo.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
+#include "nsIProfileSaveEvent.h"
+#include "nsIXULAppInfo.h"
+#include "nsIXULRuntime.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
@@ -34,6 +38,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/ProfileGatherer.h"
 #include "ProfilerMarkers.h"
+#include "shared-libraries.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -851,6 +856,395 @@ Tick(TickSample* aSample)
 // END tick/unwinding code
 ////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////
+// BEGIN saving/streaming code
+
+class ProfileSaveEvent final : public nsIProfileSaveEvent
+{
+public:
+  typedef void (*AddSubProfileFunc)(const char* aProfile, void* aClosure);
+  NS_DECL_ISUPPORTS
+
+  ProfileSaveEvent(AddSubProfileFunc aFunc, void* aClosure)
+    : mFunc(aFunc)
+    , mClosure(aClosure)
+  {}
+
+  NS_IMETHOD AddSubProfile(const char* aProfile) override {
+    mFunc(aProfile, mClosure);
+    return NS_OK;
+  }
+
+private:
+  ~ProfileSaveEvent() {}
+
+  AddSubProfileFunc mFunc;
+  void* mClosure;
+};
+
+NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
+
+static void
+AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
+{
+  aStream << "{";
+  aStream << "\"start\":" << aLib.GetStart();
+  aStream << ",\"end\":" << aLib.GetEnd();
+  aStream << ",\"offset\":" << aLib.GetOffset();
+  aStream << ",\"name\":\"" << aLib.GetName() << "\"";
+  const std::string& breakpadId = aLib.GetBreakpadId();
+  aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
+
+#ifdef XP_WIN
+  // FIXME: remove this XP_WIN code when the profiler plugin has switched to
+  // using breakpadId.
+  std::string pdbSignature = breakpadId.substr(0, 32);
+  std::string pdbAgeStr = breakpadId.substr(32,  breakpadId.size() - 1);
+
+  std::stringstream stream;
+  stream << pdbAgeStr;
+
+  unsigned pdbAge;
+  stream << std::hex;
+  stream >> pdbAge;
+
+#ifdef DEBUG
+  std::ostringstream oStream;
+  oStream << pdbSignature << std::hex << std::uppercase << pdbAge;
+  MOZ_ASSERT(breakpadId == oStream.str());
+#endif
+
+  aStream << ",\"pdbSignature\":\"" << pdbSignature << "\"";
+  aStream << ",\"pdbAge\":" << pdbAge;
+  aStream << ",\"pdbName\":\"" << aLib.GetName() << "\"";
+#endif
+
+  aStream << "}";
+}
+
+static std::string
+GetSharedLibraryInfoStringInternal()
+{
+  SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
+  if (info.GetSize() == 0) {
+    return "[]";
+  }
+
+  std::ostringstream os;
+  os << "[";
+  AddSharedLibraryInfoToStream(os, info.GetEntry(0));
+
+  for (size_t i = 1; i < info.GetSize(); i++) {
+    os << ",";
+    AddSharedLibraryInfoToStream(os, info.GetEntry(i));
+  }
+
+  os << "]";
+  return os.str();
+}
+
+static void
+StreamTaskTracer(SpliceableJSONWriter& aWriter)
+{
+#ifdef MOZ_TASK_TRACER
+  aWriter.StartArrayProperty("data");
+  {
+    UniquePtr<nsTArray<nsCString>> data =
+      mozilla::tasktracer::GetLoggedData(sStartTime);
+    for (uint32_t i = 0; i < data->Length(); ++i) {
+      aWriter.StringElement((data->ElementAt(i)).get());
+    }
+  }
+  aWriter.EndArray();
+
+  aWriter.StartArrayProperty("threads");
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
+      // Thread meta data
+      ThreadInfo* info = sRegisteredThreads->at(i);
+      aWriter.StartObjectElement();
+      {
+        if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
+          // TODO Add the proper plugin name
+          aWriter.StringProperty("name", "Plugin");
+        } else {
+          aWriter.StringProperty("name", info->Name());
+        }
+        aWriter.IntProperty("tid", static_cast<int>(info->ThreadId()));
+      }
+      aWriter.EndObject();
+    }
+  }
+  aWriter.EndArray();
+
+  aWriter.DoubleProperty(
+    "start", static_cast<double>(mozilla::tasktracer::GetStartTime()));
+#endif
+}
+
+static void
+StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  aWriter.IntProperty("version", 3);
+  aWriter.DoubleProperty("interval", gInterval);
+  aWriter.IntProperty("stackwalk", gUseStackWalk);
+
+#ifdef DEBUG
+  aWriter.IntProperty("debug", 1);
+#else
+  aWriter.IntProperty("debug", 0);
+#endif
+
+  aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
+
+  bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
+  aWriter.IntProperty("asyncstack", asyncStacks);
+
+  mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
+  aWriter.DoubleProperty(
+    "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
+
+  aWriter.IntProperty("processType", XRE_GetProcessType());
+
+  nsresult res;
+  nsCOMPtr<nsIHttpProtocolHandler> http =
+    do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
+
+  if (!NS_FAILED(res)) {
+    nsAutoCString string;
+
+    res = http->GetPlatform(string);
+    if (!NS_FAILED(res)) {
+      aWriter.StringProperty("platform", string.Data());
+    }
+
+    res = http->GetOscpu(string);
+    if (!NS_FAILED(res)) {
+      aWriter.StringProperty("oscpu", string.Data());
+    }
+
+    res = http->GetMisc(string);
+    if (!NS_FAILED(res)) {
+      aWriter.StringProperty("misc", string.Data());
+    }
+  }
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (runtime) {
+    nsAutoCString string;
+
+    res = runtime->GetXPCOMABI(string);
+    if (!NS_FAILED(res))
+      aWriter.StringProperty("abi", string.Data());
+
+    res = runtime->GetWidgetToolkit(string);
+    if (!NS_FAILED(res))
+      aWriter.StringProperty("toolkit", string.Data());
+  }
+
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+    do_GetService("@mozilla.org/xre/app-info;1");
+
+  if (appInfo) {
+    nsAutoCString string;
+    res = appInfo->GetName(string);
+    if (!NS_FAILED(res))
+      aWriter.StringProperty("product", string.Data());
+  }
+}
+
+struct SubprocessClosure
+{
+  explicit SubprocessClosure(SpliceableJSONWriter* aWriter)
+    : mWriter(aWriter)
+  {}
+
+  SpliceableJSONWriter* mWriter;
+};
+
+static void
+SubProcessCallback(const char* aProfile, void* aClosure)
+{
+  // Called by the observer to get their profile data included as a sub profile.
+  SubprocessClosure* closure = (SubprocessClosure*)aClosure;
+
+  // Add the string profile into the profile.
+  closure->mWriter->StringElement(aProfile);
+}
+
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+static void
+BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
+{
+  aWriter.StringProperty("name", "Java Main Thread");
+
+  aWriter.StartArrayProperty("samples");
+  {
+    for (int sampleId = 0; true; sampleId++) {
+      bool firstRun = true;
+      for (int frameId = 0; true; frameId++) {
+        jni::String::LocalRef frameName =
+            java::GeckoJavaSampler::GetFrameName(0, sampleId, frameId);
+
+        // When we run out of frames, we stop looping.
+        if (!frameName) {
+          // If we found at least one frame, we have objects to close.
+          if (!firstRun) {
+            aWriter.EndArray();
+            aWriter.EndObject();
+          }
+          break;
+        }
+        // The first time around, open the sample object and frames array.
+        if (firstRun) {
+          firstRun = false;
+
+          double sampleTime =
+              java::GeckoJavaSampler::GetSampleTime(0, sampleId);
+
+          aWriter.StartObjectElement();
+            aWriter.DoubleProperty("time", sampleTime);
+
+            aWriter.StartArrayProperty("frames");
+        }
+
+        // Add a frame to the sample.
+        aWriter.StartObjectElement();
+        {
+          aWriter.StringProperty("location",
+                                 frameName->ToCString().BeginReading());
+        }
+        aWriter.EndObject();
+      }
+
+      // If we found no frames for this sample, we are done.
+      if (firstRun) {
+        break;
+      }
+    }
+  }
+  aWriter.EndArray();
+}
+#endif
+
+static void
+StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
+  {
+    // Put shared library info
+    aWriter.StringProperty("libs",
+                           GetSharedLibraryInfoStringInternal().c_str());
+
+    // Put meta data
+    aWriter.StartObjectProperty("meta");
+    {
+      StreamMetaJSCustomObject(aWriter);
+    }
+    aWriter.EndObject();
+
+    // Data of TaskTracer doesn't belong in the circular buffer.
+    if (gTaskTracer) {
+      aWriter.StartObjectProperty("tasktracer");
+      StreamTaskTracer(aWriter);
+      aWriter.EndObject();
+    }
+
+    // Lists the samples for each thread profile
+    aWriter.StartArrayProperty("threads");
+    {
+      gIsPaused = true;
+
+      {
+        StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+        for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
+          // Thread not being profiled, skip it
+          ThreadInfo* info = sRegisteredThreads->at(i);
+          if (!info->hasProfile()) {
+            continue;
+          }
+
+          // Note that we intentionally include thread profiles which
+          // have been marked for pending delete.
+
+          MutexAutoLock lock(info->GetMutex());
+
+          info->StreamJSON(aWriter, aSinceTime);
+        }
+      }
+
+      if (CanNotifyObservers()) {
+        // Send a event asking any subprocesses (plugins) to
+        // give us their information
+        SubprocessClosure closure(&aWriter);
+        nsCOMPtr<nsIObserverService> os =
+          mozilla::services::GetObserverService();
+        if (os) {
+          RefPtr<ProfileSaveEvent> pse =
+            new ProfileSaveEvent(SubProcessCallback, &closure);
+          os->NotifyObservers(pse, "profiler-subprocess", nullptr);
+        }
+      }
+
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+      if (gProfileJava) {
+        java::GeckoJavaSampler::Pause();
+
+        aWriter.Start();
+        {
+          BuildJavaThreadJSObject(aWriter);
+        }
+        aWriter.End();
+
+        java::GeckoJavaSampler::Unpause();
+      }
+#endif
+
+      gIsPaused = false;
+    }
+    aWriter.EndArray();
+  }
+  aWriter.End();
+}
+
+UniquePtr<char[]>
+ToJSON(double aSinceTime)
+{
+  SpliceableChunkedJSONWriter b;
+  StreamJSON(b, aSinceTime);
+  return b.WriteFunc()->CopyData();
+}
+
+static JSObject*
+ToJSObject(JSContext* aCx, double aSinceTime)
+{
+  JS::RootedValue val(aCx);
+  {
+    UniquePtr<char[]> buf = ToJSON(aSinceTime);
+    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
+    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
+                                 js_string.Length(), &val));
+  }
+  return &val.toObject();
+}
+
+static void
+ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0)
+{
+  SpliceableJSONWriter b(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
+  StreamJSON(b, aSinceTime);
+}
+
+// END saving/streaming code
+////////////////////////////////////////////////////////////////////////
+
 ProfilerMarker::ProfilerMarker(const char* aMarkerName,
                                ProfilerMarkerPayload* aPayload,
                                double aTime)
@@ -1334,7 +1728,7 @@ profiler_shutdown()
       std::ofstream stream;
       stream.open(val);
       if (stream.is_open()) {
-        gSampler->ToStreamAsJSON(stream);
+        ToStreamAsJSON(stream);
         stream.close();
       }
     }
@@ -1385,7 +1779,7 @@ profiler_get_profile(double aSinceTime)
     return nullptr;
   }
 
-  return gSampler->ToJSON(aSinceTime);
+  return ToJSON(aSinceTime);
 }
 
 JSObject*
@@ -1397,7 +1791,7 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
     return nullptr;
   }
 
-  return gSampler->ToJSObject(aCx, aSinceTime);
+  return ToJSObject(aCx, aSinceTime);
 }
 
 void
@@ -1493,7 +1887,7 @@ profiler_save_profile_to_file(const char* aFilename)
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    gSampler->ToStreamAsJSON(stream);
+    ToStreamAsJSON(stream);
     stream.close();
     LOGF("Saved to %s", aFilename);
   } else {
