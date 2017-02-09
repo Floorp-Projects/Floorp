@@ -197,11 +197,11 @@ this.ExtensionsUI = {
 
     if (info.type == "sideload") {
       result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [addonName], 1);
-      result.text = bundle.GetStringFromName("webextPerms.sideloadText");
+      result.text = bundle.GetStringFromName("webextPerms.sideloadText2");
       result.acceptText = bundle.GetStringFromName("webextPerms.sideloadEnable.label");
       result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
-      result.cancelText = bundle.GetStringFromName("webextPerms.sideloadDisable.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadDisable.accessKey");
+      result.cancelText = bundle.GetStringFromName("webextPerms.sideloadCancel.label");
+      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
     } else if (info.type == "update") {
       result.header = "";
       result.text = bundle.formatStringFromName("webextPerms.updateText", [addonName], 1);
