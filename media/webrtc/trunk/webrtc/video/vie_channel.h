@@ -113,8 +113,8 @@ class ViEChannel : public VCMFrameTypeCallback,
   int SetReceiveVideoRotationStatus(bool enable, int id);
   int SetSendTransportSequenceNumber(bool enable, int id);
   int SetReceiveTransportSequenceNumber(bool enable, int id);
-  int SetSendRtpStreamId(bool enable, int id); // RtpStreamId (RID)
-	int SetReceiveRtpStreamId(bool enable, int id); // RtpStreamId (RID)
+  int SetSendRtpStreamId(bool enable, int id, std::vector<std::string> rids);
+  int SetReceiveRtpStreamId(bool enable, int id);
   void SetRtcpXrRrtrStatus(bool enable);
   void EnableTMMBR(bool enable);
 

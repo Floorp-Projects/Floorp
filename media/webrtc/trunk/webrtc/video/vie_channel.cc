@@ -655,23 +655,24 @@ int ViEChannel::SetReceiveTransportSequenceNumber(bool enable, int id) {
   return vie_receiver_.SetReceiveTransportSequenceNumber(enable, id) ? 0 : -1;
 }
 
-int ViEChannel::SetSendRtpStreamId(bool enable, int id) { //}, const char *rid)
-  CriticalSectionScoped cs(crit_.get());
+int ViEChannel::SetSendRtpStreamId(bool enable, int id,
+                                   std::vector<std::string> rids) {
+  for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+    rtp_rtcp->DeregisterSendRtpHeaderExtension(
+      kRtpExtensionRtpStreamId);
+  }
+  if (!enable) {
+    return 0;
+  }
   int error = 0;
-  if (enable) {
-    // Enable the extension, but disable possible old id to avoid errors.
-    for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
-      rtp_rtcp->DeregisterSendRtpHeaderExtension(
-        kRtpExtensionRtpStreamId);
-      error = rtp_rtcp->RegisterSendRtpHeaderExtension(
-        kRtpExtensionRtpStreamId, id);
-    }
-    // NOTE: simulcast streams must be set via the SetSendCodec() API
-  } else {
-    // Disable the extension.
-    for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
-    	rtp_rtcp->DeregisterSendRtpHeaderExtension(
-        kRtpExtensionRtpStreamId);
+  unsigned long i = 0;
+  // Enable the extension
+  // NOTE: simulcast streams must be set via the SetSendCodec() API
+  for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
+    error |= rtp_rtcp->RegisterSendRtpHeaderExtension(
+      kRtpExtensionRtpStreamId, id);
+    if (rids.size() > i) {
+      rtp_rtcp->SetRID(rids[i++].c_str());
     }
   }
   return error;
