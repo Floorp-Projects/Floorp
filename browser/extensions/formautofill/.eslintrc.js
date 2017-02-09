@@ -38,9 +38,6 @@ module.exports = { // eslint-disable-line no-undef
     // Braces only needed for multi-line arrow function blocks
     // "arrow-body-style": ["error", "as-needed"],
 
-    // Always require spacing around a single line block
-    "block-spacing": "warn",
-
     // Forbid spaces inside the square brackets of array literals.
     "array-bracket-spacing": ["error", "never"],
 
@@ -56,12 +53,6 @@ module.exports = { // eslint-disable-line no-undef
 
     // Commas at the end of the line not the start
     "comma-style": "error",
-
-    // Don't require spaces around computed properties
-    "computed-property-spacing": ["warn", "never"],
-
-    // Functions are not required to consistently return something or nothing
-    "consistent-return": "off",
 
     // Require braces around blocks that start a new line
     "curly": ["error", "all"],
@@ -91,17 +82,6 @@ module.exports = { // eslint-disable-line no-undef
     // which is a valid use case.
     "no-empty": "error",
 
-    // No using !! where casting to boolean is already happening
-    "no-extra-boolean-cast": "warn",
-
-    // No single if block inside an else block
-    "no-lonely-if": "warn",
-
-    // Disallow use of multiple spaces (sometimes used to align const values,
-    // array or object items, etc.). It's hard to maintain and doesn't add that
-    // much benefit.
-    "no-multi-spaces": "warn",
-
     // No spaces between function name and parentheses
     "no-spaced-func": "warn",
 
@@ -117,14 +97,8 @@ module.exports = { // eslint-disable-line no-undef
     // Always require semicolon at end of statement
     "semi": ["error", "always"],
 
-    // Never use spaces before function parentheses
-    "space-before-function-paren": ["error", {"anonymous": "never", "named": "never"}],
-
     // Require spaces around operators, except for a|"off".
     "space-infix-ops": ["error", {"int32Hint": true}],
-
-    // ++ and -- should not need spacing
-    "space-unary-ops": ["warn", {"nonwords": false}],
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
@@ -231,9 +205,6 @@ module.exports = { // eslint-disable-line no-undef
     // Allow comments inline after code.
     "no-inline-comments": "off",
 
-    // Disallow use of labels for anything other then loops and switches.
-    "no-labels": ["error", {"allowLoop": true}],
-
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "warn",
 
@@ -267,9 +238,6 @@ module.exports = { // eslint-disable-line no-undef
     // Disallow use of assignment in return statement. It is preferable for a
     // single line of code to have only one easily predictable effect.
     "no-return-assign": "error",
-
-    // Don't warn about declaration of variables already declared in the outer scope.
-    "no-shadow": "off",
 
     // Allow use of synchronous methods (not a node environment).
     "no-sync": "off",
@@ -311,9 +279,6 @@ module.exports = { // eslint-disable-line no-undef
     // Don't require quotes around object literal property names.
     "quote-props": "off",
 
-    // Double quotes should be used.
-    "quotes": ["warn", "double", {"avoidEscape": true, "allowTemplateLiterals": true}],
-
     // Require use of the second argument for parseInt().
     "radix": "error",
 
@@ -323,9 +288,6 @@ module.exports = { // eslint-disable-line no-undef
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
-
-    // Require a space immediately following the // in a line comment.
-    "spaced-comment": ["error", "always"],
 
     // Require "use strict" to be defined globally in the script.
     "strict": ["error", "global"],
