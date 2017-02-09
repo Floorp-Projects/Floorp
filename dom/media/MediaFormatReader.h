@@ -140,7 +140,6 @@ private:
   void DrainDecoder(TrackType aTrack);
   void NotifyNewOutput(TrackType aTrack,
                        const MediaDataDecoder::DecodedData& aResults);
-  void NotifyDrainComplete(TrackType aTrack);
   void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyWaitingForKey(TrackType aTrack);
@@ -162,6 +161,16 @@ private:
 
   RefPtr<PDMFactory> mPlatform;
 
+  enum class DrainState
+  {
+    None,
+    DrainRequested,
+    Draining,
+    PartialDrainPending,
+    DrainCompleted,
+    DrainAborted,
+  };
+
   struct DecoderData
   {
     DecoderData(MediaFormatReader* aOwner,
@@ -176,10 +185,8 @@ private:
       , mWaitingForData(false)
       , mWaitingForKey(false)
       , mReceivedNewData(false)
-      , mNeedDraining(false)
-      , mDraining(false)
-      , mDrainComplete(false)
       , mFlushed(true)
+      , mDrainState(DrainState::None)
       , mNumOfConsecutiveError(0)
       , mMaxConsecutiveError(aNumOfMaxError)
       , mNumSamplesInput(0)
@@ -257,19 +264,22 @@ private:
 
     // MediaDataDecoder handler's variables.
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDecodeRequest;
-    bool mNeedDraining;
-    MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDrainRequest;
-    bool mDraining;
-    bool mDrainComplete;
     MozPromiseRequestHolder<MediaDataDecoder::FlushPromise> mFlushRequest;
     // Set to true if the last operation run on the decoder was a flush.
     bool mFlushed;
     MozPromiseHolder<ShutdownPromise> mShutdownPromise;
     MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
 
+    MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDrainRequest;
+    DrainState mDrainState;
     bool HasPendingDrain() const
     {
-      return mDraining || mDrainComplete;
+      return mDrainState != DrainState::None;
+    }
+    void RequestDrain()
+    {
+        MOZ_RELEASE_ASSERT(mDrainState == DrainState::None);
+        mDrainState = DrainState::DrainRequested;
     }
 
     uint32_t mNumOfConsecutiveError;
@@ -338,12 +348,11 @@ private:
       }
       mDecodeRequest.DisconnectIfExists();
       mDrainRequest.DisconnectIfExists();
+      mDrainState = DrainState::None;
       mOutput.Clear();
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
-      mDraining = false;
-      mDrainComplete = false;
       if (mDecoder && !mFlushed) {
         RefPtr<MediaFormatReader> owner = mOwner;
         TrackType type = mType == MediaData::AUDIO_DATA
@@ -382,11 +391,9 @@ private:
       mWaitingForData = false;
       mWaitingForKey = false;
       mQueuedSamples.Clear();
-      mNeedDraining = false;
       mDecodeRequest.DisconnectIfExists();
       mDrainRequest.DisconnectIfExists();
-      mDraining = false;
-      mDrainComplete = false;
+      mDrainState = DrainState::None;
       mTimeThreshold.reset();
       mLastSampleTime.reset();
       mOutput.Clear();
