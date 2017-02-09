@@ -31,7 +31,7 @@ enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
  * |chars| and |length|.
  */
 MOZ_MUST_USE bool
-ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
+ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, Handle<RegExpObject*> reobj,
                     HandleLinearString input, size_t* lastIndex, bool test,
                     MutableHandleValue rval);
 

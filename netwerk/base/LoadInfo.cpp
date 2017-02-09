@@ -333,7 +333,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
-  , mSandboxedLoadingPrincipal(aSandboxedLoadingPrincipal)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(aTainting)

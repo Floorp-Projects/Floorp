@@ -800,7 +800,7 @@ void
 HandleException(ResumeFromException* rfe)
 {
     JSContext* cx = TlsContext.get();
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
     AutoResetLastProfilerFrameOnReturnFromException profFrameReset(cx, rfe);
 

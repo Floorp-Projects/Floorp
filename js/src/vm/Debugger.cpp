@@ -688,7 +688,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
 
 #ifdef JS_TRACE_LOGGING
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     if (logger) {
 #ifdef NIGHTLY_BUILD
         logger->getIterationAndSize(&traceLoggerLastDrainedIteration, &traceLoggerLastDrainedSize);
@@ -5088,7 +5088,7 @@ Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLogger", args, dbg);
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     bool lostEvents = logger->lostEvents(dbg->traceLoggerLastDrainedIteration,
                                          dbg->traceLoggerLastDrainedSize);
 
@@ -5157,7 +5157,7 @@ Debugger::startTraceLogger(JSContext* cx, unsigned argc, Value* vp)
     if (!args.requireAtLeast(cx, "Debugger.startTraceLogger", 0))
         return false;
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     if (!TraceLoggerEnable(logger, cx))
         return false;
 
@@ -5173,7 +5173,7 @@ Debugger::endTraceLogger(JSContext* cx, unsigned argc, Value* vp)
     if (!args.requireAtLeast(cx, "Debugger.endTraceLogger", 0))
         return false;
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     TraceLoggerDisable(logger);
 
     args.rval().setUndefined();
@@ -5186,7 +5186,7 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     bool lostEvents = logger->lostEvents(dbg->traceLoggerScriptedCallsLastDrainedIteration,
                                          dbg->traceLoggerScriptedCallsLastDrainedSize);
 

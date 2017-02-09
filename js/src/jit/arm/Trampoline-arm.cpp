@@ -287,7 +287,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.push(scratch);
         masm.push(Imm32(0)); // Fake return address.
         // No GC things to mark on the stack, push a bare token.
-        masm.enterFakeExitFrame(ExitFrameLayoutBareToken);
+        masm.enterFakeExitFrame(scratch, ExitFrameLayoutBareToken);
 
         masm.push(framePtr); // BaselineFrame
         masm.push(r0); // jitcode
@@ -793,7 +793,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     if (f.expectTailCall == NonTailCall)
         masm.pushReturnAddress();
 
-    masm.enterExitFrame(&f);
+    masm.enterExitFrame(cxreg, &f);
     masm.loadJSContext(cxreg);
 
     // Save the base of the argument set stored on the stack.
@@ -1155,8 +1155,8 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     // ^--- Entry Frame (From C++)
     //
     Register actReg = scratch4;
-    AbsoluteAddress activationAddr(GetJitContext()->runtime->addressOfProfilingActivation());
-    masm.loadPtr(activationAddr, actReg);
+    masm.loadJSContext(actReg);
+    masm.loadPtr(Address(actReg, offsetof(JSContext, profilingActivation_)), actReg);
 
     Address lastProfilingFrame(actReg, JitActivation::offsetOfLastProfilingFrame());
     Address lastProfilingCallSite(actReg, JitActivation::offsetOfLastProfilingCallSite());

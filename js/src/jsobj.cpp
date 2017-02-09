@@ -1450,40 +1450,41 @@ js::XDRObjectLiteral(XDRState<XDR_ENCODE>* xdr, MutableHandleObject obj);
 template bool
 js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr, MutableHandleObject obj);
 
-bool
-NativeObject::fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* priv)
+/* static */ bool
+NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
+                              const Vector<Value>& values, void* priv)
 {
     // This object has just been swapped with some other object, and its shape
     // no longer reflects its allocated size. Correct this information and
     // fill the slots in with the specified values.
-    MOZ_ASSERT(slotSpan() == values.length());
+    MOZ_ASSERT(obj->slotSpan() == values.length());
 
     // Make sure the shape's numFixedSlots() is correct.
-    size_t nfixed = gc::GetGCKindSlots(asTenured().getAllocKind(), getClass());
-    if (nfixed != shape_->numFixedSlots()) {
-        if (!generateOwnShape(cx))
+    size_t nfixed = gc::GetGCKindSlots(obj->asTenured().getAllocKind(), obj->getClass());
+    if (nfixed != obj->shape_->numFixedSlots()) {
+        if (!NativeObject::generateOwnShape(cx, obj))
             return false;
-        shape_->setNumFixedSlots(nfixed);
+        obj->shape_->setNumFixedSlots(nfixed);
     }
 
-    if (hasPrivate())
-        setPrivate(priv);
+    if (obj->hasPrivate())
+        obj->setPrivate(priv);
     else
         MOZ_ASSERT(!priv);
 
-    if (slots_) {
-        js_free(slots_);
-        slots_ = nullptr;
+    if (obj->slots_) {
+        js_free(obj->slots_);
+        obj->slots_ = nullptr;
     }
 
-    if (size_t ndynamic = dynamicSlotsCount(nfixed, values.length(), getClass())) {
-        slots_ = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
-        if (!slots_)
+    if (size_t ndynamic = dynamicSlotsCount(nfixed, values.length(), obj->getClass())) {
+        obj->slots_ = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
+        if (!obj->slots_)
             return false;
-        Debug_SetSlotRangeToCrashOnTouch(slots_, ndynamic);
+        Debug_SetSlotRangeToCrashOnTouch(obj->slots_, ndynamic);
     }
 
-    initSlotRange(0, values.begin(), values.length());
+    obj->initSlotRange(0, values.begin(), values.length());
     return true;
 }
 
@@ -1593,10 +1594,14 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
         a->fixDictionaryShapeAfterSwap();
         b->fixDictionaryShapeAfterSwap();
 
-        if (na && !b->as<NativeObject>().fillInAfterSwap(cx, avals, apriv))
-            oomUnsafe.crash("fillInAfterSwap");
-        if (nb && !a->as<NativeObject>().fillInAfterSwap(cx, bvals, bpriv))
-            oomUnsafe.crash("fillInAfterSwap");
+        if (na) {
+            if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), avals, apriv))
+                oomUnsafe.crash("fillInAfterSwap");
+        }
+        if (nb) {
+            if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), bvals, bpriv))
+                oomUnsafe.crash("fillInAfterSwap");
+        }
     }
 
     // Swapping the contents of two objects invalidates type sets which contain
@@ -1859,7 +1864,7 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
             // We always generate a new shape if the object is a singleton,
             // regardless of the uncacheable-proto flag. ICs may rely on
             // this.
-            if (!oldproto->as<NativeObject>().generateOwnShape(cx))
+            if (!NativeObject::generateOwnShape(cx, oldproto.as<NativeObject>()))
                 return false;
         } else {
             if (!JSObject::setUncacheableProto(cx, oldproto))
