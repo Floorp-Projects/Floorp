@@ -202,6 +202,19 @@ struct WrLayoutSize
   }
 };
 
+struct WrBorderRadius {
+  WrLayoutSize top_left;
+  WrLayoutSize top_right;
+  WrLayoutSize bottom_left;
+  WrLayoutSize bottom_right;
+
+  bool operator==(const WrBorderRadius& aRhs) const
+  {
+    return top_left == aRhs.top_left && top_right == aRhs.top_right &&
+           bottom_left == aRhs.bottom_left && bottom_right == aRhs.bottom_right;
+  }
+};
+
 struct WrRect
 {
   float x;
@@ -474,8 +487,7 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
                   WrBorderSide top, WrBorderSide right, WrBorderSide bottom, WrBorderSide left,
-                  WrLayoutSize top_left_radius, WrLayoutSize top_right_radius,
-                  WrLayoutSize bottom_left_radius, WrLayoutSize bottom_right_radius)
+                  WrBorderRadius radius)
 WR_FUNC;
 
 WR_INLINE void

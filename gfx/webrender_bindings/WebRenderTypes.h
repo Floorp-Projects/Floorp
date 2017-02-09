@@ -95,6 +95,17 @@ static inline WrLayoutSize ToWrLayoutSize(const LayerSize size)
   return ls;
 }
 
+static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
+                                              const LayerSize& bottomLeft, const LayerSize& bottomRight)
+{
+  WrBorderRadius br;
+  br.top_left = ToWrLayoutSize(topLeft);
+  br.top_right = ToWrLayoutSize(topRight);
+  br.bottom_left = ToWrLayoutSize(bottomLeft);
+  br.bottom_right = ToWrLayoutSize(bottomRight);
+  return br;
+}
+
 template<class T>
 static inline WrRect ToWrRect(const gfx::RectTyped<T>& rect)
 {

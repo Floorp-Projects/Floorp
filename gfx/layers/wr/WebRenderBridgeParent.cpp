@@ -328,8 +328,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         const OpDPPushBorder& op = cmd.get_OpDPPushBorder();
         builder.PushBorder(op.bounds(), op.clip(),
                            op.top(), op.right(), op.bottom(), op.left(),
-                           op.top_left_radius(), op.top_right_radius(),
-                           op.bottom_left_radius(), op.bottom_right_radius());
+                           op.radius());
         break;
       }
       case WebRenderCommand::TOpDPPushImage: {

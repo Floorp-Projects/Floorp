@@ -758,14 +758,9 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r
 #[no_mangle]
 pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
-                                top_left_radius: WrLayoutSize, top_right_radius: WrLayoutSize,
-                                bottom_left_radius: WrLayoutSize, bottom_right_radius: WrLayoutSize) {
+                                radius: WrBorderRadius) {
     assert!( unsafe { is_in_compositor_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
-    let radius = BorderRadius { top_left: top_left_radius.to_layout_size(),
-                                top_right: top_right_radius.to_layout_size(),
-                                bottom_left: bottom_left_radius.to_layout_size(),
-                                bottom_right: bottom_right_radius.to_layout_size() };
     state.frame_builder.dl_builder.push_border(
                                     rect.to_rect(),
                                     clip_region,
@@ -773,7 +768,7 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                     top.to_border_side(),
                                     right.to_border_side(),
                                     bottom.to_border_side(),
-                                    radius);
+                                    radius.to_border_radius());
 }
 
 #[no_mangle]
@@ -817,6 +812,25 @@ impl WrColor
     pub fn to_color(&self) -> ColorF
     {
         ColorF::new(self.r, self.g, self.b, self.a)
+    }
+}
+
+#[repr(C)]
+pub struct WrBorderRadius {
+    pub top_left: WrLayoutSize,
+    pub top_right: WrLayoutSize,
+    pub bottom_left: WrLayoutSize,
+    pub bottom_right: WrLayoutSize,
+}
+
+impl WrBorderRadius
+{
+    pub fn to_border_radius(&self) -> BorderRadius
+    {
+        BorderRadius { top_left: self.top_left.to_layout_size(),
+                       top_right: self.top_right.to_layout_size(),
+                       bottom_left: self.bottom_left.to_layout_size(),
+                       bottom_right: self.bottom_right.to_layout_size() }
     }
 }
 

@@ -390,15 +390,11 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrBorderSide& aRight,
                                const WrBorderSide& aBottom,
                                const WrBorderSide& aLeft,
-                               const WrLayoutSize& aTopLeftRadius,
-                               const WrLayoutSize& aTopRightRadius,
-                               const WrLayoutSize& aBottomLeftRadius,
-                               const WrLayoutSize& aBottomRightRadius)
+                               const WrBorderRadius& aRadius)
 {
   wr_dp_push_border(mWrState, aBounds, aClip,
                     aTop, aRight, aBottom, aLeft,
-                    aTopLeftRadius, aTopRightRadius,
-                    aBottomLeftRadius, aBottomRightRadius);
+                    aRadius);
 }
 
 void
