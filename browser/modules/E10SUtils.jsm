@@ -188,7 +188,7 @@ this.E10SUtils = {
     // If we are in a Large-Allocation process, and it wouldn't be content visible
     // to change processes, we want to load into a new process so that we can throw
     // this one out.
-    if (aDocShell.inLargeAllocProcess &&
+    if (Services.appinfo.remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
         !aDocShell.awaitingLargeAlloc &&
         aDocShell.isOnlyToplevelInTabGroup) {
       return false;

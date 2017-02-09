@@ -173,8 +173,7 @@ public:
   GetNewOrUsedBrowserProcess(const nsAString& aRemoteType = NS_LITERAL_STRING(NO_REMOTE_TYPE),
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
-                             ContentParent* aOpener = nullptr,
-                             bool* anew = nullptr);
+                             ContentParent* aOpener = nullptr);
 
   /**
    * Get or create a content process for the given TabContext.  aFrameElement
