@@ -63,7 +63,9 @@ public:
   // independent of system clock changes. While insulated from clock changes,
   // this API is succeptible to the issues discussed above wait_for.
   CVStatus wait_until(UniqueLock<Mutex>& lock,
-                      const mozilla::TimeStamp& abs_time);
+                      const mozilla::TimeStamp& abs_time) {
+    return wait_for(lock, abs_time - mozilla::TimeStamp::Now());
+  }
 
   // As with |wait_until|, block the current thread of execution until woken
   // from another thread, or the given absolute time is reached. This method
