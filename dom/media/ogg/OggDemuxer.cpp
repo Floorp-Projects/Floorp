@@ -314,7 +314,7 @@ OggDemuxer::ReadHeaders(TrackInfo::TrackType aType,
 
     // Local OggCodecState needs to decode headers in order to process
     // packet granulepos -> time mappings, etc.
-    if (!aState->DecodeHeader(packet.release())) {
+    if (!aState->DecodeHeader(Move(packet))) {
       OGG_DEBUG("Failed to decode ogg header packet; deactivating stream %ld", aState->mSerial);
       aState->Deactivate();
       return false;

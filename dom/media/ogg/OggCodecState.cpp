@@ -399,14 +399,15 @@ TheoraState::Reset()
 }
 
 bool
-TheoraState::DecodeHeader(ogg_packet* aPacket)
+TheoraState::DecodeHeader(OggPacketPtr aPacket)
 {
-  mHeaders.Append(OggPacketPtr(aPacket));
+  ogg_packet* packet = aPacket.get(); // Will be owned by mHeaders.
+  mHeaders.Append(Move(aPacket));
   mPacketCount++;
   int ret = th_decode_headerin(&mTheoraInfo,
                                &mComment,
                                &mSetup,
-                               aPacket);
+                               packet);
 
   // We must determine when we've read the last header packet.
   // th_decode_headerin() does not tell us when it's read the last header, so
@@ -422,7 +423,7 @@ TheoraState::DecodeHeader(ogg_packet* aPacket)
   //    0x82 -> Setup header
   // See http://www.theora.org/doc/Theora.pdf Chapter 6, "Bitstream Headers",
   // for more details of the Ogg/Theora containment scheme.
-  bool isSetupHeader = aPacket->bytes > 0 && aPacket->packet[0] == 0x82;
+  bool isSetupHeader = packet->bytes > 0 && packet->packet[0] == 0x82;
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
     // header packets. Assume bad input.
@@ -700,13 +701,14 @@ VorbisState::~VorbisState()
 }
 
 bool
-VorbisState::DecodeHeader(ogg_packet* aPacket)
+VorbisState::DecodeHeader(OggPacketPtr aPacket)
 {
-  mHeaders.Append(OggPacketPtr(aPacket));
+  ogg_packet* packet = aPacket.get(); // Will be owned by mHeaders.
+  mHeaders.Append(Move(aPacket));
   mPacketCount++;
   int ret = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mComment,
-                                      aPacket);
+                                      packet);
   // We must determine when we've read the last header packet.
   // vorbis_synthesis_headerin() does not tell us when it's read the last
   // header, so we must keep track of the headers externally.
@@ -723,7 +725,7 @@ VorbisState::DecodeHeader(ogg_packet* aPacket)
   // Specification, Chapter 4, Codec Setup and Packet Decode:
   // http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-580004
 
-  bool isSetupHeader = aPacket->bytes > 0 && aPacket->packet[0] == 0x5;
+  bool isSetupHeader = packet->bytes > 0 && packet->packet[0] == 0x5;
 
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
@@ -1075,22 +1077,21 @@ OpusState::Init(void)
 }
 
 bool
-OpusState::DecodeHeader(ogg_packet* aPacket)
+OpusState::DecodeHeader(OggPacketPtr aPacket)
 {
-  OggPacketPtr packet(aPacket);
   switch(mPacketCount++) {
     // Parse the id header.
     case 0:
       mParser = new OpusParser;
-      if (!mParser->DecodeHeader(packet->packet, packet->bytes)) {
+      if (!mParser->DecodeHeader(aPacket->packet, aPacket->bytes)) {
         return false;
       }
-      mHeaders.Append(Move(packet));
+      mHeaders.Append(Move(aPacket));
       break;
 
     // Parse the metadata header.
     case 1:
-      if (!mParser->DecodeTags(packet->packet, packet->bytes)) {
+      if (!mParser->DecodeTags(aPacket->packet, aPacket->bytes)) {
         return false;
       }
       break;
@@ -1100,7 +1101,7 @@ OpusState::DecodeHeader(ogg_packet* aPacket)
     default:
       mDoneReadingHeaders = true;
       // Put it back on the queue so we can decode it.
-      mPackets.PushFront(Move(packet));
+      mPackets.PushFront(Move(aPacket));
       break;
   }
   return true;
@@ -1334,10 +1335,8 @@ FlacState::FlacState(ogg_page* aBosPage)
 }
 
 bool
-FlacState::DecodeHeader(ogg_packet* aPacket)
+FlacState::DecodeHeader(OggPacketPtr aPacket)
 {
-  nsAutoRef<ogg_packet> autoRelease(aPacket);
-
   if (!mParser.DecodeHeaderBlock(aPacket->packet, aPacket->bytes)) {
     return false;
   }
@@ -1853,10 +1852,9 @@ SkeletonState::DecodeFisbone(ogg_packet* aPacket)
 }
 
 bool
-SkeletonState::DecodeHeader(ogg_packet* aPacket)
+SkeletonState::DecodeHeader(OggPacketPtr aPacket)
 {
-  nsAutoRef<ogg_packet> autoRelease(aPacket);
-  if (IsSkeletonBOS(aPacket)) {
+  if (IsSkeletonBOS(aPacket.get())) {
     uint16_t verMajor =
       LittleEndian::readUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
     uint16_t verMinor =
@@ -1888,10 +1886,10 @@ SkeletonState::DecodeHeader(ogg_packet* aPacket)
 
     // Initialize the serialno-to-index map.
     return true;
-  } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
-    return DecodeIndex(aPacket);
-  } else if (IsSkeletonFisbone(aPacket)) {
-    return DecodeFisbone(aPacket);
+  } else if (IsSkeletonIndex(aPacket.get()) && mVersion >= SKELETON_VERSION(4,0)) {
+    return DecodeIndex(aPacket.get());
+  } else if (IsSkeletonFisbone(aPacket.get())) {
+    return DecodeFisbone(aPacket.get());
   } else if (aPacket->e_o_s) {
     mDoneReadingHeaders = true;
     return true;
