@@ -286,7 +286,7 @@ protected:
 
   // Temporary buffer in which to store packets while we're reading packets
   // in order to capture granulepos.
-  nsTArray<ogg_packet*> mUnstamped;
+  nsTArray<OggPacketPtr> mUnstamped;
 
   bool SetCodecSpecificConfig(MediaByteBuffer* aBuffer,
                               OggPacketQueue& aHeaders);

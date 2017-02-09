@@ -93,9 +93,6 @@ OggCodecState::Reset()
 void
 OggCodecState::ClearUnstamped()
 {
-  for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-    OggCodecState::ReleasePacket(mUnstamped[i]);
-  }
   mUnstamped.Clear();
 }
 
@@ -327,7 +324,7 @@ OggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos)
         // We buffer data packets until we encounter a granulepos. We'll
         // then use the granulepos to figure out the granulepos of the
         // preceeding packets.
-        mUnstamped.AppendElement(clone.release());
+        mUnstamped.AppendElement(Move(clone));
         aFoundGranulepos = packet.granulepos > 0;
       }
     }
@@ -554,12 +551,12 @@ TheoraState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructTheoraGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      ogg_packet* packet = mUnstamped[i];
+      OggPacketPtr packet = Move(mUnstamped[i]);
 #ifdef DEBUG
-      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
 #endif
-      mPackets.Append(packet);
+      mPackets.Append(packet.release());
     }
     mUnstamped.Clear();
   }
@@ -616,8 +613,8 @@ TheoraState::ReconstructTheoraGranulepos()
   for (uint32_t i = 0; i < mUnstamped.Length() - 1; ++i) {
     ogg_int64_t frame = firstFrame + i;
     ogg_int64_t granulepos;
-    ogg_packet* packet = mUnstamped[i];
-    bool isKeyframe = th_packet_iskeyframe(packet) == 1;
+    auto& packet = mUnstamped[i];
+    bool isKeyframe = th_packet_iskeyframe(packet.get()) == 1;
 
     if (isKeyframe) {
       granulepos = frame << shift;
@@ -870,11 +867,11 @@ VorbisState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructVorbisGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      ogg_packet* packet = mUnstamped[i];
-      AssertHasRecordedPacketSamples(packet);
-      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      OggPacketPtr packet = Move(mUnstamped[i]);
+      AssertHasRecordedPacketSamples(packet.get());
+      NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(packet);
+      mPackets.Append(packet.release());
     }
     mUnstamped.Clear();
   }
@@ -899,12 +896,12 @@ VorbisState::ReconstructVorbisGranulepos()
   // each packet.
 
   NS_ASSERTION(mUnstamped.Length() > 0, "Length must be > 0");
-  ogg_packet* last = mUnstamped.LastElement();
+  auto& last = mUnstamped.LastElement();
   NS_ASSERTION(last->e_o_s || last->granulepos >= 0,
     "Must know last granulepos!");
   if (mUnstamped.Length() == 1) {
-    ogg_packet* packet = mUnstamped[0];
-    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet);
+    auto& packet = mUnstamped[0];
+    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet.get());
     if (blockSize < 0) {
       // On failure vorbis_packet_blocksize returns < 0. If we've got
       // a bad packet, we just assume that decode will have to skip this
@@ -924,19 +921,19 @@ VorbisState::ReconstructVorbisGranulepos()
     }
 
     mGranulepos = packet->granulepos;
-    RecordVorbisPacketSamples(packet, samples);
+    RecordVorbisPacketSamples(packet.get(), samples);
     return NS_OK;
   }
 
   bool unknownGranulepos = last->granulepos == -1;
   int totalSamples = 0;
   for (int32_t i = mUnstamped.Length() - 1; i > 0; i--) {
-    ogg_packet* packet = mUnstamped[i];
-    ogg_packet* prev = mUnstamped[i-1];
+    auto& packet = mUnstamped[i];
+    auto& prev = mUnstamped[i-1];
     ogg_int64_t granulepos = packet->granulepos;
     NS_ASSERTION(granulepos != -1, "Must know granulepos!");
-    long prevBlockSize = vorbis_packet_blocksize(&mVorbisInfo, prev);
-    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet);
+    long prevBlockSize = vorbis_packet_blocksize(&mVorbisInfo, prev.get());
+    long blockSize = vorbis_packet_blocksize(&mVorbisInfo, packet.get());
 
     if (blockSize < 0 || prevBlockSize < 0) {
       // On failure vorbis_packet_blocksize returns < 0. If we've got
@@ -949,18 +946,17 @@ VorbisState::ReconstructVorbisGranulepos()
     long samples = prevBlockSize / 4 + blockSize / 4;
     totalSamples += samples;
     prev->granulepos = granulepos - samples;
-    RecordVorbisPacketSamples(packet, samples);
+    RecordVorbisPacketSamples(packet.get(), samples);
   }
 
   if (unknownGranulepos) {
     for (uint32_t i = 0; i < mUnstamped.Length(); i++) {
-      ogg_packet* packet = mUnstamped[i];
-      packet->granulepos += mGranulepos + totalSamples + 1;
+      mUnstamped[i]->granulepos += mGranulepos + totalSamples + 1;
     }
   }
 
-  ogg_packet* first = mUnstamped[0];
-  long blockSize = vorbis_packet_blocksize(&mVorbisInfo, first);
+  auto& first = mUnstamped[0];
+  long blockSize = vorbis_packet_blocksize(&mVorbisInfo, first.get());
   if (blockSize < 0) {
     mPrevVorbisBlockSize = 0;
     blockSize = 0;
@@ -970,7 +966,7 @@ VorbisState::ReconstructVorbisGranulepos()
                  ? 0
                  : mPrevVorbisBlockSize / 4 + blockSize / 4;
   int64_t start = first->granulepos - samples;
-  RecordVorbisPacketSamples(first, samples);
+  RecordVorbisPacketSamples(first.get(), samples);
 
   if (last->e_o_s && start < mGranulepos) {
     // We've calculated that there are more samples in this page than its
@@ -983,11 +979,11 @@ VorbisState::ReconstructVorbisGranulepos()
       mUnstamped[i]->granulepos += pruned;
     }
 #ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
-    mVorbisPacketSamples[last] -= pruned;
+    mVorbisPacketSamples[last.get()] -= pruned;
 #endif
   }
 
-  mPrevVorbisBlockSize = vorbis_packet_blocksize(&mVorbisInfo, last);
+  mPrevVorbisBlockSize = vorbis_packet_blocksize(&mVorbisInfo, last.get());
   mPrevVorbisBlockSize = std::max(static_cast<long>(0), mPrevVorbisBlockSize);
   mGranulepos = last->granulepos;
 
@@ -1179,10 +1175,10 @@ OpusState::PageIn(ogg_page* aPage)
     return NS_ERROR_FAILURE;
   }
   for (uint32_t i = 0; i < mUnstamped.Length(); i++) {
-    ogg_packet* packet = mUnstamped[i];
-    NS_ASSERTION(!IsHeader(packet), "Don't try to play a header packet");
+    OggPacketPtr packet = Move(mUnstamped[i]);
+    NS_ASSERTION(!IsHeader(packet.get()), "Don't try to play a header packet");
     NS_ASSERTION(packet->granulepos != -1, "Packet should have a granulepos");
-    mPackets.Append(packet);
+    mPackets.Append(packet.release());
   }
   mUnstamped.Clear();
   return NS_OK;
@@ -1216,13 +1212,14 @@ bool
 OpusState::ReconstructOpusGranulepos(void)
 {
   NS_ASSERTION(mUnstamped.Length() > 0, "Must have unstamped packets");
-  ogg_packet* last = mUnstamped.LastElement();
-  NS_ASSERTION(last->e_o_s || last->granulepos > 0,
-      "Must know last granulepos!");
+  NS_ASSERTION(mUnstamped.LastElement()->e_o_s
+    || mUnstamped.LastElement()->granulepos > 0,
+    "Must know last granulepos!");
   int64_t gp;
   // If this is the last page, and we've seen at least one previous page (or
   // this is the first page)...
-  if (last->e_o_s) {
+  if (mUnstamped.LastElement()->e_o_s) {
+    auto& last = mUnstamped.LastElement();
     if (mPrevPageGranulepos != -1) {
       // If this file only has one page and the final granule position is
       // smaller than the pre-skip amount, we MUST reject the stream.
@@ -1234,8 +1231,8 @@ OpusState::ReconstructOpusGranulepos(void)
       // duration to the previous granulepos to get the value for the
       // current packet.
       for (uint32_t i = 0; i < mUnstamped.Length() - 1; ++i) {
-        ogg_packet* packet = mUnstamped[i];
-        int offset = GetOpusDeltaGP(packet);
+        auto& packet = mUnstamped[i];
+        int offset = GetOpusDeltaGP(packet.get());
         // Check for error (negative offset) and overflow.
         if (offset >= 0 && gp <= INT64_MAX - offset) {
           gp += offset;
@@ -1245,12 +1242,8 @@ OpusState::ReconstructOpusGranulepos(void)
             // Encoders SHOULD NOT produce streams like this, but we'll handle
             // it for them anyway.
             gp = last_gp;
-            for (uint32_t j = i+1; j < mUnstamped.Length(); ++j) {
-              OggCodecState::ReleasePacket(mUnstamped[j]);
-            }
             mUnstamped.RemoveElementsAt(i+1, mUnstamped.Length() - (i+1));
-            last = packet;
-            last->e_o_s = 1;
+            packet->e_o_s = 1;
           }
         }
         packet->granulepos = gp;
@@ -1265,12 +1258,13 @@ OpusState::ReconstructOpusGranulepos(void)
     }
   }
 
+  auto& last = mUnstamped.LastElement();
   gp = last->granulepos;
   // Loop through the packets backwards, subtracting the next
   // packet's duration from its granulepos to get the value
   // for the current packet.
   for (uint32_t i = mUnstamped.Length() - 1; i > 0; i--) {
-    int offset = GetOpusDeltaGP(mUnstamped[i]);
+    int offset = GetOpusDeltaGP(mUnstamped[i].get());
     // Check for error (negative offset) and overflow.
     if (offset >= 0) {
       if (offset <= gp) {
@@ -1295,7 +1289,7 @@ OpusState::ReconstructOpusGranulepos(void)
   // total number of samples decodable from the first page with completed
   // packets. This requires looking at the duration of the first packet, too.
   // We MUST reject such streams.
-  if (!mDoneReadingHeaders && GetOpusDeltaGP(mUnstamped[0]) > gp) {
+  if (!mDoneReadingHeaders && GetOpusDeltaGP(mUnstamped[0].get()) > gp) {
     return false;
   }
   mPrevPageGranulepos = last->granulepos;
@@ -1402,10 +1396,10 @@ FlacState::PageIn(ogg_page* aPage)
     // and initialized our decoder. Determine granulepos of buffered packets.
     ReconstructFlacGranulepos();
     for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
-      ogg_packet* packet = mUnstamped[i];
-      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      OggPacketPtr packet = Move(mUnstamped[i]);
+      NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(packet);
+      mPackets.Append(packet.release());
     }
     mUnstamped.Clear();
   }
@@ -1429,7 +1423,7 @@ bool
 FlacState::ReconstructFlacGranulepos(void)
 {
   NS_ASSERTION(mUnstamped.Length() > 0, "Must have unstamped packets");
-  ogg_packet* last = mUnstamped.LastElement();
+  auto& last = mUnstamped.LastElement();
   NS_ASSERTION(last->e_o_s || last->granulepos > 0,
       "Must know last granulepos!");
   int64_t gp;
