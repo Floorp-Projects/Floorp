@@ -258,6 +258,14 @@ function onPopupEvent(eventName, callback, condition) {
   PopupNotifications.panel.addEventListener(eventName, listener, false);
 }
 
+function waitForNotificationPanel() {
+  return new Promise(resolve => {
+    onPopupEvent("popupshown", function() {
+      resolve(this);
+    });
+  });
+}
+
 function triggerMainCommand(popup) {
   let notifications = popup.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
