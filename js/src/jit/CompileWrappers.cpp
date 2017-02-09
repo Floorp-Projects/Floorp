@@ -152,7 +152,7 @@ CompileZone::addressOfIonBailAfter()
 const void*
 CompileZone::addressOfJSContext()
 {
-    return &zone()->group()->context;
+    return zone()->group()->addressOfOwnerContext();
 }
 
 const void*

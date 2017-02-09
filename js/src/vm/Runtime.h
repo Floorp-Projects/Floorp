@@ -305,7 +305,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // All contexts participating in cooperative scheduling. All threads other
     // than |activeContext_| are suspended.
-    js::ActiveThreadData<js::Vector<JSContext*, 4, js::SystemAllocPolicy>> cooperatingContexts_;
+    js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
 
     // Count of AutoProhibitActiveContextChange instances on the active context.
     js::ActiveThreadData<size_t> activeContextChangeProhibited_;
@@ -316,14 +316,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     void setActiveContext(JSContext* cx);
 
-    js::Vector<JSContext*, 4, js::SystemAllocPolicy>& cooperatingContexts() {
+    js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>& cooperatingContexts() {
         return cooperatingContexts_.ref();
     }
 
 #ifdef DEBUG
     bool isCooperatingContext(JSContext* cx) {
-        for (size_t i = 0; i < cooperatingContexts().length(); i++) {
-            if (cooperatingContexts()[i] == cx)
+        for (const js::CooperatingContext& target : cooperatingContexts()) {
+            if (target.context() == cx)
                 return true;
         }
         return false;
