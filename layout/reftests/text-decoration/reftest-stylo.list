@@ -6,9 +6,9 @@ fails == decoration-color-quirks.html decoration-color-quirks.html
 fails == decoration-style-quirks.html decoration-style-quirks.html
 == decoration-style-standards.html decoration-style-standards.html
 fails == dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1.html
-fails == dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1.html
+== dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1.html
 fails == dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2.html
-fails == dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2.html
+== dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2.html
 fails == line-through-style-block-solid-quirks.html line-through-style-block-solid-quirks.html
 fails == line-through-style-block-dotted-quirks.html line-through-style-block-dotted-quirks.html
 fails == line-through-style-block-dashed-quirks.html line-through-style-block-dashed-quirks.html
@@ -98,7 +98,7 @@ fails == text-decoration-propagation-1-quirks.html text-decoration-propagation-1
 fails == 641444-1.html 641444-1.html
 fails == decoration-css21.html decoration-css21.html
 fails == decoration-color-override-quirks.html decoration-color-override-quirks.html
-fails == decoration-color-override-standards.html decoration-color-override-standards.html
+== decoration-color-override-standards.html decoration-color-override-standards.html
 == decoration-color-override-standards-ref.html decoration-color-override-standards-ref.html
 == decoration-css21-block.html decoration-css21-block.html
 == inline-baseline-almost-standards.html inline-baseline-almost-standards.html
