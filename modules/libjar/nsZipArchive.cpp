@@ -507,7 +507,8 @@ nsresult nsZipArchive::ExtractFile(nsZipItem *item, const char *outname,
       nsZipArchive::sFileCorruptedReason = "nsZipArchive: Read() failed to return a buffer";
       rv = NS_ERROR_FILE_CORRUPTED;
       break;
-    } else if (count == 0) {
+    }
+    if (count == 0) {
       break;
     }
 
