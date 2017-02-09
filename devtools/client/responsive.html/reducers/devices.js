@@ -10,8 +10,9 @@ const {
   LOAD_DEVICE_LIST_START,
   LOAD_DEVICE_LIST_ERROR,
   LOAD_DEVICE_LIST_END,
+  REMOVE_DEVICE,
   UPDATE_DEVICE_DISPLAYED,
-  UPDATE_DEVICE_MODAL_OPEN,
+  UPDATE_DEVICE_MODAL,
 } = require("../actions/index");
 
 const Types = require("../types");
@@ -19,6 +20,7 @@ const Types = require("../types");
 const INITIAL_DEVICES = {
   types: [],
   isModalOpen: false,
+  modalOpenedFromViewport: null,
   listState: Types.deviceListState.INITIALIZED,
 };
 
@@ -69,9 +71,23 @@ let reducers = {
     });
   },
 
-  [UPDATE_DEVICE_MODAL_OPEN](devices, { isOpen }) {
+  [REMOVE_DEVICE](devices, { device, deviceType }) {
+    let index = devices[deviceType].indexOf(device);
+    if (index < 0) {
+      return devices;
+    }
+
+    let list = [...devices[deviceType]];
+    list.splice(index, 1);
+    return Object.assign({}, devices, {
+      [deviceType]: list
+    });
+  },
+
+  [UPDATE_DEVICE_MODAL](devices, { isOpen, modalOpenedFromViewport }) {
     return Object.assign({}, devices, {
       isModalOpen: isOpen,
+      modalOpenedFromViewport,
     });
   },
 

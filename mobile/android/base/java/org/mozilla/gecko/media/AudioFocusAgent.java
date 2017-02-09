@@ -21,6 +21,7 @@ public class AudioFocusAgent {
     public static final String OWN_FOCUS = "own_focus";
     public static final String LOST_FOCUS = "lost_focus";
     public static final String LOST_FOCUS_TRANSIENT = "lost_focus_transient";
+    public static final String LOST_FOCUS_TRANSIENT_CAN_DUCK = "lost_focus_transient_can_duck";
 
     private String mAudioFocusState = LOST_FOCUS;
 
@@ -65,13 +66,20 @@ public class AudioFocusAgent {
                         notifyMediaControlService(MediaControlService.ACTION_PAUSE_BY_AUDIO_FOCUS);
                         mAudioFocusState = LOST_FOCUS_TRANSIENT;
                         break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                        Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+                        notifyMediaControlService(MediaControlService.ACTION_START_AUDIO_DUCK);
+                        mAudioFocusState = LOST_FOCUS_TRANSIENT_CAN_DUCK;
+                        break;
                     case AudioManager.AUDIOFOCUS_GAIN:
-                        if (!mAudioFocusState.equals(LOST_FOCUS_TRANSIENT)) {
-                            return;
+                        if (mAudioFocusState.equals(LOST_FOCUS_TRANSIENT_CAN_DUCK)) {
+                            Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN (from DUCKING)");
+                            notifyMediaControlService(MediaControlService.ACTION_STOP_AUDIO_DUCK);
+                        } else if (mAudioFocusState.equals(LOST_FOCUS_TRANSIENT)) {
+                            Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
+                            notifyObservers("AudioFocusChanged", "gainAudioFocus");
+                            notifyMediaControlService(MediaControlService.ACTION_RESUME_BY_AUDIO_FOCUS);
                         }
-                        Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
-                        notifyObservers("AudioFocusChanged", "gainAudioFocus");
-                        notifyMediaControlService(MediaControlService.ACTION_RESUME_BY_AUDIO_FOCUS);
                         mAudioFocusState = OWN_FOCUS;
                         break;
                     default:

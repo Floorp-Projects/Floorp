@@ -134,28 +134,6 @@ numericTags = [
 ]
 
 
-def unwrapCastableObject(descriptor, source, codeOnFailure, conversionFunction):
-    """
-    A function for unwrapping an object named by the "source" argument
-    based on the passed-in descriptor. Returns the string of the Rust expression of
-    the appropriate type.
-
-    codeOnFailure is the code to run if unwrapping fails.
-    """
-    args = {
-        "failureCode": CGIndenter(CGGeneric(codeOnFailure), 8).define(),
-        "function": conversionFunction,
-        "source": source,
-    }
-    return """\
-match %(function)s(%(source)s) {
-    Ok(val) => val,
-    Err(()) => {
-%(failureCode)s
-    }
-}""" % args
-
-
 # We'll want to insert the indent at the beginnings of lines, but we
 # don't want to indent empty lines.  So only indent lines that have a
 # non-newline character on them.
@@ -548,11 +526,6 @@ def typeIsSequenceOrHasSequenceMember(type):
     return False
 
 
-def typeNeedsRooting(type, descriptorProvider):
-    return (type.isGeckoInterface() and
-            descriptorProvider.getDescriptor(type.unroll().inner.identifier.name).needsRooting)
-
-
 def union_native_type(t):
     name = t.unroll().name
     return 'UnionTypes::%s' % name
@@ -867,8 +840,17 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 unwrapFailureCode = failureCode
 
-            templateBody = unwrapCastableObject(
-                descriptor, "${val}", unwrapFailureCode, conversionFunction)
+            templateBody = fill(
+                """
+                match ${function}($${val}) {
+                    Ok(val) => val,
+                    Err(()) => {
+                        $*{failureCode}
+                    }
+                }
+                """,
+                failureCode=unwrapFailureCode + "\n",
+                function=conversionFunction)
 
         declType = CGGeneric(descriptorType)
         if type.nullable():
@@ -1422,8 +1404,6 @@ def getRetvalDeclarationForType(returnType, descriptorProvider):
         nullable = returnType.nullable()
         dictName = returnType.inner.name if nullable else returnType.name
         result = CGGeneric(dictName)
-        if typeNeedsRooting(returnType, descriptorProvider):
-            raise TypeError("We don't support rootable dictionaries return values")
         if nullable:
             result = CGWrapper(result, pre="Option<", post=">")
         return result
@@ -2510,7 +2490,8 @@ def CopyUnforgeablePropertiesToInstance(descriptor):
     # reflector, so we can make sure we don't get confused by named getters.
     if descriptor.proxy:
         copyCode += """\
-rooted!(in(cx) let expando = ensure_expando_object(cx, obj.handle()));
+rooted!(in(cx) let mut expando = ptr::null_mut());
+ensure_expando_object(cx, obj.handle(), expando.handle_mut());
 """
         obj = "expando"
     else:
@@ -4850,7 +4831,8 @@ if RUST_JSID_IS_STRING(id) {
 
         # FIXME(#11868) Should assign to desc.obj, desc.get() is a copy.
         return get + """\
-rooted!(in(cx) let expando = get_expando_object(proxy));
+rooted!(in(cx) let mut expando = ptr::null_mut());
+get_expando_object(proxy, expando.handle_mut());
 //if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
 if !expando.is_null() {
     if !JS_GetPropertyDescriptorById(cx, expando.handle(), id, desc) {
@@ -4981,10 +4963,10 @@ class CGDOMJSProxyHandler_ownPropertyKeys(CGAbstractExternMethod):
 
         body += dedent(
             """
-            let expando = get_expando_object(proxy);
+            rooted!(in(cx) let mut expando = ptr::null_mut());
+            get_expando_object(proxy, expando.handle_mut());
             if !expando.is_null() {
-                rooted!(in(cx) let rooted_expando = expando);
-                GetPropertyKeys(cx, rooted_expando.handle(), JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
+                GetPropertyKeys(cx, expando.handle(), JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
             }
 
             return true;
@@ -5024,10 +5006,10 @@ class CGDOMJSProxyHandler_getOwnEnumerablePropertyKeys(CGAbstractExternMethod):
 
         body += dedent(
             """
-            let expando = get_expando_object(proxy);
+            rooted!(in(cx) let mut expando = ptr::null_mut());
+            get_expando_object(proxy, expando.handle_mut());
             if !expando.is_null() {
-                rooted!(in(cx) let rooted_expando = expando);
-                GetPropertyKeys(cx, rooted_expando.handle(), JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
+                GetPropertyKeys(cx, expando.handle(), JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
             }
 
             return true;
@@ -5080,7 +5062,8 @@ if RUST_JSID_IS_STRING(id) {
             named = ""
 
         return indexed + """\
-rooted!(in(cx) let expando = get_expando_object(proxy));
+rooted!(in(cx) let mut expando = ptr::null_mut());
+get_expando_object(proxy, expando.handle_mut());
 if !expando.is_null() {
     let ok = JS_HasPropertyById(cx, expando.handle(), id, bp);
     if !ok || *bp {
@@ -5105,7 +5088,8 @@ class CGDOMJSProxyHandler_get(CGAbstractExternMethod):
 
     def getBody(self):
         getFromExpando = """\
-rooted!(in(cx) let expando = get_expando_object(proxy));
+rooted!(in(cx) let mut expando = ptr::null_mut());
+get_expando_object(proxy, expando.handle_mut());
 if !expando.is_null() {
     let mut hasProp = false;
     if !JS_HasPropertyById(cx, expando.handle(), id, &mut hasProp) {
@@ -6118,14 +6102,19 @@ class CGBindingRoot(CGThing):
 
         # Do codegen for all the typdefs
         for t in typedefs:
-            if t.innerType.isUnion():
-                cgthings.extend([CGGeneric("\npub use dom::bindings::codegen::UnionTypes::%s as %s;\n\n" %
-                                           (t.innerType, t.identifier.name))])
+            typeName = getRetvalDeclarationForType(t.innerType, config.getDescriptorProvider())
+            substs = {
+                "name": t.identifier.name,
+                "type": typeName.define(),
+            }
+
+            if t.innerType.isUnion() and not t.innerType.nullable():
+                # Allow using the typedef's name for accessing variants.
+                template = "pub use self::%(type)s as %(name)s;"
             else:
-                assert not typeNeedsRooting(t.innerType, config.getDescriptorProvider)
-                cgthings.extend([CGGeneric("\npub type %s = " % (t.identifier.name)),
-                                 getRetvalDeclarationForType(t.innerType, config.getDescriptorProvider()),
-                                 CGGeneric(";\n\n")])
+                template = "pub type %(name)s = %(type)s;"
+
+            cgthings.append(CGGeneric(template % substs))
 
         # Do codegen for all the dictionaries.
         cgthings.extend([CGDictionary(d, config.getDescriptorProvider())

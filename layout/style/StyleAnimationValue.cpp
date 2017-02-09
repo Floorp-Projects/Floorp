@@ -14,7 +14,6 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
-#include "nsStyleTransformMatrix.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
@@ -3458,7 +3457,7 @@ ComputeValuesFromStyleContext(
       PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
       pair->mProperty = *p;
       if (!StyleAnimationValue::ExtractComputedValue(*p, aStyleContext,
-                                                     pair->mValue)) {
+                                                     pair->mValue.mGecko)) {
         return false;
       }
     }
@@ -3468,7 +3467,7 @@ ComputeValuesFromStyleContext(
   PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
   pair->mProperty = aProperty;
   return StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
-                                                   pair->mValue);
+                                                   pair->mValue.mGecko);
 }
 
 static bool
@@ -3583,7 +3582,7 @@ StyleAnimationValue::ComputeValue(nsCSSPropertyID aProperty,
   MOZ_ASSERT(values.Length() == 1);
   MOZ_ASSERT(values[0].mProperty == aProperty);
 
-  aComputedValue = values[0].mValue;
+  aComputedValue = values[0].mValue.mGecko;
   return true;
 }
 
@@ -4815,29 +4814,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
 gfxSize
 StyleAnimationValue::GetScaleValue(const nsIFrame* aForFrame) const
 {
-  MOZ_ASSERT(aForFrame);
   MOZ_ASSERT(GetUnit() == StyleAnimationValue::eUnit_Transform);
 
   nsCSSValueSharedList* list = GetCSSValueSharedListValue();
-  MOZ_ASSERT(list->mHead);
-
-  RuleNodeCacheConditions dontCare;
-  bool dontCareBool;
-  nsStyleTransformMatrix::TransformReferenceBox refBox(aForFrame);
-  Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-                          list->mHead,
-                          aForFrame->StyleContext(),
-                          aForFrame->PresContext(), dontCare, refBox,
-                          aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                          &dontCareBool);
-
-  Matrix transform2d;
-  bool canDraw2D = transform.CanDraw2D(&transform2d);
-  if (!canDraw2D) {
-    return gfxSize();
-  }
-
-  return ThebesMatrix(transform2d).ScaleFactors(true);
+  return nsStyleTransformMatrix::GetScaleValue(list, aForFrame);
 }
 
 StyleAnimationValue::StyleAnimationValue(int32_t aInt, Unit aUnit,

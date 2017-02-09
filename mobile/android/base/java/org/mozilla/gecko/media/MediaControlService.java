@@ -13,6 +13,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.media.VolumeProvider;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.os.Build;
@@ -43,9 +44,16 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     public static final String ACTION_STOP           = "action_stop";
     public static final String ACTION_RESUME_BY_AUDIO_FOCUS = "action_resume_audio_focus";
     public static final String ACTION_PAUSE_BY_AUDIO_FOCUS  = "action_pause_audio_focus";
-
+    public static final String ACTION_START_AUDIO_DUCK      = "action_start_audio_duck";
+    public static final String ACTION_STOP_AUDIO_DUCK       = "action_stop_audio_duck";
     private static final int MEDIA_CONTROL_ID = 1;
     private static final String MEDIA_CONTROL_PREF = "dom.audiochannel.mediaControl";
+
+    // This is maximum volume level difference when audio ducking. The number is arbitrary.
+    private static final int AUDIO_DUCK_MAX_STEPS = 3;
+    private enum AudioDucking { START, STOP };
+    private boolean mSupportsDucking = false;
+    private int mAudioDuckCurrentSteps = 0;
 
     private MediaSession mSession;
     private MediaController mController;
@@ -213,6 +221,34 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
             case ACTION_RESUME_BY_AUDIO_FOCUS :
                 mController.getTransportControls().sendCustomAction(ACTION_RESUME_BY_AUDIO_FOCUS, null);
                 break;
+            case ACTION_START_AUDIO_DUCK:
+                handleAudioDucking(AudioDucking.START);
+                break;
+            case ACTION_STOP_AUDIO_DUCK :
+                handleAudioDucking(AudioDucking.STOP);
+                break;
+        }
+    }
+
+    private void handleAudioDucking(AudioDucking audioDucking) {
+        if (!mInitialize || !mSupportsDucking) {
+            return;
+        }
+
+        int currentVolume = mController.getPlaybackInfo().getCurrentVolume();
+        int maxVolume = mController.getPlaybackInfo().getMaxVolume();
+
+        int adjustDirection;
+        if (audioDucking == AudioDucking.START) {
+            mAudioDuckCurrentSteps = Math.min(AUDIO_DUCK_MAX_STEPS, currentVolume);
+            adjustDirection = AudioManager.ADJUST_LOWER;
+        } else {
+            mAudioDuckCurrentSteps = Math.min(mAudioDuckCurrentSteps, maxVolume - currentVolume);
+            adjustDirection = AudioManager.ADJUST_RAISE;
+        }
+
+        for (int i = 0; i < mAudioDuckCurrentSteps; i++) {
+            mController.adjustVolume(adjustDirection, 0);
         }
     }
 
@@ -247,9 +283,17 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     private void initMediaSession() {
         // Android MediaSession is introduced since version L.
         mSession = new MediaSession(getApplicationContext(),
-                                    "fennec media session");
+                "fennec media session");
         mController = new MediaController(getApplicationContext(),
-                                          mSession.getSessionToken());
+                mSession.getSessionToken());
+
+        int volumeControl = mController.getPlaybackInfo().getVolumeControl();
+        if (volumeControl == VolumeProvider.VOLUME_CONTROL_ABSOLUTE ||
+                volumeControl == VolumeProvider.VOLUME_CONTROL_RELATIVE) {
+            mSupportsDucking = true;
+        } else {
+            Log.w(LOGTAG, "initMediaSession, Session does not support volume absolute or relative volume control");
+        }
 
         mSession.setCallback(new MediaSession.Callback() {
             @Override

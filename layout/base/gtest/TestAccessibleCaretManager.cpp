@@ -92,7 +92,7 @@ public:
       return true;
     }
 
-    virtual void UpdateCaretsForOverlappingTilt() override {}
+    virtual bool UpdateCaretsForOverlappingTilt() override { return true; }
 
     virtual void UpdateCaretsForAlwaysTilt(nsIFrame* aStartFrame,
                                            nsIFrame* aEndFrame)

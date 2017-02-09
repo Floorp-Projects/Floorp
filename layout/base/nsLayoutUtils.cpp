@@ -551,7 +551,7 @@ GetSuitableScale(float aMaxScale, float aMinScale,
 
 static inline void
 UpdateMinMaxScale(const nsIFrame* aFrame,
-                  const StyleAnimationValue& aValue,
+                  const AnimationValue& aValue,
                   gfxSize& aMinScale,
                   gfxSize& aMaxScale)
 {
@@ -591,7 +591,9 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
         StyleAnimationValue baseStyle =
           EffectCompositor::GetBaseStyle(prop.mProperty, aFrame);
         MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
-        UpdateMinMaxScale(aFrame, baseStyle, aMinScale, aMaxScale);
+        // FIXME: Bug 1311257: We need to get the baseStyle for
+        //        RawServoAnimationValue.
+        UpdateMinMaxScale(aFrame, { baseStyle, nullptr }, aMinScale, aMaxScale);
       }
 
       for (const AnimationPropertySegment& segment : prop.mSegments) {

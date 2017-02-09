@@ -22,10 +22,10 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
-    onRemoveDevice: PropTypes.func.isRequired,
+    onRemoveDeviceAssociation: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
-    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
+    onUpdateDeviceModal: PropTypes.func.isRequired,
   },
 
   render() {
@@ -37,10 +37,10 @@ module.exports = createClass({
       onBrowserMounted,
       onChangeDevice,
       onContentResize,
-      onRemoveDevice,
+      onRemoveDeviceAssociation,
       onResizeViewport,
       onRotateViewport,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this.props;
 
     return dom.div(
@@ -58,10 +58,10 @@ module.exports = createClass({
           onBrowserMounted,
           onChangeDevice,
           onContentResize,
-          onRemoveDevice,
+          onRemoveDeviceAssociation,
           onResizeViewport,
           onRotateViewport,
-          onUpdateDeviceModalOpen,
+          onUpdateDeviceModal,
         });
       })
     );
