@@ -1,427 +1,746 @@
 # Manifest entries for imported test suites whose individual test cases
 # we don't want to change.
 
-skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list # Intl is not enabled in all builds
 skip script ecma_6/String/normalize-generateddata-input.js # input data for other test
 
-###################################################
-# Test262 tests skipped due to SpiderMonkey fixes #
-###################################################
+# jsreftest times out on Android when the complete test262 test suite is enabled.
+skip-if(Android) include test262/jstests.list
 
-# These tests assert that function.length is non-configurable. It was
-# non-configurable in ES5, but ES6 changes this and we have implemented the
-# newer standard (bug 911142).
-skip script test262/intl402/ch13/13.1/13.1.1_L15.js
-skip script test262/intl402/ch13/13.2/13.2.1_L15.js
-skip script test262/intl402/ch13/13.3/13.3.1_L15.js
-skip script test262/intl402/ch13/13.3/13.3.2_L15.js
-skip script test262/intl402/ch13/13.3/13.3.3_L15.js
-skip script test262/intl402/ch10/10.2/10.2.2_L15.js
-skip script test262/intl402/ch10/10.3/10.3.2_1_a_L15.js
-skip script test262/intl402/ch10/10.3/10.3.3_L15.js
-skip script test262/intl402/ch10/10.3/10.3.2_L15.js
-skip script test262/intl402/ch10/10.1/10.1_L15.js
-skip script test262/intl402/ch11/11.2/11.2.2_L15.js
-skip script test262/intl402/ch11/11.1/11.1_L15.js
-skip script test262/intl402/ch11/11.3/11.3.3_L15.js
-skip script test262/intl402/ch11/11.3/11.3.2_L15.js
-skip script test262/intl402/ch11/11.3/11.3.2_1_a_L15.js
-skip script test262/intl402/ch12/12.3/12.3.3_L15.js
-skip script test262/intl402/ch12/12.3/12.3.2_L15.js
-skip script test262/intl402/ch12/12.3/12.3.2_1_a_L15.js
-skip script test262/intl402/ch12/12.1/12.1_L15.js
-skip script test262/intl402/ch12/12.2/12.2.2_L15.js
-skip script test262/ch13/13.2/13.2-15-1.js
-skip script test262/ch11/11.4/11.4.1/11.4.1-5-a-28-s.js
+# Times out on arm and cgc builds.
+slow script test262/built-ins/decodeURI/S15.1.3.1_A2.5_T1.js
+slow script test262/built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js
 
-# ECMA-402 1st ed. required |timeZoneName: undefined|, but newer versions have
-# changed it to being the default time zone, cf. the NOTE in
-# Intl.DateTimeFormat.prototype.resolvedOptions().
-skip script test262/intl402/ch12/12.3/12.3.3.js
 
-# ECMA-262 6th ed. used Unicode 5.1, but we're now supporting Unicode 9.0.
-# Disable tests which require Unicode 5.1 semantics, or more specific disable
-# tests which expect that U+180E is a white space character.
-skip script test262/ch09/9.3/9.3.1/S9.3.1_A2.js
-skip script test262/ch09/9.3/9.3.1/S9.3.1_A3_T2.js
-skip script test262/ch09/9.3/9.3.1/S9.3.1_A3_T1.js
+#################################################################
+# Tests disabled due to intentional alternative implementations #
+#################################################################
 
-# ES2017 removed the strict arguments poison pill for the "caller" property
-# (bug 1324208).
-skip script test262/ch13/13.2/S13.2.3_A1.js
-skip script test262/ch10/10.6/10.6-14-1-s.js
-skip script test262/ch10/10.6/10.6-13-b-3-s.js
-skip script test262/ch10/10.6/10.6-14-b-1-s.js
-skip script test262/ch10/10.6/10.6-14-b-4-s.js
-skip script test262/ch10/10.6/10.6-13-b-1-s.js
-skip script test262/ch10/10.6/10.6-13-b-2-s.js
+# Legacy "caller" and "arguments" implemented as accessor properties on Function.prototype.
+skip script test262/built-ins/Function/prototype/restricted-property-arguments.js
+skip script test262/built-ins/Function/prototype/restricted-property-caller.js
+skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 
-# ES2017 Intl legacy constructor semantics changes made these tests invalid
-# (bug 1328386).
-skip script test262/intl402/ch10/10.1/10.1.1_1.js
-skip script test262/intl402/ch10/10.1/10.1.2_a.js
-skip script test262/intl402/ch11/11.1/11.1.1_1.js
-skip script test262/intl402/ch12/12.1/12.1.1_1.js
-
-# Intl.{Collator,DateTimeFormat,NumberFormat}.prototype are now plain objects.
-skip script test262/intl402/ch10/10.3/10.3_a.js
-skip script test262/intl402/ch11/11.3/11.3_a.js
-skip script test262/intl402/ch12/12.3/12.3_a.js
-
-# Tests already removed upstream (https://github.com/tc39/test262/pull/807/files),
-# but apparently for the wrong reason.
-skip script test262/intl402/ch10/10.1/10.1.2.1_4.js
-skip script test262/intl402/ch11/11.1/11.1.2.1_4.js
-skip script test262/intl402/ch12/12.1/12.1.2.1_4.js
 
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
 #######################################################################
 
-# These tests are disabled because jstest doesn't understand @negative (without
-# a pattern) yet.
-skip script test262/ch07/7.2/S7.2_A5_T1.js
-skip script test262/ch07/7.2/S7.2_A5_T2.js
-skip script test262/ch07/7.2/S7.2_A5_T3.js
-skip script test262/ch07/7.2/S7.2_A5_T4.js
-skip script test262/ch07/7.2/S7.2_A5_T5.js
-skip script test262/ch07/7.3/S7.3_A2.1_T1.js
-skip script test262/ch07/7.3/S7.3_A2.1_T2.js
-skip script test262/ch07/7.3/S7.3_A2.2_T1.js
-skip script test262/ch07/7.3/S7.3_A2.2_T2.js
-skip script test262/ch07/7.3/S7.3_A2.3.js
-skip script test262/ch07/7.3/S7.3_A2.4.js
-skip script test262/ch07/7.3/S7.3_A3.1_T1.js
-skip script test262/ch07/7.3/S7.3_A3.1_T2.js
-skip script test262/ch07/7.3/S7.3_A3.1_T3.js
-skip script test262/ch07/7.3/S7.3_A3.2_T1.js
-skip script test262/ch07/7.3/S7.3_A3.2_T2.js
-skip script test262/ch07/7.3/S7.3_A3.2_T3.js
-skip script test262/ch07/7.3/S7.3_A3.3_T1.js
-skip script test262/ch07/7.3/S7.3_A3.3_T2.js
-skip script test262/ch07/7.3/S7.3_A3.4_T1.js
-skip script test262/ch07/7.3/S7.3_A3.4_T2.js
-skip script test262/ch07/7.3/S7.3_A6_T1.js
-skip script test262/ch07/7.3/S7.3_A6_T2.js
-skip script test262/ch07/7.3/S7.3_A6_T3.js
-skip script test262/ch07/7.3/S7.3_A6_T4.js
-skip script test262/ch07/7.4/S7.4_A2_T2.js
-skip script test262/ch07/7.4/S7.4_A3.js
-skip script test262/ch07/7.4/S7.4_A4_T1.js
-skip script test262/ch07/7.4/S7.4_A4_T4.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.1.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.2.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.3.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.4.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.5.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.6.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.7.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.8.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.9.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.10.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.11.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.12.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.13.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.14.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.15.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.16.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.17.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.18.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.19.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.20.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.21.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.22.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.23.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.24.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.1/S7.6.1.1_A1.25.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.5.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.6.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.7.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.9.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.10.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.11.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.15.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.16.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.18.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.21.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.22.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.23.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.24.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.26.js
-skip script test262/ch07/7.6/7.6.1/7.6.1.2/S7.6.1.2_A1.27.js
-skip script test262/ch07/7.6/7.6.1/S7.6.1_A1.1.js
-skip script test262/ch07/7.6/7.6.1/S7.6.1_A1.2.js
-skip script test262/ch07/7.6/7.6.1/S7.6.1_A1.3.js
-skip script test262/ch07/7.7/S7.7_A2_T1.js
-skip script test262/ch07/7.7/S7.7_A2_T2.js
-skip script test262/ch07/7.7/S7.7_A2_T3.js
-skip script test262/ch07/7.7/S7.7_A2_T4.js
-skip script test262/ch07/7.7/S7.7_A2_T5.js
-skip script test262/ch07/7.7/S7.7_A2_T6.js
-skip script test262/ch07/7.7/S7.7_A2_T7.js
-skip script test262/ch07/7.7/S7.7_A2_T8.js
-skip script test262/ch07/7.7/S7.7_A2_T9.js
-skip script test262/ch07/7.7/S7.7_A2_T10.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T1.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T2.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T3.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T4.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T5.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T6.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T7.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A4.1_T8.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A6.1_T1.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A6.1_T2.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A6.2_T1.js
-skip script test262/ch07/7.8/7.8.3/S7.8.3_A6.2_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A1.1_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A1.1_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A1.2_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A1.2_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A3.1_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A3.1_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A3.2_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A3.2_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A4.3_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A4.3_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.1_T4.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T1.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T2.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T3.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T4.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T5.js
-skip script test262/ch07/7.8/7.8.4/S7.8.4_A7.2_T6.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.2_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.2_T2.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.2_T3.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.2_T4.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.3_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.3_T3.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.5_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A1.5_T3.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.2_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.2_T2.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.3_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.3_T3.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.5_T1.js
-skip script test262/ch07/7.8/7.8.5/S7.8.5_A2.5_T3.js
-skip script test262/ch07/7.9/7.9.2/S7.9.2_A1_T1.js
-skip script test262/ch07/7.9/7.9.2/S7.9.2_A1_T3.js
-skip script test262/ch07/7.9/7.9.2/S7.9.2_A1_T6.js
-skip script test262/ch07/7.9/S7.9_A10_T2.js
-skip script test262/ch07/7.9/S7.9_A10_T4.js
-skip script test262/ch07/7.9/S7.9_A10_T6.js
-skip script test262/ch07/7.9/S7.9_A10_T8.js
-skip script test262/ch07/7.9/S7.9_A11_T4.js
-skip script test262/ch07/7.9/S7.9_A11_T8.js
-skip script test262/ch07/7.9/S7.9_A4.js
-skip script test262/ch07/7.9/S7.9_A5.1_T1.js
-skip script test262/ch07/7.9/S7.9_A5.3_T1.js
-skip script test262/ch07/7.9/S7.9_A5.7_T1.js
-skip script test262/ch07/7.9/S7.9_A6.2_T1.js
-skip script test262/ch07/7.9/S7.9_A6.2_T2.js
-skip script test262/ch07/7.9/S7.9_A6.2_T3.js
-skip script test262/ch07/7.9/S7.9_A6.2_T4.js
-skip script test262/ch07/7.9/S7.9_A6.2_T5.js
-skip script test262/ch07/7.9/S7.9_A6.2_T6.js
-skip script test262/ch07/7.9/S7.9_A6.2_T7.js
-skip script test262/ch07/7.9/S7.9_A6.2_T8.js
-skip script test262/ch07/7.9/S7.9_A6.2_T9.js
-skip script test262/ch07/7.9/S7.9_A6.2_T10.js
-skip script test262/ch07/7.9/S7.9_A6.3_T1.js
-skip script test262/ch07/7.9/S7.9_A6.3_T2.js
-skip script test262/ch07/7.9/S7.9_A6.3_T3.js
-skip script test262/ch07/7.9/S7.9_A6.3_T4.js
-skip script test262/ch07/7.9/S7.9_A6.3_T5.js
-skip script test262/ch07/7.9/S7.9_A6.3_T6.js
-skip script test262/ch07/7.9/S7.9_A6.3_T7.js
-skip script test262/ch07/7.9/S7.9_A6.4_T1.js
-skip script test262/ch07/7.9/S7.9_A6.4_T2.js
-skip script test262/ch07/7.9/S7.9_A7_T7.js
-skip script test262/ch07/7.9/S7.9_A9_T6.js
-skip script test262/ch07/7.9/S7.9_A9_T7.js
-skip script test262/ch07/7.9/S7.9_A9_T8.js
-skip script test262/ch08/8.2/S8.2_A2.js
-skip script test262/ch08/8.3/S8.3_A2.1.js
-skip script test262/ch08/8.3/S8.3_A2.2.js
-skip script test262/ch08/8.4/S8.4_A13_T1.js
-skip script test262/ch08/8.4/S8.4_A13_T2.js
-skip script test262/ch08/8.4/S8.4_A13_T3.js
-skip script test262/ch08/8.4/S8.4_A14_T1.js
-skip script test262/ch08/8.4/S8.4_A14_T2.js
-skip script test262/ch08/8.4/S8.4_A14_T3.js
-skip script test262/ch08/8.4/S8.4_A7.1.js
-skip script test262/ch08/8.4/S8.4_A7.2.js
-skip script test262/ch08/8.4/S8.4_A7.3.js
-skip script test262/ch08/8.4/S8.4_A7.4.js
-skip script test262/ch08/8.6/8.6.2/S8.6.2_A7.js
-skip script test262/ch08/8.7/S8.7.2_A1_T1.js
-skip script test262/ch08/8.7/S8.7.2_A1_T2.js
-skip script test262/ch11/11.1/11.1.1/S11.1.1_A1.js
-skip script test262/ch11/11.2/11.2.4/S11.2.4_A1.3_T1.js
-skip script test262/ch11/11.3/11.3.1/11.3.1-2-1gs.js
-skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T1.js
-skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T2.js
-skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T3.js
-skip script test262/ch11/11.3/11.3.1/S11.3.1_A1.1_T4.js
-skip script test262/ch11/11.3/11.3.1/S11.3.1_A2.1_T3.js
-skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T1.js
-skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T2.js
-skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T3.js
-skip script test262/ch11/11.3/11.3.2/S11.3.2_A1.1_T4.js
-skip script test262/ch11/11.3/11.3.2/S11.3.2_A2.1_T3.js
-skip script test262/ch11/11.4/11.4.1/11.4.1-5-a-5gs.js
-skip script test262/ch11/11.4/11.4.2/S11.4.2_A2_T2.js
-skip script test262/ch11/11.4/11.4.4/S11.4.4_A2.1_T3.js
-skip script test262/ch11/11.4/11.4.5/S11.4.5_A2.1_T3.js
-skip script test262/ch11/11.13/11.13.1/S11.13.1_A2.1_T3.js
-skip script test262/ch11/11.13/11.13.2/11.13.2-6-1gs.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T1.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T2.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T3.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T4.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T5.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T6.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T7.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T8.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T9.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T10.js
-skip script test262/ch11/11.13/11.13.2/S11.13.2_A2.2_T11.js
-skip script test262/ch12/12.1/S12.1_A4_T1.js
-skip script test262/ch12/12.1/S12.1_A4_T2.js
-skip script test262/ch12/12.2/S12.2_A8_T1.js
-skip script test262/ch12/12.2/S12.2_A8_T2.js
-skip script test262/ch12/12.2/S12.2_A8_T3.js
-skip script test262/ch12/12.2/S12.2_A8_T4.js
-skip script test262/ch12/12.2/S12.2_A8_T5.js
-skip script test262/ch12/12.2/S12.2_A8_T6.js
-skip script test262/ch12/12.2/S12.2_A8_T7.js
-skip script test262/ch12/12.2/S12.2_A8_T8.js
-skip script test262/ch12/12.4/S12.4_A1.js
-skip script test262/ch12/12.5/S12.5_A2.js
-skip script test262/ch12/12.5/S12.5_A6_T1.js
-skip script test262/ch12/12.5/S12.5_A6_T2.js
-skip script test262/ch12/12.5/S12.5_A8.js
-skip script test262/ch12/12.5/S12.5_A11.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T1.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T2.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T3.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T4.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T5.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A6_T6.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A12.js
-skip script test262/ch12/12.6/12.6.1/S12.6.1_A15.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A15.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T1.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T2.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T3.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T4.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T5.js
-skip script test262/ch12/12.6/12.6.2/S12.6.2_A6_T6.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A11.1_T3.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A11_T3.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A12.1_T3.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A12_T3.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A4.1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A4_T1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A4_T2.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A7.1_T1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A7.1_T2.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A7_T1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A7_T2.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8.1_T1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8.1_T2.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8.1_T3.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8_T1.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8_T2.js
-skip script test262/ch12/12.6/12.6.3/S12.6.3_A8_T3.js
-skip script test262/ch12/12.6/12.6.4/S12.6.4_A15.js
-skip script test262/ch12/12.7/S12.7_A1_T1.js
-skip script test262/ch12/12.7/S12.7_A1_T2.js
-skip script test262/ch12/12.7/S12.7_A1_T3.js
-skip script test262/ch12/12.7/S12.7_A1_T4.js
-skip script test262/ch12/12.7/S12.7_A5_T1.js
-skip script test262/ch12/12.7/S12.7_A5_T2.js
-skip script test262/ch12/12.7/S12.7_A5_T3.js
-skip script test262/ch12/12.7/S12.7_A6.js
-skip script test262/ch12/12.7/S12.7_A8_T1.js
-skip script test262/ch12/12.7/S12.7_A8_T2.js
-skip script test262/ch12/12.8/S12.8_A1_T1.js
-skip script test262/ch12/12.8/S12.8_A1_T2.js
-skip script test262/ch12/12.8/S12.8_A1_T3.js
-skip script test262/ch12/12.8/S12.8_A1_T4.js
-skip script test262/ch12/12.8/S12.8_A5_T1.js
-skip script test262/ch12/12.8/S12.8_A5_T2.js
-skip script test262/ch12/12.8/S12.8_A5_T3.js
-skip script test262/ch12/12.8/S12.8_A6.js
-skip script test262/ch12/12.8/S12.8_A8_T1.js
-skip script test262/ch12/12.8/S12.8_A8_T2.js
-skip script test262/ch12/12.9/S12.9_A1_T1.js
-skip script test262/ch12/12.9/S12.9_A1_T2.js
-skip script test262/ch12/12.9/S12.9_A1_T3.js
-skip script test262/ch12/12.9/S12.9_A1_T4.js
-skip script test262/ch12/12.9/S12.9_A1_T5.js
-skip script test262/ch12/12.9/S12.9_A1_T6.js
-skip script test262/ch12/12.9/S12.9_A1_T7.js
-skip script test262/ch12/12.9/S12.9_A1_T8.js
-skip script test262/ch12/12.9/S12.9_A1_T9.js
-skip script test262/ch12/12.9/S12.9_A1_T10.js
-skip script test262/ch12/12.11/S12.11_A2_T1.js
-skip script test262/ch12/12.11/S12.11_A3_T1.js
-skip script test262/ch12/12.11/S12.11_A3_T2.js
-skip script test262/ch12/12.11/S12.11_A3_T3.js
-skip script test262/ch12/12.11/S12.11_A3_T4.js
-skip script test262/ch12/12.11/S12.11_A3_T5.js
-skip script test262/ch12/12.13/S12.13_A1.js
-skip script test262/ch12/12.14/S12.14_A16_T1.js
-skip script test262/ch12/12.14/S12.14_A16_T2.js
-skip script test262/ch12/12.14/S12.14_A16_T3.js
-skip script test262/ch12/12.14/S12.14_A16_T4.js
-skip script test262/ch12/12.14/S12.14_A16_T5.js
-skip script test262/ch12/12.14/S12.14_A16_T6.js
-skip script test262/ch12/12.14/S12.14_A16_T7.js
-skip script test262/ch12/12.14/S12.14_A16_T8.js
-skip script test262/ch12/12.14/S12.14_A16_T9.js
-skip script test262/ch12/12.14/S12.14_A16_T10.js
-skip script test262/ch12/12.14/S12.14_A16_T11.js
-skip script test262/ch12/12.14/S12.14_A16_T12.js
-skip script test262/ch12/12.14/S12.14_A16_T13.js
-skip script test262/ch12/12.14/S12.14_A16_T14.js
-skip script test262/ch12/12.14/S12.14_A16_T15.js
-skip script test262/ch13/13.0/S13_A7_T3.js
+# jstests shell.js defines global "actual" variable and sets its value to the
+# empty string. Test262 test expects global "actual" is initially undefined.
+skip script test262/language/expressions/yield/iter-value-specified.js
+skip script test262/language/expressions/yield/iter-value-unspecified.js
 
-# These tests are disabled because jstest doesn't understand @negative with a
-# pattern yet.
-skip script test262/ch07/7.6/7.6.1/7.6.1.2-1gs.js
-skip script test262/ch07/7.8/7.8.3/7.8.3-1gs.js
-skip script test262/ch07/7.8/7.8.3/7.8.3-2gs.js
-skip script test262/ch07/7.8/7.8.3/7.8.3-3gs.js
-skip script test262/ch07/7.8/7.8.4/7.8.4-1gs.js
-skip script test262/ch07/7.8/7.8.5/7.8.5-1gs.js
-skip script test262/ch08/8.7/8.7.2/8.7.2-3-a-1gs.js
-skip script test262/ch08/8.7/8.7.2/8.7.2-3-a-2gs.js
-skip script test262/ch10/10.1/10.1.1/10.1.1-2gs.js
-skip script test262/ch10/10.1/10.1.1/10.1.1-5gs.js
-skip script test262/ch10/10.1/10.1.1/10.1.1-8gs.js
-skip script test262/ch10/10.4/10.4.2/10.4.2.1-1gs.js
-skip script test262/ch10/10.5/10.5-1gs.js
-skip script test262/ch10/10.6/10.6-2gs.js
-skip script test262/ch11/11.1/11.1.5/11.1.5-1gs.js
-skip script test262/ch11/11.1/11.1.5/11.1.5-2gs.js
-skip script test262/ch11/11.4/11.4.5/11.4.5-2-2gs.js
-skip script test262/ch11/11.13/11.13.1/11.13.1-4-28gs.js
-skip script test262/ch11/11.13/11.13.1/11.13.1-4-29gs.js
-skip script test262/ch12/12.2/12.2.1/12.2.1-1gs.js
-skip script test262/ch12/12.2/12.2.1/12.2.1-4gs.js
-skip script test262/ch12/12.10/12.10.1/12.10.1-11gs.js
-skip script test262/ch12/12.14/12.14.1/12.14.1-1gs.js
-skip script test262/ch13/13.0/13.0_4-5gs.js
-skip script test262/ch13/13.0/13.0_4-17gs.js
-skip script test262/ch13/13.1/13.1-1gs.js
-skip script test262/ch13/13.1/13.1-4gs.js
-skip script test262/ch13/13.1/13.1-5gs.js
-skip script test262/ch13/13.1/13.1-8gs.js
-skip script test262/ch13/13.1/13.1-13gs.js
-skip script test262/ch13/13.2/13.2-19-b-3gs.js
-skip script test262/ch14/14.1/14.1-4gs.js
-skip script test262/ch14/14.1/14.1-5gs.js
+# Test file modifies built-in, leads to error when reportCompare() is executed.
+skip script test262/language/statements/function/13.2-17-1.js
+
+# Test files adds properties to Object.prototype, breaks jstest harness.
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-223-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-226-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-228-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-253-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-256-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-258-1.js
+skip script test262/built-ins/Object/defineProperty/15.2.3.6-4-602.js
+
+
+#####################################
+# Test262 tests disabled on browser #
+#####################################
+
+# Defines a non-configurable property on the WindowProxy object.
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-block-decl-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-switch-case-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/direct/global-switch-dflt-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/annexB/language/eval-code/indirect/global-switch-dflt-eval-global-exsting-global-update.js
+skip-if(!xulRuntime.shell) script test262/language/eval-code/direct/var-env-func-init-global-update-non-configurable.js
+skip-if(!xulRuntime.shell) script test262/language/eval-code/indirect/var-env-func-init-global-update-non-configurable.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-lex-restricted-global.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-var.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-err-non-configurable.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func.js
+
+# Calls preventExtensions() on the WindowProxy object.
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-err-non-extensible.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-lex.js
+skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-var-err.js
+
+# Fails because window has a "length" property resp. the indexed property access on WindowProxy.
+skip-if(!xulRuntime.shell) script test262/language/expressions/arrow-function/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-static-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/function/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/generators/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/generators/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-static-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/const/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-const-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-let-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-var-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-const-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-let-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-var-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/function/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/generators/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/generators/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/let/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/try/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/language/statements/variable/dstr-ary-ptrn-rest-obj-prop-id.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/every/15.4.4.16-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/every/15.4.4.16-7-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/filter/15.4.4.20-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/filter/15.4.4.20-9-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/forEach/15.4.4.18-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-1-17.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-17.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/map/15.4.4.19-8-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/some/15.4.4.17-2-15.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/some/15.4.4.17-7-c-i-23.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-354-13.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-360-7.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-531-13.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-531-17.js
+skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-538-7.js
+
+# Removes RegExp.prototype[Symbol.match] which breaks the jstests harness.
+skip-if(!xulRuntime.shell) script test262/built-ins/RegExp/prototype/Symbol.match/prop-desc.js
+
+
+##################################################
+# Test262 tests skipped due to SpiderMonkey bugs #
+##################################################
+
+# %ThrowTypeError% should be anonymous
+skip script test262/built-ins/ThrowTypeError/name.js
+
+# Anonymous functions have own name property in SpiderMonkey
+skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
+skip script test262/language/expressions/assignment/fn-name-lhs-member.js
+skip script test262/language/expressions/function/name.js
+skip script test262/language/expressions/generators/name.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317376
+skip script test262/built-ins/Promise/prototype/then/resolve-pending-fulfilled-self.js
+skip script test262/built-ins/Promise/prototype/then/resolve-pending-rejected-self.js
+skip script test262/built-ins/Promise/prototype/then/resolve-settled-fulfilled-self.js
+skip script test262/built-ins/Promise/prototype/then/resolve-settled-rejected-self.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317422
+skip script test262/built-ins/global/property-descriptor.js
+skip script test262/built-ins/global/global-object.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
+skip script test262/built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/filter/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/find/predicate-may-detach-buffer.js
+skip script test262/built-ins/TypedArray/prototype/findIndex/predicate-may-detach-buffer.js
+skip script test262/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-on-get-src-value-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-on-tointeger-offset-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-srcbuffer-detached-during-tointeger-offset-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-targetbuffer-detached-during-tointeger-offset-throws.js
+skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-same-targettype.js
+skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-other-targettype.js
+skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-get-ctor.js
+skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-greater-than-last-index.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-lower-than-zero.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-not-integer.js
+skip script test262/built-ins/TypedArrays/internals/Get/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrays/internals/Get/key-is-not-integer.js
+skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrays/internals/HasProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrays/internals/HasProperty/key-is-not-integer.js
+skip script test262/built-ins/TypedArrays/internals/Set/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrays/internals/Set/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrays/internals/Set/key-is-not-integer.js
+skip script test262/built-ins/TypedArrays/internals/Set/key-is-out-of-bounds.js
+skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-throws.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
+skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317384
+skip script test262/built-ins/TypedArray/prototype/set/array-arg-negative-integer-offset-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-negative-integer-offset-throws.js
+skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-src-range-greather-than-target-throws-rangeerror.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317383
+skip script test262/built-ins/TypedArrays/buffer-arg-byteoffset-is-negative-throws.js
+skip script test262/built-ins/TypedArrays/buffer-arg-defined-negative-length.js
+skip script test262/built-ins/TypedArrays/length-arg-is-infinity-throws-rangeerror.js
+skip script test262/built-ins/TypedArrays/length-arg-is-negative-integer-throws-rangeerror.js
+skip script test262/built-ins/TypedArrays/length-arg-toindex-length.js
+skip script test262/built-ins/TypedArrays/object-arg-length-excessive-throws.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=924058
+skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A2_T2.js
+skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A3_T1.js
+skip script test262/built-ins/Array/prototype/pop/S15.4.4.6_A3_T2.js
+skip script test262/built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js
+skip script test262/built-ins/Array/prototype/push/S15.4.4.7_A4_T1.js
+skip script test262/built-ins/Array/prototype/slice/create-species-undef-invalid-len.js
+skip script test262/built-ins/Array/prototype/slice/create-non-array-invalid-len.js
+skip script test262/built-ins/Array/prototype/slice/S15.4.4.10_A3_T1.js
+skip script test262/built-ins/Array/prototype/slice/S15.4.4.10_A3_T2.js
+skip script test262/built-ins/Array/prototype/splice/S15.4.4.12_A3_T1.js
+skip script test262/built-ins/Array/prototype/splice/create-non-array-invalid-len.js
+skip script test262/built-ins/Array/prototype/splice/create-species-undef-invalid-len.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
+skip script test262/language/computed-property-names/class/static/method-number.js
+skip script test262/language/computed-property-names/class/static/method-string.js
+skip script test262/language/computed-property-names/class/static/method-symbol.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1286997
+# Bug 1286997 probably doesn't cover all spec violations.
+skip script test262/language/expressions/assignment/S11.13.1_A5_T5.js
+skip script test262/language/expressions/assignment/S11.13.1_A7_T1.js
+skip script test262/language/expressions/assignment/S11.13.1_A7_T2.js
+skip script test262/language/expressions/assignment/S11.13.1_A7_T3.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.10_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.11_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.1_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.2_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.3_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.4_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.5_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.6_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.7_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.8_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.9_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T2.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A5_T5.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T1.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T2.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A5_T5.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T1.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T2.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A5_T5.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T1.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T2.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A5_T5.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T1.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
+skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1296236
+skip script test262/built-ins/Proxy/revocable/revocation-function-name.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1296235
+skip script test262/built-ins/Promise/all/resolve-element-function-name.js
+skip script test262/built-ins/Promise/executor-function-name.js
+skip script test262/built-ins/Promise/reject-function-name.js
+skip script test262/built-ins/Promise/resolve-function-name.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=944846
+skip script test262/built-ins/Number/prototype/toExponential/return-values.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
+skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
+skip script test262/built-ins/Function/internals/Call/class-ctor-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
+skip script test262/built-ins/Proxy/apply/arguments-realm.js
+skip script test262/built-ins/Proxy/apply/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/construct/arguments-realm.js
+skip script test262/built-ins/Proxy/construct/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/construct/trap-is-undefined-proto-from-ctor-realm.js
+skip script test262/built-ins/Proxy/defineProperty/desc-realm.js
+skip script test262/built-ins/Proxy/defineProperty/null-handler-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js
+skip script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js
+skip script test262/built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/get/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js
+skip script test262/built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/has/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js
+skip script test262/built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
+skip script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
+
+# Erros thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
+skip script test262/language/expressions/new/non-ctor-err-realm.js
+skip script test262/built-ins/Array/define-own-prop-length-overflow-realm.js
+skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
+skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317416
+skip script test262/language/expressions/super/realm.js
+skip script test262/built-ins/Array/proto-from-ctor-realm.js
+skip script test262/built-ins/ArrayBuffer/proto-from-ctor-realm.js
+skip script test262/built-ins/Boolean/proto-from-ctor-realm.js
+skip script test262/built-ins/DataView/proto-from-ctor-realm.js
+skip script test262/built-ins/Date/proto-from-ctor-realm-one.js
+skip script test262/built-ins/Date/proto-from-ctor-realm-two.js
+skip script test262/built-ins/Date/proto-from-ctor-realm-zero.js
+skip script test262/built-ins/Error/proto-from-ctor-realm.js
+skip script test262/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
+skip script test262/built-ins/Function/proto-from-ctor-realm.js
+skip script test262/built-ins/GeneratorFunction/proto-from-ctor-realm.js
+skip script test262/built-ins/Map/proto-from-ctor-realm.js
+skip script test262/built-ins/Number/proto-from-ctor-realm.js
+skip script test262/built-ins/Object/proto-from-ctor.js
+skip script test262/built-ins/Promise/proto-from-ctor-realm.js
+skip script test262/built-ins/RegExp/proto-from-ctor-realm.js
+skip script test262/built-ins/Set/proto-from-ctor-realm.js
+skip script test262/built-ins/String/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/length-arg-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/no-args-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/object-arg-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/typedarray-arg-other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/typedarray-arg-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrays/typedarray-arg-same-ctor-buffer-ctor-species-custom-proto-from-ctor-realm.js
+skip script test262/built-ins/WeakMap/proto-from-ctor-realm.js
+skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317400
+skip script test262/built-ins/Function/prototype/toString/AsyncFunction.js
+skip script test262/built-ins/Function/prototype/toString/Function.js
+skip script test262/built-ins/Function/prototype/toString/GeneratorFunction.js
+skip script test262/built-ins/Function/prototype/toString/async-function-declaration.js
+skip script test262/built-ins/Function/prototype/toString/async-function-expression.js
+skip script test262/built-ins/Function/prototype/toString/async-method.js
+skip script test262/built-ins/Function/prototype/toString/class-declaration-complex-heritage.js
+skip script test262/built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js
+skip script test262/built-ins/Function/prototype/toString/class-declaration-implicit-ctor.js
+skip script test262/built-ins/Function/prototype/toString/class-expression-explicit-ctor.js
+skip script test262/built-ins/Function/prototype/toString/class-expression-implicit-ctor.js
+skip script test262/built-ins/Function/prototype/toString/function-declaration-non-simple-parameter-list.js
+skip script test262/built-ins/Function/prototype/toString/function-declaration.js
+skip script test262/built-ins/Function/prototype/toString/function-expression.js
+skip script test262/built-ins/Function/prototype/toString/generator-function-declaration.js
+skip script test262/built-ins/Function/prototype/toString/generator-function-expression.js
+skip script test262/built-ins/Function/prototype/toString/generator-method.js
+skip script test262/built-ins/Function/prototype/toString/getter-class-static.js
+skip script test262/built-ins/Function/prototype/toString/getter-class.js
+skip script test262/built-ins/Function/prototype/toString/getter-object.js
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-LF.js
+skip script test262/built-ins/Function/prototype/toString/method-class-static.js
+skip script test262/built-ins/Function/prototype/toString/method-class.js
+skip script test262/built-ins/Function/prototype/toString/method-computed-property-name.js
+skip script test262/built-ins/Function/prototype/toString/method-object.js
+skip script test262/built-ins/Function/prototype/toString/setter-class-static.js
+skip script test262/built-ins/Function/prototype/toString/setter-class.js
+skip script test262/built-ins/Function/prototype/toString/setter-object.js
+skip script test262/built-ins/Function/prototype/toString/unicode.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317397
+skip script test262/built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js
+skip script test262/built-ins/RegExp/prototype/exec/failure-lastindex-no-access.js
+skip script test262/built-ins/RegExp/prototype/exec/success-lastindex-no-access.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
+skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1329187
+skip script test262/built-ins/ArrayBuffer/data-allocation-after-object-creation.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317394
+skip script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
+skip script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317382
+skip script test262/built-ins/DataView/byteoffset-is-negative-throws.js
+skip script test262/built-ins/DataView/excessive-byteoffset-throws.js
+skip script test262/built-ins/DataView/excessive-bytelength-throws.js
+skip script test262/built-ins/DataView/negative-byteoffset-throws.js
+skip script test262/built-ins/DataView/negative-bytelength-throws.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1326503
+skip script test262/built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317391
+skip script test262/language/statements/class/subclass/class-definition-null-proto-missing-return-override.js
+skip script test262/language/statements/class/subclass/class-definition-null-proto-this.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1108941
+skip script test262/language/expressions/tagged-template/cache-differing-expressions.js
+skip script test262/language/expressions/tagged-template/cache-differing-expressions-eval.js
+skip script test262/language/expressions/tagged-template/cache-differing-expressions-new-function.js
+skip script test262/language/expressions/tagged-template/cache-identical-source.js
+skip script test262/language/expressions/tagged-template/cache-identical-source-new-function.js
+skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317375
+skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1147371
+skip script test262/language/expressions/arrow-function/dstr-ary-init-iter-close.js
+skip script test262/language/expressions/arrow-function/dstr-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-thrw-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-iter-thrw-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-thrw-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-thrw-close.js
+skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close.js
+skip script test262/language/expressions/assignment/dstr-array-empty-iter-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-empty-iter-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-empty-iter-close.js
+skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close-null.js
+skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close.js
+skip script test262/language/expressions/assignment/dstr-array-rest-iter-thrw-close-err.js
+skip script test262/language/expressions/assignment/dstr-array-rest-iter-thrw-close.js
+skip script test262/language/expressions/assignment/dstr-array-rest-lref-err.js
+skip script test262/language/expressions/class/dstr-gen-meth-ary-init-iter-close.js    
+skip script test262/language/expressions/class/dstr-gen-meth-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-gen-meth-static-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-gen-meth-static-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-meth-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-meth-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-meth-static-ary-init-iter-close.js
+skip script test262/language/expressions/class/dstr-meth-static-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/function/dstr-ary-init-iter-close.js
+skip script test262/language/expressions/function/dstr-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/generators/dstr-ary-init-iter-close.js
+skip script test262/language/expressions/generators/dstr-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/object/dstr-gen-meth-ary-init-iter-close.js
+skip script test262/language/expressions/object/dstr-gen-meth-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/object/dstr-meth-ary-init-iter-close.js
+skip script test262/language/expressions/object/dstr-meth-dflt-ary-init-iter-close.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-done-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-done-no-value.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-thrw-call-non-obj.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-no-rtrn.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-call-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-call-non-obj.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-get-err.js
+skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-invoke.js
+skip script test262/language/statements/class/dstr-gen-meth-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-gen-meth-dflt-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-gen-meth-static-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-gen-meth-static-dflt-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-meth-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-meth-dflt-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-meth-static-ary-init-iter-close.js
+skip script test262/language/statements/class/dstr-meth-static-dflt-ary-init-iter-close.js
+skip script test262/language/statements/const/dstr-ary-init-iter-close.js
+skip script test262/language/statements/for/dstr-const-ary-init-iter-close.js
+skip script test262/language/statements/for/dstr-let-ary-init-iter-close.js
+skip script test262/language/statements/for/dstr-var-ary-init-iter-close.js
+skip script test262/language/statements/for-of/body-dstr-assign-error.js
+skip script test262/language/statements/for-of/body-put-error.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-thrw-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-iter-thrw-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-thrw-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-thrw-close.js
+skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close-err.js
+skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close-null.js
+skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close.js
+skip script test262/language/statements/for-of/dstr-array-empty-iter-close-err.js
+skip script test262/language/statements/for-of/dstr-array-empty-iter-close-null.js
+skip script test262/language/statements/for-of/dstr-array-empty-iter-close.js
+skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close-err.js
+skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close-null.js
+skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close.js
+skip script test262/language/statements/for-of/dstr-array-rest-iter-thrw-close-err.js
+skip script test262/language/statements/for-of/dstr-array-rest-iter-thrw-close.js
+skip script test262/language/statements/for-of/dstr-array-rest-lref-err.js
+skip script test262/language/statements/for-of/dstr-const-ary-init-iter-close.js
+skip script test262/language/statements/for-of/dstr-let-ary-init-iter-close.js
+skip script test262/language/statements/for-of/dstr-var-ary-init-iter-close.js
+skip script test262/language/statements/for-of/generator-close-via-break.js
+skip script test262/language/statements/for-of/generator-close-via-return.js
+skip script test262/language/statements/for-of/generator-close-via-throw.js
+skip script test262/language/statements/for-of/iterator-close-get-method-error.js
+skip script test262/language/statements/for-of/iterator-close-non-object.js
+skip script test262/language/statements/for-of/iterator-close-via-break.js
+skip script test262/language/statements/for-of/iterator-close-via-return.js
+skip script test262/language/statements/for-of/iterator-close-via-throw.js
+skip script test262/language/statements/function/dstr-ary-init-iter-close.js
+skip script test262/language/statements/function/dstr-dflt-ary-init-iter-close.js
+skip script test262/language/statements/generators/dstr-ary-init-iter-close.js
+skip script test262/language/statements/generators/dstr-dflt-ary-init-iter-close.js
+skip script test262/language/statements/let/dstr-ary-init-iter-close.js
+skip script test262/language/statements/try/dstr-ary-init-iter-close.js
+skip script test262/language/statements/variable/dstr-ary-init-iter-close.js
+
+# We're still waiting for a final decision on https://github.com/tc39/ecma402/pull/84.
+skip script test262/intl402/Collator/10.1.1_1.js
+skip script test262/intl402/NumberFormat/11.1.1_1.js
+skip script test262/intl402/DateTimeFormat/12.1.1_1.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
+skip script test262/language/statements/do-while/cptn-abrupt-empty.js
+skip script test262/language/statements/do-while/cptn-normal.js
+skip script test262/language/statements/for-in/cptn-decl-abrupt-empty.js
+skip script test262/language/statements/for-in/cptn-decl-itr.js
+skip script test262/language/statements/for-in/cptn-decl-skip-itr.js
+skip script test262/language/statements/for-in/cptn-decl-zero-itr.js
+skip script test262/language/statements/for-in/cptn-expr-abrupt-empty.js
+skip script test262/language/statements/for-in/cptn-expr-itr.js
+skip script test262/language/statements/for-in/cptn-expr-skip-itr.js
+skip script test262/language/statements/for-in/cptn-expr-zero-itr.js
+skip script test262/language/statements/for/cptn-decl-expr-iter.js
+skip script test262/language/statements/for/cptn-decl-expr-no-iter.js
+skip script test262/language/statements/for/cptn-expr-expr-iter.js
+skip script test262/language/statements/for/cptn-expr-expr-no-iter.js
+skip script test262/language/statements/for/S12.6.3_A9.1.js
+skip script test262/language/statements/for/S12.6.3_A9.js
+skip script test262/language/statements/for-of/cptn-decl-abrupt-empty.js
+skip script test262/language/statements/for-of/cptn-decl-itr.js
+skip script test262/language/statements/for-of/cptn-decl-no-itr.js
+skip script test262/language/statements/for-of/cptn-expr-abrupt-empty.js
+skip script test262/language/statements/for-of/cptn-expr-itr.js
+skip script test262/language/statements/for-of/cptn-expr-no-itr.js
+skip script test262/language/statements/if/cptn-else-false-nrml.js
+skip script test262/language/statements/if/cptn-else-true-abrupt-empty.js
+skip script test262/language/statements/if/cptn-else-true-nrml.js
+skip script test262/language/statements/if/cptn-no-else-false.js
+skip script test262/language/statements/if/cptn-no-else-true-abrupt-empty.js
+skip script test262/language/statements/if/cptn-no-else-true-nrml.js
+skip script test262/language/statements/switch/cptn-a-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-b-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-b-final.js
+skip script test262/language/statements/switch/cptn-dflt-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-dflt-b-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-dflt-b-final.js
+skip script test262/language/statements/switch/cptn-dflt-final.js
+skip script test262/language/statements/switch/cptn-no-dflt-match-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-no-dflt-match-final.js
+skip script test262/language/statements/switch/cptn-no-dflt-no-match.js
+skip script test262/language/statements/try/cptn-finally-skip-catch.js
+skip script test262/language/statements/try/cptn-finally-wo-catch.js
+skip script test262/language/statements/try/cptn-try.js
+skip script test262/language/statements/while/cptn-abrupt-empty.js
+skip script test262/language/statements/while/cptn-iter.js
+skip script test262/language/statements/while/cptn-no-iter.js
+skip script test262/language/statements/with/cptn-abrupt-empty.js
+skip script test262/language/statements/with/cptn-nrml.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1289882
+skip script test262/intl402/NumberFormat/prototype/formatToParts/formatToParts.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/length.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/main.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/name.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/return-abrupt-tonumber.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1296234
+skip script test262/intl402/Collator/prototype/compare/name.js
+skip script test262/intl402/Collator/prototype/compare/compare-function-name.js
+skip script test262/intl402/DateTimeFormat/prototype/format/name.js
+skip script test262/intl402/DateTimeFormat/prototype/format/format-function-name.js
+skip script test262/intl402/NumberFormat/prototype/format/name.js
+skip script test262/intl402/NumberFormat/prototype/format/format-function-name.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=394604
+skip script test262/intl402/String/prototype/toLocaleLowerCase/capital_I_with_dot.js
+skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Azeri.js
+skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Lithuanian.js
+skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Turkish.js
+skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Azeri.js
+skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Lithuanian.js
+skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Turkish.js
+skip script test262/built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js
+skip script test262/built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js
+skip script test262/built-ins/String/prototype/toLocaleUpperCase/special_casing.js
+skip script test262/built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js
+skip script test262/built-ins/String/prototype/toLowerCase/special_casing.js
+skip script test262/built-ins/String/prototype/toLowerCase/special_casing_conditional.js
+skip script test262/built-ins/String/prototype/toUpperCase/special_casing.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317374
+skip script test262/annexB/language/function-code/if-decl-no-else-func-skip-param.js
+skip script test262/annexB/language/function-code/switch-case-func-skip-param.js
+skip script test262/annexB/language/function-code/switch-dflt-func-skip-param.js
+skip script test262/annexB/language/function-code/block-decl-func-skip-param.js
+skip script test262/annexB/language/function-code/if-decl-else-stmt-func-skip-param.js
+skip script test262/annexB/language/function-code/if-decl-else-decl-a-func-skip-param.js
+skip script test262/annexB/language/function-code/if-decl-else-decl-b-func-skip-param.js
+skip script test262/annexB/language/function-code/if-stmt-else-decl-func-skip-param.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317373
+skip script test262/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-switch-dflt-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-if-decl-no-else-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-if-decl-else-stmt-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-if-decl-else-decl-b-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-if-decl-else-decl-a-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-block-decl-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/direct/global-switch-case-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-if-stmt-else-decl-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-switch-dflt-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-if-decl-no-else-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-stmt-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-b-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-a-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-exsting-global-init.js
+skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-exsting-global-init.js
+
+# SIMD.
+skip script test262/built-ins/Simd/check.js
+skip script test262/built-ins/Simd/from.js
+skip script test262/built-ins/Simd/operators.js
+skip script test262/built-ins/Simd/replace_lane.js
+skip script test262/built-ins/Simd/shuffle.js
+skip script test262/built-ins/Simd/swizzle.js
+
+# SIMD. Fails with --ion-eager --no-threads
+skip script test262/built-ins/Simd/float_operators.js
+skip script test262/built-ins/Simd/all_true.js
+skip script test262/built-ins/Simd/any_true.js
+
+
+####################################################
+# Tests disabled due to invalid test expectations  #
+####################################################
+
+# Only works in the Bocoup time zone.
+skip script test262/annexB/built-ins/Date/prototype/setYear/time-clip.js
+
+# Only works for time zones west of Greenwich.
+skip script test262/annexB/built-ins/Date/prototype/setFullYear/new-value-time-clip.js
+skip script test262/annexB/built-ins/Date/prototype/setMonth/new-value-time-clip.js
+
+# ES2017: https://github.com/tc39/ecma262/pull/453
+skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration-n.js
+
+# Expects TypeError, but RangeError thrown.
+skip script test262/built-ins/DataView/prototype/setFloat64/detached-buffer-after-toindex-byteoffset.js
+skip script test262/built-ins/DataView/prototype/setInt16/detached-buffer-after-toindex-byteoffset.js
