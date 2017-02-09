@@ -205,22 +205,21 @@ class Promise;
 }
 }
 
+// We can't new/delete the type safely without defining it
+// (-Wdelete-incomplete).  Use these to hide the details from clients.
+struct PlatformDataDestructor {
+  void operator()(PlatformData*);
+};
+
+typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
+  UniquePlatformData;
+UniquePlatformData AllocPlatformData(int aThreadId);
+
 class Sampler {
 public:
   // Initialize sampler.
   Sampler();
   ~Sampler();
-
-  // We can't new/delete the type safely without defining it
-  // (-Wdelete-incomplete).  Use these to hide the details from
-  // clients.
-  struct PlatformDataDestructor {
-    void operator()(PlatformData*);
-  };
-
-  typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
-    UniquePlatformData;
-  static UniquePlatformData AllocPlatformData(int aThreadId);
 
   void RegisterThread(ThreadInfo* aInfo);
 

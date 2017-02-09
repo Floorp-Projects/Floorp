@@ -41,7 +41,7 @@ class ThreadInfo {
   int mThreadId;
   const bool mIsMainThread;
   PseudoStack* mPseudoStack;
-  Sampler::UniquePlatformData mPlatformData;
+  UniquePlatformData mPlatformData;
   void* mStackTop;
 
   // May be null for the main thread if the profiler was started during startup.
