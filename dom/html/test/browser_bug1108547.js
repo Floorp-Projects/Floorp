@@ -105,6 +105,9 @@ function runPass(getterFile, finishedCallback) {
     gBrowser.removeCurrentTab();
     gBrowser.removeCurrentTab();
 
+    privateWin = null;
+    testBrowser = null;
+
     finishedCallback();
   }
 }
