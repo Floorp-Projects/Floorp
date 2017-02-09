@@ -9,6 +9,7 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
+using WrBorderRadius from "mozilla/webrender/webrender_ffi.h";
 using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
 using WrImageKey from "mozilla/webrender/webrender_ffi.h";
 using WrTextureFilter from "mozilla/webrender/webrender_ffi.h";
@@ -54,10 +55,7 @@ struct OpDPPushBorder {
   WrBorderSide right;
   WrBorderSide bottom;
   WrBorderSide left;
-  WrLayoutSize top_left_radius;
-  WrLayoutSize top_right_radius;
-  WrLayoutSize bottom_left_radius;
-  WrLayoutSize bottom_right_radius;
+  WrBorderRadius radius;
 };
 
 struct OpDPPushImage {

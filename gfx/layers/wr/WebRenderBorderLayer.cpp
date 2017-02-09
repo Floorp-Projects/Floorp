@@ -58,10 +58,7 @@ WebRenderBorderLayer::RenderLayer()
                    wr::ToWrBorderSide(mWidths[1], mColors[1]),
                    wr::ToWrBorderSide(mWidths[2], mColors[2]),
                    wr::ToWrBorderSide(mWidths[3], mColors[3]),
-                   wr::ToWrLayoutSize(mCorners[0]),
-                   wr::ToWrLayoutSize(mCorners[1]),
-                   wr::ToWrLayoutSize(mCorners[3]),
-                   wr::ToWrLayoutSize(mCorners[2])));
+                   wr::ToWrBorderRadius(mCorners[0], mCorners[1], mCorners[3], mCorners[2])));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 

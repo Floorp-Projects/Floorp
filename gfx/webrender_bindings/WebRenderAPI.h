@@ -128,16 +128,13 @@ public:
                   const WrRect& aClip,
                   wr::PipelineId aPipeline);
 
-  void PushBorder(const WrRect& bounds,
-                  const WrRect& clip,
-                  const WrBorderSide& top,
-                  const WrBorderSide& right,
-                  const WrBorderSide& bottom,
-                  const WrBorderSide& left,
-                  const WrLayoutSize& top_left_radius,
-                  const WrLayoutSize& top_right_radius,
-                  const WrLayoutSize& bottom_left_radius,
-                  const WrLayoutSize& bottom_right_radius);
+  void PushBorder(const WrRect& aBounds,
+                  const WrRect& aClip,
+                  const WrBorderSide& aTop,
+                  const WrBorderSide& aRight,
+                  const WrBorderSide& aBbottom,
+                  const WrBorderSide& aLeft,
+                  const WrBorderRadius& aRadius);
 
   void PushText(const WrRect& aBounds,
                 const WrRect& aClip,
