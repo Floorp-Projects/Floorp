@@ -21,33 +21,25 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 elif CONFIG['OS_ARCH'] == 'Darwin':
     DIRS += [
+        'breakpad-client',
+        'breakpad-client/mac/crash_generation',
+        'breakpad-client/mac/handler',
         'google-breakpad/src/common',
         'google-breakpad/src/common/mac',
-        'google-breakpad/src/client',
-        'google-breakpad/src/client/mac/crash_generation',
-        'google-breakpad/src/client/mac/handler',
         'google-breakpad/src/processor',
         'google-breakpad/src/tools/mac/dump_syms',
     ]
 
 elif CONFIG['OS_ARCH'] == 'Linux':
     DIRS += [
+        'breakpad-client',
+        'breakpad-client/linux/',
         'google-breakpad/src/common',
         'google-breakpad/src/common/linux',
-        'google-breakpad/src/client',
-        'google-breakpad/src/client/linux/',
         'google-breakpad/src/processor',
         'google-breakpad/src/tools/linux/dump_syms',
     ]
 
-elif CONFIG['OS_ARCH'] == 'SunOS':
-    DIRS += [
-        'google-breakpad/src/common',
-        'google-breakpad/src/common/solaris',
-        'google-breakpad/src/client',
-        'google-breakpad/src/client/solaris/handler',
-        'google-breakpad/src/tools/solaris/dump_syms',
-    ]
 
 DIRS += [
     'client',

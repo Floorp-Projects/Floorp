@@ -98,7 +98,7 @@ HTMLVideoElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLVideoElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        nsRuleData* aData)
+                                        GenericSpecifiedValues* aData)
 {
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);

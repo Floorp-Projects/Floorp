@@ -72,7 +72,7 @@ public:
                                 nsIDocument*    aDocument);
 
   static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes, 
-                                      nsRuleData* aRuleData);
+                                      mozilla::GenericSpecifiedValues* aGenericData);
   
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;

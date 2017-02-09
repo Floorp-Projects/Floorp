@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableElement.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
-#include "nsRuleData.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
@@ -707,7 +707,7 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        nsRuleData* aData)
+                                        GenericSpecifiedValues* aData)
 {
   // XXX Bug 211636:  This function is used by a single style rule
   // that's used to match two different type of elements -- tables, and
@@ -719,20 +719,18 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  nsPresContext* presContext = aData->mPresContext;
+  nsPresContext* presContext = aData->PresContext();
   nsCompatibility mode = presContext->CompatibilityMode();
 
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(TableBorder))) {
     // cellspacing
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellspacing);
-    nsCSSValue* borderSpacing = aData->ValueForBorderSpacing();
     if (value && value->Type() == nsAttrValue::eInteger &&
-        borderSpacing->GetUnit() == eCSSUnit_Null) {
-      borderSpacing->
-        SetFloatValue(float(value->GetIntegerValue()), eCSSUnit_Pixel);
+        !aData->PropertyIsSet(eCSSProperty_border_spacing)) {
+      aData->SetPixelValue(eCSSProperty_border_spacing, float(value->GetIntegerValue()));
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Margin))) {
     // align; Check for enumerated type (it may be another type if
     // illegal)
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
@@ -740,12 +738,8 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eEnum) {
       if (value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_CENTER ||
           value->GetEnumValue() == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-        if (marginLeft->GetUnit() == eCSSUnit_Null)
-          marginLeft->SetAutoValue();
-        nsCSSValue* marginRight = aData->ValueForMarginRight();
-        if (marginRight->GetUnit() == eCSSUnit_Null)
-          marginRight->SetAutoValue();
+        aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
+        aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
       }
     }
 
@@ -756,65 +750,28 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       value = aAttributes->GetAttr(nsGkAtoms::hspace);
 
       if (value && value->Type() == nsAttrValue::eInteger) {
-        nsCSSValue* marginLeft = aData->ValueForMarginLeft();
-        if (marginLeft->GetUnit() == eCSSUnit_Null)
-          marginLeft->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-        nsCSSValue* marginRight = aData->ValueForMarginRight();
-        if (marginRight->GetUnit() == eCSSUnit_Null)
-          marginRight->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)value->GetIntegerValue());
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)value->GetIntegerValue());
       }
 
       value = aAttributes->GetAttr(nsGkAtoms::vspace);
 
       if (value && value->Type() == nsAttrValue::eInteger) {
-        nsCSSValue* marginTop = aData->ValueForMarginTop();
-        if (marginTop->GetUnit() == eCSSUnit_Null)
-          marginTop->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-        nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-        if (marginBottom->GetUnit() == eCSSUnit_Null)
-          marginBottom->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)value->GetIntegerValue());
+        aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)value->GetIntegerValue());
       }
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
-    // width: value
-    nsCSSValue* width = aData->ValueForWidth();
-    if (width->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
-      if (value && value->Type() == nsAttrValue::eInteger)
-        width->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-      else if (value && value->Type() == nsAttrValue::ePercent)
-        width->SetPercentValue(value->GetPercentValue());
-    }
-
-    // height: value
-    nsCSSValue* height = aData->ValueForHeight();
-    if (height->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
-      if (value && value->Type() == nsAttrValue::eInteger)
-        height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-      else if (value && value->Type() == nsAttrValue::ePercent)
-        height->SetPercentValue(value->GetPercentValue());
-    }
-  }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Border))) {
     // bordercolor
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
     nscolor color;
     if (value && presContext->UseDocumentColors() &&
         value->GetColorValue(color)) {
-      nsCSSValue* borderLeftColor = aData->ValueForBorderLeftColor();
-      if (borderLeftColor->GetUnit() == eCSSUnit_Null)
-        borderLeftColor->SetColorValue(color);
-      nsCSSValue* borderRightColor = aData->ValueForBorderRightColor();
-      if (borderRightColor->GetUnit() == eCSSUnit_Null)
-        borderRightColor->SetColorValue(color);
-      nsCSSValue* borderTopColor = aData->ValueForBorderTopColor();
-      if (borderTopColor->GetUnit() == eCSSUnit_Null)
-        borderTopColor->SetColorValue(color);
-      nsCSSValue* borderBottomColor = aData->ValueForBorderBottomColor();
-      if (borderBottomColor->GetUnit() == eCSSUnit_Null)
-        borderBottomColor->SetColorValue(color);
+      aData->SetColorValueIfUnset(eCSSProperty_border_top_color, color);
+      aData->SetColorValueIfUnset(eCSSProperty_border_left_color, color);
+      aData->SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);
+      aData->SetColorValueIfUnset(eCSSProperty_border_right_color, color);
     }
 
     // border
@@ -827,20 +784,13 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         borderThickness = borderValue->GetIntegerValue();
 
       // by default, set all border sides to the specified width
-      nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
-      if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
-        borderLeftWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
-      if (borderRightWidth->GetUnit() == eCSSUnit_Null)
-        borderRightWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();
-      if (borderTopWidth->GetUnit() == eCSSUnit_Null)
-        borderTopWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      nsCSSValue* borderBottomWidth = aData->ValueForBorderBottomWidth();
-      if (borderBottomWidth->GetUnit() == eCSSUnit_Null)
-        borderBottomWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+      aData->SetPixelValueIfUnset(eCSSProperty_border_top_width, (float)borderThickness);
+      aData->SetPixelValueIfUnset(eCSSProperty_border_left_width, (float)borderThickness);
+      aData->SetPixelValueIfUnset(eCSSProperty_border_bottom_width, (float)borderThickness);
+      aData->SetPixelValueIfUnset(eCSSProperty_border_right_width, (float)borderThickness);
     }
   }
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
@@ -880,34 +830,19 @@ HTMLTableElement::GetAttributeMappingFunction() const
 
 static void
 MapInheritedTableAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData)
+                                    GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Padding)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Padding))) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellpadding);
     if (value && value->Type() == nsAttrValue::eInteger) {
       // We have cellpadding.  This will override our padding values if we
       // don't have any set.
-      nsCSSValue padVal(float(value->GetIntegerValue()), eCSSUnit_Pixel);
+      float pad = float(value->GetIntegerValue());
 
-      nsCSSValue* paddingLeft = aData->ValueForPaddingLeft();
-      if (paddingLeft->GetUnit() == eCSSUnit_Null) {
-        *paddingLeft = padVal;
-      }
-
-      nsCSSValue* paddingRight = aData->ValueForPaddingRight();
-      if (paddingRight->GetUnit() == eCSSUnit_Null) {
-        *paddingRight = padVal;
-      }
-
-      nsCSSValue* paddingTop = aData->ValueForPaddingTop();
-      if (paddingTop->GetUnit() == eCSSUnit_Null) {
-        *paddingTop = padVal;
-      }
-
-      nsCSSValue* paddingBottom = aData->ValueForPaddingBottom();
-      if (paddingBottom->GetUnit() == eCSSUnit_Null) {
-        *paddingBottom = padVal;
-      }
+      aData->SetPixelValueIfUnset(eCSSProperty_padding_top, pad);
+      aData->SetPixelValueIfUnset(eCSSProperty_padding_right, pad);
+      aData->SetPixelValueIfUnset(eCSSProperty_padding_bottom, pad);
+      aData->SetPixelValueIfUnset(eCSSProperty_padding_left, pad);
     }
   }
 }

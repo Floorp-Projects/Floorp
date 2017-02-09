@@ -654,7 +654,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapCommonAttributesInto(const nsMappedAttributes* aAttributes, 
-                                      nsRuleData* aRuleData);
+                                      mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Same as MapCommonAttributesInto except that it does not handle hidden.
    *
@@ -663,7 +663,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapCommonAttributesIntoExceptHidden(const nsMappedAttributes* aAttributes,
-                                                  nsRuleData* aRuleData);
+                                                  mozilla::GenericSpecifiedValues* aGenericData);
 
   static const MappedAttributeEntry sCommonAttributeMap[];
   static const MappedAttributeEntry sImageMarginSizeAttributeMap[];
@@ -681,7 +681,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                         nsRuleData* aData);
+                                         mozilla::GenericSpecifiedValues* aGenericData);
 
   /**
    * Helper to map the align attribute into a style struct for things
@@ -692,7 +692,18 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapDivAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                       nsRuleData* aData);
+                                       mozilla::GenericSpecifiedValues* aGenericData);
+
+  /**
+   * Helper to map the valign attribute into a style struct for things
+   * like <col>, <tr>, <section>, etc.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapVAlignAttributeInto(const nsMappedAttributes* aAttributes,
+                                     mozilla::GenericSpecifiedValues* aGenericData);
 
   /**
    * Helper to map the image border attribute into a style struct.
@@ -702,7 +713,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapImageBorderAttributeInto(const nsMappedAttributes* aAttributes,
-                                          nsRuleData* aData);
+                                          mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the image margin attribute into a style struct.
    *
@@ -711,7 +722,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapImageMarginAttributeInto(const nsMappedAttributes* aAttributes,
-                                          nsRuleData* aData);
+                                          mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the image position attribute into a style struct.
    *
@@ -720,7 +731,26 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
-                                         nsRuleData* aData);
+                                         mozilla::GenericSpecifiedValues* aGenericData);
+
+  /**
+   * Helper to map `width` attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapWidthAttributeInto(const nsMappedAttributes* aAttributes,
+                                    mozilla::GenericSpecifiedValues* aGenericData);
+  /**
+   * Helper to map `height` attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapHeightAttributeInto(const nsMappedAttributes* aAttributes,
+                                     mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the background attribute
    * into a style struct.
@@ -730,7 +760,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapBackgroundInto(const nsMappedAttributes* aAttributes,
-                                nsRuleData* aData);
+                                mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the bgcolor attribute
    * into a style struct.
@@ -740,7 +770,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapBGColorInto(const nsMappedAttributes* aAttributes,
-                             nsRuleData* aData);
+                             mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the background attributes (currently background and bgcolor)
    * into a style struct.
@@ -750,7 +780,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapBackgroundAttributesInto(const nsMappedAttributes* aAttributes,
-                                          nsRuleData* aData);
+                                          mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the scrolling attribute on FRAME and IFRAME
    * into a style struct.
@@ -760,7 +790,7 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
-                                        nsRuleData* aData);
+                                        mozilla::GenericSpecifiedValues* aGenericData);
   /**
    * Get the presentation context for this content node.
    * @return the presentation context
