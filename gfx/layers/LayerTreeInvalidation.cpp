@@ -783,21 +783,21 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
     } else {
       ClearInvalidations(aRoot);
     }
-    IntRect result = TransformRect(aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
-                                     aRoot->GetLocalTransform());
+    IntRect result = TransformRect(
+      aRoot->GetLocalVisibleRegion().ToUnknownRegion().GetBounds(),
+      aRoot->GetLocalTransform());
     result = result.Union(OldTransformedBounds());
     if (aGeometryChanged != nullptr) {
       *aGeometryChanged = true;
     }
     return result;
-  } else {
-    bool geometryChanged = (aGeometryChanged != nullptr) ? *aGeometryChanged : false;
-    nsIntRegion invalid = ComputeChange("  ", aCallback, geometryChanged);
-    if (aGeometryChanged != nullptr) {
-      *aGeometryChanged = geometryChanged;
-    }
-    return invalid;
   }
+  bool geometryChanged = (aGeometryChanged != nullptr) ? *aGeometryChanged : false;
+  nsIntRegion invalid = ComputeChange("  ", aCallback, geometryChanged);
+  if (aGeometryChanged != nullptr) {
+    *aGeometryChanged = geometryChanged;
+  }
+  return invalid;
 }
 
 void
