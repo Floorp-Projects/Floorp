@@ -87,8 +87,8 @@ interface nsIDocShellTreeItem : nsISupports
 			ii.) Do not ask a child if it is of a different item type.
 	3.)  If there is a parent of the same item type ask parent to perform the check
 		a.) Do not ask parent if it is the aRequestor
-	4.)  If there is a tree owner ask the tree owner to perform the check
-		a.)  Do not ask the tree owner if it is the aRequestor
+	4.)  If there is a tab group ask the tab group to perform the check
+		a.)  Do not ask the tab group if aSkipTabGroup
 		b.)  This should only be done if there is no parent of the same type.
 
 	Return the child DocShellTreeItem with the specified name.
@@ -102,10 +102,12 @@ interface nsIDocShellTreeItem : nsISupports
 		asked it to search.  Children also use this to test against the treeOwner;
 	aOriginalRequestor - The original treeitem that made the request, if any.
 		This is used to ensure that we don't run into cross-site issues.
+	aSkipTabGroup - Whether the tab group should be checked.
 	*/
 	nsIDocShellTreeItem findItemWithName(in AString name,
-	                                     in nsISupports aRequestor,
-	                                     in nsIDocShellTreeItem aOriginalRequestor);
+	                                     in nsIDocShellTreeItem aRequestor,
+	                                     in nsIDocShellTreeItem aOriginalRequestor,
+	                                     in bool aSkipTabGroup);
 
 	/*
 	The owner of the DocShell Tree.  This interface will be called upon when
