@@ -156,21 +156,22 @@ int main(int argc, char **argv) {
   }
 
   while (argc > 0) {
-    if (argv[1][0] == '-' && (argv[1][1] == 'c' || 
-        argv[1][1] == 't' || argv[1][1] == 'x' || 
+    if (argv[1][0] == '-' && (argv[1][1] == 'c' ||
+        argv[1][1] == 't' || argv[1][1] == 'x' ||
         argv[1][1] == 'v' || argv[1][1] == 's' ||
         argv[1][1] == 'i' || argv[1][1] == 'T' ||
         argv[1][1] == 'r' || argv[1][1] == 'X' ||
         argv[1][1] == 'I')) {
       break;
     /* -C workingdirectory */
-    } else if (argv[1][0] == '-' && argv[1][1] == 'C') {
+    }
+    if (argv[1][0] == '-' && argv[1][1] == 'C') {
       if (chdir(argv[2]) != 0) {
         return -1;
       }
       argv += 2;
       argc -= 2;
-    } 
+    }
 #if !defined(NO_SIGN_VERIFY) && ((!defined(MAR_NSS) && defined(XP_WIN)) || \
                                  defined(XP_MACOSX))
     /* -D DERFilePath, also matches -D[index] DERFilePath
