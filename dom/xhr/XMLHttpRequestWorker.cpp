@@ -1315,12 +1315,6 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     return true;
   }
 
-  JS::Rooted<JSString*> type(aCx,
-    JS_NewUCStringCopyN(aCx, mType.get(), mType.Length()));
-  if (!type) {
-    return false;
-  }
-
   XMLHttpRequestEventTarget* target;
   if (mUploadEvent) {
     target = xhr->GetUploadObjectNoCreate();
