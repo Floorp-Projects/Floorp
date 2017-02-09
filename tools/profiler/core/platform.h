@@ -243,8 +243,6 @@ public:
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
 private:
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 };
