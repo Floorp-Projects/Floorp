@@ -207,9 +207,9 @@ OggCodecState::ReleasePacket(ogg_packet* aPacket)
 }
 
 void
-OggPacketQueue::Append(ogg_packet* aPacket)
+OggPacketQueue::Append(OggPacketPtr aPacket)
 {
-  nsDeque::Push(aPacket);
+  nsDeque::Push(aPacket.release());
 }
 
 bool
@@ -218,7 +218,7 @@ OggCodecState::IsPacketReady()
   return !mPackets.IsEmpty();
 }
 
-ogg_packet*
+OggPacketPtr
 OggCodecState::PacketOut()
 {
   if (mPackets.IsEmpty()) {
@@ -247,34 +247,31 @@ OggCodecState::PushFront(OggPacketQueue&& aOther)
 already_AddRefed<MediaRawData>
 OggCodecState::PacketOutAsMediaRawData()
 {
-  ogg_packet* packet = PacketOut();
+  OggPacketPtr packet = PacketOut();
   if (!packet) {
     return nullptr;
   }
 
   NS_ASSERTION(
-    !IsHeader(packet),
+    !IsHeader(packet.get()),
     "PacketOutAsMediaRawData can only be called on non-header packets");
   RefPtr<MediaRawData> sample = new MediaRawData(packet->packet, packet->bytes);
   if (!sample->Data()) {
     // OOM.
-    ReleasePacket(packet);
     return nullptr;
   }
 
   int64_t end_tstamp = Time(packet->granulepos);
   NS_ASSERTION(end_tstamp >= 0, "timestamp invalid");
 
-  int64_t duration = PacketDuration(packet);
+  int64_t duration = PacketDuration(packet.get());
   NS_ASSERTION(duration >= 0, "duration invalid");
 
   sample->mTimecode = packet->granulepos;
   sample->mTime = end_tstamp - duration;
   sample->mDuration = duration;
-  sample->mKeyframe = IsKeyframe(packet);
+  sample->mKeyframe = IsKeyframe(packet.get());
   sample->mEOS = packet->e_o_s;
-
-  ReleasePacket(packet);
 
   return sample.forget();
 }
@@ -295,7 +292,7 @@ OggCodecState::PageIn(ogg_page* aPage)
     ogg_packet packet;
     r = ogg_stream_packetout(&mState, &packet);
     if (r == 1) {
-      mPackets.Append(Clone(&packet).release());
+      mPackets.Append(Clone(&packet));
     }
   } while (r != 0);
   if (ogg_stream_check(&mState)) {
@@ -319,7 +316,7 @@ OggCodecState::PacketOutUntilGranulepos(bool& aFoundGranulepos)
       OggPacketPtr clone = Clone(&packet);
       if (IsHeader(&packet)) {
         // Header packets go straight into the packet queue.
-        mPackets.Append(clone.release());
+        mPackets.Append(Move(clone));
       } else {
         // We buffer data packets until we encounter a granulepos. We'll
         // then use the granulepos to figure out the granulepos of the
@@ -404,7 +401,7 @@ TheoraState::Reset()
 bool
 TheoraState::DecodeHeader(ogg_packet* aPacket)
 {
-  mHeaders.Append(aPacket);
+  mHeaders.Append(OggPacketPtr(aPacket));
   mPacketCount++;
   int ret = th_decode_headerin(&mTheoraInfo,
                                &mComment,
@@ -556,7 +553,7 @@ TheoraState::PageIn(ogg_page* aPage)
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
 #endif
-      mPackets.Append(packet.release());
+      mPackets.Append(Move(packet));
     }
     mUnstamped.Clear();
   }
@@ -705,7 +702,7 @@ VorbisState::~VorbisState()
 bool
 VorbisState::DecodeHeader(ogg_packet* aPacket)
 {
-  mHeaders.Append(aPacket);
+  mHeaders.Append(OggPacketPtr(aPacket));
   mPacketCount++;
   int ret = vorbis_synthesis_headerin(&mVorbisInfo,
                                       &mComment,
@@ -871,7 +868,7 @@ VorbisState::PageIn(ogg_page* aPage)
       AssertHasRecordedPacketSamples(packet.get());
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(packet.release());
+      mPackets.Append(Move(packet));
     }
     mUnstamped.Clear();
   }
@@ -1080,20 +1077,20 @@ OpusState::Init(void)
 bool
 OpusState::DecodeHeader(ogg_packet* aPacket)
 {
-  nsAutoRef<ogg_packet> autoRelease(aPacket);
+  OggPacketPtr packet(aPacket);
   switch(mPacketCount++) {
     // Parse the id header.
     case 0:
       mParser = new OpusParser;
-      if (!mParser->DecodeHeader(aPacket->packet, aPacket->bytes)) {
+      if (!mParser->DecodeHeader(packet->packet, packet->bytes)) {
         return false;
       }
-      mHeaders.Append(autoRelease.disown());
+      mHeaders.Append(Move(packet));
       break;
 
     // Parse the metadata header.
     case 1:
-      if (!mParser->DecodeTags(aPacket->packet, aPacket->bytes)) {
+      if (!mParser->DecodeTags(packet->packet, packet->bytes)) {
         return false;
       }
       break;
@@ -1103,7 +1100,7 @@ OpusState::DecodeHeader(ogg_packet* aPacket)
     default:
       mDoneReadingHeaders = true;
       // Put it back on the queue so we can decode it.
-      mPackets.PushFront(autoRelease.disown());
+      mPackets.PushFront(Move(packet));
       break;
   }
   return true;
@@ -1178,7 +1175,7 @@ OpusState::PageIn(ogg_page* aPage)
     OggPacketPtr packet = Move(mUnstamped[i]);
     NS_ASSERTION(!IsHeader(packet.get()), "Don't try to play a header packet");
     NS_ASSERTION(packet->granulepos != -1, "Packet should have a granulepos");
-    mPackets.Append(packet.release());
+    mPackets.Append(Move(packet));
   }
   mUnstamped.Clear();
   return NS_OK;
@@ -1399,7 +1396,7 @@ FlacState::PageIn(ogg_page* aPage)
       OggPacketPtr packet = Move(mUnstamped[i]);
       NS_ASSERTION(!IsHeader(packet.get()), "Don't try to recover header packet gp");
       NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
-      mPackets.Append(packet.release());
+      mPackets.Append(Move(packet));
     }
     mUnstamped.Clear();
   }
