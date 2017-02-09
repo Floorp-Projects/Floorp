@@ -29,13 +29,21 @@ class Matrix;
 } // namespace mozilla
 
 /**
- * This class is not particularly well named. It is inherited by some, but
- * not all SVG frame classes that can be descendants of an
- * nsSVGOuterSVGFrame in the frame tree. Note specifically that SVG container
- * frames that do not inherit nsSVGDisplayContainerFrame do not inherit this
- * class (so that's classes that only inherit nsSVGContainerFrame).
+ * This class is used for elements that can be part of a directly displayable
+ * section of a document.  This includes SVGGeometryFrame and nsSVGGframe.
+ * (Even though the latter doesn't display anything itself, if it contains
+ * SVGGeometryFrame descendants it is can still be part of a displayable
+ * section of a document)  This class is not used for elements that can never
+ * display directly, including nsSVGGradientFrame and nsSVGPatternFrame.  (The
+ * latter may contain displayable content, but it and its content are never
+ * *directly* displayed in a document.  It can only end up being displayed by
+ * means of a reference from other content.)
+ *
+ * Note specifically that SVG frames that inherit nsSVGContainerFrame do *not*
+ * implement this class (only those that inherit nsSVGDisplayContainerFrame
+ * do.)
  */
-class nsISVGChildFrame : public nsQueryFrame
+class nsSVGDisplayableFrame : public nsQueryFrame
 {
 public:
   typedef mozilla::SVGAnimatedNumberList SVGAnimatedNumberList;
@@ -45,7 +53,7 @@ public:
   typedef mozilla::SVGUserUnitList SVGUserUnitList;
   typedef mozilla::image::DrawResult DrawResult;
 
-  NS_DECL_QUERYFRAME_TARGET(nsISVGChildFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayableFrame)
 
   /**
    * Paint this frame.
