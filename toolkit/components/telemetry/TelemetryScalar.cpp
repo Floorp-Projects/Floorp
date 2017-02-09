@@ -1103,7 +1103,8 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
 
   if (aType == ScalarActionType::eAdd) {
     return scalar->AddValue(aValue);
-  } else if (aType == ScalarActionType::eSet) {
+  }
+  if (aType == ScalarActionType::eSet) {
     return scalar->SetValue(aValue);
   }
 
@@ -1244,7 +1245,8 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
 
   if (aType == ScalarActionType::eAdd) {
     return scalar->AddValue(aKey, aValue);
-  } else if (aType == ScalarActionType::eSet) {
+  }
+  if (aType == ScalarActionType::eSet) {
     return scalar->SetValue(aKey, aValue);
   }
 
