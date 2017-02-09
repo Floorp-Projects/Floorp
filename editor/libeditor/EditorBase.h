@@ -25,6 +25,7 @@
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsString.h"                   // for nsCString
+#include "nsTArray.h"                   // for nsTArray and nsAutoTArray
 #include "nsWeakReference.h"            // for nsSupportsWeakReference
 #include "nscore.h"                     // for nsresult, nsAString, etc.
 
@@ -1002,11 +1003,17 @@ protected:
   RefPtr<TextComposition> mComposition;
 
   // Listens to all low level actions on the doc.
-  nsTArray<OwningNonNull<nsIEditActionListener>> mActionListeners;
+  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 5>
+            AutoActionListenerArray;
+  AutoActionListenerArray mActionListeners;
   // Just notify once per high level change.
-  nsTArray<OwningNonNull<nsIEditorObserver>> mEditorObservers;
+  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 3>
+            AutoEditorObserverArray;
+  AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
-  nsTArray<OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
+  typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
+            AutoDocumentStateListenerArray;
+  AutoDocumentStateListenerArray mDocStateListeners;
 
   // Cached selection for AutoSelectionRestorer.
   SelectionState mSavedSel;
