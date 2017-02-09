@@ -722,6 +722,39 @@ skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-
 skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-exsting-global-init.js
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-exsting-global-init.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1331092
+skip script test262/language/expressions/async-generators/expression-yield-as-statement.js
+skip script test262/language/expressions/async-generators/expression-await-thenable-as-yield-operand.js
+skip script test262/language/expressions/async-generators/expression-yield-as-operand.js
+skip script test262/language/expressions/async-generators/expression-await-as-yield-operand.js
+skip script test262/language/expressions/async-generators/expression-yield-newline.js
+skip script test262/language/expressions/async-generators/expression-await-promise-as-yield-operand.js
+skip script test262/language/expressions/async-generators/expression-yield-star-before-newline.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1050755
+skip script test262/built-ins/Date/UTC/return-value.js
+
+# PluralRules.
+skip script test262/intl402/PluralRules/builtin.js
+skip script test262/intl402/PluralRules/this-not-ignored.js
+skip script test262/intl402/PluralRules/name.js
+skip script test262/intl402/PluralRules/length.js
+skip script test262/intl402/PluralRules/supportedLocalesOf/main.js
+skip script test262/intl402/PluralRules/can-be-subclassed.js
+skip script test262/intl402/PluralRules/internals.js
+skip script test262/intl402/PluralRules/prototype/properties.js
+skip script test262/intl402/PluralRules/supportedLocalesOf/supportedLocalesOf.js
+skip script test262/intl402/PluralRules/supportedLocalesOf/name.js
+skip script test262/intl402/PluralRules/supportedLocalesOf/arguments.js
+skip script test262/intl402/PluralRules/prototype/builtins.js
+skip script test262/intl402/PluralRules/prototype/prototype.js
+skip script test262/intl402/PluralRules/prototype/bind.js
+skip script test262/intl402/PluralRules/prototype/resolvedOptions/name.js
+skip script test262/intl402/PluralRules/prototype/resolvedOptions/properties.js
+skip script test262/intl402/PluralRules/prototype/resolvedOptions/builtins.js
+skip script test262/intl402/PluralRules/prototype/constructor/main.js
+skip script test262/intl402/PluralRules/prototype/select/name.js
+
 # SIMD.
 skip script test262/built-ins/Simd/check.js
 skip script test262/built-ins/Simd/from.js

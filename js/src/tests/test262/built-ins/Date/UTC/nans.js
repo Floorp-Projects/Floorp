@@ -14,15 +14,16 @@ info: |
   7. If ms is supplied, let milli be ? ToNumber(ms); else let milli be 0.
   8. If y is not NaN and 0 ≤ ToInteger(y) ≤ 99, let yr be 1900+ToInteger(y);
      otherwise, let yr be y.
-  9. Return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))). 
+  9. Return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))).
 ---*/
 
-assert.sameValue(new Date(NaN, 0).getTime(), NaN, 'year');
-assert.sameValue(new Date(1970, NaN).getTime(), NaN, 'month');
-assert.sameValue(new Date(1970, 0, NaN).getTime(), NaN, 'date');
-assert.sameValue(new Date(1970, 0, 1, NaN).getTime(), NaN, 'hours');
-assert.sameValue(new Date(1970, 0, 1, 0, NaN).getTime(), NaN, 'minutes');
-assert.sameValue(new Date(1970, 0, 1, 0, 0, NaN).getTime(), NaN, 'seconds');
-assert.sameValue(new Date(1970, 0, 1, 0, 0, 0, NaN).getTime(), NaN, 'ms');
+assert.sameValue(Date.UTC(NaN), NaN, 'year');
+assert.sameValue(Date.UTC(NaN, 0), NaN, 'year');
+assert.sameValue(Date.UTC(1970, NaN), NaN, 'month');
+assert.sameValue(Date.UTC(1970, 0, NaN), NaN, 'date');
+assert.sameValue(Date.UTC(1970, 0, 1, NaN), NaN, 'hours');
+assert.sameValue(Date.UTC(1970, 0, 1, 0, NaN), NaN, 'minutes');
+assert.sameValue(Date.UTC(1970, 0, 1, 0, 0, NaN), NaN, 'seconds');
+assert.sameValue(Date.UTC(1970, 0, 1, 0, 0, 0, NaN), NaN, 'ms');
 
 reportCompare(0, 0);
