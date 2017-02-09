@@ -144,6 +144,10 @@ skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3
 skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-531-17.js
 skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-538-7.js
 
+# Fails because window has a "name" property on WindowProxy.
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/method-definition/generator-name-prop-symbol.js
+skip-if(!xulRuntime.shell) script test262/language/expressions/object/method-definition/name-name-prop-symbol.js
+
 # Removes RegExp.prototype[Symbol.match] which breaks the jstests harness.
 skip-if(!xulRuntime.shell) script test262/built-ins/RegExp/prototype/Symbol.match/prop-desc.js
 
