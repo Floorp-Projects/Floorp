@@ -129,15 +129,22 @@ class TypedOperandId : public OperandId
     JSValueType type() const { return type_; }
 };
 
+#define CACHE_IR_KINDS(_)   \
+    _(GetProp)              \
+    _(GetElem)              \
+    _(GetName)              \
+    _(SetProp)              \
+    _(SetElem)              \
+    _(In)
+
 enum class CacheKind : uint8_t
 {
-    GetProp,
-    GetElem,
-    GetName,
-    SetProp,
-    SetElem,
-    In,
+#define DEFINE_KIND(kind) kind,
+    CACHE_IR_KINDS(DEFINE_KIND)
+#undef DEFINE_KIND
 };
+
+extern const char* CacheKindNames[];
 
 #define CACHE_IR_OPS(_)                   \
     _(GuardIsObject)                      \
@@ -844,6 +851,7 @@ class MOZ_RAII IRGenerator
   protected:
     CacheIRWriter writer;
     JSContext* cx_;
+    HandleScript script_;
     jsbytecode* pc_;
     CacheKind cacheKind_;
 
@@ -855,8 +863,10 @@ class MOZ_RAII IRGenerator
 
     void emitIdGuard(ValOperandId valId, jsid id);
 
+    friend class CacheIRSpewer;
+
   public:
-    explicit IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind);
+    explicit IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind);
 
     const CacheIRWriter& writerRef() const { return writer; }
     CacheKind cacheKind() const { return cacheKind_; }
@@ -924,10 +934,13 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     // matches |id|.
     void maybeEmitIdGuard(jsid id);
 
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
   public:
-    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind, ICStubEngine engine,
-                       bool* isTemporarilyUnoptimizable, HandleValue val, HandleValue idVal,
-                       CanAttachGetter canAttachGetter);
+    GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
+                       ICStubEngine engine, bool* isTemporarilyUnoptimizable,
+                       HandleValue val,HandleValue idVal, CanAttachGetter canAttachGetter);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();
@@ -940,10 +953,9 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     }
 };
 
-// GetPropIRGenerator generates CacheIR for a GetName IC.
+// GetNameIRGenerator generates CacheIR for a GetName IC.
 class MOZ_RAII GetNameIRGenerator : public IRGenerator
 {
-    HandleScript script_;
     HandleObject env_;
     HandlePropertyName name_;
 
@@ -952,7 +964,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   public:
-    GetNameIRGenerator(JSContext* cx, jsbytecode* pc, HandleScript script,
+    GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                        HandleObject env, HandlePropertyName name);
 
     bool tryAttachStub();
@@ -1009,13 +1021,16 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
     bool tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId, HandleId id,
                                  ValOperandId rhsId);
 
+    void trackAttached(const char* name);
+
   public:
-    SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
+    SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
                        bool* isTemporarilyUnoptimizable, HandleValue lhsVal, HandleValue idVal,
                        HandleValue rhsVal);
 
     bool tryAttachStub();
     bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
+    void trackNotAttached();
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
@@ -1049,8 +1064,11 @@ class MOZ_RAII InIRGenerator : public IRGenerator
     bool tryAttachNativeInDoesNotExist(HandleId key, ValOperandId keyId,
                                        HandleObject obj, ObjOperandId objId);
 
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
   public:
-    InIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue key, HandleObject obj);
+    InIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, HandleValue key, HandleObject obj);
 
     bool tryAttachStub();
 };

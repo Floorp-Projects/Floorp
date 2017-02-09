@@ -112,21 +112,25 @@ js::DestroyTraceLoggerThreadState()
     }
 }
 
+#ifdef DEBUG
+bool
+js::CurrentThreadOwnsTraceLoggerThreadStateLock()
+{
+    return traceLoggerState && traceLoggerState->lock.ownedByCurrentThread();
+}
+#endif
+
 void
-js::DestroyTraceLoggerMainThread(JSRuntime* runtime)
+js::DestroyTraceLogger(TraceLoggerThread* logger)
 {
     if (!EnsureTraceLoggerState())
         return;
-    traceLoggerState->destroyMainThread(runtime);
+    traceLoggerState->destroyLogger(logger);
 }
 
 bool
 TraceLoggerThread::init()
 {
-    if (!pointerMap.init())
-        return false;
-    if (!textIdPayloads.init())
-        return false;
     if (!events.init())
         return false;
 
@@ -174,11 +178,6 @@ TraceLoggerThread::~TraceLoggerThread()
         if (!failed)
             graph->log(events);
         graph = nullptr;
-    }
-
-    if (textIdPayloads.initialized()) {
-        for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
-            js_delete(r.front().value());
     }
 }
 
@@ -260,7 +259,7 @@ TraceLoggerThread::enable(JSContext* cx)
         if (script->compartment() != cx->compartment())
             return fail(cx, "compartment mismatch");
 
-        TraceLoggerEvent event(this, TraceLogger_Scripts, script);
+        TraceLoggerEvent event(TraceLogger_Scripts, script);
         startEvent(event);
         startEvent(engine);
     }
@@ -298,6 +297,13 @@ TraceLoggerThread::maybeEventText(uint32_t id)
 {
     if (id < TraceLogger_Last)
         return TLTextIdString(static_cast<TraceLoggerTextId>(id));
+    return traceLoggerState->maybeEventText(id);
+}
+
+const char*
+TraceLoggerThreadState::maybeEventText(uint32_t id)
+{
+    LockGuard<Mutex> guard(lock);
 
     TextIdHashMap::Ptr p = textIdPayloads.lookup(id);
     if (!p)
@@ -352,11 +358,14 @@ TraceLoggerThread::extractScriptDetails(uint32_t textId, const char** filename, 
 }
 
 TraceLoggerEventPayload*
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId textId)
+TraceLoggerThreadState::getOrCreateEventPayload(TraceLoggerTextId textId)
 {
+    LockGuard<Mutex> guard(lock);
+
     TextIdHashMap::AddPtr p = textIdPayloads.lookupForAdd(textId);
     if (p) {
         MOZ_ASSERT(p->value()->textId() == textId); // Sanity check.
+        p->value()->use();
         return p->value();
     }
 
@@ -367,26 +376,21 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId textId)
     if (!textIdPayloads.add(p, textId, payload))
         return nullptr;
 
+    payload->use();
     return payload;
 }
 
 TraceLoggerEventPayload*
-TraceLoggerThread::getOrCreateEventPayload(const char* text)
+TraceLoggerThreadState::getOrCreateEventPayload(const char* text)
 {
+    LockGuard<Mutex> guard(lock);
+
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd((const void*)text);
     if (p) {
         MOZ_ASSERT(p->value()->textId() < nextTextId); // Sanity check.
+        p->value()->use();
         return p->value();
     }
-
-    TraceLoggerEventPayload* payload = nullptr;
-
-    startEvent(TraceLogger_Internal);
-    auto guardInternalStopEvent = mozilla::MakeScopeExit([&] {
-        stopEvent(TraceLogger_Internal);
-        if (payload)
-            payload->release();
-    });
 
     char* str = js_strdup(text);
     if (!str)
@@ -394,7 +398,7 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
 
     uint32_t textId = nextTextId;
 
-    payload = js_new<TraceLoggerEventPayload>(textId, str);
+    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
     if (!payload) {
         js_free(str);
         return nullptr;
@@ -406,23 +410,21 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
         return nullptr;
     }
 
-    // Temporarily mark the payload as used. To make sure it doesn't get GC'ed.
     payload->use();
-
-    if (graph.get())
-        graph->addTextId(textId, str);
 
     nextTextId++;
 
     if (!pointerMap.add(p, text, payload))
         return nullptr;
 
+    payload->incPointerCount();
+
     return payload;
 }
 
 TraceLoggerEventPayload*
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
-                                           size_t lineno, size_t colno, const void* ptr)
+TraceLoggerThreadState::getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
+                                                size_t lineno, size_t colno, const void* ptr)
 {
     MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts ||
                type == TraceLogger_InlinedScripts);
@@ -432,27 +434,20 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
 
     // Only log scripts when enabled otherwise return the global Scripts textId,
     // which will get filtered out.
-    MOZ_ASSERT(traceLoggerState);
-    if (!traceLoggerState->isTextIdEnabled(type))
+    if (!isTextIdEnabled(type))
         return getOrCreateEventPayload(type);
+
+    LockGuard<Mutex> guard(lock);
 
     PointerHashMap::AddPtr p;
     if (ptr) {
         p = pointerMap.lookupForAdd(ptr);
         if (p) {
             MOZ_ASSERT(p->value()->textId() < nextTextId); // Sanity check.
+            p->value()->use();
             return p->value();
         }
     }
-
-    TraceLoggerEventPayload* payload = nullptr;
-
-    startEvent(TraceLogger_Internal);
-    auto guardInternalStopEvent = mozilla::MakeScopeExit([&] {
-        stopEvent(TraceLogger_Internal);
-        if (payload)
-            payload->release();
-    });
 
     // Compute the length of the string to create.
     size_t lenFilename = strlen(filename);
@@ -472,7 +467,7 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
     MOZ_ASSERT(strlen(str) == len);
 
     uint32_t textId = nextTextId;
-    payload = js_new<TraceLoggerEventPayload>(textId, str);
+    TraceLoggerEventPayload* payload = js_new<TraceLoggerEventPayload>(textId, str);
     if (!payload) {
         js_free(str);
         return nullptr;
@@ -484,34 +479,58 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
         return nullptr;
     }
 
-    // Temporarily mark the payload as used. To make sure it doesn't get GC'ed.
     payload->use();
-
-    if (graph.get())
-        graph->addTextId(textId, str);
 
     nextTextId++;
 
     if (ptr) {
         if (!pointerMap.add(p, ptr, payload))
             return nullptr;
+
+        payload->incPointerCount();
     }
 
     return payload;
 }
 
 TraceLoggerEventPayload*
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script)
+TraceLoggerThreadState::getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script)
 {
     return getOrCreateEventPayload(type, script->filename(), script->lineno(), script->column(),
                                    nullptr);
 }
 
 TraceLoggerEventPayload*
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type,
-                                           const JS::ReadOnlyCompileOptions& script)
+TraceLoggerThreadState::getOrCreateEventPayload(TraceLoggerTextId type,
+                                                const JS::ReadOnlyCompileOptions& script)
 {
     return getOrCreateEventPayload(type, script.filename(), script.lineno, script.column, nullptr);
+}
+
+void
+TraceLoggerThreadState::purgeUnusedPayloads()
+{
+    // Care needs to be taken to maintain a coherent state in this function,
+    // as payloads can have their use count change at any time from non-zero to
+    // zero (but not the other way around; see TraceLoggerEventPayload::use()).
+    LockGuard<Mutex> guard(lock);
+
+    // Remove all the pointers to payloads that have no uses anymore
+    // and decrease the pointer count of that payload.
+    for (PointerHashMap::Enum e(pointerMap); !e.empty(); e.popFront()) {
+        if (e.front().value()->uses() == 0) {
+            e.front().value()->decPointerCount();
+            e.removeFront();
+        }
+    }
+
+    // Free all other payloads that have no uses anymore.
+    for (TextIdHashMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
+        if (e.front().value()->uses() == 0 && e.front().value()->pointerCount() == 0) {
+            js_delete(e.front().value());
+            e.removeFront();
+        }
+    }
 }
 
 void
@@ -548,6 +567,11 @@ TraceLoggerThread::startEvent(uint32_t id)
             oomUnsafe.crash("Could not add item to debug stack.");
     }
 #endif
+
+    if (graph.get()) {
+        for (uint32_t otherId = graph->nextTextId(); otherId <= id; otherId++)
+            graph->addTextId(otherId, maybeEventText(id));
+    }
 
     log(id);
 }
@@ -639,26 +663,8 @@ TraceLoggerThread::log(uint32_t id)
             iteration_++;
             events.clear();
 
-            // Remove the item in the pointerMap for which the payloads
-            // have no uses anymore
-            for (PointerHashMap::Enum e(pointerMap); !e.empty(); e.popFront()) {
-                if (e.front().value()->uses() != 0)
-                    continue;
-
-                TextIdHashMap::Ptr p = textIdPayloads.lookup(e.front().value()->textId());
-                MOZ_ASSERT(p);
-                textIdPayloads.remove(p);
-
-                e.removeFront();
-            }
-
-            // Free all payloads that have no uses anymore.
-            for (TextIdHashMap::Enum e(textIdPayloads); !e.empty(); e.popFront()) {
-                if (e.front().value()->uses() == 0) {
-                    js_delete(e.front().value());
-                    e.removeFront();
-                }
-            }
+            // Periodically remove unused payloads from the global logger state.
+            traceLoggerState->purgeUnusedPayloads();
         }
 
         // Log the time it took to flush the events as being from the
@@ -685,14 +691,14 @@ TraceLoggerThread::log(uint32_t id)
 
 TraceLoggerThreadState::~TraceLoggerThreadState()
 {
-    while (TraceLoggerMainThread* logger = traceLoggerMainThreadList.popFirst())
+    while (TraceLoggerThread* logger = threadLoggers.popFirst())
         js_delete(logger);
 
-    if (threadLoggers.initialized()) {
-        for (ThreadLoggerHashMap::Range r = threadLoggers.all(); !r.empty(); r.popFront())
-            js_delete(r.front().value());
+    threadLoggers.clear();
 
-        threadLoggers.finish();
+    if (textIdPayloads.initialized()) {
+        for (TextIdHashMap::Range r = textIdPayloads.all(); !r.empty(); r.popFront())
+            js_delete(r.front().value());
     }
 
 #ifdef DEBUG
@@ -716,9 +722,6 @@ ContainsFlag(const char* str, const char* flag)
 bool
 TraceLoggerThreadState::init()
 {
-    if (!threadLoggers.init())
-        return false;
-
     const char* env = getenv("TLLOG");
     if (!env)
         env = "";
@@ -864,6 +867,11 @@ TraceLoggerThreadState::init()
             spewErrors = true;
     }
 
+    if (!pointerMap.init())
+        return false;
+    if (!textIdPayloads.init())
+        return false;
+
     startupTime = rdtsc();
 
 #ifdef DEBUG
@@ -919,40 +927,28 @@ TraceLoggerThreadState::disableTextId(JSContext* cx, uint32_t textId)
         jit::ToggleBaselineTraceLoggerEngine(cx->runtime(), false);
 }
 
-
 TraceLoggerThread*
-js::TraceLoggerForMainThread(CompileRuntime* runtime)
+js::TraceLoggerForCurrentThread(JSContext* maybecx)
 {
     if (!EnsureTraceLoggerState())
         return nullptr;
-    return traceLoggerState->forMainThread(runtime);
+    return traceLoggerState->forCurrentThread(maybecx);
 }
 
 TraceLoggerThread*
-TraceLoggerThreadState::forMainThread(CompileRuntime* runtime)
-{
-    MOZ_ASSERT(runtime->runtimeMatches(TlsContext.get()->runtime()));
-    return forMainThread(TlsContext.get()->runtime());
-}
-
-TraceLoggerThread*
-js::TraceLoggerForMainThread(JSRuntime* runtime)
-{
-    if (!EnsureTraceLoggerState())
-        return nullptr;
-    return traceLoggerState->forMainThread(runtime);
-}
-
-TraceLoggerThread*
-TraceLoggerThreadState::forMainThread(JSRuntime* runtime)
+TraceLoggerThreadState::forCurrentThread(JSContext* maybecx)
 {
     MOZ_ASSERT(initialized);
-    JSContext* cx = runtime->contextFromMainThread();
+    MOZ_ASSERT_IF(maybecx, maybecx == TlsContext.get());
+
+    JSContext* cx = maybecx ? maybecx : TlsContext.get();
+    if (!cx)
+        return nullptr;
 
     if (!cx->traceLogger) {
         LockGuard<Mutex> guard(lock);
 
-        TraceLoggerMainThread* logger = js_new<TraceLoggerMainThread>();
+        TraceLoggerThread* logger = js_new<TraceLoggerThread>();
         if (!logger)
             return nullptr;
 
@@ -961,13 +957,13 @@ TraceLoggerThreadState::forMainThread(JSRuntime* runtime)
             return nullptr;
         }
 
-        traceLoggerMainThreadList.insertFront(logger);
+        threadLoggers.insertFront(logger);
         cx->traceLogger = logger;
 
         if (graphSpewingEnabled)
             logger->initGraph();
 
-        if (mainThreadEnabled)
+        if (CurrentHelperThread() ? offThreadEnabled : mainThreadEnabled)
             logger->enable();
     }
 
@@ -975,59 +971,14 @@ TraceLoggerThreadState::forMainThread(JSRuntime* runtime)
 }
 
 void
-TraceLoggerThreadState::destroyMainThread(JSRuntime* runtime)
+TraceLoggerThreadState::destroyLogger(TraceLoggerThread* logger)
 {
     MOZ_ASSERT(initialized);
-    JSContext* cx = runtime->contextFromMainThread();
-    if (cx->traceLogger) {
-        LockGuard<Mutex> guard(lock);
-
-        static_cast<TraceLoggerMainThread*>(cx->traceLogger.ref())->remove();
-        js_delete(cx->traceLogger.ref());
-        cx->traceLogger = nullptr;
-    }
-}
-
-TraceLoggerThread*
-js::TraceLoggerForCurrentThread()
-{
-    if (!EnsureTraceLoggerState())
-        return nullptr;
-    return traceLoggerState->forThread(ThisThread::GetId());
-}
-
-TraceLoggerThread*
-TraceLoggerThreadState::forThread(const Thread::Id& thread)
-{
-    MOZ_ASSERT(initialized);
-
+    MOZ_ASSERT(logger);
     LockGuard<Mutex> guard(lock);
 
-    ThreadLoggerHashMap::AddPtr p = threadLoggers.lookupForAdd(thread);
-    if (p)
-        return p->value();
-
-    TraceLoggerThread* logger = js_new<TraceLoggerThread>();
-    if (!logger)
-        return nullptr;
-
-    if (!logger->init()) {
-        js_delete(logger);
-        return nullptr;
-    }
-
-    if (!threadLoggers.add(p, thread, logger)) {
-        js_delete(logger);
-        return nullptr;
-    }
-
-    if (graphSpewingEnabled)
-        logger->initGraph();
-
-    if (offThreadEnabled)
-        logger->enable();
-
-    return logger;
+    logger->remove();
+    js_delete(logger);
 }
 
 bool
@@ -1053,46 +1004,25 @@ js::TraceLogDisableTextId(JSContext* cx, uint32_t textId)
     traceLoggerState->disableTextId(cx, textId);
 }
 
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread* logger, TraceLoggerTextId textId)
+TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId textId)
 {
-    payload_ = nullptr;
-    if (logger) {
-        payload_ = logger->getOrCreateEventPayload(textId);
-        if (payload_)
-            payload_->use();
-    }
+    payload_ = traceLoggerState ? traceLoggerState->getOrCreateEventPayload(textId) : nullptr;
 }
 
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread* logger, TraceLoggerTextId type,
-                                   JSScript* script)
+TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId type, JSScript* script)
 {
-    payload_ = nullptr;
-    if (logger) {
-        payload_ = logger->getOrCreateEventPayload(type, script);
-        if (payload_)
-            payload_->use();
-    }
+    payload_ = traceLoggerState ? traceLoggerState->getOrCreateEventPayload(type, script) : nullptr;
 }
 
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread* logger, TraceLoggerTextId type,
+TraceLoggerEvent::TraceLoggerEvent(TraceLoggerTextId type,
                                    const JS::ReadOnlyCompileOptions& compileOptions)
 {
-    payload_ = nullptr;
-    if (logger) {
-        payload_ = logger->getOrCreateEventPayload(type, compileOptions);
-        if (payload_)
-            payload_->use();
-    }
+    payload_ = traceLoggerState ? traceLoggerState->getOrCreateEventPayload(type, compileOptions) : nullptr;
 }
 
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread* logger, const char* text)
+TraceLoggerEvent::TraceLoggerEvent(const char* text)
 {
-    payload_ = nullptr;
-    if (logger) {
-        payload_ = logger->getOrCreateEventPayload(text);
-        if (payload_)
-            payload_->use();
-    }
+    payload_ = traceLoggerState ? traceLoggerState->getOrCreateEventPayload(text) : nullptr;
 }
 
 TraceLoggerEvent::~TraceLoggerEvent()

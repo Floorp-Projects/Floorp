@@ -39,10 +39,10 @@ nsFilterInstance::GetFilterDescription(nsIContent* aFilteredElement,
                                        const gfxRect& aBBox,
                                        nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
 {
-  gfxMatrix unused; // aPaintTransform arg not used since we're not painting
+  gfxMatrix identity;
   nsFilterInstance instance(nullptr, aFilteredElement, aMetrics,
                             aFilterChain, aFilterInputIsTainted, nullptr,
-                            unused, nullptr, nullptr, nullptr, &aBBox);
+                            identity, nullptr, nullptr, nullptr, &aBBox);
   if (!instance.IsInitialized()) {
     return FilterDescription();
   }
@@ -70,9 +70,10 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
-                            filterChain, /* InputIsTainted */ true, aPaintCallback,
-                            aTransform, aDirtyArea, nullptr, nullptr, nullptr);
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                            *metrics, filterChain, /* InputIsTainted */ true,
+                            aPaintCallback, aTransform, aDirtyArea, nullptr,
+                            nullptr, nullptr);
   if (!instance.IsInitialized()) {
     return DrawResult::BAD_IMAGE;
   }
@@ -88,14 +89,14 @@ nsFilterInstance::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
     return nsRegion();
   }
 
-  gfxMatrix unused; // aPaintTransform arg not used since we're not painting
+  gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
-                            filterChain, /* InputIsTainted */ true, nullptr, unused,
-                            nullptr, &aPreFilterDirtyRegion);
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                            *metrics, filterChain, /* InputIsTainted */ true,
+                            nullptr, tm, nullptr, &aPreFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRegion();
   }
@@ -110,14 +111,14 @@ nsRegion
 nsFilterInstance::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
                                          const nsRegion& aPostFilterDirtyRegion)
 {
-  gfxMatrix unused; // aPaintTransform arg not used since we're not painting
+  gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
-                            filterChain, /* InputIsTainted */ true, nullptr, unused,
-                            &aPostFilterDirtyRegion);
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                            *metrics, filterChain, /* InputIsTainted */ true,
+                            nullptr, tm, &aPostFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRect();
   }
@@ -143,15 +144,15 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
     preFilterRegionPtr = &preFilterRegion;
   }
 
-  gfxMatrix unused; // aPaintTransform arg not used since we're not painting
+  gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
-  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
-                            filterChain, /* InputIsTainted */ true, nullptr, unused,
-                            nullptr, preFilterRegionPtr, aPreFilterBounds,
-                            aOverrideBBox);
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                            *metrics, filterChain, /* InputIsTainted */ true,
+                            nullptr, tm, nullptr, preFilterRegionPtr,
+                            aPreFilterBounds, aOverrideBBox);
   if (!instance.IsInitialized()) {
     return nsRect();
   }
@@ -203,11 +204,6 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
                               0.0f, mFilterSpaceToUserSpaceScale.height,
                               0.0f, 0.0f);
 
-  // Only used (so only set) when we paint:
-  if (mPaintCallback) {
-    mFilterSpaceToDeviceSpaceTransform = filterToUserSpace * mPaintTransform;
-  }
-
   mFilterSpaceToFrameSpaceInCSSPxTransform =
     filterToUserSpace * GetUserSpaceToFrameSpaceInCSSPxTransform();
   // mFilterSpaceToFrameSpaceInCSSPxTransform is always invertible
@@ -243,22 +239,19 @@ nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
   gfxMatrix canvasTransform;
   if (mTargetFrame) {
-    canvasTransform = nsSVGUtils::GetCanvasTM(mTargetFrame);
-    if (canvasTransform.IsSingular()) {
+    mUserSpaceToFilterSpaceScale = mPaintTransform.ScaleFactors(true);
+    if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
+        mUserSpaceToFilterSpaceScale.height <= 0.0f) {
       // Nothing should be rendered.
       return NS_ERROR_FAILURE;
     }
+  } else {
+    mUserSpaceToFilterSpaceScale = gfxSize(1.0, 1.0);
   }
 
-  mUserSpaceToFilterSpaceScale = canvasTransform.ScaleFactors(true);
-  if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
-      mUserSpaceToFilterSpaceScale.height <= 0.0f) {
-    // Nothing should be rendered.
-    return NS_ERROR_FAILURE;
-  }
-
-  mFilterSpaceToUserSpaceScale = gfxSize(1.0f / mUserSpaceToFilterSpaceScale.width,
-                                         1.0f / mUserSpaceToFilterSpaceScale.height);
+  mFilterSpaceToUserSpaceScale =
+    gfxSize(1.0f / mUserSpaceToFilterSpaceScale.width,
+            1.0f / mUserSpaceToFilterSpaceScale.height);
   return NS_OK;
 }
 
@@ -362,8 +355,7 @@ nsFilterInstance::ComputeNeededBoxes()
 }
 
 DrawResult
-nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
-                                   DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
 {
   MOZ_ASSERT(mTargetFrame);
   nsIntRect neededRect = aSource->mNeededBounds;
@@ -375,32 +367,22 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform();
-  DebugOnly<bool> invertible = deviceToFilterSpace.Invert();
-  MOZ_ASSERT(invertible,
-             "The returning matix of GetFilterSpaceToDeviceSpaceTransform must"
-             "be an invertible matrix(not a singular one), since we already"
-             "checked it and early return if it's not from the caller side"
-             "(nsFilterInstance::Render)");
+  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(offscreenDT);
+  MOZ_ASSERT(ctx); // already checked the draw target above
+  gfxContextAutoSaveRestore saver(ctx);
 
-  if (!mPaintTransform.IsSingular()) {
-    RefPtr<gfxContext> gfx = gfxContext::CreateOrNull(offscreenDT);
-    MOZ_ASSERT(gfx); // already checked the draw target above
-    gfx->Save();
-    gfx->Multiply(mPaintTransform *
-                  deviceToFilterSpace *
-                  gfxMatrix::Translation(-neededRect.TopLeft()));
-    GeneralPattern pattern;
-    if (aSource == &mFillPaint) {
-      nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx, &pattern);
-    } else if (aSource == &mStrokePaint) {
-      nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx, &pattern);
-    }
-    if (pattern.GetPattern()) {
-      offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(ThebesRect(neededRect))),
-                            pattern);
-    }
-    gfx->Restore();
+  ctx->SetMatrix(mPaintTransform *
+                 gfxMatrix::Translation(-neededRect.TopLeft()));
+  GeneralPattern pattern;
+  if (aSource == &mFillPaint) {
+    nsSVGUtils::MakeFillPatternFor(mTargetFrame, ctx, &pattern);
+  } else if (aSource == &mStrokePaint) {
+    nsSVGUtils::MakeStrokePatternFor(mTargetFrame, ctx, &pattern);
+  }
+
+  if (pattern.GetPattern()) {
+    offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(ThebesRect(neededRect))),
+                          pattern);
   }
 
   aSource->mSourceSurface = offscreenDT->Snapshot();
@@ -410,17 +392,17 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
 }
 
 DrawResult
-nsFilterInstance::BuildSourcePaints(DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourcePaints()
 {
   if (!mFillPaint.mNeededBounds.IsEmpty()) {
-    DrawResult result = BuildSourcePaint(&mFillPaint, aTargetDT);
+    DrawResult result = BuildSourcePaint(&mFillPaint);
     if (result != DrawResult::SUCCESS) {
       return result;
     }
   }
 
   if (!mStrokePaint.mNeededBounds.IsEmpty()) {
-    DrawResult result = BuildSourcePaint(&mStrokePaint, aTargetDT);
+    DrawResult result = BuildSourcePaint(&mStrokePaint);
     if (result != DrawResult::SUCCESS) {
       return result;
     }
@@ -430,7 +412,7 @@ nsFilterInstance::BuildSourcePaints(DrawTarget* aTargetDT)
 }
 
 DrawResult
-nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourceImage()
 {
   MOZ_ASSERT(mTargetFrame);
 
@@ -464,19 +446,13 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   // space to device space and back again). However, that would make the
   // code more complex while being hard to get right without introducing
   // subtle bugs, and in practice it probably makes no real difference.)
-  gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform();
-  DebugOnly<bool> invertible = deviceToFilterSpace.Invert();
-  MOZ_ASSERT(invertible,
-             "The returning matix of GetFilterSpaceToDeviceSpaceTransform must"
-             "be an invertible matrix(not a singular one), since we already"
-             "checked it and early return if it's not from the caller side"
-             "(nsFilterInstance::Render)");
-
   RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(offscreenDT);
   MOZ_ASSERT(ctx); // already checked the draw target above
-  ctx->SetMatrix(
-    ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
-                         PreMultiply(deviceToFilterSpace));
+  gfxMatrix devPxToCssPxTM = nsSVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
+  DebugOnly<bool> invertible = devPxToCssPxTM.Invert();
+  MOZ_ASSERT(invertible);
+  ctx->SetMatrix(devPxToCssPxTM * mPaintTransform *
+                 gfxMatrix::Translation(-neededRect.TopLeft()));
 
   DrawResult result =
     mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);
@@ -499,23 +475,27 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget)
 
   nsIntRect filterRect =
     mPostFilterDirtyRegion.GetBounds().Intersect(OutputFilterSpaceBounds());
-  gfxMatrix ctm = GetFilterSpaceToDeviceSpaceTransform();
-
-  if (filterRect.IsEmpty() || ctm.IsSingular()) {
+  if (filterRect.IsEmpty() || mPaintTransform.IsSingular()) {
     return DrawResult::SUCCESS;
   }
 
   AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-  Matrix newTM = ToMatrix(ctm).PreTranslate(filterRect.x, filterRect.y) *
-                 aDrawTarget->GetTransform();
-  aDrawTarget->SetTransform(newTM);
+  gfxMatrix filterSpaceToUserSpace = mPaintTransform;
+  DebugOnly<bool> invertible = filterSpaceToUserSpace.Invert();
+  MOZ_ASSERT(invertible);
+  filterSpaceToUserSpace *= nsSVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
+
+  aDrawTarget->SetTransform(ToMatrix(filterSpaceToUserSpace) *
+                            aDrawTarget->GetTransform() *
+                            Matrix::Translation(filterRect.TopLeft()));
 
   ComputeNeededBoxes();
-  DrawResult result = BuildSourceImage(aDrawTarget);
+
+  DrawResult result = BuildSourceImage();
   if (result != DrawResult::SUCCESS){
     return result;
   }
-  result = BuildSourcePaints(aDrawTarget);
+  result = BuildSourcePaints();
   if (result != DrawResult::SUCCESS){
     return result;
   }

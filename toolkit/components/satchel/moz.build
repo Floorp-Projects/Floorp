@@ -11,7 +11,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPIDL_SOURCES += [
     'nsIFormAutoComplete.idl',
     'nsIFormFillController.idl',
-    'nsIFormHistory.idl',
     'nsIInputListAutoComplete.idl',
 ]
 
@@ -28,7 +27,6 @@ LOCAL_INCLUDES += [
 EXTRA_COMPONENTS += [
     'FormHistoryStartup.js',
     'nsFormAutoComplete.js',
-    'nsFormHistory.js',
     'nsInputListAutoComplete.js',
     'satchel.manifest',
 ]

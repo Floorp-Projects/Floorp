@@ -12,6 +12,7 @@
 #define nsRuleData_h_
 
 #include "mozilla/CSSVariableDeclarations.h"
+#include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/SheetType.h"
 #include "nsAutoPtr.h"
@@ -25,13 +26,11 @@ struct nsRuleData;
 
 typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
-struct nsRuleData
+struct nsRuleData final: mozilla::GenericSpecifiedValues
 {
-  const uint32_t mSIDs;
   mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
   mozilla::SheetType mLevel;
-  nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;
 
   // We store nsCSSValues needed to compute the data for one or more
@@ -119,6 +118,104 @@ struct nsRuleData
   #undef CSS_PROP_LIST_EXCLUDE_LOGICAL
   #undef CSS_PROP
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
+
+  // GenericSpecifiedValues overrides
+  bool PropertyIsSet(nsCSSPropertyID aId) {
+    return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
+  }
+
+  void SetIdentStringValue(nsCSSPropertyID aId,
+                           const nsString& aValue) {
+    ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
+  }
+
+  void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
+                                const nsString& aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetIdentStringValue(aId, aValue);
+    }
+  }
+
+  void SetKeywordValue(nsCSSPropertyID aId,
+                       int32_t aValue) {
+    ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
+  }
+
+  void SetKeywordValueIfUnset(nsCSSPropertyID aId,
+                              int32_t aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetKeywordValue(aId, aValue);
+    }
+  }
+
+
+  void SetIntValue(nsCSSPropertyID aId,
+                   int32_t aValue) {
+    ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Integer);
+  }
+
+  void SetPixelValue(nsCSSPropertyID aId,
+                     float aValue) {
+    ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
+  }
+
+  void SetPixelValueIfUnset(nsCSSPropertyID aId,
+                            float aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetPixelValue(aId, aValue);
+    }
+  }
+
+  void SetPercentValue(nsCSSPropertyID aId,
+                       float aValue) {
+    ValueFor(aId)->SetPercentValue(aValue);
+  }
+
+  void SetAutoValue(nsCSSPropertyID aId) {
+    ValueFor(aId)->SetAutoValue();
+  }
+
+  void SetAutoValueIfUnset(nsCSSPropertyID aId) {
+    if (!PropertyIsSet(aId)) {
+      SetAutoValue(aId);
+    }
+  }
+
+  void SetPercentValueIfUnset(nsCSSPropertyID aId,
+                              float aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetPercentValue(aId, aValue);
+    }
+  }
+
+  void SetCurrentColor(nsCSSPropertyID aId) {
+    ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
+  }
+
+  void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
+    if (!PropertyIsSet(aId)) {
+      SetCurrentColor(aId);
+    }
+  }
+
+  void SetColorValue(nsCSSPropertyID aId,
+                     nscolor aValue) {
+    ValueFor(aId)->SetColorValue(aValue);
+  }
+
+  void SetColorValueIfUnset(nsCSSPropertyID aId,
+                            nscolor aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetColorValue(aId, aValue);
+    }
+  }
+
+  void SetFontFamily(const nsString& aValue);
+  void SetTextDecorationColorOverride();
+
+  nsRuleData* AsRuleData() {
+    return this;
+  }
 
 private:
   inline size_t GetPoisonOffset();

@@ -9,5 +9,4 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - build
   - build-signing

@@ -196,7 +196,7 @@ public class FindInPageBar extends LinearLayout
             onMatchesCountResult(message.getInt("total", 0),
                 message.getInt("current", 0),
                 message.getInt("limit", 0),
-                message.getString("searchString"));
+                message.getString("searchString", ""));
             return;
         }
     }

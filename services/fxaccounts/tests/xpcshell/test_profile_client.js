@@ -72,7 +72,7 @@ add_test(function successfulResponse() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    headers: { etag:"bogusETag" },
+    headers: { etag: "bogusETag" },
     body: "{\"email\":\"someone@restmail.net\",\"uid\":\"0d5c1a89b8c54580b8e3e8adadae864a\"}",
   };
 
@@ -107,6 +107,24 @@ add_test(function setsIfNoneMatchETagHeader() {
         do_check_eq(result.body.email, "someone@restmail.net");
         do_check_eq(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
         do_check_true(req.ifNoneMatchSet);
+        run_next_test();
+      }
+    );
+});
+
+add_test(function successful304Response() {
+  let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
+  let response = {
+    success: true,
+    headers: { etag: "bogusETag" },
+    status: 304,
+  };
+
+  client._Request = new mockResponse(response);
+  client.fetchProfile()
+    .then(
+      function(result) {
+        do_check_eq(result, null);
         run_next_test();
       }
     );
@@ -299,7 +317,7 @@ add_test(function server401ResponsePersists() {
 
 add_test(function networkErrorResponse() {
   let client = new FxAccountsProfileClient({
-    serverURL: "http://",
+    serverURL: "http://domain.dummy",
     fxa: mockFxa,
   });
   client.fetchProfile()

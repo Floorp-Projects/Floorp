@@ -60,9 +60,7 @@ struct AnimationPropertySegment
   float mFromKey, mToKey;
   // NOTE: In the case that no keyframe for 0 or 1 offset is specified
   // the unit of mFromValue or mToValue is eUnit_Null.
-  StyleAnimationValue mFromValue, mToValue;
-  // FIXME add a deep == impl for RawServoAnimationValue
-  RefPtr<RawServoAnimationValue> mServoFromValue, mServoToValue;
+  AnimationValue mFromValue, mToValue;
 
   Maybe<ComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
@@ -289,6 +287,10 @@ public:
   // Returns true if the effect is run on the compositor for |aProperty| and
   // needs a base style to composite with.
   bool NeedsBaseStyle(nsCSSPropertyID aProperty) const;
+
+  // Returns true if the effect is current state and has scale animation.
+  // |aFrame| is used for calculation of scale values.
+  bool ContainsAnimatedScale(const nsIFrame* aFrame) const;
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,

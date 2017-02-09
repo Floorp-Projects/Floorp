@@ -22,17 +22,18 @@ CROSS_CCTOOLS_PATH=$topsrcdir/cctools
 # `browser/config/tooltool-manifests/macosx64/cross-releng.manifest`.
 CROSS_SYSROOT=$topsrcdir/MacOSX10.7.sdk
 CROSS_PRIVATE_FRAMEWORKS=$CROSS_SYSROOT/System/Library/PrivateFrameworks
-FLAGS="-target x86_64-apple-darwin10 -mlinker-version=136 -B $CROSS_CCTOOLS_PATH/bin -isysroot $CROSS_SYSROOT"
+FLAGS="-target x86_64-apple-darwin11 -B $CROSS_CCTOOLS_PATH/bin -isysroot $CROSS_SYSROOT"
 
 export CC="$topsrcdir/clang/bin/clang $FLAGS"
 export CXX="$topsrcdir/clang/bin/clang++ $FLAGS"
 export CPP="$topsrcdir/clang/bin/clang $FLAGS -E"
 export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
 export LDFLAGS="-Wl,-syslibroot,$CROSS_SYSROOT -Wl,-dead_strip"
-export TOOLCHAIN_PREFIX=$CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin10-
+export TOOLCHAIN_PREFIX=$CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin11-
 export DSYMUTIL=$topsrcdir/clang/bin/llvm-dsymutil
-export GENISOIMAGE=$topsrcdir/genisoimage/genisoimage
+export MKFSHFS=$topsrcdir/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$topsrcdir/dmg/dmg
+export HFS_TOOL=$topsrcdir/dmg/hfsplus
 
 export HOST_CC="$topsrcdir/clang/bin/clang"
 export HOST_CXX="$topsrcdir/clang/bin/clang++"

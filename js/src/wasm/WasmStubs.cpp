@@ -700,7 +700,8 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
         Register act = WasmIonExitRegE1;
 
         // JitActivation* act = cx->activation();
-        masm.movePtr(SymbolicAddress::Context, cx);
+        masm.movePtr(SymbolicAddress::ContextPtr, cx);
+        masm.loadPtr(Address(cx, 0), cx);
         masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
         // act.active_ = true;
@@ -729,7 +730,8 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
         Register tmp = WasmIonExitRegD2;
 
         // JitActivation* act = cx->activation();
-        masm.movePtr(SymbolicAddress::Context, cx);
+        masm.movePtr(SymbolicAddress::ContextPtr, cx);
+        masm.loadPtr(Address(cx, 0), cx);
         masm.loadPtr(Address(cx, JSContext::offsetOfActivation()), act);
 
         // cx->jitTop = act->prevJitTop_;

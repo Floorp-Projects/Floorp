@@ -800,7 +800,7 @@ void
 HandleException(ResumeFromException* rfe)
 {
     JSContext* cx = TlsContext.get();
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
     AutoResetLastProfilerFrameOnReturnFromException profFrameReset(cx, rfe);
 
@@ -2476,6 +2476,9 @@ InlineFrameIterator::computeEnvironmentChain(const Value& envChainValue,
     if (isFunctionFrame())
         return callee(fallback)->environment();
 
+    if (isModuleFrame())
+        return script()->module()->environment();
+
     // Ion does not handle non-function scripts that have anything other than
     // the global on their env chain.
     MOZ_ASSERT(!script()->isForEval());
@@ -2487,6 +2490,12 @@ bool
 InlineFrameIterator::isFunctionFrame() const
 {
     return !!calleeTemplate_;
+}
+
+bool
+InlineFrameIterator::isModuleFrame() const
+{
+    return script()->module();
 }
 
 MachineState
@@ -2823,11 +2832,10 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 #endif // DEBUG
 
 JitProfilingFrameIterator::JitProfilingFrameIterator(
-        JSRuntime* rt, const JS::ProfilingFrameIterator::RegisterState& state)
+        JSContext* cx, const JS::ProfilingFrameIterator::RegisterState& state)
 {
     // If no profilingActivation is live, initialize directly to
     // end-of-iteration state.
-    JSContext* cx = rt->unsafeContextFromAnyThread();
     if (!cx->profilingActivation()) {
         type_ = JitFrame_Entry;
         fp_ = nullptr;
@@ -2853,7 +2861,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
     fp_ = (uint8_t*) act->lastProfilingFrame();
     void* lastCallSite = act->lastProfilingCallSite();
 
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
+    JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
 
     // Profiler sampling must NOT be suppressed if we are here.
     MOZ_ASSERT(cx->isProfilerSamplingEnabled());
@@ -2863,7 +2871,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
         return;
 
     // Try initializing with sampler pc using native=>bytecode table.
-    if (tryInitWithTable(table, state.pc, rt, /* forLastCallSite = */ false))
+    if (tryInitWithTable(table, state.pc, cx->runtime(), /* forLastCallSite = */ false))
         return;
 
     // Try initializing with lastProfilingCallSite pc
@@ -2872,7 +2880,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
             return;
 
         // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
-        if (tryInitWithTable(table, lastCallSite, rt, /* forLastCallSite = */ true))
+        if (tryInitWithTable(table, lastCallSite, cx->runtime(), /* forLastCallSite = */ true))
             return;
     }
 

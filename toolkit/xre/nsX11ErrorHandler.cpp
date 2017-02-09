@@ -149,7 +149,6 @@ X11Error(Display *display, XErrorEvent *event) {
 }
 }
 
-#if (MOZ_WIDGET_GTK != 3)
 void
 InstallX11ErrorHandler()
 {
@@ -161,4 +160,3 @@ InstallX11ErrorHandler()
     XSynchronize(display, True);
   }
 }
-#endif

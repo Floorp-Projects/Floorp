@@ -1561,10 +1561,22 @@
             if (rowCount == 1 && hasDummyItems) {
               // When there's only one row, make the compact settings button
               // hug the right edge of the panel.  It may not due to the panel's
-              // width not being an integral factor of the button width.  (See
+              // width not being an integral multiple of the button width.  (See
               // the "There will be an emtpy area" comment above.)  Increase the
               // width of the last dummy item by the remainder.
+              //
+              // There's one weird thing to guard against.  When layout pixels
+              // aren't an integral multiple of device pixels, the calculated
+              // remainder can end up being ~1px too big, at least on Windows,
+              // which pushes the settings button to a new row.  The remainder
+              // is integral, not a fraction, so that's not the problem.  To
+              // work around that, unscale the remainder, floor it, scale it
+              // back, and then floor that.
+              let scale = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils)
+                                .screenPixelsPerCSSPixel;
               let remainder = panelWidth - (enginesPerRow * buttonWidth);
+              remainder = Math.floor(Math.floor(remainder * scale) / scale);
               let width = remainder + buttonWidth;
               let lastDummyItem = this.settingsButton.previousSibling;
               lastDummyItem.setAttribute("width", width);

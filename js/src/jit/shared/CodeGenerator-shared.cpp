@@ -1843,10 +1843,8 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
 
     masm.Push(logger);
 
-    CodeOffset patchLogger = masm.movWithPatch(ImmPtr(nullptr), logger);
-    masm.propagateOOM(patchableTraceLoggers_.append(patchLogger));
-
-    masm.branchTest32(Assembler::Zero, logger, logger, &done);
+    masm.loadTraceLogger(logger);
+    masm.branchTestPtr(Assembler::Zero, logger, logger, &done);
 
     Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
@@ -1880,10 +1878,8 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
 
     masm.Push(logger);
 
-    CodeOffset patchLocation = masm.movWithPatch(ImmPtr(nullptr), logger);
-    masm.propagateOOM(patchableTraceLoggers_.append(patchLocation));
-
-    masm.branchTest32(Assembler::Zero, logger, logger, &done);
+    masm.loadTraceLogger(logger);
+    masm.branchTestPtr(Assembler::Zero, logger, logger, &done);
 
     Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
@@ -1913,10 +1909,8 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, const char* text,
 
     masm.Push(loggerReg);
 
-    CodeOffset patchLocation = masm.movWithPatch(ImmPtr(nullptr), loggerReg);
-    masm.propagateOOM(patchableTraceLoggers_.append(patchLocation));
-
-    masm.branchTest32(Assembler::Zero, loggerReg, loggerReg, &done);
+    masm.loadTraceLogger(loggerReg);
+    masm.branchTestPtr(Assembler::Zero, loggerReg, loggerReg, &done);
 
     Address enabledAddress(loggerReg, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);

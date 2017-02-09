@@ -542,8 +542,8 @@ KeyframeEffectReadOnly::ComposeStyle(
 
       // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
       // AnimationValue.
-      RawServoAnimationValue* servoFromValue = segment->mServoFromValue;
-      RawServoAnimationValue* servoToValue = segment->mServoToValue;
+      RawServoAnimationValue* servoFromValue = segment->mFromValue.mServo;
+      RawServoAnimationValue* servoToValue = segment->mToValue.mServo;
 
       // For unsupported or non-animatable animation types, we get nullptrs.
       if (!servoFromValue || !servoToValue) {
@@ -599,11 +599,11 @@ KeyframeEffectReadOnly::ComposeStyle(
 
       StyleAnimationValue fromValue =
         CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                       segment->mFromValue,
+                       segment->mFromValue.mGecko,
                        segment->mFromComposite);
       StyleAnimationValue toValue =
         CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                       segment->mToValue,
+                       segment->mToValue.mGecko,
                        segment->mToComposite);
 
       // Iteration composition for accumulate
@@ -614,9 +614,9 @@ KeyframeEffectReadOnly::ComposeStyle(
           prop.mSegments.LastElement();
         // FIXME: Bug 1293492: Add a utility function to calculate both of
         // below StyleAnimationValues.
-        StyleAnimationValue lastValue = lastSegment.mToValue.IsNull()
+        StyleAnimationValue lastValue = lastSegment.mToValue.mGecko.IsNull()
           ? GetUnderlyingStyle(prop.mProperty, aStyleRule.mGecko)
-          : lastSegment.mToValue;
+          : lastSegment.mToValue.mGecko;
         fromValue =
           StyleAnimationValue::Accumulate(prop.mProperty,
                                           lastValue,
@@ -1015,10 +1015,10 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
       Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mFromValue,
+                                                    s.mFromValue.mGecko,
                                                     fromValue);
       Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mToValue,
+                                                    s.mToValue.mGecko,
                                                     toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey,
              NS_ConvertUTF16toUTF8(fromValue).get(),
@@ -1135,7 +1135,7 @@ KeyframeEffectReadOnly::GetProperties(
 
       binding_detail::FastAnimationPropertyValueDetails fromValue;
       CreatePropertyValue(property.mProperty, segment.mFromKey,
-                          segment.mTimingFunction, segment.mFromValue,
+                          segment.mTimingFunction, segment.mFromValue.mGecko,
                           segment.mFromComposite, fromValue);
       // We don't apply timing functions for zero-length segments, so
       // don't return one here.
@@ -1152,10 +1152,11 @@ KeyframeEffectReadOnly::GetProperties(
       // a) this is the last segment, or
       // b) the next segment's from-value differs.
       if (segmentIdx == segmentLen - 1 ||
-          property.mSegments[segmentIdx + 1].mFromValue != segment.mToValue) {
+          property.mSegments[segmentIdx + 1].mFromValue.mGecko !=
+            segment.mToValue.mGecko) {
         binding_detail::FastAnimationPropertyValueDetails toValue;
         CreatePropertyValue(property.mProperty, segment.mToKey,
-                            Nothing(), segment.mToValue,
+                            Nothing(), segment.mToValue.mGecko,
                             segment.mToComposite, toValue);
         // It doesn't really make sense to have a timing function on the
         // last property value or before a sudden jump so we just drop the
@@ -1621,11 +1622,13 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(
       }
       RefPtr<nsStyleContext> fromContext =
         CreateStyleContextForAnimationValue(property.mProperty,
-                                            segment.mFromValue, aStyleContext);
+                                            segment.mFromValue.mGecko,
+                                            aStyleContext);
 
       RefPtr<nsStyleContext> toContext =
         CreateStyleContextForAnimationValue(property.mProperty,
-                                            segment.mToValue, aStyleContext);
+                                            segment.mToValue.mGecko,
+                                            aStyleContext);
 
       uint32_t equalStructs = 0;
       uint32_t samePointerStructs = 0;
@@ -1756,6 +1759,55 @@ KeyframeEffectReadOnly::NeedsBaseStyle(nsCSSPropertyID aProperty) const
   }
   MOZ_ASSERT_UNREACHABLE(
     "Expected a property that can be run on the compositor");
+
+  return false;
+}
+
+bool
+KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
+{
+  if (!IsCurrent()) {
+    return false;
+  }
+
+  for (const AnimationProperty& prop : mProperties) {
+    if (prop.mProperty != eCSSProperty_transform) {
+      continue;
+    }
+
+    if (NeedsBaseStyle(prop.mProperty)) {
+      StyleAnimationValue baseStyle =
+        EffectCompositor::GetBaseStyle(prop.mProperty, aFrame);
+      MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
+      if (baseStyle.IsNull()) {
+        // If we failed to get the base style, we consider it has scale value
+        // here for the safety.
+        return true;
+      }
+      gfxSize size = baseStyle.GetScaleValue(aFrame);
+      if (size != gfxSize(1.0f, 1.0f)) {
+        return true;
+      }
+    }
+
+    // This is actually overestimate because there are some cases that combining
+    // the base value and from/to value produces 1:1 scale. But it doesn't
+    // really matter.
+    for (const AnimationPropertySegment& segment : prop.mSegments) {
+      if (!segment.mFromValue.IsNull()) {
+        gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
+        if (from != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+      }
+      if (!segment.mToValue.IsNull()) {
+        gfxSize to = segment.mToValue.GetScaleValue(aFrame);
+        if (to != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+      }
+    }
+  }
 
   return false;
 }

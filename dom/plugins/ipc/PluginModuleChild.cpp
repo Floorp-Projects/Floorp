@@ -24,6 +24,7 @@
 #include "nsXULAppAPI.h"
 
 #ifdef MOZ_X11
+# include "nsX11ErrorHandler.h"
 # include "mozilla/X11Util.h"
 #endif
 #include "mozilla/ipc/ProcessChild.h"
@@ -593,7 +594,7 @@ PluginModuleChild::InitGraphics()
 #endif
 #ifdef MOZ_X11
     // Do this after initializing GDK, or GDK will install its own handler.
-    XRE_InstallX11ErrorHandler();
+    InstallX11ErrorHandler();
 #endif
     return true;
 }
@@ -2117,7 +2118,7 @@ PMCGetKeyState(int aVirtKey)
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
         int16_t ret = 0;
-        if (chromeInstance->SendGetKeyState(aVirtKey, &ret)) {
+        if (chromeInstance->CallGetKeyState(aVirtKey, &ret)) {
           return ret;
         }
     }
