@@ -16,7 +16,7 @@ let matchingProfiles = [{
 
 let testCases = [{
   options: {},
-  matchingProfiles: matchingProfiles,
+  matchingProfiles,
   searchString: "",
   fieldName: "",
   expected: {
