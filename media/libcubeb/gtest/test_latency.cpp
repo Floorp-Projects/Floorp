@@ -27,8 +27,7 @@ TEST(cubeb, latency)
   }
 
   r = cubeb_get_preferred_channel_layout(ctx, &layout);
-  ASSERT_TRUE(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED ||
-              (r == CUBEB_ERROR && layout == CUBEB_LAYOUT_UNDEFINED));
+  ASSERT_TRUE(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
 
   cubeb_stream_params params = {
     CUBEB_SAMPLE_FLOAT32NE,
