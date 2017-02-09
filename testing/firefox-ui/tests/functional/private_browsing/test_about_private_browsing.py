@@ -21,9 +21,6 @@ class TestAboutPrivateBrowsing(PuppeteerMixin, MarionetteTestCase):
 
     def tearDown(self):
         try:
-            self.puppeteer.windows.close_all([self.browser])
-            self.browser.switch_to()
-
             self.marionette.clear_pref('app.support.baseURL')
         finally:
             super(TestAboutPrivateBrowsing, self).tearDown()
