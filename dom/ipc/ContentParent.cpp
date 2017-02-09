@@ -42,6 +42,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/GeolocationBinding.h"
@@ -4959,5 +4960,39 @@ ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables
     return IPC_FAIL_NO_REASON(this);
   }
   *aRv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvFileCreationRequest(const nsID& aID,
+                                       const nsString& aFullPath,
+                                       const nsString& aType,
+                                       const nsString& aName,
+                                       const bool& aLastModifiedPassed,
+                                       const int64_t& aLastModified,
+                                       const bool& aIsFromNsIFile)
+{
+  RefPtr<BlobImpl> blobImpl;
+  nsresult rv =
+    FileCreatorHelper::CreateBlobImplForIPC(aFullPath, aType, aName,
+                                            aLastModifiedPassed,
+                                            aLastModified, aIsFromNsIFile,
+                                            getter_AddRefs(blobImpl));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (!SendFileCreationResponse(aID, FileCreationErrorResult(rv))) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(blobImpl);
+
+  BlobParent* blobParent = BlobParent::GetOrCreate(this, blobImpl);
+  if (!SendFileCreationResponse(aID,
+                                FileCreationSuccessResult(blobParent, nullptr))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   return IPC_OK();
 }

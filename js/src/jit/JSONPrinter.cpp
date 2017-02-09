@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef JS_JITSPEW
-
 #include "jit/JSONPrinter.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/SizePrintfMacros.h"
 
 #include <stdarg.h>
@@ -123,6 +122,16 @@ JSONPrinter::integerValue(int value)
 }
 
 void
+JSONPrinter::doubleProperty(const char* name, double value)
+{
+    property(name);
+    if (mozilla::IsFinite(value))
+        out_.printf("%f", value);
+    else
+        out_.printf("null");
+}
+
+void
 JSONPrinter::endObject()
 {
     indentLevel_--;
@@ -137,5 +146,3 @@ JSONPrinter::endList()
     out_.printf("]");
     first_ = false;
 }
-
-#endif /* JS_JITSPEW */

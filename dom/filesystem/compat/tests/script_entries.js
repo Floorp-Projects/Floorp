@@ -35,8 +35,10 @@ addMessageListener("entries.open", function (e) {
   dir2.append('subsubdir');
   dir2.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
-  sendAsyncMessage("entries.opened", {
-    data: [ new Directory(tmpDir.path), File.createFromNsIFile(tmpFile) ]
+  File.createFromNsIFile(tmpFile).then(function(file) {
+    sendAsyncMessage("entries.opened", {
+      data: [ new Directory(tmpDir.path), file ]
+    });
   });
 });
 

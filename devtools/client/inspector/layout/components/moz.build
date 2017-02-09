@@ -12,6 +12,8 @@ DevToolsModules(
     'BoxModelEditable.js',
     'BoxModelInfo.js',
     'BoxModelMain.js',
+    'BoxModelProperties.js',
+    'ComputedProperty.js',
     'Grid.js',
     'GridDisplaySettings.js',
     'GridList.js',

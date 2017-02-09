@@ -686,14 +686,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline bool hasSelfReference() const;
 
     // Push stub code and the VMFunction pointer.
-    inline void enterExitFrame(const VMFunction* f = nullptr);
+    inline void enterExitFrame(Register temp, const VMFunction* f = nullptr);
 
     // Push an exit frame token to identify which fake exit frame this footer
     // corresponds to.
-    inline void enterFakeExitFrame(enum ExitFrameTokenValues token);
+    inline void enterFakeExitFrame(Register temp, enum ExitFrameTokenValues token);
 
     // Push an exit frame token for a native call.
-    inline void enterFakeExitFrameForNative(bool isConstructing);
+    inline void enterFakeExitFrameForNative(Register temp, bool isConstructing);
 
     // Pop ExitFrame footer in addition to the extra frame.
     inline void leaveExitFrame(size_t extraFrame = 0);
@@ -701,7 +701,7 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
     // Save the top of the stack into JSontext::jitTop of the current thread,
     // which should be the location of the latest exit frame.
-    void linkExitFrame();
+    void linkExitFrame(Register temp);
 
     // Patch the value of PushStubCode with the pointer to the finalized code.
     void linkSelfReference(JitCode* code);
@@ -1494,18 +1494,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadStringChars(Register str, Register dest);
     void loadStringChar(Register str, Register index, Register output);
 
-    void loadJSContext(Register dest) {
-        movePtr(ImmPtr(GetJitContext()->runtime->getJSContext()), dest);
-    }
+    void loadJSContext(Register dest);
     void loadJitActivation(Register dest) {
-        loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfActivation()), dest);
+        loadJSContext(dest);
+        loadPtr(Address(dest, offsetof(JSContext, activation_)), dest);
     }
     void loadWasmActivationFromTls(Register dest) {
         loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
         loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
     }
     void loadWasmActivationFromSymbolicAddress(Register dest) {
-        movePtr(wasm::SymbolicAddress::Context, dest);
+        movePtr(wasm::SymbolicAddress::ContextPtr, dest);
+        loadPtr(Address(dest, 0), dest);
         loadPtr(Address(dest, JSContext::offsetOfWasmActivation()), dest);
     }
 
@@ -1911,6 +1911,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char* output, Register value);
 
 #ifdef JS_TRACE_LOGGING
+    void loadTraceLogger(Register logger) {
+        loadJSContext(logger);
+        loadPtr(Address(logger, offsetof(JSContext, traceLogger)), logger);
+    }
     void tracelogStartId(Register logger, uint32_t textId, bool force = false);
     void tracelogStartId(Register logger, Register textId);
     void tracelogStartEvent(Register logger, Register event);

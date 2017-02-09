@@ -1088,6 +1088,13 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvDeleteGetFilesRequest(const nsID& aID) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvFileCreationRequest(const nsID& aID, const nsString& aFullPath,
+                          const nsString& aType, const nsString& aName,
+                          const bool& aLastModifiedPassed,
+                          const int64_t& aLastModified,
+                          const bool& aIsFromNsIFile) override;
+
   virtual mozilla::ipc::IPCResult RecvAccumulateChildHistogram(
     InfallibleTArray<Accumulation>&& aAccumulations) override;
   virtual mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistogram(

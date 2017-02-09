@@ -122,16 +122,20 @@ function expectUncaughtException(expecting)
   // This is dummy for xpcshell test.
 }
 
-function ExpectError(name)
+function ExpectError(name, preventDefault)
 {
   this._name = name;
+  this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
   handleEvent: function(event)
   {
     do_check_eq(event.type, "error");
     do_check_eq(this._name, event.target.error.name);
-    event.preventDefault();
+    if (this._preventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     grabEventAndContinueHandler(event);
   }
 };
@@ -646,6 +650,7 @@ var SpecialPowers = {
       this._createdFiles = new Array;
     }
     let createdFiles = this._createdFiles;
+    let promises = [];
     requests.forEach(function(request) {
       const filePerms = 0o666;
       let testFile = dirSvc.get("ProfD", Ci.nsIFile);
@@ -654,20 +659,24 @@ var SpecialPowers = {
       } else {
         testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
       }
-        let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-        outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-                       filePerms, 0);
-        if (request.data) {
-          outStream.write(request.data, request.data.length);
-          outStream.close();
-        }
-        filePaths.push(File.createFromFileName(testFile.path, request.options));
-        createdFiles.push(testFile);
+      let outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+      outStream.init(testFile, 0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+                     filePerms, 0);
+      if (request.data) {
+        outStream.write(request.data, request.data.length);
+        outStream.close();
+      }
+      promises.push(File.createFromFileName(testFile.path, request.options).then(function(file) {
+        filePaths.push(file);
+      }));
+      createdFiles.push(testFile);
     });
 
-    setTimeout(function () {
-      callback(filePaths);
-    }, 0);
+    Promise.all(promises).then(function() {
+      setTimeout(function () {
+        callback(filePaths);
+      }, 0);
+    });
   },
 
   removeFiles: function() {

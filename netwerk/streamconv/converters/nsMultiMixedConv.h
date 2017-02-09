@@ -14,6 +14,7 @@
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/IncrementalTokenizer.h"
 #include "nsHttpResponseHead.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
@@ -117,7 +118,7 @@ protected:
 //  --BoundaryToken-- (end delimited by final "--")
 //
 // linebreaks can be either CRLF or LFLF. linebreaks preceding
-// boundary tokens are considered part of the data. BoundaryToken
+// boundary tokens are NOT considered part of the data. BoundaryToken
 // is any opaque string.
 //  
 //
@@ -129,39 +130,29 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    nsMultiMixedConv();
+    explicit nsMultiMixedConv();
 
 protected:
+    typedef mozilla::IncrementalTokenizer::Token Token;
+
     virtual ~nsMultiMixedConv();
 
-    nsresult SendStart(nsIChannel *aChannel);
+    nsresult SendStart();
+    void AccumulateData(Token const & aToken);
+    nsresult SendData();
     nsresult SendStop(nsresult aStatus);
-    nsresult SendData(char *aBuffer, uint32_t aLen);
-    nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
-                          uint32_t &aLen, bool *_retval);
-    int32_t  PushOverLine(char *&aPtr, uint32_t &aLen);
-    char *FindToken(char *aCursor, uint32_t aLen);
-    nsresult BufferData(char *aData, uint32_t aLen);
 
     // member data
-    bool                mNewPart;        // Are we processing the beginning of a part?
-    bool                mProcessingHeaders;
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
 
-    nsCString           mToken;
-    uint32_t            mTokenLen;
-
+    nsCOMPtr<nsIChannel> mChannel; // The channel as we get in in OnStartRequest call
     RefPtr<nsPartChannel> mPartChannel;   // the channel for the given part we're processing.
                                         // one channel per part.
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
     nsCString           mContentDisposition;
     uint64_t            mContentLength;
-    
-    char                *mBuffer;
-    uint32_t            mBufLen;
     uint64_t            mTotalSent;
-    bool                mFirstOnData;   // used to determine if we're in our first OnData callback.
 
     // The following members are for tracking the byte ranges in
     // multipart/mixed content which specified the 'Content-Range:'
@@ -169,8 +160,90 @@ protected:
     int64_t             mByteRangeStart;
     int64_t             mByteRangeEnd;
     bool                mIsByteRangeRequest;
+    // This flag is set first time we create a part channel.
+    // We use it to prevent duplicated OnStopRequest call on the listener
+    // when we fail from some reason to ever create a part channel that
+    // ensures correct notifications.
+    bool                mRequestListenerNotified;
 
     uint32_t            mCurrentPartID;
+
+    // Flag preventing reenter of OnDataAvailable in case the target listener
+    // ends up spinning the event loop.
+    bool                mInOnDataAvailable;
+
+    // Current state of the incremental parser
+    enum EParserState {
+      BOUNDARY,
+      BOUNDARY_CRLF,
+      HEADER_NAME,
+      HEADER_SEP,
+      HEADER_VALUE,
+      BODY_INIT,
+      BODY,
+      TRAIL_DASH1,
+      TRAIL_DASH2,
+      EPILOGUE,
+
+      INIT = BOUNDARY
+    } mParserState;
+
+    // Response part header value, valid when we find a header name
+    // we recognize.
+    enum EHeader : uint32_t {
+      HEADER_FIRST,
+      HEADER_CONTENT_TYPE = HEADER_FIRST,
+      HEADER_CONTENT_LENGTH,
+      HEADER_CONTENT_DISPOSITION,
+      HEADER_SET_COOKIE,
+      HEADER_CONTENT_RANGE,
+      HEADER_RANGE,
+      HEADER_UNKNOWN
+    } mResponseHeader;
+    // Cumulated value of a response header.
+    nsCString mResponseHeaderValue;
+
+    nsCString mBoundary;
+    mozilla::IncrementalTokenizer mTokenizer;
+
+    // When in the "body parsing" mode, see below, we cumulate raw data
+    // incrementally to mainly avoid any unnecessary granularity.
+    // mRawData points to the first byte in the tokenizer buffer where part
+    // body data begins or continues.  mRawDataLength is a cumulated length
+    // of that data during a single tokenizer input feed.  This is always
+    // flushed right after we fed the tokenizer.
+    nsACString::const_char_iterator mRawData;
+    nsACString::size_type mRawDataLength;
+
+    // At the start we don't know if the server will be sending boundary with
+    // or without the leading dashes.
+    Token mBoundaryToken;
+    Token mBoundaryTokenWithDashes;
+    // We need these custom tokens to allow finding CRLF when in the binary mode.
+    // CRLF before boundary is considered part of the boundary and not part of
+    // the data.
+    Token mLFToken;
+    Token mCRLFToken;
+    // Custom tokens for each of the response headers we recognize.
+    Token mHeaderTokens[HEADER_UNKNOWN];
+
+    // Resets values driven by part headers, like content type, to their defaults,
+    // called at the start of every part processing.
+    void HeadersToDefault();
+    // Processes captured value of mResponseHeader header.
+    nsresult ProcessHeader();
+    // Switches the parser and tokenizer state to "binary mode" which only searches
+    // for the 'CRLF boundary' delimiter.
+    void SwitchToBodyParsing();
+    // Switches to the default mode, we are in this mode when parsing headers and
+    // control data around the boundary delimiters.
+    void SwitchToControlParsing();
+    // Turns on or off recognition of the headers we recognize in part heads.
+    void SetHeaderTokensEnabled(bool aEnable);
+
+    // The main parser callback called by the IncrementalTokenizer
+    // instance from OnDataAvailable or OnStopRequest.
+    nsresult ConsumeToken(Token const & token);
 };
 
 #endif /* __nsmultimixedconv__h__ */

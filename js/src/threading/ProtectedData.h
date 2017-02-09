@@ -321,7 +321,11 @@ class ProtectedDataWriteOnce
     const T& operator->() const { return ref(); }
 
     template <typename U>
-    ThisType& operator=(const U& p) { this->writeRef() = p; return *this; }
+    ThisType& operator=(const U& p) {
+        if (ref() != p)
+            this->writeRef() = p;
+        return *this;
+    }
 
     const T& ref() const { return value; }
 

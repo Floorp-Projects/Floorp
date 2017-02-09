@@ -369,10 +369,8 @@ void*
 wasm::AddressOf(SymbolicAddress imm, JSContext* cx)
 {
     switch (imm) {
-      case SymbolicAddress::Context:
-        return cx->runtime()->unsafeContextFromAnyThread();
-      case SymbolicAddress::InterruptUint32:
-        return &cx->runtime()->unsafeContextFromAnyThread()->interrupt_;
+      case SymbolicAddress::ContextPtr:
+        return &cx->zone()->group()->context;
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:

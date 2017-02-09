@@ -21,6 +21,7 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'BlobSet.h',
     'File.h',
+    'FileCreatorHelper.h',
     'FileList.h',
     'FileReader.h',
     'MultipartBlobImpl.h',
@@ -31,6 +32,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'BlobSet.cpp',
     'File.cpp',
+    'FileCreatorHelper.cpp',
     'FileList.cpp',
     'FileReader.cpp',
     'MultipartBlobImpl.cpp',

@@ -127,10 +127,10 @@ MaybeTraceRegExpShared(JSContext* cx, RegExpShared* shared)
         shared->trace(zone->barrierTracer());
 }
 
-bool
-RegExpObject::getShared(JSContext* cx, RegExpGuard* g)
+/* static */ bool
+RegExpObject::getShared(JSContext* cx, Handle<RegExpObject*> regexp, RegExpGuard* g)
 {
-    if (RegExpShared* shared = maybeShared()) {
+    if (RegExpShared* shared = regexp->maybeShared()) {
         // Fetching a RegExpShared from an object requires a read
         // barrier, as the shared pointer might be weak.
         MaybeTraceRegExpShared(cx, shared);
@@ -139,7 +139,7 @@ RegExpObject::getShared(JSContext* cx, RegExpGuard* g)
         return true;
     }
 
-    return createShared(cx, g);
+    return createShared(cx, regexp, g);
 }
 
 /* static */ bool
@@ -277,16 +277,14 @@ RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
     return regexp;
 }
 
-bool
-RegExpObject::createShared(JSContext* cx, RegExpGuard* g)
+/* static */ bool
+RegExpObject::createShared(JSContext* cx, Handle<RegExpObject*> regexp, RegExpGuard* g)
 {
-    Rooted<RegExpObject*> self(cx, this);
-
-    MOZ_ASSERT(!maybeShared());
-    if (!cx->compartment()->regExps.get(cx, getSource(), getFlags(), g))
+    MOZ_ASSERT(!regexp->maybeShared());
+    if (!cx->compartment()->regExps.get(cx, regexp->getSource(), regexp->getFlags(), g))
         return false;
 
-    self->setShared(**g);
+    regexp->setShared(**g);
     return true;
 }
 
@@ -890,11 +888,12 @@ RegExpShared::dumpBytecode(JSContext* cx, bool match_only, HandleLinearString in
     return true;
 }
 
-bool
-RegExpObject::dumpBytecode(JSContext* cx, bool match_only, HandleLinearString input)
+/* static */ bool
+RegExpObject::dumpBytecode(JSContext* cx, Handle<RegExpObject*> regexp,
+                           bool match_only, HandleLinearString input)
 {
     RegExpGuard g(cx);
-    if (!getShared(cx, &g))
+    if (!getShared(cx, regexp, &g))
         return false;
 
     return g.re()->dumpBytecode(cx, match_only, input);
@@ -973,7 +972,7 @@ bool
 RegExpShared::compile(JSContext* cx, HandleLinearString input,
                       CompilationMode mode, ForceByteCodeEnum force)
 {
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
 
     RootedAtom pattern(cx, source);
@@ -1040,7 +1039,7 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start,
 {
     MOZ_ASSERT_IF(matches, !endIndex);
     MOZ_ASSERT_IF(!matches, endIndex);
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
 
     CompilationMode mode = matches ? Normal : MatchOnly;
 
@@ -1409,7 +1408,7 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
     Rooted<JSAtom*> source(cx, regex->getSource());
 
     RegExpGuard g(cx);
-    if (!regex->getShared(cx, &g))
+    if (!RegExpObject::getShared(cx, regex, &g))
         return nullptr;
 
     clone->initAndZeroLastIndex(source, g->getFlags(), cx);

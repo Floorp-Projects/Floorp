@@ -46,6 +46,8 @@ export LDFLAGS=/lib64/libpthread.so.0
 # Build cctools
 make -j `nproc --all` install
 strip $CROSSTOOLS_BUILD_DIR/bin/*
+# cctools-port doesn't include dsymutil but clang will need to find it.
+cp $CLANG_DIR/bin/llvm-dsymutil $CROSSTOOLS_BUILD_DIR/bin/x86_64-apple-darwin11-dsymutil
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
