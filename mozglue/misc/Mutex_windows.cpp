@@ -6,13 +6,13 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PlatformMutex.h"
 
-#include "jswin.h"
+#include <windows.h>
 
-#include "threading/Mutex.h"
-#include "threading/windows/MutexPlatformData.h"
+#include "MutexPlatformData_windows.h"
 
-js::detail::MutexImpl::MutexImpl()
+mozilla::detail::MutexImpl::MutexImpl()
 {
   // This number was adopted from NSPR.
   const static DWORD LockSpinCount = 1500;
@@ -25,25 +25,25 @@ js::detail::MutexImpl::MutexImpl()
   MOZ_RELEASE_ASSERT(r);
 }
 
-js::detail::MutexImpl::~MutexImpl()
+mozilla::detail::MutexImpl::~MutexImpl()
 {
   DeleteCriticalSection(&platformData()->criticalSection);
 }
 
 void
-js::detail::MutexImpl::lock()
+mozilla::detail::MutexImpl::lock()
 {
   EnterCriticalSection(&platformData()->criticalSection);
 }
 
 void
-js::detail::MutexImpl::unlock()
+mozilla::detail::MutexImpl::unlock()
 {
   LeaveCriticalSection(&platformData()->criticalSection);
 }
 
-js::detail::MutexImpl::PlatformData*
-js::detail::MutexImpl::platformData()
+mozilla::detail::MutexImpl::PlatformData*
+mozilla::detail::MutexImpl::platformData()
 {
   static_assert(sizeof(platformData_) >= sizeof(PlatformData),
                 "platformData_ is too small");

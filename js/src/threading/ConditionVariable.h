@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/PlatformConditionVariable.h"
 #include "mozilla/TimeStamp.h"
 
 #include <stdint.h>
@@ -25,46 +26,6 @@ enum class CVStatus {
   NoTimeout,
   Timeout
 };
-
-namespace detail {
-
-class ConditionVariableImpl {
-public:
-  struct PlatformData;
-
-  ConditionVariableImpl();
-  ~ConditionVariableImpl();
-
-  // Wake one thread that is waiting on this condition.
-  void notify_one();
-
-  // Wake all threads that are waiting on this condition.
-  void notify_all();
-
-  // Block the current thread of execution until this condition variable is
-  // woken from another thread via notify_one or notify_all.
-  void wait(Mutex& lock);
-
-  CVStatus wait_for(Mutex& lock,
-                    const mozilla::TimeDuration& rel_time);
-
-private:
-  ConditionVariableImpl(const ConditionVariableImpl&) = delete;
-  ConditionVariableImpl& operator=(const ConditionVariableImpl&) = delete;
-
-  PlatformData* platformData();
-
-#ifndef XP_WIN
-  void* platformData_[sizeof(pthread_cond_t) / sizeof(void*)];
-  static_assert(sizeof(pthread_cond_t) / sizeof(void*) != 0 &&
-                sizeof(pthread_cond_t) % sizeof(void*) == 0,
-                "pthread_cond_t must have pointer alignment");
-#else
-  void* platformData_[4];
-#endif
-};
-
-} // namespace detail
 
 template <typename T> using UniqueLock = LockGuard<T>;
 
@@ -135,7 +96,8 @@ public:
   // encounter substantially longer delays, depending on system load.
   CVStatus wait_for(UniqueLock<Mutex>& lock,
                     const mozilla::TimeDuration& rel_time) {
-    return impl_.wait_for(lock.lock, rel_time);
+    return impl_.wait_for(lock.lock, rel_time) == mozilla::detail::CVStatus::Timeout
+      ? CVStatus::Timeout : CVStatus::NoTimeout;
   }
 
   // As with |wait_for|, block the current thread of execution until woken from
@@ -154,7 +116,7 @@ private:
   ConditionVariable(const ConditionVariable&) = delete;
   ConditionVariable& operator=(const ConditionVariable&) = delete;
 
-  detail::ConditionVariableImpl impl_;
+  mozilla::detail::ConditionVariableImpl impl_;
 };
 
 } // namespace js

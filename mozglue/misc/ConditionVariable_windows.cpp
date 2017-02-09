@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <windows.h>
 
-#include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
-#include "threading/windows/MutexPlatformData.h"
+#include "mozilla/PlatformConditionVariable.h"
+#include "mozilla/PlatformMutex.h"
+#include "MutexPlatformData_windows.h"
 
 // Some versions of the Windows SDK have a bug where some interlocked functions
 // are not redefined as compiler intrinsics. Fix that for the interlocked
@@ -29,39 +29,39 @@
 #endif
 
 // Wrapper for native condition variable APIs.
-struct js::ConditionVariableImpl::PlatformData
+struct mozilla::detail::ConditionVariableImpl::PlatformData
 {
   CONDITION_VARIABLE cv_;
 };
 
-js::detail::ConditionVariableImpl::ConditionVariableImpl()
+mozilla::detail::ConditionVariableImpl::ConditionVariableImpl()
 {
   InitializeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::detail::ConditionVariableImpl::notify_one()
+mozilla::detail::ConditionVariableImpl::notify_one()
 {
   WakeConditionVariable(&platformData()->cv_);
 }
 
 void
-js::detail::ConditionVariableImpl::notify_all()
+mozilla::detail::ConditionVariableImpl::notify_all()
 {
   WakeAllConditionVariable(&platformData()->cv_);
 }
 
 void
-js::detail::ConditionVariableImpl::wait(Mutex& lock)
+mozilla::detail::ConditionVariableImpl::wait(MutexImpl& lock)
 {
   CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
   bool r = SleepConditionVariableCS(&platformData()->cv_, cs, INFINITE);
   MOZ_RELEASE_ASSERT(r);
 }
 
-js::CVStatus
-js::detail::ConditionVariableImpl::wait_for(Mutex& lock,
-                                              const mozilla::TimeDuration& rel_time)
+mozilla::detail::CVStatus
+mozilla::detail::ConditionVariableImpl::wait_for(MutexImpl& lock,
+                                                 const mozilla::TimeDuration& rel_time)
 {
   CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
 
@@ -82,13 +82,13 @@ js::detail::ConditionVariableImpl::wait_for(Mutex& lock,
   return CVStatus::Timeout;
 }
 
-js::detail::ConditionVariableImpl::~ConditionVariableImpl()
+mozilla::detail::ConditionVariableImpl::~ConditionVariableImpl()
 {
   // Native condition variables don't require cleanup.
 }
 
-inline js::detail::ConditionVariableImpl::PlatformData*
-js::detail::ConditionVariableImpl::platformData()
+inline mozilla::detail::ConditionVariableImpl::PlatformData*
+mozilla::detail::ConditionVariableImpl::platformData()
 {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
