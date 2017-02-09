@@ -45,6 +45,9 @@ import android.util.Log;
 public class GeckoNetworkManager extends BroadcastReceiver implements BundleEventListener {
     private static final String LOGTAG = "GeckoNetworkManager";
 
+    // If network configuration and/or status changed, we send details of what changed.
+    // If we received a "check out new network state!" intent from the OS but nothing in it looks
+    // different, we ignore it. See Bug 1330836 for some relevant details.
     private static final String LINK_DATA_CHANGED = "changed";
 
     private static GeckoNetworkManager instance;
@@ -321,8 +324,9 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
      * Send current network state and connection type to whomever is listening.
      */
     private void sendNetworkStateToListeners(final Context context) {
-        if (currentConnectionType != previousConnectionType ||
-                currentConnectionSubtype != previousConnectionSubtype) {
+        final boolean connectionTypeOrSubtypeChanged = currentConnectionType != previousConnectionType ||
+                currentConnectionSubtype != previousConnectionSubtype;
+        if (connectionTypeOrSubtypeChanged) {
             previousConnectionType = currentConnectionType;
             previousConnectionSubtype = currentConnectionSubtype;
 
@@ -341,20 +345,26 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
             }
         }
 
-        final String status;
+        // If neither network status nor network configuration changed, do nothing.
+        if (currentNetworkStatus == previousNetworkStatus && !connectionTypeOrSubtypeChanged) {
+            return;
+        }
 
-        if (currentNetworkStatus != previousNetworkStatus) {
+        // If network status remains the same, send "changed". Otherwise, send new network status.
+        // See Bug 1330836 for relevant details.
+        final String status;
+        if (currentNetworkStatus == previousNetworkStatus) {
+            status = LINK_DATA_CHANGED;
+        } else {
             previousNetworkStatus = currentNetworkStatus;
             status = currentNetworkStatus.value;
-        } else {
-            status = LINK_DATA_CHANGED;
         }
 
         if (GeckoThread.isRunning()) {
             onStatusChanged(status);
         } else {
             GeckoThread.queueNativeCall(GeckoNetworkManager.class, "onStatusChanged",
-                                        String.class, status);
+                    String.class, status);
         }
     }
 
