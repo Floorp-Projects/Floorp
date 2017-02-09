@@ -191,7 +191,7 @@ private:
   void
   VerifyDuration(uint32_t aToVerify, const MyDuration& aExpected)
   {
-    ASSERT_TRUE(aToVerify == (aExpected.mSecs * 1000 + aExpected.mNanos / 1000));
+    ASSERT_TRUE(aToVerify == (aExpected.mSecs * 1000));
   }
 
   ~MyParseCallback() {}
