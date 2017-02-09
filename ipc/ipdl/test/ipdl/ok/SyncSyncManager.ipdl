@@ -1,0 +1,11 @@
+include protocol SyncSyncManagee;
+
+/* The main reason for this test is that it would have caught a bug
+ * in the Rust IPDL parser that was treating "sync" like "async" in the
+ * nested case.
+ */
+nested(upto not) sync protocol SyncSyncManager {
+    manages SyncSyncManagee;
+parent:
+    async SyncSyncManagee();
+};

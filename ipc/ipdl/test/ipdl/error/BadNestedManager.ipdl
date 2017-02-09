@@ -1,0 +1,7 @@
+include protocol BadNestedManagee;
+
+nested(upto not) async protocol BadNestedManager {
+    manages BadNestedManagee;
+parent:
+    async BadNestedManagee();
+};
