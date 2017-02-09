@@ -1,0 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/REC-html401-19991224/strict.dtd">
+<html>
+ <head>
+  <title>Bug 1263696 - iframe that should be loaded</title>
+ </head>
+ <body>
+   <script>
+    parent.index = parent.index + 1;
+    parent.SimpleTest.ok(true, "this iframe should load");
+   </script>
+ </body>
+</html>
