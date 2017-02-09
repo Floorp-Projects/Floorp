@@ -42,7 +42,7 @@ struct ChromeFilePropertyBag;
 struct FilePropertyBag;
 class BlobImpl;
 class File;
-class OwningArrayBufferOrArrayBufferViewOrBlobOrUSVString;
+class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 class Promise;
 
 class Blob : public nsIDOMBlob
@@ -59,7 +59,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIDOMBlob)
 
-  typedef OwningArrayBufferOrArrayBufferViewOrBlobOrUSVString BlobPart;
+  typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
 
   // This creates a Blob or a File based on the type of BlobImpl.
   static Blob*
