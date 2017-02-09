@@ -3913,9 +3913,13 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 }
 
 bool
-nsPIDOMWindowInner::HasAudioContexts() const
+nsPIDOMWindowInner::IsPlayingAudio()
 {
-  return !mAudioContexts.IsEmpty();
+  RefPtr<AudioChannelService> acs = AudioChannelService::Get();
+  if (!acs) {
+    return false;
+  }
+  return acs->IsWindowActive(GetOuterWindow());
 }
 
 mozilla::dom::TimeoutManager&
