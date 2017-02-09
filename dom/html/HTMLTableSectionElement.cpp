@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableSectionElement.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
-#include "nsRuleData.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTableSectionElementBinding.h"
 #include "nsContentUtils.h"
@@ -167,36 +167,18 @@ HTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableSectionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                               nsRuleData* aData)
+                                               GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Position))) {
     // height: value
-    nsCSSValue* height = aData->ValueForHeight();
-    if (height->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_height)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
       if (value && value->Type() == nsAttrValue::eInteger)
-        height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
+        aData->SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    nsCSSValue* textAlign = aData->ValueForTextAlign();
-    if (textAlign->GetUnit() == eCSSUnit_Null) {
-      // align: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
-    }
-  }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
-    if (verticalAlign->GetUnit() == eCSSUnit_Null) {
-      // valign: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        verticalAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
-    }
-  }
-
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }

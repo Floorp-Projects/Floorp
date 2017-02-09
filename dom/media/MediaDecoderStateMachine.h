@@ -693,6 +693,8 @@ private:
   RefPtr<CDMProxy> mCDMProxy;
   MozPromiseRequestHolder<MediaDecoder::CDMProxyPromise> mCDMProxyPromise;
 
+  const bool mIsMSE;
+
 private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;

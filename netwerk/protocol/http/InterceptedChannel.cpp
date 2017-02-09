@@ -346,8 +346,9 @@ InterceptedChannelChrome::GetInternalContentPolicyType(nsContentPolicyType* aPol
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsresult rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *aPolicyType = loadInfo->InternalContentPolicyType();
+  if (loadInfo) {
+    *aPolicyType = loadInfo->InternalContentPolicyType();
+  }
   return NS_OK;
 }
 
@@ -515,7 +516,9 @@ InterceptedChannelContent::GetInternalContentPolicyType(nsContentPolicyType* aPo
   nsresult rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aPolicyType = loadInfo->InternalContentPolicyType();
+  if (loadInfo) {
+    *aPolicyType = loadInfo->InternalContentPolicyType();
+  }
   return NS_OK;
 }
 

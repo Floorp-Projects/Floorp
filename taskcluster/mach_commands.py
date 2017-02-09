@@ -302,6 +302,12 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
+    @SubCommand('taskgraph', 'action-callback',
+                description='Run action callback used by action tasks')
+    def action_callback(self, **options):
+        import actions
+        actions.trigger_action_callback()
+
     def setup_logging(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so

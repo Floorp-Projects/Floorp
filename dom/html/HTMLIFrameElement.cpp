@@ -6,10 +6,10 @@
 
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"
-#include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
 #include "nsSandboxFlags.h"
@@ -101,9 +101,9 @@ HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                         nsRuleData* aData)
+                                         GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Border))) {
     // frameborder: 0 | 1 (| NO | YES in quirks mode)
     // If frameborder is 0 or No, set border to 0
     // else leave it as the value set in html.css
@@ -113,43 +113,15 @@ HTMLIFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
-        nsCSSValue* borderLeftWidth = aData->ValueForBorderLeftWidth();
-        if (borderLeftWidth->GetUnit() == eCSSUnit_Null)
-          borderLeftWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
-        nsCSSValue* borderRightWidth = aData->ValueForBorderRightWidth();
-        if (borderRightWidth->GetUnit() == eCSSUnit_Null)
-          borderRightWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
-        nsCSSValue* borderTopWidth = aData->ValueForBorderTopWidth();
-        if (borderTopWidth->GetUnit() == eCSSUnit_Null)
-          borderTopWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
-        nsCSSValue* borderBottomWidth = aData->ValueForBorderBottomWidth();
-        if (borderBottomWidth->GetUnit() == eCSSUnit_Null)
-          borderBottomWidth->SetFloatValue(0.0f, eCSSUnit_Pixel);
+        aData->SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
+        aData->SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
+        aData->SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
+        aData->SetPixelValueIfUnset(eCSSProperty_border_left_width, 0.0f);
       }
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
-    // width: value
-    nsCSSValue* width = aData->ValueForWidth();
-    if (width->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
-      if (value && value->Type() == nsAttrValue::eInteger)
-        width->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-      else if (value && value->Type() == nsAttrValue::ePercent)
-        width->SetPercentValue(value->GetPercentValue());
-    }
 
-    // height: value
-    nsCSSValue* height = aData->ValueForHeight();
-    if (height->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
-      if (value && value->Type() == nsAttrValue::eInteger)
-        height->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-      else if (value && value->Type() == nsAttrValue::ePercent)
-        height->SetPercentValue(value->GetPercentValue());
-    }
-  }
-
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }

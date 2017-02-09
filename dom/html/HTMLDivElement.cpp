@@ -60,14 +60,14 @@ HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLDivElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      nsRuleData* aData)
+                                      GenericSpecifiedValues* aData)
 {
   nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 static void
-MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
+MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, GenericSpecifiedValues* aData)
 {
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);

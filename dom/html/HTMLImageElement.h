@@ -361,7 +361,7 @@ private:
   bool SourceElementMatches(nsIContent* aSourceNode);
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData);
+                                    GenericSpecifiedValues* aGenericData);
 
   bool mInDocResponsiveContent;
   RefPtr<ImageLoadTask> mPendingImageLoadTask;

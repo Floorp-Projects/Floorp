@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-#include "client/windows/handler/exception_handler.h"
+#include "windows/handler/exception_handler.h"
 
 using google_breakpad::ExceptionHandler;
 using std::wstring;

@@ -867,6 +867,10 @@ XMLHttpRequestMainThread::IsCrossSiteCORSRequest() const
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   MOZ_ASSERT(loadInfo);
 
+  if (!loadInfo) {
+    return false;
+  }
+
   return loadInfo->GetTainting() == LoadTainting::CORS;
 }
 
@@ -1608,7 +1612,9 @@ XMLHttpRequestMainThread::SetOriginAttributes(const OriginAttributesDictionary& 
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   MOZ_ASSERT(loadInfo);
-  loadInfo->SetOriginAttributes(attrs);
+  if (loadInfo) {
+    loadInfo->SetOriginAttributes(attrs);
+  }
 }
 
 void
@@ -2111,7 +2117,10 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     MOZ_ASSERT(loadInfo);
-    bool isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
+    bool isCrossSite = false;
+    if (loadInfo) {
+      isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
+    }
 
     if (isCrossSite) {
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
@@ -2516,8 +2525,10 @@ XMLHttpRequestMainThread::CreateChannel()
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  rv = loadInfo->SetPrincipalToInherit(resultingDocumentPrincipal);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (loadInfo) {
+    rv = loadInfo->SetPrincipalToInherit(resultingDocumentPrincipal);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -2622,7 +2633,9 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
   // Not doing this for privileged system XHRs since those don't use CORS.
   if (!IsSystemXHR() && !mIsAnon && mFlagACwithCredentials) {
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
+    if (loadInfo) {
+      static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
+    }
   }
 
   // Blocking gets are common enough out of XHR that we should mark
@@ -2683,8 +2696,10 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
     nsTArray<nsCString> CORSUnsafeHeaders;
     mAuthorRequestHeaders.GetCORSUnsafeHeaders(CORSUnsafeHeaders);
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
-                                   mFlagHadUploadListenersOnSend);
+    if (loadInfo) {
+      loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
+                                     mFlagHadUploadListenersOnSend);
+    }
   }
 
   // Hook us up to listen to redirects and the like. Only do this very late

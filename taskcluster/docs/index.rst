@@ -28,4 +28,6 @@ check out the :doc:`how-to section <how-tos>`.
     docker-images
     cron
     how-tos
+    in-tree-actions
+    action-spec
     reference

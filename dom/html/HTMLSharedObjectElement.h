@@ -219,7 +219,7 @@ private:
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData);
+                                    GenericSpecifiedValues* aGenericData);
 
   /**
    * Decides whether we should load embed node content.
