@@ -8,7 +8,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
-  REMOVE_DEVICE,
+  REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT
 } = require("./index");
@@ -27,11 +27,12 @@ module.exports = {
   /**
    * Change the viewport device.
    */
-  changeDevice(id, device) {
+  changeDevice(id, device, deviceType) {
     return {
       type: CHANGE_DEVICE,
       id,
       device,
+      deviceType,
     };
   },
 
@@ -49,9 +50,9 @@ module.exports = {
   /**
    * Remove the viewport's device assocation.
    */
-  removeDevice(id) {
+  removeDeviceAssociation(id) {
     return {
-      type: REMOVE_DEVICE,
+      type: REMOVE_DEVICE_ASSOCIATION,
       id,
     };
   },

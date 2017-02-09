@@ -99,16 +99,16 @@ this.FxAccountsProfile.prototype = {
         return this.client.fetchProfile(etag);
       })
       .then(response => {
-        return this._cacheProfile(response);
+        // response may be null if the profile was not modified (same ETag).
+        return response ? this._cacheProfile(response) : null;
       })
       .then(body => { // finally block
         onFinally();
+        // body may be null if the profile was not modified
         return body;
       }, err => {
         onFinally();
-        if (err.code != 304) { // fetchProfile() throws when the profile wasn't modified
-          throw err;
-        }
+        throw err;
       });
   },
 

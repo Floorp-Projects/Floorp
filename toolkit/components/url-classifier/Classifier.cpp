@@ -452,6 +452,16 @@ Classifier::Check(const nsACString& aSpec,
     }
   }
 
+  // Only record telemetry when both v2 and v4 have data.
+  bool isV2Empty = true, isV4Empty = true;
+  for (auto&& cache : cacheArray) {
+    bool& ref = LookupCache::Cast<LookupCacheV2>(cache) ? isV2Empty : isV4Empty;
+    ref = ref ? cache->IsEmpty() : false;
+    if (!isV2Empty && !isV4Empty) {
+      break;
+    }
+  }
+
   PrefixMatch matchingStatistics = PrefixMatch::eNoMatch;
 
   // Now check each lookup fragment against the entries in the DB.
@@ -506,8 +516,10 @@ Classifier::Check(const nsACString& aSpec,
       }
     }
 
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PREFIX_MATCH,
-                          static_cast<uint8_t>(matchingStatistics));
+    if (!isV2Empty && !isV4Empty) {
+      Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PREFIX_MATCH,
+                            static_cast<uint8_t>(matchingStatistics));
+    }
   }
 
   return NS_OK;
