@@ -11,6 +11,7 @@
 
 #include "gc/Statistics.h"
 #include "vm/Caches.h"
+#include "vm/Stack.h"
 
 namespace js {
 
@@ -42,11 +43,16 @@ class ZoneGroup
   public:
     JSRuntime* const runtime;
 
+  private:
     // The context with exclusive access to this zone group.
-    mozilla::Atomic<JSContext*, mozilla::ReleaseAcquire> context;
+    UnprotectedData<CooperatingContext> ownerContext_;
 
     // The number of times the context has entered this zone group.
     ZoneGroupData<size_t> enterCount;
+
+  public:
+    CooperatingContext& ownerContext() { return ownerContext_.ref(); }
+    void* addressOfOwnerContext() { return &ownerContext_.ref().cx; }
 
     void enter();
     void leave();

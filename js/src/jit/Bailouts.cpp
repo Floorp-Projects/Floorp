@@ -38,7 +38,7 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
                "Fake jitTop pointer should be within the first page.");
     cx->jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
 
-    JitActivationIterator jitActivations(cx->runtime());
+    JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
     JitFrameIterator iter(jitActivations);
     MOZ_ASSERT(!iter.ionScript()->invalidated());
@@ -110,7 +110,7 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
     // We don't have an exit frame.
     cx->jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
 
-    JitActivationIterator jitActivations(cx->runtime());
+    JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, sp);
     JitFrameIterator iter(jitActivations);
     CommonFrameLayout* currentFramePtr = iter.current();
@@ -198,7 +198,7 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
     gc::AutoSuppressGC suppress(cx);
 
-    JitActivationIterator jitActivations(cx->runtime());
+    JitActivationIterator jitActivations(cx);
     BailoutFrameInfo bailoutData(jitActivations, frame.frame());
     JitFrameIterator iter(jitActivations);
     CommonFrameLayout* currentFramePtr = iter.current();
