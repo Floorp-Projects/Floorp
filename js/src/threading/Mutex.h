@@ -14,9 +14,9 @@
 
 namespace js {
 
-class ConditionVariable;
-
 namespace detail {
+
+class ConditionVariableImpl;
 
 class MutexImpl
 {
@@ -57,7 +57,7 @@ private:
   void* platformData_[64 / sizeof(void*)];
 #endif
 
-  friend class js::ConditionVariable;
+  friend class js::detail::ConditionVariableImpl;
 };
 
 } // namespace detail

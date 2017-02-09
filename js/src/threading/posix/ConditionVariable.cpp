@@ -61,12 +61,12 @@ moz_timespecadd(struct timespec* lhs, struct timespec* rhs, struct timespec* res
 }
 #endif
 
-struct js::ConditionVariable::PlatformData
+struct js::detail::ConditionVariableImpl::PlatformData
 {
   pthread_cond_t ptCond;
 };
 
-js::ConditionVariable::ConditionVariable()
+js::detail::ConditionVariableImpl::ConditionVariableImpl()
 {
   pthread_cond_t* ptCond = &platformData()->ptCond;
 
@@ -89,39 +89,39 @@ js::ConditionVariable::ConditionVariable()
 #endif
 }
 
-js::ConditionVariable::~ConditionVariable()
+js::detail::ConditionVariableImpl::~ConditionVariableImpl()
 {
   int r = pthread_cond_destroy(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::notify_one()
+js::detail::ConditionVariableImpl::notify_one()
 {
   int r = pthread_cond_signal(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::notify_all()
+js::detail::ConditionVariableImpl::notify_all()
 {
   int r = pthread_cond_broadcast(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
+js::detail::ConditionVariableImpl::wait(Mutex& lock)
 {
   pthread_cond_t* ptCond = &platformData()->ptCond;
-  pthread_mutex_t* ptMutex = &lock.lock.platformData()->ptMutex;
+  pthread_mutex_t* ptMutex = &lock.platformData()->ptMutex;
 
   int r = pthread_cond_wait(ptCond, ptMutex);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 js::CVStatus
-js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
-                                const TimeDuration& a_rel_time)
+js::detail::ConditionVariableImpl::wait_for(Mutex& lock,
+                                              const TimeDuration& a_rel_time)
 {
   if (a_rel_time == TimeDuration::Forever()) {
     wait(lock);
@@ -129,7 +129,7 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   }
 
   pthread_cond_t* ptCond = &platformData()->ptCond;
-  pthread_mutex_t* ptMutex = &lock.lock.platformData()->ptMutex;
+  pthread_mutex_t* ptMutex = &lock.platformData()->ptMutex;
   int r;
 
   // Clamp to 0, as time_t is unsigned.
@@ -164,8 +164,8 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   return CVStatus::Timeout;
 }
 
-js::ConditionVariable::PlatformData*
-js::ConditionVariable::platformData()
+js::detail::ConditionVariableImpl::PlatformData*
+js::detail::ConditionVariableImpl::platformData()
 {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");
