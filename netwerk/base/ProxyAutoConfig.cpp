@@ -680,11 +680,11 @@ ProxyAutoConfig::Init(const nsCString &aPACURI,
   mPACURI = aPACURI;
   mPACScript = sPacUtils;
   mPACScript.Append(aPACScript);
+  mIncludePath = aIncludePath;
 
   if (!GetRunning())
     return SetupJS();
 
-  mIncludePath = aIncludePath;
   mJSNeedsSetup = true;
   return NS_OK;
 }
