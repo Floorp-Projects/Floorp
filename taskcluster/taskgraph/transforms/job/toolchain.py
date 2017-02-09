@@ -12,7 +12,8 @@ from voluptuous import Schema, Required, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_tc_vcs_cache,
-    docker_worker_add_gecko_vcs_env_vars
+    docker_worker_add_gecko_vcs_env_vars,
+    docker_worker_support_vcs_checkout,
 )
 
 toolchain_run_schema = Schema({
@@ -47,6 +48,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    docker_worker_support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -76,12 +78,16 @@ def docker_worker_toolchain(config, job, taskdesc):
             taskdesc['scopes'].append(
                 'docker-worker:relengapi-proxy:tooltool.download.internal')
 
-    command = ' && '.join([
-        "cd /home/worker/",
-        "./bin/checkout-sources.sh",
-        "./workspace/build/src/taskcluster/scripts/misc/" + run['script'],
-    ])
-    worker['command'] = ["/bin/bash", "-c", command]
+    worker['command'] = [
+        '/home/worker/bin/run-task',
+        '--vcs-checkout=/home/worker/workspace/build/src',
+        '--',
+        'bash',
+        '-c',
+        'cd /home/worker && '
+        './workspace/build/src/taskcluster/scripts/misc/{}'.format(
+            run['script'])
+    ]
 
 
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
