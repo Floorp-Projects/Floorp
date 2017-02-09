@@ -271,11 +271,10 @@ public class GeckoView extends LayerView
             throw new IllegalStateException("Not attached to window");
         }
 
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+        if (GeckoThread.isRunning()) {
             window.loadUri(uri, flags);
         }  else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    window, "loadUri", String.class, uri, flags);
+            GeckoThread.queueNativeCall(window, "loadUri", String.class, uri, flags);
         }
     }
 
