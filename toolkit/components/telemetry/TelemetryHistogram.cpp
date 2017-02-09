@@ -851,9 +851,8 @@ internal_ShouldReflectHistogram(Histogram *h)
       return false;
     }
     return true;
-  } else {
-    return !gCorruptHistograms[id];
   }
+  return !gCorruptHistograms[id];
 }
 
 } // namespace
