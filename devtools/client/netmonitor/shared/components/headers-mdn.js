@@ -91,11 +91,17 @@ var SUPPORTED_HEADERS = [
  * The MDN URL for the header, or null if not available.
  */
 exports.getURL = (header) => {
-  if (SUPPORTED_HEADERS.indexOf(header) === -1) {
+  const lowerCaseHeader = header.toLowerCase();
+
+  let matchingHeader = SUPPORTED_HEADERS.find(supportedHeader => {
+    return lowerCaseHeader === supportedHeader.toLowerCase();
+  });
+
+  if (!matchingHeader) {
     return null;
   }
 
-  return URL_DOMAIN + URL_PATH + header + URL_PARAMS;
+  return URL_DOMAIN + URL_PATH + matchingHeader + URL_PARAMS;
 };
 
 /**
