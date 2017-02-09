@@ -76,7 +76,7 @@ marionette:
     instance-size: xlarge
     loopback-video: true
     e10s: false
-    tier: 3
+    tier: 2
     max-run-time: 3600
     mozharness:
         script: android_emulator_unittest.py
