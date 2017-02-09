@@ -198,7 +198,7 @@ protected:
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData);
+                                    GenericSpecifiedValues* aGenericData);
 
   static const DOMTokenListSupportedToken sSupportedSandboxTokens[];
 };

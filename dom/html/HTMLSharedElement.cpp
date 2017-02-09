@@ -12,9 +12,9 @@
 #include "mozilla/dom/HTMLParamElementBinding.h"
 #include "mozilla/dom/HTMLQuoteElementBinding.h"
 
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
-#include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
@@ -113,18 +113,17 @@ HTMLSharedElement::ParseAttribute(int32_t aNamespaceID,
 
 static void
 DirectoryMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                               nsRuleData* aData)
+                               GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(List)) {
-    nsCSSValue* listStyleType = aData->ValueForListStyleType();
-    if (listStyleType->GetUnit() == eCSSUnit_Null) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(List))) {
+    if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
       // type: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
       if (value) {
         if (value->Type() == nsAttrValue::eEnum) {
-          listStyleType->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
         } else {
-          listStyleType->SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_list_style_type, NS_STYLE_LIST_STYLE_DISC);
         }
       }
     }

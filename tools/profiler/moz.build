@@ -29,7 +29,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerMarkers.cpp',
-        'core/Sampler.cpp',
         'core/StackTop.cpp',
         'core/SyncProfile.cpp',
         'core/ThreadInfo.cpp',
@@ -60,7 +59,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
-            'core/platform-linux.cc',
             'core/shared-libraries-linux.cc',
         ]
         if not CONFIG['MOZ_CRASHREPORTER']:
@@ -77,12 +75,10 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         UNIFIED_SOURCES += [
-            'core/platform-macos.cc',
             'core/shared-libraries-macos.cc',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += [
-            'core/platform-win32.cc',
             'core/shared-libraries-win32.cc',
         ]
 

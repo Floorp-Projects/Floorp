@@ -6,7 +6,8 @@
 <body>
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestFlakyTimeout("untriaged");
+  SimpleTest.requestFlakyTimeout(
+    "crashAndGetCrashServiceRecord() polls for async crash recording");
   SimpleTest.requestCompleteLog();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 

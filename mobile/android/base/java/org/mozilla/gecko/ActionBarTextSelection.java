@@ -182,12 +182,12 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             for (int i = 0; i < length; i++) {
                 final GeckoBundle obj = mItems[i];
                 final GeckoMenuItem menuitem = (GeckoMenuItem)
-                        menu.add(0, i, 0, obj.getString("label"));
+                        menu.add(0, i, 0, obj.getString("label", ""));
                 final int actionEnum = obj.getBoolean("showAsAction") ?
                         GeckoMenuItem.SHOW_AS_ACTION_ALWAYS : GeckoMenuItem.SHOW_AS_ACTION_NEVER;
                 menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
-                final String iconString = obj.getString("icon");
+                final String iconString = obj.getString("icon", "");
                 ResourceDrawableUtils.getDrawable(context, iconString,
                         new ResourceDrawableUtils.BitmapLoader() {
                     @Override
@@ -211,7 +211,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
             final GeckoBundle obj = mItems[item.getItemId()];
             final GeckoBundle data = new GeckoBundle(1);
-            data.putString("id", obj.getString("id"));
+            data.putString("id", obj.getString("id", ""));
             GeckoApp.getEventDispatcher().dispatch("TextSelection:Action", data);
             return true;
         }

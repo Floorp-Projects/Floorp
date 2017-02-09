@@ -159,7 +159,7 @@ MakeCSSAngle(const nsCSSValue& aValue)
   return CSSAngle(aValue.GetAngleValue(), aValue.GetUnit());
 }
 
-static void AddTransformFunctions(nsCSSValueList* aList,
+static void AddTransformFunctions(const nsCSSValueList* aList,
                                   nsStyleContext* aContext,
                                   nsPresContext* aPresContext,
                                   TransformReferenceBox& aRefBox,
@@ -401,6 +401,20 @@ static void AddTransformFunctions(nsCSSValueList* aList,
   }
 }
 
+static void
+AddTransformFunctions(const nsCSSValueSharedList* aList,
+                      const nsIFrame* aFrame,
+                      TransformReferenceBox& aRefBox,
+                      layers::Animatable& aAnimatable)
+{
+  MOZ_ASSERT(aList->mHead);
+  AddTransformFunctions(aList->mHead,
+                        aFrame->StyleContext(),
+                        aFrame->PresContext(),
+                        aRefBox,
+                        aAnimatable.get_ArrayOfTransformFunction());
+}
+
 static TimingFunction
 ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 {
@@ -420,7 +434,7 @@ ToTimingFunction(const Maybe<ComputedTimingFunction>& aCTF)
 
 static void
 SetAnimatable(nsCSSPropertyID aProperty,
-              const StyleAnimationValue& aAnimationValue,
+              const AnimationValue& aAnimationValue,
               nsIFrame* aFrame,
               TransformReferenceBox& aRefBox,
               layers::Animatable& aAnimatable)
@@ -434,17 +448,19 @@ SetAnimatable(nsCSSPropertyID aProperty,
 
   switch (aProperty) {
     case eCSSProperty_opacity:
-      aAnimatable = aAnimationValue.GetFloatValue();
+      aAnimatable = aAnimationValue.GetOpacity();
       break;
     case eCSSProperty_transform: {
       aAnimatable = InfallibleTArray<TransformFunction>();
-      nsCSSValueSharedList* list =
-        aAnimationValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead,
-                            aFrame->StyleContext(),
-                            aFrame->PresContext(),
-                            aRefBox,
-                            aAnimatable.get_ArrayOfTransformFunction());
+      if (aAnimationValue.mServo) {
+        RefPtr<nsCSSValueSharedList> list;
+        Servo_AnimationValues_GetTransform(aAnimationValue.mServo, &list);
+        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
+      } else {
+        nsCSSValueSharedList* list =
+          aAnimationValue.mGecko.GetCSSValueSharedListValue();
+        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
+      }
       break;
     }
     default:
@@ -465,7 +481,9 @@ SetBaseAnimationStyle(nsCSSPropertyID aProperty,
   MOZ_ASSERT(!baseValue.IsNull(),
              "The base value should be already there");
 
-  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, aBaseStyle);
+  // FIXME: Bug 1311257: We need to get the baseValue for
+  //        RawServoAnimationValue.
+  SetAnimatable(aProperty, { baseValue, nullptr }, aFrame, aRefBox, aBaseStyle);
 }
 
 static void
@@ -4417,9 +4435,13 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     if (br->mBorderStyles[i] == NS_STYLE_BORDER_STYLE_SOLID) {
       mColors[i] = ToDeviceColor(br->mBorderColors[i]);
       mWidths[i] = br->mBorderWidths[i];
+      mBorderStyles[i] = br->mBorderStyles[i];
     } else {
       mWidths[i] = 0;
     }
+  }
+  NS_FOR_CSS_FULL_CORNERS(corner) {
+    mCorners[corner] = LayerSize(br->mBorderRadii[corner].width, br->mBorderRadii[corner].height);
   }
 
   mRect = ViewAs<LayerPixel>(br->mOuterRect);
@@ -4439,9 +4461,10 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
       return nullptr;
   }
   layer->SetRect(mRect);
-  layer->SetCornerRadii({ LayerSize(), LayerSize(), LayerSize(), LayerSize() });
+  layer->SetCornerRadii(mCorners);
   layer->SetColors(mColors);
   layer->SetWidths(mWidths);
+  layer->SetStyles(mBorderStyles);
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
                                                       aContainerParameters.mOffset.y, 0));
   return layer.forget();

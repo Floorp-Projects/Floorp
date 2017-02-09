@@ -6,6 +6,7 @@
 
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -15,7 +16,6 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIEditor.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "nsIDocShell.h"
 #include "nsRuleWalker.h"
 #include "nsGlobalWindow.h"
@@ -360,11 +360,11 @@ HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 void
 HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                       nsRuleData* aData)
+                                       GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Display))) {
     // When display if first asked for, go ahead and get our colors set up.
-    nsIPresShell *presShell = aData->mPresContext->GetPresShell();
+    nsIPresShell *presShell = aData->PresContext()->GetPresShell();
     if (presShell) {
       nsIDocument *doc = presShell->GetDocument();
       if (doc) {
@@ -391,15 +391,14 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    nsCSSValue *colorValue = aData->ValueForColor();
-    if (colorValue->GetUnit() == eCSSUnit_Null &&
-        aData->mPresContext->UseDocumentColors()) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
+    if (!aData->PropertyIsSet(eCSSProperty_color) &&
+        aData->PresContext()->UseDocumentColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
       if (value && value->GetColorValue(color))
-        colorValue->SetColorValue(color);
+        aData->SetColorValue(eCSSProperty_color, color);
     }
   }
 

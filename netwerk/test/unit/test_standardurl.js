@@ -1,3 +1,5 @@
+"use strict";
+
 const StandardURL = Components.Constructor("@mozilla.org/network/standard-url;1",
                                            "nsIStandardURL",
                                            "init");
@@ -14,7 +16,7 @@ function symmetricEquality(expect, a, b)
     /* We don't check port in the loop, because it can be defaulted in
        some cases. */
     ["spec", "prePath", "scheme", "userPass", "username", "password",
-     "hostPort", "host", "path", "filePath", "param", "query",
+     "hostPort", "host", "path", "filePath", "query",
      "ref", "directory", "fileName", "fileBaseName", "fileExtension"]
       .map(function(prop) {
 	dump("Testing '"+ prop + "'\n");
@@ -333,6 +335,14 @@ add_test(function test_backslashReplacement()
   run_next_test();
 });
 
+add_test(function test_authority_host()
+{
+  Assert.throws(() => { stringToURL("http:"); }, "TYPE_AUTHORITY should have host");
+  Assert.throws(() => { stringToURL("http:///"); }, "TYPE_AUTHORITY should have host");
+
+  run_next_test();
+});
+
 add_test(function test_trim_C0_and_space()
 {
   var url = stringToURL("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f http://example.com/ \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ");
@@ -428,5 +438,19 @@ add_test(function test_ipv4Normalize()
     do_check_eq(url.spec, spec);
   }
 
+  run_next_test();
+});
+
+add_test(function test_invalidHostChars() {
+  var url = stringToURL("http://example.org/");
+  for (let i = 0; i <= 0x20; i++) {
+    Assert.throws(() => { url.host = "a" + String.fromCharCode(i) + "b"; }, "Trying to set hostname containing char code: " + i);
+  }
+  for (let c of "@[]*<>|:\"") {
+    Assert.throws(() => { url.host = "a" + c; }, "Trying to set hostname containing char: " + c);
+  }
+
+  // It also can't contain /, \, #, ?, but we treat these characters as
+  // hostname separators, so there is no way to set them and fail.
   run_next_test();
 });

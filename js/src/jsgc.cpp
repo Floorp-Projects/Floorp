@@ -243,6 +243,7 @@
 #include "jsscriptinlines.h"
 
 #include "gc/Heap-inl.h"
+#include "vm/GeckoProfiler-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -5517,7 +5518,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
     // middle of relocating an arena, invalid JSScript pointers may be
     // accessed. Suppress all sampling until a finer-grained solution can be
     // found. See bug 1295775.
-    AutoSuppressProfilerSampling suppressSampling(rt);
+    AutoSuppressProfilerSampling suppressSampling(TlsContext.get());
 
     ZoneList relocatedZones;
     Arena* relocatedArenas = nullptr;
@@ -5645,14 +5646,14 @@ JS::CurrentThreadHeapState()
     return TlsContext.get()->heapState;
 }
 
-void
+GCRuntime::IncrementalResult
 GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(reason != gc::AbortReason::None);
 
     switch (incrementalState) {
       case State::NotActive:
-        return;
+          return IncrementalResult::Ok;
 
       case State::MarkRoots:
         MOZ_CRASH("resetIncrementalGC did not expect MarkRoots state");
@@ -5757,6 +5758,8 @@ GCRuntime::resetIncrementalGC(gc::AbortReason reason, AutoLockForExclusiveAccess
     MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
     MOZ_ASSERT(incrementalState == State::NotActive);
 #endif
+
+    return IncrementalResult::Reset;
 }
 
 namespace {
@@ -6034,10 +6037,30 @@ gc::IsIncrementalGCUnsafe(JSRuntime* rt)
     return gc::AbortReason::None;
 }
 
-void
-GCRuntime::budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
-                               AutoLockForExclusiveAccess& lock)
+GCRuntime::IncrementalResult
+GCRuntime::budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason reason,
+                               SliceBudget& budget, AutoLockForExclusiveAccess& lock)
 {
+    if (nonincrementalByAPI) {
+        stats().nonincremental(gc::AbortReason::NonIncrementalRequested);
+        budget.makeUnlimited();
+
+        // Reset any in progress incremental GC if this was triggered via the
+        // API. This isn't required for correctness, but sometimes during tests
+        // the caller expects this GC to collect certain objects, and we need
+        // to make sure to collect everything possible.
+        if (reason != JS::gcreason::ALLOC_TRIGGER)
+            return resetIncrementalGC(gc::AbortReason::NonIncrementalRequested, lock);
+
+        return IncrementalResult::Ok;
+    }
+
+    if (reason == JS::gcreason::ABORT_GC) {
+        budget.makeUnlimited();
+        stats().nonincremental(gc::AbortReason::AbortRequested);
+        return resetIncrementalGC(gc::AbortReason::AbortRequested, lock);
+    }
+
     AbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
     if (unsafeReason == AbortReason::None) {
         if (reason == JS::gcreason::COMPARTMENT_REVIVED)
@@ -6047,10 +6070,9 @@ GCRuntime::budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
     }
 
     if (unsafeReason != AbortReason::None) {
-        resetIncrementalGC(unsafeReason, lock);
         budget.makeUnlimited();
         stats().nonincremental(unsafeReason);
-        return;
+        return resetIncrementalGC(unsafeReason, lock);
     }
 
     if (isTooMuchMalloc()) {
@@ -6075,7 +6097,9 @@ GCRuntime::budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
     }
 
     if (reset)
-        resetIncrementalGC(AbortReason::ZoneChange, lock);
+        return resetIncrementalGC(AbortReason::ZoneChange, lock);
+
+    return IncrementalResult::Ok;
 }
 
 namespace {
@@ -6156,7 +6180,7 @@ class AutoExposeLiveCrossZoneEdges
  * Returns true if we "reset" an existing incremental GC, which would force us
  * to run another cycle.
  */
-MOZ_NEVER_INLINE bool
+MOZ_NEVER_INLINE GCRuntime::IncrementalResult
 GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason)
 {
     // Note that the following is allowed to re-enter GC in the finalizer.
@@ -6201,29 +6225,17 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
         allocTask.cancel(GCParallelTask::CancelAndWait);
     }
 
-    State prevState = incrementalState;
-
     // We don't allow off-main-thread parsing to start while we're doing an
     // incremental GC.
     MOZ_ASSERT_IF(rt->activeGCInAtomsZone(), !rt->exclusiveThreadsPresent());
 
-    if (nonincrementalByAPI) {
-        // Reset any in progress incremental GC if this was triggered via the
-        // API. This isn't required for correctness, but sometimes during tests
-        // the caller expects this GC to collect certain objects, and we need
-        // to make sure to collect everything possible.
-        if (reason != JS::gcreason::ALLOC_TRIGGER)
-            resetIncrementalGC(gc::AbortReason::NonIncrementalRequested, session.lock);
+    auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget, session.lock);
 
-        stats().nonincremental(gc::AbortReason::NonIncrementalRequested);
-        budget.makeUnlimited();
-    } else {
-        budgetIncrementalGC(reason, budget, session.lock);
+    // If an ongoing incremental GC was reset, we may need to restart.
+    if (result == IncrementalResult::Reset) {
+        MOZ_ASSERT(!isIncrementalGCInProgress());
+        return result;
     }
-
-    /* The GC was reset, so we need a do-over. */
-    if (prevState != State::NotActive && !isIncrementalGCInProgress())
-        return true;
 
     TraceMajorGCStart();
 
@@ -6244,7 +6256,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 
     TraceMajorGCEnd();
 
-    return false;
+    return IncrementalResult::Ok;
 }
 
 #ifdef JS_GC_ZEAL
@@ -6363,7 +6375,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
 
-    AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
+    AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
     AutoScheduleZonesForGC asz(rt);
@@ -6371,7 +6383,12 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     bool repeat = false;
     do {
         poked = false;
-        bool wasReset = gcCycle(nonincrementalByAPI, budget, reason);
+        bool wasReset = gcCycle(nonincrementalByAPI, budget, reason) == IncrementalResult::Reset;
+
+        if (reason == JS::gcreason::ABORT_GC) {
+            MOZ_ASSERT(!isIncrementalGCInProgress());
+            break;
+        }
 
         bool repeatForDeadZone = false;
         if (poked && cleanUpEverything) {
@@ -6477,20 +6494,11 @@ GCRuntime::finishGC(JS::gcreason::Reason reason)
 void
 GCRuntime::abortGC()
 {
+    MOZ_ASSERT(isIncrementalGCInProgress());
     checkCanCallAPI();
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
 
-    AutoStopVerifyingBarriers av(rt, false);
-    AutoEnqueuePendingParseTasksAfterGC aept(*this);
-
-    gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), invocationKind,
-                             SliceBudget::unlimited(), JS::gcreason::ABORT_GC);
-
-    rt->zoneGroupFromMainThread()->evictNursery(JS::gcreason::ABORT_GC);
-    AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
-
-    number++;
-    resetIncrementalGC(gc::AbortReason::AbortRequested, session.lock);
+    collect(false, SliceBudget::unlimited(), JS::gcreason::ABORT_GC);
 }
 
 void
@@ -6597,7 +6605,7 @@ ZoneGroup::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
     gcstats::AutoPhase ap(runtime->gc.stats(), phase);
 
     runtime->gc.minorGCTriggerReason = JS::gcreason::NO_REASON;
-    TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery().collect(reason);
     MOZ_ASSERT(nursery().isEmpty());
@@ -7244,7 +7252,8 @@ JS::FinishIncrementalGC(JSContext* cx, gcreason::Reason reason)
 JS_PUBLIC_API(void)
 JS::AbortIncrementalGC(JSContext* cx)
 {
-    cx->runtime()->gc.abortGC();
+    if (IsIncrementalGCInProgress(cx))
+        cx->runtime()->gc.abortGC();
 }
 
 char16_t*

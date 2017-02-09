@@ -25,10 +25,7 @@ def make_beetmover_description(config, jobs):
             group = 'tc-BM-L10n'
 
             # add the locale code
-            if 'signing' in label:
-                symbol = 'S{}'.format(locale)
-            else:
-                symbol = locale
+            symbol = locale
 
             treeherder = {
                 'symbol': join_symbol(group, symbol),

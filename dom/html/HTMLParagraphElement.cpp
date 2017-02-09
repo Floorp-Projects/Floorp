@@ -7,9 +7,9 @@
 #include "mozilla/dom/HTMLParagraphElement.h"
 #include "mozilla/dom/HTMLParagraphElementBinding.h"
 
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
@@ -44,7 +44,7 @@ HTMLParagraphElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLParagraphElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                            nsRuleData* aData)
+                                            GenericSpecifiedValues* aData)
 {
   nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);

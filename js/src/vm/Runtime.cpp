@@ -95,7 +95,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
     updateChildRuntimeCount(parentRuntime),
 #endif
-    activeContext(nullptr),
+    activeContext_(nullptr),
+    activeContextChangeProhibited_(0),
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
     telemetryCallback(nullptr),
@@ -192,7 +193,9 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (CanUseExtraThreads() && !EnsureHelperThreadsInitialized())
         return false;
 
-    activeContext = cx;
+    activeContext_ = cx;
+    if (!cooperatingContexts().append(cx))
+        return false;
 
     singletonContext = cx;
 
@@ -248,9 +251,6 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
     jitSupportsSimd = js::jit::JitSupportsSimd();
-
-    if (!wasm::EnsureSignalHandlers(this))
-        return false;
 
     if (!geckoProfiler().init())
         return false;
@@ -341,11 +341,16 @@ JSRuntime::destroyRuntime()
     DebugOnly<size_t> oldCount = liveRuntimesCount--;
     MOZ_ASSERT(oldCount > 0);
 
-#ifdef JS_TRACE_LOGGING
-    DestroyTraceLoggerMainThread(this);
-#endif
-
     js_delete(zoneGroupFromMainThread());
+}
+
+void
+JSRuntime::setActiveContext(JSContext* cx)
+{
+    MOZ_ASSERT_IF(cx, isCooperatingContext(cx));
+    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+
+    activeContext_ = cx;
 }
 
 void
@@ -503,7 +508,7 @@ JSContext::requestInterrupt(InterruptMode mode)
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
-        InterruptRunningJitCode(runtime());
+        InterruptRunningJitCode(this);
     }
 }
 

@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import buildconfig
 import errno
 import mozfile
 import os
@@ -10,6 +11,7 @@ import shutil
 import subprocess
 
 is_linux = platform.system() == 'Linux'
+
 
 def mkdir(dir):
     if not os.path.isdir(dir):
@@ -34,11 +36,48 @@ def rsync(source, dest):
                            source, dest])
 
 
-def set_folder_icon(dir):
+def set_folder_icon(dir, tmpdir):
     'Set HFS attributes of dir to use a custom icon'
     if not is_linux:
-        #TODO: bug 1197325 - figure out how to support this on Linux
         subprocess.check_call(['SetFile', '-a', 'C', dir])
+    else:
+        hfs = os.path.join(tmpdir, 'staged.hfs')
+        subprocess.check_call([
+            buildconfig.substs['HFS_TOOL'],  hfs, 'attr', '/', 'C'])
+
+
+def generate_hfs_file(stagedir, tmpdir, volume_name):
+    '''
+    When cross compiling, we zero fill an hfs file, that we will turn into
+    a DMG. To do so we test the size of the staged dir, and add some slight
+    padding to that.
+    '''
+    if is_linux:
+        hfs = os.path.join(tmpdir, 'staged.hfs')
+        output = subprocess.check_output(['du', '-s', stagedir])
+        size = (int(output.split()[0]) / 1000)  # Get in MB
+        size = int(size * 1.02)  # Bump the used size slightly larger.
+        # Setup a proper file sized out with zero's
+        subprocess.check_call(['dd', 'if=/dev/zero', 'of={}'.format(hfs),
+                               'bs=1M', 'count={}'.format(size)])
+        subprocess.check_call([
+            buildconfig.substs['MKFSHFS'], '-v', volume_name,
+            hfs])
+
+
+def create_app_symlink(stagedir, tmpdir):
+    '''
+    Make a symlink to /Applications. The symlink name is a space
+    so we don't have to localize it. The Applications folder icon
+    will be shown in Finder, which should be clear enough for users.
+    '''
+    if is_linux:
+        hfs = os.path.join(tmpdir, 'staged.hfs')
+        subprocess.check_call([
+            buildconfig.substs['HFS_TOOL'], hfs, 'symlink',
+            '/ ', '/Applications'])
+    else:
+        os.symlink('/Applications', os.path.join(stagedir, ' '))
 
 
 def create_dmg_from_staged(stagedir, output_dmg, tmpdir, volume_name):
@@ -55,29 +94,23 @@ def create_dmg_from_staged(stagedir, output_dmg, tmpdir, volume_name):
                                '-imagekey', 'bzip2-level=9',
                                '-ov', hybrid, '-o', output_dmg])
     else:
-        import buildconfig
-        uncompressed = os.path.join(tmpdir, 'uncompressed.dmg')
+        hfs = os.path.join(tmpdir, 'staged.hfs')
         subprocess.check_call([
-            buildconfig.substs['GENISOIMAGE'],
-            '-V', volume_name,
-            '-D', '-R', '-apple', '-no-pad',
-            '-o', uncompressed,
-            stagedir
-        ])
+            buildconfig.substs['HFS_TOOL'], hfs, 'addall', stagedir])
         subprocess.check_call([
             buildconfig.substs['DMG_TOOL'],
-            'dmg',
-            uncompressed,
+            'build',
+            hfs,
             output_dmg
         ],
                               # dmg is seriously chatty
                               stdout=open(os.devnull, 'wb'))
 
+
 def check_tools(*tools):
     '''
     Check that each tool named in tools exists in SUBSTS and is executable.
     '''
-    import buildconfig
     for tool in tools:
         path = buildconfig.substs[tool]
         if not path:
@@ -100,7 +133,7 @@ def create_dmg(source_directory, output_dmg, volume_name, extra_files):
         raise Exception("Don't know how to build a DMG on '%s'" % platform.system())
 
     if is_linux:
-        check_tools('DMG_TOOL', 'GENISOIMAGE')
+        check_tools('DMG_TOOL', 'MKFSHFS', 'HFS_TOOL')
     with mozfile.TemporaryDirectory() as tmpdir:
         stagedir = os.path.join(tmpdir, 'stage')
         os.mkdir(stagedir)
@@ -111,11 +144,9 @@ def create_dmg(source_directory, output_dmg, volume_name, extra_files):
             full_target = os.path.join(stagedir, target)
             mkdir(os.path.dirname(full_target))
             shutil.copyfile(source, full_target)
-        # Make a symlink to /Applications. The symlink name is a space
-        # so we don't have to localize it. The Applications folder icon
-        # will be shown in Finder, which should be clear enough for users.
-        os.symlink('/Applications', os.path.join(stagedir, ' '))
+        generate_hfs_file(stagedir, tmpdir, volume_name)
+        create_app_symlink(stagedir, tmpdir)
         # Set the folder attributes to use a custom icon
-        set_folder_icon(stagedir)
+        set_folder_icon(stagedir, tmpdir)
         chmod(stagedir)
         create_dmg_from_staged(stagedir, output_dmg, tmpdir, volume_name)

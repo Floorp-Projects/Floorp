@@ -30,6 +30,7 @@ audio-video-metadata = "0.1.2"
 atomic_refcell = "0.1"
 bitflags = "0.7"
 bluetooth_traits = {path = "../bluetooth_traits"}
+byteorder = "1.0"
 canvas_traits = {path = "../canvas_traits"}
 caseless = "0.1.0"
 cookie = {version = "0.2.5", features = ["serialize-rustc"]}
@@ -69,7 +70,7 @@ regex = "0.2"
 rustc-serialize = "0.3"
 script_layout_interface = {path = "../script_layout_interface"}
 script_traits = {path = "../script_traits"}
-selectors = "0.15.1"
+selectors = { path = "../selectors" }
 serde = "0.8"
 servo_atoms = {path = "../atoms"}
 servo_config = {path = "../config", features = ["servo"] }

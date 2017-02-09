@@ -80,10 +80,10 @@ public class GeckoAccessibility {
         final String[] textArray = message.getStringArray("text");
         if (textArray != null) {
             for (int i = 0; i < textArray.length; i++)
-                event.getText().add(textArray[i]);
+                event.getText().add(textArray[i] != null ? textArray[i] : "");
         }
 
-        event.setContentDescription(message.getString("description"));
+        event.setContentDescription(message.getString("description", ""));
         event.setEnabled(message.getBoolean("enabled", true));
         event.setChecked(message.getBoolean("checked"));
         event.setPassword(message.getBoolean("password"));
@@ -92,7 +92,7 @@ public class GeckoAccessibility {
         event.setFromIndex(message.getInt("fromIndex", -1));
         event.setItemCount(message.getInt("itemCount", -1));
         event.setCurrentItemIndex(message.getInt("currentItemIndex", -1));
-        event.setBeforeText(message.getString("beforeText"));
+        event.setBeforeText(message.getString("beforeText", ""));
         event.setToIndex(message.getInt("toIndex", -1));
         event.setScrollable(message.getBoolean("scrollable"));
         event.setScrollX(message.getInt("scrollX", -1));
@@ -137,7 +137,7 @@ public class GeckoAccessibility {
         if (!sEnabled)
             return;
 
-        final String exitView = message.getString("exitView");
+        final String exitView = message.getString("exitView", "");
         if (exitView.equals("moveNext")) {
             sCurrentNode = VIRTUAL_ENTRY_POINT_AFTER;
         } else if (exitView.equals("movePrevious")) {
@@ -174,13 +174,13 @@ public class GeckoAccessibility {
             final String[] textArray = message.getStringArray("text");
             StringBuilder sb = new StringBuilder();
             if (textArray != null && textArray.length > 0) {
-                sb.append(textArray[0]);
+                sb.append(textArray[0] != null ? textArray[0] : "");
                 for (int i = 1; i < textArray.length; i++) {
-                    sb.append(" ").append(textArray[i]);
+                    sb.append(' ').append(textArray[i] != null ? textArray[i] : "");
                 }
                 sVirtualCursorNode.setText(sb.toString());
             }
-            sVirtualCursorNode.setContentDescription(message.getString("description"));
+            sVirtualCursorNode.setContentDescription(message.getString("description", ""));
 
             final GeckoBundle bounds = message.getBundle("bounds");
             if (bounds != null) {
@@ -196,7 +196,7 @@ public class GeckoAccessibility {
 
             final GeckoBundle braille = message.getBundle("brailleOutput");
             if (braille != null) {
-                sendBrailleText(view, braille.getString("text"),
+                sendBrailleText(view, braille.getString("text", ""),
                                 braille.getInt("selectionStart"), braille.getInt("selectionEnd"));
             }
 

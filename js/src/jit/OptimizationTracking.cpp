@@ -1244,7 +1244,7 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(const IonTrackedType
         const char* filename;
         Maybe<unsigned> lineno;
         InterpretedFunctionFilenameAndLineNumber(fun, &filename, &lineno);
-        op_.readType(tracked.constructor ? "constructor" : "function",
+        op_.readType(tracked.hasConstructor() ? "constructor" : "function",
                      name, filename, lineno);
         return;
     }

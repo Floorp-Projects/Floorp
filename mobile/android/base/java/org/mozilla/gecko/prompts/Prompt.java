@@ -77,9 +77,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     }
 
     public void show(GeckoBundle message) {
-        String title = message.getString("title");
-        String text = message.getString("text");
-        mGuid = message.getString("guid");
+        String title = message.getString("title", "");
+        String text = message.getString("text", "");
+        mGuid = message.getString("guid", "");
 
         mButtons = message.getStringArray("buttons");
         final int buttonCount = mButtons == null ? 0 : mButtons.length;
@@ -94,7 +94,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
 
         PromptListItem[] menuitems = PromptListItem.getArray(message.getBundleArray("listitems"));
-        String selected = message.getString("choiceMode");
+        String selected = message.getString("choiceMode", "");
 
         int choiceMode = ListView.CHOICE_MODE_NONE;
         if ("single".equals(selected)) {

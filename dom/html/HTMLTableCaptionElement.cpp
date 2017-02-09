@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableCaptionElement.h"
+
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "mozilla/dom/HTMLTableCaptionElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)
@@ -51,14 +52,13 @@ HTMLTableCaptionElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableCaptionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                               nsRuleData* aData)
+                                               GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
-    nsCSSValue* captionSide = aData->ValueForCaptionSide();
-    if (captionSide->GetUnit() == eCSSUnit_Null) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(TableBorder))) {
+    if (!aData->PropertyIsSet(eCSSProperty_caption_side)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
-        captionSide->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
+        aData->SetKeywordValue(eCSSProperty_caption_side, value->GetEnumValue());
     }
   }
 

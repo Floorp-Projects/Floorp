@@ -21,6 +21,7 @@ FilePicker.prototype = {
   _extensionsFilter: "",
   _defaultString: "",
   _domWin: null,
+  _domFile: null,
   _defaultExtension: null,
   _displayDirectory: null,
   _filePath: null,
@@ -135,37 +136,16 @@ FilePicker.prototype = {
   },
 
   get files() {
-    return this.getEnumerator([this.file], function(file) {
-      return file;
-    });
+    return this.getEnumerator([this.file]);
   },
 
   // We don't support directory selection yet.
   get domFileOrDirectory() {
-    let f = this.file;
-    if (!f) {
-        return null;
-    }
-
-    let win = this._domWin;
-    if (win) {
-      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      return utils.wrapDOMFile(f);
-    }
-
-    return File.createFromNsIFile(f);
+    return this._domFile;
   },
 
   get domFileOrDirectoryEnumerator() {
-    let win = this._domWin;
-    return this.getEnumerator([this.file], function(file) {
-      if (win) {
-        let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        return utils.wrapDOMFile(file);
-      }
-
-      return File.createFromNsIFile(file);
-    });
+    return this.getEnumerator([this._domFile]);
   },
 
   get addToRecentDocs() {
@@ -244,15 +224,30 @@ FilePicker.prototype = {
       this._filePath = file || null;
       this._promptActive = false;
 
+      if (!file) {
+        return;
+      }
+
+      if (this._domWin) {
+        let utils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        this._domFile = utils.wrapDOMFile(this.file);
+        return;
+      }
+
+      return File.createFromNsIFile(this.file).then(domFile => {
+        this._domFile = domFile;
+      });
+    }).catch(() => {
+    }).then(() => {
       if (this._callback) {
         this._callback.done(this._filePath ?
-            Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
+          Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
       }
       delete this._callback;
     });
   },
 
-  getEnumerator: function(files, mapFunction) {
+  getEnumerator: function(files) {
     return {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
       mFiles: files,
@@ -264,7 +259,7 @@ FilePicker.prototype = {
         if (this.mIndex >= this.mFiles.length) {
           throw Components.results.NS_ERROR_FAILURE;
         }
-        return mapFunction(this.mFiles[this.mIndex++]);
+        return this.mFiles[this.mIndex++];
       }
     };
   },
