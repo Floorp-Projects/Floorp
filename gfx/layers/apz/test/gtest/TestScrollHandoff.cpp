@@ -536,3 +536,8 @@ TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
   TestCrossApzcAxisLock();
 }
+
+TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
+  TestCrossApzcAxisLock();
+}
