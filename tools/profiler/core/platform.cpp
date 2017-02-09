@@ -1116,28 +1116,38 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (gSampler) {
-    size_t n = gSampler->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/sampler", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by the Gecko Profiler's Sampler object.");
+  size_t n = 0;
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+
+      n += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+    }
   }
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/thread-info", KIND_HEAP, UNITS_BYTES, n,
+    "Memory used by the Gecko Profiler's ThreadInfo objects.");
 
   if (gBuffer) {
-    size_t n = gBuffer->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+    n = gBuffer->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
     MOZ_COLLECT_REPORT(
       "explicit/profiler/profile-buffer", KIND_HEAP, UNITS_BYTES, n,
       "Memory used by the Gecko Profiler's ProfileBuffer object.");
   }
 
 #if defined(USE_LUL_STACKWALK)
-  {
-    size_t n = sLUL ? sLUL->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
-    MOZ_COLLECT_REPORT(
-      "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, n,
-      "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
-  }
+  n = sLUL ? sLUL->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
+  MOZ_COLLECT_REPORT(
+    "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, n,
+    "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
 #endif
+
+  // Measurement of the following things may be added later if DMD finds it
+  // is worthwhile:
+  // - gThreadNameFilters
+  // - gFeatures
 
   return NS_OK;
 }
