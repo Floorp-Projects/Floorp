@@ -517,8 +517,10 @@ jit::CheckLogging()
         EnableIonDebugSyncLogging();
     if (ContainsFlag(env, "profiling"))
         EnableChannel(JitSpew_Profiling);
-    if (ContainsFlag(env, "trackopts"))
+    if (ContainsFlag(env, "trackopts")) {
+        JitOptions.disableOptimizationTracking = false;
         EnableChannel(JitSpew_OptimizationTracking);
+    }
     if (ContainsFlag(env, "trackopts-ext"))
         EnableChannel(JitSpew_OptimizationTrackingExtended);
     if (ContainsFlag(env, "dump-mir-expr"))
