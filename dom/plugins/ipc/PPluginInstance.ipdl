@@ -87,10 +87,6 @@ child:
   intr NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
     returns (bool value, NPError result);
 
-  // this message is not used on non-X platforms
-  intr NPP_GetValue_NPPVpluginNeedsXEmbed()
-    returns (bool value, NPError result);
-
   intr NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
 
