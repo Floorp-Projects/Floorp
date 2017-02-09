@@ -2213,8 +2213,12 @@ bool
 SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId, HandleId id,
                                             ValOperandId rhsId)
 {
-    if (!obj->is<ArrayObject>() || !JSID_IS_ATOM(id, cx_->names().length))
+    if (!obj->is<ArrayObject>() ||
+        !JSID_IS_ATOM(id, cx_->names().length) ||
+        !obj->as<ArrayObject>().lengthIsWritable())
+    {
         return false;
+    }
 
     maybeEmitIdGuard(id);
     writer.guardClass(objId, GuardClassKind::Array);
