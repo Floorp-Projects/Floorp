@@ -43,6 +43,11 @@ struct VS_INPUT {
   float2 vPosition : POSITION;
 };
 
+struct VS_TEX_INPUT {
+  float2 vPosition : POSITION;
+  float2 vTexCoords : TEXCOORD0;
+};
+
 struct VS_OUTPUT {
   float4 vPosition : SV_Position;
   float2 vTexCoords : TEXCOORD0;
@@ -161,6 +166,38 @@ VS_MASK_OUTPUT LayerQuadMaskVS(const VS_INPUT aVertex)
   outp.vMaskCoords *= position.w;
 
   outp.vTexCoords = TexCoords(aVertex.vPosition.xy);
+
+  return outp;
+}
+
+VS_OUTPUT LayerDynamicVS(const VS_TEX_INPUT aVertex)
+{
+  VS_OUTPUT outp;
+
+  float4 position = float4(aVertex.vPosition, 0, 1);
+  position = mul(mLayerTransform, position);
+  outp.vPosition = VertexPosition(position);
+
+  outp.vTexCoords = aVertex.vTexCoords;
+
+  return outp;
+}
+
+VS_MASK_OUTPUT LayerDynamicMaskVS(const VS_TEX_INPUT aVertex)
+{
+  VS_MASK_OUTPUT outp;
+
+  float4 position = float4(aVertex.vPosition, 0, 1);
+  position = mul(mLayerTransform, position);
+  outp.vPosition = VertexPosition(position);
+
+  // calculate the position on the mask texture
+  outp.vMaskCoords.x = (position.x - vMaskQuad.x) / vMaskQuad.z;
+  outp.vMaskCoords.y = (position.y - vMaskQuad.y) / vMaskQuad.w;
+  outp.vMaskCoords.z = 1;
+  outp.vMaskCoords *= position.w;
+
+  outp.vTexCoords = aVertex.vTexCoords;
 
   return outp;
 }
@@ -304,6 +341,30 @@ VS_BLEND_OUTPUT LayerQuadBlendVS(const VS_INPUT aVertex)
 VS_BLEND_OUTPUT LayerQuadBlendMaskVS(const VS_INPUT aVertex)
 {
   VS_MASK_OUTPUT v = LayerQuadMaskVS(aVertex);
+
+  VS_BLEND_OUTPUT o;
+  o.vPosition = v.vPosition;
+  o.vTexCoords = v.vTexCoords;
+  o.vMaskCoords = v.vMaskCoords;
+  o.vBackdropCoords = BackdropPosition(v.vPosition);
+  return o;
+}
+
+VS_BLEND_OUTPUT LayerDynamicBlendVS(const VS_TEX_INPUT aVertex)
+{
+  VS_OUTPUT v = LayerDynamicVS(aVertex);
+
+  VS_BLEND_OUTPUT o;
+  o.vPosition = v.vPosition;
+  o.vTexCoords = v.vTexCoords;
+  o.vMaskCoords = float3(0, 0, 0);
+  o.vBackdropCoords = BackdropPosition(v.vPosition);
+  return o;
+}
+
+VS_BLEND_OUTPUT LayerDynamicBlendMaskVS(const VS_TEX_INPUT aVertex)
+{
+  VS_MASK_OUTPUT v = LayerDynamicMaskVS(aVertex);
 
   VS_BLEND_OUTPUT o;
   o.vPosition = v.vPosition;
