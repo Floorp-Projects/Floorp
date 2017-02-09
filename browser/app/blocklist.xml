@@ -2143,12 +2143,16 @@
       <versionRange maxVersion="13.0.0.302" minVersion="13.0.0.302" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p1495" os="Linux">
+      <match exp="" name="name"/>
       <match exp="libflashplayer\.so" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="24.0.0.186" minVersion="23.0.0.207" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="p1420">
+    <pluginItem blockID="p1420" os="">
+      <match exp="" name="name"/>
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.205" minVersion="23.0.0.185" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
@@ -2202,7 +2206,9 @@
       <versionRange maxVersion="*" minVersion="0"/>
     </pluginItem>
     <pluginItem blockID="p1419" os="Linux">
+      <match exp="" name="name"/>
       <match exp="libflashplayer\.so" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.643" minVersion="11.2.202.637" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
@@ -2459,8 +2465,10 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="18.0.0.232" minVersion="18.0.0.204" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="p1274">
+    <pluginItem blockID="p1274" os="">
+      <match exp="" name="name"/>
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="22.0.0.211" minVersion="22.0.0.192" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
@@ -2571,8 +2579,10 @@
         </targetApplication>
       </versionRange>
     </pluginItem>
-    <pluginItem blockID="p1494">
+    <pluginItem blockID="p1494" os="">
+      <match exp="" name="name"/>
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="24.0.0.186" minVersion="23.0.0.207" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
@@ -2640,8 +2650,10 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="18.0.0.352" minVersion="18.0.0.343" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="p160">
+    <pluginItem blockID="p160" os="">
+      <match exp="" name="name"/>
       <match exp="NPSWF32\.dll" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="10.2.9999" minVersion="0" severity="0" vulnerabilitystatus="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -2810,7 +2822,9 @@
       <match exp="NPFFAddOn.dll" name="filename"/>
     </pluginItem>
     <pluginItem blockID="p1421" os="Linux">
+      <match exp="" name="name"/>
       <match exp="libflashplayer\.so" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.207" minVersion="11.2.202.643" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
@@ -3006,8 +3020,10 @@
       <infoURL>https://get.adobe.com/reader</infoURL>
       <versionRange maxVersion="15.006.30174" minVersion="15.006.30174" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="p1422">
+    <pluginItem blockID="p1422" os="">
+      <match exp="" name="name"/>
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <match exp="" name="description"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.207" minVersion="23.0.0.205" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
