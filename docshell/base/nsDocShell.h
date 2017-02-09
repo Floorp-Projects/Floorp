@@ -1057,8 +1057,9 @@ private:
   // Separate function to do the actual name (i.e. not _top, _self etc.)
   // searching for FindItemWithName.
   nsresult DoFindItemWithName(const nsAString& aName,
-                              nsISupports* aRequestor,
+                              nsIDocShellTreeItem* aRequestor,
                               nsIDocShellTreeItem* aOriginalRequestor,
+                              bool aSkipTabGroup,
                               nsIDocShellTreeItem** aResult);
 
   // Helper assertion to enforce that mInPrivateBrowsing is in sync with
