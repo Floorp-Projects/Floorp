@@ -10,8 +10,6 @@
 // For MOZ_SAMPLE_TYPE_*
 #include "FlacFrameParser.h"
 #include "VideoUtils.h"
-#include <nsAutoPtr.h>
-#include <nsAutoRef.h>
 #include <nsDeque.h>
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
@@ -200,9 +198,8 @@ public:
 
   // Returns the next raw packet in the stream, or nullptr if there are no more
   // packets buffered in the packet queue. More packets can be buffered by
-  // inserting one or more pages into the stream by calling PageIn(). The
-  // caller is responsible for deleting returned packet's using
-  // OggCodecState::ReleasePacket(). The packet will have a valid granulepos.
+  // inserting one or more pages into the stream by calling PageIn().
+  // The packet will have a valid granulepos.
   OggPacketPtr PacketOut();
 
   // Returns the next raw packet in the stream, or nullptr if there are no more
@@ -212,10 +209,6 @@ public:
 
   // Moves all raw packets from aOther to the front of the current packet queue.
   void PushFront(OggPacketQueue&& aOther);
-
-  // Releases the memory used by a cloned packet. Every packet returned by
-  // PacketOut() must be free'd using this function.
-  static void ReleasePacket(ogg_packet* aPacket);
 
   // Returns the next packet in the stream as a MediaRawData, or nullptr
   // if there are no more packets buffered in the packet queue. More packets
@@ -664,18 +657,5 @@ private:
 };
 
 } // namespace mozilla
-
-// This allows the use of nsAutoRefs for an ogg_packet that properly free the
-// contents of the packet.
-template <>
-class nsAutoRefTraits<ogg_packet> : public nsPointerRefTraits<ogg_packet>
-{
-public:
-  static void Release(ogg_packet* aPacket)
-  {
-    mozilla::OggCodecState::ReleasePacket(aPacket);
-  }
-};
-
 
 #endif
