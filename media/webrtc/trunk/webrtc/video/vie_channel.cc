@@ -44,8 +44,6 @@ const int kMinSendSidePacketHistorySize = 600;
 const int kMaxPacketAgeToNack = 450;
 const int kMaxNackListSize = 250;
 
-const int kInvalidRtpExtensionId = 0; //MOZ addition for RtpSenderId (RID)
-
 // Helper class receiving statistics callbacks.
 class ChannelStatsObserver : public CallStatsObserver {
  public:
@@ -122,7 +120,6 @@ ViEChannel::ViEChannel(uint32_t number_of_cores,
       rtt_sum_ms_(0),
       last_rtt_ms_(0),
       num_rtts_(0),
-			rid_extension_id_(kInvalidRtpExtensionId),
       rtp_rtcp_modules_(
           CreateRtpRtcpModules(!sender,
                                vie_receiver_.GetReceiveStatistics(),
@@ -663,7 +660,6 @@ int ViEChannel::SetSendRtpStreamId(bool enable, int id) { //}, const char *rid)
   int error = 0;
   if (enable) {
     // Enable the extension, but disable possible old id to avoid errors.
-    rid_extension_id_ = id;
     for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
       rtp_rtcp->DeregisterSendRtpHeaderExtension(
         kRtpExtensionRtpStreamId);
@@ -673,7 +669,6 @@ int ViEChannel::SetSendRtpStreamId(bool enable, int id) { //}, const char *rid)
     // NOTE: simulcast streams must be set via the SetSendCodec() API
   } else {
     // Disable the extension.
-    rid_extension_id_ = kInvalidRtpExtensionId;
     for (RtpRtcp* rtp_rtcp : rtp_rtcp_modules_) {
     	rtp_rtcp->DeregisterSendRtpHeaderExtension(
         kRtpExtensionRtpStreamId);
