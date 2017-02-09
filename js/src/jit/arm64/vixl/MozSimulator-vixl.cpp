@@ -32,11 +32,14 @@
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
 
+js::jit::SimulatorProcess* js::jit::SimulatorProcess::singleton_ = nullptr;
+
 namespace vixl {
 
 
 using mozilla::DebugOnly;
 using js::jit::ABIFunctionType;
+using js::jit::SimulatorProcess;
 
 Simulator::Simulator(Decoder* decoder, FILE* stream)
   : stream_(nullptr)
@@ -46,7 +49,6 @@ Simulator::Simulator(Decoder* decoder, FILE* stream)
   , stack_limit_(nullptr)
   , decoder_(nullptr)
   , oom_(false)
-  , lock_(js::mutexid::Arm64SimulatorLock)
 {
     this->init(decoder, stream);
 }
@@ -144,13 +146,13 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   // time they are encountered. This warning can be silenced using
   // SilenceExclusiveAccessWarning().
   print_exclusive_access_warning_ = true;
-
-  redirection_ = nullptr;
 }
 
 
 Simulator* Simulator::Current() {
-  return js::TlsContext.get()->simulator();
+  JSContext* cx = js::TlsContext.get();
+  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(cx->runtime()));
+  return cx->simulator();
 }
 
 
@@ -294,8 +296,8 @@ class AutoLockSimulatorCache : public js::LockGuard<js::Mutex>
   using Base = js::LockGuard<js::Mutex>;
 
  public:
-  explicit AutoLockSimulatorCache(Simulator* sim)
-    : Base(sim->lock_)
+  explicit AutoLockSimulatorCache()
+    : Base(SimulatorProcess::singleton_->lock_)
   {
   }
 };
@@ -311,14 +313,14 @@ class Redirection
 {
   friend class Simulator;
 
-  Redirection(void* nativeFunction, ABIFunctionType type, Simulator* sim)
+  Redirection(void* nativeFunction, ABIFunctionType type)
     : nativeFunction_(nativeFunction),
     type_(type),
     next_(nullptr)
   {
-    next_ = sim->redirection();
+    next_ = SimulatorProcess::redirection();
     // TODO: Flush ICache?
-    sim->setRedirection(this);
+    SimulatorProcess::setRedirection(this);
 
     Instruction* instr = (Instruction*)(&svcInstruction_);
     vixl::Assembler::svc(instr, kCallRtRedirected);
@@ -330,13 +332,12 @@ class Redirection
   ABIFunctionType type() const { return type_; }
 
   static Redirection* Get(void* nativeFunction, ABIFunctionType type) {
-    Simulator* sim = Simulator::Current();
-    AutoLockSimulatorCache alsr(sim);
+    AutoLockSimulatorCache alsr;
 
     // TODO: Store srt_ in the simulator for this assertion.
     // VIXL_ASSERT_IF(pt->simulator(), pt->simulator()->srt_ == srt);
 
-    Redirection* current = sim->redirection();
+    Redirection* current = SimulatorProcess::redirection();
     for (; current != nullptr; current = current->next_) {
       if (current->nativeFunction_ == nativeFunction) {
         VIXL_ASSERT(current->type() == type);
@@ -348,7 +349,7 @@ class Redirection
     Redirection* redir = (Redirection*)js_malloc(sizeof(Redirection));
     if (!redir)
         oomUnsafe.crash("Simulator redirection");
-    new(redir) Redirection(nativeFunction, type, sim);
+    new(redir) Redirection(nativeFunction, type);
     return redir;
   }
 
@@ -366,14 +367,6 @@ class Redirection
 };
 
 
-void Simulator::setRedirection(Redirection* redirection) {
-  redirection_ = redirection;
-}
-
-
-Redirection* Simulator::redirection() const {
-  return redirection_;
-}
 
 
 void* Simulator::RedirectNativeFunction(void* nativeFunction, ABIFunctionType type) {
