@@ -11,6 +11,7 @@
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"   // for StyleSheet
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
@@ -996,7 +997,7 @@ protected:
   // Name of placeholder transaction.
   nsIAtom* mPlaceHolderName;
   // Saved selection state for placeholder transaction batching.
-  SelectionState* mSelState;
+  mozilla::UniquePtr<SelectionState> mSelState;
   nsString* mPhonetic;
   // IME composition this is not null between compositionstart and
   // compositionend.

@@ -193,7 +193,7 @@ public final class NotificationHelper implements BundleEventListener {
         final Uri dataUri = builder.build();
         notificationIntent.setData(dataUri);
         notificationIntent.putExtra(HELPER_NOTIFICATION, true);
-        notificationIntent.putExtra(COOKIE_ATTR, message.getString(COOKIE_ATTR));
+        notificationIntent.putExtra(COOKIE_ATTR, message.getString(COOKIE_ATTR, ""));
 
         // All intents get routed through the notificationReceiver. That lets us bail if we don't want to start Gecko
         final ComponentName name = new ComponentName(
@@ -239,7 +239,7 @@ public final class NotificationHelper implements BundleEventListener {
         builder.setContentTitle(message.getString(TITLE_ATTR));
         builder.setContentText(message.getString(TEXT_ATTR));
 
-        final Uri imageUri = Uri.parse(message.getString(SMALLICON_ATTR));
+        final Uri imageUri = Uri.parse(message.getString(SMALLICON_ATTR, ""));
         builder.setSmallIcon(BitmapUtils.getResource(mContext, imageUri));
 
         final int[] light = message.getIntArray(LIGHT_ATTR);
@@ -261,7 +261,8 @@ public final class NotificationHelper implements BundleEventListener {
         }
 
         if (message.containsKey(LARGE_ICON_ATTR)) {
-            final Bitmap b = BitmapUtils.getBitmapFromDataURI(message.getString(LARGE_ICON_ATTR));
+            final Bitmap b = BitmapUtils.getBitmapFromDataURI(
+                    message.getString(LARGE_ICON_ATTR, ""));
             builder.setLargeIcon(b);
         }
 
@@ -280,7 +281,7 @@ public final class NotificationHelper implements BundleEventListener {
                 final GeckoBundle action = actions[i];
                 final PendingIntent pending = buildButtonClickPendingIntent(message, action);
                 final String actionTitle = action.getString(ACTION_TITLE_ATTR);
-                final Uri actionImage = Uri.parse(action.getString(ACTION_ICON_ATTR));
+                final Uri actionImage = Uri.parse(action.getString(ACTION_ICON_ATTR, ""));
                 builder.addAction(BitmapUtils.getResource(mContext, actionImage),
                                   actionTitle,
                                   pending);
@@ -354,8 +355,8 @@ public final class NotificationHelper implements BundleEventListener {
 
     private void hideNotification(final GeckoBundle message) {
         final String id = message.getString("id");
-        final String handler = message.getString("handlerKey");
-        final String cookie = message.getString("cookie");
+        final String handler = message.getString("handlerKey", "");
+        final String cookie = message.getString("cookie", "");
 
         hideNotification(id, handler, cookie);
     }
@@ -377,7 +378,7 @@ public final class NotificationHelper implements BundleEventListener {
         for (int i = 0; i < mClearableNotifications.size(); i++) {
             final String id = mClearableNotifications.keyAt(i);
             final GeckoBundle obj = mClearableNotifications.valueAt(i);
-            closeNotification(id, obj.getString(HANDLER_ATTR), obj.getString(COOKIE_ATTR));
+            closeNotification(id, obj.getString(HANDLER_ATTR, ""), obj.getString(COOKIE_ATTR, ""));
         }
         mClearableNotifications.clear();
     }

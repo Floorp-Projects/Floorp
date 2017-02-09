@@ -153,3 +153,59 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   left: -3px;
   right: -3px;
 }
+
+/**
+ * Color Widget Editor
+ */
+
+.colorwidget-value {
+  position: relative;
+  margin-top: 8px;
+}
+
+/**
+ * Color Widget Select
+ */
+
+.colorwidget-select {
+  width: 100%;
+}
+
+.colorwidget-select-spacing {
+  letter-spacing: 40px;
+}
+
+.colorwidget-select-spacing option {
+  letter-spacing: initial;
+}
+
+/**
+ * Color Widget Inputs
+ */
+
+.colorwidget-hidden {
+  display: none;
+}
+
+.colorwidget-hex,
+.colorwidget-rgba,
+.colorwidget-hsla {
+  width: 200px;
+  font-size: 0;
+}
+
+.colorwidget-hex-input {
+  width: 192px;
+}
+
+.colorwidget-rgba-r,
+.colorwidget-rgba-g,
+.colorwidget-rgba-b,
+.colorwidget-rgba-a,
+.colorwidget-hsla-h,
+.colorwidget-hsla-s,
+.colorwidget-hsla-l,
+.colorwidget-hsla-a {
+  width: 42px;
+  margin: 0;
+}

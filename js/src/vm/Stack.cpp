@@ -26,6 +26,7 @@
 
 using namespace js;
 
+using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
@@ -1739,7 +1740,7 @@ ActivationIterator::settle()
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
                                                    uint32_t sampleBufferGen)
-  : rt_(cx->runtime()),
+  : cx_(cx),
     sampleBufferGen_(sampleBufferGen),
     activation_(nullptr),
     savedPrevJitTop_(nullptr)
@@ -1821,7 +1822,7 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
-    new (storage_.addr()) jit::JitProfilingFrameIterator(rt_, state);
+    new (storage_.addr()) jit::JitProfilingFrameIterator(cx_, state);
 }
 
 void
@@ -1899,9 +1900,9 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
 
     // Look up an entry for the return address.
     void* returnAddr = jitIter().returnAddressToFp();
-    jit::JitcodeGlobalTable* table = rt_->jitRuntime()->getJitcodeGlobalTable();
+    jit::JitcodeGlobalTable* table = cx_->runtime()->jitRuntime()->getJitcodeGlobalTable();
     if (hasSampleBufferGen())
-        *entry = table->lookupForSamplerInfallible(returnAddr, rt_, sampleBufferGen_);
+        *entry = table->lookupForSamplerInfallible(returnAddr, cx_->runtime(), sampleBufferGen_);
     else
         *entry = table->lookupInfallible(returnAddr);
 
@@ -1941,8 +1942,9 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
 
     // Extract the stack for the entry.  Assume maximum inlining depth is <64
     const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(rt_, jitIter().returnAddressToFp(), labels, 64);
-    MOZ_ASSERT(depth < 64);
+    uint32_t depth = entry.callStackAtAddr(cx_->runtime(), jitIter().returnAddressToFp(),
+                                           labels, ArrayLength(labels));
+    MOZ_ASSERT(depth < ArrayLength(labels));
     for (uint32_t i = 0; i < depth; i++) {
         if (offset + i >= end)
             return i;

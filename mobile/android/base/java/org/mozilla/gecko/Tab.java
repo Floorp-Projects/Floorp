@@ -649,7 +649,7 @@ public class Tab {
 
         setContentType(message.getString("contentType"));
         updateUserRequested(message.getString("userRequested"));
-        mBaseDomain = message.getString("baseDomain");
+        mBaseDomain = message.getString("baseDomain", "");
 
         setHasFeeds(false);
         setHasManifest(false);
