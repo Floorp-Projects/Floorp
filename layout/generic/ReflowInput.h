@@ -337,7 +337,8 @@ struct ReflowInput : public SizeComputationInput {
   // parent's reflow state
   const ReflowInput* mParentReflowInput;
 
-  // pointer to the float manager associated with this area
+  // A non-owning pointer to the float manager associated with this area,
+  // which points to the object owned by nsAutoFloatManager::mNew.
   nsFloatManager* mFloatManager;
 
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
