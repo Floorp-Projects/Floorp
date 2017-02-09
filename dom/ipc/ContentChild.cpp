@@ -2620,7 +2620,8 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
       return IPC_FAIL_NO_REASON(this);
     }
     return IPC_OK();
-  } else if (!mPolicy) {
+  }
+  if (!mPolicy) {
     MOZ_ASSERT_UNREACHABLE("If the domain policy is not active yet,"
                            " the first message should be ACTIVATE_POLICY");
     return IPC_FAIL_NO_REASON(this);
@@ -2776,9 +2777,7 @@ ContentChild::GetBrowserOrId(TabChild* aTabChild)
     this == aTabChild->Manager()) {
     return PBrowserOrId(aTabChild);
   }
-  else {
-    return PBrowserOrId(aTabChild->GetTabId());
-  }
+  return PBrowserOrId(aTabChild->GetTabId());
 }
 
 mozilla::ipc::IPCResult
