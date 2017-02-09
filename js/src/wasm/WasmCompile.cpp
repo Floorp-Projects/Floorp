@@ -18,6 +18,9 @@
 
 #include "wasm/WasmCompile.h"
 
+#include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
+
 #include "jsprf.h"
 
 #include "wasm/WasmBaselineCompile.h"
@@ -125,6 +128,12 @@ CompilerAvailability(ModuleKind kind, const CompileArgs& args, bool* baselineEna
         *ionEnabled = true;
 }
 
+static bool
+BackgroundWorkPossible()
+{
+    return CanUseExtraThreads() && HelperThreadState().cpuCount > 1;
+}
+
 bool
 wasm::GetDebugEnabled(const CompileArgs& args, ModuleKind kind)
 {
@@ -140,7 +149,7 @@ wasm::GetInitialCompileMode(const CompileArgs& args, ModuleKind kind)
     bool baselineEnabled, debugEnabled, ionEnabled;
     CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
 
-    return (baselineEnabled && ionEnabled && !debugEnabled)
+    return BackgroundWorkPossible() && baselineEnabled && ionEnabled && !debugEnabled
            ? CompileMode::Tier1
            : CompileMode::Once;
 }
@@ -168,33 +177,106 @@ wasm::GetTier(const CompileArgs& args, CompileMode compileMode, ModuleKind kind)
     }
 }
 
+namespace js {
+namespace wasm {
+
+struct Tier2GeneratorTask
+{
+    // The module that wants the results of the compilation
+    SharedModule            module;
+
+    // The arguments for the compilation
+    SharedCompileArgs       compileArgs;
+
+    Tier2GeneratorTask(Module& module, const CompileArgs& compileArgs)
+      : module(&module),
+        compileArgs(&compileArgs)
+    {}
+};
+
+}
+}
+
+static bool
+Compile(ModuleGenerator& mg, const ShareableBytes& bytecode, const CompileArgs& args,
+        UniqueChars* error, CompileMode compileMode)
+{
+    auto env = js::MakeUnique<ModuleEnvironment>();
+    if (!env)
+        return false;
+
+    Decoder d(bytecode.bytes, error);
+    if (!DecodeModuleEnvironment(d, env.get()))
+        return false;
+
+    if (!mg.init(Move(env), args, compileMode))
+        return false;
+
+    if (!DecodeCodeSection(d, mg))
+        return false;
+
+    if (!DecodeModuleTail(d, &mg.mutableEnv()))
+        return false;
+
+    return true;
+}
+
+
 SharedModule
 wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    Decoder d(bytecode.bytes, error);
-
-    auto env = js::MakeUnique<ModuleEnvironment>();
-    if (!env)
-        return nullptr;
-
-    if (!DecodeModuleEnvironment(d, env.get()))
-        return nullptr;
-
-    CompileMode compileMode = GetInitialCompileMode(args);
-
     ModuleGenerator mg(error);
-    if (!mg.init(Move(env), args, compileMode))
-        return nullptr;
 
-    if (!DecodeCodeSection(d, mg))
-        return nullptr;
-
-    if (!DecodeModuleTail(d, &mg.mutableEnv()))
+    CompileMode mode = GetInitialCompileMode(args);
+    if (!::Compile(mg, bytecode, args, error, mode))
         return nullptr;
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
 
-    return mg.finish(bytecode);
+    SharedModule module = mg.finishModule(bytecode);
+    if (!module)
+        return nullptr;
+
+    if (mode == CompileMode::Tier1) {
+        MOZ_ASSERT(BackgroundWorkPossible());
+
+        auto task = js::MakeUnique<Tier2GeneratorTask>(*module, args);
+        if (!task) {
+            module->unblockOnTier2GeneratorFinished(CompileMode::Once);
+            return nullptr;
+        }
+
+        if (!StartOffThreadWasmTier2Generator(&*task)) {
+            module->unblockOnTier2GeneratorFinished(CompileMode::Once);
+            return nullptr;
+        }
+
+        mozilla::Unused << task.release();
+    }
+
+    return module;
+}
+
+// This runs on a helper thread.
+bool
+wasm::GenerateTier2(Tier2GeneratorTask* task)
+{
+    UniqueChars     error;
+    ModuleGenerator mg(&error);
+
+    bool res =
+        ::Compile(mg, task->module->bytecode(), *task->compileArgs, &error, CompileMode::Tier2) &&
+        mg.finishTier2(task->module->bytecode(), task->module);
+
+    task->module->unblockOnTier2GeneratorFinished(res ? CompileMode::Tier2 : CompileMode::Once);
+
+    return res;
+}
+
+void
+wasm::DeleteTier2GeneratorTask(Tier2GeneratorTask* task)
+{
+    js_delete(task);
 }

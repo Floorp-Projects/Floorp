@@ -20,12 +20,17 @@
 #define wasm_module_h
 
 #include "js/TypeDecls.h"
-
+#include "threading/ConditionVariable.h"
+#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmTable.h"
+#include "wasm/WasmValidate.h"
 
 namespace js {
 namespace wasm {
+
+struct CompileArgs;
 
 // LinkData contains all the metadata necessary to patch all the locations
 // that depend on the absolute address of a CodeSegment.
@@ -95,6 +100,12 @@ class LinkData
     const LinkDataTier& linkData(Tier tier) const;
     LinkDataTier& linkData(Tier tier);
 
+    UniquePtr<LinkDataTier> takeLinkData(Tier tier) {
+        MOZ_ASSERT(!hasTier2());
+        MOZ_ASSERT(linkData1_->tier == tier);
+        return Move(linkData1_);
+    }
+
     WASM_DECLARE_SERIALIZABLE(LinkData)
 };
 
@@ -130,6 +141,20 @@ class Module : public JS::WasmModule
 
     mutable mozilla::Atomic<bool> codeIsBusy_;
 
+    // The lock guards the mode_ member, and the lock/cond pair are used to
+    // allow threads to wait for the availability of Ion code and signal the
+    // completion of tier-2 compilation; see blockOnIonCompileFinished and
+    // unblockOnTier2GeneratorFinished, below.
+
+    mutable Mutex                 tier2Lock_;
+    mutable ConditionVariable     tier2Cond_;
+
+    // Access mode_ only under the lock.  It will be changed from Tier1 to Tier2
+    // once Tier2 compilation is finished, and from Tier1 to Once if Tier2
+    // compilation is disabled (in testing modes) or cancelled.
+
+    mutable CompileMode           mode_;
+
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
     bool instantiateTable(JSContext* cx,
@@ -142,7 +167,8 @@ class Module : public JS::WasmModule
                       const ValVector& globalImports) const;
 
   public:
-    Module(Assumptions&& assumptions,
+    Module(CompileMode mode,
+           Assumptions&& assumptions,
            const Code& code,
            UniqueConstBytes unlinkedCodeForDebugging,
            LinkData&& linkData,
@@ -160,18 +186,23 @@ class Module : public JS::WasmModule
         dataSegments_(Move(dataSegments)),
         elemSegments_(Move(elemSegments)),
         bytecode_(&bytecode),
-        codeIsBusy_(false)
+        codeIsBusy_(false),
+        tier2Lock_(js::mutexid::WasmTier2GeneratorComplete),
+        mode_(mode)
     {
         MOZ_ASSERT_IF(metadata().debugEnabled, unlinkedCodeForDebugging_);
     }
     ~Module() override { /* Note: can be called on any thread */ }
 
     const Code& code() const { return *code_; }
+    const CodeSegment& codeSegment(Tier t) const { return code_->segment(t); }
     const Metadata& metadata() const { return code_->metadata(); }
     const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
+    const LinkData& linkData() const { return linkData_; }
+    const LinkDataTier& linkData(Tier t) const { return linkData_.linkData(t); }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
-    const Bytes& bytecode() const { return bytecode_->bytes; }
+    const ShareableBytes& bytecode() const { return *bytecode_; }
     uint32_t codeLength(Tier t) const { return code_->segment(t).length(); }
 
     // Instantiate this module with the given imports:
@@ -183,6 +214,29 @@ class Module : public JS::WasmModule
                      const ValVector& globalImports,
                      HandleObject instanceProto,
                      MutableHandleWasmInstanceObject instanceObj) const;
+
+    // Tiered compilation support: these run on the compilation thread.
+
+    // Will be invoked once the second-tier compilation of the module is
+    // finished; it is passed the tier-variant data for Tier 2, which it
+    // installs in the module and makes visible.
+
+    void finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
+                              UniqueConstCodeSegment code2, UniqueModuleEnvironment env2);
+
+    // Wait until Ion-compiled code is available, which will be true either
+    // immediately (first-level compile was Ion and is already done), not at all
+    // (first-level compile was Baseline and there's not a second level), or
+    // later (ongoing second-level compilation).  Once this returns, one can use
+    // code().hasTier() to check code availability - there is no guarantee that
+    // Ion code will be available, but if it isn't then it never will.
+
+    void blockOnIonCompileFinished() const;
+
+    // Signal all waiters that are waiting on tier-2 compilation to be done that
+    // they should wake up.  They will be waiting in blockOnIonCompileFinished.
+
+    void unblockOnTier2GeneratorFinished(CompileMode newMode) const;
 
     // Structured clone support:
 

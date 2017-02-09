@@ -35,7 +35,7 @@ struct ScriptedCaller
 
 // Describes all the parameters that control wasm compilation.
 
-struct CompileArgs
+struct CompileArgs : ShareableBase<CompileArgs>
 {
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
@@ -57,6 +57,9 @@ struct CompileArgs
     bool initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller);
 };
 
+typedef RefPtr<CompileArgs> MutableCompileArgs;
+typedef RefPtr<const CompileArgs> SharedCompileArgs;
+
 // Compile the given WebAssembly bytecode with the given arguments into a
 // wasm::Module. On success, the Module is returned. On failure, the returned
 // SharedModule pointer is null and either:
@@ -75,10 +78,11 @@ bool
 GetDebugEnabled(const CompileArgs& args, ModuleKind kind = ModuleKind::Wasm);
 
 // Select the mode for the initial compilation of a module.  The mode is "Tier1"
-// precisely if both compilers are available and we're not debugging, and in
-// that case, we'll compile twice, with the mode set to "Tier2" during the
-// second compilation.  Otherwise, the tier is "Once" and we'll compile once,
-// with the appropriate compiler.
+// precisely if both compilers are available, we're not debugging, and it is
+// possible to compile in the background, and in that case, we'll compile twice,
+// with the mode set to "Tier2" during the second (background) compilation.
+// Otherwise, the tier is "Once" and we'll compile once, with the appropriate
+// compiler.
 
 CompileMode
 GetInitialCompileMode(const CompileArgs& args, ModuleKind kind = ModuleKind::Wasm);
