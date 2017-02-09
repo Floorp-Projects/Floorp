@@ -92,8 +92,8 @@ BaselineCompiler::compile()
     JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%" PRIuSIZE,
             script->filename(), script->lineno());
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLoggerEvent scriptEvent(logger, TraceLogger_AnnotateScripts, script);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+    TraceLoggerEvent scriptEvent(TraceLogger_AnnotateScripts, script);
     AutoTraceLog logScript(logger, scriptEvent);
     AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
@@ -525,7 +525,6 @@ bool
 BaselineCompiler::emitStackCheck(bool earlyCheck)
 {
     Label skipCall;
-    void* limitAddr = &cx->runtime()->contextFromMainThread()->jitStackLimit;
     uint32_t slotsSize = script->nslots() * sizeof(Value);
     uint32_t tolerance = earlyCheck ? slotsSize : 0;
 
@@ -551,7 +550,10 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
                           &forceCall);
     }
 
-    masm.branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(limitAddr), R1.scratchReg(),
+    void* contextAddr = &cx->zone()->group()->context;
+    masm.loadPtr(AbsoluteAddress(contextAddr), R0.scratchReg());
+    masm.branchPtr(Assembler::BelowOrEqual,
+                   Address(R0.scratchReg(), offsetof(JSContext, jitStackLimit)), R1.scratchReg(),
                    &skipCall);
 
     if (!earlyCheck && needsEarlyStackCheck())
@@ -697,8 +699,11 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void* interrupt = &cx->runtime()->contextFromMainThread()->interrupt_;
-    masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
+    void* context = &cx->zone()->group()->context;
+    masm.loadPtr(AbsoluteAddress(context), R0.scratchReg());
+    masm.branch32(Assembler::Equal,
+                  Address(R0.scratchReg(), offsetof(JSContext, interrupt_)), Imm32(0),
+                  &done);
 
     prepareVMCall();
     if (!callVM(InterruptCheckInfo))
@@ -838,7 +843,6 @@ BaselineCompiler::emitDebugTrap()
 bool
 BaselineCompiler::emitTraceLoggerEnter()
 {
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     AllocatableRegisterSet regs(RegisterSet::Volatile());
     Register loggerReg = regs.takeAnyGeneral();
     Register scriptReg = regs.takeAnyGeneral();
@@ -850,7 +854,7 @@ BaselineCompiler::emitTraceLoggerEnter()
     masm.Push(loggerReg);
     masm.Push(scriptReg);
 
-    masm.movePtr(ImmPtr(logger), loggerReg);
+    masm.loadTraceLogger(loggerReg);
 
     // Script start.
     masm.movePtr(ImmGCPtr(script), scriptReg);
@@ -873,7 +877,6 @@ BaselineCompiler::emitTraceLoggerEnter()
 bool
 BaselineCompiler::emitTraceLoggerExit()
 {
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     AllocatableRegisterSet regs(RegisterSet::Volatile());
     Register loggerReg = regs.takeAnyGeneral();
 
@@ -882,7 +885,7 @@ BaselineCompiler::emitTraceLoggerExit()
         return false;
 
     masm.Push(loggerReg);
-    masm.movePtr(ImmPtr(logger), loggerReg);
+    masm.loadTraceLogger(loggerReg);
 
     masm.tracelogStopId(loggerReg, TraceLogger_Baseline, /* force = */ true);
     masm.tracelogStopId(loggerReg, TraceLogger_Scripts, /* force = */ true);
@@ -904,8 +907,7 @@ BaselineCompiler::emitTraceLoggerResume(Register baselineScript, AllocatableGene
     if (!traceLoggerToggleOffsets_.append(masm.toggledJump(&noTraceLogger)))
         return false;
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    masm.movePtr(ImmPtr(logger), loggerReg);
+    masm.loadTraceLogger(loggerReg);
 
     Address scriptEvent(baselineScript, BaselineScript::offsetOfTraceLoggerScriptEvent());
     masm.computeEffectiveAddress(scriptEvent, scriptId);

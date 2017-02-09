@@ -7,7 +7,8 @@ addMessageListener("file.open", function (e) {
                   .QueryInterface(Ci.nsIProperties)
                   .get('ProfD', Ci.nsIFile);
   tmpFile.append('prefs.js');
-  sendAsyncMessage("file.opened", {
-    data: [ File.createFromNsIFile(tmpFile) ]
+
+  File.createFromNsIFile(tmpFile).then(file => {
+    sendAsyncMessage("file.opened", { data: [ file ] });
   });
 });

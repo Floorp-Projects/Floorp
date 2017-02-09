@@ -1378,13 +1378,18 @@ class LInitPropGetterSetter : public LCallInstructionHelper<0, 2, 0>
     }
 };
 
-class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
+class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
 {
   public:
     LIR_HEADER(CheckOverRecursed)
 
-    LCheckOverRecursed()
-    { }
+    explicit LCheckOverRecursed(const LDefinition& temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
 
     MCheckOverRecursed* mir() const {
         return mir_->toCheckOverRecursed();
@@ -1484,22 +1489,24 @@ class LRotateI64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1, 1>
     LAllocation* count() { return getOperand(Count); }
 };
 
-class LInterruptCheck : public LInstructionHelper<0, 0, 0>
+class LInterruptCheck : public LInstructionHelper<0, 0, 1>
 {
     Label* oolEntry_;
 
     // Whether this is an implicit interrupt check. Implicit interrupt checks
     // use a patchable backedge and signal handlers instead of an explicit
-    // rt->interrupt check.
+    // cx->interrupt check.
     bool implicit_;
 
   public:
     LIR_HEADER(InterruptCheck)
 
-    LInterruptCheck()
+    explicit LInterruptCheck(const LDefinition& temp)
       : oolEntry_(nullptr),
         implicit_(false)
-    {}
+    {
+        setTemp(0, temp);
+    }
 
     Label* oolEntry() {
         MOZ_ASSERT(implicit_);
@@ -1516,9 +1523,14 @@ class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 
     void setImplicit() {
         implicit_ = true;
+        setTemp(0, LDefinition::BogusTemp());
     }
     bool implicit() const {
         return implicit_;
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 

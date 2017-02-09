@@ -906,9 +906,6 @@ class Shape : public gc::TenuredCell
                setter() == rawSetter;
     }
 
-    bool set(JSContext* cx, HandleNativeObject obj, HandleObject receiver, MutableHandleValue vp,
-             ObjectOpResult& result);
-
     BaseShape* base() const { return base_.get(); }
 
     bool hasSlot() const {
