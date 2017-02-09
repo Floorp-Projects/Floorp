@@ -79,7 +79,7 @@ HTMLObjectElement::DoneAddingChildren(bool aHaveNotified)
   // If we're already in a document, we need to trigger the load
   // Otherwise, BindToTree takes care of that.
   if (IsInComposedDoc()) {
-    StartObjectLoad(aHaveNotified, false);
+    StartObjectLoad(aHaveNotified);
   }
 }
 
@@ -310,8 +310,7 @@ HTMLObjectElement::SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
   // a document, just in case that the caller wants to set additional
   // attributes before inserting the node into the document.
   if (aNotify && IsInComposedDoc() && mIsDoneAddingChildren &&
-      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::data &&
-      !BlockEmbedOrObjectContentLoading()) {
+      aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::data) {
     return LoadObject(aNotify, true);
   }
 
@@ -328,8 +327,7 @@ HTMLObjectElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 
   // See comment in SetAttr
   if (aNotify && IsInComposedDoc() && mIsDoneAddingChildren &&
-      aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::data &&
-      !BlockEmbedOrObjectContentLoading()) {
+      aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::data) {
     return LoadObject(aNotify, true);
   }
 
@@ -537,16 +535,15 @@ HTMLObjectElement::GetAttributeMappingFunction() const
 }
 
 void
-HTMLObjectElement::StartObjectLoad(bool aNotify, bool aForce)
+HTMLObjectElement::StartObjectLoad(bool aNotify)
 {
   // BindToTree can call us asynchronously, and we may be removed from the tree
   // in the interim
-  if (!IsInComposedDoc() || !OwnerDoc()->IsActive() ||
-      BlockEmbedOrObjectContentLoading()) {
+  if (!IsInComposedDoc() || !OwnerDoc()->IsActive()) {
     return;
   }
 
-  LoadObject(aNotify, aForce);
+  LoadObject(aNotify);
   SetIsNetworkCreated(false);
 }
 

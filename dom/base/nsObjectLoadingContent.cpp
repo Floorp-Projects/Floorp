@@ -88,7 +88,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLSharedObjectElement.h"
-#include "mozilla/dom/HTMLObjectElement.h"
 #include "nsChannelClassifier.h"
 
 #ifdef XP_WIN
@@ -97,6 +96,13 @@
 #undef CreateEvent
 #endif
 #endif // XP_WIN
+
+#ifdef XP_MACOSX
+// HandlePluginCrashed() and HandlePluginInstantiated() needed from here to
+// fix bug 1147521.  Should later be replaced by proper interface methods,
+// maybe on nsIObjectLoadingContext.
+#include "mozilla/dom/HTMLObjectElement.h"
+#endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -3011,7 +3017,7 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   // Fixup mFallbackType
   //
   nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "must be a content");
 
   if (!thisContent->IsHTMLElement() || mContentType.IsEmpty()) {
@@ -3024,10 +3030,8 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   // child embeds as we find them in the upcoming loop.
   mType = eType_Null;
 
-  bool thisIsObject = thisContent->IsHTMLElement(nsGkAtoms::object);
-
-  // Do a depth-first traverse of node tree with the current element as root,
-  // looking for <embed> or <object> elements that might now need to load.
+  // Do a breadth-first traverse of node tree with the current element as root,
+  // looking for the first embed we can find.
   nsTArray<nsINodeList*> childNodes;
   if ((thisContent->IsHTMLElement(nsGkAtoms::object) ||
        thisContent->IsHTMLElement(nsGkAtoms::applet)) &&
@@ -3043,11 +3047,10 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
           nsStyleUtil::IsSignificantChild(child, true, false)) {
         aType = eFallbackAlternate;
       }
-      if (thisIsObject) {
-        if (child->IsHTMLElement(nsGkAtoms::embed)) {
-          HTMLSharedObjectElement* embed = static_cast<HTMLSharedObjectElement*>(child);
-          embed->StartObjectLoad(true, true);
-        } else if (auto object = HTMLObjectElement::FromContent(child)) {
+      if (child->IsHTMLElement(nsGkAtoms::embed) &&
+          thisContent->IsHTMLElement(nsGkAtoms::object)) {
+        HTMLSharedObjectElement* object = static_cast<HTMLSharedObjectElement*>(child);
+        if (object) {
           object->StartObjectLoad(true, true);
         }
       }
@@ -3811,38 +3814,6 @@ nsObjectLoadingContent::MaybeFireErrorEvent()
                                            false, false);
     loadBlockingAsyncDispatcher->PostDOMEvent();
   }
-}
-
-bool
-nsObjectLoadingContent::BlockEmbedOrObjectContentLoading()
-{
-  nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  if (!thisContent->IsHTMLElement(nsGkAtoms::embed) &&
-      !thisContent->IsHTMLElement(nsGkAtoms::object)) {
-    // Doesn't apply to other elements (i.e. <applet>)
-    return false;
-  }
-
-  // Traverse up the node tree to see if we have any ancestors that may block us
-  // from loading
-  for (nsIContent* parent = thisContent->GetParent();
-       parent;
-       parent = parent->GetParent()) {
-    if (parent->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio)) {
-      return true;
-    }
-    // If we have an ancestor that is an object with a source, it'll have an
-    // associated displayed type. If that type is not null, don't load content
-    // for the embed.
-    if (HTMLObjectElement* object = HTMLObjectElement::FromContent(parent)) {
-      uint32_t type = object->DisplayedType();
-      if (type != eType_Null) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 // SetupProtoChainRunner implementation
