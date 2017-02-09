@@ -48,12 +48,7 @@ function getPID(aBrowser) {
 
 function getInLAProc(aBrowser) {
   return ContentTask.spawn(aBrowser, null, () => {
-    try {
-      return docShell.inLargeAllocProcess;
-    } catch (e) {
-      // This must be a non-remote browser, which means it is not fresh
-      return false;
-    }
+    return Services.appinfo.remoteType == "webLargeAllocation";
   });
 }
 
