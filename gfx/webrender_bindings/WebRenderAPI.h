@@ -116,7 +116,7 @@ public:
 
   void PushRect(const WrRect& aBounds,
                 const WrRect& aClip,
-                const gfx::Color& aColor);
+                const WrColor& aColor);
 
   void PushImage(const WrRect& aBounds,
                  const WrRect& aClip,

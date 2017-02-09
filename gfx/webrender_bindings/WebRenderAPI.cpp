@@ -359,10 +359,9 @@ DisplayListBuilder::PopStackingContext()
 void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
                              const WrRect& aClip,
-                             const gfx::Color& aColor)
+                             const WrColor& aColor)
 {
-  wr_dp_push_rect(mWrState, aBounds, aClip,
-                  aColor.r, aColor.g, aColor.b, aColor.a);
+  wr_dp_push_rect(mWrState, aBounds, aClip, aColor);
 }
 
 void

@@ -56,7 +56,7 @@ WebRenderColorLayer::RenderLayer()
                               mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(
-    OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
+    OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), wr::ToWrColor(mColor)));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 

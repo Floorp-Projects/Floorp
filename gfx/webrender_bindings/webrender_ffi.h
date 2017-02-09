@@ -475,7 +475,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_rect(WrState* wrState, WrRect bounds, WrRect clip,
-                float r, float g, float b, float a)
+                WrColor color)
 WR_FUNC;
 
 WR_INLINE void
