@@ -199,14 +199,6 @@ Clone(ogg_packet* aPacket)
 }
 
 void
-OggCodecState::ReleasePacket(ogg_packet* aPacket)
-{
-  if (aPacket) {
-    OggPacketDeletePolicy()(aPacket);
-  }
-}
-
-void
 OggPacketQueue::Append(OggPacketPtr aPacket)
 {
   nsDeque::Push(aPacket.release());
