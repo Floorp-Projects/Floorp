@@ -19,7 +19,7 @@ use app_units::Au;
 
 extern crate webrender_traits;
 
-fn pipeline_id_to_u64(id: PipelineId) -> u64 { (id.0 as u64) << 32 + id.1 as u64 }
+fn pipeline_id_to_u64(id: PipelineId) -> u64 { ((id.0 as u64) << 32) + id.1 as u64 }
 fn u64_to_pipeline_id(id: u64) -> PipelineId { PipelineId((id >> 32) as u32, id as u32) }
 
 fn font_key_to_u64(key: FontKey) -> u64 { unsafe { mem::transmute(key) } }
