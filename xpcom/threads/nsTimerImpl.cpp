@@ -140,7 +140,6 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mITimer(aTimer),
   mMutex("nsTimerImpl::mMutex")
 {
-  MOZ_COUNT_CTOR(nsTimerImpl);
   // XXXbsmedberg: shouldn't this be in Init()?
   mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 }
