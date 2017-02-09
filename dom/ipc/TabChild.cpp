@@ -20,7 +20,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
-#include "mozilla/plugins/PluginWidgetChild.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -39,6 +38,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/plugins/PPluginWidgetChild.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Move.h"
@@ -122,6 +122,10 @@
 #include "mozilla/dom/DocGroup.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/Telemetry.h"
+
+#ifdef XP_WIN
+#include "mozilla/plugins/PluginWidgetChild.h"
+#endif
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"
@@ -3143,16 +3147,22 @@ TabChild::StopAwaitingLargeAlloc()
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {
-    return new mozilla::plugins::PluginWidgetChild();
+#ifdef XP_WIN
+  return new mozilla::plugins::PluginWidgetChild();
+#else
+  MOZ_ASSERT_UNREACHABLE();
+  return nullptr;
+#endif
 }
 
 bool
 TabChild::DeallocPPluginWidgetChild(mozilla::plugins::PPluginWidgetChild* aActor)
 {
-    delete aActor;
-    return true;
+  delete aActor;
+  return true;
 }
 
+#ifdef XP_WIN
 nsresult
 TabChild::CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut)
 {
@@ -3183,6 +3193,7 @@ TabChild::CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut)
   pluginWidget.forget(aOut);
   return rv;
 }
+#endif // XP_WIN
 
 ScreenIntSize
 TabChild::GetInnerSize()
