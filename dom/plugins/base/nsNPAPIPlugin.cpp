@@ -2274,9 +2274,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
         return NPERR_NO_ERROR;
       }
-      else {
-        return NPERR_GENERIC_ERROR;
-      }
+      return NPERR_GENERIC_ERROR;
     }
 #endif
 
