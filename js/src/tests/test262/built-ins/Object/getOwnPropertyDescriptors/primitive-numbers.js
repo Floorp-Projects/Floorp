@@ -3,7 +3,7 @@
 
 /*---
 description: Object.getOwnPropertyDescriptors accepts number primitives.
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 ---*/
 
@@ -13,3 +13,5 @@ assert.sameValue(Object.keys(Object.getOwnPropertyDescriptors(Infinity)).length,
 assert.sameValue(Object.keys(Object.getOwnPropertyDescriptors(-Infinity)).length, 0, '-Infinity has zero descriptors');
 assert.sameValue(Object.keys(Object.getOwnPropertyDescriptors(NaN)).length, 0, 'NaN has zero descriptors');
 assert.sameValue(Object.keys(Object.getOwnPropertyDescriptors(Math.PI)).length, 0, 'Math.PI has zero descriptors');
+
+reportCompare(0, 0);

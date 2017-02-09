@@ -19,7 +19,7 @@ Adding a test
 
         <fineprint> Some names are forbidden. Do not name your test browser.js,
         shell.js, template.js, user.js, js-test-driver-begin.js, or
-        js-test-driver-end.js, or any of the names of the files in supporting/.
+        js-test-driver-end.js.
         </fineprint>
 
 Adjusting when and how a test runs

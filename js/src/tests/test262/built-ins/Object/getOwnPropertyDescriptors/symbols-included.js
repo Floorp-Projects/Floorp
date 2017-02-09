@@ -3,7 +3,7 @@
 
 /*---
 description: Object.getOwnPropertyDescriptors includes Symbol keys.
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 features: [Symbol]
 ---*/
@@ -36,3 +36,5 @@ assert.sameValue(result[nonEnumSym].configurable, true, 'result[nonEnumSym] is c
 assert.sameValue(result[nonEnumSym].enumerable, false, 'result[nonEnumSym] is not enumerable');
 assert.sameValue(result[nonEnumSym].writable, true, 'result[nonEnumSym] is writable');
 assert.sameValue(result[nonEnumSym].value, value, 'result[nonEnumSym] has value `value`');
+
+reportCompare(0, 0);

@@ -17,3 +17,5 @@ function argumentsAndSet(a) {
   assert.sameValue(arguments[0], 2);
 }
 argumentsAndSet(1);
+
+reportCompare(0, 0);
