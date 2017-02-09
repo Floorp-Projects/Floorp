@@ -6,9 +6,9 @@
 
 #include "HTMLFontElement.h"
 #include "mozilla/dom/HTMLFontElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "nsContentUtils.h"
 #include "nsCSSParser.h"
 
@@ -55,56 +55,44 @@ HTMLFontElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLFontElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                       nsRuleData* aData)
+                                       GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Font))) {
     // face: string list
-    nsCSSValue* family = aData->ValueForFontFamily();
-    if (family->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_font_family)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
       if (value && value->Type() == nsAttrValue::eString &&
           !value->IsEmptyString()) {
-        nsCSSParser parser;
-        parser.ParseFontFamilyListString(value->GetStringValue(),
-                                         nullptr, 0, *family);
+        aData->SetFontFamily(value->GetStringValue());
       }
     }
-
     // size: int
-    nsCSSValue* fontSize = aData->ValueForFontSize();
-    if (fontSize->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_font_size)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        fontSize->SetIntValue(value->GetIntegerValue(), eCSSUnit_Enumerated);
-      }
+      if (value && value->Type() == nsAttrValue::eInteger)
+        aData->SetKeywordValue(eCSSProperty_font_size, value->GetIntegerValue());
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    nsCSSValue* colorValue = aData->ValueForColor();
-    if (colorValue->GetUnit() == eCSSUnit_Null &&
-        aData->mPresContext->UseDocumentColors()) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
+    if (!aData->PropertyIsSet(eCSSProperty_color) &&
+        aData->PresContext()->UseDocumentColors()) {
       // color: color
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
       nscolor color;
       if (value && value->GetColorValue(color)) {
-        colorValue->SetColorValue(color);
+        aData->SetColorValue(eCSSProperty_color, color);
       }
     }
   }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset) &&
-      aData->mPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(TextReset)) &&
+      aData->PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL flag only
     // affects quirks mode rendering.
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      nsCSSValue* decoration = aData->ValueForTextDecorationLine();
-      int32_t newValue = NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
-      if (decoration->GetUnit() == eCSSUnit_Enumerated) {
-        newValue |= decoration->GetIntValue();
-      }
-      decoration->SetIntValue(newValue, eCSSUnit_Enumerated);
+      aData->SetTextDecorationColorOverride();
     }
   }
 

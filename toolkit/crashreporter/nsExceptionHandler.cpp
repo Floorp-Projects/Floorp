@@ -32,18 +32,18 @@
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"
 #include "nsIWindowsRegKey.h"
-#include "client/windows/crash_generation/client_info.h"
-#include "client/windows/crash_generation/crash_generation_server.h"
-#include "client/windows/handler/exception_handler.h"
+#include "breakpad-client/windows/crash_generation/client_info.h"
+#include "breakpad-client/windows/crash_generation/crash_generation_server.h"
+#include "breakpad-client/windows/handler/exception_handler.h"
 #include <dbghelp.h>
 #include <string.h>
 #include "nsDirectoryServiceUtils.h"
 
 #include "nsWindowsDllInterceptor.h"
 #elif defined(XP_MACOSX)
-#include "client/mac/crash_generation/client_info.h"
-#include "client/mac/crash_generation/crash_generation_server.h"
-#include "client/mac/handler/exception_handler.h"
+#include "breakpad-client/mac/crash_generation/client_info.h"
+#include "breakpad-client/mac/crash_generation/crash_generation_server.h"
+#include "breakpad-client/mac/handler/exception_handler.h"
 #include <string>
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -58,18 +58,13 @@
 #include "nsIINIParser.h"
 #include "common/linux/linux_libc_support.h"
 #include "third_party/lss/linux_syscall_support.h"
-#include "client/linux/crash_generation/client_info.h"
-#include "client/linux/crash_generation/crash_generation_server.h"
-#include "client/linux/handler/exception_handler.h"
+#include "breakpad-client/linux/crash_generation/client_info.h"
+#include "breakpad-client/linux/crash_generation/crash_generation_server.h"
+#include "breakpad-client/linux/handler/exception_handler.h"
 #include "common/linux/eintr_wrapper.h"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#elif defined(XP_SOLARIS)
-#include "client/solaris/handler/exception_handler.h"
-#include <fcntl.h>
-#include <sys/types.h>
 #include <unistd.h>
 #else
 #error "Not yet implemented for this platform"

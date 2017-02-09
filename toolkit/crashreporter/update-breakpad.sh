@@ -20,19 +20,23 @@ breakpad_repo=$1
 rev=${2-HEAD}
 (cd $breakpad_repo; git archive --prefix=toolkit/crashreporter/google-breakpad/ $rev) | (cd $repo; tar xf -)
 # Breakpad uses gclient for externals, so manually export what we need.
-lss_rev=`python -c "import sys; execfile(sys.argv[1]); print deps['src/src/third_party/lss'].split('@')[1]" ${crashreporter_dir}/google-breakpad/DEPS`
+lss_rev=$(cd $breakpad_repo; git show ${rev}:DEPS | python -c "import sys; exec sys.stdin; print deps['src/src/third_party/lss'].split('@')[1]")
 (cd $breakpad_repo/src/third_party/lss; git archive --prefix=toolkit/crashreporter/google-breakpad/src/third_party/lss/ $lss_rev) | (cd $repo; tar xf -)
 
 # remove some extraneous bits
+# We've forked src/client toolkit/crashreporter/breakpad-client.
 rm -rf \
   ${crashreporter_dir}/google-breakpad/docs/ \
+  ${crashreporter_dir}/google-breakpad/autotools/ \
+  ${crashreporter_dir}/google-breakpad/m4/ \
   ${crashreporter_dir}/google-breakpad/scripts/ \
+  ${crashreporter_dir}/google-breakpad/src/client/ \
   ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
   ${crashreporter_dir}/google-breakpad/src/testing/ \
   ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
   ${crashreporter_dir}/google-breakpad/src/processor/testdata/ \
   ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/ \
-  ${crashreporter_dir}/.travis.yml
+  ${crashreporter_dir}/google-breakpad/.travis.yml
 
 # restore our Makefile.ins
 hg -R ${repo} st -n | grep "Makefile\.in$" | xargs hg revert --no-backup

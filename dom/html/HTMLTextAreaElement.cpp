@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentCID.h"
@@ -37,7 +38,6 @@
 #include "nsPresContext.h"
 #include "nsPresState.h"
 #include "nsReadableUtils.h"
-#include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsTextEditorState.h"
 #include "nsIController.h"
@@ -436,16 +436,15 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           nsRuleData* aData)
+                                           GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Text))) {
     // wrap=off
-    nsCSSValue* whiteSpace = aData->ValueForWhiteSpace();
-    if (whiteSpace->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
       if (value && value->Type() == nsAttrValue::eString &&
           value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-        whiteSpace->SetIntValue(NS_STYLE_WHITESPACE_PRE, eCSSUnit_Enumerated);
+        aData->SetKeywordValue(eCSSProperty_white_space, NS_STYLE_WHITESPACE_PRE);
       }
     }
   }

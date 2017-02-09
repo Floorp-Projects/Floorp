@@ -5,6 +5,7 @@
 
 #include "nsRuleData.h"
 
+#include "nsCSSParser.h"
 #include "mozilla/Poison.h"
 #include <stdint.h>
 
@@ -27,8 +28,7 @@ nsRuleData::GetPoisonOffset()
 
 nsRuleData::nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
                        nsPresContext* aContext, nsStyleContext* aStyleContext)
-  : mSIDs(aSIDs),
-    mPresContext(aContext),
+  : GenericSpecifiedValues(StyleBackendType::Gecko, aContext, aSIDs),
     mStyleContext(aStyleContext),
     mValueStorage(aValueStorage)
 {
@@ -38,6 +38,25 @@ nsRuleData::nsRuleData(uint32_t aSIDs, nsCSSValue* aValueStorage,
     mValueOffsets[i] = framePoisonOffset;
   }
 #endif
+}
+
+void
+nsRuleData::SetFontFamily(const nsString& aValue)
+{
+  nsCSSValue* family = ValueForFontFamily();
+  nsCSSParser parser;
+  parser.ParseFontFamilyListString(aValue, nullptr, 0, *family);
+}
+
+void
+nsRuleData::SetTextDecorationColorOverride()
+{
+  nsCSSValue* decoration = ValueForTextDecorationLine();
+  int32_t newValue = NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
+  if (decoration->GetUnit() == eCSSUnit_Enumerated) {
+    newValue |= decoration->GetIntValue();
+  }
+  decoration->SetIntValue(newValue, eCSSUnit_Enumerated);
 }
 
 #ifdef DEBUG
