@@ -19,7 +19,9 @@ var invalidLanguageTags = [
     "i_klingon",
     "cmn-hans-cn-t-ca-u-ca-x_t-u",
     "enochian_enochian",
-    "de-gregory_u-ca-gregory"
+    "de-gregory_u-ca-gregory",
+    "de-tester-Tester",  // Case-insensitive duplicate variant subtag
+    "de-DE-u-kn-true-U-kn-true",  // Case-insensitive duplicate singleton subtag
 ];
 
 testWithIntlConstructors(function (Constructor) {
