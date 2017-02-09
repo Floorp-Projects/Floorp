@@ -101,30 +101,27 @@ CanHandleCodecsType(const MediaContainerType& aType,
   if (OggDecoder::IsSupportedType(mimeType)) {
     if (OggDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
-    } else {
-      // We can only reach this position if a particular codec was requested,
-      // ogg is supported and working: the codec must be invalid.
-      return CANPLAY_NO;
     }
+    // We can only reach this position if a particular codec was requested,
+    // ogg is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
   if (WaveDecoder::IsSupportedType(MediaContainerType(mimeType))) {
     if (WaveDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
-    } else {
-      // We can only reach this position if a particular codec was requested,
-      // ogg is supported and working: the codec must be invalid.
-      return CANPLAY_NO;
     }
+    // We can only reach this position if a particular codec was requested,
+    // ogg is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
   if (WebMDecoder::IsSupportedType(mimeType)) {
     if (WebMDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
-    } else {
-      // We can only reach this position if a particular codec was requested,
-      // webm is supported and working: the codec must be invalid.
-      return CANPLAY_NO;
     }
+    // We can only reach this position if a particular codec was requested,
+    // webm is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
 #endif
 #ifdef MOZ_FMP4
@@ -132,11 +129,10 @@ CanHandleCodecsType(const MediaContainerType& aType,
                                   /* DecoderDoctorDiagnostics* */ nullptr)) {
     if (MP4Decoder::IsSupportedType(aType, aDiagnostics)) {
       return CANPLAY_YES;
-    } else {
-      // We can only reach this position if a particular codec was requested,
-      // fmp4 is supported and working: the codec must be invalid.
-      return CANPLAY_NO;
     }
+    // We can only reach this position if a particular codec was requested,
+    // fmp4 is supported and working: the codec must be invalid.
+    return CANPLAY_NO;
   }
 #endif
   if (MP3Decoder::IsSupportedType(aType)) {
@@ -166,7 +162,6 @@ CanHandleCodecsType(const MediaContainerType& aType,
     // At least one requested codec is not supported.
     return CANPLAY_NO;
   }
-
   return CANPLAY_YES;
 }
 
