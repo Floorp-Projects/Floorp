@@ -779,6 +779,10 @@ imgFrame::GetSourceSurfaceInternal()
     return surf.forget();
   }
 
+  if (!mRawSurface) {
+    return nullptr;
+  }
+
   return CreateLockedSurface(mRawSurface, mFrameRect.Size(), mFormat);
 }
 

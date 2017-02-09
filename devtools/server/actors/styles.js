@@ -785,7 +785,9 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       "border-left-width",
       "z-index",
       "box-sizing",
-      "display"
+      "display",
+      "float",
+      "line-height"
     ]) {
       layout[prop] = style.getPropertyValue(prop);
     }

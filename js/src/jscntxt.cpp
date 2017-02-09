@@ -1047,6 +1047,11 @@ JSContext::~JSContext()
     js::jit::Simulator::Destroy(simulator_);
 #endif
 
+#ifdef JS_TRACE_LOGGING
+    if (traceLogger)
+        DestroyTraceLogger(traceLogger);
+#endif
+
     if (TlsContext.get() == this)
         TlsContext.set(nullptr);
 }

@@ -48,12 +48,13 @@ partial interface DataTransfer {
    * @param element drag source to use
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws]
+  [Throws, UseCounter]
   void addElement(Element element);
 
   /**
    * The number of items being dragged.
    */
+  [UseCounter]
   readonly attribute unsigned long mozItemCount;
 
   /**
@@ -68,6 +69,7 @@ partial interface DataTransfer {
    * Values other than 'default' are indentical to setting mozCursor to
    * 'auto'.
    */
+  [UseCounter]
   attribute DOMString mozCursor;
 
   /**
@@ -75,7 +77,7 @@ partial interface DataTransfer {
    * at the specified index. If the index is not in the range from 0 to
    * itemCount - 1, an empty string list is returned.
    */
-  [Throws, NeedsCallerType]
+  [Throws, NeedsCallerType, UseCounter]
   DOMStringList mozTypesAt(unsigned long index);
 
   /**
@@ -92,7 +94,7 @@ partial interface DataTransfer {
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws, NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal, UseCounter]
   void mozClearDataAt(DOMString format, unsigned long index);
 
   /*
@@ -116,7 +118,7 @@ partial interface DataTransfer {
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater than itemCount
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
-  [Throws, NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal, UseCounter]
   void mozSetDataAt(DOMString format, any data, unsigned long index);
 
   /**
@@ -128,7 +130,7 @@ partial interface DataTransfer {
    * @returns the data of the given format, or null if it doesn't exist.
    * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
    */
-  [Throws, NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal, UseCounter]
   any mozGetDataAt(DOMString format, unsigned long index);
 
   /**
@@ -144,11 +146,13 @@ partial interface DataTransfer {
    * false otherwise, including when the drop has been rejected by its target.
    * This property is only relevant for the dragend event.
    */
+  [UseCounter]
   readonly attribute boolean mozUserCancelled;
 
   /**
    * The node that the mouse was pressed over to begin the drag. For external
    * drags, or if the caller cannot access this node, this will be null.
    */
+  [UseCounter]
   readonly attribute Node? mozSourceNode;
 };

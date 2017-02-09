@@ -21,10 +21,11 @@ namespace Common {
 bool
 IsExpiredVersion(const char* aExpiration)
 {
-  static mozilla::Version current_version = mozilla::Version(MOZ_APP_VERSION);
   MOZ_ASSERT(aExpiration);
+  // Note: We intentionally don't construct a static Version object here as we
+  // saw odd crashes around this (see bug 1334105).
   return strcmp(aExpiration, "never") && strcmp(aExpiration, "default") &&
-    (mozilla::Version(aExpiration) <= current_version);
+    (mozilla::Version(aExpiration) <= MOZ_APP_VERSION);
 }
 
 bool

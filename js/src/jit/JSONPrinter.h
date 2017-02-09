@@ -7,8 +7,6 @@
 #ifndef jit_JSONPrinter_h
 #define jit_JSONPrinter_h
 
-#ifdef JS_JITSPEW
-
 #include <stdio.h>
 
 #include "js/TypeDecls.h"
@@ -26,6 +24,13 @@ class JSONPrinter
 
     void indent();
 
+  public:
+    explicit JSONPrinter(GenericPrinter& out)
+      : indentLevel_(0),
+        first_(true),
+        out_(out)
+    { }
+
     void property(const char* name);
     void beginObject();
     void beginObjectProperty(const char* name);
@@ -36,20 +41,12 @@ class JSONPrinter
     void endStringProperty();
     void integerValue(int value);
     void integerProperty(const char* name, int value);
+    void doubleProperty(const char* name, double value);
     void endObject();
     void endList();
-
-  public:
-    explicit JSONPrinter(GenericPrinter& out)
-      : indentLevel_(0),
-        first_(true),
-        out_(out)
-    { }
 };
 
 } // namespace jit
 } // namespace js
-
-#endif /* JS_JITSPEW */
 
 #endif /* jit_JSONPrinter_h */

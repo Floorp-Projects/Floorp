@@ -142,7 +142,7 @@ add_test(function serverErrorResponse() {
 
 add_test(function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
-    serverURL: "http://",
+    serverURL: "http://domain.dummy",
     client_id: "abc123"
   });
   Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);

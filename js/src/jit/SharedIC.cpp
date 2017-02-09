@@ -2145,8 +2145,8 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
 
     if (!attached && !JitOptions.disableCacheIR) {
         RootedValue idVal(cx, StringValue(name));
-        GetPropIRGenerator gen(cx, pc, CacheKind::GetProp, engine, &isTemporarilyUnoptimizable,
-                               val, idVal, CanAttachGetter::Yes);
+        GetPropIRGenerator gen(cx, script, pc, CacheKind::GetProp, engine,
+                               &isTemporarilyUnoptimizable, val, idVal, CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);

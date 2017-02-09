@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html reftest-zoom="1.3300000429153442">
+<html reftest-zoom="1.3300000429153442" class="reftest-wait">
   <head>
     <meta charset="utf-8">
     <title>dashed border with radius</title>
@@ -59,6 +59,12 @@ td {
   border-width: 60px;
 }
     </style>
+    <script>
+      function doTest() {
+        document.documentElement.className='';
+      }
+      window.addEventListener("MozReftestInvalidate", doTest);
+      </script>
   </head>
   <body>
     <div class="box">

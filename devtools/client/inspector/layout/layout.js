@@ -78,6 +78,12 @@ LayoutView.prototype = {
 
     let app = App({
       /**
+       * Shows the box model properties under the box model if true, otherwise, hidden by
+       * default.
+       */
+      showBoxModelProperties: true,
+
+      /**
        * Hides the box-model highlighter on the currently selected element.
        */
       onHideBoxModelHighlighter: () => {

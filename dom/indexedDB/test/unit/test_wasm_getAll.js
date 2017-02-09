@@ -10,9 +10,13 @@ function* testSteps()
   const name =
     this.window ? window.location.pathname : "test_wasm_getAll.js";
 
-  const objectStoreInfo = { name: "Wasm", options: { autoIncrement: true } };
+  const objectStoreName = "Wasm";
 
-  const values = [ 42, [], [] ];
+  const wasmData = [
+    { key: 1, value: 42 },
+    { key: 2, value: [null, null, null] },
+    { key: 3, value: [null, null, null, null, null] }
+  ];
 
   if (!isWasmSupported()) {
     finishTest();
@@ -21,35 +25,35 @@ function* testSteps()
 
   getWasmBinary('(module (func (result i32) (i32.const 1)))');
   let binary = yield undefined;
-  values[1].push(getWasmModule(binary));
+  wasmData[1].value[0] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 2)))');
   binary = yield undefined;
-  values[1].push(getWasmModule(binary));
+  wasmData[1].value[1] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 3)))');
   binary = yield undefined;
-  values[1].push(getWasmModule(binary));
+  wasmData[1].value[2] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 4)))');
   binary = yield undefined;
-  values[2].push(getWasmModule(binary));
+  wasmData[2].value[0] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 5)))');
   binary = yield undefined;
-  values[2].push(getWasmModule(binary));
+  wasmData[2].value[1] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 6)))');
   binary = yield undefined;
-  values[2].push(getWasmModule(binary));
+  wasmData[2].value[2] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 7)))');
   binary = yield undefined;
-  values[2].push(getWasmModule(binary));
+  wasmData[2].value[3] = getWasmModule(binary);
 
   getWasmBinary('(module (func (result i32) (i32.const 8)))');
   binary = yield undefined;
-  values[2].push(getWasmModule(binary));
+  wasmData[2].value[4] = getWasmModule(binary);
 
   let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
@@ -63,8 +67,7 @@ function* testSteps()
 
   info("Creating objectStore");
 
-  request.result.createObjectStore(objectStoreInfo.name,
-                                   objectStoreInfo.options);
+  request.result.createObjectStore(objectStoreName);
 
   yield undefined;
 
@@ -74,13 +77,13 @@ function* testSteps()
 
   info("Storing values");
 
-  let objectStore = db.transaction([objectStoreInfo.name], "readwrite")
-                      .objectStore(objectStoreInfo.name);
+  let objectStore = db.transaction([objectStoreName], "readwrite")
+                      .objectStore(objectStoreName);
   let addedCount = 0;
-  for (let i in values) {
-    request = objectStore.add(values[i]);
+  for (let i in wasmData) {
+    request = objectStore.add(wasmData[i].value, wasmData[i].key);
     request.onsuccess = function(event) {
-      if (++addedCount == values.length) {
+      if (++addedCount == wasmData.length) {
         continueToNextStep();
       }
     }
@@ -89,32 +92,42 @@ function* testSteps()
 
   info("Getting values");
 
-  request = db.transaction(objectStoreInfo.name)
-              .objectStore(objectStoreInfo.name).getAll();
+  request = db.transaction(objectStoreName)
+              .objectStore(objectStoreName)
+              .getAll();
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
-  // Can't call yield inside of the verify function.
-  let resultsToProcess  = [];
+  info("Verifying values");
 
-  function verifyResult(result, value) {
-    if (value instanceof WebAssembly.Module) {
-      resultsToProcess.push({ result: result, value: value });
-    } else if (value instanceof Array) {
-      is(result instanceof Array, true, "Got an array object");
-      is(result.length, value.length, "Same length");
-      for (let i in value) {
-        verifyResult(result[i], value[i]);
+  // Can't call yield inside of the verify function.
+  let modulesToProcess = [];
+
+  function verifyArray(array1, array2) {
+    is(array1 instanceof Array, true, "Got an array object");
+    is(array1.length, array2.length, "Same length");
+  }
+
+  function verifyData(data1, data2) {
+    if (data2 instanceof Array) {
+      verifyArray(data1, data2);
+      for (let i in data2) {
+        verifyData(data1[i], data2[i]);
       }
+    } else if (data2 instanceof WebAssembly.Module) {
+      modulesToProcess.push({ module1: data1, module2: data2 });
     } else {
-      is(result, value, "Same value");
+      is(data1, data2, "Same value");
     }
   }
 
-  verifyResult(request.result, values);
+  verifyArray(request.result, wasmData);
+  for (let i in wasmData) {
+    verifyData(request.result[i], wasmData[i].value);
+  }
 
-  for (let resultToProcess of resultsToProcess) {
-    verifyWasmModule(resultToProcess.result, resultToProcess.value);
+  for (let moduleToProcess of modulesToProcess) {
+    verifyWasmModule(moduleToProcess.module1, moduleToProcess.module2);
     yield undefined;
   }
 

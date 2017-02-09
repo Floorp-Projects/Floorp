@@ -49,9 +49,12 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue* stackVal)
 }
 
 void
-ICStubSpace::freeAllAfterMinorGC(JSRuntime* rt)
+ICStubSpace::freeAllAfterMinorGC(Zone* zone)
 {
-    rt->zoneGroupFromMainThread()->freeAllLifoBlocksAfterMinorGC(&allocator_);
+    if (zone->isAtomsZone())
+        MOZ_ASSERT(allocator_.isEmpty());
+    else
+        zone->group()->freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
@@ -256,7 +259,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
         }
     }
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     TraceLogStopEvent(logger, TraceLogger_Interpreter);
     TraceLogStartEvent(logger, TraceLogger_Baseline);
 
@@ -517,7 +520,7 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
      *
      * Defer freeing any allocated blocks until after the next minor GC.
      */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(fop->runtime());
+    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
 
     fop->delete_(script);
 }
@@ -986,14 +989,12 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script,
     traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
 #endif
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
-
     MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
     for (size_t i = 0; i < offsets.length(); i++)
         traceLoggerToggleOffsets()[i] = offsets[i].offset();
 
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
+        traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
         for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
             CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
             Assembler::ToggleToCmp(label);
@@ -1010,9 +1011,8 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
 
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
-    TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
     if (enable && !traceLoggerScriptEvent_.hasPayload())
-        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
+        traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
 
     AutoWritableJitCode awjc(method());
 

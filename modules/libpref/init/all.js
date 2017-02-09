@@ -5575,6 +5575,9 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 pref("browser.storageManager.enabled", false);
 pref("dom.IntersectionObserver.enabled", false);
 
+// Whether module scripts (<script type="module">) are enabled for content.
+pref("dom.moduleScripts.enabled", false);
+
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
 #endif
