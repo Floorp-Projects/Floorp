@@ -712,8 +712,8 @@ public abstract class GeckoApp
             });
 
         } else if ("Contact:Add".equals(event)) {
-            final String email = message.getString("email", null);
-            final String phone = message.getString("phone", null);
+            final String email = message.getString("email");
+            final String phone = message.getString("phone");
             if (email != null) {
                 Uri contactUri = Uri.parse(email);
                 Intent i = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT, contactUri);
@@ -757,7 +757,7 @@ public abstract class GeckoApp
             showSiteSettingsDialog(permissions);
 
         } else if ("PrivateBrowsing:Data".equals(event)) {
-            mPrivateBrowsingSession = message.getString("session", null);
+            mPrivateBrowsingSession = message.getString("session");
 
         } else if ("RuntimePermissions:Prompt".equals(event)) {
             String[] permissions = message.getStringArray("permissions");
