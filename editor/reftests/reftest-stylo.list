@@ -88,7 +88,7 @@ fails == 642800.html 642800.html
 fails == selection_visibility_after_reframe.html selection_visibility_after_reframe.html
 fails == selection_visibility_after_reframe-2.html selection_visibility_after_reframe-2.html
 fails == selection_visibility_after_reframe-3.html selection_visibility_after_reframe-3.html
-fails == 672709.html 672709.html
+== 672709.html 672709.html
 fails == 338427-1.html 338427-1.html
 fails == 674212-spellcheck.html 674212-spellcheck.html
 fails == 338427-2.html 338427-2.html

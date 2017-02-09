@@ -7,5 +7,5 @@ load 444260-1.xul
 load 444864-1.html
 load 449111-1.html
 load 460349-1.xhtml
-load 460387-1.html
+asserts-if(stylo,4) load 460387-1.html # bug 1324661
 load 464589-1.html

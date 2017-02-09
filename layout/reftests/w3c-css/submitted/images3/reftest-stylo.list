@@ -2,14 +2,14 @@
 default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
 # Tests for 'object-fit' / 'object-position' with a PNG image
 fails == object-fit-fill-png-001c.html object-fit-fill-png-001c.html
-fails == object-fit-fill-png-001e.html object-fit-fill-png-001e.html
+# fails == object-fit-fill-png-001e.html object-fit-fill-png-001e.html
 fails == object-fit-fill-png-001i.html object-fit-fill-png-001i.html
-fails == object-fit-fill-png-001o.html object-fit-fill-png-001o.html
+# fails == object-fit-fill-png-001o.html object-fit-fill-png-001o.html
 fails == object-fit-fill-png-001p.html object-fit-fill-png-001p.html
 fails == object-fit-fill-png-002c.html object-fit-fill-png-002c.html
-fails == object-fit-fill-png-002e.html object-fit-fill-png-002e.html
+# fails == object-fit-fill-png-002e.html object-fit-fill-png-002e.html
 fails == object-fit-fill-png-002i.html object-fit-fill-png-002i.html
-fails == object-fit-fill-png-002o.html object-fit-fill-png-002o.html
+# fails == object-fit-fill-png-002o.html object-fit-fill-png-002o.html
 fails == object-fit-fill-png-002p.html object-fit-fill-png-002p.html
 fails == object-fit-contain-png-001c.html object-fit-contain-png-001c.html
 fails == object-fit-contain-png-001e.html object-fit-contain-png-001e.html
@@ -17,9 +17,9 @@ fails == object-fit-contain-png-001i.html object-fit-contain-png-001i.html
 fails == object-fit-contain-png-001o.html object-fit-contain-png-001o.html
 fails == object-fit-contain-png-001p.html object-fit-contain-png-001p.html
 fails == object-fit-contain-png-002c.html object-fit-contain-png-002c.html
-fails == object-fit-contain-png-002e.html object-fit-contain-png-002e.html
+# fails == object-fit-contain-png-002e.html object-fit-contain-png-002e.html
 fails == object-fit-contain-png-002i.html object-fit-contain-png-002i.html
-fails == object-fit-contain-png-002o.html object-fit-contain-png-002o.html
+# fails == object-fit-contain-png-002o.html object-fit-contain-png-002o.html
 fails == object-fit-contain-png-002p.html object-fit-contain-png-002p.html
 fails == object-fit-cover-png-001c.html object-fit-cover-png-001c.html
 fails == object-fit-cover-png-001e.html object-fit-cover-png-001e.html
@@ -174,20 +174,20 @@ fails == object-fit-scale-down-svg-006i.html object-fit-scale-down-svg-006i.html
 fails == object-fit-scale-down-svg-006o.html object-fit-scale-down-svg-006o.html
 fails == object-fit-scale-down-svg-006p.html object-fit-scale-down-svg-006p.html
 fails == object-position-png-001c.html object-position-png-001c.html
-fails == object-position-png-001e.html object-position-png-001e.html
+# fails == object-position-png-001e.html object-position-png-001e.html
 fails == object-position-png-001i.html object-position-png-001i.html
-fails == object-position-png-001o.html object-position-png-001o.html
+# fails == object-position-png-001o.html object-position-png-001o.html
 fails == object-position-png-001p.html object-position-png-001p.html
 fails == object-position-png-002c.html object-position-png-002c.html
-fails == object-position-png-002e.html object-position-png-002e.html
+# fails == object-position-png-002e.html object-position-png-002e.html
 fails == object-position-png-002i.html object-position-png-002i.html
-fails == object-position-png-002o.html object-position-png-002o.html
+# fails == object-position-png-002o.html object-position-png-002o.html
 fails == object-position-png-002p.html object-position-png-002p.html
 fails == object-position-svg-001e.html object-position-svg-001e.html
 fails == object-position-svg-001i.html object-position-svg-001i.html
 fails == object-position-svg-001o.html object-position-svg-001o.html
 fails == object-position-svg-001p.html object-position-svg-001p.html
-fails == object-position-svg-002e.html object-position-svg-002e.html
+# fails == object-position-svg-002e.html object-position-svg-002e.html
 fails == object-position-svg-002i.html object-position-svg-002i.html
 fails == object-position-svg-002o.html object-position-svg-002o.html
 fails == object-position-svg-002p.html object-position-svg-002p.html
