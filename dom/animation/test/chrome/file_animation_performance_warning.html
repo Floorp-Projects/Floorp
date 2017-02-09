@@ -840,7 +840,7 @@ function testMultipleAnimationsWithGeometricAnimations() {
 function testSmallElements() {
   [
     {
-      desc: 'opacity on too small element',
+      desc: 'opacity on small element',
       frames: {
         opacity: [0, 1]
       },
@@ -855,13 +855,12 @@ function testSmallElements() {
       expected: [
         {
           property: 'opacity',
-          runningOnCompositor: false,
-          warning: /Animation cannot be run on the compositor because frame size \(8, 8\) is smaller than \(16, 16\)/
+          runningOnCompositor: true
         }
       ]
     },
     {
-      desc: 'transform on too small element',
+      desc: 'transform on small element',
       frames: {
         transform: ['translate(0px)', 'translate(100px)']
       },
@@ -869,8 +868,7 @@ function testSmallElements() {
       expected: [
         {
           property: 'transform',
-          runningOnCompositor: false,
-          warning: /Animation cannot be run on the compositor because frame size \(8, 8\) is smaller than \(16, 16\)/
+          runningOnCompositor: true
         }
       ]
     },
