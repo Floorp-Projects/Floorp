@@ -30,7 +30,7 @@ clang.manifest",
         'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'MOZ_OBJDIR': 'obj-firefox',
-        'PATH': 'C:/mozilla-build/nsis-3.0a2;C:/mozilla-build/nsis-2.46u;C:/mozilla-build/python27;'
+        'PATH': 'C:/mozilla-build/nsis-3.01;C:/mozilla-build/python27;'
                 'C:/mozilla-build/buildbotve/scripts;'
                 '%s' % (os.environ.get('path')),
         'PROPERTIES_FILE': os.path.join(os.getcwd(), 'buildprops.json'),
