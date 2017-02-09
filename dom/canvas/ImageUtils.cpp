@@ -53,13 +53,18 @@ GetImageBitmapFormatFromPlanarYCbCrData(layers::PlanarYCbCrData const *aData)
 {
   MOZ_ASSERT(aData);
 
-  if (aData->mYSkip == 0 && aData->mCbSkip == 0 && aData->mCrSkip == 0) { // Possibly three planes.
-    if (aData->mCbChannel >= aData->mYChannel + aData->mYSize.height * aData->mYStride &&
-        aData->mCrChannel >= aData->mCbChannel + aData->mCbCrSize.height * aData->mCbCrStride) { // Three planes.
+  if (aData->mYSkip == 0 && aData->mCbSkip == 0 &&
+      aData->mCrSkip == 0) { // Possibly three planes.
+    if (aData->mCbChannel >=
+          aData->mYChannel + aData->mYSize.height * aData->mYStride &&
+        aData->mCrChannel >=
+          aData->mCbChannel +
+            aData->mCbCrSize.height * aData->mCbCrStride) { // Three planes.
       if (aData->mYSize.height == aData->mCbCrSize.height) {
         if (aData->mYSize.width == aData->mCbCrSize.width) {
           return ImageBitmapFormat::YUV444P;
-        } else if (((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
+        }
+        if (((aData->mYSize.width + 1) / 2) == aData->mCbCrSize.width) {
           return ImageBitmapFormat::YUV422P;
         }
       } else if (((aData->mYSize.height + 1) / 2) == aData->mCbCrSize.height) {
@@ -191,17 +196,15 @@ public:
   {
     if (mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
       return mImage->AsPlanarYCbCrImage()->GetDataSize();
-    } else {
-      return mImage->AsNVImage()->GetBufferSize();
     }
+    return mImage->AsNVImage()->GetBufferSize();
   }
 
-  UniquePtr<ImagePixelLayout>
-  MapDataInto(uint8_t* aBuffer,
-              uint32_t aOffset,
-              uint32_t aBufferLength,
-              ImageBitmapFormat aFormat,
-              ErrorResult& aRv) const override
+  UniquePtr<ImagePixelLayout> MapDataInto(uint8_t* aBuffer,
+                                          uint32_t aOffset,
+                                          uint32_t aBufferLength,
+                                          ImageBitmapFormat aFormat,
+                                          ErrorResult& aRv) const override
   {
     // Prepare source buffer and pixel layout.
     const PlanarYCbCrData* data = GetPlanarYCbCrData();
@@ -227,9 +230,8 @@ private:
   {
     if (mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
       return mImage->AsPlanarYCbCrImage()->GetData();
-    } else {
-      return mImage->AsNVImage()->GetData();
     }
+    return mImage->AsNVImage()->GetData();
   }
 };
 
