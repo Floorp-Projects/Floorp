@@ -546,6 +546,7 @@ input[type="file"]:dir(rtl) > xul|label {
 
 /* radio buttons */
 input[type="radio"] {
+  display: inline-block;
   -moz-appearance: radio;
   margin-block-start: 3px;
   margin-block-end: 0px;
@@ -555,6 +556,7 @@ input[type="radio"] {
 
 /* check boxes */
 input[type="checkbox"] {
+  display: inline-block;
   -moz-appearance: checkbox;
   margin-block-start: 3px;
   margin-block-end: 3px;
