@@ -98,8 +98,8 @@ Message.fromMsg = function (data) {
  *     Command parameters.
  */
 this.Command = class {
-  constructor(msgId, name, params={}) {
-    this.id = msgId;
+  constructor(msgID, name, params = {}) {
+    this.id = msgID;
     this.name = name;
     this.parameters = params;
 
@@ -133,11 +133,18 @@ this.Command = class {
   toString() {
     return "Command {id: " + this.id + ", " +
         "name: " + JSON.stringify(this.name) + ", " +
-        "parameters: " + JSON.stringify(this.parameters) + "}"
+        "parameters: " + JSON.stringify(this.parameters) + "}";
   }
 
   static fromMsg(msg) {
-    return new Command(msg[1], msg[2], msg[3]);
+    let [msgID, name, params] = [msg[1], msg[2], msg[3]];
+
+    // if parameters are given but null, treat them as undefined
+    if (params === null) {
+      params = undefined;
+    }
+
+    return new Command(msgID, name, params);
   }
 };
 
