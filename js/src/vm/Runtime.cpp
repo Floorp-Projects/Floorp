@@ -211,7 +211,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
 
-    if (!zoneGroup->init(maxNurseryBytes))
+    if (!zoneGroup->init(maxNurseryBytes) || !gc.groups.ref().append(zoneGroup))
         return false;
     zoneGroup.forget();
 
