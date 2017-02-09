@@ -437,13 +437,14 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   }
 
   shutdown() {
-    if (!this._devToolsTarget) {
-      throw new Error("no DevTools target is set during DevTools Context shutdown");
+    if (this._devToolsTarget) {
+      this._devToolsTarget.destroy();
+      this._devToolsTarget = null;
     }
 
-    this._devToolsTarget.destroy();
-    this._devToolsTarget = null;
     this._devToolsToolbox = null;
+
+    super.shutdown();
   }
 }
 
