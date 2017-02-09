@@ -30,12 +30,14 @@ DEST=CompositorD3D11Shaders.h
 rm -f $DEST
 echo "struct ShaderBytes { const void* mData; size_t mLength; };" >> $DEST;
 makeShaderVS LayerQuadVS
+makeShaderVS LayerDynamicVS
 makeShaderPS SolidColorShader
 makeShaderPS RGBShader
 makeShaderPS RGBAShader
 makeShaderPS ComponentAlphaShader
 makeShaderPS YCbCrShader
 makeShaderVS LayerQuadMaskVS
+makeShaderVS LayerDynamicMaskVS
 makeShaderPS SolidColorShaderMask
 makeShaderPS RGBShaderMask
 makeShaderPS RGBAShaderMask
@@ -45,6 +47,8 @@ makeShaderPS ComponentAlphaShaderMask
 # Mix-blend shaders
 makeShaderVS LayerQuadBlendVS
 makeShaderVS LayerQuadBlendMaskVS
+makeShaderVS LayerDynamicBlendVS
+makeShaderVS LayerDynamicBlendMaskVS
 makeShaderPS BlendShader
 
 rm $tempfile
