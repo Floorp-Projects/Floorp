@@ -416,7 +416,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             })
         upload_env = self.query_env(partial_env=config.get("upload_env"),
                                     replace_dict=replace_dict)
-        upload_env['LATEST_MAR_DIR'] = config['latest_mar_dir']
         # check if there are any extra option from the platform configuration
         # and append them to the env
 

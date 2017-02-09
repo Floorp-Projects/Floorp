@@ -11,8 +11,10 @@ const { createClass, createFactory, PropTypes, DOM: dom } =
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
+  addCustomDevice,
+  removeCustomDevice,
   updateDeviceDisplayed,
-  updateDeviceModalOpen,
+  updateDeviceModal,
   updatePreferredDevices,
 } = require("./actions/devices");
 const { changeNetworkThrottling } = require("./actions/network-throttling");
@@ -21,7 +23,7 @@ const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
   changeDevice,
   changePixelRatio,
-  removeDevice,
+  removeDeviceAssociation,
   resizeViewport,
   rotateViewport,
 } = require("./actions/viewports");
@@ -44,16 +46,20 @@ let App = createClass({
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
   },
 
+  onAddCustomDevice(device) {
+    this.props.dispatch(addCustomDevice(device));
+  },
+
   onBrowserMounted() {
     window.postMessage({ type: "browser-mounted" }, "*");
   },
 
-  onChangeDevice(id, device) {
+  onChangeDevice(id, device, deviceType) {
     window.postMessage({
       type: "change-device",
       device,
     }, "*");
-    this.props.dispatch(changeDevice(id, device.name));
+    this.props.dispatch(changeDevice(id, device.name, deviceType));
     this.props.dispatch(changeTouchSimulation(device.touch));
     this.props.dispatch(changePixelRatio(id, device.pixelRatio));
   },
@@ -99,12 +105,16 @@ let App = createClass({
     window.postMessage({ type: "exit" }, "*");
   },
 
-  onRemoveDevice(id) {
+  onRemoveCustomDevice(device) {
+    this.props.dispatch(removeCustomDevice(device));
+  },
+
+  onRemoveDeviceAssociation(id) {
     // TODO: Bug 1332754: Move messaging and logic into the action creator.
     window.postMessage({
-      type: "remove-device",
+      type: "remove-device-association",
     }, "*");
-    this.props.dispatch(removeDevice(id));
+    this.props.dispatch(removeDeviceAssociation(id));
     this.props.dispatch(changeTouchSimulation(false));
     this.props.dispatch(changePixelRatio(id, 0));
   },
@@ -125,8 +135,8 @@ let App = createClass({
     this.props.dispatch(updateDeviceDisplayed(device, deviceType, displayed));
   },
 
-  onUpdateDeviceModalOpen(isOpen) {
-    this.props.dispatch(updateDeviceModalOpen(isOpen));
+  onUpdateDeviceModal(isOpen, modalOpenedFromViewport) {
+    this.props.dispatch(updateDeviceModal(isOpen, modalOpenedFromViewport));
   },
 
   render() {
@@ -141,6 +151,7 @@ let App = createClass({
     } = this.props;
 
     let {
+      onAddCustomDevice,
       onBrowserMounted,
       onChangeDevice,
       onChangeNetworkThrottling,
@@ -149,12 +160,13 @@ let App = createClass({
       onContentResize,
       onDeviceListUpdate,
       onExit,
-      onRemoveDevice,
+      onRemoveCustomDevice,
+      onRemoveDeviceAssociation,
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
       onUpdateDeviceDisplayed,
-      onUpdateDeviceModalOpen,
+      onUpdateDeviceModal,
     } = this;
 
     let selectedDevice = "";
@@ -163,6 +175,11 @@ let App = createClass({
     if (viewports.length) {
       selectedDevice = viewports[0].device;
       selectedPixelRatio = viewports[0].pixelRatio;
+    }
+
+    let deviceAdderViewportTemplate = {};
+    if (devices.modalOpenedFromViewport !== null) {
+      deviceAdderViewportTemplate = viewports[devices.modalOpenedFromViewport];
     }
 
     return dom.div(
@@ -191,16 +208,19 @@ let App = createClass({
         onBrowserMounted,
         onChangeDevice,
         onContentResize,
-        onRemoveDevice,
+        onRemoveDeviceAssociation,
         onRotateViewport,
         onResizeViewport,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       }),
       DeviceModal({
+        deviceAdderViewportTemplate,
         devices,
+        onAddCustomDevice,
         onDeviceListUpdate,
+        onRemoveCustomDevice,
         onUpdateDeviceDisplayed,
-        onUpdateDeviceModalOpen,
+        onUpdateDeviceModal,
       })
     );
   },

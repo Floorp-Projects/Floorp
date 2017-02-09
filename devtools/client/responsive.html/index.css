@@ -38,7 +38,8 @@
 }
 
 #root,
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }
@@ -366,6 +367,7 @@ select > option.divider {
 .viewport-dimension-editable.editing,
 .viewport-dimension-input.editing {
   color: var(--viewport-active-color);
+  outline: none;
 }
 
 .viewport-dimension-editable.editing {
@@ -424,7 +426,7 @@ select > option.divider {
   left: 0;
   right: 0;
   width: 642px;
-  height: 612px;
+  height: 650px;
   z-index: 1;
 }
 
@@ -457,9 +459,9 @@ select > option.divider {
   flex-direction: column;
   flex-wrap: wrap;
   overflow: auto;
-  height: 550px;
+  height: 515px;
   width: 600px;
-  margin: 20px;
+  margin: 20px 20px 0;
 }
 
 #device-close-button,
@@ -494,10 +496,27 @@ select > option.divider {
   padding-bottom: 3px;
   display: flex;
   align-items: center;
+  /* Largest size without horizontal scrollbars */
+  max-width: 181px;
 }
 
 .device-input-checkbox {
   margin-right: 5px;
+}
+
+.device-name {
+  flex: 1;
+}
+
+.device-remove-button,
+.device-remove-button::before {
+  width: 12px;
+  height: 12px;
+}
+
+.device-remove-button::before {
+  background-image: url("./images/close.svg");
+  margin: -6px 0 0 -6px;
 }
 
 #device-submit-button {
@@ -509,6 +528,8 @@ select > option.divider {
   color: var(--theme-body-color);
   width: 100%;
   height: 20px;
+  position: absolute;
+  bottom: 0;
 }
 
 #device-submit-button:hover {
@@ -518,4 +539,75 @@ select > option.divider {
 #device-submit-button:hover:active {
   background-color: var(--submit-button-active-background-color);
   color: var(--submit-button-active-color);
+}
+
+/**
+ * Device Adder
+ */
+
+#device-adder {
+  display: flex;
+  flex-direction: column;
+  margin: 0 20px;
+}
+
+#device-adder-content {
+  display: flex;
+}
+
+#device-adder-column-1 {
+  flex: 1;
+  margin-right: 10px;
+}
+
+#device-adder-column-2 {
+  flex: 2;
+}
+
+#device-adder button {
+  background-color: var(--theme-tab-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 2px;
+  color: var(--theme-body-color);
+  margin: 0 auto;
+}
+
+#device-adder label {
+  display: flex;
+  margin-bottom: 5px;
+  align-items: center;
+}
+
+#device-adder label > input,
+#device-adder label > .viewport-dimension {
+  flex: 1;
+  margin: 0;
+}
+
+#device-adder input {
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: center;
+  color: var(--theme-body-color-inactive);
+  transition: all 0.25s ease;
+}
+
+#device-adder input:focus {
+  color: var(--viewport-active-color);
+}
+
+#device-adder label > input:focus,
+#device-adder label > .viewport-dimension:focus  {
+  border-bottom: 1px solid var(--theme-selection-background);
+  outline: none;
+}
+
+.device-adder-label {
+  display: inline-block;
+  margin-right: 5px;
+  min-width: 35px;
+}
+
+#device-adder #device-adder-save {
+  margin-top: 5px;
 }

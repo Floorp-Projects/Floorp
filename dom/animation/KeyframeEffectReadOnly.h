@@ -60,9 +60,7 @@ struct AnimationPropertySegment
   float mFromKey, mToKey;
   // NOTE: In the case that no keyframe for 0 or 1 offset is specified
   // the unit of mFromValue or mToValue is eUnit_Null.
-  StyleAnimationValue mFromValue, mToValue;
-  // FIXME add a deep == impl for RawServoAnimationValue
-  RefPtr<RawServoAnimationValue> mServoFromValue, mServoToValue;
+  AnimationValue mFromValue, mToValue;
 
   Maybe<ComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;

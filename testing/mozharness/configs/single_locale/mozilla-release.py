@@ -3,7 +3,6 @@ config = {
     "branch": "mozilla-release",
     "en_us_binary_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-release/",
     "update_channel": "release",
-    "latest_mar_dir": '/pub/mozilla.org/firefox/nightly/latest-mozilla-release-l10n',
 
     # l10n
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",

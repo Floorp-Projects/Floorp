@@ -597,6 +597,15 @@ public:
 
   static float
   ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity);
+
+  /**
+   * SVG frames expect to paint in SVG user units, which are equal to CSS px
+   * units. This method provides a transform matrix to multiply onto a
+   * gfxContext's current transform to convert the context's current units from
+   * its usual dev pixels to SVG user units/CSS px to keep the SVG code happy.
+   */
+  static gfxMatrix
+  GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
 };
 
 #endif
