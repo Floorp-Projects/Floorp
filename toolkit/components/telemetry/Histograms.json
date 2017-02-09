@@ -8252,7 +8252,7 @@
   },
   "COOKIE_LEAVE_SECURE_ALONE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [976073],
+    "bug_numbers": [976073, 1325909],
     "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 10,
