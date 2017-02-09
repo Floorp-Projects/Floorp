@@ -186,13 +186,10 @@ busy_beaver_PR_Read(PRFileDesc *fd, void * start, int32_t len)
                 return -1;
             break;
         }
-        else
-        {
-            remaining -= n;
-            char *cp = (char *) start;
-            cp += n;
-            start = cp;
-        }
+        remaining -= n;
+        char *cp = (char *) start;
+        cp += n;
+        start = cp;
     }
     return len - remaining;
 }
@@ -2848,8 +2845,8 @@ nsPluginHost::ReadPluginInfo()
                           getter_AddRefs(mPluginRegFile));
     if (!mPluginRegFile)
       return NS_ERROR_FAILURE;
-    else
-      return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   PRFileDesc* fd = nullptr;
