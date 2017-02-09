@@ -620,7 +620,7 @@ nsStandardURL::ValidIPv6orHostname(const char *host, uint32_t length)
     }
 
     const char *end = host + length;
-    if (end != net_FindCharInSet(host, end, "\t\n\v\f\r #/:?@[\\]")) {
+    if (end != net_FindCharInSet(host, end, CONTROL_CHARACTERS " #/:?@[\\]*<>|\"")) {
         // We still allow % because it is in the ID of addons.
         // Any percent encoded ASCII characters that are not allowed in the
         // hostname are not percent decoded, and will be parsed just fine.
