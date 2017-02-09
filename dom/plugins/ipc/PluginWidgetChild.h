@@ -5,6 +5,10 @@
 #ifndef mozilla_plugins_PluginWidgetChild_h
 #define mozilla_plugins_PluginWidgetChild_h
 
+#ifndef XP_WIN
+#error "This header should be Windows-only."
+#endif
+
 #include "mozilla/plugins/PPluginWidgetChild.h"
 
 namespace mozilla {
