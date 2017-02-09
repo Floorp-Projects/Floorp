@@ -899,9 +899,8 @@ static int rename_file(const NS_tchar *spath, const NS_tchar *dpath,
       LOG(("rename_file: path present, but not a file: " LOG_S ", err: %d",
            spath, errno));
       return RENAME_ERROR_EXPECTED_FILE;
-    } else {
-      LOG(("rename_file: proceeding to rename the directory"));
     }
+    LOG(("rename_file: proceeding to rename the directory"));
   }
 
   if (!NS_taccess(dpath, F_OK)) {
