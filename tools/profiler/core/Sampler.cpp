@@ -569,27 +569,3 @@ Sampler::RegisterThread(ThreadInfo* aInfo)
   aInfo->SetProfile(gBuffer);
 }
 
-size_t
-Sampler::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = aMallocSizeOf(this);
-
-  {
-    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
-
-    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-      ThreadInfo* info = sRegisteredThreads->at(i);
-
-      n += info->SizeOfIncludingThis(aMallocSizeOf);
-    }
-  }
-
-  // Measurement of the following members may be added later if DMD finds it
-  // is worthwhile:
-  // - memory pointed to by the elements within mBuffer
-  // - sRegisteredThreads
-  // - mThreadNameFilters
-  // - mFeatures
-
-  return n;
-}
