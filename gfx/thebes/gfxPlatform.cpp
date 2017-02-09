@@ -689,18 +689,6 @@ gfxPlatform::Init()
 #endif
     gPlatform->InitAcceleration();
 
-#ifdef MOZ_ENABLE_WEBRENDER
-    if (XRE_IsParentProcess()) {
-      // XXX: right now this is just based on the pref. But we may want to
-      // do other runtime detection of hardware support etc.
-      // This pref defaults to true, so builds with --enable-webrender have it
-      // turned on by default, but can have it disabled via pref. The ifdef
-      // guards this entire block, so builds without --enable-webrender will
-      // always have the gfxVar default to false.
-      gfxVars::SetUseWebRender(Preferences::GetBool("gfx.webrender.enabled", true));
-    }
-#endif
-
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
       gpu->LaunchGPUProcess();
@@ -2225,6 +2213,7 @@ gfxPlatform::InitAcceleration()
                                          nullptr,
                                          Preferences::ExactMatch);
     InitGPUProcessPrefs();
+    InitWebRenderConfig();
   }
 }
 
@@ -2309,6 +2298,47 @@ gfxPlatform::InitCompositorAccelerationPrefs()
     feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by safe-mode",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
   }
+}
+
+void
+gfxPlatform::InitWebRenderConfig()
+{
+  FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
+
+  featureWebRender.EnableByDefault();
+
+  if (!Preferences::GetBool("gfx.webrender.enabled", false)) {
+    featureWebRender.UserDisable(
+      "User disabled WebRender",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_DISABLED"));
+  }
+
+  // WebRender relies on the GPU process when on Windows
+#ifdef XP_WIN
+  if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    featureWebRender.ForceDisable(
+      FeatureStatus::Unavailable,
+      "GPU Process is disabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_GPU_PROCESS_DISABLED"));
+  }
+#endif
+
+  if (InSafeMode()) {
+    featureWebRender.ForceDisable(
+      FeatureStatus::Unavailable,
+      "Safe-mode is enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
+  }
+
+#ifndef MOZ_ENABLE_WEBRENDER
+  featureWebRender.ForceDisable(
+    FeatureStatus::Unavailable,
+    "Build doesn't include WebRender",
+    NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_WEBRENDER"));
+#endif
+
+  // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature
+  gfxVars::SetUseWebRender(gfxConfig::IsEnabled(Feature::WEBRENDER));
 }
 
 bool
@@ -2559,6 +2589,18 @@ gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend)
       obsvc->NotifyObservers(nullptr, "compositor:created", nullptr);
     }
   }));
+}
+
+/* static */ void
+gfxPlatform::NotifyGPUProcessDisabled()
+{
+  if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
+    gfxConfig::GetFeature(Feature::WEBRENDER).ForceDisable(
+      FeatureStatus::Unavailable,
+      "GPU Process is disabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_GPU_PROCESS_DISABLED"));
+    gfxVars::SetUseWebRender(false);
+  }
 }
 
 void
