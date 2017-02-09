@@ -1115,10 +1115,9 @@ _getvalue(NPP aNPP,
         case NPNVxDisplay: {
             if (aNPP) {
                 return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
-            } 
-            else {
-                *(void **)aValue = xt_client_get_display();
-            }          
+            }
+            *(void
+              **)aValue = xt_client_get_display();
             return NPERR_NO_ERROR;
         }
         case NPNVxtAppContext:
