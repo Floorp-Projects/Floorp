@@ -422,9 +422,9 @@ TraceInterpreterActivation(JSTracer* trc, InterpreterActivation* act)
 }
 
 void
-js::TraceInterpreterActivations(JSRuntime* rt, JSTracer* trc)
+js::TraceInterpreterActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 {
-    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
+    for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
         Activation* act = iter.activation();
         if (act->isInterpreter())
             TraceInterpreterActivation(trc, act->asInterpreter());
@@ -588,7 +588,7 @@ FrameIter::Data::Data(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
     state_(DONE),
     pc_(nullptr),
     interpFrames_(nullptr),
-    activations_(cx->runtime()),
+    activations_(cx),
     jitFrames_(),
     ionInlineFrameNo_(0),
     wasmFrames_()
@@ -1019,7 +1019,7 @@ FrameIter::updatePcQuadratic()
 
             // ActivationIterator::jitTop_ may be invalid, so create a new
             // activation iterator.
-            data_.activations_ = ActivationIterator(data_.cx_->runtime());
+            data_.activations_ = ActivationIterator(data_.cx_);
             while (data_.activations_.activation() != activation)
                 ++data_.activations_;
 
@@ -1711,10 +1711,29 @@ Activation::unregisterProfiling()
     cx_->profilingActivation_ = prevProfiling;
 }
 
-ActivationIterator::ActivationIterator(JSRuntime* rt)
-  : jitTop_(TlsContext.get()->jitTop),
-    activation_(TlsContext.get()->activation_)
+ActivationIterator::ActivationIterator(JSContext* cx)
+    : jitTop_(cx->jitTop)
+    , activation_(cx->activation_)
 {
+    MOZ_ASSERT(cx == TlsContext.get());
+    settle();
+}
+
+ActivationIterator::ActivationIterator(JSContext* cx, const CooperatingContext& target)
+{
+    MOZ_ASSERT(cx == TlsContext.get());
+
+    // If target was specified --- even if it is the same as cx itself --- then
+    // we must be in a scope where changes of the active context are prohibited.
+    // Otherwise our state would be corrupted if the target thread resumed
+    // execution while we are iterating over its state.
+    MOZ_ASSERT(cx->runtime()->activeContextChangeProhibited());
+
+    // Tolerate a null target context, in case we are iterating over the
+    // activations for a zone group that is not in use by any thread.
+    jitTop_ = target.context() ? target.context()->jitTop.ref() : nullptr;
+    activation_ = target.context() ? target.context()->activation_.ref() : nullptr;
+
     settle();
 }
 

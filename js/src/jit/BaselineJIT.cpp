@@ -1215,7 +1215,7 @@ jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable)
 #endif
 
 static void
-MarkActiveBaselineScripts(JSRuntime* rt, const JitActivationIterator& activation)
+MarkActiveBaselineScripts(JSContext* cx, const JitActivationIterator& activation)
 {
     for (jit::JitFrameIterator iter(activation); !iter.done(); ++iter) {
         switch (iter.type()) {
@@ -1233,7 +1233,7 @@ MarkActiveBaselineScripts(JSRuntime* rt, const JitActivationIterator& activation
             // Keep the baseline script around, since bailouts from the ion
             // jitcode might need to re-enter into the baseline jitcode.
             iter.script()->baselineScript()->setActive();
-            for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
+            for (InlineFrameIterator inlineIter(cx, &iter); inlineIter.more(); ++inlineIter)
                 inlineIter.script()->baselineScript()->setActive();
             break;
           }
@@ -1245,9 +1245,11 @@ MarkActiveBaselineScripts(JSRuntime* rt, const JitActivationIterator& activation
 void
 jit::MarkActiveBaselineScripts(Zone* zone)
 {
-    JSRuntime* rt = zone->runtimeFromMainThread();
-    for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
+    if (zone->isAtomsZone())
+        return;
+    JSContext* cx = TlsContext.get();
+    for (JitActivationIterator iter(cx, zone->group()->ownerContext()); !iter.done(); ++iter) {
         if (iter->compartment()->zone() == zone)
-            MarkActiveBaselineScripts(rt, iter);
+            MarkActiveBaselineScripts(cx, iter);
     }
 }

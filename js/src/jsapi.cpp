@@ -6631,7 +6631,7 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
 static bool
 GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
 {
-    ActivationIterator activationIter(cx->runtime());
+    ActivationIterator activationIter(cx);
 
     if (activationIter.done()) {
         *activation = nullptr;

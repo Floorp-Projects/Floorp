@@ -546,7 +546,7 @@ void
 js::Nursery::collect(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
-    MOZ_RELEASE_ASSERT(TlsContext.get() == zoneGroup()->context);
+    MOZ_RELEASE_ASSERT(zoneGroup()->ownedByCurrentThread());
 
     if (!isEnabled() || isEmpty()) {
         // Our barriers are not always exact, and there may be entries in the
@@ -727,7 +727,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
 
     // Update any slot or element pointers whose destination has been tenured.
     maybeStartProfile(ProfileKey::UpdateJitActivations);
-    js::jit::UpdateJitActivationsForMinorGC(rt, &mover);
+    js::jit::UpdateJitActivationsForMinorGC(zoneGroup(), &mover);
     forwardedBuffers.finish();
     maybeEndProfile(ProfileKey::UpdateJitActivations);
 
