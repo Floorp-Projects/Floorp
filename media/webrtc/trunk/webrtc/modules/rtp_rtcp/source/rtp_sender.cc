@@ -204,6 +204,10 @@ RTPSender::~RTPSender() {
     delete it->second;
     payload_type_map_.erase(it);
   }
+
+  if (rid_) {
+    delete[] rid_;
+  }
 }
 
 void RTPSender::SetTargetBitrate(uint32_t bitrate) {
