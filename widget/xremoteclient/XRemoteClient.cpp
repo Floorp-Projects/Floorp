@@ -151,9 +151,9 @@ HandleBadWindow(Display *display, XErrorEvent *event)
     sGotBadWindow = true;
     return 0; // ignored
   }
-  else {
+  
     return (*sOldHandler)(display, event);
-  }
+  
 }
 
 nsresult
@@ -384,7 +384,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
           rv = NS_ERROR_FAILURE;
           break;
 	}
-	else if (event.xany.type == PropertyNotify &&
+	if (event.xany.type == PropertyNotify &&
 		 event.xproperty.state == PropertyDelete &&
 		 event.xproperty.window == aWindow &&
 		 event.xproperty.atom == mMozLockAtom) {
@@ -584,7 +584,7 @@ XRemoteClient::FreeLock(Window aWindow)
               " property\n"));
       return NS_ERROR_FAILURE;
   }
-  else if (!data || !*data){
+  if (!data || !*data){
       MOZ_LOG(sRemoteLm, LogLevel::Debug,
              ("invalid data on " MOZILLA_LOCK_PROP
               " of window 0x%x.\n",
@@ -709,7 +709,7 @@ XRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
       *aDestroyed = true;
       return false;
     }
-    else if (event.xany.type == PropertyNotify &&
+    if (event.xany.type == PropertyNotify &&
              event.xproperty.state == PropertyNewValue &&
              event.xproperty.window == aWindow &&
              event.xproperty.atom == mMozResponseAtom) {
