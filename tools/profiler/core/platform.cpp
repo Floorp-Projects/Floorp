@@ -1984,6 +1984,9 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 static void PlatformStart();
 static void PlatformStop();
 
+// XXX: an empty class left behind after refactoring. Will be removed soon.
+class Sampler {};
+
 // Values are only honored on the first start
 void
 profiler_start(int aProfileEntries, double aInterval,
@@ -2010,8 +2013,8 @@ profiler_start(int aProfileEntries, double aInterval,
   // Reset the current state if the profiler is running
   profiler_stop();
 
-  // Deep copy aThreadNameFilters. Must happen before Sampler's constructor
-  // calls MaybeSetProfile().
+  // Deep copy aThreadNameFilters. Must happen before the MaybeSetProfile()
+  // calls below.
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
 
@@ -2031,6 +2034,27 @@ profiler_start(int aProfileEntries, double aInterval,
   gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
   gBuffer = new ProfileBuffer(gEntrySize);
   gSampler = new Sampler();
+
+  bool ignore;
+  sStartTime = mozilla::TimeStamp::ProcessCreation(ignore);
+
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    // Set up profiling for each registered thread, if appropriate
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+
+      MaybeSetProfile(info);
+    }
+  }
+
+#ifdef MOZ_TASK_TRACER
+  if (mTaskTracer) {
+    mozilla::tasktracer::StartLogging();
+  }
+#endif
+
   gGatherer = new mozilla::ProfileGatherer(gSampler);
 
   bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
@@ -2164,6 +2188,33 @@ profiler_stop()
   gProfileRestyle   = false;
   gProfileThreads   = false;
   gUseStackWalk     = false;
+
+  if (gIsActive)
+    PlatformStop();
+
+  // Destroy ThreadInfo for all threads
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+      ThreadInfo* info = sRegisteredThreads->at(i);
+      // We've stopped profiling. We no longer need to retain
+      // information for an old thread.
+      if (info->IsPendingDelete()) {
+        // The stack was nulled when SetPendingDelete() was called.
+        MOZ_ASSERT(!info->Stack());
+        delete info;
+        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+        i--;
+      }
+    }
+  }
+
+#ifdef MOZ_TASK_TRACER
+  if (mTaskTracer) {
+    mozilla::tasktracer::StopLogging();
+  }
+#endif
 
   delete gSampler;
   gSampler = nullptr;
@@ -2625,10 +2676,38 @@ profiler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
 
-// XXX: Sampler will eventually be merged with this file. In the meantime,
-// we #include it directly so that declarations can be shared between the files
-// without having to copy all the code from that file into this one.
-#include "Sampler.cpp"
+void PseudoStack::flushSamplerOnJSShutdown()
+{
+  MOZ_ASSERT(mContext);
+
+  if (!gIsActive) {
+    return;
+  }
+
+  gIsPaused = true;
+
+  {
+    StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+
+    for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
+      // Thread not being profiled, skip it.
+      ThreadInfo* info = sRegisteredThreads->at(i);
+      if (!info->hasProfile() || info->IsPendingDelete()) {
+        continue;
+      }
+
+      // Thread not profiling the context that's going away, skip it.
+      if (info->Stack()->mContext != mContext) {
+        continue;
+      }
+
+      MutexAutoLock lock(info->GetMutex());
+      info->FlushSamplesAndMarkers();
+    }
+  }
+
+  gIsPaused = false;
+}
 
 // We #include these files directly because it means those files can use
 // declarations from this file trivially.
