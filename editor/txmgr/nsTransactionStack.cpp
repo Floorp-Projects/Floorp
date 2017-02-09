@@ -11,9 +11,9 @@
 #include "nscore.h"
 
 class nsTransactionStackDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aObject) {
+  virtual void operator()(void* aObject)
+  {
     RefPtr<nsTransactionItem> releaseMe = dont_AddRef(static_cast<nsTransactionItem*>(aObject));
-    return nullptr;
   }
 };
 
