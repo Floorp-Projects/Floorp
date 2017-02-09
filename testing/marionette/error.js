@@ -81,17 +81,6 @@ error.isWebDriverError = function (obj) {
 };
 
 /**
- * Wraps an Error prototype in a WebDriverError.  If the given error is
- * already a WebDriverError, this is effectively a no-op.
- */
-error.wrap = function (err) {
-  if (error.isWebDriverError(err)) {
-    return err;
-  }
-  return new WebDriverError(`${err.name}: ${err.message}`, err.stack);
-};
-
-/**
  * Wraps an Error as a WebDriverError type.  If the given error is already
  * in the WebDriverError prototype chain, this function acts as a no-op.
  */
@@ -99,7 +88,7 @@ error.wrap = function (err) {
   if (error.isWebDriverError(err)) {
     return err;
   }
-  return new WebDriverError(err.message, err.stacktrace);
+  return new WebDriverError(`${err.name}: ${err.message}`, err.stacktrace);
 };
 
 /**

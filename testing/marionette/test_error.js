@@ -48,9 +48,16 @@ add_test(function test_isWebDriverError() {
 });
 
 add_test(function test_wrap() {
+  // webdriver-derived errors should not be wrapped
   equal(error.wrap(new WebDriverError()).name, "WebDriverError");
+  ok(error.wrap(new WebDriverError()) instanceof WebDriverError);
   equal(error.wrap(new InvalidArgumentError()).name, "InvalidArgumentError");
+  ok(error.wrap(new InvalidArgumentError()) instanceof WebDriverError);
+  ok(error.wrap(new InvalidArgumentError()) instanceof InvalidArgumentError);
+
+  // JS errors should be wrapped in WebDriverError
   equal(error.wrap(new Error()).name, "WebDriverError");
+  ok(error.wrap(new Error()) instanceof WebDriverError);
   equal(error.wrap(new EvalError()).name, "WebDriverError");
   equal(error.wrap(new InternalError()).name, "WebDriverError");
   equal(error.wrap(new RangeError()).name, "WebDriverError");
@@ -58,6 +65,11 @@ add_test(function test_wrap() {
   equal(error.wrap(new SyntaxError()).name, "WebDriverError");
   equal(error.wrap(new TypeError()).name, "WebDriverError");
   equal(error.wrap(new URIError()).name, "WebDriverError");
+
+  // wrapped JS errors should retain their type
+  // as part of the message field
+  equal(error.wrap(new WebDriverError("foo")).message, "foo");
+  equal(error.wrap(new TypeError("foo")).message, "TypeError: foo");
 
   run_next_test();
 });
