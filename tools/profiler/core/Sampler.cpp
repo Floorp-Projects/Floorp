@@ -170,7 +170,7 @@ Sampler::Sampler()
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
       ThreadInfo* info = sRegisteredThreads->at(i);
 
-      RegisterThread(info);
+      MaybeSetProfile(info);
     }
   }
 
@@ -529,43 +529,4 @@ void PseudoStack::flushSamplerOnJSShutdown()
 
 // END SaveProfileTask et al
 ////////////////////////////////////////////////////////////////////////
-
-static bool
-ThreadSelected(const char* aThreadName)
-{
-  StaticMutexAutoLock lock(gThreadNameFiltersMutex);
-
-  if (gThreadNameFilters.empty()) {
-    return true;
-  }
-
-  std::string name = aThreadName;
-  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-
-  for (uint32_t i = 0; i < gThreadNameFilters.length(); ++i) {
-    std::string filter = gThreadNameFilters[i];
-    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
-
-    // Crude, non UTF-8 compatible, case insensitive substring search
-    if (name.find(filter) != std::string::npos) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void
-Sampler::RegisterThread(ThreadInfo* aInfo)
-{
-  if (!aInfo->IsMainThread() && !gProfileThreads) {
-    return;
-  }
-
-  if (!ThreadSelected(aInfo->Name())) {
-    return;
-  }
-
-  aInfo->SetProfile(gBuffer);
-}
 
