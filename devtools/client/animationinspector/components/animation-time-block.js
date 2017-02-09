@@ -299,8 +299,8 @@ AnimationTimeBlock.prototype = {
       text += "\n";
     }
 
-    // Adding the easing.
-    if (state.easing) {
+    // Adding the easing if it is not "linear".
+    if (state.easing && state.easing !== "linear") {
       text += L10N.getStr("player.animationEasingLabel") + " ";
       text += state.easing;
       text += "\n";
