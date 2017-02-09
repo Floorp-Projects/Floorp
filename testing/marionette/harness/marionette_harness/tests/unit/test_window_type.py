@@ -5,7 +5,7 @@
 from marionette_harness import MarionetteTestCase
 
 
-class TestTitleChrome(MarionetteTestCase):
+class TestWindowTypeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -20,7 +20,8 @@ class TestTitleChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_get_chrome_title(self):
-        title = self.marionette.execute_script("return window.document.documentElement.getAttribute('title');")
-        self.assertEqual(title, self.marionette.title)
-        self.assertEqual('Title Test', self.marionette.title)
+    def test_get_window_type(self):
+        window_type = self.marionette.execute_script("return window.document.documentElement.getAttribute('windowtype');")
+        self.assertEqual(window_type, self.marionette.get_window_type())
+        self.assertEqual('Test Type', self.marionette.get_window_type())
+
