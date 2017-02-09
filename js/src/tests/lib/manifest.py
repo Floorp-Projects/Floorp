@@ -116,9 +116,9 @@ class NullXULInfoTester:
     def test(self, cond):
         return False
 
-def _parse_one(testcase, xul_tester):
+def _parse_one(testcase, terms, xul_tester):
     pos = 0
-    parts = testcase.terms.split()
+    parts = terms.split()
     while pos < len(parts):
         if parts[pos] == 'fails':
             testcase.expect = False
@@ -240,6 +240,17 @@ def _find_all_js_files(base, location):
 TEST_HEADER_PATTERN_INLINE = re.compile(r'//\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?$')
 TEST_HEADER_PATTERN_MULTI  = re.compile(r'/\*\s*\|(.*?)\|\s*(.*?)\s*(--\s*(.*))?\*/')
 
+def _append_terms_and_comment(testcase, terms, comment):
+    if testcase.terms is None:
+        testcase.terms = terms
+    else:
+        testcase.terms += " " + terms
+
+    if testcase.comment is None:
+        testcase.comment = comment
+    else:
+        testcase.comment += "; " + comment
+
 def _parse_test_header(fullpath, testcase, xul_tester):
     """
     This looks a bit weird.  The reason is that it needs to be efficient, since
@@ -265,10 +276,8 @@ def _parse_test_header(fullpath, testcase, xul_tester):
             return
 
     testcase.tag = matches.group(1)
-    testcase.terms = matches.group(2)
-    testcase.comment = matches.group(4)
-
-    _parse_one(testcase, xul_tester)
+    _append_terms_and_comment(testcase, matches.group(2), matches.group(4))
+    _parse_one(testcase, matches.group(2), xul_tester)
 
 def _parse_external_manifest(filename, relpath):
     """
@@ -323,9 +332,8 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             # At this point, we use external manifests only for test cases
             # that can't have their own failure type comments, so we simply
             # use the terms for the most specific path.
-            testcase.terms = entry["terms"]
-            testcase.comment = entry["comment"]
-            _parse_one(testcase, xul_tester)
+            _append_terms_and_comment(testcase, entry["terms"], entry["comment"])
+            _parse_one(testcase, entry["terms"], xul_tester)
 
 def _is_test_file(path_from_root, basename, filename, requested_paths,
                   excluded_files, excluded_dirs):

@@ -1,0 +1,8 @@
+commit 4ff7e4342e1a15ce7af893ba9af9bd55c7d95e51
+Author: Adam Klein <adamk@chromium.org>
+Date:   Wed Dec 28 17:18:19 2016 -0800
+
+    Fix test for instantiating a class extending null (#813)
+    
+    The sameValue assertion should be that the [[Prototype]] is
+    equal to the class's prototype, not the constructor.

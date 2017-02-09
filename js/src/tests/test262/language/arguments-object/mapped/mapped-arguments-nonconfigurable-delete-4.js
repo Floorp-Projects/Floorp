@@ -23,3 +23,5 @@ function argumentsAndDeleteSet(a) {
   assert.sameValue(arguments[0], 2);
 }
 argumentsAndDeleteSet(1);
+
+reportCompare(0, 0);

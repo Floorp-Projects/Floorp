@@ -3,7 +3,7 @@
 
 /*---
 description: Object.getOwnPropertyDescriptors should have name property with value 'getOwnPropertyDescriptors'
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
@@ -14,7 +14,8 @@ assert.sameValue(
     'Expected Object.getOwnPropertyDescriptors.name to be "getOwnPropertyDescriptors"'
 );
 
-var desc = Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptors, 'name');
-assertEq(desc.enumerable, false);
-assertEq(desc.writable, false);
-assertEq(desc.configurable, true);
+verifyNotEnumerable(Object.getOwnPropertyDescriptors, 'name');
+verifyNotWritable(Object.getOwnPropertyDescriptors, 'name');
+verifyConfigurable(Object.getOwnPropertyDescriptors, 'name');
+
+reportCompare(0, 0);
