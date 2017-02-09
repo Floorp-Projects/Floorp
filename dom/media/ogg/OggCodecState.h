@@ -128,7 +128,7 @@ public:
   // to determine if the last header has been read.
   // This function takes ownership of the packet and is responsible for
   // releasing it or queuing it for later processing.
-  virtual bool DecodeHeader(ogg_packet* aPacket)
+  virtual bool DecodeHeader(OggPacketPtr aPacket)
   {
     return (mDoneReadingHeaders = true);
   }
@@ -308,7 +308,7 @@ public:
   virtual ~VorbisState();
 
   CodecType GetType() override { return TYPE_VORBIS; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
+  bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t granulepos) override;
   int64_t PacketDuration(ogg_packet* aPacket) override;
   bool Init() override;
@@ -385,7 +385,7 @@ public:
   virtual ~TheoraState();
 
   CodecType GetType() override { return TYPE_THEORA; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
+  bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t granulepos) override;
   int64_t StartTime(int64_t granulepos) override;
   int64_t PacketDuration(ogg_packet* aPacket) override;
@@ -428,7 +428,7 @@ public:
   virtual ~OpusState();
 
   CodecType GetType() override { return TYPE_OPUS; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
+  bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t aGranulepos) override;
   int64_t PacketDuration(ogg_packet* aPacket) override;
   bool Init() override;
@@ -506,7 +506,7 @@ public:
   nsClassHashtable<nsUint32HashKey, MessageField> mMsgFieldStore;
 
   CodecType GetType() override { return TYPE_SKELETON; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
+  bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t granulepos) override { return -1; }
   bool IsHeader(ogg_packet* aPacket) override { return true; }
 
@@ -646,7 +646,7 @@ public:
   explicit FlacState(ogg_page* aBosPage);
 
   CodecType GetType() override { return TYPE_FLAC; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
+  bool DecodeHeader(OggPacketPtr aPacket) override;
   int64_t Time(int64_t granulepos) override;
   int64_t PacketDuration(ogg_packet* aPacket) override;
   bool IsHeader(ogg_packet* aPacket) override;
