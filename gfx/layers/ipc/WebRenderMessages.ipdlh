@@ -11,6 +11,7 @@ include protocol PTexture;
 
 using WrBorderRadius from "mozilla/webrender/webrender_ffi.h";
 using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
+using WrColor from "mozilla/webrender/webrender_ffi.h";
 using WrImageKey from "mozilla/webrender/webrender_ffi.h";
 using WrTextureFilter from "mozilla/webrender/webrender_ffi.h";
 using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
@@ -42,10 +43,7 @@ struct OpDPPopStackingContext { };
 struct OpDPPushRect {
   WrRect bounds;
   WrRect clip;
-  float r;
-  float g;
-  float b;
-  float a;
+  WrColor color;
 };
 
 struct OpDPPushBorder {
