@@ -586,10 +586,9 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
       if (errno == EINPROGRESS) {
         // non-blocking
         return;
-      } else {
-        LOG(("usrsctp_connect failed: %d", errno));
-        mState = CLOSED;
       }
+      LOG(("usrsctp_connect failed: %d", errno));
+      mState = CLOSED;
     } else {
       // We set Even/Odd and fire ON_CONNECTION via SCTP_COMM_UP when we get that
       // This also avoids issues with calling TransportFlow stuff on Mainthread
@@ -1783,50 +1782,49 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
          strchg->strchange_outstrms));
     // XXX FIX! notify pending opens of failure
     return;
-  } else {
-    if (strchg->strchange_instrms > mStreams.Length()) {
-      LOG(("Other side increased streams from %u to %u",
-           mStreams.Length(), strchg->strchange_instrms));
-    }
-    if (strchg->strchange_outstrms > mStreams.Length() ||
-        strchg->strchange_instrms > mStreams.Length()) {
-      uint16_t old_len = mStreams.Length();
-      uint16_t new_len = std::max(strchg->strchange_outstrms,
-                                  strchg->strchange_instrms);
-      LOG(("Increasing number of streams from %u to %u - adding %u (in: %u)",
-           old_len, new_len, new_len - old_len,
-           strchg->strchange_instrms));
-      // make sure both are the same length
-      mStreams.AppendElements(new_len - old_len);
-      LOG(("New length = %d (was %d)", mStreams.Length(), old_len));
-      for (size_t i = old_len; i < mStreams.Length(); ++i) {
-        mStreams[i] = nullptr;
-      }
-      // Re-process any channels waiting for streams.
-      // Linear search, but we don't increase channels often and
-      // the array would only get long in case of an app error normally
-
-      // Make sure we request enough streams if there's a big jump in streams
-      // Could make a more complex API for OpenXxxFinish() and avoid this loop
-      size_t num_needed = mPending.GetSize();
-      LOG(("%d of %d new streams already needed", num_needed,
-           new_len - old_len));
-      num_needed -= (new_len - old_len); // number we added
-      if (num_needed > 0) {
-        if (num_needed < 16)
-          num_needed = 16;
-        LOG(("Not enough new streams, asking for %d more", num_needed));
-        RequestMoreStreams(num_needed);
-      } else if (strchg->strchange_outstrms < strchg->strchange_instrms) {
-        LOG(("Requesting %d output streams to match partner",
-             strchg->strchange_instrms - strchg->strchange_outstrms));
-        RequestMoreStreams(strchg->strchange_instrms - strchg->strchange_outstrms);
-      }
-
-      ProcessQueuedOpens();
-    }
-    // else probably not a change in # of streams
   }
+  if (strchg->strchange_instrms > mStreams.Length()) {
+    LOG(("Other side increased streams from %u to %u",
+         mStreams.Length(), strchg->strchange_instrms));
+  }
+  if (strchg->strchange_outstrms > mStreams.Length() ||
+      strchg->strchange_instrms > mStreams.Length()) {
+    uint16_t old_len = mStreams.Length();
+    uint16_t new_len = std::max(strchg->strchange_outstrms,
+                                strchg->strchange_instrms);
+    LOG(("Increasing number of streams from %u to %u - adding %u (in: %u)",
+         old_len, new_len, new_len - old_len,
+         strchg->strchange_instrms));
+    // make sure both are the same length
+    mStreams.AppendElements(new_len - old_len);
+    LOG(("New length = %d (was %d)", mStreams.Length(), old_len));
+    for (size_t i = old_len; i < mStreams.Length(); ++i) {
+      mStreams[i] = nullptr;
+    }
+    // Re-process any channels waiting for streams.
+    // Linear search, but we don't increase channels often and
+    // the array would only get long in case of an app error normally
+
+    // Make sure we request enough streams if there's a big jump in streams
+    // Could make a more complex API for OpenXxxFinish() and avoid this loop
+    size_t num_needed = mPending.GetSize();
+    LOG(("%d of %d new streams already needed", num_needed,
+         new_len - old_len));
+    num_needed -= (new_len - old_len); // number we added
+    if (num_needed > 0) {
+      if (num_needed < 16)
+        num_needed = 16;
+      LOG(("Not enough new streams, asking for %d more", num_needed));
+      RequestMoreStreams(num_needed);
+    } else if (strchg->strchange_outstrms < strchg->strchange_instrms) {
+      LOG(("Requesting %d output streams to match partner",
+           strchg->strchange_instrms - strchg->strchange_outstrms));
+      RequestMoreStreams(strchg->strchange_instrms - strchg->strchange_outstrms);
+    }
+
+    ProcessQueuedOpens();
+  }
+  // else probably not a change in # of streams
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     channel = mStreams[i];
@@ -2117,22 +2115,21 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
         // Note: we're locked, so there's no danger of a race with the
         // buffer-threshold callback
         return channel.forget();
-      } else {
-        if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-          // We already returned the channel to the app.
-          NS_ERROR("Failed to send open request");
-          NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                    channel)));
-        }
-        // If we haven't returned the channel yet, it will get destroyed when we exit
-        // this function.
-        mStreams[stream] = nullptr;
-        channel->mStream = INVALID_STREAM;
-        // we'll be destroying the channel
-        channel->mState = CLOSED;
-        return nullptr;
       }
+      if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+        // We already returned the channel to the app.
+        NS_ERROR("Failed to send open request");
+        NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
+                                            DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                            channel)));
+      }
+      // If we haven't returned the channel yet, it will get destroyed when we exit
+      // this function.
+      mStreams[stream] = nullptr;
+      channel->mStream = INVALID_STREAM;
+      // we'll be destroying the channel
+      channel->mState = CLOSED;
+      return nullptr;
       /* NOTREACHED */
     }
   }
