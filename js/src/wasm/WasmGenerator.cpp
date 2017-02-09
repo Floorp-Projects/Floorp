@@ -1133,22 +1133,13 @@ ModuleGenerator::generateBytecodeHash(const ShareableBytes& bytecode)
     memcpy(metadata_->hash, hash, sizeof(ModuleHash));
 }
 
-SharedModule
-ModuleGenerator::finish(const ShareableBytes& bytecode)
+bool
+ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 {
-    MOZ_ASSERT(!activeFuncDef_);
-    MOZ_ASSERT(finishedFuncDefs_);
-
-    if (!finishFuncExports())
-        return nullptr;
-
-    if (!finishCodegen())
-        return nullptr;
-
     // Convert the CallSiteAndTargetVector (needed during generation) to a
     // CallSiteVector (what is stored in the Module).
     if (!metadataTier_->callSites.appendAll(masm_.callSites()))
-        return nullptr;
+        return false;
 
     // The MacroAssembler has accumulated all the memory accesses during codegen.
     metadataTier_->memoryAccesses = masm_.extractMemoryAccesses();
@@ -1179,7 +1170,27 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // For asm.js, the tables vector is over-allocated (to avoid resize during
     // parallel copilation). Shrink it back down to fit.
     if (isAsmJS() && !metadata_->tables.resize(numTables_))
-        return nullptr;
+        return false;
+
+    generateBytecodeHash(bytecode);
+
+    return true;
+}
+
+bool
+ModuleGenerator::finishCommon(const ShareableBytes& bytecode)
+{
+    MOZ_ASSERT(!activeFuncDef_);
+    MOZ_ASSERT(finishedFuncDefs_);
+
+    if (!finishFuncExports())
+        return false;
+
+    if (!finishCodegen())
+        return false;
+
+    if (!finishMetadata(bytecode))
+        return false;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
@@ -1200,9 +1211,18 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 #endif
 
     if (!finishLinkData())
-        return nullptr;
+        return false;
 
-    generateBytecodeHash(bytecode);
+    return true;
+}
+
+SharedModule
+ModuleGenerator::finishModule(const ShareableBytes& bytecode)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Once || compileMode_ == CompileMode::Tier1);
+
+    if (!finishCommon(bytecode))
+        return nullptr;
 
     UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
                                                              masm_,
@@ -1227,7 +1247,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!code)
         return nullptr;
 
-    return SharedModule(js_new<Module>(Move(assumptions_),
+    return SharedModule(js_new<Module>(compileMode_,
+                                       Move(assumptions_),
                                        *code,
                                        Move(maybeDebuggingBytes),
                                        Move(linkData_),
@@ -1236,6 +1257,31 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
                                        Move(env_->dataSegments),
                                        Move(env_->elemSegments),
                                        bytecode));
+}
+
+bool
+ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
+
+    if (!finishCommon(bytecode))
+        return false;
+
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
+                                                             masm_,
+                                                             bytecode,
+                                                             *linkDataTier_,
+                                                             *metadata_);
+    if (!codeSegment)
+        return false;
+
+    MOZ_ASSERT(!metadata_->debugEnabled);
+
+    module->finishTier2Generator(linkData_.takeLinkData(tier_),
+                                 metadata_->takeMetadata(tier_),
+                                 Move(codeSegment),
+                                 Move(env_));
+    return true;
 }
 
 bool

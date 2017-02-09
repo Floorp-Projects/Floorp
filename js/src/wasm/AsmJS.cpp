@@ -1863,8 +1863,8 @@ class MOZ_STACK_CLASS ModuleValidator
                 return false;
         }
 
-        CompileArgs args;
-        if (!args.initFromContext(cx_, Move(scriptedCaller)))
+        MutableCompileArgs args = cx_->new_<CompileArgs>();
+        if (!args || !args->initFromContext(cx_, Move(scriptedCaller)))
             return false;
 
         auto env = MakeUnique<ModuleEnvironment>(ModuleKind::AsmJS);
@@ -1880,7 +1880,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
         env->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
 
-        if (!mg_.init(Move(env), args, CompileMode::Once, asmJSMetadata_.get()))
+        if (!mg_.init(Move(env), *args, CompileMode::Once, asmJSMetadata_.get()))
             return false;
 
         return true;
@@ -2402,11 +2402,11 @@ class MOZ_STACK_CLASS ModuleValidator
 
         // asm.js does not have any wasm bytecode to save; view-source is
         // provided through the ScriptSource.
-        SharedBytes bytes = js_new<ShareableBytes>();
+        SharedBytes bytes = cx_->new_<ShareableBytes>();
         if (!bytes)
             return nullptr;
 
-        return mg_.finish(*bytes);
+        return mg_.finishModule(*bytes);
     }
 };
 

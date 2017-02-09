@@ -21,6 +21,7 @@
 #include "jsnspr.h"
 
 #include "jit/JitOptions.h"
+#include "threading/LockGuard.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
@@ -262,6 +263,10 @@ Module::compiledSerializedSize() const
     if (metadata().debugEnabled)
         return 0;
 
+    blockOnIonCompileFinished();
+    if (!code_->hasTier(Tier::Serialized))
+        return 0;
+
     return assumptions_.serializedSize() +
            linkData_.serializedSize() +
            SerializedVectorSize(imports_) +
@@ -279,9 +284,11 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
         return;
     }
 
-    // Assumption must be serialized at the beginning of the compiled bytes so
-    // that compiledAssumptionsMatch can detect a build-id mismatch before any
-    // other decoding occurs.
+    blockOnIonCompileFinished();
+    if (!code_->hasTier(Tier::Serialized)) {
+        MOZ_RELEASE_ASSERT(compiledSize == 0);
+        return;
+    }
 
     uint8_t* cursor = compiledBegin;
     cursor = assumptions_.serialize(cursor);
@@ -292,6 +299,40 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
+}
+
+void
+Module::finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
+                             UniqueConstCodeSegment code2, UniqueModuleEnvironment env2)
+{
+    // Install the data in the data structures. They will not be visible yet.
+
+    metadata().setTier2(Move(metadata2));
+    linkData().setTier2(Move(linkData2));
+    code().setTier2(Move(code2));
+    for (uint32_t i = 0; i < elemSegments_.length(); i++)
+        elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+
+    // Set the flag atomically to make the tier 2 data visible everywhere at
+    // once.
+
+    metadata().commitTier2();
+}
+
+void
+Module::blockOnIonCompileFinished() const
+{
+    LockGuard<Mutex> l(tier2Lock_);
+    while (mode_ == CompileMode::Tier1 && !metadata().hasTier2())
+        tier2Cond_.wait(l);
+}
+
+void
+Module::unblockOnTier2GeneratorFinished(CompileMode newMode) const
+{
+    LockGuard<Mutex> l(tier2Lock_);
+    mode_ = newMode;
+    tier2Cond_.notify_all();
 }
 
 /* static */ bool
@@ -367,9 +408,10 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
 
-    return js_new<Module>(Move(assumptions),
+    return js_new<Module>(CompileMode::Tier2, // Serialized code is always Tier 2
+                          Move(assumptions),
                           *code,
-                          nullptr, // Serialized code is never debuggable
+                          nullptr,            // Serialized code is never debuggable
                           Move(linkData),
                           Move(imports),
                           Move(exports),
@@ -463,10 +505,12 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
     scriptedCaller.line = line;
     scriptedCaller.column = column;
 
-    CompileArgs args(Assumptions(Move(buildId)), Move(scriptedCaller));
+    SharedCompileArgs args = js_new<CompileArgs>(Assumptions(Move(buildId)), Move(scriptedCaller));
+    if (!args)
+        return nullptr;
 
     UniqueChars error;
-    return Compile(*bytecode, Move(args), &error);
+    return Compile(*bytecode, *args, &error);
 }
 
 /* virtual */ void
