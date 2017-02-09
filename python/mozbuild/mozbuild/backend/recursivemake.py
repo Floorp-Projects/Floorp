@@ -263,6 +263,7 @@ class RecursiveMakeTraversal(object):
 
     def __init__(self):
         self._traversal = {}
+        self._attached = set()
 
     def add(self, dir, dirs=[], tests=[]):
         """
@@ -273,7 +274,10 @@ class RecursiveMakeTraversal(object):
         subdirs = self._traversal.setdefault(dir, self.SubDirectories())
         for key, value in (('dirs', dirs), ('tests', tests)):
             assert(key in self.SubDirectoryCategories)
+            # Callers give us generators
+            value = list(value)
             getattr(subdirs, key).extend(value)
+            self._attached |= set(value)
 
     @staticmethod
     def default_filter(current, subdirs):
@@ -287,8 +291,7 @@ class RecursiveMakeTraversal(object):
         Helper function to call a filter from compute_dependencies and
         traverse.
         """
-        return filter(current, self._traversal.get(current,
-            self.SubDirectories()))
+        return filter(current, self.get_subdirs(current))
 
     def compute_dependencies(self, filter=None):
         """
@@ -357,7 +360,16 @@ class RecursiveMakeTraversal(object):
         """
         Returns all direct subdirectories under the given directory.
         """
-        return self._traversal.get(dir, self.SubDirectories())
+        result = self._traversal.get(dir, self.SubDirectories())
+        if dir == '':
+            unattached = set(self._traversal) - self._attached - set([''])
+            if unattached:
+                new_result = self.SubDirectories()
+                new_result.dirs.extend(result.dirs)
+                new_result.dirs.extend(sorted(unattached))
+                new_result.tests.extend(result.tests)
+                result = new_result
+        return result
 
 
 class RecursiveMakeBackend(CommonBackend):
