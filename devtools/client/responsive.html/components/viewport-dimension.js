@@ -15,8 +15,8 @@ module.exports = createClass({
 
   propTypes: {
     viewport: PropTypes.shape(Types.viewport).isRequired,
-    onRemoveDevice: PropTypes.func.isRequired,
-    onResizeViewport: PropTypes.func.isRequired,
+    onChangeSize: PropTypes.func.isRequired,
+    onRemoveDeviceAssociation: PropTypes.func.isRequired,
   },
 
   getInitialState() {
@@ -116,10 +116,10 @@ module.exports = createClass({
     // Change the device selector back to an unselected device
     // TODO: Bug 1332754: Logic like this probably belongs in the action creator.
     if (this.props.viewport.device) {
-      this.props.onRemoveDevice();
+      this.props.onRemoveDeviceAssociation();
     }
-    this.props.onResizeViewport(parseInt(this.state.width, 10),
-                                parseInt(this.state.height, 10));
+    this.props.onChangeSize(parseInt(this.state.width, 10),
+                            parseInt(this.state.height, 10));
   },
 
   render() {

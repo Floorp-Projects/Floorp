@@ -42,7 +42,8 @@ struct ChromeFilePropertyBag;
 struct FilePropertyBag;
 class BlobImpl;
 class File;
-class OwningArrayBufferOrArrayBufferViewOrBlobOrUSVString;
+class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
+class Promise;
 
 class Blob : public nsIDOMBlob
            , public nsIXHRSendable
@@ -58,7 +59,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIDOMBlob)
 
-  typedef OwningArrayBufferOrArrayBufferViewOrBlobOrUSVString BlobPart;
+  typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
 
   // This creates a Blob or a File based on the type of BlobImpl.
   static Blob*
@@ -204,17 +205,17 @@ public:
               ErrorResult& aRv);
 
   // ChromeOnly
-  static already_AddRefed<File>
+  static already_AddRefed<Promise>
   CreateFromFileName(const GlobalObject& aGlobal,
-                     const nsAString& aData,
+                     const nsAString& aFilePath,
                      const ChromeFilePropertyBag& aBag,
                      SystemCallerGuarantee aGuarantee,
                      ErrorResult& aRv);
 
   // ChromeOnly
-  static already_AddRefed<File>
+  static already_AddRefed<Promise>
   CreateFromNsIFile(const GlobalObject& aGlobal,
-                    nsIFile* aData,
+                    nsIFile* aFile,
                     const ChromeFilePropertyBag& aBag,
                     SystemCallerGuarantee aGuarantee,
                     ErrorResult& aRv);

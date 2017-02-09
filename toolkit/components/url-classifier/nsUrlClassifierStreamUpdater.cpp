@@ -133,7 +133,9 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   mozilla::OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
-  loadInfo->SetOriginAttributes(attrs);
+  if (loadInfo) {
+    loadInfo->SetOriginAttributes(attrs);
+  }
 
   mBeganStream = false;
 

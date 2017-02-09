@@ -867,6 +867,10 @@ CheckUpgradeInsecureRequestsPreventsCORS(nsIPrincipal* aRequestingPrincipal,
   rv = aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_SUCCESS(rv, false);
 
+  if (!loadInfo) {
+    return false;
+  }
+
   // lets see if the loadInfo indicates that the request will
   // be upgraded before fetching any data from the netwerk.
   return loadInfo->GetUpgradeInsecureRequests();

@@ -12,7 +12,7 @@ function* testSteps()
 
   const objectStoreName = "Wasm";
 
-  const wasmData = { key: 1, wasm: null };
+  const wasmData = { key: 1, value: null };
 
   if (!isWasmSupported()) {
     finishTest();
@@ -21,8 +21,7 @@ function* testSteps()
 
   getWasmBinary('(module (func (nop)))');
   let binary = yield undefined;
-
-  wasmData.wasm = getWasmModule(binary);
+  wasmData.value = getWasmModule(binary);
 
   info("Opening database");
 
@@ -50,7 +49,7 @@ function* testSteps()
 
   let objectStore = db.transaction([objectStoreName], "readwrite")
                       .objectStore(objectStoreName);
-  request = objectStore.add(wasmData.wasm, wasmData.key);
+  request = objectStore.add(wasmData.value, wasmData.key);
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
@@ -62,7 +61,9 @@ function* testSteps()
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
-  verifyWasmModule(request.result, wasmData.wasm);
+  info("Verifying wasm");
+
+  verifyWasmModule(request.result, wasmData.value);
   yield undefined;
 
   info("Getting wasm in new transaction");
@@ -72,7 +73,9 @@ function* testSteps()
   request.onsuccess = continueToNextStepSync;
   yield undefined;
 
-  verifyWasmModule(request.result, wasmData.wasm);
+  info("Verifying wasm");
+
+  verifyWasmModule(request.result, wasmData.value);
   yield undefined;
 
   finishTest();

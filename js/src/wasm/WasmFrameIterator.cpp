@@ -268,19 +268,19 @@ FrameIterator::debugTrapCallsite() const
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 23;
-static const unsigned StoredFP = 30;
+static const unsigned PushedFP = 26;
+static const unsigned StoredFP = 33;
 #elif defined(JS_CODEGEN_X86)
 # if defined(DEBUG)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PostStorePrePopFP = 0;
 # endif
-static const unsigned PushedFP = 14;
-static const unsigned StoredFP = 17;
+static const unsigned PushedFP = 16;
+static const unsigned StoredFP = 19;
 #elif defined(JS_CODEGEN_ARM)
 static const unsigned PushedRetAddr = 4;
-static const unsigned PushedFP = 24;
-static const unsigned StoredFP = 28;
+static const unsigned PushedFP = 28;
+static const unsigned StoredFP = 32;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned PushedRetAddr = 0;
@@ -289,8 +289,8 @@ static const unsigned StoredFP = 0;
 static const unsigned PostStorePrePopFP = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedFP = 32;
-static const unsigned StoredFP = 36;
+static const unsigned PushedFP = 36;
+static const unsigned StoredFP = 40;
 static const unsigned PostStorePrePopFP = 4;
 #elif defined(JS_CODEGEN_NONE)
 # if defined(DEBUG)
@@ -331,7 +331,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
     // randomly inserted between two instructions.
     {
 #if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 8);
 #endif
 
         offsets->begin = masm.currentOffset();

@@ -66,3 +66,6 @@ fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
 fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
 fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 == sepia-zero.html sepia-zero-ref.html
+
+fuzzy(2,125000) == scale-filtered-content-01.html scale-filtered-content-01-ref.html
+

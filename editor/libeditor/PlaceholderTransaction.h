@@ -8,12 +8,12 @@
 
 #include "EditAggregateTransaction.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
@@ -33,7 +33,8 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  PlaceholderTransaction();
+  PlaceholderTransaction(EditorBase& aEditorBase, nsIAtom* aName,
+                         UniquePtr<SelectionState> aSelState);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaceholderTransaction,
                                            EditAggregateTransaction)
@@ -45,9 +46,6 @@ public:
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
 // ------------ nsIAbsorbingTransaction -----------------------
-
-  NS_IMETHOD Init(nsIAtom* aName, SelectionState* aSelState,
-                  EditorBase* aEditorBase) override;
 
   NS_IMETHOD GetTxnName(nsIAtom** aName) override;
 
@@ -80,11 +78,11 @@ protected:
   // restore the selection properly.
 
   // Use a pointer because this is constructed before we exist.
-  nsAutoPtr<SelectionState> mStartSel;
+  UniquePtr<SelectionState> mStartSel;
   SelectionState mEndSel;
 
   // The editor for this transaction.
-  EditorBase* mEditorBase;
+  EditorBase& mEditorBase;
 };
 
 } // namespace mozilla

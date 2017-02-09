@@ -11,8 +11,9 @@
 
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsRuleWalker.h"
 #include "nsRuleData.h"
+#include "nsRuleWalker.h"
+#include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoDeclarationBlock.h"

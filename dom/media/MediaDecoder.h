@@ -242,6 +242,9 @@ public:
   // Return true if the decoder has reached the end of playback.
   bool IsEnded() const;
 
+  // True if we are playing a MediaSource object.
+  virtual bool IsMSE() const { return false; }
+
   // Return true if the MediaDecoderOwner's error attribute is not null.
   // Must be called before Shutdown().
   bool OwnerHasError() const;

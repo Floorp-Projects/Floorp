@@ -7947,8 +7947,10 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   } else if (url && NS_SUCCEEDED(aStatus)) {
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    mozilla::net::PredictorLearnRedirect(url, aChannel,
-                                         loadInfo->GetOriginAttributes());
+    if (loadInfo) {
+      mozilla::net::PredictorLearnRedirect(url, aChannel,
+                                           loadInfo->GetOriginAttributes());
+    }
   }
 
   return NS_OK;
@@ -12605,7 +12607,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
   MOZ_ASSERT(triggeringPrincipal,
              "need a valid triggeringPrincipal to load from history");
   if (!triggeringPrincipal) {
-    return NS_ERROR_FAILURE;
+    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
   }
 
   // Passing nullptr as aSourceDocShell gives the same behaviour as before

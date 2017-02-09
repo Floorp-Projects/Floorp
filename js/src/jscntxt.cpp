@@ -51,6 +51,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -125,6 +126,9 @@ JSContext::init()
     if (!simulator_)
         return false;
 #endif
+
+    if (!wasm::EnsureSignalHandlers(this))
+        return false;
 
     return true;
 }
@@ -1045,6 +1049,11 @@ JSContext::~JSContext()
 
 #ifdef JS_SIMULATOR
     js::jit::Simulator::Destroy(simulator_);
+#endif
+
+#ifdef JS_TRACE_LOGGING
+    if (traceLogger)
+        DestroyTraceLogger(traceLogger);
 #endif
 
     if (TlsContext.get() == this)

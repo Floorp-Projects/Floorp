@@ -103,6 +103,10 @@ using namespace mozilla::places;
 #define PREF_FREC_RELOAD_VISIT_BONUS            "places.frecency.reloadVisitBonus"
 #define PREF_FREC_RELOAD_VISIT_BONUS_DEF        0
 
+// This is a 'hidden' pref for the purposes of unit tests.
+#define PREF_FREC_DECAY_RATE     "places.frecency.decayRate"
+#define PREF_FREC_DECAY_RATE_DEF 0.975f
+
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
 #define RENEW_CACHED_NOW_TIMEOUT ((int32_t)3 * PR_MSEC_PER_SEC)
@@ -952,6 +956,10 @@ nsresult // static
 nsNavHistory::AsciiHostNameFromHostString(const nsACString& aHostName,
                                           nsACString& aAscii)
 {
+  aAscii.Truncate();
+  if (aHostName.IsEmpty()) {
+    return NS_OK;
+  }
   // To properly generate a uri we must provide a protocol.
   nsAutoCString fakeURL("http://");
   fakeURL.Append(aHostName);
@@ -3092,6 +3100,8 @@ nsNavHistory::DecayFrecency()
   nsresult rv = FixInvalidFrecencies();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
+
   // Globally decay places frecency rankings to estimate reduced frecency
   // values of pages that haven't been visited for a while, i.e., they do
   // not get an updated frecency.  A scaling factor of .975 results in .5 the
@@ -3099,10 +3109,14 @@ nsNavHistory::DecayFrecency()
   // When changing the scaling factor, ensure that the barrier in
   // moz_places_afterupdate_frecency_trigger still ignores these changes.
   nsCOMPtr<mozIStorageAsyncStatement> decayFrecency = mDB->GetAsyncStatement(
-    "UPDATE moz_places SET frecency = ROUND(frecency * .975) "
+    "UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate) "
     "WHERE frecency > 0"
   );
   NS_ENSURE_STATE(decayFrecency);
+
+  rv = decayFrecency->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
+                                       static_cast<double>(decayRate));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Decay potentially unused adaptive entries (e.g. those that are at 1)
   // to allow better chances for new entries that will start at 1.

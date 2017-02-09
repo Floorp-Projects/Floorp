@@ -224,8 +224,11 @@ protected:
   bool IsMailEditor() const;
   bool DontEchoPassword() const;
 
+private:
   // Note that we do not refcount the editor.
   TextEditor* mTextEditor;
+
+protected:
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.

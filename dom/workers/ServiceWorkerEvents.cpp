@@ -190,7 +190,7 @@ public:
     NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
     nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
 
-    if (!CSPPermitsResponse(loadInfo)) {
+    if (!loadInfo || !CSPPermitsResponse(loadInfo)) {
       mChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_OK;
     }

@@ -978,7 +978,7 @@ AbortGC(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    cx->runtime()->gc.abortGC();
+    JS::AbortIncrementalGC(cx);
     args.rval().setUndefined();
     return true;
 }
@@ -1482,7 +1482,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
 #ifdef JS_TRACE_LOGGING
             // Reset the TraceLogger state if enabled.
-            TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+            TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
             if (logger->enabled()) {
                 while (logger->enabled())
                     logger->disable();
@@ -2571,7 +2571,7 @@ static bool
 EnableTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     if (!TraceLoggerEnable(logger, cx))
         return false;
 
@@ -2583,7 +2583,7 @@ static bool
 DisableTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     args.rval().setBoolean(TraceLoggerDisable(logger));
 
     return true;
@@ -4166,7 +4166,7 @@ DisRegExp(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    if (!reobj->dumpBytecode(cx, match_only, input))
+    if (!RegExpObject::dumpBytecode(cx, reobj, match_only, input))
         return false;
 
     args.rval().setUndefined();

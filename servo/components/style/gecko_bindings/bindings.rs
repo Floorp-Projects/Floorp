@@ -312,6 +312,10 @@ extern "C" {
     pub fn Gecko_IsInDocument(node: RawGeckoNodeBorrowed) -> bool;
 }
 extern "C" {
+    pub fn Gecko_FlattenedTreeParentIsParent(node: RawGeckoNodeBorrowed)
+     -> bool;
+}
+extern "C" {
     pub fn Gecko_GetParentNode(node: RawGeckoNodeBorrowed)
      -> RawGeckoNodeBorrowedOrNull;
 }
@@ -330,10 +334,6 @@ extern "C" {
 extern "C" {
     pub fn Gecko_GetNextSibling(node: RawGeckoNodeBorrowed)
      -> RawGeckoNodeBorrowedOrNull;
-}
-extern "C" {
-    pub fn Gecko_GetParentElement(element: RawGeckoElementBorrowed)
-     -> RawGeckoElementBorrowedOrNull;
 }
 extern "C" {
     pub fn Gecko_GetFirstChildElement(element: RawGeckoElementBorrowed)
@@ -375,10 +375,6 @@ extern "C" {
 }
 extern "C" {
     pub fn Gecko_ElementState(element: RawGeckoElementBorrowed) -> u16;
-}
-extern "C" {
-    pub fn Gecko_IsHTMLElementInHTMLDocument(element: RawGeckoElementBorrowed)
-     -> bool;
 }
 extern "C" {
     pub fn Gecko_IsLink(element: RawGeckoElementBorrowed) -> bool;
@@ -503,7 +499,11 @@ extern "C" {
      -> u32;
 }
 extern "C" {
-    pub fn Gecko_GetServoDeclarationBlock(element: RawGeckoElementBorrowed)
+    pub fn Gecko_GetStyleAttrDeclarationBlock(element: RawGeckoElementBorrowed)
+     -> RawServoDeclarationBlockStrongBorrowedOrNull;
+}
+extern "C" {
+    pub fn Gecko_GetHTMLPresentationAttrDeclarationBlock(element: RawGeckoElementBorrowed)
      -> RawServoDeclarationBlockStrongBorrowedOrNull;
 }
 extern "C" {
@@ -743,6 +743,35 @@ extern "C" {
     pub fn Gecko_NewCSSValueSharedList(len: u32) -> *mut nsCSSValueSharedList;
 }
 extern "C" {
+    pub fn Gecko_CSSValue_GetArrayItem(css_value: nsCSSValueBorrowedMut,
+                                       index: i32) -> nsCSSValueBorrowedMut;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetArrayItemConst(css_value: nsCSSValueBorrowed,
+                                            index: i32) -> nsCSSValueBorrowed;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetAbsoluteLength(css_value: nsCSSValueBorrowed)
+     -> nscoord;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetAngle(css_value: nsCSSValueBorrowed) -> f32;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetKeyword(aCSSValue: nsCSSValueBorrowed)
+     -> nsCSSKeyword;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetNumber(css_value: nsCSSValueBorrowed) -> f32;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetPercentage(css_value: nsCSSValueBorrowed) -> f32;
+}
+extern "C" {
+    pub fn Gecko_CSSValue_GetCalc(aCSSValue: nsCSSValueBorrowed)
+     -> nsStyleCoord_CalcValue;
+}
+extern "C" {
     pub fn Gecko_CSSValue_SetAbsoluteLength(css_value: nsCSSValueBorrowedMut,
                                             len: nscoord);
 }
@@ -769,10 +798,6 @@ extern "C" {
 extern "C" {
     pub fn Gecko_CSSValue_SetFunction(css_value: nsCSSValueBorrowedMut,
                                       len: i32);
-}
-extern "C" {
-    pub fn Gecko_CSSValue_GetArrayItem(css_value: nsCSSValueBorrowedMut,
-                                       index: i32) -> nsCSSValueBorrowedMut;
 }
 extern "C" {
     pub fn Gecko_CSSValue_Drop(css_value: nsCSSValueBorrowedMut);
@@ -1369,6 +1394,13 @@ extern "C" {
                                                          RawServoDeclarationBlockBorrowed,
                                                      property:
                                                          nsCSSPropertyID);
+}
+extern "C" {
+    pub fn Servo_DeclarationBlock_AddPresValue(declarations:
+                                                   RawServoDeclarationBlockBorrowed,
+                                               property: nsCSSPropertyID,
+                                               css_value:
+                                                   nsCSSValueBorrowedMut);
 }
 extern "C" {
     pub fn Servo_CSSSupports2(name: *const nsACString_internal,

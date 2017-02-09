@@ -25,13 +25,38 @@ var closedWithEnter = false;
 var selectRect;
 
 this.SelectParentHelper = {
-  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor) {
+  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
+           uaSelectBackgroundColor, uaSelectColor, selectBackgroundColor, selectColor) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
+    let stylesheet = menulist.querySelector("#ContentSelectDropdownScopedStylesheet");
+    if (stylesheet) {
+      stylesheet.remove();
+    }
+
+    let doc = menulist.ownerDocument;
+    stylesheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    stylesheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
+    stylesheet.scoped = true;
+    stylesheet.hidden = true;
+    stylesheet = menulist.appendChild(stylesheet);
+
+    let sheet = stylesheet.sheet;
+    if (selectBackgroundColor != uaSelectBackgroundColor ||
+        selectColor != uaSelectColor) {
+      sheet.insertRule(`menupopup {
+        background-color: ${selectBackgroundColor};
+        color: ${selectColor};
+      }`, 0);
+      menulist.menupopup.setAttribute("customoptionstyling", "true");
+    } else {
+      menulist.menupopup.removeAttribute("customoptionstyling");
+    }
+
     currentZoom = zoom;
     currentMenulist = menulist;
     populateChildren(menulist, items, selectedIndex, zoom,
-                     uaBackgroundColor, uaColor);
+                     uaBackgroundColor, uaColor, sheet);
   },
 
   open(browser, menulist, rect, isOpenedViaTouch) {
@@ -142,8 +167,11 @@ this.SelectParentHelper = {
       let selectedIndex = msg.data.selectedIndex;
       let uaBackgroundColor = msg.data.uaBackgroundColor;
       let uaColor = msg.data.uaColor;
+      let selectBackgroundColor = msg.data.selectBackgroundColor;
+      let selectColor = msg.data.selectColor;
       this.populate(currentMenulist, options, selectedIndex,
-                    currentZoom, uaBackgroundColor, uaColor);
+                    currentZoom, uaBackgroundColor, uaColor,
+                    selectBackgroundColor, selectColor);
     }
   },
 
@@ -172,9 +200,9 @@ this.SelectParentHelper = {
 };
 
 function populateChildren(menulist, options, selectedIndex, zoom,
-                          uaBackgroundColor, uaColor,
+                          uaBackgroundColor, uaColor, sheet,
                           parentElement = null, isGroupDisabled = false,
-                          adjustedTextSize = -1, addSearch = true) {
+                          adjustedTextSize = -1, addSearch = true, nthChildIndex = 1) {
   let element = menulist.menupopup;
   let win = element.ownerGlobal;
 
@@ -201,27 +229,30 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.hiddenByContent = item.hidden;
     item.setAttribute("tooltiptext", option.tooltip);
 
-    let customOptionStylingUsed = false;
+    let ruleBody = "";
     if (option.backgroundColor &&
         option.backgroundColor != "transparent" &&
         option.backgroundColor != uaBackgroundColor) {
-      item.style.backgroundColor = option.backgroundColor;
-      customOptionStylingUsed = true;
+      ruleBody = `background-color: ${option.backgroundColor};`;
     }
 
     if (option.color &&
         option.color != uaColor) {
-      item.style.color = option.color;
-      customOptionStylingUsed = true;
+      ruleBody += `color: ${option.color};`;
     }
 
-    if (customOptionStylingUsed) {
+    if (ruleBody) {
+      sheet.insertRule(`${item.localName}:nth-child(${nthChildIndex}):not([_moz-menuactive="true"]) {
+        ${ruleBody}
+      }`, 0);
+
       item.setAttribute("customoptionstyling", "true");
     } else {
       item.removeAttribute("customoptionstyling");
     }
 
     element.appendChild(item);
+    nthChildIndex++;
 
     // A disabled optgroup disables all of its child options.
     let isDisabled = isGroupDisabled || option.disabled;
@@ -230,9 +261,10 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     }
 
     if (isOptGroup) {
-      populateChildren(menulist, option.children, selectedIndex, zoom,
-                       uaBackgroundColor, uaColor,
-                       item, isDisabled, adjustedTextSize, false);
+      nthChildIndex =
+        populateChildren(menulist, option.children, selectedIndex, zoom,
+                         uaBackgroundColor, uaColor, sheet,
+                         item, isDisabled, adjustedTextSize, false);
     } else {
       if (option.index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
@@ -308,6 +340,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     element.insertBefore(searchbox, element.childNodes[0]);
   }
 
+  return nthChildIndex;
 }
 
 function onSearchInput() {

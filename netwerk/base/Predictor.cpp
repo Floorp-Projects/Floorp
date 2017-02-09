@@ -1352,7 +1352,9 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-  rv = loadInfo->SetOriginAttributes(originAttributes);
+  if (loadInfo) {
+    rv = loadInfo->SetOriginAttributes(originAttributes);
+  }
 
   if (NS_FAILED(rv)) {
     PREDICTOR_LOG(("    Set originAttributes into loadInfo failed rv=0x%X", rv));
