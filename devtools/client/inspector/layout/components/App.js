@@ -28,6 +28,7 @@ const App = createClass({
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+    showBoxModelProperties: PropTypes.bool.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,

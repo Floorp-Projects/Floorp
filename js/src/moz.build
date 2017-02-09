@@ -226,6 +226,7 @@ UNIFIED_SOURCES += [
     'jit/C1Spewer.cpp',
     'jit/CacheIR.cpp',
     'jit/CacheIRCompiler.cpp',
+    'jit/CacheIRSpewer.cpp',
     'jit/CodeGenerator.cpp',
     'jit/CompileWrappers.cpp',
     'jit/Disassembler.cpp',

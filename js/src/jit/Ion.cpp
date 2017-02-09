@@ -510,8 +510,8 @@ static bool
 LinkCodeGen(JSContext* cx, IonBuilder* builder, CodeGenerator *codegen)
 {
     RootedScript script(cx, builder->script());
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+    TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
@@ -575,9 +575,10 @@ jit::LinkIonScript(JSContext* cx, HandleScript calleeScript)
 }
 
 uint8_t*
-jit::LazyLinkTopActivation(JSContext* cx)
+jit::LazyLinkTopActivation()
 {
     // First frame should be an exit frame.
+    JSContext* cx = TlsContext.get();
     JitFrameIterator it(cx);
     LazyLinkExitFrameLayout* ll = it.exitFrame()->as<LazyLinkExitFrameLayout>();
     RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
@@ -634,13 +635,6 @@ JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt)
 {
     if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable())
         rt->jitRuntime()->getJitcodeGlobalTable()->sweep(rt);
-}
-
-void
-JitCompartment::trace(JSTracer* trc, JSCompartment* compartment)
-{
-    // Free temporary OSR buffer.
-    trc->runtime()->contextFromMainThread()->freeOsrTempData();
 }
 
 void
@@ -1260,7 +1254,7 @@ IonScript::Destroy(FreeOp* fop, IonScript* script)
      *
      * Defer freeing any allocated blocks until after the next minor GC.
      */
-    script->fallbackStubSpace_.freeAllAfterMinorGC(fop->runtime());
+    script->fallbackStubSpace_.freeAllAfterMinorGC(script->method()->zone());
 
     fop->delete_(script);
 }
@@ -1515,11 +1509,7 @@ OptimizeMIR(MIRGenerator* mir)
 {
     MIRGraph& graph = mir->graph();
     GraphSpewer& gs = mir->graphSpewer();
-    TraceLoggerThread* logger;
-    if (GetJitContext()->onMainThread())
-        logger = TraceLoggerForMainThread(GetJitContext()->runtime);
-    else
-        logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
     if (mir->shouldCancel("Start"))
         return false;
@@ -1954,11 +1944,7 @@ GenerateLIR(MIRGenerator* mir)
     MIRGraph& graph = mir->graph();
     GraphSpewer& gs = mir->graphSpewer();
 
-    TraceLoggerThread* logger;
-    if (GetJitContext()->onMainThread())
-        logger = TraceLoggerForMainThread(GetJitContext()->runtime);
-    else
-        logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
 
     LIRGraph* lir = mir->alloc().lifoAlloc()->new_<LIRGraph>(&graph);
     if (!lir || !lir->init())
@@ -2037,11 +2023,7 @@ GenerateLIR(MIRGenerator* mir)
 CodeGenerator*
 GenerateCode(MIRGenerator* mir, LIRGraph* lir)
 {
-    TraceLoggerThread* logger;
-    if (GetJitContext()->onMainThread())
-        logger = TraceLoggerForMainThread(GetJitContext()->runtime);
-    else
-        logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog log(logger, TraceLogger_GenerateCode);
 
     CodeGenerator* codegen = js_new<CodeGenerator>(mir, lir);
@@ -2191,8 +2173,8 @@ IonCompile(JSContext* cx, JSScript* script,
            BaselineFrame* baselineFrame, jsbytecode* osrPc,
            bool recompile, OptimizationLevel optimizationLevel)
 {
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
+    TraceLoggerEvent event(TraceLogger_AnnotateScripts, script);
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
