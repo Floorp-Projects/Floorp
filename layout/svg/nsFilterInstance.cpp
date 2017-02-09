@@ -186,20 +186,15 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   }
 
   // Compute user space to filter space transforms.
-  nsresult rv = ComputeUserSpaceToFilterSpaceScale();
-  if (NS_FAILED(rv)) {
+  if (!ComputeUserSpaceToFilterSpaceScale()) {
     return;
   }
 
-  gfxRect targetBBoxInFilterSpace = UserSpaceToFilterSpace(mTargetBBox);
-  targetBBoxInFilterSpace.RoundOut();
-  if (!gfxUtils::GfxRectToIntRect(targetBBoxInFilterSpace, &mTargetBBoxInFilterSpace)) {
-    // The target's bbox is way too big if there is float->int overflow.
+  if (!ComputeTargetBBoxInFilterSpace()) {
     return;
   }
 
   // Get various transforms:
-
   gfxMatrix filterToUserSpace(mFilterSpaceToUserSpaceScale.width, 0.0f,
                               0.0f, mFilterSpaceToUserSpaceScale.height,
                               0.0f, 0.0f);
@@ -222,8 +217,8 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mTargetBounds.UnionRect(mTargetBBoxInFilterSpace, targetBounds);
 
   // Build the filter graph.
-  rv = BuildPrimitives(aFilterChain, aTargetFrame, aFilterInputIsTainted);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(BuildPrimitives(aFilterChain, aTargetFrame,
+                                aFilterInputIsTainted))) {
     return;
   }
 
@@ -234,7 +229,39 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mInitialized = true;
 }
 
-nsresult
+bool
+nsFilterInstance::ComputeTargetBBoxInFilterSpace()
+{
+  gfxRect targetBBoxInFilterSpace = UserSpaceToFilterSpace(mTargetBBox);
+  targetBBoxInFilterSpace.RoundOut();
+  if (!gfxUtils::GfxRectToIntRect(targetBBoxInFilterSpace,
+                                  &mTargetBBoxInFilterSpace)) {
+    // The target's bbox is way too big if there is float->int overflow.
+    return false;
+  }
+
+  if (!mTargetFrame || !mTargetFrame->IsFrameOfType(nsIFrame::eSVG)) {
+    return true;
+  }
+
+  // SVG graphic elements will always be clipped by svg::svg element, so we
+  // should clip mTargetBBoxInFilterSpace by the bounded parent SVG frame
+  // anyway to shrink the size of surface that we are going to create later in
+  // BuildSourcePaint and BuildSourceImage.
+  MOZ_ASSERT(mTargetFrame->IsFrameOfType(nsIFrame::eSVG));
+  nsIFrame* svgFrame = nsSVGUtils::GetNearestSVGParent(mTargetFrame);
+  if (svgFrame) {
+    nscoord A2D = svgFrame->PresContext()->AppUnitsPerCSSPixel();
+    nsIntRect bounds =
+      svgFrame->GetVisualOverflowRect().ToOutsidePixels(A2D);
+
+    mTargetBBoxInFilterSpace = mTargetBBoxInFilterSpace.Intersect(bounds);
+  }
+
+  return true;
+}
+
+bool
 nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
   gfxMatrix canvasTransform;
@@ -243,7 +270,7 @@ nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
     if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
         mUserSpaceToFilterSpaceScale.height <= 0.0f) {
       // Nothing should be rendered.
-      return NS_ERROR_FAILURE;
+      return false;
     }
   } else {
     mUserSpaceToFilterSpaceScale = gfxSize(1.0, 1.0);
@@ -252,7 +279,7 @@ nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
   mFilterSpaceToUserSpaceScale =
     gfxSize(1.0f / mUserSpaceToFilterSpaceScale.width,
             1.0f / mUserSpaceToFilterSpaceScale.height);
-  return NS_OK;
+  return true;
 }
 
 gfxRect
