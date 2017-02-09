@@ -1014,12 +1014,8 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
     printf("%s\n", nsCSSProps::GetStringValue(p.mProperty).get());
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
-      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mFromValue.mGecko,
-                                                    fromValue);
-      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mToValue.mGecko,
-                                                    toValue);
+      s.mFromValue.SerializeSpecifiedValue(p.mProperty, fromValue);
+      s.mToValue.SerializeSpecifiedValue(p.mProperty, toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey,
              NS_ConvertUTF16toUTF8(fromValue).get(),
              NS_ConvertUTF16toUTF8(toValue).get());
@@ -1088,9 +1084,7 @@ CreatePropertyValue(nsCSSPropertyID aProperty,
 
   if (!aValue.IsNull()) {
     nsString stringValue;
-    DebugOnly<bool> uncomputeResult =
-      StyleAnimationValue::UncomputeValue(aProperty, aValue.mGecko, stringValue);
-    MOZ_ASSERT(uncomputeResult, "failed to uncompute value");
+    aValue.SerializeSpecifiedValue(aProperty, stringValue);
     aResult.mValue.Construct(stringValue);
   }
 

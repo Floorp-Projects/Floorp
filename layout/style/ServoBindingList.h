@@ -127,6 +127,10 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
 SERVO_BINDING_FUNC(Servo_AnimationValues_Uncompute,
                    RawServoDeclarationBlockStrong,
                    RawServoAnimationValueBorrowedListBorrowed value)
+SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
+                   RawServoAnimationValueBorrowed value,
+                   nsCSSPropertyID property,
+                   nsAString* buffer)
 SERVO_BINDING_FUNC(Servo_AnimationValues_GetOpacity, float,
                    RawServoAnimationValueBorrowed value)
 SERVO_BINDING_FUNC(Servo_AnimationValues_GetTransform, void,
