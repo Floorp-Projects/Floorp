@@ -22,7 +22,7 @@
 // the non-MOZ_USE_RENDER_THREAD code.
 // In the mean time, if you are working on making the render thread work, change
 // define below to true instead of false.
-#define MOZ_USE_RENDER_THREAD false
+#define MOZ_USE_RENDER_THREAD true
 
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
