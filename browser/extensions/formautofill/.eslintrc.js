@@ -265,11 +265,6 @@ module.exports = { // eslint-disable-line no-undef
     // Allow using TODO/FIXME comments.
     "no-warning-comments": "off",
 
-    // Don't require method and property shorthand syntax for object literals.
-    // We use this in the code a lot, but not consistently, and this seems more
-    // like something to check at code review time.
-    "object-shorthand": "off",
-
     // Allow more than one variable declaration per function.
     "one-var": "off",
 
