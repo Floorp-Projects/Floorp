@@ -573,7 +573,8 @@ nsOSHelperAppService::GetExtensionsAndDescriptionFromMimetypesFile(const nsAStri
           aDescription.Assign(Substring(descriptionStart, descriptionEnd));
           mimeFile->Close();
           return NS_OK;
-        } else if (NS_FAILED(rv)) {
+        }
+        if (NS_FAILED(rv)) {
           LOG(("Failed to parse entry: %s\n", NS_LossyConvertUTF16toASCII(entry).get()));
         }
 
@@ -1113,11 +1114,11 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
               // get out of here
               mailcapFile->Close();
               return NS_OK;
-            } else { // pretend that this match never happened
-              aDescription.Truncate();
-              aMozillaFlags.Truncate();
-              aHandler.Truncate();
             }
+            // pretend that this match never happened
+            aDescription.Truncate();
+            aMozillaFlags.Truncate();
+            aHandler.Truncate();
           }
         }
         // zero out the entry for the next cycle
