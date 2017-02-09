@@ -4434,6 +4434,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     if (br->mBorderStyles[i] == NS_STYLE_BORDER_STYLE_SOLID) {
       mColors[i] = ToDeviceColor(br->mBorderColors[i]);
       mWidths[i] = br->mBorderWidths[i];
+      mBorderStyles[i] = br->mBorderStyles[i];
     } else {
       mWidths[i] = 0;
     }
@@ -4459,6 +4460,7 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetCornerRadii({ LayerSize(), LayerSize(), LayerSize(), LayerSize() });
   layer->SetColors(mColors);
   layer->SetWidths(mWidths);
+  layer->SetStyles(mBorderStyles);
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
                                                       aContainerParameters.mOffset.y, 0));
   return layer.forget();
