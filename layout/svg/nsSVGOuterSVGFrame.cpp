@@ -838,7 +838,7 @@ nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 }
 
 //----------------------------------------------------------------------
-// nsISVGChildFrame methods:
+// nsSVGDisplayableFrame methods:
 
 DrawResult
 nsSVGOuterSVGFrame::PaintSVG(gfxContext& aContext,

@@ -14,7 +14,7 @@
 #include "nsGridContainerFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsIFrame.h"
-#include "nsISVGChildFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsImageFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
