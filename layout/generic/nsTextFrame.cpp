@@ -1784,6 +1784,23 @@ GetSpacingFlags(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   return nonStandardSpacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
 }
 
+static bool
+IsBaselineAligned(const nsStyleCoord& aCoord)
+{
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Enumerated:
+      return aCoord.GetIntValue() == NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    case eStyleUnit_Coord:
+      return aCoord.GetCoordValue() == 0;
+    case eStyleUnit_Percent:
+      return aCoord.GetPercentValue() == 0;
+    case eStyleUnit_Calc:
+      return aCoord.GetCalcValue()->IsDefinitelyZero();
+    default:
+      return false;
+  }
+}
+
 bool
 BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
@@ -1813,6 +1830,10 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (textStyle1->NewlineIsSignificant(aFrame1) && HasTerminalNewline(aFrame1))
     return false;
 
+  if (!IsBaselineAligned(sc1->StyleDisplay()->mVerticalAlign)) {
+    return false;
+  }
+
   if (aFrame1->GetContent() == aFrame2->GetContent() &&
       aFrame1->GetNextInFlow() != aFrame2) {
     // aFrame2 must be a non-fluid continuation of aFrame1. This can happen
@@ -1828,6 +1849,10 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   const nsStyleText* textStyle2 = sc2->StyleText();
   if (sc1 == sc2)
     return true;
+
+  if (!IsBaselineAligned(sc1->StyleDisplay()->mVerticalAlign)) {
+    return false;
+  }
 
   const nsStyleFont* fontStyle1 = sc1->StyleFont();
   const nsStyleFont* fontStyle2 = sc2->StyleFont();
