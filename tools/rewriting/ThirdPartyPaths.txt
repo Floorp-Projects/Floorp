@@ -39,7 +39,7 @@ media/libtremor/
 media/libvorbis/
 media/libvpx/
 media/libyuv/
-media/mtransport/
+media/mtransport/third_party/
 media/openmax_dl/
 media/pocketsphinx/
 media/sphinxbase/
