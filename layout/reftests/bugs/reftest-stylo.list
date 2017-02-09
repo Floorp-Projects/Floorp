@@ -95,24 +95,24 @@ fails == 84400-2.html 84400-2.html
 fails == 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
 == 98223-2.html 98223-2.html
-fails == 99850-1a.html 99850-1a.html
-random == 99850-1b.html 99850-1b.html
+# == 99850-1a.html 99850-1a.html # bug 1337695
+# == 99850-1b.html 99850-1b.html # bug 1337695
 fails == 99850-1c.html 99850-1c.html
-fails == 99850-1d.html 99850-1d.html
-== 105030-1.html 105030-1.html
+# == 99850-1d.html 99850-1d.html # bug 1337695
+asserts-if(stylo,8) == 105030-1.html 105030-1.html # bug 1324661
 == 109735-1.html 109735-1.html
 == 116882-1.html 116882-1.html
 == 120834-1a.html 120834-1a.html
 == 120834-2a.html 120834-2a.html
 # == 120834-2b.html 120834-2b.html
-fails == 120834-2c.html 120834-2c.html
-fails == 120834-2d.html 120834-2d.html
-fails == 120834-2e.html 120834-2e.html
-fails == 120834-2f.html 120834-2f.html
-fails == 120834-2g.html 120834-2g.html
-fails == 120834-2h.html 120834-2h.html
-fails == 120834-2i.html 120834-2i.html
-fails == 120834-2j.html 120834-2j.html
+== 120834-2c.html 120834-2c.html
+== 120834-2d.html 120834-2d.html
+== 120834-2e.html 120834-2e.html
+== 120834-2f.html 120834-2f.html
+== 120834-2g.html 120834-2g.html
+== 120834-2h.html 120834-2h.html
+== 120834-2i.html 120834-2i.html
+== 120834-2j.html 120834-2j.html
 fails == 124903-1.html 124903-1.html
 == 128896.html 128896.html
 == 130767-1.html 130767-1.html
@@ -144,7 +144,7 @@ fails == 163504-1a.html 163504-1a.html
 fails == 163504-1b.html 163504-1b.html
 fails == 163504-2a.html 163504-2a.html
 fails == 163504-2b.html 163504-2b.html
-== 167496-1.html 167496-1.html
+asserts-if(stylo,4) == 167496-1.html 167496-1.html # bug 1324661
 == 169749-1.html 169749-1.html
 == 172073-1.html 172073-1.html
 fails == 175190-1.html 175190-1.html
@@ -211,7 +211,7 @@ fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1.svg
 fails == 223809-1.html 223809-1.html
 == 228856-1.html 228856-1.html
 == 228856-2.html 228856-2.html
-== 229591-1.html 229591-1.html
+asserts-if(stylo,4) == 229591-1.html 229591-1.html # bug 1324661
 # == 231823-1.html 231823-1.html
 == 232990-1a.xhtml 232990-1a.xhtml
 == 232990-1b.xhtml 232990-1b.xhtml
@@ -253,14 +253,14 @@ fails == 243519-1.html 243519-1.html
 == 243519-3.html 243519-3.html
 == 243519-4a.html 243519-4a.html
 == 243519-4b.html 243519-4b.html
-== 243519-4c.html 243519-4c.html
-== 243519-4d.html 243519-4d.html
+asserts-if(stylo,2) == 243519-4c.html 243519-4c.html # bug 1324661
+asserts-if(stylo,1) == 243519-4d.html 243519-4d.html # bug 1324661
 == 243519-4e.html 243519-4e.html
 == 243519-4f.html 243519-4f.html
 == 243519-5a.html 243519-5a.html
-== 243519-5b.html 243519-5b.html
+asserts-if(stylo,2) == 243519-5b.html 243519-5b.html # bug 1324661
 == 243519-5c.html 243519-5c.html
-== 243519-5d.html 243519-5d.html
+asserts-if(stylo,1) == 243519-5d.html 243519-5d.html # bug 1324661
 == 243519-6.html 243519-6.html
 fails == 243519-7.html 243519-7.html
 == 243519-8.svg 243519-8.svg
@@ -313,7 +313,7 @@ fails == 291078-2.html 291078-2.html
 == 291262-1.html 291262-1.html
 # == 294306-1.html 294306-1.html
 # == 294306-1.html 294306-1.html
-fails == 296361-1.html 296361-1.html
+asserts-if(stylo,4) fails == 296361-1.html 296361-1.html # bug 1324661
 == 296904-1.html 296904-1.html
 fails == 299136-1.html 299136-1.html
 == 299837-1.html 299837-1.html
@@ -394,13 +394,13 @@ fails == 315920-18f.html 315920-18f.html
 fails == 315920-18g.html 315920-18g.html
 == 315920-18h.html 315920-18h.html
 == 315920-18i.html 315920-18i.html
-fails == 315920-19.html 315920-19.html
+== 315920-19.html 315920-19.html
 == 315920-20.svg 315920-20.svg
 == 315920-21.svg 315920-21.svg
 fails == 315920-22.html 315920-22.html
 fails == 315920-23.html 315920-23.html
-fails == 315920-24.html 315920-24.html
-fails == 315920-25.html 315920-25.html
+== 315920-24.html 315920-24.html
+== 315920-25.html 315920-25.html
 fails == 315920-26.html 315920-26.html
 fails == 315920-27.html 315920-27.html
 fails == 315920-28a.html 315920-28a.html
@@ -425,8 +425,8 @@ fails == 315920-30.html 315920-30.html
 fails == 323656-3.html 323656-3.html
 == 323656-4.html 323656-4.html
 == 323656-5.svg 323656-5.svg
-== 323656-6.html 323656-6.html
-fails == 325292-1.html 325292-1.html
+fails asserts-if(stylo,12) == 323656-6.html 323656-6.html # bug 1324661
+fails asserts-if(stylo,4) == 325292-1.html 325292-1.html
 fails == 325486-1.html 325486-1.html
 == 328111-1.html 328111-1.html
 random == 328829-1.xhtml 328829-1.xhtml
@@ -473,11 +473,11 @@ fails == 348516-1.html 348516-1.html
 # == 348516-2.html 348516-2.html
 # == 348516-2.html 348516-2.html
 fails == 348516-3.html 348516-3.html
-== 348597-1.html 348597-1.html
+asserts-if(stylo,6) == 348597-1.html 348597-1.html # bug 1324661
 == 348809-1a.html 348809-1a.html
 == 348809-1b.html 348809-1b.html
-fails == 348809-1c.html 348809-1c.html
-fails == 348809-1d.html 348809-1d.html
+== 348809-1c.html 348809-1c.html
+== 348809-1d.html 348809-1d.html
 == 348809-1e.html 348809-1e.html
 == 348809-1f.html 348809-1f.html
 fails == 348809-2a.html 348809-2a.html
@@ -525,7 +525,7 @@ fails == 352980-3f.html 352980-3f.html
 == 355548-3.xml 355548-3.xml
 == 355548-4.xml 355548-4.xml
 == 355548-5.xml 355548-5.xml
-== 356774-1.html 356774-1.html
+asserts-if(stylo,4) == 356774-1.html 356774-1.html # bug 1324661
 == 356775-1.html 356775-1.html
 fails == 359869-1.html 359869-1.html
 fails == 359903-1.html 359903-1.html
@@ -595,10 +595,10 @@ fails == 367504-margin-1.html 367504-margin-1.html
 fails == 367504-float-1.html 367504-float-1.html
 == 367612-1a.html 367612-1a.html
 == 367612-1b.html 367612-1b.html
-fails == 367612-1c.html 367612-1c.html
+== 367612-1c.html 367612-1c.html
 == 367612-1d.html 367612-1d.html
 == 367612-1e.html 367612-1e.html
-fails == 367612-1f.html 367612-1f.html
+== 367612-1f.html 367612-1f.html
 == 367612-1g.html 367612-1g.html
 fails == 368020-1.html 368020-1.html
 fails == 368020-2.html 368020-2.html
@@ -673,13 +673,13 @@ random-if(d2d) == 374719-1.xul 374719-1.xul
 == 374927-1.html 374927-1.html
 fails == 375508-1.html 375508-1.html
 == 375716-1.html 375716-1.html
-== 375827-1.html 375827-1.html
+asserts-if(stylo,6) == 375827-1.html 375827-1.html # bug 1324661
 fails == 376375-1.html 376375-1.html
 == 376484-1.html 376484-1.html
 == 376532-1.html 376532-1.html
 == 376532-2.html 376532-2.html
 == 376532-3.html 376532-3.html
-fails asserts-if(stylo,2) == 377603-1.html 377603-1.html # bug 1324661
+fails asserts-if(stylo,4) == 377603-1.html 377603-1.html # bug 1324661
 == 377918.html 377918.html
 == 378535-1.html 378535-1.html
 fails == 378933-1.html 378933-1.html
@@ -709,7 +709,7 @@ fails == 379361-3.html 379361-3.html
 fails == 380004-1.html 380004-1.html
 fails == 380227-1.html 380227-1.html
 fails == 380825-1.html 380825-1.html
-== 380842-1.html 380842-1.html
+fails == 380842-1.html 380842-1.html
 == 381130-1.html 381130-1.html
 fails == 381507-1.html 381507-1.html
 == 381746-1.html 381746-1.html
@@ -717,7 +717,7 @@ fails == 382600-1.html 382600-1.html
 fails == 382916-1.html 382916-1.html
 fails == 383035-1.html 383035-1.html
 fails == 383035-2.html 383035-2.html
-fails == 383488-1.html 383488-1.html
+== 383488-1.html 383488-1.html
 == 383551-1.html 383551-1.html
 fails == 383883-1.html 383883-1.html
 fails == 383883-2.html 383883-2.html
@@ -739,9 +739,9 @@ fails == 385823-2b.html 385823-2b.html
 fails == 385823-2c.html 385823-2c.html
 fails == 385870-1.html 385870-1.html
 fails == 385870-2.html 385870-2.html
-== 386014-1a.html 386014-1a.html
-== 386014-1b.html 386014-1b.html
-== 386014-1c.html 386014-1c.html
+fails asserts-if(stylo,3) == 386014-1a.html 386014-1a.html # bug 1324661
+fails asserts-if(stylo,6) == 386014-1b.html 386014-1b.html # bug 1324661
+fails == 386014-1c.html 386014-1c.html
 fails == 386065-1.html 386065-1.html
 == 386065-2.html 386065-2.html
 fails test-pref(layout.float-fragments-inside-column.enabled,false) fails == 386147-1.html 386147-1.html
@@ -771,11 +771,11 @@ fails == 386470-1b.html 386470-1b.html
 fails == 389074-1.html 389074-1.html
 # == 389224-1.html 389224-1.html
 # == 389224-2.html 389224-2.html
-fails asserts-if(stylo,5) == 389468-1.html 389468-1.html # bug 1324661
+fails asserts-if(stylo,9) == 389468-1.html 389468-1.html # bug 1324661
 == 389623-1.html 389623-1.html
 == 389636-1.html 389636-1.html
 # == 389924-1a.html 389924-1a.html
-== 389924-1b.html 389924-1b.html
+fails asserts-if(stylo,10) == 389924-1b.html 389924-1b.html # bug 1324661
 # == 389924-1a.html 389924-1a.html
 == 390318-1a.html 390318-1a.html
 == 390318-1b.html 390318-1b.html
@@ -807,7 +807,7 @@ fails == 393490-1.html 393490-1.html
 == 393760-1.xml 393760-1.xml
 fuzzy-if(skiaContent,1,500) == 393760-2.xml 393760-2.xml
 == 394111-1.html 394111-1.html
-fails == 394534-1.html 394534-1.html
+== 394534-1.html 394534-1.html
 # == 394676-1.xhtml 394676-1.xhtml
 fails == 395107-1.html 395107-1.html
 fails == 395107-2.html 395107-2.html
@@ -832,7 +832,7 @@ fails == 398682-1.html 398682-1.html
 == 399209-1.html 399209-1.html
 == 399209-2.html 399209-2.html
 fails == 399258-1.html 399258-1.html
-== 399384-1.html 399384-1.html
+fails == 399384-1.html 399384-1.html
 random-if(gtkWidget) == 399636-standards-css.html 399636-standards-css.html
 random-if(gtkWidget) == 399636-standards-html.html 399636-standards-html.html
 random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-css.html
@@ -879,7 +879,7 @@ fails == 403249-2b.html 403249-2b.html
 fails == 403455-1.html 403455-1.html
 == 403505-1.xml 403505-1.xml
 #== 403519-1.html 403519-1.html
-== 403519-2.html 403519-2.html
+asserts-if(stylo,4) == 403519-2.html 403519-2.html # bug 1324661
 fails == 403656-1.html 403656-1.html
 fails == 403656-2.html 403656-2.html
 fails == 403656-3.html 403656-3.html
@@ -914,8 +914,8 @@ fails == 405577-1.html 405577-1.html
 # == 405952-1.html 405952-1.html
 == 406484-1.html 406484-1.html
 == 406568-1.html 406568-1.html
-fails == 407016-1-a.html 407016-1-a.html
-fails == 407016-1-b.html 407016-1-b.html
+fails asserts-if(stylo,8) == 407016-1-a.html 407016-1-a.html # bug 1324661
+fails asserts-if(stylo,8) == 407016-1-b.html 407016-1-b.html # bug 1324661
 fails == 407078-1.html 407078-1.html
 fails == 407095-1.html 407095-1.html
 fails == 407111-1.html 407111-1.html
@@ -1018,7 +1018,7 @@ fails asserts-if(stylo,0-4) == 421632-1.html 421632-1.html # bug 1335314
 fails == 421710-1.html 421710-1.html
 fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1.xml
 == 421955-1.html 421955-1.html
-fails == 422249-1.html 422249-1.html
+fails asserts-if(stylo,2) == 422249-1.html 422249-1.html # bug 1324661
 fails == 422394-1.html 422394-1.html
 fails == 422678-1.html 422678-1.html
 == 423130-1.html 423130-1.html
@@ -1040,8 +1040,8 @@ fails == 424236-8.html 424236-8.html
 fails == 424236-9.html 424236-9.html
 == 424236-10.html 424236-10.html
 fails == 424236-11.html 424236-11.html
-== 424434-1.html 424434-1.html
-fails == 424465-1.html 424465-1.html
+asserts-if(stylo,4) == 424434-1.html 424434-1.html # bug 1324661
+fails asserts-if(stylo,4) == 424465-1.html 424465-1.html # bug 1324661
 == 424631-1.html 424631-1.html
 == 424710-1.html 424710-1.html
 fails == 424766-1.html 424766-1.html
@@ -1056,7 +1056,7 @@ asserts(3-6) == 427017-1.xhtml 427017-1.xhtml
 == 427129-table-caption.html 427129-table-caption.html
 == 427370-1.html 427370-1.html
 fails == 427730-1.html 427730-1.html
-== 428278.html 428278.html
+asserts-if(stylo,6) == 428278.html 428278.html # bug 1324661
 == 428423-1a.html 428423-1a.html
 == 428423-1b.html 428423-1b.html
 fails == 428521-1a.html 428521-1a.html
@@ -1164,8 +1164,8 @@ fails random asserts-if(stylo,2) == 445004-1.html 445004-1.html # bug 1324683
 == 445142-1a.html 445142-1a.html
 == 445142-1b.html 445142-1b.html
 == 445142-1c.html 445142-1c.html
-== 445142-2a.html 445142-2a.html
-== 445142-2b.html 445142-2b.html
+asserts-if(stylo,72) == 445142-2a.html 445142-2a.html # bug 1324661
+asserts-if(stylo,72) == 445142-2b.html 445142-2b.html # bug 1324661
 fails-if(usesRepeatResampling) == 446100-1a.html 446100-1a.html
 fails-if(Android) fails-if(usesRepeatResampling) == 446100-1b.html 446100-1b.html
 fails-if(Android) fails-if(usesRepeatResampling) == 446100-1c.html 446100-1c.html
@@ -1187,8 +1187,8 @@ fails == 449362-1.html 449362-1.html
 == 449519-1.html 449519-1.html
 == 450670-1.html 450670-1.html
 fails == 451168-1.html 451168-1.html
-== 451876-1.html 451876-1.html
-== 451876-2.html 451876-2.html
+asserts-if(stylo,2) == 451876-1.html 451876-1.html # bug 1324661
+asserts-if(stylo,2) == 451876-2.html 451876-2.html # bug 1324661
 == 452915-1.html 452915-1.html
 == 452964-1.html 452964-1.html
 # == 454361.html 454361.html
@@ -1330,8 +1330,8 @@ fails == 482592-1b.xhtml 482592-1b.xhtml
 asserts-if(stylo,1) == 482659-1c.html 482659-1c.html # bug 1324683
 asserts-if(stylo,1) == 482659-1d.html 482659-1d.html # bug 1324683
 == 483565.xul 483565.xul
-== 484256-1.html 484256-1.html
-== 484256-2.html 484256-2.html
+asserts-if(stylo,4) == 484256-1.html 484256-1.html # bug 1324661
+asserts-if(stylo,4) == 484256-2.html 484256-2.html # bug 1324661
 == 485012-1.html 485012-1.html
 fails == 485275-1.html 485275-1.html
 fails == 485275-1.svg 485275-1.svg
@@ -1553,7 +1553,7 @@ fails needs-focus == 568441.html 568441.html
 == 571281-1a.html 571281-1a.html
 == 571281-1b.html 571281-1b.html
 == 571281-1c.html 571281-1c.html
-fails == 571347-1a.html 571347-1a.html
+== 571347-1a.html 571347-1a.html
 # == 571347-1b.html 571347-1b.html
 # == 571347-2a.html 571347-2a.html
 # == 571347-2b.html 571347-2b.html
@@ -1618,7 +1618,7 @@ fails == 602200-4.html 602200-4.html
 == 603423-1.html 603423-1.html
 fails == 604737.html 604737.html
 fails == 605138-1.html 605138-1.html
-fails == 605157-1.xhtml 605157-1.xhtml
+== 605157-1.xhtml 605157-1.xhtml
 == 607267-1.html 607267-1.html
 fails == 608636-1.html 608636-1.html
 == 608756-1a.html 608756-1a.html
@@ -1680,7 +1680,7 @@ fails == 652775-1.html 652775-1.html
 fails == 653930-1.html 653930-1.html
 fails HTTP(..) == 654057-1.html 654057-1.html
 fails == 654950-1.html 654950-1.html
-fails == 655549-1.html 655549-1.html
+== 655549-1.html 655549-1.html
 == 655836-1.html 655836-1.html
 fails == 656875.html 656875.html
 fails == 658952.html 658952.html
@@ -1758,7 +1758,7 @@ fails == 816458-1.html 816458-1.html
 fails == 816948-1.html 816948-1.html
 == 817019-1.html 817019-1.html
 fails == 818276-1.html 818276-1.html
-fails == 825999.html 825999.html
+fails asserts-if(stylo,0-4) == 825999.html 825999.html # bug 1324661
 == 827577-1a.html 827577-1a.html
 == 827577-1b.html 827577-1b.html
 fails == 827799-1.html 827799-1.html
@@ -1947,7 +1947,7 @@ fails == 1202512-2.html 1202512-2.html
 fails == 1209994-2.html 1209994-2.html
 == 1209994-3.html 1209994-3.html
 fails == 1209994-4.html 1209994-4.html
-fails == 1222226-1.html 1222226-1.html
+== 1222226-1.html 1222226-1.html
 fails pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278.html
 == 1230466.html 1230466.html
 == 1238243-1.html 1238243-1.html
