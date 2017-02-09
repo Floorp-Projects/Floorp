@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="reftest-wait"
+        onload="tweak()">
+  <style xmlns="http://www.w3.org/1999/xhtml">
+    <![CDATA[
+    panelview {
+      border: 1px solid black;
+      background: green;
+      display: flex;
+      height: 50px;
+    }
+    ]]>
+  </style>
+  <script>
+    <![CDATA[
+    function tweak() {
+      var tweakMe = document.getElementById("tweakMe");
+      tweakMe.style.width = "100px";
+      document.documentElement.className = "";
+    }
+    ]]>
+  </script>
+  <hbox>
+    <panelview id="tweakMe"></panelview>
+  </hbox>
+</window>
