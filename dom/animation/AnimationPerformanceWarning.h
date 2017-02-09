@@ -20,7 +20,6 @@ namespace mozilla {
 struct AnimationPerformanceWarning
 {
   enum class Type : uint8_t {
-    ContentTooSmall,
     ContentTooLarge,
     TransformBackfaceVisibilityHidden,
     TransformPreserve3D,

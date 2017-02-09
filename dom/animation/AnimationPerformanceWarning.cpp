@@ -33,13 +33,6 @@ AnimationPerformanceWarning::ToLocalizedString(
   const char* key = nullptr;
 
   switch (mType) {
-    case Type::ContentTooSmall:
-      MOZ_ASSERT(mParams && mParams->Length() == 2,
-                 "Parameter's length should be 2 for ContentTooSmall");
-
-      return NS_SUCCEEDED(
-        ToLocalizedStringWithIntParams<2>(
-          "CompositorAnimationWarningContentTooSmall", aLocalizedString));
     case Type::ContentTooLarge:
       MOZ_ASSERT(mParams && mParams->Length() == 6,
                  "Parameter's length should be 6 for ContentTooLarge");
