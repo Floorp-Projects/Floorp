@@ -192,6 +192,19 @@ static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
 
+static bool
+CanNotifyObservers()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+#if defined(SPS_OS_android)
+  // Android ANR reporter uses the profiler off the main thread.
+  return NS_IsMainThread();
+#else
+  return true;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
 
@@ -1663,7 +1676,7 @@ profiler_start(int aProfileEntries, double aInterval,
 
   sIsProfiling = true;
 
-  if (Sampler::CanNotifyObservers()) {
+  if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       nsTArray<nsCString> featuresArray;
@@ -1749,7 +1762,7 @@ profiler_stop()
 
   sIsProfiling = false;
 
-  if (Sampler::CanNotifyObservers()) {
+  if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os)
       os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
@@ -1780,7 +1793,7 @@ profiler_pause()
   }
 
   gIsPaused = true;
-  if (Sampler::CanNotifyObservers()) {
+  if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->NotifyObservers(nullptr, "profiler-paused", nullptr);
@@ -1798,7 +1811,7 @@ profiler_resume()
   }
 
   gIsPaused = false;
-  if (Sampler::CanNotifyObservers()) {
+  if (CanNotifyObservers()) {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->NotifyObservers(nullptr, "profiler-resumed", nullptr);

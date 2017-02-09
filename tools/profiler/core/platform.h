@@ -222,19 +222,6 @@ public:
     UniquePlatformData;
   static UniquePlatformData AllocPlatformData(int aThreadId);
 
-  static bool CanNotifyObservers() {
-#ifdef MOZ_WIDGET_GONK
-    // We use profile.sh on b2g to manually select threads and options per process.
-    return false;
-#elif defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-    // Android ANR reporter uses the profiler off the main thread
-    return NS_IsMainThread();
-#else
-    MOZ_ASSERT(NS_IsMainThread());
-    return true;
-#endif
-  }
-
   void RegisterThread(ThreadInfo* aInfo);
 
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
