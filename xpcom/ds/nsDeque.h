@@ -39,7 +39,7 @@
 class nsDequeFunctor
 {
 public:
-  virtual void* operator()(void* aObject) = 0;
+  virtual void operator()(void* aObject) = 0;
   virtual ~nsDequeFunctor() {}
 };
 
