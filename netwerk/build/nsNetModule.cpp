@@ -348,9 +348,8 @@ WebSocketChannelConstructor(bool aSecure)
 
   if (aSecure) {
     return new WebSocketSSLChannel;
-  } else {
-    return new WebSocketChannel;
   }
+  return new WebSocketChannel;
 }
 
 #define WEB_SOCKET_HANDLER_CONSTRUCTOR(type, secure)  \

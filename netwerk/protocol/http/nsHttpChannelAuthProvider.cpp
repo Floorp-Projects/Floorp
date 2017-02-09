@@ -622,7 +622,7 @@ nsHttpChannelAuthProvider::GetCredentials(const char     *challenges,
 
                 break;
             }
-            else if (rv == NS_ERROR_IN_PROGRESS) {
+            if (rv == NS_ERROR_IN_PROGRESS) {
                 // authentication prompt has been invoked and result is
                 // expected asynchronously, save current challenge being
                 // processed and all remaining challenges to use later in
@@ -1370,7 +1370,7 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports *aContext,
                 mRemainingChallenges.Truncate();
                 return ContinueOnAuthAvailable(creds);
             }
-            else if (rv == NS_ERROR_IN_PROGRESS) {
+            if (rv == NS_ERROR_IN_PROGRESS) {
                 // GetCredentials successfully queued another authprompt for
                 // a challenge from the list, we are now waiting for the user
                 // to provide the credentials
