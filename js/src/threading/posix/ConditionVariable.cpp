@@ -120,13 +120,6 @@ js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
 }
 
 js::CVStatus
-js::ConditionVariable::wait_until(UniqueLock<Mutex>& lock,
-                                  const TimeStamp& abs_time)
-{
-  return wait_for(lock, abs_time - TimeStamp::Now());
-}
-
-js::CVStatus
 js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
                                 const TimeDuration& a_rel_time)
 {
