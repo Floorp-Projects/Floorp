@@ -406,29 +406,30 @@ public final class IntentHelper implements BundleEventListener {
 
     private void getHandlers(final GeckoBundle message, final EventCallback callback) {
         final Intent intent = getOpenURIIntent(activity,
-                                               message.getString("url"),
-                                               message.getString("mime"),
-                                               message.getString("action"),
-                                               message.getString("title"));
+                                               message.getString("url", ""),
+                                               message.getString("mime", ""),
+                                               message.getString("action", ""),
+                                               message.getString("title", ""));
         callback.sendSuccess(getHandlersForIntent(intent));
     }
 
     private void open(final GeckoBundle message) {
-        openUriExternal(message.getString("url"),
-                        message.getString("mime"),
-                        message.getString("packageName"),
-                        message.getString("className"),
-                        message.getString("action"),
-                        message.getString("title"), false);
+        openUriExternal(message.getString("url", ""),
+                        message.getString("mime", ""),
+                        message.getString("packageName", ""),
+                        message.getString("className", ""),
+                        message.getString("action", ""),
+                        message.getString("title", ""), false);
     }
 
     private void openForResult(final GeckoBundle message, final EventCallback callback) {
         Intent intent = getOpenURIIntent(activity,
-                                         message.getString("url"),
-                                         message.getString("mime"),
-                                         message.getString("action"),
-                                         message.getString("title"));
-        intent.setClassName(message.getString("packageName"), message.getString("className"));
+                                         message.getString("url", ""),
+                                         message.getString("mime", ""),
+                                         message.getString("action", ""),
+                                         message.getString("title", ""));
+        intent.setClassName(message.getString("packageName", ""),
+                            message.getString("className", ""));
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         final ResultHandler handler = new ResultHandler(callback);
