@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset=utf-8>
+<head>
+  <title>Bug 1308437 - setValueCurve should throw on non-finite elements</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function testInfiniteElement(audioContext, audioParam) {
+  // create value curve with infinite element
+  var arr = new Float32Array(5);
+  arr[0] = 0.5;
+  arr[1] = 1;
+  arr[2] = Infinity;
+  arr[3] = 1;
+  arr[4] = 0.5;
+
+  try {
+    audioParam.setValueCurveAtTime(arr, audioContext.currentTime(), 2);
+    ok(false, "We shouldn't be able to call setValueCurve with Infinity but we can");
+  } catch(e) {
+    ok(e instanceof TypeError, "TypeError is thrown");
+  }
+};
+
+function testNanElement(audioContext, audioParam) {
+  // create value curve with infinite element
+  var arr = new Float32Array(5);
+  arr[0] = 0.5;
+  arr[1] = 1;
+  arr[2] = NaN;
+  arr[3] = 1;
+  arr[4] = 0.5;
+
+  try {
+    audioParam.setValueCurveAtTime(arr, audioContext.currentTime(), 2);
+    ok(false, "We shouldn't be able to call setValueCurve with NaN but we can");
+  } catch(e) {
+    ok(e instanceof TypeError, "TypeError is thrown");
+  }
+};
+
+addLoadEvent(function() {
+  var audioContext = new AudioContext();
+  var gainNode = audioContext.createGain();
+
+  testInfiniteElement(audioContext, gainNode.gain);
+  testNanElement(audioContext, gainNode.gain);
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

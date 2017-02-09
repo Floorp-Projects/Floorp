@@ -399,6 +399,18 @@
   </script>
 
   <script>
+    /** Test for Bug 1275746 **/
+    SimpleTest.doesThrow(() => { var url = new URL("http:"); }, "http: is not a valid URL");
+    SimpleTest.doesThrow(() => { var url = new URL("http:///"); }, "http: is not a valid URL");
+
+    var url = new URL("file:");
+    is(url.href, "file:///", "Parsing file: should work.");
+
+    url = new URL("file:///");
+    is(url.href, "file:///", "Parsing file:/// should work.");
+  </script>
+
+  <script>
     var url = new URL("scheme:path/to/file?query#hash");
     is(url.href, "scheme:path/to/file?query#hash");
     is(url.pathname, "path/to/file");

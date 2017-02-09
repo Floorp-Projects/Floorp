@@ -192,7 +192,6 @@ add_task(function test_search_all_full_case_sensitive()
 {
   checkAllSearches({ hostname: "http://www.example.com" }, 1);
   checkAllSearches({ hostname: "http://www.example.com/" }, 0);
-  checkAllSearches({ hostname: "http://" }, 0);
   checkAllSearches({ hostname: "example.com" }, 0);
 
   checkAllSearches({ formSubmitURL: "http://www.example.com" }, 2);

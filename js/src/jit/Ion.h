@@ -87,11 +87,8 @@ class JitContext
     CompileRuntime* runtime;
     CompileCompartment* compartment;
 
-    bool onMainThread() const {
-        return runtime && runtime->onMainThread();
-    }
     bool hasProfilingScripts() const {
-        return runtime && !!runtime->profilingScripts();
+        return compartment && compartment->zone()->profilingScripts();
     }
 
     int getNextAssemblerId() {
@@ -178,7 +175,7 @@ void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
                             const AutoLockHelperThreadState& lock);
 
 void LinkIonScript(JSContext* cx, HandleScript calleescript);
-uint8_t* LazyLinkTopActivation(JSContext* cx);
+uint8_t* LazyLinkTopActivation();
 
 static inline bool
 IsIonEnabled(JSContext* cx)

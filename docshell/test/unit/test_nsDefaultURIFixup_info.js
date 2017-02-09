@@ -426,8 +426,6 @@ var testcases = [ {
     protocolChange: true,
   }, {
     input: "?'.com",
-    fixedURI: "http:///?%27.com",
-    alternateURI: "http://www..com/?%27.com",
     keywordLookup: true,
     protocolChange: true,
   }, {
@@ -436,14 +434,10 @@ var testcases = [ {
     protocolChange: true
   }, {
     input: "?mozilla",
-    fixedURI: "http:///?mozilla",
-    alternateURI: "http://www..com/?mozilla",
     keywordLookup: true,
     protocolChange: true,
   }, {
     input: "??mozilla",
-    fixedURI: "http:///??mozilla",
-    alternateURI: "http://www..com/??mozilla",
     keywordLookup: true,
     protocolChange: true,
   }, {

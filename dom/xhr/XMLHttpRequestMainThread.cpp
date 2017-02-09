@@ -16,11 +16,13 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/LoadInfo.h"
@@ -88,6 +90,12 @@
 #include "mozilla/Preferences.h"
 #include "private/pprio.h"
 #include "XMLHttpRequestUpload.h"
+
+// Undefine the macro of CreateFile to avoid FileCreatorHelper#CreateFile being
+// replaced by FileCreatorHelper#CreateFileW.
+#ifdef CreateFile
+#undef CreateFile
+#endif
 
 using namespace mozilla::net;
 
@@ -295,7 +303,6 @@ XMLHttpRequestMainThread::ResetResponse()
   mResponseBody.Truncate();
   TruncateResponseText();
   mResponseBlob = nullptr;
-  mDOMBlob = nullptr;
   mBlobStorage = nullptr;
   mBlobSet = nullptr;
   mResultArrayBuffer = nullptr;
@@ -323,7 +330,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestMainThread,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseBlob)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMBlob)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationCallbacks)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannelEventSink)
@@ -344,7 +350,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestMainThread,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponseBlob)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMBlob)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNotificationCallbacks)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannelEventSink)
@@ -659,19 +664,6 @@ XMLHttpRequestMainThread::CreateResponseParsedJSON(JSContext* aCx)
 void
 XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
 {
-  if (mDOMBlob) {
-    // Use progress info to determine whether load is complete, but use
-    // mDataAvailable to ensure a slice is created based on the uncompressed
-    // data count.
-    if (mState == State::done) {
-      mResponseBlob = mDOMBlob;
-    } else {
-      mResponseBlob = mDOMBlob->CreateSlice(0, mDataAvailable,
-                                            EmptyString(), aRv);
-    }
-    return;
-  }
-
   // mBlobSet can be null if the request has been canceled
   if (!mBlobSet) {
     return;
@@ -1449,7 +1441,7 @@ XMLHttpRequestMainThread::IsSystemXHR() const
 {
   return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
 }
- 
+
 bool
 XMLHttpRequestMainThread::InUploadPhase() const
 {
@@ -1652,17 +1644,13 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
   nsresult rv = NS_OK;
 
   if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Blob) {
-    if (!xmlHttpRequest->mDOMBlob) {
-      xmlHttpRequest->MaybeCreateBlobStorage();
-      rv = xmlHttpRequest->mBlobStorage->Append(fromRawSegment, count);
-    }
+    xmlHttpRequest->MaybeCreateBlobStorage();
+    rv = xmlHttpRequest->mBlobStorage->Append(fromRawSegment, count);
   } else if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
-    if (!xmlHttpRequest->mDOMBlob) {
-      if (!xmlHttpRequest->mBlobSet) {
-        xmlHttpRequest->mBlobSet = new BlobSet();
-      }
-      rv = xmlHttpRequest->mBlobSet->AppendVoidPtr(fromRawSegment, count);
+    if (!xmlHttpRequest->mBlobSet) {
+      xmlHttpRequest->mBlobSet = new BlobSet();
     }
+    rv = xmlHttpRequest->mBlobSet->AppendVoidPtr(fromRawSegment, count);
     // Clear the cache so that the blob size is updated.
     xmlHttpRequest->mResponseBlob = nullptr;
   } else if ((xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
@@ -1723,27 +1711,107 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
   return rv;
 }
 
-bool XMLHttpRequestMainThread::CreateDOMBlob(nsIRequest *request)
+namespace {
+
+nsresult
+GetLocalFileFromChannel(nsIRequest* aRequest, nsIFile** aFile)
 {
-  nsCOMPtr<nsIFile> file;
-  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
-  if (fc) {
-    fc->GetFile(getter_AddRefs(file));
+  MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aFile);
+
+  *aFile = nullptr;
+
+  nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aRequest);
+  if (!fc) {
+    return NS_OK;
   }
 
-  if (!file)
-    return false;
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = fc->GetFile(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsAutoCString contentType;
-  mChannel->GetContentType(contentType);
+  file.forget(aFile);
+  return NS_OK;
+}
 
-  mDOMBlob = File::CreateFromFile(GetOwner(), file, EmptyString(),
-                                  NS_ConvertASCIItoUTF16(contentType));
+nsresult
+DummyStreamReaderFunc(nsIInputStream* aInputStream,
+                      void* aClosure,
+                      const char* aFromRawSegment,
+                      uint32_t aToOffset,
+                      uint32_t aCount,
+                      uint32_t* aWriteCount)
+{
+  *aWriteCount = aCount;
+  return NS_OK;
+}
 
+class FileCreationHandler final : public PromiseNativeHandler
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  static void
+  Create(Promise* aPromise, XMLHttpRequestMainThread* aXHR)
+  {
+    MOZ_ASSERT(aPromise);
+
+    RefPtr<FileCreationHandler> handler = new FileCreationHandler(aXHR);
+    aPromise->AppendNativeHandler(handler);
+  }
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    if (NS_WARN_IF(!aValue.isObject())) {
+      mXHR->LocalFileToBlobCompleted(nullptr);
+      return;
+    }
+
+    RefPtr<Blob> blob;
+    if (NS_WARN_IF(NS_FAILED(UNWRAP_OBJECT(Blob, &aValue.toObject(), blob)))) {
+      mXHR->LocalFileToBlobCompleted(nullptr);
+      return;
+    }
+
+    mXHR->LocalFileToBlobCompleted(blob);
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mXHR->LocalFileToBlobCompleted(nullptr);
+  }
+
+private:
+  explicit FileCreationHandler(XMLHttpRequestMainThread* aXHR)
+    : mXHR(aXHR)
+  {
+    MOZ_ASSERT(aXHR);
+  }
+
+  ~FileCreationHandler() = default;
+
+  RefPtr<XMLHttpRequestMainThread> mXHR;
+};
+
+NS_IMPL_ISUPPORTS0(FileCreationHandler)
+
+} // namespace
+
+void
+XMLHttpRequestMainThread::LocalFileToBlobCompleted(Blob* aBlob)
+{
+  MOZ_ASSERT(mState != State::done);
+
+  mResponseBlob = aBlob;
   mBlobStorage = nullptr;
   mBlobSet = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
-  return true;
+
+  ChangeStateToDone();
 }
 
 NS_IMETHODIMP
@@ -1760,30 +1828,44 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
   mProgressSinceLastProgressEvent = true;
   XMLHttpRequestBinding::ClearCachedResponseTextValue(this);
 
-  bool cancelable = false;
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> localFile;
   if ((mResponseType == XMLHttpRequestResponseType::Blob ||
-       mResponseType == XMLHttpRequestResponseType::Moz_blob) && !mDOMBlob) {
-    cancelable = CreateDOMBlob(request);
-    // The nsIStreamListener contract mandates us
-    // to read from the stream before returning.
+       mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
+    rv = GetLocalFileFromChannel(request, getter_AddRefs(localFile));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (localFile) {
+      mBlobStorage = nullptr;
+      mBlobSet = nullptr;
+      NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
+
+      // We don't have to read from the local file for the blob response
+      int64_t fileSize;
+      rv = localFile->GetFileSize(&fileSize);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mDataAvailable = fileSize;
+
+      // The nsIStreamListener contract mandates us to read from the stream
+      // before returning.
+      uint32_t totalRead;
+      rv =
+        inStr->ReadSegments(DummyStreamReaderFunc, nullptr, count, &totalRead);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      ChangeState(State::loading);
+      return request->Cancel(NS_OK);
+    }
   }
 
   uint32_t totalRead;
-  nsresult rv = inStr->ReadSegments(XMLHttpRequestMainThread::StreamReaderFunc,
-                                    (void*)this, count, &totalRead);
+  rv = inStr->ReadSegments(XMLHttpRequestMainThread::StreamReaderFunc,
+                           (void*)this, count, &totalRead);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (cancelable) {
-    // We don't have to read from the local file for the blob response
-    ErrorResult error;
-    mDataAvailable = mDOMBlob->GetSize(error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    ChangeState(State::loading);
-    return request->Cancel(NS_OK);
-  }
 
   mDataAvailable += totalRead;
 
@@ -2106,14 +2188,36 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   if (NS_SUCCEEDED(status) &&
       (mResponseType == XMLHttpRequestResponseType::Blob ||
        mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
-    ErrorResult rv;
-    if (!mDOMBlob) {
-      CreateDOMBlob(request);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = GetLocalFileFromChannel(request, getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
-    if (mDOMBlob) {
-      mResponseBlob = mDOMBlob;
-      mDOMBlob = nullptr;
+
+    if (file) {
+      nsAutoCString contentType;
+      rv = mChannel->GetContentType(contentType);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      ChromeFilePropertyBag bag;
+      bag.mType = NS_ConvertUTF8toUTF16(contentType);
+
+      nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+
+      ErrorResult error;
+      RefPtr<Promise> promise =
+        FileCreatorHelper::CreateFile(global, file, bag, true, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+
+      FileCreationHandler::Create(promise, this);
+      waitingForBlobCreation = true;
     } else {
+      // No local file.
+
       // Smaller files may be written in cache map instead of separate files.
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
@@ -2132,15 +2236,16 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
           mBlobSet = new BlobSet();
         }
 
+        ErrorResult error;
         nsTArray<RefPtr<BlobImpl>> subImpls(mBlobSet->GetBlobImpls());
         RefPtr<BlobImpl> blobImpl =
           MultipartBlobImpl::Create(Move(subImpls),
                                     NS_ConvertASCIItoUTF16(contentType),
-                                    rv);
+                                    error);
         mBlobSet = nullptr;
 
-        if (NS_WARN_IF(rv.Failed())) {
-          return rv.StealNSResult();
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
         }
 
         mResponseBlob = Blob::Create(GetOwner(), blobImpl);

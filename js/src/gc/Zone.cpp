@@ -268,7 +268,7 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
          * Defer freeing any allocated blocks until after the next minor GC.
          */
         if (discardBaselineCode) {
-            jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
+            jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
             jitZone()->purgeIonCacheIRStubInfo();
         }
 

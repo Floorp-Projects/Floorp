@@ -649,12 +649,9 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     }
 
     if (!JS::CurrentThreadIsHeapMinorCollecting()) {
-        // JIT code and the global are never nursery allocated, so we only need
-        // to trace them when not doing a minor collection.
-
-        if (jitCompartment_)
-            jitCompartment_->trace(trc, this);
-
+        // The global is never nursery allocated, so we don't need to
+        // trace it when doing a minor collection.
+        //
         // If a compartment is on-stack, we mark its global so that
         // JSContext::global() remains valid.
         if (enterCompartmentDepth && global_.unbarrieredGet())

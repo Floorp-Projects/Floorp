@@ -9,6 +9,7 @@ const { addons, createClass, createFactory, DOM: dom, PropTypes } =
 
 const BoxModelInfo = createFactory(require("./BoxModelInfo"));
 const BoxModelMain = createFactory(require("./BoxModelMain"));
+const BoxModelProperties = createFactory(require("./BoxModelProperties"));
 
 const Types = require("../types");
 
@@ -18,6 +19,7 @@ module.exports = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    showBoxModelProperties: PropTypes.bool.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
@@ -28,6 +30,7 @@ module.exports = createClass({
   render() {
     let {
       boxModel,
+      showBoxModelProperties,
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
@@ -45,7 +48,13 @@ module.exports = createClass({
       }),
       BoxModelInfo({
         boxModel,
-      })
+      }),
+      showBoxModelProperties ?
+        BoxModelProperties({
+          boxModel,
+        })
+        :
+        null,
     );
   },
 
