@@ -14,11 +14,13 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIFrame;
 struct JSContext;
 
 namespace mozilla {
 
 class ComputedTimingFunction;
+class EffectSet;
 
 class AnimationUtils
 {
@@ -73,6 +75,13 @@ public:
    * true or the caller is chrome.
    */
   static bool IsCoreAPIEnabledForCaller(dom::CallerType aCallerType);
+
+  /**
+   * Returns true if the given EffectSet contains a current effect that animates
+   * scale. |aFrame| is used for calculation of scale values.
+   */
+  static bool EffectSetContainsAnimatedScale(EffectSet& aEffects,
+                                             const nsIFrame* aFrame);
 };
 
 } // namespace mozilla
