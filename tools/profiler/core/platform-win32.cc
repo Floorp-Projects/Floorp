@@ -64,14 +64,14 @@ class PlatformData {
   HANDLE profiled_thread_;
 };
 
-/* static */ auto
-Sampler::AllocPlatformData(int aThreadId) -> UniquePlatformData
+UniquePlatformData
+AllocPlatformData(int aThreadId)
 {
   return UniquePlatformData(new PlatformData(aThreadId));
 }
 
 void
-Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
+PlatformDataDestructor::operator()(PlatformData* aData)
 {
   delete aData;
 }
