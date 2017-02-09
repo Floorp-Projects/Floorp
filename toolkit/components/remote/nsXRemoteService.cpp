@@ -221,7 +221,7 @@ nsXRemoteService::HandleNewProperty(XID aWindowId, Display* aDisplay,
     return true;
   }
 
-  else if (aChangedAtom == sMozResponseAtom) {
+  if (aChangedAtom == sMozResponseAtom) {
     // client accepted the response.  party on wayne.
     return true;
   }
