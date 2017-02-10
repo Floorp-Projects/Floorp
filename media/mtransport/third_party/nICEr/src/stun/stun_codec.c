@@ -1196,6 +1196,7 @@ static nr_stun_attr_info attrs[] = {
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_RELAY_ADDRESS, "XOR-RELAY-ADDRESS", nr_stun_attr_codec_xor_mapped_address, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_XOR_PEER_ADDRESS, "XOR-PEER-ADDRESS", nr_stun_attr_codec_xor_peer_address, 0)
    NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_REQUESTED_TRANSPORT, "REQUESTED-TRANSPORT", nr_stun_attr_codec_UCHAR, 0)
+   NR_ADD_STUN_ATTRIBUTE(NR_STUN_ATTR_BANDWIDTH, "BANDWIDTH", nr_stun_attr_codec_UINT4, 0)
 #endif /* USE_TURN */
 
    /* for backwards compatibilty */
