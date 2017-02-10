@@ -80,7 +80,6 @@ EXPORTS.mozilla += [
     'RestyleManagerHandle.h',
     'RestyleManagerHandleInlines.h',
     'ServoRestyleManager.h',
-    'ServoRestyleManagerInlines.h',
     'ShapeUtils.h',
     'StaticPresData.h',
 ]

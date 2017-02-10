@@ -8,7 +8,6 @@
 
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoRestyleManagerInlines.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsContentUtils.h"
