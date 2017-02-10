@@ -149,9 +149,7 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
   }
   MOZ_ASSERT(mApi || mWRWindowState);
   mBuilder.emplace(LayerIntSize(aSize.width, aSize.height), mPipelineId);
-  if (!MOZ_USE_RENDER_THREAD) {
-    wr_window_init_pipeline_epoch(mWRWindowState, mPipelineId.mHandle, aSize.width, aSize.height);
-  }
+
   return IPC_OK();
 }
 
@@ -190,15 +188,9 @@ WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi || mWRWindowState);
-  if (MOZ_USE_RENDER_THREAD) {
-    *aOutImageKey = mApi->AddImageBuffer(aSize, aStride, aFormat,
-                                         aBuffer.AsSlice());
-  } else {
-    auto format = wr::SurfaceFormatToWrImageFormat(aFormat).value();
-    *aOutImageKey = wr::ImageKey(wr_add_image(mWRWindowState, aSize.width, aSize.height,
-                                              aStride, format,
-                                              aBuffer.mData, aBuffer.mLength));
-  }
+  *aOutImageKey = mApi->AddImageBuffer(aSize, aStride, aFormat,
+                                       aBuffer.AsSlice());
+
   return IPC_OK();
 }
 
@@ -212,13 +204,8 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi || mWRWindowState);
-  if (MOZ_USE_RENDER_THREAD) {
-    mApi->UpdateImageBuffer(aImageKey, aSize, aFormat, aBuffer.AsSlice());
-  } else {
-    auto format = wr::SurfaceFormatToWrImageFormat(aFormat).value();
-    wr_update_image(mWRWindowState, aImageKey.mHandle, aSize.width, aSize.height, format,
-                    aBuffer.mData, aBuffer.mLength);
-  }
+  mApi->UpdateImageBuffer(aImageKey, aSize, aFormat, aBuffer.AsSlice());
+
   return IPC_OK();
 }
 
@@ -241,12 +228,9 @@ WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize,
     return IPC_OK();
   }
   MOZ_ASSERT(mBuilder.isSome());
-  if (MOZ_USE_RENDER_THREAD) {
-    mBuilder.ref().Begin(LayerIntSize(aSize.width, aSize.height));
-  } else {
-    wr_window_dp_begin(mWRWindowState, mBuilder.ref().Raw(), aSize.width, aSize.height);
-  }
+  mBuilder.ref().Begin(LayerIntSize(aSize.width, aSize.height));
   *aOutSuccess = true;
+
   return IPC_OK();
 }
 
@@ -376,13 +360,8 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         }
 
         wr::ImageKey key;
-        if (MOZ_USE_RENDER_THREAD) {
-          auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
-          key = mApi->AddImageBuffer(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8, slice);
-        } else {
-          key = wr::ImageKey(wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride,
-            WrImageFormat::RGBA8, map.mData, validRect.height * map.mStride));
-        }
+        auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
+        key = mApi->AddImageBuffer(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8, slice);
 
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
@@ -391,11 +370,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        if (MOZ_USE_RENDER_THREAD) {
-          builder.PushIFrame(op.bounds(), op.clip(), op.pipelineId());
-        } else {
-          wr_window_dp_push_iframe(mWRWindowState, builder.Raw(), op.bounds(), op.clip(), op.pipelineId().mHandle);
-        }
+        builder.PushIFrame(op.bounds(), op.clip(), op.pipelineId());
         break;
       }
       case WebRenderCommand::TCompositableOperation: {
@@ -415,14 +390,8 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
 
           // TODO: We are leaking the key
           wr::FontKey fontKey;
-          if (MOZ_USE_RENDER_THREAD) {
-            auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
-            fontKey = mApi->AddRawFont(slice);
-          } else {
-            fontKey = wr::FontKey(wr_window_add_raw_font(mWRWindowState,
-                                                         op.font_buffer().mData,
-                                                         op.font_buffer_length()));
-          }
+          auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
+          fontKey = mApi->AddRawFont(slice);
           builder.PushText(op.bounds(),
                            op.clip(),
                            glyph_array[i].color,
@@ -437,11 +406,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  if (MOZ_USE_RENDER_THREAD) {
-    builder.End(*mApi, aEpoch);
-  } else {
-    wr_window_dp_end(mWRWindowState, mBuilder.ref().Raw());
-  }
+  builder.End(*mApi, aEpoch);
 
   ScheduleComposition();
   DeleteOldImages();
@@ -495,13 +460,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
   MOZ_ASSERT(mBuilder.isSome());
-  if (MOZ_USE_RENDER_THREAD) {
-    mApi->Readback(size, buffer, buffer_size);
-  } else {
-    mGLContext->MakeCurrent();
-    wr_composite_window(mWRWindowState);
-    wr_readback_into_buffer(size.width, size.height, buffer, buffer_size);
-  }
+  mApi->Readback(size, buffer, buffer_size);
 
   return IPC_OK();
 }
@@ -532,13 +491,9 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     return IPC_OK();
   }
 
-  if (!MOZ_USE_RENDER_THREAD) {
-    host->SetCompositor(mCompositor);
-    mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
-  } else {
-    mCompositableHolder->AddExternalImageId(aImageId, host);
-  }
+  mCompositableHolder->AddExternalImageId(aImageId, host);
   mExternalImageIds.Put(aImageId, host);
+
   return IPC_OK();
 }
 
@@ -559,13 +514,9 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
     return IPC_OK();
   }
 
-  if (!MOZ_USE_RENDER_THREAD) {
-    host->SetCompositor(mCompositor);
-    mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
-  } else {
-    mCompositableHolder->AddExternalImageId(aImageId, host);
-  }
+  mCompositableHolder->AddExternalImageId(aImageId, host);
   mExternalImageIds.Put(aImageId, host);
+
   return IPC_OK();
 }
 
@@ -577,11 +528,8 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
   }
   MOZ_ASSERT(mExternalImageIds.Get(aImageId).get());
   mExternalImageIds.Remove(aImageId);
-  if (!MOZ_USE_RENDER_THREAD) {
-    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
-  } else {
-    mCompositableHolder->RemoveExternalImageId(aImageId);
-  }
+  mCompositableHolder->RemoveExternalImageId(aImageId);
+
   return IPC_OK();
 }
 
@@ -669,11 +617,7 @@ void
 WebRenderBridgeParent::DeleteOldImages()
 {
   for (wr::ImageKey key : mKeysToDelete) {
-    if (MOZ_USE_RENDER_THREAD) {
-      mApi->DeleteImage(key);
-    } else {
-      wr_delete_image(mWRWindowState, key.mHandle);
-    }
+    mApi->DeleteImage(key);
   }
   mKeysToDelete.clear();
 }
@@ -681,15 +625,11 @@ WebRenderBridgeParent::DeleteOldImages()
 void
 WebRenderBridgeParent::ScheduleComposition()
 {
-  if (MOZ_USE_RENDER_THREAD) {
-    MOZ_ASSERT(mApi);
-    // TODO(bug 1328602) should probably send a message to the render
-    // thread and force rendering, although in most cases where this is
-    // called, rendering should be triggered automatically already (maybe
-    // not in the ImageBridge case).
-  } else {
-    mCompositor->AsWebRenderCompositorOGL()->ScheduleComposition();
-  }
+  MOZ_ASSERT(mApi);
+  // TODO(bug 1328602) should probably send a message to the render
+  // thread and force rendering, although in most cases where this is
+  // called, rendering should be triggered automatically already (maybe
+  // not in the ImageBridge case).
 }
 
 void
@@ -711,9 +651,6 @@ WebRenderBridgeParent::ClearResources()
   mExternalImageIds.Clear();
 
   if (mBuilder.isSome()) {
-    if (!MOZ_USE_RENDER_THREAD) {
-      wr_window_remove_pipeline(mWRWindowState, mBuilder.ref().Raw());
-    }
     mBuilder.reset();
   }
   if (mCompositorScheduler) {
@@ -797,21 +734,7 @@ WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
 {
   if (mWidget) {
     // Only set the flag to "root" WebRenderBridgeParent.
-    if (MOZ_USE_RENDER_THREAD) {
-      mApi->SetProfilerEnabled(aEnabled);
-    } else {
-      if (CompositorThreadHolder::IsInCompositorThread()) {
-        wr_profiler_set_enabled(mWRWindowState, aEnabled);
-      } else {
-        bool enabled = aEnabled;
-        WrWindowState* state = mWRWindowState;
-        RefPtr<Runnable> runnable =
-          NS_NewRunnableFunction([state, enabled]() {
-          wr_profiler_set_enabled(state, enabled);
-        });
-        CompositorThreadHolder::Loop()->PostTask(runnable.forget());
-      }
-    }
+    mApi->SetProfilerEnabled(aEnabled);
   }
 }
 
