@@ -25,4 +25,15 @@ nsIPresShell::SetNeedStyleFlush()
   }
 }
 
+void
+nsIPresShell::SetNeedThrottledAnimationFlush()
+{
+  mNeedThrottledAnimationFlush = true;
+  if (nsIDocument* doc = mDocument->GetDisplayDocument()) {
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->mNeedThrottledAnimationFlush = true;
+    }
+  }
+}
+
 #endif // nsIPresShellInlines_h
