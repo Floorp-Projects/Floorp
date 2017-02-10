@@ -1803,6 +1803,8 @@ private:
     // Context customization points
     virtual WebGLVertexArray* CreateVertexArrayImpl();
 
+    virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) = 0;
+
 public:
     void ForceLoseContext(bool simulateLoss = false);
 

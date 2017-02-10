@@ -304,10 +304,8 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
     if (!loc->ValidateArrayLength(setterElemSize, setterArraySize, funcName))
         return false;
 
-    if (setterTranspose && !IsWebGL2()) {
-        ErrorInvalidValue("%s: `transpose` must be false.", funcName);
+    if (!ValidateUniformMatrixTranspose(setterTranspose, funcName))
         return false;
-    }
 
     const auto& elemCount = loc->mInfo->mActiveInfo->mElemCount;
     MOZ_ASSERT(elemCount > loc->mArrayIndex);
