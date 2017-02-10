@@ -3804,8 +3804,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
-            StmtExpr(registerexpr),
+            # set manager in prior to register to inherit EventTarget from manager.
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
+            StmtExpr(registerexpr),
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetIPCChannel'),
                               args=[self.protocol.callGetChannel()])),
             StmtExpr(_callInsertManagedActor(
