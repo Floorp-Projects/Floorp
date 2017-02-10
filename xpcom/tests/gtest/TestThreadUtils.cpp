@@ -164,7 +164,18 @@ static void Expect(const char* aContext, int aCounter, int aMaxExpected)
   EXPECT_LE(aCounter, aMaxExpected) << aContext;
 }
 
-TEST(ThreadUtils, NewRunnableFunction)
+static void ExpectRunnableName(Runnable* aRunnable, const char* aExpectedName)
+{
+  nsAutoCString name;
+  EXPECT_TRUE(NS_SUCCEEDED(aRunnable->GetName(name))) << "Runnable::GetName()";
+#ifdef RELEASE_OR_BETA
+  EXPECT_TRUE(name.IsEmpty()) << "Runnable name shall be empty in RELEASE or BETA!";
+#else
+  EXPECT_TRUE(name.EqualsASCII(aExpectedName)) << "Verify Runnable name";
+#endif
+}
+
+static void TestNewRunnableFunction(bool aNamed)
 {
   // Test NS_NewRunnableFunction with copyable-only function object.
   {
@@ -173,7 +184,8 @@ TEST(ThreadUtils, NewRunnableFunction)
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
         TestCopyWithNoMove tracker(&copyCounter);
-        trackedRunnable = NS_NewRunnableFunction(tracker);
+        trackedRunnable = aNamed ? NS_NewRunnableFunction("unused", tracker) :
+                                   NS_NewRunnableFunction(tracker);
         // Original 'tracker' is destroyed here.
       }
       // Verify that the runnable contains a non-destroyed function object.
@@ -189,7 +201,9 @@ TEST(ThreadUtils, NewRunnableFunction)
       {
         // Passing as rvalue, but using copy.
         // (TestCopyWithDeletedMove wouldn't allow this.)
-        trackedRunnable = NS_NewRunnableFunction(TestCopyWithNoMove(&copyCounter));
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", TestCopyWithNoMove(&copyCounter)) :
+          NS_NewRunnableFunction(TestCopyWithNoMove(&copyCounter));
       }
       trackedRunnable->Run();
     }
@@ -202,7 +216,8 @@ TEST(ThreadUtils, NewRunnableFunction)
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
         TestCopyWithDeletedMove tracker(&copyCounter);
-        trackedRunnable = NS_NewRunnableFunction(tracker);
+        trackedRunnable = aNamed ? NS_NewRunnableFunction("unused", tracker) :
+                                   NS_NewRunnableFunction(tracker);
       }
       trackedRunnable->Run();
     }
@@ -217,7 +232,8 @@ TEST(ThreadUtils, NewRunnableFunction)
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
         TestMove tracker(&moveCounter);
-        trackedRunnable = NS_NewRunnableFunction(Move(tracker));
+        trackedRunnable = aNamed ? NS_NewRunnableFunction("unused", Move(tracker)) :
+                                   NS_NewRunnableFunction(Move(tracker));
       }
       trackedRunnable->Run();
     }
@@ -229,7 +245,9 @@ TEST(ThreadUtils, NewRunnableFunction)
     {
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
-        trackedRunnable = NS_NewRunnableFunction(TestMove(&moveCounter));
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", TestMove(&moveCounter)) :
+          NS_NewRunnableFunction(TestMove(&moveCounter));
       }
       trackedRunnable->Run();
     }
@@ -245,7 +263,8 @@ TEST(ThreadUtils, NewRunnableFunction)
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
         TestCopyMove tracker(&copyCounter, &moveCounter);
-        trackedRunnable = NS_NewRunnableFunction(Move(tracker));
+        trackedRunnable = aNamed ? NS_NewRunnableFunction("unused", Move(tracker)) :
+                                   NS_NewRunnableFunction(Move(tracker));
       }
       trackedRunnable->Run();
     }
@@ -260,7 +279,8 @@ TEST(ThreadUtils, NewRunnableFunction)
     {
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
-        trackedRunnable =
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", TestCopyMove(&copyCounter, &moveCounter)) :
           NS_NewRunnableFunction(TestCopyMove(&copyCounter, &moveCounter));
       }
       trackedRunnable->Run();
@@ -279,7 +299,9 @@ TEST(ThreadUtils, NewRunnableFunction)
       {
         TestCopyWithNoMove tracker(&copyCounter);
         // Expect 2 copies (here -> local lambda -> runnable lambda).
-        trackedRunnable = NS_NewRunnableFunction([tracker]() mutable { tracker(); });
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", [tracker]() mutable { tracker(); }) :
+          NS_NewRunnableFunction([tracker]() mutable { tracker(); });
       }
       trackedRunnable->Run();
     }
@@ -293,7 +315,9 @@ TEST(ThreadUtils, NewRunnableFunction)
       {
         TestCopyWithDeletedMove tracker(&copyCounter);
         // Expect 2 copies (here -> local lambda -> runnable lambda).
-        trackedRunnable = NS_NewRunnableFunction([tracker]() mutable { tracker(); });
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", [tracker]() mutable { tracker(); }) :
+          NS_NewRunnableFunction([tracker]() mutable { tracker(); });
       }
       trackedRunnable->Run();
     }
@@ -312,7 +336,9 @@ TEST(ThreadUtils, NewRunnableFunction)
       nsCOMPtr<nsIRunnable> trackedRunnable;
       {
         TestCopyMove tracker(&copyCounter, &moveCounter);
-        trackedRunnable = NS_NewRunnableFunction([tracker]() mutable { tracker(); });
+        trackedRunnable = aNamed ?
+          NS_NewRunnableFunction("unused", [tracker]() mutable { tracker(); }) :
+          NS_NewRunnableFunction([tracker]() mutable { tracker(); });
         // Expect 1 copy (here -> local lambda) and 1 move (local -> runnable lambda).
       }
       trackedRunnable->Run();
@@ -324,7 +350,25 @@ TEST(ThreadUtils, NewRunnableFunction)
   }
 }
 
-TEST(ThreadUtils, RunnableMethod)
+TEST(ThreadUtils, NewRunnableFunction)
+{
+  TestNewRunnableFunction(/*aNamed*/false);
+}
+
+TEST(ThreadUtils, NewNamedRunnableFunction)
+{
+  // The named overload shall behave identical to the non-named counterpart.
+  TestNewRunnableFunction(/*aNamed*/true);
+
+  // Test naming.
+  {
+    const char* expectedName = "NamedRunnable";
+    RefPtr<Runnable> NamedRunnable = NS_NewRunnableFunction(expectedName, []{});
+    ExpectRunnableName(NamedRunnable, expectedName);
+  }
+}
+
+static void TestNewRunnableMethod(bool aNamed)
 {
   memset(gRunnableExecuted, false, MAX_TESTS * sizeof(bool));
   // Scope the smart ptrs so that the runnables need to hold on to whatever they need
@@ -340,24 +384,46 @@ TEST(ThreadUtils, RunnableMethod)
     // Read only string. Dereferencing in runnable method to check this works.
     char* message = (char*)"Test message";
 
-    NS_DispatchToMainThread(NewRunnableMethod(bar, &nsBar::DoBar1));
-    NS_DispatchToMainThread(NewRunnableMethod(constBar, &nsBar::DoBar1Const));
-    NS_DispatchToMainThread(NewRunnableMethod(bar, &nsBar::DoBar2));
-    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<nsFoo>>
-      (bar, &nsBar::DoBar3, foo));
-    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<nsFoo>>
-      (bar, &nsBar::DoBar4, foo));
-    NS_DispatchToMainThread(NewRunnableMethod<nsFoo*>(bar, &nsBar::DoBar5, rawFoo));
-    NS_DispatchToMainThread(NewRunnableMethod<char*>(bar, &nsBar::DoBar6, message));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod("unused", bar, &nsBar::DoBar1) :
+      NewRunnableMethod(bar, &nsBar::DoBar1));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod("unused", constBar, &nsBar::DoBar1Const) :
+      NewRunnableMethod(constBar, &nsBar::DoBar1Const));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod("unused", bar, &nsBar::DoBar2) :
+      NewRunnableMethod(bar, &nsBar::DoBar2));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<RefPtr<nsFoo>>("unused", bar, &nsBar::DoBar3, foo) :
+      NewRunnableMethod<RefPtr<nsFoo>>(bar, &nsBar::DoBar3, foo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<RefPtr<nsFoo>>("unused", bar, &nsBar::DoBar4, foo) :
+      NewRunnableMethod<RefPtr<nsFoo>>(bar, &nsBar::DoBar4, foo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<nsFoo*>("unused", bar, &nsBar::DoBar5, rawFoo) :
+      NewRunnableMethod<nsFoo*>(bar, &nsBar::DoBar5, rawFoo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<char*>("unused", bar, &nsBar::DoBar6, message) :
+      NewRunnableMethod<char*>(bar, &nsBar::DoBar6, message));
 #ifdef HAVE_STDCALL
-    NS_DispatchToMainThread(NewRunnableMethod(bar, &nsBar::DoBar1std));
-    NS_DispatchToMainThread(NewRunnableMethod(bar, &nsBar::DoBar2std));
-    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<nsFoo>>
-      (bar, &nsBar::DoBar3std, foo));
-    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<nsFoo>>
-      (bar, &nsBar::DoBar4std, foo));
-    NS_DispatchToMainThread(NewRunnableMethod<nsFoo*>(bar, &nsBar::DoBar5std, rawFoo));
-    NS_DispatchToMainThread(NewRunnableMethod<char*>(bar, &nsBar::DoBar6std, message));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod("unused", bar, &nsBar::DoBar1std) :
+      NewRunnableMethod(bar, &nsBar::DoBar1std));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod("unused", bar, &nsBar::DoBar2std) :
+      NewRunnableMethod(bar, &nsBar::DoBar2std));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<RefPtr<nsFoo>>("unused", bar, &nsBar::DoBar3std, foo) :
+      NewRunnableMethod<RefPtr<nsFoo>>(bar, &nsBar::DoBar3std, foo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<RefPtr<nsFoo>>("unused", bar, &nsBar::DoBar4std, foo) :
+      NewRunnableMethod<RefPtr<nsFoo>>(bar, &nsBar::DoBar4std, foo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<nsFoo*>("unused", bar, &nsBar::DoBar5std, rawFoo) :
+      NewRunnableMethod<nsFoo*>(bar, &nsBar::DoBar5std, rawFoo));
+    NS_DispatchToMainThread(aNamed ?
+      NewRunnableMethod<char*>("unused", bar, &nsBar::DoBar6std, message) :
+      NewRunnableMethod<char*>(bar, &nsBar::DoBar6std, message));
 #endif
   }
 
@@ -375,6 +441,27 @@ TEST(ThreadUtils, RunnableMethod)
 
   for (uint32_t i = 0; i < MAX_TESTS; i++) {
     EXPECT_TRUE(gRunnableExecuted[i]) << "Error in test " << i;
+  }
+}
+
+TEST(ThreadUtils, RunnableMethod)
+{
+  TestNewRunnableMethod(/* aNamed */false);
+}
+
+TEST(ThreadUtils, NamedRunnableMethod)
+{
+  // The named overloads shall behave identical to the non-named counterparts.
+  TestNewRunnableMethod(/* aNamed */true);
+
+  // Test naming.
+  {
+    RefPtr<nsFoo> foo = new nsFoo();
+    const char* expectedName = "NamedRunnable";
+    bool unused;
+    RefPtr<Runnable> NamedRunnable =
+      NewRunnableMethod<bool*>(expectedName, foo, &nsFoo::DoFoo, &unused);
+    ExpectRunnableName(NamedRunnable, expectedName);
   }
 }
 

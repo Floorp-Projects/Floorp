@@ -167,6 +167,13 @@ nsCocoaFeatures::OnSierraOrLater()
     return (OSXVersion() >= MAC_OS_X_VERSION_10_12_HEX);
 }
 
+/* Version of OnSierraOrLater as a global function callable from C (cairo) */
+bool
+Gecko_OnSierraOrLater()
+{
+    return nsCocoaFeatures::OnSierraOrLater();
+}
+
 /* static */ bool
 nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {
