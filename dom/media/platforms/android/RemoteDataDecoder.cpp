@@ -150,6 +150,9 @@ public:
 
     void HandleOutput(Sample::Param aSample) override
     {
+      UniquePtr<VideoData::Listener>
+        releaseSample(new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
+
       BufferInfo::LocalRef info = aSample->Info();
 
       int32_t flags;
@@ -188,9 +191,7 @@ public:
           gfx::IntRect(0, 0, mDecoder->mConfig.mDisplay.width,
                        mDecoder->mConfig.mDisplay.height));
 
-        UniquePtr<VideoData::Listener> listener(
-          new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
-        v->SetListener(Move(listener));
+        v->SetListener(Move(releaseSample));
 
         mDecoder->Output(v);
       }
