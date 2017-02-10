@@ -7680,7 +7680,7 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     printTiming = op.getBoolOption('b');
     enableCodeCoverage = op.getBoolOption("code-coverage");
     enableDisassemblyDumps = op.getBoolOption('D');
-    cx->runtime()->zoneGroupFromMainThread()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
+    cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
     jsCacheDir = op.getStringOption("js-cache");
     if (jsCacheDir) {
@@ -7722,7 +7722,7 @@ SetWorkerContextOptions(JSContext* cx)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays);
     cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
-    cx->runtime()->zoneGroupFromMainThread()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
+    cx->runtime()->profilingScripts = enableCodeCoverage || enableDisassemblyDumps;
 
 #ifdef JS_GC_ZEAL
     if (gZealBits && gZealFrequency) {
@@ -7793,6 +7793,13 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
             JS_free(cx, const_cast<char*>(jsCacheDir));
         }
     }
+
+    /*
+     * Dump remaining type inference results while we still have a context.
+     * This printing depends on atoms still existing.
+     */
+    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next())
+        PrintTypes(cx, c, false);
 
     return result;
 }

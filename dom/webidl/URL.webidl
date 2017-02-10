@@ -44,9 +44,12 @@ interface URL {
            attribute USVString pathname;
   [Throws]
            attribute USVString search;
-  readonly attribute URLSearchParams searchParams;
+  [SameObject] readonly attribute URLSearchParams searchParams;
   [Throws]
            attribute USVString hash;
+
+  [Throws]
+  USVString toJSON();
 };
 
 partial interface URL {

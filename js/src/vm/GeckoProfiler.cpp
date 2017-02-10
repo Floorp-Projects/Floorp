@@ -87,11 +87,10 @@ GeckoProfiler::enable(bool enabled)
     rt->resetProfilerSampleBufferLapCount();
 
     // Ensure that lastProfilingFrame is null for all threads before 'enabled' becomes true.
-    for (size_t i = 0; i < rt->cooperatingContexts().length(); i++) {
-        JSContext* cx = rt->cooperatingContexts()[i];
-        if (cx->jitActivation) {
-            cx->jitActivation->setLastProfilingFrame(nullptr);
-            cx->jitActivation->setLastProfilingCallSite(nullptr);
+    for (const CooperatingContext& target : rt->cooperatingContexts()) {
+        if (target.context()->jitActivation) {
+            target.context()->jitActivation->setLastProfilingFrame(nullptr);
+            target.context()->jitActivation->setLastProfilingCallSite(nullptr);
         }
     }
 
@@ -107,13 +106,12 @@ GeckoProfiler::enable(bool enabled)
     /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
      * stack.
      */
-    for (size_t i = 0; i < rt->cooperatingContexts().length(); i++) {
-        JSContext* cx = rt->cooperatingContexts()[i];
-        if (cx->jitActivation) {
+    for (const CooperatingContext& target : rt->cooperatingContexts()) {
+        if (target.context()->jitActivation) {
             // Walk through all activations, and set their lastProfilingFrame appropriately.
             if (enabled) {
-                void* lastProfilingFrame = GetTopProfilingJitFrame(cx->jitTop);
-                jit::JitActivation* jitActivation = cx->jitActivation;
+                void* lastProfilingFrame = GetTopProfilingJitFrame(target.context()->jitTop);
+                jit::JitActivation* jitActivation = target.context()->jitActivation;
                 while (jitActivation) {
                     jitActivation->setLastProfilingFrame(lastProfilingFrame);
                     jitActivation->setLastProfilingCallSite(nullptr);
@@ -122,7 +120,7 @@ GeckoProfiler::enable(bool enabled)
                     jitActivation = jitActivation->prevJitActivation();
                 }
             } else {
-                jit::JitActivation* jitActivation = cx->jitActivation;
+                jit::JitActivation* jitActivation = target.context()->jitActivation;
                 while (jitActivation) {
                     jitActivation->setLastProfilingFrame(nullptr);
                     jitActivation->setLastProfilingCallSite(nullptr);

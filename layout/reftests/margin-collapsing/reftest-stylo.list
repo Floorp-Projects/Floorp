@@ -690,14 +690,14 @@ fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 == caption-sibling-1b.html caption-sibling-1b.html
 == caption-sibling-1c.html caption-sibling-1c.html
 == caption-sibling-1c.html caption-sibling-1c.html
-== caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
-== caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
-== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
-== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
-== caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
-== caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
-== caption-sibling-2-dyn.html caption-sibling-2-dyn.html
-== caption-sibling-2-dyn.html caption-sibling-2-dyn.html
+asserts-if(stylo,2) == caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html # bug 1337703
+asserts-if(stylo,2) == caption-sibling-2-dyn.html caption-sibling-2-dyn.html # bug 1337700
+asserts-if(stylo,2) == caption-sibling-2-dyn.html caption-sibling-2-dyn.html # bug 1337700
 == caption-child-1.html caption-child-1.html
 == caption-child-1-dyn.html caption-child-1-dyn.html
 # * Multi-column elements, per CSS Multi-column Layout Module
