@@ -99,3 +99,6 @@ menulist > menupopup {
   min-width: 0px;
 }
 
+menupopup[customoptionstyling="true"] {
+  -moz-appearance: none;
+}
