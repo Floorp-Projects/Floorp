@@ -82,6 +82,7 @@
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "nsAutoLayoutPhase.h"
 #include "nsStyleStructInlines.h"
 #include "nsPageContentFrame.h"
