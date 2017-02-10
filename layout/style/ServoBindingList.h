@@ -131,9 +131,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
                    RawServoAnimationValueBorrowed value,
                    nsCSSPropertyID property,
                    nsAString* buffer)
-SERVO_BINDING_FUNC(Servo_AnimationValues_GetOpacity, float,
+SERVO_BINDING_FUNC(Servo_AnimationValue_GetOpacity, float,
                    RawServoAnimationValueBorrowed value)
-SERVO_BINDING_FUNC(Servo_AnimationValues_GetTransform, void,
+SERVO_BINDING_FUNC(Servo_AnimationValue_GetTransform, void,
                    RawServoAnimationValueBorrowed value,
                    RefPtr<nsCSSValueSharedList>* list)
 

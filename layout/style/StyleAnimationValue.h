@@ -599,7 +599,7 @@ struct AnimationValue
 
   float GetOpacity() const
   {
-    return mServo ? Servo_AnimationValues_GetOpacity(mServo)
+    return mServo ? Servo_AnimationValue_GetOpacity(mServo)
                   : mGecko.GetFloatValue();
   }
 
@@ -609,7 +609,7 @@ struct AnimationValue
   {
     if (mServo) {
       RefPtr<nsCSSValueSharedList> list;
-      Servo_AnimationValues_GetTransform(mServo, &list);
+      Servo_AnimationValue_GetTransform(mServo, &list);
       return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
     }
     return mGecko.GetScaleValue(aFrame);
