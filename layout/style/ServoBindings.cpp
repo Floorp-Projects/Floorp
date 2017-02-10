@@ -1081,6 +1081,24 @@ Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, ServoBundledURI aURI)
   aEffects->SetURL(url.get());
 }
 
+void
+Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest, const nsStyleSVGPaint* aSrc)
+{
+  *aDest = *aSrc;
+}
+
+void
+Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aPaint->SetPaintServer(url.get(), NS_RGB(0, 0, 0));
+}
+
+void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint)
+{
+  aPaint->SetNone();
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 nsCSSShadowArray*
