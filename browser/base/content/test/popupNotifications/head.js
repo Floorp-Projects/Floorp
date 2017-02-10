@@ -264,6 +264,14 @@ function waitForNotificationPanel() {
   });
 }
 
+function waitForNotificationPanelHidden() {
+  return new Promise(resolve => {
+    onPopupEvent("popuphidden", function() {
+      resolve(this);
+    });
+  });
+}
+
 function triggerMainCommand(popup) {
   let notifications = popup.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
