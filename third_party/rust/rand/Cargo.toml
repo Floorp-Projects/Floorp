@@ -1,0 +1,20 @@
+[package]
+
+name = "rand"
+version = "0.3.15"
+authors = ["The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-lang/rand"
+documentation = "https://doc.rust-lang.org/rand"
+homepage = "https://github.com/rust-lang/rand"
+description = """
+Random number generators and other randomness functionality.
+"""
+keywords = ["random", "rng"]
+
+[dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+log = "0.3.0"

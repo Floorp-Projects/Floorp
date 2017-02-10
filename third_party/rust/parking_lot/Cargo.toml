@@ -1,0 +1,24 @@
+[package]
+name = "parking_lot"
+version = "0.3.7"
+authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
+description = "More compact and efficient implementations of the standard synchronization primitives."
+documentation = "https://amanieu.github.io/parking_lot/parking_lot/index.html"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/Amanieu/parking_lot"
+readme = "README.md"
+keywords = ["mutex", "condvar", "rwlock", "once", "thread"]
+
+[dependencies]
+parking_lot_core = { path = "core", version = "0.2" }
+owning_ref = { version = "0.2", optional = true }
+
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+thread-id = "3.0"
+
+[dev-dependencies]
+rand = "0.3"
+
+[features]
+default = ["owning_ref"]
+nightly = ["parking_lot_core/nightly"]

@@ -1,0 +1,48 @@
+[package]
+
+name = "clang-sys"
+authors = ["Kyle Mayes <kyle@mayeses.com>"]
+
+version = "0.12.0"
+
+readme = "README.md"
+license = "Apache-2.0"
+
+description = "Rust bindings for libclang."
+
+documentation = "https://kylemayes.github.io/clang-sys/3_5/clang_sys"
+repository = "https://github.com/KyleMayes/clang-sys"
+
+build = "build.rs"
+
+[features]
+
+clang_3_5 = []
+clang_3_6 = ["gte_clang_3_6"]
+clang_3_7 = ["gte_clang_3_6", "gte_clang_3_7"]
+clang_3_8 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8"]
+clang_3_9 = ["gte_clang_3_6", "gte_clang_3_7", "gte_clang_3_8", "gte_clang_3_9"]
+
+gte_clang_3_6 = []
+gte_clang_3_7 = []
+gte_clang_3_8 = []
+gte_clang_3_9 = []
+
+runtime = ["lazy_static", "libloading"]
+static = []
+
+[dependencies]
+
+bitflags = "0.7.0"
+glob = "0.2.11"
+lazy_static = { version = "0.2.1", optional = true }
+libc = "0.2.14"
+libloading = { version = "0.3.0", optional = true }
+
+clippy = { version = "0.0.*", optional = true }
+
+[build-dependencies]
+
+glob = "0.2.11"
+
+clippy = { version = "0.0.*", optional = true }

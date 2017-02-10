@@ -1,0 +1,14 @@
+[package]
+name = "utf8-ranges"
+version = "1.0.0"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Convert ranges of Unicode codepoints to UTF-8 byte ranges."
+documentation = "https://docs.rs/utf8-ranges"
+homepage = "https://github.com/BurntSushi/utf8-ranges"
+repository = "https://github.com/BurntSushi/utf8-ranges"
+readme = "README.md"
+keywords = ["codepoint", "utf8", "automaton", "range"]
+license = "Unlicense/MIT"
+
+[dev-dependencies]
+quickcheck = "0.4.1"

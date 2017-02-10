@@ -1,0 +1,15 @@
+[package]
+
+name = "glob"
+version = "0.2.11"
+authors = ["The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+homepage = "https://github.com/rust-lang/glob"
+repository = "https://github.com/rust-lang/glob"
+documentation = "https://doc.rust-lang.org/glob"
+description = """
+Support for matching file paths against Unix shell style patterns.
+"""
+
+[dev-dependencies]
+tempdir = "0.3"
