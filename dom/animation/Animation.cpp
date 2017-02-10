@@ -787,12 +787,21 @@ Animation::CancelNoUpdate()
   mHoldTime.SetNull();
   mStartTime.SetNull();
 
-  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
-
   if (mTimeline) {
     mTimeline->RemoveAnimation(this);
   }
   MaybeQueueCancelEvent(activeTime);
+
+  // When an animation is cancelled it no longer needs further ticks from the
+  // timeline. However, if we queued a cancel event and this was the last
+  // animation attached to the timeline, the timeline will stop observing the
+  // refresh driver and there may be no subsequent refresh driver tick for
+  // dispatching the queued event.
+  //
+  // By calling UpdateTiming *after* removing ourselves from our timeline, we
+  // ensure the timeline will register with the refresh driver for at least one
+  // more tick.
+  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
 bool
