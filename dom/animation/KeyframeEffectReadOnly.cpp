@@ -878,7 +878,10 @@ KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
                                              mTarget->mElement,
                                              aStyleContext);
 
-  if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+  // FIXME: Bug 1332633: we have to implement ComputeDistance for
+  //        RawServoAnimationValue.
+  if (mEffectOptions.mSpacingMode == SpacingMode::paced &&
+      aStyleContext->PresContext()->StyleSet()->IsGecko()) {
     KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
                                 mEffectOptions.mPacedProperty,
                                 computedValues, aStyleContext);
