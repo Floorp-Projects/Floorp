@@ -774,20 +774,6 @@ ServoBundledURI::IntoCssUrl()
 }
 
 void
-Gecko_SetMozBinding(nsStyleDisplay* aDisplay, ServoBundledURI aBundledURI)
-{
-    MOZ_ASSERT(aDisplay);
-    aDisplay->mBinding = aBundledURI.IntoCssUrl();
-}
-
-void
-Gecko_CopyMozBindingFrom(nsStyleDisplay* aDest, const nsStyleDisplay* aSrc)
-{
-  aDest->mBinding = aSrc->mBinding;
-}
-
-
-void
 Gecko_SetNullImageValue(nsStyleImage* aImage)
 {
   MOZ_ASSERT(aImage);
@@ -1098,6 +1084,15 @@ void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint)
 {
   aPaint->SetNone();
 }
+
+css::URLValue*
+Gecko_NewURLValue(ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  return url.forget().take();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
