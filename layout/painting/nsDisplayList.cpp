@@ -4413,6 +4413,25 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  LayersBackend backend = aManager->GetBackendType();
+  if (backend == layers::LayersBackend::LAYERS_WR) {
+    bool hasCompositeColors;
+    br->AllBordersSolid(&hasCompositeColors);
+    if (hasCompositeColors) {
+      return LAYER_NONE;
+    }
+
+    NS_FOR_CSS_SIDES(i) {
+      mColors[i] = ToDeviceColor(br->mBorderColors[i]);
+      mWidths[i] = br->mBorderWidths[i];
+      mBorderStyles[i] = br->mBorderStyles[i];
+    }
+
+    mRect = ViewAs<LayerPixel>(br->mOuterRect);
+
+    return LAYER_ACTIVE;
+  }
+
   bool hasCompositeColors;
   if (!br->AllBordersSolid(&hasCompositeColors) || hasCompositeColors) {
     return LAYER_NONE;
