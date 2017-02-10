@@ -136,9 +136,13 @@ private:
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
-  // Set to true if the MFT doesn't require draining. That is no data was input
-  // since creation or the last drain.
-  bool mDrained = true;
+  enum class DrainStatus
+  {
+    DRAINED,
+    DRAINABLE,
+    DRAINING,
+  };
+  DrainStatus mDrainStatus = DrainStatus::DRAINED;
 
   // For telemetry
   bool mHasSuccessfulOutput = false;
