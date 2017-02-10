@@ -1,34 +1,19 @@
-var Debugger =
-/******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else {
+		var a = factory();
+		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
+	}
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/ 		// SingleModulePlugin
-/******/ 		const smpCache = this.smpCache = this.smpCache || {};
-/******/ 		const smpMap = this.smpMap = this.smpMap || new Map();
-/******/ 		function sanitizeString(text) {
-/******/ 		   return text.replace(/__webpack_require__\(\d+\)/g,"");
-/******/ 		}
-/******/ 		function getModuleBody(id) {
-/******/ 		  if (smpCache.hasOwnProperty(id)) {
-/******/ 		    return smpCache[id];
-/******/ 		  }
-/******/
-/******/ 		  const body = sanitizeString(String(modules[id]));
-/******/ 		  smpCache[id] = body;
-/******/ 		  return body;
-/******/ 		}
-/******/ 		if (!installedModules[moduleId]) {
-/******/ 			const body = getModuleBody(moduleId);
-/******/ 			if (smpMap.has(body)) {
-/******/ 				installedModules[moduleId] = installedModules[smpMap.get(body)];
-/******/ 			}
-/******/ 			else {
-/******/ 				smpMap.set(body, moduleId)
-/******/ 			}
-/******/ 		}
 /******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
@@ -70,7 +55,7 @@ var Debugger =
 /***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(692);
+	module.exports = __webpack_require__(540);
 
 
 /***/ },
@@ -92,7 +77,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 125:
+/***/ 127:
 /***/ function(module, exports) {
 
 	function networkRequest(url, opts) {
@@ -128,9 +113,11 @@ var Debugger =
 
 /***/ },
 
-/***/ 250:
+/***/ 195:
 /***/ function(module, exports) {
 
+	"use strict";
+	
 	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 	
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -181,7 +168,7 @@ var Debugger =
 	 */
 	function truncateStr(str, size) {
 	  if (str.length > size) {
-	    return `${ str.slice(0, size) }...`;
+	    return `${str.slice(0, size)}...`;
 	  }
 	  return str;
 	}
@@ -192,7 +179,7 @@ var Debugger =
 	 */
 	function endTruncateStr(str, size) {
 	  if (str.length > size) {
-	    return `...${ str.slice(str.length - size) }`;
+	    return `...${str.slice(str.length - size)}`;
 	  }
 	  return str;
 	}
@@ -356,6 +343,10 @@ var Debugger =
 	  };
 	}
 	
+	function waitForMs(ms) {
+	  return new Promise(resolve => setTimeout(resolve, ms));
+	}
+	
 	module.exports = {
 	  handleError,
 	  promisify,
@@ -368,17 +359,20 @@ var Debugger =
 	  mapObject,
 	  compose,
 	  updateObj,
-	  throttle
+	  throttle,
+	  waitForMs
 	};
 
 /***/ },
 
-/***/ 252:
+/***/ 197:
 /***/ function(module, exports) {
 
+	"use strict";
+	
 	function assert(condition, message) {
 	  if (!condition) {
-	    throw new Error(`Assertion failure: ${ message }`);
+	    throw new Error(`Assertion failure: ${message}`);
 	  }
 	}
 	
@@ -386,20 +380,20 @@ var Debugger =
 
 /***/ },
 
-/***/ 295:
+/***/ 207:
 /***/ function(module, exports, __webpack_require__) {
 
-	
+	"use strict";
 	
 	/**
 	 * Utils for working with Source URLs
 	 * @module utils/source
 	 */
 	
-	var _require = __webpack_require__(250),
+	var _require = __webpack_require__(195),
 	    endTruncateStr = _require.endTruncateStr;
 	
-	var _require2 = __webpack_require__(296),
+	var _require2 = __webpack_require__(208),
 	    basename = _require2.basename;
 	
 	/**
@@ -447,7 +441,7 @@ var Debugger =
 	 * @static
 	 */
 	function getPrettySourceURL(url) {
-	  return `${ url }:formatted`;
+	  return `${url}:formatted`;
 	}
 	
 	/**
@@ -471,7 +465,7 @@ var Debugger =
 	
 	  if (!url) {
 	    var sourceId = id.split("/")[1];
-	    return `SOURCE${ sourceId }`;
+	    return `SOURCE${sourceId}`;
 	  }
 	
 	  url = getRawSourceURL(url || "");
@@ -569,9 +563,11 @@ var Debugger =
 
 /***/ },
 
-/***/ 296:
+/***/ 208:
 /***/ function(module, exports) {
 
+	"use strict";
+	
 	function basename(path) {
 	  return path.split("/").pop();
 	}
@@ -590,7 +586,7 @@ var Debugger =
 	}
 	
 	function join(base, dir) {
-	  return `${ base }/${ dir }`;
+	  return `${base}/${dir}`;
 	}
 	
 	module.exports = {
@@ -599,10 +595,12 @@ var Debugger =
 
 /***/ },
 
-/***/ 317:
+/***/ 220:
 /***/ function(module, exports, __webpack_require__) {
 
-	var md5 = __webpack_require__(318);
+	"use strict";
+	
+	var md5 = __webpack_require__(221);
 	
 	function originalToGeneratedId(originalId) {
 	  var match = originalId.match(/(.*)\/originalSource/);
@@ -610,7 +608,7 @@ var Debugger =
 	}
 	
 	function generatedToOriginalId(generatedId, url) {
-	  return `${ generatedId }/originalSource-${ md5(url) }`;
+	  return `${generatedId}/originalSource-${md5(url)}`;
 	}
 	
 	function isOriginalId(id) {
@@ -627,14 +625,14 @@ var Debugger =
 
 /***/ },
 
-/***/ 318:
+/***/ 221:
 /***/ function(module, exports, __webpack_require__) {
 
 	(function(){
-	  var crypt = __webpack_require__(319),
-	      utf8 = __webpack_require__(320).utf8,
-	      isBuffer = __webpack_require__(321),
-	      bin = __webpack_require__(320).bin,
+	  var crypt = __webpack_require__(222),
+	      utf8 = __webpack_require__(223).utf8,
+	      isBuffer = __webpack_require__(224),
+	      bin = __webpack_require__(223).bin,
 	
 	  // The core
 	  md5 = function (message, options) {
@@ -794,7 +792,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 319:
+/***/ 222:
 /***/ function(module, exports) {
 
 	(function() {
@@ -897,7 +895,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 320:
+/***/ 223:
 /***/ function(module, exports) {
 
 	var charenc = {
@@ -937,7 +935,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 321:
+/***/ 224:
 /***/ function(module, exports) {
 
 	/*!
@@ -965,7 +963,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 398:
+/***/ 262:
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -991,8 +989,8 @@ var Debugger =
 	
 	'use strict';
 	
-	var punycode = __webpack_require__(399);
-	var util = __webpack_require__(400);
+	var punycode = __webpack_require__(263);
+	var util = __webpack_require__(264);
 	
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -1067,7 +1065,7 @@ var Debugger =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(401);
+	    querystring = __webpack_require__(265);
 	
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && util.isObject(url) && url instanceof Url) return url;
@@ -1704,7 +1702,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 399:
+/***/ 263:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -2240,7 +2238,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 400:
+/***/ 264:
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2263,18 +2261,18 @@ var Debugger =
 
 /***/ },
 
-/***/ 401:
+/***/ 265:
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	exports.decode = exports.parse = __webpack_require__(402);
-	exports.encode = exports.stringify = __webpack_require__(403);
+	exports.decode = exports.parse = __webpack_require__(266);
+	exports.encode = exports.stringify = __webpack_require__(267);
 
 
 /***/ },
 
-/***/ 402:
+/***/ 266:
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -2361,7 +2359,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 403:
+/***/ 267:
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -2432,9 +2430,11 @@ var Debugger =
 
 /***/ },
 
-/***/ 692:
+/***/ 540:
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+	
 	var _resolveAndFetch = (() => {
 	  var _ref = _asyncToGenerator(function* (generatedSource) {
 	    // Fetch the sourcemap over the network and create it.
@@ -2566,23 +2566,23 @@ var Debugger =
 	 * @module utils/source-map-worker
 	 */
 	
-	var networkRequest = __webpack_require__(125);
+	var networkRequest = __webpack_require__(127);
 	
-	var _require = __webpack_require__(398),
+	var _require = __webpack_require__(262),
 	    parse = _require.parse;
 	
-	var path = __webpack_require__(296);
+	var path = __webpack_require__(208);
 	
-	var _require2 = __webpack_require__(693),
+	var _require2 = __webpack_require__(541),
 	    SourceMapConsumer = _require2.SourceMapConsumer,
 	    SourceMapGenerator = _require2.SourceMapGenerator;
 	
-	var _require3 = __webpack_require__(295),
+	var _require3 = __webpack_require__(207),
 	    getContentType = _require3.getContentType;
 	
-	var assert = __webpack_require__(252);
+	var assert = __webpack_require__(197);
 	
-	var _require4 = __webpack_require__(317),
+	var _require4 = __webpack_require__(220),
 	    originalToGeneratedId = _require4.originalToGeneratedId,
 	    generatedToOriginalId = _require4.generatedToOriginalId,
 	    isGeneratedId = _require4.isGeneratedId,
@@ -2618,11 +2618,11 @@ var Debugger =
 	        _parse$host = _parse.host,
 	        host = _parse$host === undefined ? "" : _parse$host;
 	
-	    return `${ protocol }//${ host }${ sourceMapURL }`;
+	    return `${protocol}//${host}${sourceMapURL}`;
 	  }
 	  // Otherwise, it's a relative path and should be resolved relative
 	  // to the source.
-	  return `${ path.dirname(url) }/${ sourceMapURL }`;
+	  return `${path.dirname(url)}/${sourceMapURL}`;
 	}
 	
 	/**
@@ -2710,7 +2710,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 693:
+/***/ 541:
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -2718,14 +2718,14 @@ var Debugger =
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(694).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(700).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(703).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(542).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(548).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(551).SourceNode;
 
 
 /***/ },
 
-/***/ 694:
+/***/ 542:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2735,10 +2735,10 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var base64VLQ = __webpack_require__(695);
-	var util = __webpack_require__(697);
-	var ArraySet = __webpack_require__(698).ArraySet;
-	var MappingList = __webpack_require__(699).MappingList;
+	var base64VLQ = __webpack_require__(543);
+	var util = __webpack_require__(545);
+	var ArraySet = __webpack_require__(546).ArraySet;
+	var MappingList = __webpack_require__(547).MappingList;
 	
 	/**
 	 * An instance of the SourceMapGenerator represents a source map which is
@@ -3136,7 +3136,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 695:
+/***/ 543:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3176,7 +3176,7 @@ var Debugger =
 	 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	 */
 	
-	var base64 = __webpack_require__(696);
+	var base64 = __webpack_require__(544);
 	
 	// A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	// length quantities we use in the source map spec, the first bit is the sign,
@@ -3283,7 +3283,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 696:
+/***/ 544:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3357,7 +3357,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 697:
+/***/ 545:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3781,7 +3781,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 698:
+/***/ 546:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3791,7 +3791,7 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(697);
+	var util = __webpack_require__(545);
 	var has = Object.prototype.hasOwnProperty;
 	
 	/**
@@ -3892,7 +3892,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 699:
+/***/ 547:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3902,7 +3902,7 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(697);
+	var util = __webpack_require__(545);
 	
 	/**
 	 * Determine whether mappingB is after mappingA with respect to generated
@@ -3978,7 +3978,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 700:
+/***/ 548:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3988,11 +3988,11 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var util = __webpack_require__(697);
-	var binarySearch = __webpack_require__(701);
-	var ArraySet = __webpack_require__(698).ArraySet;
-	var base64VLQ = __webpack_require__(695);
-	var quickSort = __webpack_require__(702).quickSort;
+	var util = __webpack_require__(545);
+	var binarySearch = __webpack_require__(549);
+	var ArraySet = __webpack_require__(546).ArraySet;
+	var base64VLQ = __webpack_require__(543);
+	var quickSort = __webpack_require__(550).quickSort;
 	
 	function SourceMapConsumer(aSourceMap) {
 	  var sourceMap = aSourceMap;
@@ -5067,7 +5067,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 701:
+/***/ 549:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5185,7 +5185,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 702:
+/***/ 550:
 /***/ function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5306,7 +5306,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 703:
+/***/ 551:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5316,8 +5316,8 @@ var Debugger =
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
 	
-	var SourceMapGenerator = __webpack_require__(694).SourceMapGenerator;
-	var util = __webpack_require__(697);
+	var SourceMapGenerator = __webpack_require__(542).SourceMapGenerator;
+	var util = __webpack_require__(545);
 	
 	// Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	// operating systems these days (capturing the result).
@@ -5720,5 +5720,7 @@ var Debugger =
 
 /***/ }
 
-/******/ });
+/******/ })
+});
+;
 //# sourceMappingURL=source-map-worker.js.map
