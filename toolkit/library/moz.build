@@ -341,6 +341,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'shlwapi',
         'ws2_32',
         'dbghelp',
+        'dwmapi',
         'rasapi32',
         'rasdlg',
         'iphlpapi',

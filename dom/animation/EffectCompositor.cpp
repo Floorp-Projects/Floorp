@@ -22,6 +22,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
 #include "nsRuleProcessorData.h" // For ElementRuleProcessorData etc.
@@ -263,7 +264,7 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     if (!elementsToRestyle.Contains(key)) {
       elementsToRestyle.Put(key, false);
     }
-    mPresContext->Document()->SetNeedStyleFlush();
+    mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
     // Get() returns 0 if the element is not found. It will also return
     // false if the element is found but does not have a pending restyle.

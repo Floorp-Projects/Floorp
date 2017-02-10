@@ -392,21 +392,6 @@ public:
   static bool GetIsMouseFromTouch(EventMessage aEventType);
 
   /**
-   * SHCreateItemFromParsingName() calls native SHCreateItemFromParsingName()
-   * API which is available on Vista and up.
-   */
-  static HRESULT SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
-                                             REFIID riid, void **ppv);
-
-  /**
-   * SHGetKnownFolderPath() calls native SHGetKnownFolderPath()
-   * API which is available on Vista and up.
-   */
-  static HRESULT SHGetKnownFolderPath(REFKNOWNFOLDERID rfid,
-                                      DWORD dwFlags,
-                                      HANDLE hToken,
-                                      PWSTR *ppszPath);
-  /**
    * GetShellItemPath return the file or directory path of a shell item.
    * Internally calls IShellItem's GetDisplayName.
    *
@@ -478,31 +463,6 @@ public:
    */
   static bool ResolveMovedUsersFolder(std::wstring& aPath);
 
-  /**
-  * dwmapi.dll function typedefs and declarations
-  */
-  typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
-  typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
-  typedef HRESULT (WINAPI*DwmSetIconicThumbnailProc)(HWND hWnd, HBITMAP hBitmap, DWORD dwSITFlags);
-  typedef HRESULT (WINAPI*DwmSetIconicLivePreviewBitmapProc)(HWND hWnd, HBITMAP hBitmap, POINT *pptClient, DWORD dwSITFlags);
-  typedef HRESULT (WINAPI*DwmGetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
-  typedef HRESULT (WINAPI*DwmSetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
-  typedef HRESULT (WINAPI*DwmInvalidateIconicBitmapsProc)(HWND hWnd);
-  typedef HRESULT (WINAPI*DwmDefWindowProcProc)(HWND hWnd, UINT msg, LPARAM lParam, WPARAM wParam, LRESULT *aRetValue);
-  typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_INFO *info);
-  typedef HRESULT (WINAPI*DwmFlushProc)(void);
-
-  static DwmExtendFrameIntoClientAreaProc dwmExtendFrameIntoClientAreaPtr;
-  static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr;
-  static DwmSetIconicThumbnailProc dwmSetIconicThumbnailPtr;
-  static DwmSetIconicLivePreviewBitmapProc dwmSetIconicLivePreviewBitmapPtr;
-  static DwmGetWindowAttributeProc dwmGetWindowAttributePtr;
-  static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
-  static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
-  static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;
-  static DwmGetCompositionTimingInfoProc dwmGetCompositionTimingInfoPtr;
-  static DwmFlushProc dwmFlushProcPtr;
-
   static void Initialize();
 
   static bool ShouldHideScrollbars();
@@ -524,17 +484,6 @@ public:
 #endif
 
 private:
-  typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
-                                                            IBindCtx *pbc,
-                                                            REFIID riid,
-                                                            void **ppv);
-  static SHCreateItemFromParsingNamePtr sCreateItemFromParsingName;
-  typedef HRESULT (WINAPI * SHGetKnownFolderPathPtr)(REFKNOWNFOLDERID rfid,
-                                                     DWORD dwFlags,
-                                                     HANDLE hToken,
-                                                     PWSTR *ppszPath);
-  static SHGetKnownFolderPathPtr sGetKnownFolderPath;
-
   static void GetWhitelistedPaths(
       nsTArray<mozilla::Pair<nsString,nsDependentString>>& aOutput);
 };

@@ -162,6 +162,10 @@ function awaitRefresh() {
   return awaitOneRefresh().then(awaitOneRefresh);
 }
 
+function flushStyles() {
+  getComputedStyle(document.body).color;
+}
+
 function runTest() {
   // Document and window from inside the display:none iframe.
   var nframe = document.getElementById("n");
@@ -956,6 +960,7 @@ function runTest() {
     is(document.fonts.status, "loading", "FontFaceSet.status after adding a loading FontFace (TEST 32)");
 
     document.fonts.clear();
+    flushStyles();
 
     is(document.fonts.status, "loaded", "FontFaceSet.status after clearing (TEST 32)");
 

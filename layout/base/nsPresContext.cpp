@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
@@ -76,7 +77,6 @@
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/ServoRestyleManagerInlines.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceTiming.h"
@@ -2069,12 +2069,12 @@ nsPresContext::PostMediaFeatureValuesChangedEvent()
   // FIXME: We should probably replace this event with use of
   // nsRefreshDriver::AddStyleFlushObserver (except the pres shell would
   // need to track whether it's been added).
-  if (!mPendingMediaFeatureValuesChanged) {
+  if (!mPendingMediaFeatureValuesChanged && mShell) {
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPendingMediaFeatureValuesChanged = true;
-      mDocument->SetNeedStyleFlush();
+      mShell->SetNeedStyleFlush();
     }
   }
 }
@@ -2258,7 +2258,9 @@ nsPresContext::RebuildCounterStyles()
   }
 
   mCounterStylesDirty = true;
-  mDocument->SetNeedStyleFlush();
+  if (mShell) {
+    mShell->SetNeedStyleFlush();
+  }
   if (!mPostedFlushCounterStyles) {
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsPresContext::HandleRebuildCounterStyles);
@@ -2776,8 +2778,8 @@ nsPresContext::NotifyFontFaceSetOnRefresh()
 bool
 nsPresContext::HasPendingRestyleOrReflow()
 {
-  return (mRestyleManager && mRestyleManager->HasPendingRestyles()) ||
-         PresShell()->HasPendingReflow();
+  nsIPresShell* shell = PresShell();
+  return shell->NeedStyleFlush() || shell->HasPendingReflow();
 }
 
 void
