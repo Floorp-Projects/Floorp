@@ -18,8 +18,8 @@ Test RegExp rep
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { RegExp } = browserRequire("devtools/client/shared/components/reps/regexp");
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, RegExp } = REPS;
 
     let gripStub = {
       "type": "object",

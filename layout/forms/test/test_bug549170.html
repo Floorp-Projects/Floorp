@@ -47,13 +47,13 @@ function checkMouseEvents(element)
 {
   gNumberOfMouseEventsCatched = 0;
 
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 0});
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 0});
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 1});
+  synthesizeMouse(element, 7, 7, {type: "mousedown", button: 0});
+  synthesizeMouse(element, 7, 7, {type: "mouseup",   button: 0});
+  synthesizeMouse(element, 7, 7, {type: "mousedown", button: 1});
   // NOTE: this event is going to copy the buffer on linux, this should not be a problem
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 1});
-  synthesizeMouse(element, 5, 5, {type: "mousedown", button: 2});
-  synthesizeMouse(element, 5, 5, {type: "mouseup",   button: 2});
+  synthesizeMouse(element, 7, 7, {type: "mouseup",   button: 1});
+  synthesizeMouse(element, 7, 7, {type: "mousedown", button: 2});
+  synthesizeMouse(element, 7, 7, {type: "mouseup",   button: 2});
 
   is(gNumberOfMouseEventsCatched, 6, "Some mouse events have not been catched");
 }

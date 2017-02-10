@@ -41,6 +41,12 @@ GLLibraryLoader::LoadSymbols(const SymLoadStruct* firstStruct,
 }
 
 PRFuncPtr
+GLLibraryLoader::LookupSymbol(const char* sym)
+{
+    return LookupSymbol(mLibrary, sym, mLookupFunc);
+}
+
+PRFuncPtr
 GLLibraryLoader::LookupSymbol(PRLibrary* lib,
                               const char* sym,
                               PlatformLookupFunction lookupFunction)

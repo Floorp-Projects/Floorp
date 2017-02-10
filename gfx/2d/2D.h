@@ -751,6 +751,8 @@ public:
 
   virtual bool GetFontDescriptor(FontDescriptorOutput, void *) { return false; }
 
+  virtual bool CanSerialize() { return false; }
+
   void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
     mUserData.Add(key, userData, destroy);
   }

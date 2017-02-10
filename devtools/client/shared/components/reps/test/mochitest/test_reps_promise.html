@@ -19,9 +19,8 @@ Test Promise rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { PromiseRep } = browserRequire("devtools/client/shared/components/reps/promise");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, PromiseRep } = REPS;
 
   const componentUnderTest = PromiseRep;
 

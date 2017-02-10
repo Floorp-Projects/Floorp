@@ -185,7 +185,7 @@ class MessageType(IPDLType):
                  ctor=False, dtor=False, cdtype=None, compress=False,
                  verify=False):
         assert not (ctor and dtor)
-        assert not (ctor or dtor) or type is not None
+        assert not (ctor or dtor) or cdtype is not None
 
         self.nested = nested
         self.prio = prio
@@ -622,10 +622,6 @@ class GatherDecls(TcheckVisitor):
         # second pass to check each definition
         for su in tu.structsAndUnions:
             su.accept(self)
-        for inc in tu.includes:
-            if inc.tu.filetype == 'header':
-                for su in inc.tu.structsAndUnions:
-                    su.accept(self)
 
         if tu.protocol:
             # grab symbols in the protocol itself

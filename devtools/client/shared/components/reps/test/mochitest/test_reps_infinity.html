@@ -19,8 +19,8 @@ Test Infinity rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { InfinityRep } = browserRequire("devtools/client/shared/components/reps/infinity");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, InfinityRep } = REPS;
 
   try {
     yield testInfinity();

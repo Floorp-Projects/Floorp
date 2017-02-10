@@ -36,6 +36,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -424,6 +425,14 @@ TabChild::TabChild(nsIContentChild* aManager,
   for (uint32_t idx = 0; idx < NUMBER_OF_AUDIO_CHANNELS; idx++) {
     mAudioChannelsActive.AppendElement(false);
   }
+}
+
+const CompositorOptions&
+TabChild::GetCompositorOptions() const
+{
+  // If you're calling this before mCompositorOptions is set, well.. don't.
+  MOZ_ASSERT(mCompositorOptions);
+  return mCompositorOptions.ref();
 }
 
 bool
@@ -2384,11 +2393,6 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
   }
   mLayerObserverEpoch = aLayerObserverEpoch;
 
-  MOZ_ASSERT(mPuppetWidget);
-  MOZ_ASSERT(mPuppetWidget->GetLayerManager());
-  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
-             LayersBackend::LAYERS_CLIENT);
-
   auto clearForcePaint = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
     // no-op. In either case, once we exit this scope, we need to alert the
@@ -2400,11 +2404,20 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive,
     }
   });
 
-  // We send the current layer observer epoch to the compositor so that
-  // TabParent knows whether a layer update notification corresponds to the
-  // latest SetDocShellIsActive request that was made.
-  if (ClientLayerManager* clm = mPuppetWidget->GetLayerManager()->AsClientLayerManager()) {
-    clm->SetLayerObserverEpoch(aLayerObserverEpoch);
+  if (mCompositorOptions) {
+    // Note that |GetLayerManager()| has side-effects in that it creates a layer
+    // manager if one doesn't exist already. Calling it inside a debug-only
+    // assertion is generally bad but in this case we call it unconditionally
+    // just below so it's ok.
+    MOZ_ASSERT(mPuppetWidget);
+    MOZ_ASSERT(mPuppetWidget->GetLayerManager());
+    MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+            || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
+
+    // We send the current layer observer epoch to the compositor so that
+    // TabParent knows whether a layer update notification corresponds to the
+    // latest SetDocShellIsActive request that was made.
+    mPuppetWidget->GetLayerManager()->SetLayerObserverEpoch(aLayerObserverEpoch);
   }
 
   // docshell is consider prerendered only if not active yet
@@ -2597,9 +2610,16 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
         mPuppetWidget->GetLayerManager(
             nullptr, mTextureFactoryIdentifier.mParentBackend)
                 ->AsShadowForwarder();
-    // As long as we are creating a ClientLayerManager for the puppet widget,
-    // lf must be non-null here.
-    MOZ_ASSERT(lf);
+
+    LayerManager* lm = mPuppetWidget->GetLayerManager();
+    if (lm->AsWebRenderLayerManager()) {
+      lm->AsWebRenderLayerManager()->Initialize(compositorChild,
+                                                aLayersId,
+                                                &mTextureFactoryIdentifier);
+      ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+      gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+      InitAPZState();
+    }
 
     if (lf) {
       nsTArray<LayersBackend> backends;
@@ -2902,12 +2922,10 @@ TabChild::DidComposite(uint64_t aTransactionId,
 {
   MOZ_ASSERT(mPuppetWidget);
   MOZ_ASSERT(mPuppetWidget->GetLayerManager());
-  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
-               LayersBackend::LAYERS_CLIENT);
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+             || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
 
-  RefPtr<ClientLayerManager> manager = mPuppetWidget->GetLayerManager()->AsClientLayerManager();
-
-  manager->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
+  mPuppetWidget->GetLayerManager()->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
 }
 
 void
@@ -2941,11 +2959,10 @@ TabChild::ClearCachedResources()
 {
   MOZ_ASSERT(mPuppetWidget);
   MOZ_ASSERT(mPuppetWidget->GetLayerManager());
-  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
-               LayersBackend::LAYERS_CLIENT);
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+             || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
 
-  ClientLayerManager *manager = mPuppetWidget->GetLayerManager()->AsClientLayerManager();
-  manager->ClearCachedResources();
+  mPuppetWidget->GetLayerManager()->ClearCachedResources();
 }
 
 void
@@ -2953,8 +2970,8 @@ TabChild::InvalidateLayers()
 {
   MOZ_ASSERT(mPuppetWidget);
   MOZ_ASSERT(mPuppetWidget->GetLayerManager());
-  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() ==
-               LayersBackend::LAYERS_CLIENT);
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+             || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
 
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
   FrameLayerBuilder::InvalidateAllLayers(lm);
@@ -3013,13 +3030,14 @@ void
 TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier,
                             uint64_t aDeviceResetSeqNo)
 {
+  MOZ_ASSERT(mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT
+             || mPuppetWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR);
+
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
-  ClientLayerManager* clm = lm->AsClientLayerManager();
-  MOZ_ASSERT(clm);
 
   mTextureFactoryIdentifier = aNewIdentifier;
-  clm->UpdateTextureFactoryIdentifier(aNewIdentifier, aDeviceResetSeqNo);
-  FrameLayerBuilder::InvalidateAllLayers(clm);
+  lm->UpdateTextureFactoryIdentifier(aNewIdentifier, aDeviceResetSeqNo);
+  FrameLayerBuilder::InvalidateAllLayers(lm);
 }
 
 NS_IMETHODIMP

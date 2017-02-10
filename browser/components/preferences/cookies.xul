@@ -5,8 +5,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/cookies.dtd" >
 
@@ -97,10 +97,8 @@
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
       <button id="removeSelectedCookies" disabled="true" icon="clear"
-              accesskey="&button.removeSelectedCookies.accesskey;"
               oncommand="gCookiesWindow.deleteCookie();"/>
       <button id="removeAllCookies" disabled="true" icon="clear"
-              label="&button.removeAllCookies.label;" accesskey="&button.removeAllCookies.accesskey;"
               oncommand="gCookiesWindow.deleteAllCookies();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
