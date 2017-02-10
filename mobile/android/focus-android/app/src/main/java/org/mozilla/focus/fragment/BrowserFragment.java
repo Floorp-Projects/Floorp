@@ -6,7 +6,6 @@
 package org.mozilla.focus.fragment;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -15,15 +14,13 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionMenu;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
+import org.mozilla.focus.web.IWebView;
 
 /**
  * Fragment for displaying the browser UI.
@@ -45,7 +42,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
     private TextView urlView;
     private View urlBarView;
-    private WebView webView;
+    private IWebView webView;
     private FloatingActionMenu menu;
     private ProgressBar progressView;
     private View lockView;
@@ -70,25 +67,13 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
         view.findViewById(R.id.erase).setOnClickListener(this);
 
-        webView = (WebView) view.findViewById(R.id.webview);
-
-        webView.getSettings().setJavaScriptEnabled(true);
-
-        // Enabling built in zooming shows the controls by default
-        webView.getSettings().setBuiltInZoomControls(true);
-        // So we hide the controls after enabling zooming
-        webView.getSettings().setDisplayZoomControls(false);
-
-        webView.setVerticalScrollBarEnabled(true);
-        webView.setHorizontalScrollBarEnabled(true);
+        webView = (IWebView) view.findViewById(R.id.webview);
 
         menu = (FloatingActionMenu) view.findViewById(R.id.menu);
 
-        final TrackingProtectionWebViewClient webViewClient = new TrackingProtectionWebViewClient(getContext().getApplicationContext()) {
+        webView.setCallback(new IWebView.Callback() {
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                webView.setVisibility(View.VISIBLE);
-
+            public void onPageStarted(String url) {
                 urlView.setText(url);
 
                 urlBarView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorTitleBar));
@@ -98,23 +83,19 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            public void onPageFinished(WebView view, String url) {
+            public void onPageFinished(boolean isSecure) {
                 urlBarView.setBackgroundResource(R.drawable.urlbar_gradient);
 
                 progressView.setVisibility(View.INVISIBLE);
 
-                if (view.getCertificate() != null) {
+                if (isSecure) {
                     lockView.setVisibility(View.VISIBLE);
                 }
             }
-        };
 
-        webView.setWebViewClient(webViewClient);
-
-        webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                progressView.setProgress(newProgress);
+            public void onProgress(int progress) {
+                progressView.setProgress(progress);
             }
         });
 
@@ -137,8 +118,6 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-        webViewClient.notifyCurrentURL(url);
-
         webView.loadUrl(url);
 
         return view;
@@ -155,7 +134,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.erase:
-                cleanup();
+                webView.cleanup();
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -166,13 +145,5 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
 
                 break;
         }
-    }
-
-    private void cleanup() {
-        webView.clearFormData();
-        webView.clearHistory();
-        webView.clearMatches();
-        webView.clearSslPreferences();
-        webView.clearCache(true);
     }
 }

@@ -17,6 +17,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    productFlavors {
+        webkit {
+
+        }
+        gecko {
+
+        }
+    }
 }
 
 dependencies {
@@ -37,5 +45,5 @@ task buildBlocklists(type:Exec) {
 }
 
 project.afterEvaluate{
-    prepareDebugDependencies.dependsOn("buildBlocklists")
+    prepareWebkitDebugDependencies.dependsOn("buildBlocklists")
 }

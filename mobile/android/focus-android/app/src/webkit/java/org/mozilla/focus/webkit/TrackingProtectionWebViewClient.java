@@ -34,7 +34,6 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         return super.shouldInterceptRequest(view, url);
     }
 
-
     /**
      * Notify that the user has requested a new URL. This MUST be called before loading a new URL
      * into the webview: sometimes content requests might begin before the WebView itself notifies

@@ -72,11 +72,10 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <WebView
+        <org.mozilla.focus.web.IWebView
             android:id="@+id/webview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="invisible"/>
+            android:layout_height="match_parent" />
 
         <com.github.clans.fab.FloatingActionMenu
             android:id="@+id/menu"
