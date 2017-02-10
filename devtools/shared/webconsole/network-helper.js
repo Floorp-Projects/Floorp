@@ -633,19 +633,15 @@ var NetworkHelper = {
                       .getService(Ci.nsISiteSecurityService);
 
         // SiteSecurityService uses different storage if the channel is
-        // private. Thus we must give isSecureURI correct flags or we
+        // private. Thus we must give isSecureHost correct flags or we
         // might get incorrect results.
         let flags = (httpActivity.private) ?
                       Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
 
-        if (!uri) {
-          // isSecureURI only cares about the host, not the scheme.
-          let host = httpActivity.hostname;
-          uri = Services.io.newURI("https://" + host);
-        }
+        let host = httpActivity.hostname;
 
-        info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
-        info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
+        info.hsts = sss.isSecureHost(sss.HEADER_HSTS, host, flags);
+        info.hpkp = sss.isSecureHost(sss.HEADER_HPKP, host, flags);
       } else {
         DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
           "Could not get HSTS/HPKP status as hostname is not available.");

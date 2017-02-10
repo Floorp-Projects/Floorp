@@ -122,6 +122,18 @@ interface nsISiteSecurityService : nsISupports
                        [optional] out uint32_t aFailureResult);
 
     /**
+     * Same as processHeader but without checking for the security properties
+     * of the connection. Use ONLY for testing.
+     */
+    void unsafeProcessHeader(in uint32_t aType,
+                             in nsIURI aSourceURI,
+                             in ACString aHeader,
+                             in uint32_t aFlags,
+                             [optional] out unsigned long long aMaxAge,
+                             [optional] out boolean aIncludeSubdomains,
+                             [optional] out uint32_t aFailureResult);
+
+    /**
      * Given a header type, removes state relating to that header of a host,
      * including the includeSubdomains state that would affect subdomains.
      * This essentially removes the state for the domain tree rooted at this
@@ -134,6 +146,21 @@ interface nsISiteSecurityService : nsISupports
     void removeState(in uint32_t aType,
                      in nsIURI aURI,
                      in uint32_t aFlags);
+
+    /**
+     * See isSecureURI
+     *
+     * @param aType the type of security state in question.
+     * @param aHost the hostname (punycode) to query for state.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     * @param aCached true if we have cached information regarding whether or not
+     *                  the host is HSTS, false otherwise.
+     */
+    boolean isSecureHost(in uint32_t aType,
+                         in ACString aHost,
+                         in uint32_t aFlags,
+                         [optional] out boolean aCached);
 
     /**
      * Checks whether or not the URI's hostname has a given security state set.

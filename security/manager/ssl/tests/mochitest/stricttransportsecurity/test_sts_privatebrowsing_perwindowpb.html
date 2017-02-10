@@ -31,7 +31,6 @@
   Cu.import("resource://testing-common/BrowserTestUtils.jsm");
   Cu.import("resource://testing-common/ContentTask.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
-  Cu.import("resource://gre/modules/Services.jsm");
 
   // This is how many sub-tests (testframes) in each round.
   // When the round begins, this will be initialized.
@@ -243,9 +242,7 @@
     let sss = Cc["@mozilla.org/ssservice;1"]
                 .getService(Ci.nsISiteSecurityService);
     let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
-    SimpleTest.info("State of example.com: " +
-      sss.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                      Services.io.newURI("https://example.com"), flags));
+    SimpleTest.info("State of example.com: " + sss.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "example.com", flags));
   }
 
   // These are executed in the order presented.

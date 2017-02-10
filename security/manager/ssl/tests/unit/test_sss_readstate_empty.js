@@ -10,18 +10,15 @@ var gSSService = null;
 
 function checkStateRead(aSubject, aTopic, aData) {
   // nonexistent.example.com should never be an HSTS host
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://nonexistent.example.com"), 0));
+  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                              "nonexistent.example.com", 0));
   // bugzilla.mozilla.org is preloaded
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://bugzilla.mozilla.org"),
-                            0));
+  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             "bugzilla.mozilla.org", 0));
   // notexpired.example.com is an HSTS host in a different test - we
   // want to make sure that test hasn't interfered with this one.
-  ok(!gSSService.isSecureURI(
-       Ci.nsISiteSecurityService.HEADER_HSTS,
-       Services.io.newURI("https://notexpired.example.com"), 0));
+  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                              "notexpired.example.com", 0));
   do_test_finished();
 }
 
