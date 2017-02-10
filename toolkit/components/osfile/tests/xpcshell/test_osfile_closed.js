@@ -8,7 +8,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_closed() {
+add_task(function* test_closed() {
   OS.Shared.DEBUG = true;
   let currentDir = yield OS.File.getCurrentDirectory();
   do_print("Open a file, ensure that we can call stat()");

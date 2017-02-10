@@ -12,7 +12,7 @@ var EXISTING_FILE = do_get_file("xpcshell.ini").path;
 
 // Tests on |open|
 
-add_test_pair(function test_typeerror() {
+add_test_pair(function* test_typeerror() {
   let exn;
   try {
     let fd = yield OS.File.open("/tmp", {no_such_key: 1});
