@@ -151,9 +151,16 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
   try {
+    // Hide all notifications while the URL is being edited and the address bar
+    // has focus, including the virtual focus in the results popup.
+    let shouldSuppress = () => {
+      return gURLBar.getAttribute("pageproxystate") != "valid" &&
+             gURLBar.focused;
+    };
     return new tmp.PopupNotifications(gBrowser,
                                       document.getElementById("notification-popup"),
-                                      document.getElementById("notification-popup-box"));
+                                      document.getElementById("notification-popup-box"),
+                                      { shouldSuppress });
   } catch (ex) {
     Cu.reportError(ex);
     return null;
@@ -2441,17 +2448,8 @@ function BrowserPageInfo(documentURL, initialTab, imageElement, frameOuterWindow
  *
  * @param aURI [optional]
  *        nsIURI to set. If this is unspecified, the current URI will be used.
- * @param aOptions [optional]
- *        An object with the following properties:
- *        {
- *          isForLocationChange:
- *            Set to true to indicate that the function was invoked to respond
- *            to a location change event, rather than to reset the current URI
- *            value. This is useful to avoid calling PopupNotifications.jsm
- *            multiple times.
- *        }
  */
-function URLBarSetURI(aURI, aOptions = {}) {
+function URLBarSetURI(aURI) {
   var value = gBrowser.userTypedValue;
   var valid = false;
 
@@ -2484,7 +2482,7 @@ function URLBarSetURI(aURI, aOptions = {}) {
 
   gURLBar.value = value;
   gURLBar.valueIsTyped = !valid;
-  SetPageProxyState(valid ? "valid" : "invalid", aOptions);
+  SetPageProxyState(valid ? "valid" : "invalid");
 }
 
 function losslessDecodeURI(aURI) {
@@ -2591,19 +2589,15 @@ function UpdatePageProxyState() {
  *        related user interface elments should be shown because the URI in the
  *        location bar matches the loaded page. The string "invalid" indicates
  *        that the URI in the location bar is different than the loaded page.
- * @param aOptions [optional]
- *        An object with the following properties:
- *        {
- *          isForLocationChange:
- *            Set to true to indicate that the function was invoked to respond
- *            to a location change event. This is useful to avoid calling
- *            PopupNotifications.jsm multiple times.
- *        }
  */
-function SetPageProxyState(aState, aOptions = {}) {
+function SetPageProxyState(aState) {
   if (!gURLBar)
     return;
 
+  let oldPageProxyState = gURLBar.getAttribute("pageproxystate");
+  // The "browser_urlbar_stop_pending.js" test uses a MutationObserver to do
+  // some verifications at this point, and it breaks if we don't write the
+  // attribute, even if it hasn't changed (bug 1338115).
   gURLBar.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
@@ -2615,14 +2609,26 @@ function SetPageProxyState(aState, aOptions = {}) {
     gURLBar.removeEventListener("input", UpdatePageProxyState);
   }
 
-  // Only need to call anchorVisibilityChange if the PopupNotifications object
-  // for this window has already been initialized (i.e. its getter no
-  // longer exists). If this is the result of a locations change, then we will
-  // already invoke PopupNotifications.locationChange separately.
-  if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get &&
-      !aOptions.isForLocationChange) {
-    PopupNotifications.anchorVisibilityChange();
+  // After we've ensured that we've applied the listeners and updated the value
+  // of gLastValidURLStr, return early if the actual state hasn't changed.
+  if (oldPageProxyState == aState) {
+    return;
   }
+
+  UpdatePopupNotificationsVisibility();
+}
+
+function UpdatePopupNotificationsVisibility() {
+  // Only need to do something if the PopupNotifications object for this window
+  // has already been initialized (i.e. its getter no longer exists).
+  if (Object.getOwnPropertyDescriptor(window, "PopupNotifications").get) {
+    return;
+  }
+
+  // Notify PopupNotifications that the visible anchors may have changed. This
+  // also checks the suppression state according to the "shouldSuppress"
+  // function defined earlier in this file.
+  PopupNotifications.anchorVisibilityChange();
 }
 
 function PageProxyClickHandler(aEvent) {
@@ -4541,7 +4547,7 @@ var XULBrowserWindow = {
         this.reloadCommand.removeAttribute("disabled");
       }
 
-      URLBarSetURI(aLocationURI, { isForLocationChange: true });
+      URLBarSetURI(aLocationURI);
 
       BookmarkingUI.onLocationChange();
 

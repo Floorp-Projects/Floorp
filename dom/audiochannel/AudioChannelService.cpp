@@ -220,6 +220,17 @@ AudioChannelService::GetOrCreate()
   return service.forget();
 }
 
+/* static */ already_AddRefed<AudioChannelService>
+AudioChannelService::Get()
+{
+  if (sXPCOMShuttingDown) {
+    return nullptr;
+  }
+
+  RefPtr<AudioChannelService> service = gAudioChannelService.get();
+  return service.forget();
+}
+
 /* static */ PRLogModuleInfo*
 AudioChannelService::GetAudioChannelLog()
 {
@@ -933,6 +944,17 @@ AudioChannelService::IsAudioChannelActive(mozIDOMWindowProxy* aWindow,
   *aActive = IsAudioChannelActive(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
+
+bool
+AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  AudioChannelWindow* winData = GetOrCreateWindowData(window);
+  return !winData->mAudibleAgents.IsEmpty();
+}
+
 void
 AudioChannelService::SetDefaultVolumeControlChannel(int32_t aChannel,
                                                     bool aVisible)

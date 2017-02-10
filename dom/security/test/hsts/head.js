@@ -426,7 +426,7 @@ function build_test_uri(base_uri, host, test_id, type, timeout) {
 }
 
 // open a new tab, load the test, and wait for it to finish
-function execute_test(test, mimetype) {
+async function execute_test(test, mimetype) {
   var src = build_test_uri(TOP_URI, test_servers[test].host,
       test, test_settings[which_test].type,
       test_settings[which_test].timeout);
@@ -435,7 +435,7 @@ function execute_test(test, mimetype) {
   test_servers[test]['tab'] = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
-  yield BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.browserLoaded(browser);
 
-  yield BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.removeTab(tab);
 }

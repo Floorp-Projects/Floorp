@@ -95,18 +95,14 @@ function checkWatchdog(expectInterrupt, continuation) {
   });
 }
 
-var gGenerator;
-function continueTest() {
-  gGenerator.next();
-}
-
 function run_test() {
 
   // Run async.
   do_test_pending();
 
-  // Instantiate the generator and kick it off.
-  gGenerator = testBody();
-  gGenerator.next();
+  // Run the async function.
+  testBody().then(() => {
+    do_test_finished();
+  });
 }
 

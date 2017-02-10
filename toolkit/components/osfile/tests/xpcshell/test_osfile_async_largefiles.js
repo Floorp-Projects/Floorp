@@ -13,7 +13,7 @@ Components.utils.import("resource://gre/modules/Task.jsm");
  */
 
 // Test setPosition/getPosition.
-function test_setPosition(forward, current, backward) {
+function* test_setPosition(forward, current, backward) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_async_largefiles.tmp");
 
@@ -62,7 +62,7 @@ function test_setPosition(forward, current, backward) {
 }
 
 // Test setPosition/getPosition expected failures.
-function test_setPosition_failures() {
+function* test_setPosition_failures() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_async_largefiles.tmp");
 

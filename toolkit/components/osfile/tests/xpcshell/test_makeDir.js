@@ -78,7 +78,7 @@ add_task(function* test_root() {
 /**
  * Creating subdirectories
  */
-add_task(function test_option_from() {
+add_task(function* test_option_from() {
   let dir = Path.join(profileDir, "a", "b", "c");
 
   // Sanity checking for the test

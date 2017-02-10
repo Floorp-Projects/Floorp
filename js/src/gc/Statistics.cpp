@@ -1405,7 +1405,12 @@ Statistics::maybePrintProfileHeaders()
     static int printedHeader = 0;
     if ((printedHeader++ % 200) == 0) {
         printProfileHeader();
-        runtime->zoneGroupFromMainThread()->nursery().printProfileHeader();
+        for (ZoneGroupsIter group(runtime); !group.done(); group.next()) {
+            if (group->nursery().enableProfiling()) {
+                Nursery::printProfileHeader();
+                break;
+            }
+        }
     }
 }
 

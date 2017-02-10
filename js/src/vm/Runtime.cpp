@@ -351,6 +351,7 @@ JSRuntime::setActiveContext(JSContext* cx)
 {
     MOZ_ASSERT_IF(cx, isCooperatingContext(cx));
     MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+    MOZ_RELEASE_ASSERT(gc.canChangeActiveContext(cx));
 
     activeContext_ = cx;
 }
@@ -374,12 +375,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     // Several tables in the runtime enumerated below can be used off thread.
     AutoLockForExclusiveAccess lock(this);
 
-    // For now, measure the size of the derived class (JSContext).
-    // TODO (bug 1281529): make memory reporting reflect the new
-    // JSContext/JSRuntime world better.
-    JSContext* cx = unsafeContextFromAnyThread();
-    rtSizes->object += mallocSizeOf(cx);
-
+    rtSizes->object += mallocSizeOf(this);
     rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
 
     if (!parentRuntime) {
@@ -388,16 +384,27 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
+    for (const CooperatingContext& target : cooperatingContexts()) {
+        JSContext* cx = target.context();
+        rtSizes->contexts += mallocSizeOf(cx);
+        rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
+        rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+        rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
+    }
 
-    rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+    for (ZoneGroupsIter group(this); !group.done(); group.next()) {
+        ZoneGroupCaches& caches = group->caches();
 
-    rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
+        if (MathCache* cache = caches.maybeGetMathCache())
+            rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
 
-    ZoneGroupCaches& caches = zoneGroupFromAnyThread()->caches();
+        rtSizes->uncompressedSourceCache +=
+            caches.uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 
-    if (MathCache* cache = caches.maybeGetMathCache())
-        rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
+        rtSizes->gc.nurseryCommitted += group->nursery().sizeOfHeapCommitted();
+        rtSizes->gc.nurseryMallocedBuffers += group->nursery().sizeOfMallocedBuffers(mallocSizeOf);
+        group->storeBuffer().addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
+    }
 
     if (sharedImmutableStrings_) {
         rtSizes->sharedImmutableStringsCache +=
@@ -405,9 +412,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     }
 
     rtSizes->sharedIntlData += sharedIntlData.ref().sizeOfExcludingThis(mallocSizeOf);
-
-    rtSizes->uncompressedSourceCache +=
-        caches.uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->scriptData += scriptDataTable(lock).sizeOfExcludingThis(mallocSizeOf);
     for (ScriptDataTable::Range r = scriptDataTable(lock).all(); !r.empty(); r.popFront())
@@ -419,9 +423,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     }
 
     rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
-    rtSizes->gc.nurseryCommitted += zoneGroupFromAnyThread()->nursery().sizeOfHeapCommitted();
-    rtSizes->gc.nurseryMallocedBuffers += zoneGroupFromAnyThread()->nursery().sizeOfMallocedBuffers(mallocSizeOf);
-    zoneGroupFromAnyThread()->storeBuffer().addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
 }
 
 static bool
@@ -532,7 +533,7 @@ JSRuntime::setDefaultLocale(const char* locale)
     if (!locale)
         return false;
     resetDefaultLocale();
-    defaultLocale = JS_strdup(contextFromMainThread(), locale);
+    defaultLocale = JS_strdup(activeContextFromOwnThread(), locale);
     return defaultLocale != nullptr;
 }
 
@@ -559,7 +560,7 @@ JSRuntime::getDefaultLocale()
     if (!locale || !strcmp(locale, "C"))
         locale = "und";
 
-    char* lang = JS_strdup(contextFromMainThread(), locale);
+    char* lang = JS_strdup(activeContextFromOwnThread(), locale);
     if (!lang)
         return nullptr;
 
@@ -787,7 +788,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone* zone)
 bool
 js::CurrentThreadCanAccessRuntime(const JSRuntime* rt)
 {
-    return rt->unsafeContextFromAnyThread() == TlsContext.get();
+    return rt->activeContext() == TlsContext.get();
 }
 
 bool

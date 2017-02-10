@@ -91,7 +91,7 @@ StoreBuffer::setAboutToOverflow()
         aboutToOverflow_ = true;
         runtime_->gc.stats().count(gcstats::STAT_STOREBUFFER_OVERFLOW);
     }
-    runtime_->gc.requestMinorGC(JS::gcreason::FULL_STORE_BUFFER);
+    nursery_.requestMinorGC(JS::gcreason::FULL_STORE_BUFFER);
 }
 
 void

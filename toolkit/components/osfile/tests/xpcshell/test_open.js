@@ -15,7 +15,7 @@ function run_test() {
  * - with a non-existing file (should fail);
  * - with inconsistent arguments (should fail).
  */
-add_task(function() {
+add_task(function*() {
   // Attempt to open a file that does not exist, ensure that it yields the
   // appropriate error.
   try {
@@ -55,7 +55,7 @@ add_task(function() {
  * Test the error thrown by OS.File.open when attempting to open a directory
  * that does not exist.
  */
-add_task(function test_error_attributes () {
+add_task(function* test_error_attributes () {
 
   let dir = OS.Path.join(do_get_profile().path, "test_osfileErrorAttrs");
   let fpath = OS.Path.join(dir, "test_error_attributes.txt");

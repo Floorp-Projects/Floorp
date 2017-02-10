@@ -1960,6 +1960,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                                bool compilingWasm);
 
     void convertInt32ValueToDouble(const Address& address, Register scratch, Label* done);
+    void convertInt32ValueToDouble(ValueOperand val);
+
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label* fail) {
         convertValueToFloatingPoint(value, output, fail, MIRType::Double);
     }

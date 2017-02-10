@@ -34,7 +34,15 @@ class ProcessContext(object):
         """
         if self.process and self.process.is_running():
             LOG.debug("Terminating %s" % self.process)
-            self.process.terminate()
+            try:
+                self.process.terminate()
+            except psutil.NoSuchProcess:
+                procs = self.process.children()
+                for p in procs:
+                    c = ProcessContext()
+                    c.process = p
+                    c.kill_process()
+                return self.process.returncode
             try:
                 return self.process.wait(3)
             except psutil.TimeoutExpired:
