@@ -175,6 +175,25 @@ assert.number = function (obj, msg = "") {
 };
 
 /**
+ * Asserts that |obj| is callable.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {Function}
+ *     |obj| is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |obj| is not callable.
+ */
+assert.callable = function (obj, msg = "") {
+  msg = msg || error.pprint`${obj} is not callable`;
+  return assert.that(o => typeof o == "function", msg)(obj);
+};
+
+/**
  * Asserts that |obj| is an integer.
  *
  * @param {?} obj
