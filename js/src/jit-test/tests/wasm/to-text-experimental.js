@@ -62,7 +62,7 @@ wasmFailValidateText(
   )
   (export "test" 0)
   (memory 1 10)
-)`, /popping value from empty stack/);
+)`, emptyStackError);
 
 // function calls
 runTest(`

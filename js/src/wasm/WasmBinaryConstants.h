@@ -25,7 +25,11 @@ namespace js {
 namespace wasm {
 
 static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
-static const uint32_t EncodingVersion    = 0x0d;
+static const uint32_t EncodingVersion    = 0x01;
+
+// 0xd is equivalent to 0x1 modulo unreachability validation rules, so to aid
+// transition of toolchain, accept both for a short period of time.
+static const uint32_t PrevEncodingVersion = 0x0d;
 
 static const char NameSectionName[]      = "name";
 
