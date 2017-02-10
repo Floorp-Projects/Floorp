@@ -67,11 +67,12 @@ function checkReceivedEvents(eventType, elements) {
 // Take over the refresh driver right from the start.
 advance_clock(0);
 
-// 1. Test CSS Animation event handlers.
+// 1a. Test CSS Animation event handlers (without animationcancel)
 
 var targets = createAndRegisterTargets([ 'onanimationstart',
                                          'onanimationiteration',
-                                         'onanimationend' ]);
+                                         'onanimationend',
+                                         'onanimationcancel']);
 targets.forEach(div => {
   div.setAttribute('style', 'animation: anim 100ms 2');
   getComputedStyle(div).animationName;  // flush
@@ -87,6 +88,29 @@ advance_clock(200);
 checkReceivedEvents("animationend", targets);
 
 targets.forEach(div => { div.remove(); });
+
+// 1b. Test CSS Animation cancel event handler
+var targets = createAndRegisterTargets([ 'onanimationcancel' ]);
+
+targets.forEach(div => {
+  div.setAttribute('style', 'animation: anim 100ms 2 200ms');
+  getComputedStyle(div).animationName;  // flush
+});
+
+advance_clock(200);
+
+targets.forEach(div => {
+  div.style.display = "none"
+  getComputedStyle(div).display; // flush
+});
+
+advance_clock(0);
+checkReceivedEvents("animationcancel", targets);
+
+advance_clock(200);
+
+targets.forEach(div => { div.remove(); });
+
 
 // 2a. Test CSS Transition event handlers (without transitioncancel)
 
