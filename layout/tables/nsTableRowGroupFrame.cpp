@@ -1391,7 +1391,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // not paginated ... we can't split across columns yet.
   if (aReflowInput.mFlags.mTableIsSplittable &&
       NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableHeight() &&
-      (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak ||
+      (aStatus == NS_FRAME_NOT_COMPLETE || splitDueToPageBreak ||
        aDesiredSize.Height() > aReflowInput.AvailableHeight())) {
     // Nope, find a place to split the row group
     bool specialReflow = (bool)aReflowInput.mFlags.mSpecialBSizeReflow;
