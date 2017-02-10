@@ -24,18 +24,14 @@ const TEST_GUID = "test-guid";
 const TEST_PROFILE = {
   guid: TEST_GUID,
   organization: "World Wide Web Consortium",
-  streetAddress: "32 Vassar Street\nMIT Room 32-G524",
-  addressLevel2: "Cambridge",
-  addressLevel1: "MA",
+  "street-address": "32 Vassar Street\nMIT Room 32-G524",
+  "address-level2": "Cambridge",
+  "address-level1": "MA",
   postalCode: "02139",
   country: "US",
   tel: "+1 617 253 5702",
   email: "timbl@w3.org",
 };
-
-function camelCase(str) {
-  return str.toLowerCase().replace(/-([a-z])/g, s => s[1].toUpperCase());
-}
 
 add_task(function* test_populateFieldValues() {
   FormAutofillParent.init();
@@ -71,7 +67,7 @@ add_task(function* test_populateFieldValues() {
           for (let i = 0; i < fields.length; i++) {
             do_check_eq(fields[i].fieldName, TEST_FIELDS[i].fieldName);
             do_check_eq(fields[i].value,
-              TEST_PROFILE[camelCase(fields[i].fieldName)]);
+              TEST_PROFILE[fields[i].fieldName]);
           }
 
           resolve();

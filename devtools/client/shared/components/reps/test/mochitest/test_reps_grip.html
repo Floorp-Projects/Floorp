@@ -17,9 +17,8 @@ Test grip rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { Grip } = browserRequire("devtools/client/shared/components/reps/grip");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, Grip } = REPS;
 
   const componentUnderTest = Grip;
 

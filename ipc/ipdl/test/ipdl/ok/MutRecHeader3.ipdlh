@@ -1,0 +1,8 @@
+include MutRecHeader1;
+
+// See MutRecHeader1.ipdlh for explanation.
+
+struct Struct3
+{
+  bool b;
+};

@@ -26,6 +26,7 @@ let gSiteDataSettings = {
 
   _list: null,
   _searchBox: null,
+  _prefStrBundle: null,
 
   init() {
     function setEventListener(id, eventType, callback) {
@@ -35,6 +36,7 @@ let gSiteDataSettings = {
 
     this._list = document.getElementById("sitesList");
     this._searchBox = document.getElementById("searchBox");
+    this._prefStrBundle = document.getElementById("bundlePreferences")
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
       let sortCol = document.getElementById("hostCol");
@@ -42,6 +44,9 @@ let gSiteDataSettings = {
       this._buildSitesList(this._sites);
       Services.obs.notifyObservers(null, "sitedata-settings-init", null);
     });
+
+    let removeAllBtn = document.getElementById("removeAll");
+    removeAllBtn.setAttribute("accesskey", this._prefStrBundle.getString("removeAll.accesskey"));
 
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
@@ -59,6 +64,9 @@ let gSiteDataSettings = {
     let removeAllBtn = document.getElementById("removeAll");
     removeSelectedBtn.disabled = items.length == 0;
     removeAllBtn.disabled = removeSelectedBtn.disabled;
+    let removeAllBtnLabel = this._searchBox.value ?
+      this._prefStrBundle.getString("removeAllShown.label") : this._prefStrBundle.getString("removeAll.label");
+    removeAllBtn.setAttribute("label", removeAllBtnLabel);
   },
 
   /**
@@ -117,7 +125,6 @@ let gSiteDataSettings = {
       item.remove();
     }
 
-    let prefStrBundle = document.getElementById("bundlePreferences");
     let keyword = this._searchBox.value.toLowerCase().trim();
     for (let data of sites) {
       let host = data.uri.host;
@@ -134,8 +141,8 @@ let gSiteDataSettings = {
       let item = document.createElement("richlistitem");
       item.setAttribute("data-origin", data.uri.spec);
       item.setAttribute("host", host);
-      item.setAttribute("status", prefStrBundle.getString(statusStrId));
-      item.setAttribute("usage", prefStrBundle.getFormattedString("siteUsage", size));
+      item.setAttribute("status", this._prefStrBundle.getString(statusStrId));
+      item.setAttribute("usage", this._prefStrBundle.getFormattedString("siteUsage", size));
       this._list.appendChild(item);
     }
     this._updateButtonsState();

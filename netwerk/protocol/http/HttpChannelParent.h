@@ -119,7 +119,7 @@ protected:
                    const nsCString&           requestMethod,
                    const OptionalIPCStream&   uploadStream,
                    const bool&                uploadStreamHasHeaders,
-                   const uint16_t&            priority,
+                   const int16_t&             priority,
                    const uint32_t&            classOfService,
                    const uint8_t&             redirectionLimit,
                    const bool&                allowPipelining,
@@ -148,7 +148,7 @@ protected:
                    const uint64_t&            aContentWindowId,
                    const nsCString&           aPreferredAlternativeType);
 
-  virtual mozilla::ipc::IPCResult RecvSetPriority(const uint16_t& priority) override;
+  virtual mozilla::ipc::IPCResult RecvSetPriority(const int16_t& priority) override;
   virtual mozilla::ipc::IPCResult RecvSetClassOfService(const uint32_t& cos) override;
   virtual mozilla::ipc::IPCResult RecvSetCacheTokenCachedCharset(const nsCString& charset) override;
   virtual mozilla::ipc::IPCResult RecvSuspend() override;

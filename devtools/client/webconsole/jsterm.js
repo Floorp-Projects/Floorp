@@ -1637,6 +1637,12 @@ JSTerm.prototype = {
     this.lastCompletion = { value: null };
     this.updateCompleteNode("");
     if (this.autocompletePopup.isOpen) {
+      // Trigger a blur/focus of the JSTerm input to force screen readers to read the
+      // value again.
+      this.inputNode.blur();
+      this.autocompletePopup.once("popup-closed", () => {
+        this.inputNode.focus();
+      });
       this.autocompletePopup.hidePopup();
       this._autocompletePopupNavigated = false;
     }
