@@ -2,15 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals NetMonitorController */
+
 "use strict";
 
 const {
   ADD_REQUEST,
-  UPDATE_REQUEST,
+  CLEAR_REQUESTS,
   CLONE_SELECTED_REQUEST,
   REMOVE_SELECTED_CUSTOM_REQUEST,
-  CLEAR_REQUESTS,
+  SEND_CUSTOM_REQUEST,
+  UPDATE_REQUEST,
 } = require("../constants");
+const { getSelectedRequest } = require("../selectors/index");
 
 function addRequest(id, data, batch) {
   return {
@@ -41,6 +45,43 @@ function cloneSelectedRequest() {
 }
 
 /**
+ * Send a new HTTP request using the data in the custom request form.
+ */
+function sendCustomRequest() {
+  if (!NetMonitorController.supportsCustomRequest) {
+    return cloneSelectedRequest();
+  }
+
+  return (dispatch, getState) => {
+    const selected = getSelectedRequest(getState());
+
+    if (!selected) {
+      return;
+    }
+
+    // Send a new HTTP request using the data in the custom request form
+    let data = {
+      url: selected.url,
+      method: selected.method,
+      httpVersion: selected.httpVersion,
+    };
+    if (selected.requestHeaders) {
+      data.headers = selected.requestHeaders.headers;
+    }
+    if (selected.requestPostData) {
+      data.body = selected.requestPostData.postData.text;
+    }
+
+    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
+      return dispatch({
+        type: SEND_CUSTOM_REQUEST,
+        id: response.eventActor.actor,
+      });
+    });
+  };
+}
+
+/**
  * Remove a request from the list. Supports removing only cloned requests with a
  * "isCustom" attribute. Other requests never need to be removed.
  */
@@ -58,8 +99,9 @@ function clearRequests() {
 
 module.exports = {
   addRequest,
-  updateRequest,
+  clearRequests,
   cloneSelectedRequest,
   removeSelectedCustomRequest,
-  clearRequests,
+  sendCustomRequest,
+  updateRequest,
 };

@@ -127,7 +127,7 @@
               case "date":
                 let timeObj = new Date(node.time / 1000);
                 // Default is short date format.
-                let dtOptions = { year: '2-digit', month: 'numeric', day: 'numeric',
+                let dtOptions = { year: 'numeric', month: 'numeric', day: 'numeric',
                                   hour: 'numeric', minute: 'numeric' };
                 // For today's visits we don't show date portion.
                 if (node.uri == "http://at.midnight.com/" ||
