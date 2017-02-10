@@ -2075,7 +2075,9 @@ MediaFormatReader::Update(TrackType aTrack)
 
   if (decoder.mDrainState == DrainState::DrainRequested
       || decoder.mDrainState == DrainState::PartialDrainPending) {
-    DrainDecoder(aTrack);
+    if (decoder.mOutput.IsEmpty()) {
+      DrainDecoder(aTrack);
+    }
     return;
   }
 
