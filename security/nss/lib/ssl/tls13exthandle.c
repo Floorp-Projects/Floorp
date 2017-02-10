@@ -768,12 +768,6 @@ tls13_ServerHandleEarlyDataXtn(const sslSocket *ss, TLSExtensionData *xtnData, P
         return SECSuccess;
     }
 
-    if (ss->ssl3.hs.helloRetry) {
-        ssl3_ExtSendAlert(ss, alert_fatal, unsupported_extension);
-        PORT_SetError(SSL_ERROR_RX_UNEXPECTED_EXTENSION);
-        return SECFailure;
-    }
-
     if (data->len) {
         PORT_SetError(SSL_ERROR_MALFORMED_EARLY_DATA);
         return SECFailure;

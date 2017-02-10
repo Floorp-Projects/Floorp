@@ -251,23 +251,6 @@ async function scheduleLinux(name, base) {
 
 /*****************************************************************************/
 
-function scheduleFuzzingRun(base, name, target, max_len, symbol = null) {
-  const MAX_FUZZ_TIME = 300;
-
-  queue.scheduleTask(merge(base, {
-    name,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        `${target} nss/fuzz/corpus/${target} ` +
-        `-max_total_time=${MAX_FUZZ_TIME} ` +
-        `-max_len=${max_len}`
-    ],
-    symbol: symbol || name
-  }));
-}
-
 async function scheduleFuzzing() {
   let base = {
     env: {
@@ -324,17 +307,57 @@ async function scheduleFuzzing() {
     kind: "test"
   }));
 
-  // Schedule fuzzing runs.
-  let run_base = merge(base, {parent: task_build, kind: "test"});
-  let mpi_base = merge(run_base, {group: "MPI"});
-  scheduleFuzzingRun(run_base, "CertDN", "certDN", 4096);
-  scheduleFuzzingRun(run_base, "Hash", "hash", 4096);
-  scheduleFuzzingRun(run_base, "QuickDER", "quickder", 10000);
-  for (let mpi_name of ["add", "addmod", "div", "expmod", "mod", "mulmod",
-                        "sqr", "sqrmod", "sub", "submod"]) {
-    scheduleFuzzingRun(mpi_base, `MPI (${mpi_name})`, `mpi-${mpi_name}`,
-                       4096, mpi_name);
-  }
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "Hash",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "hash nss/fuzz/corpus/hash -max_total_time=300 -max_len=4096"
+    ],
+    symbol: "Hash",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "QuickDER",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "quickder nss/fuzz/corpus/quickder -max_total_time=300 -max_len=10000"
+    ],
+    symbol: "QuickDER",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "MPI",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "mpi nss/fuzz/corpus/mpi -max_total_time=300 -max_len=2048"
+    ],
+    symbol: "MPI",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "CertDN",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "certDN nss/fuzz/corpus/certDN -max_total_time=300 -max_len=4096"
+    ],
+    symbol: "CertDN",
+    kind: "test"
+  }));
 
   return queue.submit();
 }
