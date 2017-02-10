@@ -58,20 +58,6 @@ SetElemICInspector::sawOOBTypedArrayWrite() const
 }
 
 bool
-SetElemICInspector::sawDenseWrite() const
-{
-    if (!icEntry_)
-        return false;
-
-    // Check for a SetElem_DenseAdd or SetElem_Dense stub.
-    for (ICStub* stub = icEntry_->firstStub(); stub; stub = stub->next()) {
-        if (stub->isSetElem_DenseOrUnboxedArrayAdd() || stub->isSetElem_DenseOrUnboxedArray())
-            return true;
-    }
-    return false;
-}
-
-bool
 SetElemICInspector::sawTypedArrayWrite() const
 {
     if (!icEntry_)
