@@ -176,7 +176,7 @@ class FunctionCompiler
                      const ValTypeVector& locals,
                      MIRGenerator& mirGen)
       : env_(env),
-        iter_(decoder, func.lineOrBytecode()),
+        iter_(env, decoder, func.lineOrBytecode()),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -1703,7 +1703,6 @@ EmitEnd(FunctionCompiler& f)
             return false;
         break;
       case LabelKind::Then:
-      case LabelKind::UnreachableThen:
         // If we didn't see an Else, create a trivial else block so that we create
         // a diamond anyway, to preserve Ion invariants.
         if (!f.switchToElse(block, &block))
@@ -1770,30 +1769,13 @@ EmitBrIf(FunctionCompiler& f)
 static bool
 EmitBrTable(FunctionCompiler& f)
 {
-    uint32_t tableLength;
-    ExprType type;
-    MDefinition* value;
-    MDefinition* index;
-    if (!f.iter().readBrTable(&tableLength, &type, &value, &index))
-        return false;
-
     Uint32Vector depths;
-    if (!depths.reserve(tableLength))
-        return false;
-
-    for (size_t i = 0; i < tableLength; ++i) {
-        uint32_t depth;
-        if (!f.iter().readBrTableEntry(&type, &value, &depth))
-            return false;
-        depths.infallibleAppend(depth);
-    }
-
-    // Read the default label.
     uint32_t defaultDepth;
-    if (!f.iter().readBrTableDefault(&type, &value, &defaultDepth))
+    ExprType branchValueType;
+    MDefinition* branchValue;
+    MDefinition* index;
+    if (!f.iter().readBrTable(&depths, &defaultDepth, &branchValueType, &branchValue, &index))
         return false;
-
-    MDefinition* maybeValue = IsVoid(type) ? nullptr : value;
 
     // If all the targets are the same, or there are no targets, we can just
     // use a goto. This is not just an optimization: MaybeFoldConditionBlock
@@ -1807,9 +1789,9 @@ EmitBrTable(FunctionCompiler& f)
     }
 
     if (allSameDepth)
-        return f.br(defaultDepth, maybeValue);
+        return f.br(defaultDepth, branchValue);
 
-    return f.brTable(index, defaultDepth, depths, maybeValue);
+    return f.brTable(index, defaultDepth, depths, branchValue);
 }
 
 static bool
@@ -1818,9 +1800,6 @@ EmitReturn(FunctionCompiler& f)
     MDefinition* value;
     if (!f.iter().readReturn(&value))
         return false;
-
-    if (f.inDeadCode())
-        return true;
 
     if (IsVoid(f.sig().ret())) {
         f.returnVoid();
@@ -1831,27 +1810,21 @@ EmitReturn(FunctionCompiler& f)
     return true;
 }
 
+typedef IonOpIter::ValueVector DefVector;
+
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, TlsUsage tls, CallCompileState* call)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, const DefVector& args, TlsUsage tls,
+             CallCompileState* call)
 {
     MOZ_ASSERT(NeedsTls(tls));
 
     if (!f.startCall(call))
         return false;
 
-    MDefinition* arg;
-    const ValTypeVector& argTypes = sig.args();
-    uint32_t numArgs = argTypes.length();
-    for (size_t i = 0; i < numArgs; ++i) {
-        ValType argType = argTypes[i];
-        if (!f.iter().readCallArg(argType, numArgs, i, &arg))
-            return false;
-        if (!f.passArg(arg, argType, call))
+    for (size_t i = 0, n = sig.args().length(); i < n; ++i) {
+        if (!f.passArg(args[i], sig.args()[i], call))
             return false;
     }
-
-    if (!f.iter().readCallArgsEnd(numArgs))
-        return false;
 
     return f.finishCall(call, tls);
 }
@@ -1862,7 +1835,8 @@ EmitCall(FunctionCompiler& f)
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
     uint32_t funcIndex;
-    if (!f.iter().readCall(&funcIndex))
+    DefVector args;
+    if (!f.iter().readCall(&funcIndex, &args))
         return false;
 
     if (f.inDeadCode())
@@ -1870,12 +1844,10 @@ EmitCall(FunctionCompiler& f)
 
     const Sig& sig = *f.env().funcSigs[funcIndex];
     bool import = f.env().funcIsImport(funcIndex);
+    TlsUsage tls = import ? TlsUsage::CallerSaved : TlsUsage::Need;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, import ? TlsUsage::CallerSaved : TlsUsage::Need, &call))
-        return false;
-
-    if (!f.iter().readCallReturn(sig.ret()))
+    if (!EmitCallArgs(f, sig, args, tls, &call))
         return false;
 
     MDefinition* def;
@@ -1902,11 +1874,12 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
 
     uint32_t sigIndex;
     MDefinition* callee;
+    DefVector args;
     if (oldStyle) {
-        if (!f.iter().readOldCallIndirect(&sigIndex))
+        if (!f.iter().readOldCallIndirect(&sigIndex, &callee, &args))
             return false;
     } else {
-        if (!f.iter().readCallIndirect(&sigIndex, &callee))
+        if (!f.iter().readCallIndirect(&sigIndex, &callee, &args))
             return false;
     }
 
@@ -1920,15 +1893,7 @@ EmitCallIndirect(FunctionCompiler& f, bool oldStyle)
                    : TlsUsage::Need;
 
     CallCompileState call(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, tls, &call))
-        return false;
-
-    if (oldStyle) {
-        if (!f.iter().readOldCallIndirectCallee(&callee))
-            return false;
-    }
-
-    if (!f.iter().readCallReturn(sig.ret()))
+    if (!EmitCallArgs(f, sig, args, tls, &call))
         return false;
 
     MDefinition* def;
@@ -1981,7 +1946,7 @@ static bool
 EmitGetGlobal(FunctionCompiler& f)
 {
     uint32_t id;
-    if (!f.iter().readGetGlobal(f.env().globals, &id))
+    if (!f.iter().readGetGlobal(&id))
         return false;
 
     const GlobalDesc& global = f.env().globals[id];
@@ -2033,7 +1998,7 @@ EmitSetGlobal(FunctionCompiler& f)
 {
     uint32_t id;
     MDefinition* value;
-    if (!f.iter().readSetGlobal(f.env().globals, &id, &value))
+    if (!f.iter().readSetGlobal(&id, &value))
         return false;
 
     const GlobalDesc& global = f.env().globals[id];
@@ -2048,7 +2013,7 @@ EmitTeeGlobal(FunctionCompiler& f)
 {
     uint32_t id;
     MDefinition* value;
-    if (!f.iter().readTeeGlobal(f.env().globals, &id, &value))
+    if (!f.iter().readTeeGlobal(&id, &value))
         return false;
 
     const GlobalDesc& global = f.env().globals[id];
@@ -2300,7 +2265,7 @@ EmitComparison(FunctionCompiler& f,
 static bool
 EmitSelect(FunctionCompiler& f)
 {
-    ValType type;
+    StackType type;
     MDefinition* trueValue;
     MDefinition* falseValue;
     MDefinition* condition;
@@ -2807,15 +2772,15 @@ static bool
 EmitSimdChainedCtor(FunctionCompiler& f, ValType valType, MIRType type, const SimdConstant& init)
 {
     const unsigned length = SimdTypeToLength(type);
-    MDefinition* val = f.constant(init, type);
-    for (unsigned i = 0; i < length; i++) {
-        MDefinition* scalar = 0;
-        if (!f.iter().readSimdCtorArg(ValType::I32, length, i, &scalar))
-            return false;
-        val = f.insertElementSimd(val, scalar, i, type);
-    }
-    if (!f.iter().readSimdCtorArgsEnd(length) || !f.iter().readSimdCtorReturn(valType))
+
+    DefVector args;
+    if (!f.iter().readSimdCtor(ValType::I32, length, valType, &args))
         return false;
+
+    MDefinition* val = f.constant(init, type);
+    for (unsigned i = 0; i < length; i++)
+        val = f.insertElementSimd(val, args[i], i, type);
+
     f.iter().setResult(val);
     return true;
 }
@@ -2826,15 +2791,15 @@ EmitSimdBooleanChainedCtor(FunctionCompiler& f, ValType valType, MIRType type,
                            const SimdConstant& init)
 {
     const unsigned length = SimdTypeToLength(type);
-    MDefinition* val = f.constant(init, type);
-    for (unsigned i = 0; i < length; i++) {
-        MDefinition* scalar = 0;
-        if (!f.iter().readSimdCtorArg(ValType::I32, length, i, &scalar))
-            return false;
-        val = f.insertElementSimd(val, EmitSimdBooleanLaneExpr(f, scalar), i, type);
-    }
-    if (!f.iter().readSimdCtorArgsEnd(length) || !f.iter().readSimdCtorReturn(valType))
+
+    DefVector args;
+    if (!f.iter().readSimdCtor(ValType::I32, length, valType, &args))
         return false;
+
+    MDefinition* val = f.constant(init, type);
+    for (unsigned i = 0; i < length; i++)
+        val = f.insertElementSimd(val, EmitSimdBooleanLaneExpr(f, args[i]), i, type);
+
     f.iter().setResult(val);
     return true;
 }
@@ -2842,34 +2807,25 @@ EmitSimdBooleanChainedCtor(FunctionCompiler& f, ValType valType, MIRType type,
 static bool
 EmitSimdCtor(FunctionCompiler& f, ValType type)
 {
-    if (!f.iter().readSimdCtor())
-        return false;
-
     switch (type) {
       case ValType::I8x16:
         return EmitSimdChainedCtor(f, type, MIRType::Int8x16, SimdConstant::SplatX16(0));
       case ValType::I16x8:
         return EmitSimdChainedCtor(f, type, MIRType::Int16x8, SimdConstant::SplatX8(0));
       case ValType::I32x4: {
-        MDefinition* args[4];
-        for (unsigned i = 0; i < 4; i++) {
-            if (!f.iter().readSimdCtorArg(ValType::I32, 4, i, &args[i]))
-                return false;
-        }
-        if (!f.iter().readSimdCtorArgsEnd(4) || !f.iter().readSimdCtorReturn(type))
+        DefVector args;
+        if (!f.iter().readSimdCtor(ValType::I32, 4, type, &args))
             return false;
+
         f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
                                                          MIRType::Int32x4));
         return true;
       }
       case ValType::F32x4: {
-        MDefinition* args[4];
-        for (unsigned i = 0; i < 4; i++) {
-            if (!f.iter().readSimdCtorArg(ValType::F32, 4, i, &args[i]))
-                return false;
-        }
-        if (!f.iter().readSimdCtorArgsEnd(4) || !f.iter().readSimdCtorReturn(type))
+        DefVector args;
+        if (!f.iter().readSimdCtor(ValType::F32, 4, type, &args))
             return false;
+
         f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
                            MIRType::Float32x4));
         return true;
@@ -2879,15 +2835,14 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
       case ValType::B16x8:
         return EmitSimdBooleanChainedCtor(f, type, MIRType::Bool16x8, SimdConstant::SplatX8(0));
       case ValType::B32x4: {
-        MDefinition* args[4];
-        for (unsigned i = 0; i < 4; i++) {
-            MDefinition* i32;
-            if (!f.iter().readSimdCtorArg(ValType::I32, 4, i, &i32))
-                return false;
-            args[i] = EmitSimdBooleanLaneExpr(f, i32);
-        }
-        if (!f.iter().readSimdCtorArgsEnd(4) || !f.iter().readSimdCtorReturn(type))
+        DefVector args;
+        if (!f.iter().readSimdCtor(ValType::I32, 4, type, &args))
             return false;
+
+        MOZ_ASSERT(args.length() == 4);
+        for (unsigned i = 0; i < 4; i++)
+            args[i] = EmitSimdBooleanLaneExpr(f, args[i]);
+
         f.iter().setResult(f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3],
                            MIRType::Bool32x4));
         return true;
