@@ -590,24 +590,27 @@ public:
    * function returns false, we definitely don't need to flush.
    *
    * @param aFlushType The flush type to check.  This must be
-   *   >= FlushType::Style.
+   *   >= FlushType::Style.  This also returns true if a throttled
+   *   animation flush is required.
    */
   bool NeedFlush(mozilla::FlushType aType) const
   {
     // We check mInFlush to handle re-entrant calls to FlushPendingNotifications
     // by reporting that we always need a flush in that case.  Otherwise,
-    // we could end up missing needed flushes, since we clear mNeedStyleFlush
-    // and mNeedLayoutFlush at the top of FlushPendingNotifications.
+    // we could end up missing needed flushes, since we clear the mNeedXXXFlush
+    // flags at the top of FlushPendingNotifications.
     MOZ_ASSERT(aType >= mozilla::FlushType::Style);
     return mNeedStyleFlush ||
            (mNeedLayoutFlush &&
             aType >= mozilla::FlushType::InterruptibleLayout) ||
            aType >= mozilla::FlushType::Display ||
+           mNeedThrottledAnimationFlush ||
            mInFlush;
   }
 
   inline void SetNeedStyleFlush();
   inline void SetNeedLayoutFlush();
+  inline void SetNeedThrottledAnimationFlush();
 
   bool NeedStyleFlush() { return mNeedStyleFlush; }
 
@@ -1836,6 +1839,10 @@ protected:
 
   // True if a style flush might not be a no-op
   bool mNeedStyleFlush : 1;
+
+  // True if there are throttled animations that would be processed when
+  // performing a flush with mFlushAnimations == true.
+  bool mNeedThrottledAnimationFlush : 1;
 
   uint32_t                  mPresShellId;
 
