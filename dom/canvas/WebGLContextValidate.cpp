@@ -725,6 +725,11 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     mFakeVertexAttrib0BufferObject = 0;
 
+    mNeedsIndexValidation = !gl->IsSupported(gl::GLFeature::robust_buffer_access_behavior);
+    if (gfxPrefs::WebGLForceIndexValidation()) {
+        mNeedsIndexValidation = true;
+    }
+
     return true;
 }
 
