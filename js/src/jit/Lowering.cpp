@@ -2518,6 +2518,19 @@ LIRGenerator::visitSetFunName(MSetFunName* ins)
 }
 
 void
+LIRGenerator::visitNewLexicalEnvironmentObject(MNewLexicalEnvironmentObject* ins)
+{
+    MDefinition* enclosing = ins->enclosing();
+    MOZ_ASSERT(enclosing->type() == MIRType::Object);
+
+    LNewLexicalEnvironmentObject* lir =
+        new(alloc()) LNewLexicalEnvironmentObject(useRegisterAtStart(enclosing));
+
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitKeepAliveObject(MKeepAliveObject* ins)
 {
     MDefinition* obj = ins->object();
