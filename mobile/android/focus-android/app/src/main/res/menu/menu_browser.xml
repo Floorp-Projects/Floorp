@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/back"
+        android:title="Back" />
+    <item
+        android:id="@+id/forward"
+        android:title="Forward" />
+    <item
+        android:id="@+id/refresh"
+        android:title="Refresh" />
+    <item
+        android:id="@+id/share"
+        android:title="Share" />
+    <item
+        android:id="@+id/open"
+        android:title="Open with" />
+    <item
+        android:id="@+id/settings"
+        android:title="Settings" />
+</menu>

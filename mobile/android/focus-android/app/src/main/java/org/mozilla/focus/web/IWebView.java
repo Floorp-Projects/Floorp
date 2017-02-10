@@ -21,4 +21,12 @@ public interface IWebView {
     void loadUrl(String url);
 
     void cleanup();
+
+    void goForward();
+
+    void goBack();
+
+    boolean canGoForward();
+
+    boolean canGoBack();
 }

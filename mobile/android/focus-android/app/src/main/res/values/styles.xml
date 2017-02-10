@@ -9,11 +9,17 @@
         <item name="colorAccent">@color/colorAccent</item>
 
         <item name="android:windowContentTransitions">true</item>
+
+        <item name="popupMenuStyle">@style/PopupMenu</item>
     </style>
 
     <style name="SettingsTheme" parent="AppTheme">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorAccent">#FF00A4DC</item>
         <item name="colorPrimaryDark">#ff363b40</item>
+    </style>
+
+    <style name="PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
+        <item name="overlapAnchor">true</item>
     </style>
 </resources>

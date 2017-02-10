@@ -55,5 +55,25 @@ public class WebViewProvider {
         public void cleanup() {
 
         }
+
+        @Override
+        public void goForward() {
+
+        }
+
+        @Override
+        public void goBack() {
+
+        }
+
+        @Override
+        public boolean canGoForward() {
+            return false;
+        }
+
+        @Override
+        public boolean canGoBack() {
+            return false;
+        }
     }
 }

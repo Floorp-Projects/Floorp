@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:fab="http://schemas.android.com/apk/res-auto">
+    android:orientation="vertical">
 
     <FrameLayout
         android:id="@+id/urlbar"
         android:layout_width="match_parent"
         android:layout_height="81dp"
-        android:paddingTop="25dp"
         android:background="@color/colorUrlInput"
-        android:animateLayoutChanges="true">
+        android:paddingTop="25dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:animateLayoutChanges="true">
 
             <ImageView
                 android:id="@+id/lock"
@@ -24,11 +24,11 @@
                 android:layout_height="24dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginBottom="8dp"
-                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:scaleType="centerInside"
-                android:visibility="gone"
-                android:src="@drawable/ic_lock" />
+                android:src="@drawable/ic_lock"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/url"
@@ -36,34 +36,36 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_margin="8dp"
-                android:textSize="15sp"
                 android:layout_weight="1"
-                android:lines="1"
                 android:ellipsize="end"
                 android:gravity="center_vertical"
+                android:lines="1"
                 android:padding="6dp"
-                android:textColor="#ffffff" />
-
-            <Button
-                android:id="@+id/erase"
-                android:layout_width="80dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
-                android:layout_gravity="center_vertical"
-                android:textSize="15sp"
                 android:textColor="#ffffff"
-                android:background="@drawable/erase_background"
-                android:text="@string/action_erase" />
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/menu"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:padding="4dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:src="@drawable/ic_menu"
+                android:background="?android:attr/selectableItemBackground" />
 
         </LinearLayout>
 
         <ProgressBar
             android:id="@+id/progress"
+            style="@android:style/Widget.Material.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_gravity="bottom"
-            android:visibility="invisible"
-            style="@android:style/Widget.Material.ProgressBar.Horizontal" />
+            android:progress="20"
+            android:visibility="visible" />
 
     </FrameLayout>
 
@@ -77,40 +79,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <com.github.clans.fab.FloatingActionMenu
-            android:id="@+id/menu"
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/erase"
             android:layout_width="wrap_content"
-            android:layout_gravity="end|bottom"
             android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
             android:layout_marginBottom="24dp"
-            android:layout_marginRight="24dp"
-            fab:menu_colorNormal="#FF00A4DC"
-            fab:menu_colorPressed="#FF007197"
-            fab:menu_colorRipple="#50FFFFFF">
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/open"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                fab:fab_size="mini"
-                android:scaleType="centerInside"
-                fab:fab_colorNormal="#FF363B40"
-                fab:fab_colorPressed="#FF3E4B89"
-                fab:fab_colorRipple="#50FFFFFF"
-                android:src="@drawable/ic_open" />
-
-            <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/refresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:scaleType="centerInside"
-                fab:fab_size="mini"
-                fab:fab_colorNormal="#FF363B40"
-                fab:fab_colorPressed="#FF3E4B89"
-                fab:fab_colorRipple="#50FFFFFF"
-                android:src="@drawable/ic_refresh" />
-
-        </com.github.clans.fab.FloatingActionMenu>
+            android:layout_marginEnd="24dp"
+            android:elevation="4dp"
+            android:src="@drawable/ic_delete"
+            app:backgroundTint="#FF00A4DC"
+            app:rippleColor="#50FFFFFF" />
 
     </FrameLayout>
 

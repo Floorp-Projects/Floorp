@@ -11,21 +11,23 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.PopupMenu;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.github.clans.fab.FloatingActionMenu;
-
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.web.IWebView;
 
 /**
  * Fragment for displaying the browser UI.
  */
-public class BrowserFragment extends Fragment implements View.OnClickListener {
+public class BrowserFragment extends Fragment implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
     public static final String FRAGMENT_TAG = "browser";
 
     private static final String ARGUMENT_URL = "url";
@@ -40,12 +42,12 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
-    private TextView urlView;
     private View urlBarView;
+    private TextView urlView;
     private IWebView webView;
-    private FloatingActionMenu menu;
     private ProgressBar progressView;
     private View lockView;
+    private View menuView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,24 +64,27 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         urlView.setOnClickListener(this);
 
         urlBarView = view.findViewById(R.id.urlbar);
-        progressView = (ProgressBar) view.findViewById(R.id.progress);
         lockView = view.findViewById(R.id.lock);
+
+        progressView = (ProgressBar) view.findViewById(R.id.progress);
 
         view.findViewById(R.id.erase).setOnClickListener(this);
 
-        webView = (IWebView) view.findViewById(R.id.webview);
+        menuView = view.findViewById(R.id.menu);
+        menuView.setOnClickListener(this);
 
-        menu = (FloatingActionMenu) view.findViewById(R.id.menu);
+        webView = (IWebView) view.findViewById(R.id.webview);
 
         webView.setCallback(new IWebView.Callback() {
             @Override
-            public void onPageStarted(String url) {
+            public void onPageStarted(final String url) {
+                lockView.setVisibility(View.GONE);
+
                 urlView.setText(url);
 
                 urlBarView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorTitleBar));
 
                 progressView.setVisibility(View.VISIBLE);
-                lockView.setVisibility(View.GONE);
             }
 
             @Override
@@ -99,25 +104,6 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-        view.findViewById(R.id.refresh).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                webView.reload();
-                menu.close(true);
-            }
-        });
-
-        view.findViewById(R.id.open).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
-                startActivity(intent);
-                menu.close(true);
-            }
-        });
-
         webView.loadUrl(url);
 
         return view;
@@ -126,6 +112,16 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.menu:
+                final PopupMenu popupMenu = new PopupMenu(getActivity(), menuView);
+                popupMenu.getMenuInflater().inflate(R.menu.menu_browser, popupMenu.getMenu());
+                popupMenu.getMenu().findItem(R.id.forward).setEnabled(webView.canGoForward());
+                popupMenu.getMenu().findItem(R.id.back).setEnabled(webView.canGoBack());
+                popupMenu.setOnMenuItemClickListener(this);
+                popupMenu.setGravity(Gravity.TOP);
+                popupMenu.show();
+                break;
+
             case R.id.url:
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -141,9 +137,44 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                         .commit();
 
-                Snackbar.make(urlView, R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
+                Snackbar.make(urlBarView, R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
 
                 break;
         }
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.forward:
+                webView.goForward();
+                return true;
+
+            case R.id.back:
+                webView.goBack();
+                return true;
+
+            case R.id.refresh:
+                webView.reload();
+                return true;
+
+            case R.id.share:
+                final Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
+                startActivity(shareIntent);
+                return true;
+
+            case R.id.open:
+                // TODO: Switch to full featured browser (Issue #26)
+                return true;
+
+            case R.id.settings:
+                final Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
+                startActivity(settingsIntent);
+                return true;
+        }
+
+        return false;
     }
 }
