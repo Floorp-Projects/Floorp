@@ -1341,15 +1341,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // Remote types must match to swap loaders.
-  const nsAString& currentRemoteType =
-    mRemoteBrowser->Manager()->AsContentParent()->GetRemoteType();
-  const nsAString& newRemoteType =
-    aOther->mRemoteBrowser->Manager()->AsContentParent()->GetRemoteType();
-  if (!currentRemoteType.Equals(newRemoteType)) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (mRemoteBrowser->IsIsolatedMozBrowserElement() !=
       aOther->mRemoteBrowser->IsIsolatedMozBrowserElement()) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1498,6 +1489,20 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // Swap the remoteType property as the frameloaders are being swapped
+  nsAutoString ourRemoteType;
+  if (!ourContent->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                           ourRemoteType)) {
+    ourRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+  nsAutoString otherRemoteType;
+  if (!otherContent->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                             otherRemoteType)) {
+    otherRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+  ourContent->SetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, otherRemoteType, false);
+  otherContent->SetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, ourRemoteType, false);
 
   Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
     ourContext.AsIPCTabContext());
