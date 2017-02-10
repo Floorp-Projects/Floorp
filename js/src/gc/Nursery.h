@@ -260,13 +260,21 @@ class Nursery
 #endif
 
     /* Print header line for profile times. */
-    void printProfileHeader();
+    static void printProfileHeader();
 
     /* Print total profile times on shutdown. */
     void printTotalProfileTimes();
 
     void* addressOfCurrentEnd() const { return (void*)&currentEnd_; }
     void* addressOfPosition() const { return (void*)&position_; }
+
+    void requestMinorGC(JS::gcreason::Reason reason) const;
+
+    bool minorGCRequested() const { return minorGCTriggerReason_ != JS::gcreason::NO_REASON; }
+    JS::gcreason::Reason minorGCTriggerReason() const { return minorGCTriggerReason_; }
+    void clearMinorGCRequest() { minorGCTriggerReason_ = JS::gcreason::NO_REASON; }
+
+    bool enableProfiling() const { return enableProfiling_; }
 
   private:
     /* The amount of space in the mapped nursery available to allocations. */
@@ -276,8 +284,8 @@ class Nursery
         char data[NurseryChunkUsableSize];
         gc::ChunkTrailer trailer;
         static NurseryChunk* fromChunk(gc::Chunk* chunk);
-        void init(JSRuntime* rt);
-        void poisonAndInit(JSRuntime* rt, uint8_t poison);
+        void init(ZoneGroup* group);
+        void poisonAndInit(ZoneGroup* group, uint8_t poison);
         uintptr_t start() const { return uintptr_t(&data); }
         uintptr_t end() const { return uintptr_t(&trailer); }
         gc::Chunk* toChunk(JSRuntime* rt);
@@ -316,6 +324,13 @@ class Nursery
 
     /* Report ObjectGroups with at lest this many instances tenured. */
     int64_t reportTenurings_;
+
+    /*
+     * Whether and why a collection of this nursery has been requested. This is
+     * mutable as it is set by the store buffer, which otherwise cannot modify
+     * anything in the nursery.
+     */
+    mutable JS::gcreason::Reason minorGCTriggerReason_;
 
     /* Profiling data. */
 
@@ -455,6 +470,7 @@ class Nursery
     void minimizeAllocableSpace();
 
     /* Profile recording and printing. */
+    void maybeClearProfileDurations();
     void startProfile(ProfileKey key);
     void endProfile(ProfileKey key);
     void maybeStartProfile(ProfileKey key);

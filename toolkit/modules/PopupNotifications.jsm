@@ -202,14 +202,26 @@ Notification.prototype = {
  *        parent of anchor elements whose IDs are passed to show().
  *        It is used as a fallback popup anchor if notifications specify
  *        invalid or non-existent anchor IDs.
+ * @param options
+ *        An optional object with the following optional properties:
+ *        {
+ *          shouldSuppress:
+ *            If this function returns true, then all notifications are
+ *            suppressed for this window. This state is checked on construction
+ *            and when the "anchorVisibilityChange" method is called.
+ *        }
  */
-this.PopupNotifications = function PopupNotifications(tabbrowser, panel, iconBox) {
+this.PopupNotifications = function PopupNotifications(tabbrowser, panel,
+                                                      iconBox, options = {}) {
   if (!(tabbrowser instanceof Ci.nsIDOMXULElement))
     throw "Invalid tabbrowser";
   if (iconBox && !(iconBox instanceof Ci.nsIDOMXULElement))
     throw "Invalid iconBox";
   if (!(panel instanceof Ci.nsIDOMXULElement))
     throw "Invalid panel";
+
+  this._shouldSuppress = options.shouldSuppress || (() => false);
+  this._suppress = this._shouldSuppress();
 
   this.window = tabbrowser.ownerGlobal;
   this.panel = panel;
@@ -524,25 +536,35 @@ PopupNotifications.prototype = {
     this._setNotificationsForBrowser(aBrowser, notifications);
 
     if (this._isActiveBrowser(aBrowser)) {
-      // get the anchor element if the browser has defined one so it will
-      // _update will handle both the tabs iconBox and non-tab permission
-      // anchors.
-      this._update(notifications, this._getAnchorsForNotifications(notifications,
-        getAnchorFromBrowser(aBrowser)));
+      this.anchorVisibilityChange();
     }
   },
 
   /**
    * Called by the consumer to indicate that the visibility of the notification
-   * anchors may have changed, but the location has not changed. This may result
-   * in the "showing" and "shown" events for visible notifications to be
-   * invoked even if the anchor has not changed.
+   * anchors may have changed, but the location has not changed. This also
+   * checks whether all notifications are suppressed for this window.
+   *
+   * Calling this method may result in the "showing" and "shown" events for
+   * visible notifications to be invoked even if the anchor has not changed.
    */
   anchorVisibilityChange() {
-    let notifications =
-      this._getNotificationsForBrowser(this.tabbrowser.selectedBrowser);
-    this._update(notifications, this._getAnchorsForNotifications(notifications,
-      getAnchorFromBrowser(this.tabbrowser.selectedBrowser)));
+    let suppress = this._shouldSuppress();
+    if (!suppress) {
+      // If notifications are not suppressed, always update the visibility.
+      this._suppress = false;
+      let notifications =
+        this._getNotificationsForBrowser(this.tabbrowser.selectedBrowser);
+      this._update(notifications, this._getAnchorsForNotifications(notifications,
+        getAnchorFromBrowser(this.tabbrowser.selectedBrowser)));
+      return;
+    }
+
+    // Notifications are suppressed, ensure that the panel is hidden.
+    if (!this._suppress) {
+      this._suppress = true;
+      this._hidePanel().catch(Cu.reportError);
+    }
   },
 
   /**
@@ -1014,10 +1036,12 @@ PopupNotifications.prototype = {
     }
 
     // Filter out notifications that have been dismissed, unless they are
-    // persistent.
-    let notificationsToShow = notifications.filter(function(n) {
-      return (!n.dismissed || n.options.persistent) && !n.options.neverShow;
-    });
+    // persistent. Also check if we should not show any notification.
+    let notificationsToShow = [];
+    if (!this._suppress) {
+      notificationsToShow = notifications.filter(
+        n => (!n.dismissed || n.options.persistent) && !n.options.neverShow);
+    }
 
     if (useIconBox) {
       // Hide icons of the previous tab.
@@ -1283,17 +1307,22 @@ PopupNotifications.prototype = {
   },
 
   _onPopupHidden: function PopupNotifications_onPopupHidden(event) {
-    if (event.target != this.panel || this._ignoreDismissal) {
-      if (this._ignoreDismissal) {
-        this._ignoreDismissal.resolve();
-        this._ignoreDismissal = null;
-      }
+    if (event.target != this.panel) {
       return;
     }
 
-    // Ensure that when the panel comes up without user interaction,
-    // we don't autofocus it.
+    // We may have removed the "noautofocus" attribute before showing the panel
+    // if it was opened with user interaction. When the panel is closed, we have
+    // to restore the attribute to its default value, so we don't autofocus it
+    // if it is subsequently opened from a different code path.
     this.panel.setAttribute("noautofocus", "true");
+
+    // Handle the case where the panel was closed programmatically.
+    if (this._ignoreDismissal) {
+      this._ignoreDismissal.resolve();
+      this._ignoreDismissal = null;
+      return;
+    }
 
     this._dismissOrRemoveCurrentNotifications();
 

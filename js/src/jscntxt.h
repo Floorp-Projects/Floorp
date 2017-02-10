@@ -886,6 +886,13 @@ JSContext::boolToResult(bool ok)
     return JS::Result<>(reportedError);
 }
 
+inline JSContext*
+JSRuntime::activeContextFromOwnThread()
+{
+    MOZ_ASSERT(activeContext() == js::TlsContext.get());
+    return activeContext();
+}
+
 namespace js {
 
 struct MOZ_RAII AutoResolving {

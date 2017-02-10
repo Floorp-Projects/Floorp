@@ -886,6 +886,18 @@ IonCacheIRCompiler::emitStoreTypedObjectScalarProperty()
 }
 
 bool
+IonCacheIRCompiler::emitStoreDenseElement()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
+IonCacheIRCompiler::emitStoreUnboxedArrayElement()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
 IonCacheIRCompiler::emitCallNativeSetter()
 {
     MOZ_CRASH("Baseline-specific op");

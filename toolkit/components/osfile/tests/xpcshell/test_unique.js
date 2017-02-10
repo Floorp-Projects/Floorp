@@ -9,7 +9,7 @@ function run_test() {
 }
 
 function testFiles(filename) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     const MAX_TRIES = 10;
     let profileDir = OS.Constants.Path.profileDir;
     let path = OS.Path.join(profileDir, filename);
@@ -79,7 +79,7 @@ function testFiles(filename) {
   });
 }
 
-add_task(function test_unique() {
+add_task(function* test_unique() {
   OS.Shared.DEBUG = true;
   // Tests files with extension
   yield testFiles("dummy_unique_file.txt");

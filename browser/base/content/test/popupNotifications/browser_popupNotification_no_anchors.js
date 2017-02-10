@@ -102,49 +102,126 @@ var tests = [
       gBrowser.selectedTab = this.oldSelectedTab;
     }
   },
-  // Test that popupnotifications are anchored to the identity icon while
-  // editing the URL in the location bar, and restored to their anchors when the
-  // URL is reverted.
+  // Test that popupnotifications are hidden while editing the URL in the
+  // location bar, anchored to the identity icon when the focus is moved away
+  // from the location bar, and restored when the URL is reverted.
   { id: "Test#4",
     *run() {
-      this.oldSelectedTab = gBrowser.selectedTab;
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      for (let persistent of [false, true]) {
+        let shown = waitForNotificationPanel();
+        this.notifyObj = new BasicNotification(this.id);
+        this.notifyObj.anchorID = "geo-notification-icon";
+        this.notifyObj.addOptions({ persistent });
+        this.notification = showNotification(this.notifyObj);
+        yield shown;
 
-      let shownInitially = waitForNotificationPanel();
+        checkPopup(PopupNotifications.panel, this.notifyObj);
+
+        // Typing in the location bar should hide the notification.
+        let hidden = waitForNotificationPanelHidden();
+        gURLBar.select();
+        EventUtils.synthesizeKey("*", {});
+        yield hidden;
+
+        is(document.getElementById("geo-notification-icon").boxObject.width, 0,
+           "geo anchor shouldn't be visible");
+
+        // Moving focus to the next control should show the notifications again,
+        // anchored to the identity icon. We clear the URL bar before moving the
+        // focus so that the awesomebar popup doesn't get in the way.
+        shown = waitForNotificationPanel();
+        EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+        EventUtils.synthesizeKey("VK_TAB", {});
+        yield shown;
+
+        is(PopupNotifications.panel.anchorNode.id, "identity-icon",
+           "notification anchored to identity icon");
+
+        // Moving focus to the location bar should hide the notification again.
+        hidden = waitForNotificationPanelHidden();
+        EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+        yield hidden;
+
+        // Reverting the URL should show the notification again.
+        shown = waitForNotificationPanel();
+        EventUtils.synthesizeKey("VK_ESCAPE", {});
+        yield shown;
+
+        checkPopup(PopupNotifications.panel, this.notifyObj);
+
+        hidden = waitForNotificationPanelHidden();
+        this.notification.remove();
+        yield hidden;
+      }
+      goNext();
+    }
+  },
+  // Test that popupnotifications triggered while editing the URL in the
+  // location bar are only shown later when the URL is reverted.
+  { id: "Test#5",
+    *run() {
+      for (let persistent of [false, true]) {
+        // Start editing the URL, ensuring that the awesomebar popup is hidden.
+        gURLBar.select();
+        EventUtils.synthesizeKey("*", {});
+        EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+
+        // Trying to show a notification should display nothing.
+        let notShowing = promiseTopicObserved("PopupNotifications-updateNotShowing");
+        this.notifyObj = new BasicNotification(this.id);
+        this.notifyObj.anchorID = "geo-notification-icon";
+        this.notifyObj.addOptions({ persistent });
+        this.notification = showNotification(this.notifyObj);
+        yield notShowing;
+
+        // Reverting the URL should show the notification.
+        let shown = waitForNotificationPanel();
+        EventUtils.synthesizeKey("VK_ESCAPE", {});
+        yield shown;
+
+        checkPopup(PopupNotifications.panel, this.notifyObj);
+
+        let hidden = waitForNotificationPanelHidden();
+        this.notification.remove();
+        yield hidden;
+      }
+
+      goNext();
+    }
+  },
+  // Test that persistent panels are still open after switching to another tab
+  // and back, even while editing the URL in the new tab.
+  { id: "Test#6",
+    *run() {
+      let shown = waitForNotificationPanel();
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notifyObj.addOptions({
         persistent: true,
       });
       this.notification = showNotification(this.notifyObj);
-      yield shownInitially;
+      yield shown;
 
-      checkPopup(PopupNotifications.panel, this.notifyObj);
+      // Switching to a new tab should hide the notification.
+      let hidden = waitForNotificationPanelHidden();
+      this.oldSelectedTab = gBrowser.selectedTab;
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      yield hidden;
 
-      let shownAgain = waitForNotificationPanel();
-      // This will cause the popup to hide and show again.
+      // Start editing the URL.
       gURLBar.select();
       EventUtils.synthesizeKey("*", {});
-      // Keep the URL bar empty, so we don't show the awesomebar.
-      EventUtils.synthesizeKey("VK_BACK_SPACE", {});
-      yield shownAgain;
 
-      is(document.getElementById("geo-notification-icon").boxObject.width, 0,
-         "geo anchor shouldn't be visible");
-      is(PopupNotifications.panel.anchorNode.id, "identity-icon",
-         "notification anchored to identity icon");
-
-      let shownLastTime = waitForNotificationPanel();
-      // This will cause the popup to hide and show again.
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
-      yield shownLastTime;
+      // Switching to the old tab should show the notification again.
+      shown = waitForNotificationPanel();
+      gBrowser.removeTab(gBrowser.selectedTab);
+      gBrowser.selectedTab = this.oldSelectedTab;
+      yield shown;
 
       checkPopup(PopupNotifications.panel, this.notifyObj);
 
-      let hidden = new Promise(resolve => onPopupEvent("popuphidden", resolve));
+      hidden = waitForNotificationPanelHidden();
       this.notification.remove();
-      gBrowser.removeTab(gBrowser.selectedTab);
-      gBrowser.selectedTab = this.oldSelectedTab;
       yield hidden;
 
       goNext();

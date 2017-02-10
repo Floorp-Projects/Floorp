@@ -23,7 +23,7 @@ function setup_mode(mode) {
 }
 
 // Test append mode.
-function test_append(mode) {
+function* test_append(mode) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_async_append.tmp");
 
@@ -64,7 +64,7 @@ function test_append(mode) {
 }
 
 // Test no-append mode.
-function test_no_append(mode) {
+function* test_no_append(mode) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_async_noappend.tmp");
 

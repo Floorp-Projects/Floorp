@@ -371,7 +371,7 @@ SavedFrame::finalize(FreeOp* fop, JSObject* obj)
     JSPrincipals* p = obj->as<SavedFrame>().getPrincipals();
     if (p) {
         JSRuntime* rt = obj->runtimeFromMainThread();
-        JS_DropPrincipals(rt->contextFromMainThread(), p);
+        JS_DropPrincipals(rt->activeContextFromOwnThread(), p);
     }
 }
 

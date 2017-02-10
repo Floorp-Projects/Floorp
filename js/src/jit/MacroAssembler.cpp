@@ -1822,6 +1822,17 @@ MacroAssembler::convertInt32ValueToDouble(const Address& address, Register scrat
 }
 
 void
+MacroAssembler::convertInt32ValueToDouble(ValueOperand val)
+{
+    Label done;
+    branchTestInt32(Assembler::NotEqual, val, &done);
+    unboxInt32(val, val.scratchReg());
+    convertInt32ToDouble(val.scratchReg(), ScratchDoubleReg);
+    boxDouble(ScratchDoubleReg, val);
+    bind(&done);
+}
+
+void
 MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister output,
                                             Label* fail, MIRType outputType)
 {

@@ -9,7 +9,7 @@ function run_test() {
  * Test to ensure that deprecation warning is issued on use
  * of creationDate.
  */
-add_task(function test_deprecatedCreationDate () {
+add_task(function* test_deprecatedCreationDate () {
   let deferred = Promise.defer();
   let consoleListener = {
     observe: function (aMessage) {

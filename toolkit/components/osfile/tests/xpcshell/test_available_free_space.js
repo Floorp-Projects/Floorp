@@ -20,7 +20,7 @@ function run_test() {
 /**
  * Test OS.File.getAvailableFreeSpace
  */
-add_task(function() {
+add_task(function*() {
   // Set up profile. We will use profile path to query for available free
   // space.
   do_get_profile();

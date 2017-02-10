@@ -602,6 +602,12 @@ FunctionScope::copyData(JSContext* cx, Handle<Data*> data,
     return NewEmptyScopeData<FunctionScope>(cx);
 }
 
+Zone*
+FunctionScope::Data::zone() const
+{
+    return canonicalFunction ? canonicalFunction->zone() : nullptr;
+}
+
 /* static */ FunctionScope*
 FunctionScope::create(JSContext* cx, Handle<Data*> data,
                       bool hasParameterExprs, bool needsEnvironment,
@@ -1110,6 +1116,12 @@ ModuleScope::copyData(JSContext* cx, Handle<Data*> data, MutableHandleShape envS
                                           ModuleScopeEnvShapeFlags, envShape);
     }
     return NewEmptyScopeData<ModuleScope>(cx);
+}
+
+Zone*
+ModuleScope::Data::zone() const
+{
+    return module ? module->zone() : nullptr;
 }
 
 /* static */ ModuleScope*

@@ -49,6 +49,8 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     WeakMapBase(JSObject* memOf, JS::Zone* zone);
     virtual ~WeakMapBase();
 
+    Zone* zone() const { return zone_; }
+
     // Garbage collector entry points.
 
     // Unmark all weak maps in a zone.
@@ -99,7 +101,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     GCPtrObject memberOf;
 
     // Zone containing this weak map.
-    JS::Zone* zone;
+    JS::Zone* zone_;
 
     // Whether this object has been traced during garbage collection.
     bool marked;
@@ -136,7 +138,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     bool init(uint32_t len = 16) {
         if (!Base::init(len))
             return false;
-        zone->gcWeakMapList().insertFront(this);
+        zone()->gcWeakMapList().insertFront(this);
         marked = JS::IsIncrementalGCInProgress(TlsContext.get());
         return true;
     }
@@ -284,7 +286,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         if (!obj)
             return nullptr;
 
-        MOZ_ASSERT(obj->runtimeFromMainThread() == zone->runtimeFromMainThread());
+        MOZ_ASSERT(obj->runtimeFromMainThread() == zone()->runtimeFromMainThread());
         return obj;
     }
 
@@ -302,7 +304,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
          * Check if the delegate is marked with any color to properly handle
          * gray marking when the key's delegate is black and the map is gray.
          */
-        return delegate && gc::IsMarkedUnbarriered(zone->runtimeFromMainThread(), &delegate);
+        return delegate && gc::IsMarkedUnbarriered(zone()->runtimeFromMainThread(), &delegate);
     }
 
     bool keyNeedsMark(JSScript* script) const {
