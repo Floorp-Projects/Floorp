@@ -47,13 +47,7 @@ public:
     TX_DECL_TXINSTRUCTION
 };
 
-class txApplyImportsEnd : public txInstruction
-{
-public:
-    TX_DECL_TXINSTRUCTION
-};
-
-class txApplyImportsStart : public txInstruction
+class txApplyImports : public txInstruction
 {
 public:
     TX_DECL_TXINSTRUCTION
