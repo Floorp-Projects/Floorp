@@ -67,8 +67,8 @@ const RequestListEmptyNotice = createClass({
 module.exports = connect(
   undefined,
   dispatch => ({
-    onPerfClick: () => dispatch(Actions.openStatistics(true)),
-    onReloadClick: () =>
+    onPerfClick: e => dispatch(Actions.openStatistics(true)),
+    onReloadClick: e =>
       NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);

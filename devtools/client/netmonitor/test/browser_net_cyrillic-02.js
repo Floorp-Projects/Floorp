@@ -12,35 +12,25 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CYRILLIC_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   yield wait;
 
-  verifyRequestItemTarget(
-    document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(0),
-    "GET",
-    CYRILLIC_URL,
-    {
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
+    "GET", CYRILLIC_URL, {
       status: 200,
       statusText: "OK"
     });
 
-  wait = waitForDOM(document, "#headers-panel");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  yield wait;
   wait = waitForDOM(document, "#response-panel .editor-mount iframe");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelector(".network-details-panel-toggle"));
+  document.querySelector("#response-tab").click();
   let [editor] = yield wait;
   yield once(editor, "DOMContentLoaded");
   yield waitForDOM(editor.contentDocument, ".CodeMirror-code");

@@ -30,7 +30,8 @@ const HAR_VERSION = "1.1";
  *
  * The following options are supported:
  *
- * - items {Array}: List of Network requests to be exported.
+ * - items {Array}: List of Network requests to be exported. It is possible
+ *   to use directly: NetMonitorView.RequestsMenu.items
  *
  * - id {String}: ID of the exported page.
  *

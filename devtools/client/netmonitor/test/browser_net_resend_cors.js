@@ -12,14 +12,11 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CORS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { gStore, NetMonitorView, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
 
@@ -31,7 +28,7 @@ add_task(function* () {
   yield wait;
 
   const METHODS = ["OPTIONS", "POST"];
-  const ITEMS = METHODS.map((val, i) => getSortedRequests(gStore.getState()).get(i));
+  const ITEMS = METHODS.map((val, i) => RequestsMenu.getItemAtIndex(i));
 
   // Check the requests that were sent
   ITEMS.forEach((item, i) => {
@@ -44,7 +41,7 @@ add_task(function* () {
   let onRequests = waitForNetworkEvents(monitor, 1, 0);
   ITEMS.forEach((item) => {
     info(`Selecting the ${item.method} request`);
-    gStore.dispatch(Actions.selectRequest(item.id))
+    RequestsMenu.selectedItem = item;
 
     info("Cloning the selected request into a custom clone");
     gStore.dispatch(Actions.cloneSelectedRequest());

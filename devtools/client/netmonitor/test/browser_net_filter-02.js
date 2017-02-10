@@ -136,15 +136,10 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 9);
   loadCommonFrameScript();
@@ -152,11 +147,11 @@ add_task(function* () {
   yield wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+    document.querySelector(".network-details-panel-toggle"));
 
-  isnot(getSelectedRequest(gStore.getState()), null,
+  isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(gStore.getState()), 0,
+  is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should be visible after toggle button was pressed.");
@@ -198,23 +193,16 @@ add_task(function* () {
 
   yield teardown(monitor);
 
-  function getSelectedIndex(state) {
-    if (!state.requests.selectedId) {
-      return -1;
-    }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
-  }
-
   function testContents(visibility) {
-    isnot(getSelectedRequest(gStore.getState()), null,
+    isnot(RequestsMenu.selectedItem, null,
       "There should still be a selected item after filtering.");
-    is(getSelectedIndex(gStore.getState()), 0,
+    is(RequestsMenu.selectedIndex, 0,
       "The first item should be still selected after filtering.");
     is(!!document.querySelector(".network-details-panel"), true,
       "The network details panel should still be visible after filtering.");
 
-    const items = getSortedRequests(gStore.getState());
-    const visibleItems = getDisplayedRequests(gStore.getState());
+    const items = RequestsMenu.items;
+    const visibleItems = RequestsMenu.visibleItems;
 
     is(items.size, visibility.length,
       "There should be a specific amount of items in the requests menu.");
@@ -233,14 +221,7 @@ add_task(function* () {
       let { method, url, data } = EXPECTED_REQUESTS[i];
       for (let j = i; j < visibility.length; j += EXPECTED_REQUESTS.length) {
         if (visibility[j]) {
-          verifyRequestItemTarget(
-            document,
-            getDisplayedRequests(gStore.getState()),
-            getSortedRequests(gStore.getState()).get(i),
-            method,
-            url,
-            data
-          );
+          verifyRequestItemTarget(RequestsMenu, items.get(j), method, url, data);
         }
       }
     }

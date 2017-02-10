@@ -1,36 +1,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/* globals NetMonitorController */
+/* globals NetMonitorView */
 
 "use strict";
 
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const {
-  createClass,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const { Task } = require("devtools/shared/task");
-const Actions = require("../actions/index");
-const {
-  setTooltipImageContent,
-  setTooltipStackTraceContent,
-} = require("../request-list-tooltip");
-const {
-  getDisplayedRequests,
-  getWaterfallScale,
-} = require("../selectors/index");
-
-// Components
-const RequestListItem = createFactory(require("./request-list-item"));
-const RequestListContextMenu = require("../request-list-context-menu");
-
+const { createClass, createFactory, DOM, PropTypes } = require("devtools/client/shared/vendor/react");
 const { div } = DOM;
+const Actions = require("../actions/index");
+const RequestListItem = createFactory(require("./request-list-item"));
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { setTooltipImageContent,
+        setTooltipStackTraceContent } = require("./request-list-tooltip");
+const { getDisplayedRequests,
+        getWaterfallScale } = require("../selectors/index");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 // tooltip show/hide delay in ms
 const REQUESTS_TOOLTIP_TOGGLE_DELAY = 500;
@@ -42,10 +27,9 @@ const RequestListContent = createClass({
   displayName: "RequestListContent",
 
   propTypes: {
-    contextMenu: PropTypes.object.isRequired,
-    dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
+    onItemContextMenu: PropTypes.func.isRequired,
     onItemMouseDown: PropTypes.func.isRequired,
     onSecurityIconClick: PropTypes.func.isRequired,
     onSelectDelta: PropTypes.func.isRequired,
@@ -58,21 +42,12 @@ const RequestListContent = createClass({
     }).isRequired
   },
 
-  componentWillMount() {
-    const { dispatch } = this.props;
-    this.contextMenu = new RequestListContextMenu({
-      cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-      openStatistics: (open) => dispatch(Actions.openStatistics(open)),
-    });
-    this.tooltip = new HTMLTooltip(NetMonitorController._toolbox.doc, { type: "arrow" });
-  },
-
   componentDidMount() {
     // Set the CSS variables for waterfall scaling
     this.setScalingStyles();
 
     // Install event handler for displaying a tooltip
-    this.tooltip.startTogglingOnHover(this.refs.contentEl, this.onHover, {
+    this.props.tooltip.startTogglingOnHover(this.refs.contentEl, this.onHover, {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });
@@ -103,7 +78,7 @@ const RequestListContent = createClass({
     this.refs.contentEl.removeEventListener("scroll", this.onScroll, true);
 
     // Uninstall the tooltip event handler
-    this.tooltip.stopTogglingOnHover();
+    this.props.tooltip.stopTogglingOnHover();
   },
 
   /**
@@ -177,7 +152,7 @@ const RequestListContent = createClass({
    * Scroll listener for the requests menu view.
    */
   onScroll() {
-    this.tooltip.hide();
+    this.props.tooltip.hide();
   },
 
   /**
@@ -218,11 +193,6 @@ const RequestListContent = createClass({
     }
   },
 
-  onContextMenu(evt) {
-    evt.preventDefault();
-    this.contextMenu.open(evt);
-  },
-
   /**
    * If selection has just changed (by keyboard navigation), don't keep the list
    * scrolled to bottom, but allow scrolling up with the selection.
@@ -241,57 +211,61 @@ const RequestListContent = createClass({
   },
 
   render() {
-    const {
-      displayedRequests,
-      firstRequestStartedMillis,
-      selectedRequestId,
-      onItemMouseDown,
-      onSecurityIconClick,
-    } = this.props;
+    const { selectedRequestId,
+            displayedRequests,
+            firstRequestStartedMillis,
+            onItemMouseDown,
+            onItemContextMenu,
+            onSecurityIconClick } = this.props;
 
-    return (
-      div({
+    return div(
+      {
         ref: "contentEl",
         className: "requests-menu-contents",
         tabIndex: 0,
         onKeyDown: this.onKeyDown,
       },
-        displayedRequests.map((item, index) => RequestListItem({
-          key: item.id,
-          item,
-          index,
-          isSelected: item.id === selectedRequestId,
-          firstRequestStartedMillis,
-          onMouseDown: () => onItemMouseDown(item.id),
-          onContextMenu: this.onContextMenu,
-          onFocusedNodeChange: this.onFocusedNodeChange,
-          onFocusedNodeUnmount: this.onFocusedNodeUnmount,
-          onSecurityIconClick: () => onSecurityIconClick(item.securityState),
-        }))
-      )
+      displayedRequests.map((item, index) => RequestListItem({
+        key: item.id,
+        item,
+        index,
+        isSelected: item.id === selectedRequestId,
+        firstRequestStartedMillis,
+        onMouseDown: e => onItemMouseDown(e, item.id),
+        onContextMenu: e => onItemContextMenu(e, item.id),
+        onSecurityIconClick: e => onSecurityIconClick(e, item),
+        onFocusedNodeChange: this.onFocusedNodeChange,
+        onFocusedNodeUnmount: this.onFocusedNodeUnmount,
+      }))
     );
   },
 });
 
 module.exports = connect(
-  (state) => ({
+  state => ({
     displayedRequests: getDisplayedRequests(state),
-    firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequestId: state.requests.selectedId,
     scale: getWaterfallScale(state),
+    firstRequestStartedMillis: state.requests.firstStartedMillis,
+    tooltip: NetMonitorView.RequestsMenu.tooltip,
   }),
-  (dispatch) => ({
-    dispatch,
-    onItemMouseDown: (id) => dispatch(Actions.selectRequest(id)),
+  dispatch => ({
+    onItemMouseDown: (e, item) => dispatch(Actions.selectRequest(item)),
+    onItemContextMenu: (e, item) => {
+      e.preventDefault();
+      NetMonitorView.RequestsMenu.contextMenu.open(e);
+    },
+    onSelectDelta: (delta) => dispatch(Actions.selectDelta(delta)),
     /**
      * A handler that opens the security tab in the details view if secure or
      * broken security indicator is clicked.
      */
-    onSecurityIconClick: (securityState) => {
+    onSecurityIconClick: (e, item) => {
+      const { securityState } = item;
+      // Choose the security tab.
       if (securityState && securityState !== "insecure") {
         dispatch(Actions.selectDetailsPanelTab("security"));
       }
     },
-    onSelectDelta: (delta) => dispatch(Actions.selectDelta(delta)),
-  }),
+  })
 )(RequestListContent);

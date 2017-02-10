@@ -9,15 +9,8 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CORS_URL);
-
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
-
-  gStore.dispatch(Actions.batchEnable(false));
+  let { RequestsMenu } = monitor.panelWin.NetMonitorView;
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1, 1);
 
@@ -31,14 +24,9 @@ add_task(function* () {
   yield wait;
 
   info("Checking the preflight and flight methods");
-  ["OPTIONS", "POST"].forEach((method, index) => {
-    verifyRequestItemTarget(
-      document,
-      getDisplayedRequests(gStore.getState()),
-      getSortedRequests(gStore.getState()).get(index),
-      method,
-      requestUrl
-    );
+  ["OPTIONS", "POST"].forEach((method, i) => {
+    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(i),
+      method, requestUrl);
   });
 
   yield teardown(monitor);

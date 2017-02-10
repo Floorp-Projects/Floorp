@@ -11,8 +11,7 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, windowRequire } = monitor.panelWin;
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { document, EVENTS } = monitor.panelWin;
   let button = document.querySelector("#requests-menu-reload-notice-button");
   button.click();
 

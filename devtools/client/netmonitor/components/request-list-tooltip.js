@@ -7,12 +7,10 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
-const {
-  setImageTooltip,
-  getImageDimensions,
-} = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const { WEBCONSOLE_L10N } = require("./l10n");
-const { formDataURI } = require("./request-utils");
+const { formDataURI } = require("../request-utils");
+const { WEBCONSOLE_L10N } = require("../l10n");
+const { setImageTooltip,
+        getImageDimensions } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 
 // px
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;

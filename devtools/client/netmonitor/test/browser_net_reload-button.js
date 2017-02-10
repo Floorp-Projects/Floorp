@@ -11,15 +11,15 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
   let wait = waitForNetworkEvents(monitor, 1);
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-menu-reload-notice-button"));
+  let button = document.querySelector("#requests-menu-reload-notice-button");
+  button.click();
   yield wait;
 
-  is(document.querySelectorAll(".request-list-item").length, 1,
-    "The request list should have one item after reloading");
+  is(RequestsMenu.itemCount, 1, "The request menu should have one item after reloading");
 
   return teardown(monitor);
 });
