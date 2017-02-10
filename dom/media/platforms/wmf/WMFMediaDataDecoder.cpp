@@ -7,8 +7,8 @@
 #include "WMFMediaDataDecoder.h"
 #include "VideoUtils.h"
 #include "WMFUtils.h"
-#include "nsTArray.h"
 #include "mozilla/Telemetry.h"
+#include "nsTArray.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
@@ -21,7 +21,6 @@ WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager,
                                          TaskQueue* aTaskQueue)
   : mTaskQueue(aTaskQueue)
   , mMFTManager(aMFTManager)
-  , mIsShutDown(false)
 {
 }
 
