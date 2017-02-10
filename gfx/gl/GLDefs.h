@@ -75,6 +75,9 @@
 #define LOCAL_WGL_ACCESS_READ_WRITE                     0x0001
 #define LOCAL_WGL_ACCESS_WRITE_DISCARD                  0x0002
 
+// GL_KHR_robustness
+#define LOCAL_GL_CONTEXT_ROBUST_ACCESS                  0x90F3
+
 // Others
 #define LOCAL_EGL_PRESERVED_RESOURCES                   0x3030
 #define LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT 0x3138
