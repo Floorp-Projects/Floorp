@@ -15,7 +15,6 @@ DIRS += [
 
 DevToolsModules(
     'constants.js',
-    'custom-request-view.js',
     'events.js',
     'filter-predicates.js',
     'l10n.js',
@@ -26,7 +25,6 @@ DevToolsModules(
     'request-list-context-menu.js',
     'request-utils.js',
     'requests-menu-view.js',
-    'sidebar-view.js',
     'sort-predicates.js',
     'store.js',
     'waterfall-background.js',

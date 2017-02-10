@@ -591,31 +591,25 @@ class TransportAndDataEvent : public ChannelEvent
   TransportAndDataEvent(HttpChannelChild* child,
                         const nsresult& channelStatus,
                         const nsresult& transportStatus,
-                        const uint64_t& progress,
-                        const uint64_t& progressMax,
                         const nsCString& data,
                         const uint64_t& offset,
                         const uint32_t& count)
   : mChild(child)
   , mChannelStatus(channelStatus)
   , mTransportStatus(transportStatus)
-  , mProgress(progress)
-  , mProgressMax(progressMax)
   , mData(data)
   , mOffset(offset)
   , mCount(count) {}
 
   void Run()
   {
-    mChild->OnTransportAndData(mChannelStatus, mTransportStatus, mProgress,
-                               mProgressMax, mOffset, mCount, mData);
+    mChild->OnTransportAndData(mChannelStatus, mTransportStatus,
+                               mOffset, mCount, mData);
   }
  private:
   HttpChannelChild* mChild;
   nsresult mChannelStatus;
   nsresult mTransportStatus;
-  uint64_t mProgress;
-  uint64_t mProgressMax;
   nsCString mData;
   uint64_t mOffset;
   uint32_t mCount;
@@ -624,8 +618,6 @@ class TransportAndDataEvent : public ChannelEvent
 mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
                                          const nsresult& transportStatus,
-                                         const uint64_t& progress,
-                                         const uint64_t& progressMax,
                                          const uint64_t& offset,
                                          const uint32_t& count,
                                          const nsCString& data)
@@ -635,8 +627,7 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
                      "Should not be receiving any more callbacks from parent!");
 
   mEventQ->RunOrEnqueue(new TransportAndDataEvent(this, channelStatus,
-                                                  transportStatus, progress,
-                                                  progressMax, data, offset,
+                                                  transportStatus, data, offset,
                                                   count),
                         mDivertingToParent);
   return IPC_OK();
@@ -681,8 +672,6 @@ HttpChannelChild::MaybeDivertOnData(const nsCString& data,
 void
 HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
                                      const nsresult& transportStatus,
-                                     const uint64_t progress,
-                                     const uint64_t& progressMax,
                                      const uint64_t& offset,
                                      const uint32_t& count,
                                      const nsCString& data)
@@ -717,6 +706,9 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
   DoOnStatus(this, transportStatus);
+
+  const int64_t progressMax = mResponseHead->ContentLength();
+  const int64_t progress = offset + count;
   DoOnProgress(this, progress, progressMax);
 
   // OnDataAvailable
@@ -1213,8 +1205,8 @@ HttpChannelChild::RecvFinishInterceptedRedirect()
   RefPtr<HttpChannelChild> self(this);
   Send__delete__(this);
 
-  // Reset the event target to which queued messages are delivered. Otherwise
-  // we'll get an assertion when we re-use the channel later on.
+  // Reset the event target since the IPC actor is about to be destroyed.
+  // Following channel event should be handled on main thread.
   mEventQ->ResetDeliveryTarget();
 
   // The IPDL connection was torn down by a interception logic in

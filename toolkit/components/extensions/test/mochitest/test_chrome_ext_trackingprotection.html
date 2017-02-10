@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+
+function tp_background(expectFail = true) {
+  fetch("https://tracking.example.com/example.txt").then(() => {
+    browser.test.assertTrue(!expectFail, "fetch received");
+    browser.test.sendMessage("done");
+  }, () => {
+    browser.test.assertTrue(expectFail, "fetch failure");
+    browser.test.sendMessage("done");
+  });
+}
+
+function* test_permission(permissions, expectFail) {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions,
+    },
+    background: `(${tp_background})(${expectFail})`,
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+}
+
+add_task(function* setup() {
+  yield UrlClassifierTestUtils.addTestTrackers();
+  yield SpecialPowers.pushPrefEnv({
+    set: [["privacy.trackingprotection.enabled", true]],
+  });
+});
+
+// Fetch would be blocked with these tests
+add_task(function* () { yield test_permission([], true); });
+add_task(function* () { yield test_permission(["http://*/"], true); });
+add_task(function* () { yield test_permission(["http://*.example.com/"], true); });
+add_task(function* () { yield test_permission(["http://localhost/*"], true); });
+add_task(function* () { yield test_permission(["<all_urls>"], true); });
+// Fetch will not be blocked with explicit permissions
+add_task(function* () { yield test_permission(["*://tracking.example.com/*"], false); });
+
+add_task(function* test_contentscript() {
+  function contentScript() {
+    fetch("https://tracking.example.com/example.txt").then(() => {
+      browser.test.notifyPass("fetch received");
+    }, () => {
+      browser.test.notifyFail("fetch failure");
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["*://tracking.example.com/*"],
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_start",
+        },
+      ],
+    },
+
+    files: {
+      "content_script.js": contentScript,
+    },
+  };
+  const url = "http://mochi.test:8888/chrome/toolkit/components/extensions/test/mochitest/file_sample.html";
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+  let win = window.open(url);
+  yield extension.awaitFinish();
+  win.close();
+  yield extension.unload();
+});
+
+add_task(function* teardown() {
+  UrlClassifierTestUtils.cleanupTestTrackers();
+});
+</script>
+
+</body>
+</html>

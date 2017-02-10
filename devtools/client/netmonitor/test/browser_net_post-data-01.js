@@ -49,7 +49,7 @@ add_task(function* () {
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   document.querySelector("#params-tab").click();
   yield wait;
   yield testParamsTab("urlencoded");

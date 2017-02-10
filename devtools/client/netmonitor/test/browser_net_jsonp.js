@@ -45,7 +45,7 @@ add_task(function* () {
 
   wait = waitForDOM(document, "#response-panel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   document.querySelector("#response-tab").click();
   yield wait;
 

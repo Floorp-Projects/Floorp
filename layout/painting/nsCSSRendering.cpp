@@ -1925,19 +1925,17 @@ IsHTMLStyleGeometryBox(StyleGeometryBox aBox)
 static StyleGeometryBox
 ComputeBoxValue(nsIFrame* aForFrame, StyleGeometryBox aBox)
 {
-  // Except <svg>, all svg elements are not associate with CSS layout box.
-  if (aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
-      (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame)) {
-    // For SVG elements without associated CSS layout box, the values
-    // content-box, padding-box, border-box and margin-box compute to fill-box.
-    if (IsHTMLStyleGeometryBox(aBox)) {
-      return StyleGeometryBox::Fill;
-    }
-  } else {
+  if (nsLayoutUtils::HasCSSBoxLayout(aForFrame)) {
     // For elements with associated CSS layout box, the values fill-box,
     // stroke-box and view-box compute to the initial value of mask-clip.
     if (IsSVGStyleGeometryBox(aBox)) {
       return StyleGeometryBox::Border;
+    }
+  } else {
+    // For SVG elements without associated CSS layout box, the values
+    // content-box, padding-box, border-box and margin-box compute to fill-box.
+    if (IsHTMLStyleGeometryBox(aBox)) {
+      return StyleGeometryBox::Fill;
     }
   }
 

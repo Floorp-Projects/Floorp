@@ -158,6 +158,38 @@ class TestRecursiveMakeTraversal(unittest.TestCase):
             'I': ('H',),
         })
 
+    def test_traversal_parallel(self):
+        traversal = RecursiveMakeTraversal()
+        traversal.add('', dirs=['A', 'B', 'C'])
+        traversal.add('A')
+        traversal.add('B', dirs=['D', 'E', 'F'])
+        traversal.add('C', dirs=['G', 'H', 'I'])
+        traversal.add('D')
+        traversal.add('E')
+        traversal.add('F')
+        traversal.add('G')
+        traversal.add('H')
+        traversal.add('I')
+        traversal.add('J')
+
+        def filter(current, subdirs):
+            return current, subdirs.dirs, []
+
+        start, deps = traversal.compute_dependencies(filter)
+        self.assertEqual(start, ('A', 'D', 'E', 'F', 'G', 'H', 'I', 'J'))
+        self.assertEqual(deps, {
+            'A': ('',),
+            'B': ('',),
+            'C': ('',),
+            'D': ('B',),
+            'E': ('B',),
+            'F': ('B',),
+            'G': ('C',),
+            'H': ('C',),
+            'I': ('C',),
+            'J': ('',),
+        })
+
 class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
         """Ensure the RecursiveMakeBackend works without error."""

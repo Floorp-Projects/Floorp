@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals window, dumpn, $, gNetwork, NetMonitorController, NetMonitorView */
+/* globals window, dumpn, $, gNetwork, NetMonitorController */
 
 "use strict";
 
@@ -81,10 +81,10 @@ RequestsMenuView.prototype = {
       (newSelected, oldSelected) => this.onSelectionUpdate(newSelected, oldSelected)
     ));
 
-    // Watch the sidebar status and resize the waterfall column on change
+    // Watch the network details panel toggle and resize the waterfall column on change
     this.store.subscribe(storeWatcher(
       false,
-      () => this.store.getState().ui.sidebarOpen,
+      () => this.store.getState().ui.networkDetailsOpen,
       () => this.onResize()
     ));
 
@@ -139,9 +139,6 @@ RequestsMenuView.prototype = {
       },
     ));
 
-    this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);
-    this.closeCustomRequestEvent = this.closeCustomRequest.bind(this);
-
     this._summary = $("#requests-menu-network-summary-button");
     this._summary.setAttribute("label", L10N.getStr("networkMenu.empty"));
 
@@ -157,17 +154,6 @@ RequestsMenuView.prototype = {
       { store: this.store },
       RequestList()
     ), this.mountPoint);
-
-    window.once("connected", this._onConnect.bind(this));
-  },
-
-  _onConnect() {
-    if (NetMonitorController.supportsCustomRequest) {
-      $("#custom-request-send-button")
-        .addEventListener("click", this.sendCustomRequestEvent);
-      $("#custom-request-close-button")
-        .addEventListener("click", this.closeCustomRequestEvent);
-    }
   },
 
   /**
@@ -177,13 +163,6 @@ RequestsMenuView.prototype = {
     dumpn("Destroying the RequestsMenuView");
 
     Prefs.filters = getActiveFilters(this.store.getState());
-
-    // this.flushRequestsTask.disarm();
-
-    $("#custom-request-send-button")
-      .removeEventListener("click", this.sendCustomRequestEvent);
-    $("#custom-request-close-button")
-      .removeEventListener("click", this.closeCustomRequestEvent);
 
     this._splitter.removeEventListener("mouseup", this.onResize);
     window.removeEventListener("resize", this.onResize);
@@ -202,7 +181,7 @@ RequestsMenuView.prototype = {
   },
 
   /**
-   * Removes all network requests and closes the sidebar if open.
+   * Removes all network requests and closes the network details panel if open.
    */
   clear() {
     this.store.dispatch(Actions.clearRequests());
@@ -401,16 +380,15 @@ RequestsMenuView.prototype = {
   },
 
   /**
-   * Updates the sidebar status when something about the selection changes
+   * Updates the network details panel state when something about the selection changes
    */
   onSelectionUpdate(newSelected, oldSelected) {
     if (newSelected) {
       // Another item just got selected
-      NetMonitorView.Sidebar.populate(newSelected);
-      NetMonitorView.Sidebar.toggle(true);
+      this.store.dispatch(Actions.openNetworkDetails(true));
     } else {
       // Selection just got empty
-      NetMonitorView.Sidebar.toggle(false);
+      this.store.dispatch(Actions.openNetworkDetails(false));
     }
   },
 
@@ -426,48 +404,7 @@ RequestsMenuView.prototype = {
         this.store.dispatch(Actions.resizeWaterfall(width));
       }
     });
-  },
-
-  /**
-   * Create a new custom request form populated with the data from
-   * the currently selected request.
-   */
-  cloneSelectedRequest() {
-    this.store.dispatch(Actions.cloneSelectedRequest());
-  },
-
-  /**
-   * Send a new HTTP request using the data in the custom request form.
-   */
-  sendCustomRequest: function () {
-    let selected = getSelectedRequest(this.store.getState());
-
-    let data = {
-      url: selected.url,
-      method: selected.method,
-      httpVersion: selected.httpVersion,
-    };
-    if (selected.requestHeaders) {
-      data.headers = selected.requestHeaders.headers;
-    }
-    if (selected.requestPostData) {
-      data.body = selected.requestPostData.postData.text;
-    }
-
-    NetMonitorController.webConsoleClient.sendHTTPRequest(data, response => {
-      let id = response.eventActor.actor;
-      this.store.dispatch(Actions.preselectRequest(id));
-    });
-
-    this.closeCustomRequest();
-  },
-
-  /**
-   * Remove the currently selected custom request.
-   */
-  closeCustomRequest() {
-    this.store.dispatch(Actions.removeSelectedCustomRequest());
-  },
+  }
 };
 
 exports.RequestsMenuView = RequestsMenuView;

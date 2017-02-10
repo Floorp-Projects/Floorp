@@ -20,13 +20,13 @@
                               "::cssparser::Color::CurrentColor",
                               alias=maybe_moz_logical_alias(product, side, "-moz-border-%s-color"),
                               spec=maybe_logical_spec(side, "color"),
-                              animatable=True, logical = side[1])}
+                              animatable=True, logical = side[1], boxed=True)}
 % endfor
 
 % for side in ALL_SIDES:
     ${helpers.predefined_type("border-%s-style" % side[0], "BorderStyle",
                               "specified::BorderStyle::none",
-                              needs_context=False, need_clone=True,
+                              need_clone=True,
                               alias=maybe_moz_logical_alias(product, side, "-moz-border-%s-style"),
                               spec=maybe_logical_spec(side, "style"),
                               animatable=False, logical = side[1])}
@@ -83,14 +83,14 @@ ${helpers.single_keyword("-moz-float-edge", "content-box margin-box",
                          spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-float-edge)",
                          animatable=False)}
 
-<%helpers:longhand name="border-image-source" products="gecko" animatable="False"
+<%helpers:longhand name="border-image-source" products="gecko" animatable="False" boxed="True"
                    spec="https://drafts.csswg.org/css-backgrounds/#border-image-source">
     use std::fmt;
     use style_traits::ToCss;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     use values::specified::Image;
 
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         use values::computed;
@@ -257,10 +257,10 @@ ${helpers.single_keyword("-moz-float-edge", "content-box margin-box",
         }
     }
 
-    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
         let mut values = vec![];
         for _ in 0..4 {
-            let value = input.try(|input| LengthOrNumber::parse_non_negative(input));
+            let value = input.try(|input| LengthOrNumber::parse_non_negative(context, input));
             match value {
                 Ok(val) => values.push(val),
                 Err(_) => break,
@@ -279,9 +279,9 @@ ${helpers.single_keyword("-moz-float-edge", "content-box margin-box",
                    spec="https://drafts.csswg.org/css-backgrounds/#border-image-repeat">
     use std::fmt;
     use style_traits::ToCss;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
 
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         pub use super::RepeatKeyword;
@@ -557,10 +557,10 @@ ${helpers.single_keyword("-moz-float-edge", "content-box margin-box",
                    spec="https://drafts.csswg.org/css-backgrounds/#border-image-slice">
     use std::fmt;
     use style_traits::ToCss;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     use values::specified::{Number, Percentage};
 
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         use values::computed::Number;

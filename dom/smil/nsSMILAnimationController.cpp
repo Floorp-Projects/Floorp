@@ -16,6 +16,8 @@
 #include <algorithm>
 #include "mozilla/AutoRestore.h"
 #include "RestyleTracker.h"
+#include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -793,5 +795,7 @@ nsSMILAnimationController::GetRefreshDriver()
 void
 nsSMILAnimationController::FlagDocumentNeedsFlush()
 {
-  mDocument->SetNeedStyleFlush();
+  if (nsIPresShell* shell = mDocument->GetShell()) {
+    shell->SetNeedStyleFlush();
+  }
 }

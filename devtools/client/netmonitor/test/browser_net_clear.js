@@ -11,16 +11,15 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { $, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
-  let detailsPane = $("#details-pane");
-  let detailsPaneToggleButton = $("#details-pane-toggle");
-  let clearButton = $("#requests-menu-clear-button");
+  let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
+  let clearButton = document.querySelector("#requests-menu-clear-button");
 
   RequestsMenu.lazyUpdate = false;
 
   // Make sure we start in a sane state
-  assertNoRequestState(RequestsMenu, detailsPaneToggleButton);
+  assertNoRequestState(RequestsMenu, detailsPanelToggleButton);
 
   // Load one request and assert it shows up in the list
   let networkEvent = monitor.panelWin.once(monitor.panelWin.EVENTS.NETWORK_EVENT);
@@ -40,17 +39,18 @@ add_task(function* () {
 
   assertSingleRequestState();
 
-  // Make sure we can now open the details pane
-  NetMonitorView.toggleDetailsPane({ visible: true, animated: false });
-  ok(!detailsPane.classList.contains("pane-collapsed") &&
-    !detailsPaneToggleButton.classList.contains("pane-collapsed"),
+  // Make sure we can now open the network details panel
+  EventUtils.sendMouseEvent({ type: "mousedown" }, detailsPanelToggleButton);
+
+  ok(document.querySelector(".network-details-panel") &&
+    !detailsPanelToggleButton.classList.contains("pane-collapsed"),
     "The details pane should be visible after clicking the toggle button.");
 
   // Click clear and make sure the details pane closes
   EventUtils.sendMouseEvent({ type: "click" }, clearButton);
   assertNoRequestState();
-  ok(detailsPane.classList.contains("pane-collapsed") &&
-    detailsPaneToggleButton.classList.contains("pane-collapsed"),
+  ok(!document.querySelector(".network-details-panel") &&
+    detailsPanelToggleButton.classList.contains("pane-collapsed"),
     "The details pane should not be visible clicking 'clear'.");
 
   return teardown(monitor);
@@ -61,7 +61,7 @@ add_task(function* () {
   function assertSingleRequestState() {
     is(RequestsMenu.itemCount, 1,
       "The request menu should have one item at this point.");
-    is(detailsPaneToggleButton.hasAttribute("disabled"), false,
+    is(detailsPanelToggleButton.hasAttribute("disabled"), false,
       "The pane toggle button should be enabled after a request is made.");
   }
 
@@ -71,7 +71,7 @@ add_task(function* () {
   function assertNoRequestState() {
     is(RequestsMenu.itemCount, 0,
       "The request menu should be empty at this point.");
-    is(detailsPaneToggleButton.hasAttribute("disabled"), true,
+    is(detailsPanelToggleButton.hasAttribute("disabled"), true,
       "The pane toggle button should be disabled when the request menu is cleared.");
   }
 });

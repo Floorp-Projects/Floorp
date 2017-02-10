@@ -27,7 +27,7 @@ add_task(function* () {
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   document.querySelector("#params-tab").click();
   yield wait;
   testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
@@ -61,9 +61,7 @@ add_task(function* () {
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
   testParamsTab2("a", '"b"', "?foo=bar", "text");
 
-  wait = waitForDOM(document, "#params-panel .empty-notice");
   RequestsMenu.selectedIndex = 6;
-  yield wait;
   testParamsTab3();
 
   yield teardown(monitor);

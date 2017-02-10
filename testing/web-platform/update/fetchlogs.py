@@ -6,6 +6,7 @@ import argparse
 import os
 import requests
 import urlparse
+from multiprocessing import Pool
 
 treeherder_base = "https://treeherder.mozilla.org/"
 
@@ -94,6 +95,8 @@ def get_structured_logs(branch, commit, dest=None):
     }
     job_data = fetch_json(jobs_url, params=jobs_params)
 
+    tasks = []
+
     for result in job_data["results"]:
         job_type_name = result["job_type_name"]
         if (job_type_name.startswith("W3C Web Platform") or
@@ -101,8 +104,14 @@ def get_structured_logs(branch, commit, dest=None):
             url = get_blobber_url(branch, result)
             if url:
                 prefix = result["platform"] # platform
-                download(url, prefix, None)
+                tasks.append((url, prefix, None))
 
+    pool = Pool(8)
+    for item in pool.imap_unordered(download_logs, tasks, 1):
+        pass
+
+def download_logs(args):
+    download(*args)
 
 def main():
     parser = create_parser()

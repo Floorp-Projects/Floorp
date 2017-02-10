@@ -27,8 +27,8 @@ function test() {
         "There shouldn't be any selected item in the requests menu.");
       is(RequestsMenu.itemCount, 1,
         "The requests menu should not be empty after the first request.");
-      is(NetMonitorView.detailsPaneHidden, true,
-        "The details pane should still be hidden after the first request.");
+      is(!!document.querySelector(".network-details-panel"), false,
+        "The network details panel should still be hidden after first request.");
 
       let requestItem = RequestsMenu.getItemAtIndex(0);
 

@@ -1072,15 +1072,18 @@ impl FragmentDisplayListBuilding for Fragment {
                                                     style: &ServoComputedValues,
                                                     bounds: &Rect<Au>,
                                                     clip: &ClippingRegion) {
+        use style::values::Either;
+
         let width = style.get_outline().outline_width;
         if width == Au(0) {
             return
         }
 
-        let outline_style = style.get_outline().outline_style;
-        if outline_style == border_style::T::none {
-            return
-        }
+        let outline_style = match style.get_outline().outline_style {
+            Either::First(_auto) => border_style::T::solid,
+            Either::Second(border_style::T::none) => return,
+            Either::Second(border_style) => border_style
+        };
 
         // Outlines are not accounted for in the dimensions of the border box, so adjust the
         // absolute bounds.
@@ -1173,10 +1176,11 @@ impl FragmentDisplayListBuilding for Fragment {
     fn adjust_clip_for_style(&self,
                              parent_clip: &mut ClippingRegion,
                              stacking_relative_border_box: &Rect<Au>) {
+        use style::values::Either;
         // Account for `clip` per CSS 2.1 § 11.1.2.
         let style_clip_rect = match (self.style().get_box().position,
-                                     self.style().get_effects().clip.0) {
-            (position::T::absolute, Some(style_clip_rect)) => style_clip_rect,
+                                     self.style().get_effects().clip) {
+            (position::T::absolute, Either::First(style_clip_rect)) => style_clip_rect,
             _ => return,
         };
 

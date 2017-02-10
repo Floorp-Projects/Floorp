@@ -40,7 +40,7 @@ public:
   // This is a separate static method so nsNSSComponent can use it during NSS
   // initialization. Other code should probably not use it.
   static nsresult
-  FindCertByDBKey(const char* aDBKey, mozilla::UniqueCERTCertificate& cert);
+  FindCertByDBKey(const nsACString& aDBKey, mozilla::UniqueCERTCertificate& cert);
 
 protected:
   virtual ~nsNSSCertificateDB();

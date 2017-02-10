@@ -104,7 +104,8 @@ class DebugModeOSRVolatileJitFrameIterator : public JitFrameIterator
         *stack = prev;
     }
 
-    static void forwardLiveIterators(JSContext* cx, uint8_t* oldAddr, uint8_t* newAddr);
+    static void forwardLiveIterators(const CooperatingContext& target,
+                                     uint8_t* oldAddr, uint8_t* newAddr);
 };
 
 //

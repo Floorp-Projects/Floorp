@@ -5,20 +5,20 @@
 "use strict";
 
 const {
-  OPEN_SIDEBAR,
+  OPEN_NETWORK_DETAILS,
   OPEN_STATISTICS,
   SELECT_DETAILS_PANEL_TAB,
   WATERFALL_RESIZE,
 } = require("../constants");
 
 /**
- * Change sidebar open state.
+ * Change network details panel.
  *
- * @param {boolean} open - open state
+ * @param {boolean} open - expected network details panel open state
  */
-function openSidebar(open) {
+function openNetworkDetails(open) {
   return {
-    type: OPEN_SIDEBAR,
+    type: OPEN_NETWORK_DETAILS,
     open,
   };
 }
@@ -26,7 +26,7 @@ function openSidebar(open) {
 /**
  * Change performance statistics view open state.
  *
- * @param {boolean} visible - expected sidebar open state
+ * @param {boolean} visible - expected performance statistics open state
  */
 function openStatistics(open) {
   return {
@@ -46,7 +46,7 @@ function resizeWaterfall(width) {
 }
 
 /**
- * Change the selected tab for details panel.
+ * Change the selected tab for network details panel.
  *
  * @param {string} id - tab id to be selected
  */
@@ -58,10 +58,11 @@ function selectDetailsPanelTab(id) {
 }
 
 /**
- * Toggle sidebar open state.
+ * Toggle network details panel.
  */
-function toggleSidebar() {
-  return (dispatch, getState) => dispatch(openSidebar(!getState().ui.sidebarOpen));
+function toggleNetworkDetails() {
+  return (dispatch, getState) =>
+    dispatch(openNetworkDetails(!getState().ui.networkDetailsOpen));
 }
 
 /**
@@ -72,10 +73,10 @@ function toggleStatistics() {
 }
 
 module.exports = {
-  openSidebar,
+  openNetworkDetails,
   openStatistics,
   resizeWaterfall,
   selectDetailsPanelTab,
-  toggleSidebar,
+  toggleNetworkDetails,
   toggleStatistics,
 };

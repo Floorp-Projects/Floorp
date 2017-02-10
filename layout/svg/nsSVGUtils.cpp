@@ -148,21 +148,20 @@ nsSVGUtils::Init()
                                "svg.new-getBBox.enabled");
 }
 
-nsSVGDisplayContainerFrame*
-nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
+nsIFrame*
+nsSVGUtils::GetNearestSVGParent(nsIFrame *aFrame)
 {
   NS_ASSERTION(aFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
-  if (aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame) {
-    return nullptr;
-  }
-  while ((aFrame = aFrame->GetParent())) {
+
+  for (; aFrame &&  aFrame->IsFrameOfType(nsIFrame::eSVG);
+       aFrame = aFrame->GetParent()) {
     NS_ASSERTION(aFrame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
     if (aFrame->GetType() == nsGkAtoms::svgInnerSVGFrame ||
         aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame) {
-      return do_QueryFrame(aFrame);
+      return aFrame;
     }
   }
-  NS_NOTREACHED("This is not reached. It's only needed to compile.");
+
   return nullptr;
 }
 

@@ -432,7 +432,7 @@ var BrowserApp = {
         // Tab selection has changed during a fullscreen transition, handle it now.
         let tab = this.fullscreenTransitionTab;
         this.fullscreenTransitionTab = null;
-        this._handleTabSelected(tab);
+        this.selectTab(tab);
       }
     });
 
@@ -1206,7 +1206,20 @@ var BrowserApp = {
   addTab: function addTab(aURI, aParams) {
     aParams = aParams || {};
 
+    let fullscreenState;
+    if (this.selectedBrowser) {
+       fullscreenState = this.selectedBrowser.contentDocument.fullscreenElement;
+       if (fullscreenState) {
+         aParams.selected = false;
+       }
+    }
+
     let newTab = new Tab(aURI, aParams);
+
+    if (fullscreenState) {
+       this.fullscreenTransitionTab = newTab;
+       doc.exitFullscreen();
+    }
 
     if (typeof aParams.tabIndex == "number") {
       this._tabs.splice(aParams.tabIndex, 0, newTab);
@@ -1312,6 +1325,7 @@ var BrowserApp = {
       // remember the new tab for this.
       this.fullscreenTransitionTab = aTab;
       doc.exitFullscreen();
+      return;
     }
 
     let message = {

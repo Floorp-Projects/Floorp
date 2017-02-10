@@ -6,7 +6,7 @@
 
 const { getDisplayedRequests } = require("./requests");
 
-function isSidebarToggleButtonDisabled(state) {
+function isNetworkDetailsToggleButtonDisabled(state) {
   return getDisplayedRequests(state).isEmpty();
 }
 
@@ -31,6 +31,6 @@ function getWaterfallScale(state) {
 }
 
 module.exports = {
-  isSidebarToggleButtonDisabled,
+  isNetworkDetailsToggleButtonDisabled,
   getWaterfallScale,
 };

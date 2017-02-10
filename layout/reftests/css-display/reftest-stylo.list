@@ -4,8 +4,8 @@
 
 fails == display-contents-acid.html display-contents-acid.html
 # fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
-fails == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
-fails == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
+fails asserts-if(stylo,5) == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html # bug 1337700
+fails asserts-if(stylo,2) == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html # bug 1324661
 # == display-contents-generated-content.html display-contents-generated-content.html
 # == display-contents-generated-content-2.html display-contents-generated-content-2.html
 fails == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html

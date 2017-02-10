@@ -656,7 +656,6 @@ class InlineFrameIterator
 
   public:
     InlineFrameIterator(JSContext* cx, const JitFrameIterator* iter);
-    InlineFrameIterator(JSRuntime* rt, const JitFrameIterator* iter);
     InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter);
 
     bool more() const {

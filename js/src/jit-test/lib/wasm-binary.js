@@ -4,12 +4,12 @@ const magic1 = 0x61;  // 'a'
 const magic2 = 0x73;  // 's'
 const magic3 = 0x6d;  // 'm'
 
-// EncodingVersion (temporary; to be set to 1 at some point before release)
-const experimentalVersion = 0xd;
-const ver0 = (experimentalVersion >>>  0) & 0xff;
-const ver1 = (experimentalVersion >>>  8) & 0xff;
-const ver2 = (experimentalVersion >>> 16) & 0xff;
-const ver3 = (experimentalVersion >>> 24) & 0xff;
+// EncodingVersion
+const encodingVersion = 0x1;
+const ver0 = (encodingVersion >>>  0) & 0xff;
+const ver1 = (encodingVersion >>>  8) & 0xff;
+const ver2 = (encodingVersion >>> 16) & 0xff;
+const ver3 = (encodingVersion >>> 24) & 0xff;
 
 // Section opcodes
 const userDefinedId    = 0;

@@ -922,8 +922,8 @@ IMEHandler::ShowOnScreenKeyboard()
       } else {
         PWSTR path = nullptr;
         HRESULT hres =
-          WinUtils::SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, 0,
-                                         nullptr, &path);
+          SHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, 0,
+                               nullptr, &path);
         if (FAILED(hres) || !path) {
           return;
         }

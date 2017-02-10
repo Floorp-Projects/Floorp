@@ -57,10 +57,10 @@ protected:
   void UninstallFromEditor();
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
-  nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyDown(const WidgetKeyboardEvent* aKeyboardEvent);
+  nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
-  nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);
+  nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
@@ -80,10 +80,10 @@ protected:
   nsPresContext* GetPresContext();
   nsIContent* GetFocusedRootContent();
   // Returns true if IME consumes the mouse event.
-  bool NotifyIMEOfMouseButtonEvent(nsIDOMMouseEvent* aMouseEvent);
+  bool NotifyIMEOfMouseButtonEvent(WidgetMouseEvent* aMouseEvent);
   bool EditorHasFocus();
   bool IsFileControlTextBox();
-  bool ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent);
+  bool ShouldHandleNativeKeyBindings(WidgetKeyboardEvent* aKeyboardEvent);
   nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
   /**

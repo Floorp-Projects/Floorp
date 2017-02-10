@@ -55,9 +55,11 @@ import org.mozilla.gecko.home.activitystream.model.Item;
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setFocusable(true);
 
-        // On Asus devices running Android 4, PopupWindow is assigned height/width = 0 - we therefore
-        // need to manually override that behaviour, but only on those devices:
-        if (AppConstants.Versions.preLollipop && "asus".equals(android.os.Build.MANUFACTURER)) {
+        // On a variety of devices running Android 4 and 5, PopupWindow is assigned height/width = 0 - we therefore
+        // need to manually override that behaviour. There don't appear to be any reported issues
+        // with devices running 6 (Marshmallow) or newer, so we should restrict the workaround
+        // as much as possible:
+        if (AppConstants.Versions.preMarshmallow) {
             popupWindow.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
             popupWindow.setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
         }

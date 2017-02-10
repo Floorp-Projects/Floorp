@@ -60,8 +60,9 @@ this.SelectContentHelper.prototype = {
     this.global.addMessageListener("Forms:MouseOver", this);
     this.global.addMessageListener("Forms:MouseOut", this);
     this.global.addMessageListener("Forms:MouseUp", this);
-    this.global.addEventListener("pagehide", this);
-    this.global.addEventListener("mozhidedropdown", this);
+    this.global.addEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.addEventListener("mozhidedropdown", this, { mozSystemGroup: true });
+    this.element.addEventListener("blur", this, { mozSystemGroup: true });
     let MutationObserver = this.element.ownerGlobal.MutationObserver;
     this.mut = new MutationObserver(mutations => {
       // Something changed the <select> while it was open, so
@@ -79,8 +80,9 @@ this.SelectContentHelper.prototype = {
     this.global.removeMessageListener("Forms:MouseOver", this);
     this.global.removeMessageListener("Forms:MouseOut", this);
     this.global.removeMessageListener("Forms:MouseUp", this);
-    this.global.removeEventListener("pagehide", this);
-    this.global.removeEventListener("mozhidedropdown", this);
+    this.global.removeEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.removeEventListener("mozhidedropdown", this, { mozSystemGroup: true });
+    this.element.removeEventListener("blur", this, { mozSystemGroup: true });
     this.element = null;
     this.global = null;
     this.mut.disconnect();
@@ -259,6 +261,7 @@ this.SelectContentHelper.prototype = {
           this.uninit();
         }
         break;
+      case "blur":
       case "mozhidedropdown":
         if (this.element === event.target) {
           this.global.sendAsyncMessage("Forms:HideDropDown", {});

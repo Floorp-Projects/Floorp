@@ -457,7 +457,13 @@ class Viewport {
       type: 'viewport',
       xOffset: this._runtimePosition.x,
       yOffset: this._runtimePosition.y,
-      zoom: this._zoom
+      zoom: this._zoom,
+      // FIXME Since Chromium improves pinch-zoom for PDF. PostMessage of type
+      //       viewport takes an addition parameter pinchPhase. We workaround
+      //       here by adding a pinchPhase of value 0 to make sure that viewing
+      //       pdf works normally. More details about pinch-zoom please refer
+      //       to chromium revision: 6e1abbfb2450eedddb1ab128be1b31cc93104e41
+      pinchPhase: 0
     });
 
     let newPage = this._getMostVisiblePage();

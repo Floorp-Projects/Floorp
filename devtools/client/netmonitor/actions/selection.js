@@ -5,19 +5,7 @@
 "use strict";
 
 const { getDisplayedRequests } = require("../selectors/index");
-const { SELECT_REQUEST, PRESELECT_REQUEST } = require("../constants");
-
-/**
- * When a new request with a given id is added in future, select it immediately.
- * Used by the "Edit and Resend" feature, where we know in advance the ID of the
- * request, at a time when it wasn't sent yet.
- */
-function preselectRequest(id) {
-  return {
-    type: PRESELECT_REQUEST,
-    id
-  };
-}
+const { SELECT_REQUEST } = require("../constants");
 
 /**
  * Select request with a given id.
@@ -61,7 +49,6 @@ function selectDelta(delta) {
 }
 
 module.exports = {
-  preselectRequest,
   selectRequest,
   selectDelta,
 };

@@ -151,7 +151,7 @@ ProfileGatherer::Finish()
     return;
   }
 
-  UniquePtr<char[]> buf = mSampler->ToJSON(mSinceTime);
+  UniquePtr<char[]> buf = ToJSON(mSinceTime);
 
   if (mFile) {
     nsCOMPtr<nsIFileOutputStream> of =

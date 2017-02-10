@@ -1128,7 +1128,7 @@ bool
 RecompileImpl(JSContext* cx, bool force)
 {
     MOZ_ASSERT(cx->currentlyRunningInJit());
-    JitActivationIterator activations(cx->runtime());
+    JitActivationIterator activations(cx);
     JitFrameIterator iter(activations);
 
     MOZ_ASSERT(iter.type() == JitFrame_Exit);

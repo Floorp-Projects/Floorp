@@ -17,7 +17,6 @@
 #include "nsExceptionHandler.h"
 #endif
 #include "nsGkAtoms.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsIWindowsRegKey.h"
 #include "nsMemory.h"
@@ -255,13 +254,13 @@ static const nsCString
 GetKeyLocationName(uint32_t aLocation)
 {
   switch (aLocation) {
-    case nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT:
+    case eKeyLocationLeft:
       return NS_LITERAL_CSTRING("KEY_LOCATION_LEFT");
-    case nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT:
+    case eKeyLocationRight:
       return NS_LITERAL_CSTRING("KEY_LOCATION_RIGHT");
-    case nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD:
+    case eKeyLocationStandard:
       return NS_LITERAL_CSTRING("KEY_LOCATION_STANDARD");
-    case nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD:
+    case eKeyLocationNumpad:
       return NS_LITERAL_CSTRING("KEY_LOCATION_NUMPAD");
     default:
       return nsPrintfCString("Unknown (0x%04X)", aLocation);
@@ -1777,18 +1776,17 @@ NativeKey::GetKeyLocation() const
     case VK_LCONTROL:
     case VK_LMENU:
     case VK_LWIN:
-      return nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      return eKeyLocationLeft;
 
     case VK_RSHIFT:
     case VK_RCONTROL:
     case VK_RMENU:
     case VK_RWIN:
-      return nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      return eKeyLocationRight;
 
     case VK_RETURN:
       // XXX This code assumes that all keyboard drivers use same mapping.
-      return !mIsExtended ? nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD :
-                            nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      return !mIsExtended ? eKeyLocationStandard : eKeyLocationNumpad;
 
     case VK_INSERT:
     case VK_DELETE:
@@ -1802,8 +1800,7 @@ NativeKey::GetKeyLocation() const
     case VK_UP:
     case VK_PRIOR:
       // XXX This code assumes that all keyboard drivers use same mapping.
-      return mIsExtended ? nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD :
-                           nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      return mIsExtended ? eKeyLocationStandard : eKeyLocationNumpad;
 
     // NumLock key isn't included due to IE9's behavior.
     case VK_NUMPAD0:
@@ -1823,7 +1820,7 @@ NativeKey::GetKeyLocation() const
     case VK_ADD:
     // Separator key of Brazilian keyboard or JIS keyboard for Mac
     case VK_ABNT_C2:
-      return nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      return eKeyLocationNumpad;
 
     case VK_SHIFT:
     case VK_CONTROL:
@@ -1831,7 +1828,7 @@ NativeKey::GetKeyLocation() const
       NS_WARNING("Failed to decide the key location?");
 
     default:
-      return nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      return eKeyLocationStandard;
   }
 }
 

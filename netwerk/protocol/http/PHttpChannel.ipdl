@@ -113,8 +113,6 @@ child:
   // OnStatus calls into one IPDL message
   async OnTransportAndData(nsresult  channelStatus,
                            nsresult  transportStatus,
-                           uint64_t  progress,
-                           uint64_t  progressMax,
                            uint64_t  offset,
                            uint32_t  count,
                            nsCString data);

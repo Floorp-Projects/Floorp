@@ -18,12 +18,12 @@ use properties::{self, CascadeFlags, ComputedValues, INHERIT_ALL};
 use properties::PropertyDeclarationBlock;
 use restyle_hints::{RestyleHint, DependencySet};
 use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
-use selector_parser::{ElementExt, SelectorImpl, PseudoElement, Snapshot};
+use selector_parser::{SelectorImpl, PseudoElement, Snapshot};
 use selectors::Element;
 use selectors::bloom::BloomFilter;
 use selectors::matching::{AFFECTED_BY_ANIMATIONS, AFFECTED_BY_TRANSITIONS};
 use selectors::matching::{AFFECTED_BY_STYLE_ATTRIBUTE, AFFECTED_BY_PRESENTATIONAL_HINTS};
-use selectors::matching::{MatchingReason, StyleRelations, matches_complex_selector};
+use selectors::matching::{ElementSelectorFlags, StyleRelations, matches_complex_selector};
 use selectors::parser::{Selector, SimpleSelector, LocalName as LocalNameSelector, ComplexSelector};
 use sink::Push;
 use smallvec::VecLike;
@@ -34,6 +34,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 use style_traits::viewport::ViewportConstraints;
 use stylesheets::{CssRule, Origin, StyleRule, Stylesheet, UserAgentStylesheets};
+use thread_state;
 use viewport::{self, MaybeNew, ViewportRule};
 
 pub use ::fnv::FnvHashMap;
@@ -210,14 +211,10 @@ impl Stylist {
                self.state_deps.len());
 
         SelectorImpl::each_precomputed_pseudo_element(|pseudo| {
-            // TODO: Consider not doing this and just getting the rules on the
-            // fly. It should be a bit slower, but we'd take rid of the
-            // extra field, and avoid this precomputation entirely.
             if let Some(map) = self.pseudos_map.remove(&pseudo) {
-                let mut declarations = vec![];
-                map.user_agent.get_universal_rules(&mut declarations,
-                                                   CascadeLevel::UANormal,
-                                                   CascadeLevel::UAImportant);
+                let declarations =
+                    map.user_agent.get_universal_rules(CascadeLevel::UANormal,
+                                                       CascadeLevel::UAImportant);
                 self.precomputed_pseudo_element_decls.insert(pseudo, declarations);
             }
         });
@@ -368,7 +365,7 @@ impl Stylist {
                                                   parent: &Arc<ComputedValues>,
                                                   default: &Arc<ComputedValues>)
                                                   -> Option<ComputedStyle>
-        where E: ElementExt +
+        where E: TElement +
                  fmt::Debug +
                  PresentationalHintsSynthetizer
     {
@@ -379,13 +376,14 @@ impl Stylist {
 
         let mut declarations = vec![];
 
+        let mut flags = ElementSelectorFlags::empty();
         self.push_applicable_declarations(element,
                                           None,
                                           None,
                                           AnimationRules(None, None),
                                           Some(pseudo),
                                           &mut declarations,
-                                          MatchingReason::ForStyling);
+                                          &mut flags);
 
         let rule_node =
             self.rule_tree.insert_ordered_rules(
@@ -399,6 +397,28 @@ impl Stylist {
                                 None,
                                 Box::new(StdoutErrorReporter),
                                 CascadeFlags::empty());
+
+        // Apply the selector flags. We should be in sequential mode already,
+        // so we can directly apply the parent flags.
+        if cfg!(feature = "servo") {
+            // Servo calls this function from the worker, but only for internal
+            // pseudos, so we should never generate selector flags here.
+            debug_assert!(flags.is_empty());
+        } else {
+            // Gecko calls this from sequential mode, so we can directly apply
+            // the flags.
+            debug_assert!(thread_state::get() == thread_state::LAYOUT);
+            let self_flags = flags.for_self();
+            if !self_flags.is_empty() {
+                unsafe { element.set_selector_flags(self_flags); }
+            }
+            let parent_flags = flags.for_parent();
+            if !parent_flags.is_empty() {
+                if let Some(p) = element.parent_element() {
+                    unsafe { p.set_selector_flags(parent_flags); }
+                }
+            }
+        }
 
         Some(ComputedStyle::new(rule_node, Arc::new(computed)))
     }
@@ -495,8 +515,8 @@ impl Stylist {
                                         animation_rules: AnimationRules,
                                         pseudo_element: Option<&PseudoElement>,
                                         applicable_declarations: &mut V,
-                                        reason: MatchingReason) -> StyleRelations
-        where E: ElementExt +
+                                        flags: &mut ElementSelectorFlags) -> StyleRelations
+        where E: TElement +
                  fmt::Debug +
                  PresentationalHintsSynthetizer,
               V: Push<ApplicableDeclarationBlock> + VecLike<ApplicableDeclarationBlock>
@@ -521,7 +541,7 @@ impl Stylist {
                                               parent_bf,
                                               applicable_declarations,
                                               &mut relations,
-                                              reason,
+                                              flags,
                                               CascadeLevel::UANormal);
         debug!("UA normal: {:?}", relations);
 
@@ -545,14 +565,14 @@ impl Stylist {
                                             parent_bf,
                                             applicable_declarations,
                                             &mut relations,
-                                            reason,
+                                            flags,
                                             CascadeLevel::UserNormal);
             debug!("user normal: {:?}", relations);
             map.author.get_all_matching_rules(element,
                                               parent_bf,
                                               applicable_declarations,
                                               &mut relations,
-                                              reason,
+                                              flags,
                                               CascadeLevel::AuthorNormal);
             debug!("author normal: {:?}", relations);
 
@@ -586,7 +606,7 @@ impl Stylist {
                                               parent_bf,
                                               applicable_declarations,
                                               &mut relations,
-                                              reason,
+                                              flags,
                                               CascadeLevel::AuthorImportant);
 
             debug!("author important: {:?}", relations);
@@ -609,7 +629,7 @@ impl Stylist {
                                             parent_bf,
                                             applicable_declarations,
                                             &mut relations,
-                                            reason,
+                                            flags,
                                             CascadeLevel::UserImportant);
 
             debug!("user important: {:?}", relations);
@@ -622,7 +642,7 @@ impl Stylist {
                                               parent_bf,
                                               applicable_declarations,
                                               &mut relations,
-                                              reason,
+                                              flags,
                                               CascadeLevel::UAImportant);
 
         debug!("UA important: {:?}", relations);
@@ -663,7 +683,7 @@ impl Stylist {
     pub fn match_same_not_common_style_affecting_attributes_rules<E>(&self,
                                                                      element: &E,
                                                                      candidate: &E) -> bool
-        where E: ElementExt,
+        where E: TElement,
     {
         use selectors::matching::StyleRelations;
         use selectors::matching::matches_complex_selector;
@@ -678,11 +698,11 @@ impl Stylist {
             let element_matches =
                 matches_complex_selector(&selector.complex_selector, element,
                                          None, &mut StyleRelations::empty(),
-                                         MatchingReason::Other);
+                                         &mut ElementSelectorFlags::empty());
             let candidate_matches =
                 matches_complex_selector(&selector.complex_selector, candidate,
                                          None, &mut StyleRelations::empty(),
-                                         MatchingReason::Other);
+                                         &mut ElementSelectorFlags::empty());
 
             if element_matches != candidate_matches {
                 return false;
@@ -704,7 +724,7 @@ impl Stylist {
     pub fn match_same_sibling_affecting_rules<E>(&self,
                                                  element: &E,
                                                  candidate: &E) -> bool
-        where E: ElementExt,
+        where E: TElement,
     {
         use selectors::matching::StyleRelations;
         use selectors::matching::matches_complex_selector;
@@ -717,12 +737,12 @@ impl Stylist {
             let element_matches =
                 matches_complex_selector(&selector.complex_selector, element,
                                          None, &mut StyleRelations::empty(),
-                                         MatchingReason::Other);
+                                         &mut ElementSelectorFlags::empty());
 
             let candidate_matches =
                 matches_complex_selector(&selector.complex_selector, candidate,
                                          None, &mut StyleRelations::empty(),
-                                         MatchingReason::Other);
+                                         &mut ElementSelectorFlags::empty());
 
             if element_matches != candidate_matches {
                 debug!("match_same_sibling_affecting_rules: Failure due to {:?}",
@@ -860,7 +880,7 @@ impl SelectorMap {
                                         parent_bf: Option<&BloomFilter>,
                                         matching_rules_list: &mut V,
                                         relations: &mut StyleRelations,
-                                        reason: MatchingReason,
+                                        flags: &mut ElementSelectorFlags,
                                         cascade_level: CascadeLevel)
         where E: Element<Impl=SelectorImpl>,
               V: VecLike<ApplicableDeclarationBlock>
@@ -878,7 +898,7 @@ impl SelectorMap {
                                                       &id,
                                                       matching_rules_list,
                                                       relations,
-                                                      reason,
+                                                      flags,
                                                       cascade_level)
         }
 
@@ -889,7 +909,7 @@ impl SelectorMap {
                                                       class,
                                                       matching_rules_list,
                                                       relations,
-                                                      reason,
+                                                      flags,
                                                       cascade_level);
         });
 
@@ -904,7 +924,7 @@ impl SelectorMap {
                                                   element.get_local_name(),
                                                   matching_rules_list,
                                                   relations,
-                                                  reason,
+                                                  flags,
                                                   cascade_level);
 
         SelectorMap::get_matching_rules(element,
@@ -912,7 +932,7 @@ impl SelectorMap {
                                         &self.other_rules,
                                         matching_rules_list,
                                         relations,
-                                        reason,
+                                        flags,
                                         cascade_level);
 
         // Sort only the rules we just added.
@@ -922,20 +942,21 @@ impl SelectorMap {
 
     /// Append to `rule_list` all universal Rules (rules with selector `*|*`) in
     /// `self` sorted by specificity and source order.
-    pub fn get_universal_rules<V>(&self,
-                                  matching_rules_list: &mut V,
-                                  cascade_level: CascadeLevel,
-                                  important_cascade_level: CascadeLevel)
-        where V: VecLike<ApplicableDeclarationBlock>
-    {
+    pub fn get_universal_rules(&self,
+                               cascade_level: CascadeLevel,
+                               important_cascade_level: CascadeLevel)
+                               -> Vec<ApplicableDeclarationBlock> {
         debug_assert!(!cascade_level.is_important());
         debug_assert!(important_cascade_level.is_important());
         if self.empty {
-            return
+            return vec![];
         }
 
-        let init_len = matching_rules_list.len();
+        let mut matching_rules_list = vec![];
 
+        // We need to insert important rules _after_ normal rules for this to be
+        // correct, and also to not trigger rule tree assertions.
+        let mut important = vec![];
         for rule in self.other_rules.iter() {
             if rule.selector.compound_selector.is_empty() &&
                rule.selector.next.is_none() {
@@ -946,14 +967,21 @@ impl SelectorMap {
                         rule.to_applicable_declaration_block(cascade_level));
                 }
                 if block.any_important() {
-                    matching_rules_list.push(
+                    important.push(
                         rule.to_applicable_declaration_block(important_cascade_level));
                 }
             }
         }
 
-        sort_by_key(&mut matching_rules_list[init_len..],
+        let normal_len = matching_rules_list.len();
+        matching_rules_list.extend(important.into_iter());
+
+        sort_by_key(&mut matching_rules_list[0..normal_len],
                     |block| (block.specificity, block.source_order));
+        sort_by_key(&mut matching_rules_list[normal_len..],
+                    |block| (block.specificity, block.source_order));
+
+        matching_rules_list
     }
 
     fn get_matching_rules_from_hash<E, Str, BorrowedStr: ?Sized, Vector>(
@@ -963,7 +991,7 @@ impl SelectorMap {
         key: &BorrowedStr,
         matching_rules: &mut Vector,
         relations: &mut StyleRelations,
-        reason: MatchingReason,
+        flags: &mut ElementSelectorFlags,
         cascade_level: CascadeLevel)
         where E: Element<Impl=SelectorImpl>,
               Str: Borrow<BorrowedStr> + Eq + Hash,
@@ -976,7 +1004,7 @@ impl SelectorMap {
                                             rules,
                                             matching_rules,
                                             relations,
-                                            reason,
+                                            flags,
                                             cascade_level)
         }
     }
@@ -987,7 +1015,7 @@ impl SelectorMap {
                                 rules: &[Rule],
                                 matching_rules: &mut V,
                                 relations: &mut StyleRelations,
-                                reason: MatchingReason,
+                                flags: &mut ElementSelectorFlags,
                                 cascade_level: CascadeLevel)
         where E: Element<Impl=SelectorImpl>,
               V: VecLike<ApplicableDeclarationBlock>
@@ -1002,7 +1030,7 @@ impl SelectorMap {
             };
             if any_declaration_for_importance &&
                matches_complex_selector(&*rule.selector, element, parent_bf,
-                                        relations, reason) {
+                                        relations, flags) {
                 matching_rules.push(
                     rule.to_applicable_declaration_block(cascade_level));
             }

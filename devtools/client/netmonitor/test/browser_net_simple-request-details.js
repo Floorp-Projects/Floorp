@@ -25,20 +25,20 @@ add_task(function* () {
     "There shouldn't be any selected item in the requests menu.");
   is(RequestsMenu.itemCount, 1,
     "The requests menu should not be empty after the first request.");
-  is(NetMonitorView.detailsPaneHidden, true,
-    "The details pane should still be hidden after the first request.");
+  is(!!document.querySelector(".network-details-panel"), false,
+    "The network details panel should still be hidden after first request.");
 
   let onTabUpdated = monitor.panelWin.once(EVENTS.TAB_UPDATED);
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   yield onTabUpdated;
 
   isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
   is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
-  is(NetMonitorView.detailsPaneHidden, false,
-    "The details pane should not be hidden after toggle button was pressed.");
+  is(!!document.querySelector(".network-details-panel"), true,
+    "The network details panel should not be hidden after toggle button was pressed.");
 
   testHeadersTab();
   yield testCookiesTab();

@@ -9,15 +9,15 @@
 ${helpers.predefined_type("background-color", "CSSColor",
     "::cssparser::Color::RGBA(::cssparser::RGBA { red: 0., green: 0., blue: 0., alpha: 0. }) /* transparent */",
     spec="https://drafts.csswg.org/css-backgrounds/#background-color",
-    animatable=True, complex_color=True)}
+    animatable=True, complex_color=True, boxed=True)}
 
 <%helpers:vector_longhand name="background-image" animatable="False"
                           spec="https://drafts.csswg.org/css-backgrounds/#the-background-image"
                           has_uncacheable_values="${product == 'gecko'}">
     use std::fmt;
     use style_traits::ToCss;
+    use values::HasViewportPercentage;
     use values::specified::Image;
-    use values::NoViewportPercentage;
 
     pub mod computed_value {
         use values::computed;
@@ -35,7 +35,7 @@ ${helpers.predefined_type("background-color", "CSSColor",
         }
     }
 
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     #[derive(Debug, Clone, PartialEq)]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
@@ -89,7 +89,8 @@ ${helpers.predefined_type("background-color", "CSSColor",
 </%helpers:vector_longhand>
 
 <%helpers:vector_longhand name="background-position-x" animatable="True"
-                          spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-x">
+                          spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-x"
+                          delegate_animate="True">
     use std::fmt;
     use style_traits::ToCss;
     use values::HasViewportPercentage;
@@ -139,7 +140,8 @@ ${helpers.predefined_type("background-color", "CSSColor",
 </%helpers:vector_longhand>
 
 <%helpers:vector_longhand name="background-position-y" animatable="True"
-                          spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-y">
+                          spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-y"
+                          delegate_animate="True">
     use std::fmt;
     use style_traits::ToCss;
     use values::HasViewportPercentage;
@@ -373,7 +375,7 @@ ${helpers.single_keyword("background-origin",
         })
     }
 
-    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
+    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
         let width;
         if let Ok(value) = input.try(|input| {
             match input.next() {
@@ -389,7 +391,7 @@ ${helpers.single_keyword("background-origin",
         }) {
             return Ok(value)
         } else {
-            width = try!(specified::LengthOrPercentageOrAuto::parse(context, input))
+            width = try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input))
         }
 
         let height;
@@ -401,7 +403,7 @@ ${helpers.single_keyword("background-origin",
         }) {
             height = value
         } else {
-            height = try!(specified::LengthOrPercentageOrAuto::parse(context, input));
+            height = try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input));
         }
 
         Ok(SpecifiedValue::Explicit(ExplicitSize {

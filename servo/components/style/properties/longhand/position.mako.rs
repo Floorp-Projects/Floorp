@@ -24,11 +24,11 @@
 % endfor
 
 <%helpers:longhand name="z-index" spec="https://www.w3.org/TR/CSS2/visuren.html#z-index" animatable="True">
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
 
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
     pub type SpecifiedValue = computed_value::T;
     pub mod computed_value {
         use std::fmt;
@@ -210,6 +210,14 @@ ${helpers.single_keyword("object-fit", "fill contain cover none scale-down",
                          products="gecko", animatable=False,
                          spec="https://drafts.csswg.org/css-images/#propdef-object-fit")}
 
+${helpers.predefined_type("object-position",
+                          "Position",
+                          "computed::Position::zero()",
+                          products="gecko",
+                          boxed="True",
+                          spec="https://drafts.csswg.org/css-images-3/#the-object-position",
+                          animatable=True)}
+
 <% grid_longhands = ["grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end"] %>
 
 % for longhand in grid_longhands:
@@ -218,5 +226,6 @@ ${helpers.single_keyword("object-fit", "fill contain cover none scale-down",
                               "Default::default()",
                               animatable=False,
                               spec="https://drafts.csswg.org/css-grid/#propdef-%s" % longhand,
-                              products="gecko")}
+                              products="gecko",
+                              boxed=True)}
 % endfor

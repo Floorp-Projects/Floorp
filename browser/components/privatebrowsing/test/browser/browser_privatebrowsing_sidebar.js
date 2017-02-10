@@ -10,32 +10,9 @@
 function test() {
   waitForExplicitFinish();
 
-  let { utils: Cu } = Components;
-
-  let { Promise: { defer } } = Cu.import("resource://gre/modules/Promise.jsm", {});
-
   // opens a sidebar
   function openSidebar(win) {
-    let { promise, resolve } = defer();
-    let doc = win.document;
-
-    let sidebarID = 'viewBookmarksSidebar';
-
-    let sidebar = doc.getElementById('sidebar');
-
-    let sidebarurl = doc.getElementById(sidebarID).getAttribute('sidebarurl');
-
-    sidebar.addEventListener('load', function onSidebarLoad() {
-      if (sidebar.contentWindow.location.href != sidebarurl)
-        return;
-      sidebar.removeEventListener('load', onSidebarLoad, true);
-
-      resolve(win);
-    }, true);
-
-    win.SidebarUI.show(sidebarID);
-
-    return promise;
+    return win.SidebarUI.show("viewBookmarksSidebar").then(() => win);
   }
 
   let windowCache = [];

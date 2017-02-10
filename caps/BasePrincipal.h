@@ -264,6 +264,11 @@ public:
 
   already_AddRefed<BasePrincipal> CloneStrippingUserContextIdAndFirstPartyDomain();
 
+  // Helper to check whether this principal is associated with an addon that
+  // allows unprivileged code to load aURI.  aExplicit == true will prevent
+  // use of all_urls permission, requiring the domain in its permissions.
+  bool AddonAllowsLoad(nsIURI* aURI, bool aExplicit = false);
+
 protected:
   virtual ~BasePrincipal();
 
@@ -277,10 +282,6 @@ protected:
   // BasePrincipal::CheckMayLoad.
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::nsExpandedPrincipal;
-
-  // Helper to check whether this principal is associated with an addon that
-  // allows unprivileged code to load aURI.
-  bool AddonAllowsLoad(nsIURI* aURI);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;

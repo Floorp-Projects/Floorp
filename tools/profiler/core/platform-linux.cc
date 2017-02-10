@@ -70,16 +70,6 @@
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
 
-#if defined(__ARM_EABI__) && defined(ANDROID)
- // Should also work on other Android and ARM Linux, but not tested there yet.
-# define USE_EHABI_STACKWALK
-# include "EHABIStackWalk.h"
-#elif defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
-# define USE_LUL_STACKWALK
-# include "lul/LulMain.h"
-# include "lul/platform-linux-lul.h"
-#endif
-
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
@@ -100,7 +90,7 @@ static pthread_t gSignalSenderThread;
 
 #if defined(USE_LUL_STACKWALK)
 // A singleton instance of the library.  It is initialised at first
-// use.  Currently only the main thread can call Sampler::Start, so
+// use.  Currently only the main thread can call PlatformStart(), so
 // there is no need for a mechanism to ensure that it is only
 // created once in a multi-thread-use situation.
 lul::LUL* sLUL = nullptr;
@@ -135,27 +125,21 @@ Thread::GetCurrentId()
 // doesn't have pthread_atfork.
 
 // This records the current state at the time we paused it.
-static bool was_paused = false;
+static bool gWasPaused = false;
 
 // In the parent, just before the fork, record the pausedness state,
 // and then pause.
 static void paf_prepare(void) {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (gSampler) {
-    was_paused = gSampler->IsPaused();
-    gSampler->SetPaused(true);
-  } else {
-    was_paused = false;
-  }
+  // This function can run off the main thread.
+  gWasPaused = gIsPaused;
+  gIsPaused = true;
 }
 
 // In the parent, just after the fork, return pausedness to the
 // pre-fork state.
 static void paf_parent(void) {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (gSampler) {
-    gSampler->SetPaused(was_paused);
-  }
+  // This function can run off the main thread.
+  gIsPaused = gWasPaused;
 }
 
 // Set up the fork handlers.
@@ -232,8 +216,7 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sample->rssMemory = sample->threadInfo->mRssMemory;
   sample->ussMemory = sample->threadInfo->mUssMemory;
 
-  // XXX: this is an off-main-thread(?) use of gSampler
-  gSampler->Tick(sample);
+  Tick(sample);
 
   sCurrentThreadInfo = NULL;
   sem_post(&sSignalHandlingDone);
@@ -245,8 +228,7 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
 static void
 ProfilerSignalThread(ThreadInfo* aInfo, bool aIsFirstProfiledThread)
 {
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (aIsFirstProfiledThread && gSampler->ProfileMemory()) {
+  if (aIsFirstProfiledThread && gProfileMemory) {
     aInfo->mRssMemory = nsMemoryReporterManager::ResidentFast();
     aInfo->mUssMemory = nsMemoryReporterManager::ResidentUnique();
   } else {
@@ -272,19 +254,21 @@ class PlatformData {
   }
 };
 
-/* static */ auto
-Sampler::AllocPlatformData(int aThreadId) -> UniquePlatformData
+UniquePlatformData
+AllocPlatformData(int aThreadId)
 {
   return UniquePlatformData(new PlatformData);
 }
 
 void
-Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
+PlatformDataDestructor::operator()(PlatformData* aData)
 {
   delete aData;
 }
 
 static void* SignalSender(void* arg) {
+  // This function runs on its own thread.
+
   // Taken from platform_thread_posix.cc
   prctl(PR_SET_NAME, "SamplerThread", 0, 0, 0);
 
@@ -295,11 +279,10 @@ static void* SignalSender(void* arg) {
 
   TimeDuration lastSleepOverhead = 0;
   TimeStamp sampleStart = TimeStamp::Now();
-  // XXX: this loop is an off-main-thread use of gSampler
-  while (gSampler->IsActive()) {
-    gSampler->DeleteExpiredMarkers();
+  while (gIsActive) {
+    gBuffer->deleteExpiredStoredMarkers();
 
-    if (!gSampler->IsPaused()) {
+    if (!gIsPaused) {
       StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
@@ -360,8 +343,11 @@ static void* SignalSender(void* arg) {
       }
     }
 
+    // This off-main-thread use of gInterval is safe due to implicit
+    // synchronization -- this function cannot run at the same time as
+    // profiler_{start,stop}(), where gInterval is set.
     TimeStamp targetSleepEndTime =
-      sampleStart + TimeDuration::FromMicroseconds(gSampler->interval() * 1000);
+      sampleStart + TimeDuration::FromMicroseconds(gInterval * 1000);
     TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
@@ -372,7 +358,9 @@ static void* SignalSender(void* arg) {
   return 0;
 }
 
-void Sampler::Start() {
+static void
+PlatformStart()
+{
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   LOG("Sampler started");
@@ -380,7 +368,7 @@ void Sampler::Start() {
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
 #elif defined(USE_LUL_STACKWALK)
-  // NOTE: this isn't thread-safe.  But we expect Sampler::Start to be
+  // NOTE: this isn't thread-safe.  But we expect PlatformStart() to be
   // called only from the main thread, so this is OK in general.
   if (!sLUL) {
      sLUL_initialization_routine();
@@ -423,18 +411,21 @@ void Sampler::Start() {
   // Start a thread that sends SIGPROF signal to VM thread.
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
-  SetActive(true);
+  MOZ_ASSERT(!gIsActive);
+  gIsActive = true;
   if (pthread_create(&gSignalSenderThread, NULL, SignalSender, NULL) == 0) {
     gHasSignalSenderLaunched = true;
   }
   LOG("Profiler thread started");
 }
 
-
-void Sampler::Stop() {
+static void
+PlatformStop()
+{
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  SetActive(false);
+  MOZ_ASSERT(gIsActive);
+  gIsActive = false;
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).

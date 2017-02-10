@@ -26,9 +26,7 @@ inline void EmitBaselineCreateStubFrameDescriptor(MacroAssembler&, Register, uin
 inline void EmitBaselineCallVM(JitCode*, MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitIonCallVM(JitCode*, size_t, MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitBaselineEnterStubFrame(MacroAssembler&, Register) { MOZ_CRASH(); }
-inline void EmitIonEnterStubFrame(MacroAssembler&, Register) { MOZ_CRASH(); }
 inline void EmitBaselineLeaveStubFrame(MacroAssembler&, bool v = false) { MOZ_CRASH(); }
-inline void EmitIonLeaveStubFrame(MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitStowICValues(MacroAssembler&, int) { MOZ_CRASH(); }
 inline void EmitUnstowICValues(MacroAssembler&, int, bool v = false) { MOZ_CRASH(); }
 inline void EmitCallTypeUpdateIC(MacroAssembler&, JitCode*, uint32_t) { MOZ_CRASH(); }

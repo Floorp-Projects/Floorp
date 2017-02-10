@@ -170,16 +170,16 @@ function finishTests() {
   </a>
   <p id="display"></p>
   <div id="content">
-    <object data="http://mochi.test:8888/tests/dom/tests/mochitest/general/res0.resource"> <!-- same origin, no header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res0.resource"> <!-- cross origin, no header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res1.resource"> <!-- cross origin, Timing-Allow-Origin: * header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res2.resource"> <!-- cross origin redirect to test2.example.com, no header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res3.resource"> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res4.resource"> <!-- cross origin redirect to mochi.test:8888/.../res1.resource, Timing-Allow-Origin: * -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res5.resource"> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8889 -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res6.resource"> <!-- cross origin, Timing-Allow-Origin: "" (empty string) -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res7.resource"> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 http://test1.com header -->
-    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res8.resource"> <!-- double cross origin redirect -->
+    <object data="http://mochi.test:8888/tests/dom/tests/mochitest/general/res0.resource"></object> <!-- same origin, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res0.resource"></object> <!-- cross origin, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res1.resource"></object> <!-- cross origin, Timing-Allow-Origin: * header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res2.resource"></object> <!-- cross origin redirect to test2.example.com, no header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res3.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res4.resource"></object> <!-- cross origin redirect to mochi.test:8888/.../res1.resource, Timing-Allow-Origin: * -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res5.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8889 -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res6.resource"></object> <!-- cross origin, Timing-Allow-Origin: "" (empty string) -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res7.resource"></object> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 http://test1.com header -->
+    <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res8.resource"></object> <!-- double cross origin redirect -->
     <script type="text/javascript" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing.js"></script> <!-- same origin script -->
   </div>
 </body>

@@ -23,7 +23,7 @@ add_task(function* () {
   yield wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
 
   ok(document.querySelector("#headers-tab[aria-selected=true]"),
     "The headers tab in the details panel should be selected.");
@@ -32,11 +32,8 @@ add_task(function* () {
   ok(!document.querySelector("#preview-panel"),
     "The preview panel is hidden for non html responses.");
 
-  wait = waitForDOM(document, ".tabs");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]);
-  yield wait;
-
   document.querySelector("#preview-tab").click();
 
   ok(document.querySelector("#preview-tab[aria-selected=true]"),
@@ -45,7 +42,9 @@ add_task(function* () {
     "The preview panel should be visible now.");
 
   let iframe = document.querySelector("#preview-panel iframe");
+  console.log(123)
   yield once(iframe, "DOMContentLoaded");
+  console.log(123)
 
   ok(iframe,
     "There should be a response preview iframe available.");

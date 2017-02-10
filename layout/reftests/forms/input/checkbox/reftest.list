@@ -1,13 +1,13 @@
 == label-dynamic.html label-dynamic-ref.html
 fails-if(Android) == radio-stretched.html radio-stretched-ref.html # test for bug 464589
-!= checked.html checked-notref.html
 != checked-native.html checked-native-notref.html
-!= checked.html about:blank
-!= checked-notref.html about:blank
+fails-if(Android) == checked-appearance-none.html about:blank
+fails-if(Android) == unchecked-appearance-none.html about:blank
 != checked-native.html about:blank
 != checked-native-notref.html about:blank
-!= indeterminate-checked.html indeterminate-checked-notref.html
-!= indeterminate-unchecked.html indeterminate-unchecked-notref.html
+fails-if(Android) == indeterminate-checked.html about:blank
+fails-if(Android) == indeterminate-checked-notref.html about:blank
+fails-if(Android) == indeterminate-unchecked.html about:blank
 != indeterminate-native-checked.html indeterminate-native-checked-notref.html
 != indeterminate-native-unchecked.html indeterminate-native-unchecked-notref.html
 == indeterminate-selector.html indeterminate-selector-ref.html

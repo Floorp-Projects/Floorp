@@ -284,12 +284,12 @@ void HandleException(ResumeFromException* rfe);
 
 void EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame);
 
-void TraceJitActivations(JSRuntime* rt, JSTracer* trc);
+void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
 JSCompartment*
-TopmostIonActivationCompartment(JSRuntime* rt);
+TopmostIonActivationCompartment(JSContext* cx);
 
-void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc);
+void UpdateJitActivationsForMinorGC(ZoneGroup* group, JSTracer* trc);
 
 static inline uint32_t
 EncodeFrameHeaderSize(size_t headerSize)

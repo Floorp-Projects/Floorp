@@ -454,7 +454,7 @@ SetAnimatable(nsCSSPropertyID aProperty,
       aAnimatable = InfallibleTArray<TransformFunction>();
       if (aAnimationValue.mServo) {
         RefPtr<nsCSSValueSharedList> list;
-        Servo_AnimationValues_GetTransform(aAnimationValue.mServo, &list);
+        Servo_AnimationValue_GetTransform(aAnimationValue.mServo, &list);
         AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
       } else {
         nsCSSValueSharedList* list =

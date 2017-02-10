@@ -450,5 +450,11 @@
     url = new URL("data:text/html,<a href=\"http://example.org/?q\">Link</a>");
     is(url.href, "data:text/html,<a%20href=\"http://example.org/?q\">Link</a>");
   </script>
+
+  <script>
+    var u = new URL('http://www.example.org');
+    ok(u.toJSON(), 'http://www.example.org', "URL.toJSON()");
+    is(JSON.stringify(u), "\"http://www.example.org/\"", "JSON.stringify(u) works");
+  </script>
 </body>
 </html>

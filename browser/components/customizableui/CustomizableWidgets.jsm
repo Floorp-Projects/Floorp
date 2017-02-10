@@ -102,7 +102,7 @@ function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
 function fillSubviewFromMenuItems(aMenuItems, aSubview) {
   let attrs = ["oncommand", "onclick", "label", "key", "disabled",
                "command", "observes", "hidden", "class", "origin",
-               "image", "checked"];
+               "image", "checked", "style"];
 
   let doc = aSubview.ownerDocument;
   let fragment = doc.createDocumentFragment();

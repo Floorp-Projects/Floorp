@@ -47,6 +47,7 @@ class MOZ_RAII AutoTraceSession
 
     JS::HeapState prevState;
     AutoGeckoProfilerEntry pseudoFrame;
+    JSRuntime::AutoProhibitActiveContextChange prohibitActiveContextChange;
 };
 
 class MOZ_RAII AutoPrepareForTracing

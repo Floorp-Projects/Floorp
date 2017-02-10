@@ -1506,16 +1506,16 @@ TraceJitActivation(JSTracer* trc, const JitActivationIterator& activations)
 }
 
 void
-TraceJitActivations(JSRuntime* rt, JSTracer* trc)
+TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 {
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations)
+    for (JitActivationIterator activations(cx, target); !activations.done(); ++activations)
         TraceJitActivation(trc, activations);
 }
 
 JSCompartment*
-TopmostIonActivationCompartment(JSRuntime* rt)
+TopmostIonActivationCompartment(JSContext* cx)
 {
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 return activations.activation()->compartment();
@@ -1524,10 +1524,11 @@ TopmostIonActivationCompartment(JSRuntime* rt)
     return nullptr;
 }
 
-void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
+void UpdateJitActivationsForMinorGC(ZoneGroup* group, JSTracer* trc)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
+    JSContext* cx = TlsContext.get();
+    for (JitActivationIterator activations(cx, group->ownerContext()); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 UpdateIonJSFrameForMinorGC(trc, frames);
@@ -1542,8 +1543,7 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
 
     // Recover the return address so that we can look it up in the
     // PcScriptCache, as script/pc computation is expensive.
-    JSRuntime* rt = cx->runtime();
-    JitActivationIterator iter(rt);
+    JitActivationIterator iter(cx);
     JitFrameIterator it(iter);
     uint8_t* retAddr;
     if (it.isExitFrame()) {
@@ -1591,10 +1591,10 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
         if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
             cx->ionPcScriptCache = (PcScriptCache*)js_malloc(sizeof(struct PcScriptCache));
             if (cx->ionPcScriptCache)
-                cx->ionPcScriptCache->clear(rt->gc.gcNumber());
+                cx->ionPcScriptCache->clear(cx->runtime()->gc.gcNumber());
         }
 
-        if (cx->ionPcScriptCache && cx->ionPcScriptCache->get(rt, hash, retAddr, scriptRes, pcRes))
+        if (cx->ionPcScriptCache && cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes, pcRes))
             return;
     }
 
@@ -2301,14 +2301,6 @@ InlineFrameIterator::InlineFrameIterator(JSContext* cx, const JitFrameIterator* 
   : calleeTemplate_(cx),
     calleeRVA_(),
     script_(cx)
-{
-    resetOn(iter);
-}
-
-InlineFrameIterator::InlineFrameIterator(JSRuntime* rt, const JitFrameIterator* iter)
-  : calleeTemplate_(TlsContext.get()),
-    calleeRVA_(),
-    script_(TlsContext.get())
 {
     resetOn(iter);
 }
@@ -3150,7 +3142,7 @@ InvalidationBailoutStack::checkInvariants() const
 void
 AssertJitStackInvariants(JSContext* cx)
 {
-    for (JitActivationIterator activations(cx->runtime()); !activations.done(); ++activations) {
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         JitFrameIterator frames(activations);
         size_t prevFrameSize = 0;
         size_t frameSize = 0;

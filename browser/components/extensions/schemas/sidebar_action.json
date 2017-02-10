@@ -1,0 +1,183 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "sidebar_action": {
+            "type": "object",
+            "additionalProperties": { "$ref": "UnrecognizedProperty" },
+            "properties": {
+              "default_title": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "default_icon": {
+                "$ref": "IconPath",
+                "optional": true
+              },
+              "default_panel": {
+                "type": "string",
+                "format": "strictRelativeUrl",
+                "preprocess": "localize"
+              }
+            },
+            "optional": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "sidebarAction",
+    "description": "Use sidebar actions to add a sidebar to Firefox.",
+    "permissions": ["manifest:sidebar_action"],
+    "types": [
+      {
+        "id": "ImageDataType",
+        "type": "object",
+        "isInstanceOf": "ImageData",
+        "additionalProperties": { "type": "any" },
+        "postprocess": "convertImageDataToURL",
+        "description": "Pixel data for an image. Must be an ImageData object (for example, from a <code>canvas</code> element)."
+      }
+    ],
+    "functions": [
+      {
+        "name": "setTitle",
+        "type": "function",
+        "description": "Sets the title of the sidebar action. This shows up in the tooltip.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "The string the sidebar action should display when moused over."
+              },
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Sets the sidebar title for the tab specified by tabId. Automatically resets when the tab is closed."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "getTitle",
+        "type": "function",
+        "description": "Gets the title of the sidebar action.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Specify the tab to get the title from. If no tab is specified, the non-tab-specific title is returned."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "setIcon",
+        "type": "function",
+        "description": "Sets the icon for the sidebar action. The icon can be specified either as the path to an image file or as the pixel data from a canvas element, or as dictionary of either one of those. Either the <strong>path</strong> or the <strong>imageData</strong> property must be specified.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "imageData": {
+                "choices": [
+                  { "$ref": "ImageDataType" },
+                  {
+                    "type": "object",
+                    "patternProperties": {
+                      "^[1-9]\\d*$": { "$ref": "ImageDataType" }
+                    },
+                    "additionalProperties": false
+                  }
+                ],
+                "optional": true,
+                "description": "Either an ImageData object or a dictionary {size -> ImageData} representing icon to be set. If the icon is specified as a dictionary, the actual image to be used is chosen depending on screen's pixel density. If the number of image pixels that fit into one screen space unit equals <code>scale</code>, then image with size <code>scale</code> * 19 will be selected. Initially only scales 1 and 2 will be supported. At least one image must be specified. Note that 'details.imageData = foo' is equivalent to 'details.imageData = {'19': foo}'"
+              },
+              "path": {
+                "choices": [
+                  { "type": "string" },
+                  {
+                    "type": "object",
+                    "additionalProperties": {"type": "string"}
+                  }
+                ],
+                "optional": true,
+                "description": "Either a relative image path or a dictionary {size -> relative image path} pointing to icon to be set. If the icon is specified as a dictionary, the actual image to be used is chosen depending on screen's pixel density. If the number of image pixels that fit into one screen space unit equals <code>scale</code>, then image with size <code>scale</code> * 19 will be selected. Initially only scales 1 and 2 will be supported. At least one image must be specified. Note that 'details.path = foo' is equivalent to 'details.imageData = {'19': foo}'"
+              },
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Sets the sidebar icon for the tab specified by tabId. Automatically resets when the tab is closed."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "setPanel",
+        "type": "function",
+        "description": "Sets the url to the html document to be opened in the sidebar when the user clicks on the sidebar action's icon.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "minimum": 0,
+                "description": "Sets the sidebar url for the tab specified by tabId. Automatically resets when the tab is closed."
+              },
+              "panel": {
+                "type": "string",
+                "description": "The url to the html file to show in a sidebar.  If set to the empty string (''), no sidebar is shown."
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "getPanel",
+        "type": "function",
+        "description": "Gets the url to the html document set as the panel for this sidebar action.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Specify the tab to get the sidebar from. If no tab is specified, the non-tab-specific sidebar is returned."
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

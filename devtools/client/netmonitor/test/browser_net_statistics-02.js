@@ -33,7 +33,7 @@ add_task(function* () {
 
   let body = document.querySelector("#body");
 
-  is(body.selectedPanel.id, "statistics-panel",
+  is(body.selectedPanel.id, "react-statistics-panel-hook",
     "The main panel is switched to the statistics panel.");
 
   yield waitUntil(

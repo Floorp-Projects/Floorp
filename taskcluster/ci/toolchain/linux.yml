@@ -113,7 +113,7 @@ linux64-cctools-port/opt:
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 linux64-hfsplus/opt:
-    description: "hfplus toolchain build"
+    description: "hfsplus toolchain build"
     treeherder:
         kind: build
         platform: linux64/opt
@@ -122,6 +122,7 @@ linux64-hfsplus/opt:
     run:
         using: toolchain-script
         script: build-hfsplus-linux.sh
+        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -131,4 +132,24 @@ linux64-hfsplus/opt:
         files-changed:
             - 'build/unix/build-hfsplus/**'
             - 'taskcluster/scripts/misc/build-hfsplus-linux.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+
+linux64-libdmg/opt:
+    description: "libdmg-hfsplus toolchain build"
+    treeherder:
+        kind: build
+        platform: linux64/opt
+        symbol: Cc(libdmg)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-libdmg-hfsplus.sh
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'taskcluster/scripts/misc/build-libdmg-hfsplus.sh'
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
