@@ -399,11 +399,26 @@ this.UnsupportedOperationError = function (msg) {
 };
 UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
 
-const nameLookup = new Map();
-const statusLookup = new Map();
-for (let s of ERRORS) {
-  let cls = this[s];
-  let inst = new cls();
-  nameLookup.set(inst.name, cls);
-  statusLookup.set(inst.status, cls);
-};
+const STATUSES = new Map([
+  ["element not accessible", ElementNotAccessibleError],
+  ["element not visible", ElementNotVisibleError],
+  ["insecure certificate", InsecureCertificateError],
+  ["invalid argument", InvalidArgumentError],
+  ["invalid element state", InvalidElementStateError],
+  ["invalid selector", InvalidSelectorError],
+  ["invalid session id", InvalidSessionIDError],
+  ["javascript error", JavaScriptError],
+  ["no alert open", NoAlertOpenError],
+  ["no such element", NoSuchElementError],
+  ["no such frame", NoSuchFrameError],
+  ["no such window", NoSuchWindowError],
+  ["script timeout", ScriptTimeoutError],
+  ["session not created", SessionNotCreatedError],
+  ["stale element reference", StaleElementReferenceError],
+  ["timeout", TimeoutError],
+  ["unable to set cookie", UnableToSetCookieError],
+  ["unknown command", UnknownCommandError],
+  ["unknown error", UnknownError],
+  ["unsupported operation", UnsupportedOperationError],
+  ["webdriver error", WebDriverError],
+]);
