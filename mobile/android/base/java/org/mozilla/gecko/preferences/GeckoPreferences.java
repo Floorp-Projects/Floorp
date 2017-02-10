@@ -45,7 +45,6 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
-import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ViewUtil;
 
@@ -122,9 +121,6 @@ public class GeckoPreferences
     public static final String PREFS_TRACKING_PROTECTION_PROMPT_SHOWN = NON_PREF_PREFIX + "trackingProtectionPromptShown";
     public static final String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
     public static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
-
-    // Has this activity recently started another Gecko activity?
-    private boolean mGeckoActivityOpened;
 
     private static boolean sIsCharEncodingEnabled;
     private boolean mInitialized;
@@ -561,7 +557,6 @@ public class GeckoPreferences
 
         if (getApplication() instanceof GeckoApplication) {
             ((GeckoApplication) getApplication()).onActivityResume(this);
-            mGeckoActivityOpened = false;
         }
 
         // Watch prefs, otherwise we don't reliably get told when they change.
@@ -585,12 +580,6 @@ public class GeckoPreferences
     }
 
     @Override
-    public void startActivityForResult(Intent intent, int request) {
-        mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
-        super.startActivityForResult(intent, request);
-    }
-
-    @Override
     public void startWithFragment(String fragmentName, Bundle args,
             Fragment resultTo, int resultRequestCode, int titleRes, int shortTitleRes) {
         Log.v(LOGTAG, "Starting with fragment: " + fragmentName + ", title " + titleRes);
@@ -600,7 +589,6 @@ public class GeckoPreferences
         if (resultTo == null) {
             startActivityForResultChoosingTransition(intent, REQUEST_CODE_PREF_SCREEN);
         } else {
-            mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
             resultTo.startActivityForResult(intent, resultRequestCode);
             if (NO_TRANSITIONS) {
                 overridePendingTransition(0, 0);
@@ -1532,7 +1520,7 @@ public class GeckoPreferences
 
     @Override
     public boolean isGeckoActivityOpened() {
-        return mGeckoActivityOpened;
+        return false;
     }
 
     /**
