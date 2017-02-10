@@ -114,7 +114,7 @@ proxy.AsyncMessageChannel = class {
             break;
 
           case proxy.AsyncMessageChannel.ReplyType.Error:
-            let err = error.fromJson(msg.json.data);
+            let err = WebDriverError.fromJSON(msg.json.data);
             reject(err);
             break;
 
@@ -172,16 +172,24 @@ proxy.AsyncMessageChannel = class {
       this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Ok);
     } else if (error.isError(obj)) {
       let err = error.wrap(obj);
-      let serr = error.toJson(err);
-      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Error, serr);
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Error, err);
     } else {
       this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Value, obj);
     }
   }
 
   sendReply_(uuid, type, data = undefined) {
-    let path = proxy.AsyncMessageChannel.makePath(uuid);
-    let msg = {type: type, data: data};
+    const path = proxy.AsyncMessageChannel.makePath(uuid);
+
+    let payload;
+    if (data && typeof data.toJSON == "function") {
+      payload = data.toJSON();
+    } else {
+      payload = data;
+    }
+
+    const msg = {type: type, data: payload};
+
     // here sendAsync is actually the content frame's
     // sendAsyncMessage(path, message) global
     this.sendAsync(path, msg);
