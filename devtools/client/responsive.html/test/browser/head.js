@@ -390,3 +390,10 @@ function* enableTouchSimulation(ui) {
   touchButton.click();
   yield loaded;
 }
+
+function* testUserAgent(ui, expected) {
+  let ua = yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
+    return content.navigator.userAgent;
+  });
+  is(ua, expected, `UA should be set to ${expected}`);
+}
