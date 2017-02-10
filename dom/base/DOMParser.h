@@ -82,7 +82,10 @@ public:
   }
 
 private:
-  explicit DOMParser(nsISupports* aOwner) : mOwner(aOwner), mAttemptedInit(false)
+  explicit DOMParser(nsISupports* aOwner)
+    : mOwner(aOwner)
+    , mAttemptedInit(false)
+    , mOriginalPrincipalWasSystem(false)
   {
     MOZ_ASSERT(aOwner);
   }

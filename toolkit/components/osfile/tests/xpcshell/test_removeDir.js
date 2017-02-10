@@ -18,7 +18,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function() {
+add_task(function*() {
   // Set up profile. We create the directory in the profile, because the profile
   // is removed after every test run.
   do_get_profile();

@@ -226,7 +226,7 @@ class ExecutableAllocator
 #elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     static void cacheFlush(void* code, size_t size)
     {
-        js::jit::Simulator::FlushICache(code, size);
+        js::jit::SimulatorProcess::FlushICache(code, size);
     }
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     static void cacheFlush(void* code, size_t size)

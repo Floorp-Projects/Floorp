@@ -1164,8 +1164,10 @@ DumpHeapTracer::onChild(const JS::GCCellPtr& thing)
 void
 js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
-    if (nurseryBehaviour == js::CollectNurseryBeforeDump)
-        cx->runtime()->zoneGroupFromMainThread()->evictNursery(JS::gcreason::API);
+    if (nurseryBehaviour == js::CollectNurseryBeforeDump) {
+        for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next())
+            group->evictNursery(JS::gcreason::API);
+    }
 
     DumpHeapTracer dtrc(fp, cx);
 
@@ -1222,7 +1224,7 @@ js::GetAnyCompartmentInZone(JS::Zone* zone)
 void
 JS::ObjectPtr::finalize(JSRuntime* rt)
 {
-    if (IsIncrementalBarrierNeeded(rt->contextFromMainThread()))
+    if (IsIncrementalBarrierNeeded(rt->activeContextFromOwnThread()))
         IncrementalObjectBarrier(value);
     value = nullptr;
 }

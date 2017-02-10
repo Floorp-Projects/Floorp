@@ -2186,6 +2186,11 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
             }
         }
 
+        // Don't cache uninformative 304
+        if (mCustomConditionalRequest) {
+            CloseCacheEntry(false);
+        }
+
         if (ShouldBypassProcessNotModified() || NS_FAILED(rv)) {
             rv = ProcessNormal();
         }
@@ -3545,6 +3550,15 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
                             | nsICacheStorage::CHECK_MULTITHREADED;
     }
 
+    // Remember the request is a custom conditional request so that we can
+    // process any 304 response correctly.
+    mCustomConditionalRequest =
+        mRequestHead.HasHeader(nsHttp::If_Modified_Since) ||
+        mRequestHead.HasHeader(nsHttp::If_None_Match) ||
+        mRequestHead.HasHeader(nsHttp::If_Unmodified_Since) ||
+        mRequestHead.HasHeader(nsHttp::If_Match) ||
+        mRequestHead.HasHeader(nsHttp::If_Range);
+
     if (!mPostID && mApplicationCache) {
         rv = cacheStorageService->AppCacheStorage(info,
             mApplicationCache,
@@ -3711,15 +3725,6 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         *aResult = ENTRY_NOT_WANTED;
         return NS_OK;
     }
-
-    // Remember the request is a custom conditional request so that we can
-    // process any 304 response correctly.
-    mCustomConditionalRequest =
-        mRequestHead.HasHeader(nsHttp::If_Modified_Since) ||
-        mRequestHead.HasHeader(nsHttp::If_None_Match) ||
-        mRequestHead.HasHeader(nsHttp::If_Unmodified_Since) ||
-        mRequestHead.HasHeader(nsHttp::If_Match) ||
-        mRequestHead.HasHeader(nsHttp::If_Range);
 
     // Be pessimistic: assume the cache entry has no useful data.
     *aResult = ENTRY_WANTED;
@@ -3938,6 +3943,13 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     else if (mCachedResponseHead->MustValidate()) {
         LOG(("Validating based on MustValidate() returning TRUE\n"));
         doValidation = true;
+    // possibly serve from cache for a custom If-Match/If-Unmodified-Since
+    // conditional request
+    } else if (mCustomConditionalRequest &&
+               !mRequestHead.HasHeader(nsHttp::If_Match) &&
+               !mRequestHead.HasHeader(nsHttp::If_Unmodified_Since)) {
+        LOG(("Validating based on a custom conditional request\n"));
+        doValidation = true;
     } else {
         // previously we also checked for a query-url w/out expiration
         // and didn't do heuristic on it. but defacto that is allowed now.
@@ -4022,6 +4034,9 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             doValidation = true;
         }
     }
+
+    // Previous error should not be propagated.
+    rv = NS_OK;
 
     if (!doValidation) {
         //

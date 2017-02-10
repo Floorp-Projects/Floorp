@@ -11,6 +11,7 @@
 #include "InputBlockState.h"            // for TouchBlockState
 #include "base/task.h"                  // for CancelableTask, etc
 #include "gfxPrefs.h"                   // for gfxPrefs
+#include "InputBlockState.h"            // for TouchBlockState
 #include "mozilla/SizePrintfMacros.h"   // for PRIuSIZE
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsMathUtils.h"                // for NS_hypot

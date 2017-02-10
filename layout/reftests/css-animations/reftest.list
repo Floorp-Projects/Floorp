@@ -30,7 +30,7 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-co
 == stacking-context-transform-none-animation.html stacking-context-animation-ref.html
 == stacking-context-transform-none-animation-on-svg.html  stacking-context-animation-ref.html
 == stacking-context-transform-none-animation-with-backface-visibility.html stacking-context-animation-ref.html
-== stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
+fails-if(webrender) == stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-backwards.html stacking-context-animation-ref.html
 == stacking-context-transform-none-with-fill-forwards.html stacking-context-animation-ref.html
 == stacking-context-opacity-1-in-delay.html stacking-context-animation-ref.html

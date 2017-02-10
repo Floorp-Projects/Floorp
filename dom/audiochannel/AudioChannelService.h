@@ -89,10 +89,16 @@ public:
 
   /**
    * Returns the AudioChannelServce singleton.
-   * If AudioChannelServce is not exist, create and return new one.
+   * If AudioChannelService doesn't exist, create and return new one.
    * Only to be called from main thread.
    */
   static already_AddRefed<AudioChannelService> GetOrCreate();
+
+  /**
+   * Returns the AudioChannelService singleton if one exists.
+   * If AudioChannelService doesn't exist, returns null.
+   */
+  static already_AddRefed<AudioChannelService> Get();
 
   static bool IsAudioChannelMutedByDefault();
 
@@ -149,6 +155,8 @@ public:
                             bool aMuted);
 
   bool IsAudioChannelActive(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
+
+  bool IsWindowActive(nsPIDOMWindowOuter* aWindow);
 
   /**
    * Return true if there is a telephony channel active in this process

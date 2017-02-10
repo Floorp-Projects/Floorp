@@ -1274,15 +1274,14 @@ JitInterruptHandler(int signum, siginfo_t* info, void* context)
     if (JSContext* cx = TlsContext.get()) {
 
 #if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
-        bool prevICacheCheckingState = Simulator::ICacheCheckingEnabled;
-        Simulator::ICacheCheckingEnabled = false;
+        SimulatorProcess::ICacheCheckingDisableCount++;
 #endif
 
         RedirectJitCodeToInterruptCheck(cx, (CONTEXT*)context);
 
 #if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
-        Simulator::ICacheCheckingEnabled = prevICacheCheckingState;
-        cx->simulator()->cacheInvalidatedBySignalHandler_ = true;
+        SimulatorProcess::cacheInvalidatedBySignalHandler_ = true;
+        SimulatorProcess::ICacheCheckingDisableCount--;
 #endif
 
         cx->finishHandlingJitInterrupt();

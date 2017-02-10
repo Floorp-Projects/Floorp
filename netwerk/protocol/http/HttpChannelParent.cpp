@@ -592,16 +592,20 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
        "[this=%p, id=%lu]\n", this, registrarId));
   nsCOMPtr<nsIChannel> channel;
   rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(channel));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not find the http channel to connect its IPC parent");
+    // This makes the channel delete itself safely.  It's the only thing
+    // we can do now, since this parent channel cannot be used and there is
+    // no other way to tell the child side there were something wrong.
+    Delete();
+    return true;
+  }
+
   // It's safe to cast here since the found parent-side real channel is ensured
   // to be http (nsHttpChannel).  ConnectChannel called from HttpChannelParent::Init
   // can only be called for http channels.  It's bound by ipdl.
   mChannel = static_cast<nsHttpChannel*>(channel.get());
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
-
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not find the http channel to connect its IPC parent");
-    return false;
-  }
 
   nsCOMPtr<nsINetworkInterceptController> controller;
   NS_QueryNotificationCallbacks(channel, controller);

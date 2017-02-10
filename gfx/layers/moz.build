@@ -150,6 +150,7 @@ EXPORTS.mozilla.layers += [
     'composite/ContentHost.h',
     'composite/FrameUniformityData.h',
     'composite/GPUVideoTextureHost.h',
+    'composite/ImageComposite.h',
     'composite/ImageHost.h',
     'composite/ImageLayerComposite.h',
     'composite/LayerManagerComposite.h',
@@ -206,6 +207,14 @@ EXPORTS.mozilla.layers += [
     'SourceSurfaceVolatileData.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
+    'wr/WebRenderBridgeChild.h',
+    'wr/WebRenderBridgeParent.h',
+    'wr/WebRenderCompositableHolder.h',
+    'wr/WebRenderCompositorOGL.h',
+    'wr/WebRenderImageHost.h',
+    'wr/WebRenderLayerManager.h',
+    'wr/WebRenderLayersLogging.h',
+    'wr/WebRenderMessageUtils.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -322,6 +331,7 @@ UNIFIED_SOURCES += [
     'composite/FPSCounter.cpp',
     'composite/FrameUniformityData.cpp',
     'composite/GPUVideoTextureHost.cpp',
+    'composite/ImageComposite.cpp',
     'composite/ImageHost.cpp',
     'composite/ImageLayerComposite.cpp',
     'composite/LayerManagerComposite.cpp',
@@ -380,6 +390,20 @@ UNIFIED_SOURCES += [
     'SourceSurfaceSharedData.cpp',
     'SourceSurfaceVolatileData.cpp',
     'TextureWrapperImage.cpp',
+    'wr/WebRenderBorderLayer.cpp',
+    'wr/WebRenderBridgeChild.cpp',
+    'wr/WebRenderBridgeParent.cpp',
+    'wr/WebRenderCanvasLayer.cpp',
+    'wr/WebRenderColorLayer.cpp',
+    'wr/WebRenderCompositableHolder.cpp',
+    'wr/WebRenderCompositorOGL.cpp',
+    'wr/WebRenderContainerLayer.cpp',
+    'wr/WebRenderImageHost.cpp',
+    'wr/WebRenderImageLayer.cpp',
+    'wr/WebRenderLayerManager.cpp',
+    'wr/WebRenderLayersLogging.cpp',
+    'wr/WebRenderPaintedLayer.cpp',
+    'wr/WebRenderTextLayer.cpp',
 ]
 
 SOURCES += [
@@ -419,6 +443,8 @@ IPDL_SOURCES += [
     'ipc/PTexture.ipdl',
     'ipc/PUiCompositorController.ipdl',
     'ipc/PVideoBridge.ipdl',
+    'ipc/PWebRenderBridge.ipdl',
+    'ipc/WebRenderMessages.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

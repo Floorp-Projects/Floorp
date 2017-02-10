@@ -86,9 +86,9 @@ JS::RootingContext::traceStackRoots(JSTracer* trc)
 }
 
 static void
-TraceExactStackRoots(JSRuntime* rt, JSTracer* trc)
+TraceExactStackRoots(const CooperatingContext& target, JSTracer* trc)
 {
-    TlsContext.get()->traceStackRoots(trc);
+    target.context()->traceStackRoots(trc);
 }
 
 template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
@@ -201,18 +201,16 @@ AutoGCRooter::trace(JSTracer* trc)
 }
 
 /* static */ void
-AutoGCRooter::traceAll(JSTracer* trc)
+AutoGCRooter::traceAll(const CooperatingContext& target, JSTracer* trc)
 {
-    for (AutoGCRooter* gcr = TlsContext.get()->autoGCRooters_; gcr; gcr = gcr->down)
+    for (AutoGCRooter* gcr = target.context()->autoGCRooters_; gcr; gcr = gcr->down)
         gcr->trace(trc);
 }
 
 /* static */ void
-AutoGCRooter::traceAllWrappers(JSTracer* trc)
+AutoGCRooter::traceAllWrappers(const CooperatingContext& target, JSTracer* trc)
 {
-    JSContext* cx = TlsContext.get();
-
-    for (AutoGCRooter* gcr = cx->autoGCRooters_; gcr; gcr = gcr->down) {
+    for (AutoGCRooter* gcr = target.context()->autoGCRooters_; gcr; gcr = gcr->down) {
         if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
             gcr->trace(trc);
     }
@@ -290,7 +288,8 @@ js::TraceRuntime(JSTracer* trc)
     MOZ_ASSERT(!trc->isMarkingTracer());
 
     JSRuntime* rt = trc->runtime();
-    rt->zoneGroupFromMainThread()->evictNursery();
+    for (ZoneGroupsIter group(rt); !group.done(); group.next())
+        group->evictNursery();
     AutoPrepareForTracing prep(TlsContext.get(), WithAtoms);
     gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_TRACE_HEAP);
     rt->gc.traceRuntime(trc, prep.session().lock);
@@ -330,18 +329,18 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
             // Trace active interpreter and JIT stack roots.
             TraceInterpreterActivations(cx, target, trc);
             jit::TraceJitActivations(cx, target, trc);
-        }
 
-        // Trace legacy C stack roots.
-        AutoGCRooter::traceAll(trc);
+            // Trace legacy C stack roots.
+            AutoGCRooter::traceAll(target, trc);
+
+            // Trace C stack roots.
+            TraceExactStackRoots(target, trc);
+        }
 
         for (RootRange r = rootsHash.ref().all(); !r.empty(); r.popFront()) {
             const RootEntry& entry = r.front();
             TraceRoot(trc, entry.key(), entry.value());
         }
-
-        // Trace C stack roots.
-        TraceExactStackRoots(rt, trc);
     }
 
     // Trace runtime global roots.
@@ -353,9 +352,9 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     // Trace the shared Intl data.
     rt->traceSharedIntlData(trc);
 
-    // Trace anything in the current thread's context. Ignore other JSContexts,
-    // as these will only refer to ZoneGroups which we are not collecting/tracing.
-    TlsContext.get()->trace(trc);
+    // Trace anything in any of the cooperating threads.
+    for (const CooperatingContext& target : rt->cooperatingContexts())
+        target.context()->trace(trc);
 
     // Trace all compartment roots, but not the compartment itself; it is
     // traced via the parent pointer if traceRoots actually traces anything.

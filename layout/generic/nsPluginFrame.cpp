@@ -89,7 +89,6 @@ using mozilla::DefaultXDisplay;
 #endif
 
 #include "mozilla/dom/TabChild.h"
-#include "ClientLayerManager.h"
 
 #ifdef CreateEvent // Thank you MS.
 #undef CreateEvent
@@ -1415,11 +1414,10 @@ nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
 #endif
 }
 
-class PluginFrameDidCompositeObserver final : public ClientLayerManager::
-  DidCompositeObserver
+class PluginFrameDidCompositeObserver final : public DidCompositeObserver
 {
 public:
-  PluginFrameDidCompositeObserver(nsPluginInstanceOwner* aOwner, ClientLayerManager* aLayerManager)
+  PluginFrameDidCompositeObserver(nsPluginInstanceOwner* aOwner, LayerManager* aLayerManager)
     : mInstanceOwner(aOwner),
       mLayerManager(aLayerManager)
   {
@@ -1430,13 +1428,13 @@ public:
   void DidComposite() override {
     mInstanceOwner->DidComposite();
   }
-  bool IsValid(ClientLayerManager* aLayerManager) {
+  bool IsValid(LayerManager* aLayerManager) {
     return aLayerManager == mLayerManager;
   }
 
 private:
   nsPluginInstanceOwner* mInstanceOwner;
-  RefPtr<ClientLayerManager> mLayerManager;
+  RefPtr<LayerManager> mLayerManager;
 };
 
 already_AddRefed<Layer>
@@ -1520,10 +1518,11 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
     if (aBuilder->IsPaintingToWindow() &&
         aBuilder->GetWidgetLayerManager() &&
-        aBuilder->GetWidgetLayerManager()->AsClientLayerManager() &&
+        (aBuilder->GetWidgetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
+         aBuilder->GetWidgetLayerManager()->GetBackendType() == LayersBackend::LAYERS_WR) &&
         mInstanceOwner->UseAsyncRendering())
     {
-      RefPtr<ClientLayerManager> lm = aBuilder->GetWidgetLayerManager()->AsClientLayerManager();
+      RefPtr<LayerManager> lm = aBuilder->GetWidgetLayerManager();
       if (!mDidCompositeObserver || !mDidCompositeObserver->IsValid(lm)) {
         mDidCompositeObserver = MakeUnique<PluginFrameDidCompositeObserver>(mInstanceOwner, lm);
       }

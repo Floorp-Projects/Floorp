@@ -28,8 +28,10 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/gfx/2D.h"          // for DrawTarget
+#include "mozilla/gfx/GPUChild.h"       // for GfxPrefValue
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"          // for IntSize
+#include "mozilla/gfx/gfxVars.h"        // for gfxVars
 #include "VRManager.h"                  // for VRManager
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
@@ -50,7 +52,11 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
+#include "mozilla/layers/WebRenderBridgeParent.h"
+#include "mozilla/layers/WebRenderCompositableHolder.h"
+#include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/Telemetry.h"
@@ -235,6 +241,11 @@ CompositorBridgeParent::Setup()
 
   MOZ_ASSERT(!sCompositorMap);
   sCompositorMap = new CompositorMap;
+
+  gfxPrefs::SetWebRenderProfilerEnabledChangeCallback(
+    [](const GfxPrefValue& aValue) -> void {
+      CompositorBridgeParent::SetWebRenderProfilerEnabled(aValue.get_bool());
+  });
 }
 
 void
@@ -243,6 +254,7 @@ CompositorBridgeParent::Shutdown()
   MOZ_ASSERT(sCompositorMap);
   MOZ_ASSERT(sCompositorMap->empty());
   sCompositorMap = nullptr;
+  gfxPrefs::SetWebRenderProfilerEnabledChangeCallback(nullptr);
 }
 
 void
@@ -379,7 +391,9 @@ CompositorBridgeParent::Initialize()
 
   LayerScope::SetPixelScale(mScale.scale);
 
-  mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  if (!mOptions.UseWebRender()) {
+    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -390,7 +404,7 @@ CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints,
 {
   Maybe<TextureFactoryIdentifier> newIdentifier;
   ResetCompositorTask(aBackendHints, aSeqNo, &newIdentifier);
-  
+
   if (newIdentifier) {
     *aResult = true;
     *aOutIdentifier = newIdentifier.value();
@@ -448,6 +462,19 @@ CompositorBridgeParent::StopAndClearResources()
     mLayerManager->Destroy();
     mLayerManager = nullptr;
     mCompositionManager = nullptr;
+  }
+
+  if (mWrBridge) {
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    ForEachIndirectLayerTree([this] (LayerTreeState* lts, uint64_t) -> void {
+      if (lts->mWrBridge) {
+        lts->mWrBridge->Destroy();
+        lts->mWrBridge = nullptr;
+      }
+      lts->mParent = nullptr;
+    });
+    mWrBridge->Destroy();
+    mWrBridge = nullptr;
   }
 
   if (mCompositor) {
@@ -980,14 +1007,18 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     DidComposite(start, end);
   }
 
-  // We're not really taking advantage of the stored composite-again-time here.
-  // We might be able to skip the next few composites altogether. However,
-  // that's a bit complex to implement and we'll get most of the advantage
-  // by skipping compositing when we detect there's nothing invalid. This is why
-  // we do "composite until" rather than "composite again at".
-  if (!mCompositor->GetCompositeUntilTime().IsNull() ||
-      mLayerManager->DebugOverlayWantsNextFrame()) {
-    ScheduleComposition();
+  if (mCompositor) {
+    // We're not really taking advantage of the stored composite-again-time here.
+    // We might be able to skip the next few composites altogether. However,
+    // that's a bit complex to implement and we'll get most of the advantage
+    // by skipping compositing when we detect there's nothing invalid. This is why
+    // we do "composite until" rather than "composite again at".
+    if (!mCompositor->GetCompositeUntilTime().IsNull() ||
+        mLayerManager->DebugOverlayWantsNextFrame()) {
+      ScheduleComposition();
+    }
+  } else {
+    // TODO(bug 1328602) Figure out what we should do here with the render thread.
   }
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
@@ -1009,7 +1040,12 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     // Special full-tilt composite mode for performance testing
     ScheduleComposition();
   }
-  mCompositor->SetCompositionTime(TimeStamp());
+
+  if (mCompositor) {
+    mCompositor->SetCompositionTime(TimeStamp());
+  } else {
+    // TODO(bug 1328602) Need an equivalent that works with the rende thread.
+  }
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME, start);
 }
@@ -1536,6 +1572,72 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
   return IPC_OK();
 }
 
+PWebRenderBridgeParent*
+CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
+                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier)
+{
+#ifndef MOZ_ENABLE_WEBRENDER
+  // Extra guard since this in the parent process and we don't want a malicious
+  // child process invoking this codepath before it's ready
+  MOZ_RELEASE_ASSERT(false);
+#endif
+  MOZ_ASSERT(aPipelineId.mHandle == mRootLayerTreeID);
+  MOZ_ASSERT(!mWrBridge);
+  MOZ_ASSERT(!mCompositor);
+  MOZ_ASSERT(!mCompositorScheduler);
+
+
+  MOZ_ASSERT(mWidget);
+  RefPtr<widget::CompositorWidget> widget = mWidget;
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
+  RefPtr<WebRenderCompositableHolder> holder = new WebRenderCompositableHolder();
+  MOZ_ASSERT(api); // TODO have a fallback
+  api->SetRootPipeline(aPipelineId);
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(api), Move(holder));
+
+  mCompositorScheduler = mWrBridge->CompositorScheduler();
+  MOZ_ASSERT(mCompositorScheduler);
+  mWrBridge.get()->AddRef(); // IPDL reference
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  auto pipelineHandle = aPipelineId.mHandle;
+  MOZ_ASSERT(sIndirectLayerTrees[pipelineHandle].mWrBridge == nullptr);
+  sIndirectLayerTrees[pipelineHandle].mWrBridge = mWrBridge;
+  *aTextureFactoryIdentifier = mWrBridge->GetTextureFactoryIdentifier();
+  return mWrBridge;
+}
+
+bool
+CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor)
+{
+#ifndef MOZ_ENABLE_WEBRENDER
+  // Extra guard since this in the parent process and we don't want a malicious
+  // child process invoking this codepath before it's ready
+  MOZ_RELEASE_ASSERT(false);
+#endif
+  WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
+  {
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    auto it = sIndirectLayerTrees.find(parent->PipelineId().mHandle);
+    if (it != sIndirectLayerTrees.end()) {
+      it->second.mWrBridge = nullptr;
+    }
+  }
+  parent->Release(); // IPDL reference
+  return true;
+}
+
+void
+CompositorBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
+{
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  for (auto it = sIndirectLayerTrees.begin(); it != sIndirectLayerTrees.end(); it++) {
+    LayerTreeState* state = &it->second;
+    if (state->mWrBridge) {
+      state->mWrBridge->SetWebRenderProfilerEnabled(aEnabled);
+    }
+  }
+}
+
 void
 EraseLayerState(uint64_t aId)
 {
@@ -1716,12 +1818,26 @@ void
 CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
                                      TimeStamp& aCompositeEnd)
 {
-  Unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
+  NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
   mPendingTransaction = 0;
+}
+
+void
+CompositorBridgeParent::NotifyDidComposite(uint64_t aTransactionId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
+{
+  Unused << SendDidComposite(0, aTransactionId, aCompositeStart, aCompositeEnd);
 
   if (mLayerManager) {
     nsTArray<ImageCompositeNotificationInfo> notifications;
     mLayerManager->ExtractImageCompositeNotifications(&notifications);
+    if (!notifications.IsEmpty()) {
+      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+    }
+  }
+
+  if (mWrBridge) {
+    nsTArray<ImageCompositeNotificationInfo> notifications;
+    mWrBridge->ExtractImageCompositeNotifications(&notifications);
     if (!notifications.IsEmpty()) {
       Unused << ImageBridgeParent::NotifyImageComposites(notifications);
     }

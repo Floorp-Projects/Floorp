@@ -20,7 +20,7 @@ function run_test() {
 /**
  * Test OS.File.removeEmptyDir
  */
-add_task(function() {
+add_task(function*() {
   // Set up profile. We create the directory in the profile, because the profile
   // is removed after every test run.
   do_get_profile();

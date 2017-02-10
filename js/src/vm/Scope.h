@@ -485,6 +485,7 @@ class FunctionScope : public Scope
         BindingName names[1];
 
         void trace(JSTracer* trc);
+        Zone* zone() const;
     };
 
     static size_t sizeOfData(uint32_t length) {
@@ -886,6 +887,7 @@ class ModuleScope : public Scope
         BindingName names[1];
 
         void trace(JSTracer* trc);
+        Zone* zone() const;
     };
 
     static size_t sizeOfData(uint32_t length) {
