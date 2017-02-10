@@ -724,7 +724,7 @@ impl MarionetteSession {
                                         Ok(Date::new((try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
-                                            "Failed to interpret domain as String"))))
+                                            "Failed to interpret expiry as u64"))))
                                     }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
