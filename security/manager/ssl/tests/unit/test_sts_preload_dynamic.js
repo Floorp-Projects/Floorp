@@ -16,52 +16,57 @@ function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
   let sslStatus = new FakeSSLStatus();
-  let unlikelyHost = "highlyunlikely.example.com";
-  let uri = Services.io.newURI("https://" + unlikelyHost);
-  let subDomainUri = Services.io.newURI("https://subdomain." + unlikelyHost);
 
   // first check that a host probably not on the preload list is not identified
   // as an sts host
-  ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  let unlikelyHost = "highlyunlikely.example.com";
+  ok(!SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             unlikelyHost, 0));
 
   // now add a preload entry for this host
   SSService.setHSTSPreload(unlikelyHost, false, Date.now() + 60000);
 
   // check that it's now an STS host
-  ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  ok(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            unlikelyHost, 0));
 
   // check that it's honoring the fact we set includeSubdomains to false
-  ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, subDomainUri,
-                            0));
+  ok(!SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             "subdomain." + unlikelyHost, 0));
 
   // clear the non-preloaded entries
   SSService.clearAll();
 
   // check that it's still an STS host
-  ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  ok(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            unlikelyHost, 0));
 
   // clear the preloads
   SSService.clearPreloads();
 
   // Check that it's no longer an STS host now that the preloads have been
   // cleared
-  ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  ok(!SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             unlikelyHost, 0));
 
   // Now let's do the same, this time with includeSubdomains on
   SSService.setHSTSPreload(unlikelyHost, true, Date.now() + 60000);
 
   // check that it's now an STS host
-  ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  ok(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            unlikelyHost, 0));
 
   // check that it's now including subdomains
-  ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, subDomainUri,
-                           0));
+  ok(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                            "subdomain." + unlikelyHost, 0));
 
   // Now let's simulate overriding the entry by setting an entry from a header
   // with max-age set to 0
+  let uri = Services.io.newURI("https://" + unlikelyHost);
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                           "max-age=0", sslStatus, 0);
 
   // this should no longer be an HSTS host
-  ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
+  ok(!SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             unlikelyHost, 0));
 }

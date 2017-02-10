@@ -19,17 +19,14 @@ function checkStateRead(aSubject, aTopic, aData) {
 
   equal(aData, SSS_STATE_FILE_NAME);
 
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://example1.example.com"),
-                            0));
-  ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                            Services.io.newURI("https://example2.example.com"),
-                            0));
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://example.com"), 0));
-  ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS,
-                             Services.io.newURI("https://example3.example.com"),
-                             0));
+  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             "example1.example.com", 0));
+  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             "example2.example.com", 0));
+  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                              "example.com", 0));
+  ok(!gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                              "example3.example.com", 0));
   do_test_finished();
 }
 

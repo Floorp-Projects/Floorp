@@ -10,6 +10,7 @@ SOURCES += [
     'DeserializeCertTest.cpp',
     'MD4Test.cpp',
     'OCSPCacheTest.cpp',
+    'STSParserTest.cpp',
     'TLSIntoleranceTest.cpp',
 ]
 
