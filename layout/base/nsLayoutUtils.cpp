@@ -8455,10 +8455,10 @@ namespace layout {
 void
 MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView)
 {
-  if (aManager->GetBackendType() == layers::LayersBackend::LAYERS_CLIENT) {
-    layers::ClientLayerManager *manager = static_cast<layers::ClientLayerManager*>(aManager);
+  if (aManager->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
+      aManager->GetBackendType() == LayersBackend::LAYERS_WR) {
     nsRefreshDriver *refresh = aView->GetViewManager()->GetPresShell()->GetPresContext()->RefreshDriver();
-    manager->SetTransactionIdAllocator(refresh);
+    aManager->SetTransactionIdAllocator(refresh);
   }
 }
 

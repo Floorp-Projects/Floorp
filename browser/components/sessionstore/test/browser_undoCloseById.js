@@ -6,25 +6,25 @@
 
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm");
 
-function openAndCloseTab(window, url) {
+async function openAndCloseTab(window, url) {
   let tab = window.gBrowser.addTab(url);
-  yield promiseBrowserLoaded(tab.linkedBrowser, true, url);
-  yield TabStateFlusher.flush(tab.linkedBrowser);
-  yield promiseRemoveTab(tab);
+  await promiseBrowserLoaded(tab.linkedBrowser, true, url);
+  await TabStateFlusher.flush(tab.linkedBrowser);
+  await promiseRemoveTab(tab);
 }
 
-function* openWindow(url) {
-  let win = yield promiseNewWindowLoaded();
+async function openWindow(url) {
+  let win = await promiseNewWindowLoaded();
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
   win.gBrowser.selectedBrowser.loadURIWithFlags(url, flags);
-  yield promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, url);
+  await promiseBrowserLoaded(win.gBrowser.selectedBrowser, true, url);
   return win;
 }
 
-function closeWindow(win) {
-  yield BrowserTestUtils.closeWindow(win);
+async function closeWindow(win) {
+  await BrowserTestUtils.closeWindow(win);
   // Wait 20 ms to allow SessionStorage a chance to register the closed window.
-  yield new Promise(resolve => setTimeout(resolve, 20));
+  await new Promise(resolve => setTimeout(resolve, 20));
 }
 
 add_task(function* test_undoCloseById() {

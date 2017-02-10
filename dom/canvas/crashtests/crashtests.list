@@ -11,8 +11,8 @@ load 746813-1.html
 load 743499-negative-size.html
 skip-if(Android) load 745818-large-source.html # Bug XXX - Crashes Android mid-run w/o a stack
 load 767337-1.html
-asserts-if(stylo,1) skip-if(Android) load 780392-1.html # bug 1324700
-skip-if(Android) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
+asserts-if(stylo,1) skip-if(Android) skip-if(webrender) load 780392-1.html # bug 1324700. bug 1322816 for webrender
+skip-if(Android) skip-if(gtkWidget&&isDebugBuild) skip-if(webrender) load 789933-1.html # bug 1155252 for linux, bug 1322816 for webrender
 load 794463-1.html
 load 802926-1.html
 load 896047-1.html

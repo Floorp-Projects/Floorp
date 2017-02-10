@@ -97,7 +97,7 @@ function eventExpected(msg) {
  * enough, and we won't observe what should have been a failure of the test.
  * But it shouldn't happen that good code will randomly *fail* this test.
  */
-function run_test() {
+function* run_test() {
   /*
    * TEST 1 tests that:
    *    <body onhashchange = ... >  works,

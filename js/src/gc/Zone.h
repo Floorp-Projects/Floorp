@@ -882,11 +882,11 @@ struct GCManagedDeletePolicy
 {
     void operator()(const T* ptr) {
         if (ptr) {
-            JSRuntime* rt = TlsContext.get()->runtime();
-            if (CurrentThreadCanAccessRuntime(rt) && rt->zoneGroupFromMainThread()->nursery().isEnabled()) {
+            Zone* zone = ptr->zone();
+            if (zone && zone->group()->nursery().isEnabled()) {
                 // The object may contain nursery pointers and must only be
                 // destroyed after a minor GC.
-                rt->zoneGroupFromMainThread()->callAfterMinorGC(deletePtr, const_cast<T*>(ptr));
+                zone->group()->callAfterMinorGC(deletePtr, const_cast<T*>(ptr));
             } else {
                 // The object cannot contain nursery pointers so can be
                 // destroyed immediately.

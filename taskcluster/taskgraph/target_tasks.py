@@ -87,9 +87,20 @@ def target_tasks_ash(full_task_graph, parameters):
     """Target tasks that only run on the ash branch."""
     def filter(task):
         platform = task.attributes.get('build_platform')
-        # only select platforms
-        if platform not in ('linux32', 'linux32-pgo', 'linux64', 'linux64-asan', 'linux64-pgo'):
+        # Early return if platform is None
+        if not platform:
             return False
+        # Only on Linux platforms
+        if 'linux' not in platform:
+            return False
+        # No random non-build jobs either. This is being purposely done as a
+        # blacklist so newly-added jobs aren't missed by default.
+        for p in ('nightly', 'haz', 'artifact', 'cov', 'add-on'):
+            if p in platform:
+                return False
+        for k in ('toolchain', 'l10n', 'static-analysis'):
+            if k in task.attributes['kind']:
+                return False
         # and none of this linux64-asan/debug stuff
         if platform == 'linux64-asan' and task.attributes['build_type'] == 'debug':
             return False

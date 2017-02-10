@@ -84,16 +84,16 @@ struct js::Nursery::Canary
 #endif
 
 inline void
-js::Nursery::NurseryChunk::poisonAndInit(JSRuntime* rt, uint8_t poison)
+js::Nursery::NurseryChunk::poisonAndInit(ZoneGroup* group, uint8_t poison)
 {
     JS_POISON(this, poison, ChunkSize);
-    init(rt);
+    init(group);
 }
 
 inline void
-js::Nursery::NurseryChunk::init(JSRuntime* rt)
+js::Nursery::NurseryChunk::init(ZoneGroup* group)
 {
-    new (&trailer) gc::ChunkTrailer(rt, &rt->zoneGroupFromMainThread()->storeBuffer());
+    new (&trailer) gc::ChunkTrailer(group->runtime, &group->storeBuffer());
 }
 
 /* static */ inline js::Nursery::NurseryChunk*
@@ -122,6 +122,7 @@ js::Nursery::Nursery(ZoneGroup* group)
   , profileThreshold_(0)
   , enableProfiling_(false)
   , reportTenurings_(0)
+  , minorGCTriggerReason_(JS::gcreason::NO_REASON)
   , minorGcCount_(0)
   , freeMallocedBuffersTask(nullptr)
   , sweepActions_(nullptr)
@@ -484,12 +485,9 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
 {
 }
 
-void
+/* static */ void
 js::Nursery::printProfileHeader()
 {
-    if (!enableProfiling_)
-        return;
-
     fprintf(stderr, "MinorGC:               Reason  PRate Size ");
 #define PRINT_HEADER(name, text)                                              \
     fprintf(stderr, " %6s", text);
@@ -512,6 +510,15 @@ js::Nursery::printTotalProfileTimes()
     if (enableProfiling_) {
         fprintf(stderr, "MinorGC TOTALS: %7" PRIu64 " collections:      ", minorGcCount_);
         printProfileDurations(totalDurations_);
+    }
+}
+
+void
+js::Nursery::maybeClearProfileDurations()
+{
+    if (enableProfiling_) {
+        for (auto& duration : profileDurations_)
+            duration = mozilla::TimeDuration();
     }
 }
 
@@ -573,6 +580,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     rt->gc.stats().beginNurseryCollection(reason);
     TraceMinorGCStart();
 
+    maybeClearProfileDurations();
     startProfile(ProfileKey::Total);
 
     // The hazard analysis thinks doCollection can invalidate pointers in
@@ -642,7 +650,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         if (reportTenurings_) {
             for (auto& entry : tenureCounts.entries) {
                 if (entry.count >= reportTenurings_) {
-                    fprintf(stderr, "%d x ", entry.count);
+                    fprintf(stderr, "  %d x ", entry.count);
                     entry.group->print();
                 }
             }
@@ -703,7 +711,7 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     maybeStartProfile(ProfileKey::MarkDebugger);
     {
         gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PHASE_MARK_ROOTS);
-        Debugger::traceAll(&mover);
+        Debugger::traceAllForMovingGC(&mover);
     }
     maybeEndProfile(ProfileKey::MarkDebugger);
 
@@ -829,7 +837,7 @@ js::Nursery::sweep()
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
     for (unsigned i = 0; i < numChunks(); i++)
-        chunk(i).poisonAndInit(zoneGroup()->runtime, JS_SWEPT_NURSERY_PATTERN);
+        chunk(i).poisonAndInit(zoneGroup(), JS_SWEPT_NURSERY_PATTERN);
 
     if (zoneGroup()->runtime->hasZealMode(ZealMode::GenerationalGC)) {
         /* Only reset the alloc point when we are close to the end. */
@@ -840,7 +848,7 @@ js::Nursery::sweep()
     {
 #ifdef JS_CRASH_DIAGNOSTICS
         for (unsigned i = 0; i < numChunks(); ++i)
-            chunk(i).poisonAndInit(zoneGroup()->runtime, JS_SWEPT_NURSERY_PATTERN);
+            chunk(i).poisonAndInit(zoneGroup(), JS_SWEPT_NURSERY_PATTERN);
 #endif
         setCurrentChunk(0);
     }
@@ -874,7 +882,7 @@ js::Nursery::setCurrentChunk(unsigned chunkno)
     currentChunk_ = chunkno;
     position_ = chunk(chunkno).start();
     currentEnd_ = chunk(chunkno).end();
-    chunk(chunkno).poisonAndInit(zoneGroup()->runtime, JS_FRESH_NURSERY_PATTERN);
+    chunk(chunkno).poisonAndInit(zoneGroup(), JS_FRESH_NURSERY_PATTERN);
 }
 
 MOZ_ALWAYS_INLINE void
@@ -974,7 +982,7 @@ js::Nursery::updateNumChunksLocked(unsigned newCount,
         }
 
         chunks_[i] = NurseryChunk::fromChunk(newChunk);
-        chunk(i).poisonAndInit(zoneGroup()->runtime, JS_FRESH_NURSERY_PATTERN);
+        chunk(i).poisonAndInit(zoneGroup(), JS_FRESH_NURSERY_PATTERN);
     }
 }
 

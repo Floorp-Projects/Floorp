@@ -52,7 +52,46 @@ add_task(function* test() {
 
     // Verify that we removed the bookmark successfully.
     ok(!PlacesUtils.bookmarks.isBookmarked(uri), "URI should be removed");
-  }
+  };
+
+  /**
+   * Simulates a drop of multiple URIs onto the bookmarks bar.
+   *
+   * @param aEffect
+   *        The effect to use for the drop operation: move, copy, or link.
+   * @param aMimeType
+   *        The mime type to use for the drop operation.
+   */
+  let simulateDragDropMultiple = function(aEffect, aMimeType) {
+    const uriSpecs = [
+      "http://www.mozilla.org/C54263C6-A484-46CF-8E2B-FE131586348A",
+      "http://www.mozilla.org/71381257-61E6-4376-AF7C-BF3C5FD8870D",
+      "http://www.mozilla.org/091A88BD-5743-4C16-A005-3D2EA3A3B71E"
+    ];
+    let uris = uriSpecs.map(spec => makeURI(spec));
+    let data;
+    if (aMimeType == "text/x-moz-url")
+      data = uriSpecs.map(spec => spec + "\n" + spec).join("\n");
+    else
+      data = uriSpecs.join("\n");
+    EventUtils.synthesizeDrop(placesItems.childNodes[0],
+                              placesItems,
+                              [[{type: aMimeType,
+                                 data}]],
+                              aEffect, window);
+
+    // Verify that the drop produces exactly one bookmark per each URL.
+    for (let uri of uris) {
+      let bookmarkIds = PlacesUtils.bookmarks
+        .getBookmarkIdsForURI(uri);
+      ok(bookmarkIds.length == 1, "There should be exactly one bookmark");
+
+      PlacesUtils.bookmarks.removeItem(bookmarkIds[0]);
+
+      // Verify that we removed the bookmark successfully.
+      ok(!PlacesUtils.bookmarks.isBookmarked(uri), "URI should be removed");
+    }
+  };
 
   // Simulate a bookmark drop for all of the mime types and effects.
   let mimeTypes = ["text/plain", "text/unicode", "text/x-moz-url"];
@@ -60,6 +99,7 @@ add_task(function* test() {
   effects.forEach(function(effect) {
     mimeTypes.forEach(function(mimeType) {
       simulateDragDrop(effect, mimeType);
+      simulateDragDropMultiple(effect, mimeType);
     });
   });
 });

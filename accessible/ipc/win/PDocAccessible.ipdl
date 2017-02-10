@@ -67,7 +67,8 @@ parent:
 
 child:
   async ParentCOMProxy(IAccessibleHolder aParentCOMProxy,
-                       WindowsHandle aEmulatedWindowHandle);
+                       WindowsHandle aEmulatedWindowHandle,
+                       IAccessibleHolder aEmulatedWindowCOMProxy);
 
   async __delete__();
 };

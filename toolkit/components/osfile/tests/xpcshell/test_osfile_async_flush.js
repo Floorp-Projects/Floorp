@@ -12,7 +12,7 @@ function run_test() {
  * Test to ensure that |File.prototype.flush| is available in the async API.
  */
 
-add_task(function test_flush() {
+add_task(function* test_flush() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir,
                           "test_osfile_async_flush.tmp");
   let file = yield OS.File.open(path, {trunc: true, write: true});

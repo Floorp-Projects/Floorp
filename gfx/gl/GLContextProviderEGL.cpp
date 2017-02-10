@@ -51,6 +51,7 @@
 #include "GLLibraryEGL.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
@@ -149,14 +150,16 @@ CreateSurfaceFromNativeWindow(EGLNativeWindowType window, const EGLConfig& confi
  */
 class GLContextEGLFactory {
 public:
-    static already_AddRefed<GLContext> Create(EGLNativeWindowType aWindow);
+    static already_AddRefed<GLContext> Create(EGLNativeWindowType aWindow,
+                                              bool aWebRender);
 private:
     GLContextEGLFactory(){}
     ~GLContextEGLFactory(){}
 };
 
 already_AddRefed<GLContext>
-GLContextEGLFactory::Create(EGLNativeWindowType aWindow)
+GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
+                            bool aWebRender)
 {
     MOZ_ASSERT(aWindow);
     nsCString discardFailureId;
@@ -180,8 +183,12 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow)
         return nullptr;
     }
 
+    CreateContextFlags flags = CreateContextFlags::NONE;
+    if (aWebRender) {
+        flags |= CreateContextFlags::PREFER_ES3;
+    }
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(CreateContextFlags::NONE,
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags,
                                                             caps, nullptr, false, config,
                                                             surface, &discardFailureId);
     if (!gl) {
@@ -711,14 +718,18 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
     MOZ_ASSERT(aCompositorWidget);
-    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget));
+    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget),
+                                       aCompositorWidget->GetCompositorOptions().UseWebRender());
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget,
+                                      bool aWebRender,
+                                      bool aForceAccelerated)
 {
     MOZ_ASSERT(aWidget);
-    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget));
+    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget),
+                                       aWebRender);
 }
 
 #if defined(ANDROID)

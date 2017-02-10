@@ -327,7 +327,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
-    AutoPrepareForTracing prep(rt->contextFromMainThread(), SkipAtoms);
+    AutoPrepareForTracing prep(rt->activeContextFromOwnThread(), SkipAtoms);
 
     bool compartmentCreated = false;
 
