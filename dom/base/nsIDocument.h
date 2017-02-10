@@ -2477,20 +2477,6 @@ public:
 
   bool IsSyntheticDocument() const { return mIsSyntheticDocument; }
 
-  void SetNeedLayoutFlush() {
-    mNeedLayoutFlush = true;
-    if (mDisplayDocument) {
-      mDisplayDocument->SetNeedLayoutFlush();
-    }
-  }
-
-  void SetNeedStyleFlush() {
-    mNeedStyleFlush = true;
-    if (mDisplayDocument) {
-      mDisplayDocument->SetNeedStyleFlush();
-    }
-  }
-
   // Note: nsIDocument is a sub-class of nsINode, which has a
   // SizeOfExcludingThis function.  However, because nsIDocument objects can
   // only appear at the top of the DOM tree, we have a specialized measurement
@@ -3123,12 +3109,6 @@ protected:
 
   // True if this document has links whose state needs updating
   bool mHasLinksToUpdate : 1;
-
-  // True if a layout flush might not be a no-op
-  bool mNeedLayoutFlush : 1;
-
-  // True if a style flush might not be a no-op
-  bool mNeedStyleFlush : 1;
 
   // True if a DOMMutationObserver is perhaps attached to a node in the document.
   bool mMayHaveDOMMutationObservers : 1;

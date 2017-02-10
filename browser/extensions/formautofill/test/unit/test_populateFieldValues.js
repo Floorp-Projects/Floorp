@@ -2,8 +2,6 @@
  * Test for populating field values in Form Autofill Parent.
  */
 
-/* global FormAutofillParent */
-
 "use strict";
 
 Cu.import("resource://formautofill/FormAutofillParent.jsm");
@@ -64,7 +62,7 @@ add_task(function* test_populateFieldValues() {
         fields: TEST_FIELDS,
       },
       target: {
-        sendAsyncMessage: function(name, data) {
+        sendAsyncMessage(name, data) {
           do_check_eq(name, "FormAutofill:fillForm");
 
           let fields = data.fields;

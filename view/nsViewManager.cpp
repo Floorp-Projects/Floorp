@@ -17,6 +17,7 @@
 #include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"
 #include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsPresContext.h"
 #include "mozilla/StartupTimeline.h"
 #include "GeckoProfiler.h"
@@ -229,10 +230,9 @@ nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDelayR
       DoSetWindowDimensions(aWidth, aHeight);
     } else {
       mDelayedResize.SizeTo(aWidth, aHeight);
-      if (mPresShell && mPresShell->GetDocument()) {
-        nsIDocument* doc = mPresShell->GetDocument();
-        doc->SetNeedStyleFlush();
-        doc->SetNeedLayoutFlush();
+      if (mPresShell) {
+        mPresShell->SetNeedStyleFlush();
+        mPresShell->SetNeedLayoutFlush();
       }
     }
   }

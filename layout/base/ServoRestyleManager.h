@@ -79,9 +79,6 @@ public:
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  inline bool HasPendingRestyles();
-
-
   /**
    * Gets the appropriate frame given a content and a pseudo-element tag.
    *

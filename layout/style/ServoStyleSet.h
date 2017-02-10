@@ -145,9 +145,11 @@ public:
 
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
-   * document. The root element must be non-null.
+   * document.  This will traverse all of the document's style roots (that
+   * is, its document element, and the roots of the document-level native
+   * anonymous content).  Returns true if a post-traversal is required.
    */
-  void StyleDocument();
+  bool StyleDocument();
 
   /**
    * Eagerly styles a subtree of unstyled nodes that was just appended to the
@@ -223,9 +225,9 @@ private:
 
   /**
    * Perform all lazy operations required before traversing
-   * a subtree.
+   * a subtree.  Returns whether a post-traversal is required.
    */
-  void PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
+  bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
                                  mozilla::TraversalRootBehavior aRootBehavior);
 
   nsPresContext* mPresContext;

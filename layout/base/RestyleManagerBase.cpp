@@ -7,6 +7,7 @@
 #include "mozilla/RestyleManagerBase.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsIFrame.h"
+#include "nsIPresShellInlines.h"
 
 namespace mozilla {
 
@@ -218,7 +219,7 @@ RestyleManagerBase::PostRestyleEventInternal(bool aForLazyConstruction)
   // Unconditionally flag our document as needing a flush.  The other
   // option here would be a dedicated boolean to track whether we need
   // to do so (set here and unset in ProcessPendingRestyles).
-  presShell->GetDocument()->SetNeedStyleFlush();
+  presShell->SetNeedStyleFlush();
 }
 
 /**

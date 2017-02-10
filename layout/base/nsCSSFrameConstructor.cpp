@@ -82,6 +82,7 @@
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "nsAutoLayoutPhase.h"
 #include "nsStyleStructInlines.h"
 #include "nsPageContentFrame.h"
@@ -122,6 +123,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsTextNode.h"
 #include "ActiveLayerTracker.h"
+#include "nsIPresShellInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -12935,4 +12937,20 @@ Iterator::DeleteItemsTo(const Iterator& aEnd)
     mList.AdjustCountsForItem(item, -1);
     delete item;
   } while (*this != aEnd);
+}
+
+void
+nsCSSFrameConstructor::QuotesDirty()
+{
+  NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
+  mQuotesDirty = true;
+  mPresShell->SetNeedLayoutFlush();
+}
+
+void
+nsCSSFrameConstructor::CountersDirty()
+{
+  NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
+  mCountersDirty = true;
+  mPresShell->SetNeedLayoutFlush();
 }
