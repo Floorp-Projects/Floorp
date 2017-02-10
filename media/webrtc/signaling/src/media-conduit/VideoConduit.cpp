@@ -241,10 +241,11 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
 }
 
 void
-WebrtcVideoConduit::AddLocalRTPExtensions(
+WebrtcVideoConduit::AddLocalRTPExtensions(bool aIsSend,
   const std::vector<webrtc::RtpExtension> & aExtensions)
 {
-  auto& extList = mSendStreamConfig.rtp.extensions;
+  auto& extList = aIsSend ? mSendStreamConfig.rtp.extensions :
+                  mRecvStreamConfig.rtp.extensions;
   std::remove_if(extList.begin(), extList.end(), [&](const webrtc::RtpExtension & i) {
     return std::find(aExtensions.begin(), aExtensions.end(),i) != aExtensions.end();
   });
@@ -252,9 +253,9 @@ WebrtcVideoConduit::AddLocalRTPExtensions(
 }
 
 std::vector<webrtc::RtpExtension>
-WebrtcVideoConduit::GetLocalRTPExtensions() const
+WebrtcVideoConduit::GetLocalRTPExtensions(bool aIsSend) const
 {
-  return mSendStreamConfig.rtp.extensions;
+  return aIsSend ? mSendStreamConfig.rtp.extensions : mRecvStreamConfig.rtp.extensions;
 }
 
 bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
