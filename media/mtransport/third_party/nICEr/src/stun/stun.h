@@ -114,6 +114,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef USE_TURN
 /* TURN attributes */
 #define NR_STUN_ATTR_LIFETIME                0x000d
+/* from an expired draft defined as optional, but in the required range */
+#define NR_STUN_ATTR_BANDWIDTH               0x0010
 #define NR_STUN_ATTR_XOR_PEER_ADDRESS        0x0012
 #define NR_STUN_ATTR_DATA                    0x0013
 #define NR_STUN_ATTR_XOR_RELAY_ADDRESS       0x0016
