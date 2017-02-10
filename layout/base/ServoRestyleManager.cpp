@@ -323,10 +323,6 @@ ServoRestyleManager::ProcessPendingRestyles()
     return;
   }
 
-  if (!HasPendingRestyles()) {
-    return;
-  }
-
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations and transitions on elements that have no frame at the end
   // of the restyling process.
@@ -335,10 +331,11 @@ ServoRestyleManager::ProcessPendingRestyles()
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
 
-  // XXXbholley: Should this be while() per bug 1316247?
-  if (HasPendingRestyles()) {
-    mInStyleRefresh = true;
-    styleSet->StyleDocument();
+  mInStyleRefresh = true;
+
+  // Perform the Servo traversal, and the post-traversal if required.
+  if (styleSet->StyleDocument()) {
+
     PresContext()->EffectCompositor()->ClearElementsToRestyle();
 
     // First do any queued-up frame creation. (see bugs 827239 and 997506).
@@ -377,8 +374,9 @@ ServoRestyleManager::ProcessPendingRestyles()
     mReentrantChanges = nullptr;
 
     styleSet->AssertTreeIsClean();
-    mInStyleRefresh = false;
   }
+
+  mInStyleRefresh = false;
 
   IncrementRestyleGeneration();
 
