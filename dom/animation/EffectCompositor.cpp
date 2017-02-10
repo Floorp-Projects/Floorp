@@ -264,7 +264,7 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     if (!elementsToRestyle.Contains(key)) {
       elementsToRestyle.Put(key, false);
     }
-    mPresContext->PresShell()->SetNeedStyleFlush();
+    mPresContext->PresShell()->SetNeedThrottledAnimationFlush();
   } else {
     // Get() returns 0 if the element is not found. It will also return
     // false if the element is found but does not have a pending restyle.
