@@ -1086,18 +1086,17 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
     CK_RV crv;
     PRUint32 i;
 
+    PK11_EnterSlotMonitor(slot);
+
     if (slot->mechanismList) {
         PORT_Free(slot->mechanismList);
         slot->mechanismList = NULL;
     }
     slot->mechanismCount = 0;
 
-    if (!slot->isThreadSafe)
-        PK11_EnterSlotMonitor(slot);
     crv = PK11_GETTAB(slot)->C_GetMechanismList(slot->slotID, NULL, &count);
     if (crv != CKR_OK) {
-        if (!slot->isThreadSafe)
-            PK11_ExitSlotMonitor(slot);
+        PK11_ExitSlotMonitor(slot);
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
     }
@@ -1105,17 +1104,15 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
     slot->mechanismList = (CK_MECHANISM_TYPE *)
         PORT_Alloc(count * sizeof(CK_MECHANISM_TYPE));
     if (slot->mechanismList == NULL) {
-        if (!slot->isThreadSafe)
-            PK11_ExitSlotMonitor(slot);
+        PK11_ExitSlotMonitor(slot);
         return SECFailure;
     }
     crv = PK11_GETTAB(slot)->C_GetMechanismList(slot->slotID,
                                                 slot->mechanismList, &count);
-    if (!slot->isThreadSafe)
-        PK11_ExitSlotMonitor(slot);
     if (crv != CKR_OK) {
         PORT_Free(slot->mechanismList);
         slot->mechanismList = NULL;
+        PK11_ExitSlotMonitor(slot);
         PORT_SetError(PK11_MapError(crv));
         return SECSuccess;
     }
@@ -1128,6 +1125,8 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
             slot->mechanismBits[mech & 0xff] |= 1 << (mech >> 8);
         }
     }
+
+    PK11_ExitSlotMonitor(slot);
     return SECSuccess;
 }
 
@@ -1875,6 +1874,7 @@ PRBool
 PK11_DoesMechanism(PK11SlotInfo *slot, CK_MECHANISM_TYPE type)
 {
     int i;
+    PRBool retval = PR_FALSE;
 
     /* CKM_FAKE_RANDOM is not a real PKCS mechanism. It's a marker to
      * tell us we're looking form someone that has implemented get
@@ -1883,16 +1883,22 @@ PK11_DoesMechanism(PK11SlotInfo *slot, CK_MECHANISM_TYPE type)
         return slot->hasRandom;
     }
 
+    PK11_EnterSlotMonitor(slot);
+
     /* for most mechanism, bypass the linear lookup */
     if (type < 0x7ff) {
-        return (slot->mechanismBits[type & 0xff] & (1 << (type >> 8))) ? PR_TRUE : PR_FALSE;
+        PRBool doesMechanism = (PRBool)(slot->mechanismBits[type & 0xff] &
+                                        (1 << (type >> 8)));
+        PK11_ExitSlotMonitor(slot);
+        return doesMechanism;
     }
 
-    for (i = 0; i < (int)slot->mechanismCount; i++) {
-        if (slot->mechanismList[i] == type)
-            return PR_TRUE;
+    for (i = 0; i < (int)slot->mechanismCount && !retval; i++) {
+        retval = (PRBool)(slot->mechanismList[i] == type);
     }
-    return PR_FALSE;
+
+    PK11_ExitSlotMonitor(slot);
+    return retval;
 }
 
 /*
