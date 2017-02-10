@@ -22,6 +22,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 #include "apz/src/AsyncPanZoomController.h"
 #include "apz/src/HitTestingTreeNode.h"
@@ -288,6 +289,11 @@ public:
     mcc = new NiceMock<MockContentControllerDelayed>();
   }
 
+  enum class PanOptions {
+    None = 0,
+    KeepFingerDown = 0x1,
+  };
+
   template<class InputReceiver>
   void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
            TimeDuration aTapLength,
@@ -302,7 +308,7 @@ public:
   void Pan(const RefPtr<InputReceiver>& aTarget,
            const ScreenIntPoint& aTouchStart,
            const ScreenIntPoint& aTouchEnd,
-           bool aKeepFingerDown = false,
+           PanOptions aOptions = PanOptions::None,
            nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
            nsEventStatus (*aOutEventStatuses)[4] = nullptr,
            uint64_t* aOutInputBlockId = nullptr);
@@ -314,7 +320,7 @@ public:
   */
   template<class InputReceiver>
   void Pan(const RefPtr<InputReceiver>& aTarget, int aTouchStartY,
-           int aTouchEndY, bool aKeepFingerDown = false,
+           int aTouchEndY, PanOptions aOptions = PanOptions::None,
            nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
            nsEventStatus (*aOutEventStatuses)[4] = nullptr,
            uint64_t* aOutInputBlockId = nullptr);
@@ -349,6 +355,8 @@ public:
 protected:
   RefPtr<MockContentControllerDelayed> mcc;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
 
 template<class InputReceiver>
 void
@@ -399,7 +407,7 @@ void
 APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
                     const ScreenIntPoint& aTouchStart,
                     const ScreenIntPoint& aTouchEnd,
-                    bool aKeepFingerDown,
+                    PanOptions aOptions,
                     nsTArray<uint32_t>* aAllowedTouchBehaviors,
                     nsEventStatus (*aOutEventStatuses)[4],
                     uint64_t* aOutInputBlockId)
@@ -455,7 +463,7 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
-  if (!aKeepFingerDown) {
+  if (!(aOptions & PanOptions::KeepFingerDown)) {
     status = TouchUp(aTarget, aTouchEnd, mcc->Time());
   } else {
     status = nsEventStatus_eIgnore;
@@ -472,13 +480,13 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 template<class InputReceiver>
 void
 APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
-                    int aTouchStartY, int aTouchEndY, bool aKeepFingerDown,
+                    int aTouchStartY, int aTouchEndY, PanOptions aOptions,
                     nsTArray<uint32_t>* aAllowedTouchBehaviors,
                     nsEventStatus (*aOutEventStatuses)[4],
                     uint64_t* aOutInputBlockId)
 {
   Pan(aTarget, ScreenIntPoint(10, aTouchStartY), ScreenIntPoint(10, aTouchEndY),
-      aKeepFingerDown, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
+      aOptions, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
 }
 
 template<class InputReceiver>
@@ -491,7 +499,7 @@ APZCTesterBase::PanAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
                                   uint64_t* aOutInputBlockId)
 {
   nsEventStatus statuses[4]; // down, move, move, up
-  Pan(aTarget, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses, aOutInputBlockId);
+  Pan(aTarget, aTouchStartY, aTouchEndY, PanOptions::None, aAllowedTouchBehaviors, &statuses, aOutInputBlockId);
 
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
 
@@ -510,7 +518,7 @@ APZCTesterBase::ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
                                int aTouchStartY, int aTouchEndY,
                                uint64_t* aOutInputBlockId)
 {
-  Pan(aApzc, aTouchStartY, aTouchEndY, false, nullptr, nullptr, aOutInputBlockId);
+  Pan(aApzc, aTouchStartY, aTouchEndY, PanOptions::None, nullptr, nullptr, aOutInputBlockId);
   aApzc->CancelAnimation();
 }
 

@@ -217,7 +217,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 10, 40, true /* keep finger down */);
+  Pan(manager, 10, 40, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -255,7 +255,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -289,7 +289,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -322,7 +322,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
