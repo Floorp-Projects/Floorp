@@ -561,6 +561,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_lambda(JSFunction* fun);
     AbortReasonOr<Ok> jsop_lambda_arrow(JSFunction* fun);
     AbortReasonOr<Ok> jsop_setfunname(uint8_t prefixKind);
+    AbortReasonOr<Ok> jsop_pushlexicalenv(uint32_t index);
     AbortReasonOr<Ok> jsop_functionthis();
     AbortReasonOr<Ok> jsop_globalthis();
     AbortReasonOr<Ok> jsop_typeof();
