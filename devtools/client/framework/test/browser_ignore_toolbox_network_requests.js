@@ -23,9 +23,8 @@ add_task(function* () {
   is(panel.UI.editors.length, 1, "correct number of editors opened");
 
   let monitor = yield toolbox.selectTool("netmonitor");
-  let { gStore } = monitor.panelWin;
-
-  is(gStore.getState().requests.requests.size, 0, "No network requests appear in the network panel");
+  let { RequestsMenu } = monitor.panelWin.NetMonitorView;
+  is(RequestsMenu.itemCount, 0, "No network requests appear in the network panel");
 
   yield gDevTools.closeToolbox(target);
   tab = target = toolbox = panel = null;

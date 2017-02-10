@@ -11,10 +11,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1, 6);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -22,85 +22,76 @@ add_task(function* () {
   });
   yield wait;
 
-  yield testCopyUrlParamsHidden(0, false);
-  yield testCopyUrlParams(0, "a");
-  yield testCopyPostDataHidden(0, false);
-  yield testCopyPostData(0, "{ \"foo\": \"bar\" }");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(0);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("{ \"foo\": \"bar\" }");
 
-  yield testCopyUrlParamsHidden(1, false);
-  yield testCopyUrlParams(1, "a=b");
-  yield testCopyPostDataHidden(1, false);
-  yield testCopyPostData(1, "{ \"foo\": \"bar\" }");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(1);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a=b");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("{ \"foo\": \"bar\" }");
 
-  yield testCopyUrlParamsHidden(2, false);
-  yield testCopyUrlParams(2, "a=b");
-  yield testCopyPostDataHidden(2, false);
-  yield testCopyPostData(2, "foo=bar");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(2);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a=b");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("foo=bar");
 
-  yield testCopyUrlParamsHidden(3, false);
-  yield testCopyUrlParams(3, "a");
-  yield testCopyPostDataHidden(3, false);
-  yield testCopyPostData(3, "{ \"foo\": \"bar\" }");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(3);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("{ \"foo\": \"bar\" }");
 
-  yield testCopyUrlParamsHidden(4, false);
-  yield testCopyUrlParams(4, "a=b");
-  yield testCopyPostDataHidden(4, false);
-  yield testCopyPostData(4, "{ \"foo\": \"bar\" }");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(4);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a=b");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("{ \"foo\": \"bar\" }");
 
-  yield testCopyUrlParamsHidden(5, false);
-  yield testCopyUrlParams(5, "a=b");
-  yield testCopyPostDataHidden(5, false);
-  yield testCopyPostData(5, "?foo=bar");
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(5);
+  yield testCopyUrlParamsHidden(false);
+  yield testCopyUrlParams("a=b");
+  yield testCopyPostDataHidden(false);
+  yield testCopyPostData("?foo=bar");
 
-  yield testCopyUrlParamsHidden(6, true);
-  yield testCopyPostDataHidden(6, true);
+  RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(6);
+  yield testCopyUrlParamsHidden(true);
+  yield testCopyPostDataHidden(true);
 
   return teardown(monitor);
 
-  function testCopyUrlParamsHidden(index, hidden) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[index]);
-    let copyUrlParamsNode = monitor._toolbox.doc
-      .querySelector("#request-menu-context-copy-url-params");
-    is(!!copyUrlParamsNode, !hidden,
+  function testCopyUrlParamsHidden(hidden) {
+    let allMenuItems = openContextMenuAndGetAllItems(NetMonitorView);
+    let copyUrlParamsNode = allMenuItems.find(item =>
+      item.id === "request-menu-context-copy-url-params");
+    is(copyUrlParamsNode.visible, !hidden,
       "The \"Copy URL Parameters\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
   }
 
-  function* testCopyUrlParams(index, queryString) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[index]);
+  function* testCopyUrlParams(queryString) {
     yield waitForClipboardPromise(function setup() {
-      monitor._toolbox.doc
-        .querySelector("#request-menu-context-copy-url-params").click();
+      RequestsMenu.contextMenu.copyUrlParams();
     }, queryString);
     ok(true, "The url query string copied from the selected item is correct.");
   }
 
-  function testCopyPostDataHidden(index, hidden) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[index]);
-    let copyPostDataNode = monitor._toolbox.doc
-      .querySelector("#request-menu-context-copy-post-data");
-    is(!!copyPostDataNode, !hidden,
+  function testCopyPostDataHidden(hidden) {
+    let allMenuItems = openContextMenuAndGetAllItems(NetMonitorView);
+    let copyPostDataNode = allMenuItems.find(item =>
+      item.id === "request-menu-context-copy-post-data");
+    is(copyPostDataNode.visible, !hidden,
       "The \"Copy POST Data\" context menu item should" + (hidden ? " " : " not ") +
         "be hidden.");
   }
 
-  function* testCopyPostData(index, postData) {
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      document.querySelectorAll(".request-list-item")[index]);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelectorAll(".request-list-item")[index]);
+  function* testCopyPostData(postData) {
     yield waitForClipboardPromise(function setup() {
-      monitor._toolbox.doc
-        .querySelector("#request-menu-context-copy-post-data").click();
+      RequestsMenu.contextMenu.copyPostData();
     }, postData);
     ok(true, "The post data string copied from the selected item is correct.");
   }

@@ -14,10 +14,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_RAW_WITH_HEADERS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 0, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -27,10 +27,9 @@ add_task(function* () {
 
   // Wait for all tree view updated by react
   wait = waitForDOM(document, "#headers-panel");
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector(".network-details-panel-toggle"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#headers-tab"));
+  document.querySelector("#headers-tab").click();
   yield wait;
 
   let tabpanel = document.querySelector("#headers-panel");
@@ -59,8 +58,7 @@ add_task(function* () {
 
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#params-panel .tree-section");
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#params-tab"));
+  document.querySelector("#params-tab").click();
   yield wait;
 
   tabpanel = document.querySelector("#params-panel");

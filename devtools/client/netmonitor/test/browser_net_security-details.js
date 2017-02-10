@@ -9,10 +9,10 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   info("Performing a secure request.");
   const REQUESTS_URL = "https://example.com" + CORS_SJS_PATH;
@@ -23,10 +23,9 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, "#security-panel");
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector(".network-details-panel-toggle"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#security-tab"));
+  document.querySelector("#security-tab").click();
   yield wait;
 
   let tabpanel = document.querySelector("#security-panel");

@@ -6,17 +6,11 @@
 
 "use strict";
 
-const {
-  createClass,
-  createFactory,
-  DOM,
-  PropTypes,
-} = require("devtools/client/shared/vendor/react");
+const { createClass, createFactory, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
+const { div, span, img } = DOM;
 const { L10N } = require("../l10n");
-const { getAbbreviatedMimeType } = require("../request-utils");
 const { getFormattedSize } = require("../utils/format-utils");
-
-const { div, img, span } = DOM;
+const { getAbbreviatedMimeType } = require("../request-utils");
 
 /**
  * Compare two objects on a subset of their properties
@@ -53,7 +47,7 @@ const UPDATED_REQ_ITEM_PROPS = [
 const UPDATED_REQ_PROPS = [
   "index",
   "isSelected",
-  "firstRequestStartedMillis",
+  "firstRequestStartedMillis"
 ];
 
 /**
@@ -82,7 +76,7 @@ const RequestListItem = createClass({
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
-      !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps);
+           !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps);
   },
 
   componentDidUpdate(prevProps) {
@@ -125,8 +119,8 @@ const RequestListItem = createClass({
     }
     classList.push(index % 2 ? "odd" : "even");
 
-    return (
-      div({
+    return div(
+      {
         ref: "el",
         className: classList.join(" "),
         "data-id": item.id,
@@ -134,16 +128,15 @@ const RequestListItem = createClass({
         onContextMenu,
         onMouseDown,
       },
-        StatusColumn({ item }),
-        MethodColumn({ item }),
-        FileColumn({ item }),
-        DomainColumn({ item, onSecurityIconClick }),
-        CauseColumn({ item }),
-        TypeColumn({ item }),
-        TransferredSizeColumn({ item }),
-        ContentSizeColumn({ item }),
-        WaterfallColumn({ item, firstRequestStartedMillis }),
-      )
+      StatusColumn({ item }),
+      MethodColumn({ item }),
+      FileColumn({ item }),
+      DomainColumn({ item, onSecurityIconClick }),
+      CauseColumn({ item }),
+      TypeColumn({ item }),
+      TransferredSizeColumn({ item }),
+      ContentSizeColumn({ item }),
+      WaterfallColumn({ item, firstRequestStartedMillis })
     );
   }
 });
@@ -156,8 +149,6 @@ const UPDATED_STATUS_PROPS = [
 ];
 
 const StatusColumn = createFactory(createClass({
-  displayName: "StatusColumn",
-
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_STATUS_PROPS, this.props.item, nextProps.item);
   },
@@ -187,28 +178,22 @@ const StatusColumn = createFactory(createClass({
       }
     }
 
-    return (
-      div({ className: "requests-menu-subitem requests-menu-status", title },
-        div({ className: "requests-menu-status-icon", "data-code": code }),
-        span({ className: "subitem-label requests-menu-status-code" }, status),
-      )
+    return div({ className: "requests-menu-subitem requests-menu-status", title },
+      div({ className: "requests-menu-status-icon", "data-code": code }),
+      span({ className: "subitem-label requests-menu-status-code" }, status)
     );
   }
 }));
 
 const MethodColumn = createFactory(createClass({
-  displayName: "MethodColumn",
-
   shouldComponentUpdate(nextProps) {
     return this.props.item.method !== nextProps.item.method;
   },
 
   render() {
     const { method } = this.props.item;
-    return (
-      div({ className: "requests-menu-subitem requests-menu-method-box" },
-        span({ className: "subitem-label requests-menu-method" }, method)
-      )
+    return div({ className: "requests-menu-subitem requests-menu-method-box" },
+      span({ className: "subitem-label requests-menu-method" }, method)
     );
   }
 }));
@@ -219,8 +204,6 @@ const UPDATED_FILE_PROPS = [
 ];
 
 const FileColumn = createFactory(createClass({
-  displayName: "FileColumn",
-
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_FILE_PROPS, this.props.item, nextProps.item);
   },
@@ -228,20 +211,19 @@ const FileColumn = createFactory(createClass({
   render() {
     const { urlDetails, responseContentDataUri } = this.props.item;
 
-    return (
-      div({ className: "requests-menu-subitem requests-menu-icon-and-file" },
-        img({
-          className: "requests-menu-icon",
-          src: responseContentDataUri,
-          hidden: !responseContentDataUri,
-          "data-type": responseContentDataUri ? "thumbnail" : undefined,
-        }),
-        div({
+    return div({ className: "requests-menu-subitem requests-menu-icon-and-file" },
+      img({
+        className: "requests-menu-icon",
+        src: responseContentDataUri,
+        hidden: !responseContentDataUri,
+        "data-type": responseContentDataUri ? "thumbnail" : undefined
+      }),
+      div(
+        {
           className: "subitem-label requests-menu-file",
-          title: urlDetails.unicodeUrl,
+          title: urlDetails.unicodeUrl
         },
-          urlDetails.baseNameWithQuery,
-        ),
+        urlDetails.baseNameWithQuery
       )
     );
   }
@@ -254,8 +236,6 @@ const UPDATED_DOMAIN_PROPS = [
 ];
 
 const DomainColumn = createFactory(createClass({
-  displayName: "DomainColumn",
-
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_DOMAIN_PROPS, this.props.item, nextProps.item);
   },
@@ -276,22 +256,19 @@ const DomainColumn = createFactory(createClass({
 
     let title = urlDetails.host + (remoteAddress ? ` (${remoteAddress})` : "");
 
-    return (
-      div({ className: "requests-menu-subitem requests-menu-security-and-domain" },
-        div({
-          className: iconClassList.join(" "),
-          title: iconTitle,
-          onClick: onSecurityIconClick,
-        }),
-        span({ className: "subitem-label requests-menu-domain", title }, urlDetails.host),
-      )
+    return div(
+      { className: "requests-menu-subitem requests-menu-security-and-domain" },
+      div({
+        className: iconClassList.join(" "),
+        title: iconTitle,
+        onClick: onSecurityIconClick,
+      }),
+      span({ className: "subitem-label requests-menu-domain", title }, urlDetails.host)
     );
   }
 }));
 
 const CauseColumn = createFactory(createClass({
-  displayName: "CauseColumn",
-
   shouldComponentUpdate(nextProps) {
     return this.props.item.cause !== nextProps.item.cause;
   },
@@ -310,17 +287,10 @@ const CauseColumn = createFactory(createClass({
       causeHasStack = cause.stacktrace && cause.stacktrace.length > 0;
     }
 
-    return (
-      div({
-        className: "requests-menu-subitem requests-menu-cause",
-        title: causeUri,
-      },
-        span({
-          className: "requests-menu-cause-stack",
-          hidden: !causeHasStack,
-        }, "JS"),
-        span({ className: "subitem-label" }, causeType),
-      )
+    return div(
+      { className: "requests-menu-subitem requests-menu-cause", title: causeUri },
+      span({ className: "requests-menu-cause-stack", hidden: !causeHasStack }, "JS"),
+      span({ className: "subitem-label" }, causeType)
     );
   }
 }));
@@ -332,8 +302,6 @@ const CONTENT_MIME_TYPE_ABBREVIATIONS = {
 };
 
 const TypeColumn = createFactory(createClass({
-  displayName: "TypeColumn",
-
   shouldComponentUpdate(nextProps) {
     return this.props.item.mimeType !== nextProps.item.mimeType;
   },
@@ -346,13 +314,9 @@ const TypeColumn = createFactory(createClass({
       abbrevType = CONTENT_MIME_TYPE_ABBREVIATIONS[abbrevType] || abbrevType;
     }
 
-    return (
-      div({
-        className: "requests-menu-subitem requests-menu-type",
-        title: mimeType,
-      },
-        span({ className: "subitem-label" }, abbrevType),
-      )
+    return div(
+      { className: "requests-menu-subitem requests-menu-type", title: mimeType },
+      span({ className: "subitem-label" }, abbrevType)
     );
   }
 }));
@@ -364,8 +328,6 @@ const UPDATED_TRANSFERRED_PROPS = [
 ];
 
 const TransferredSizeColumn = createFactory(createClass({
-  displayName: "TransferredSizeColumn",
-
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_TRANSFERRED_PROPS, this.props.item, nextProps.item);
   },
@@ -387,20 +349,14 @@ const TransferredSizeColumn = createFactory(createClass({
       text = L10N.getStr("networkMenu.sizeUnavailable");
     }
 
-    return (
-      div({
-        className: "requests-menu-subitem requests-menu-transferred",
-        title: text,
-      },
-        span({ className }, text),
-      )
+    return div(
+      { className: "requests-menu-subitem requests-menu-transferred", title: text },
+      span({ className }, text)
     );
   }
 }));
 
 const ContentSizeColumn = createFactory(createClass({
-  displayName: "ContentSizeColumn",
-
   shouldComponentUpdate(nextProps) {
     return this.props.item.contentSize !== nextProps.item.contentSize;
   },
@@ -413,13 +369,12 @@ const ContentSizeColumn = createFactory(createClass({
       text = getFormattedSize(contentSize);
     }
 
-    return (
-      div({
+    return div(
+      {
         className: "requests-menu-subitem subitem-label requests-menu-size",
-        title: text,
+        title: text
       },
-        span({ className: "subitem-label" }, text),
-      )
+      span({ className: "subitem-label" }, text)
     );
   }
 }));
@@ -432,26 +387,20 @@ const UPDATED_WATERFALL_PROPS = [
 ];
 
 const WaterfallColumn = createFactory(createClass({
-  displayName: "WaterfallColumn",
-
   shouldComponentUpdate(nextProps) {
     return this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis ||
-      !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item);
+           !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item);
   },
 
   render() {
     const { item, firstRequestStartedMillis } = this.props;
+    const startedDeltaMillis = item.startedMillis - firstRequestStartedMillis;
+    const paddingInlineStart = `${startedDeltaMillis}px`;
 
-    return (
-      div({ className: "requests-menu-subitem requests-menu-waterfall" },
-        div({
-          className: "requests-menu-timings",
-          style: {
-            paddingInlineStart: `${item.startedMillis - firstRequestStartedMillis}px`,
-          },
-        },
-          timingBoxes(item),
-        )
+    return div({ className: "requests-menu-subitem requests-menu-waterfall" },
+      div(
+        { className: "requests-menu-timings", style: { paddingInlineStart } },
+        timingBoxes(item)
       )
     );
   }

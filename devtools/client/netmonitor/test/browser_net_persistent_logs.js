@@ -12,20 +12,21 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SINGLE_GET_URL);
   info("Starting test... ");
 
-  let { document, windowRequire } = monitor.panelWin;
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
   Services.prefs.setBoolPref("devtools.webconsole.persistlog", false);
 
   yield reloadAndWait();
 
-  is(document.querySelectorAll(".request-list-item").length, 2,
-    "The request list should have two items at this point.");
+  is(RequestsMenu.itemCount, 2,
+    "The request menu should have two items at this point.");
 
   yield reloadAndWait();
 
   // Since the reload clears the log, we still expect two requests in the log
-  is(document.querySelectorAll(".request-list-item").length, 2,
-    "The request list should still have two items at this point.");
+  is(RequestsMenu.itemCount, 2,
+    "The request menu should still have two items at this point.");
 
   // Now we toggle the persistence logs on
   Services.prefs.setBoolPref("devtools.webconsole.persistlog", true);
@@ -33,8 +34,8 @@ add_task(function* () {
   yield reloadAndWait();
 
   // Since we togged the persistence logs, we expect four items after the reload
-  is(document.querySelectorAll(".request-list-item").length, 4,
-    "The request list should now have four items at this point.");
+  is(RequestsMenu.itemCount, 4,
+    "The request menu should now have four items at this point.");
 
   Services.prefs.setBoolPref("devtools.webconsole.persistlog", false);
   return teardown(monitor);

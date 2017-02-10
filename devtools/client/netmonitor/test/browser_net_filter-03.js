@@ -27,15 +27,10 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   // The test assumes that the first HTML request here has a longer response
   // body than the other HTML requests performed later during the test.
@@ -50,11 +45,11 @@ add_task(function* () {
   yield wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
+    document.querySelector(".network-details-panel-toggle"));
 
-  isnot(getSelectedRequest(gStore.getState()), null,
+  isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(gStore.getState()), 0,
+  is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should be visible after toggle button was pressed.");
@@ -103,24 +98,17 @@ add_task(function* () {
       document.querySelector("#requests-menu-size-button"));
   }
 
-  function getSelectedIndex(state) {
-    if (!state.requests.selectedId) {
-      return -1;
-    }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
-  }
-
   function testContents(order, visible, selection) {
-    isnot(getSelectedRequest(gStore.getState()), null,
+    isnot(RequestsMenu.selectedItem, null,
       "There should still be a selected item after filtering.");
-    is(getSelectedIndex(gStore.getState()), selection,
+    is(RequestsMenu.selectedIndex, selection,
       "The first item should be still selected after filtering.");
     is(!!document.querySelector(".network-details-panel"), true,
       "The network details panel should still be visible after filtering.");
 
-    is(getSortedRequests(gStore.getState()).length, order.length,
+    is(RequestsMenu.items.length, order.length,
       "There should be a specific amount of items in the requests menu.");
-    is(getDisplayedRequests(gStore.getState()).length, visible,
+    is(RequestsMenu.visibleItems.length, visible,
       "There should be a specific amount of visible items in the requests menu.");
   }
 });

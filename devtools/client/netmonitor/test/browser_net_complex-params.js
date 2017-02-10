@@ -9,14 +9,15 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
+
   let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/l10n");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1, 6);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -25,42 +26,42 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(0));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#params-tab"));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelector(".network-details-panel-toggle"));
+  document.querySelector("#params-tab").click();
   yield wait;
   testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(1));
+  RequestsMenu.selectedIndex = 1;
   yield wait;
   testParamsTab1("a", '"b"', '{ "foo": "bar" }', '""');
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(2));
+  RequestsMenu.selectedIndex = 2;
   yield wait;
   testParamsTab1("a", '"b"', "foo", '"bar"');
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(3));
+  RequestsMenu.selectedIndex = 3;
   yield wait;
   testParamsTab2("a", '""', '{ "foo": "bar" }', "js");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(4));
+  RequestsMenu.selectedIndex = 4;
   yield wait;
   testParamsTab2("a", '"b"', '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
   let waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
   let waitEditor = waitForDOM(document, "#params-panel .editor-mount iframe");
-  gStore.dispatch(Actions.selectRequestByIndex(5));
+  RequestsMenu.selectedIndex = 5;
   let [, editorFrames] = yield Promise.all([waitSections, waitEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
   testParamsTab2("a", '"b"', "?foo=bar", "text");
 
-  gStore.dispatch(Actions.selectRequestByIndex(6));
+  RequestsMenu.selectedIndex = 6;
   testParamsTab3();
 
   yield teardown(monitor);

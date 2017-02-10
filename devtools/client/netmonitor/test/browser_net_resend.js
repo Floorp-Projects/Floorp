@@ -16,14 +16,12 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { panelWin } = monitor;
+  let { document, gStore, NetMonitorView, windowRequire } = panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 0, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -31,22 +29,22 @@ add_task(function* () {
   });
   yield wait;
 
-  let origItem = getSortedRequests(gStore.getState()).get(0);
+  let origItem = RequestsMenu.getItemAtIndex(0);
 
-  gStore.dispatch(Actions.selectRequest(origItem.id));
+  RequestsMenu.selectedItem = origItem;
 
   // add a new custom request cloned from selected request
   gStore.dispatch(Actions.cloneSelectedRequest());
 
   testCustomForm(origItem);
 
-  let customItem = getSelectedRequest(gStore.getState());
+  let customItem = RequestsMenu.selectedItem;
   testCustomItem(customItem, origItem);
 
   // edit the custom request
   yield editCustomForm();
   // FIXME: reread the customItem, it's been replaced by a new object (immutable!)
-  customItem = getSelectedRequest(gStore.getState());
+  customItem = RequestsMenu.selectedItem;
   testCustomItemChanged(customItem, origItem);
 
   // send the new request
@@ -54,7 +52,7 @@ add_task(function* () {
   gStore.dispatch(Actions.sendCustomRequest());
   yield wait;
 
-  let sentItem = getSelectedRequest(gStore.getState());
+  let sentItem = RequestsMenu.selectedItem;
   testSentRequest(sentItem, origItem);
 
   return teardown(monitor);
@@ -75,7 +73,6 @@ add_task(function* () {
    * Test that the New Request form was populated correctly
    */
   function testCustomForm(data) {
-    yield waitUntil(() => document.querySelector(".custom-request-panel"));
     is(document.getElementById("custom-method-value").value, data.method,
        "new request form showing correct method");
 
@@ -100,7 +97,7 @@ add_task(function* () {
    * Add some params and headers to the request form
    */
   function* editCustomForm() {
-    monitor.panelWin.focus();
+    panelWin.focus();
 
     let query = document.getElementById("custom-query-value");
     let queryFocus = once(query, "focus", false);
@@ -157,7 +154,7 @@ add_task(function* () {
 
   function type(string) {
     for (let ch of string) {
-      EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
+      EventUtils.synthesizeKey(ch, {}, panelWin);
     }
   }
 });

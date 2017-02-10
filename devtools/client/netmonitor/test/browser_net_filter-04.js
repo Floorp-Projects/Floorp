@@ -35,11 +35,10 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { Prefs } = windowRequire("devtools/client/netmonitor/prefs");
+  let { Prefs, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   is(Prefs.filters.length, 2,
     "All filter types were loaded as an array from the preferences.");

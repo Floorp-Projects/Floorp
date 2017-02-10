@@ -12,14 +12,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(JSON_MALFORMED_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -27,13 +23,8 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(
-    document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(0),
-    "GET",
-    CONTENT_TYPE_SJS + "?fmt=json-malformed",
-    {
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
+    "GET", CONTENT_TYPE_SJS + "?fmt=json-malformed", {
       status: 200,
       statusText: "OK",
       type: "json",
@@ -41,10 +32,9 @@ add_task(function* () {
     });
 
   wait = waitForDOM(document, "#response-panel .editor-mount iframe");
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector(".network-details-panel-toggle"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  document.querySelector("#response-tab").click();
   let [editor] = yield wait;
   yield once(editor, "DOMContentLoaded");
   yield waitForDOM(editor.contentDocument, ".CodeMirror-code");

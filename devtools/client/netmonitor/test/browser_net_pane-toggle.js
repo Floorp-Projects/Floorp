@@ -11,15 +11,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
-  let {
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
-
-  gStore.dispatch(Actions.batchEnable(false));
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+  let { NETWORK_EVENT } = monitor.panelWin.EVENTS;
+  RequestsMenu.lazyUpdate = false;
 
   let toggleButton = document.querySelector(".network-details-panel-toggle");
 
@@ -30,10 +25,10 @@ add_task(function* () {
     "collapsed when the frontend is opened.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should be hidden when the frontend is opened.");
-  is(getSelectedRequest(gStore.getState()), null,
+  is(RequestsMenu.selectedItem, null,
     "There should be no selected item in the requests menu.");
 
-  let networkEvent = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
+  let networkEvent = monitor.panelWin.once(NETWORK_EVENT);
   tab.linkedBrowser.reload();
   yield networkEvent;
 
@@ -44,10 +39,10 @@ add_task(function* () {
     "collapsed after the first request.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should still be hidden after the first request.");
-  is(getSelectedRequest(gStore.getState()), null,
+  is(RequestsMenu.selectedItem, null,
     "There should still be no selected item in the requests menu.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, toggleButton);
 
   is(toggleButton.hasAttribute("disabled"), false,
     "The pane toggle button should still be enabled after being pressed.");
@@ -56,12 +51,12 @@ add_task(function* () {
     "not collapsed anymore after being pressed.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The details pane should not be hidden after toggle button was pressed.");
-  isnot(getSelectedRequest(gStore.getState()), null,
+  isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
-  is(getSelectedIndex(gStore.getState()), 0,
+  is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, toggleButton);
 
   is(toggleButton.hasAttribute("disabled"), false,
     "The pane toggle button should still be enabled after being pressed again.");
@@ -70,15 +65,8 @@ add_task(function* () {
     "collapsed after being pressed again.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should now be hidden after the toggle button was pressed again.");
-  is(getSelectedRequest(gStore.getState()), null,
+  is(RequestsMenu.selectedItem, null,
     "There should now be no selected item in the requests menu.");
 
   yield teardown(monitor);
-
-  function getSelectedIndex(state) {
-    if (!state.requests.selectedId) {
-      return -1;
-    }
-    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
-  }
 });

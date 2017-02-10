@@ -19,33 +19,24 @@ function test() {
   initNetMonitor(URL).then(({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { document, gStore, windowRequire } = monitor.panelWin;
-    let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-    let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
-    let {
-      getDisplayedRequests,
-      getSortedRequests,
-    } = windowRequire("devtools/client/netmonitor/selectors/index");
+    let { NetMonitorView } = monitor.panelWin;
+    let { RequestsMenu } = NetMonitorView;
 
-    gStore.dispatch(Actions.batchEnable(false));
+    RequestsMenu.lazyUpdate = false;
 
     waitForNetworkEvents(monitor, 1)
       .then(() => teardown(monitor))
       .then(finish);
 
-    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
-      verifyRequestItemTarget(
-        document,
-        getDisplayedRequests(gStore.getState()),
-        getSortedRequests(gStore.getState()).get(0),
-        "GET", URL,
-        {
-          type: "plain",
-          fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
-        }
-      );
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
+      let requestItem = RequestsMenu.getItemAtIndex(0);
+
+      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", URL, {
+        type: "plain",
+        fullMimeType: "text/plain; charset=utf-8",
+        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+      });
     });
 
     tab.linkedBrowser.reload();

@@ -8,16 +8,16 @@
  */
 
 add_task(function* () {
+  let Actions = require("devtools/client/netmonitor/actions/index");
+
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire, NetMonitorController } =
-    monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { $, $all, EVENTS, ACTIVITY_TYPE, NetMonitorView, NetMonitorController,
+        gStore } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForEvents();
   yield performRequests();
@@ -63,11 +63,11 @@ add_task(function* () {
   }
 
   function checkImageThumbnail() {
-    is(document.querySelectorAll(".requests-menu-icon[data-type=thumbnail]").length, 1,
+    is($all(".requests-menu-icon[data-type=thumbnail]").length, 1,
       "There should be only one image request with a thumbnail displayed.");
-    is(document.querySelector(".requests-menu-icon[data-type=thumbnail]").src, TEST_IMAGE_DATA_URI,
+    is($(".requests-menu-icon[data-type=thumbnail]").src, TEST_IMAGE_DATA_URI,
       "The image requests-menu-icon thumbnail is displayed correctly.");
-    is(document.querySelector(".requests-menu-icon[data-type=thumbnail]").hidden, false,
+    is($(".requests-menu-icon[data-type=thumbnail]").hidden, false,
       "The image requests-menu-icon thumbnail should not be hidden.");
   }
 });
