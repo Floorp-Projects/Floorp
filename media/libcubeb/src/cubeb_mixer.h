@@ -52,6 +52,13 @@ static cubeb_channel const CHANNEL_INDEX_TO_ORDER[CUBEB_LAYOUT_MAX][CHANNEL_MAX]
   { CHANNEL_LEFT, CHANNEL_RIGHT, CHANNEL_CENTER, CHANNEL_LFE, CHANNEL_RLS, CHANNEL_RRS, CHANNEL_LS, CHANNEL_RS }  // 3F4_LFE
 };
 
+typedef struct {
+  unsigned int channels;
+  cubeb_channel map[CHANNEL_MAX];
+} cubeb_channel_map;
+
+cubeb_channel_layout cubeb_channel_map_to_layout(cubeb_channel_map const * channel_map);
+
 bool cubeb_should_upmix(cubeb_stream_params const * stream, cubeb_stream_params const * mixer);
 
 bool cubeb_should_downmix(cubeb_stream_params const * stream, cubeb_stream_params const * mixer);
