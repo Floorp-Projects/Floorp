@@ -628,7 +628,7 @@ private:
     JSAutoRequest ar(mContext);
 
     JS::CompartmentOptions options;
-    options.creationOptions().setZone(JS::SystemZone);
+    options.creationOptions().setSystemZone();
     options.behaviors().setVersion(JSVERSION_LATEST);
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
                                  JS::DontFireOnNewGlobalHook, options);
