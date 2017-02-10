@@ -1835,7 +1835,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mOriginAttributes = aOther.mOriginAttributes;
 }
 
-nsresult
+void
 WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
                                          nsILoadGroup* aLoadGroup)
 {
@@ -1846,8 +1846,7 @@ WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
   mPrincipal = aPrincipal;
   mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
 
-  nsresult rv = aPrincipal->GetCsp(getter_AddRefs(mCSP));
-  NS_ENSURE_SUCCESS(rv, rv);
+  aPrincipal->GetCsp(getter_AddRefs(mCSP));
 
   if (mCSP) {
     mCSP->GetAllowsEval(&mReportCSPViolations, &mEvalAllowed);
@@ -1855,8 +1854,8 @@ WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
     bool hasReferrerPolicy = false;
     uint32_t rp = mozilla::net::RP_Unset;
 
-    rv = mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
+    NS_ENSURE_SUCCESS_VOID(rv);
 
     if (hasReferrerPolicy) {
       mReferrerPolicy = static_cast<net::ReferrerPolicy>(rp);
@@ -1871,10 +1870,8 @@ WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
   mPrincipalInfo = new PrincipalInfo();
   mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
 
-  rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  MOZ_ALWAYS_SUCCEEDS(
+    PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo));
 }
 
 nsresult
@@ -1956,7 +1953,8 @@ WorkerLoadInfo::SetPrincipalFromChannel(nsIChannel* aChannel)
                                                     getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return SetPrincipalOnMainThread(principal, loadGroup);
+  SetPrincipalOnMainThread(principal, loadGroup);
+  return NS_OK;
 }
 
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
@@ -3805,11 +3803,11 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
 }
 
 template <class Derived>
-nsresult
+void
 WorkerPrivateParent<Derived>::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
                                                        nsILoadGroup* aLoadGroup)
 {
-  return mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
+  mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
 }
 
 template <class Derived>
