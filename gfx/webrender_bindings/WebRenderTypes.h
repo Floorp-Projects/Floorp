@@ -78,12 +78,41 @@ static inline WrColor ToWrColor(const gfx::Color& color)
   return c;
 }
 
-static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Color& color)
+static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
+{
+  switch (style) {
+  case NS_STYLE_BORDER_STYLE_NONE:
+    return WrBorderStyle::None;
+  case NS_STYLE_BORDER_STYLE_SOLID:
+    return WrBorderStyle::Solid;
+  case NS_STYLE_BORDER_STYLE_DOUBLE:
+    return WrBorderStyle::Double;
+  case NS_STYLE_BORDER_STYLE_DOTTED:
+    return WrBorderStyle::Dotted;
+  case NS_STYLE_BORDER_STYLE_DASHED:
+    return WrBorderStyle::Dashed;
+  case NS_STYLE_BORDER_STYLE_HIDDEN:
+    return WrBorderStyle::Hidden;
+  case NS_STYLE_BORDER_STYLE_GROOVE:
+    return WrBorderStyle::Groove;
+  case NS_STYLE_BORDER_STYLE_RIDGE:
+    return WrBorderStyle::Ridge;
+  case NS_STYLE_BORDER_STYLE_INSET:
+    return WrBorderStyle::Inset;
+  case NS_STYLE_BORDER_STYLE_OUTSET:
+    return WrBorderStyle::Outset;
+  default:
+    MOZ_ASSERT(false);
+  }
+  return WrBorderStyle::None;
+}
+
+static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Color& color, const uint8_t& style)
 {
   WrBorderSide bs;
   bs.width = width;
   bs.color = ToWrColor(color);
-  bs.style = WrBorderStyle::Solid;
+  bs.style = ToWrBorderStyle(style);
   return bs;
 }
 
