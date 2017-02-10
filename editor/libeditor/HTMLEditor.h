@@ -38,7 +38,6 @@
 #include "nsTArray.h"
 
 class nsDocumentFragment;
-class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIClipboard;
 class nsILinkHandler;
@@ -108,7 +107,8 @@ public:
 
   // TextEditor overrides
   NS_IMETHOD BeginningOfDocument() override;
-  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent) override;
+  virtual nsresult HandleKeyPressEvent(
+                     WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual already_AddRefed<nsIContent> GetFocusedContent() override;
   virtual already_AddRefed<nsIContent> GetFocusedContentForIME() override;
   virtual bool IsActiveInDOMWindow() override;

@@ -9,6 +9,11 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 cd $HOME_DIR/src
 
+TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/linux64/clang.manifest
+. taskcluster/scripts/misc/tooltool-download.sh
+
+export PATH=$PATH:$HOME_DIR/src/clang/bin
+
 build/unix/build-hfsplus/build-hfsplus.sh $HOME_DIR
 
 # Put a tarball in the artifacts dir

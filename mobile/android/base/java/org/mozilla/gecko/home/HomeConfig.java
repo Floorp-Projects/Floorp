@@ -1603,7 +1603,7 @@ public final class HomeConfig {
     // configuration. Because they don't consider the active configuration, it
     // is only sensible to do this for built-in panels (and not for dynamic
     // panels).
-    private static final String TOP_SITES_PANEL_ID = "4becc86b-41eb-429a-a042-88fe8b5a094e";
+    /* package-private */ static final String TOP_SITES_PANEL_ID = "4becc86b-41eb-429a-a042-88fe8b5a094e";
     private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
     private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
     private static final String COMBINED_HISTORY_PANEL_ID = "4d716ce2-e063-486d-9e7c-b190d7b04dc6";

@@ -5,14 +5,15 @@
 DevToolsModules(
     'cookies-panel.js',
     'custom-request-panel.js',
-    'details-panel.js',
     'editor.js',
     'headers-mdn.js',
     'headers-panel.js',
+    'network-details-panel.js',
     'params-panel.js',
     'preview-panel.js',
     'properties-view.js',
     'response-panel.js',
     'security-panel.js',
+    'tabbox-panel.js',
     'timings-panel.js',
 )

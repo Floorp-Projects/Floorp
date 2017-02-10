@@ -57,6 +57,22 @@ XPCOMUtils.defineLazyGetter(this, "ROOTS", () =>
   Object.keys(ROOT_SYNC_ID_TO_GUID)
 );
 
+const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
+  fetchURLFrecency: Task.async(function* (url) {
+    let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(url);
+
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(`
+      SELECT frecency
+      FROM moz_places
+      WHERE url_hash = hash(:url) AND url = :url
+      LIMIT 1`,
+      { url:canonicalURL.href }
+    );
+    return rows.length ? rows[0].getResultByName("frecency") : -1;
+  }),
+});
+
 const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   SMART_BOOKMARKS_ANNO: "Places/SmartBookmark",
   DESCRIPTION_ANNO: "bookmarkProperties/description",
