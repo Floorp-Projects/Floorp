@@ -42,10 +42,9 @@ function setupAnimation(t, animationStyle) {
   var watcher = new EventWatcher(t, div, [ 'animationstart',
                                            'animationiteration',
                                            'animationend' ]);
-  var handler = new AnimationEventHandler(div);
   var animation = div.getAnimations()[0];
 
-  return [animation, watcher, handler, div];
+  return [animation, watcher, div];
 }
 
 promise_test(function(t) {
@@ -58,7 +57,8 @@ promise_test(function(t) {
 }, 'Idle -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s');
+  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -70,7 +70,7 @@ promise_test(function(t) {
 }, 'Idle -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s paused');
 
   return animation.ready.then(function() {
@@ -83,8 +83,9 @@ promise_test(function(t) {
 }, 'Before -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(function() {
     // Seek to After phase.
@@ -97,7 +98,7 @@ promise_test(function(t) {
 }, 'Before -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to Active phase.
@@ -112,7 +113,7 @@ promise_test(function(t) {
 }, 'Active -> Before');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s paused');
+  const [animation, watcher] = setupAnimation(t, 'anim 100s paused');
 
   return watcher.wait_for('animationstart').then(function(evt) {
     // Seek to After phase.
@@ -124,8 +125,9 @@ promise_test(function(t) {
 }, 'Active -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -142,8 +144,9 @@ promise_test(function(t) {
 }, 'After -> Before');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -159,8 +162,9 @@ promise_test(function(t) {
 }, 'After -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler]
+  const [animation, watcher, div]
     = setupAnimation(t, 'anim 100s 100s 3 paused');
+  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(function() {
     // Seek to iteration 0 (no animationiteration event should be dispatched)
@@ -182,7 +186,7 @@ promise_test(function(t) {
 }, 'Active -> Active (forwards)');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s 100s 3');
+  const [animation, watcher] = setupAnimation(t, 'anim 100s 100s 3');
 
   // Seek to After phase.
   animation.finish();
@@ -205,7 +209,7 @@ promise_test(function(t) {
 }, 'Active -> Active (backwards)');
 
 promise_test(function(t) {
-  const [animation, watcher, handler, div] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s paused');
   return watcher.wait_for('animationstart').then(function(evt) {
     // Seek to Idle phase.
@@ -221,7 +225,7 @@ promise_test(function(t) {
 }, 'Active -> Idle -> Active: animationstart is fired by restarting animation');
 
 promise_test(function(t) {
-  const [animation, watcher, handler, div] =
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s 2 paused');
 
   // Make After.
