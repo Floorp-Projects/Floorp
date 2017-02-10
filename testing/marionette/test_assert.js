@@ -51,6 +51,17 @@ add_test(function test_number() {
   run_next_test();
 });
 
+add_test(function test_callable() {
+  assert.callable(function () {});
+  assert.callable(() => {});
+
+  for (let typ of [undefined, "", true, {}, []]) {
+    Assert.throws(() => assert.callable(typ), InvalidArgumentError);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_integer() {
   assert.integer(1);
   assert.integer(0);
