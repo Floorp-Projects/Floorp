@@ -44,10 +44,10 @@
 #include "MainThreadUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "ThreadResponsiveness.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/Vector.h"
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
@@ -232,25 +232,17 @@ class SpliceableJSONWriter;
 class SyncProfile;
 
 namespace mozilla {
-class ProfileGatherer;
-
 namespace dom {
 class Promise;
 }
 }
-
-typedef mozilla::Vector<std::string> ThreadNameFilterList;
-typedef mozilla::Vector<std::string> FeatureList;
-
-extern int sFrameNumber;
-extern int sLastFrameNumber;
 
 class Sampler {
 public:
   // Initialize sampler.
   Sampler(double aInterval, int aEntrySize,
           const char** aFeatures, uint32_t aFeatureCount,
-          const char** aThreadNameFilters, uint32_t aFilterCount);
+          uint32_t aFilterCount);
   ~Sampler();
 
   double interval() const { return interval_; }
@@ -277,8 +269,6 @@ public:
   bool IsPaused() const { return paused_; }
   void SetPaused(bool value) { NoBarrier_Store(&paused_, value); }
 
-  int EntrySize() { return entrySize_; }
-
   // We can't new/delete the type safely without defining it
   // (-Wdelete-incomplete).  Use these to hide the details from
   // clients.
@@ -296,18 +286,6 @@ public:
   // xxxehsan sucky hack :(
   static uintptr_t GetThreadHandle(PlatformData*);
 #endif
-
-  static bool RegisterCurrentThread(const char* aName,
-                                    PseudoStack* aPseudoStack,
-                                    bool aIsMainThread, void* stackTop);
-  static void UnregisterCurrentThread();
-
-  static void Startup();
-  // Should only be called on shutdown
-  static void Shutdown();
-
-  static mozilla::StaticMutex sRegisteredThreadsMutex;
-  static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
@@ -335,16 +313,10 @@ public:
   bool LayersDump() const { return mLayersDump; }
   bool DisplayListDump() const { return mDisplayListDump; }
   bool ProfileRestyle() const { return mProfileRestyle; }
-  const ThreadNameFilterList& ThreadNameFilters() { return mThreadNameFilters; }
-  const FeatureList& Features() { return mFeatures; }
 
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
   JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
-  void GetGatherer(nsISupports** aRetVal);
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
-  void ToJSObjectAsync(double aSinceTime = 0,
-                       mozilla::dom::Promise* aPromise = 0);
-  void ToFileAsync(const nsACString& aFileName, double aSinceTime = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSContext* aContext);
@@ -367,16 +339,6 @@ private:
   const double interval_;
   Atomic32 paused_;
   Atomic32 active_;
-  const int entrySize_;
-
-  // Refactor me!
-#if defined(SPS_OS_linux) || defined(SPS_OS_android)
-  bool signal_handler_installed_;
-  struct sigaction old_sigprof_signal_handler_;
-  struct sigaction old_sigsave_signal_handler_;
-  bool signal_sender_launched_;
-  pthread_t signal_sender_thread_;
-#endif
 
   RefPtr<ProfileBuffer> mBuffer;
   bool mAddLeafAddresses;
@@ -388,17 +350,10 @@ private:
   bool mLayersDump;
   bool mDisplayListDump;
   bool mProfileRestyle;
-
-  // Keep the thread filter to check against new thread that
-  // are started while profiling
-  ThreadNameFilterList mThreadNameFilters;
-  FeatureList mFeatures;
   bool mPrivacyMode;
   bool mAddMainThreadIO;
   bool mProfileMemory;
   bool mTaskTracer;
-
-  RefPtr<mozilla::ProfileGatherer> mGatherer;
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

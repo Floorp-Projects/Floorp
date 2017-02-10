@@ -1229,7 +1229,7 @@ BeaconStreamListener::OnDataAvailable(nsIRequest *aRequest,
 
 bool
 Navigator::SendBeacon(const nsAString& aUrl,
-                      const Nullable<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aData,
+                      const Nullable<fetch::BodyInit>& aData,
                       ErrorResult& aRv)
 {
   if (aData.IsNull()) {

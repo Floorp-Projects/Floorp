@@ -63,18 +63,12 @@
 #include <strings.h>    // index
 #include <errno.h>
 #include <stdarg.h>
+
 #include "prenv.h"
-#include "platform.h"
-#include "GeckoProfiler.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LinuxSignal.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
-#include "nsThreadUtils.h"
-#include "ThreadInfo.h"
-#include "ThreadResponsiveness.h"
 
 #if defined(__ARM_EABI__) && defined(ANDROID)
  // Should also work on other Android and ARM Linux, but not tested there yet.
@@ -93,6 +87,16 @@
 #include <list>
 
 using namespace mozilla;
+
+// All accesses to these two variables are on the main thread, so no locking is
+// needed.
+static bool gIsSigprofSignalHandlerInstalled;
+static struct sigaction gOldSigprofSignalHandler;
+
+// All accesses to these two variables are on the main thread, so no locking is
+// needed.
+static bool gHasSignalSenderLaunched;
+static pthread_t gSignalSenderThread;
 
 #if defined(USE_LUL_STACKWALK)
 // A singleton instance of the library.  It is initialised at first
@@ -296,11 +300,11 @@ static void* SignalSender(void* arg) {
     gSampler->DeleteExpiredMarkers();
 
     if (!gSampler->IsPaused()) {
-      StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+      StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
-      for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
+      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+        ThreadInfo* info = (*sRegisteredThreads)[i];
 
         // This will be null if we're not interested in profiling this thread.
         if (!info->hasProfile() || info->IsPendingDelete()) {
@@ -369,6 +373,8 @@ static void* SignalSender(void* arg) {
 }
 
 void Sampler::Start() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG("Sampler started");
 
 #if defined(USE_EHABI_STACKWALK)
@@ -394,12 +400,12 @@ void Sampler::Start() {
   sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(ProfilerSignalHandler);
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGPROF, &sa, &old_sigprof_signal_handler_) != 0) {
+  if (sigaction(SIGPROF, &sa, &gOldSigprofSignalHandler) != 0) {
     LOG("Error installing signal");
     return;
   }
   LOG("Signal installed");
-  signal_handler_installed_ = true;
+  gIsSigprofSignalHandlerInstalled = true;
 
 #if defined(USE_LUL_STACKWALK)
   // Switch into unwind mode.  After this point, we can't add or
@@ -418,28 +424,29 @@ void Sampler::Start() {
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
   SetActive(true);
-  if (pthread_create(
-        &signal_sender_thread_, NULL, SignalSender, NULL) == 0) {
-    signal_sender_launched_ = true;
+  if (pthread_create(&gSignalSenderThread, NULL, SignalSender, NULL) == 0) {
+    gHasSignalSenderLaunched = true;
   }
   LOG("Profiler thread started");
 }
 
 
 void Sampler::Stop() {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   SetActive(false);
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).
-  if (signal_sender_launched_) {
-    pthread_join(signal_sender_thread_, NULL);
-    signal_sender_launched_ = false;
+  if (gHasSignalSenderLaunched) {
+    pthread_join(gSignalSenderThread, NULL);
+    gHasSignalSenderLaunched = false;
   }
 
   // Restore old signal handler
-  if (signal_handler_installed_) {
-    sigaction(SIGPROF, &old_sigprof_signal_handler_, 0);
-    signal_handler_installed_ = false;
+  if (gIsSigprofSignalHandlerInstalled) {
+    sigaction(SIGPROF, &gOldSigprofSignalHandler, 0);
+    gIsSigprofSignalHandlerInstalled = false;
   }
 }
 

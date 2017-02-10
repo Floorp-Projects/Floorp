@@ -26,6 +26,7 @@
 
 using namespace js;
 
+using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
@@ -421,9 +422,9 @@ TraceInterpreterActivation(JSTracer* trc, InterpreterActivation* act)
 }
 
 void
-js::TraceInterpreterActivations(JSRuntime* rt, JSTracer* trc)
+js::TraceInterpreterActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 {
-    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
+    for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
         Activation* act = iter.activation();
         if (act->isInterpreter())
             TraceInterpreterActivation(trc, act->asInterpreter());
@@ -587,7 +588,7 @@ FrameIter::Data::Data(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
     state_(DONE),
     pc_(nullptr),
     interpFrames_(nullptr),
-    activations_(cx->runtime()),
+    activations_(cx),
     jitFrames_(),
     ionInlineFrameNo_(0),
     wasmFrames_()
@@ -1018,7 +1019,7 @@ FrameIter::updatePcQuadratic()
 
             // ActivationIterator::jitTop_ may be invalid, so create a new
             // activation iterator.
-            data_.activations_ = ActivationIterator(data_.cx_->runtime());
+            data_.activations_ = ActivationIterator(data_.cx_);
             while (data_.activations_.activation() != activation)
                 ++data_.activations_;
 
@@ -1710,10 +1711,29 @@ Activation::unregisterProfiling()
     cx_->profilingActivation_ = prevProfiling;
 }
 
-ActivationIterator::ActivationIterator(JSRuntime* rt)
-  : jitTop_(TlsContext.get()->jitTop),
-    activation_(TlsContext.get()->activation_)
+ActivationIterator::ActivationIterator(JSContext* cx)
+    : jitTop_(cx->jitTop)
+    , activation_(cx->activation_)
 {
+    MOZ_ASSERT(cx == TlsContext.get());
+    settle();
+}
+
+ActivationIterator::ActivationIterator(JSContext* cx, const CooperatingContext& target)
+{
+    MOZ_ASSERT(cx == TlsContext.get());
+
+    // If target was specified --- even if it is the same as cx itself --- then
+    // we must be in a scope where changes of the active context are prohibited.
+    // Otherwise our state would be corrupted if the target thread resumed
+    // execution while we are iterating over its state.
+    MOZ_ASSERT(cx->runtime()->activeContextChangeProhibited());
+
+    // Tolerate a null target context, in case we are iterating over the
+    // activations for a zone group that is not in use by any thread.
+    jitTop_ = target.context() ? target.context()->jitTop.ref() : nullptr;
+    activation_ = target.context() ? target.context()->activation_.ref() : nullptr;
+
     settle();
 }
 
@@ -1739,7 +1759,7 @@ ActivationIterator::settle()
 
 JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const RegisterState& state,
                                                    uint32_t sampleBufferGen)
-  : rt_(cx->runtime()),
+  : cx_(cx),
     sampleBufferGen_(sampleBufferGen),
     activation_(nullptr),
     savedPrevJitTop_(nullptr)
@@ -1821,7 +1841,7 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
-    new (storage_.addr()) jit::JitProfilingFrameIterator(rt_, state);
+    new (storage_.addr()) jit::JitProfilingFrameIterator(cx_, state);
 }
 
 void
@@ -1899,9 +1919,9 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
 
     // Look up an entry for the return address.
     void* returnAddr = jitIter().returnAddressToFp();
-    jit::JitcodeGlobalTable* table = rt_->jitRuntime()->getJitcodeGlobalTable();
+    jit::JitcodeGlobalTable* table = cx_->runtime()->jitRuntime()->getJitcodeGlobalTable();
     if (hasSampleBufferGen())
-        *entry = table->lookupForSamplerInfallible(returnAddr, rt_, sampleBufferGen_);
+        *entry = table->lookupForSamplerInfallible(returnAddr, cx_->runtime(), sampleBufferGen_);
     else
         *entry = table->lookupInfallible(returnAddr);
 
@@ -1941,8 +1961,9 @@ JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_
 
     // Extract the stack for the entry.  Assume maximum inlining depth is <64
     const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(rt_, jitIter().returnAddressToFp(), labels, 64);
-    MOZ_ASSERT(depth < 64);
+    uint32_t depth = entry.callStackAtAddr(cx_->runtime(), jitIter().returnAddressToFp(),
+                                           labels, ArrayLength(labels));
+    MOZ_ASSERT(depth < ArrayLength(labels));
     for (uint32_t i = 0; i < depth; i++) {
         if (offset + i >= end)
             return i;

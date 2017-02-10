@@ -446,6 +446,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   if (NS_FAILED(rv)) {
     LOG(("nsWyciwygChannel::OpenCacheEntry failed [rv=%x]\n", rv));
     mIsPending = false;
+    mCallbacks = nullptr;
     return rv;
   }
 
@@ -466,7 +467,11 @@ nsWyciwygChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mIsPending = false;
+    mCallbacks = nullptr;
+    return rv;
+  }
   return AsyncOpen(listener, nullptr);
 }
 

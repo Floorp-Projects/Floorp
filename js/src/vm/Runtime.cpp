@@ -95,7 +95,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
     updateChildRuntimeCount(parentRuntime),
 #endif
-    activeContext(nullptr),
+    activeContext_(nullptr),
+    activeContextChangeProhibited_(0),
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
     telemetryCallback(nullptr),
@@ -137,6 +138,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     defaultVersion_(JSVERSION_DEFAULT),
+    profilingScripts(false),
+    scriptAndCountsVector(nullptr),
     lcovOutput_(),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
@@ -192,7 +195,9 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (CanUseExtraThreads() && !EnsureHelperThreadsInitialized())
         return false;
 
-    activeContext = cx;
+    activeContext_ = cx;
+    if (!cooperatingContexts().append(cx))
+        return false;
 
     singletonContext = cx;
 
@@ -208,7 +213,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
 
-    if (!zoneGroup->init(maxNurseryBytes))
+    if (!zoneGroup->init(maxNurseryBytes) || !gc.groups.ref().append(zoneGroup))
         return false;
     zoneGroup.forget();
 
@@ -248,9 +253,6 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsUnalignedAccesses = js::jit::JitSupportsUnalignedAccesses();
     jitSupportsSimd = js::jit::JitSupportsSimd();
-
-    if (!wasm::EnsureSignalHandlers(this))
-        return false;
 
     if (!geckoProfiler().init())
         return false;
@@ -303,7 +305,7 @@ JSRuntime::destroyRuntime()
         beingDestroyed_ = true;
 
         /* Allow the GC to release scripts that were being profiled. */
-        zoneGroupFromMainThread()->profilingScripts = false;
+        profilingScripts = false;
 
         /* Set the profiler sampler buffer generation to invalid. */
         profilerSampleBufferGen_ = UINT32_MAX;
@@ -342,6 +344,15 @@ JSRuntime::destroyRuntime()
     MOZ_ASSERT(oldCount > 0);
 
     js_delete(zoneGroupFromMainThread());
+}
+
+void
+JSRuntime::setActiveContext(JSContext* cx)
+{
+    MOZ_ASSERT_IF(cx, isCooperatingContext(cx));
+    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+
+    activeContext_ = cx;
 }
 
 void
@@ -499,7 +510,7 @@ JSContext::requestInterrupt(InterruptMode mode)
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
-        InterruptRunningJitCode(runtime());
+        InterruptRunningJitCode(this);
     }
 }
 

@@ -8,6 +8,7 @@
 #include "CompositionTransaction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/Move.h"
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 
@@ -15,13 +16,18 @@ namespace mozilla {
 
 using namespace dom;
 
-PlaceholderTransaction::PlaceholderTransaction()
+PlaceholderTransaction::PlaceholderTransaction(
+                          EditorBase& aEditorBase,
+                          nsIAtom* aName,
+                          UniquePtr<SelectionState> aSelState)
   : mAbsorb(true)
   , mForwarding(nullptr)
   , mCompositionTransaction(nullptr)
   , mCommitted(false)
-  , mEditorBase(nullptr)
+  , mStartSel(Move(aSelState))
+  , mEditorBase(aEditorBase)
 {
+  mName = aName;
 }
 
 PlaceholderTransaction::~PlaceholderTransaction()
@@ -55,19 +61,6 @@ NS_IMPL_ADDREF_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 
 NS_IMETHODIMP
-PlaceholderTransaction::Init(nsIAtom* aName,
-                             SelectionState* aSelState,
-                             EditorBase* aEditorBase)
-{
-  NS_ENSURE_TRUE(aEditorBase && aSelState, NS_ERROR_NULL_POINTER);
-
-  mName = aName;
-  mStartSel = aSelState;
-  mEditorBase = aEditorBase;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PlaceholderTransaction::DoTransaction()
 {
   return NS_OK;
@@ -83,7 +76,7 @@ PlaceholderTransaction::UndoTransaction()
   NS_ENSURE_TRUE(mStartSel, NS_ERROR_NULL_POINTER);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = mEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mStartSel->RestoreSelection(selection);
 }
@@ -96,7 +89,7 @@ PlaceholderTransaction::RedoTransaction()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now restore selection
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = mEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mEndSel.RestoreSelection(selection);
 }
@@ -261,7 +254,7 @@ PlaceholderTransaction::Commit()
 nsresult
 PlaceholderTransaction::RememberEndingSelection()
 {
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = mEditorBase.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   mEndSel.SaveSelection(selection);
   return NS_OK;

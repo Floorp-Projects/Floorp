@@ -370,7 +370,7 @@ wasm::AddressOf(SymbolicAddress imm, JSContext* cx)
 {
     switch (imm) {
       case SymbolicAddress::ContextPtr:
-        return &cx->zone()->group()->context;
+        return cx->zone()->group()->addressOfOwnerContext();
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
