@@ -58,6 +58,7 @@ extern uint8_t gLayerManagerLayerBuilder;
 
 namespace mozilla {
 
+class ComputedTimingFunction;
 class FrameLayerBuilder;
 class StyleAnimationValue;
 
@@ -83,6 +84,7 @@ class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
 class ColorLayer;
+class CompositorBridgeChild;
 class TextLayer;
 class CanvasLayer;
 class BorderLayer;
@@ -90,14 +92,17 @@ class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
 class HostLayer;
+class KnowsCompositor;
 class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
 class SpecificLayerAttributes;
+class TransactionIdAllocator;
 class Compositor;
 class FrameUniformityData;
 class PersistentBufferProvider;
 class GlyphArray;
+class WebRenderLayerManager;
 struct AnimData;
 
 namespace layerscope {
@@ -110,6 +115,11 @@ class LayersPacket;
 
 // Defined in LayerUserData.h; please include that file instead.
 class LayerUserData;
+
+class DidCompositeObserver {
+  public:
+    virtual void DidComposite() = 0;
+};
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -193,6 +203,9 @@ public:
   virtual ShadowLayerForwarder* AsShadowForwarder()
   { return nullptr; }
 
+  virtual KnowsCompositor* AsKnowsCompositor()
+  { return nullptr; }
+
   virtual LayerManagerComposite* AsLayerManagerComposite()
   { return nullptr; }
 
@@ -200,6 +213,9 @@ public:
   { return nullptr; }
 
   virtual BasicLayerManager* AsBasicLayerManager()
+  { return nullptr; }
+
+  virtual WebRenderLayerManager* AsWebRenderLayerManager()
   { return nullptr; }
 
   /**
@@ -665,6 +681,27 @@ public:
     mPaintedPixelCount = 0;
     return count;
   }
+
+  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) {}
+
+  virtual void DidComposite(uint64_t aTransactionId,
+                            const mozilla::TimeStamp& aCompositeStart,
+                            const mozilla::TimeStamp& aCompositeEnd) {}
+
+  virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) { MOZ_CRASH("GFX: LayerManager"); }
+  virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) { MOZ_CRASH("GFX: LayerManager"); }
+
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
+											  uint64_t aDeviceResetSeqNo) {}
+
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier()
+  {
+    return TextureFactoryIdentifier();
+  }
+
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) {}
+
+  virtual CompositorBridgeChild* GetCompositorBridgeChild() { return nullptr; }
 
 protected:
   RefPtr<Layer> mRoot;
@@ -1742,6 +1779,8 @@ public:
   AsyncPanZoomController* GetAsyncPanZoomController(uint32_t aIndex) const;
   // The ScrollMetadataChanged function is used internally to ensure the APZC array length
   // matches the frame metrics array length.
+
+  virtual void ClearCachedResources() {}
 private:
   void ScrollMetadataChanged();
 public:

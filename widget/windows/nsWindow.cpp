@@ -3924,7 +3924,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
       reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
       mTransparencyMode);
     // If we're not using the compositor, the options don't actually matter.
-    CompositorOptions options(false);
+    CompositorOptions options(false, false);
     mBasicLayersSurface = new InProcessWinCompositorWidget(initData, options, this);
     mCompositorWidgetDelegate = mBasicLayersSurface;
     mLayerManager = CreateBasicLayerManager();

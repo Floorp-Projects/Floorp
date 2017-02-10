@@ -1,4 +1,7 @@
 == min-intrinsic-with-percents-across-img-cases.html min-intrinsic-with-percents-across-img-cases-ref.html
 == min-intrinsic-with-percents-across-elements.html min-intrinsic-with-percents-across-elements-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,true) == min-intrinsic-with-percents-across-elements.html min-intrinsic-with-percents-across-elements-ref.html
 == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,true) == min-intrinsic-with-max-width-percents-across-form-controls.html min-intrinsic-with-max-width-percents-across-form-controls-ref.html
 == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html
+skip-if(!webrender) pref(layers.advanced.border-layers,true) == min-intrinsic-with-width-percents-across-form-controls.html min-intrinsic-with-width-percents-across-form-controls-ref.html

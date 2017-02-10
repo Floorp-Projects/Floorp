@@ -135,6 +135,7 @@ class CompositorD3D11;
 class BasicCompositor;
 class TextureHost;
 class TextureReadLock;
+class WebRenderCompositorOGL;
 
 enum SurfaceInitMode
 {
@@ -473,6 +474,7 @@ public:
   virtual CompositorD3D9* AsCompositorD3D9() { return nullptr; }
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
   virtual BasicCompositor* AsBasicCompositor() { return nullptr; }
+  virtual WebRenderCompositorOGL* AsWebRenderCompositorOGL() { return nullptr; }
 
   /**
    * Each Compositor has a unique ID.
@@ -553,7 +555,7 @@ public:
     }
   }
 
-  void CompositeUntil(TimeStamp aTimeStamp) {
+  virtual void CompositeUntil(TimeStamp aTimeStamp) {
     if (mCompositeUntilTime.IsNull() ||
         mCompositeUntilTime < aTimeStamp) {
       mCompositeUntilTime = aTimeStamp;
@@ -566,7 +568,7 @@ public:
   // A stale Compositor has no CompositorBridgeParent; it will not process
   // frames and should not be used.
   void SetInvalid();
-  bool IsValid() const;
+  virtual bool IsValid() const;
   CompositorBridgeParent* GetCompositorBridgeParent() const {
     return mParent;
   }

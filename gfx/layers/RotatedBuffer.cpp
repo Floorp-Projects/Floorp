@@ -427,8 +427,10 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
+  // Also disable buffer rotation when using webrender.
   bool canHaveRotation = gfxPlatform::BufferRotationEnabled() &&
-                         !(aFlags & (PAINT_WILL_RESAMPLE | PAINT_NO_ROTATION));
+                         !(aFlags & (PAINT_WILL_RESAMPLE | PAINT_NO_ROTATION)) &&
+                         !(aLayer->Manager()->AsWebRenderLayerManager());
 
   nsIntRegion validRegion = aLayer->GetValidRegion();
 

@@ -31,20 +31,25 @@ public:
   // This constructor needed for IPDL purposes, don't use it anywhere else.
   CompositorOptions()
     : mUseAPZ(false)
+    , mUseWebRender(false)
   {
   }
 
-  explicit CompositorOptions(bool aUseAPZ)
+  explicit CompositorOptions(bool aUseAPZ,
+                             bool aUseWebRender)
     : mUseAPZ(aUseAPZ)
+    , mUseWebRender(aUseWebRender)
   {
   }
 
   bool UseAPZ() const { return mUseAPZ; }
+  bool UseWebRender() const { return mUseWebRender; }
 
   friend struct IPC::ParamTraits<CompositorOptions>;
 
 private:
   bool mUseAPZ;
+  bool mUseWebRender;
 
   // Make sure to add new fields to the ParamTraits implementation
 };

@@ -40,15 +40,15 @@ fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mod
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
 fuzzy(64,53) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
-fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
-fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
+fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) fails-if(webrender) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) fails-if(webrender) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
 fuzzy(2,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
-== clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
+fails-if(webrender) == clipped-mixblendmode-containing-unclipped-stuff.html clipped-mixblendmode-containing-unclipped-stuff-ref.html
 fuzzy(1,6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-opacity-containing-unclipped-mixblendmode-ref.html
 
 # Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode
@@ -85,16 +85,16 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 
 # Test plan 5.3.11 background-blend-mode for an element with background-attachement
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed.html background-blending-background-attachement-fixed-ref.html
-pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
+pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
 fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) fuzzy-if(skiaContent,1,800) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element-ref.html
 
-fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
+fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
 
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html
 
-pref(layout.css.background-blend-mode.enabled,true) == bug1281593.html bug1281593-ref.html
+pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == bug1281593.html bug1281593-ref.html

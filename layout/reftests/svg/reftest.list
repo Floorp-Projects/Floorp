@@ -414,7 +414,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-darken.svg blend-darken-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
 skip-if(Android) fuzzy-if(skiaContent,1,1600) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light-ref.svg
@@ -423,7 +423,7 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-ble
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
@@ -432,7 +432,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-re
 #skip-if(Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls

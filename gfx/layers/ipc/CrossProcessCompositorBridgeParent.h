@@ -151,6 +151,12 @@ public:
 
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) override;
 
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
+                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier) override;
+  bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
+
+  void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) override;
+
 protected:
   void OnChannelConnected(int32_t pid) override {
     mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
