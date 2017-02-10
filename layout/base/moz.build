@@ -50,6 +50,7 @@ EXPORTS += [
     'nsILayoutHistoryState.h',
     'nsIPercentBSizeObserver.h',
     'nsIPresShell.h',
+    'nsIPresShellInlines.h',
     'nsIReflowCallback.h',
     'nsLayoutUtils.h',
     'nsPresArena.h',
