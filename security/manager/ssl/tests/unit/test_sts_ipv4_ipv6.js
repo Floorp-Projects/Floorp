@@ -2,6 +2,7 @@
 
 function check_ip(s, v, ip) {
   let sslStatus = new FakeSSLStatus();
+  ok(!s.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, ip, 0));
 
   let str = "https://";
   if (v == 6) {
@@ -14,15 +15,12 @@ function check_ip(s, v, ip) {
   str += "/";
 
   let uri = Services.io.newURI(str);
-  ok(!s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
 
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
   s.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                   "max-age=1000;includeSubdomains", sslStatus, 0,
                   parsedMaxAge, parsedIncludeSubdomains);
-  ok(!s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
-     "URI should not be secure if it contains an IP address");
 
   /* Test that processHeader will ignore headers for an uri, if the uri
    * contains an IP address not a hostname.
