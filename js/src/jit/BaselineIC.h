@@ -457,67 +457,6 @@ class ICSetElem_Fallback : public ICFallbackStub
     };
 };
 
-class ICSetElem_DenseOrUnboxedArray : public ICUpdatedStub
-{
-    friend class ICStubSpace;
-
-    GCPtrShape shape_; // null for unboxed arrays
-    GCPtrObjectGroup group_;
-
-    ICSetElem_DenseOrUnboxedArray(JitCode* stubCode, Shape* shape, ObjectGroup* group);
-
-  public:
-    static size_t offsetOfShape() {
-        return offsetof(ICSetElem_DenseOrUnboxedArray, shape_);
-    }
-    static size_t offsetOfGroup() {
-        return offsetof(ICSetElem_DenseOrUnboxedArray, group_);
-    }
-
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    GCPtrObjectGroup& group() {
-        return group_;
-    }
-
-    class Compiler : public ICStubCompiler {
-        RootedShape shape_;
-        RootedObjectGroup group_;
-        JSValueType unboxedType_;
-
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(unboxedType_) << 17);
-        }
-
-        Compiler(JSContext* cx, Shape* shape, HandleObjectGroup group)
-          : ICStubCompiler(cx, ICStub::SetElem_DenseOrUnboxedArray, Engine::Baseline),
-            shape_(cx, shape),
-            group_(cx, group),
-            unboxedType_(shape
-                         ? JSVAL_TYPE_MAGIC
-                         : group->unboxedLayoutDontCheckGeneration().elementType())
-        {}
-
-        ICUpdatedStub* getStub(ICStubSpace* space) {
-            ICSetElem_DenseOrUnboxedArray* stub =
-                newStub<ICSetElem_DenseOrUnboxedArray>(space, getStubCode(), shape_, group_);
-            if (!stub || !stub->initUpdatingChain(cx, space))
-                return nullptr;
-            return stub;
-        }
-
-        bool needsUpdateStubs() {
-            return unboxedType_ == JSVAL_TYPE_MAGIC || unboxedType_ == JSVAL_TYPE_OBJECT;
-        }
-    };
-};
-
 template <size_t ProtoChainDepth> class ICSetElem_DenseOrUnboxedArrayAddImpl;
 
 class ICSetElem_DenseOrUnboxedArrayAdd : public ICUpdatedStub
