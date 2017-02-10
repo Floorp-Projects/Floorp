@@ -525,55 +525,15 @@ layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
   }
 }
 
-// DUAL_MONO(_LFE) is same as STEREO(_LFE).
-#define MASK_MONO         (1 << CHANNEL_MONO)
-#define MASK_MONO_LFE     (MASK_MONO | (1 << CHANNEL_LFE))
-#define MASK_STEREO       ((1 << CHANNEL_LEFT) | (1 << CHANNEL_RIGHT))
-#define MASK_STEREO_LFE   (MASK_STEREO | (1 << CHANNEL_LFE))
-#define MASK_3F           (MASK_STEREO | (1 << CHANNEL_CENTER))
-#define MASK_3F_LFE       (MASK_3F | (1 << CHANNEL_LFE))
-#define MASK_2F1          (MASK_STEREO | (1 << CHANNEL_RCENTER))
-#define MASK_2F1_LFE      (MASK_2F1 | (1 << CHANNEL_LFE))
-#define MASK_3F1          (MASK_3F | (1 << CHANNEL_RCENTER))
-#define MASK_3F1_LFE      (MASK_3F1 | (1 << CHANNEL_LFE))
-#define MASK_2F2          (MASK_STEREO | (1 << CHANNEL_LS) | (1 << CHANNEL_RS))
-#define MASK_2F2_LFE      (MASK_2F2 | (1 << CHANNEL_LFE))
-#define MASK_3F2          (MASK_2F2 | (1 << CHANNEL_CENTER))
-#define MASK_3F2_LFE      (MASK_3F2 | (1 << CHANNEL_LFE))
-#define MASK_3F3R_LFE     (MASK_3F2_LFE | (1 << CHANNEL_RCENTER))
-#define MASK_3F4_LFE      (MASK_3F2_LFE | (1 << CHANNEL_RLS) | (1 << CHANNEL_RRS))
-
 static cubeb_channel_layout
 channel_map_to_layout(pa_channel_map * cm)
 {
-  uint32_t channel_mask = 0;
-  for (uint8_t i = 0 ; i < cm->channels ; ++i) {
-    cubeb_channel channel = pa_channel_to_cubeb_channel(cm->map[i]);
-    if (channel == CHANNEL_INVALID) {
-      return CUBEB_LAYOUT_UNDEFINED;
-    }
-    channel_mask |= 1 << channel;
+  cubeb_channel_map cubeb_map;
+  cubeb_map.channels = cm->channels;
+  for (uint32_t i = 0 ; i < cm->channels ; ++i) {
+    cubeb_map.map[i] = pa_channel_to_cubeb_channel(cm->map[i]);
   }
-
-  switch(channel_mask) {
-    case MASK_MONO: return CUBEB_LAYOUT_MONO;
-    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
-    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
-    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
-    case MASK_3F: return CUBEB_LAYOUT_3F;
-    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
-    case MASK_2F1: return CUBEB_LAYOUT_2F1;
-    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
-    case MASK_3F1: return CUBEB_LAYOUT_3F1;
-    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
-    case MASK_2F2: return CUBEB_LAYOUT_2F2;
-    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
-    case MASK_3F2: return CUBEB_LAYOUT_3F2;
-    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
-    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
-    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
-    default: return CUBEB_LAYOUT_UNDEFINED;
-  }
+  return cubeb_channel_map_to_layout(&cubeb_map);
 }
 
 static void pulse_context_destroy(cubeb * ctx);
