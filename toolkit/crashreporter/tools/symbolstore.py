@@ -577,7 +577,7 @@ class Dumper:
         if os.path.isdir(file_or_dir) and not self.ShouldSkipDir(file_or_dir):
             for f in self.get_files_to_process_in_dir(file_or_dir):
                 yield f
-        elif os.path.isfile(file_or_dir):
+        elif os.path.isfile(file_or_dir) and self.ShouldProcess(os.path.abspath(file_or_dir)):
             yield file_or_dir
 
     def get_files_to_process_in_dir(self, path):
