@@ -230,7 +230,53 @@ enum nsSpread {
  *
  * @see #Reflow()
  */
-typedef uint32_t nsReflowStatus;
+
+class nsReflowStatus final {
+public:
+  nsReflowStatus()
+    : mStatus(0)
+  {}
+
+  nsReflowStatus(uint32_t aStatus)
+    : mStatus(aStatus)
+  {}
+
+  uint32_t& operator=(uint32_t aRhs) {
+    mStatus = aRhs;
+    return mStatus;
+  }
+
+  uint32_t operator&(uint32_t aRhs) const {
+    return mStatus & aRhs;
+  }
+
+  uint32_t operator&=(uint32_t aRhs) {
+    return mStatus = mStatus & aRhs;
+  }
+
+  uint32_t operator|(uint32_t aRhs) const {
+    return mStatus | aRhs;
+  }
+
+  uint32_t operator|=(uint32_t aRhs) {
+    return mStatus = mStatus | aRhs;
+  }
+
+  uint32_t operator>>(uint32_t aRhs) const {
+    return mStatus >> aRhs;
+  }
+
+  bool operator==(uint32_t aRhs) const {
+    return mStatus == aRhs;
+  }
+
+  bool operator!=(uint32_t aRhs) const {
+    return !(*this == aRhs);
+  }
+
+private:
+  uint32_t mStatus;
+};
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
 #define NS_FRAME_NOT_COMPLETE         0x1
