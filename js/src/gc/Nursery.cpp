@@ -515,6 +515,15 @@ js::Nursery::printTotalProfileTimes()
     }
 }
 
+void
+js::Nursery::maybeClearProfileDurations()
+{
+    if (enableProfiling_) {
+        for (auto& duration : profileDurations_)
+            duration = mozilla::TimeDuration();
+    }
+}
+
 inline void
 js::Nursery::startProfile(ProfileKey key)
 {
@@ -573,6 +582,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     rt->gc.stats().beginNurseryCollection(reason);
     TraceMinorGCStart();
 
+    maybeClearProfileDurations();
     startProfile(ProfileKey::Total);
 
     // The hazard analysis thinks doCollection can invalidate pointers in
@@ -642,7 +652,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         if (reportTenurings_) {
             for (auto& entry : tenureCounts.entries) {
                 if (entry.count >= reportTenurings_) {
-                    fprintf(stderr, "%d x ", entry.count);
+                    fprintf(stderr, "  %d x ", entry.count);
                     entry.group->print();
                 }
             }
