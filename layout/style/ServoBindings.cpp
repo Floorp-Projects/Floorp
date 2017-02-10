@@ -749,32 +749,35 @@ Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src)
 NS_IMPL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_IMPL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
 
-void
-Gecko_SetMozBinding(nsStyleDisplay* aDisplay,
-                    const uint8_t* aURLString, uint32_t aURLStringLength,
-                    ThreadSafeURIHolder* aBaseURI,
-                    ThreadSafeURIHolder* aReferrer,
-                    ThreadSafePrincipalHolder* aPrincipal)
+already_AddRefed<css::URLValue>
+ServoBundledURI::IntoCssUrl()
 {
-  if (!aURLString) {
-    aDisplay->mBinding = nullptr;
-    return;
+  if (!mURLString) {
+    return nullptr;
   }
 
-  MOZ_ASSERT(aDisplay);
-  MOZ_ASSERT(aBaseURI);
-  MOZ_ASSERT(aReferrer);
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(mBaseURI);
+  MOZ_ASSERT(mReferrer);
+  MOZ_ASSERT(mPrincipal);
 
   nsString url;
-  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURLString),
-                                  aURLStringLength);
+  nsDependentCSubstring urlString(reinterpret_cast<const char*>(mURLString),
+                                  mURLStringLength);
   AppendUTF8toUTF16(urlString, url);
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
-  aDisplay->mBinding =
-    new css::URLValue(urlBuffer, do_AddRef(aBaseURI),
-                      do_AddRef(aReferrer), do_AddRef(aPrincipal));
+  RefPtr<css::URLValue> urlValue = new css::URLValue(urlBuffer,
+                                                     do_AddRef(mBaseURI),
+                                                     do_AddRef(mReferrer),
+                                                     do_AddRef(mPrincipal));
+  return urlValue.forget();
+}
+
+void
+Gecko_SetMozBinding(nsStyleDisplay* aDisplay, ServoBundledURI aBundledURI)
+{
+    MOZ_ASSERT(aDisplay);
+    aDisplay->mBinding = aBundledURI.IntoCssUrl();
 }
 
 void
@@ -912,15 +915,12 @@ Gecko_SetListStyleImageNone(nsStyleList* aList)
 
 void
 Gecko_SetListStyleImage(nsStyleList* aList,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
+                        ServoBundledURI aURI)
 {
   aList->mListStyleImage =
     CreateStyleImageRequest(nsStyleImageRequest::Mode(0),
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+                            aURI.mURLString, aURI.mURLStringLength,
+                            aURI.mBaseURI, aURI.mReferrer, aURI.mPrincipal);
 }
 
 void
