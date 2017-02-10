@@ -160,7 +160,7 @@ parent:
 
   async ReturnSitesWithData(nsCString[] aSites, uint64_t aCallbackId);
 
-  sync GetKeyState(int32_t aVirtKey)
+  intr GetKeyState(int32_t aVirtKey)
     returns (int16_t aState);
 
   intr NPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(bool shouldRegister)

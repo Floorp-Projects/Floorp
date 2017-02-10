@@ -23,7 +23,7 @@ public:
   ~IPDLUnitTestProcessChild()
   { }
 
-  virtual bool Init();
+  virtual bool Init(int aArgc, char* aArgv[]) override;
 };
 
 } // namespace _ipdltest
