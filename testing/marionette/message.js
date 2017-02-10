@@ -254,15 +254,12 @@ this.Response = class {
    *     propagated.
    */
   sendError(err) {
-    let wd = error.isWebDriverError(err);
-    let we = wd ? err : new WebDriverError(err.message);
-
-    this.error = error.toJson(we);
+    this.error = error.wrap(err).toJSON();
     this.body = null;
     this.send();
 
-    // propagate errors that are implementation problems
-    if (!wd) {
+    // propagate errors which are implementation problems
+    if (!error.isWebDriverError(err)) {
       throw err;
     }
   }
