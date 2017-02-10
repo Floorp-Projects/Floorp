@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env browser */
+
 "use strict";
 
 const {
@@ -12,6 +14,8 @@ const {
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT
 } = require("./index");
+
+const { post } = require("../utils/message");
 
 module.exports = {
 
@@ -51,6 +55,7 @@ module.exports = {
    * Remove the viewport's device assocation.
    */
   removeDeviceAssociation(id) {
+    post(window, "remove-device-association");
     return {
       type: REMOVE_DEVICE_ASSOCIATION,
       id,
