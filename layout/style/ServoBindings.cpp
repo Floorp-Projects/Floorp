@@ -1047,6 +1047,13 @@ Gecko_DestroyClipPath(mozilla::StyleClipPath* aClip)
   aClip->~StyleClipPath();
 }
 
+void
+Gecko_StyleClipPath_SetURLValue(mozilla::StyleClipPath* aClip, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aClip->SetURL(url.get());
+}
+
 mozilla::StyleBasicShape*
 Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
 {
