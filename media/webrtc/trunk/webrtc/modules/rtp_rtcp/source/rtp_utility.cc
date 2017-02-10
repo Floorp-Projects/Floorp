@@ -336,9 +336,7 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     RTPExtensionType type;
     if (ptrExtensionMap->GetType(id, &type) != 0) {
       // If we encounter an unknown extension, just skip over it.
-      // Mozilla - we reuse the parse for demux, without registering extensions.
-      // Reduce log-spam by switching to VERBOSE
-      LOG(LS_VERBOSE) << "Failed to find extension id: " << id;
+      LOG(LS_INFO) << "Failed to find extension id: " << id;
     } else {
       switch (type) {
         case kRtpExtensionTransmissionTimeOffset: {
