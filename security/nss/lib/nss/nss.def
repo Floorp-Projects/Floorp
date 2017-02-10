@@ -1097,9 +1097,3 @@ PK11_VerifyWithMechanism;
 ;+    local:
 ;+       *;
 ;+};
-;+NSS_3.30 { 	# NSS 3.30 release
-;+    global:
-PK11_HasAttributeSet;
-;+    local:
-;+       *;
-;+};

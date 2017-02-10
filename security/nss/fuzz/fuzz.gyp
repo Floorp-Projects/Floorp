@@ -52,40 +52,18 @@
               ['exclude', '-fsanitize-coverage'],
             ],
           },
+          'direct_dependent_settings': {
+            'include_dirs': [
+              'libFuzzer',
+            ],
+          },
         }, {
           'type': 'none',
-          'all_dependent_settings': {
+          'direct_dependent_settings': {
             'libraries': ['-lFuzzingEngine'],
           }
         }]
       ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-base',
-      'type': 'none',
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'fuzz_base',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '<(DEPTH)/lib/freebl/mpi',
-        ],
-        'sources': [
-          'mpi_helper.cc',
-        ],
-        'conditions': [
-          [ 'fuzz_oss==1', {
-            'libraries': [
-              '/usr/lib/x86_64-linux-gnu/libcrypto.a',
-            ],
-          }, {
-            'libraries': [
-              '-lcrypto',
-            ],
-          }],
-        ],
-      },
     },
     {
       'target_name': 'nssfuzz-pkcs8',
@@ -123,6 +101,31 @@
       ],
     },
     {
+      'target_name': 'nssfuzz-mpi',
+      'type': 'executable',
+      'sources': [
+        'mpi_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+      'conditions': [
+        [ 'fuzz_oss==1', {
+          'libraries': [
+            '/usr/lib/x86_64-linux-gnu/libcrypto.a',
+          ],
+        }, {
+          'libraries': [
+            '-lcrypto',
+          ],
+        }],
+      ],
+      'include_dirs': [
+        '<(DEPTH)/lib/freebl/mpi',
+      ],
+    },
+    {
       'target_name': 'nssfuzz-certDN',
       'type': 'executable',
       'sources': [
@@ -131,116 +134,6 @@
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
         'fuzz_base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-add',
-      'type': 'executable',
-      'sources': [
-        'mpi_add_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-sub',
-      'type': 'executable',
-      'sources': [
-        'mpi_sub_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-sqr',
-      'type': 'executable',
-      'sources': [
-        'mpi_sqr_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-div',
-      'type': 'executable',
-      'sources': [
-        'mpi_div_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-mod',
-      'type': 'executable',
-      'sources': [
-        'mpi_mod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-sqrmod',
-      'type': 'executable',
-      'sources': [
-        'mpi_sqrmod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-addmod',
-      'type': 'executable',
-      'sources': [
-        'mpi_addmod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-submod',
-      'type': 'executable',
-      'sources': [
-        'mpi_submod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-mulmod',
-      'type': 'executable',
-      'sources': [
-        'mpi_mulmod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
-      ],
-    },
-    {
-      'target_name': 'nssfuzz-mpi-expmod',
-      'type': 'executable',
-      'sources': [
-        'mpi_expmod_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'nssfuzz-mpi-base',
       ],
     },
     {
@@ -255,16 +148,7 @@
       'conditions': [
         ['OS=="linux"', {
           'dependencies': [
-            'nssfuzz-mpi-add',
-            'nssfuzz-mpi-addmod',
-            'nssfuzz-mpi-div',
-            'nssfuzz-mpi-expmod',
-            'nssfuzz-mpi-mod',
-            'nssfuzz-mpi-mulmod',
-            'nssfuzz-mpi-sqr',
-            'nssfuzz-mpi-sqrmod',
-            'nssfuzz-mpi-sub',
-            'nssfuzz-mpi-submod',
+            'nssfuzz-mpi',
           ],
         }],
       ],
