@@ -128,6 +128,7 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
       __func__);
   }
 
+  mDrained = false;
   mLastStreamOffset = aSample->mOffset;
 
   RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
@@ -193,7 +194,7 @@ WMFMediaDataDecoder::Flush()
 RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::ProcessDrain()
 {
-  if (!mMFTManager) {
+  if (!mMFTManager || mDrained) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
   // Order the decoder to drain...
@@ -201,6 +202,7 @@ WMFMediaDataDecoder::ProcessDrain()
   // Then extract all available output.
   RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
   ProcessOutput();
+  mDrained = true;
   return p;
 }
 
