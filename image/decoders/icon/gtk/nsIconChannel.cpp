@@ -179,13 +179,12 @@ GetIconSize(nsIMozIconURI* aIconURI)
     mozilla::DebugOnly<nsresult> rv = aIconURI->GetImageSize(&size);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetImageSize failed");
     return size;
-  } else {
-    int size;
-
-    GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
-    gtk_icon_size_lookup(icon_size, &size, nullptr);
-    return size;
   }
+  int size;
+
+  GtkIconSize icon_size = moz_gtk_icon_size(iconSizeString.get());
+  gtk_icon_size_lookup(icon_size, &size, nullptr);
+  return size;
 }
 
 /* Scale icon buffer to preferred size */
