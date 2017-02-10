@@ -1352,22 +1352,9 @@ public:
 
     ////
 
-protected:
-    void VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuint index,
-                                GLint size, GLenum type, bool normalized, GLsizei stride,
-                                WebGLintptr byteOffset);
-
-public:
     void VertexAttribPointer(GLuint index, GLint size, GLenum type,
                              WebGLboolean normalized, GLsizei stride,
-                             WebGLintptr byteOffset)
-    {
-        const char funcName[] = "vertexAttribPointer";
-        const bool isFuncInt = false;
-        VertexAttribAnyPointer(funcName, isFuncInt, index, size, type, normalized, stride,
-                               byteOffset);
-    }
-
+                             WebGLintptr byteOffset);
     void VertexAttribDivisor(GLuint index, GLuint divisor);
 
 private:
@@ -1803,6 +1790,7 @@ private:
     // Context customization points
     virtual WebGLVertexArray* CreateVertexArrayImpl();
 
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, uint32_t* alignment, const char* info) = 0;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) = 0;
 
 public:

@@ -287,147 +287,38 @@ WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
     return mBoundVertexArray->mAttribs[index].ByteOffset();
 }
 
-////////////////////////////////////////
-
 void
-WebGLContext::VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuint index,
-                                     GLint size, GLenum type, bool normalized,
-                                     GLsizei stride, WebGLintptr byteOffset)
+WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
+                                  WebGLboolean normalized, GLsizei stride,
+                                  WebGLintptr byteOffset)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateAttribIndex(index, funcName))
+    if (!ValidateAttribIndex(index, "vertexAttribPointer"))
         return;
 
-    ////
-
-    if (size < 1 || size > 4) {
-        ErrorInvalidValue("%s: invalid element size", funcName);
+    if (!ValidateAttribPointer(false, index, size, type, normalized, stride, byteOffset, "vertexAttribPointer"))
         return;
-    }
 
-    // see WebGL spec section 6.6 "Vertex Attribute Data Stride"
-    if (stride < 0 || stride > 255) {
-        ErrorInvalidValue("%s: negative or too large stride", funcName);
-        return;
-    }
-
-    if (byteOffset < 0) {
-        ErrorInvalidValue("%s: negative offset", funcName);
-        return;
-    }
-
-    ////
-
-    bool isTypeValid = true;
-    uint8_t typeAlignment;
-    switch (type) {
-    // WebGL 1:
-    case LOCAL_GL_BYTE:
-    case LOCAL_GL_UNSIGNED_BYTE:
-        typeAlignment = 1;
-        break;
-
-    case LOCAL_GL_SHORT:
-    case LOCAL_GL_UNSIGNED_SHORT:
-        typeAlignment = 2;
-        break;
-
-    case LOCAL_GL_FLOAT:
-        if (isFuncInt) {
-            isTypeValid = false;
-        }
-        typeAlignment = 4;
-        break;
-
-    // WebGL 2:
-    case LOCAL_GL_INT:
-    case LOCAL_GL_UNSIGNED_INT:
-        if (!IsWebGL2()) {
-            isTypeValid = false;
-        }
-        typeAlignment = 4;
-        break;
-
-    case LOCAL_GL_HALF_FLOAT:
-        if (isFuncInt || !IsWebGL2()) {
-            isTypeValid = false;
-        }
-        typeAlignment = 2;
-        break;
-
-    case LOCAL_GL_FIXED:
-        if (isFuncInt || !IsWebGL2()) {
-            isTypeValid = false;
-        }
-        typeAlignment = 4;
-        break;
-
-    case LOCAL_GL_INT_2_10_10_10_REV:
-    case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
-        if (isFuncInt || !IsWebGL2()) {
-            isTypeValid = false;
-            break;
-        }
-        if (size != 4) {
-            ErrorInvalidOperation("%s: size must be 4 for this type.", funcName);
-            return;
-        }
-        typeAlignment = 4;
-        break;
-
-    default:
-        isTypeValid = false;
-        break;
-    }
-    if (!isTypeValid) {
-        ErrorInvalidEnumArg(funcName, "type", type);
-        return;
-    }
-
-    ////
-
-    // `alignment` should always be a power of two.
-    MOZ_ASSERT(IsPowerOfTwo(typeAlignment));
-    const GLsizei typeAlignmentMask = typeAlignment - 1;
-
-    if (stride & typeAlignmentMask ||
-        byteOffset & typeAlignmentMask)
-    {
-        ErrorInvalidOperation("%s: `stride` and `byteOffset` must satisfy the alignment"
-                              " requirement of `type`.",
-                              funcName);
-        return;
-    }
-
-    ////
-
-    const auto& buffer = mBoundArrayBuffer;
-    if (!buffer && byteOffset) {
-        ErrorInvalidOperation("%s: If ARRAY_BUFFER is null, byteOffset must be zero.",
-                              funcName);
-        return;
-    }
-
-    ////
-
-    gl->MakeCurrent();
-    if (isFuncInt) {
-        gl->fVertexAttribIPointer(index, size, type, stride,
-                                  reinterpret_cast<void*>(byteOffset));
-    } else {
-        gl->fVertexAttribPointer(index, size, type, normalized, stride,
-                                 reinterpret_cast<void*>(byteOffset));
-    }
-
-    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-    vd.VertexAttribPointer(isFuncInt, buffer, size, type, normalized, stride, byteOffset);
+    MOZ_ASSERT(mBoundVertexArray);
 
     InvalidateBufferFetching();
-}
 
-////////////////////////////////////////
+    /* XXX make work with bufferSubData & heterogeneous types
+     if (type != mBoundArrayBuffer->GLType())
+     return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
+     */
+
+    MakeContextCurrent();
+    gl->fVertexAttribPointer(index, size, type, normalized, stride,
+                             reinterpret_cast<void*>(byteOffset));
+
+    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
+    const bool integerFunc = false;
+    vd.VertexAttribPointer(integerFunc, mBoundArrayBuffer, size, type, normalized, stride,
+                           byteOffset);
+}
 
 void
 WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
