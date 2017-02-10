@@ -3,58 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/activity_main"
+    android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/gradient_background">
+    android:layout_height="match_parent">
 
-    <ImageButton
-        android:id="@+id/settings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_settings"
-        android:layout_gravity="right"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="45dp"
-        android:background="?android:attr/selectableItemBackground" />
-
-    <LinearLayout
+    <!--
+    <fragment
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:orientation="vertical">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/focus_wordmark"
-            android:paddingBottom="30dp"
-            android:layout_gravity="center_horizontal"/>
-
-        <TextView
-            android:id="@+id/url"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginLeft="18dp"
-            android:layout_marginRight="18dp"
-            android:background="@drawable/urlbar_background"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="@string/urlbar_hint"
-            android:textSize="15sp"
-            android:textColor="#40ffffff"
-            android:transitionName="urlbar" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingTop="30dp"
-            android:textSize="14sp"
-            android:lineSpacingExtra="7sp"
-            android:text="@string/teaser"
-            android:textColor="#eeeeee" />
-
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:name="org.mozilla.focus.fragment.HomeFragment"
+        android:tag="home" />
+    -->
 
 </FrameLayout>

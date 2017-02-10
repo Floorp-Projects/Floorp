@@ -73,15 +73,15 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         mContext = context;
     }
 
-    void setOnCommitListener(OnCommitListener listener) {
+    public void setOnCommitListener(OnCommitListener listener) {
         mCommitListener = listener;
     }
 
-    void setOnDismissListener(OnDismissListener listener) {
+    public void setOnDismissListener(OnDismissListener listener) {
         mDismissListener = listener;
     }
 
-    void setOnFilterListener(OnFilterListener listener) {
+    public void setOnFilterListener(OnFilterListener listener) {
         mFilterListener = listener;
     }
 
@@ -574,9 +574,8 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
             }
 
             if (keyCode == KeyEvent.KEYCODE_BACK) {
-                // Drop the virtual keyboard.
-                clearFocus();
-                return true;
+                removeAutocomplete(getText());
+                return false;
             }
 
             return false;

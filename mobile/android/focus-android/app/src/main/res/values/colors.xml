@@ -17,4 +17,7 @@
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 
     <color name="colorTitleBar">#FF363B40</color>
+
+    <color name="colorUrlInput">#FF444444</color>
+    <color name="colorUrlInputBackground">#aa000000</color>
 </resources>

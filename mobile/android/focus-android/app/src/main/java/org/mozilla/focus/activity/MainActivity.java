@@ -5,17 +5,18 @@
 
 package org.mozilla.focus.activity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.fragment.HomeFragment;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,31 +28,20 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        final View urlView = findViewById(R.id.url);
-
-        urlView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, BrowserActivity.class);
-
-                ActivityOptionsCompat options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation(MainActivity.this, urlView, "urlbar");
-
-                startActivityForResult(intent, 0, options.toBundle());
-            }
-        });
-
-        findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(intent);
-            }
-        });
+        // We add the home fragment to the layout if it doesn't exist yet. I tried adding the fragment
+        // to the layout directly but then I wasn't able to remove it later. It was still visible but
+        // without an activity attached. So let's do it manually.
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager.findFragmentByTag(HomeFragment.FRAGMENT_TAG) == null) {
+            fragmentManager
+                    .beginTransaction()
+                    .add(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                    .commit();
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Snackbar.make(findViewById(R.id.url), R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
+
     }
 }
