@@ -2174,6 +2174,20 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     SerializeURI(nullptr, xpcomInit.userContentSheetURL());
   }
 
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  if (gfxInfo) {
+    for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
+      int32_t status = 0;
+      nsAutoCString failureId;
+      gfxInfo->GetFeatureStatus(i, failureId, &status);
+      dom::GfxInfoFeatureStatus gfxFeatureStatus;
+      gfxFeatureStatus.feature() = i;
+      gfxFeatureStatus.status() = status;
+      gfxFeatureStatus.failureId() = failureId;
+      xpcomInit.gfxFeatureStatus().AppendElement(gfxFeatureStatus);
+    }
+  }
+
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache);
 
   if (aSendRegisteredChrome) {
@@ -4014,25 +4028,6 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
   } else {
     NS_WARNING("Could not get the Observer service for ContentParent::RecvRecordingDeviceEvents.");
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS)
-{
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  if (!gfxInfo) {
-    return IPC_OK();
-  }
-
-  for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
-    int32_t status = 0;
-    nsAutoCString failureId;
-    gfxInfo->GetFeatureStatus(i, failureId, &status);
-    mozilla::dom::GfxInfoFeatureStatus fs(i, status, failureId);
-    aFS->AppendElement(Move(fs));
-  }
-
   return IPC_OK();
 }
 
