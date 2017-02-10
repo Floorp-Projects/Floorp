@@ -254,6 +254,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
+#include "nsIPresShellInlines.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 
@@ -1313,8 +1314,6 @@ nsIDocument::nsIDocument()
     mIsBeingUsedAsImage(false),
     mIsSyntheticDocument(false),
     mHasLinksToUpdate(false),
-    mNeedLayoutFlush(false),
-    mNeedStyleFlush(false),
     mMayHaveDOMMutationObservers(false),
     mMayHaveAnimationObservers(false),
     mHasMixedActiveContentLoaded(false),
@@ -1392,7 +1391,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mDelayFrameLoaderInitialization(false)
   , mSynchronousDOMContentLoaded(false)
   , mInXBLUpdate(false)
-  , mInFlush(false)
   , mParserAborted(false)
   , mCurrentOrientationAngle(0)
   , mCurrentOrientationType(OrientationType::Portrait_primary)
@@ -7949,27 +7947,12 @@ nsDocument::FlushPendingNotifications(FlushType aType)
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  // We can optimize away getting our presshell and calling
-  // FlushPendingNotifications on it if we don't need a flush of the sort we're
-  // looking at.  The one exception is if mInFlush is true, because in that
-  // case we might have set mNeedStyleFlush and mNeedLayoutFlush to false
-  // already but the presshell hasn't actually done the corresponding work yet.
-  // So if mInFlush and reentering this code, we need to flush the presshell.
-  if (mNeedStyleFlush ||
-      (mNeedLayoutFlush && aType >= FlushType::InterruptibleLayout) ||
-      aType >= FlushType::Display ||
-      mInFlush) {
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
-      mNeedStyleFlush = false;
-      mNeedLayoutFlush = mNeedLayoutFlush && (aType < FlushType::InterruptibleLayout);
-      // mInFlush is a bitfield, so can't us AutoRestore here.  But we
-      // need to keep track of multi-level reentry correctly, so need
-      // to restore the old mInFlush value.
-      bool oldInFlush = mInFlush;
-      mInFlush = true;
-      shell->FlushPendingNotifications(aType);
-      mInFlush = oldInFlush;
+  // Call nsIPresShell::NeedFlush (inline, non-virtual) to check whether we
+  // really need to flush the shell (virtual, and needs a strong reference).
+  if (nsIPresShell* shell = GetShell()) {
+    if (shell->NeedFlush(aType)) {
+      nsCOMPtr<nsIPresShell> presShell = shell;
+      presShell->FlushPendingNotifications(aType);
     }
   }
 }
@@ -12902,7 +12885,9 @@ nsIDocument::RebuildUserFontSet()
   }
 
   mFontFaceSetDirty = true;
-  SetNeedStyleFlush();
+  if (nsIPresShell* shell = GetShell()) {
+    shell->SetNeedStyleFlush();
+  }
 
   // Somebody has already asked for the user font set, so we need to
   // post an event to rebuild it.  Setting the user font set to be dirty

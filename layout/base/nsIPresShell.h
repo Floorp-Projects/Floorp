@@ -586,6 +586,32 @@ public:
   virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
 
   /**
+   * Whether we might need a flush for the given flush type.  If this
+   * function returns false, we definitely don't need to flush.
+   *
+   * @param aFlushType The flush type to check.  This must be
+   *   >= FlushType::Style.
+   */
+  bool NeedFlush(mozilla::FlushType aType) const
+  {
+    // We check mInFlush to handle re-entrant calls to FlushPendingNotifications
+    // by reporting that we always need a flush in that case.  Otherwise,
+    // we could end up missing needed flushes, since we clear mNeedStyleFlush
+    // and mNeedLayoutFlush at the top of FlushPendingNotifications.
+    MOZ_ASSERT(aType >= mozilla::FlushType::Style);
+    return mNeedStyleFlush ||
+           (mNeedLayoutFlush &&
+            aType >= mozilla::FlushType::InterruptibleLayout) ||
+           aType >= mozilla::FlushType::Display ||
+           mInFlush;
+  }
+
+  inline void SetNeedStyleFlush();
+  inline void SetNeedLayoutFlush();
+
+  bool NeedStyleFlush() { return mNeedStyleFlush; }
+
+  /**
    * Callbacks will be called even if reflow itself fails for
    * some reason.
    */
@@ -1805,6 +1831,12 @@ protected:
   bool                      mSuppressInterruptibleReflows : 1;
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
 
+  // True if a layout flush might not be a no-op
+  bool mNeedLayoutFlush : 1;
+
+  // True if a style flush might not be a no-op
+  bool mNeedStyleFlush : 1;
+
   uint32_t                  mPresShellId;
 
   // List of subtrees rooted at style scope roots that need to be restyled.
@@ -1835,6 +1867,10 @@ protected:
   // to true, so we can avoid any paint calls for widget related to this
   // presshell.
   bool mIsNeverPainting;
+
+  // Whether we're currently under a FlushPendingNotifications.
+  // This is used to handle flush reentry correctly.
+  bool mInFlush;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell, NS_IPRESSHELL_IID)
