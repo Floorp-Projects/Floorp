@@ -431,6 +431,7 @@ private:
 
     // CreateVertexArrayImpl is assumed to be infallible.
     virtual WebGLVertexArray* CreateVertexArrayImpl() override;
+    virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
 } // namespace mozilla
