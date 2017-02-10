@@ -1077,7 +1077,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                            // Hence the weird SELECT * FROM (SELECT ...relevant suggested sites... LIMIT ?)
                            " SELECT * FROM (SELECT " +
                            Bookmarks._ID + ", " +
-                           Bookmarks._ID + " AS " + Combined.BOOKMARK_ID + ", " +
+                           " NULL " + " AS " + Combined.BOOKMARK_ID + ", " +
                            " -1 AS " + Combined.HISTORY_ID + ", " +
                            Bookmarks.URL + ", " +
                            Bookmarks.TITLE + ", " +

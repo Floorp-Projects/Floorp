@@ -8,6 +8,7 @@
 #include "mozilla/net/DNS.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDependentSubstring.h"
 #include "nsIServerSocket.h"
 #include "nsITimer.h"
 #include "nsIX509Cert.h"
@@ -467,9 +468,10 @@ TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD)
     }
 
     nsCOMPtr<nsIX509Cert> clientCertPSM;
-    rv = certDB->ConstructX509(reinterpret_cast<char*>(clientCert->derCert.data),
-                               clientCert->derCert.len,
-                               getter_AddRefs(clientCertPSM));
+    nsDependentCSubstring certDER(
+      reinterpret_cast<char*>(clientCert->derCert.data),
+      clientCert->derCert.len);
+    rv = certDB->ConstructX509(certDER, getter_AddRefs(clientCertPSM));
     if (NS_FAILED(rv)) {
       return rv;
     }
