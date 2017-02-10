@@ -84,7 +84,7 @@ CreateConfig(EGLConfig* aConfig);
 #define EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS \
      LOCAL_EGL_NONE, 0, 0, 0
 
-static EGLint gTerminationAttribs[] = {
+static EGLint kTerminationAttribs[] = {
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
@@ -482,31 +482,38 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
     EGLContext eglShareContext = shareContext ? shareContext->mContext
                                               : EGL_NO_CONTEXT;
 
-    nsTArray<EGLint> contextAttribs;
+    std::vector<EGLint> contextAttribs;
 
-    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
+    contextAttribs.push_back(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
     if (flags & CreateContextFlags::PREFER_ES3)
-        contextAttribs.AppendElement(3);
+        contextAttribs.push_back(3);
     else
-        contextAttribs.AppendElement(2);
+        contextAttribs.push_back(2);
 
-    if (sEGLLibrary.HasRobustness()) {
-//    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT);
-//    contextAttribs.AppendElement(LOCAL_EGL_TRUE);
+    if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
+        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+        contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+        contextAttribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
+        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
+    } else if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EXT_create_context_robustness)) {
+        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
+        contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
+        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
+        contextAttribs.push_back(LOCAL_EGL_TRUE);
     }
 
-    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(gTerminationAttribs); i++) {
-      contextAttribs.AppendElement(gTerminationAttribs[i]);
+    for (const auto& cur : kTerminationAttribs) {
+        contextAttribs.push_back(cur);
     }
 
     EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
                                                     config,
                                                     eglShareContext,
-                                                    contextAttribs.Elements());
+                                                    contextAttribs.data());
     if (!context && shareContext) {
         shareContext = nullptr;
         context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, EGL_NO_CONTEXT,
-                                             contextAttribs.Elements());
+                                             contextAttribs.data());
     }
     if (!context) {
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_CREATE");
@@ -547,8 +554,8 @@ TRY_AGAIN_POWER_OF_TWO:
         pbattrs.AppendElement(bindToTextureFormat);
     }
 
-    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(gTerminationAttribs); i++) {
-      pbattrs.AppendElement(gTerminationAttribs[i]);
+    for (const auto& cur : kTerminationAttribs) {
+        pbattrs.AppendElement(cur);
     }
 
     surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, &pbattrs[0]);
