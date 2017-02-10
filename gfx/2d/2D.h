@@ -31,8 +31,6 @@
 #include <string>
 #endif
 
-#include "gfxPrefs.h"
-
 struct _cairo_surface;
 typedef _cairo_surface cairo_surface_t;
 
@@ -719,13 +717,7 @@ public:
   typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength, Float aFontSize, void* aBaton);
 
   virtual FontType GetType() const = 0;
-  virtual AntialiasMode GetDefaultAAMode() {
-    if (gfxPrefs::DisableAllTextAA()) {
-      return AntialiasMode::NONE;
-    }
-
-    return AntialiasMode::DEFAULT;
-  }
+  virtual AntialiasMode GetDefaultAAMode();
 
   /** This allows getting a path that describes the outline of a set of glyphs.
    * A target is passed in so that the guarantee is made the returned path
