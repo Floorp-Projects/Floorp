@@ -17,8 +17,8 @@ module.exports = { // eslint-disable-line no-undef
     // Rules from the mozilla plugin
     "mozilla/balanced-listeners": "error",
     "mozilla/no-aArgs": "warn",
-    "mozilla/no-cpows-in-tests": "warn",
-    "mozilla/var-only-at-top-level": "warn",
+    "mozilla/no-cpows-in-tests": "error",
+    "mozilla/var-only-at-top-level": "error",
 
     "valid-jsdoc": ["error", {
       "prefer": {
