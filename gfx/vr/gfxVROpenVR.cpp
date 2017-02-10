@@ -424,7 +424,7 @@ VRControllerOpenVR::VRControllerOpenVR()
   : VRControllerHost(VRDeviceType::OpenVR)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("OpenVR Controller");
+  mControllerInfo.mControllerName.AssignLiteral("OpenVR Gamepad");
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = GamepadHand::_empty;
   mControllerInfo.mNumButtons = gNumOpenVRButtonMask;

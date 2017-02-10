@@ -100,6 +100,7 @@ public:
   explicit VRControllerOculus();
   float GetAxisMove(uint32_t aAxis);
   void SetAxisMove(uint32_t aAxis, float aValue);
+  virtual void SetHand(dom::GamepadHand aHand) override;
 
 protected:
   virtual ~VRControllerOculus();
