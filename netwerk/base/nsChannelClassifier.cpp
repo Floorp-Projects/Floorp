@@ -9,6 +9,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
+#include "nsIAddonPolicyService.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIChannel.h"
@@ -148,6 +149,10 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(nsIChannel *aChannel
       return NS_OK;
     }
 
+    if (AddonMayLoad(aChannel, chanURI)) {
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -231,6 +236,23 @@ nsChannelClassifier::ShouldEnableTrackingProtectionInternal(nsIChannel *aChannel
     // window for the channel, then the shield won't show up so we can't send
     // an event to the securityUI anyway.
     return NotifyTrackingProtectionDisabled(aChannel);
+}
+
+bool
+nsChannelClassifier::AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri)
+{
+    nsCOMPtr<nsILoadInfo> channelLoadInfo = aChannel->GetLoadInfo();
+    if (!channelLoadInfo)
+        return false;
+
+    // loadingPrincipal is used here to ensure we are loading into an
+    // addon principal.  This allows an addon, with explicit permission, to
+    // call out to API endpoints that may otherwise get blocked.
+    nsIPrincipal* loadingPrincipal = channelLoadInfo->LoadingPrincipal();
+    if (!loadingPrincipal)
+        return false;
+
+    return BasePrincipal::Cast(loadingPrincipal)->AddonAllowsLoad(aUri, true);
 }
 
 // static
