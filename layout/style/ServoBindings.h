@@ -35,6 +35,9 @@ namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
   struct Keyframe;
+  namespace css {
+    struct URLValue;
+  };
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -84,6 +87,17 @@ extern "C" {
 // Object refcounting.
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
+
+class ServoBundledURI
+{
+public:
+  already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
+  const uint8_t* mURLString;
+  uint32_t mURLStringLength;
+  ThreadSafeURIHolder* mBaseURI;
+  ThreadSafeURIHolder* mReferrer;
+  ThreadSafePrincipalHolder* mPrincipal;
+};
 
 // DOM Traversal.
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
@@ -206,10 +220,7 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
 void Gecko_SetListStyleImage(nsStyleList* style_struct,
-                             const uint8_t* string_bytes, uint32_t string_length,
-                             ThreadSafeURIHolder* base_uri,
-                             ThreadSafeURIHolder* referrer,
-                             ThreadSafePrincipalHolder* principal);
+                             ServoBundledURI uri);
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // cursor style.
@@ -223,11 +234,7 @@ void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
 
 // Display style.
-void Gecko_SetMozBinding(nsStyleDisplay* style_struct,
-                         const uint8_t* string_bytes, uint32_t string_length,
-                         ThreadSafeURIHolder* base_uri,
-                         ThreadSafeURIHolder* referrer,
-                         ThreadSafePrincipalHolder* principal);
+void Gecko_SetMozBinding(nsStyleDisplay* style_struct, ServoBundledURI bundled_uri);
 void Gecko_CopyMozBindingFrom(nsStyleDisplay* des, const nsStyleDisplay* src);
 
 // Dirtiness tracking.
