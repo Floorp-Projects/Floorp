@@ -48,6 +48,7 @@ public class GeckoView extends LayerView
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
     /* package */ NavigationListener mNavigationListener;
+    /* package */ ProgressListener mProgressListener;
     private InputConnectionListener mInputConnectionListener;
 
     protected boolean onAttachedToWindowCalled;
@@ -117,6 +118,9 @@ public class GeckoView extends LayerView
             getEventDispatcher().registerUiThreadListener(this,
                 "GeckoView:DOMTitleChanged",
                 "GeckoView:LocationChange",
+                "GeckoView:PageStart",
+                "GeckoView:PageStop",
+                "GeckoView:SecurityChanged",
                 null);
         }
 
@@ -139,6 +143,18 @@ public class GeckoView extends LayerView
                     mNavigationListener.onLocationChange(GeckoView.this, message.getString("uri"));
                     mNavigationListener.onCanGoBack(GeckoView.this, message.getBoolean("canGoBack"));
                     mNavigationListener.onCanGoForward(GeckoView.this, message.getBoolean("canGoForward"));
+                }
+            } else if ("GeckoView:PageStart".equals(event)) {
+                if (mProgressListener != null) {
+                    mProgressListener.onPageStart(GeckoView.this, message.getString("uri"));
+                }
+            } else if ("GeckoView:PageStop".equals(event)) {
+                if (mProgressListener != null) {
+                    mProgressListener.onPageStop(GeckoView.this, message.getBoolean("success"));
+                }
+            } else if ("GeckoView:SecurityChanged".equals(event)) {
+                if (mProgressListener != null) {
+                    mProgressListener.onSecurityChanged(GeckoView.this, message.getInt("status"));
                 }
             }
         }
@@ -413,6 +429,23 @@ public class GeckoView extends LayerView
     }
 
     /**
+    * Set the progress callback handler.
+    * This will replace the current handler.
+    * @param progress An implementation of ProgressListener.
+    */
+    public void setProgressListener(ProgressListener progress) {
+        mProgressListener = progress;
+    }
+
+    /**
+    * Get the progress callback handler.
+    * @return The current progress callback handler.
+    */
+    public ProgressListener getProgressListener() {
+        return mProgressListener;
+    }
+
+    /**
     * Set the navigation callback handler.
     * This will replace the current handler.
     * @param navigation An implementation of NavigationListener.
@@ -523,6 +556,33 @@ public class GeckoView extends LayerView
         * Defaults to cancel requests.
         */
         public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
+    }
+
+    public interface ProgressListener {
+        static final int STATE_IS_BROKEN = 1;
+        static final int STATE_IS_SECURE = 2;
+        static final int STATE_IS_INSECURE = 4;
+
+        /**
+        * A View has started loading content from the network.
+        * @param view The GeckoView that initiated the callback.
+        * @param url The resource being loaded.
+        */
+        public void onPageStart(GeckoView view, String url);
+
+        /**
+        * A View has finished loading content from the network.
+        * @param view The GeckoView that initiated the callback.
+        * @param success Whether the page loaded successfully or an error occurred.
+        */
+        public void onPageStop(GeckoView view, boolean success);
+
+        /**
+        * The security status has been updated.
+        * @param view The GeckoView that initiated the callback.
+        * @param status The new security status.
+        */
+        public void onSecurityChanged(GeckoView view, int status);
     }
 
     public interface ContentListener {

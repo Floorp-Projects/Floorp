@@ -51,6 +51,8 @@ function startup() {
                     "GeckoViewContent");
   ModuleManager.add("resource://gre/modules/GeckoViewNavigation.jsm",
                     "GeckoViewNavigation");
+  ModuleManager.add("resource://gre/modules/GeckoViewProgress.jsm",
+                    "GeckoViewProgress");
 
   dump("zerdatime " + Date.now() + " - geckoview chrome startup finished.");
 }
