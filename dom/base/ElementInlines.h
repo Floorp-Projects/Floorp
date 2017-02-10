@@ -11,6 +11,8 @@
 #include "mozilla/ServoBindings.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 
 namespace mozilla {
 namespace dom {
@@ -49,12 +51,6 @@ Element::GetFlattenedTreeParentElementForStyle() const
   return nullptr;
 }
 
-inline bool
-Element::ShouldTraverseForServo()
-{
-  return HasDirtyDescendantsForServo() || Servo_Element_ShouldTraverse(this);
-}
-
 inline void
 Element::NoteDirtyDescendantsForServo()
 {
@@ -67,6 +63,10 @@ Element::NoteDirtyDescendantsForServo()
   while (curr && !curr->HasDirtyDescendantsForServo()) {
     curr->SetHasDirtyDescendantsForServo();
     curr = curr->GetFlattenedTreeParentElementForStyle();
+  }
+
+  if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
+    shell->SetNeedStyleFlush();
   }
 
   MOZ_ASSERT(DirtyDescendantsBitIsPropagatedForServo());

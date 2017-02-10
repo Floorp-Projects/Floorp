@@ -12,6 +12,8 @@ gfx/harfbuzz/
 gfx/ots/
 gfx/qcms/
 gfx/skia/
+gfx/webrender
+gfx/webrender_traits
 gfx/ycbcr/
 intl/hyphenation/hyphen/
 intl/icu/
@@ -37,11 +39,12 @@ media/libtremor/
 media/libvorbis/
 media/libvpx/
 media/libyuv/
-media/mtransport/
+media/mtransport/third_party/
 media/openmax_dl/
 media/pocketsphinx/
 media/sphinxbase/
 media/webrtc/trunk/
+media/webrtc/signaling/src/sdp/sipcc/
 memory/jemalloc/src/
 mfbt/decimal/
 mfbt/double-conversion/source/

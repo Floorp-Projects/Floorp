@@ -11,10 +11,12 @@ browser.jar:
     content/browser/schemas/context_menus_internal.json
     content/browser/schemas/devtools.json
     content/browser/schemas/devtools_inspected_window.json
+    content/browser/schemas/devtools_network.json
     content/browser/schemas/history.json
     content/browser/schemas/omnibox.json
     content/browser/schemas/page_action.json
     content/browser/schemas/sessions.json
+    content/browser/schemas/sidebar_action.json
     content/browser/schemas/tabs.json
     content/browser/schemas/theme.json
     content/browser/schemas/url_overrides.json

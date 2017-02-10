@@ -116,7 +116,6 @@ USE_LIBS += [
 ]
 
 USE_LIBS += [
-    'gkmedias',
     'lgpllibs',
     'nspr',
     'nss',
@@ -342,6 +341,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'shlwapi',
         'ws2_32',
         'dbghelp',
+        'dwmapi',
         'rasapi32',
         'rasdlg',
         'iphlpapi',

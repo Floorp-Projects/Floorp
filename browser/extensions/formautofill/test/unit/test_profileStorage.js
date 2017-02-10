@@ -2,8 +2,6 @@
  * Tests ProfileStorage object.
  */
 
-/* global ProfileStorage */
-
 "use strict";
 
 Cu.import("resource://gre/modules/Task.jsm");

@@ -39,7 +39,7 @@ let gFileCounter = Math.floor(Math.random() * 1000000);
 
 function loadFormAutofillContent() {
   let facGlobal = {
-    addEventListener: function() {},
+    addEventListener() {},
   };
   let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);

@@ -13,6 +13,8 @@ with Files('**'):
 # on Windows for them to propagate there.
 Library('gkmedias')
 
+FINAL_LIBRARY = 'xul'
+
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['webrtc']
 

@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<!DOCTYPE page [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+<!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
+%textcontextDTD;
+]>
+
+<page id="webextpanels-window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="load()">
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-fxaccounts.js"/>
+  <script type="application/javascript" src="chrome://browser/content/nsContextMenu.js"/>
+  <script type="application/javascript" src="chrome://browser/content/webext-panels.js"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+  </stringbundleset>
+
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="isFrameImage"/>
+  </broadcasterset>
+
+  <commandset id="mainCommandset">
+    <command id="Browser:Back"
+             oncommand="getPanelBrowser().webNavigation.goBack();"
+             disabled="true"/>
+    <command id="Browser:Forward"
+             oncommand="getPanelBrowser().webNavigation.goForward();"
+             disabled="true"/>
+    <command id="Browser:Stop" oncommand="PanelBrowserStop();"/>
+    <command id="Browser:Reload" oncommand="PanelBrowserReload();"/>
+  </commandset>
+
+  <popupset id="mainPopupSet">
+    <tooltip id="aHTMLTooltip" page="true"/>
+    <menupopup id="contentAreaContextMenu" pagemenu="start"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, event.shiftKey);
+                               if (gContextMenu.shouldDisplay)
+                                 document.popupNode = this.triggerNode;
+                               return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding();
+                              gContextMenu = null;">
+#include browser-context.inc
+    </menupopup>
+  </popupset>
+
+  <commandset id="editMenuCommands"/>
+  <browser id="webext-panels-browser"
+           type="content" flex="1"
+           webextension-view-type="sidebar"
+           context="contentAreaContextMenu" tooltip="aHTMLTooltip"
+           onclick="window.parent.contentAreaClick(event, true);"/>
+</page>

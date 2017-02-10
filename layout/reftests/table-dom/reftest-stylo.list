@@ -21,10 +21,10 @@ fails == deleteRowsRebuild1a.html deleteRowsRebuild1a.html
 fails == deleteRowsShrink1.html deleteRowsShrink1.html
 fails == deleteTbodyExpand1.html deleteTbodyExpand1.html
 fails == deleteTbodyRebuild1.html deleteTbodyRebuild1.html
-== insertCaptionsAndRows1.html insertCaptionsAndRows1.html
-== insertCaptionsAndRows2.html insertCaptionsAndRows2.html
-== insertCaptionsAndRows3.html insertCaptionsAndRows3.html
-== insertCaptionsAndRows4.html insertCaptionsAndRows4.html
+# == insertCaptionsAndRows1.html insertCaptionsAndRows1.html
+# == insertCaptionsAndRows2.html insertCaptionsAndRows2.html
+# == insertCaptionsAndRows3.html insertCaptionsAndRows3.html
+# == insertCaptionsAndRows4.html insertCaptionsAndRows4.html
 fails == insertCellsExpand1.html insertCellsExpand1.html
 fails == insertCellsExpand2.html insertCellsExpand2.html
 fails == insertCellsExpandZeroRowspan.html insertCellsExpandZeroRowspan.html

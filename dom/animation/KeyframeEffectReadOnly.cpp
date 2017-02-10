@@ -1014,12 +1014,8 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
     printf("%s\n", nsCSSProps::GetStringValue(p.mProperty).get());
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
-      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mFromValue.mGecko,
-                                                    fromValue);
-      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
-                                                    s.mToValue.mGecko,
-                                                    toValue);
+      s.mFromValue.SerializeSpecifiedValue(p.mProperty, fromValue);
+      s.mToValue.SerializeSpecifiedValue(p.mProperty, toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey,
              NS_ConvertUTF16toUTF8(fromValue).get(),
              NS_ConvertUTF16toUTF8(toValue).get());
@@ -1080,7 +1076,7 @@ static void
 CreatePropertyValue(nsCSSPropertyID aProperty,
                     float aOffset,
                     const Maybe<ComputedTimingFunction>& aTimingFunction,
-                    const StyleAnimationValue& aValue,
+                    const AnimationValue& aValue,
                     dom::CompositeOperation aComposite,
                     AnimationPropertyValueDetails& aResult)
 {
@@ -1088,9 +1084,7 @@ CreatePropertyValue(nsCSSPropertyID aProperty,
 
   if (!aValue.IsNull()) {
     nsString stringValue;
-    DebugOnly<bool> uncomputeResult =
-      StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
-    MOZ_ASSERT(uncomputeResult, "failed to uncompute value");
+    aValue.SerializeSpecifiedValue(aProperty, stringValue);
     aResult.mValue.Construct(stringValue);
   }
 
@@ -1135,7 +1129,7 @@ KeyframeEffectReadOnly::GetProperties(
 
       binding_detail::FastAnimationPropertyValueDetails fromValue;
       CreatePropertyValue(property.mProperty, segment.mFromKey,
-                          segment.mTimingFunction, segment.mFromValue.mGecko,
+                          segment.mTimingFunction, segment.mFromValue,
                           segment.mFromComposite, fromValue);
       // We don't apply timing functions for zero-length segments, so
       // don't return one here.
@@ -1156,7 +1150,7 @@ KeyframeEffectReadOnly::GetProperties(
             segment.mToValue.mGecko) {
         binding_detail::FastAnimationPropertyValueDetails toValue;
         CreatePropertyValue(property.mProperty, segment.mToKey,
-                            Nothing(), segment.mToValue.mGecko,
+                            Nothing(), segment.mToValue,
                             segment.mToComposite, toValue);
         // It doesn't really make sense to have a timing function on the
         // last property value or before a sudden jump so we just drop the

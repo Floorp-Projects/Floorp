@@ -30,13 +30,13 @@ add_task(function* () {
 
   wait = waitForDOM(document, ".raw-headers-container textarea", 2);
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".tool-button")[1]);
+    document.querySelectorAll(".headers-summary .tool-button")[1]);
   yield wait;
 
   testShowRawHeaders(origItem);
 
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".tool-button")[1]);
+    document.querySelectorAll(".headers-summary .tool-button")[1]);
 
   testHideRawHeaders(document);
 

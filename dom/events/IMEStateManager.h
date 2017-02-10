@@ -13,7 +13,6 @@
 #include "nsIWidget.h"
 
 class nsIContent;
-class nsIDOMMouseEvent;
 class nsIEditor;
 class nsINode;
 class nsPresContext;
@@ -142,7 +141,7 @@ public:
   // Returns true if IME consumes the event.  Otherwise, false.
   static bool OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                          nsIContent* aContent,
-                                         nsIDOMMouseEvent* aMouseEvent);
+                                         WidgetMouseEvent* aMouseEvent);
 
   // This method is called when user clicked in an editor.
   // aContent must be:
@@ -151,7 +150,7 @@ public:
   //   If the editor is for designMode, nullptr.
   static void OnClickInEditor(nsPresContext* aPresContext,
                               nsIContent* aContent,
-                              nsIDOMMouseEvent* aMouseEvent);
+                              const WidgetMouseEvent* aMouseEvent);
 
   // This method is called when editor actually gets focus.
   // aContent must be:

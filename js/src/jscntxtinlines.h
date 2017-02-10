@@ -503,7 +503,7 @@ JSContext::setCompartment(JSCompartment* comp,
     // This context must have exclusive access to the zone's group. There is an
     // exception, for now, for zones used by exclusive threads.
     MOZ_ASSERT_IF(comp && !comp->zone()->isAtomsZone() && !comp->zone()->usedByExclusiveThread,
-                  comp->zone()->group()->context == this);
+                  comp->zone()->group()->ownedByCurrentThread());
 
     compartment_ = comp;
     zone_ = comp ? comp->zone() : nullptr;

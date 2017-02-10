@@ -33,76 +33,18 @@
         <splitter id="network-inspector-view-splitter"
                   class="devtools-side-splitter"/>
 
-        <deck id="details-pane"
-              hidden="true">
-          <vbox id="custom-pane"
-                class="tabpanel-content">
-            <hbox align="baseline">
-              <label data-localization="content=netmonitor.custom.newRequest"
-                     class="plain tabpanel-summary-label
-                            custom-header"/>
-              <hbox flex="1" pack="end"
-                    class="devtools-toolbarbutton-group">
-                <button id="custom-request-send-button"
-                        class="devtools-toolbarbutton"
-                        data-localization="label=netmonitor.custom.send"/>
-                <button id="custom-request-close-button"
-                        class="devtools-toolbarbutton"
-                        data-localization="label=netmonitor.custom.cancel"/>
-              </hbox>
-            </hbox>
-            <hbox id="custom-method-and-url"
-                  class="tabpanel-summary-container"
-                  align="center">
-              <textbox id="custom-method-value"
-                       data-key="method"/>
-              <textbox id="custom-url-value"
-                       flex="1"
-                       data-key="url"/>
-            </hbox>
-            <vbox id="custom-query"
-                  class="tabpanel-summary-container custom-section">
-              <label class="plain tabpanel-summary-label"
-                     data-localization="content=netmonitor.custom.query"/>
-              <textbox id="custom-query-value"
-                       class="tabpanel-summary-input"
-                       multiline="true"
-                       rows="4"
-                       wrap="off"
-                       data-key="query"/>
-            </vbox>
-            <vbox id="custom-headers"
-                  class="tabpanel-summary-container custom-section">
-              <label class="plain tabpanel-summary-label"
-                     data-localization="content=netmonitor.custom.headers"/>
-              <textbox id="custom-headers-value"
-                       class="tabpanel-summary-input"
-                       multiline="true"
-                       rows="8"
-                       wrap="off"
-                       data-key="headers"/>
-            </vbox>
-            <vbox id="custom-postdata"
-                  class="tabpanel-summary-container custom-section">
-              <label class="plain tabpanel-summary-label"
-                     data-localization="content=netmonitor.custom.postData"/>
-              <textbox id="custom-postdata-value"
-                       class="tabpanel-summary-input"
-                       multiline="true"
-                       rows="6"
-                       wrap="off"
-                       data-key="body"/>
-            </vbox>
-          </vbox>
+        <box id="splitter-adjustable-box"
+             hidden="true">
           <html:div xmlns="http://www.w3.org/1999/xhtml"
-                    id="react-details-panel-hook"/>
-        </deck>
+                    id="react-network-details-panel-hook">
+          </html:div>
+        </box>
       </hbox>
 
     </vbox>
 
     <html:div xmlns="http://www.w3.org/1999/xhtml"
-              id="statistics-panel">
+              id="react-statistics-panel-hook">
     </html:div>
   </deck>
 

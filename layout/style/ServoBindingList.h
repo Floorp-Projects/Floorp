@@ -20,7 +20,6 @@
 
 // Element data
 SERVO_BINDING_FUNC(Servo_Element_ClearData, void, RawGeckoElementBorrowed node)
-SERVO_BINDING_FUNC(Servo_Element_ShouldTraverse, bool, RawGeckoElementBorrowed node)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetStrong,
@@ -127,9 +126,13 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
 SERVO_BINDING_FUNC(Servo_AnimationValues_Uncompute,
                    RawServoDeclarationBlockStrong,
                    RawServoAnimationValueBorrowedListBorrowed value)
-SERVO_BINDING_FUNC(Servo_AnimationValues_GetOpacity, float,
+SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
+                   RawServoAnimationValueBorrowed value,
+                   nsCSSPropertyID property,
+                   nsAString* buffer)
+SERVO_BINDING_FUNC(Servo_AnimationValue_GetOpacity, float,
                    RawServoAnimationValueBorrowed value)
-SERVO_BINDING_FUNC(Servo_AnimationValues_GetTransform, void,
+SERVO_BINDING_FUNC(Servo_AnimationValue_GetTransform, void,
                    RawServoAnimationValueBorrowed value,
                    RefPtr<nsCSSValueSharedList>* list)
 
@@ -230,10 +233,9 @@ SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    RawServoStyleSetBorrowed set)
 
-// Restyle the given subtree.
 // Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
 // directly
-SERVO_BINDING_FUNC(Servo_TraverseSubtree, void,
+SERVO_BINDING_FUNC(Servo_TraverseSubtree, bool,
                    RawGeckoElementBorrowed root, RawServoStyleSetBorrowed set,
                    mozilla::TraversalRootBehavior root_behavior)
 

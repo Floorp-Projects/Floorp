@@ -15,7 +15,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
   , mPseudoStack(aPseudoStack)
-  , mPlatformData(Sampler::AllocPlatformData(aThreadId))
+  , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mMutex(MakeUnique<mozilla::Mutex>("ThreadInfo::mMutex"))

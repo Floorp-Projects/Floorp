@@ -562,12 +562,18 @@ IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 bool
 IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                             nsIContent* aContent,
-                                            nsIDOMMouseEvent* aMouseEvent)
+                                            WidgetMouseEvent* aMouseEvent)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("OnMouseButtonEventInEditor(aPresContext=0x%p, "
      "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext.get(), sContent.get()));
+
+  if (NS_WARN_IF(!aMouseEvent)) {
+    MOZ_LOG(sISMLog, LogLevel::Debug,
+      ("  OnMouseButtonEventInEditor(), aMouseEvent is nullptr"));
+    return false;
+  }
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -590,25 +596,15 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  WidgetMouseEvent* internalEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
-  if (NS_WARN_IF(!internalEvent)) {
-    MOZ_LOG(sISMLog, LogLevel::Debug,
-      ("  OnMouseButtonEventInEditor(), "
-       "the internal event of aMouseEvent isn't WidgetMouseEvent"));
-    return false;
-  }
-
   bool consumed =
-    sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
+    sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, aMouseEvent);
 
   if (MOZ_LOG_TEST(sISMLog, LogLevel::Info)) {
     nsAutoString eventType;
-    aMouseEvent->AsEvent()->GetType(eventType);
     MOZ_LOG(sISMLog, LogLevel::Info,
       ("  OnMouseButtonEventInEditor(), "
-       "mouse event (type=%s, button=%d) is %s",
-       NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
+       "mouse event (mMessage=%s, button=%d) is %s",
+       ToChar(aMouseEvent->mMessage), aMouseEvent->button,
        consumed ? "consumed" : "not consumed"));
   }
 
@@ -619,12 +615,16 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
 void
 IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
-                                 nsIDOMMouseEvent* aMouseEvent)
+                                 const WidgetMouseEvent* aMouseEvent)
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("OnClickInEditor(aPresContext=0x%p, aContent=0x%p, aMouseEvent=0x%p), "
      "sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext.get(), sContent.get()));
+
+  if (NS_WARN_IF(!aMouseEvent)) {
+    return;
+  }
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -636,40 +636,29 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   nsCOMPtr<nsIWidget> widget = aPresContext->GetRootWidget();
   NS_ENSURE_TRUE_VOID(widget);
 
-  bool isTrusted;
-  nsresult rv = aMouseEvent->AsEvent()->GetIsTrusted(&isTrusted);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (!isTrusted) {
+  if (!aMouseEvent->IsTrusted()) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  OnClickInEditor(), "
        "the mouse event isn't a trusted event"));
     return; // ignore untrusted event.
   }
 
-  int16_t button;
-  rv = aMouseEvent->GetButton(&button);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (button != 0) {
+  if (aMouseEvent->button) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  OnClickInEditor(), "
        "the mouse event isn't a left mouse button event"));
     return; // not a left click event.
   }
 
-  int32_t clickCount;
-  rv = aMouseEvent->GetDetail(&clickCount);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (clickCount != 1) {
+  if (aMouseEvent->mClickCount != 1) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
       ("  OnClickInEditor(), "
        "the mouse event isn't a single click event"));
     return; // should notify only first click event.
   }
 
-  uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
-  aMouseEvent->GetMozInputSource(&inputSource);
   InputContextAction::Cause cause =
-    inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH ?
+    aMouseEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH ?
       InputContextAction::CAUSE_TOUCH : InputContextAction::CAUSE_MOUSE;
 
   InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);
