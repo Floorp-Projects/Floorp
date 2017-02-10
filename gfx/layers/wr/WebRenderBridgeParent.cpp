@@ -79,52 +79,14 @@ private:
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
-                                             gl::GLContext* aGlContext,
-                                             WrWindowState* aWrWindowState,
-                                             layers::Compositor* aCompositor)
-  : mCompositorBridge(aCompositorBridge)
-  , mPipelineId(aPipelineId)
-  , mWidget(aWidget)
-  , mBuilder()
-  , mGLContext(aGlContext)
-  , mWRWindowState(aWrWindowState)
-  , mCompositor(aCompositor)
-  , mChildLayerObserverEpoch(0)
-  , mParentLayerObserverEpoch(0)
-  , mPendingTransactionId(0)
-  , mDestroyed(false)
-{
-  MOZ_ASSERT(mGLContext);
-  MOZ_ASSERT(mCompositor);
-
-  if (!mWRWindowState) {
-    // mWRWindowState should only be null for the root WRBP of a layers tree,
-    // i.e. the one created by the CompositorBridgeParent as opposed to the
-    // CrossProcessCompositorBridgeParent
-    MOZ_ASSERT(mWidget);
-    mWRWindowState = wr_init_window(mPipelineId.mHandle,
-                                    aGlContext,
-                                    gfxPrefs::WebRenderProfilerEnabled());
-  }
-  if (mWidget) {
-    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
-  }
-}
-
-WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                                             const wr::PipelineId& aPipelineId,
-                                             widget::CompositorWidget* aWidget,
                                              RefPtr<wr::WebRenderAPI>&& aApi,
                                              RefPtr<WebRenderCompositableHolder>&& aHolder)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mBuilder(Nothing())
-  , mGLContext(nullptr)
-  , mWRWindowState(nullptr)
   , mApi(aApi)
   , mCompositableHolder(aHolder)
-  , mCompositor(nullptr)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mPendingTransactionId(0)
@@ -147,7 +109,7 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
   if (mBuilder.isSome()) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mApi || mWRWindowState);
+  MOZ_ASSERT(mApi);
   mBuilder.emplace(LayerIntSize(aSize.width, aSize.height), mPipelineId);
 
   return IPC_OK();
@@ -187,7 +149,7 @@ WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mApi || mWRWindowState);
+  MOZ_ASSERT(mApi);
   *aOutImageKey = mApi->AddImageBuffer(aSize, aStride, aFormat,
                                        aBuffer.AsSlice());
 
@@ -203,7 +165,7 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mApi || mWRWindowState);
+  MOZ_ASSERT(mApi);
   mApi->UpdateImageBuffer(aImageKey, aSize, aFormat, aBuffer.AsSlice());
 
   return IPC_OK();
@@ -215,7 +177,7 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mApi || mWRWindowState);
+  MOZ_ASSERT(mApi);
   mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
@@ -556,51 +518,9 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
-  if (aTarget) {
-    // XXX Add compositing to DrawTarget
-    return;
-  }
-  if (!mWidget) {
-    return;
-  }
-
-  if (MOZ_USE_RENDER_THREAD) {
-    MOZ_ASSERT(mApi);
-    // TODO(bug 1328602) With the RenderThread, calling SetRootStackingContext
-    // should trigger the composition on the render thread.
-    return;
-  }
-
-  TimeStamp start = TimeStamp::Now();
-
-  mCompositor->SetCompositionTime(TimeStamp::Now());
-  mCompositor->AsWebRenderCompositorOGL()->UpdateExternalImages();
-
-  MOZ_ASSERT(mBuilder.isSome());
-  mozilla::widget::WidgetRenderingContext widgetContext;
-#if defined(XP_MACOSX)
-  widgetContext.mGL = mGLContext;
-#elif defined(MOZ_WIDGET_ANDROID)
-  widgetContext.mCompositor = mCompositor;
-#endif
-  if (!mWidget->PreRender(&widgetContext)) {
-    return;
-  }
-  // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
-  mWidget->DrawWindowUnderlay(&widgetContext, LayoutDeviceIntRect());
-  mGLContext->MakeCurrent();
-  wr_composite_window(mWRWindowState);
-  mGLContext->SwapBuffers();
-  mWidget->DrawWindowOverlay(&widgetContext, LayoutDeviceIntRect());
-  mWidget->PostRender(&widgetContext);
-
-  TimeStamp end = TimeStamp::Now();
-  mCompositorBridge->NotifyDidComposite(mPendingTransactionId, start, end);
-  mPendingTransactionId = 0;
-
-  // Calls for TextureHosts recycling
-  mCompositor->EndFrame();
-  mCompositor->FlushPendingNotifyNotUsed();
+  // TODO(bug 1328602) With the RenderThread, calling SetRootStackingContext
+  // should trigger the composition on the render thread.
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 
 void
@@ -636,12 +556,6 @@ void
 WebRenderBridgeParent::ClearResources()
 {
   DeleteOldImages();
-  if (mCompositor) {
-    for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-      uint64_t externalImageId = iter.Key();
-      mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
-    }
-  }
   if (mCompositableHolder) {
     for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
       uint64_t externalImageId = iter.Key();
@@ -659,7 +573,6 @@ WebRenderBridgeParent::ClearResources()
   }
 
   mApi = nullptr;
-  mGLContext = nullptr;
   mCompositorBridge = nullptr;
 }
 
@@ -741,10 +654,6 @@ WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
 TextureFactoryIdentifier
 WebRenderBridgeParent::GetTextureFactoryIdentifier()
 {
-  if (mCompositor) {
-    return mCompositor->GetTextureFactoryIdentifier();
-  }
-
   MOZ_ASSERT(mApi);
 
   return TextureFactoryIdentifier(LayersBackend::LAYERS_WR,

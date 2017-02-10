@@ -78,7 +78,8 @@ RendererOGL::Render()
   mWidget->DrawWindowOverlay(&widgetContext, LayoutDeviceIntRect());
   mWidget->PostRender(&widgetContext);
 
-  // TODO: Flush pending actions such as texture deletions/unlocks.
+  // TODO: Flush pending actions such as texture deletions/unlocks and
+  //       textureHosts recycling.
 
   return true;
 }

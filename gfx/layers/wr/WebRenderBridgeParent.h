@@ -49,18 +49,9 @@ public:
                         RefPtr<wr::WebRenderAPI>&& aApi,
                         RefPtr<WebRenderCompositableHolder>&& aHolder);
 
-  WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                        const wr::PipelineId& aPipelineId,
-                        widget::CompositorWidget* aWidget,
-                        gl::GLContext* aGlContext,
-                        WrWindowState* aWrWindowState,
-                        layers::Compositor* aCompositor);
   wr::PipelineId PipelineId() { return mPipelineId; }
-  gl::GLContext* GLContext() { return mGLContext.get(); }
-  WrWindowState* WindowState() { return mWRWindowState; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
   WebRenderCompositableHolder* CompositableHolder() { return mCompositableHolder; }
-  layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
   mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
@@ -156,11 +147,8 @@ private:
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   Maybe<wr::DisplayListBuilder> mBuilder;
-  RefPtr<gl::GLContext> mGLContext;
-  WrWindowState* mWRWindowState;
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<WebRenderCompositableHolder> mCompositableHolder;
-  RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<wr::ImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
