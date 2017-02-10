@@ -12,7 +12,7 @@ Cu.import("chrome://marionette/content/error.js");
 add_test(function test_session() {
   assert.session({sessionId: "foo"});
   for (let typ of [null, undefined, ""]) {
-    Assert.throws(() => assert.session({sessionId: typ}), InvalidSessionIdError);
+    Assert.throws(() => assert.session({sessionId: typ}), InvalidSessionIDError);
   }
 
   run_next_test();
