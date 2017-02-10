@@ -1194,6 +1194,8 @@ GetLayersBackendName(layers::LayersBackend aBackend)
       return "d3d11";
     case layers::LayersBackend::LAYERS_CLIENT:
       return "client";
+    case layers::LayersBackend::LAYERS_WR:
+      return "webrender";
     case layers::LayersBackend::LAYERS_BASIC:
       return "basic";
     default:

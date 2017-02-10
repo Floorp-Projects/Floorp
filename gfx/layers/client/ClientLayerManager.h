@@ -52,6 +52,11 @@ public:
     return mForwarder;
   }
 
+  virtual KnowsCompositor* AsKnowsCompositor() override
+  {
+    return mForwarder;
+  }
+
   virtual ClientLayerManager* AsClientLayerManager() override
   {
     return this;
@@ -91,9 +96,9 @@ public:
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
-  void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
-                                      uint64_t aDeviceResetSeqNo);
-  TextureFactoryIdentifier GetTextureFactoryIdentifier()
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
+											  uint64_t aDeviceResetSeqNo) override;
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
     return AsShadowForwarder()->GetTextureFactoryIdentifier();
   }
@@ -153,7 +158,7 @@ public:
 
   CompositorBridgeChild* GetRemoteRenderer();
 
-  CompositorBridgeChild* GetCompositorBridgeChild();
+  virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
 
   // Disable component alpha layers with the software compositor.
   virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }
@@ -174,9 +179,9 @@ public:
   virtual void Composite() override;
   virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;
 
-  void DidComposite(uint64_t aTransactionId,
-                    const mozilla::TimeStamp& aCompositeStart,
-                    const mozilla::TimeStamp& aCompositeEnd);
+  virtual void DidComposite(uint64_t aTransactionId,
+                            const mozilla::TimeStamp& aCompositeStart,
+                            const mozilla::TimeStamp& aCompositeEnd) override;
 
   virtual bool AreComponentAlphaLayersEnabled() override;
 
@@ -215,7 +220,10 @@ public:
   // Get a copy of the compositor-side APZ test data for our layers ID.
   void GetCompositorSideAPZTestData(APZTestData* aData) const;
 
-  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
+  virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override
+  {
+     mTransactionIdAllocator = aAllocator;
+  }
 
   float RequestProperty(const nsAString& aProperty) override;
 
@@ -223,15 +231,10 @@ public:
 
   void SetNextPaintSyncId(int32_t aSyncId);
 
-  void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
+  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
-  class DidCompositeObserver {
-  public:
-    virtual void DidComposite() = 0;
-  };
-
-  void AddDidCompositeObserver(DidCompositeObserver* aObserver);
-  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
+  virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
+  virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
   virtual already_AddRefed<PersistentBufferProvider>
   CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
@@ -349,8 +352,6 @@ public:
   }
 
   ~ClientLayer();
-
-  virtual void ClearCachedResources() { }
 
   // Shrink memory usage.
   // Called when "memory-pressure" is observed.

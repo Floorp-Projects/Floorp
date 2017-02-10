@@ -1052,7 +1052,8 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
     data = D3D9TextureData::Create(aSize, aFormat, aAllocFlags);
   }
 
-  if (!data && aFormat == SurfaceFormat::B8G8R8X8 &&
+  if (aLayersBackend != LayersBackend::LAYERS_WR &&
+      !data && aFormat == SurfaceFormat::B8G8R8X8 &&
       moz2DBackend == gfx::BackendType::CAIRO &&
       NS_IsMainThread()) {
     data = DIBTextureData::Create(aSize, aFormat, aAllocator);

@@ -1340,10 +1340,12 @@ struct ParamTraits<mozilla::layers::CompositorOptions>
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mUseAPZ);
+    WriteParam(aMsg, aParam.mUseWebRender);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mUseAPZ);
+    return ReadParam(aMsg, aIter, &aResult->mUseAPZ)
+        && ReadParam(aMsg, aIter, &aResult->mUseWebRender);
   }
 };
 

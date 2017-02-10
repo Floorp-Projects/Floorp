@@ -104,7 +104,7 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvCompositorUpdated(const uint64_t& aLayersId,
                         const TextureFactoryIdentifier& aNewIdentifier,
-                        const uint64_t& aSequenceNumber) override;
+                        const uint64_t& aSeqNo) override;
 
   virtual mozilla::ipc::IPCResult
   RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
@@ -222,6 +222,9 @@ public:
   void ProcessingError(Result aCode, const char* aReason) override;
 
   void WillEndTransaction();
+
+  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId, TextureFactoryIdentifier*) override;
+  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
   uint64_t DeviceResetSequenceNumber() const {
     return mDeviceResetSequenceNumber;

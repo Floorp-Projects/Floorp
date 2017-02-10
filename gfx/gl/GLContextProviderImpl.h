@@ -61,12 +61,13 @@ public:
      * a GL layer manager.
      *
      * @param aWidget Widget whose surface to create a context for
+     * @param aWebRender If the compositor is a WebRender compositor
      * @param aForceAccelerated true if only accelerated contexts are allowed
      *
      * @return Context to use for the window
      */
     static already_AddRefed<GLContext>
-    CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated);
+    CreateForWindow(nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated);
 
     /**
      * Create a context for offscreen rendering.  The target of this

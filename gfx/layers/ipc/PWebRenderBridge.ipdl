@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include LayersMessages;
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
+
+include WebRenderMessages;
+include protocol PCompositorBridge;
+include protocol PTexture;
+
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+
+namespace mozilla {
+namespace layers {
+
+sync protocol PWebRenderBridge
+{
+  manager PCompositorBridge;
+
+parent:
+  async NewCompositable(CompositableHandle handle, TextureInfo info);
+  async ReleaseCompositable(CompositableHandle compositable);
+
+  sync Create(IntSize aSize);
+  sync AddImage(IntSize aSize, uint32_t aStride,
+                SurfaceFormat aFormat, ByteBuffer aBytes)
+    returns (ImageKey aOutImageKey);
+  sync UpdateImage(ImageKey aImageKey, IntSize aSize,
+                   SurfaceFormat aFormat, ByteBuffer aBytes);
+  sync DeleteImage(ImageKey aImageKey);
+  sync DPBegin(IntSize aSize)
+    returns (bool aOutSuccess);
+  async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
+  sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
+  sync DPGetSnapshot(PTexture texture);
+  async AddExternalImageId(uint64_t aImageId, CompositableHandle aHandle);
+  async AddExternalImageIdForCompositable(uint64_t aImageId, CompositableHandle aHandle);
+  async RemoveExternalImageId(uint64_t aImageId);
+  async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
+  async ClearCachedResources();
+
+  async Shutdown();
+child:
+  async __delete__();
+};
+
+} // layers
+} // mozilla
