@@ -10341,7 +10341,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
     PR_LogPrint("%s: %s %s, status=%scomplete%s",
                 tagbuf, aEnter ? "enter" : "exit", aMethod,
                 NS_FRAME_IS_NOT_COMPLETE(aStatus) ? "not" : "",
-                (NS_FRAME_REFLOW_NEXTINFLOW & aStatus) ? "+reflow" : "");
+                (aStatus & NS_FRAME_REFLOW_NEXTINFLOW) ? "+reflow" : "");
   }
 }
 
@@ -11202,11 +11202,11 @@ void* nsFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
   return treeNode;
 }
 
-void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
-                                nsIFrame*            aFrame,
+void nsFrame::DisplayReflowExit(nsPresContext* aPresContext,
+                                nsIFrame* aFrame,
                                 ReflowOutput& aMetrics,
-                                nsReflowStatus       aStatus,
-                                void*                aFrameTreeNode)
+                                const nsReflowStatus& aStatus,
+                                void* aFrameTreeNode)
 {
   if (!DR_state->mActive) return;
 
