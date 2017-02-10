@@ -24,7 +24,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIFormControl.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -41,7 +40,9 @@
 #include "nsIFrame.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsFocusManager.h"
+#include "nsThreadUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
@@ -67,10 +68,13 @@ nsFormFillController::nsFormFillController() :
   mFocusedInput(nullptr),
   mFocusedInputNode(nullptr),
   mListNode(nullptr),
+  // This matches the threshold in
+  // toolkit/components/passwordmgr/LoginManagerContent.jsm.
+  mFocusAfterContextMenuThreshold(250),
   mTimeout(50),
   mMinResultsForPopup(1),
   mMaxRows(0),
-  mContextMenuFiredBeforeFocus(false),
+  mLastContextMenuEventTimeStamp(TimeStamp::Now()),
   mDisableAutoComplete(false),
   mCompleteDefaultIndex(false),
   mCompleteSelectedIndex(false),
@@ -934,7 +938,9 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   if (type.EqualsLiteral("contextmenu")) {
-    mContextMenuFiredBeforeFocus = true;
+    // Set timestamp to check for a recent contextmenu
+    // call in Focus(), to avoid showing the popup.
+    mLastContextMenuEventTimeStamp = TimeStamp::Now();
     if (mFocusedPopup)
       mFocusedPopup->ClosePopup();
     return NS_OK;
@@ -1018,6 +1024,27 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   }
 }
 
+void
+nsFormFillController::FocusEventDelayedCallback(nsIFormControl* aFormControl)
+{
+  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
+
+  if (!formControl || formControl != aFormControl) {
+    return;
+  }
+
+  uint64_t timeDiff = fabs((TimeStamp::Now() - mLastContextMenuEventTimeStamp).ToMilliseconds());
+  // If this focus doesn't follow a contextmenu event within our specified
+  // threshold then show the autocomplete popup for all password fields.
+  // This is done to avoid showing both the context menu and the popup
+  // at the same time. The threshold should be a low amount of time that
+  // makes it impossible for the user to accidentally trigger this condition.
+  if (timeDiff > mFocusAfterContextMenuThreshold
+      && formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
+   ShowPopup();
+  }
+}
+
 nsresult
 nsFormFillController::Focus(nsIDOMEvent* aEvent)
 {
@@ -1027,7 +1054,6 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 
   // Bail if we didn't start controlling the input.
   if (!mFocusedInputNode) {
-    mContextMenuFiredBeforeFocus = false;
     return NS_OK;
   }
 
@@ -1035,15 +1061,10 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
   MOZ_ASSERT(formControl);
 
-  // If this focus doesn't immediately follow a contextmenu event then show
-  // the autocomplete popup for all password fields.
-  if (!mContextMenuFiredBeforeFocus
-      && formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
-    ShowPopup();
-  }
+  NS_DispatchToMainThread(NewRunnableMethod<nsCOMPtr<nsIFormControl>>(
+      this, &nsFormFillController::FocusEventDelayedCallback, formControl));
 #endif
 
-  mContextMenuFiredBeforeFocus = false;
   return NS_OK;
 }
 
