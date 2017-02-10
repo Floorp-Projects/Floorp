@@ -2207,6 +2207,13 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETFUNNAME:
         return jsop_setfunname(GET_UINT8(pc));
 
+      case JSOP_PUSHLEXICALENV:
+        return jsop_pushlexicalenv(GET_UINT32_INDEX(pc));
+
+      case JSOP_POPLEXICALENV:
+        current->setEnvironmentChain(walkEnvironmentChain(1));
+        return Ok();
+
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
 
@@ -2270,10 +2277,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return Ok();
 
 #ifdef DEBUG
-      case JSOP_PUSHLEXICALENV:
       case JSOP_FRESHENLEXICALENV:
       case JSOP_RECREATELEXICALENV:
-      case JSOP_POPLEXICALENV:
         // These opcodes are currently unhandled by Ion, but in principle
         // there's no reason they couldn't be.  Whenever this happens, OSR
         // will have to consider that JSOP_{FRESHEN,RECREATE}LEXICALENV
@@ -11845,6 +11850,21 @@ IonBuilder::jsop_setfunname(uint8_t prefixKind)
 
     current->add(ins);
     current->push(fun);
+
+    return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_pushlexicalenv(uint32_t index)
+{
+    MOZ_ASSERT(analysis().usesEnvironmentChain());
+
+    LexicalScope* scope = &script()->getScope(index)->as<LexicalScope>();
+    MNewLexicalEnvironmentObject* ins =
+        MNewLexicalEnvironmentObject::New(alloc(), current->environmentChain(), scope);
+
+    current->add(ins);
+    current->setEnvironmentChain(ins);
 
     return resumeAfter(ins);
 }
