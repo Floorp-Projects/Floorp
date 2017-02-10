@@ -10,11 +10,11 @@
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 
 #include "nsAttrName.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIContentFilter.h"
 #include "nsICSSLoaderObserver.h"
@@ -822,7 +822,7 @@ protected:
   bool mCRInParagraphCreatesParagraph;
 
   bool mCSSAware;
-  nsAutoPtr<CSSEditUtils> mCSSEditUtils;
+  UniquePtr<CSSEditUtils> mCSSEditUtils;
 
   // Used by GetFirstSelectedCell and GetNextSelectedCell
   int32_t  mSelectedCellIndex;

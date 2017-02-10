@@ -54,6 +54,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "js/TypeDecls.h"
@@ -200,9 +201,6 @@ PROFILER_FUNC(bool profiler_is_active(), false)
 //  * gpu
 PROFILER_FUNC(bool profiler_feature_active(const char*), false)
 
-// Internal-only. Used by the event tracer.
-PROFILER_FUNC_VOID(profiler_responsiveness(const mozilla::TimeStamp& aTime))
-
 // Internal-only.
 PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
 
@@ -312,8 +310,22 @@ class Sampler;
 class nsISupports;
 class ProfilerMarkerPayload;
 
-extern MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-extern Sampler* gSampler;
+// Each thread gets its own PseudoStack on thread creation, which is then
+// destroyed on thread destruction. (GeckoProfilerInitRAII handles this for the
+// main thread and AutoProfileRegister handles it for others threads.)
+// tlsPseudoStack is the owning reference. Other non-owning references to it
+// are handed out as follows.
+//
+// - ThreadInfo has a long-lived one, which we must ensure is nulled or
+//   destroyed before the PseudoStack is destroyed.
+//
+// - profiler_call_{enter,exit}() call pairs temporarily get one. RAII classes
+//   ensure these calls are balanced, and they occur on the thread itself,
+//   which means they are necessarily bounded by the lifetime of the thread,
+//   which ensures they can't be used after the PseudoStack is destroyed.
+//
+extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
+
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -333,6 +345,8 @@ profiler_call_enter(const char* aInfo,
                     js::ProfileEntry::Category aCategory,
                     void *aFrameAddress, bool aCopy, uint32_t line)
 {
+  // This function runs both on and off the main thread.
+
   // check if we've been initialized to avoid calling pthread_getspecific
   // with a null tlsStack which will return undefined results.
   if (!stack_key_initialized)
@@ -359,11 +373,13 @@ profiler_call_enter(const char* aInfo,
 static inline void
 profiler_call_exit(void* aHandle)
 {
+  // This function runs both on and off the main thread.
+
   if (!aHandle)
     return;
 
   PseudoStack *stack = (PseudoStack*)aHandle;
-  stack->popAndMaybeDelete();
+  stack->pop();
 }
 
 void profiler_add_marker(const char *aMarker,
@@ -506,6 +522,8 @@ private:
 inline PseudoStack*
 profiler_get_pseudo_stack(void)
 {
+  // This function runs both on and off the main thread.
+
   if (!stack_key_initialized)
     return nullptr;
   return tlsPseudoStack.get();

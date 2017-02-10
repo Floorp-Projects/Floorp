@@ -465,7 +465,6 @@
 @RESPATH@/components/nsWebHandlerApp.js
 @RESPATH@/components/satchel.manifest
 @RESPATH@/components/nsFormAutoComplete.js
-@RESPATH@/components/nsFormHistory.js
 @RESPATH@/components/FormHistoryStartup.js
 @RESPATH@/components/nsInputListAutoComplete.js
 @RESPATH@/components/formautofill.manifest

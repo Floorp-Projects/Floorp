@@ -32,10 +32,12 @@ CacheRegisterAllocator::addressOf(MacroAssembler& masm, BaselineFrameSlot slot) 
 // BaselineCacheIRCompiler compiles CacheIR to BaselineIC native code.
 class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 {
+#ifdef DEBUG
     // Some Baseline IC stubs can be used in IonMonkey through SharedStubs.
     // Those stubs have different machine code, so we need to track whether
     // we're compiling for Baseline or Ion.
     ICStubEngine engine_;
+#endif
 
     uint32_t stubDataOffset_;
     bool inStubFrame_;
@@ -43,8 +45,8 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
-    MOZ_MUST_USE bool callTypeUpdateIC(AutoStubFrame& stubFrame, Register obj, ValueOperand val,
-                                       Register scratch, LiveGeneralRegisterSet saveRegs);
+    MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val, Register scratch,
+                                       LiveGeneralRegisterSet saveRegs);
 
     MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
     MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
@@ -55,7 +57,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
                             uint32_t stubDataOffset)
       : CacheIRCompiler(cx, writer, Mode::Baseline),
+#ifdef DEBUG
         engine_(engine),
+#endif
         stubDataOffset_(stubDataOffset),
         inStubFrame_(false),
         makesGCCalls_(false)
@@ -84,44 +88,35 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 
 enum class CallCanGC { CanGC, CanNotGC };
 
-// Instructions that have to perform a callVM require a stub frame. Use
-// AutoStubFrame before allocating any registers, then call its enter() and
-// leave() methods to enter/leave the stub frame.
+// Instructions that have to perform a callVM require a stub frame. Call its
+// enter() and leave() methods to enter/leave the stub frame.
 class MOZ_RAII AutoStubFrame
 {
     BaselineCacheIRCompiler& compiler;
 #ifdef DEBUG
     uint32_t framePushedAtEnterStubFrame_;
 #endif
-    Maybe<AutoScratchRegister> tail;
 
     AutoStubFrame(const AutoStubFrame&) = delete;
     void operator=(const AutoStubFrame&) = delete;
 
   public:
     explicit AutoStubFrame(BaselineCacheIRCompiler& compiler)
-      : compiler(compiler),
+      : compiler(compiler)
 #ifdef DEBUG
-        framePushedAtEnterStubFrame_(0),
+        , framePushedAtEnterStubFrame_(0)
 #endif
-        tail()
-    {
-        // We use ICTailCallReg when entering the stub frame, so ensure it's not
-        // used for something else.
-        if (compiler.allocator.isAllocatable(ICTailCallReg))
-            tail.emplace(compiler.allocator, compiler.masm, ICTailCallReg);
-    }
+    { }
 
     void enter(MacroAssembler& masm, Register scratch, CallCanGC canGC = CallCanGC::CanGC) {
         MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
-        if (compiler.engine_ == ICStubEngine::Baseline) {
-            EmitBaselineEnterStubFrame(masm, scratch);
+        MOZ_ASSERT(compiler.engine_ == ICStubEngine::Baseline);
+
+        EmitBaselineEnterStubFrame(masm, scratch);
+
 #ifdef DEBUG
-            framePushedAtEnterStubFrame_ = masm.framePushed();
+        framePushedAtEnterStubFrame_ = masm.framePushed();
 #endif
-        } else {
-            EmitIonEnterStubFrame(masm, scratch);
-        }
 
         MOZ_ASSERT(!compiler.inStubFrame_);
         compiler.inStubFrame_ = true;
@@ -132,17 +127,13 @@ class MOZ_RAII AutoStubFrame
         MOZ_ASSERT(compiler.inStubFrame_);
         compiler.inStubFrame_ = false;
 
-        if (compiler.engine_ == ICStubEngine::Baseline) {
 #ifdef DEBUG
-            masm.setFramePushed(framePushedAtEnterStubFrame_);
-            if (calledIntoIon)
-                masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
+        masm.setFramePushed(framePushedAtEnterStubFrame_);
+        if (calledIntoIon)
+            masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
 #endif
 
-            EmitBaselineLeaveStubFrame(masm, calledIntoIon);
-        } else {
-            EmitIonLeaveStubFrame(masm);
-        }
+        EmitBaselineLeaveStubFrame(masm, calledIntoIon);
     }
 
 #ifdef DEBUG
@@ -162,10 +153,9 @@ BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
         return false;
 
     MOZ_ASSERT(fun.expectTailCall == NonTailCall);
-    if (engine_ == ICStubEngine::Baseline)
-        EmitBaselineCallVM(code, masm);
-    else
-        EmitIonCallVM(code, fun.explicitStackSlots(), masm);
+    MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
+
+    EmitBaselineCallVM(code, masm);
     return true;
 }
 
@@ -377,8 +367,6 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 {
     MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
 
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
 
@@ -400,6 +388,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     // Align the stack such that the JitFrameLayout is aligned on
@@ -444,8 +433,6 @@ static const VMFunction CallNativeGetterInfo =
 bool
 BaselineCacheIRCompiler::emitCallNativeGetterResult()
 {
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
 
@@ -453,6 +440,7 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     // Load the callee in the scratch register.
@@ -475,8 +463,6 @@ static const VMFunction ProxyGetPropertyInfo =
 bool
 BaselineCacheIRCompiler::emitCallProxyGetResult()
 {
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address idAddr(stubAddress(reader.stubOffset()));
 
@@ -484,6 +470,7 @@ BaselineCacheIRCompiler::emitCallProxyGetResult()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     // Load the jsid in the scratch register.
@@ -506,8 +493,6 @@ static const VMFunction ProxyGetPropertyByValueInfo =
 bool
 BaselineCacheIRCompiler::emitCallProxyGetByValueResult()
 {
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
 
@@ -515,6 +500,7 @@ BaselineCacheIRCompiler::emitCallProxyGetByValueResult()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     masm.Push(idVal);
@@ -671,8 +657,8 @@ BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
 }
 
 bool
-BaselineCacheIRCompiler::callTypeUpdateIC(AutoStubFrame& stubFrame, Register obj, ValueOperand val,
-                                          Register scratch, LiveGeneralRegisterSet saveRegs)
+BaselineCacheIRCompiler::callTypeUpdateIC(Register obj, ValueOperand val, Register scratch,
+                                          LiveGeneralRegisterSet saveRegs)
 {
     // Ensure the stack is empty for the VM call below.
     allocator.discardStack(masm);
@@ -703,6 +689,7 @@ BaselineCacheIRCompiler::callTypeUpdateIC(AutoStubFrame& stubFrame, Register obj
     Label done;
     masm.branch32(Assembler::Equal, scratch, Imm32(1), &done);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch, CallCanGC::CanNotGC);
 
     masm.PushRegsInMask(saveRegs);
@@ -734,36 +721,35 @@ BaselineCacheIRCompiler::emitStoreSlotShared(bool isFixed)
 
     // Allocate the fixed registers first. These need to be fixed for
     // callTypeUpdateIC.
-    AutoStubFrame stubFrame(*this);
-    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
     ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
     Register obj = allocator.useRegister(masm, objId);
+    Maybe<AutoScratchRegister> scratch2;
+    if (!isFixed)
+        scratch2.emplace(allocator, masm);
 
     LiveGeneralRegisterSet saveRegs;
     saveRegs.add(obj);
     saveRegs.add(val);
-    if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+    if (!callTypeUpdateIC(obj, val, scratch1, saveRegs))
         return false;
 
-    masm.load32(offsetAddr, scratch);
+    masm.load32(offsetAddr, scratch1);
 
     if (isFixed) {
-        BaseIndex slot(obj, scratch, TimesOne);
+        BaseIndex slot(obj, scratch1, TimesOne);
         EmitPreBarrier(masm, slot, MIRType::Value);
         masm.storeValue(val, slot);
     } else {
-        // To avoid running out of registers on x86, use ICStubReg as scratch.
-        // We don't need it anymore.
-        Register slots = ICStubReg;
-        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), slots);
-        BaseIndex slot(slots, scratch, TimesOne);
+        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2.ref());
+        BaseIndex slot(scratch2.ref(), scratch1, TimesOne);
         EmitPreBarrier(masm, slot, MIRType::Value);
         masm.storeValue(val, slot);
     }
 
     if (cx_->nursery().exists())
-        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch1, LiveGeneralRegisterSet(), cx_);
     return true;
 }
 
@@ -787,11 +773,12 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
 
     // Allocate the fixed registers first. These need to be fixed for
     // callTypeUpdateIC.
-    AutoStubFrame stubFrame(*this);
-    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
     ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
     Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratch2(allocator, masm);
+
     bool changeGroup = reader.readBool();
     Address newGroupAddr = stubAddress(reader.stubOffset());
     Address newShapeAddr = stubAddress(reader.stubOffset());
@@ -810,32 +797,28 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         AllocatableRegisterSet regs(RegisterSet::Volatile());
         LiveRegisterSet save(regs.asLiveSet());
 
-        // Use ICStubReg as second scratch.
-        if (!save.has(ICStubReg))
-            save.add(ICStubReg);
-
         masm.PushRegsInMask(save);
 
-        masm.setupUnalignedABICall(scratch);
-        masm.loadJSContext(scratch);
-        masm.passABIArg(scratch);
+        masm.setupUnalignedABICall(scratch1);
+        masm.loadJSContext(scratch1);
+        masm.passABIArg(scratch1);
         masm.passABIArg(obj);
-        masm.load32(numNewSlotsAddr, ICStubReg);
-        masm.passABIArg(ICStubReg);
+        masm.load32(numNewSlotsAddr, scratch2);
+        masm.passABIArg(scratch2);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsDontReportOOM));
-        masm.mov(ReturnReg, scratch);
+        masm.mov(ReturnReg, scratch1);
 
         LiveRegisterSet ignore;
-        ignore.add(scratch);
+        ignore.add(scratch1);
         masm.PopRegsInMaskIgnore(save, ignore);
 
-        masm.branchIfFalseBool(scratch, failure->label());
+        masm.branchIfFalseBool(scratch1, failure->label());
     }
 
     LiveGeneralRegisterSet saveRegs;
     saveRegs.add(obj);
     saveRegs.add(val);
-    if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+    if (!callTypeUpdateIC(obj, val, scratch1, saveRegs))
         return false;
 
     if (changeGroup) {
@@ -843,47 +826,44 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         // per the acquired properties analysis. Only change the group if the
         // old group still has a newScript. This only applies to PlainObjects.
         Label noGroupChange;
-        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch1);
         masm.branchPtr(Assembler::Equal,
-                       Address(scratch, ObjectGroup::offsetOfAddendum()),
+                       Address(scratch1, ObjectGroup::offsetOfAddendum()),
                        ImmWord(0),
                        &noGroupChange);
 
         // Reload the new group from the cache.
-        masm.loadPtr(newGroupAddr, scratch);
+        masm.loadPtr(newGroupAddr, scratch1);
 
         Address groupAddr(obj, JSObject::offsetOfGroup());
         EmitPreBarrier(masm, groupAddr, MIRType::ObjectGroup);
-        masm.storePtr(scratch, groupAddr);
+        masm.storePtr(scratch1, groupAddr);
 
         masm.bind(&noGroupChange);
     }
 
     // Update the object's shape.
     Address shapeAddr(obj, ShapedObject::offsetOfShape());
-    masm.loadPtr(newShapeAddr, scratch);
+    masm.loadPtr(newShapeAddr, scratch1);
     EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
-    masm.storePtr(scratch, shapeAddr);
+    masm.storePtr(scratch1, shapeAddr);
 
     // Perform the store. No pre-barrier required since this is a new
     // initialization.
-    masm.load32(offsetAddr, scratch);
+    masm.load32(offsetAddr, scratch1);
     if (op == CacheOp::AddAndStoreFixedSlot) {
-        BaseIndex slot(obj, scratch, TimesOne);
+        BaseIndex slot(obj, scratch1, TimesOne);
         masm.storeValue(val, slot);
     } else {
         MOZ_ASSERT(op == CacheOp::AddAndStoreDynamicSlot ||
                    op == CacheOp::AllocateAndStoreDynamicSlot);
-        // To avoid running out of registers on x86, use ICStubReg as scratch.
-        // We don't need it anymore.
-        Register slots = ICStubReg;
-        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), slots);
-        BaseIndex slot(slots, scratch, TimesOne);
+        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
+        BaseIndex slot(scratch2, scratch1, TimesOne);
         masm.storeValue(val, slot);
     }
 
     if (cx_->nursery().exists())
-        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch1, LiveGeneralRegisterSet(), cx_);
     return true;
 }
 
@@ -914,7 +894,6 @@ BaselineCacheIRCompiler::emitStoreUnboxedProperty()
 
     // Allocate the fixed registers first. These need to be fixed for
     // callTypeUpdateIC.
-    AutoStubFrame stubFrame(*this);
     AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
     ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
@@ -925,7 +904,7 @@ BaselineCacheIRCompiler::emitStoreUnboxedProperty()
         LiveGeneralRegisterSet saveRegs;
         saveRegs.add(obj);
         saveRegs.add(val);
-        if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+        if (!callTypeUpdateIC(obj, val, scratch, saveRegs))
             return false;
     }
 
@@ -954,18 +933,18 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
 
     // Allocate the fixed registers first. These need to be fixed for
     // callTypeUpdateIC.
-    AutoStubFrame stubFrame(*this);
     AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
     ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
 
     Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratch2(allocator, masm);
 
-    // We don't need a type update IC if the property is always a string.
+    // We don't need a type update IC if the property is always a string.scratch
     if (type != ReferenceTypeDescr::TYPE_STRING) {
         LiveGeneralRegisterSet saveRegs;
         saveRegs.add(obj);
         saveRegs.add(val);
-        if (!callTypeUpdateIC(stubFrame, obj, val, scratch1, saveRegs))
+        if (!callTypeUpdateIC(obj, val, scratch1, saveRegs))
             return false;
     }
 
@@ -973,10 +952,6 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     LoadTypedThingData(masm, layout, obj, scratch1);
     masm.addPtr(offsetAddr, scratch1);
     Address dest(scratch1, 0);
-
-    // To avoid running out of registers on x86, use ICStubReg as second
-    // scratch. It won't be used after this.
-    Register scratch2 = ICStubReg;
 
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
@@ -1043,8 +1018,6 @@ static const VMFunction CallNativeSetterInfo =
 bool
 BaselineCacheIRCompiler::emitCallNativeSetter()
 {
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address setterAddr(stubAddress(reader.stubOffset()));
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1053,6 +1026,7 @@ BaselineCacheIRCompiler::emitCallNativeSetter()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     // Load the callee in the scratch register.
@@ -1072,31 +1046,30 @@ BaselineCacheIRCompiler::emitCallNativeSetter()
 bool
 BaselineCacheIRCompiler::emitCallScriptedSetter()
 {
-    AutoStubFrame stubFrame(*this);
-
-    // We don't have many registers available on x86, so we use a single
-    // scratch register.
-    AutoScratchRegisterExcluding scratch(allocator, masm, ArgumentsRectifierReg);
+    AutoScratchRegisterExcluding scratch1(allocator, masm, ArgumentsRectifierReg);
+    AutoScratchRegister scratch2(allocator, masm);
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address setterAddr(stubAddress(reader.stubOffset()));
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
-    // First, ensure our setter is non-lazy and has JIT code.
+    // First, ensure our setter is non-lazy and has JIT code. This also loads
+    // the callee in scratch1.
     {
         FailurePath* failure;
         if (!addFailurePath(&failure))
             return false;
 
-        masm.loadPtr(setterAddr, scratch);
-        masm.branchIfFunctionHasNoScript(scratch, failure->label());
-        masm.loadPtr(Address(scratch, JSFunction::offsetOfNativeOrScript()), scratch);
-        masm.loadBaselineOrIonRaw(scratch, scratch, failure->label());
+        masm.loadPtr(setterAddr, scratch1);
+        masm.branchIfFunctionHasNoScript(scratch1, failure->label());
+        masm.loadPtr(Address(scratch1, JSFunction::offsetOfNativeOrScript()), scratch2);
+        masm.loadBaselineOrIonRaw(scratch2, scratch2, failure->label());
     }
 
     allocator.discardStack(masm);
 
-    stubFrame.enter(masm, scratch);
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch2);
 
     // Align the stack such that the JitFrameLayout is aligned on
     // JitStackAlignment.
@@ -1109,37 +1082,35 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
 
     // Now that the object register is no longer needed, use it as second
     // scratch.
-    Register scratch2 = obj;
     EmitBaselineCreateStubFrameDescriptor(masm, scratch2, JitFrameLayout::Size());
     masm.Push(Imm32(1));  // ActualArgc
 
     // Push callee.
-    masm.loadPtr(setterAddr, scratch);
-    masm.Push(scratch);
+    masm.Push(scratch1);
 
     // Push frame descriptor.
     masm.Push(scratch2);
 
     // Load callee->nargs in scratch2 and the JIT code in scratch.
     Label noUnderflow;
-    masm.load16ZeroExtend(Address(scratch, JSFunction::offsetOfNargs()), scratch2);
-    masm.loadPtr(Address(scratch, JSFunction::offsetOfNativeOrScript()), scratch);
-    masm.loadBaselineOrIonRaw(scratch, scratch, nullptr);
+    masm.load16ZeroExtend(Address(scratch1, JSFunction::offsetOfNargs()), scratch2);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfNativeOrScript()), scratch1);
+    masm.loadBaselineOrIonRaw(scratch1, scratch1, nullptr);
 
     // Handle arguments underflow.
     masm.branch32(Assembler::BelowOrEqual, scratch2, Imm32(1), &noUnderflow);
     {
         // Call the arguments rectifier.
-        MOZ_ASSERT(ArgumentsRectifierReg != scratch);
+        MOZ_ASSERT(ArgumentsRectifierReg != scratch1);
 
         JitCode* argumentsRectifier = cx_->runtime()->jitRuntime()->getArgumentsRectifier();
-        masm.movePtr(ImmGCPtr(argumentsRectifier), scratch);
-        masm.loadPtr(Address(scratch, JitCode::offsetOfCode()), scratch);
+        masm.movePtr(ImmGCPtr(argumentsRectifier), scratch1);
+        masm.loadPtr(Address(scratch1, JitCode::offsetOfCode()), scratch1);
         masm.movePtr(ImmWord(1), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);
-    masm.callJit(scratch);
+    masm.callJit(scratch1);
 
     stubFrame.leave(masm, true);
     return true;
@@ -1152,8 +1123,6 @@ static const VMFunction SetArrayLengthInfo =
 bool
 BaselineCacheIRCompiler::emitCallSetArrayLength()
 {
-    AutoStubFrame stubFrame(*this);
-
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     bool strict = reader.readBool();
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
@@ -1162,6 +1131,7 @@ BaselineCacheIRCompiler::emitCallSetArrayLength()
 
     allocator.discardStack(masm);
 
+    AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
     masm.Push(Imm32(strict));

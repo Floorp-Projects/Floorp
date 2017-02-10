@@ -116,7 +116,6 @@ USE_LIBS += [
 ]
 
 USE_LIBS += [
-    'gkmedias',
     'lgpllibs',
     'nspr',
     'nss',

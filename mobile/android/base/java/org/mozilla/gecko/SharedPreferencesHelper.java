@@ -82,14 +82,14 @@ public final class SharedPreferencesHelper
             case APP:
                 return GeckoSharedPrefs.forApp(mContext);
             case PROFILE:
-                final String profileName = message.getString("profileName", null);
+                final String profileName = message.getString("profileName");
                 if (profileName == null) {
                     return GeckoSharedPrefs.forProfile(mContext);
                 } else {
                     return GeckoSharedPrefs.forProfileName(mContext, profileName);
                 }
             case GLOBAL:
-                final String branch = message.getString("branch", null);
+                final String branch = message.getString("branch");
                 if (branch == null) {
                     return PreferenceManager.getDefaultSharedPreferences(mContext);
                 } else {
@@ -258,8 +258,8 @@ public final class SharedPreferencesHelper
         final boolean enable = message.getBoolean("enable");
 
         final Scope scope = Scope.forKey(message.getString("scope"));
-        final String profileName = message.getString("profileName", null);
-        final String branch = getBranch(scope, profileName, message.getString("branch", null));
+        final String profileName = message.getString("profileName");
+        final String branch = getBranch(scope, profileName, message.getString("branch"));
 
         if (branch == null) {
             Log.e(LOGTAG, "No branch specified for SharedPreference:Observe; aborting.");

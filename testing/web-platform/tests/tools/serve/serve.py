@@ -59,6 +59,7 @@ fetch_tests_from_worker(new Worker("%(worker_path)s"));
 
     def _get_meta(self, request):
         path = filesystem_path(self.base_path, request, self.url_base)
+        path = path.replace(".any.worker.html", ".any.js")
         path = path.replace(".worker.html", ".worker.js")
         meta_values = []
         with open(path) as f:

@@ -99,6 +99,10 @@ FileCreatorHelper::FileCreatorHelper(Promise* aPromise,
   MOZ_ASSERT(aPromise);
 }
 
+FileCreatorHelper::~FileCreatorHelper()
+{
+}
+
 void
 FileCreatorHelper::SendRequest(nsIFile* aFile,
                                const ChromeFilePropertyBag& aBag,

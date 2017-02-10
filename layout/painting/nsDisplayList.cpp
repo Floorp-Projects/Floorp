@@ -4434,9 +4434,13 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
     if (br->mBorderStyles[i] == NS_STYLE_BORDER_STYLE_SOLID) {
       mColors[i] = ToDeviceColor(br->mBorderColors[i]);
       mWidths[i] = br->mBorderWidths[i];
+      mBorderStyles[i] = br->mBorderStyles[i];
     } else {
       mWidths[i] = 0;
     }
+  }
+  NS_FOR_CSS_FULL_CORNERS(corner) {
+    mCorners[corner] = LayerSize(br->mBorderRadii[corner].width, br->mBorderRadii[corner].height);
   }
 
   mRect = ViewAs<LayerPixel>(br->mOuterRect);
@@ -4456,9 +4460,10 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
       return nullptr;
   }
   layer->SetRect(mRect);
-  layer->SetCornerRadii({ LayerSize(), LayerSize(), LayerSize(), LayerSize() });
+  layer->SetCornerRadii(mCorners);
   layer->SetColors(mColors);
   layer->SetWidths(mWidths);
+  layer->SetStyles(mBorderStyles);
   layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
                                                       aContainerParameters.mOffset.y, 0));
   return layer.forget();

@@ -44,6 +44,21 @@ class ServoStyleSet
 {
   friend class ServoRestyleManager;
 public:
+  static bool IsInServoTraversal(bool aAssertServoTraversalOrMainThread = true)
+  {
+    // The callers of this function are generally main-thread-only _except_
+    // for potentially running during the Servo traversal, in which case they may
+    // take special paths that avoid writing to caches and the like. In order
+    // to allow those callers to branch efficiently without checking TLS, we
+    // maintain this static boolean. However, the danger is that those callers
+    // are generally unprepared to deal with non-Servo-but-also-non-main-thread
+    // callers, and are likely to take the main-thread codepath if this function
+    // returns false. So we assert against other non-main-thread callers here.
+    MOZ_ASSERT_IF(aAssertServoTraversalOrMainThread,
+                  sInServoTraversal || NS_IsMainThread());
+    return sInServoTraversal;
+  }
+
   ServoStyleSet();
 
   void Init(nsPresContext* aPresContext);
@@ -218,6 +233,8 @@ private:
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
+
+  static bool sInServoTraversal;
 };
 
 } // namespace mozilla

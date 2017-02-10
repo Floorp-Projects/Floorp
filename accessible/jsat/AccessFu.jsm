@@ -569,25 +569,12 @@ var Output = {
     }
   },
 
-  get androidBridge() {
-    delete this.androidBridge;
-    if (Utils.MozBuildApp === 'mobile/android') {
-      this.androidBridge = Services.androidBridge;
-    } else {
-      this.androidBridge = null;
-    }
-    return this.androidBridge;
-  },
-
   Android: function Android(aDetails, aBrowser) {
     const ANDROID_VIEW_TEXT_CHANGED = 0x10;
     const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
 
-    if (!this.androidBridge) {
-      return;
-    }
-
     for (let androidEvent of aDetails) {
+      androidEvent.type = 'Accessibility:Event';
       if (androidEvent.bounds) {
         androidEvent.bounds = AccessFu.adjustContentBounds(
           androidEvent.bounds, aBrowser);
@@ -607,9 +594,8 @@ var Output = {
             androidEvent.brailleOutput);
           break;
       }
-      let win = Utils.win;
-      let view = win && win.QueryInterface(Ci.nsIAndroidView);
-      view.dispatch('Accessibility:Event', androidEvent);
+
+      Utils.win.WindowEventDispatcher.sendRequest(androidEvent);
     }
   },
 
@@ -805,9 +791,7 @@ var Input = {
 
         if (Utils.MozBuildApp == 'mobile/android') {
           // Return focus to native Android browser chrome.
-          let win = Utils.win;
-          let view = win && win.QueryInterface(Ci.nsIAndroidView);
-          view.dispatch('ToggleChrome:Focus');
+          Utils.win.WindowEventDispatcher.dispatch('ToggleChrome:Focus');
         }
         break;
       case aEvent.DOM_VK_RETURN:

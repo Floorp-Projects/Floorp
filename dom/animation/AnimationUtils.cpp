@@ -13,6 +13,8 @@
 #include "nsGlobalWindow.h"
 #include "nsString.h"
 #include "xpcpublic.h" // For xpc::NativeGlobal
+#include "mozilla/EffectSet.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -81,6 +83,19 @@ AnimationUtils::IsCoreAPIEnabled()
 AnimationUtils::IsCoreAPIEnabledForCaller(dom::CallerType aCallerType)
 {
   return IsCoreAPIEnabled() || aCallerType == dom::CallerType::System;
+}
+
+/* static */ bool
+AnimationUtils::EffectSetContainsAnimatedScale(EffectSet& aEffects,
+                                               const nsIFrame* aFrame)
+{
+  for (const dom::KeyframeEffectReadOnly* effect : aEffects) {
+    if (effect->ContainsAnimatedScale(aFrame)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace mozilla

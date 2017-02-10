@@ -8,6 +8,7 @@
 
 #include "nsCSSValue.h"
 
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -408,43 +409,55 @@ nscoord nsCSSValue::GetPixelLength() const
   return nsPresContext::CSSPixelsToAppUnits(float(mValue.mFloat*scaleFactor));
 }
 
+// Assert against resetting non-trivial CSS values from the parallel Servo
+// traversal, since the refcounts aren't thread-safe.
+// Note that the caller might be an OMTA thread, which is allowed to operate off
+// main thread because it owns all of the corresponding nsCSSValues and any that
+// they might be sharing members with. So pass false for aAssertServoOrMainThread.
+#define DO_RELEASE(member) {                                                  \
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(false));                      \
+  mValue.member->Release();                                                   \
+}
+
 void nsCSSValue::DoReset()
 {
   if (UnitHasStringValue()) {
-    mValue.mString->Release();
+    DO_RELEASE(mString);
   } else if (IsFloatColorUnit()) {
-    mValue.mFloatColor->Release();
+    DO_RELEASE(mFloatColor);
   } else if (eCSSUnit_ComplexColor == mUnit) {
-    mValue.mComplexColor->Release();
+    DO_RELEASE(mComplexColor);
   } else if (UnitHasArrayValue()) {
-    mValue.mArray->Release();
+    DO_RELEASE(mArray);
   } else if (eCSSUnit_URL == mUnit) {
-    mValue.mURL->Release();
+    DO_RELEASE(mURL);
   } else if (eCSSUnit_Image == mUnit) {
-    mValue.mImage->Release();
+    DO_RELEASE(mImage);
   } else if (eCSSUnit_Gradient == mUnit) {
-    mValue.mGradient->Release();
+    DO_RELEASE(mGradient);
   } else if (eCSSUnit_TokenStream == mUnit) {
-    mValue.mTokenStream->Release();
+    DO_RELEASE(mTokenStream);
   } else if (eCSSUnit_Pair == mUnit) {
-    mValue.mPair->Release();
+    DO_RELEASE(mPair);
   } else if (eCSSUnit_Triplet == mUnit) {
-    mValue.mTriplet->Release();
+    DO_RELEASE(mTriplet);
   } else if (eCSSUnit_Rect == mUnit) {
-    mValue.mRect->Release();
+    DO_RELEASE(mRect);
   } else if (eCSSUnit_List == mUnit) {
-    mValue.mList->Release();
+    DO_RELEASE(mList);
   } else if (eCSSUnit_SharedList == mUnit) {
-    mValue.mSharedList->Release();
+    DO_RELEASE(mSharedList);
   } else if (eCSSUnit_PairList == mUnit) {
-    mValue.mPairList->Release();
+    DO_RELEASE(mPairList);
   } else if (eCSSUnit_GridTemplateAreas == mUnit) {
-    mValue.mGridTemplateAreas->Release();
+    DO_RELEASE(mGridTemplateAreas);
   } else if (eCSSUnit_FontFamilyList == mUnit) {
-    mValue.mFontFamilyList->Release();
+    DO_RELEASE(mFontFamilyList);
   }
   mUnit = eCSSUnit_Null;
 }
+
+#undef DO_RELEASE
 
 void nsCSSValue::SetIntValue(int32_t aValue, nsCSSUnit aUnit)
 {

@@ -142,8 +142,6 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 template <typename T, typename Wrapper>
 class PersistentRootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
 
-static void* const ConstNullValue = nullptr;
-
 namespace gc {
 struct Cell;
 template<typename T>
@@ -471,7 +469,8 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>>
     MOZ_IMPLICIT Handle(decltype(nullptr)) {
         static_assert(mozilla::IsPointer<T>::value,
                       "nullptr_t overload not valid for non-pointer types");
-        ptr = reinterpret_cast<const T*>(&js::ConstNullValue);
+        static void* const ConstNullValue = nullptr;
+        ptr = reinterpret_cast<const T*>(&ConstNullValue);
     }
 
     MOZ_IMPLICIT Handle(MutableHandle<T> handle) {

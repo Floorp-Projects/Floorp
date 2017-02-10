@@ -30,7 +30,6 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
     private static final UriMatcher URI_MATCHER;
 
 
-    // This should be kept in sync with the db version in toolkit/components/satchel/nsFormHistory.js
     private static final int DB_VERSION = 4;
     private static final String DB_FILENAME = "formhistory.sqlite";
     private static final String TELEMETRY_TAG = "SQLITEBRIDGE_PROVIDER_FORMS";

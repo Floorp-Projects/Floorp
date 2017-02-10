@@ -14,6 +14,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 
 #include "nsICachingChannel.h"
 #include "nsIDOMDocument.h"
@@ -1464,6 +1465,10 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   // true: spoof with URI of the current request
   bool userSpoofReferrerSource = gHttpHandler->SpoofReferrerSource();
 
+  // false: use real referrer when leaving .onion
+  // true: use an empty referrer
+  bool userHideOnionReferrerSource = gHttpHandler->HideOnionReferrerSource();
+
   // 0: full URI
   // 1: scheme+host+port+path
   // 2: scheme+host+port
@@ -1615,6 +1620,13 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   rv = clone->GetAsciiHost(referrerHost);
   if (NS_FAILED(rv)) return rv;
+
+  // Send an empty referrer if leaving a .onion domain.
+  if(userHideOnionReferrerSource &&
+     !currentHost.Equals(referrerHost) &&
+     StringEndsWith(referrerHost, NS_LITERAL_CSTRING(".onion"))) {
+    return NS_OK;
+  }
 
   // check policy for sending ref only when hosts match
   if (userReferrerXOriginPolicy == 2 && !currentHost.Equals(referrerHost))

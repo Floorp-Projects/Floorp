@@ -29,10 +29,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <process.h>
-#include "platform.h"
 #include "ProfileEntry.h"
-#include "ThreadInfo.h"
-#include "ThreadResponsiveness.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
@@ -168,11 +165,11 @@ class SamplerThread
       gSampler->DeleteExpiredMarkers();
 
       if (!gSampler->IsPaused()) {
-        mozilla::StaticMutexAutoLock lock(Sampler::sRegisteredThreadsMutex);
+        mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < Sampler::sRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*Sampler::sRegisteredThreads)[i];
+        for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+          ThreadInfo* info = (*sRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
           if (!info->hasProfile() || info->IsPendingDelete()) {

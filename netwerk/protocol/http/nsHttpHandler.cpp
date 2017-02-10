@@ -168,6 +168,7 @@ nsHttpHandler::nsHttpHandler()
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mSpoofReferrerSource(false)
+    , mHideOnionReferrerSource(false)
     , mReferrerTrimmingPolicy(0)
     , mReferrerXOriginTrimmingPolicy(0)
     , mReferrerXOriginPolicy(0)
@@ -1074,6 +1075,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("referer.spoofSource"), &cVar);
         if (NS_SUCCEEDED(rv))
             mSpoofReferrerSource = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("referer.spoofOnionSource"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("referer.spoofOnionSource"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mHideOnionReferrerSource = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("referer.trimmingPolicy"))) {

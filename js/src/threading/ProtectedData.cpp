@@ -47,7 +47,7 @@ CheckActiveThread<Background>::check() const
         return;
 
     JSContext* cx = TlsContext.get();
-    MOZ_ASSERT(cx == cx->runtime()->activeContext);
+    MOZ_ASSERT(cx == cx->runtime()->activeContext());
 #endif // XP_WIN
 }
 

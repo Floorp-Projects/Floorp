@@ -268,6 +268,14 @@ DataChannelConnection::Destroy()
 
   MOZ_ASSERT(mSTS);
   ASSERT_WEBRTC(NS_IsMainThread());
+  // Must do this in Destroy() since we may then delete this object.
+  // Do this before dispatching to create a consistent ordering of calls to
+  // the SCTP stack.
+  if (mUsingDtls) {
+    usrsctp_deregister_address(static_cast<void *>(this));
+    LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
+  }
+
   // Finish Destroy on STS thread to avoid bug 876167 - once that's fixed,
   // the usrsctp_close() calls can move back here (and just proxy the
   // disconnect_all())
@@ -279,12 +287,6 @@ DataChannelConnection::Destroy()
   // These will be released on STS
   mSocket = nullptr;
   mMasterSocket = nullptr; // also a flag that we've Destroyed this connection
-
-  // Must do this in Destroy() since we may then delete this object
-  if (mUsingDtls) {
-    usrsctp_deregister_address(static_cast<void *>(this));
-    LOG(("Deregistered %p from the SCTP stack.", static_cast<void *>(this)));
-  }
 
   // We can't get any more new callbacks from the SCTP library
   // All existing callbacks have refs to DataChannelConnection

@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIDOMNavigator.h"
@@ -226,7 +227,7 @@ public:
   Presentation* GetPresentation(ErrorResult& aRv);
 
   bool SendBeacon(const nsAString& aUrl,
-                  const Nullable<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aData,
+                  const Nullable<fetch::BodyInit>& aData,
                   ErrorResult& aRv);
 
   void MozGetUserMedia(const MediaStreamConstraints& aConstraints,

@@ -1763,5 +1763,54 @@ KeyframeEffectReadOnly::NeedsBaseStyle(nsCSSPropertyID aProperty) const
   return false;
 }
 
+bool
+KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
+{
+  if (!IsCurrent()) {
+    return false;
+  }
+
+  for (const AnimationProperty& prop : mProperties) {
+    if (prop.mProperty != eCSSProperty_transform) {
+      continue;
+    }
+
+    if (NeedsBaseStyle(prop.mProperty)) {
+      StyleAnimationValue baseStyle =
+        EffectCompositor::GetBaseStyle(prop.mProperty, aFrame);
+      MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
+      if (baseStyle.IsNull()) {
+        // If we failed to get the base style, we consider it has scale value
+        // here for the safety.
+        return true;
+      }
+      gfxSize size = baseStyle.GetScaleValue(aFrame);
+      if (size != gfxSize(1.0f, 1.0f)) {
+        return true;
+      }
+    }
+
+    // This is actually overestimate because there are some cases that combining
+    // the base value and from/to value produces 1:1 scale. But it doesn't
+    // really matter.
+    for (const AnimationPropertySegment& segment : prop.mSegments) {
+      if (!segment.mFromValue.IsNull()) {
+        gfxSize from = segment.mFromValue.GetScaleValue(aFrame);
+        if (from != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+      }
+      if (!segment.mToValue.IsNull()) {
+        gfxSize to = segment.mToValue.GetScaleValue(aFrame);
+        if (to != gfxSize(1.0f, 1.0f)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla

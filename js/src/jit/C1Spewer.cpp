@@ -137,9 +137,11 @@ C1Spewer::spewPass(GenericPrinter& out, MBasicBlock* block)
     out.printf("\n");
 
     out.printf("    successors");
-    for (uint32_t i = 0; i < block->numSuccessors(); i++) {
-        MBasicBlock* successor = block->getSuccessor(i);
-        out.printf(" \"B%d\"", successor->id());
+    if (block->hasLastIns()) {
+        for (uint32_t i = 0; i < block->numSuccessors(); i++) {
+            MBasicBlock* successor = block->getSuccessor(i);
+            out.printf(" \"B%d\"", successor->id());
+        }
     }
     out.printf("\n");
 

@@ -188,7 +188,7 @@ public class SnackbarBuilder {
 
         GeckoBundle actionObject = object.getBundle("action");
         if (actionObject != null) {
-            action = actionObject.getString("label", null);
+            action = actionObject.getString("label");
         }
         return this;
     }

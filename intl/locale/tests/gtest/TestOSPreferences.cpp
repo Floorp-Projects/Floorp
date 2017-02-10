@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "OSPreferences.h"
+#include "mozilla/intl/OSPreferences.h"
 
 using namespace mozilla::intl;
 

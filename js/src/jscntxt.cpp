@@ -51,6 +51,7 @@
 #include "js/CharacterEncoding.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -126,6 +127,9 @@ JSContext::init()
         return false;
 #endif
 
+    if (!wasm::EnsureSignalHandlers(this))
+        return false;
+
     return true;
 }
 
@@ -173,13 +177,6 @@ js::DestroyContext(JSContext* cx)
     cx->checkNoGCRooters();
 
     js_delete(cx->ionPcScriptCache.ref());
-
-    /*
-     * Dump remaining type inference results while we still have a context.
-     * This printing depends on atoms still existing.
-     */
-    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next())
-        PrintTypes(cx, c, false);
 
     cx->runtime()->destroyRuntime();
     js_delete(cx->runtime());

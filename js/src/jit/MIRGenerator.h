@@ -102,7 +102,8 @@ class MIRGenerator
     }
 
     bool isOptimizationTrackingEnabled() {
-        return isProfilerInstrumentationEnabled() && !info().isAnalysis();
+        return isProfilerInstrumentationEnabled() && !info().isAnalysis() &&
+               !JitOptions.disableOptimizationTracking;
     }
 
     bool safeForMinorGC() const {

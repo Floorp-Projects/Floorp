@@ -98,7 +98,7 @@ public:
 
   nsresult CopyInnerTo(Element* aDest);
 
-  void StartObjectLoad() { StartObjectLoad(true); }
+  void StartObjectLoad() { StartObjectLoad(true, false); }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLObjectElement,
                                            nsGenericHTMLFormElement)
@@ -247,12 +247,12 @@ public:
     return GetContentDocument(aSubjectPrincipal);
   }
 
-private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
-  void StartObjectLoad(bool aNotify);
+  void StartObjectLoad(bool aNotify, bool aForceLoad);
 
+private:
   /**
    * Returns if the element is currently focusable regardless of it's tabindex
    * value. This is used to know the default tabindex value.

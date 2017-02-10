@@ -4037,6 +4037,10 @@ nsIDocument::GetRootElement() const
 Element*
 nsDocument::GetRootElementInternal() const
 {
+  // We invoke GetRootElement() immediately before the servo traversal, so we
+  // should always have a cache hit from Servo.
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Loop backwards because any non-elements, such as doctypes and PIs
   // are likely to appear before the root element.
   uint32_t i;

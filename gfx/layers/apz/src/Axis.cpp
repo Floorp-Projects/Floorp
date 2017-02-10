@@ -311,14 +311,14 @@ void Axis::EndTouch(uint32_t aTimestampMs) {
   mAxisLocked = false;
   mVelocity = 0;
   int count = 0;
-  while (!mVelocityQueue.IsEmpty()) {
-    uint32_t timeDelta = (aTimestampMs - mVelocityQueue[0].first);
+  for (const auto& e : mVelocityQueue) {
+    uint32_t timeDelta = (aTimestampMs - e.first);
     if (timeDelta < gfxPrefs::APZVelocityRelevanceTime()) {
       count++;
-      mVelocity += mVelocityQueue[0].second;
+      mVelocity += e.second;
     }
-    mVelocityQueue.RemoveElementAt(0);
   }
+  mVelocityQueue.Clear();
   if (count > 1) {
     mVelocity /= count;
   }
@@ -333,9 +333,7 @@ void Axis::CancelGesture() {
   AXIS_LOG("%p|%s cancelling touch, clearing velocity queue\n",
     mAsyncPanZoomController, Name());
   mVelocity = 0.0f;
-  while (!mVelocityQueue.IsEmpty()) {
-    mVelocityQueue.RemoveElementAt(0);
-  }
+  mVelocityQueue.Clear();
 }
 
 bool Axis::CanScroll() const {

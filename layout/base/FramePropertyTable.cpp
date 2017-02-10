@@ -6,6 +6,7 @@
 #include "FramePropertyTable.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -74,12 +75,9 @@ FramePropertyTable::GetInternal(
   // We can end up here during parallel style traversal, in which case the main
   // thread is blocked. Reading from the cache is fine on any thread, but we
   // only want to write to it in the main-thread case.
-  //
-  // We order things such that we only need to check TLS in the case of a cache
-  // miss.
   bool cacheHit = mLastFrame == aFrame;
   Entry* entry = cacheHit ? mLastEntry : mEntries.GetEntry(aFrame);
-  if (!cacheHit && NS_IsMainThread()) {
+  if (!cacheHit && !ServoStyleSet::IsInServoTraversal()) {
     mLastFrame = aFrame;
     mLastEntry = entry;
   }

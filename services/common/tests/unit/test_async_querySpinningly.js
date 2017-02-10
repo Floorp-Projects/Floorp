@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FormHistory.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -9,13 +11,28 @@ _("Make sure querySpinningly will synchronously fetch rows for a query asyncly")
 
 const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.html
 
-var Svc = {};
-XPCOMUtils.defineLazyServiceGetter(Svc, "Form",
-                                   "@mozilla.org/satchel/form-history;1",
-                                   "nsIFormHistory2");
+// This test is a bit hacky - it was originally written to use the
+// formhistory.sqlite database using the nsIFormHistory2 sync APIs. However,
+// that's now been deprecated in favour of the async FormHistory.jsm.
+// Rather than re-write the test completely, we cheat - we use FormHistory.jsm
+// to initialize the database, then we just re-open it for these tests.
+
+// Init the forms database.
+FormHistory.schemaVersion;
+
+// and open the database it just created.
+let dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
+dbFile.append("formhistory.sqlite");
+let dbConnection = Services.storage.openUnsharedDatabase(dbFile);
+
+do_register_cleanup(() => {
+  let cb = Async.makeSpinningCallback();
+  dbConnection.asyncClose(cb);
+  cb.wait();
+});
 
 function querySpinningly(query, names) {
-  let q = Svc.Form.DBConnection.createStatement(query);
+  let q = dbConnection.createStatement(query);
   let r = Async.querySpinningly(q, names);
   q.finalize();
   return r;
@@ -84,7 +101,7 @@ function run_test() {
 
   _("Generate an execution error");
   let query = "INSERT INTO moz_formhistory (fieldname, value) VALUES ('one', NULL)";
-  let stmt = Svc.Form.DBConnection.createStatement(query);
+  let stmt = dbConnection.createStatement(query);
   let except;
   try {
     Async.querySpinningly(stmt);

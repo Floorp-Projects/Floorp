@@ -187,7 +187,7 @@ public class LightweightTheme implements BundleEventListener {
         if (event.equals("LightweightTheme:Update")) {
             GeckoBundle lightweightTheme = message.getBundle("data");
             final String headerURL = lightweightTheme.getString("headerURL");
-            final String color = lightweightTheme.getString("accentcolor");
+            final String color = lightweightTheme.getString("accentcolor", "");
 
             ThreadUtils.postToBackgroundThread(new LightweightThemeRunnable(headerURL, color));
 

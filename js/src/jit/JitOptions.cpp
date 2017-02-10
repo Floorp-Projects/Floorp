@@ -105,6 +105,9 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggles whether Loop Unrolling is globally disabled.
     SET_DEFAULT(disableLoopUnrolling, true);
 
+    // Toggles wheter optimization tracking is globally disabled.
+    SET_DEFAULT(disableOptimizationTracking, true);
+
     // Toggle whether Profile Guided Optimization is globally disabled.
     SET_DEFAULT(disablePgo, false);
 

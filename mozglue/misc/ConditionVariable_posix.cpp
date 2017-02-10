@@ -13,9 +13,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
-#include "threading/posix/MutexPlatformData.h"
+#include "mozilla/PlatformConditionVariable.h"
+#include "mozilla/PlatformMutex.h"
+#include "MutexPlatformData_posix.h"
 
 using mozilla::CheckedInt;
 using mozilla::TimeDuration;
@@ -26,10 +26,10 @@ static const long NanoSecPerSec = 1000000000;
 // Android 32-bit & macOS 10.12 has the clock functions, but not pthread_condattr_setclock.
 #if defined(HAVE_CLOCK_MONOTONIC) && \
     !(defined(__ANDROID__) && !defined(__LP64__)) && !defined(__APPLE__)
-# define USE_CLOCK_API
+# define CV_USE_CLOCK_API
 #endif
 
-#ifdef USE_CLOCK_API
+#ifdef CV_USE_CLOCK_API
 // The C++ specification defines std::condition_variable::wait_for in terms of
 // std::chrono::steady_clock, which is closest to CLOCK_MONOTONIC.
 static const clockid_t WhichClock = CLOCK_MONOTONIC;
@@ -61,16 +61,16 @@ moz_timespecadd(struct timespec* lhs, struct timespec* rhs, struct timespec* res
 }
 #endif
 
-struct js::ConditionVariable::PlatformData
+struct mozilla::detail::ConditionVariableImpl::PlatformData
 {
   pthread_cond_t ptCond;
 };
 
-js::ConditionVariable::ConditionVariable()
+mozilla::detail::ConditionVariableImpl::ConditionVariableImpl()
 {
   pthread_cond_t* ptCond = &platformData()->ptCond;
 
-#ifdef USE_CLOCK_API
+#ifdef CV_USE_CLOCK_API
   pthread_condattr_t attr;
   int r0 = pthread_condattr_init(&attr);
   MOZ_RELEASE_ASSERT(!r0);
@@ -89,46 +89,39 @@ js::ConditionVariable::ConditionVariable()
 #endif
 }
 
-js::ConditionVariable::~ConditionVariable()
+mozilla::detail::ConditionVariableImpl::~ConditionVariableImpl()
 {
   int r = pthread_cond_destroy(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::notify_one()
+mozilla::detail::ConditionVariableImpl::notify_one()
 {
   int r = pthread_cond_signal(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::notify_all()
+mozilla::detail::ConditionVariableImpl::notify_all()
 {
   int r = pthread_cond_broadcast(&platformData()->ptCond);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
 void
-js::ConditionVariable::wait(UniqueLock<Mutex>& lock)
+mozilla::detail::ConditionVariableImpl::wait(MutexImpl& lock)
 {
   pthread_cond_t* ptCond = &platformData()->ptCond;
-  pthread_mutex_t* ptMutex = &lock.lock.platformData()->ptMutex;
+  pthread_mutex_t* ptMutex = &lock.platformData()->ptMutex;
 
   int r = pthread_cond_wait(ptCond, ptMutex);
   MOZ_RELEASE_ASSERT(r == 0);
 }
 
-js::CVStatus
-js::ConditionVariable::wait_until(UniqueLock<Mutex>& lock,
-                                  const TimeStamp& abs_time)
-{
-  return wait_for(lock, abs_time - TimeStamp::Now());
-}
-
-js::CVStatus
-js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
-                                const TimeDuration& a_rel_time)
+mozilla::detail::CVStatus
+mozilla::detail::ConditionVariableImpl::wait_for(MutexImpl& lock,
+						 const TimeDuration& a_rel_time)
 {
   if (a_rel_time == TimeDuration::Forever()) {
     wait(lock);
@@ -136,7 +129,7 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   }
 
   pthread_cond_t* ptCond = &platformData()->ptCond;
-  pthread_mutex_t* ptMutex = &lock.lock.platformData()->ptMutex;
+  pthread_mutex_t* ptMutex = &lock.platformData()->ptMutex;
   int r;
 
   // Clamp to 0, as time_t is unsigned.
@@ -149,7 +142,7 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   rel_ts.tv_sec = static_cast<time_t>(rel_time.ToSeconds());
   rel_ts.tv_nsec = static_cast<uint64_t>(rel_time.ToMicroseconds() * 1000.0) % NanoSecPerSec;
 
-#ifdef USE_CLOCK_API
+#ifdef CV_USE_CLOCK_API
   struct timespec now_ts;
   r = clock_gettime(WhichClock, &now_ts);
   MOZ_RELEASE_ASSERT(!r);
@@ -171,8 +164,8 @@ js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
   return CVStatus::Timeout;
 }
 
-js::ConditionVariable::PlatformData*
-js::ConditionVariable::platformData()
+mozilla::detail::ConditionVariableImpl::PlatformData*
+mozilla::detail::ConditionVariableImpl::platformData()
 {
   static_assert(sizeof platformData_ >= sizeof(PlatformData),
                 "platformData_ is too small");

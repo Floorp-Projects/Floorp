@@ -31,8 +31,7 @@ var data = [
   { type: 'month', apply: true },
   { type: 'week', apply: true },
   { type: 'time', apply: true },
-  // TODO: temporary set to false until bug 888331 is fixed.
-  { type: 'datetime-local', apply: false },
+  { type: 'datetime-local', apply: true },
   { type: 'number', apply: true },
   { type: 'range', apply: true },
   { type: 'color', apply: false },
@@ -950,7 +949,104 @@ for (var test of data) {
 
       break;
     case 'datetime-local':
-      // TODO: this is temporary until bug 888331 is fixed.
+      // When step is invalid, every datetime is valid
+      input.step = 0;
+      input.value = '2017-02-06T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'foo';
+      input.value = '1970-01-01T00:00';
+      checkValidity(input, true, apply);
+
+      input.step = '-1';
+      input.value = '1969-12-12 00:10';
+      checkValidity(input, true, apply);
+
+      input.removeAttribute('step');
+      input.value = '1500-01-01T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'any';
+      input.value = '1966-12-12T12:00';
+      checkValidity(input, true, apply);
+
+      input.step = 'ANY';
+      input.value = '2017-01-01 12:00';
+      checkValidity(input, true, apply);
+
+      // When min is set to a valid datetime, there is a step base.
+      input.min = '2017-01-01T00:00:00';
+      input.step = '2';
+      input.value = '2017-01-01T00:00:02';
+      checkValidity(input, true, apply);
+
+      input.value = '2017-01-01T00:00:03';
+      checkValidity(input, false, apply,
+        { low: "2017-01-01T00:00:02", high: "2017-01-01T00:00:04" });
+
+      input.min = '2017-01-01T00:00:05';
+      input.value = '2017-01-01T00:00:08';
+      checkValidity(input, false, apply,
+        { low: "2017-01-01T00:00:07", high: "2017-01-01T00:00:09" });
+
+      input.min = '2000-01-01T00:00';
+      input.step = '120';
+      input.value = '2000-01-01T00:02';
+      checkValidity(input, true, apply);
+
+      // Without any step attribute the datetime is valid
+      input.removeAttribute('step');
+      checkValidity(input, true, apply);
+
+      input.min = '1950-01-01T00:00';
+      input.step = '129600'; // 1.5 day
+      input.value = '1950-01-02T00:00';
+      checkValidity(input, false, apply,
+        { low: "1950-01-01T00:00", high: "1950-01-02T12:00" });
+
+      input.step = '259200'; // 3 days
+      input.value = '1950-01-04T12:00';
+      checkValidity(input, false, apply,
+        { low: "1950-01-04T00:00", high: "1950-01-07T00:00" });
+
+      input.value = '1950-01-10T00:00';
+      checkValidity(input, true, apply);
+
+      input.step = '0.5'; // half a second
+      input.value = '1950-01-01T00:00:00.123';
+      checkValidity(input, false, apply,
+        { low: "1950-01-01T00:00", high: "1950-01-01T00:00:00.500" });
+
+      input.value = '2000-01-01T12:30:30.600';
+      checkValidity(input, false, apply,
+        { low: "2000-01-01T12:30:30.500", high: "2000-01-01T12:30:31" });
+
+      input.value = '1950-01-05T00:00:00.500';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1991-01-01T12:00';
+      input.value = '1991-01-01T12:00';
+      checkValidity(input, true, apply);
+
+      input.value = '1991-01-01T12:00:03';
+      checkValidity(input, false, apply,
+        { low: "1991-01-01T12:00:02.100", high: "1991-01-01T12:00:04.200" });
+
+      input.value = '1991-01-01T12:00:06.3';
+      checkValidity(input, true, apply);
+
+      input.step = '2.1';
+      input.min = '1969-12-20T10:00:05';
+      input.value = '1969-12-20T10:00:05';
+      checkValidity(input, true, apply);
+
+      input.value = '1969-12-20T10:00:08';
+      checkValidity(input, false, apply,
+        { low: "1969-12-20T10:00:07.100", high: "1969-12-20T10:00:09.200" });
+
+      input.value = '1969-12-20T10:00:09.200';
+      checkValidity(input, true, apply);
 
       break;
     default:

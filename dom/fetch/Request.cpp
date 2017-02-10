@@ -547,11 +547,9 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aInit.mBody.WasPassed()) {
-    const Nullable<OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& bodyInitNullable =
-      aInit.mBody.Value();
+    const Nullable<fetch::OwningBodyInit>& bodyInitNullable = aInit.mBody.Value();
     if (!bodyInitNullable.IsNull()) {
-      const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& bodyInit =
-        bodyInitNullable.Value();
+      const fetch::OwningBodyInit& bodyInit = bodyInitNullable.Value();
       nsCOMPtr<nsIInputStream> stream;
       nsAutoCString contentTypeWithCharset;
       uint64_t contentLengthUnused;

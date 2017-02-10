@@ -1091,6 +1091,10 @@ Gecko_NewCSSValueSharedList(uint32_t aLen)
 void
 Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut aCSSValue, nscoord aLen)
 {
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null || aCSSValue->IsLengthUnit());
+  // The call below could trigger refcounting if aCSSValue were a
+  // FontFamilyList, but we just asserted that it's not. So we can
+  // whitelist this for static analysis.
   aCSSValue->SetIntegerCoordValue(aLen);
 }
 
@@ -1211,6 +1215,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                      const uint8_t* aMediaString,
                      uint32_t aMediaStringLength)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURLString, "Invalid URLs shouldn't be loaded!");

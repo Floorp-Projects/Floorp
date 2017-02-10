@@ -10,8 +10,8 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#include "threading/Mutex.h"
-#include "threading/posix/MutexPlatformData.h"
+#include "mozilla/PlatformMutex.h"
+#include "MutexPlatformData_posix.h"
 
 #define TRY_CALL_PTHREADS(call, msg)            \
   {                                             \
@@ -23,7 +23,7 @@
     }                                           \
   }
 
-js::detail::MutexImpl::MutexImpl()
+mozilla::detail::MutexImpl::MutexImpl()
 {
   pthread_mutexattr_t* attrp = nullptr;
 
@@ -31,47 +31,47 @@ js::detail::MutexImpl::MutexImpl()
   pthread_mutexattr_t attr;
 
   TRY_CALL_PTHREADS(pthread_mutexattr_init(&attr),
-                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_init failed");
+                    "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_init failed");
 
   TRY_CALL_PTHREADS(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK),
-                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_settype failed");
+                    "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_settype failed");
 
   attrp = &attr;
 #endif
 
   TRY_CALL_PTHREADS(pthread_mutex_init(&platformData()->ptMutex, attrp),
-                    "js::detail::MutexImpl::MutexImpl: pthread_mutex_init failed");
+                    "mozilla::detail::MutexImpl::MutexImpl: pthread_mutex_init failed");
 
 #ifdef DEBUG
   TRY_CALL_PTHREADS(pthread_mutexattr_destroy(&attr),
-                    "js::detail::MutexImpl::MutexImpl: pthread_mutexattr_destroy failed");
+                    "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_destroy failed");
 #endif
 }
 
-js::detail::MutexImpl::~MutexImpl()
+mozilla::detail::MutexImpl::~MutexImpl()
 {
   TRY_CALL_PTHREADS(pthread_mutex_destroy(&platformData()->ptMutex),
-                    "js::detail::MutexImpl::~MutexImpl: pthread_mutex_destroy failed");
+                    "mozilla::detail::MutexImpl::~MutexImpl: pthread_mutex_destroy failed");
 }
 
 void
-js::detail::MutexImpl::lock()
+mozilla::detail::MutexImpl::lock()
 {
   TRY_CALL_PTHREADS(pthread_mutex_lock(&platformData()->ptMutex),
-                    "js::detail::MutexImpl::lock: pthread_mutex_lock failed");
+                    "mozilla::detail::MutexImpl::lock: pthread_mutex_lock failed");
 }
 
 void
-js::detail::MutexImpl::unlock()
+mozilla::detail::MutexImpl::unlock()
 {
   TRY_CALL_PTHREADS(pthread_mutex_unlock(&platformData()->ptMutex),
-                    "js::detail::MutexImpl::unlock: pthread_mutex_unlock failed");
+                    "mozilla::detail::MutexImpl::unlock: pthread_mutex_unlock failed");
 }
 
 #undef TRY_CALL_PTHREADS
 
-js::detail::MutexImpl::PlatformData*
-js::detail::MutexImpl::platformData()
+mozilla::detail::MutexImpl::PlatformData*
+mozilla::detail::MutexImpl::platformData()
 {
   static_assert(sizeof(platformData_) >= sizeof(PlatformData),
                 "platformData_ is too small");

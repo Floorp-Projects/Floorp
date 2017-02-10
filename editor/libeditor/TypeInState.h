@@ -6,6 +6,7 @@
 #ifndef TypeInState_h
 #define TypeInState_h
 
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISelectionListener.h"
@@ -63,13 +64,13 @@ public:
    * TakeClearProperty() hands back next property item on the clear list.
    * Caller assumes ownership of PropItem and must delete it.
    */
-  PropItem* TakeClearProperty();
+  UniquePtr<PropItem> TakeClearProperty();
 
   /**
    * TakeSetProperty() hands back next property item on the set list.
    * Caller assumes ownership of PropItem and must delete it.
    */
-  PropItem* TakeSetProperty();
+  UniquePtr<PropItem> TakeSetProperty();
 
   /**
    * TakeRelativeFontSize() hands back relative font value, which is then

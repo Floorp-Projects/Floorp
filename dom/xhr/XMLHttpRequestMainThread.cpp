@@ -1864,7 +1864,11 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
       NS_ENSURE_SUCCESS(rv, rv);
 
       ChangeState(State::loading);
-      return request->Cancel(NS_OK);
+
+      // Cancel() must be called with an error. We use
+      // NS_ERROR_FILE_ALREADY_EXISTS to know that we've aborted the operation
+      // just because we can retrieve the File from the channel directly.
+      return request->Cancel(NS_ERROR_FILE_ALREADY_EXISTS);
     }
   }
 
@@ -2194,7 +2198,10 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 
   bool waitingForBlobCreation = false;
 
-  if (NS_SUCCEEDED(status) &&
+  // If we have this error, we have to deal with a file: URL + responseType =
+  // blob. We have this error because we canceled the channel. The status will
+  // be set to NS_OK.
+  if (status == NS_ERROR_FILE_ALREADY_EXISTS &&
       (mResponseType == XMLHttpRequestResponseType::Blob ||
        mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
     nsCOMPtr<nsIFile> file;
@@ -2224,41 +2231,48 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
 
       FileCreationHandler::Create(promise, this);
       waitingForBlobCreation = true;
+      status = NS_OK;
+
+      NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
+      NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
+    }
+  }
+
+  if (NS_SUCCEEDED(status) &&
+      (mResponseType == XMLHttpRequestResponseType::Blob ||
+       mResponseType == XMLHttpRequestResponseType::Moz_blob) &&
+      !waitingForBlobCreation) {
+    // Smaller files may be written in cache map instead of separate files.
+    // Also, no-store response cannot be written in persistent cache.
+    nsAutoCString contentType;
+    mChannel->GetContentType(contentType);
+
+    if (mResponseType == XMLHttpRequestResponseType::Blob) {
+      // mBlobStorage can be null if the channel is non-file non-cacheable
+      // and if the response length is zero.
+      MaybeCreateBlobStorage();
+      mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
+      waitingForBlobCreation = true;
     } else {
-      // No local file.
-
-      // Smaller files may be written in cache map instead of separate files.
-      // Also, no-store response cannot be written in persistent cache.
-      nsAutoCString contentType;
-      mChannel->GetContentType(contentType);
-
-      if (mResponseType == XMLHttpRequestResponseType::Blob) {
-        // mBlobStorage can be null if the channel is non-file non-cacheable
-        // and if the response length is zero.
-        MaybeCreateBlobStorage();
-        mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
-        waitingForBlobCreation = true;
-      } else {
-        // mBlobSet can be null if the channel is non-file non-cacheable
-        // and if the response length is zero.
-        if (!mBlobSet) {
-          mBlobSet = new BlobSet();
-        }
-
-        ErrorResult error;
-        nsTArray<RefPtr<BlobImpl>> subImpls(mBlobSet->GetBlobImpls());
-        RefPtr<BlobImpl> blobImpl =
-          MultipartBlobImpl::Create(Move(subImpls),
-                                    NS_ConvertASCIItoUTF16(contentType),
-                                    error);
-        mBlobSet = nullptr;
-
-        if (NS_WARN_IF(error.Failed())) {
-          return error.StealNSResult();
-        }
-
-        mResponseBlob = Blob::Create(GetOwner(), blobImpl);
+      // mBlobSet can be null if the channel is non-file non-cacheable
+      // and if the response length is zero.
+      if (!mBlobSet) {
+        mBlobSet = new BlobSet();
       }
+
+      ErrorResult error;
+      nsTArray<RefPtr<BlobImpl>> subImpls(mBlobSet->GetBlobImpls());
+      RefPtr<BlobImpl> blobImpl =
+        MultipartBlobImpl::Create(Move(subImpls),
+                                  NS_ConvertASCIItoUTF16(contentType),
+                                  error);
+      mBlobSet = nullptr;
+
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+
+      mResponseBlob = Blob::Create(GetOwner(), blobImpl);
     }
 
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");

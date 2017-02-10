@@ -11,6 +11,7 @@
 
 #include "gc/Statistics.h"
 #include "vm/Caches.h"
+#include "vm/Stack.h"
 
 namespace js {
 
@@ -19,8 +20,6 @@ namespace jit { class JitZoneGroup; }
 class AutoKeepAtoms;
 
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
-
-using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
 // Zone groups encapsulate data about a group of zones that are logically
 // related in some way. Currently, each runtime has a single zone group, and
@@ -42,11 +41,16 @@ class ZoneGroup
   public:
     JSRuntime* const runtime;
 
+  private:
     // The context with exclusive access to this zone group.
-    mozilla::Atomic<JSContext*, mozilla::ReleaseAcquire> context;
+    UnprotectedData<CooperatingContext> ownerContext_;
 
     // The number of times the context has entered this zone group.
     ZoneGroupData<size_t> enterCount;
+
+  public:
+    CooperatingContext& ownerContext() { return ownerContext_.ref(); }
+    void* addressOfOwnerContext() { return &ownerContext_.ref().cx; }
 
     void enter();
     void leave();
@@ -124,12 +128,6 @@ class ZoneGroup
     ZoneGroupData<mozilla::LinkedList<js::Debugger>> debuggerList_;
   public:
     mozilla::LinkedList<js::Debugger>& debuggerList() { return debuggerList_.ref(); }
-
-    /* If true, new scripts must be created with PC counter information. */
-    ZoneGroupOrIonCompileData<bool> profilingScripts;
-
-    /* Strong references on scripts held for PCCount profiling API. */
-    ZoneGroupData<JS::PersistentRooted<ScriptAndCountsVector>*> scriptAndCountsVector;
 };
 
 class MOZ_RAII AutoAccessZoneGroup

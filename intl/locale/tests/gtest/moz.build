@@ -14,8 +14,4 @@ if CONFIG['ENABLE_INTL_API']:
         'TestOSPreferences.cpp',
     ]
 
-LOCAL_INCLUDES += [
-    '/intl/locale',
-]
-
 FINAL_LIBRARY = 'xul-gtest'

@@ -480,7 +480,7 @@ WorkerFetchResolver::FlushConsoleReport()
 }
 
 nsresult
-ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& aBodyInit,
+ExtractByteStreamFromBody(const fetch::OwningBodyInit& aBodyInit,
                           nsIInputStream** aStream,
                           nsCString& aContentTypeWithCharset,
                           uint64_t& aContentLength)
@@ -533,7 +533,7 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDa
 }
 
 nsresult
-ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& aBodyInit,
+ExtractByteStreamFromBody(const fetch::BodyInit& aBodyInit,
                           nsIInputStream** aStream,
                           nsCString& aContentTypeWithCharset,
                           uint64_t& aContentLength)

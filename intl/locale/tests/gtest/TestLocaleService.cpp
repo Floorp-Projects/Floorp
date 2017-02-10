@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "LocaleService.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/Services.h"
 #include "nsIToolkitChromeRegistry.h"
 

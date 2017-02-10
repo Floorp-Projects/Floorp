@@ -35,9 +35,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IABSORBINGTRANSACTION_IID)
 
-  NS_IMETHOD Init(nsIAtom* aName, mozilla::SelectionState* aSelState,
-                  mozilla::EditorBase* aEditorBase) = 0;
-
   NS_IMETHOD EndPlaceHolderBatch()=0;
 
   NS_IMETHOD GetTxnName(nsIAtom **aName)=0;

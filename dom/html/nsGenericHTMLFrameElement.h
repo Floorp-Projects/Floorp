@@ -71,6 +71,8 @@ public:
 
   virtual int32_t TabIndexDefault() override;
 
+  virtual nsIMozBrowserFrame* GetAsMozBrowserFrame() override { return this; }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGenericHTMLFrameElement,
                                            nsGenericHTMLElement)
 
@@ -86,6 +88,7 @@ public:
   void PresetOpenerWindow(mozIDOMWindowProxy* aOpenerWindow,
                           mozilla::ErrorResult& aRv);
 
+  static void InitStatics();
   static bool BrowserFramesEnabled();
 
   /**

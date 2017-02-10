@@ -222,10 +222,25 @@ void ProfilerJSEventMarker(const char *event);
 struct PseudoStack
 {
 public:
-  // Create a new PseudoStack and acquire a reference to it.
-  static PseudoStack *create()
+  PseudoStack()
+    : mStackPointer(0)
+    , mSleepId(0)
+    , mSleepIdObserved(0)
+    , mSleeping(false)
+    , mContext(nullptr)
+    , mStartJSSampling(false)
+    , mPrivacyMode(false)
   {
-    return new PseudoStack();
+    MOZ_COUNT_CTOR(PseudoStack);
+  }
+
+  ~PseudoStack() {
+    MOZ_COUNT_DTOR(PseudoStack);
+
+    // The label macros keep a reference to the PseudoStack to avoid a TLS
+    // access. If these are somehow not all cleared we will get a
+    // use-after-free so better to crash now.
+    MOZ_RELEASE_ASSERT(mStackPointer == 0);
   }
 
   // This is called on every profiler restart. Put things that should happen at that time here.
@@ -263,13 +278,6 @@ public:
       return;
     }
 
-    // In order to ensure this object is kept alive while it is
-    // active, we acquire a reference at the outermost push.  This is
-    // released by the corresponding pop.
-    if (mStackPointer == 0) {
-      ref();
-    }
-
     volatile StackEntry &entry = mStack[mStackPointer];
 
     // Make sure we increment the pointer after the name has
@@ -290,24 +298,9 @@ public:
     mStackPointer++;
   }
 
-  // Pop the stack.  If the stack is empty and all other references to
-  // this PseudoStack have been dropped, then the PseudoStack is
-  // deleted and "false" is returned.  Otherwise "true" is returned.
-  bool popAndMaybeDelete()
-  {
-    mStackPointer--;
-    if (mStackPointer == 0) {
-      // Release our self-owned reference count.  See 'push'.
-      deref();
-      return false;
-    } else {
-      return true;
-    }
-  }
-  bool isEmpty()
-  {
-    return mStackPointer == 0;
-  }
+  // Pop the stack.
+  void pop() { mStackPointer--; }
+
   uint32_t stackSize() const
   {
     return sMin(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
@@ -335,6 +328,7 @@ public:
     if (mStartJSSampling)
       enableJSSampling();
   }
+
   void enableJSSampling() {
     if (mContext) {
       js::EnableContextProfilingStack(mContext, true);
@@ -344,10 +338,12 @@ public:
       mStartJSSampling = true;
     }
   }
+
   void jsOperationCallback() {
     if (mStartJSSampling)
       enableJSSampling();
   }
+
   void disableJSSampling() {
     mStartJSSampling = false;
     if (mContext)
@@ -372,34 +368,8 @@ public:
 
   // Keep a list of active checkpoints
   StackEntry volatile mStack[1024];
- private:
 
-  // A PseudoStack can only be created via the "create" method.
-  PseudoStack()
-    : mStackPointer(0)
-    , mSleepId(0)
-    , mSleepIdObserved(0)
-    , mSleeping(false)
-    , mRefCnt(1)
-    , mContext(nullptr)
-    , mStartJSSampling(false)
-    , mPrivacyMode(false)
-  {
-    MOZ_COUNT_CTOR(PseudoStack);
-  }
-
-  // A PseudoStack can only be deleted via deref.
-  ~PseudoStack() {
-    MOZ_COUNT_DTOR(PseudoStack);
-    if (mStackPointer != 0) {
-      // We're releasing the pseudostack while it's still in use.
-      // The label macros keep a non ref counted reference to the
-      // stack to avoid a TLS. If these are not all cleared we will
-      // get a use-after-free so better to crash now.
-      abort();
-    }
-  }
-
+private:
   // No copying.
   PseudoStack(const PseudoStack&) = delete;
   void operator=(const PseudoStack&) = delete;
@@ -418,10 +388,6 @@ public:
   mozilla::Atomic<int> mSleepIdObserved;
   // Keeps tack of whether the thread is sleeping or not (1 when sleeping 0 when awake)
   mozilla::Atomic<int> mSleeping;
-  // This class is reference counted because it must be kept alive by
-  // the ThreadInfo, by the reference from tlsPseudoStack, and by the
-  // current thread when callbacks are in progress.
-  mozilla::Atomic<int> mRefCnt;
 
  public:
   // The context which is being sampled
@@ -458,17 +424,6 @@ public:
 
   bool isSleeping() {
     return !!mSleeping;
-  }
-
-  void ref() {
-    ++mRefCnt;
-  }
-
-  void deref() {
-    int newValue = --mRefCnt;
-    if (newValue == 0) {
-      delete this;
-    }
   }
 };
 

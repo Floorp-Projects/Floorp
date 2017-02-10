@@ -104,7 +104,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams> body;
+  Optional<fetch::BodyInit> body;
   ResponseInit init;
   init.mStatus = aStatus;
   RefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
@@ -125,7 +125,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
 /*static*/ already_AddRefed<Response>
 Response::Constructor(const GlobalObject& aGlobal,
-                      const Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aBody,
+                      const Optional<fetch::BodyInit>& aBody,
                       const ResponseInit& aInit, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());

@@ -16,6 +16,32 @@
 [scriptable, uuid(C27F8983-B48B-4D1A-92D7-FEB8106F212D)]
 interface mozILocaleService : nsISupports
 {
+  /**
+   * Returns a list of locales that the application should be localized to.
+   *
+   * The result is a sorted list of valid locale IDs and it should be
+   * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
+   *
+   * This API always returns at least one locale.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * (See LocaleService.h for a more C++-friendly version of this.)
+   */
   [implicit_jscontext] jsval getAppLocales();
-  [implicit_jscontext] ACString getAppLocale();
+
+  /**
+   * Returns the best locale that the application should be localized to.
+   *
+   * The result is a valid locale ID and it should be
+   * used for all APIs that do not handle language negotiation.
+   *
+   * Where possible, getAppLocales() should be preferred over this API and
+   * all callsites should handle some form of "best effort" language
+   * negotiation to respect user preferences in case the use case does
+   * not have data for the first locale in the list.
+   *
+   * Example: "zh-Hans-HK"
+   */
+  ACString getAppLocale();
 };

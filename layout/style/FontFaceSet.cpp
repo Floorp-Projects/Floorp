@@ -1604,8 +1604,8 @@ FontFaceSet::CheckLoadingFinished()
   }
 
   // Now dispatch the loadingdone/loadingerror events.
-  nsTArray<FontFace*> loaded;
-  nsTArray<FontFace*> failed;
+  nsTArray<OwningNonNull<FontFace>> loaded;
+  nsTArray<OwningNonNull<FontFace>> failed;
 
   for (size_t i = 0; i < mRuleFaces.Length(); i++) {
     if (!mRuleFaces[i].mLoadEventShouldFire) {
@@ -1613,10 +1613,10 @@ FontFaceSet::CheckLoadingFinished()
     }
     FontFace* f = mRuleFaces[i].mFontFace;
     if (f->Status() == FontFaceLoadStatus::Loaded) {
-      loaded.AppendElement(f);
+      loaded.AppendElement(*f);
       mRuleFaces[i].mLoadEventShouldFire = false;
     } else if (f->Status() == FontFaceLoadStatus::Error) {
-      failed.AppendElement(f);
+      failed.AppendElement(*f);
       mRuleFaces[i].mLoadEventShouldFire = false;
     }
   }
@@ -1627,35 +1627,32 @@ FontFaceSet::CheckLoadingFinished()
     }
     FontFace* f = mNonRuleFaces[i].mFontFace;
     if (f->Status() == FontFaceLoadStatus::Loaded) {
-      loaded.AppendElement(f);
+      loaded.AppendElement(*f);
       mNonRuleFaces[i].mLoadEventShouldFire = false;
     } else if (f->Status() == FontFaceLoadStatus::Error) {
-      failed.AppendElement(f);
+      failed.AppendElement(*f);
       mNonRuleFaces[i].mLoadEventShouldFire = false;
     }
   }
 
-  DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingdone"), loaded);
+  DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingdone"),
+                               Move(loaded));
 
   if (!failed.IsEmpty()) {
-    DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingerror"), failed);
+    DispatchLoadingFinishedEvent(NS_LITERAL_STRING("loadingerror"),
+                                 Move(failed));
   }
 }
 
 void
 FontFaceSet::DispatchLoadingFinishedEvent(
                                  const nsAString& aType,
-                                 const nsTArray<FontFace*>& aFontFaces)
+                                 nsTArray<OwningNonNull<FontFace>>&& aFontFaces)
 {
   FontFaceSetLoadEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  OwningNonNull<FontFace>* elements =
-    init.mFontfaces.AppendElements(aFontFaces.Length(), fallible);
-  MOZ_ASSERT(elements);
-  for (size_t i = 0; i < aFontFaces.Length(); i++) {
-    elements[i] = aFontFaces[i];
-  }
+  init.mFontfaces.SwapElements(aFontFaces);
   RefPtr<FontFaceSetLoadEvent> event =
     FontFaceSetLoadEvent::Constructor(this, aType, init);
   (new AsyncEventDispatcher(this, event))->PostDOMEvent();

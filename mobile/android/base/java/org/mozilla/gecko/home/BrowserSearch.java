@@ -725,8 +725,8 @@ public class BrowserSearch extends HomeFragment
         }
 
         final GeckoBundle suggest = data.getBundle("suggest");
-        final String suggestEngine = suggest.getString("engine", null);
-        final String suggestTemplate = suggest.getString("template", null);
+        final String suggestEngine = suggest.getString("engine");
+        final String suggestTemplate = suggest.getString("template");
         final boolean suggestionsPrompted = suggest.getBoolean("prompted");
         final GeckoBundle[] engines = data.getBundleArray("searchEngines");
 

@@ -2427,6 +2427,13 @@ public:
     Mutated();
   }
 
+  virtual void SetStyles(const BorderStyles& aBorderStyles)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Widths", this));
+    PodCopy(&mBorderStyles[0], &aBorderStyles[0], 4);
+    Mutated();
+  }
+
   MOZ_LAYER_DECL_NAME("BorderLayer", TYPE_BORDER)
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
@@ -2454,6 +2461,7 @@ protected:
   LayerRect mRect;
   BorderCorners mCorners;
   BorderWidths mWidths;
+  BorderStyles mBorderStyles;
 };
 
 /**

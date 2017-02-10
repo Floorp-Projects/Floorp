@@ -2433,11 +2433,8 @@ HTMLInputElement::GetMaximum() const
 Decimal
 HTMLInputElement::GetStepBase() const
 {
-  MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER ||
-             mType == NS_FORM_INPUT_DATE ||
-             mType == NS_FORM_INPUT_TIME ||
-             mType == NS_FORM_INPUT_MONTH ||
-             mType == NS_FORM_INPUT_WEEK ||
+  MOZ_ASSERT(IsDateTimeInputType(mType) ||
+             mType == NS_FORM_INPUT_NUMBER ||
              mType == NS_FORM_INPUT_RANGE,
              "Check that kDefaultStepBase is correct for this new type");
 
@@ -8671,6 +8668,7 @@ HTMLInputElement::GetStepScaleFactor() const
     case NS_FORM_INPUT_RANGE:
       return kStepScaleFactorNumberRange;
     case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return kStepScaleFactorTime;
     case NS_FORM_INPUT_MONTH:
       return kStepScaleFactorMonth;
@@ -8695,6 +8693,7 @@ HTMLInputElement::GetDefaultStep() const
     case NS_FORM_INPUT_RANGE:
       return kDefaultStep;
     case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_DATETIME_LOCAL:
       return kDefaultStepTime;
     default:
       MOZ_ASSERT(false, "Unrecognized input type");

@@ -81,6 +81,7 @@ public:
     nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
     uint8_t        ReferrerLevel()           { return mReferrerLevel; }
     bool           SpoofReferrerSource()     { return mSpoofReferrerSource; }
+    bool           HideOnionReferrerSource() { return mHideOnionReferrerSource; }
     uint8_t        ReferrerTrimmingPolicy()  { return mReferrerTrimmingPolicy; }
     uint8_t        ReferrerXOriginTrimmingPolicy() {
         return mReferrerXOriginTrimmingPolicy;
@@ -422,6 +423,7 @@ private:
     uint32_t mCapabilities;
     uint8_t  mReferrerLevel;
     uint8_t  mSpoofReferrerSource;
+    uint8_t  mHideOnionReferrerSource;
     uint8_t  mReferrerTrimmingPolicy;
     uint8_t  mReferrerXOriginTrimmingPolicy;
     uint8_t  mReferrerXOriginPolicy;

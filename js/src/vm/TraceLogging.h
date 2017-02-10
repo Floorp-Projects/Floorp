@@ -120,16 +120,18 @@ bool CurrentThreadOwnsTraceLoggerThreadStateLock();
 
 /**
  * An internal class holding the string information to report, together with an
- * unique id and a useCount. Whenever this useCount reaches 0, this event
+ * unique id, a useCount and a pointerCount. Whenever this useCount reaches 0, this event
  * cannot get started/stopped anymore. Consumers may still request the
  * string information through maybeEventText below, but this may not succeed:
  * when the use count becomes zero, a payload may be deleted by any thread
- * holding the TraceLoggerThreadState lock.
+ * holding the TraceLoggerThreadState lock, after that the pointers have been
+ * cleared out of the pointerMap. That means pointerCount needs to be zero.
  */
 class TraceLoggerEventPayload {
     uint32_t textId_;
     UniqueChars string_;
     mozilla::Atomic<uint32_t> uses_;
+    mozilla::Atomic<uint32_t> pointerCount_;
 
   public:
     TraceLoggerEventPayload(uint32_t textId, char* string)
@@ -151,6 +153,9 @@ class TraceLoggerEventPayload {
     uint32_t uses() {
         return uses_;
     }
+    uint32_t pointerCount() {
+        return pointerCount_;
+    }
 
     // Payloads may have their use count change at any time, *except* the count
     // can only go from zero to non-zero while the thread state lock is held.
@@ -162,6 +167,14 @@ class TraceLoggerEventPayload {
     }
     void release() {
         uses_--;
+    }
+    void incPointerCount() {
+        MOZ_ASSERT(CurrentThreadOwnsTraceLoggerThreadStateLock());
+        pointerCount_++;
+    }
+    void decPointerCount() {
+        MOZ_ASSERT(CurrentThreadOwnsTraceLoggerThreadStateLock());
+        pointerCount_--;
     }
 };
 
