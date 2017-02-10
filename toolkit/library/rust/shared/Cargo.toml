@@ -6,7 +6,7 @@ license = "MPL-2.0"
 description = "Shared Rust code for libxul"
 
 [dependencies]
-geckoservo = { path = "../../geckolib", optional = true }
+geckoservo = { path = "../../../../servo/ports/geckolib", optional = true }
 mp4parse_capi = { path = "../../../../media/libstagefright/binding/mp4parse_capi" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
