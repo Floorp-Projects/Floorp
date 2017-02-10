@@ -51,14 +51,14 @@ public class FilePicker implements BundleEventListener {
                               final EventCallback callback) {
         if ("FilePicker:Show".equals(event)) {
             String mimeType = "*/*";
-            final String mode = message.getString("mode");
+            final String mode = message.getString("mode", "");
             final int tabId = message.getInt("tabId", -1);
-            final String title = message.getString("title");
+            final String title = message.getString("title", "");
 
             if ("mimeType".equals(mode)) {
-                mimeType = message.getString("mimeType");
+                mimeType = message.getString("mimeType", "");
             } else if ("extension".equals(mode)) {
-                mimeType = GeckoAppShell.getMimeTypeFromExtensions(message.getString("extensions"));
+                mimeType = GeckoAppShell.getMimeTypeFromExtensions(message.getString("extensions", ""));
             }
 
             showFilePickerAsync(title, mimeType, new ResultHandler() {

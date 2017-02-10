@@ -74,13 +74,13 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     eyedropper.style.pointerEvents = "auto";
     container.appendChild(eyedropper);
 
-    this.tooltip.setContent(container, { width: 218, height: 224 });
-
     let spectrum;
     if (NEW_COLOR_WIDGET) {
+      this.tooltip.setContent(container, { width: 218, height: 271 });
       const {ColorWidget} = require("devtools/client/shared/widgets/ColorWidget");
       spectrum = new ColorWidget(spectrumNode, color);
     } else {
+      this.tooltip.setContent(container, { width: 218, height: 224 });
       spectrum = new Spectrum(spectrumNode, color);
     }
 

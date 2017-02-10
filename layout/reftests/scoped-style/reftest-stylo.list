@@ -22,7 +22,7 @@ fails == scoped-style-018.html scoped-style-018.html
 == scoped-style-021.html scoped-style-021.html
 == scoped-style-022.html scoped-style-022.html
 fails == scoped-style-023.html scoped-style-023.html
-fails == scoped-style-024.html scoped-style-024.html
+== scoped-style-024.html scoped-style-024.html
 == scoped-style-important-001.html scoped-style-important-001.html
 fails == scoped-style-important-002.html scoped-style-important-002.html
 == scoped-style-important-003.html scoped-style-important-003.html

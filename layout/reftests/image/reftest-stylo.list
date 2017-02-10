@@ -14,10 +14,10 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.htm
 
 # Tests for "object-fit" & "object-position"
 test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
-fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
+# test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
 fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
 # test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1.html
-fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1.html
+# fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1.html
 fails == image-object-position-with-background-2.html image-object-position-with-background-2.html
 
 # Tests for image-orientation used with 'from-image' (note that all

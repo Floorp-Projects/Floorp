@@ -88,7 +88,7 @@ class JitContext
     CompileCompartment* compartment;
 
     bool hasProfilingScripts() const {
-        return compartment && compartment->zone()->profilingScripts();
+        return runtime && !!runtime->profilingScripts();
     }
 
     int getNextAssemblerId() {

@@ -1506,16 +1506,16 @@ TraceJitActivation(JSTracer* trc, const JitActivationIterator& activations)
 }
 
 void
-TraceJitActivations(JSRuntime* rt, JSTracer* trc)
+TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
 {
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations)
+    for (JitActivationIterator activations(cx, target); !activations.done(); ++activations)
         TraceJitActivation(trc, activations);
 }
 
 JSCompartment*
-TopmostIonActivationCompartment(JSRuntime* rt)
+TopmostIonActivationCompartment(JSContext* cx)
 {
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 return activations.activation()->compartment();
@@ -1524,10 +1524,11 @@ TopmostIonActivationCompartment(JSRuntime* rt)
     return nullptr;
 }
 
-void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
+void UpdateJitActivationsForMinorGC(ZoneGroup* group, JSTracer* trc)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
-    for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
+    JSContext* cx = TlsContext.get();
+    for (JitActivationIterator activations(cx, group->ownerContext()); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 UpdateIonJSFrameForMinorGC(trc, frames);
@@ -1542,8 +1543,7 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
 
     // Recover the return address so that we can look it up in the
     // PcScriptCache, as script/pc computation is expensive.
-    JSRuntime* rt = cx->runtime();
-    JitActivationIterator iter(rt);
+    JitActivationIterator iter(cx);
     JitFrameIterator it(iter);
     uint8_t* retAddr;
     if (it.isExitFrame()) {
@@ -1591,10 +1591,10 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
         if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
             cx->ionPcScriptCache = (PcScriptCache*)js_malloc(sizeof(struct PcScriptCache));
             if (cx->ionPcScriptCache)
-                cx->ionPcScriptCache->clear(rt->gc.gcNumber());
+                cx->ionPcScriptCache->clear(cx->runtime()->gc.gcNumber());
         }
 
-        if (cx->ionPcScriptCache && cx->ionPcScriptCache->get(rt, hash, retAddr, scriptRes, pcRes))
+        if (cx->ionPcScriptCache && cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes, pcRes))
             return;
     }
 
@@ -2305,14 +2305,6 @@ InlineFrameIterator::InlineFrameIterator(JSContext* cx, const JitFrameIterator* 
     resetOn(iter);
 }
 
-InlineFrameIterator::InlineFrameIterator(JSRuntime* rt, const JitFrameIterator* iter)
-  : calleeTemplate_(TlsContext.get()),
-    calleeRVA_(),
-    script_(TlsContext.get())
-{
-    resetOn(iter);
-}
-
 InlineFrameIterator::InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter)
   : frame_(iter ? iter->frame_ : nullptr),
     framesRead_(0),
@@ -2476,6 +2468,9 @@ InlineFrameIterator::computeEnvironmentChain(const Value& envChainValue,
     if (isFunctionFrame())
         return callee(fallback)->environment();
 
+    if (isModuleFrame())
+        return script()->module()->environment();
+
     // Ion does not handle non-function scripts that have anything other than
     // the global on their env chain.
     MOZ_ASSERT(!script()->isForEval());
@@ -2487,6 +2482,12 @@ bool
 InlineFrameIterator::isFunctionFrame() const
 {
     return !!calleeTemplate_;
+}
+
+bool
+InlineFrameIterator::isModuleFrame() const
+{
+    return script()->module();
 }
 
 MachineState
@@ -2823,11 +2824,10 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 #endif // DEBUG
 
 JitProfilingFrameIterator::JitProfilingFrameIterator(
-        JSRuntime* rt, const JS::ProfilingFrameIterator::RegisterState& state)
+        JSContext* cx, const JS::ProfilingFrameIterator::RegisterState& state)
 {
     // If no profilingActivation is live, initialize directly to
     // end-of-iteration state.
-    JSContext* cx = rt->unsafeContextFromAnyThread();
     if (!cx->profilingActivation()) {
         type_ = JitFrame_Entry;
         fp_ = nullptr;
@@ -2853,7 +2853,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
     fp_ = (uint8_t*) act->lastProfilingFrame();
     void* lastCallSite = act->lastProfilingCallSite();
 
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
+    JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
 
     // Profiler sampling must NOT be suppressed if we are here.
     MOZ_ASSERT(cx->isProfilerSamplingEnabled());
@@ -2863,7 +2863,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
         return;
 
     // Try initializing with sampler pc using native=>bytecode table.
-    if (tryInitWithTable(table, state.pc, rt, /* forLastCallSite = */ false))
+    if (tryInitWithTable(table, state.pc, cx->runtime(), /* forLastCallSite = */ false))
         return;
 
     // Try initializing with lastProfilingCallSite pc
@@ -2872,7 +2872,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(
             return;
 
         // Try initializing with lastProfilingCallSite pc using native=>bytecode table.
-        if (tryInitWithTable(table, lastCallSite, rt, /* forLastCallSite = */ true))
+        if (tryInitWithTable(table, lastCallSite, cx->runtime(), /* forLastCallSite = */ true))
             return;
     }
 
@@ -3142,7 +3142,7 @@ InvalidationBailoutStack::checkInvariants() const
 void
 AssertJitStackInvariants(JSContext* cx)
 {
-    for (JitActivationIterator activations(cx->runtime()); !activations.done(); ++activations) {
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         JitFrameIterator frames(activations);
         size_t prevFrameSize = 0;
         size_t frameSize = 0;

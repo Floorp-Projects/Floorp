@@ -162,7 +162,7 @@ public class HomeBanner extends LinearLayout
                               final EventCallback callback) {
         final String id = message.getString("id");
         final String text = message.getString("text");
-        final String iconURI = message.getString("iconURI");
+        final String iconURI = message.getString("iconURI", "");
 
         // Don't update the banner if the message doesn't have valid id and text.
         if (TextUtils.isEmpty(id) || TextUtils.isEmpty(text)) {

@@ -602,6 +602,39 @@ struct Zone : public JS::shadow::Zone,
 
 namespace js {
 
+// Iterate over all zone groups except those which may be in use by parse
+// threads. Pretty soon this will exclude zone groups in use by parse threads
+// (as for ZonesIter), i.e. the zone groups in use by cooperating threads,
+// except that right now parse threads use zones in the same zone group as
+// cooperating threads (bug 1323066).
+class ZoneGroupsIter
+{
+    gc::AutoEnterIteration iterMarker;
+    ZoneGroup** it;
+    ZoneGroup** end;
+
+  public:
+    explicit ZoneGroupsIter(JSRuntime* rt) : iterMarker(&rt->gc) {
+        it = rt->gc.groups.ref().begin();
+        end = rt->gc.groups.ref().end();
+    }
+
+    bool done() const { return it == end; }
+
+    void next() {
+        MOZ_ASSERT(!done());
+        it++;
+    }
+
+    ZoneGroup* get() const {
+        MOZ_ASSERT(!done());
+        return *it;
+    }
+
+    operator ZoneGroup*() const { return get(); }
+    ZoneGroup* operator->() const { return get(); }
+};
+
 // Using the atoms zone without holding the exclusive access lock is dangerous
 // because worker threads may be using it simultaneously. Therefore, it's
 // better to skip the atoms zone when iterating over zones. If you need to
@@ -611,39 +644,78 @@ enum ZoneSelector {
     SkipAtoms
 };
 
-class ZonesIter
+// Iterate over all zones in one zone group.
+class ZonesInGroupIter
 {
     gc::AutoEnterIteration iterMarker;
-    JSRuntime* rt;
     JS::Zone** it;
     JS::Zone** end;
 
   public:
-    ZonesIter(JSRuntime* rt, ZoneSelector selector) : iterMarker(&rt->gc), rt(rt) {
-        if (selector == WithAtoms && rt->gc.atomsZone)
-            it = const_cast<JS::Zone**>(&rt->gc.atomsZone.ref());
-        else
-            it = rt->zoneGroupFromAnyThread()->zones().begin();
-        end = rt->zoneGroupFromAnyThread()->zones().end();
+    explicit ZonesInGroupIter(ZoneGroup* group) : iterMarker(&group->runtime->gc) {
+        it = group->zones().begin();
+        end = group->zones().end();
     }
-
-    bool atAtomsZone(JSRuntime* rt);
 
     bool done() const { return it == end; }
 
     void next() {
         MOZ_ASSERT(!done());
-        do {
-            if (it == &rt->gc.atomsZone.ref())
-                it = rt->zoneGroupFromAnyThread()->zones().begin();
-            else
-                it++;
-        } while (!done() && (*it)->usedByExclusiveThread);
+        it++;
     }
 
     JS::Zone* get() const {
         MOZ_ASSERT(!done());
         return *it;
+    }
+
+    operator JS::Zone*() const { return get(); }
+    JS::Zone* operator->() const { return get(); }
+};
+
+// Iterate over all zones in the runtime, except those which may be in use by
+// parse threads.
+class ZonesIter
+{
+    ZoneGroupsIter group;
+    Maybe<ZonesInGroupIter> zone;
+    JS::Zone* atomsZone;
+
+  public:
+    ZonesIter(JSRuntime* rt, ZoneSelector selector)
+      : group(rt), atomsZone(selector == WithAtoms ? rt->gc.atomsZone.ref() : nullptr)
+    {
+        if (!atomsZone && !done())
+            next();
+    }
+
+    bool atAtomsZone(JSRuntime* rt) const {
+        return !!atomsZone;
+    }
+
+    bool done() const { return !atomsZone && group.done(); }
+
+    void next() {
+        MOZ_ASSERT(!done());
+        if (atomsZone)
+            atomsZone = nullptr;
+        while (!group.done()) {
+            if (zone.isSome())
+                zone.ref().next();
+            else
+                zone.emplace(group);
+            if (zone.ref().done()) {
+                zone.reset();
+                group.next();
+            } else if (!zone.ref().get()->usedByExclusiveThread) {
+                break;
+            }
+        }
+    }
+
+    JS::Zone* get() const {
+        MOZ_ASSERT(!done());
+        return atomsZone ? atomsZone : zone.ref().get();
     }
 
     operator JS::Zone*() const { return get(); }

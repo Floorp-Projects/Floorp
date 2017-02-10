@@ -152,9 +152,9 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
         Drawable icon;
 
         public IconGridItem(final Context context, final GeckoBundle obj) {
-            label = obj.getString("name");
-            final String iconUrl = obj.getString("iconUri");
-            description = obj.getString("description");
+            label = obj.getString("name", "");
+            final String iconUrl = obj.getString("iconUri", "");
+            description = obj.getString("description", "");
             selected = obj.getBoolean("selected");
 
             ResourceDrawableUtils.getDrawable(context, iconUrl, new ResourceDrawableUtils.BitmapLoader() {

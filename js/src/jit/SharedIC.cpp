@@ -600,14 +600,11 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler& masm, uint32_t objectOffset)
 void
 ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 {
-    if (engine_ == Engine::Baseline) {
-        EmitBaselineEnterStubFrame(masm, scratch);
+    MOZ_ASSERT(engine_ == Engine::Baseline);
+    EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
-        framePushedAtEnterStubFrame_ = masm.framePushed();
+    framePushedAtEnterStubFrame_ = masm.framePushed();
 #endif
-    } else {
-        EmitIonEnterStubFrame(masm, scratch);
-    }
 
     MOZ_ASSERT(!inStubFrame_);
     inStubFrame_ = true;
@@ -623,17 +620,13 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
     MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
     inStubFrame_ = false;
 
-    if (engine_ == Engine::Baseline) {
+    MOZ_ASSERT(engine_ == Engine::Baseline);
 #ifdef DEBUG
-        masm.setFramePushed(framePushedAtEnterStubFrame_);
-        if (calledIntoIon)
-            masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
+    masm.setFramePushed(framePushedAtEnterStubFrame_);
+    if (calledIntoIon)
+        masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
 #endif
-
-        EmitBaselineLeaveStubFrame(masm, calledIntoIon);
-    } else {
-        EmitIonLeaveStubFrame(masm);
-    }
+    EmitBaselineLeaveStubFrame(masm, calledIntoIon);
 }
 
 void
@@ -705,7 +698,7 @@ HandleScript
 SharedStubInfo::outerScript(JSContext* cx)
 {
     if (!outerScript_) {
-        js::jit::JitActivationIterator iter(cx->runtime());
+        js::jit::JitActivationIterator iter(cx);
         JitFrameIterator it(iter);
         MOZ_ASSERT(it.isExitFrame());
         ++it;

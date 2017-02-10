@@ -61,15 +61,6 @@ LocaleService::GetAppLocales(nsTArray<nsCString>& aRetVal)
 }
 
 void
-LocaleService::GetAppLocale(nsACString& aRetVal)
-{
-  if (mAppLocales.IsEmpty()) {
-    ReadAppLocales(mAppLocales);
-  }
-  aRetVal = mAppLocales[0];
-}
-
-void
 LocaleService::Refresh()
 {
   nsTArray<nsCString> newLocales;
@@ -111,8 +102,11 @@ LocaleService::GetAppLocales(JSContext* aCtx, JS::MutableHandleValue aRetVal)
 }
 
 NS_IMETHODIMP
-LocaleService::GetAppLocale(JSContext* aCtx, nsACString& aRetVal)
+LocaleService::GetAppLocale(nsACString& aRetVal)
 {
-  GetAppLocale(aRetVal);
+  if (mAppLocales.IsEmpty()) {
+    ReadAppLocales(mAppLocales);
+  }
+  aRetVal = mAppLocales[0];
   return NS_OK;
 }

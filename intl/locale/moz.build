@@ -8,6 +8,9 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 if CONFIG['ENABLE_INTL_API']:
     SOURCES += ['OSPreferences.cpp']
+    EXPORTS.mozilla.intl += [
+        'OSPreferences.h',
+    ]
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
@@ -40,7 +43,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.intl += [
-    'LocaleService.h'
+    'LocaleService.h',
 ]
 
 UNIFIED_SOURCES += [

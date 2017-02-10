@@ -253,6 +253,8 @@ CanUseExtraThreads()
 
 void DisableExtraThreads();
 
+using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
+
 class AutoLockForExclusiveAccess;
 } // namespace js
 
@@ -297,10 +299,57 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     AutoUpdateChildRuntimeCount updateChildRuntimeCount;
 #endif
 
+  private:
     // The context for the thread which currently has exclusive access to most
     // contents of the runtime. When execution on the runtime is cooperatively
     // scheduled, this is the thread which is currently running.
-    mozilla::Atomic<JSContext*, mozilla::ReleaseAcquire> activeContext;
+    mozilla::Atomic<JSContext*, mozilla::ReleaseAcquire> activeContext_;
+
+    // All contexts participating in cooperative scheduling. All threads other
+    // than |activeContext_| are suspended.
+    js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
+
+    // Count of AutoProhibitActiveContextChange instances on the active context.
+    js::ActiveThreadData<size_t> activeContextChangeProhibited_;
+
+  public:
+    JSContext* activeContext() { return activeContext_; }
+    const void* addressOfActiveContext() { return &activeContext_; }
+
+    void setActiveContext(JSContext* cx);
+
+    js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>& cooperatingContexts() {
+        return cooperatingContexts_.ref();
+    }
+
+#ifdef DEBUG
+    bool isCooperatingContext(JSContext* cx) {
+        for (const js::CooperatingContext& target : cooperatingContexts()) {
+            if (target.context() == cx)
+                return true;
+        }
+        return false;
+    }
+#endif
+
+    class MOZ_RAII AutoProhibitActiveContextChange
+    {
+        JSRuntime* rt;
+
+      public:
+        explicit AutoProhibitActiveContextChange(JSRuntime* rt)
+          : rt(rt)
+        {
+            rt->activeContextChangeProhibited_++;
+        }
+
+        ~AutoProhibitActiveContextChange()
+        {
+            rt->activeContextChangeProhibited_--;
+        }
+    };
+
+    bool activeContextChangeProhibited() { return activeContextChangeProhibited_; }
 
     /*
      * The profiler sampler generation after the latest sample.
@@ -523,6 +572,12 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     /* Default JSVersion. */
     js::ActiveThreadData<JSVersion> defaultVersion_;
+
+    /* If true, new scripts must be created with PC counter information. */
+    js::ActiveThreadOrIonCompileData<bool> profilingScripts;
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ActiveThreadData<JS::PersistentRooted<js::ScriptAndCountsVector>*> scriptAndCountsVector;
 
   private:
     /* Code coverage output. */

@@ -62,7 +62,7 @@ public abstract class PromptInput {
 
         public EditInput(GeckoBundle object) {
             super(object);
-            mHint = object.getString("hint");
+            mHint = object.getString("hint", "");
             mAutofocus = object.getBoolean("autofocus");
         }
 
@@ -331,13 +331,13 @@ public abstract class PromptInput {
     }
 
     public PromptInput(GeckoBundle obj) {
-        mLabel = obj.getString("label");
-        mType = obj.getString("type");
-        String id = obj.getString("id");
+        mLabel = obj.getString("label", "");
+        mType = obj.getString("type", "");
+        String id = obj.getString("id", "");
         mId = TextUtils.isEmpty(id) ? mType : id;
-        mValue = obj.getString("value");
-        mMaxValue = obj.getString("max");
-        mMinValue = obj.getString("min");
+        mValue = obj.getString("value", "");
+        mMaxValue = obj.getString("max", "");
+        mMinValue = obj.getString("min", "");
     }
 
     public void putInBundle(final GeckoBundle bundle) {
@@ -362,7 +362,7 @@ public abstract class PromptInput {
     }
 
     public static PromptInput getInput(GeckoBundle obj) {
-        String type = obj.getString("type");
+        String type = obj.getString("type", "");
         switch (type) {
             case EditInput.INPUT_TYPE:
                 return new EditInput(obj);

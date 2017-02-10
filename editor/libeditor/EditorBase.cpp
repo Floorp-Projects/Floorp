@@ -674,13 +674,10 @@ EditorBase::DoTransaction(nsITransaction* aTxn)
 {
   if (mPlaceHolderBatch && !mPlaceHolderTxn) {
     nsCOMPtr<nsIAbsorbingTransaction> placeholderTransaction =
-      new PlaceholderTransaction();
+      new PlaceholderTransaction(*this, mPlaceHolderName, Move(mSelState));
 
     // Save off weak reference to placeholder transaction
     mPlaceHolderTxn = do_GetWeakReference(placeholderTransaction);
-    placeholderTransaction->Init(mPlaceHolderName, mSelState, this);
-    // placeholder txn took ownership of this pointer
-    mSelState = nullptr;
 
     // QI to an nsITransaction since that's what DoTransaction() expects
     nsCOMPtr<nsITransaction> transaction =
@@ -925,7 +922,7 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
     mPlaceHolderName = aName;
     RefPtr<Selection> selection = GetSelection();
     if (selection) {
-      mSelState = new SelectionState();
+      mSelState = MakeUnique<SelectionState>();
       mSelState->SaveSelection(selection);
       // Composition transaction can modify multiple nodes and it merges text
       // node for ime into single text node.
@@ -989,7 +986,6 @@ EditorBase::EndPlaceHolderTransaction()
       if (mPlaceHolderName == nsGkAtoms::IMETxnName) {
         mRangeUpdater.DropSelectionState(*mSelState);
       }
-      delete mSelState;
       mSelState = nullptr;
     }
     // We might have never made a placeholder if no action took place.

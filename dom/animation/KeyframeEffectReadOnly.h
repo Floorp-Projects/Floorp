@@ -288,6 +288,10 @@ public:
   // needs a base style to composite with.
   bool NeedsBaseStyle(nsCSSPropertyID aProperty) const;
 
+  // Returns true if the effect is current state and has scale animation.
+  // |aFrame| is used for calculation of scale values.
+  bool ContainsAnimatedScale(const nsIFrame* aFrame) const;
+
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
