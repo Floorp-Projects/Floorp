@@ -79,6 +79,8 @@ nsICODecoder::FinishInternal()
 nsresult
 nsICODecoder::FinishWithErrorInternal()
 {
+  // No need to assert !mInFrame here because this condition is enforced by
+  // mContainedDecoder.
   return GetFinalStateFromContainedDecoder();
 }
 
