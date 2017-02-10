@@ -856,6 +856,7 @@ public:
   // call. |aStr| will be truncated as a side-effect of this
   // constructor.
   nsTAdoptingString_CharT(const self_type& aStr)
+    : nsTXPIDLString_CharT()
   {
     *this = aStr;
   }

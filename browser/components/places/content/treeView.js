@@ -514,7 +514,7 @@ PlacesTreeView.prototype = {
       const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Ci.nsIXULChromeRegistry)
                      .getSelectedLocale("global", true);
-      const dtOptions = { year: "2-digit", month: "numeric", day: "numeric",
+      const dtOptions = { year: "numeric", month: "numeric", day: "numeric",
                           hour: "numeric", minute: "numeric" };
       this.__dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
     }

@@ -31,6 +31,8 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "target.jsshell.zip",
     "mozharness.zip",
     "target.langpack.xpi",
+    "host/bin/mar",
+    "host/bin/mbsdiff",
 ]
 _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US = [
     "update/target.complete.mar",
