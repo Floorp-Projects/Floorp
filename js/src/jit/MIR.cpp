@@ -1021,6 +1021,22 @@ MConstant::assertInitializedPayload() const
 }
 #endif
 
+static HashNumber
+ConstantValueHash(MIRType type, uint64_t payload)
+{
+    // Build a 64-bit value holding both the payload and the type.
+    static const size_t TypeBits = 8;
+    static const size_t TypeShift = 64 - TypeBits;
+    MOZ_ASSERT(uintptr_t(type) <= (1 << TypeBits) - 1);
+    uint64_t bits = (uint64_t(type) << TypeShift) ^ payload;
+
+    // Fold all 64 bits into the 32-bit result. It's tempting to just discard
+    // half of the bits, as this is just a hash, however there are many common
+    // patterns of values where only the low or the high bits vary, so
+    // discarding either side would lead to excessive hash collisions.
+    return (HashNumber)bits ^ (HashNumber)(bits >> 32);
+}
+
 HashNumber
 MConstant::valueHash() const
 {
@@ -1028,18 +1044,7 @@ MConstant::valueHash() const
                   "Code below assumes payload fits in 64 bits");
 
     assertInitializedPayload();
-
-    // Build a 64-bit value holding both the payload and the type.
-    static const size_t TypeBits = 8;
-    static const size_t TypeShift = 64 - TypeBits;
-    MOZ_ASSERT(uintptr_t(type()) <= (1 << TypeBits) - 1);
-    uint64_t bits = (uint64_t(type()) << TypeShift) ^ payload_.asBits;
-
-    // Fold all 64 bits into the 32-bit result. It's tempting to just discard
-    // half of the bits, as this is just a hash, however there are many common
-    // patterns of values where only the low or the high bits vary, so
-    // discarding either side would lead to excessive hash collisions.
-    return (HashNumber)bits ^ (HashNumber)(bits >> 32);
+    return ConstantValueHash(type(), payload_.asBits);
 }
 
 bool
@@ -1214,6 +1219,20 @@ MConstant::valueToBoolean(bool* res) const
         MOZ_ASSERT(IsMagicType(type()));
         return false;
     }
+}
+
+HashNumber
+MWasmFloatConstant::valueHash() const
+{
+    return ConstantValueHash(type(), u.bits_);
+}
+
+bool
+MWasmFloatConstant::congruentTo(const MDefinition* ins) const
+{
+    return ins->isWasmFloatConstant() &&
+           type() == ins->type() &&
+           u.bits_ == ins->toWasmFloatConstant()->u.bits_;
 }
 
 MDefinition*

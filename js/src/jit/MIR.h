@@ -1694,6 +1694,52 @@ class MConstant : public MNullaryInstruction
     bool appendRoots(MRootList& roots) const override;
 };
 
+// Floating-point value as created by wasm. Just a constant value, used to
+// effectively inhibite all the MIR optimizations. This uses the same LIR nodes
+// as a MConstant of the same type would.
+class MWasmFloatConstant : public MNullaryInstruction
+{
+    union {
+        float f32_;
+        double f64_;
+        uint64_t bits_;
+    } u;
+
+    explicit MWasmFloatConstant(MIRType type)
+    {
+        u.bits_ = 0;
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(WasmFloatConstant)
+
+    static MWasmFloatConstant* NewDouble(TempAllocator& alloc, double d) {
+        auto* ret = new(alloc) MWasmFloatConstant(MIRType::Double);
+        ret->u.f64_ = d;
+        return ret;
+    }
+
+    static MWasmFloatConstant* NewFloat32(TempAllocator& alloc, float f) {
+        auto* ret = new(alloc) MWasmFloatConstant(MIRType::Float32);
+        ret->u.f32_ = f;
+        return ret;
+    }
+
+    HashNumber valueHash() const override;
+    bool congruentTo(const MDefinition* ins) const override;
+    AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+    const double& toDouble() const {
+        MOZ_ASSERT(type() == MIRType::Double);
+        return u.f64_;
+    }
+    const float& toFloat32() const {
+        MOZ_ASSERT(type() == MIRType::Float32);
+        return u.f32_;
+    }
+};
+
 // Generic constructor of SIMD valuesX4.
 class MSimdValueX4
   : public MQuaternaryInstruction,
