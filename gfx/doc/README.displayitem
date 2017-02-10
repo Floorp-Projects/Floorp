@@ -1,0 +1,27 @@
+How to add a new WebRender display item from a Gecko Display item, the general flow is to:
+
+(1) Force layout to create a new active layer for the gecko display item.
+(2) Plumb the data needed for the display item from content through WebRenderBridgeParent on the parent side.
+(3) From WebRenderBridgeParent, call out into bindings.rs and implement the appropriate WR calls.
+
+More detailed steps are:
+
+1) Force layout to create an active layer for the gecko display item.
+See http://searchfox.org/mozilla-central/rev/0f254a30d684796bcc8b6e2a102a0095d25842bb/layout/generic/nsTextFrame.cpp#4983
+as an example for text layers. Ping Matt Woodrow or Markus Stange for help.
+
+The Active layer part comes from nsDisplayText::GetLayerState
+
+2) Create the new display item layer:
+
+See text layer:
+http://searchfox.org/mozilla-central/rev/0f254a30d684796bcc8b6e2a102a0095d25842bb/gfx/layers/Layers.h#2403
+
+The layer should have all the information to display the item.
+
+3) Create the WebRender equivalent layer. In YourLayerType::RenderLayer, serialize the data needed for the layer type.
+4) If you need to add a custom IPC serialization mechanism, do it in WebRenderMessageUtils.h
+5) Create a WebRender command to process the new layer type in WebRenderMessages.ipdlh. These are the struct OpDPPushYourLayerTypeHere
+6) Add a new function in WebRender.h that will call out into webrender to render your display item.
+7) In WebRenderBridgeParent::ProcessWebRenderCommands, call out to the new function in (6).
+8) Fill out the function in (6) in bindings.rs to make webrender do the right thing. Generally, it's just push a display item.

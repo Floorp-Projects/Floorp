@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -59,9 +60,11 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
@@ -1298,9 +1301,21 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-  RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
+  bool enableWR = gfx::gfxVars::UseWebRender();
+  bool enableAPZ = UseAPZ();
+  if (enableWR && !gfxPrefs::APZAllowWithWebRender()) {
+    // Disable APZ on widgets using WebRender, since it doesn't work yet. Allow
+    // it on non-WR widgets or if the pref forces it on.
+    enableAPZ = false;
+  }
+  CompositorOptions options(enableAPZ, enableWR);
 
-  CompositorOptions options(UseAPZ());
+  RefPtr<LayerManager> lm;
+  if (options.UseWebRender()) {
+    lm = new WebRenderLayerManager(this);
+  } else {
+    lm = new ClientLayerManager(this);
+  }
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
@@ -1327,11 +1342,18 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     mInitialZoomConstraints.reset();
   }
 
-  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-  // As long as we are creating a ClientLayerManager above lf must be non-null.
-  MOZ_ASSERT(lf);
+  if (lm->AsWebRenderLayerManager()) {
+    TextureFactoryIdentifier textureFactoryIdentifier;
+    lm->AsWebRenderLayerManager()->Initialize(mCompositorBridgeChild,
+                                              mCompositorSession->RootLayerTreeId(),
+                                              &textureFactoryIdentifier);
+    ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+    gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
+  }
 
+  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
   if (lf) {
+    // lf is non-null if we are creating a ClientLayerManager above
     TextureFactoryIdentifier textureFactoryIdentifier;
     PLayerTransactionChild* shadowManager = nullptr;
 
@@ -1352,9 +1374,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     }
 
     lf->SetShadowManager(shadowManager);
-    if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
-      clm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier, 0);
-    }
+    lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier, 0);
     // Some popup or transparent widgets may use a different backend than the
     // compositors used with ImageBridge and VR (and more generally web content).
     if (WidgetTypeSupportsAcceleration()) {

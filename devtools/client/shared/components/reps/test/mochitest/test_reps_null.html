@@ -18,8 +18,8 @@ Test Null rep
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { Null } = browserRequire("devtools/client/shared/components/reps/null");
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, Null } = REPS;
 
     let gripStub = {
       "type": "null"

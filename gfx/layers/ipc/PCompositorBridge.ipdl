@@ -14,6 +14,7 @@ include protocol PBrowser;
 include protocol PCompositorWidget;
 include protocol PLayerTransaction;
 include protocol PTexture;
+include protocol PWebRenderBridge;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
@@ -33,6 +34,7 @@ using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -71,6 +73,7 @@ sync protocol PCompositorBridge
   manages PLayerTransaction;
   manages PTexture;
   manages PCompositorWidget;
+  manages PWebRenderBridge;
 
 child:
   // The child should invalidate retained layers. This is used for local
@@ -237,6 +240,10 @@ parent:
   async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial);
 
   sync SyncWithCompositor();
+
+  // The pipelineId is the same as the layersId
+  sync PWebRenderBridge(PipelineId pipelineId)
+    returns (TextureFactoryIdentifier textureFactoryIdentifier);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

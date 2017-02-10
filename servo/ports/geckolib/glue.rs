@@ -28,6 +28,7 @@ use style::gecko::selector_parser::{SelectorImpl, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::wrapper::DUMMY_BASE_URL;
 use style::gecko::wrapper::GeckoElement;
+use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::{RawServoDeclarationBlockBorrowed, RawServoDeclarationBlockStrong};
 use style::gecko_bindings::bindings::{RawServoStyleRuleBorrowed, RawServoStyleRuleStrong};
 use style::gecko_bindings::bindings::{RawServoStyleSetBorrowed, RawServoStyleSetOwned};
@@ -163,14 +164,19 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
     }
 }
 
+/// Traverses the subtree rooted at `root` for restyling.  Returns whether a
+/// Gecko post-traversal (to perform lazy frame construction, or consume any
+/// RestyleData, or drop any ElementData) is required.
 #[no_mangle]
 pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                                         raw_data: RawServoStyleSetBorrowed,
-                                        behavior: structs::TraversalRootBehavior) -> () {
+                                        behavior: structs::TraversalRootBehavior) -> bool {
     let element = GeckoElement(root);
     debug!("Servo_TraverseSubtree: {:?}", element);
     traverse_subtree(element, raw_data,
                      behavior == structs::TraversalRootBehavior::UnstyledChildrenOnly);
+
+    element.has_dirty_descendants() || element.mutate_data().unwrap().has_restyle()
 }
 
 #[no_mangle]
@@ -207,8 +213,33 @@ pub extern "C" fn Servo_AnimationValues_Uncompute(value: RawServoAnimationValueB
     })).into_strong()
 }
 
+macro_rules! get_property_id_from_nscsspropertyid {
+    ($property_id: ident, $ret: expr) => {{
+        match PropertyId::from_nscsspropertyid($property_id) {
+            Ok(property_id) => property_id,
+            Err(()) => { return $ret; }
+        }
+    }}
+}
+
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValues_GetOpacity(value: RawServoAnimationValueBorrowed)
+pub extern "C" fn Servo_AnimationValue_Serialize(value: RawServoAnimationValueBorrowed,
+                                                 property: nsCSSPropertyID,
+                                                 buffer: *mut nsAString)
+{
+    let uncomputed_value = AnimationValue::as_arc(&value).uncompute();
+    let mut string = String::new();
+    let rv = PropertyDeclarationBlock {
+        declarations: vec![(uncomputed_value, Importance::Normal)],
+        important_count: 0
+    }.single_value_to_css(&get_property_id_from_nscsspropertyid!(property, ()), &mut string);
+    debug_assert!(rv.is_ok());
+
+    write!(unsafe { &mut *buffer }, "{}", string).expect("Failed to copy string");
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_AnimationValue_GetOpacity(value: RawServoAnimationValueBorrowed)
      -> f32
 {
     let value = AnimationValue::as_arc(&value);
@@ -220,8 +251,8 @@ pub extern "C" fn Servo_AnimationValues_GetOpacity(value: RawServoAnimationValue
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValues_GetTransform(value: RawServoAnimationValueBorrowed,
-                                                     list: &mut structs::RefPtr<nsCSSValueSharedList>)
+pub extern "C" fn Servo_AnimationValue_GetTransform(value: RawServoAnimationValueBorrowed,
+                                                    list: &mut structs::RefPtr<nsCSSValueSharedList>)
 {
     let value = AnimationValue::as_arc(&value);
     if let AnimationValue::Transform(ref servo_list) = **value {
@@ -339,24 +370,6 @@ pub extern "C" fn Servo_StyleWorkerThreadCount() -> u32 {
 #[no_mangle]
 pub extern "C" fn Servo_Element_ClearData(element: RawGeckoElementBorrowed) -> () {
     GeckoElement(element).clear_data();
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_Element_ShouldTraverse(element: RawGeckoElementBorrowed) -> bool {
-    let element = GeckoElement(element);
-    debug_assert!(!element.has_dirty_descendants(),
-                  "only call Servo_Element_ShouldTraverse if you know the element \
-                   does not have dirty descendants");
-    let result = match element.borrow_data() {
-        // Note that we check for has_restyle here rather than has_current_styles,
-        // because we also want the traversal code to trigger if there's restyle
-        // damage. We really only need the Gecko post-traversal in that case, so
-        // the servo traversal will be a no-op, but it's cheap enough that we
-        // don't bother distinguishing the two cases.
-        Some(d) => !d.has_styles() || d.has_restyle(),
-        None => true,
-    };
-    result
 }
 
 #[no_mangle]
@@ -844,15 +857,6 @@ pub extern "C" fn Servo_DeclarationBlock_GetCssText(declarations: RawServoDeclar
     declarations.read().to_css(unsafe { result.as_mut().unwrap() }).unwrap();
 }
 
-macro_rules! get_property_id_from_nscsspropertyid {
-    ($property_id: ident, $ret: expr) => {{
-        match PropertyId::from_nscsspropertyid($property_id) {
-            Ok(property_id) => property_id,
-            Err(()) => { return $ret; }
-        }
-    }}
-}
-
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
     declarations: RawServoDeclarationBlockBorrowed,
@@ -1077,6 +1081,7 @@ unsafe fn maybe_restyle<'a>(data: &'a mut AtomicRefMut<ElementData>, element: Ge
         if curr.has_dirty_descendants() { break; }
         curr.set_dirty_descendants();
     }
+    bindings::Gecko_SetOwnerDocumentNeedsStyleFlush(element.0);
 
     // Ensure and return the RestyleData.
     Some(data.ensure_restyle())

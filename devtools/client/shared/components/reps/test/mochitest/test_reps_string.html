@@ -17,8 +17,8 @@ Test String rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { StringRep } = browserRequire("devtools/client/shared/components/reps/string");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, StringRep } = REPS;
 
   try {
     // Test that correct rep is chosen

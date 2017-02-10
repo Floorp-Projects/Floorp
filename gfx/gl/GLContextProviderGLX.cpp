@@ -15,6 +15,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/X11CompositorWidget.h"
 #include "mozilla/Unused.h"
@@ -1120,7 +1121,9 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
 }
 
 already_AddRefed<GLContext>
-CreateForWidget(Display* aXDisplay, Window aXWindow, bool aForceAccelerated)
+CreateForWidget(Display* aXDisplay, Window aXWindow,
+                bool aWebRender,
+                bool aForceAccelerated)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
         return nullptr;
@@ -1144,17 +1147,27 @@ CreateForWidget(Display* aXDisplay, Window aXWindow, bool aForceAccelerated)
     GLXFBConfig config;
     int visid;
     if (!GLContextGLX::FindFBConfigForWindow(aXDisplay, xscreen, aXWindow, &cfgs,
-                                             &config, &visid))
+                                             &config, &visid, aWebRender))
     {
         return nullptr;
     }
 
     SurfaceCaps caps = SurfaceCaps::Any();
     GLContextGLX* shareContext = GetGlobalContextGLX();
-    RefPtr<GLContextGLX> gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                                            caps, shareContext, false,
-                                                            aXDisplay, aXWindow, config,
-                                                            false);
+    RefPtr<GLContextGLX> gl;
+    if (aWebRender) {
+      gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
+                                         caps, shareContext, false,
+                                         aXDisplay, aXWindow, config,
+                                         //TODO: we might want to pass an additional bool to select GL core/compat
+                                         false, nullptr, ContextProfile::OpenGLCore); //WR: required GL 3.2+
+    } else {
+      gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
+                                         caps, shareContext, false,
+                                         aXDisplay, aXWindow, config,
+                                         false);
+    }
+
     return gl.forget();
 }
 
@@ -1166,17 +1179,21 @@ GLContextProviderGLX::CreateForCompositorWidget(CompositorWidget* aCompositorWid
 
     return CreateForWidget(compWidget->XDisplay(),
                            compWidget->XWindow(),
+                           compWidget->GetCompositorOptions().UseWebRender(),
                            aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderGLX::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderGLX::CreateForWindow(nsIWidget* aWidget,
+                                      bool aWebRender,
+                                      bool aForceAccelerated)
 {
     Display* display = (Display*)aWidget->GetNativeData(NS_NATIVE_COMPOSITOR_DISPLAY);
     Window window = GET_NATIVE_WINDOW(aWidget);
 
     return CreateForWidget(display,
                            window,
+                           aWebRender,
                            aForceAccelerated);
 }
 
@@ -1240,7 +1257,8 @@ ChooseConfig(GLXLibrary* glx, Display* display, int screen, const SurfaceCaps& m
 bool
 GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                                     ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,
-                                    GLXFBConfig* const out_config, int* const out_visid)
+                                    GLXFBConfig* const out_config, int* const out_visid,
+                                    bool aWebRender)
 {
     ScopedXFree<GLXFBConfig>& cfgs = *out_scopedConfigArr;
     int numConfigs;
@@ -1250,14 +1268,40 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
             LOCAL_GLX_DOUBLEBUFFER, False,
             0
         };
-        cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                           screen,
-                                           attribs,
-                                           &numConfigs);
+        const int webrenderAttribs[] = {
+            LOCAL_GLX_DOUBLEBUFFER, False,
+            LOCAL_GLX_DEPTH_SIZE, 24,
+            0
+        };
+
+        if (aWebRender) {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             webrenderAttribs,
+                                             &numConfigs);
+        } else {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             attribs,
+                                             &numConfigs);
+        }
     } else {
-        cfgs = sGLXLibrary.xGetFBConfigs(display,
-                                         screen,
-                                         &numConfigs);
+        const int webrenderAttribs[] = {
+            LOCAL_GLX_DEPTH_SIZE, 24,
+            LOCAL_GLX_DOUBLEBUFFER, True,
+            0
+        };
+
+        if (aWebRender) {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             webrenderAttribs,
+                                             &numConfigs);
+        } else {
+          cfgs = sGLXLibrary.xGetFBConfigs(display,
+                                           screen,
+                                           &numConfigs);
+        }
     }
 
     if (!cfgs) {
@@ -1279,13 +1323,14 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     printf("[GLX] window %lx has VisualID 0x%lx\n", window, windowVisualID);
 #endif
 
-    for (int i = 0; i < numConfigs; i++) {
-        int visid = X11None;
-        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-        if (!visid) {
-            continue;
-        }
-        if (sGLXLibrary.IsATI()) {
+    if (aWebRender) {
+        for (int i = 0; i < numConfigs; i++) {
+            int visid = X11None;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+            if (!visid) {
+                continue;
+            }
+
             int depth;
             Visual* visual;
             FindVisualAndDepth(display, visid, &visual, &depth);
@@ -1295,11 +1340,30 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                 *out_visid = visid;
                 return true;
             }
-        } else {
-            if (windowVisualID == static_cast<VisualID>(visid)) {
-                *out_config = cfgs[i];
-                *out_visid = visid;
-                return true;
+        }
+    } else {
+        for (int i = 0; i < numConfigs; i++) {
+            int visid = X11None;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+            if (!visid) {
+                continue;
+            }
+            if (sGLXLibrary.IsATI()) {
+                int depth;
+                Visual* visual;
+                FindVisualAndDepth(display, visid, &visual, &depth);
+                if (depth == windowAttrs.depth &&
+                    AreCompatibleVisuals(windowAttrs.visual, visual)) {
+                    *out_config = cfgs[i];
+                    *out_visid = visid;
+                    return true;
+                }
+            } else {
+                if (windowVisualID == static_cast<VisualID>(visid)) {
+                    *out_config = cfgs[i];
+                    *out_visid = visid;
+                    return true;
+                }
             }
         }
     }

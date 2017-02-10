@@ -13,6 +13,7 @@
 #include "prenv.h"
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 #include <OpenGL/OpenGL.h>
@@ -202,6 +203,16 @@ static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel[] = {
     0
 };
 
+static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel_webrender[] = {
+    NSOpenGLPFAAccelerated,
+    NSOpenGLPFAAllowOfflineRenderers,
+    NSOpenGLPFADoubleBuffer,
+    NSOpenGLPFAOpenGLProfile,
+    NSOpenGLProfileVersion3_2Core,
+    NSOpenGLPFADepthSize, 24,
+    0
+};
+
 static const NSOpenGLPixelFormatAttribute kAttribs_offscreen[] = {
     0
 };
@@ -243,11 +254,15 @@ CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
+    return CreateForWindow(aCompositorWidget->RealWidget(),
+                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
+                           aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,
+                                      bool aWebRender,
+                                      bool aForceAccelerated)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nullptr;
@@ -261,7 +276,11 @@ GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated
 
     const NSOpenGLPixelFormatAttribute* attribs;
     if (sCGLLibrary.UseDoubleBufferedWindows()) {
-        attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
+        if (aWebRender) {
+            attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel_webrender : kAttribs_doubleBuffered;
+        } else {
+            attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
+        }
     } else {
         attribs = aForceAccelerated ? kAttribs_singleBuffered_accel : kAttribs_singleBuffered;
     }

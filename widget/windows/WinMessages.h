@@ -45,10 +45,6 @@
 #define MOZ_WM_DEADCHAR                   (WM_APP+0x031E)
 #define MOZ_WM_SYSDEADCHAR                (WM_APP+0x031F)
 
-// Internal message for ensuring the file picker is visible on multi monitor
-// systems, and when the screen resolution changes.
-#define MOZ_WM_ENSUREVISIBLE              (WM_APP+0x374F)
-
 // XXX Should rename them to MOZ_WM_* and use safer values!
 // Messages for fullscreen transition window
 #define WM_FULLSCREEN_TRANSITION_BEFORE   (WM_USER + 0)

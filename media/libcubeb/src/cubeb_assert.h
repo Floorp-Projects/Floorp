@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <mozilla/Assertions.h>
 
-/* Forward fatal asserts to MOZ_ASSERT when built inside Gecko. */
-#define XASSERT(expr) MOZ_ASSERT(expr)
+/* Forward fatal asserts to MOZ_RELEASE_ASSERT when built inside Gecko. */
+#define XASSERT(expr) MOZ_RELEASE_ASSERT(expr)
 
 #endif

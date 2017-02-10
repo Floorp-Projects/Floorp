@@ -154,6 +154,8 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
   gfxConfig::SetFailed(Feature::GPU_PROCESS, FeatureStatus::Failed, aMessage);
   gfxCriticalNote << aMessage;
 
+  gfxPlatform::NotifyGPUProcessDisabled();
+
   DestroyProcess();
   ShutdownVsyncIOThread();
 }

@@ -20,8 +20,8 @@ Test Symbol rep
 /* import-globals-from head.js */
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { SymbolRep } = browserRequire("devtools/client/shared/components/reps/symbol");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, SymbolRep } = REPS;
 
   let gripStubs = new Map();
   gripStubs.set("testSymbolFoo", {

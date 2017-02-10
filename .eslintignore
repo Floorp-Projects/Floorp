@@ -186,6 +186,12 @@ mobile/android/components/Snippets.js
 # Bug 1178739: Ignore this file as a quick fix for "Illegal yield expression"
 mobile/android/modules/HomeProvider.jsm
 
+# security/ exclusions (pref files).
+security/manager/ssl/security-prefs.js
+
+#NSS
+security/nss/**
+
 # services/ exclusions
 
 # Uses `#filter substitution`
@@ -228,6 +234,3 @@ toolkit/webapps/**
 
 # Third party
 toolkit/modules/third_party/**
-
-#NSS
-security/nss/**

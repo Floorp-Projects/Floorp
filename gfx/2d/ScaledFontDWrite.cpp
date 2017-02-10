@@ -228,6 +228,10 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
     return false;
   }
 
+  if (!aDataCallback) {
+    return true;
+  }
+
   RefPtr<IDWriteFontFile> file;
   mFontFace->GetFiles(&fileCount, getter_AddRefs(file));
 
