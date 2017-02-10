@@ -197,8 +197,8 @@ if __name__ == "__main__":
     os.chdir("../src/") # changing download path to /unicode-bidi/src/
     r = "tables.rs"
     # downloading the test case files
-    fetch("BidiTest.txt")
-    fetch("BidiCharacterTest.txt")
+    # fetch("BidiTest.txt")
+    # fetch("BidiCharacterTest.txt")
 
     if os.path.exists(r):
         os.remove(r)

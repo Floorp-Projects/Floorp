@@ -1,0 +1,12 @@
+environment:
+  matrix:
+    - LLVM_VERSION: 3.9
+      CLANG_VERSION: clang_3_9
+
+install:
+  - .\ci\install.bat
+
+build: false
+
+test_script:
+  - .\ci\test_script.bat

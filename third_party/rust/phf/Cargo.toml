@@ -1,0 +1,20 @@
+[package]
+name = "phf"
+authors = ["Steven Fackler <sfackler@gmail.com>"]
+version = "0.7.21"
+license = "MIT"
+description = "Runtime support for perfect hash function data structures"
+repository = "https://github.com/sfackler/rust-phf"
+documentation = "https://docs.rs/phf/0.7.21/phf"
+
+[lib]
+name = "phf"
+path = "src/lib.rs"
+test = false
+
+[features]
+core = ["phf_shared/core"]
+unicase = ["phf_shared/unicase"]
+
+[dependencies]
+phf_shared = { version = "=0.7.21", path = "../phf_shared" }

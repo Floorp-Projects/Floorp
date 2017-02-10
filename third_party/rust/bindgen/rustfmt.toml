@@ -1,0 +1,10 @@
+max_width = 80
+format_strings = false
+fn_brace_style = "SameLineWhere"
+item_brace_style = "SameLineWhere"
+struct_lit_multiline_style = "ForceMulti"
+where_trailing_comma = true
+reorder_imports = true
+reorder_imported_names = true
+normalize_comments = false
+write_mode = "Overwrite"

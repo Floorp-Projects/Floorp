@@ -1,0 +1,44 @@
+[package]
+name = "vec_map"
+version = "0.6.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>",
+           "Jorge Aparicio <japaricious@gmail.com>",
+           "Alexis Beingessner <a.beingessner@gmail.com>",
+           "Brian Anderson <>",
+           "tbu- <>",
+           "Manish Goregaokar <>",
+           "Aaron Turon <aturon@mozilla.com>",
+           "Adolfo Ochagavía <>",
+           "Niko Matsakis <>",
+           "Steven Fackler <>",
+           "Chase Southwood <csouth3@illinois.edu>",
+           "Eduard Burtescu <>",
+           "Florian Wilkens <>",
+           "Félix Raimundo <>",
+           "Tibor Benke <>",
+           "Markus Siemens <markus@m-siemens.de>",
+           "Josh Branchaud <jbranchaud@gmail.com>",
+           "Huon Wilson <dbau.pp@gmail.com>",
+           "Corey Farwell <coref@rwell.org>",
+           "Aaron Liblong <>",
+           "Nick Cameron <nrc@ncameron.org>",
+           "Patrick Walton <pcwalton@mimiga.net>",
+           "Felix S Klock II <>",
+           "Andrew Paseltiner <apaseltiner@gmail.com>",
+           "Sean McArthur <sean.monstar@gmail.com>",
+           "Vadim Petrochenkov <>"]
+
+license = "MIT/Apache-2.0"
+description = "A simple map based on a vector for small integer keys"
+repository = "https://github.com/contain-rs/vec-map"
+homepage = "https://github.com/contain-rs/vec-map"
+documentation = "https://contain-rs.github.io/vec-map/vec_map"
+keywords = ["data-structures", "collections", "vecmap", "vec_map", "contain-rs"]
+readme = "README.md"
+
+[features]
+eders = ["serde", "serde_macros"]
+
+[dependencies]
+serde = { version = "0.6", optional = true }
+serde_macros = { version = "0.6", optional = true }
