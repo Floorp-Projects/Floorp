@@ -19,9 +19,8 @@ Test Element node rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { ElementNode } = browserRequire("devtools/client/shared/components/reps/element-node");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, ElementNode } = REPS;
 
   try {
     yield testBodyNode();

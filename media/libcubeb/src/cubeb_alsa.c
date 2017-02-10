@@ -316,12 +316,12 @@ alsa_process_stream(cubeb_stream * stm)
   /* Capture: Pass read frames to callback function */
   if (stm->stream_type == SND_PCM_STREAM_CAPTURE && stm->bufframes > 0 &&
       (!stm->other_stream || stm->other_stream->bufframes < stm->other_stream->buffer_size)) {
-    long wrote = stm->bufframes;
+    snd_pcm_sframes_t wrote = stm->bufframes;
     struct cubeb_stream * mainstm = stm->other_stream ? stm->other_stream : stm;
     void * other_buffer = stm->other_stream ? stm->other_stream->buffer + stm->other_stream->bufframes : NULL;
 
     /* Correct write size to the other stream available space */
-    if (stm->other_stream && wrote > stm->other_stream->buffer_size - stm->other_stream->bufframes) {
+    if (stm->other_stream && wrote > (snd_pcm_sframes_t) (stm->other_stream->buffer_size - stm->other_stream->bufframes)) {
       wrote = stm->other_stream->buffer_size - stm->other_stream->bufframes;
     }
 
@@ -341,14 +341,14 @@ alsa_process_stream(cubeb_stream * stm)
   }
 
   /* Playback: Don't have enough data? Let's ask for more. */
-  if (stm->stream_type == SND_PCM_STREAM_PLAYBACK && avail > stm->bufframes &&
+  if (stm->stream_type == SND_PCM_STREAM_PLAYBACK && avail > (snd_pcm_sframes_t) stm->bufframes &&
       (!stm->other_stream || stm->other_stream->bufframes > 0)) {
     long got = avail - stm->bufframes;
     void * other_buffer = stm->other_stream ? stm->other_stream->buffer : NULL;
     char * buftail = stm->buffer + snd_pcm_frames_to_bytes(stm->pcm, stm->bufframes);
 
     /* Correct read size to the other stream available frames */
-    if (stm->other_stream && got > stm->other_stream->bufframes) {
+    if (stm->other_stream && got > (snd_pcm_sframes_t) stm->other_stream->bufframes) {
       got = stm->other_stream->bufframes;
     }
 
@@ -368,7 +368,7 @@ alsa_process_stream(cubeb_stream * stm)
   }
 
   /* Playback: Still don't have enough data? Add some silence. */
-  if (stm->stream_type == SND_PCM_STREAM_PLAYBACK && avail > stm->bufframes) {
+  if (stm->stream_type == SND_PCM_STREAM_PLAYBACK && avail > (snd_pcm_sframes_t) stm->bufframes) {
     long drain_frames = avail - stm->bufframes;
     double drain_time = (double) drain_frames / stm->params.rate;
 
@@ -933,6 +933,9 @@ alsa_stream_init_single(cubeb * ctx, cubeb_stream ** stream, char const * stream
   r = pthread_mutex_init(&stm->mutex, NULL);
   assert(r == 0);
 
+  r = pthread_cond_init(&stm->cond, NULL);
+  assert(r == 0);
+
   r = alsa_locked_pcm_open(&stm->pcm, pcm_name, stm->stream_type, ctx->local_config);
   if (r < 0) {
     alsa_stream_destroy(stm);
@@ -975,9 +978,6 @@ alsa_stream_init_single(cubeb * ctx, cubeb_stream ** stream, char const * stream
   assert(stm->saved_fds);
   r = snd_pcm_poll_descriptors(stm->pcm, stm->saved_fds, stm->nfds);
   assert((nfds_t) r == stm->nfds);
-
-  r = pthread_cond_init(&stm->cond, NULL);
-  assert(r == 0);
 
   if (alsa_register_stream(ctx, stm) != 0) {
     alsa_stream_destroy(stm);

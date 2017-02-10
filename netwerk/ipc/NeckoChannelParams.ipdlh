@@ -105,7 +105,7 @@ struct HttpChannelOpenArgs
   nsCString                   requestMethod;
   OptionalIPCStream           uploadStream;
   bool                        uploadStreamHasHeaders;
-  uint16_t                    priority;
+  int16_t                     priority;
   uint32_t                    classOfService;
   uint8_t                     redirectionLimit;
   bool                        allowPipelining;

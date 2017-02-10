@@ -17,9 +17,8 @@ Test GripArray rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { GripArray } = browserRequire("devtools/client/shared/components/reps/grip-array");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, GripArray } = REPS;
 
   let componentUnderTest = GripArray;
   const maxLength = {

@@ -13,6 +13,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
@@ -270,12 +271,20 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         }
     }
 
+    private void performPendingIntent(@NonNull PendingIntent pendingIntent) {
+        // bug 1337771: If intent-creator haven't set data url, call send() directly won't work.
+        final Intent additional = new Intent();
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        additional.setData(Uri.parse(tab.getURL()));
+        try {
+            pendingIntent.send(this, 0, additional);
+        } catch (PendingIntent.CanceledException e) {
+            Log.w(LOGTAG, "Performing a canceled pending intent", e);
+        }
+    }
+
     private void onActionButtonClicked() {
         PendingIntent pendingIntent = IntentUtil.getActionButtonPendingIntent(getIntent());
-        try {
-            pendingIntent.send();
-        } catch (PendingIntent.CanceledException e) {
-            Log.w(LOGTAG, "Action Button clicked, but pending intent was canceled", e);
-        }
+        performPendingIntent(pendingIntent);
     }
 }

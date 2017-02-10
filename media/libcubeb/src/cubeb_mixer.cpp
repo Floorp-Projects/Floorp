@@ -9,6 +9,55 @@
 #include "cubeb-internal.h"
 #include "cubeb_mixer.h"
 
+// DUAL_MONO(_LFE) is same as STEREO(_LFE).
+#define MASK_MONO         (1 << CHANNEL_MONO)
+#define MASK_MONO_LFE     (MASK_MONO | (1 << CHANNEL_LFE))
+#define MASK_STEREO       ((1 << CHANNEL_LEFT) | (1 << CHANNEL_RIGHT))
+#define MASK_STEREO_LFE   (MASK_STEREO | (1 << CHANNEL_LFE))
+#define MASK_3F           (MASK_STEREO | (1 << CHANNEL_CENTER))
+#define MASK_3F_LFE       (MASK_3F | (1 << CHANNEL_LFE))
+#define MASK_2F1          (MASK_STEREO | (1 << CHANNEL_RCENTER))
+#define MASK_2F1_LFE      (MASK_2F1 | (1 << CHANNEL_LFE))
+#define MASK_3F1          (MASK_3F | (1 << CHANNEL_RCENTER))
+#define MASK_3F1_LFE      (MASK_3F1 | (1 << CHANNEL_LFE))
+#define MASK_2F2          (MASK_STEREO | (1 << CHANNEL_LS) | (1 << CHANNEL_RS))
+#define MASK_2F2_LFE      (MASK_2F2 | (1 << CHANNEL_LFE))
+#define MASK_3F2          (MASK_2F2 | (1 << CHANNEL_CENTER))
+#define MASK_3F2_LFE      (MASK_3F2 | (1 << CHANNEL_LFE))
+#define MASK_3F3R_LFE     (MASK_3F2_LFE | (1 << CHANNEL_RCENTER))
+#define MASK_3F4_LFE      (MASK_3F2_LFE | (1 << CHANNEL_RLS) | (1 << CHANNEL_RRS))
+
+cubeb_channel_layout cubeb_channel_map_to_layout(cubeb_channel_map const * channel_map)
+{
+  uint32_t channel_mask = 0;
+  for (uint8_t i = 0 ; i < channel_map->channels ; ++i) {
+    if (channel_map->map[i] == CHANNEL_INVALID) {
+      return CUBEB_LAYOUT_UNDEFINED;
+    }
+    channel_mask |= 1 << channel_map->map[i];
+  }
+
+  switch(channel_mask) {
+    case MASK_MONO: return CUBEB_LAYOUT_MONO;
+    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
+    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
+    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
+    case MASK_3F: return CUBEB_LAYOUT_3F;
+    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
+    case MASK_2F1: return CUBEB_LAYOUT_2F1;
+    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
+    case MASK_3F1: return CUBEB_LAYOUT_3F1;
+    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
+    case MASK_2F2: return CUBEB_LAYOUT_2F2;
+    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
+    case MASK_3F2: return CUBEB_LAYOUT_3F2;
+    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
+    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
+    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
+    default: return CUBEB_LAYOUT_UNDEFINED;
+  }
+}
+
 cubeb_layout_map const CUBEB_CHANNEL_LAYOUT_MAPS[CUBEB_LAYOUT_MAX] = {
   { "undefined",      0,  CUBEB_LAYOUT_UNDEFINED },
   { "dual mono",      2,  CUBEB_LAYOUT_DUAL_MONO },

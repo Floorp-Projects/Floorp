@@ -418,10 +418,7 @@ public:
    * Operating system versions.
    */
   enum OperatingSystemVersion {
-    // XXX: The XP and Vista values can now be removed (see bug 1330146).
-    eOperatingSystemVersion_WindowsXP = 0,
-    eOperatingSystemVersion_WindowsVista,
-    eOperatingSystemVersion_Windows7,
+    eOperatingSystemVersion_Windows7 = 2,
     eOperatingSystemVersion_Windows8,
     eOperatingSystemVersion_Windows10,
     eOperatingSystemVersion_Unknown
