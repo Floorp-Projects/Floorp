@@ -3549,8 +3549,8 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
             max_cells = atol(env);
         for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
             for (ArenaCellIterUnderGC i(current); !i.done(); i.next()) {
-                Cell* t = i.get<Cell>();
-                MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
+                TenuredCell* t = i.getCell();
+                MOZ_ASSERT(t->isMarked(), "unmarked cells should have been finalized");
                 if (++num_live <= max_cells) {
                     fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
                             t, AllocKindToAscii(kind));
