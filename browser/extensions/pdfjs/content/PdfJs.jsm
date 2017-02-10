@@ -94,6 +94,7 @@ function initializeDefaultPreferences() {
   "enhanceTextSelection": false,
   "renderer": "canvas",
   "renderInteractiveForms": false,
+  "enablePrintAutoRotate": false,
   "disablePageLabels": false
 }
 
