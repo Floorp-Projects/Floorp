@@ -8,8 +8,10 @@
 #include "WidevineAdapter.h"
 #include "WidevineUtils.h"
 #include "WidevineFileIO.h"
+#include "GMPPlatform.h"
 #include <mozilla/SizePrintfMacros.h>
 #include <stdarg.h>
+#include "TimeUnits.h"
 
 using namespace cdm;
 using namespace std;
@@ -196,6 +198,33 @@ private:
   int64_t mTimestamp;
 };
 
+cdm::Time
+WidevineDecryptor::ThrottleDecrypt(cdm::Time aWallTime, cdm::Time aSampleDuration)
+{
+  const cdm::Time WindowSize = 1.0;
+  const cdm::Time MaxThroughput = 2.0;
+
+  // Forget decrypts that happened before the start of our window.
+  while (!mDecrypts.empty() && mDecrypts.front().mWallTime < aWallTime - WindowSize) {
+    mDecrypts.pop_front();
+  }
+
+  // How much time duration of the media would we have decrypted inside the
+  // time window if we did decrypt this block?
+  cdm::Time durationDecrypted = aSampleDuration;
+  for (const DecryptJob& job : mDecrypts) {
+    durationDecrypted += job.mSampleDuration;
+  }
+
+  if (durationDecrypted > MaxThroughput) {
+    // If we decrypted a sample of this duration, we would have decrypted more than
+    // our threshold for max throughput, over the preceding wall time window.
+    return durationDecrypted - MaxThroughput;
+  }
+
+  return 0.0;
+}
+
 void
 WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
                            GMPEncryptedBufferMetadata* aMetadata,
@@ -205,27 +234,88 @@ WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
     Log("WidevineDecryptor::Decrypt() this=%p FAIL; !mCallback", this);
     return;
   }
-  const GMPEncryptedBufferMetadata* crypto = aMetadata;
+
+  cdm::Time duration = double(aDurationUsecs) / USECS_PER_S;
+  mPendingDecrypts.push({aBuffer, aMetadata, duration});
+  ProcessDecrypts();
+}
+
+void
+WidevineDecryptor::ProcessDecryptsFromTimer()
+{
+  MOZ_ASSERT(mPendingDecryptTimerSet);
+  mPendingDecryptTimerSet = false;
+  ProcessDecrypts();
+}
+
+void
+WidevineDecryptor::ProcessDecrypts()
+{
+  while (!mPendingDecrypts.empty()) {
+    PendingDecrypt job = mPendingDecrypts.front();
+
+    // We throttle our decrypt so that we don't decrypt more than a certain
+    // duration of samples per second. This is to work around bugs in the
+    // Widevine CDM. See bug 1338924.
+    cdm::Time now = GetCurrentWallTime();
+    cdm::Time delay = ThrottleDecrypt(now, job.mSampleDuration);
+
+    if (delay > 0.0) {
+      // If we decrypted this sample now, we'd decrypt more than our threshold
+      // per second of samples. Enqueue the sample, and wait until we'd be able
+      // to decrypt it without breaking our throughput threshold.
+      if (!mPendingDecryptTimerSet) {
+        mPendingDecryptTimerSet = true;
+        RefPtr<WidevineDecryptor> self = this;
+        GMPTask* task = gmp::NewGMPTask(
+          [self]() {
+            self->ProcessDecryptsFromTimer();
+          });
+        gmp::SetTimerOnMainThread(task, delay * 1000);
+      }
+      return;
+    }
+    DecryptBuffer(job);
+    mDecrypts.push_back(DecryptJob(now, job.mSampleDuration));
+    mPendingDecrypts.pop();
+  }
+}
+
+void
+WidevineDecryptor::DecryptBuffer(const PendingDecrypt& aJob)
+{
+  GMPBuffer* buffer = aJob.mBuffer;
+  const GMPEncryptedBufferMetadata* crypto = aJob.mMetadata;
   InputBuffer sample;
   nsTArray<SubsampleEntry> subsamples;
-  InitInputBuffer(crypto, aBuffer->Id(), aBuffer->Data(), aBuffer->Size(), sample, subsamples);
+  InitInputBuffer(crypto, buffer->Id(), buffer->Data(), buffer->Size(), sample, subsamples);
   WidevineDecryptedBlock decrypted;
   Status rv = CDM()->Decrypt(sample, &decrypted);
   Log("Decryptor::Decrypt(timestamp=%lld) rv=%d sz=%d",
       sample.timestamp, rv, decrypted.DecryptedBuffer()->Size());
   if (rv == kSuccess) {
-    aBuffer->Resize(decrypted.DecryptedBuffer()->Size());
-    memcpy(aBuffer->Data(),
+    buffer->Resize(decrypted.DecryptedBuffer()->Size());
+    memcpy(buffer->Data(),
            decrypted.DecryptedBuffer()->Data(),
            decrypted.DecryptedBuffer()->Size());
   }
-  mCallback->Decrypted(aBuffer, ToGMPErr(rv));
+  mCallback->Decrypted(buffer, ToGMPErr(rv));
 }
 
 void
 WidevineDecryptor::DecryptingComplete()
 {
   Log("WidevineDecryptor::DecryptingComplete() this=%p, instanceId=%u", this, mInstanceId);
+
+  // Ensure buffers are freed.
+  while (!mPendingDecrypts.empty()) {
+    PendingDecrypt& job = mPendingDecrypts.front();
+    if (mCallback) {
+      mCallback->Decrypted(job.mBuffer, GMPAbortedErr);
+    }
+    mPendingDecrypts.pop();
+  }
+
   // Drop our references to the CDMWrapper. When any other references
   // held elsewhere are dropped (for example references held by a
   // WidevineVideoDecoder, or a runnable), the CDMWrapper destroys
