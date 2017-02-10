@@ -11,21 +11,49 @@
 
 // TODO(pcwalton): `invert`
 ${helpers.predefined_type("outline-color", "CSSColor", "::cssparser::Color::CurrentColor",
-                          animatable=True, complex_color=True, need_clone=True,
+                          animatable=True, complex_color=True, need_clone=True, boxed=True,
                           spec="https://drafts.csswg.org/css-ui/#propdef-outline-color")}
 
 <%helpers:longhand name="outline-style" need_clone="True" animatable="False"
                    spec="https://drafts.csswg.org/css-ui/#propdef-outline-style">
-    pub use values::specified::BorderStyle as SpecifiedValue;
-    pub fn get_initial_value() -> SpecifiedValue { SpecifiedValue::none }
-    pub mod computed_value {
-        pub use values::specified::BorderStyle as T;
-    }
-    pub fn parse(_: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
-        match SpecifiedValue::parse(input) {
-            Ok(SpecifiedValue::hidden) => Err(()),
-            result => result
+
+    use std::fmt;
+    use style_traits::ToCss;
+    use values::specified::BorderStyle;
+    use values::computed::ComputedValueAsSpecified;
+
+    pub type SpecifiedValue = Either<Auto, BorderStyle>;
+
+    impl SpecifiedValue {
+        #[inline]
+        pub fn none_or_hidden(&self) -> bool {
+            match *self {
+                Either::First(ref _auto) => false,
+                Either::Second(ref border_style) => border_style.none_or_hidden()
+            }
         }
+    }
+
+    #[inline]
+    pub fn get_initial_value() -> computed_value::T {
+        Either::Second(BorderStyle::none)
+    }
+
+    pub mod computed_value {
+        pub type T = super::SpecifiedValue;
+    }
+
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        SpecifiedValue::parse(context, input)
+            .and_then(|result| {
+                if let Either::Second(BorderStyle::hidden) = result {
+                    // The outline-style property accepts the same values as border-style,
+                    // except that 'hidden' is not a legal outline style.
+                    Err(())
+                } else {
+                    Ok(result)
+                }
+            })
     }
 </%helpers:longhand>
 
@@ -86,5 +114,5 @@ ${helpers.predefined_type("outline-color", "CSSColor", "::cssparser::Color::Curr
         spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-outline-radius)")}
 % endfor
 
-${helpers.predefined_type("outline-offset", "Length", "Au(0)", products="servo", animatable=True,
+${helpers.predefined_type("outline-offset", "Length", "Au(0)", products="servo gecko", animatable=True,
                           spec="https://drafts.csswg.org/css-ui/#propdef-outline-offset")}

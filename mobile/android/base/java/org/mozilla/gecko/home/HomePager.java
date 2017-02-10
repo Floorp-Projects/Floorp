@@ -13,6 +13,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
@@ -461,6 +462,12 @@ public class HomePager extends ViewPager implements HomeScreen {
                 adapter.setCanLoadHint(true);
             }
         });
+
+        // We need to fire telemetry on the initial load: we will subsequently send telemetry whenever
+        // the user switches between homepanels, but the first load doesn't involve any switching hence
+        // we need to send telemetry now:
+        final String panelType = ((HomeAdapter) getAdapter()).getPanelIdAtPosition(mDefaultPageIndex);
+        startNewPanelTelemetrySession(panelType);
     }
 
     @Override
@@ -553,7 +560,17 @@ public class HomePager extends ViewPager implements HomeScreen {
         stopCurrentPanelTelemetrySession();
 
         mCurrentPanelSession = TelemetryContract.Session.HOME_PANEL;
-        mCurrentPanelSessionSuffix = panelId;
+
+        if (HomeConfig.TOP_SITES_PANEL_ID.equals(panelId) &&
+                ActivityStream.isEnabled(getContext())) {
+            // Override the panel ID for Activity Stream: we're reusing the topsites panel to show
+            // Activity Stream, i.e. AS ends up havin the same panel ID. We override this for telemetry
+            // to distinguish between topsites and AS:
+            mCurrentPanelSessionSuffix = "activity_stream";
+        } else {
+            mCurrentPanelSessionSuffix = panelId;
+        }
+
         Telemetry.startUISession(mCurrentPanelSession, mCurrentPanelSessionSuffix);
     }
 

@@ -692,7 +692,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     // line option, or with the PCCount JSFriend API functions, then we mark the
     // keys of the map to hold the JSScript alive.
     if (scriptCountsMap &&
-        zone()->group()->profilingScripts &&
+        trc->runtime()->profilingScripts &&
         !JS::CurrentThreadIsHeapMinorCollecting())
     {
         MOZ_ASSERT_IF(!trc->runtime()->isBeingDestroyed(), collectCoverage());
@@ -1171,7 +1171,9 @@ JSCompartment::updateDebuggerObservesCoverage()
     if (debuggerObservesCoverage()) {
         // Interrupt any running interpreter frame. The scriptCounts are
         // allocated on demand when a script resume its execution.
-        for (ActivationIterator iter(runtimeFromMainThread()); !iter.done(); ++iter) {
+        JSContext* cx = TlsContext.get();
+        MOZ_ASSERT(zone()->group()->ownedByCurrentThread());
+        for (ActivationIterator iter(cx); !iter.done(); ++iter) {
             if (iter->isInterpreter())
                 iter->asInterpreter()->enableInterruptsUnconditionally();
         }
@@ -1202,7 +1204,7 @@ bool
 JSCompartment::collectCoverageForDebug() const
 {
     return debuggerObservesCoverage() ||
-           zone()->group()->profilingScripts ||
+           runtimeFromAnyThread()->profilingScripts ||
            runtimeFromAnyThread()->lcovOutput().isEnabled();
 }
 

@@ -253,6 +253,8 @@ CanUseExtraThreads()
 
 void DisableExtraThreads();
 
+using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
+
 class AutoLockForExclusiveAccess;
 } // namespace js
 
@@ -305,7 +307,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // All contexts participating in cooperative scheduling. All threads other
     // than |activeContext_| are suspended.
-    js::ActiveThreadData<js::Vector<JSContext*, 4, js::SystemAllocPolicy>> cooperatingContexts_;
+    js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
 
     // Count of AutoProhibitActiveContextChange instances on the active context.
     js::ActiveThreadData<size_t> activeContextChangeProhibited_;
@@ -316,14 +318,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     void setActiveContext(JSContext* cx);
 
-    js::Vector<JSContext*, 4, js::SystemAllocPolicy>& cooperatingContexts() {
+    js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>& cooperatingContexts() {
         return cooperatingContexts_.ref();
     }
 
 #ifdef DEBUG
     bool isCooperatingContext(JSContext* cx) {
-        for (size_t i = 0; i < cooperatingContexts().length(); i++) {
-            if (cooperatingContexts()[i] == cx)
+        for (const js::CooperatingContext& target : cooperatingContexts()) {
+            if (target.context() == cx)
                 return true;
         }
         return false;
@@ -570,6 +572,12 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     /* Default JSVersion. */
     js::ActiveThreadData<JSVersion> defaultVersion_;
+
+    /* If true, new scripts must be created with PC counter information. */
+    js::ActiveThreadOrIonCompileData<bool> profilingScripts;
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ActiveThreadData<JS::PersistentRooted<js::ScriptAndCountsVector>*> scriptAndCountsVector;
 
   private:
     /* Code coverage output. */

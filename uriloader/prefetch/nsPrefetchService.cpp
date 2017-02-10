@@ -14,6 +14,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
 #include "nsISimpleEnumerator.h"
+#include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -154,6 +155,12 @@ nsPrefetchNode::OpenChannel()
             NS_LITERAL_CSTRING("X-Moz"),
             NS_LITERAL_CSTRING("prefetch"),
             false);
+    }
+
+    // Reduce the priority of prefetch network requests.
+    nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(mChannel);
+    if (priorityChannel) {
+      priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
     }
 
     rv = mChannel->AsyncOpen2(this);

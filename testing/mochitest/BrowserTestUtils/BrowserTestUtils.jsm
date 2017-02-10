@@ -479,6 +479,11 @@ this.BrowserTestUtils = {
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
     let features = "chrome,dialog=no,all";
+    let opener = null;
+
+    if (options.opener) {
+      opener = options.opener;
+    }
 
     if (options.private) {
       features += ",private";
@@ -497,7 +502,7 @@ this.BrowserTestUtils = {
     }
 
     let win = Services.ww.openWindow(
-      null, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
+      opener, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
       features, argString);
 
     // Wait for browser-delayed-startup-finished notification, it indicates

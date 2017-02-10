@@ -925,7 +925,8 @@ this.Extension = class extends ExtensionData {
     });
   }
 
-  shutdown() {
+  shutdown(reason) {
+    this.shutdownReason = reason;
     this.hasShutdown = true;
 
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);

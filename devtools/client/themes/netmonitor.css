@@ -28,32 +28,7 @@
   align-items: center;
 }
 
-#details-pane {
-  /* Make details-pane's width adjustable by splitter */
-  min-width: 50px;
-}
-
-/**
- * Collapsed details pane needs to be truly hidden to prevent both accessibility
- * tools and keyboard from accessing its contents.
- */
-#details-pane.pane-collapsed {
-  visibility: hidden;
-}
-
-#details-pane-toggle[disabled] {
-  display: none;
-}
-
-#custom-pane {
-  overflow: auto;
-}
-
 #response-content-image-box {
-  overflow: auto;
-}
-
-#network-statistics-charts {
   overflow: auto;
 }
 
@@ -96,7 +71,7 @@
   --table-splitter-color: rgba(0,0,0,0.15);
   --table-zebra-background: rgba(0,0,0,0.05);
 
-  --timing-blocked-color:  rgba(235, 83, 104, 0.8); /* red */
+  --timing-blocked-color: rgba(235, 83, 104, 0.8); /* red */
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
   --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
   --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
@@ -647,27 +622,23 @@
   padding-inline-end: 4px;
 }
 
-/* Network request details */
+/* Network details panel */
 
-#details-pane-toggle:-moz-locale-dir(ltr)::before,
-#details-pane-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
+.network-details-panel-toggle[disabled] {
+  display: none;
+}
+
+.network-details-panel-toggle:-moz-locale-dir(ltr)::before,
+.network-details-panel-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
   background-image: var(--theme-pane-collapse-image);
 }
 
-#details-pane-toggle.pane-collapsed:-moz-locale-dir(ltr)::before,
-#details-pane-toggle:-moz-locale-dir(rtl)::before {
+.network-details-panel-toggle.pane-collapsed:-moz-locale-dir(ltr)::before,
+.network-details-panel-toggle:-moz-locale-dir(rtl)::before {
   background-image: var(--theme-pane-expand-image);
 }
 
 /* Network request details tabpanels */
-
-.tabpanel-content {
-  background-color: var(--theme-sidebar-background);
-}
-
-.theme-dark .tabpanel-content {
-  color: var(--theme-selection-color);
-}
 
 .theme-firebug .variables-view-scope:focus > .title {
   color: var(--theme-body-color);
@@ -785,22 +756,59 @@
   }
 }
 
-/* Custom request form */
+/* Custom request view */
 
-#custom-pane {
-  padding: 0.6em 0.5em;
+.custom-request-panel {
+  overflow: auto;
+  /* Full view hight - toolbar height */
+  height: calc(100vh - 24px);
+  padding: 6px 4px;
+  background-color: var(--theme-sidebar-background);
+}
+
+.theme-dark .custom-request-panel {
+  color: var(--theme-selection-color);
+}
+
+.custom-request-label {
+  font-weight: 600;
+}
+
+.custom-request-panel textarea {
+  resize: none;
+  font: message-box;
+}
+
+.custom-request-panel .devtools-button {
+  margin: 3px 1px;
+  min-width: 78px;
+}
+
+.custom-header,
+.custom-method-and-url,
+.custom-request,
+.custom-section {
+  display: flex;
 }
 
 .custom-header {
+  flex-grow: 1;
   font-size: 1.1em;
+  padding-top: 4px;
 }
 
 .custom-section {
+  flex-direction: column;
   margin-top: 0.5em;
 }
 
-#custom-method-value {
+.custom-method-value {
   width: 4.5em;
+}
+
+.custom-url-value {
+  flex-grow: 1;
+  margin-inline-start: 6px;
 }
 
 /* Performance analysis buttons */
@@ -987,8 +995,7 @@
 /* Responsive sidebar */
 @media (max-width: 700px) {
   #toolbar-spacer,
-  #details-pane-toggle,
-  #details-pane.pane-collapsed,
+  .network-details-panel-toggle,
   #requests-menu-network-summary-button > .summary-info-text {
     display: none;
   }
@@ -1000,6 +1007,10 @@
   .requests-menu-header-button {
     min-height: 22px;
     padding-left: 8px;
+  }
+
+  .custom-request-panel {
+    height: auto;
   }
 
   #details-pane {
@@ -1212,34 +1223,39 @@
 }
 
 .headers-summary .tool-button {
-  border: 1px solid transparent;
-  color: var(--theme-body-color);
-  transition: background 0.05s ease-in-out;
   margin-inline-end: 6px;
-  padding: 0 5px;
 }
 
-.theme-light .headers-summary .tool-button {
+.tool-button {
+  background: transparent;
+  border: none;
+  border-color: var(--toolbar-button-border-color);
+  color: var(--theme-body-color);
+  min-height: 18px;
+  transition: background 0.05s ease-in-out;
+}
+
+.theme-light .tool-button {
   background-color: var(--toolbar-tab-hover);
 }
 
-.theme-light .headers-summary .tool-button:hover {
+.theme-light .tool-button:hover {
   background-color: rgba(170, 170, 170, 0.3);
 }
 
-.theme-light .headers-summary .tool-button:hover:active {
+.theme-light .tool-button:hover:active {
   background-color: var(--toolbar-tab-hover-active);
 }
 
-.theme-dark .headers-summary .tool-button {
+.theme-dark .tool-button {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-.theme-dark .headers-summary .tool-button:hover {
+.theme-dark .tool-button:hover {
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-.theme-dark .headers-summary .tool-button:hover:active {
+.theme-dark .tool-button:hover:active {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
@@ -1254,7 +1270,7 @@
 
 .headers-summary .raw-headers {
   width: 50%;
-  padding: 0px 4px;
+  padding: 0 4px;
 }
 
 .headers-summary .raw-headers textarea {
@@ -1286,6 +1302,10 @@
   height: 100%;
 }
 
+.network-details-panel {
+  height: 100%;
+}
+
 /*
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
@@ -1297,10 +1317,18 @@
   overflow: hidden;
 }
 
-#statistics-panel,
-#react-details-panel-hook {
+#react-network-details-panel-hook,
+#react-statistics-panel-hook,
+#splitter-adjustable-box {
   display: flex;
   flex-direction: column;
+  min-width: 50px;
+  height: 100%;
+  overflow: hidden;
+}
+
+#splitter-adjustable-box[hidden=true] {
+  display: none;
 }
 
 #primed-cache-chart,

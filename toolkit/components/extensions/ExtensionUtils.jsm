@@ -317,6 +317,13 @@ let IconDetails = {
       image.src = imageURL;
     });
   },
+
+  // These URLs should already be properly escaped, but make doubly sure CSS
+  // string escape characters are escaped here, since they could lead to a
+  // sandbox break.
+  escapeUrl(url) {
+    return url.replace(/[\\\s"]/g, encodeURIComponent);
+  },
 };
 
 const LISTENERS = Symbol("listeners");

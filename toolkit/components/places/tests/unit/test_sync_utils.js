@@ -171,6 +171,25 @@ var ignoreChangedRoots = Task.async(function* () {
   yield setChangesSynced(changes);
 });
 
+add_task(function* test_fetchURLFrecency() {
+  // Add visits to the following URLs and then check if frecency for those URLs is not -1.
+  let arrayOfURLsToVisit = ["https://www.mozilla.org/en-US/", "http://getfirefox.com", "http://getthunderbird.com"];
+  for (let url of arrayOfURLsToVisit) {
+    yield PlacesTestUtils.addVisits(url);
+  }
+  for (let url of arrayOfURLsToVisit) {
+    let frecency = yield PlacesSyncUtils.history.fetchURLFrecency(url);
+    equal(typeof frecency, "number");
+    notEqual(frecency, -1);
+  }
+  // Do not add visits to the following URLs, and then check if frecency for those URLs is -1.
+  let arrayOfURLsNotVisited = ["https://bugzilla.org", "https://example.org"];
+  for (let url of arrayOfURLsNotVisited) {
+    let frecency = yield PlacesSyncUtils.history.fetchURLFrecency(url);
+    equal(frecency, -1);
+  }
+});
+
 add_task(function* test_order() {
   do_print("Insert some bookmarks");
   let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
@@ -198,16 +217,28 @@ add_task(function* test_order() {
     deepEqual(childSyncIds, order, "New bookmarks should be reordered according to array");
   }
 
-  do_print("Reorder with unspecified children");
+  do_print("Same order with unspecified children");
   {
     yield PlacesSyncUtils.bookmarks.order(PlacesUtils.bookmarks.menuGuid, [
       guids.siblingSep, guids.siblingBmk,
     ]);
     let childSyncIds = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(
       PlacesUtils.bookmarks.menuGuid);
-    deepEqual(childSyncIds, [guids.siblingSep, guids.siblingBmk,
+    deepEqual(childSyncIds, [guids.siblingFolder, guids.siblingSep,
+      guids.childBmk, guids.siblingBmk],
+      "Current order should be respected if possible");
+  }
+
+  do_print("New order with unspecified children");
+  {
+    yield PlacesSyncUtils.bookmarks.order(PlacesUtils.bookmarks.menuGuid, [
+      guids.siblingBmk, guids.siblingSep,
+    ]);
+    let childSyncIds = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(
+      PlacesUtils.bookmarks.menuGuid);
+    deepEqual(childSyncIds, [guids.siblingBmk, guids.siblingSep,
       guids.siblingFolder, guids.childBmk],
-      "Unordered children should be moved to end");
+      "Unordered children should be moved to end if current order can't be respected");
   }
 
   do_print("Reorder with nonexistent children");

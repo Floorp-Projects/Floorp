@@ -4178,11 +4178,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                                              &scrolledClipRect,
                                              uniformColorPtr);
       } else if (item->ShouldFixToViewport(mBuilder) && itemClip.HasClip() &&
-                 item->AnimatedGeometryRootForScrollMetadata() != animatedGeometryRoot) {
+                 item->AnimatedGeometryRootForScrollMetadata() != animatedGeometryRoot &&
+                 !nsLayoutUtils::UsesAsyncScrolling(item->Frame())) {
         // This is basically the same as the case above, but for the non-APZ
         // case. At the moment, when APZ is off, there is only the root ASR
         // (because scroll frames without display ports don't create ASRs) and
         // the whole clip chain is always just one fused clip.
+        // Bug 1336516 aims to change that and to remove this workaround.
         AnimatedGeometryRoot* clipAGR = item->AnimatedGeometryRootForScrollMetadata();
         nsIntRect scrolledClipRect =
           ScaleToNearestPixels(itemClip.GetClipRect()) + mParameters.mOffset;

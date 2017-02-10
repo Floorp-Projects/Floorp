@@ -32,7 +32,6 @@
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
-#include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
@@ -396,24 +395,17 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
     case eKeyDown: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyDown(keyEvent);
+      return KeyDown(internalEvent->AsKeyboardEvent());
     }
     // keyup
-    case eKeyUp: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyUp(keyEvent);
-    }
+    case eKeyUp:
+      return KeyUp(internalEvent->AsKeyboardEvent());
 #endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keypress
-    case eKeyPress: {
-      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-      return KeyPress(keyEvent);
-    }
+    case eKeyPress:
+      return KeyPress(internalEvent->AsKeyboardEvent());
     // mousedown
     case eMouseDown: {
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // EditorEventListener may receive (1) all mousedown, mouseup and click
       // events, (2) only mousedown event or (3) only mouseup event.
       // mMouseDownOrUpConsumedByIME is used only for ignoring click event if
@@ -421,13 +413,16 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // Therefore, even if case #2 or case #3 occurs,
       // mMouseDownOrUpConsumedByIME is true here.  Therefore, we should always
       // overwrite it here.
-      mMouseDownOrUpConsumedByIME = NotifyIMEOfMouseButtonEvent(mouseEvent);
-      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseDown(mouseEvent);
+      mMouseDownOrUpConsumedByIME =
+        NotifyIMEOfMouseButtonEvent(internalEvent->AsMouseEvent());
+      if (mMouseDownOrUpConsumedByIME) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
     case eMouseUp: {
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-      NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // See above comment in the eMouseDown case, first.
       // This code assumes that case #1 is occuring.  However, if case #3 may
       // occurs after case #2 and the mousedown is consumed,
@@ -438,10 +433,14 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // only by eMouseClick case but click event is fired only in case #1.
       // So, before a click event is fired, mMouseDownOrUpConsumedByIME is
       // always initialized in the eMouseDown case if it's referred.
-      if (NotifyIMEOfMouseButtonEvent(mouseEvent)) {
+      if (NotifyIMEOfMouseButtonEvent(internalEvent->AsMouseEvent())) {
         mMouseDownOrUpConsumedByIME = true;
       }
-      return mMouseDownOrUpConsumedByIME ? NS_OK : MouseUp(mouseEvent);
+      if (mMouseDownOrUpConsumedByIME) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case eMouseClick: {
@@ -497,11 +496,11 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-namespace {
 
 // This function is borrowed from Chromium's ImeInput::IsCtrlShiftPressed
-bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
+bool IsCtrlShiftPressed(const WidgetKeyboardEvent* aKeyboardEvent, bool& isRTL)
 {
+  MOZ_ASSERT(aKeyboardEvent);
   // To check if a user is pressing only a control key and a right-shift key
   // (or a left-shift key), we use the steps below:
   // 1. Check if a user is pressing a control key and a right-shift key (or
@@ -510,42 +509,38 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
   //    keys pressed at the same time.
   //    To ignore the keys checked in 1, we set their status to 0 before
   //    checking the key status.
-  WidgetKeyboardEvent* keyboardEvent =
-    aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-  MOZ_ASSERT(keyboardEvent,
-             "DOM key event's internal event must be WidgetKeyboardEvent");
 
-  if (!keyboardEvent->IsControl()) {
+  if (!aKeyboardEvent->IsControl()) {
     return false;
   }
 
-  uint32_t location = keyboardEvent->mLocation;
-  if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT) {
-    isRTL = true;
-  } else if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT) {
-    isRTL = false;
-  } else {
-    return false;
+  switch (aKeyboardEvent->mLocation) {
+    case eKeyLocationRight:
+      isRTL = true;
+      break;
+    case eKeyLocationLeft:
+      isRTL = false;
+      break;
+    default:
+      return false;
   }
 
   // Scan the key status to find pressed keys. We should abandon changing the
   // text direction when there are other pressed keys.
-  if (keyboardEvent->IsAlt() || keyboardEvent->IsOS()) {
+  if (aKeyboardEvent->IsAlt() || aKeyboardEvent->IsOS()) {
     return false;
   }
 
   return true;
 }
 
-}
-
 // This logic is mostly borrowed from Chromium's
 // RenderWidgetHostViewWin::OnKeyEvent.
 
 nsresult
-EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyUp(const WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+  if (NS_WARN_IF(!aKeyboardEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
@@ -555,10 +550,8 @@ EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 
   // XXX Why doesn't this method check if it's consumed?
   RefPtr<EditorBase> editorBase(mEditorBase);
-  uint32_t keyCode = 0;
-  aKeyEvent->GetKeyCode(&keyCode);
-  if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
-       keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) &&
+  if ((aKeyboardEvent->mKeyCode == NS_VK_SHIFT ||
+       aKeyboardEvent->mKeyCode == NS_VK_CONTROL) &&
       mShouldSwitchTextDirection && editorBase->IsPlaintextEditor()) {
     editorBase->SwitchTextDirectionTo(mSwitchToRTL ?
       nsIPlaintextEditor::eEditorRightToLeft :
@@ -569,9 +562,9 @@ EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 }
 
 nsresult
-EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyDown(const WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+  if (NS_WARN_IF(!aKeyboardEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
 
@@ -580,51 +573,46 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   }
 
   // XXX Why isn't this method check if it's consumed?
-  uint32_t keyCode = 0;
-  aKeyEvent->GetKeyCode(&keyCode);
-  if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
+  if (aKeyboardEvent->mKeyCode == NS_VK_SHIFT) {
     bool switchToRTL;
-    if (IsCtrlShiftPressed(aKeyEvent, switchToRTL)) {
+    if (IsCtrlShiftPressed(aKeyboardEvent, switchToRTL)) {
       mShouldSwitchTextDirection = true;
       mSwitchToRTL = switchToRTL;
     }
-  } else if (keyCode != nsIDOMKeyEvent::DOM_VK_CONTROL) {
+  } else if (aKeyboardEvent->mKeyCode != NS_VK_CONTROL) {
     // In case the user presses any other key besides Ctrl and Shift
     mShouldSwitchTextDirection = false;
   }
   return NS_OK;
 }
-#endif
+
+#endif // #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
 
 nsresult
-EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent)
 {
-  if (NS_WARN_IF(!aKeyEvent)) {
+  if (NS_WARN_IF(!aKeyboardEvent)) {
     return NS_OK;
   }
 
   RefPtr<EditorBase> editorBase(mEditorBase);
-  WidgetKeyboardEvent* keypressEvent =
-    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-  MOZ_ASSERT(keypressEvent,
-             "DOM key event's internal event must be WidgetKeyboardEvent");
-  if (!editorBase->IsAcceptableInputEvent(keypressEvent) ||
-      DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
+  if (!editorBase->IsAcceptableInputEvent(aKeyboardEvent) ||
+      DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
     return NS_OK;
   }
 
-  nsresult rv = editorBase->HandleKeyPressEvent(aKeyEvent);
+  nsresult rv = editorBase->HandleKeyPressEvent(aKeyboardEvent);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
+  if (DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
     return NS_OK;
   }
 
-  if (!ShouldHandleNativeKeyBindings(aKeyEvent)) {
+  if (!ShouldHandleNativeKeyBindings(aKeyboardEvent)) {
     return NS_OK;
   }
 
   // Now, ask the native key bindings to handle the event.
-  nsIWidget* widget = keypressEvent->mWidget;
+  nsIWidget* widget = aKeyboardEvent->mWidget;
   // If the event is created by chrome script, the widget is always nullptr.
   if (!widget) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -636,9 +624,9 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
   bool handled = widget->ExecuteNativeKeyBinding(
                            nsIWidget::NativeKeyBindingsForRichTextEditor,
-                           *keypressEvent, DoCommandCallback, doc);
+                           *aKeyboardEvent, DoCommandCallback, doc);
   if (handled) {
-    aKeyEvent->AsEvent()->PreventDefault();
+    aKeyboardEvent->PreventDefault();
   }
   return NS_OK;
 }
@@ -664,7 +652,7 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     nsPresContext* presContext = GetPresContext();
     if (presContext) {
       IMEStateManager::OnClickInEditor(presContext, GetFocusedRootContent(),
-                                       aMouseEvent);
+                                       clickEvent);
       if (DetachedFromEditor()) {
         return NS_OK;
       }
@@ -683,9 +671,7 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     return NS_OK;
   }
 
-  int16_t button = -1;
-  aMouseEvent->GetButton(&button);
-  if (button == 1) {
+  if (clickEvent->button == 1) {
     return HandleMiddleClickPaste(aMouseEvent);
   }
   return NS_OK;
@@ -695,8 +681,10 @@ nsresult
 EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
-  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(
-                aMouseEvent->AsEvent()->WidgetEventPtr()));
+
+  WidgetMouseEvent* clickEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(clickEvent));
 
   if (!Preferences::GetBool("middlemouse.paste", false)) {
     // Middle click paste isn't enabled.
@@ -721,11 +709,8 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
   // If the ctrl key is pressed, we'll do paste as quotation.
   // Would've used the alt key, but the kde wmgr treats alt-middle specially.
-  bool ctrlKey = false;
-  aMouseEvent->GetCtrlKey(&ctrlKey);
-
   nsCOMPtr<nsIEditorMailSupport> mailEditor;
-  if (ctrlKey) {
+  if (clickEvent->IsControl()) {
     mailEditor = do_QueryObject(editorBase);
   }
 
@@ -749,8 +734,8 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
   // Prevent the event from propagating up to be possibly handled
   // again by the containing window:
-  aMouseEvent->AsEvent()->StopPropagation();
-  aMouseEvent->AsEvent()->PreventDefault();
+  clickEvent->StopPropagation();
+  clickEvent->PreventDefault();
 
   // We processed the event, whether drop/paste succeeded or not
   return NS_OK;
@@ -758,7 +743,7 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
 bool
 EditorEventListener::NotifyIMEOfMouseButtonEvent(
-                       nsIDOMMouseEvent* aMouseEvent)
+                       WidgetMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
@@ -1236,7 +1221,8 @@ EditorEventListener::IsFileControlTextBox()
 }
 
 bool
-EditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
+EditorEventListener::ShouldHandleNativeKeyBindings(
+                       WidgetKeyboardEvent* aKeyboardEvent)
 {
   MOZ_ASSERT(!DetachedFromEditor());
 
@@ -1248,8 +1234,7 @@ EditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
   // unnecessary.  IsAcceptableInputEvent currently makes a similar check for
   // mouse events.
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aKeyEvent->AsEvent()->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMEventTarget> target = aKeyboardEvent->GetDOMEventTarget();
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
   if (!targetContent) {
     return false;

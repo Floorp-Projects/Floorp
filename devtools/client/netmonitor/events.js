@@ -59,12 +59,6 @@ const EVENTS = {
   RESPONSE_IMAGE_THUMBNAIL_DISPLAYED:
     "NetMonitor:ResponseImageThumbnailAvailable",
 
-  // Fired when Sidebar has finished being populated.
-  SIDEBAR_POPULATED: "NetMonitor:SidebarPopulated",
-
-  // Fired when CustomRequestView has finished being populated.
-  CUSTOMREQUESTVIEW_POPULATED: "NetMonitor:CustomRequestViewPopulated",
-
   // Fired when charts have been displayed in the PerformanceStatisticsView.
   PLACEHOLDER_CHARTS_DISPLAYED: "NetMonitor:PlaceholderChartsDisplayed",
   PRIMED_CACHE_CHART_DISPLAYED: "NetMonitor:PrimedChartsDisplayed",

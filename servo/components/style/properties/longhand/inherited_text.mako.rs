@@ -204,9 +204,9 @@ ${helpers.single_keyword("text-align-last",
 <%helpers:longhand name="text-align" animatable="False" spec="https://drafts.csswg.org/css-text/#propdef-text-align">
     pub use self::computed_value::T as SpecifiedValue;
     use values::computed::ComputedValueAsSpecified;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
     pub mod computed_value {
         use style_traits::ToCss;
         macro_rules! define_text_align {
@@ -429,16 +429,16 @@ ${helpers.single_keyword("text-align-last",
 <%helpers:longhand name="-servo-text-decorations-in-effect"
                    derived_from="display text-decoration"
                    need_clone="True" products="servo"
-                   animatable="False"
+                   animatable="False" boxed="True"
                    spec="Nonstandard (Internal property used by Servo)">
     use cssparser::RGBA;
     use std::fmt;
     use style_traits::ToCss;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
 
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     #[derive(Clone, PartialEq, Copy, Debug)]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
@@ -518,9 +518,9 @@ ${helpers.single_keyword("text-align-last",
                                   animatable="False"
                                   spec="https://drafts.csswg.org/css-text/#propdef-white-space">
     use values::computed::ComputedValueAsSpecified;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     impl SpecifiedValue {
         pub fn allow_wrap(&self) -> bool {
@@ -771,9 +771,9 @@ ${helpers.single_keyword("text-align-last",
     use std::fmt;
     use style_traits::ToCss;
     use unicode_segmentation::UnicodeSegmentation;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
 
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         #[derive(Debug, Clone, PartialEq)]
@@ -973,11 +973,11 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="text-emphasis-position" animatable="False" products="none"
+<%helpers:longhand name="text-emphasis-position" animatable="False" products="gecko"
                    spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-position">
     use std::fmt;
     use values::computed::ComputedValueAsSpecified;
-    use values::NoViewportPercentage;
+    use values::HasViewportPercentage;
     use style_traits::ToCss;
 
     define_css_keyword_enum!(HorizontalWritingModeValue:
@@ -996,7 +996,7 @@ ${helpers.single_keyword("text-align-last",
     }
 
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    impl NoViewportPercentage for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
 
     pub fn get_initial_value() -> computed_value::T {
         SpecifiedValue(HorizontalWritingModeValue::Over, VerticalWritingModeValue::Right)
@@ -1027,7 +1027,17 @@ ${helpers.predefined_type("text-emphasis-color", "CSSColor",
                           "::cssparser::Color::CurrentColor",
                           products="gecko",animatable=True,
                           complex_color=True, need_clone=True,
+                          boxed=True,
                           spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-color")}
+
+
+${helpers.predefined_type(
+    "-moz-tab-size", "LengthOrNumber",
+    "::values::Either::Second(8.0)",
+    "parse_non_negative",
+    products="gecko", animatable=False,
+    spec="https://drafts.csswg.org/css-text-3/#tab-size-property")}
+
 
 // CSS Compatibility
 // https://compat.spec.whatwg.org
@@ -1035,14 +1045,14 @@ ${helpers.predefined_type(
     "-webkit-text-fill-color", "CSSColor",
     "CSSParserColor::CurrentColor",
     products="gecko", animatable=True,
-    complex_color=True, need_clone=True,
+    complex_color=True, need_clone=True, boxed=True,
     spec="https://compat.spec.whatwg.org/#the-webkit-text-fill-color")}
 
 ${helpers.predefined_type(
     "-webkit-text-stroke-color", "CSSColor",
     "CSSParserColor::CurrentColor",
     products="gecko", animatable=True,
-    complex_color=True, need_clone=True,
+    complex_color=True, need_clone=True, boxed=True,
     spec="https://compat.spec.whatwg.org/#the-webkit-text-stroke-color")}
 
 <%helpers:longhand products="gecko" name="-webkit-text-stroke-width" animatable="False"
@@ -1068,6 +1078,7 @@ ${helpers.predefined_type(
         Au::from_px(0)
     }
 </%helpers:longhand>
+
 
 // CSS Ruby Layout Module Level 1
 // https://drafts.csswg.org/css-ruby/

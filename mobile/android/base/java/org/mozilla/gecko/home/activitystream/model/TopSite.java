@@ -26,9 +26,10 @@ public class TopSite implements Item {
         final String title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
         final int type = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.TopSites.TYPE));
 
-        // We can't figure out bookmark state of a pin, so we leave it as unknown to be queried later.
+        // We can't figure out bookmark state of a pin or suggested site, so we leave it as unknown to be queried later.
         Boolean isBookmarked = null;
-        if (type != BrowserContract.TopSites.TYPE_PINNED) {
+        if (type != BrowserContract.TopSites.TYPE_PINNED &&
+                type != BrowserContract.TopSites.TYPE_SUGGESTED) {
             isBookmarked = !cursor.isNull(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
         }
 

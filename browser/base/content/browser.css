@@ -324,6 +324,10 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
   .webextension-page-action {
     list-style-image: var(--webextension-urlbar-image);
   }
+
+  .webextension-menuitem {
+    list-style-image: var(--webextension-menuitem-image);
+  }
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -338,6 +342,10 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
 
   .webextension-page-action {
     list-style-image: var(--webextension-urlbar-image-2x);
+  }
+
+  .webextension-menuitem {
+    list-style-image: var(--webextension-menuitem-image-2x);
   }
 }
 

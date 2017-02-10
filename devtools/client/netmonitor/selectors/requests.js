@@ -94,7 +94,7 @@ const getDisplayedRequestsSummary = createSelector(
 
 const getSelectedRequest = createSelector(
   state => state.requests,
-  ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : null
+  ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : undefined
 );
 
 function getRequestById(state, id) {

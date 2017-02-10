@@ -1,15 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals NetMonitorView */
+
+/* globals NetMonitorController */
 
 "use strict";
 
-const { createClass, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../l10n");
-const { div, span, button } = DOM;
+const {
+  createClass,
+  DOM,
+  PropTypes,
+} = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
+const { ACTIVITY_TYPE } = require("../constants");
+const { L10N } = require("../l10n");
+
+const { button, div, span } = DOM;
 
 /**
  * UI displayed when the request list is empty. Contains instructions on reloading
@@ -61,6 +68,7 @@ module.exports = connect(
   undefined,
   dispatch => ({
     onPerfClick: e => dispatch(Actions.openStatistics(true)),
-    onReloadClick: e => NetMonitorView.reloadPage(),
+    onReloadClick: e =>
+      NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);
