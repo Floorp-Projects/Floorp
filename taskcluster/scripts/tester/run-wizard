@@ -13,6 +13,7 @@ import time
 from textwrap import wrap
 
 here = os.path.dirname(os.path.abspath(__file__))
+MOZHARNESS_WORKDIR = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
 
 
 def call(cmd, **kwargs):
@@ -29,6 +30,15 @@ def wait_for_run_mozharness(timeout=60):
     else:
         print("Timed out after %d seconds waiting for the 'run-mozharness' binary" % timeout)
         return 1
+
+
+def setup_mach_environment():
+    mach_src = os.path.join(MOZHARNESS_WORKDIR, 'tests', 'mach')
+    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
+
+    if os.path.exists(mach_dest):
+        os.remove(mach_dest)
+    os.symlink(mach_src, mach_dest)
 
 
 def resume():
@@ -50,13 +60,7 @@ def setup():
         # something went wrong
         return status
 
-    build_dir = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
-    mach_src = os.path.join(build_dir, 'tests', 'mach')
-    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
-
-    if os.path.exists(mach_dest):
-        os.remove(mach_dest)
-    os.symlink(mach_src, mach_dest)
+    setup_mach_environment()
 
     print("""
 Mozharness has finished downloading the build and tests to:
