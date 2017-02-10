@@ -1579,7 +1579,6 @@ pref("services.sync.validation.enabled", true);
 
 // Preferences for the form autofill system extension
 pref("browser.formautofill.experimental", false);
-pref("browser.formautofill.enabled", false);
 
 // Enable safebrowsing v4 tables (suffixed by "-proto") update.
 #ifdef NIGHTLY_BUILD
