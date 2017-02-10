@@ -16,10 +16,10 @@
  *
  *       // profile
  *       organization,     // Company
- *       streetAddress,    // (Multiline)
- *       addressLevel2,    // City/Town
- *       addressLevel1,    // Province (Standardized code if possible)
- *       postalCode,
+ *       street-address,    // (Multiline)
+ *       address-level2,    // City/Town
+ *       address-level1,    // Province (Standardized code if possible)
+ *       postal-code,
  *       country,          // ISO 3166
  *       tel,
  *       email,
@@ -57,10 +57,10 @@ const SCHEMA_VERSION = 1;
 // Name-related fields will be handled in follow-up bugs due to the complexity.
 const VALID_FIELDS = [
   "organization",
-  "streetAddress",
-  "addressLevel2",
-  "addressLevel1",
-  "postalCode",
+  "street-address",
+  "address-level2",
+  "address-level1",
+  "postal-code",
   "country",
   "tel",
   "email",
@@ -71,12 +71,12 @@ const MOCK_MODE = false;
 const MOCK_STORAGE = [{
   guid: "test-guid-1",
   organization: "Sesame Street",
-  streetAddress: "123 Sesame Street.",
+  "street-address": "123 Sesame Street.",
   tel: "1-345-345-3456",
 }, {
   guid: "test-guid-2",
   organization: "Mozilla",
-  streetAddress: "331 E. Evelyn Avenue",
+  "street-address": "331 E. Evelyn Avenue",
   tel: "1-650-903-0800",
 }];
 
