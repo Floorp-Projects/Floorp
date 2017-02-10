@@ -2298,6 +2298,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   mProgressEventSink = nullptr;
 
   mFlagSyncLooping = false;
+  mRequestSentTime = 0;
 
   // update our charset and decoder to match mResponseXML,
   // before it is possibly nulled out
