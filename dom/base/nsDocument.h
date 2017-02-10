@@ -1445,10 +1445,6 @@ public:
 
   bool mInXBLUpdate:1;
 
-  // Whether we're currently under a FlushPendingNotifications call to
-  // our presshell.  This is used to handle flush reentry correctly.
-  bool mInFlush:1;
-
   // Parser aborted. True if the parser of this document was forcibly
   // terminated instead of letting it finish at its own pace.
   bool mParserAborted:1;
