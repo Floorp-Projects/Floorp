@@ -58,9 +58,12 @@ def setup_mach_environment():
     return 0
 
 
-def resume():
+def run_mozharness(*args):
     wait_for_run_mozharness()
-    call(['run-mozharness'])
+    try:
+        return call(['run-mozharness'] + list(args))
+    finally:
+        setup_mach_environment()
 
 
 def setup():
@@ -70,14 +73,7 @@ def setup():
     downloading the tests and firefox binary. But it stops before running the
     tests.
     """
-    wait_for_run_mozharness()
-    status = call(['run-mozharness', '--no-run-tests'])
-
-    if status:
-        # something went wrong
-        return status
-
-    setup_mach_environment()
+    status = run_mozharness('--no-run-tests')
 
     if find_executable('mach'):
         print(MACH_SETUP_FINISHED)
@@ -122,7 +118,7 @@ def exit():
 
 
 OPTIONS = [
-    ('Resume task', resume,
+    ('Resume task', run_mozharness,
      "Resume the original task without modification. This can be useful for "
      "passively monitoring it from another shell."),
     ('Setup task', setup,
