@@ -230,10 +230,9 @@ SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    RawServoStyleSetBorrowed set)
 
-// Restyle the given subtree.
 // Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
 // directly
-SERVO_BINDING_FUNC(Servo_TraverseSubtree, void,
+SERVO_BINDING_FUNC(Servo_TraverseSubtree, bool,
                    RawGeckoElementBorrowed root, RawServoStyleSetBorrowed set,
                    mozilla::TraversalRootBehavior root_behavior)
 
