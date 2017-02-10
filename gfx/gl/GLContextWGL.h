@@ -53,8 +53,6 @@ public:
 
     virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const override;
-
     virtual bool SwapBuffers() override;
 
     virtual bool SetupLookupFunction() override;
