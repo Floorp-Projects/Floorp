@@ -13,6 +13,14 @@ const DEFAULT_EXTENSION_ICON = "chrome://browser/content/extension.svg";
 Services.perms.add(makeURI("https://example.com/"), "install",
                    Services.perms.ALLOW_ACTION);
 
+registerCleanupFunction(async function() {
+  let addon = await AddonManager.getAddonByID(ID);
+  if (addon) {
+    ok(false, `Addon ${ID} was still installed at the end of the test`);
+    addon.uninstall();
+  }
+});
+
 function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
     function popupshown() {
@@ -27,12 +35,6 @@ function promisePopupNotificationShown(name) {
     }
 
     PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
-
-function promiseGetAddonByID(id) {
-  return new Promise(resolve => {
-    AddonManager.getAddonByID(id, resolve);
   });
 }
 
@@ -171,7 +173,7 @@ add_task(function* () {
     }
 
     let result = yield installPromise;
-    let addon = yield promiseGetAddonByID(ID);
+    let addon = yield AddonManager.getAddonByID(ID);
     if (cancel) {
       ok(!result, "Installation was cancelled");
       is(addon, null, "Extension is not installed");

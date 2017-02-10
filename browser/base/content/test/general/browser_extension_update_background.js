@@ -4,6 +4,16 @@ const URL_BASE = "https://example.com/browser/browser/base/content/test/general"
 const ID = "update@tests.mozilla.org";
 const ID_ICON = "update_icon@tests.mozilla.org";
 
+registerCleanupFunction(async function() {
+  for (let id of [ID, ID_ICON]) {
+    let addon = await AddonManager.getAddonByID(id);
+    if (addon) {
+      ok(false, `Addon ${id} was still installed at the end of the test`);
+      addon.uninstall();
+    }
+  }
+});
+
 function promiseInstallAddon(url) {
   return AddonManager.getInstallForURL(url, null, "application/x-xpinstall")
                      .then(install => {

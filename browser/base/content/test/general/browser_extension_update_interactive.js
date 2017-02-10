@@ -3,6 +3,14 @@ const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm
 const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
 const ID = "update@tests.mozilla.org";
 
+registerCleanupFunction(async function() {
+  let addon = await AddonManager.getAddonByID(ID);
+  if (addon) {
+    ok(false, `Addon ${ID} was still installed at the end of the test`);
+    addon.uninstall();
+  }
+});
+
 function promiseInstallAddon(url) {
   return AddonManager.getInstallForURL(url, null, "application/x-xpinstall")
                      .then(install => {
