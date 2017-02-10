@@ -1247,8 +1247,7 @@ private:
       MOZ_ASSERT(equal);
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
-      rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
     }
 
     if (NS_SUCCEEDED(rv)) {
