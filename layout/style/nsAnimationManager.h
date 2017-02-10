@@ -110,7 +110,6 @@ public:
   void PauseFromStyle();
   void CancelFromStyle() override
   {
-    mOwningElement = OwningElementRef();
 
     // When an animation is disassociated with style it enters an odd state
     // where its composite order is undefined until it first transitions
@@ -126,6 +125,11 @@ public:
     mNeedsNewAnimationIndexWhenRun = true;
 
     Animation::CancelFromStyle();
+
+    // We need to do this *after* calling CancelFromStyle() since
+    // CancelFromStyle might synchronously trigger a cancel event for which
+    // we need an owning element to target the event at.
+    mOwningElement = OwningElementRef();
   }
 
   void Tick() override;
