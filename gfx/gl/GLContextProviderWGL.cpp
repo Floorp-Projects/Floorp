@@ -362,12 +362,6 @@ GLContextWGL::IsDoubleBuffered() const
 }
 
 bool
-GLContextWGL::SupportsRobustness() const
-{
-    return sWGLLib.HasRobustness();
-}
-
-bool
 GLContextWGL::SwapBuffers() {
     if (!mIsDoubleBuffered)
         return false;
