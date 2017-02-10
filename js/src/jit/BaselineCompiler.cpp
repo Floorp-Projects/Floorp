@@ -550,7 +550,7 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
                           &forceCall);
     }
 
-    void* contextAddr = &cx->zone()->group()->context;
+    void* contextAddr = cx->zone()->group()->addressOfOwnerContext();
     masm.loadPtr(AbsoluteAddress(contextAddr), R0.scratchReg());
     masm.branchPtr(Assembler::BelowOrEqual,
                    Address(R0.scratchReg(), offsetof(JSContext, jitStackLimit)), R1.scratchReg(),
@@ -699,7 +699,7 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void* context = &cx->zone()->group()->context;
+    void* context = cx->zone()->group()->addressOfOwnerContext();
     masm.loadPtr(AbsoluteAddress(context), R0.scratchReg());
     masm.branch32(Assembler::Equal,
                   Address(R0.scratchReg(), offsetof(JSContext, interrupt_)), Imm32(0),

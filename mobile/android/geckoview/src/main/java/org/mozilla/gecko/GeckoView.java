@@ -47,7 +47,7 @@ public class GeckoView extends LayerView
 
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
-
+    /* package */ NavigationListener mNavigationListener;
     private InputConnectionListener mInputConnectionListener;
 
     protected boolean onAttachedToWindowCalled;
@@ -116,6 +116,7 @@ public class GeckoView extends LayerView
         /* package */ void registerListeners() {
             getEventDispatcher().registerUiThreadListener(this,
                 "GeckoView:DOMTitleChanged",
+                "GeckoView:LocationChange",
                 null);
         }
 
@@ -129,6 +130,15 @@ public class GeckoView extends LayerView
             if ("GeckoView:DOMTitleChanged".equals(event)) {
                 if (mContentListener != null) {
                     mContentListener.onTitleChanged(GeckoView.this, message.getString("title"));
+                }
+            } else if ("GeckoView:LocationChange".equals(event)) {
+                if (mNavigationListener == null) {
+                    // We shouldn't be getting this event.
+                    eventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
+                } else {
+                    mNavigationListener.onLocationChange(GeckoView.this, message.getString("uri"));
+                    mNavigationListener.onCanGoBack(GeckoView.this, message.getBoolean("canGoBack"));
+                    mNavigationListener.onCanGoForward(GeckoView.this, message.getBoolean("canGoForward"));
                 }
             }
         }
@@ -266,6 +276,11 @@ public class GeckoView extends LayerView
     @WrapForJNI public static final int LOAD_NEW_TAB = 1;
     @WrapForJNI public static final int LOAD_SWITCH_TAB = 2;
 
+    /**
+    * Load the given URI.
+    * @param uri The URI of the resource to load.
+    * @param flags The load flags (TODO).
+    */
     public void loadUri(String uri, int flags) {
         if (window == null) {
             throw new IllegalStateException("Not attached to window");
@@ -280,6 +295,20 @@ public class GeckoView extends LayerView
 
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
         mInputConnectionListener = icl;
+    }
+
+    /**
+    * Go back in history.
+    */
+    public void goBack() {
+        eventDispatcher.dispatch("GeckoView:GoBack", null);
+    }
+
+    /**
+    * Go forward in history.
+    */
+    public void goForward() {
+        eventDispatcher.dispatch("GeckoView:GoForward", null);
     }
 
     @Override
@@ -383,6 +412,32 @@ public class GeckoView extends LayerView
         return mContentListener;
     }
 
+    /**
+    * Set the navigation callback handler.
+    * This will replace the current handler.
+    * @param navigation An implementation of NavigationListener.
+    */
+    public void setNavigationDelegate(NavigationListener listener) {
+        if (mNavigationListener == listener) {
+            return;
+        }
+        if (listener == null) {
+            eventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
+        } else if (mNavigationListener == null) {
+            eventDispatcher.dispatch("GeckoViewNavigation:Active", null);
+        }
+
+        mNavigationListener = listener;
+    }
+
+    /**
+    * Get the navigation callback handler.
+    * @return The current navigation callback handler.
+    */
+    public NavigationListener getNavigationListener() {
+        return mNavigationListener;
+    }
+
     public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
         GeckoAppShell.setGeckoInterface(geckoInterface);
     }
@@ -478,5 +533,28 @@ public class GeckoView extends LayerView
         * @param title The title sent from the content.
         */
         public void onTitleChanged(GeckoView view, String title);
+    }
+
+    public interface NavigationListener {
+        /**
+        * A view has started loading content from the network.
+        * @param view The GeckoView that initiated the callback.
+        * @param url The resource being loaded.
+        */
+        public void onLocationChange(GeckoView view, String url);
+
+        /**
+        * The view's ability to go back has changed.
+        * @param view The GeckoView that initiated the callback.
+        * @param canGoBack The new value for the ability.
+        */
+        public void onCanGoBack(GeckoView view, boolean canGoBack);
+
+        /**
+        * The view's ability to go forward has changed.
+        * @param view The GeckoView that initiated the callback.
+        * @param canGoForward The new value for the ability.
+        */
+        public void onCanGoForward(GeckoView view, boolean canGoForward);
     }
 }

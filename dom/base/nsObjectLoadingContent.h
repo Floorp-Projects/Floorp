@@ -334,6 +334,21 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     virtual nsContentPolicyType GetContentPolicyType() const = 0;
 
+    /**
+     * Decides whether we should load <embed>/<object> node content.
+     *
+     * If this is an <embed> or <object> node there are cases in which we should
+     * not try to load the content:
+     *
+     * - If the node is the child of a media element
+     * - If the node is the child of an <object> node that already has
+     *   content being loaded.
+     *
+     * In these cases, this function will return false, which will cause
+     * us to skip calling LoadObject.
+     */
+    bool BlockEmbedOrObjectContentLoading();
+
   private:
 
     // Object parameter changes returned by UpdateObjectParameters

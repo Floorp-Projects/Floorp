@@ -157,7 +157,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     // avoid failing repeatedly when the regex code is called from Ion JIT code,
     // see bug 1208819.
     Label stack_ok;
-    void* context_addr = &cx->zone()->group()->context;
+    void* context_addr = cx->zone()->group()->addressOfOwnerContext();
     masm.loadPtr(AbsoluteAddress(context_addr), temp0);
     Address limit_addr(temp0, offsetof(JSContext, jitStackLimitNoInterrupt));
     masm.branchStackPtrRhs(Assembler::Below, limit_addr, &stack_ok);
@@ -466,7 +466,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         Address backtrackStackBaseAddress(temp2, offsetof(FrameData, backtrackStackBase));
         masm.subPtr(backtrackStackBaseAddress, backtrack_stack_pointer);
 
-        void* context_addr = &cx->zone()->group()->context;
+        void* context_addr = cx->zone()->group()->addressOfOwnerContext();
         size_t baseOffset = offsetof(JSContext, regexpStack) + RegExpStack::offsetOfBase();
         masm.loadPtr(AbsoluteAddress(context_addr), temp1);
         masm.loadPtr(Address(temp1, baseOffset), temp1);
@@ -548,7 +548,7 @@ NativeRegExpMacroAssembler::Backtrack()
 
     // Check for an interrupt.
     Label noInterrupt;
-    void* contextAddr = &cx->zone()->group()->context;
+    void* contextAddr = cx->zone()->group()->addressOfOwnerContext();
     masm.loadPtr(AbsoluteAddress(contextAddr), temp0);
     masm.branch32(Assembler::Equal, Address(temp0, offsetof(JSContext, interrupt_)), Imm32(0),
                   &noInterrupt);
@@ -1109,7 +1109,7 @@ NativeRegExpMacroAssembler::CheckBacktrackStackLimit()
     JitSpew(SPEW_PREFIX "CheckBacktrackStackLimit");
 
     Label no_stack_overflow;
-    void* context_addr = &cx->zone()->group()->context;
+    void* context_addr = cx->zone()->group()->addressOfOwnerContext();
     size_t limitOffset = offsetof(JSContext, regexpStack) + RegExpStack::offsetOfLimit();
     masm.loadPtr(AbsoluteAddress(context_addr), temp1);
     masm.branchPtr(Assembler::AboveOrEqual, Address(temp1, limitOffset),
