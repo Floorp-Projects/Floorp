@@ -93,19 +93,18 @@ MacroAssemblerX64::convertInt64ToFloat32(Register64 input, FloatRegister output)
 bool
 MacroAssemblerX64::convertUInt64ToDoubleNeedsTemp()
 {
-    return false;
+    return true;
 }
 
 void
 MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp)
 {
-    MOZ_ASSERT(temp == Register::Invalid());
-
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
     // If the input's sign bit is not set we use vcvtsq2sd directly.
-    // Else, we divide by 2, convert to double, and multiply the result by 2.
+    // Else, we divide by 2 and keep the LSB, convert to double, and multiply
+    // the result by 2.
     Label done;
     Label isSigned;
 
@@ -118,7 +117,11 @@ MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output,
 
     ScratchRegisterScope scratch(asMasm());
     mov(input.reg, scratch);
+    mov(input.reg, temp);
     shrq(Imm32(1), scratch);
+    andq(Imm32(1), temp);
+    orq(temp, scratch);
+
     vcvtsq2sd(scratch, output, output);
     vaddsd(output, output, output);
 
@@ -128,13 +131,10 @@ MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output,
 void
 MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
-    MOZ_ASSERT(temp == Register::Invalid());
-
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroFloat32(output);
 
-    // If the input's sign bit is not set we use vcvtsq2ss directly.
-    // Else, we divide by 2, convert to float, and multiply the result by 2.
+    // See comment in convertUInt64ToDouble.
     Label done;
     Label isSigned;
 
@@ -147,7 +147,11 @@ MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output
 
     ScratchRegisterScope scratch(asMasm());
     mov(input.reg, scratch);
+    mov(input.reg, temp);
     shrq(Imm32(1), scratch);
+    andq(Imm32(1), temp);
+    orq(temp, scratch);
+
     vcvtsq2ss(scratch, output, output);
     vaddss(output, output, output);
 

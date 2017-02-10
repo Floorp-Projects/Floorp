@@ -62,7 +62,7 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, FloatRegister dest, Reg
 
         fstp(Operand(esp, 0));
         vmovsd(Address(esp, 0), dest);
-        asMasm().freeStack(2*sizeof(intptr_t));
+        asMasm().freeStack(2 * sizeof(intptr_t));
         return;
     }
 
@@ -903,21 +903,49 @@ MacroAssemblerX86::convertInt64ToDouble(Register64 input, FloatRegister output)
 
     fstp(Operand(esp, 0));
     vmovsd(Address(esp, 0), output);
-    asMasm().freeStack(2*sizeof(intptr_t));
+    asMasm().freeStack(2 * sizeof(intptr_t));
 }
 
 void
 MacroAssemblerX86::convertInt64ToFloat32(Register64 input, FloatRegister output)
 {
-    convertInt64ToDouble(input, output);
-    convertDoubleToFloat32(output, output);
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    asMasm().Push(input.high);
+    asMasm().Push(input.low);
+    fild(Operand(esp, 0));
+
+    fstp32(Operand(esp, 0));
+    vmovss(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(intptr_t));
 }
 
 void
 MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
-    convertUInt64ToDouble(input, output.asDouble(), temp);
-    convertDoubleToFloat32(output, output);
+    MOZ_ASSERT(temp == Register::Invalid());
+
+    // Zero the dest register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    asMasm().Push(input.high);
+    asMasm().Push(input.low);
+    fild(Operand(esp, 0));
+
+    Label notNegative;
+    asMasm().branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
+    double add_constant = 18446744073709551616.0; // 2^64
+    uint64_t add_constant_u64 = mozilla::BitwiseCast<uint64_t>(add_constant);
+    store64(Imm64(add_constant_u64), Address(esp, 0));
+
+    fld(Operand(esp, 0));
+    faddp();
+    bind(&notNegative);
+
+    fstp32(Operand(esp, 0));
+    vmovss(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(intptr_t));
 }
 
 void
