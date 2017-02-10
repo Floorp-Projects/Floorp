@@ -4255,13 +4255,11 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     }
   }
 
-  if (!didLayoutFlush && !mIsDestroying &&
-      (flushType >=
-       (mSuppressInterruptibleReflows ? FlushType::Layout
-                                      : FlushType::InterruptibleLayout))) {
-    // We suppressed this flush due to mSuppressInterruptibleReflows or
-    // !isSafeToFlush, but now we think we don't need to flush any more.
-    // Record what's really going on.
+  if (!didLayoutFlush && flushType >= FlushType::InterruptibleLayout &&
+      !mIsDestroying) {
+    // We suppressed this flush either due to it not being safe to flush,
+    // or due to mSuppressInterruptibleReflows.  Either way, the
+    // mNeedLayoutFlush flag needs to be re-set.
     SetNeedLayoutFlush();
   }
 }
