@@ -17,14 +17,10 @@ add_task(function* () {
   // is going to be requested and displayed in the source editor.
   requestLongerTimeout(2);
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, HTML_LONG_URL, function* (url) {
@@ -32,22 +28,16 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(
-    document,
-    getDisplayedRequests(gStore.getState()),
-    getSortedRequests(gStore.getState()).get(0),
-    "GET",
-    CONTENT_TYPE_SJS + "?fmt=html-long",
-    {
+  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
+    "GET", CONTENT_TYPE_SJS + "?fmt=html-long", {
       status: 200,
       statusText: "OK"
     });
 
   let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector(".network-details-panel-toggle"));
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
+  document.querySelector("#response-tab").click();
   let [editor] = yield waitDOM;
   yield once(editor, "DOMContentLoaded");
   yield waitForDOM(editor.contentDocument, ".CodeMirror-code");

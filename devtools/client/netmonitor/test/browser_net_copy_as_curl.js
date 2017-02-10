@@ -41,8 +41,9 @@ add_task(function* () {
     header("Cache-Control: no-cache")
   ];
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
@@ -50,16 +51,11 @@ add_task(function* () {
   });
   yield wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll(".request-list-item")[0]);
-  EventUtils.sendMouseEvent({ type: "contextmenu" },
-    document.querySelectorAll(".request-list-item")[0]);
+  let requestItem = RequestsMenu.getItemAtIndex(0);
+  RequestsMenu.selectedItem = requestItem;
 
   yield waitForClipboardPromise(function setup() {
-    // Context menu is appending in XUL document, we must select it from
-    // _toolbox.doc
-    monitor._toolbox.doc
-      .querySelector("#request-menu-context-copy-as-curl").click();
+    RequestsMenu.contextMenu.copyAsCurl();
   }, function validate(result) {
     if (typeof result !== "string") {
       return false;

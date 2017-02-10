@@ -22,12 +22,7 @@ add_task(function* () {
   let toolbox = gDevTools.getToolbox(hud.target);
   is(toolbox.currentToolId, "netmonitor", "Network panel was opened");
   let panel = toolbox.getCurrentPanel();
-
-  let { gStore, windowRequire } = panel.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/selectors/index");
-
-  let selected = getSelectedRequest(gStore.getState());
+  let selected = panel.panelWin.NetMonitorView.RequestsMenu.selectedItem;
   is(selected.method, request.request.method,
      "The correct request is selected");
   is(selected.url, request.request.url,

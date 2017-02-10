@@ -9,25 +9,22 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   info("Requesting a resource over HTTPS.");
   yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
   yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
 
-  is(gStore.getState().requests.requests.size, 2, "Two events event logged.");
-
+  is(RequestsMenu.itemCount, 2, "Two events event logged.");
+console.log(123)
   yield clickAndTestSecurityIcon();
+console.log(123)
 
   info("Selecting headers panel again.");
-  EventUtils.sendMouseEvent({ type: "click" },
+  EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector("#headers-tab"));
 
   info("Sorting the items by filename.");
@@ -35,8 +32,9 @@ add_task(function* () {
     document.querySelector("#requests-menu-file-button"));
 
   info("Testing that security icon can be clicked after the items were sorted.");
-
+console.log(123)
   yield clickAndTestSecurityIcon();
+console.log(123)
 
   return teardown(monitor);
 
@@ -49,6 +47,7 @@ add_task(function* () {
   }
 
   function* clickAndTestSecurityIcon() {
+    let item = RequestsMenu.getItemAtIndex(0);
     let icon = document.querySelector(".requests-security-state-icon");
 
     info("Clicking security icon of the first request and waiting for panel update.");

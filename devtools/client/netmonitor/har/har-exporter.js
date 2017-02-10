@@ -46,7 +46,8 @@ const HarExporter = {
    *   are also included in the HAR file (can produce significantly bigger
    *   amount of data).
    *
-   * - items {Array}: List of Network requests to be exported.
+   * - items {Array}: List of Network requests to be exported. It is possible
+   *   to use directly: NetMonitorView.RequestsMenu.items
    *
    * - jsonp {Boolean}: If set to true the export format is HARP (support
    *   for JSONP syntax).

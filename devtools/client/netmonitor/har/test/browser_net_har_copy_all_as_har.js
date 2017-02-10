@@ -11,19 +11,16 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let RequestListContextMenu = windowRequire(
-    "devtools/client/netmonitor/request-list-context-menu");
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  gStore.dispatch(Actions.batchEnable(false));
+  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   yield wait;
 
-  let contextMenu = new RequestListContextMenu({});
-  yield contextMenu.copyAllAsHar();
+  yield RequestsMenu.contextMenu.copyAllAsHar();
 
   let jsonString = SpecialPowers.getClipboardData("text/unicode");
   let har = JSON.parse(jsonString);
