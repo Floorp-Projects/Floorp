@@ -59,6 +59,7 @@ private:
     nsresult ShouldEnableTrackingProtectionInternal(nsIChannel *aChannel,
                                                     bool *result);
 
+    bool AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri);
 public:
     // If we are blocking tracking content, update the corresponding flag in
     // the respective docshell and call nsISecurityEventSink::onSecurityChange.

@@ -19,7 +19,6 @@ class nsIContent;
 class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMEvent;
-class nsIDOMKeyEvent;
 class nsIDOMNode;
 class nsIDocumentEncoder;
 class nsIEditRules;
@@ -127,7 +126,8 @@ public:
    */
   virtual nsresult SelectEntireDocument(Selection* aSelection) override;
 
-  virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent) override;
+  virtual nsresult HandleKeyPressEvent(
+                     WidgetKeyboardEvent* aKeyboardEvent) override;
 
   virtual already_AddRefed<dom::EventTarget> GetDOMEventTarget() override;
 

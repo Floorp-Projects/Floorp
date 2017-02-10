@@ -207,8 +207,8 @@ var Service = {
   // Checks whether a given extension can load this URI (typically via
   // an XML HTTP request). The manifest.json |permissions| directive
   // determines this.
-  checkAddonMayLoad(extension, uri) {
-    return extension.whiteListedHosts.matchesIgnoringPath(uri);
+  checkAddonMayLoad(extension, uri, explicit = false) {
+    return extension.whiteListedHosts.matchesIgnoringPath(uri, explicit);
   },
 
   generateBackgroundPageUrl(extension) {

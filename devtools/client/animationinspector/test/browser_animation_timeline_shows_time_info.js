@@ -37,8 +37,11 @@ add_task(function* () {
     } else {
       ok(!title.match(/Repeats: /), "The tooltip doesn't show the iterations");
     }
-    if (state.easing) {
-      ok(title.match(/Easing: /), "The tooltip shows the easing");
+    if (state.easing && state.easing !== "linear") {
+      ok(title.match(/Overall easing: /), "The tooltip shows the easing");
+    } else {
+      ok(!title.match(/Overall easing: /),
+         "The tooltip doesn't show the easing if it is 'linear'");
     }
     if (state.fill) {
       ok(title.match(/Fill: /), "The tooltip shows the fill");

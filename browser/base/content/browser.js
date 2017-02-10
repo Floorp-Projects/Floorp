@@ -1292,8 +1292,6 @@ var gBrowserInit = {
     PanelUI.init();
     LightweightThemeListener.init();
 
-    SidebarUI.startDelayedLoad();
-
     UpdateUrlbarSearchSplitterState();
 
     if (!(isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") ||
@@ -1467,6 +1465,7 @@ var gBrowserInit = {
       // Enable the Restore Last Session command if needed
       RestoreLastSessionObserver.init();
 
+      SidebarUI.startDelayedLoad();
       SocialUI.init();
 
       // Start monitoring slow add-ons

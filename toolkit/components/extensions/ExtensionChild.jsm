@@ -765,7 +765,7 @@ class ExtensionBaseContextChild extends BaseContext {
    * @param {string} params.envType One of "addon_child" or "devtools_child".
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
    * @param {string} params.viewType One of "background", "popup", "tab",
-   *   "devtools_page" or "devtools_panel".
+   *   "sidebar", "devtools_page" or "devtools_panel".
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
    */
   constructor(extension, params) {
@@ -817,7 +817,7 @@ class ExtensionBaseContextChild extends BaseContext {
   }
 
   get windowId() {
-    if (this.viewType == "tab" || this.viewType == "popup") {
+    if (["tab", "popup", "sidebar"].includes(this.viewType)) {
       let globalView = ExtensionChild.contentGlobals.get(this.messageManager);
       return globalView ? globalView.windowId : -1;
     }
@@ -869,8 +869,8 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
    * @param {BrowserExtensionContent} extension This context's owner.
    * @param {object} params
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
-   * @param {string} params.viewType One of "background", "popup" or "tab".
-   *     "background" and "tab" are used by `browser.extension.getViews`.
+   * @param {string} params.viewType One of "background", "popup", "sidebar" or "tab".
+   *     "background", "sidebar" and "tab" are used by `browser.extension.getViews`.
    *     "popup" is only used internally to identify page action and browser
    *     action popups and options_ui pages.
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".

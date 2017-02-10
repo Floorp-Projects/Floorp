@@ -267,6 +267,10 @@ public: /* internal necko use only */
     bool AwaitingCacheCallbacks();
     void SetCouldBeSynthesized();
 
+    // Return true if the latest ODA is invoked by mCachePump.
+    // Should only be called on the same thread as ODA.
+    bool IsReadingFromCache() const { return mIsReadingFromCache; }
+
 private: // used for alternate service validation
     RefPtr<TransactionObserver> mTransactionObserver;
 public:
@@ -597,6 +601,10 @@ private:
     HttpChannelSecurityWarningReporter* mWarningReporter;
 
     RefPtr<ADivertableParentChannel> mParentChannel;
+
+    // True if the channel is reading from cache.
+    Atomic<bool> mIsReadingFromCache;
+
 protected:
     virtual void DoNotifyListenerCleanup() override;
 

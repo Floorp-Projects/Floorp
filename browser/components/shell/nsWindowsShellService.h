@@ -26,7 +26,6 @@ public:
   NS_DECL_NSIWINDOWSSHELLSERVICE
 
 protected:
-  bool IsDefaultBrowserVista(bool aCheckAllTypes, bool* aIsDefaultBrowser);
   nsresult LaunchControlPanelDefaultsSelectionUI();
   nsresult LaunchControlPanelDefaultPrograms();
   nsresult LaunchModernSettingsDialogDefaultApps();

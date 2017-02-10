@@ -69,3 +69,4 @@ fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 
 fuzzy(2,125000) == scale-filtered-content-01.html scale-filtered-content-01-ref.html
 
+== filter-on-outer-svg.html pass.svg

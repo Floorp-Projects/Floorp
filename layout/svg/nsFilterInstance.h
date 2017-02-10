@@ -270,7 +270,7 @@ private:
   /**
    * Compute the scale factors between user space and filter space.
    */
-  nsresult ComputeUserSpaceToFilterSpaceScale();
+  bool ComputeUserSpaceToFilterSpaceScale();
 
   /**
    * Transform a rect between user space and filter space.
@@ -302,6 +302,8 @@ private:
    * top-left corner of its border box, aka the top left corner of its mRect.
    */
   gfxMatrix GetUserSpaceToFrameSpaceInCSSPxTransform() const;
+
+  bool ComputeTargetBBoxInFilterSpace();
 
   /**
    * The frame for the element that is currently being filtered.
