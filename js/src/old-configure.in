@@ -301,14 +301,6 @@ dnl ========================================================
 if test "$COMPILE_ENVIRONMENT"; then
 
 dnl ========================================================
-dnl = Mac OS X toolchain support
-dnl ========================================================
-
-dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced.
-AC_SUBST(UNIVERSAL_BINARY)
-
-dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
