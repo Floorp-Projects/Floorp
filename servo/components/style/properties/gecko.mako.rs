@@ -59,6 +59,8 @@ use std::ptr;
 use std::sync::Arc;
 use std::cmp;
 use values::computed::ToComputedValue;
+use values::{Either, Auto};
+use computed_values::border_style;
 
 pub mod style_structs {
     % for style_struct in data.style_structs:
@@ -166,8 +168,16 @@ impl ComputedValues {
                         PropertyDeclarationBlock {
                             declarations: vec![
                                 (PropertyDeclaration::${prop.camel_case}(DeclaredValue::Value(
+                                    % if prop.boxed:
+                                        Box::new(
+                                    % endif
                                     longhands::${prop.ident}::SpecifiedValue::from_computed_value(
-                                      &self.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}()))),
+                                      &self.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}())
+                                    % if prop.boxed:
+                                        )
+                                    % endif
+
+                                 )),
                                  Importance::Normal)
                             ],
                             important_count: 0
@@ -913,7 +923,38 @@ fn static_assert() {
                   skip_longhands="${skip_outline_longhands}"
                   skip_additionals="*">
 
-    <% impl_keyword("outline_style", "mOutlineStyle", border_style_keyword, need_clone=True) %>
+    #[allow(non_snake_case)]
+    pub fn set_outline_style(&mut self, v: longhands::outline_style::computed_value::T) {
+        // FIXME(bholley): Align binary representations and ditch |match| for cast + static_asserts
+        let result = match v {
+            % for value in border_style_keyword.values_for('gecko'):
+                Either::Second(border_style::T::${to_rust_ident(value)}) =>
+                    structs::${border_style_keyword.gecko_constant(value)} ${border_style_keyword.maybe_cast("u8")},
+            % endfor
+                Either::First(Auto) =>
+                    structs::${border_style_keyword.gecko_constant('auto')} ${border_style_keyword.maybe_cast("u8")},
+        };
+        ${set_gecko_property("mOutlineStyle", "result")}
+    }
+
+    #[allow(non_snake_case)]
+    pub fn copy_outline_style_from(&mut self, other: &Self) {
+        self.gecko.mOutlineStyle = other.gecko.mOutlineStyle;
+    }
+
+    #[allow(non_snake_case)]
+    pub fn clone_outline_style(&self) -> longhands::outline_style::computed_value::T {
+        // FIXME(bholley): Align binary representations and ditch |match| for cast + static_asserts
+        match ${get_gecko_property("mOutlineStyle")} ${border_style_keyword.maybe_cast("u32")} {
+            % for value in border_style_keyword.values_for('gecko'):
+            structs::${border_style_keyword.gecko_constant(value)} => Either::Second(border_style::T::${value}),
+            % endfor
+            structs::${border_style_keyword.gecko_constant('auto')} => Either::First(Auto),
+            % if border_style_keyword.gecko_inexhaustive:
+            x => panic!("Found unexpected value in style struct for outline_style property: {:?}", x),
+            % endif
+        }
+    }
 
     <% impl_app_units("outline_width", "mActualOutlineWidth", need_clone=True,
                       round_to_pixels=True) %>
@@ -1322,7 +1363,7 @@ fn static_assert() {
                 "number" : "bindings::Gecko_CSSValue_SetNumber(%s, %s)",
             }
         %>
-        ComputedOperation::${name.title()}(${pattern}) => {
+        longhands::transform::computed_value::ComputedOperation::${name.title()}(${pattern}) => {
             bindings::Gecko_CSSValue_SetFunction(gecko_value, ${len(items) + 1});
             bindings::Gecko_CSSValue_SetKeyword(
                 bindings::Gecko_CSSValue_GetArrayItem(gecko_value, 0),
@@ -1336,27 +1377,20 @@ fn static_assert() {
             % endfor
         }
     </%def>
-    pub fn set_transform(&mut self, other: longhands::transform::computed_value::T) {
+    pub fn convert_transform(input: Vec<longhands::transform::computed_value::ComputedOperation>,
+                             output: &mut structs::root::RefPtr<structs::root::nsCSSValueSharedList>) {
         use gecko_bindings::structs::nsCSSKeyword::*;
         use gecko_bindings::sugar::refptr::RefPtr;
         use properties::longhands::transform::computed_value::ComputedMatrix;
-        use properties::longhands::transform::computed_value::ComputedOperation;
 
-        let vec = if let Some(v) = other.0 {
-            v
-        } else {
-            unsafe {
-                self.gecko.mSpecifiedTransform.clear();
-            }
-            return;
-        };
+        unsafe { output.clear() };
 
         let list = unsafe {
-            RefPtr::from_addrefed(bindings::Gecko_NewCSSValueSharedList(vec.len() as u32))
+            RefPtr::from_addrefed(bindings::Gecko_NewCSSValueSharedList(input.len() as u32))
         };
 
         let mut cur = list.mHead;
-        let mut iter = vec.into_iter();
+        let mut iter = input.into_iter();
         while !cur.is_null() {
             let gecko_value = unsafe { &mut (*cur).mValue };
             let servo = iter.next().expect("Gecko_NewCSSValueSharedList should create a shared \
@@ -1374,7 +1408,19 @@ fn static_assert() {
             }
         }
         debug_assert!(iter.next().is_none());
-        unsafe { self.gecko.mSpecifiedTransform.set_move(list) };
+        unsafe { output.set_move(list) };
+    }
+
+    pub fn set_transform(&mut self, other: longhands::transform::computed_value::T) {
+        let vec = if let Some(v) = other.0 {
+            v
+        } else {
+            unsafe {
+                self.gecko.mSpecifiedTransform.clear();
+            }
+            return;
+        };
+        Self::convert_transform(vec, &mut self.gecko.mSpecifiedTransform);
     }
 
     pub fn copy_transform_from(&mut self, other: &Self) {
@@ -2804,4 +2850,3 @@ pub unsafe extern "C" fn Servo_GetStyleVariables(_cv: ServoComputedValuesBorrowe
                                                  -> *const nsStyleVariables {
     &*EMPTY_VARIABLES_STRUCT
 }
-

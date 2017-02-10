@@ -127,7 +127,7 @@ function loadCertificates(certFile, currentWhitelist) {
       cert = gCertDB.constructX509FromBase64(certData);
     } catch (e) {}
     if (!cert) {
-      cert = gCertDB.constructX509(certData, certData.length);
+      cert = gCertDB.constructX509(certData);
     }
     // Don't add multiple copies of any particular certificate.
     if (cert.sha256Fingerprint in certMap) {

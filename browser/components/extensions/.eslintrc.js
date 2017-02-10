@@ -12,6 +12,7 @@ module.exports = {  // eslint-disable-line no-undef
     "WindowEventManager": true,
     "browserActionFor": true,
     "getCookieStoreIdForTab": true,
+    "getDevToolsTargetForContext": true,
     "makeWidgetId": true,
     "pageActionFor": true,
     "tabTracker": true,

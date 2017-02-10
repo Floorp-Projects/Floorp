@@ -197,6 +197,9 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       SET_PREF_PHASE(END_INIT_PREFS);
       foundStringPrefs = true;
     }
+    else if (!strcmp(aArgv[idx], "-safeMode")) {
+      gSafeMode = true;
+    }
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
     else if (!strcmp(aArgv[idx], "-profile")) {
