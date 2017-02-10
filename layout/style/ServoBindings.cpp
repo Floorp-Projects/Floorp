@@ -20,6 +20,8 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
+#include "nsIPresShell.h"
+#include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
 #include "nsMappedAttributes.h"
 #include "nsMediaFeatures.h"
@@ -258,6 +260,16 @@ void
 Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed aNode, uint32_t aFlags)
 {
   const_cast<nsINode*>(aNode)->UnsetFlags(aFlags);
+}
+
+void
+Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
+    shell->SetNeedStyleFlush();
+  }
 }
 
 nsStyleContext*
