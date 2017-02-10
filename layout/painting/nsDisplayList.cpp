@@ -4426,6 +4426,9 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
       mWidths[i] = br->mBorderWidths[i];
       mBorderStyles[i] = br->mBorderStyles[i];
     }
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      mCorners[corner] = LayerSize(br->mBorderRadii[corner].width, br->mBorderRadii[corner].height);
+    }
 
     mRect = ViewAs<LayerPixel>(br->mOuterRect);
 
