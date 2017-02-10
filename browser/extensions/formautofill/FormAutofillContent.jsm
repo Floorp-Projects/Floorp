@@ -249,7 +249,10 @@ let ProfileAutocomplete = {
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
-  _formsDetails: [],
+  /**
+   * @type {WeakMap} mapping FormLike root HTML elements to form details.
+   */
+  _formsDetails: new WeakMap(),
 
   init() {
     Services.cpmm.addMessageListener("FormAutofill:enabledStatus", (result) => {
@@ -273,11 +276,10 @@ var FormAutofillContent = {
    *          (or return null if the information is not found in the cache).
    */
   getInputDetails(element) {
-    for (let formDetails of this._formsDetails) {
-      for (let detail of formDetails) {
-        if (element == detail.element) {
-          return detail;
-        }
+    let formDetails = this.getFormDetails(element);
+    for (let detail of formDetails) {
+      if (element == detail.element) {
+        return detail;
       }
     }
     return null;
@@ -293,12 +295,9 @@ var FormAutofillContent = {
    *
    */
   getFormDetails(element) {
-    for (let formDetails of this._formsDetails) {
-      if (formDetails.some((detail) => detail.element == element)) {
-        return formDetails;
-      }
-    }
-    return null;
+    let rootElement = FormLikeFactory.findRootForField(element);
+    let formDetails = this._formsDetails.get(rootElement);
+    return formDetails ? formDetails.fieldDetails : null;
   },
 
   getAllFieldNames(element) {
@@ -332,7 +331,7 @@ var FormAutofillContent = {
         return;
       }
 
-      this._formsDetails.push(formHandler.fieldDetails);
+      this._formsDetails.set(form.rootElement, formHandler);
       formHandler.fieldDetails.forEach(
         detail => this._markAsAutofillField(detail.element));
     });
