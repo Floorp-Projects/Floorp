@@ -411,7 +411,7 @@ public:
 inline bool
 LoggingEnabled()
 {
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(FUZZING)
     return !!PR_GetEnv("MOZ_IPC_MESSAGE_LOG");
 #else
     return false;

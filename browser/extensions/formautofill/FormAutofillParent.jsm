@@ -46,7 +46,7 @@ let FormAutofillParent = {
   /**
    * Initializes ProfileStorage and registers the message handler.
    */
-  init: function() {
+  init() {
     let storePath =
       OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME);
 
@@ -66,7 +66,7 @@ let FormAutofillParent = {
    * @param   {object} message.data The data of the message.
    * @param   {nsIFrameMessageManager} message.target Caller's message manager.
    */
-  receiveMessage: function({name, data, target}) {
+  receiveMessage({name, data, target}) {
     switch (name) {
       case "FormAutofill:PopulateFieldValues":
         this._populateFieldValues(data, target);
@@ -84,7 +84,7 @@ let FormAutofillParent = {
    *
    * @returns {ProfileStorage}
    */
-  getProfileStore: function() {
+  getProfileStore() {
     return this._profileStore;
   },
 
@@ -93,7 +93,7 @@ let FormAutofillParent = {
    *
    * @private
    */
-  _uninit: function() {
+  _uninit() {
     if (this._profileStore) {
       this._profileStore._saveImmediately();
       this._profileStore = null;

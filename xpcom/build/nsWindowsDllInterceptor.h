@@ -111,7 +111,7 @@ class WindowsDllNopSpacePatcher
 
   // Dumb array for remembering the addresses of functions we've patched.
   // (This should be nsTArray, but non-XPCOM code uses this class.)
-  static const size_t maxPatchedFns = 128;
+  static const size_t maxPatchedFns = 16;
   byteptr_t mPatchedFns[maxPatchedFns];
   int mPatchedFnsLen;
 
@@ -249,10 +249,7 @@ public:
       return false;
     }
 
-    if (mPatchedFnsLen == maxPatchedFns) {
-      // printf ("No space for hook in mPatchedFns.\n");
-      return false;
-    }
+    MOZ_RELEASE_ASSERT(mPatchedFnsLen < maxPatchedFns, "No room for the hook");
 
     byteptr_t fn = reinterpret_cast<byteptr_t>(GetProcAddress(mModule, aName));
     if (!fn) {

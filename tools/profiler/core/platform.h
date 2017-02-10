@@ -106,8 +106,6 @@ bool profiler_verbose();
 #define ENABLE_LEAF_DATA
 #endif
 
-typedef int32_t Atomic32;
-
 extern mozilla::TimeStamp sStartTime;
 
 typedef uint8_t* Address;
@@ -185,175 +183,20 @@ bool set_profiler_scan(const char*);
 bool is_native_unwinding_avail();
 
 // ----------------------------------------------------------------------------
-// Sampler
-//
-// A sampler periodically samples the state of the VM and optionally
-// (if used for profiling) the program counter and stack pointer for
-// the thread that created it.
+// Miscellaneous
 
-class ThreadInfo;
-
-// TickSample captures the information collected for each sample.
-class TickSample {
- public:
-  TickSample()
-      : pc(NULL)
-      , sp(NULL)
-      , fp(NULL)
-      , lr(NULL)
-      , context(NULL)
-      , isSamplingCurrentThread(false)
-      , threadInfo(nullptr)
-      , rssMemory(0)
-      , ussMemory(0)
-  {}
-
-  void PopulateContext(void* aContext);
-
-  Address pc;  // Instruction pointer.
-  Address sp;  // Stack pointer.
-  Address fp;  // Frame pointer.
-  Address lr;  // ARM link register
-  void*   context;   // The context from the signal handler, if available. On
-                     // Win32 this may contain the windows thread context.
-  bool    isSamplingCurrentThread;
-  ThreadInfo* threadInfo;
-  mozilla::TimeStamp timestamp;
-  int64_t rssMemory;
-  int64_t ussMemory;
-};
-
-struct JSContext;
-class JSObject;
 class PlatformData;
-class ProfileBuffer;
-struct PseudoStack;
-class SpliceableJSONWriter;
-class SyncProfile;
 
-namespace mozilla {
-namespace dom {
-class Promise;
-}
-}
-
-class Sampler {
-public:
-  // Initialize sampler.
-  Sampler(double aInterval, int aEntrySize,
-          const char** aFeatures, uint32_t aFeatureCount,
-          uint32_t aFilterCount);
-  ~Sampler();
-
-  double interval() const { return interval_; }
-
-  // This method is called for each sampling period with the current
-  // program counter. This function must be re-entrant.
-  void Tick(TickSample* sample);
-
-  // Immediately captures the calling thread's call stack and returns it.
-  SyncProfile* GetBacktrace();
-
-  // Delete markers which are no longer part of the profile due to buffer
-  // wraparound.
-  void DeleteExpiredMarkers();
-
-  // Start and stop sampler.
-  void Start();
-  void Stop();
-
-  // Whether the sampler is running (that is, consumes resources).
-  bool IsActive() const { return active_; }
-
-  // Low overhead way to stop the sampler from ticking
-  bool IsPaused() const { return paused_; }
-  void SetPaused(bool value) { NoBarrier_Store(&paused_, value); }
-
-  // We can't new/delete the type safely without defining it
-  // (-Wdelete-incomplete).  Use these to hide the details from
-  // clients.
-  struct PlatformDataDestructor {
-    void operator()(PlatformData*);
-  };
-
-  typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
-    UniquePlatformData;
-  static UniquePlatformData AllocPlatformData(int aThreadId);
-
-  // If we move the backtracing code into the platform files we won't
-  // need to have these hacks
-#ifdef XP_WIN
-  // xxxehsan sucky hack :(
-  static uintptr_t GetThreadHandle(PlatformData*);
-#endif
-
-  static bool CanNotifyObservers() {
-#ifdef MOZ_WIDGET_GONK
-    // We use profile.sh on b2g to manually select threads and options per process.
-    return false;
-#elif defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-    // Android ANR reporter uses the profiler off the main thread
-    return NS_IsMainThread();
-#else
-    MOZ_ASSERT(NS_IsMainThread());
-    return true;
-#endif
-  }
-
-  void RegisterThread(ThreadInfo* aInfo);
-
-  bool ProfileJS() const { return mProfileJS; }
-  bool ProfileJava() const { return mProfileJava; }
-  bool ProfileGPU() const { return mProfileGPU; }
-  bool ProfileThreads() const { return mProfileThreads; }
-  bool InPrivacyMode() const { return mPrivacyMode; }
-  bool AddMainThreadIO() const { return mAddMainThreadIO; }
-  bool ProfileMemory() const { return mProfileMemory; }
-  bool TaskTracer() const { return mTaskTracer; }
-  bool LayersDump() const { return mLayersDump; }
-  bool DisplayListDump() const { return mDisplayListDump; }
-  bool ProfileRestyle() const { return mProfileRestyle; }
-
-  void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
-  JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
-  mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
-  void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
-  void StreamTaskTracer(SpliceableJSONWriter& aWriter);
-  void FlushOnJSShutdown(JSContext* aContext);
-
-  void GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration);
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-private:
-  // Not implemented on platforms which do not support backtracing
-  void doNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample);
-
-  void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
-
-  // Called within a signal. This function must be reentrant
-  void InplaceTick(TickSample* sample);
-
-  void SetActive(bool value) { NoBarrier_Store(&active_, value); }
-
-  const double interval_;
-  Atomic32 paused_;
-  Atomic32 active_;
-
-  RefPtr<ProfileBuffer> mBuffer;
-  bool mAddLeafAddresses;
-  bool mUseStackWalk;
-  bool mProfileJS;
-  bool mProfileGPU;
-  bool mProfileThreads;
-  bool mProfileJava;
-  bool mLayersDump;
-  bool mDisplayListDump;
-  bool mProfileRestyle;
-  bool mPrivacyMode;
-  bool mAddMainThreadIO;
-  bool mProfileMemory;
-  bool mTaskTracer;
+// We can't new/delete the type safely without defining it
+// (-Wdelete-incomplete).  Use these to hide the details from clients.
+struct PlatformDataDestructor {
+  void operator()(PlatformData*);
 };
+
+typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
+  UniquePlatformData;
+UniquePlatformData AllocPlatformData(int aThreadId);
+
+mozilla::UniquePtr<char[]> ToJSON(double aSinceTime);
 
 #endif /* ndef TOOLS_PLATFORM_H_ */
