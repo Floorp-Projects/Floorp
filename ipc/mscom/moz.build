@@ -34,6 +34,7 @@ if CONFIG['ACCESSIBILITY']:
         'MainThreadHandoff.h',
         'MainThreadInvoker.h',
         'Registration.h',
+        'SpinEvent.h',
         'StructStream.h',
         'WeakRef.h',
     ]
@@ -41,6 +42,7 @@ if CONFIG['ACCESSIBILITY']:
     SOURCES += [
         'Interceptor.cpp',
         'Registration.cpp',
+        'SpinEvent.cpp',
         'WeakRef.cpp',
     ]
 
