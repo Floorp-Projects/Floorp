@@ -1,8 +1,7 @@
-# Use at least -O1 for optimization to avoid stack space
-# exhaustions caused by Clang function inlining.
 ac_add_options --enable-application=browser
-ac_add_options --enable-debug
-ac_add_options --enable-optimize="-O1"
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2"
 
 . $topsrcdir/build/unix/mozconfig.asan
 
