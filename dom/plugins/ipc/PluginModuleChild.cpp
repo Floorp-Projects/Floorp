@@ -41,8 +41,8 @@
 #ifdef XP_WIN
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/widget/AudioSession.h"
-#include "WinUtils.h"
 #include <knownfolders.h>
+#include <shlobj.h>
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
@@ -1934,8 +1934,8 @@ GetLocalLowTempPath(size_t aLen, LPWSTR aPath)
 {
     NS_NAMED_LITERAL_STRING(tempname, "\\Temp");
     LPWSTR path;
-    if (SUCCEEDED(WinUtils::SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0,
-                                                 nullptr, &path))) {
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0,
+                                       nullptr, &path))) {
         if (wcslen(path) + tempname.Length() < aLen) {
             wcscpy(aPath, path);
             wcscat(aPath, tempname.get());

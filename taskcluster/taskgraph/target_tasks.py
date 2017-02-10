@@ -88,7 +88,7 @@ def target_tasks_ash(full_task_graph, parameters):
     def filter(task):
         platform = task.attributes.get('build_platform')
         # only select platforms
-        if platform not in ('linux64', 'linux64-asan', 'linux64-pgo'):
+        if platform not in ('linux32', 'linux32-pgo', 'linux64', 'linux64-asan', 'linux64-pgo'):
             return False
         # and none of this linux64-asan/debug stuff
         if platform == 'linux64-asan' and task.attributes['build_type'] == 'debug':
