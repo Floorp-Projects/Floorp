@@ -19,19 +19,17 @@ Components.utils.import("resource://gre/modules/Task.jsm");
  * test_backupTo_option_with_backup_file.tmp
  * test_backupTo_option_with_backup_file.tmp.backup
  */
-function clearFiles() {
-  return Task.spawn(function () {
-    let files = ["test_backupTo_option_with_tmpPath.tmp",
-                  "test_backupTo_option_without_tmpPath.tmp",
-                  "test_non_backupTo_option.tmp",
-                  "test_backupTo_option_without_destination_file.tmp",
-                  "test_backupTo_option_with_backup_file.tmp"];
-    for (let file of files) {
-      let path = Path.join(Constants.Path.tmpDir, file);
-      yield File.remove(path);
-      yield File.remove(path + ".backup");
-    }
-  });
+async function clearFiles() {
+  let files = ["test_backupTo_option_with_tmpPath.tmp",
+               "test_backupTo_option_without_tmpPath.tmp",
+               "test_non_backupTo_option.tmp",
+               "test_backupTo_option_without_destination_file.tmp",
+               "test_backupTo_option_with_backup_file.tmp"];
+  for (let file of files) {
+    let path = Path.join(Constants.Path.tmpDir, file);
+    await File.remove(path);
+    await File.remove(path + ".backup");
+  }
 }
 
 function run_test() {

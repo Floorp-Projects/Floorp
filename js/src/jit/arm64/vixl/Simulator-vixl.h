@@ -704,8 +704,6 @@ class SimExclusiveGlobalMonitor {
 class Redirection;
 
 class Simulator : public DecoderVisitor {
-  friend class AutoLockSimulatorCache;
-
  public:
   explicit Simulator(Decoder* decoder, FILE* stream = stdout);
   ~Simulator();
@@ -720,8 +718,6 @@ class Simulator : public DecoderVisitor {
   bool overRecursed(uintptr_t newsp = 0) const;
   bool overRecursedWithExtra(uint32_t extra) const;
   int64_t call(uint8_t* entry, int argument_count, ...);
-  void setRedirection(Redirection* redirection);
-  Redirection* redirection() const;
   static void* RedirectNativeFunction(void* nativeFunction, js::jit::ABIFunctionType type);
   void setGPR32Result(int32_t result);
   void setGPR64Result(int64_t result);
@@ -2666,12 +2662,50 @@ class Simulator : public DecoderVisitor {
   bool oom() const { return oom_; }
 
  protected:
-  // Moz: Synchronizes access between main thread and compilation threads.
-  js::Mutex lock_;
-  Redirection* redirection_;
   mozilla::Vector<int64_t, 0, js::SystemAllocPolicy> spStack_;
 };
+
 }  // namespace vixl
+
+namespace js {
+namespace jit {
+
+class SimulatorProcess
+{
+ public:
+  static SimulatorProcess* singleton_;
+
+  SimulatorProcess()
+    : lock_(mutexid::Arm64SimulatorLock)
+    , redirection_(nullptr)
+  {}
+
+  // Synchronizes access between main thread and compilation threads.
+  js::Mutex lock_;
+  vixl::Redirection* redirection_;
+
+  static void setRedirection(vixl::Redirection* redirection) {
+    MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+    singleton_->redirection_ = redirection;
+  }
+
+  static vixl::Redirection* redirection() {
+    MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+    return singleton_->redirection_;
+  }
+
+  static bool initialize() {
+    singleton_ = js_new<SimulatorProcess>();
+    return !!singleton_;
+  }
+  static void destroy() {
+    js_delete(singleton_);
+    singleton_ = nullptr;
+  }
+};
+
+} // namespace jit
+} // namespace js
 
 #endif  // JS_SIMULATOR_ARM64
 #endif  // VIXL_A64_SIMULATOR_A64_H_

@@ -1,0 +1,82 @@
+Step 1: Install Rust if you don't have it already
+    If you are doing gecko builds already, you should already have Rust as it is a build requirement.
+    If not, you can install it using |mach bootstrap| (recommended) or from https://www.rust-lang.org/
+        Note: If installing manually, use the stable 64-bit release - on Windows make sure to use the MSVC ABI installer.
+    Ensure that rustc and cargo are in your $PATH (adding $HOME/.cargo/bin/ should be sufficient)
+
+Step 2: Set up mozconfig
+    Add the following line to your mozconfig:
+        ac_add_options --enable-webrender
+    The first time you do a build with this changes, you should also run |mach clobber|
+
+Step 3:
+    Build using |mach build|
+
+
+When making changes:
+    - Make the changes you want.
+    - Run |mach build| or |mach build binaries| as desired.
+
+
+For a debug webrender build:
+    Use a debug mozconfig (ac_add_options --enable-debug)
+    You can also use an opt build but make webrender less optimized by putting opt-level=0 in the [profile.release] section of your toolkit/library/rust/Cargo.toml file
+    See also https://groups.google.com/forum/#!topic/mozilla.dev.servo/MbeMcqqO1fs
+
+
+What if you have to pull in an update to webrender itself?
+
+1) Update your graphics branch checkout to the latest code on the
+   graphics branch
+2) Check out and update the webrender repo to the version you want
+3) Copy over the webrender and webrender_traits folders into gfx/. The best way
+   to do this is to simply delete the gfx/webrender and gfx/webrender_traits
+   folders and use |cp -R| to copy them in again from the webrender repo. Update
+   the "latest commit" information at the bottom of this file with the version.
+4) If you need to modify webrender_bindings/Cargo.toml to include or remove
+   features, do so now.
+4) Commit your changes to the graphics branch locally
+5) Run |mach vendor rust| to update the rust dependencies in third_party/rust
+6) Commit the vendored changes locally
+7) Build and test. You may need to make changes in bindings.rs or on
+   the C++ side depending on what changed in webrender. This can
+   potentially be quite tricky if you don't fully understand the API
+   changes on the webrender side. In this step, try to not use your new
+   features yet, just get the build working with the minimal changes.
+8) Commit the changes locally from step 7, and push everything to the
+   graphics branch.
+9) Now you have an update webrender with the new features you wanted,
+   so you can write gecko code against them.
+
+Yes, this is somewhat painful. It used to be worse. :)
+
+Note that when webrender is built as part of gecko, it may end up using slightly
+different versions of its dependencies than when it is built standalone from the
+webrender repo. The reason is that the Cargo.lock files in m-c and in the WR
+repo may reference different versions of the dependencies. Both builds will be
+compatible in terms of semantic versioning, but may produce different results -
+for example the standalone webrender might use euclid 0.10.4 while the
+one in gecko uses euclid 0.10.3. Although both choices are "valid" per
+the semantic versioning rules in webrender's Cargo.toml, the 0.2.3 may provide
+a bugfix that is needed for correct behaviour in webrender. If this is the case,
+the technically "correct" fix is to change the upstream webrender Cargo.toml
+file to require the correct version. Alternnatively, you can update the
+Cargo.lock files in m-c to pull in the new version. The way to do this is as
+follows:
+- Go to toolkit/library/rust and run |cargo update -p <package> --precise <version>|.
+  Repeat this for as many libraries as you need to update. Run the same commands
+  in toolkit/library/gtest/rust and js/src (ignore any errors about unmatched
+  packages). Commit all the changes locally.
+- Run |mach vendor rust|, which will update the corresponding libraries in
+  third_party/rust to the versions you specified.
+The reason we don't do this by default is to work around bug 1336528. Specifically,
+there is another crate in m-c called mozjs_sys which is built separately but uses
+the same folder to store its rust dependencies. If one of the libraries that is
+required by both mozjs_sys and webrender is updated without updating the other
+project's Cargo.lock file, that results in build bustage.
+This means that any time you do this sort of manual update of packages, you need
+to make sure that mozjs_sys also has its Cargo.lock file updated if needed, hence
+the need to run the cargo update command in js/src as well. Hopefully this will
+be resolved soon.
+
+Latest Commit: bcf3c371086894f5e1d098ee60f0592abf01f6b3

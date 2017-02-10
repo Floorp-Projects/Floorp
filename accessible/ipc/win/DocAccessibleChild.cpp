@@ -47,12 +47,18 @@ DocAccessibleChild::Shutdown()
 
 ipc::IPCResult
 DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy,
-                                       const WindowsHandle& aEmulatedWindowHandle)
+                                       const WindowsHandle& aEmulatedWindowHandle,
+                                       const IAccessibleHolder& aEmulatedWindowCOMProxy)
 {
   MOZ_ASSERT(!mParentProxy && !aParentCOMProxy.IsNull());
   mParentProxy.reset(const_cast<IAccessibleHolder&>(aParentCOMProxy).Release());
   SetConstructedInParentProcess();
   mEmulatedWindowHandle = reinterpret_cast<HWND>(aEmulatedWindowHandle);
+  if (!aEmulatedWindowCOMProxy.IsNull()) {
+    MOZ_ASSERT(!mEmulatedWindowProxy);
+    mEmulatedWindowProxy.reset(
+      const_cast<IAccessibleHolder&>(aEmulatedWindowCOMProxy).Release());
+  }
 
   for (uint32_t i = 0, l = mDeferredEvents.Length(); i < l; ++i) {
     mDeferredEvents[i]->Dispatch();
