@@ -178,13 +178,6 @@ js::DestroyContext(JSContext* cx)
 
     js_delete(cx->ionPcScriptCache.ref());
 
-    /*
-     * Dump remaining type inference results while we still have a context.
-     * This printing depends on atoms still existing.
-     */
-    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next())
-        PrintTypes(cx, c, false);
-
     cx->runtime()->destroyRuntime();
     js_delete(cx->runtime());
 

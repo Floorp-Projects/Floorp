@@ -546,25 +546,61 @@ input[type="file"]:dir(rtl) > xul|label {
 
 /* radio buttons */
 input[type="radio"] {
+  display: inline-block;
   -moz-appearance: radio;
   margin-block-start: 3px;
   margin-block-end: 0px;
   margin-inline-start: 5px;
   margin-inline-end: 3px;
-  border-radius: 100%;
 }
 
 /* check boxes */
 input[type="checkbox"] {
+  display: inline-block;
   -moz-appearance: checkbox;
   margin-block-start: 3px;
   margin-block-end: 3px;
   margin-inline-start: 4px;
   margin-inline-end: 3px;
-  border-radius: 0;
 }
 
 /* common features of radio buttons and check boxes */
+
+input[type="radio"],
+input[type="checkbox"] {
+  box-sizing: border-box;
+  cursor: default;
+  /* unset some values from the general 'input' rule above: */
+  padding: unset;
+  -moz-binding: unset;
+  border: unset;
+  background-color: unset;
+}
+
+input[type="radio"]:disabled,
+input[type="radio"]:disabled:active,
+input[type="radio"]:disabled:hover,
+input[type="radio"]:disabled:hover:active,
+input[type="checkbox"]:disabled,
+input[type="checkbox"]:disabled:active,
+input[type="checkbox"]:disabled:hover,
+input[type="checkbox"]:disabled:hover:active {
+  cursor: inherit;
+}
+
+%if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+/*
+ * These platforms doesn't have any theming support and thus appearance:none
+ * is the same as any other appearance value.
+ * XXX This is not web-compatible and should be fixed.
+ */
+input[type="radio"] {
+  border-radius: 100%;
+}
+
+input[type="checkbox"] {
+  border-radius: 0;
+}
 
 /* NOTE: The width, height, border-width, and padding here must all
    add up the way nsFormControlFrame::GetIntrinsic(Width|Height)
@@ -573,12 +609,8 @@ input[type="checkbox"] {
    (Should we maybe set !important on width and height, then?)  */
 input[type="radio"],
 input[type="checkbox"] {
-  box-sizing: border-box;
   inline-size: 13px;
   block-size: 13px;
-  cursor: default;
-  padding: 0;
-  -moz-binding: none;
   border: 2px inset ThreeDLightShadow;
   background-repeat: no-repeat;
   background-position: center;
@@ -594,18 +626,7 @@ input[type="checkbox"]:disabled:hover,
 input[type="checkbox"]:disabled:hover:active {
   padding: 1px;
   border: 1px inset ThreeDShadow;
-  cursor: inherit;
 }
-
-% On Mac, the native theme takes care of this.
-% See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.
-%ifndef XP_MACOSX
-input[type="checkbox"]:-moz-focusring,
-input[type="radio"]:-moz-focusring {
-  /* Don't specify the outline-color, we should always use initial value. */
-  outline: 1px dotted;
-}
-%endif
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
@@ -644,6 +665,18 @@ input[type="checkbox"]:indeterminate {
 input[type="checkbox"]:indeterminate:disabled {
   background-image: url(indeterminate-checkmark.svg#disabled);
 }
+
+%endif /* defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK) */
+
+% On Mac, the native theme takes care of this.
+% See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.
+%ifndef XP_MACOSX
+input[type="checkbox"]:-moz-focusring,
+input[type="radio"]:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+%endif
 
 input[type="search"] {
   box-sizing: border-box;

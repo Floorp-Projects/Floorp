@@ -138,6 +138,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     defaultVersion_(JSVERSION_DEFAULT),
+    profilingScripts(false),
+    scriptAndCountsVector(nullptr),
     lcovOutput_(),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
@@ -211,7 +213,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
 
-    if (!zoneGroup->init(maxNurseryBytes))
+    if (!zoneGroup->init(maxNurseryBytes) || !gc.groups.ref().append(zoneGroup))
         return false;
     zoneGroup.forget();
 
@@ -303,7 +305,7 @@ JSRuntime::destroyRuntime()
         beingDestroyed_ = true;
 
         /* Allow the GC to release scripts that were being profiled. */
-        zoneGroupFromMainThread()->profilingScripts = false;
+        profilingScripts = false;
 
         /* Set the profiler sampler buffer generation to invalid. */
         profilerSampleBufferGen_ = UINT32_MAX;

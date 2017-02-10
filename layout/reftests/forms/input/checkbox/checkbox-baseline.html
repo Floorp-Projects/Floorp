@@ -23,13 +23,23 @@ div { border: 1px dashed blue; }
   width:0px;
   height:0px;
 }
+.intrinsic { width:unset; height:unset; }
 .border { border: 25px solid black; }
 input { margin: 20px; }
 
    </style>
   </head>
   <body>
+    <div><input class="none intrinsic" type="checkbox" style="background:pink; outline:10px solid black">Block</div>
+    <div><input class="none intrinsic" type="radio" style="background:pink; outline:1px solid black">Block</div>
+    <div><input class="none intrinsic border" type="checkbox">Block</div>
+    <div><input class="none intrinsic border" type="radio">Block</div>
     <div><input class="none border" type="checkbox">Block</div>
+    <div><input class="none border" type="radio">Block</div>
+    <div><input class="none" style="margin:0; width:20px; height:20px; background-color:pink" type="checkbox" checked>Block</div>
+    <div><input class="none" style="margin:0; width:20px; height:20px; background-color:black" type="checkbox">Block</div>
+    <div><input class="none" style="margin:0; width:20px; height:20px; background-color:pink" type="radio" checked>Block</div>
+    <div><input class="none" style="margin:0; width:20px; height:20px; background-color:black" type="radio">Block</div>
     <div style="font-size:72px"><input class="none border" type="checkbox" style="border-width:3px">Block</div>
   </body>
 </html>

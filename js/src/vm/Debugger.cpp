@@ -2404,7 +2404,12 @@ class MOZ_RAII ExecutionObservableCompartments : public Debugger::ExecutionObser
     }
 
     bool init() { return compartments_.init() && zones_.init(); }
-    bool add(JSCompartment* comp) { return compartments_.put(comp) && zones_.put(comp->zone()); }
+    bool add(JSCompartment* comp) {
+        // The current cx should have exclusive access to observed content,
+        // since debuggees must be in the same zone group as ther debugger.
+        MOZ_ASSERT(comp->zone()->group() == TlsContext.get()->zone()->group());
+        return compartments_.put(comp) && zones_.put(comp->zone());
+    }
 
     typedef HashSet<JSCompartment*>::Range CompartmentRange;
     const HashSet<JSCompartment*>* compartments() const { return &compartments_; }
@@ -2498,6 +2503,9 @@ class MOZ_RAII ExecutionObservableScript : public Debugger::ExecutionObservableS
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : script_(cx, script)
     {
+        // The current cx should have exclusive access to observed content,
+        // since debuggees must be in the same zone group as ther debugger.
+        MOZ_ASSERT(singleZone()->group() == cx->zone()->group());
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -2602,7 +2610,6 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
 
     AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 
-    JSRuntime* rt = cx->runtime();
     FreeOp* fop = cx->runtime()->defaultFreeOp();
 
     Vector<JSScript*> scripts(cx);
@@ -2634,7 +2641,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
     //
     // Mark active baseline scripts in the observable set so that they don't
     // get discarded. They will be recompiled.
-    for (JitActivationIterator actIter(rt); !actIter.done(); ++actIter) {
+    for (JitActivationIterator actIter(cx, zone->group()->ownerContext()); !actIter.done(); ++actIter) {
         if (actIter->compartment()->zone() != zone)
             continue;
 
@@ -2645,7 +2652,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                 break;
               case JitFrame_IonJS:
                 MarkBaselineScriptActiveIfObservable(iter.script(), obs);
-                for (InlineFrameIterator inlineIter(rt, &iter); inlineIter.more(); ++inlineIter)
+                for (InlineFrameIterator inlineIter(cx, &iter); inlineIter.more(); ++inlineIter)
                     MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
                 break;
               default:;
@@ -3941,6 +3948,13 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
 {
+    // Debuggers are required to be in the same zone group as their debuggees.
+    // The debugger must be able to observe all activity in the debuggee
+    // compartment, which requires that its thread have exclusive access to
+    // that compartment's contents.
+    MOZ_ASSERT(cx->zone() == object->zone());
+    MOZ_RELEASE_ASSERT(global->zone()->group() == cx->zone()->group());
+
     if (debuggees.has(global))
         return true;
 
@@ -7712,7 +7726,10 @@ UpdateFrameIterPc(FrameIter& iter)
         jit::JitFrameLayout* jsFrame = (jit::JitFrameLayout*)frame->top();
         jit::JitActivation* activation = iter.activation()->asJit();
 
-        ActivationIterator activationIter(activation->cx()->runtime());
+        JSContext* cx = TlsContext.get();
+        MOZ_ASSERT(cx == activation->cx());
+
+        ActivationIterator activationIter(cx);
         while (activationIter.activation() != activation)
             ++activationIter;
 
@@ -7720,7 +7737,7 @@ UpdateFrameIterPc(FrameIter& iter)
         while (!jitIter.isIonJS() || jitIter.jsFrame() != jsFrame)
             ++jitIter;
 
-        jit::InlineFrameIterator ionInlineIter(activation->cx(), &jitIter);
+        jit::InlineFrameIterator ionInlineIter(cx, &jitIter);
         while (ionInlineIter.frameNo() != frame->frameNo())
             ++ionInlineIter;
 

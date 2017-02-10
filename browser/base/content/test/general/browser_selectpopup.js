@@ -1,9 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This test checks that a <select> with an <optgroup> opens and can be navigated
-// in a child process. This is different than single-process as a <menulist> is used
-// to implement the dropdown list.
+// This test tests <select> in a child process. This is different than
+// single-process as a <menulist> is used to implement the dropdown list.
 
 requestLongerTimeout(2);
 
@@ -849,5 +848,37 @@ add_task(function* test_colors_applied_to_popup() {
   }
 
   yield hideSelectPopup(selectPopup, "escape");
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks that the popup is closed when the select element is blurred.
+add_task(function* test_blur_hides_popup() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+    content.addEventListener("blur", function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+
+    content.document.getElementById("one").focus();
+  });
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  yield openSelectPopup(selectPopup);
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(selectPopup, "popuphidden");
+
+  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+    content.document.getElementById("one").blur();
+  });
+
+  yield popupHiddenPromise;
+
+  ok(true, "Blur closed popup");
+
   yield BrowserTestUtils.removeTab(tab);
 });
