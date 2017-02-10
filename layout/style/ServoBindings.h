@@ -299,6 +299,10 @@ void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
 void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* effects, ServoBundledURI uri);
 
+void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest, const nsStyleSVGPaint* src);
+void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* paint, ServoBundledURI uri);
+void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
+
 void Gecko_FillAllBackgroundLists(nsStyleImageLayers* layers, uint32_t max_len);
 void Gecko_FillAllMaskLists(nsStyleImageLayers* layers, uint32_t max_len);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
