@@ -219,14 +219,9 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
   WebRenderBridgeParent* parent = nullptr;
-  if (MOZ_USE_RENDER_THREAD) {
-    RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
-    RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
-    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api), Move(holder));
-  } else {
-    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->GLContext(),
-                                       root->WindowState(), root->Compositor());
-  }
+  RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
+  RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
+  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api), Move(holder));
 
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[pipelineHandle].mCrossProcessParent = this;
