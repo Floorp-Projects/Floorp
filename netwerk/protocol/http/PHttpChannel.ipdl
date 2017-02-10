@@ -175,7 +175,7 @@ both:
   // Send__delete__() and complete the steps required to finish the redirect.
   async FinishInterceptedRedirect();
 
-  async SetPriority(uint16_t priority);
+  async SetPriority(int16_t priority);
 };
 
 

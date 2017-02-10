@@ -18,8 +18,8 @@ Test Attribute rep
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { Attribute } = browserRequire("devtools/client/shared/components/reps/attribute");
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, Attribute } = REPS;
 
     let gripStub = {
       "type": "object",

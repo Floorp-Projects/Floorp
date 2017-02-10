@@ -9,6 +9,10 @@ var StarUI = {
   _isNewBookmark: false,
   _isComposing: false,
   _autoCloseTimer: 0,
+  // The autoclose timer is diasbled if the user interacts with the
+  // popup, such as making a change through typing or clicking on
+  // the popup.
+  _autoCloseTimerEnabled: true,
 
   _element(aID) {
     return document.getElementById(aID);
@@ -22,6 +26,7 @@ var StarUI = {
     // to avoid impacting startup / new window performance
     element.hidden = false;
     element.addEventListener("keypress", this);
+    element.addEventListener("mousedown", this);
     element.addEventListener("mouseout", this);
     element.addEventListener("mousemove", this);
     element.addEventListener("compositionstart", this);
@@ -66,6 +71,8 @@ var StarUI = {
     switch (aEvent.type) {
       case "mousemove":
         clearTimeout(this._autoCloseTimer);
+        // The autoclose timer is not disabled on generic mouseout
+        // because the user may not have actually interacted with the popup.
         break;
       case "popuphidden":
         clearTimeout(this._autoCloseTimer);
@@ -109,6 +116,7 @@ var StarUI = {
         break;
       case "keypress":
         clearTimeout(this._autoCloseTimer);
+        this._autoCloseTimerEnabled = false;
 
         if (aEvent.defaultPrevented) {
           // The event has already been consumed inside of the panel.
@@ -139,26 +147,32 @@ var StarUI = {
             break;
         }
         break;
-      case "compositionstart":
-        if (aEvent.defaultPrevented) {
-          // If the composition was canceled, nothing to do here.
-          break;
-        }
-        // During composition, panel shouldn't be hidden automatically.
-        clearTimeout(this._autoCloseTimer);
-        this._isComposing = true;
-        break;
       case "compositionend":
         // After composition is committed, "mouseout" or something can set
         // auto close timer.
         this._isComposing = false;
         break;
+      case "compositionstart":
+        if (aEvent.defaultPrevented) {
+          // If the composition was canceled, nothing to do here.
+          break;
+        }
+        this._isComposing = true;
+        // Explicit fall-through, during composition, panel shouldn't be
+        // hidden automatically.
       case "input":
-        // Might be edited some text without keyboard events nor composition
-        // events. Let's cancel auto close in such case.
+        // Might have edited some text without keyboard events nor composition
+        // events. Fall-through to cancel auto close in such case.
+      case "mousedown":
         clearTimeout(this._autoCloseTimer);
+        this._autoCloseTimerEnabled = false;
         break;
       case "mouseout":
+        if (!this._autoCloseTimerEnabled) {
+          // Don't autoclose the popup if the user has made a selection
+          // or keypress and then subsequently mouseout.
+          break;
+        }
         // Explicit fall-through
       case "popupshown":
         // Don't handle events for descendent elements.
@@ -179,6 +193,7 @@ var StarUI = {
               this.panel.hidePopup();
             }
           }, delay);
+          this._autoCloseTimerEnabled = true;
         }
         break;
     }

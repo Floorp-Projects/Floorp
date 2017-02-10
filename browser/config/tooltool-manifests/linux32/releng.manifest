@@ -16,9 +16,9 @@
 "unpack": true
 },
 {
-"version": "rustc 1.15.1-dev (38014d1b6 2017-02-08) gecko build with -fPIC",
-"size": 75614428,
-"digest": "1bfd06db51c4aeaf43e43d8080069bba4b3d590a4863366ceb9c9a9915fbc528111fa067a13fc701ee00cbeda21a9f5de23d20d2479eab35fa2d7f729c660159",
+"version": "rustc 1.15.1 (021bd294c 2017-02-08) repack",
+"size": 110077036,
+"digest": "8b99d058cc081f6ca2a3cc88c3ca9c15232961d2539774dacee35e2258955ad8fc4cb0af3b903a3e3f8a264ddecb3baae9256502ffc178a2823779284ace2bd8",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true

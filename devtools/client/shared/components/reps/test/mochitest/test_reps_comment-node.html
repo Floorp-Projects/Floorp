@@ -20,9 +20,8 @@ Test comment-node rep
 
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { CommentNode } = browserRequire("devtools/client/shared/components/reps/comment-node");
-    const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+    const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, CommentNode } = REPS;
 
     let gripStub = {
       "type": "object",

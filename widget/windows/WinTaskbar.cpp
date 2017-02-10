@@ -28,7 +28,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/WindowsVersion.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>

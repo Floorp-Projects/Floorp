@@ -32,6 +32,9 @@
                android:duplicateParentState="true"
                gecko:fadeWidth="15dp"
                android:paddingRight="5dp"
+               android:paddingEnd="5dp"
+               android:paddingLeft="0dp"
+               android:paddingStart="0dp"
                android:drawablePadding="6dp"/>
 
         <!-- Use of baselineAlignBottom only supported from API 11+ - if this needs to work on lower API versions

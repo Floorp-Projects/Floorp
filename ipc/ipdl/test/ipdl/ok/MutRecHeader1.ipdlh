@@ -1,0 +1,34 @@
+include MutRecHeader2;
+
+/* MutRecHeader1 (H1) includes MutRecHeader2 (H2), and uses a struct from H2.
+   H2 includes MutRecHeader3 (H3).
+   H3 includes H1.
+
+When type checking H1, GatherDecls::visitInclude will recursively
+cause us to first check H2, which in turn will cause us to first check
+H3.
+
+H3 only includes H1, so when we check it, we do not have any
+declarations from H2 in the context. There used to be code in
+GatherDecls::visitTranslationUnit that would, as part of the "second
+pass", check the validity of all included structures. This would check
+Struct1, and fail, because Struct2 is not declared.
+
+Fundamentally, it doesn't make sense to check anything declared in an
+included file in the context of the file that included it.
+
+Note that this error did not show up when either H2 or H3 was
+checked. This is because in those cases we are not in the middle of
+checking H1 when we check H3, so we end up fully checking H1 before we
+get to the end of checking H3. This means the "visited" tag gets put
+on Struct1 before we get to the end of that troublesome block of code
+in visitTranslationUnit, and visitStructDecl doesn't do anything if
+that tag is set, so we don't end up actually checking H1 in the
+context of H3.
+
+*/
+
+struct Struct1
+{
+  Struct2 b;
+};

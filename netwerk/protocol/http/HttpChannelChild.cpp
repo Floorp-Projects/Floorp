@@ -2960,7 +2960,7 @@ HttpChannelChild::ShouldInterceptURI(nsIURI* aURI,
 }
 
 mozilla::ipc::IPCResult
-HttpChannelChild::RecvSetPriority(const uint16_t& aPriority)
+HttpChannelChild::RecvSetPriority(const int16_t& aPriority)
 {
   mPriority = aPriority;
   return IPC_OK();

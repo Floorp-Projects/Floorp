@@ -18,8 +18,8 @@ Test ObjectWithText rep
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { ObjectWithText } = browserRequire("devtools/client/shared/components/reps/object-with-text");
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, ObjectWithText } = REPS;
 
     let gripStub = {
       "type": "object",
