@@ -212,6 +212,7 @@
       clickToPlay    : null,
       controlsOverlay : null,
       fullscreenButton : null,
+      layoutControls : null,
       currentTextTrackIndex: 0,
 
       textTracksCount: 0,
@@ -239,7 +240,7 @@
           return;
         }
         if (this._isAudioOnly) {
-          this.video.style.height = this.controlBar.minHeight + "px";
+          this.video.style.height = this.controlBarMinHeight + "px";
           this.video.style.width = "66%";
         } else {
           this.video.style.removeProperty("height");
@@ -364,14 +365,7 @@
         // An event handler for |onresize| should be added when bug 227495 is fixed.
         this.controlBar.hidden = false;
 
-        let layoutControls = [
-          ...this.controlBar.children,
-          this.durationSpan,
-          this.controlBar,
-          this.clickToPlay
-        ];
-
-        for (let control of layoutControls) {
+        for (let control of this.layoutControls) {
           if (!control) {
             break;
           }
@@ -379,10 +373,6 @@
           Object.defineProperties(control, {
             minWidth: {
               value: control.clientWidth,
-              writable: true
-            },
-            minHeight: {
-              value: control.clientHeight,
               writable: true
             },
             isAdjustableControl: {
@@ -398,7 +388,13 @@
             },
             resizedHandler: {
               value: () => {
-                control.minWidth = control.clientWidth;
+                let width = control.clientWidth;
+
+                if (width === 0) {
+                  return;
+                }
+
+                control.minWidth = width;
               },
               writable: true
             },
@@ -422,17 +418,18 @@
         }
         // Cannot get minimal width of flexible scrubber and clickToPlay.
         // Rewrite to empirical value for now.
-        this.controlBar.minHeight = 40;
         this.scrubberStack.minWidth = 64;
-        this.volumeControl.minWidth = 48;
+        this.volumeStack.minWidth = 48;
         this.clickToPlay.minWidth = 48;
 
         if (this.positionDurationBox) {
-          this.durationSpan.resized = true;
-          this.positionDurationBox.resized = true;
           this.positionDurationBox.resizedHandler = () => {
-            this.positionDurationBox.minWidth = this.positionDurationBox.clientWidth - this.durationSpan.clientWidth;
+            let durationWidth = this.durationSpan.hideByAdjustment ? 0 : this.durationSpan.clientWidth;
+
+            this.positionDurationBox.minWidth = this.positionDurationBox.clientWidth - durationWidth;
           };
+
+          this.positionDurationBox.resized = true;
         }
 
         this.adjustControlSize();
@@ -1102,8 +1099,11 @@
           element.removeAttribute("immediate");
         }
 
-        if (fadeIn && !(element.isAdjustableControl && element.hideByAdjustment)) {
-          element.hidden = false;
+        if (fadeIn) {
+          // hidden state should be controlled by adjustControlSize
+          if (!(element.isAdjustableControl && element.hideByAdjustment)) {
+            element.hidden = false;
+          }
           // force style resolution, so that transition begins
           // when we remove the attribute.
           element.clientTop;
@@ -1137,6 +1137,26 @@
           this.scrubber.dragStateChanged(false);
         }
         element.hidden = true;
+      },
+
+      onVideoControlsResized() {
+        // Do not adjust again if resize event is caused by adjustControls(). Audio
+        // might be resized by adjustControls(), so we should skip this handler if
+        // current size is the same as the adjusted size.
+        let {width, height} = this.video.getBoundingClientRect();
+        if (width === this.adjustedVideoSize.width && height === this.adjustedVideoSize.height) {
+          return;
+        }
+
+        // For the controls which haven't got correct computed size yet, force
+        // them to re-cache their minWidth when the media is resized (reflow).
+        this.layoutControls.forEach(control => {
+          if (control) {
+            control.resized = control.resized || (control.minWidth === 0);
+          }
+        });
+
+        this.adjustControlSize();
       },
 
       _triggeredByControls: false,
@@ -1249,7 +1269,7 @@
         let animationMinSize = this.clickToPlay.minWidth * animationScale;
 
         if (animationMinSize > videoWidth ||
-            animationMinSize > (videoHeight - this.controlBar.minHeight)) {
+            animationMinSize > (videoHeight - this.controlBarMinHeight)) {
           this.clickToPlay.setAttribute("immediate", "true");
           this.clickToPlay.hidden = true;
         } else {
@@ -1437,8 +1457,9 @@
       },
 
       setClosedCaptionButtonState() {
+        this.adjustControlSize();
+
         if (!this.isClosedCaptionAvailable) {
-          this.closedCaptionButton.setAttribute("hidden", "true");
           return;
         }
 
@@ -1449,7 +1470,6 @@
         } else {
           this.closedCaptionButton.removeAttribute("enabled");
         }
-        this.adjustControlSize();
 
         let ttItems = this.textTrackList.childNodes;
 
@@ -1609,8 +1629,32 @@
         return doc.mozSyntheticDocument && win === win.top;
       },
 
+      controlBarMinHeight : 40,
+      adjustedVideoSize : {},
       adjustControlSize() {
-        if (!this.controlBar.minWidth || this.videocontrols.isTouchControls) {
+        if (this.videocontrols.isTouchControls) {
+          return;
+        }
+
+        let controlHidden = this.isControlBarHidden;
+
+        if (this.layoutControls.some(control => control.resized)) {
+          this.controlBar.hidden = false;
+
+          for (let control of this.layoutControls) {
+            if (control.resized && !control.hideByAdjustment) {
+              control.resizedHandler();
+              control.resized = false;
+            }
+          }
+
+          this.controlBar.hidden = controlHidden;
+        }
+
+        // Check minWidth of controlBar before adjusting. If the layout information
+        // isn't ready yet, the minWidth of controlBar would be undefined or 0, so early
+        // return to avoid invalid adjustment.
+        if (!this.controlBar.minWidth) {
           return;
         }
 
@@ -1644,11 +1688,6 @@
         let preventAppendControl = false;
 
         for (let control of prioritizedControls) {
-          if (!this.isControlBarHidden && control.resized && !control.hideByAdjustment) {
-            control.resizedHandler();
-            control.resized = false;
-          }
-
           if (!control.isWanted) {
             control.hideByAdjustment = true;
             continue;
@@ -1664,7 +1703,11 @@
           }
         }
 
-        if (videoHeight < this.controlBar.minHeight ||
+        if (this.durationSpan.hideByAdjustment) {
+          this.positionDurationBox.resized = true;
+        }
+
+        if (videoHeight < this.controlBarMinHeight ||
             widthUsed === minControlBarPaddingWidth) {
           this.controlBar.setAttribute("size", "hidden");
           this.controlBar.hideByAdjustment = true;
@@ -1685,7 +1728,7 @@
         this.clickToPlay.minWidth, minVideoSideLength * clickToPlayViewRatio);
 
         if (clickToPlayScaledSize >= videoWidth ||
-            (clickToPlayScaledSize + this.controlBar.minHeight / 2 >= videoHeight / 2 )) {
+           (clickToPlayScaledSize + this.controlBarMinHeight / 2 >= videoHeight / 2 )) {
           this.clickToPlay.hideByAdjustment = true;
         } else {
           if (this.clickToPlay.hidden && !this.video.played.length && this.video.paused) {
@@ -1694,6 +1737,8 @@
           this.clickToPlay.style.width = `${clickToPlayScaledSize}px`;
           this.clickToPlay.style.height = `${clickToPlayScaledSize}px`;
         }
+        // Record new size after adjustment
+        this.adjustedVideoSize = this.video.getBoundingClientRect();
       },
 
       init(binding) {
@@ -1726,6 +1771,14 @@
         if (this.positionDurationBox) {
           this.durationSpan = this.positionDurationBox.getElementsByTagName("span")[0];
         }
+
+        this.layoutControls = [
+          ...this.controlBar.children,
+          this.durationSpan,
+          this.controlBar,
+          this.clickToPlay
+        ];
+
 
         // XXX controlsContainer is a desktop only element. To determine whether
         // isTouchControls or not during the whole initialization process, get
@@ -1765,7 +1818,7 @@
         addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
         addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
 
-        addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
+        addListener(this.videocontrols, "resizevideocontrols", this.onVideoControlsResized);
         addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
         addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
         addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
