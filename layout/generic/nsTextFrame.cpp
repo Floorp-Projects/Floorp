@@ -5003,7 +5003,9 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
     GlyphArray* g = mGlyphs.AppendElement();
     std::vector<Glyph> glyphs;
     Color color;
-    if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)) {
+    if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)
+        || !mFont->CanSerialize()
+        || XRE_IsParentProcess()) {
       mFont = nullptr;
       mGlyphs.Clear();
     } else {
@@ -5020,7 +5022,7 @@ nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
                              const ContainerLayerParameters& aParameters)
 {
   if (mFont) {
-    return mozilla::LAYER_INACTIVE;
+    return mozilla::LAYER_ACTIVE;
   }
   MOZ_ASSERT(mMergedFrames.IsEmpty());
   return mozilla::LAYER_NONE;

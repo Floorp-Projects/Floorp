@@ -28,8 +28,12 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
   let winUtils = webNav.document.defaultView.
                         QueryInterface(Ci.nsIInterfaceRequestor).
                         getInterface(Ci.nsIDOMWindowUtils);
-  is(winUtils.layerManagerType, "None", "windowless browser's layerManagerType should be 'None'");
-
+  try {
+    is(winUtils.layerManagerType, "None", "windowless browser's layerManagerType should be 'None'");
+  } catch (e) {
+    // The windowless browser may not have a layermanager at all yet, and that's ok.
+    // The troubleshooting code similarly skips over windows with no layer managers.
+  }
   ok(true, "not crashed");
 
   var Troubleshoot = Cu.import("resource://gre/modules/Troubleshoot.jsm", {}).Troubleshoot;

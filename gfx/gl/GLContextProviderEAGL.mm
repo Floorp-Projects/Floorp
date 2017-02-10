@@ -11,6 +11,7 @@
 #include "gfxFailure.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "GeckoProfiler.h"
 
@@ -215,11 +216,15 @@ CreateEAGLContext(CreateContextFlags flags, bool aOffscreen, GLContextEAGL* shar
 already_AddRefed<GLContext>
 GLContextProviderEAGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
+    return CreateForWindow(aCompositorWidget->RealWidget(),
+                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
+                           aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget,
+                                       bool aWebRender,
+                                       bool aForceAccelerated)
 {
     RefPtr<GLContext> glContext = CreateEAGLContext(CreateContextFlags::NONE, false,
                                                     GetGlobalContextEAGL());

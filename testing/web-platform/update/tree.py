@@ -25,6 +25,12 @@ class GitTree(wptupdate.tree.GitTree):
         wptupdate.tree.GitTree.__init__(self, *args, **kwargs)
         self.commit_cls = commit_cls
 
+    def rev_from_hg(self, rev):
+        return self.git("cinnabar", "hg2git", rev).strip()
+
+    def rev_to_hg(self, rev):
+        return self.git("cinnabar", "git2hg", rev).strip()
+
     def create_branch(self, name, ref=None):
         """Create a named branch,
 

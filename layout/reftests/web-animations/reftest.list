@@ -11,6 +11,7 @@ test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-losi
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-keyframe.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-keyframe-in-delay.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-target.html stacking-context-animation-changing-target-ref.html
+
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-target-in-delay.html stacking-context-animation-changing-target-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-effect.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-changing-display-property.html stacking-context-animation-ref.html

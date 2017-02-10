@@ -13,6 +13,7 @@ var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var flags = require("devtools/shared/flags");
 var { Task } = require("devtools/shared/task");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 flags.testing = true;
 var { require: browserRequire } = BrowserLoader({
@@ -44,14 +45,18 @@ function shallowRenderComponent(component, props) {
 /**
  * Test that a rep renders correctly across different modes.
  */
-function testRepRenderModes(modeTests, testName, componentUnderTest, gripStub) {
+function testRepRenderModes(modeTests, testName, componentUnderTest, gripStub,
+  props = {}) {
   modeTests.forEach(({mode, expectedOutput, message}) => {
     const modeString = typeof mode === "undefined" ? "no mode" : mode.toString();
     if (!message) {
       message = `${testName}: ${modeString} renders correctly.`;
     }
 
-    const rendered = renderComponent(componentUnderTest.rep, { object: gripStub, mode });
+    const rendered = renderComponent(
+      componentUnderTest.rep,
+      Object.assign({}, { object: gripStub, mode }, props)
+    );
     is(rendered.textContent, expectedOutput, message);
   });
 }

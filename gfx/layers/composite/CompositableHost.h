@@ -45,6 +45,11 @@ class TiledContentHost;
 class CompositableParentManager;
 struct EffectChain;
 
+struct ImageCompositeNotificationInfo {
+  base::ProcessId mImageBridgeProcessId;
+  ImageCompositeNotification mNotification;
+};
+
 struct AsyncCompositableRef
 {
   AsyncCompositableRef()
@@ -232,6 +237,8 @@ public:
   /// This is a good place to clear all potential gpu resources before the widget
   /// is is destroyed.
   virtual void CleanupResources() {}
+
+  virtual void BindTextureSource() {}
 
 protected:
   TextureInfo mTextureInfo;

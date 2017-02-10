@@ -11,27 +11,27 @@ const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const TEST_PROFILE_1 = {
   organization: "World Wide Web Consortium",
-  streetAddress: "32 Vassar Street\nMIT Room 32-G524",
-  addressLevel2: "Cambridge",
-  addressLevel1: "MA",
-  postalCode: "02139",
+  "street-address": "32 Vassar Street\nMIT Room 32-G524",
+  "address-level2": "Cambridge",
+  "address-level1": "MA",
+  "postal-code": "02139",
   country: "US",
   tel: "+1 617 253 5702",
   email: "timbl@w3.org",
 };
 
 const TEST_PROFILE_2 = {
-  streetAddress: "Some Address",
+  "street-address": "Some Address",
   country: "US",
 };
 
 const TEST_PROFILE_3 = {
-  streetAddress: "Other Address",
-  postalCode: "12345",
+  "street-address": "Other Address",
+  "postal-code": "12345",
 };
 
 const TEST_PROFILE_WITH_INVALID_FIELD = {
-  streetAddress: "Another Address",
+  "street-address": "Another Address",
   invalidField: "INVALID",
 };
 
@@ -114,7 +114,7 @@ add_task(function* test_getByFilter() {
   let profileStorage = new ProfileStorage(path);
   yield profileStorage.initialize();
 
-  let filter = {info: {fieldName: "streetAddress"}, searchString: "Some"};
+  let filter = {info: {fieldName: "street-address"}, searchString: "Some"};
   let profiles = profileStorage.getByFilter(filter);
   do_check_eq(profiles.length, 1);
   do_check_profile_matches(profiles[0], TEST_PROFILE_2);
@@ -125,16 +125,16 @@ add_task(function* test_getByFilter() {
   do_check_profile_matches(profiles[0], TEST_PROFILE_1);
   do_check_profile_matches(profiles[1], TEST_PROFILE_2);
 
-  filter = {info: {fieldName: "streetAddress"}, searchString: "test"};
+  filter = {info: {fieldName: "street-address"}, searchString: "test"};
   profiles = profileStorage.getByFilter(filter);
   do_check_eq(profiles.length, 0);
 
-  filter = {info: {fieldName: "streetAddress"}, searchString: ""};
+  filter = {info: {fieldName: "street-address"}, searchString: ""};
   profiles = profileStorage.getByFilter(filter);
   do_check_eq(profiles.length, 2);
 
   // Check if the filtering logic is free from searching special chars.
-  filter = {info: {fieldName: "streetAddress"}, searchString: ".*"};
+  filter = {info: {fieldName: "street-address"}, searchString: ".*"};
   profiles = profileStorage.getByFilter(filter);
   do_check_eq(profiles.length, 0);
 });

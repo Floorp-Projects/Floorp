@@ -19,9 +19,8 @@ Test GripMap rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { GripMap } = browserRequire("devtools/client/shared/components/reps/grip-map");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, GripMap } = REPS;
 
   const componentUnderTest = GripMap;
 

@@ -37,8 +37,6 @@ using namespace mozilla::widget;
 char16_t *nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
-static const wchar_t kDialogPtrProp[] = L"DialogPtrProperty";
-static const DWORD kDialogTimerID = 9999;
 static const unsigned long kDialogTimerTimeout = 300;
 
 #define MAX_EXTENSION_LENGTH 10

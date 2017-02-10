@@ -2,8 +2,8 @@
 fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-exit-1.html component-alpha-exit-1-ref.html # bug 760275
 != pull-background-1.html about:blank
 != pull-background-2.html about:blank
-!= pull-background-3.html about:blank 
-!= pull-background-4.html about:blank 
+fails-if(webrender) != pull-background-3.html about:blank 
+fails-if(webrender) != pull-background-4.html about:blank 
 != pull-background-5.html about:blank
 != pull-background-6.html about:blank
 # The animated-position tests are disabled for intermittent failures / passes, bug 1150941
@@ -18,7 +18,7 @@ skip-if(!asyncPan) != pull-background-displayport-3.html about:blank # fails wit
 skip-if(!asyncPan) != pull-background-displayport-4.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 skip-if(!asyncPan) != pull-background-displayport-5.html about:blank
 skip-if(!asyncPan) != pull-background-displayport-6.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
-fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
+fuzzy(2,30150) fails-if(webrender) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
 != layerize-over-fixed-bg-1.html about:blank

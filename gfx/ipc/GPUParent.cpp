@@ -28,6 +28,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "nsDebugImpl.h"
 #include "nsExceptionHandler.h"
 #include "nsThreadManager.h"
@@ -190,6 +191,11 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     gtk_init(nullptr, nullptr);
   }
 #endif
+
+  // Make sure to do this *after* we update gfxVars above.
+  if (gfxVars::UseWebRender()) {
+    wr::RenderThread::Start();
+  }
 
   VRManager::ManagerInit();
   // Send a message to the UI process that we're done.
@@ -411,6 +417,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   dom::VideoDecoderManagerParent::ShutdownVideoBridge();
   CompositorThreadHolder::Shutdown();
+  if (gfxVars::UseWebRender()) {
+    wr::RenderThread::ShutDown();
+  }
   Factory::ShutDown();
 #if defined(XP_WIN)
   DeviceManagerDx::Shutdown();

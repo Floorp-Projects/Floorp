@@ -1,7 +1,4 @@
-use fnv::FnvHasher;
-use std::collections::HashMap;
 use std::ffi::CString;
-use std::hash::BuildHasherDefault;
 use std::{mem, slice};
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
@@ -14,12 +11,11 @@ use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
-use std::sync::{Arc, Mutex, Condvar};
 use app_units::Au;
 
 extern crate webrender_traits;
 
-fn pipeline_id_to_u64(id: PipelineId) -> u64 { (id.0 as u64) << 32 + id.1 as u64 }
+fn pipeline_id_to_u64(id: PipelineId) -> u64 { ((id.0 as u64) << 32) + id.1 as u64 }
 fn u64_to_pipeline_id(id: u64) -> PipelineId { PipelineId((id >> 32) as u32, id as u32) }
 
 fn font_key_to_u64(key: FontKey) -> u64 { unsafe { mem::transmute(key) } }
@@ -323,39 +319,6 @@ impl WebRenderFrameBuilder {
     }
 }
 
-// XXX (bug 1328602) - This will be removed soon-ish.
-struct Notifier {
-    render_notifier: Arc<(Mutex<bool>, Condvar)>,
-}
-
-impl webrender_traits::RenderNotifier for Notifier {
-    fn new_frame_ready(&mut self) {
-        assert!( unsafe { !is_in_compositor_thread() });
-        let &(ref lock, ref cvar) = &*self.render_notifier;
-        let mut finished = lock.lock().unwrap();
-        *finished = true;
-        cvar.notify_one();
-    }
-    fn new_scroll_frame_ready(&mut self, _: bool) {
-    }
-
-    fn pipeline_size_changed(&mut self,
-                             _: PipelineId,
-                             _: Option<LayoutSize>) {
-    }
-}
-
-// XXX (bug 1328602) - This will be removed soon-ish.
-pub struct WrWindowState {
-    renderer: Renderer,
-    api: RenderApi,
-    root_pipeline_id: PipelineId,
-    size: DeviceUintSize,
-    render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
-    pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
-    pipeline_sync_list: Vec<PipelineId>,
-}
-
 pub struct WrState {
     size: (u32, u32),
     pipeline_id: PipelineId,
@@ -473,93 +436,6 @@ impl WrMixBlendMode
     }
 }
 
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_init_window(root_pipeline_id: u64,
-                             glcontext_ptr: *mut c_void,
-                             enable_profiler: bool,
-                             external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
-    assert!( unsafe { is_in_compositor_thread() });
-    gl::load_with(|symbol| get_proc_address(glcontext_ptr, symbol));
-    gl::clear_color(0.3, 0.0, 0.0, 1.0);
-
-    let version = gl::get_string(gl::VERSION);
-
-    println!("OpenGL version new {}", version);
-
-    let opts = RendererOptions {
-        device_pixel_ratio: 1.0,
-        resource_override_path: None,
-        enable_aa: true,
-        enable_subpixel_aa: true,
-        enable_profiler: enable_profiler,
-        enable_recording: false,
-        enable_scrollbars: false,
-        precache_shaders: false,
-        renderer_kind: RendererKind::Native,
-        debug: false,
-        clear_framebuffer: true,
-        render_target_debug: false,
-        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
-    };
-
-    let (mut renderer, sender) = Renderer::new(opts);
-    let api = sender.create_api();
-
-    let notification_lock = Arc::new((Mutex::new(false), Condvar::new()));
-    let notification_lock_clone = notification_lock.clone();
-    let notifier = Box::new(Notifier{render_notifier: notification_lock});
-    renderer.set_render_notifier(notifier);
-
-    if !external_image_handler.is_null() {
-        renderer.set_external_image_handler(Box::new(
-            unsafe {
-                WrExternalImageHandler {
-                    external_image_obj: (*external_image_handler).external_image_obj,
-                    lock_func: (*external_image_handler).lock_func,
-                    unlock_func: (*external_image_handler).unlock_func,
-                    release_func: (*external_image_handler).release_func,
-                }
-            }));
-    }
-
-    let pipeline_id = u64_to_pipeline_id(root_pipeline_id);
-    api.set_root_pipeline(pipeline_id);
-    api.generate_frame();
-
-    let state = Box::new(WrWindowState {
-        renderer: renderer,
-        api: api,
-        root_pipeline_id: pipeline_id,
-        size: DeviceUintSize::new(0, 0),
-        render_notifier_lock: notification_lock_clone,
-        pipeline_epoch_map: HashMap::with_hasher(Default::default()),
-        pipeline_sync_list: Vec::new(),
-    });
-    Box::into_raw(state)
-}
-
-// TODO: Remove.
-// This is the code specific to WrWindowState that was taken out of wr_create.
-#[no_mangle]
-pub extern fn wr_window_init_pipeline_epoch(window: &mut WrWindowState, pipeline: u64, width: u32, height: u32,) {
-    let pipeline_id = u64_to_pipeline_id(pipeline);
-    if pipeline_id == window.root_pipeline_id {
-        window.size = DeviceUintSize::new(width, height);
-    }
-    window.pipeline_epoch_map.insert(pipeline_id, Epoch(0));
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_window_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
-    if state.pipeline_id == window.root_pipeline_id {
-        window.size = DeviceUintSize::new(width, height);
-    }
-
-    wr_dp_begin(state, width, height);
-}
-
 #[no_mangle]
 pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
 {
@@ -595,109 +471,6 @@ pub extern fn wr_dp_pop_stacking_context(state: &mut WrState)
 {
     assert!( unsafe { is_in_compositor_thread() });
     state.frame_builder.dl_builder.pop_stacking_context()
-}
-
-// TODO: Remove.
-fn wait_for_epoch(window: &mut WrWindowState) {
-    let &(ref lock, ref cvar) = &*window.render_notifier_lock;
-    let mut finished = lock.lock().unwrap();
-
-    window.pipeline_sync_list.push(window.root_pipeline_id);
-
-    'outer: for pipeline_id in window.pipeline_sync_list.iter() {
-        let epoch = window.pipeline_epoch_map.get(pipeline_id);
-        if epoch.is_none() {
-            // We could only push a pipeline_id for iframe without setting its root_display_list data.
-            continue;
-        }
-
-        if epoch.unwrap().0 == 0 {
-            // This pipeline_id is not set the display_list yet, so skip the waiting.
-            continue;
-        }
-
-        loop {
-            // Update all epochs.
-            window.renderer.update();
-
-            if let Some(rendered_epoch) = window.renderer.current_epoch(*pipeline_id) {
-                if *(epoch.unwrap()) == rendered_epoch {
-                    continue 'outer;
-                }
-            }
-
-            // If the epoch is not matched, starts to wait for next frame updating.
-            while !*finished {
-                finished = cvar.wait(finished).unwrap();
-            }
-            // For the next sync one
-            *finished = false;
-        }
-    }
-    window.pipeline_sync_list.clear();
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub fn wr_composite_window(window: &mut WrWindowState) {
-    assert!(unsafe { is_in_compositor_thread() });
-
-    gl::clear(gl::COLOR_BUFFER_BIT);
-
-    wait_for_epoch(window);
-    window.renderer.render(window.size);
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_window_dp_end(window: &mut WrWindowState, state: &mut WrState) {
-    assert!( unsafe { is_in_compositor_thread() });
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
-    let pipeline_id = state.pipeline_id;
-    let (width, height) = state.size;
-
-    if let Some(epoch) = window.pipeline_epoch_map.get_mut(&pipeline_id) {
-        (*epoch).0 += 1;
-
-        state.frame_builder.dl_builder.pop_stacking_context();
-
-        let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
-
-        //let (dl_builder, aux_builder) = fb.dl_builder.finalize();
-        window.api.set_root_display_list(Some(root_background_color),
-                                         *epoch,
-                                         LayoutSize::new(width as f32, height as f32),
-                                         fb.dl_builder);
-        window.api.generate_frame();
-
-        return;
-    }
-
-    panic!("Could not find epoch for pipeline_id:({},{})", pipeline_id.0, pipeline_id.1);
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, stride: u32, format: ImageFormat, bytes: * const u8, size: usize) -> ImageKey {
-    wr_api_add_image(&mut window.api, width, height, stride, format, bytes, size)
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_add_external_image_texture(window: &mut WrWindowState, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
-    wr_api_add_external_image_texture(&mut window.api, width, height, format, external_image_id)
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
-    wr_api_update_image(&mut window.api, key, width, height, format, bytes, size);
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
-    wr_api_delete_image(&mut window.api, key);
 }
 
 #[no_mangle]
@@ -745,27 +518,22 @@ pub extern fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
 
 
 #[no_mangle]
-pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
+pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, color: WrColor) {
     assert!( unsafe { is_in_compositor_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_rect(
                                     rect.to_rect(),
                                     clip_region,
-                                    ColorF::new(r, g, b, a));
+                                    color.to_color());
 }
 
 #[no_mangle]
 pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
-                                top_left_radius: WrLayoutSize, top_right_radius: WrLayoutSize,
-                                bottom_left_radius: WrLayoutSize, bottom_right_radius: WrLayoutSize) {
+                                radius: WrBorderRadius) {
     assert!( unsafe { is_in_compositor_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
-    let radius = BorderRadius { top_left: top_left_radius.to_layout_size(),
-                                top_right: top_right_radius.to_layout_size(),
-                                bottom_left: bottom_left_radius.to_layout_size(),
-                                bottom_right: bottom_right_radius.to_layout_size() };
     state.frame_builder.dl_builder.push_border(
                                     rect.to_rect(),
                                     clip_region,
@@ -773,21 +541,7 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                     top.to_border_side(),
                                     right.to_border_side(),
                                     bottom.to_border_side(),
-                                    radius);
-}
-
-#[no_mangle]
-pub extern fn wr_window_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
-    assert!( unsafe { is_in_compositor_thread() });
-
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
-                                                                     Vec::new(),
-                                                                     None);
-    let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
-    window.pipeline_sync_list.push(pipeline_id);
-    state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
-                                                                   clip_region,
-                                                                   pipeline_id);
+                                    radius.to_border_radius());
 }
 
 #[no_mangle]
@@ -817,6 +571,25 @@ impl WrColor
     pub fn to_color(&self) -> ColorF
     {
         ColorF::new(self.r, self.g, self.b, self.a)
+    }
+}
+
+#[repr(C)]
+pub struct WrBorderRadius {
+    pub top_left: WrLayoutSize,
+    pub top_right: WrLayoutSize,
+    pub bottom_left: WrLayoutSize,
+    pub bottom_right: WrLayoutSize,
+}
+
+impl WrBorderRadius
+{
+    pub fn to_border_radius(&self) -> BorderRadius
+    {
+        BorderRadius { top_left: self.top_left.to_layout_size(),
+                       top_right: self.top_right.to_layout_size(),
+                       bottom_left: self.bottom_left.to_layout_size(),
+                       bottom_right: self.bottom_right.to_layout_size() }
     }
 }
 
@@ -940,15 +713,6 @@ pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
     return font_key_to_u64(api.add_raw_font(font_vector));
 }
 
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_window_add_raw_font(window: &mut WrWindowState,
-                                     font_buffer: *mut u8,
-                                     buffer_size: usize) -> u64
-{
-    return wr_api_add_raw_font(&mut window.api, font_buffer, buffer_size);
-}
-
 #[no_mangle]
 pub extern fn wr_dp_push_text(state: &mut WrState,
                               bounds: WrRect,
@@ -982,30 +746,3 @@ pub extern fn wr_dp_push_text(state: &mut WrState,
                                              Au::from_px(0));
 }
 
-#[no_mangle]
-pub extern fn wr_window_remove_pipeline(window: &mut WrWindowState, state: &WrState) {
-    window.pipeline_epoch_map.remove(&state.pipeline_id);
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_readback_into_buffer(width: u32, height: u32,
-                                      dst_buffer: *mut u8, buffer_size: usize) {
-    unsafe {
-        let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
-        gl::read_pixels_into_buffer(0, 0,
-                                    width as gl::GLsizei,
-                                    height as gl::GLsizei,
-                                    gl::BGRA,
-                                    gl::UNSIGNED_BYTE,
-                                    slice);
-    }
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
-{
-    assert!( unsafe { is_in_compositor_thread() });
-    window.renderer.set_profiler_enabled(enabled);
-}

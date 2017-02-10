@@ -17,7 +17,9 @@ GLContextProviderNull::CreateForCompositorWidget(CompositorWidget* aCompositorWi
 }
 
 already_AddRefed<GLContext>
-GLContextProviderNull::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderNull::CreateForWindow(nsIWidget* aWidget,
+                                       bool aWebRender,
+                                       bool aForceAccelerated)
 {
     return nullptr;
 }

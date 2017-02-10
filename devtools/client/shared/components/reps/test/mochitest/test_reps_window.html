@@ -20,8 +20,9 @@ window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
-    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-    let { Window } = browserRequire("devtools/client/shared/components/reps/window");
+
+    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    let { Rep, Window } = REPS;
 
     let gripStub = {
       "type": "object",

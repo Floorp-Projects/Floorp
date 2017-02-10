@@ -19,9 +19,8 @@ Test text-node rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
-  let { TextNode } = browserRequire("devtools/client/shared/components/reps/text-node");
-  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  let { Rep, TextNode } = REPS;
 
   let gripStubs = new Map();
   gripStubs.set("testRendering", {
