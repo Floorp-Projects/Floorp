@@ -115,77 +115,28 @@ module.exports = { // eslint-disable-line no-undef
     // with auto-binding fat arrow functions).
     // "consistent-this": ["error", "self"],
 
-    // Don't require a default case in switch statements. Avoid being forced to
-    // add a bogus default when you know all possible cases are handled.
-    "default-case": "off",
-
     // Enforce dots on the next line with property name.
     "dot-location": ["error", "property"],
 
     // Encourage the use of dot notation whenever possible.
     "dot-notation": "error",
 
-    // Allow using == instead of ===, in the interest of landing something since
-    // the devtools codebase is split on convention here.
-    "eqeqeq": "off",
-
-    // Don't require function expressions to have a name.
-    // This makes the code more verbose and hard to read. Our engine already
-    // does a fantastic job assigning a name to the function, which includes
-    // the enclosing function name, and worst case you have a line number that
-    // you can just look up.
-    "func-names": "off",
-
-    // Allow use of function declarations and expressions.
-    "func-style": "off",
-
-    // Don't enforce the maximum depth that blocks can be nested. The complexity
-    // rule is a better rule to check this.
-    "max-depth": "off",
-
     // Maximum length of a line.
-    // Disabled because we exceed this in too many places.
-    "max-len": ["off", 80],
+    // This should be 100 but too many lines were longer than that so set a
+    // conservative upper bound for now.
+    "max-len": ["error", 140],
 
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 4],
 
-    // Don't limit the number of parameters that can be used in a function.
-    "max-params": "off",
-
-    // Don't limit the maximum number of statement allowed in a function. We
-    // already have the complexity rule that's a better measurement.
-    "max-statements": "off",
-
-    // Don't require a capital letter for constructors, only check if all new
-    // operators are followed by a capital letter. Don't warn when capitalized
-    // functions are used without the new operator.
-    "new-cap": ["off", {"capIsNew": false}],
-
-    // Allow use of bitwise operators.
-    "no-bitwise": "off",
-
     // Disallow use of arguments.caller or arguments.callee.
     "no-caller": "error",
-
-    // Disallow the catch clause parameter name being the same as a variable in
-    // the outer scope, to avoid confusion.
-    "no-catch-shadow": "off",
 
     // Disallow using the console API.
     "no-console": "error",
 
-    // Allow using constant expressions in conditions like while (true)
-    "no-constant-condition": "off",
-
-    // Allow use of the continue statement.
-    "no-continue": "off",
-
     // Disallow control characters in regular expressions.
     "no-control-regex": "error",
-
-    // Allow division operators explicitly at beginning of regular expression.
-    "no-div-regex": "off",
 
     // Disallow use of eval(). We have other APIs to evaluate code in content.
     "no-eval": "error",
@@ -193,17 +144,8 @@ module.exports = { // eslint-disable-line no-undef
     // Disallow adding to native types
     "no-extend-native": "error",
 
-    // Allow unnecessary parentheses, as they may make the code more readable.
-    "no-extra-parens": "off",
-
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
-
-    // Allow the use of leading or trailing decimal points in numeric literals.
-    "no-floating-decimal": "off",
-
-    // Allow comments inline after code.
-    "no-inline-comments": "off",
 
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "warn",
@@ -211,68 +153,22 @@ module.exports = { // eslint-disable-line no-undef
     // Disallow multiple empty lines.
     "no-multiple-empty-lines": ["warn", {"max": 2}],
 
-    // Allow reassignment of function parameters.
-    "no-param-reassign": "off",
-
-    // Allow string concatenation with __dirname and __filename (not a node env).
-    "no-path-concat": "off",
-
-    // Allow use of unary operators, ++ and --.
-    "no-plusplus": "off",
-
-    // Allow using process.env (not a node environment).
-    "no-process-env": "off",
-
-    // Allow using process.exit (not a node environment).
-    "no-process-exit": "off",
-
     // Disallow usage of __proto__ property.
     "no-proto": "error",
-
-    // Allow reserved words being used as object literal keys.
-    "no-reserved-keys": "off",
-
-    // Don't restrict usage of specified node modules (not a node environment).
-    "no-restricted-modules": "off",
 
     // Disallow use of assignment in return statement. It is preferable for a
     // single line of code to have only one easily predictable effect.
     "no-return-assign": "error",
 
-    // Allow use of synchronous methods (not a node environment).
-    "no-sync": "off",
-
-    // Allow the use of ternary operators.
-    "no-ternary": "off",
-
     // Disallow throwing literals (eg. throw "error" instead of
     // throw new Error("error")).
     "no-throw-literal": "error",
 
-    // Allow dangling underscores in identifiers (for privates).
-    "no-underscore-dangle": "off",
-
-    // Allow use of undefined variable.
-    "no-undefined": "off",
-
     // Disallow the use of Boolean literals in conditional expressions.
     "no-unneeded-ternary": "error",
 
-    // We use var-only-at-top-level instead of no-var as we allow top level
-    // vars.
-    "no-var": "off",
-
-    // Allow using TODO/FIXME comments.
-    "no-warning-comments": "off",
-
-    // Allow more than one variable declaration per function.
-    "one-var": "off",
-
     // Disallow padding within blocks.
     "padded-blocks": ["warn", "never"],
-
-    // Don't require quotes around object literal property names.
-    "quote-props": "off",
 
     // Require use of the second argument for parseInt().
     "radix": "error",
@@ -280,22 +176,8 @@ module.exports = { // eslint-disable-line no-undef
     // Enforce spacing after semicolons.
     "semi-spacing": ["error", {"before": false, "after": true}],
 
-    // Don't require to sort variables within the same declaration block.
-    // Anyway, one-var is disabled.
-    "sort-vars": "off",
-
     // Require "use strict" to be defined globally in the script.
     "strict": ["error", "global"],
-
-    // Allow vars to be declared anywhere in the scope.
-    "vars-on-top": "off",
-
-    // Don't require immediate function invocation to be wrapped in parentheses.
-    "wrap-iife": "off",
-
-    // Don't require regex literals to be wrapped in parentheses (which
-    // supposedly prevent them from being mistaken for division operators).
-    "wrap-regex": "off",
 
     // Disallow Yoda conditions (where literal value comes first).
     "yoda": "error",
