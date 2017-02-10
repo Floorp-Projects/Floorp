@@ -76,13 +76,6 @@ function testViewportDimensions(ui, w, h) {
      `${h}px`, `Viewport should have height of ${h}px`);
 }
 
-function* testUserAgent(ui, expected) {
-  let ua = yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    return content.navigator.userAgent;
-  });
-  is(ua, expected, `UA should be set to ${expected}`);
-}
-
 function* testDevicePixelRatio(ui, expected) {
   let dppx = yield getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);

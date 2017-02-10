@@ -55,6 +55,9 @@ let App = createClass({
   },
 
   onChangeDevice(id, device, deviceType) {
+    // TODO: Bug 1332754: Move messaging and logic into the action creator so that the
+    // message is sent from the action creator and device property changes are sent from
+    // there instead of this function.
     window.postMessage({
       type: "change-device",
       device,
@@ -110,10 +113,8 @@ let App = createClass({
   },
 
   onRemoveDeviceAssociation(id) {
-    // TODO: Bug 1332754: Move messaging and logic into the action creator.
-    window.postMessage({
-      type: "remove-device-association",
-    }, "*");
+    // TODO: Bug 1332754: Move messaging and logic into the action creator so that device
+    // property changes are sent from there instead of this function.
     this.props.dispatch(removeDeviceAssociation(id));
     this.props.dispatch(changeTouchSimulation(false));
     this.props.dispatch(changePixelRatio(id, 0));
