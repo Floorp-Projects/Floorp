@@ -337,7 +337,7 @@ def p_ProtocolDefn(p):
     protocol = p[5]
     protocol.loc = locFromTok(p, 2)
     protocol.name = p[3]
-    protocol.nestedRange = p[1][0]
+    protocol.nested = p[1][0]
     protocol.sendSemantics = p[1][1]
     p[0] = protocol
 
@@ -556,7 +556,7 @@ def p_OptionalProtocolSendSemanticsQual(p):
     """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
                                          | """
     if 2 == len(p): p[0] = p[1]
-    else:           p[0] = [ (NOT_NESTED, NOT_NESTED), ASYNC ]
+    else:           p[0] = [ NOT_NESTED, ASYNC ]
 
 def p_ProtocolSendSemanticsQual(p):
     """ProtocolSendSemanticsQual : ASYNC
@@ -566,10 +566,10 @@ def p_ProtocolSendSemanticsQual(p):
                                  | INTR"""
     if p[1] == 'nested':
         mtype = p[6]
-        nested = (NOT_NESTED, p[4])
+        nested = p[4]
     else:
         mtype = p[1]
-        nested = (NOT_NESTED, NOT_NESTED)
+        nested = NOT_NESTED
 
     if mtype == 'async': mtype = ASYNC
     elif mtype == 'sync': mtype = SYNC
