@@ -36,6 +36,8 @@ public:
                      const char* prefix = nullptr,
                      bool warnOnFailure = true);
 
+    PRFuncPtr LookupSymbol(const char* symname);
+
     /*
      * Static version of the functions in this class
      */

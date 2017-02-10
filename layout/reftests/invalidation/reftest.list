@@ -40,35 +40,35 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-userSpace-at100 filter-userspace-offset.svg
-!= scroll-inactive-layers.html about:blank
-!= scroll-inactive-layers-2.html about:blank
-!= inactive-layertree-visible-region-1.html about:blank
-!= inactive-layertree-visible-region-2.html about:blank
-!= transform-floating-point-invalidation.html about:blank
-!= transform-floating-point-invalidation.html?reverse about:blank
-!= nudge-to-integer-invalidation.html about:blank
-!= nudge-to-integer-invalidation.html?reverse about:blank
-!= clipped-animated-transform-1.html about:blank
-!= paintedlayer-recycling-1.html about:blank
-!= paintedlayer-recycling-2.html about:blank
-pref(layers.single-tile.enabled,false) != paintedlayer-recycling-3.html about:blank
-!= paintedlayer-recycling-4.html about:blank
-!= paintedlayer-recycling-5.html about:blank
-!= paintedlayer-recycling-6.html about:blank
-!= paintedlayer-recycling-7.html about:blank
+fails-if(webrender) != scroll-inactive-layers.html about:blank
+fails-if(webrender) != scroll-inactive-layers-2.html about:blank
+fails-if(webrender) != inactive-layertree-visible-region-1.html about:blank
+fails-if(webrender) != inactive-layertree-visible-region-2.html about:blank
+fails-if(webrender) != transform-floating-point-invalidation.html about:blank
+fails-if(webrender) != transform-floating-point-invalidation.html?reverse about:blank
+fails-if(webrender) != nudge-to-integer-invalidation.html about:blank
+fails-if(webrender) != nudge-to-integer-invalidation.html?reverse about:blank
+fails-if(webrender) != clipped-animated-transform-1.html about:blank
+fails-if(webrender) != paintedlayer-recycling-1.html about:blank
+fails-if(webrender) != paintedlayer-recycling-2.html about:blank
+pref(layers.single-tile.enabled,false) fails-if(webrender) != paintedlayer-recycling-3.html about:blank
+fails-if(webrender) != paintedlayer-recycling-4.html about:blank
+fails-if(webrender) != paintedlayer-recycling-5.html about:blank
+fails-if(webrender) != paintedlayer-recycling-6.html about:blank
+fails-if(webrender) != paintedlayer-recycling-7.html about:blank
 != masklayer-1.html about:blank
 != masklayer-2.html about:blank
-!= layer-splitting-1.html about:blank
-!= layer-splitting-2.html about:blank
-!= layer-splitting-3.html about:blank
+fails-if(webrender) != layer-splitting-1.html about:blank
+fails-if(webrender) != layer-splitting-2.html about:blank
+fails-if(webrender) != layer-splitting-3.html about:blank
 != layer-splitting-4.html about:blank
-!= layer-splitting-5.html about:blank
-!= layer-splitting-6.html about:blank
-!= layer-splitting-7.html about:blank
+fails-if(webrender) != layer-splitting-5.html about:blank
+fails-if(webrender) != layer-splitting-6.html about:blank
+fails-if(webrender) != layer-splitting-7.html about:blank
 fuzzy-if(gtkWidget,2,4) fuzzy-if(asyncPan,2,3955) fuzzy-if(OSX,179,30) fuzzy-if(skiaContent,16,3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
 != image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
-pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
-== background-position-1.html background-position-1-ref.html
+pref(layers.single-tile.enabled,false) fails-if(webrender) != fast-scrolling.html about:blank
+fails-if(webrender) == background-position-1.html background-position-1-ref.html
 == background-position-2a.html background-position-2-ref.html
 == background-position-2b.html background-position-2-ref.html
 == background-position-2c.html background-position-2-ref.html

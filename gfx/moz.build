@@ -25,6 +25,7 @@ DIRS += [
     'ipc',
     'vr',
     'config',
+    'webrender_bindings',
 ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:

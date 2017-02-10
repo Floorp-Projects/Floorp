@@ -25,6 +25,7 @@ namespace gfx {
   _(D3D11_HW_ANGLE,               Feature,      "Direct3D11 hardware ANGLE")      \
   _(DIRECT_DRAW,                  Feature,      "DirectDraw")                     \
   _(GPU_PROCESS,                  Feature,      "GPU Process")                    \
+  _(WEBRENDER,                    Feature,      "WebRender")                      \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

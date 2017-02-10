@@ -621,6 +621,7 @@ pref("layers.geometry.basic.enabled", true);
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
 pref("apz.allow_immediate_handoff", true);
+pref("apz.allow_with_webrender", false);
 pref("apz.allow_zooming", false);
 
 // Whether to lock touch scrolling to one axis at a time
@@ -808,6 +809,8 @@ pref("gfx.logging.texture-usage.enabled", false);
 pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
+
+pref("gfx.webrender.enabled", true);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
@@ -4656,6 +4659,8 @@ pref("layers.bufferrotation.enabled", true);
 
 pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
+
+pref("layers.advanced.border-layers", false);
 
 pref("gfx.content.always-paint", false);
 

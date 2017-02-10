@@ -169,10 +169,10 @@ skip-if(Android) HTTP(..) == 1248248-1-orientation-break-glyphrun.html 1248248-1
 
 == 1302389-scrolled-rect-1a.html 1302389-scrolled-rect-1-ref.html
 fuzzy-if(Android,54,852) == 1302389-scrolled-rect-1b.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
-fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
-fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) fails-if(webrender) == 1302389-scrolled-rect-1c.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) fails-if(webrender) == 1302389-scrolled-rect-1d.html 1302389-scrolled-rect-1-ref.html
+fuzzy-if(Android,54,852) fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) fails-if(webrender) == 1302389-scrolled-rect-2a.html 1302389-scrolled-rect-2-ref.html
+fuzzy-if(gtkWidget,1,25) fuzzy-if(cocoaWidget,1,2) fails-if(webrender) == 1302389-scrolled-rect-2b.html 1302389-scrolled-rect-2-ref.html
 == 1302389-scrolled-rect-2c.html 1302389-scrolled-rect-2-ref.html
 fuzzy-if(Android,54,852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2-ref.html
 

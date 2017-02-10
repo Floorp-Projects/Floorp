@@ -63,6 +63,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   if (backend != LayersBackend::LAYERS_OPENGL &&
       backend != LayersBackend::LAYERS_D3D9 &&
       backend != LayersBackend::LAYERS_D3D11 &&
+      backend != LayersBackend::LAYERS_WR &&
       backend != LayersBackend::LAYERS_BASIC) {
     return nullptr;
   }
