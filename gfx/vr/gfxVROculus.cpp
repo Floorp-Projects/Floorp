@@ -836,7 +836,7 @@ VRControllerOculus::VRControllerOculus()
   : VRControllerHost(VRDeviceType::Oculus)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOculus, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch Controller");
+  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch");
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = GamepadHand::_empty;
   mControllerInfo.mNumButtons = kNumOculusButton;
@@ -854,6 +854,16 @@ void
 VRControllerOculus::SetAxisMove(uint32_t aAxis, float aValue)
 {
   mAxisMove[aAxis] = aValue;
+}
+
+void
+VRControllerOculus::SetHand(dom::GamepadHand aHand)
+{
+  VRControllerHost::SetHand(aHand);
+  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch (");
+  mControllerInfo.mControllerName.AppendPrintf("%s%s",
+                                               GamepadHandValues::strings[uint32_t(aHand)].value,
+                                               ")");
 }
 
 VRControllerOculus::~VRControllerOculus()
