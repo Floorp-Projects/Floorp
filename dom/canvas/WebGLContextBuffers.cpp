@@ -402,26 +402,10 @@ WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
     if (!buffer)
         return;
 
-    if (!buffer->ValidateRange(funcName, dstByteOffset, dataLen))
-        return;
-
-    if (!CheckedInt<GLintptr>(dataLen).isValid()) {
-        ErrorOutOfMemory("%s: Size too large.", funcName);
-        return;
-    }
-    const GLintptr glDataLen(dataLen);
-
-    ////
-
-    MakeContextCurrent();
-    const ScopedLazyBind lazyBind(gl, target, buffer);
-
-    // Warning: Possibly shared memory.  See bug 1225033.
-    gl->fBufferSubData(target, dstByteOffset, glDataLen, data);
-
-    // Warning: Possibly shared memory.  See bug 1225033.
-    buffer->ElementArrayCacheBufferSubData(dstByteOffset, data, size_t(glDataLen));
+    buffer->BufferSubData(target, size_t(dstByteOffset), dataLen, data);
 }
+
+////
 
 void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
