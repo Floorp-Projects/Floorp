@@ -1489,8 +1489,8 @@ impl Parameters for PointerAction {
         match body.find("type").and_then(|x| x.as_string()) {
             Some("pointerUp") => Ok(PointerAction::Up(try!(PointerUpAction::from_json(body)))),
             Some("pointerDown") => Ok(PointerAction::Down(try!(PointerDownAction::from_json(body)))),
-            Some("move") => Ok(PointerAction::Move(try!(PointerMoveAction::from_json(body)))),
-            Some("cancel") => Ok(PointerAction::Cancel),
+            Some("pointerMove") => Ok(PointerAction::Move(try!(PointerMoveAction::from_json(body)))),
+            Some("pointerCancel") => Ok(PointerAction::Cancel),
             Some(_) | None => Err(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "Missing or invalid type argument for pointer action"))
@@ -1507,7 +1507,7 @@ impl ToJson for PointerAction {
             &PointerAction::Cancel => {
                 let mut data = BTreeMap::new();
                 data.insert("type".to_owned(),
-                            "cancel".to_json());
+                            "pointerCancel".to_json());
                 Json::Object(data)
             }
         }
