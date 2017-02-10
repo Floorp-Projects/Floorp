@@ -97,7 +97,7 @@ See `bug 1204823 <https://bugzilla.mozilla.org/show_bug.cgi?id=1204823>`_ for de
 subsessionLength
 ~~~~~~~~~~~~~~~~
 The length of this subsession in seconds.
-This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on ``Date.now()`).
+This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on ``Date.now()``).
 
 If ``sessionLength`` is ``-1``, the monotonic clock is not working.
 

@@ -19,6 +19,7 @@
 #include "gc/Statistics.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/Ion.h"
+#include "jit/JitCommon.h"
 #include "js/Utility.h"
 #if ENABLE_INTL_API
 #include "unicode/uclean.h"
@@ -123,6 +124,10 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     RETURN_IF_FAIL(FutexThread::initialize());
     RETURN_IF_FAIL(js::gcstats::Statistics::initialize());
 
+#ifdef JS_SIMULATOR
+    RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
+#endif
+
     libraryInitState = InitState::Running;
     return nullptr;
 }
@@ -147,6 +152,10 @@ JS_ShutDown(void)
     FutexThread::destroy();
 
     js::DestroyHelperThreadsState();
+
+#ifdef JS_SIMULATOR
+    js::jit::SimulatorProcess::destroy();
+#endif
 
 #ifdef JS_TRACE_LOGGING
     js::DestroyTraceLoggerThreadState();

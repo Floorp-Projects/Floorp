@@ -124,7 +124,7 @@ const tests = [
     ["warn", "iso-8859-1"]
 ];
 
-function do_get_file_by_line(file, charset) {
+function* do_get_file_by_line(file, charset) {
   dump("getting file by line for file " + file.path + "\n");
   dump("using charset " + charset +"\n");
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -163,7 +163,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
 
   if (good.exists()) {
     var good_counter = 0;
-    for (val in do_get_file_by_line(good, charset)) {
+    for (val of do_get_file_by_line(good, charset)) {
       let todo = false;
       good_counter++;
       if (todo_good && todo_good[good_counter]) {
@@ -182,7 +182,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
 
   if (bad.exists()) {
     var bad_counter = 0;
-    for (val in do_get_file_by_line(bad, charset)) {
+    for (val of do_get_file_by_line(bad, charset)) {
       let todo = false;
       bad_counter++;
       if (todo_bad && todo_bad[bad_counter]) {

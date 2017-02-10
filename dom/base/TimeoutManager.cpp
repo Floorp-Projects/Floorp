@@ -34,9 +34,10 @@ int32_t
 TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // First apply any back pressure delay that might be in effect.
   int32_t value = std::max(mBackPressureDelayMS, 0);
-  // Don't use the background timeout value when there are audio contexts
-  // present, so that background audio can keep running smoothly. (bug 1181073)
-  bool isBackground = !mWindow.AsInner()->HasAudioContexts() &&
+  // Don't use the background timeout value when the tab is playing audio.
+  // Until bug 1336484 we only used to do this for pages that use Web Audio.
+  // The original behavior was implemented in bug 11811073.
+  bool isBackground = !mWindow.AsInner()->IsPlayingAudio() &&
     mWindow.IsBackgroundInternal();
   auto minValue = aIsTracking ? (isBackground ? gMinTrackingBackgroundTimeoutValue
                                               : gMinTrackingTimeoutValue)

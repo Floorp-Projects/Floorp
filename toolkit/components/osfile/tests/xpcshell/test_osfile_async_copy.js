@@ -64,9 +64,9 @@ var reference_fetch_file = function reference_fetch_file(path) {
  *
  * @resolves {null}
  */
-var reference_compare_files = function reference_compare_files(a, b) {
-  let a_contents = yield reference_fetch_file(a);
-  let b_contents = yield reference_fetch_file(b);
+var reference_compare_files = async function reference_compare_files(a, b) {
+  let a_contents = await reference_fetch_file(a);
+  let b_contents = await reference_fetch_file(b);
   // Not using do_check_eq to avoid dumping the whole file to the log.
   // It is OK to === compare here, as both variables contain a string.
   do_check_true(a_contents === b_contents);
@@ -75,7 +75,7 @@ var reference_compare_files = function reference_compare_files(a, b) {
 /**
  * Test to ensure that OS.File.copy works.
  */
-function test_copymove(options = {}) {
+function* test_copymove(options = {}) {
   let source = OS.Path.join((yield OS.File.getCurrentDirectory()),
                             EXISTING_FILE);
   let dest = OS.Path.join(OS.Constants.Path.tmpDir,

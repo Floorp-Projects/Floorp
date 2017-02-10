@@ -607,7 +607,7 @@ public:
       return mLoadInfo.mPrincipal;
   }
 
-  void
+  nsresult
   SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
 
   nsresult

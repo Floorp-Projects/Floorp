@@ -741,7 +741,10 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
     if (!rtStats->compartmentStatsVector.reserve(rt->numCompartments))
         return false;
 
-    if (!rtStats->zoneStatsVector.reserve(rt->zoneGroupFromMainThread()->zones().length()))
+    size_t totalZones = 1; // For the atoms zone.
+    for (ZoneGroupsIter group(rt); !group.done(); group.next())
+        totalZones += group->zones().length();
+    if (!rtStats->zoneStatsVector.reserve(totalZones))
         return false;
 
     rtStats->gcHeapChunkTotal =
