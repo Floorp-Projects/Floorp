@@ -8,7 +8,6 @@
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "WebGL2Context.h"
-#include "WebGLProgram.h"
 
 namespace mozilla {
 
