@@ -113,7 +113,7 @@ linux64-cctools-port/opt:
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 linux64-hfsplus/opt:
-    description: "hfplus toolchain build"
+    description: "hfsplus toolchain build"
     treeherder:
         kind: build
         platform: linux64/opt
@@ -122,6 +122,7 @@ linux64-hfsplus/opt:
     run:
         using: toolchain-script
         script: build-hfsplus-linux.sh
+        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker

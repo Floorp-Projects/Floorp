@@ -145,10 +145,8 @@ add_task(function* () {
    * A function that tests "Headers" panel contains correct information.
    */
   function* testHeaders(data, index) {
-    let wait = waitForDOM(document, "#headers-panel");
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
-    yield wait;
 
     let panel = document.querySelector("#headers-panel");
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
@@ -166,17 +164,14 @@ add_task(function* () {
    * A function that tests "Params" panel contains correct information.
    */
   function* testParams(data, index) {
-    let wait = waitForDOM(document, "#params-panel .properties-view");
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
     document.querySelector("#params-tab").click();
-    yield wait;
 
     let panel = document.querySelector("#params-panel");
     let statusParamValue = data.uri.split("=").pop();
     let statusParamShownValue = "\"" + statusParamValue + "\"";
     let treeSections = panel.querySelectorAll(".tree-section");
-    debugger
 
     is(treeSections.length, 1,
       "There should be 1 param section displayed in this panel.");

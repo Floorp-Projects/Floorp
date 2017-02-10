@@ -9348,10 +9348,17 @@ nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
   // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
   // element, which does have an associated CSS layout box. In this case we
   // should still use ComputeHTMLReferenceRect for region computing.
-  nsRect r = aFrame->IsFrameOfType(nsIFrame::eSVG) &&
-             (aFrame->GetType() != nsGkAtoms::svgOuterSVGFrame)
-             ? ComputeSVGReferenceRect(aFrame, aGeometryBox)
-             : ComputeHTMLReferenceRect(aFrame, aGeometryBox);
+  nsRect r = HasCSSBoxLayout(aFrame)
+             ? ComputeHTMLReferenceRect(aFrame, aGeometryBox)
+             : ComputeSVGReferenceRect(aFrame, aGeometryBox);
 
   return r;
+}
+
+/* static */ bool
+nsLayoutUtils::HasCSSBoxLayout(nsIFrame* aFrame)
+{
+  // Except SVG outer element, all SVG element does not have CSS box layout.
+  return !aFrame->IsFrameOfType(nsIFrame::eSVG) ||
+          aFrame->GetType() == nsGkAtoms::svgOuterSVGFrame;
 }

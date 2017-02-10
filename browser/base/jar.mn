@@ -155,6 +155,8 @@ browser.jar:
         content/browser/usercontext.svg               (content/usercontext.svg)
         content/browser/web-panels.js                 (content/web-panels.js)
 *       content/browser/web-panels.xul                (content/web-panels.xul)
+        content/browser/webext-panels.js              (content/webext-panels.js)
+*       content/browser/webext-panels.xul             (content/webext-panels.xul)
 *       content/browser/baseMenuOverlay.xul           (content/baseMenuOverlay.xul)
 *       content/browser/nsContextMenu.js              (content/nsContextMenu.js)
 # XXX: We should exclude this one as well (bug 71895)

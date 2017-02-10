@@ -6,7 +6,7 @@
 
 const I = require("devtools/client/shared/vendor/immutable");
 const {
-  OPEN_SIDEBAR,
+  OPEN_NETWORK_DETAILS,
   OPEN_STATISTICS,
   SELECT_DETAILS_PANEL_TAB,
   WATERFALL_RESIZE,
@@ -14,7 +14,7 @@ const {
 
 const UI = I.Record({
   detailsPanelSelectedTab: "headers",
-  sidebarOpen: false,
+  networkDetailsOpen: false,
   statisticsOpen: false,
   waterfallWidth: null,
 });
@@ -26,8 +26,8 @@ function resizeWaterfall(state, action) {
   return state.set("waterfallWidth", action.width - REQUESTS_WATERFALL_SAFE_BOUNDS);
 }
 
-function openSidebar(state, action) {
-  return state.set("sidebarOpen", action.open);
+function openNetworkDetails(state, action) {
+  return state.set("networkDetailsOpen", action.open);
 }
 
 function openStatistics(state, action) {
@@ -40,8 +40,8 @@ function setDetailsPanelTab(state, action) {
 
 function ui(state = new UI(), action) {
   switch (action.type) {
-    case OPEN_SIDEBAR:
-      return openSidebar(state, action);
+    case OPEN_NETWORK_DETAILS:
+      return openNetworkDetails(state, action);
     case OPEN_STATISTICS:
       return openStatistics(state, action);
     case SELECT_DETAILS_PANEL_TAB:

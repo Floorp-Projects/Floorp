@@ -22,7 +22,8 @@ add_task(function* () {
 
   info("Displaying statistics view");
   gStore.dispatch(Actions.openStatistics(true));
-  is(body.selectedPanel.id, "statistics-panel",
+
+  is(body.selectedPanel.id, "react-statistics-panel-hook",
     "The current main panel is correct.");
 
   info("Waiting for placeholder to display");
