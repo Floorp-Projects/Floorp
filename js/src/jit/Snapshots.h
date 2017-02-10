@@ -8,6 +8,7 @@
 #define jit_Snapshot_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Attributes.h"
 
 #include "jsalloc.h"
 #include "jsbytecode.h"
@@ -504,16 +505,23 @@ class SnapshotReader
     }
 };
 
-class RInstructionStorage
+class MOZ_NON_PARAM RInstructionStorage
 {
+    static constexpr size_t Size = 4 * sizeof(uint32_t);
+
+    // This presumes all RInstructionStorage are safely void*-alignable.
+    // RInstruction::readRecoverData asserts that no RInstruction subclass
+    // has stricter alignment requirements than RInstructionStorage.
+    static constexpr size_t Alignment = alignof(void*);
+
     /*
      * DO NOT REUSE THIS IMPLEMENTATION TACTIC.
      *
      * It is undefined behavior to bytewise-copy the bytes of one T, into a
-     * location that isn't a T -- and because the target |mBytes| often wasn't
-     * previously constructed as a T, it doesn't always count as such -- and
-     * then interpret that second location as T.  (This is *possibly* okay if T
-     * is POD or standard layout or is trivial.  None of those are true here.)
+     * location that isn't a T -- and because the target |mem| often wasn't
+     * already constructed as a T, it doesn't always count as such -- and then
+     * interpret that second location as T.  (This is *possibly* okay if T is
+     * POD or standard layout or is trivial.  None of those are true here.)
      * The C++ spec considers this a strict aliasing violation.  We've hit
      * crashes before when we've done this: for example, bug 1269319.
      *
@@ -521,35 +529,19 @@ class RInstructionStorage
      * ago, before it was recognized to be buggy, and we haven't yet struggled
      * through the effort to remove it.
      */
-    static constexpr size_t Size = 4 * sizeof(uint32_t);
-    union U
-    {
-        char mBytes[Size];
-
-        // This presumes all RInstructionStorage are safely uint64_t-alignable.
-        // RInstruction::readRecoverData asserts that no RInstruction subclass
-        // has stricter alignment requirements than RInstructionStorage.
-        uint64_t mDummy;
-    } u;
+    alignas(Alignment) unsigned char mem[Size];
 
   public:
-    const void* addr() const { return u.mBytes; }
-    void* addr() { return u.mBytes; }
+    const void* addr() const { return mem; }
+    void* addr() { return mem; }
 
     RInstructionStorage() = default;
 
-    RInstructionStorage(const RInstructionStorage& other) {
-        // FIXME: This is a strict aliasing violation: see the comment above,
-        //        and see bug 1269319 for an instance of this idea having
-        //        caused crashes.
-        memcpy(addr(), other.addr(), Size);
-    }
-    void operator=(const RInstructionStorage& other) {
-        // FIXME: This is a strict aliasing violation: see the comment above,
-        //        and see bug 1269319 for an instance of this idea having
-        //        caused crashes.
-        memcpy(addr(), other.addr(), Size);
-    }
+    // FIXME (bug 1341951): These are strict aliasing violations: see the
+    // comment above, and see bug 1269319 for an instance of bytewise copying
+    // having caused crashes.
+    RInstructionStorage(const RInstructionStorage& other) = default;
+    RInstructionStorage& operator=(const RInstructionStorage& other) = default;
 };
 
 class RInstruction;
