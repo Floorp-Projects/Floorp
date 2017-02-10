@@ -18,6 +18,8 @@ exclude = [
   "*.mp4",
 ]
 
+build = false
+
 [dependencies]
 byteorder = "1.0.0"
 "mp4parse" = {version = "0.6.0", path = "../mp4parse"}
