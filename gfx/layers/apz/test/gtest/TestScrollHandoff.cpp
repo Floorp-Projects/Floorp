@@ -126,6 +126,18 @@ protected:
     EXPECT_LE(childVelocityAfterFling2,
               childVelocityAfterFling1 * kAcceleration * kAcceleration / 4);
   }
+
+  void TestCrossApzcAxisLock() {
+    SCOPED_GFX_PREF(APZAxisLockMode, int32_t, 1);
+
+    CreateScrollHandoffLayerTree1();
+
+    RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+    Pan(childApzc, ScreenIntPoint(10, 60), ScreenIntPoint(15, 90),
+        PanOptions::KeepFingerDown | PanOptions::ExactCoordinates);
+
+    childApzc->AssertAxisLocked(ScrollDirection::VERTICAL);
+  }
 };
 
 // Here we test that if the processing of a touch block is deferred while we
@@ -518,4 +530,9 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 
   // Verify that the parent scrolled from the fling.
   EXPECT_GT(parentApzc->GetFrameMetrics().GetScrollOffset().y, 10);
+}
+
+TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+  TestCrossApzcAxisLock();
 }
