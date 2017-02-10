@@ -110,7 +110,6 @@ public:
   void PauseFromStyle();
   void CancelFromStyle() override
   {
-
     // When an animation is disassociated with style it enters an odd state
     // where its composite order is undefined until it first transitions
     // out of the idle state.
