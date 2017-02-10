@@ -1227,6 +1227,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (event.originalTarget == this.inputField) {
           this._hideURLTooltip();
           this.formatValue();
+          if (this.getAttribute("pageproxystate") != "valid") {
+            UpdatePopupNotificationsVisibility();
+          }
         }
       ]]></handler>
 
@@ -1234,6 +1237,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (event.originalTarget == this.inputField) {
           this._clearNoActions();
           this.formatValue();
+          if (this.getAttribute("pageproxystate") != "valid") {
+            UpdatePopupNotificationsVisibility();
+          }
         }
         if (ExtensionSearchHandler.hasActiveInputSession()) {
           ExtensionSearchHandler.handleInputCancelled();
