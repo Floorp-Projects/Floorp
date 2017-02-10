@@ -498,8 +498,9 @@ FindArrayData(REFIID aIid, ULONG aMethodIndex)
     for (size_t innerIdx = 0, innerLen = data.second(); innerIdx < innerLen;
          ++innerIdx) {
       const ArrayData* array = data.first();
-      if (aIid == array[innerIdx].mIid &&
-          aMethodIndex == array[innerIdx].mMethodIndex) {
+      if (aMethodIndex == array[innerIdx].mMethodIndex &&
+          IsInterfaceEqualToOrInheritedFrom(aIid, array[innerIdx].mIid,
+                                            aMethodIndex)) {
         return &array[innerIdx];
       }
     }
