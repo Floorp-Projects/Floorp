@@ -346,26 +346,9 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
-    JSRuntime* rt = cx->runtime();
-
-    auto zoneSpecifier = options.creationOptions().zoneSpecifier();
-    Zone* zone;
-    if (zoneSpecifier == JS::SystemZone)
-        zone = rt->gc.systemZone;
-    else if (zoneSpecifier == JS::FreshZone)
-        zone = nullptr;
-    else
-        zone = static_cast<Zone*>(options.creationOptions().zonePointer());
-
-    JSCompartment* compartment = NewCompartment(cx, zone, principals, options);
+    JSCompartment* compartment = NewCompartment(cx, principals, options);
     if (!compartment)
         return nullptr;
-
-    // Lazily create the system zone.
-    if (!rt->gc.systemZone && zoneSpecifier == JS::SystemZone) {
-        rt->gc.systemZone = compartment->zone();
-        rt->gc.systemZone->isSystem = true;
-    }
 
     Rooted<GlobalObject*> global(cx);
     {

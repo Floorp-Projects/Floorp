@@ -1655,7 +1655,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   const uint32_t flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES;
 
   JS::CompartmentOptions options;
-  options.creationOptions().setZone(JS::SystemZone);
+  options.creationOptions().setSystemZone();
   options.behaviors().setVersion(JSVERSION_LATEST);
 
   if (xpc::SharedMemoryEnabled()) {

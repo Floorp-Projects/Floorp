@@ -980,8 +980,9 @@ class GCRuntime
   public:
     JSRuntime* const rt;
 
-    /* Embedders can use this zone however they wish. */
+    /* Embedders can use this zone and group however they wish. */
     UnprotectedData<JS::Zone*> systemZone;
+    UnprotectedData<ZoneGroup*> systemZoneGroup;
 
     // List of all zone groups (protected by the GC lock).
     ActiveThreadOrGCTaskData<ZoneGroupVector> groups;

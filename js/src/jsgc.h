@@ -1057,7 +1057,7 @@ extern void
 FinalizeStringRT(JSRuntime* rt, JSString* str);
 
 JSCompartment*
-NewCompartment(JSContext* cx, JS::Zone* zone, JSPrincipals* principals,
+NewCompartment(JSContext* cx, JSPrincipals* principals,
                const JS::CompartmentOptions& options);
 
 namespace gc {

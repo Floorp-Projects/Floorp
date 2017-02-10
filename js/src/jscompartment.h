@@ -406,10 +406,6 @@ struct JSCompartment
         return runtime_;
     }
 
-    JSContext* contextFromMainThread() const {
-        return runtime_->contextFromMainThread();
-    }
-
     /*
      * Nb: global_ might be nullptr, if (a) it's the atoms compartment, or
      * (b) the compartment's global has been collected.  The latter can happen

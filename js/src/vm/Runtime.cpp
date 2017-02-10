@@ -143,8 +143,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     lcovOutput_(),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
-    singletonContext(nullptr),
-    singletonZoneGroup(nullptr),
     gc(thisFromCtor()),
     gcInitialized(false),
     NaNValue(DoubleNaNValue()),
@@ -199,23 +197,12 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!cooperatingContexts().append(cx))
         return false;
 
-    singletonContext = cx;
-
     defaultFreeOp_ = js_new<js::FreeOp>(this);
     if (!defaultFreeOp_)
         return false;
 
-    ScopedJSDeletePtr<ZoneGroup> zoneGroup(js_new<ZoneGroup>(this));
-    if (!zoneGroup)
-        return false;
-    singletonZoneGroup = zoneGroup;
-
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
-
-    if (!zoneGroup->init(maxNurseryBytes) || !gc.groups.ref().append(zoneGroup))
-        return false;
-    zoneGroup.forget();
 
     ScopedJSDeletePtr<Zone> atomsZone(new_<Zone>(this, nullptr));
     if (!atomsZone || !atomsZone->init(true))
@@ -342,8 +329,6 @@ JSRuntime::destroyRuntime()
 
     DebugOnly<size_t> oldCount = liveRuntimesCount--;
     MOZ_ASSERT(oldCount > 0);
-
-    js_delete(zoneGroupFromMainThread());
 }
 
 void

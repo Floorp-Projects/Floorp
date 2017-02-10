@@ -347,6 +347,7 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
 #define FOR_EACH_GC_PARAM(_)                                                    \
     _("maxBytes",                   JSGC_MAX_BYTES,                      true)  \
     _("maxMallocBytes",             JSGC_MAX_MALLOC_BYTES,               true)  \
+    _("maxNurseryBytes",            JSGC_MAX_NURSERY_BYTES,              true)  \
     _("gcBytes",                    JSGC_BYTES,                          false) \
     _("gcNumber",                   JSGC_NUMBER,                         false) \
     _("mode",                       JSGC_MODE,                           true)  \
@@ -421,9 +422,16 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (disableOOMFunctions && (param == JSGC_MAX_BYTES || param == JSGC_MAX_MALLOC_BYTES)) {
-        args.rval().setUndefined();
-        return true;
+    if (disableOOMFunctions) {
+        switch (param) {
+          case JSGC_MAX_BYTES:
+          case JSGC_MAX_MALLOC_BYTES:
+          case JSGC_MAX_NURSERY_BYTES:
+            args.rval().setUndefined();
+            return true;
+          default:
+            break;
+        }
     }
 
     double d;

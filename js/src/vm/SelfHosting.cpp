@@ -2745,10 +2745,10 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     JS::CompartmentOptions options;
-    options.creationOptions().setZone(JS::FreshZone);
+    options.creationOptions().setNewZoneInSystemZoneGroup();
     options.behaviors().setDiscardSource(true);
 
-    JSCompartment* compartment = NewCompartment(cx, nullptr, nullptr, options);
+    JSCompartment* compartment = NewCompartment(cx, nullptr, options);
     if (!compartment)
         return nullptr;
 

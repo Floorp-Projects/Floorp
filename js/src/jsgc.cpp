@@ -810,6 +810,7 @@ GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock)
 GCRuntime::GCRuntime(JSRuntime* rt) :
     rt(rt),
     systemZone(nullptr),
+    systemZoneGroup(nullptr),
     atomsZone(nullptr),
     stats_(rt),
     marker(rt),
@@ -1044,6 +1045,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
          * for default backward API compatibility.
          */
         MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
+        MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_NURSERY_BYTES, maxNurseryBytes, lock));
         setMaxMallocBytes(maxbytes);
 
         const char* size = getenv("JSGC_MARK_STACK_LIMIT");
@@ -1164,6 +1166,9 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
     switch(key) {
       case JSGC_MAX_BYTES:
         gcMaxBytes_ = value;
+        break;
+      case JSGC_MAX_NURSERY_BYTES:
+        gcMaxNurseryBytes_ = value;
         break;
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
         highFrequencyThresholdUsec_ = value * PRMJ_USEC_PER_MSEC;
@@ -3550,9 +3555,7 @@ GCRuntime::sweepZoneGroups(FreeOp* fop, bool destroyingRuntime)
         ZoneGroup* group = *read++;
         sweepZones(fop, group, destroyingRuntime);
 
-        // For now, the singleton zone group is not destroyed until the runtime
-        // itself is, bug 1323066.
-        if (group->zones().empty() && group != rt->zoneGroupFromMainThread()) {
+        if (group->zones().empty()) {
             MOZ_ASSERT(numActiveZoneIters == 0);
             fop->delete_(group);
         } else {
@@ -6169,7 +6172,6 @@ namespace {
 class AutoScheduleZonesForGC
 {
     JSRuntime* rt_;
-    AutoAccessZoneGroups aazg;
 
   public:
     explicit AutoScheduleZonesForGC(JSRuntime* rt) : rt_(rt) {
@@ -6187,9 +6189,6 @@ class AutoScheduleZonesForGC
             {
                 zone->scheduleGC();
             }
-
-            if (zone->isGCScheduled() && !zone->isAtomsZone())
-                aazg.access(zone->group());
         }
     }
 
@@ -6753,15 +6752,61 @@ AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx, ZoneSelector selecto
 }
 
 JSCompartment*
-js::NewCompartment(JSContext* cx, Zone* zone, JSPrincipals* principals,
+js::NewCompartment(JSContext* cx, JSPrincipals* principals,
                    const JS::CompartmentOptions& options)
 {
     JSRuntime* rt = cx->runtime();
     JS_AbortIfWrongThread(cx);
 
+    ScopedJSDeletePtr<ZoneGroup> groupHolder;
     ScopedJSDeletePtr<Zone> zoneHolder;
+
+    Zone* zone = nullptr;
+    ZoneGroup* group = nullptr;
+    JS::ZoneSpecifier zoneSpec = options.creationOptions().zoneSpecifier();
+    switch (zoneSpec) {
+      case JS::SystemZone:
+        // systemZone and possibly systemZoneGroup might be null here, in which
+        // case we'll make a zone/group and set these fields below.
+        zone = rt->gc.systemZone;
+        group = rt->gc.systemZoneGroup;
+        break;
+      case JS::ExistingZone:
+        zone = static_cast<Zone*>(options.creationOptions().zonePointer());
+        MOZ_ASSERT(zone);
+        group = zone->group();
+        break;
+      case JS::NewZoneInNewZoneGroup:
+        break;
+      case JS::NewZoneInSystemZoneGroup:
+        // As above, systemZoneGroup might be null here.
+        group = rt->gc.systemZoneGroup;
+        break;
+      case JS::NewZoneInExistingZoneGroup:
+        group = static_cast<ZoneGroup*>(options.creationOptions().zonePointer());
+        MOZ_ASSERT(group);
+        break;
+    }
+
+    if (!group) {
+        MOZ_ASSERT(!zone);
+        group = cx->new_<ZoneGroup>(rt);
+        if (!group)
+            return nullptr;
+
+        groupHolder.reset(group);
+
+        if (!group->init(rt->gc.tunables.gcMaxNurseryBytes())) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+
+        if (cx->generationalDisabled)
+            group->nursery().disable();
+    }
+
     if (!zone) {
-        zone = cx->new_<Zone>(cx->runtime(), rt->zoneGroupFromMainThread());
+        zone = cx->new_<Zone>(cx->runtime(), group);
         if (!zone)
             return nullptr;
 
@@ -6789,12 +6834,35 @@ js::NewCompartment(JSContext* cx, Zone* zone, JSPrincipals* principals,
         return nullptr;
     }
 
-    if (zoneHolder && zoneHolder->group() && !zoneHolder->group()->zones().append(zone)) {
-        ReportOutOfMemory(cx);
-        return nullptr;
+    if (zoneHolder) {
+        if (!group->zones().append(zone)) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+
+        // Lazily set the runtime's sytem zone.
+        if (zoneSpec == JS::SystemZone) {
+            MOZ_RELEASE_ASSERT(!rt->gc.systemZone);
+            rt->gc.systemZone = zone;
+            zone->isSystem = true;
+        }
+    }
+
+    if (groupHolder) {
+        if (!rt->gc.groups.ref().append(group)) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+
+        // Lazily set the runtime's system zone group.
+        if (zoneSpec == JS::SystemZone || zoneSpec == JS::NewZoneInSystemZoneGroup) {
+            MOZ_RELEASE_ASSERT(!rt->gc.systemZoneGroup);
+            rt->gc.systemZoneGroup = group;
+        }
     }
 
     zoneHolder.forget();
+    groupHolder.forget();
     return compartment.forget();
 }
 

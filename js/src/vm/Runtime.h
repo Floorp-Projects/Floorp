@@ -616,24 +616,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return !!jitRuntime_;
     }
 
-    // These will be removed soon.
-  private:
-    JSContext* singletonContext;
-    js::ZoneGroup* singletonZoneGroup;
-  public:
-
-    JSContext* unsafeContextFromAnyThread() const { return singletonContext; }
-    JSContext* contextFromMainThread() const {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return singletonContext;
-    }
-
-    js::ZoneGroup* zoneGroupFromAnyThread() const { return singletonZoneGroup; }
-    js::ZoneGroup* zoneGroupFromMainThread() const {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return singletonZoneGroup;
-    }
-
   private:
     // Used to generate random keys for hash tables.
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomKeyGenerator_;

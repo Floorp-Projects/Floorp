@@ -3364,12 +3364,12 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
 
 struct WorkerInput
 {
-    JSContext* context;
+    JSRuntime* parentRuntime;
     char16_t* chars;
     size_t length;
 
-    WorkerInput(JSContext* context, char16_t* chars, size_t length)
-      : context(context), chars(chars), length(length)
+    WorkerInput(JSRuntime* parentRuntime, char16_t* chars, size_t length)
+      : parentRuntime(parentRuntime), chars(chars), length(length)
     {}
 
     ~WorkerInput() {
@@ -3384,7 +3384,7 @@ WorkerMain(void* arg)
 {
     WorkerInput* input = (WorkerInput*) arg;
 
-    JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->context);
+    JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime);
     if (!cx) {
         js_delete(input);
         return;
@@ -3513,7 +3513,7 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     CopyChars(chars, *str);
 
-    WorkerInput* input = js_new<WorkerInput>(JS_GetParentContext(cx), chars, str->length());
+    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
     if (!input) {
         ReportOutOfMemory(cx);
         return false;
@@ -4846,7 +4846,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
         if (!JS_GetProperty(cx, opts, "sameZoneAs", &v))
             return false;
         if (v.isObject())
-            creationOptions.setSameZoneAs(UncheckedUnwrap(&v.toObject()));
+            creationOptions.setExistingZone(UncheckedUnwrap(&v.toObject()));
 
         if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v))
             return false;
