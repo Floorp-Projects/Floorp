@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver import By
+from marionette_driver import By, Wait
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
@@ -32,7 +32,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
-        self.assertEqual(self.marionette.get_url(), self.empty_page)
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda mn: mn.get_url() == self.empty_page,
+            message="{} did not load after opening a new tab".format(self.empty_page))
 
         self.marionette.switch_to_window(self.start_tab)
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
