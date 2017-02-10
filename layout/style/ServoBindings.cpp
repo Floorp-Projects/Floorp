@@ -1067,6 +1067,13 @@ Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest)
   aDest->mFilters = aSrc->mFilters;
 }
 
+void
+Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aEffects->SetURL(url.get());
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 nsCSSShadowArray*
