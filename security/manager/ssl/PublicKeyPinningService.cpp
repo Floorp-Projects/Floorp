@@ -5,7 +5,9 @@
 #include "PublicKeyPinningService.h"
 
 #include "RootCertificateTelemetryUtils.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
@@ -133,16 +135,21 @@ EvalChain(const UniqueCERTCertList& certList,
   return NS_OK;
 }
 
-/**
-  Comparator for the is public key pinned host.
-*/
-static int
-TransportSecurityPreloadCompare(const void* key, const void* entry) {
-  auto keyStr = static_cast<const char*>(key);
-  auto preloadEntry = static_cast<const TransportSecurityPreload*>(entry);
+class TransportSecurityPreloadBinarySearchComparator
+{
+public:
+  explicit TransportSecurityPreloadBinarySearchComparator(
+    const char* aTargetHost)
+    : mTargetHost(aTargetHost) { }
 
-  return strcmp(keyStr, preloadEntry->mHost);
-}
+  int operator()(const TransportSecurityPreload& val) const
+  {
+    return strcmp(mTargetHost, val.mHost);
+  }
+
+private:
+  const char* mTargetHost; // non-owning
+};
 
 nsresult
 PublicKeyPinningService::ChainMatchesPinset(const UniqueCERTCertList& certList,
@@ -158,7 +165,7 @@ PublicKeyPinningService::ChainMatchesPinset(const UniqueCERTCertList& certList,
 static nsresult
 FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
                /*out*/ nsTArray<nsCString>& dynamicFingerprints,
-               /*out*/ TransportSecurityPreload*& staticFingerprints)
+               /*out*/ const TransportSecurityPreload*& staticFingerprints)
 {
   if (!hostname || hostname[0] == 0) {
     return NS_ERROR_INVALID_ARG;
@@ -170,9 +177,9 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
   if (!sssService) {
     return NS_ERROR_FAILURE;
   }
-  TransportSecurityPreload* foundEntry = nullptr;
-  char* evalHost = const_cast<char*>(hostname);
-  char* evalPart;
+  const TransportSecurityPreload* foundEntry = nullptr;
+  const char* evalHost = hostname;
+  const char* evalPart;
   // Notice how the (xx = strchr) prevents pins for unqualified domain names.
   while (!foundEntry && (evalPart = strchr(evalHost, '.'))) {
     MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
@@ -194,12 +201,12 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
       return NS_OK;
     }
 
-    foundEntry = (TransportSecurityPreload *)bsearch(evalHost,
-      kPublicKeyPinningPreloadList,
-      sizeof(kPublicKeyPinningPreloadList) / sizeof(TransportSecurityPreload),
-      sizeof(TransportSecurityPreload),
-      TransportSecurityPreloadCompare);
-    if (foundEntry) {
+    size_t foundEntryIndex;
+    if (BinarySearchIf(kPublicKeyPinningPreloadList, 0,
+                       ArrayLength(kPublicKeyPinningPreloadList),
+                       TransportSecurityPreloadBinarySearchComparator(evalHost),
+                       &foundEntryIndex)) {
+      foundEntry = &kPublicKeyPinningPreloadList[foundEntryIndex];
       MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
              ("pkpin: Found pinset for host: '%s'\n", evalHost));
       if (evalHost != hostname) {
@@ -246,7 +253,7 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
   }
 
   nsTArray<nsCString> dynamicFingerprints;
-  TransportSecurityPreload* staticFingerprints = nullptr;
+  const TransportSecurityPreload* staticFingerprints = nullptr;
   nsresult rv = FindPinningInformation(hostname, time, dynamicFingerprints,
                                        staticFingerprints);
   // If we have no pinning information, the certificate chain trivially
@@ -348,7 +355,7 @@ PublicKeyPinningService::HostHasPins(const char* hostname,
   hostHasPins = false;
   nsAutoCString canonicalizedHostname(CanonicalizeHostname(hostname));
   nsTArray<nsCString> dynamicFingerprints;
-  TransportSecurityPreload* staticFingerprints = nullptr;
+  const TransportSecurityPreload* staticFingerprints = nullptr;
   nsresult rv = FindPinningInformation(canonicalizedHostname.get(), time,
                                        dynamicFingerprints, staticFingerprints);
   if (NS_FAILED(rv)) {
