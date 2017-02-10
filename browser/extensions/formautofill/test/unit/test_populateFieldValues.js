@@ -2,8 +2,6 @@
  * Test for populating field values in Form Autofill Parent.
  */
 
-/* global FormAutofillParent */
-
 "use strict";
 
 Cu.import("resource://formautofill/FormAutofillParent.jsm");
