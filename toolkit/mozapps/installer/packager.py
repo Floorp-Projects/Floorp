@@ -23,7 +23,6 @@ from mozpack.copier import (
     Jarrer,
 )
 from mozpack.errors import errors
-from mozpack.unify import UnifiedBuildFinder
 import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
@@ -268,8 +267,6 @@ def main():
                         'access logs')
     parser.add_argument('--optimizejars', action='store_true', default=False,
                         help='Enable jar optimizations')
-    parser.add_argument('--unify', default='',
-                        help='Base directory of another build to unify with')
     parser.add_argument('--disable-compression', action='store_false',
                         dest='compress', default=True,
                         help='Disable jar compression')
@@ -316,18 +313,7 @@ def main():
     while respath.startswith('/'):
         respath = respath[1:]
 
-    if args.unify:
-        def is_native(path):
-            path = os.path.abspath(path)
-            return platform.machine() in mozpath.split(path)
-
-        # Invert args.unify and args.source if args.unify points to the
-        # native architecture.
-        args.source, args.unify = sorted([args.source, args.unify],
-                                         key=is_native, reverse=True)
-        if is_native(args.source) and not buildconfig.substs['CROSS_COMPILE']:
-            launcher.tooldir = args.source
-    elif not buildconfig.substs['CROSS_COMPILE']:
+    if not buildconfig.substs['CROSS_COMPILE']:
         launcher.tooldir = mozpath.join(buildconfig.topobjdir, 'dist')
 
     with errors.accumulate():
@@ -341,15 +327,8 @@ def main():
                 os.path.join(os.path.abspath(os.path.dirname(__file__)),
                     'js-compare-ast.js')
             ]
-        if args.unify:
-            finder = UnifiedBuildFinder(FileFinder(args.source,
-                                                   find_executables=True),
-                                        FileFinder(args.unify,
-                                                   find_executables=True),
-                                        **finder_args)
-        else:
-            finder = FileFinder(args.source, find_executables=True,
-                                **finder_args)
+        finder = FileFinder(args.source, find_executables=True,
+                            **finder_args)
         if 'NO_PKG_FILES' in os.environ:
             sinkformatter = NoPkgFilesRemover(formatter,
                                               args.manifest is not None)

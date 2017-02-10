@@ -264,13 +264,8 @@ MAKE_SYM_STORE_PATH := .
 endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
-ifdef UNIVERSAL_BINARY
-MAKE_SYM_STORE_ARGS := -c --vcs-info
-MAKE_SYM_STORE_PATH := $(DIST)/bin $(UNIFY_DIST)/bin
-else
 MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/bin
-endif
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 endif
 ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
