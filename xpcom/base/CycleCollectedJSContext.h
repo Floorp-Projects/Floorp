@@ -147,7 +147,7 @@ protected:
   virtual ~CycleCollectedJSContext();
 
   MOZ_IS_CLASS_INIT
-  nsresult Initialize(JSContext* aParentContext,
+  nsresult Initialize(JSRuntime* aParentRuntime,
                       uint32_t aMaxBytes,
                       uint32_t aMaxNurseryBytes);
 

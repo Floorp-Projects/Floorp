@@ -981,7 +981,7 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 extern JS_PUBLIC_API(JSContext*)
 JS_NewContext(uint32_t maxbytes,
               uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,
-              JSContext* parentContext = nullptr);
+              JSRuntime* parentRuntime = nullptr);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext* cx);
@@ -992,8 +992,8 @@ JS_GetContextPrivate(JSContext* cx);
 JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext* cx, void* data);
 
-extern JS_PUBLIC_API(JSContext*)
-JS_GetParentContext(JSContext* cx);
+extern JS_PUBLIC_API(JSRuntime*)
+JS_GetParentRuntime(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext* cx);
@@ -1710,6 +1710,9 @@ typedef enum JSGCParamKey {
     /** Number of JS_malloc bytes before last ditch GC. */
     JSGC_MAX_MALLOC_BYTES   = 1,
 
+    /** Maximum size of the generational GC nurseries. */
+    JSGC_MAX_NURSERY_BYTES  = 2,
+
     /** Amount of bytes allocated by the GC. */
     JSGC_BYTES = 3,
 
@@ -2178,9 +2181,23 @@ JS_GetConstructor(JSContext* cx, JS::Handle<JSObject*> proto);
 
 namespace JS {
 
+// Specification for which zone a newly created compartment should use.
 enum ZoneSpecifier {
-    FreshZone = 0,
-    SystemZone = 1
+    // Use the single runtime wide system zone. The meaning of this zone is
+    // left to the embedder.
+    SystemZone,
+
+    // Use a particular existing zone.
+    ExistingZone,
+
+    // Create a new zone with its own new zone group.
+    NewZoneInNewZoneGroup,
+
+    // Create a new zone in the same zone group as the system zone.
+    NewZoneInSystemZoneGroup,
+
+    // Create a new zone in the same zone group as another existing zone.
+    NewZoneInExistingZoneGroup
 };
 
 /**
@@ -2197,6 +2214,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     CompartmentCreationOptions()
       : addonId_(nullptr),
         traceGlobal_(nullptr),
+        zoneSpec_(NewZoneInSystemZoneGroup),
+        zonePointer_(nullptr),
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
@@ -2204,9 +2223,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         experimentalNumberFormatFormatToPartsEnabled_(false),
         sharedMemoryAndAtomics_(false),
         secureContext_(false)
-    {
-        zone_.spec = JS::FreshZone;
-    }
+    {}
 
     // A null add-on ID means that the compartment is not associated with an
     // add-on.
@@ -2224,13 +2241,15 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
-    void* zonePointer() const {
-        MOZ_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
-        return zone_.pointer;
-    }
-    ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
-    CompartmentCreationOptions& setZone(ZoneSpecifier spec);
-    CompartmentCreationOptions& setSameZoneAs(JSObject* obj);
+    void* zonePointer() const { return zonePointer_; }
+    ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
+
+    // Set the zone to use for the compartment. See ZoneSpecifier above.
+    CompartmentCreationOptions& setSystemZone();
+    CompartmentCreationOptions& setExistingZone(JSObject* obj);
+    CompartmentCreationOptions& setNewZoneInNewZoneGroup();
+    CompartmentCreationOptions& setNewZoneInSystemZoneGroup();
+    CompartmentCreationOptions& setNewZoneInExistingZoneGroup(JSObject* obj);
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
@@ -2299,10 +2318,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
   private:
     JSAddonId* addonId_;
     JSTraceOp traceGlobal_;
-    union {
-        ZoneSpecifier spec;
-        void* pointer; // js::Zone* is not exposed in the API.
-    } zone_;
+    ZoneSpecifier zoneSpec_;
+    void* zonePointer_; // Per zoneSpec_, either a Zone, ZoneGroup, or null.
     bool invisibleToDebugger_;
     bool mergeable_;
     bool preserveJitCode_;
