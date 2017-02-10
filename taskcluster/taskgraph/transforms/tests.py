@@ -75,13 +75,6 @@ BUILDER_NAME_PREFIX = {
     'android-4.3-arm7-api-15-gradle': 'Android 4.3 armv7 API 15+',
 }
 
-TASKCLUSTER_WORKER_TESTS = [
-    'cppunit',
-    'crashtest',
-    'jsreftest',
-    'mochitest-webgl',
-]
-
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -257,9 +250,7 @@ test_description_schema = Schema({
 
             # If true, include chunking information in the command even if the number
             # of chunks is 1
-            Required('chunked', default=False): optionally_keyed_by(
-                'test-platform',
-                bool),
+            Required('chunked', default=False): bool,
 
             # The chunking argument format to use
             Required('chunking-args', default='this-chunk'): Any(
@@ -412,14 +403,7 @@ def set_worker_implementation(config, tests):
         elif test['test-platform'].startswith('win'):
             test['worker-implementation'] = 'generic-worker'
         elif test['test-platform'].startswith('macosx'):
-            test['worker-implementation'] = 'buildbot-bridge'
-            # Some tests must also run in taskcluster-worker
-            # small hack until we completely switch to taskcluster-worker
-            if test['test-name'] in TASKCLUSTER_WORKER_TESTS:
-                test_tc_worker = copy.deepcopy(test)
-                test_tc_worker['worker-implementation'] = 'native-engine'
-                test_tc_worker['test-name'] += '-worker'
-                yield test_tc_worker
+            test['worker-implementation'] = 'native-engine'
         else:
             test['worker-implementation'] = 'docker-worker'
         yield test
@@ -445,8 +429,7 @@ def set_tier(config, tests):
                                          'android-4.3-arm7-api-15/debug',
                                          'android-4.2-x86/opt']:
                 test['tier'] = 1
-            elif test['test-platform'].startswith('windows') \
-                    or test['worker-implementation'] == 'native-engine':
+            elif test['test-platform'].startswith('windows'):
                 test['tier'] = 3
             else:
                 test['tier'] = 2
@@ -494,7 +477,6 @@ def handle_keyed_by(config, tests):
         'suite',
         'run-on-projects',
         'os-groups',
-        'mozharness.chunked',
         'mozharness.config',
         'mozharness.extra-options',
     ]
@@ -1028,45 +1010,13 @@ def macosx_engine_setup(config, test, taskdesc):
 def buildbot_bridge_setup(config, test, taskdesc):
     branch = config.params['project']
     platform, build_type = test['build-platform'].split('/')
-
-    # mochitest e10s follows the pattern mochitest-e10s-<suffix>
-    # in buildbot, except for these special cases
-    buildbot_specials = [
-        'mochitest-webgl',
-        'mochitest-clipboard',
-        'mochitest-media',
-        'mochitest-gpu',
-        'mochitest-e10s',
-    ]
-    test_name = test.get(
-                    'talos-try-name',
-                    test.get(
-                        'unittest-try-name',
-                        test['test-name']
-                    )
-                )
-    if test['e10s'] and 'e10s' not in test_name:
-        test_name += '-e10s'
-
-    if test_name.startswith('mochitest') \
-            and test_name.endswith('e10s') \
-            and not any(map(
-                lambda name: test_name.startswith(name),
-                buildbot_specials
-            )):
-        split_mochitest = test_name.split('-')
-        test_name = '-'.join([
-            split_mochitest[0],
-            split_mochitest[-1],
-            '-'.join(split_mochitest[1:-1])
-        ])
-
-    # in buildbot, mochitest-webgl is called mochitest-gl
-    test_name = test_name.replace('webgl', 'gl')
-
+    test_name = test.get('talos-try-name', test['test-name'])
     mozharness = test['mozharness']
 
-    if mozharness.get('chunked', False) or test['chunks'] > 1:
+    if test['e10s'] and not test_name.endswith('-e10s'):
+        test_name += '-e10s'
+
+    if mozharness.get('chunked', False):
         this_chunk = test.get('this-chunk')
         test_name = '{}-{}'.format(test_name, this_chunk)
 
