@@ -183,7 +183,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     ReflowChild(outerWrapperFrame, aPresContext, wrappersDesiredSize,
                 wrapperReflowInput, myWM, wrapperOffset, dummyContainerSize, 0,
                 childStatus);
-    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
+    MOZ_ASSERT(childStatus.IsFullyComplete(),
                "We gave our child unconstrained available block-size, "
                "so it should be complete");
 

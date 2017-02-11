@@ -898,7 +898,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   mButtonFrame->SetRect(buttonRect, containerSize);
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
-      !NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
+      !aStatus.IsFullyComplete()) {
     // This frame didn't fit inside a fragmentation container.  Splitting
     // a nsComboboxControlFrame makes no sense, so we override the status here.
     aStatus = NS_FRAME_COMPLETE;

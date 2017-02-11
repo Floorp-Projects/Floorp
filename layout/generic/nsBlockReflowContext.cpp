@@ -336,7 +336,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up), unless it is an out of flow frame.
-    if (NS_FRAME_IS_FULLY_COMPLETE(aFrameReflowStatus)) {
+    if (aFrameReflowStatus.IsFullyComplete()) {
       nsIFrame* kidNextInFlow = mFrame->GetNextInFlow();
       if (nullptr != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
