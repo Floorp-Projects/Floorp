@@ -36,4 +36,3 @@ def filter_target_tasks(graph, parameters):
     attr = parameters.get('target_tasks_method', 'all_tasks')
     fn = target_tasks.get_method(attr)
     return fn(graph, parameters)
-
