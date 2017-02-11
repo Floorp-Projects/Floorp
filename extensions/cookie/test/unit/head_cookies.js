@@ -42,8 +42,7 @@ function do_run_generator(generator)
   try {
     generator.next();
   } catch (e) {
-    if (e != StopIteration)
-      do_throw("caught exception " + e, Components.stack.caller);
+    do_throw("caught exception " + e, Components.stack.caller);
   }
 }
 
@@ -51,7 +50,7 @@ function do_run_generator(generator)
 function do_finish_generator_test(generator)
 {
   do_execute_soon(function() {
-    generator.close();
+    generator.return();
     do_test_finished();
   });
 }
