@@ -249,16 +249,16 @@ this.MigratorPrototype = {
       }
       return null;
     };
-    let maybeStartTelemetryStopwatch = (resourceType, resource) => {
+    let maybeStartTelemetryStopwatch = (resourceType) => {
       let histogram = getHistogramForResourceType(resourceType);
       if (histogram) {
-        TelemetryStopwatch.startKeyed(histogram, this.getKey(), resource);
+        TelemetryStopwatch.startKeyed(histogram, this.getKey());
       }
     };
-    let maybeStopTelemetryStopwatch = (resourceType, resource) => {
+    let maybeStopTelemetryStopwatch = (resourceType) => {
       let histogram = getHistogramForResourceType(resourceType);
       if (histogram) {
-        TelemetryStopwatch.finishKeyed(histogram, this.getKey(), resource);
+        TelemetryStopwatch.finishKeyed(histogram, this.getKey());
       }
     };
 
@@ -300,14 +300,14 @@ this.MigratorPrototype = {
 
         notify("Migration:ItemBeforeMigrate", migrationType);
 
+        maybeStartTelemetryStopwatch(migrationType);
+
         let itemSuccess = false;
         for (let res of itemResources) {
           // Workaround bug 449811.
           let resource = res;
-          maybeStartTelemetryStopwatch(migrationType, resource);
           let completeDeferred = PromiseUtils.defer();
           let resourceDone = function(aSuccess) {
-            maybeStopTelemetryStopwatch(migrationType, resource);
             itemResources.delete(resource);
             itemSuccess |= aSuccess;
             if (itemResources.size == 0) {
@@ -315,6 +315,9 @@ this.MigratorPrototype = {
                      "Migration:ItemAfterMigrate" : "Migration:ItemError",
                      migrationType);
               resourcesGroupedByItems.delete(migrationType);
+
+              maybeStopTelemetryStopwatch(migrationType);
+
               if (resourcesGroupedByItems.size == 0) {
                 collectQuantityTelemetry();
                 notify("Migration:Ended");
