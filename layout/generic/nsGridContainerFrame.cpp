@@ -100,12 +100,12 @@ ClampToCSSMaxBSize(nscoord aSize, const ReflowInput* aReflowInput,
   if (MOZ_UNLIKELY(maxSize != NS_UNCONSTRAINEDSIZE)) {
     MOZ_ASSERT(aReflowInput->ComputedMinBSize() <= maxSize);
     if (aSize < maxSize) {
-      NS_FRAME_SET_INCOMPLETE(*aStatus);
+      aStatus->SetIncomplete();
     } else {
       aSize = maxSize;
     }
   } else {
-    NS_FRAME_SET_INCOMPLETE(*aStatus);
+    aStatus->SetIncomplete();
   }
   return aSize;
 }
@@ -5485,7 +5485,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
       // box-decoration-break:clone then we are technically COMPLETE.  There's
       // no point in creating another zero-bsize fragment in this case.
       if (newBSize < bSize || !isBDBClone) {
-        NS_FRAME_SET_INCOMPLETE(aStatus);
+        aStatus.SetIncomplete();
       }
       bSize = newBSize;
     } else if (bSize <= bEndRow && startRow + 1 < endRow) {
@@ -5499,7 +5499,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
           bSize = ClampToCSSMaxBSize(bSize, aState.mReflowInput);
         }
       }
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
     } else if (endRow < numRows) {
       bSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowInput, &aStatus);
     } // else - no break opportunities.
@@ -5670,14 +5670,14 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           isRowTopOfPage = isStartRowTopOfPage;
           overflowIncompleteItems.Clear();
           incompleteItems.Clear();
-          NS_FRAME_SET_INCOMPLETE(aStatus);
+          aStatus.SetIncomplete();
           continue;
         }
         NS_ERROR("got BREAK_BEFORE at top-of-page");
         childStatus = NS_FRAME_COMPLETE;
       } else {
         NS_ERROR("got BREAK_BEFORE again after growing the row?");
-        NS_FRAME_SET_INCOMPLETE(childStatus);
+        childStatus.SetIncomplete();
       }
     } else if (NS_INLINE_IS_BREAK_AFTER(childStatus)) {
       MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");

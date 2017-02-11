@@ -960,7 +960,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   if (aStatus.IsOverflowIncomplete()) {
     // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
     //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
     printf("Set table cell incomplete %p\n", static_cast<void*>(this));
   }
 

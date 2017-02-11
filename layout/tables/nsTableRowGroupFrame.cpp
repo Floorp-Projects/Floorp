@@ -1407,7 +1407,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // ReflowChildren should pull up rows from our next-in-flow before returning
   // a Complete status, but doesn't (bug 804888).
   if (GetNextInFlow() && GetNextInFlow()->PrincipalChildList().FirstChild()) {
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
   }
 
   SetHasStyleBSize((NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) &&
