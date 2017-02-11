@@ -1846,7 +1846,7 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
   // handle incomplete childReflowStatuses. But for now, we give our kids
   // unconstrained available height, which means they should always complete.
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+  MOZ_ASSERT(childReflowStatus.IsComplete(),
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
@@ -4626,7 +4626,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // NOTE: If we're auto-height, we allow our bottom border/padding to push us
   // over the available height without requesting a continuation, for
   // consistency with the behavior of "display:block" elements.
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+  if (aStatus.IsComplete()) {
     nscoord desiredBSizeWithBEndBP =
       desiredSizeInFlexWM.BSize(flexWM) + blockEndContainerBP;
 
@@ -4780,7 +4780,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   // handle incomplete childReflowStatuses. But for now, we give our kids
   // unconstrained available height, which means they should always
   // complete.
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+  MOZ_ASSERT(childReflowStatus.IsComplete(),
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 

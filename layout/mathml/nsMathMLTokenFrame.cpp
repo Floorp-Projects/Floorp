@@ -144,7 +144,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowInput, aStatus);
-    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+    //NS_ASSERTION(aStatus.IsComplete(), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
   }

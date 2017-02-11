@@ -257,7 +257,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   ReflowChild(aFirstKid, aPresContext,
               contentsDesiredSize, contentsReflowInput,
               wm, childPos, dummyContainerSize, 0, contentsReflowStatus);
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(contentsReflowStatus),
+  MOZ_ASSERT(contentsReflowStatus.IsComplete(),
              "We gave button-contents frame unconstrained available height, "
              "so it should be complete");
 

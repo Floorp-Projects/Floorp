@@ -405,9 +405,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   // If there exists any span, the columns must either be completely
   // reflowed, or be not reflowed at all.
   MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
-             NS_FRAME_IS_COMPLETE(aStatus) || !hasSpan);
+             aStatus.IsComplete() || !hasSpan);
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
-      NS_FRAME_IS_COMPLETE(aStatus) && hasSpan) {
+      aStatus.IsComplete() && hasSpan) {
     // Reflow spans
     RubyReflowInput reflowInput = {
       false, false, textContainers, aReflowInput, reflowInputs
@@ -528,7 +528,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
       return 0;
     }
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
-    MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus) || aReflowInput.mAllowLineBreak);
+    MOZ_ASSERT(aStatus.IsComplete() || aReflowInput.mAllowLineBreak);
 
     // If we are on an intra-level whitespace column, null values in
     // column.mBaseFrame and column.mTextFrames don't represent the

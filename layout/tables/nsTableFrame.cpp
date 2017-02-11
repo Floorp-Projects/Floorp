@@ -1929,7 +1929,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
     }
 
     // XXXldb Are all these conditions correct?
-    if (needToInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
+    if (needToInitiateSpecialReflow && aStatus.IsComplete()) {
       // XXXldb Do we need to set the IsBResize flag on any reflow states?
 
       ReflowInput &mutable_rs =
@@ -3172,7 +3172,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // the next page
       if (isPaginated &&
           (NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
-           (NS_FRAME_IS_COMPLETE(aStatus) &&
+           (aStatus.IsComplete() &&
             (NS_UNCONSTRAINEDSIZE != kidReflowInput.AvailableHeight()) &&
             kidReflowInput.AvailableHeight() < desiredSize.Height()))) {
         if (ShouldAvoidBreakInside(aReflowInput.reflowInput)) {
@@ -3233,7 +3233,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       pageBreak = false;
       // see if there is a page break after this row group or before the next one
-      if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated &&
+      if (aStatus.IsComplete() && isPaginated &&
           (NS_UNCONSTRAINEDSIZE != kidReflowInput.AvailableHeight())) {
         nsIFrame* nextKid =
           (childX + 1 < rowGroups.Length()) ? rowGroups[childX + 1] : nullptr;

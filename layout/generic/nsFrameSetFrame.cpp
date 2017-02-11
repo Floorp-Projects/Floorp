@@ -705,7 +705,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
 
   ReflowChild(aChild, aPresContext, reflowOutput, reflowInput, aOffset.x,
               aOffset.y, 0, status);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+  NS_ASSERTION(status.IsComplete(), "bad status");
 
   // Place and size the child
   reflowOutput.Width() = aSize.width;

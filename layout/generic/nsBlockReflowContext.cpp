@@ -367,7 +367,7 @@ nsBlockReflowContext::PlaceBlock(const ReflowInput&  aReflowInput,
   // Compute collapsed block-end margin value.
   WritingMode wm = aReflowInput.GetWritingMode();
   WritingMode parentWM = mMetrics.GetWritingMode();
-  if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+  if (aReflowStatus.IsComplete()) {
     aBEndMarginResult = mMetrics.mCarriedOutBEndMargin;
     aBEndMarginResult.Include(aReflowInput.ComputedLogicalMargin().
       ConvertTo(parentWM, wm).BEnd(parentWM));
