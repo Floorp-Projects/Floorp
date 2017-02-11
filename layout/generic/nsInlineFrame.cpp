@@ -829,7 +829,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   if (NS_INLINE_IS_BREAK_AFTER(aStatus)) {
     nsIFrame* nextFrame = aFrame->GetNextSibling();
     if (nextFrame) {
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
       PushFrames(aPresContext, nextFrame, aFrame, irs);
     }
     else {
@@ -838,7 +838,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       nsInlineFrame* nextInFlow = static_cast<nsInlineFrame*>(GetNextInFlow());
       while (nextInFlow) {
         if (nextInFlow->mFrames.NotEmpty()) {
-          NS_FRAME_SET_INCOMPLETE(aStatus);
+          aStatus.SetIncomplete();
           break;
         }
         nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
