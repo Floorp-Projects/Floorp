@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const url = "ftp://ftp.example.com";
   const name = "test_bad_origin_directory.js";

@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const name = "test_snappyUpgrade.js";
   const objectStoreName = "test";
