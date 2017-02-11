@@ -186,6 +186,17 @@ public:
   nsresult StealNSResult() {
     nsresult rv = ErrorCode();
     SuppressException();
+    // Don't propagate out our internal error codes that have special meaning.
+    if (rv == NS_ERROR_TYPE_ERR ||
+        rv == NS_ERROR_RANGE_ERR ||
+        rv == NS_ERROR_DOM_JS_EXCEPTION ||
+        rv == NS_ERROR_DOM_DOMEXCEPTION) {
+      // What about NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT?  I guess that can be
+      // legitimately passed on through....
+      // What to pick here?
+      return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+
     return rv;
   }
 
@@ -395,7 +406,15 @@ private:
     MOZ_ASSERT(aRv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "May need to bring back ThrowNotEnoughArgsError");
     MOZ_ASSERT(aRv != NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT,
                "Use NoteJSContextException");
-    mResult = aRv;
+    // Don't trust people anyway, though.
+    if (aRv == NS_ERROR_TYPE_ERR ||
+        aRv == NS_ERROR_RANGE_ERR ||
+        aRv == NS_ERROR_DOM_JS_EXCEPTION ||
+        aRv == NS_ERROR_DOM_DOMEXCEPTION) {
+      mResult = NS_ERROR_UNEXPECTED;
+    } else {
+      mResult = aRv;
+    }
   }
 
   void ClearMessage();
