@@ -60,7 +60,7 @@
         </groupbox>
       </vbox>
       <vbox>
-        <image class="fxaSyncIllustration"/>
+        <html:img class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg#blueFill"/>
       </vbox>
     </hbox>
     <label class="fxaMobilePromo">
@@ -178,7 +178,7 @@
         </groupbox>
       </vbox>
       <vbox>
-        <image class="fxaSyncIllustration"/>
+        <html:img  class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg#blueFill"/>
       </vbox>
     </hbox>
     <groupbox>
