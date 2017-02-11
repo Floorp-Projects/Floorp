@@ -7014,8 +7014,11 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
                                             nsIContent* aChild)
 {
+  // XXXmats no lazy frames for display:contents direct descendants yet
+  // (bug 979782).
   if (mPresShell->GetPresContext()->IsChrome() || !aContainer ||
-      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXULElement()) {
+      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXULElement() ||
+      GetDisplayContentsStyleFor(aContainer)) {
     return false;
   }
 
@@ -7043,12 +7046,17 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
   nsIContent* content = aContainer;
+
 #ifdef DEBUG
   // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
   // we want to assert, but leaf frames that process their own children and may
   // ignore anonymous children (eg framesets) make this complicated. So we set
   // these two booleans if we encounter these situations and unset them if we
   // hit a node with a leaf frame.
+  //
+  // Also, it's fine if one of the nodes without primary frame is a display:
+  // contents node except if it's the direct ancestor of the children we're
+  // recreating frames for.
   bool noPrimaryFrame = false;
   bool needsFrameBitSet = false;
 #endif
@@ -7058,17 +7066,14 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
       noPrimaryFrame = needsFrameBitSet = false;
     }
-    if (!noPrimaryFrame && !content->GetPrimaryFrame()) {
+    if (!noPrimaryFrame && !content->GetPrimaryFrame() &&
+        !GetDisplayContentsStyleFor(content)) {
       noPrimaryFrame = true;
     }
     if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME)) {
       needsFrameBitSet = true;
     }
 #endif
-    // XXXmats no lazy frames for display:contents descendants yet (bug 979782).
-    if (GetDisplayContentsStyleFor(content)) {
-      return false;
-    }
     content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
     content = content->GetFlattenedTreeParent();
   }
