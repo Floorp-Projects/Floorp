@@ -142,7 +142,7 @@ protected:
   {
     public:
       imgCancelRunnable(imgRequestProxy* owner, nsresult status)
-        : mOwner(owner), mStatus(status)
+        : Runnable("imgCancelRunnable"), mOwner(owner), mStatus(status)
       { }
 
       NS_IMETHOD Run() override {

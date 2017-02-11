@@ -424,7 +424,8 @@ RasterImage::OnSurfaceDiscarded()
 {
   MOZ_ASSERT(mProgressTracker);
 
-  NS_DispatchToMainThread(NewRunnableMethod(mProgressTracker, &ProgressTracker::OnDiscard));
+  NS_DispatchToMainThread(NewRunnableMethod("ProgressTracker::OnDiscard",
+                                            mProgressTracker, &ProgressTracker::OnDiscard));
 }
 
 //******************************************************************************

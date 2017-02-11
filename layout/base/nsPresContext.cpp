@@ -119,7 +119,8 @@ class CharSetChangingRunnable : public Runnable
 public:
   CharSetChangingRunnable(nsPresContext* aPresContext,
                           const nsCString& aCharSet)
-    : mPresContext(aPresContext),
+    : Runnable("CharSetChangingRunnable"),
+      mPresContext(aPresContext),
       mCharSet(aCharSet)
   {
   }
@@ -2089,7 +2090,8 @@ nsPresContext::PostMediaFeatureValuesChangedEvent()
   // need to track whether it's been added).
   if (!mPendingMediaFeatureValuesChanged && mShell) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
+      NewRunnableMethod("nsPresContext::HandleMediaFeatureValuesChangedEvent",
+                        this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPendingMediaFeatureValuesChanged = true;
       mShell->SetNeedStyleFlush();
@@ -2281,7 +2283,8 @@ nsPresContext::RebuildCounterStyles()
   }
   if (!mPostedFlushCounterStyles) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::HandleRebuildCounterStyles);
+      NewRunnableMethod("nsPresContext::HandleRebuildCounterStyles",
+                        this, &nsPresContext::HandleRebuildCounterStyles);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPostedFlushCounterStyles = true;
     }
