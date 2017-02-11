@@ -321,6 +321,11 @@ UDPSocketParent::ConnectInternal(const nsCString& aHost, const uint16_t& aPort)
   nsresult rv;
 
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, nsCString(aHost).get(), aPort));
+
+  if (!mSocket) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   PRNetAddr prAddr;
   PR_InitializeNetAddr(PR_IpAddrAny, aPort, &prAddr);
   PRStatus status = PR_StringToNetAddr(aHost.BeginReading(), &prAddr);
@@ -343,7 +348,11 @@ bool
 UDPSocketParent::RecvOutgoingData(const UDPData& aData,
                                   const UDPSocketAddr& aAddr)
 {
-  MOZ_ASSERT(mSocket);
+  if (!mSocket) {
+    NS_WARNING("sending socket is closed");
+    FireInternalError(__LINE__);
+    return IPC_OK();
+  }
 
   nsresult rv;
   if (mFilter) {
