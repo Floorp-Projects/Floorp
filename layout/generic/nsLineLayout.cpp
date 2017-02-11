@@ -1072,7 +1072,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up).
-    if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+    if (aReflowStatus.IsComplete()) {
       nsIFrame* kidNextInFlow = aFrame->GetNextInFlow();
       if (nullptr != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask

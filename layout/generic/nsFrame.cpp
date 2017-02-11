@@ -9946,7 +9946,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     Reflow(aPresContext, aDesiredSize, reflowInput, status);
 
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+    NS_ASSERTION(status.IsComplete(), "bad status");
 
     uint32_t layoutFlags = aState.LayoutFlags();
     nsContainerFrame::FinishReflowChild(this, aPresContext, aDesiredSize,

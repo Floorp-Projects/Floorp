@@ -775,7 +775,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, false, reflowStatus);
     floatMarginISize = aFloat->ISize(wm) + floatMargin.IStartEnd(wm);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(reflowStatus),
+    NS_ASSERTION(reflowStatus.IsComplete(),
                  "letter frames and orthogonal floats with auto block-size "
                  "shouldn't break, and if they do now, then they're breaking "
                  "at the wrong point");

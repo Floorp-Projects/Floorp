@@ -303,9 +303,6 @@ private:
 #define NS_FRAME_REFLOW_NEXTINFLOW    0x2
 #define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
-#define NS_FRAME_IS_COMPLETE(status) \
-  (0 == ((status) & NS_FRAME_NOT_COMPLETE))
-
 #define NS_FRAME_OVERFLOW_IS_INCOMPLETE(status) \
   (0 != ((status) & NS_FRAME_OVERFLOW_INCOMPLETE))
 

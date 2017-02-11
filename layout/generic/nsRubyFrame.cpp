@@ -171,7 +171,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   if (boxDecorationBreakClone || !GetPrevContinuation()) {
     aDesiredSize.ISize(lineWM) += borderPadding.IStart(frameWM);
   }
-  if (boxDecorationBreakClone || NS_FRAME_IS_COMPLETE(aStatus)) {
+  if (boxDecorationBreakClone || aStatus.IsComplete()) {
     aDesiredSize.ISize(lineWM) += borderPadding.IEnd(frameWM);
   }
 

@@ -265,7 +265,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowInput, childStatus);
-    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+    //NS_ASSERTION(childStatus.IsComplete(), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
 

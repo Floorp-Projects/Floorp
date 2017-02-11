@@ -1028,7 +1028,7 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
                                                   isTopOfPage, cell,
                                                   cellAvailBSize, status);
         aDesiredBSize = std::max(aDesiredBSize, rowPos.y + cellBSize);
-        if (NS_FRAME_IS_COMPLETE(status)) {
+        if (status.IsComplete()) {
           if (cellBSize > cellAvailBSize) {
             aFirstTruncatedRow = row;
             if ((row != &aFirstRow) || !aFirstRowIsTopOfPage) {

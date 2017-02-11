@@ -95,7 +95,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   // Reflow our fixed frames
   nsReflowStatus fixedStatus = NS_FRAME_COMPLETE;
   ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, fixedStatus);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
+  NS_ASSERTION(fixedStatus.IsComplete(), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size
   WritingMode wm = aReflowInput.GetWritingMode();
