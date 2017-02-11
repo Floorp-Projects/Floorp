@@ -283,7 +283,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
     // Is the page complete?
     nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
 
-    if (NS_FRAME_IS_FULLY_COMPLETE(status)) {
+    if (status.IsFullyComplete()) {
       NS_ASSERTION(!kidNextInFlow, "bad child flow list");
     } else if (!kidNextInFlow) {
       // The page isn't complete and it doesn't have a next-in-flow, so

@@ -418,7 +418,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     ReflowOutput trackDesiredSize(aReflowInput);
     ReflowChild(trackFrame, aPresContext, trackDesiredSize,
                 trackReflowInput, trackX, trackY, 0, frameStatus);
-    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
+    MOZ_ASSERT(frameStatus.IsFullyComplete(),
                "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
                       &trackReflowInput, trackX, trackY, 0);
@@ -440,7 +440,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     ReflowOutput thumbDesiredSize(aReflowInput);
     ReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
                 thumbReflowInput, 0, 0, 0, frameStatus);
-    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
+    MOZ_ASSERT(frameStatus.IsFullyComplete(),
                "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
                       &thumbReflowInput, 0, 0, 0);
@@ -466,7 +466,7 @@ nsRangeFrame::ReflowAnonymousContent(nsPresContext*           aPresContext,
     ReflowChild(rangeProgressFrame, aPresContext,
                 progressDesiredSize, progressReflowInput, 0, 0,
                 0, frameStatus);
-    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(frameStatus),
+    MOZ_ASSERT(frameStatus.IsFullyComplete(),
                "We gave our child unconstrained height, so it should be complete");
     FinishReflowChild(rangeProgressFrame, aPresContext,
                       progressDesiredSize, &progressReflowInput, 0, 0, 0);

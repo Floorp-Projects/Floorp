@@ -1238,8 +1238,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   // If we have a next-in-flow, and that next-in-flow has pushed floats from
   // this frame from a previous iteration of reflow, then we should not return
-  // a status of NS_FRAME_IS_FULLY_COMPLETE, since we actually have overflow,
-  // it's just already been handled.
+  // a status with IsFullyComplete() equals to true, since we actually have
+  // overflow, it's just already been handled.
 
   // NOTE: This really shouldn't happen, since we _should_ pull back our floats
   // and reflow them, but just in case it does, this is a safety precaution so
@@ -1247,7 +1247,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // been deleted as part of removing our next-in-flow.
   // XXXmats maybe this code isn't needed anymore?
   // XXXmats (layout/generic/crashtests/600100.xhtml doesn't crash without it)
-  if (NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
+  if (state.mReflowStatus.IsFullyComplete()) {
     nsBlockFrame* nif = static_cast<nsBlockFrame*>(GetNextInFlow());
     while (nif) {
       if (nif->HasPushedFloatsFromPrevContinuation()) {
@@ -1272,7 +1272,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     NS_FRAME_SET_INCOMPLETE(state.mReflowStatus);
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
+  if (!state.mReflowStatus.IsFullyComplete()) {
     if (HasOverflowLines() || HasPushedFloats()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     }
@@ -3604,7 +3604,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
                                          collapsedBEndMargin,
                                          overflowAreas,
                                          frameReflowStatus);
-      if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus) &&
+      if (!frameReflowStatus.IsFullyComplete() &&
           ShouldAvoidBreakInside(aState.mReflowInput)) {
         *aKeepReflowGoing = false;
       }
@@ -3628,7 +3628,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
         // Continue the block frame now if it didn't completely fit in
         // the available space.
-        if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
+        if (!frameReflowStatus.IsFullyComplete()) {
           bool madeContinuation =
             CreateContinuationFor(aState, nullptr, frame);
 
@@ -4240,7 +4240,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
     }
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
+  if (!frameReflowStatus.IsFullyComplete()) {
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
     CreateContinuationFor(aState, aLine, aFrame);
@@ -4291,7 +4291,7 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
                          nsIFrame*           aFloat,
                          nsReflowStatus      aFloatStatus)
 {
-  MOZ_ASSERT(!NS_FRAME_IS_FULLY_COMPLETE(aFloatStatus),
+  MOZ_ASSERT(!aFloatStatus.IsFullyComplete(),
              "why split the frame if it's fully complete?");
   MOZ_ASSERT(aState.mBlock == this);
 
@@ -4639,7 +4639,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
     newBCoord = aState.mBCoord + dy;
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(aState.mReflowStatus) &&
+  if (!aState.mReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aState.mReflowInput)) {
     aLine->AppendFloats(aState.mCurrentLineFloats);
     aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
@@ -6273,7 +6273,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
                     aReflowStatus, aState);
   } while (clearanceFrame);
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(aReflowStatus) &&
+  if (!aReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(floatRS)) {
     aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
   } else if (aReflowStatus.IsIncomplete() &&

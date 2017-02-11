@@ -5626,7 +5626,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     ReflowInFlowChild(child, info, aContainerSize, Some(bSize), &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
     MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(childStatus) ||
-               !NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
+               !childStatus.IsFullyComplete() ||
                !child->GetNextInFlow(),
                "fully-complete reflow should destroy any NIFs");
 
@@ -5685,7 +5685,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
 
     if (childStatus.IsIncomplete()) {
       incompleteItems.PutEntry(child);
-    } else if (!NS_FRAME_IS_FULLY_COMPLETE(childStatus)) {
+    } else if (!childStatus.IsFullyComplete()) {
       overflowIncompleteItems.PutEntry(child);
     }
   }
@@ -6415,7 +6415,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   if (!prevInFlow) {
     SharedGridData* sharedGridData = Properties().Get(SharedGridData::Prop());
-    if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
+    if (!aStatus.IsFullyComplete()) {
       if (!sharedGridData) {
         sharedGridData = new SharedGridData;
         Properties().Set(SharedGridData::Prop(), sharedGridData);

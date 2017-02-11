@@ -683,7 +683,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     // Build a continuation column if necessary
     nsIFrame* kidNextInFlow = child->GetNextInFlow();
 
-    if (NS_FRAME_IS_FULLY_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus)) {
+    if (aStatus.IsFullyComplete() && !NS_FRAME_IS_TRUNCATED(aStatus)) {
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
       child = nullptr;
       break;
@@ -828,10 +828,10 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   }
 
 #ifdef DEBUG_roc
-  printf("*** DONE PASS feasible=%d\n", allFit && NS_FRAME_IS_FULLY_COMPLETE(aStatus)
+  printf("*** DONE PASS feasible=%d\n", allFit && aStatus.IsFullyComplete()
          && !NS_FRAME_IS_TRUNCATED(aStatus));
 #endif
-  return allFit && NS_FRAME_IS_FULLY_COMPLETE(aStatus)
+  return allFit && aStatus.IsFullyComplete()
     && !NS_FRAME_IS_TRUNCATED(aStatus);
 }
 
@@ -1102,7 +1102,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     aStatus = NS_FRAME_COMPLETE;
   }
 
-  NS_ASSERTION(NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
+  NS_ASSERTION(aStatus.IsFullyComplete() ||
                aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
                "Column set should be complete if the available block-size is unconstrained");
 
