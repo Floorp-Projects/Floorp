@@ -1284,7 +1284,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
         if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
           // Abspos frames can't cause their parent to be incomplete,
           // only overflow incomplete.
-          NS_FRAME_SET_OVERFLOW_INCOMPLETE(frameStatus);
+          frameStatus.SetOverflowIncomplete();
         }
         else {
           NS_ASSERTION(frameStatus.IsComplete(),
