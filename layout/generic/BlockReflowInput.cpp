@@ -1053,7 +1053,7 @@ BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
   DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
   AppendPushedFloatChain(aFloat);
-  NS_FRAME_SET_OVERFLOW_INCOMPLETE(mReflowStatus);
+  mReflowStatus.SetOverflowIncomplete();
 }
 
 /**

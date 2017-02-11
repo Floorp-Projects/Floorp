@@ -1663,7 +1663,7 @@ nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       // Note that auto height overflow containers have no normal children
       NS_ASSERTION(finalSize.BSize(wm) == 0,
                    "overflow containers must be zero-block-size");
-      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+      aState.mReflowStatus.SetOverflowIncomplete();
     }
   } else if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
              !NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus) &&
@@ -2576,7 +2576,7 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
   if (skipPull && aState.mNextInFlow) {
     NS_ASSERTION(heightConstrained, "Height should be constrained here\n");
     if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
-      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+      aState.mReflowStatus.SetOverflowIncomplete();
     else
       aState.mReflowStatus.SetIncomplete();
   }
@@ -4324,7 +4324,7 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
   }
 
   aState.AppendPushedFloatChain(nextInFlow);
-  NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+  aState.mReflowStatus.SetOverflowIncomplete();
   return NS_OK;
 }
 
@@ -7413,7 +7413,7 @@ nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
     // We fit in the available space - change status to OVERFLOW_INCOMPLETE.
     // XXXmats why didn't Reflow report OVERFLOW_INCOMPLETE in the first place?
     // XXXmats and why exclude the case when our size == AvailableBSize?
-    NS_FRAME_SET_OVERFLOW_INCOMPLETE(*aStatus);
+    aStatus->SetOverflowIncomplete();
   }
 
   if (aStatus->IsComplete()) {

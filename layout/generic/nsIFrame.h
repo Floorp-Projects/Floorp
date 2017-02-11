@@ -303,11 +303,6 @@ private:
 #define NS_FRAME_REFLOW_NEXTINFLOW    0x2
 #define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
-// These macros set or switch incomplete statuses without touching the
-// NS_FRAME_REFLOW_NEXTINFLOW bit.
-#define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
-  status = (status & ~NS_FRAME_NOT_COMPLETE) | NS_FRAME_OVERFLOW_INCOMPLETE
-
 // This bit is set, when a break is requested. This bit is orthogonal
 // to the nsIFrame::nsReflowStatus completion bits.
 #define NS_INLINE_BREAK              0x0100
