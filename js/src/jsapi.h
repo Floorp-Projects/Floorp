@@ -4158,9 +4158,9 @@ CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t
  *
  * After successfully triggering an off thread compile of a script, the
  * callback will eventually be invoked with the specified data and a token
- * for the compilation. The callback will be invoked while off the main thread,
+ * for the compilation. The callback will be invoked while off thread,
  * so must ensure that its operations are thread safe. Afterwards, one of the
- * following functions must be invoked on the main thread:
+ * following functions must be invoked on the runtime's active thread:
  *
  * - FinishOffThreadScript, to get the result script (or nullptr on failure).
  * - CancelOffThreadScript, to free the resources without creating a script.
@@ -6000,7 +6000,7 @@ DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, JS::MutableHan
 
 // Register an encoder on the given script source, such that all functions can
 // be encoded as they are parsed. This strategy is used to avoid blocking the
-// main thread in a non-interruptible way.
+// active thread in a non-interruptible way.
 //
 // The |script| argument of |StartIncrementalEncoding| and
 // |FinishIncrementalEncoding| should be the top-level script returned either as

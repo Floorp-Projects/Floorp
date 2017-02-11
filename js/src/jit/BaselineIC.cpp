@@ -1015,7 +1015,7 @@ CanOptimizeDenseOrUnboxedArraySetElem(JSObject* obj, uint32_t index,
         return false;
 
     // Unboxed arrays need to be able to emit floating point code.
-    if (obj->is<UnboxedArrayObject>() && !obj->runtimeFromMainThread()->jitSupportsFloatingPoint)
+    if (obj->is<UnboxedArrayObject>() && !obj->runtimeFromActiveCooperatingThread()->jitSupportsFloatingPoint)
         return false;
 
     Shape* shape = obj->maybeShape();

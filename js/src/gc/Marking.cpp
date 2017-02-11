@@ -253,7 +253,7 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
      * either free or uninitialized in which case we check the free list.
      *
      * Further complications are that background sweeping may be running and
-     * concurrently modifiying the free list and that tracing is done off main
+     * concurrently modifiying the free list and that tracing is done off
      * thread during compacting GC and reading the contents of the thing by
      * IsThingPoisoned would be racy in this case.
      */
@@ -3000,7 +3000,7 @@ TypedUnmarkGrayCellRecursively(T* t)
 {
     MOZ_ASSERT(t);
 
-    JSRuntime* rt = t->runtimeFromMainThread();
+    JSRuntime* rt = t->runtimeFromActiveCooperatingThread();
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
 

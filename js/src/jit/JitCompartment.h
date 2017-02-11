@@ -330,7 +330,7 @@ class JitZoneGroup
     ZoneGroupData<BackedgeTarget> backedgeTarget_;
 
     // List of all backedges in all Ion code. The backedge edge list is accessed
-    // asynchronously when the main thread is paused and preventBackedgePatching_
+    // asynchronously when the active thread is paused and preventBackedgePatching_
     // is false. Thus, the list must only be mutated while preventBackedgePatching_
     // is true.
     ZoneGroupData<InlineList<PatchableBackedge>> backedgeList_;
@@ -501,7 +501,7 @@ class JitCompartment
     }
 
     // This function is used to call the read barrier, to mark the SIMD template
-    // type as used. This function can only be called from the main thread.
+    // type as used. This function can only be called from the active thread.
     void registerSimdTemplateObjectFor(SimdType type) {
         ReadBarrieredObject& tpl = simdTemplateObjects_[type];
         MOZ_ASSERT(tpl.unbarrieredGet());
@@ -650,7 +650,7 @@ class MOZ_STACK_CLASS AutoWritableJitCode
       : AutoWritableJitCode(TlsContext.get()->runtime(), addr, size)
     {}
     explicit AutoWritableJitCode(JitCode* code)
-      : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
+      : AutoWritableJitCode(code->runtimeFromActiveCooperatingThread(), code->raw(), code->bufferSize())
     {}
     ~AutoWritableJitCode() {
         if (!ExecutableAllocator::makeExecutable(addr_, size_))

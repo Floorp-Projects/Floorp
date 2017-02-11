@@ -1332,7 +1332,7 @@ ScriptSourceObject::trace(JSTracer* trc, JSObject* obj)
 void
 ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
 
     // If code coverage is enabled, record the filename associated with this
@@ -1807,8 +1807,8 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf,
     // helper threads:
     //  - If we are on a helper thread, there must be another helper thread to
     //    execute our compression task.
-    //  - If we are on the main thread, there must be at least two helper
-    //    threads since at most one helper thread can be blocking on the main
+    //  - If we are on the active thread, there must be at least two helper
+    //    threads since at most one helper thread can be blocking on the active
     //    thread (see HelperThreadState::canStartParseTask) which would cause a
     //    deadlock if there wasn't a second helper thread that could make
     //    progress on our compression task.

@@ -286,7 +286,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         if (!obj)
             return nullptr;
 
-        MOZ_ASSERT(obj->runtimeFromMainThread() == zone()->runtimeFromMainThread());
+        MOZ_ASSERT(obj->runtimeFromActiveCooperatingThread() == zone()->runtimeFromActiveCooperatingThread());
         return obj;
     }
 
@@ -304,7 +304,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
          * Check if the delegate is marked with any color to properly handle
          * gray marking when the key's delegate is black and the map is gray.
          */
-        return delegate && gc::IsMarkedUnbarriered(zone()->runtimeFromMainThread(), &delegate);
+        return delegate && gc::IsMarkedUnbarriered(zone()->runtimeFromActiveCooperatingThread(), &delegate);
     }
 
     bool keyNeedsMark(JSScript* script) const {

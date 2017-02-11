@@ -378,7 +378,7 @@ BEGIN_TEST(testHashMapLookupWithDefaultOOM)
 {
     uint32_t timeToFail;
     for (timeToFail = 1; timeToFail < 1000; timeToFail++) {
-        js::oom::SimulateOOMAfter(timeToFail, js::oom::THREAD_TYPE_MAIN, false);
+        js::oom::SimulateOOMAfter(timeToFail, js::oom::THREAD_TYPE_COOPERATING, false);
         LookupWithDefaultUntilResize();
     }
 
