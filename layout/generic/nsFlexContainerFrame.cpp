@@ -3903,7 +3903,7 @@ ResolveFlexContainerMainSize(const ReflowInput& aReflowInput,
     // XXXdholbert For now, we don't support pushing children to our next
     // continuation or splitting children, so "amount of BSize required by
     // our children" is just the main-size (BSize) of our longest flex line.
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
     nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
 
     if (largestLineOuterSize <= aAvailableBSizeForContent) {
@@ -3963,7 +3963,7 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
     // XXXdholbert For now, we don't support pushing children to our next
     // continuation or splitting children, so "amount of BSize required by
     // our children" is just the sum of our FlexLines' BSizes (cross sizes).
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
     if (aSumLineCrossSizes <= aAvailableBSizeForContent) {
       return aAvailableBSizeForContent;
     }
@@ -4638,7 +4638,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       desiredSizeInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
     } else {
       // We couldn't fit bottom border/padding, so we'll need a continuation.
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
     }
   }
 

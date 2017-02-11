@@ -517,7 +517,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
     reflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
   }
   if (!e.AtEnd() || (GetNextInFlow() && !isComplete)) {
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
   }
 
   if (NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {

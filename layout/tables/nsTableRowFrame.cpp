@@ -1061,7 +1061,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
     nscoord styleBSize = CalcBSizeFromUnpaginatedBSize(*this, wm);
     if (styleBSize > aReflowInput.AvailableBSize()) {
       styleBSize = aReflowInput.AvailableBSize();
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
     }
     aDesiredSize.BSize(wm) = std::max(cellMaxBSize, styleBSize);
   }
