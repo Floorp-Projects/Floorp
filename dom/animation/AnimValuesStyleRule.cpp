@@ -67,7 +67,7 @@ AnimValuesStyleRule::AddValue(nsCSSPropertyID aProperty,
 {
   MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN,
              "Unexpected css property");
-  mAnimationValues.Put(aProperty, Move(aValue));
+  mAnimationValues.Put(aProperty, aValue);
   mStyleBits |=
     nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
 }
