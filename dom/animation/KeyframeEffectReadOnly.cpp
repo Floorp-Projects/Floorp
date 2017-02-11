@@ -351,6 +351,33 @@ KeyframeEffectReadOnly::CompositeValue(
 }
 
 StyleAnimationValue
+KeyframeEffectReadOnly::ResolveBaseStyle(nsCSSPropertyID aProperty,
+                                         nsStyleContext* aStyleContext)
+{
+  StyleAnimationValue result;
+  if (mBaseStyleValues.Get(aProperty, &result)) {
+    return result;
+  }
+
+  RefPtr<nsStyleContext> styleContextWithoutAnimation =
+    aStyleContext->PresContext()->StyleSet()->AsGecko()->
+      ResolveStyleByRemovingAnimation(mTarget->mElement,
+                                      aStyleContext,
+                                      eRestyle_AllHintsWithAnimations);
+  bool success =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              styleContextWithoutAnimation,
+                                              result);
+
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
+
+  mBaseStyleValues.Put(aProperty, result);
+
+  return result;
+}
+
+StyleAnimationValue
 KeyframeEffectReadOnly::GetUnderlyingStyle(
   nsCSSPropertyID aProperty,
   const RefPtr<AnimValuesStyleRule>& aAnimationRule)
@@ -368,12 +395,7 @@ KeyframeEffectReadOnly::GetUnderlyingStyle(
     // the base style for the property.
     RefPtr<nsStyleContext> styleContext =
       GetTargetStyleContextWithoutAnimation();
-    result = EffectCompositor::GetBaseStyle(aProperty,
-                                            styleContext,
-                                            *mTarget->mElement,
-                                            mTarget->mPseudoType);
-    MOZ_ASSERT(!result.IsNull(), "The base style should be set");
-    SetNeedsBaseStyle(aProperty);
+    result = ResolveBaseStyle(aProperty, styleContext);
   }
 
   return result;
@@ -434,12 +456,6 @@ KeyframeEffectReadOnly::EnsureBaseStylesForCompositor(
       continue;
     }
 
-    // We only call SetNeedsBaseStyle after calling GetBaseStyle so if
-    // NeedsBaseStyle is true, the base style should be already filled-in.
-    if (NeedsBaseStyle(property.mProperty)) {
-      continue;
-    }
-
     for (const AnimationPropertySegment& segment : property.mSegments) {
       if (segment.mFromComposite == dom::CompositeOperation::Replace &&
           segment.mToComposite == dom::CompositeOperation::Replace) {
@@ -451,13 +467,8 @@ KeyframeEffectReadOnly::EnsureBaseStylesForCompositor(
       }
       MOZ_RELEASE_ASSERT(styleContext);
 
-      Unused << EffectCompositor::GetBaseStyle(property.mProperty,
-                                               styleContext,
-                                               *mTarget->mElement,
-                                               mTarget->mPseudoType);
-      // Make this property as needing a base style so that we send the (now
-      // cached) base style to the compositor.
-      SetNeedsBaseStyle(property.mProperty);
+      StyleAnimationValue result =
+        ResolveBaseStyle(property.mProperty, styleContext);
       break;
     }
   }
@@ -499,8 +510,6 @@ KeyframeEffectReadOnly::ComposeStyle(
 
   nsPresContext* presContext = GetPresContext();
   bool isServoBackend = presContext && presContext->StyleSet()->IsServo();
-
-  mNeedsBaseStyleSet.Empty();
 
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx)
@@ -605,6 +614,9 @@ KeyframeEffectReadOnly::ComposeStyle(
         CompositeValue(prop.mProperty, aStyleRule.mGecko,
                        segment->mToValue.mGecko,
                        segment->mToComposite);
+      if (fromValue.IsNull() || toValue.IsNull()) {
+        continue;
+      }
 
       // Iteration composition for accumulate
       if (mEffectOptions.mIterationComposite ==
@@ -1732,31 +1744,6 @@ KeyframeEffectReadOnly::HasComputedTimingChanged() const
           mCurrentIterationOnLastCompose);
 }
 
-void
-KeyframeEffectReadOnly::SetNeedsBaseStyle(nsCSSPropertyID aProperty)
-{
-  for (size_t i = 0; i < LayerAnimationInfo::kRecords; i++) {
-    if (LayerAnimationInfo::sRecords[i].mProperty == aProperty) {
-      mNeedsBaseStyleSet.AddProperty(aProperty);
-      break;
-    }
-  }
-}
-
-bool
-KeyframeEffectReadOnly::NeedsBaseStyle(nsCSSPropertyID aProperty) const
-{
-  for (size_t i = 0; i < LayerAnimationInfo::kRecords; i++) {
-    if (LayerAnimationInfo::sRecords[i].mProperty == aProperty) {
-      return mNeedsBaseStyleSet.HasProperty(aProperty);
-    }
-  }
-  MOZ_ASSERT_UNREACHABLE(
-    "Expected a property that can be run on the compositor");
-
-  return false;
-}
-
 bool
 KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
 {
@@ -1769,19 +1756,15 @@ KeyframeEffectReadOnly::ContainsAnimatedScale(const nsIFrame* aFrame) const
       continue;
     }
 
-    if (NeedsBaseStyle(prop.mProperty)) {
-      StyleAnimationValue baseStyle =
-        EffectCompositor::GetBaseStyle(prop.mProperty, aFrame);
-      MOZ_ASSERT(!baseStyle.IsNull(), "The base value should be set");
-      if (baseStyle.IsNull()) {
-        // If we failed to get the base style, we consider it has scale value
-        // here for the safety.
-        return true;
-      }
-      gfxSize size = baseStyle.GetScaleValue(aFrame);
-      if (size != gfxSize(1.0f, 1.0f)) {
-        return true;
-      }
+    StyleAnimationValue baseStyle = BaseStyle(prop.mProperty);
+    if (baseStyle.IsNull()) {
+      // If we failed to get the base style, we consider it has scale value
+      // here just to be safe.
+      return true;
+    }
+    gfxSize size = baseStyle.GetScaleValue(aFrame);
+    if (size != gfxSize(1.0f, 1.0f)) {
+      return true;
     }
 
     // This is actually overestimate because there are some cases that combining
