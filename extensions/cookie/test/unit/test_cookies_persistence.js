@@ -14,12 +14,12 @@ function run_test() {
 
 function finish_test() {
   do_execute_soon(function() {
-    test_generator.close();
+    test_generator.return();
     do_test_finished();
   });
 }
 
-function do_run_test() {
+function* do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
