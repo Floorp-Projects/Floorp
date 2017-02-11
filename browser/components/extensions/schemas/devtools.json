@@ -12,5 +12,10 @@
         }
       }
     ]
+  },
+  {
+    "namespace": "devtools",
+    "allowedContexts": ["devtools", "devtools_only"],
+    "defaultContexts": ["devtools", "devtools_only"]
   }
 ]
