@@ -640,7 +640,7 @@ js::DefineToStringTag(JSContext *cx, HandleObject obj, JSAtom* tag)
 static void
 GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->maybeOffMainThread());
+    MOZ_ASSERT(fop->maybeOnHelperThread());
     fop->delete_((GlobalObject::DebuggerVector*) obj->as<NativeObject>().getPrivate());
 }
 

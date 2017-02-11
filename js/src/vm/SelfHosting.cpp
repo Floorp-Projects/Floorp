@@ -3069,7 +3069,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     // Object hash identities are owned by the hashed object, which may be on a
     // different thread than the clone target. In theory, these objects are all
     // tenured and will not be compacted; however, we simply avoid the issue
-    // altogether by skipping the cycle-detection when off the main thread.
+    // altogether by skipping the cycle-detection when off thread.
     mozilla::Maybe<AutoCycleDetector> detect;
     if (js::CurrentThreadCanAccessZone(selfHostedObject->zoneFromAnyThread())) {
         detect.emplace(cx, selfHostedObject);

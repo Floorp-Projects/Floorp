@@ -45,7 +45,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     }
 
     // Lock to allocate. If symbol allocation becomes a bottleneck, this can
-    // probably be replaced with an assertion that we're on the main thread.
+    // probably be replaced with an assertion that we're on the active thread.
     AutoLockForExclusiveAccess lock(cx);
     Symbol* sym;
     {

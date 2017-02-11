@@ -3986,7 +3986,7 @@ class MInitElemGetterSetter
 };
 
 // WrappedFunction wraps a JSFunction so it can safely be used off-thread.
-// In particular, a function's flags can be modified on the main thread as
+// In particular, a function's flags can be modified on the active thread as
 // functions are relazified and delazified, so we must be careful not to access
 // these flags off-thread.
 class WrappedFunction : public TempObject
@@ -8351,7 +8351,7 @@ struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in
     // the script, and are immutable except for delazification. Record this
-    // information while still on the main thread to avoid races.
+    // information while still on the active thread to avoid races.
     CompilerFunction fun;
     uint16_t flags;
     uint16_t nargs;
