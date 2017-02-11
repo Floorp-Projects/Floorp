@@ -386,10 +386,9 @@ protected:
     nsCSSPropertyID aProperty,
     const RefPtr<AnimValuesStyleRule>& aAnimationRule);
 
-  // Ensure the base styles is available for any properties that can be run on
-  // the compositor and which are not includes in |aPropertiesToSkip|.
-  void EnsureBaseStylesForCompositor(
-    const nsCSSPropertyIDSet& aPropertiesToSkip);
+  // Ensure the base styles is available for any properties in |aProperties|.
+  void EnsureBaseStyles(nsStyleContext* aStyleContext,
+                        const nsTArray<AnimationProperty>& aProperties);
 
   // Returns the base style resolved by |aStyleContext| for |aProperty|.
   StyleAnimationValue ResolveBaseStyle(nsCSSPropertyID aProperty,
