@@ -580,11 +580,6 @@ ApplyAnimatedValue(Layer* aLayer,
                    const AnimationData& aAnimationData,
                    const StyleAnimationValue& aValue)
 {
-  if (aValue.IsNull()) {
-    // Return gracefully if we have no valid StyleAnimationValue.
-    return;
-  }
-
   HostLayer* layerCompositor = aLayer->AsHostLayer();
   switch (aProperty) {
     case eCSSProperty_opacity: {
