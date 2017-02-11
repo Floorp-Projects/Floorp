@@ -13,6 +13,7 @@ const global = this;
 
 Cu.importGlobalProperties(["URL"]);
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -23,21 +24,13 @@ var {
   instanceOf,
 } = ExtensionUtils;
 
-class DeepMap extends DefaultMap {
-  constructor() {
-    super(() => new DeepMap());
-  }
-
-  getPath(...keys) {
-    return keys.reduce((map, prop) => map.get(prop), this);
-  }
-}
-
 XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
                                    "@mozilla.org/addons/content-policy;1",
                                    "nsIAddonContentPolicy");
 
 this.EXPORTED_SYMBOLS = ["Schemas"];
+
+const {DEBUG} = AppConstants;
 
 /* globals Schemas, URL */
 
@@ -644,11 +637,10 @@ class Entry {
    * of a given function or event.
    *
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The method name, e.g. "get".
    * @param {object} dest The object where `path`.`name` should be stored.
    * @param {InjectionContext} context
    */
-  inject(path, name, dest, context) {
+  inject(path, dest, context) {
   }
 }
 
@@ -709,11 +701,15 @@ class Type extends Entry {
    *        schema object.
    */
   static checkSchemaProperties(schema, path, extra = []) {
-    let allowedSet = new Set([...this.EXTRA_PROPERTIES, ...extra]);
+    if (DEBUG) {
+      let allowedSet = new Set([...this.EXTRA_PROPERTIES, ...extra]);
 
-    for (let prop of Object.keys(schema)) {
-      if (!allowedSet.has(prop)) {
-        throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${schema.id || JSON.stringify(schema)}"`);
+      for (let prop of Object.keys(schema)) {
+        if (!allowedSet.has(prop)) {
+          throw new Error(`Internal error: Namespace ${path.join(".")} has ` +
+                          `invalid type property "${prop}" ` +
+                          `in type "${schema.id || JSON.stringify(schema)}"`);
+        }
       }
     }
   }
@@ -853,7 +849,7 @@ class RefType extends Type {
   }
 
   get targetType() {
-    let ns = Schemas.namespaces.get(this.namespaceName);
+    let ns = Schemas.getNamespace(this.namespaceName);
     let type = ns.get(this.reference);
     if (!type) {
       throw new Error(`Internal error: Type ${this.reference} not found`);
@@ -909,15 +905,18 @@ class StringType extends Type {
       }
       format = FORMATS[schema.format];
     }
-    return new this(schema, enumeration,
+    return new this(schema,
+                    schema.id,
+                    enumeration,
                     schema.minLength || 0,
                     schema.maxLength || Infinity,
                     pattern,
                     format);
   }
 
-  constructor(schema, enumeration, minLength, maxLength, pattern, format) {
+  constructor(schema, name, enumeration, minLength, maxLength, pattern, format) {
     super(schema);
+    this.name = name;
     this.enumeration = enumeration;
     this.minLength = minLength;
     this.maxLength = maxLength;
@@ -972,9 +971,9 @@ class StringType extends Type {
     return baseType == "string";
   }
 
-  inject(path, name, dest, context) {
+  inject(path, dest, context) {
     if (this.enumeration) {
-      exportLazyGetter(dest, name, () => {
+      exportLazyGetter(dest, this.name, () => {
         let obj = Cu.createObjectIn(dest);
         for (let e of this.enumeration) {
           obj[e.toUpperCase()] = e;
@@ -985,7 +984,9 @@ class StringType extends Type {
   }
 }
 
+let FunctionEntry;
 let SubModuleType;
+
 class ObjectType extends Type {
   static get EXTRA_PROPERTIES() {
     return ["properties", "patternProperties", ...super.EXTRA_PROPERTIES];
@@ -996,7 +997,7 @@ class ObjectType extends Type {
       return SubModuleType.parseSchema(schema, path, extraProperties);
     }
 
-    if (!("$extend" in schema)) {
+    if (DEBUG && !("$extend" in schema)) {
       // Only allow extending "properties" and "patternProperties".
       extraProperties = ["additionalProperties", "isInstanceOf", ...extraProperties];
     }
@@ -1005,7 +1006,7 @@ class ObjectType extends Type {
     let parseProperty = (schema, extraProps = []) => {
       return {
         type: Schemas.parseSchema(schema, path,
-                                  ["unsupported", "onError", "permissions", ...extraProps]),
+                                  DEBUG && ["unsupported", "onError", "permissions", ...extraProps]),
         optional: schema.optional || false,
         unsupported: schema.unsupported || false,
         onError: schema.onError || null,
@@ -1166,10 +1167,13 @@ class ObjectType extends Type {
       value = v.value;
 
       if (this.isInstanceOf) {
-        if (Object.keys(this.properties).length ||
-            this.patternProperties.length ||
-            !(this.additionalProperties instanceof AnyType)) {
-          throw new Error("InternalError: isInstanceOf can only be used with objects that are otherwise unrestricted");
+        if (DEBUG) {
+          if (Object.keys(this.properties).length ||
+              this.patternProperties.length ||
+              !(this.additionalProperties instanceof AnyType)) {
+            throw new Error("InternalError: isInstanceOf can only be used " +
+                            "with objects that are otherwise unrestricted");
+          }
         }
 
         if (!instanceOf(value, this.isInstanceOf)) {
@@ -1240,7 +1244,7 @@ SubModuleType = class SubModuleType extends Type {
 
     // The path we pass in here is only used for error messages.
     path = [...path, schema.id];
-    let functions = schema.functions.map(fun => Schemas.parseFunction(path, fun));
+    let functions = schema.functions.map(fun => FunctionEntry.parseSchema(fun, path));
 
     return new this(functions);
   }
@@ -1411,23 +1415,29 @@ class FunctionType extends Type {
         });
       }
     }
-    if (isExpectingCallback) {
-      throw new Error(`Internal error: Expected a callback parameter with name ${schema.async}`);
-    }
-
     let hasAsyncCallback = false;
     if (isAsync) {
       hasAsyncCallback = (parameters &&
                           parameters.length &&
                           parameters[parameters.length - 1].name == schema.async);
+    }
 
-      if (schema.returns) {
-        throw new Error("Internal error: Async functions must not have return values.");
+    if (DEBUG) {
+      if (isExpectingCallback) {
+        throw new Error(`Internal error: Expected a callback parameter ` +
+                        `with name ${schema.async}`);
       }
-      if (schema.allowAmbiguousOptionalArguments && !hasAsyncCallback) {
-        throw new Error("Internal error: Async functions with ambiguous arguments must declare the callback as the last parameter");
+
+      if (isAsync && schema.returns) {
+        throw new Error("Internal error: Async functions must not " +
+                        "have return values.");
+      }
+      if (isAsync && schema.allowAmbiguousOptionalArguments && !hasAsyncCallback) {
+        throw new Error("Internal error: Async functions with ambiguous " +
+                        "arguments must declare the callback as the last parameter");
       }
     }
+
 
     return new this(schema, parameters, isAsync, hasAsyncCallback);
   }
@@ -1457,32 +1467,32 @@ class ValueProperty extends Entry {
     this.value = value;
   }
 
-  inject(path, name, dest, context) {
-    dest[name] = this.value;
+  inject(path, dest, context) {
+    dest[this.name] = this.value;
   }
 }
 
 // Represents a "property" defined in a schema namespace that is not a
 // constant.
 class TypeProperty extends Entry {
-  constructor(schema, namespaceName, name, type, writable) {
+  constructor(schema, path, name, type, writable) {
     super(schema);
-    this.namespaceName = namespaceName;
+    this.path = path;
     this.name = name;
     this.type = type;
     this.writable = writable;
   }
 
   throwError(context, msg) {
-    throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
+    throw context.makeError(`${msg} for ${this.path.join(".")}.${this.name}.`);
   }
 
-  inject(path, name, dest, context) {
+  inject(path, dest, context) {
     if (this.unsupported) {
       return;
     }
 
-    let apiImpl = context.getImplementation(path.join("."), name);
+    let apiImpl = context.getImplementation(path.join("."), this.name);
 
     let getStub = () => {
       this.checkDeprecated(context);
@@ -1509,7 +1519,7 @@ class TypeProperty extends Entry {
       desc.set = Cu.exportFunction(setStub, dest);
     }
 
-    Object.defineProperty(dest, name, desc);
+    Object.defineProperty(dest, this.name, desc);
   }
 }
 
@@ -1524,36 +1534,41 @@ class SubModuleProperty extends Entry {
   // namespaceName: Namespace in which the property lives.
   // reference: Name of the type defining the functions to add to the property.
   // properties: Additional properties to add to the module (unsupported).
-  constructor(schema, name, namespaceName, reference, properties) {
+  constructor(schema, path, name, reference, properties) {
     super(schema);
     this.name = name;
-    this.namespaceName = namespaceName;
+    this.path = path;
+    this.namespaceName = path.join(".");
     this.reference = reference;
     this.properties = properties;
   }
 
-  inject(path, name, dest, context) {
-    exportLazyGetter(dest, name, () => {
+  inject(path, dest, context) {
+    exportLazyGetter(dest, this.name, () => {
       let obj = Cu.createObjectIn(dest);
 
-      let ns = Schemas.namespaces.get(this.namespaceName);
+      let ns = Schemas.getNamespace(this.namespaceName);
       let type = ns.get(this.reference);
       if (!type && this.reference.includes(".")) {
         let [namespaceName, ref] = this.reference.split(".");
-        ns = Schemas.namespaces.get(namespaceName);
+        ns = Schemas.getNamespace(namespaceName);
         type = ns.get(ref);
       }
-      if (!type || !(type instanceof SubModuleType)) {
-        throw new Error(`Internal error: ${this.namespaceName}.${this.reference} is not a sub-module`);
+
+      if (DEBUG) {
+        if (!type || !(type instanceof SubModuleType)) {
+          throw new Error(`Internal error: ${this.namespaceName}.${this.reference} ` +
+                          `is not a sub-module`);
+        }
       }
+      let subpath = [path, this.name];
+      let namespace = subpath.join(".");
 
       let functions = type.functions;
       for (let fun of functions) {
-        let subpath = path.concat(name);
-        let namespace = subpath.join(".");
         let allowedContexts = fun.allowedContexts.length ? fun.allowedContexts : ns.defaultContexts;
         if (context.shouldInject(namespace, fun.name, allowedContexts)) {
-          fun.inject(subpath, fun.name, obj, context);
+          fun.inject(subpath, obj, context);
         }
       }
 
@@ -1655,7 +1670,19 @@ class CallEntry extends Entry {
 }
 
 // Represents a "function" defined in a schema namespace.
-class FunctionEntry extends CallEntry {
+FunctionEntry = class FunctionEntry extends CallEntry {
+  static parseSchema(schema, path) {
+    return new this(schema, path, schema.name,
+                    Schemas.parseSchema(schema, path,
+                      ["name", "unsupported", "returns",
+                       "permissions",
+                       "allowAmbiguousOptionalArguments"]),
+                    schema.unsupported || false,
+                    schema.allowAmbiguousOptionalArguments || false,
+                    schema.returns || null,
+                    schema.permissions || null);
+  }
+
   constructor(schema, path, name, type, unsupported, allowAmbiguousOptionalArguments, returns, permissions) {
     super(schema, path, name, type.parameters, allowAmbiguousOptionalArguments);
     this.unsupported = unsupported;
@@ -1666,7 +1693,7 @@ class FunctionEntry extends CallEntry {
     this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
-  inject(path, name, dest, context) {
+  inject(path, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1675,8 +1702,8 @@ class FunctionEntry extends CallEntry {
       return;
     }
 
-    exportLazyGetter(dest, name, () => {
-      let apiImpl = context.getImplementation(path.join("."), name);
+    exportLazyGetter(dest, this.name, () => {
+      let apiImpl = context.getImplementation(path.join("."), this.name);
 
       let stub;
       if (this.isAsync) {
@@ -1711,10 +1738,29 @@ class FunctionEntry extends CallEntry {
       return Cu.exportFunction(stub, dest);
     });
   }
-}
+};
 
 // Represents an "event" defined in a schema namespace.
 class Event extends CallEntry {
+  static parseSchema(event, path) {
+    let extraParameters = Array.from(event.extraParameters || [], param => ({
+      type: Schemas.parseSchema(param, path, ["name", "optional", "default"]),
+      name: param.name,
+      optional: param.optional || false,
+      default: param.default == undefined ? null : param.default,
+    }));
+
+    let extraProperties = ["name", "unsupported", "permissions", "extraParameters",
+                           // We ignore these properties for now.
+                           "returns", "filters"];
+
+    return new this(event, path, event.name,
+                    Schemas.parseSchema(event, path, extraProperties),
+                    extraParameters,
+                    event.unsupported || false,
+                    event.permissions || null);
+  }
+
   constructor(schema, path, name, type, extraParameters, unsupported, permissions) {
     super(schema, path, name, extraParameters);
     this.type = type;
@@ -1730,7 +1776,7 @@ class Event extends CallEntry {
     return r.value;
   }
 
-  inject(path, name, dest, context) {
+  inject(path, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1739,8 +1785,8 @@ class Event extends CallEntry {
       return;
     }
 
-    exportLazyGetter(dest, name, () => {
-      let apiImpl = context.getImplementation(path.join("."), name);
+    exportLazyGetter(dest, this.name, () => {
+      let apiImpl = context.getImplementation(path.join("."), this.name);
 
       let addStub = (listener, ...args) => {
         listener = this.checkListener(listener, context);
@@ -1780,6 +1826,279 @@ const TYPES = Object.freeze(Object.assign(Object.create(null), {
   string: StringType,
 }));
 
+const LOADERS = {
+  events: "loadEvent",
+  functions: "loadFunction",
+  properties: "loadProperty",
+  types: "loadType",
+};
+
+class Namespace extends Map {
+  constructor(name, path) {
+    super();
+
+    this._lazySchemas = [];
+
+    this.name = name;
+    this.path = name ? [...path, name] : [...path];
+
+    this.permissions = null;
+    this.allowedContexts = [];
+    this.defaultContexts = [];
+  }
+
+  /**
+   * Adds a JSON Schema object to the set of schemas that represent this
+   * namespace.
+   *
+   * @param {object} schema
+   *        A JSON schema object which partially describes this
+   *        namespace.
+   */
+  addSchema(schema) {
+    this._lazySchemas.push(schema);
+
+    for (let prop of ["permissions", "allowedContexts", "defaultContexts"]) {
+      if (schema[prop]) {
+        this[prop] = schema[prop];
+      }
+    }
+  }
+
+  /**
+   * Initializes the keys of this namespace based on the schema objects
+   * added via previous `addSchema` calls.
+   */
+  init() {
+    if (!this._lazySchemas) {
+      return;
+    }
+
+    for (let type of Object.keys(LOADERS)) {
+      this[type] = new DefaultMap(() => []);
+    }
+
+    for (let schema of this._lazySchemas) {
+      for (let type of schema.types || []) {
+        this.types.get(type.$extend || type.id).push(type);
+      }
+
+      for (let [name, prop] of Object.entries(schema.properties || {})) {
+        if (!prop.unsupported) {
+          this.properties.get(name).push(prop);
+        }
+      }
+
+      for (let fun of schema.functions || []) {
+        this.functions.get(fun.name).push(fun);
+      }
+
+      for (let event of schema.events || []) {
+        this.events.get(event.name).push(event);
+      }
+    }
+
+    // For each type of top-level property in the schema object, iterate
+    // over all properties of that type, and create a temporary key for
+    // each property pointing to its type. Those temporary properties
+    // are later used to instantiate an Entry object based on the actual
+    // schema object.
+    for (let type of Object.keys(LOADERS)) {
+      for (let key of this[type].keys()) {
+        this.set(key, type);
+      }
+    }
+
+    this._lazySchemas = null;
+
+    if (DEBUG) {
+      for (let key of this.keys()) {
+        this.get(key);
+      }
+    }
+  }
+
+  /**
+   * Initializes the value of a given key, by parsing the schema object
+   * associated with it and replacing its temporary value with an `Entry`
+   * instance.
+   *
+   * @param {string} key
+   *        The name of the property to initialize.
+   * @param {string} type
+   *        The type of property the key represents. Must have a
+   *        corresponding entry in the `LOADERS` object, pointing to the
+   *        initialization method for that type.
+   *
+   * @returns {Entry}
+   */
+  initKey(key, type) {
+    let loader = LOADERS[type];
+
+    for (let schema of this[type].get(key)) {
+      this.set(key, this[loader](key, schema));
+    }
+
+    return this.get(key);
+  }
+
+  loadType(name, type) {
+    if ("$extend" in type) {
+      return this.extendType(type);
+    }
+    return Schemas.parseSchema(type, this.path, ["id"]);
+  }
+
+  extendType(type) {
+    let targetType = this.get(type.$extend);
+
+    // Only allow extending object and choices types for now.
+    if (targetType instanceof ObjectType) {
+      type.type = "object";
+    } else if (DEBUG) {
+      if (!targetType) {
+        throw new Error(`Internal error: Attempt to extend a nonexistant type ${type.$extend}`);
+      } else if (!(targetType instanceof ChoiceType)) {
+        throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
+      }
+    }
+
+    let parsed = Schemas.parseSchema(type, this.path, ["$extend"]);
+
+    if (DEBUG && parsed.constructor !== targetType.constructor) {
+      throw new Error(`Internal error: Bad attempt to extend ${type.$extend}`);
+    }
+
+    targetType.extend(parsed);
+
+    return targetType;
+  }
+
+  loadProperty(name, prop) {
+    if ("$ref" in prop) {
+      if (!prop.unsupported) {
+        return new SubModuleProperty(prop, this.path, name,
+                                     prop.$ref, prop.properties || {});
+      }
+    } else if ("value" in prop) {
+      return new ValueProperty(prop, name, prop.value);
+    } else {
+      // We ignore the "optional" attribute on properties since we
+      // don't inject anything here anyway.
+      let type = Schemas.parseSchema(prop, [this.name], ["optional", "writable"]);
+      return new TypeProperty(prop, this.path, name, type, prop.writable || false);
+    }
+  }
+
+  loadFunction(name, fun) {
+    return FunctionEntry.parseSchema(fun, this.path);
+  }
+
+  loadEvent(name, event) {
+    return Event.parseSchema(event, this.path);
+  }
+
+  /**
+   * Injects the properties of this namespace into the given object.
+   *
+   * @param {object} dest
+   *        The object into which to inject the namespace properties.
+   * @param {InjectionContext} context
+   *        The injection context with which to inject the properties.
+   */
+  injectInto(dest, context) {
+    for (let [name, entry] of this.entries()) {
+      if (entry.permissions && !entry.permissions.some(perm => context.hasPermission(perm))) {
+        continue;
+      }
+
+      let allowedContexts = entry.allowedContexts;
+      if (!allowedContexts.length) {
+        allowedContexts = this.defaultContexts;
+      }
+
+      if (context.shouldInject(this.path.join("."), name, allowedContexts)) {
+        entry.inject(this.path, dest, context);
+      }
+    }
+  }
+
+  inject(path, dest, context) {
+    exportLazyGetter(dest, this.name, () => {
+      let obj = Cu.createObjectIn(dest);
+
+      this.injectInto(obj, context);
+
+      // Only inject the namespace object if it isn't empty.
+      if (Object.keys(obj).length) {
+        return obj;
+      }
+    });
+  }
+
+  keys() {
+    this.init();
+    return super.keys();
+  }
+
+  * entries() {
+    for (let key of this.keys()) {
+      yield [key, this.get(key)];
+    }
+  }
+
+  get(key) {
+    this.init();
+    let value = super.get(key);
+
+    // The initial values of lazily-initialized schema properties are
+    // strings, pointing to the type of property, corresponding to one
+    // of the entries in the `LOADERS` object.
+    if (typeof value === "string") {
+      value = this.initKey(key, value);
+    }
+
+    return value;
+  }
+
+  /**
+   * Returns a Namespace object for the given namespace name. If a
+   * namespace object with this name does not already exist, it is
+   * created. If the name contains any '.' characters, namespaces are
+   * recursively created, for each dot-separated component.
+   *
+   * @param {string} name
+   *        The name of the sub-namespace to retrieve.
+   *
+   * @returns {Namespace}
+   */
+  getNamespace(name) {
+    let subName;
+
+    let idx = name.indexOf(".");
+    if (idx > 0) {
+      subName = name.slice(idx + 1);
+      name = name.slice(0, idx);
+    }
+
+    let ns = super.get(name);
+    if (!ns) {
+      ns = new Namespace(name, this.path);
+      this.set(name, ns);
+    }
+
+    if (subName) {
+      return ns.getNamespace(subName);
+    }
+    return ns;
+  }
+
+  has(key) {
+    this.init();
+    return super.has(key);
+  }
+}
+
 this.Schemas = {
   initialized: false,
 
@@ -1789,23 +2108,14 @@ this.Schemas = {
 
   // Map[<schema-name> -> Map[<symbol-name> -> Entry]]
   // This keeps track of all the schemas that have been loaded so far.
-  namespaces: new Map(),
+  rootNamespace: new Namespace("", []),
 
-  register(namespaceName, symbol, value) {
-    let ns = this.namespaces.get(namespaceName);
-    if (!ns) {
-      ns = new Map();
-      ns.name = namespaceName;
-      ns.permissions = null;
-      ns.allowedContexts = [];
-      ns.defaultContexts = [];
-      this.namespaces.set(namespaceName, ns);
-    }
-    ns.set(symbol, value);
+  getNamespace(name) {
+    return this.rootNamespace.getNamespace(name);
   },
 
   parseSchema(schema, path, extraProperties = []) {
-    let allowedProperties = new Set(extraProperties);
+    let allowedProperties = DEBUG && new Set(extraProperties);
 
     if ("choices" in schema) {
       return ChoiceType.parseSchema(schema, path, allowedProperties);
@@ -1813,107 +2123,21 @@ this.Schemas = {
       return RefType.parseSchema(schema, path, allowedProperties);
     }
 
-    if (!("type" in schema)) {
-      throw new Error(`Unexpected value for type: ${JSON.stringify(schema)}`);
-    }
-
-    allowedProperties.add("type");
-
     let type = TYPES[schema.type];
-    if (!type) {
-      throw new Error(`Unexpected type ${schema.type}`);
-    }
-    return type.parseSchema(schema, path, allowedProperties);
-  },
 
-  parseFunction(path, fun) {
-    let f = new FunctionEntry(fun, path, fun.name,
-                              this.parseSchema(fun, path,
-                                ["name", "unsupported", "returns",
-                                 "permissions",
-                                 "allowAmbiguousOptionalArguments"]),
-                              fun.unsupported || false,
-                              fun.allowAmbiguousOptionalArguments || false,
-                              fun.returns || null,
-                              fun.permissions || null);
-    return f;
-  },
+    if (DEBUG) {
+      allowedProperties.add("type");
 
-  loadType(namespaceName, type) {
-    if ("$extend" in type) {
-      this.extendType(namespaceName, type);
-    } else {
-      this.register(namespaceName, type.id, this.parseSchema(type, [namespaceName], ["id"]));
-    }
-  },
-
-  extendType(namespaceName, type) {
-    let ns = Schemas.namespaces.get(namespaceName);
-    let targetType = ns && ns.get(type.$extend);
-
-    // Only allow extending object and choices types for now.
-    if (targetType instanceof ObjectType) {
-      type.type = "object";
-    } else if (!targetType) {
-      throw new Error(`Internal error: Attempt to extend a nonexistant type ${type.$extend}`);
-    } else if (!(targetType instanceof ChoiceType)) {
-      throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
-    }
-
-    let parsed = this.parseSchema(type, [namespaceName], ["$extend"]);
-    if (parsed.constructor !== targetType.constructor) {
-      throw new Error(`Internal error: Bad attempt to extend ${type.$extend}`);
-    }
-
-    targetType.extend(parsed);
-  },
-
-  loadProperty(namespaceName, name, prop) {
-    if ("$ref" in prop) {
-      if (!prop.unsupported) {
-        this.register(namespaceName, name, new SubModuleProperty(prop, name, namespaceName, prop.$ref,
-                                                                 prop.properties || {}));
+      if (!("type" in schema)) {
+        throw new Error(`Unexpected value for type: ${JSON.stringify(schema)}`);
       }
-    } else if ("value" in prop) {
-      this.register(namespaceName, name, new ValueProperty(prop, name, prop.value));
-    } else {
-      // We ignore the "optional" attribute on properties since we
-      // don't inject anything here anyway.
-      let type = this.parseSchema(prop, [namespaceName], ["optional", "writable"]);
-      this.register(namespaceName, name, new TypeProperty(prop, namespaceName, name, type, prop.writable || false));
+
+      if (!type) {
+        throw new Error(`Unexpected type ${schema.type}`);
+      }
     }
-  },
 
-  loadFunction(namespaceName, fun) {
-    let f = this.parseFunction([namespaceName], fun);
-    this.register(namespaceName, fun.name, f);
-  },
-
-  loadEvent(namespaceName, event) {
-    let extras = event.extraParameters || [];
-    extras = extras.map(param => {
-      return {
-        type: this.parseSchema(param, [namespaceName], ["name", "optional", "default"]),
-        name: param.name,
-        optional: param.optional || false,
-        default: param.default == undefined ? null : param.default,
-      };
-    });
-
-    // We ignore these properties for now.
-    /* eslint-disable no-unused-vars */
-    let returns = event.returns;
-    let filters = event.filters;
-    /* eslint-enable no-unused-vars */
-
-    let type = this.parseSchema(event, [namespaceName],
-      ["name", "unsupported", "permissions",
-       "extraParameters", "returns", "filters"]);
-
-    let e = new Event(event, [namespaceName], event.name, type, extras,
-                      event.unsupported || false,
-                      event.permissions || null);
-    this.register(namespaceName, event.name, e);
+    return type.parseSchema(schema, path, allowedProperties);
   },
 
   init() {
@@ -1949,15 +2173,15 @@ this.Schemas = {
   },
 
   flushSchemas() {
-    XPCOMUtils.defineLazyGetter(this, "namespaces",
+    XPCOMUtils.defineLazyGetter(this, "rootNamespace",
                                 () => this.parseSchemas());
   },
 
   parseSchemas() {
-    Object.defineProperty(this, "namespaces", {
+    Object.defineProperty(this, "rootNamespace", {
       enumerable: true,
       configurable: true,
-      value: new Map(),
+      value: new Namespace("", []),
     });
 
     for (let json of this.schemaJSON.values()) {
@@ -1968,37 +2192,13 @@ this.Schemas = {
       }
     }
 
-    return this.namespaces;
+    return this.rootNamespace;
   },
 
   loadSchema(json) {
     for (let namespace of json) {
-      let name = namespace.namespace;
-
-      let types = namespace.types || [];
-      for (let type of types) {
-        this.loadType(name, type);
-      }
-
-      let properties = namespace.properties || {};
-      for (let propertyName of Object.keys(properties)) {
-        this.loadProperty(name, propertyName, properties[propertyName]);
-      }
-
-      let functions = namespace.functions || [];
-      for (let fun of functions) {
-        this.loadFunction(name, fun);
-      }
-
-      let events = namespace.events || [];
-      for (let event of events) {
-        this.loadEvent(name, event);
-      }
-
-      let ns = this.namespaces.get(name);
-      ns.permissions = namespace.permissions || null;
-      ns.allowedContexts = namespace.allowedContexts || [];
-      ns.defaultContexts = namespace.defaultContexts || [];
+      this.getNamespace(namespace.namespace)
+          .addSchema(namespace);
     }
   },
 
@@ -2043,7 +2243,7 @@ this.Schemas = {
    *        True if the context has permission for the given namespace.
    */
   checkPermissions(namespace, wrapperFuncs) {
-    let ns = this.namespaces.get(namespace);
+    let ns = this.getNamespace(namespace);
     if (ns && ns.permissions) {
       return ns.permissions.some(perm => wrapperFuncs.hasPermission(perm));
     }
@@ -2063,65 +2263,7 @@ this.Schemas = {
   inject(dest, wrapperFuncs) {
     let context = new InjectionContext(wrapperFuncs);
 
-    let createNamespace = ns => {
-      let obj = Cu.createObjectIn(dest);
-
-      for (let [name, entry] of ns) {
-        let allowedContexts = entry.allowedContexts;
-        if (!allowedContexts.length) {
-          allowedContexts = ns.defaultContexts;
-        }
-
-        if (context.shouldInject(ns.name, name, allowedContexts)) {
-          entry.inject([ns.name], name, obj, context);
-        }
-      }
-
-      // Remove the namespace object if it is empty
-      if (Object.keys(obj).length) {
-        return obj;
-      }
-    };
-
-    let createNestedNamespaces = (parent, namespaces) => {
-      for (let [prop, namespace] of namespaces) {
-        if (namespace instanceof DeepMap) {
-          exportLazyGetter(parent, prop, () => {
-            let obj = Cu.createObjectIn(parent);
-            createNestedNamespaces(obj, namespace);
-            return obj;
-          });
-        } else {
-          exportLazyGetter(parent, prop,
-                           () => createNamespace(namespace));
-        }
-      }
-    };
-
-    let nestedNamespaces = new DeepMap();
-    for (let ns of this.namespaces.values()) {
-      if (ns.permissions && !ns.permissions.some(perm => context.hasPermission(perm))) {
-        continue;
-      }
-
-      if (!wrapperFuncs.shouldInject(ns.name, null, ns.allowedContexts)) {
-        continue;
-      }
-
-      if (ns.name.includes(".")) {
-        let path = ns.name.split(".");
-        let leafName = path.pop();
-
-        let parent = nestedNamespaces.getPath(...path);
-
-        parent.set(leafName, ns);
-      } else {
-        exportLazyGetter(dest, ns.name,
-                         () => createNamespace(ns));
-      }
-    }
-
-    createNestedNamespaces(dest, nestedNamespaces);
+    this.rootNamespace.injectInto(dest, context);
   },
 
   /**
@@ -2135,7 +2277,7 @@ this.Schemas = {
    */
   normalize(obj, typeName, context) {
     let [namespaceName, prop] = typeName.split(".");
-    let ns = this.namespaces.get(namespaceName);
+    let ns = this.getNamespace(namespaceName);
     let type = ns.get(prop);
 
     return type.normalize(obj, new Context(context));
