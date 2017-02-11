@@ -43,7 +43,7 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".pie-chart-slice"));
 
-  is(body.selectedPanel.id, "inspector-panel",
+  is(body.selectedPanel.id, "react-monitor-panel-hook",
     "The main panel is switched back to the inspector panel.");
 
   testFilterButtons(monitor, "html");
