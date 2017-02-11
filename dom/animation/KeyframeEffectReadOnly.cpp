@@ -887,9 +887,8 @@ KeyframeEffectReadOnly::RequestRestyle(
   }
 }
 
-template<KeyframeEffectReadOnly::AnimationStyle aAnimationStyle>
 already_AddRefed<nsStyleContext>
-KeyframeEffectReadOnly::DoGetTargetStyleContext()
+KeyframeEffectReadOnly::GetTargetStyleContext()
 {
   nsIPresShell* shell = GetPresShell();
   if (!shell) {
@@ -903,26 +902,9 @@ KeyframeEffectReadOnly::DoGetTargetStyleContext()
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
 
-  if (aAnimationStyle == AnimationStyle::Include) {
-    return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                         pseudo,
-                                                         shell);
-  }
-
-  return nsComputedDOMStyle::GetStyleContextForElementWithoutAnimation(
-    mTarget->mElement, pseudo, shell);
-}
-
-already_AddRefed<nsStyleContext>
-KeyframeEffectReadOnly::GetTargetStyleContext()
-{
-  return DoGetTargetStyleContext<AnimationStyle::Include>();
-}
-
-already_AddRefed<nsStyleContext>
-KeyframeEffectReadOnly::GetTargetStyleContextWithoutAnimation()
-{
-  return DoGetTargetStyleContext<AnimationStyle::Skip>();
+  return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
+                                                       pseudo,
+                                                       shell);
 }
 
 #ifdef DEBUG
