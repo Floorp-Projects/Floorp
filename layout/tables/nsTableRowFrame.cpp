@@ -1118,7 +1118,7 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
 
   ReflowChildren(aPresContext, aDesiredSize, aReflowInput, *tableFrame, aStatus);
 
-  if (aPresContext->IsPaginated() && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+  if (aPresContext->IsPaginated() && !aStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aReflowInput)) {
     aStatus = NS_INLINE_LINE_BREAK_BEFORE();
   }

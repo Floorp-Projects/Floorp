@@ -309,9 +309,6 @@ private:
 #define NS_FRAME_OVERFLOW_IS_INCOMPLETE(status) \
   (0 != ((status) & NS_FRAME_OVERFLOW_INCOMPLETE))
 
-#define NS_FRAME_IS_FULLY_COMPLETE(status) \
-  (NS_FRAME_IS_COMPLETE(status) && !NS_FRAME_OVERFLOW_IS_INCOMPLETE(status))
-
 // These macros set or switch incomplete statuses without touching the
 // NS_FRAME_REFLOW_NEXTINFLOW bit.
 #define NS_FRAME_SET_INCOMPLETE(status) \

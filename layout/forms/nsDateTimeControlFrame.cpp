@@ -235,7 +235,7 @@ nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
     ReflowChild(inputAreaFrame, aPresContext, childDesiredSize,
                 childReflowOuput, myWM, childOffset, dummyContainerSize, 0,
                 childStatus);
-    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
+    MOZ_ASSERT(childStatus.IsFullyComplete(),
                "We gave our child unconstrained available block-size, "
                "so it should be complete");
 

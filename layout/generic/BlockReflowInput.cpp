@@ -941,7 +941,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
       !mustPlaceFloat &&
       (!mReflowInput.mFlags.mIsTopOfPage || floatPos.B(wm) > 0) &&
       NS_STYLE_PAGE_BREAK_AVOID == aFloat->StyleDisplay()->mBreakInside &&
-      (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus) ||
+      (!reflowStatus.IsFullyComplete() ||
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
        ContentBEnd() - floatPos.B(wm)) &&
       !aFloat->GetPrevInFlow()) {
@@ -1002,7 +1002,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     FloatManager()->IncludeInDamage(blockStart, blockEnd);
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
+  if (!reflowStatus.IsFullyComplete()) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
   } else {
     MOZ_ASSERT(!aFloat->GetNextInFlow());

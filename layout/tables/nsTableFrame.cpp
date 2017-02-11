@@ -3163,7 +3163,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           childX = rowGroups.Length();
         }
       }
-      if (isPaginated && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+      if (isPaginated && !aStatus.IsFullyComplete() &&
           ShouldAvoidBreakInside(aReflowInput.reflowInput)) {
         aStatus = NS_INLINE_LINE_BREAK_BEFORE();
         break;
