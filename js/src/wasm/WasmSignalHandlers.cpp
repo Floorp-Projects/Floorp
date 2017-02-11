@@ -1319,10 +1319,10 @@ ProcessHasSignalHandlers()
 # endif
 #endif
 
-    // The interrupt handler allows the main thread to be paused from another
+    // The interrupt handler allows the active thread to be paused from another
     // thread (see InterruptRunningJitCode).
 #if defined(XP_WIN)
-    // Windows uses SuspendThread to stop the main thread from another thread.
+    // Windows uses SuspendThread to stop the active thread from another thread.
 #else
     struct sigaction interruptHandler;
     interruptHandler.sa_flags = SA_SIGINFO;
@@ -1419,7 +1419,7 @@ wasm::HaveSignalHandlers()
 // handled by this function:
 //  1. Ion loop backedges are patched to instead point to a stub that handles
 //     the interrupt;
-//  2. if the main thread's pc is inside wasm code, the pc is updated to point
+//  2. if the active thread's pc is inside wasm code, the pc is updated to point
 //     to a stub that handles the interrupt.
 void
 js::InterruptRunningJitCode(JSContext* cx)
@@ -1443,10 +1443,10 @@ js::InterruptRunningJitCode(JSContext* cx)
         return;
     }
 
-    // We are not on the runtime's main thread, so to do 1 and 2 above, we need
-    // to halt the runtime's main thread first.
+    // We are not on the runtime's active thread, so to do 1 and 2 above, we need
+    // to halt the runtime's active thread first.
 #if defined(XP_WIN)
-    // On Windows, we can simply suspend the main thread and work directly on
+    // On Windows, we can simply suspend the active thread and work directly on
     // its context from this thread. SuspendThread can sporadically fail if the
     // thread is in the middle of a syscall. Rather than retrying in a loop,
     // just wait for the next request for interrupt.
@@ -1462,7 +1462,7 @@ js::InterruptRunningJitCode(JSContext* cx)
     }
     cx->finishHandlingJitInterrupt();
 #else
-    // On Unix, we instead deliver an async signal to the main thread which
+    // On Unix, we instead deliver an async signal to the active thread which
     // halts the thread and callers our JitInterruptHandler (which has already
     // been installed by EnsureSignalHandlersInstalled).
     pthread_t thread = (pthread_t)cx->threadNative();

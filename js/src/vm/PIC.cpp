@@ -276,7 +276,7 @@ js::ForOfPIC::Chain::sweep(FreeOp* fop)
 static void
 ForOfPIC_finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->maybeOffMainThread());
+    MOZ_ASSERT(fop->maybeOnHelperThread());
     if (ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
         chain->sweep(fop);
 }
