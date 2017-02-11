@@ -15,6 +15,7 @@
 #ifdef MOZ_WIDGET_UIKIT
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+#include "nsCocoaFeatures.h"
 
 #ifdef MOZ_WIDGET_COCOA
 // prototype for private API
@@ -38,6 +39,12 @@ bool ScaledFontMac::sSymbolLookupDone = false;
 static CTFontRef
 CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
 {
+    // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+    // versions (see bug 1331683)
+    if (!nsCocoaFeatures::OnSierraOrLater()) {
+        return CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
+    }
+
     CFDictionaryRef vars = CGFontCopyVariations(aCGFont);
     CTFontRef ctFont;
     if (vars) {
@@ -275,17 +282,21 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     // Collect any variation settings that were incorporated into the CTFont.
     uint32_t variationCount = 0;
     VariationSetting* variations = nullptr;
-    if (mCTFont) {
-      CFDictionaryRef dict = CTFontCopyVariation(mCTFont);
-      if (dict) {
-        CFIndex count = CFDictionaryGetCount(dict);
-        if (count > 0) {
-          variations = new VariationSetting[count];
-          VariationSetting* vPtr = variations;
-          CFDictionaryApplyFunction(dict, CollectVariationSetting, &vPtr);
-          variationCount = vPtr - variations;
+    // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+    // versions (see bug 1331683)
+    if (nsCocoaFeatures::OnSierraOrLater()) {
+      if (mCTFont) {
+        CFDictionaryRef dict = CTFontCopyVariation(mCTFont);
+        if (dict) {
+          CFIndex count = CFDictionaryGetCount(dict);
+          if (count > 0) {
+            variations = new VariationSetting[count];
+            VariationSetting* vPtr = variations;
+            CFDictionaryApplyFunction(dict, CollectVariationSetting, &vPtr);
+            variationCount = vPtr - variations;
+          }
+          CFRelease(dict);
         }
-        CFRelease(dict);
       }
     }
 
