@@ -1287,7 +1287,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
           NS_FRAME_SET_OVERFLOW_INCOMPLETE(frameStatus);
         }
         else {
-          NS_ASSERTION(NS_FRAME_IS_COMPLETE(frameStatus),
+          NS_ASSERTION(frameStatus.IsComplete(),
                        "overflow container frames can't be incomplete, only overflow-incomplete");
         }
 

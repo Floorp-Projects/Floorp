@@ -734,7 +734,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     }
   }
 
-  NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) || !GetOverflowFrames(),
+  NS_ASSERTION(!aStatus.IsComplete() || !GetOverflowFrames(),
                "We can't be complete AND have overflow frames!");
 
   // If after reflowing our children they take up no area then make
@@ -771,7 +771,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
    * chain.  For box-decoration-break:clone we always apply the end border and
    * padding since all continuations have them.
    */
-  if ((NS_FRAME_IS_COMPLETE(aStatus) &&
+  if ((aStatus.IsComplete() &&
        !LastInFlow()->GetNextContinuation() &&
        !FrameIsNonLastInIBSplit()) ||
       boxDecorationBreakClone) {
