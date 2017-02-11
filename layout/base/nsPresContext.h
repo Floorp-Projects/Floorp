@@ -1585,7 +1585,9 @@ protected:
 
   class RunWillPaintObservers : public mozilla::Runnable {
   public:
-    explicit RunWillPaintObservers(nsRootPresContext* aPresContext) : mPresContext(aPresContext) {}
+    explicit RunWillPaintObservers(nsRootPresContext* aPresContext)
+      : Runnable("nsPresContextType::RunWillPaintObservers")
+      , mPresContext(aPresContext) {}
     void Revoke() { mPresContext = nullptr; }
     NS_IMETHOD Run() override
     {

@@ -123,7 +123,8 @@ class AsyncNotifyRunnable : public Runnable
   public:
     AsyncNotifyRunnable(ProgressTracker* aTracker,
                         IProgressObserver* aObserver)
-      : mTracker(aTracker)
+     : Runnable("ProgressTracker::AsyncNotifyRunnable")
+     , mTracker(aTracker)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");
       MOZ_ASSERT(aTracker, "aTracker should not be null");

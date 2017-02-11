@@ -315,7 +315,8 @@ private:
   class PaintTask : public Runnable {
   public:
     NS_DECL_NSIRUNNABLE
-    explicit PaintTask(PuppetWidget* widget) : mWidget(widget) {}
+    explicit PaintTask(PuppetWidget* widget)
+     : Runnable("PuppetWidget::PaintTask"), mWidget(widget) {}
     void Revoke() { mWidget = nullptr; }
   private:
     PuppetWidget* mWidget;
