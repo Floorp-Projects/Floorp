@@ -355,6 +355,8 @@ EffectCompositor::UpdateEffectProperties(nsStyleContext* aStyleContext,
   // e.g removing !important, so we should update the cascading result.
   effectSet->MarkCascadeNeedsUpdate();
 
+  ClearBaseStyles(*aElement, aPseudoType);
+
   for (KeyframeEffectReadOnly* effect : *effectSet) {
     effect->UpdateProperties(aStyleContext);
   }
@@ -944,6 +946,79 @@ EffectCompositor::SetPerformanceWarning(
   for (KeyframeEffectReadOnly* effect : *effects) {
     effect->SetPerformanceWarning(aProperty, aWarning);
   }
+}
+
+/* static */ StyleAnimationValue
+EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
+                               nsStyleContext* aStyleContext,
+                               dom::Element& aElement,
+                               CSSPseudoElementType aPseudoType)
+{
+  MOZ_ASSERT(aStyleContext, "Need style context to resolve the base value");
+  MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
+             "Bug 1311257: Servo backend does not support the base value yet");
+
+  StyleAnimationValue result;
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return result;
+  }
+
+  // Check whether there is a cached style.
+  result = effectSet->GetBaseStyle(aProperty);
+  if (!result.IsNull()) {
+    return result;
+  }
+
+  RefPtr<nsStyleContext> styleContextWithoutAnimation =
+    aStyleContext->PresContext()->StyleSet()->AsGecko()->
+      ResolveStyleByRemovingAnimation(&aElement, aStyleContext,
+                                      eRestyle_AllHintsWithAnimations);
+
+  DebugOnly<bool> success =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              styleContextWithoutAnimation,
+                                              result);
+  MOZ_ASSERT(success, "Should be able to extract computed animation value");
+  MOZ_ASSERT(!result.IsNull(), "Should have a valid StyleAnimationValue");
+
+  effectSet->PutBaseStyle(aProperty, result);
+
+  return result;
+}
+
+/* static */ StyleAnimationValue
+EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
+                               const nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->StyleContext(),
+             "The frame should have a valid style context");
+
+  Maybe<NonOwningAnimationTarget> pseudoElement =
+    EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+
+  MOZ_ASSERT(pseudoElement && pseudoElement->mElement,
+             "The frame should have an associated element");
+
+  return EffectCompositor::GetBaseStyle(aProperty,
+                                        aFrame->StyleContext(),
+                                        *pseudoElement->mElement,
+                                        pseudoElement->mPseudoType);
+}
+
+/* static */ void
+EffectCompositor::ClearBaseStyles(dom::Element& aElement,
+                                  CSSPseudoElementType aPseudoType)
+{
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(&aElement, aPseudoType);
+  if (!effectSet) {
+    return;
+  }
+
+  effectSet->ClearBaseStyles();
 }
 
 // ---------------------------------------------------------
