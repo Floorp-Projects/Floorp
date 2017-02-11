@@ -1184,7 +1184,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
                                            oldRowVisualOverflow,
                                            false);
 
-        if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+        if (aStatus.IsIncomplete()) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
           if ((rowMetrics.Height() <= rowReflowInput.AvailableHeight()) || isTopOfPage) {
             // The row stays on this page because either it split ok or we're on the top of page.
@@ -1323,7 +1323,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
       }
-      if (NS_FRAME_IS_NOT_COMPLETE(aStatus) && !contRow) {
+      if (aStatus.IsIncomplete() && !contRow) {
         nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow();
         if (nextRow) {
           PushChildren(nextRow, lastRowThisPage);

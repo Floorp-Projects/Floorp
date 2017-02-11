@@ -5653,7 +5653,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           aFragmentainer.mToFragmentainerEnd = bEndRow;
           if (aFragmentainer.mIsAutoBSize) {
             aBSize = ClampToCSSMaxBSize(bEndRow, aState.mReflowInput, &aStatus);
-          } else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+          } else if (aStatus.IsIncomplete()) {
             aBSize = NS_CSS_MINMAX(aState.mReflowInput->ComputedBSize(),
                                    aState.mReflowInput->ComputedMinBSize(),
                                    aState.mReflowInput->ComputedMaxBSize());
@@ -5683,7 +5683,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
       MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");
     }
 
-    if (NS_FRAME_IS_NOT_COMPLETE(childStatus)) {
+    if (childStatus.IsIncomplete()) {
       incompleteItems.PutEntry(child);
     } else if (!NS_FRAME_IS_FULLY_COMPLETE(childStatus)) {
       overflowIncompleteItems.PutEntry(child);

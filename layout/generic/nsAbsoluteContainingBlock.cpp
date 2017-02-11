@@ -191,7 +191,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
 
   // Abspos frames can't cause their parent to be incomplete,
   // only overflow incomplete.
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
+  if (reflowStatus.IsIncomplete())
     NS_FRAME_SET_OVERFLOW_INCOMPLETE(reflowStatus);
 
   NS_MergeReflowStatusInto(&aReflowStatus, reflowStatus);
