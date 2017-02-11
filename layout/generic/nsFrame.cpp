@@ -10340,7 +10340,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
     PR_LogPrint("%s: %s %s, status=%scomplete%s",
                 tagbuf, aEnter ? "enter" : "exit", aMethod,
-                NS_FRAME_IS_NOT_COMPLETE(aStatus) ? "not" : "",
+                aStatus.IsIncomplete() ? "not" : "",
                 (aStatus & NS_FRAME_REFLOW_NEXTINFLOW) ? "+reflow" : "");
   }
 }

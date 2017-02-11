@@ -936,7 +936,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
 
         // allow the table to determine if/how the table needs to be rebalanced
         // If any of the cells are not complete, then we're not complete
-        if (NS_FRAME_IS_NOT_COMPLETE(status)) {
+        if (status.IsIncomplete()) {
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
       } else {

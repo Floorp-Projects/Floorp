@@ -217,7 +217,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // text containers paired with it.
     return;
   }
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+  if (aStatus.IsIncomplete()) {
     // It always promise that if the status is incomplete, there is a
     // break occurs. Break before has been processed above. However,
     // it is possible that break after happens with the frame reflow

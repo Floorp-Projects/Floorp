@@ -263,14 +263,14 @@ RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
     if (NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
       newS |= 1;
     }
-    else if (NS_FRAME_IS_NOT_COMPLETE(aFrameReflowStatus)) {
+    else if (aFrameReflowStatus.IsIncomplete()) {
       newS |= 2;
     }
     else {
       newS |= 4;
     }
   }
-  else if (NS_FRAME_IS_NOT_COMPLETE(aFrameReflowStatus)) {
+  else if (aFrameReflowStatus.IsIncomplete()) {
     newS |= 8;
   }
   else {
@@ -1658,7 +1658,7 @@ nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   }
 
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
+    if (aState.mReflowStatus.IsIncomplete()) {
       // Overflow containers can only be overflow complete.
       // Note that auto height overflow containers have no normal children
       NS_ASSERTION(finalSize.BSize(wm) == 0,
@@ -2683,7 +2683,7 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
       }
     }
 
-    if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
+    if (aState.mReflowStatus.IsIncomplete()) {
       aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     } //XXXfr shouldn't set this flag when nextinflow has no lines
   }
@@ -3635,7 +3635,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
           nsIFrame* nextFrame = frame->GetNextInFlow();
           NS_ASSERTION(nextFrame, "We're supposed to have a next-in-flow by now");
 
-          if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
+          if (frameReflowStatus.IsIncomplete()) {
             // If nextFrame used to be an overflow container, make it a normal block
             if (!madeContinuation &&
                 (NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
@@ -6276,7 +6276,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
   if (!NS_FRAME_IS_FULLY_COMPLETE(aReflowStatus) &&
       ShouldAvoidBreakInside(floatRS)) {
     aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
-  } else if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
+  } else if (aReflowStatus.IsIncomplete() &&
              (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.BSize(wm))) {
     // An incomplete reflow status means we should split the float
     // if the height is constrained (bug 145305).
@@ -6291,7 +6291,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
     // We never split floating first letters; an incomplete state for
     // such frames simply means that there is more content to be
     // reflowed on the line.
-    if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus))
+    if (aReflowStatus.IsIncomplete())
       aReflowStatus = NS_FRAME_COMPLETE;
   }
 
@@ -7408,7 +7408,7 @@ nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                                               computedBSizeLeftOver),
                          aBorderPadding.BEnd(wm));
 
-  if (NS_FRAME_IS_NOT_COMPLETE(*aStatus) &&
+  if (aStatus->IsIncomplete() &&
       aFinalSize.BSize(wm) < aReflowInput.AvailableBSize()) {
     // We fit in the available space - change status to OVERFLOW_INCOMPLETE.
     // XXXmats why didn't Reflow report OVERFLOW_INCOMPLETE in the first place?
