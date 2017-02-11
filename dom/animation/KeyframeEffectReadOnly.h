@@ -355,18 +355,6 @@ protected:
   // infinite recursion.
   already_AddRefed<nsStyleContext> GetTargetStyleContext();
 
-  // Similar to the above but ignoring animation rules. We use this to get base
-  // styles (which don't include animation rules).
-  already_AddRefed<nsStyleContext>
-  GetTargetStyleContextWithoutAnimation();
-
-  enum AnimationStyle {
-    Skip,
-    Include
-  };
-  template<AnimationStyle aAnimationStyle>
-  already_AddRefed<nsStyleContext> DoGetTargetStyleContext();
-
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
