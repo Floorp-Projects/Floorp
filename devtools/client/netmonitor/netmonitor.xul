@@ -18,31 +18,9 @@
         class="theme-sidebar"
         flex="1"
         data-localization-bundle="devtools/client/locales/netmonitor.properties">
-
-    <vbox id="inspector-panel" flex="1">
-      <html:div xmlns="http://www.w3.org/1999/xhtml"
-                id="react-toolbar-hook"/>
-      <hbox id="network-table-and-sidebar"
-            class="devtools-responsive-container"
-            flex="1">
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-request-list-hook"
-                  class="devtools-main-content">
-        </html:div>
-
-        <splitter id="network-inspector-view-splitter"
-                  class="devtools-side-splitter"/>
-
-        <box id="splitter-adjustable-box"
-             hidden="true">
-          <html:div xmlns="http://www.w3.org/1999/xhtml"
-                    id="react-network-details-panel-hook">
-          </html:div>
-        </box>
-      </hbox>
-
-    </vbox>
-
+    <html:div xmlns="http://www.w3.org/1999/xhtml"
+              id="react-monitor-panel-hook">
+    </html:div>
     <html:div xmlns="http://www.w3.org/1999/xhtml"
               id="react-statistics-panel-hook">
     </html:div>

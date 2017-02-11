@@ -8,8 +8,8 @@
 
 const { createClass, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
 const { div, button } = DOM;
-const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { L10N } = require("../l10n");
 const { getWaterfallScale } = require("../selectors/index");
 const Actions = require("../actions/index");
@@ -50,19 +50,11 @@ const RequestListHeader = createClass({
   },
 
   componentDidMount() {
-    // This is the first time the waterfall column header is actually rendered.
-    // Measure its width and update the 'waterfallWidth' property in the store.
-    // The 'waterfallWidth' will be further updated on every window resize.
-    const waterfallHeaderEl = findDOMNode(this)
-      .querySelector("#requests-menu-waterfall-header-box");
-    if (waterfallHeaderEl) {
-      const { width } = waterfallHeaderEl.getBoundingClientRect();
-      this.props.resizeWaterfall(width);
-    }
-
     // Create the object that takes care of drawing the waterfall canvas background
     this.background = new WaterfallBackground(document);
     this.background.draw(this.props);
+    this.resizeWaterfall();
+    window.addEventListener("resize", this.resizeWaterfall);
   },
 
   componentDidUpdate() {
@@ -72,6 +64,16 @@ const RequestListHeader = createClass({
   componentWillUnmount() {
     this.background.destroy();
     this.background = null;
+    window.removeEventListener("resize", this.resizeWaterfall);
+  },
+
+  resizeWaterfall() {
+    // Measure its width and update the 'waterfallWidth' property in the store.
+    // The 'waterfallWidth' will be further updated on every window resize.
+    setNamedTimeout("resize-events", 50, () => {
+      const { width } = this.refs.header.getBoundingClientRect();
+      this.props.resizeWaterfall(width);
+    });
   },
 
   render() {
@@ -97,8 +99,9 @@ const RequestListHeader = createClass({
           return div(
             {
               id: `requests-menu-${boxName}-header-box`,
-              key: name,
               className: `requests-menu-header requests-menu-${boxName}`,
+              key: name,
+              ref: "header",
               // Used to style the next column.
               "data-active": active,
             },

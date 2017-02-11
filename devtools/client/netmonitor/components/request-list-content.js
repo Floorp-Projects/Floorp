@@ -20,7 +20,7 @@ const Actions = require("../actions/index");
 const {
   setTooltipImageContent,
   setTooltipStackTraceContent,
-} = require("./request-list-tooltip");
+} = require("../request-list-tooltip");
 const {
   getDisplayedRequests,
   getWaterfallScale,
@@ -28,7 +28,7 @@ const {
 
 // Components
 const RequestListItem = createFactory(require("./request-list-item"));
-const RequestListContextMenu = require("./request-list-context-menu");
+const RequestListContextMenu = require("../request-list-context-menu");
 
 const { div } = DOM;
 
@@ -42,7 +42,6 @@ const RequestListContent = createClass({
   displayName: "RequestListContent",
 
   propTypes: {
-    contextMenu: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
@@ -51,11 +50,6 @@ const RequestListContent = createClass({
     onSelectDelta: PropTypes.func.isRequired,
     scale: PropTypes.number,
     selectedRequestId: PropTypes.string,
-    tooltip: PropTypes.shape({
-      hide: PropTypes.func.isRequired,
-      startTogglingOnHover: PropTypes.func.isRequired,
-      stopTogglingOnHover: PropTypes.func.isRequired,
-    }).isRequired
   },
 
   componentWillMount() {

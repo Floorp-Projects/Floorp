@@ -5,6 +5,10 @@
 "use strict";
 
 module.exports = {
+  "env": {
+    "browser": true,
+  },
+
   // Extend from the devtools eslintrc.
   "extends": "../../.eslintrc.js",
 

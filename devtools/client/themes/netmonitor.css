@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "resource://devtools/client/shared/components/splitter/split-box.css";
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
 @import "resource://devtools/client/shared/components/tabs/tabbar.css";
@@ -85,6 +86,8 @@
 .request-list-container {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
 .request-list-empty-notice {
@@ -757,10 +760,9 @@
 /* Custom request view */
 
 .custom-request-panel {
+  height: 100%;
   overflow: auto;
-  /* Full view hight - toolbar height */
-  height: calc(100vh - 24px);
-  padding: 6px 4px;
+  padding: 0 4px;
   background-color: var(--theme-sidebar-background);
 }
 
@@ -1000,15 +1002,6 @@
   .requests-menu-header-button {
     min-height: 22px;
     padding-left: 8px;
-  }
-
-  .custom-request-panel {
-    height: auto;
-  }
-
-  #details-pane {
-    margin: 0 !important;
-    /* To prevent all the margin hacks to hide the sidebar. */
   }
 
   .requests-menu-status {
@@ -1262,41 +1255,18 @@
   height: 100%;
 }
 
+.monitor-panel {
+  width: 100vw;
+  /* Devtools panel height - devtools toolbar height */
+  height: calc(100vh - 24px);
+}
+
 .network-details-panel {
-  height: 100%;
-}
-
-/*
- * FIXME: normal html block element cannot fill outer XUL element
- * This workaround should be removed after netmonitor is migrated to react
- */
-#network-table {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-flex: 1;
-  overflow: hidden;
-}
-
-#react-network-details-panel-hook,
-#react-statistics-panel-hook,
-#splitter-adjustable-box {
-  display: flex;
-  flex-direction: column;
-  min-width: 50px;
+  width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-#splitter-adjustable-box[hidden=true] {
-  display: none;
-}
-
-#react-request-list-hook {
-  -moz-box-flex: 1;
-}
-
-#primed-cache-chart,
-#empty-cache-chart {
-  display: -moz-box;
-  -moz-box-flex: 1;
+.split-box {
+  width: 100vw;
 }

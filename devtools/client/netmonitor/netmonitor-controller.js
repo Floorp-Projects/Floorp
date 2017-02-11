@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable mozilla/reject-some-requires */
-/* globals window, NetMonitorView, gStore, gNetwork, dumpn */
+/* globals window, NetMonitorView, gStore, gNetwork */
 
 "use strict";
 
@@ -386,7 +385,6 @@ TargetEventsHandler.prototype = {
    * Listen for events emitted by the current tab target.
    */
   connect: function () {
-    dumpn("TargetEventsHandler is connecting...");
     this.target.on("close", this._onTabDetached);
     this.target.on("navigate", this._onTabNavigated);
     this.target.on("will-navigate", this._onTabNavigated);
@@ -399,7 +397,6 @@ TargetEventsHandler.prototype = {
     if (!this.target) {
       return;
     }
-    dumpn("TargetEventsHandler is disconnecting...");
     this.target.off("close", this._onTabDetached);
     this.target.off("navigate", this._onTabNavigated);
     this.target.off("will-navigate", this._onTabNavigated);
@@ -479,7 +476,6 @@ NetworkEventsHandler.prototype = {
    * Connect to the current target client.
    */
   connect: function () {
-    dumpn("NetworkEventsHandler is connecting...");
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
@@ -497,7 +493,6 @@ NetworkEventsHandler.prototype = {
     if (!this.client) {
       return;
     }
-    dumpn("NetworkEventsHandler is disconnecting...");
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
 

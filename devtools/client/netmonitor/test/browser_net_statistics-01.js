@@ -17,7 +17,7 @@ add_task(function* () {
 
   let body = document.querySelector("#body");
 
-  is(body.selectedPanel.id, "inspector-panel",
+  is(body.selectedPanel.id, "react-monitor-panel-hook",
     "The current main panel is correct.");
 
   info("Displaying statistics view");
