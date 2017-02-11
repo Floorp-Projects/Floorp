@@ -1195,13 +1195,14 @@ AddRange(ContainedInLattice a,
 class BoyerMoorePositionInfo
 {
   public:
-    explicit BoyerMoorePositionInfo(LifoAlloc* alloc)
+    explicit BoyerMoorePositionInfo(LifoAlloc* alloc, bool unicode_ignore_case)
       : map_(*alloc),
         map_count_(0),
         w_(kNotYet),
         s_(kNotYet),
         d_(kNotYet),
-        surrogate_(kNotYet)
+        surrogate_(kNotYet),
+        unicode_ignore_case_(unicode_ignore_case)
     {
         map_.reserve(kMapSize);
         for (int i = 0; i < kMapSize; i++)
@@ -1228,6 +1229,9 @@ class BoyerMoorePositionInfo
     ContainedInLattice s_;  // The \s character class.
     ContainedInLattice d_;  // The \d character class.
     ContainedInLattice surrogate_;  // Surrogate UTF-16 code units.
+
+    // True if the RegExp has unicode and ignoreCase flags.
+    bool unicode_ignore_case_;
 };
 
 typedef InfallibleVector<BoyerMoorePositionInfo*, 1> BoyerMoorePositionInfoVector;

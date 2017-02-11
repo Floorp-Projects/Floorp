@@ -2254,7 +2254,10 @@ void
 BoyerMoorePositionInfo::SetInterval(const Interval& interval)
 {
     s_ = AddRange(s_, kSpaceRanges, kSpaceRangeCount, interval);
-    w_ = AddRange(w_, kWordRanges, kWordRangeCount, interval);
+    if (unicode_ignore_case_)
+        w_ = AddRange(w_, kIgnoreCaseWordRanges, kIgnoreCaseWordRangeCount, interval);
+    else
+        w_ = AddRange(w_, kWordRanges, kWordRangeCount, interval);
     d_ = AddRange(d_, kDigitRanges, kDigitRangeCount, interval);
     surrogate_ =
         AddRange(surrogate_, kSurrogateRanges, kSurrogateRangeCount, interval);
@@ -2291,11 +2294,12 @@ BoyerMoorePositionInfo::SetAll()
 BoyerMooreLookahead::BoyerMooreLookahead(LifoAlloc* alloc, size_t length, RegExpCompiler* compiler)
   : length_(length), compiler_(compiler), bitmaps_(*alloc)
 {
+    bool unicode_ignore_case = compiler->unicode() && compiler->ignore_case();
     max_char_ = MaximumCharacter(compiler->ascii());
 
     bitmaps_.reserve(length);
     for (size_t i = 0; i < length; i++)
-        bitmaps_.append(alloc->newInfallible<BoyerMoorePositionInfo>(alloc));
+        bitmaps_.append(alloc->newInfallible<BoyerMoorePositionInfo>(alloc, unicode_ignore_case));
 }
 
 // Find the longest range of lookahead that has the fewest number of different
@@ -2961,13 +2965,20 @@ EmitNotInSurrogatePair(RegExpCompiler* compiler, RegExpNode* on_success, Trace* 
 // Check for [0-9A-Z_a-z].
 static void
 EmitWordCheck(RegExpMacroAssembler* assembler,
-              jit::Label* word, jit::Label* non_word, bool fall_through_on_word)
+              jit::Label* word, jit::Label* non_word, bool fall_through_on_word,
+              bool unicode_ignore_case)
 {
-    if (assembler->CheckSpecialCharacterClass(fall_through_on_word ? 'w' : 'W',
+    if (!unicode_ignore_case &&
+        assembler->CheckSpecialCharacterClass(fall_through_on_word ? 'w' : 'W',
                                               fall_through_on_word ? non_word : word))
     {
         // Optimized implementation available.
         return;
+    }
+
+    if (unicode_ignore_case) {
+        assembler->CheckCharacter(0x017F, word);
+        assembler->CheckCharacter(0x212A, word);
     }
 
     assembler->CheckCharacterGT('z', non_word);
@@ -3018,7 +3029,8 @@ AssertionNode::EmitBoundaryCheck(RegExpCompiler* compiler, Trace* trace)
             assembler->LoadCurrentCharacter(trace->cp_offset(), &before_non_word);
         }
         // Fall through on non-word.
-        EmitWordCheck(assembler, &before_word, &before_non_word, false);
+        EmitWordCheck(assembler, &before_word, &before_non_word, false,
+                      compiler->unicode() && compiler->ignore_case());
         // Next character is not a word character.
         assembler->Bind(&before_non_word);
         jit::Label ok;
@@ -3058,7 +3070,8 @@ AssertionNode::BacktrackIfPrevious(RegExpCompiler* compiler,
     // We already checked that we are not at the start of input so it must be
     // OK to load the previous character.
     assembler->LoadCurrentCharacter(new_trace.cp_offset() - 1, &dummy, false);
-    EmitWordCheck(assembler, word, non_word, backtrack_if_previous == kIsNonWord);
+    EmitWordCheck(assembler, word, non_word, backtrack_if_previous == kIsNonWord,
+                  compiler->unicode() && compiler->ignore_case());
 
     assembler->Bind(&fall_through);
     on_success()->Emit(compiler, &new_trace);
