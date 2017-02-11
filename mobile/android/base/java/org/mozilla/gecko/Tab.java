@@ -601,8 +601,7 @@ public class Tab {
         final String oldUrl = getURL();
         final boolean sameDocument = message.getBoolean("sameDocument");
         mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(oldUrl, uri);
-        mCanDoBack = message.getBoolean("canGoBack");
-        mCanDoForward = message.getBoolean("canGoForward");
+        handleButtonStateChange(message);
 
         if (!TextUtils.equals(oldUrl, uri)) {
             updateURL(uri);
@@ -648,6 +647,11 @@ public class Tab {
         setLoadProgressIfLoading(LOAD_PROGRESS_LOCATION_CHANGE);
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
+    }
+
+    void handleButtonStateChange(final GeckoBundle message) {
+        mCanDoBack = message.getBoolean("canGoBack");
+        mCanDoForward = message.getBoolean("canGoForward");
     }
 
     private static boolean shouldShowProgress(final String url) {
