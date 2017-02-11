@@ -108,7 +108,7 @@ add_task(function* test_legacy_extension_context() {
      "Got the expected message");
   ok(msgSender, "Got a message sender object");
 
-  equal(msgSender.id, extensionInfo.uuid, "The sender has the expected id property");
+  equal(msgSender.id, extension.id, "The sender has the expected id property");
   equal(msgSender.url, extensionInfo.bgURL, "The sender has the expected url property");
 
   // Wait confirmation that the reply has been received.
@@ -136,7 +136,7 @@ add_task(function* test_legacy_extension_context() {
 
   ok(port, "Got the Port API object");
   ok(port.sender, "The port has a sender property");
-  equal(port.sender.id, extensionInfo.uuid,
+  equal(port.sender.id, extension.id,
      "The port sender has the expected id property");
   equal(port.sender.url, extensionInfo.bgURL,
      "The port sender has the expected url property");
