@@ -13,6 +13,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include "nsCocoaFeatures.h"
+
 // Simple helper class to automatically release a CFObject when it goes out
 // of scope.
 template<class T>
@@ -54,6 +56,12 @@ static CFDictionaryRef
 CreateVariationDictionaryOrNull(CGFontRef aCGFont, uint32_t aVariationCount,
   const mozilla::gfx::ScaledFont::VariationSetting* aVariations)
 {
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683)
+  if (!nsCocoaFeatures::OnSierraOrLater()) {
+    return nullptr;
+  }
+
   AutoRelease<CTFontRef>
     ctFont(CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
   AutoRelease<CFArrayRef> axes(CTFontCopyVariationAxes(ctFont));
