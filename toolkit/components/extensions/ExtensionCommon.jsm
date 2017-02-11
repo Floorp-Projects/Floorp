@@ -197,10 +197,9 @@ class BaseContext {
    * @returns {Promise}
    */
   sendMessage(target, messageName, data, options = {}) {
-    options.recipient = options.recipient || {};
+    options.recipient = Object.assign({extensionId: this.extension.id}, options.recipient);
     options.sender = options.sender || {};
 
-    options.recipient.extensionId = this.extension.id;
     options.sender.extensionId = this.extension.id;
     options.sender.contextId = this.contextId;
 
