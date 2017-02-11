@@ -1942,7 +1942,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
       ReflowTable(aDesiredSize, aReflowInput, aReflowInput.AvailableBSize(),
                   lastChildReflowed, aStatus);
 
-      if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+      if (lastChildReflowed && aStatus.IsIncomplete()) {
         // if there is an incomplete child, then set the desired bsize
         // to include it but not the next one
         LogicalMargin borderPadding = GetChildAreaOffset(wm, &aReflowInput);
@@ -3249,11 +3249,11 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // Remember where we just were in case we end up pushing children
       prevKidFrame = kidFrame;
 
-      MOZ_ASSERT(!NS_FRAME_IS_NOT_COMPLETE(aStatus) || isPaginated,
+      MOZ_ASSERT(!aStatus.IsIncomplete() || isPaginated,
                  "Table contents should only fragment in paginated contexts");
 
       // Special handling for incomplete children
-      if (isPaginated && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+      if (isPaginated && aStatus.IsIncomplete()) {
         nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
         if (!kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing

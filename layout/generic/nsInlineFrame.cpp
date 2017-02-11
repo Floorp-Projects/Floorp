@@ -688,7 +688,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
       done = NS_INLINE_IS_BREAK(aStatus) || 
-             (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus));
+             (!reflowingFirstLetter && aStatus.IsIncomplete());
       if (done) {
         if (!irs.mSetParentPointer) {
           break;
@@ -726,7 +726,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       }
       ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
       if (NS_INLINE_IS_BREAK(aStatus) || 
-          (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
+          (!reflowingFirstLetter && aStatus.IsIncomplete())) {
         break;
       }
       irs.mPrevFrame = frame;

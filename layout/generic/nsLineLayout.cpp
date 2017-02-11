@@ -1293,7 +1293,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
    * For box-decoration-break:clone we apply the end margin on all
    * continuations (that are not letter frames).
    */
-  if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
+  if ((aStatus.IsIncomplete() ||
        pfd->mFrame->LastInFlow()->GetNextContinuation() ||
        pfd->mFrame->FrameIsNonLastInIBSplit()) &&
       !pfd->mIsLetterFrame &&

@@ -912,7 +912,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   }
   if (aFloat->GetPrevInFlow())
     floatMargin.BStart(wm) = 0;
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
+  if (reflowStatus.IsIncomplete())
     floatMargin.BEnd(wm) = 0;
 
   // In the case that we're in columns and not splitting floats, we need
@@ -980,7 +980,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     nsFloatManager::CalculateRegionFor(wm, aFloat, floatMargin,
                                        ContainerSize());
   // if the float split, then take up all of the vertical height
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus) &&
+  if (reflowStatus.IsIncomplete() &&
       (NS_UNCONSTRAINEDSIZE != ContentBSize())) {
     region.BSize(wm) = std::max(region.BSize(wm),
                                 ContentBSize() - floatPos.B(wm));
