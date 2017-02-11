@@ -22,6 +22,8 @@ DevToolsModules(
     'netmonitor-view.js',
     'panel.js',
     'prefs.js',
+    'request-list-context-menu.js',
+    'request-list-tooltip.js',
     'request-utils.js',
     'sort-predicates.js',
     'store.js',

@@ -22,7 +22,7 @@ let Tabbar = createClass({
   displayName: "Tabbar",
 
   propTypes: {
-    children: PropTypes.object,
+    children: PropTypes.array,
     onSelect: PropTypes.func,
     showAllTabsMenu: PropTypes.bool,
     activeTabId: PropTypes.string,

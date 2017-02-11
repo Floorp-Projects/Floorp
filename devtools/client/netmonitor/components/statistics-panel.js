@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals document */
-
 "use strict";
 
 const {
@@ -53,13 +51,13 @@ const StatisticsPanel = createClass({
     this.createChart({
       id: "primedCacheChart",
       title: CHARTS_CACHE_ENABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, false) : null
+      data: ready ? this.sanitizeChartDataSource(requests, false) : null,
     });
 
     this.createChart({
       id: "emptyCacheChart",
       title: CHARTS_CACHE_DISABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, true) : null
+      data: ready ? this.sanitizeChartDataSource(requests, true) : null,
     });
   },
 
@@ -74,7 +72,7 @@ const StatisticsPanel = createClass({
         label: L10N.getStr("charts.type"),
         size: L10N.getStr("charts.size"),
         transferredSize: L10N.getStr("charts.transferred"),
-        time: L10N.getStr("charts.time")
+        time: L10N.getStr("charts.time"),
       },
       data,
       strings: {
@@ -84,7 +82,7 @@ const StatisticsPanel = createClass({
           L10N.getFormatStr("charts.transferredSizeKB",
             getSizeWithDecimals(value / 1024)),
         time: (value) =>
-          L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000))
+          L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
       },
       totals: {
         cached: (total) => L10N.getFormatStr("charts.totalCached", total),
@@ -129,7 +127,7 @@ const StatisticsPanel = createClass({
       label: type,
       size: 0,
       transferredSize: 0,
-      time: 0
+      time: 0,
     }));
 
     for (let request of requests) {
@@ -224,7 +222,7 @@ const StatisticsPanel = createClass({
     return (
       div({ className: "statistics-panel" },
         button({
-          className: "back-button devtools-toolbarbutton",
+          className: "back-button devtools-button",
           "data-text-only": "true",
           title: BACK_BUTTON,
           onClick: closeStatistics,

@@ -9,7 +9,7 @@ const {
   TOGGLE_REQUEST_FILTER_TYPE,
 } = require("../constants");
 const { Prefs } = require("../prefs");
-const { getActiveFilters } = require("../selectors/index");
+const { getRequestFilterTypes } = require("../selectors/index");
 
 /**
   * Whenever the User clicks on a filter in the network monitor, save the new
@@ -20,7 +20,9 @@ function prefsMiddleware(store) {
     const res = next(action);
     if (action.type === ENABLE_REQUEST_FILTER_TYPE_ONLY ||
         action.type === TOGGLE_REQUEST_FILTER_TYPE) {
-      Prefs.filters = getActiveFilters(store.getState());
+      Prefs.filters = getRequestFilterTypes(store.getState())
+        .filter(([type, check]) => check)
+        .map(([type, check]) => type);
     }
     return res;
   };
