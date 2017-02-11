@@ -4303,14 +4303,14 @@ nsBlockFrame::SplitFloat(BlockReflowInput& aState,
     if (oldParent != this) {
       ReparentFrame(nextInFlow, oldParent, this);
     }
-    if (!NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus)) {
+    if (!aFloatStatus.IsOverflowIncomplete()) {
       nextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
     }
   } else {
     nextInFlow = aState.mPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aState.mPresContext, aFloat, this);
   }
-  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aFloatStatus)) {
+  if (aFloatStatus.IsOverflowIncomplete()) {
     nextInFlow->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
   }
 
