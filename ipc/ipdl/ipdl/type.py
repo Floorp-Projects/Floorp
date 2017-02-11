@@ -1029,17 +1029,7 @@ class CheckTypes(TcheckVisitor):
                     "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
                     pname, mgrtype.name())
 
-        # XXX currently we don't require a delete() message of top-level
-        # actors.  need to let experience guide this decision
-        if not ptype.isToplevel():
-            for md in p.messageDecls:
-                if _DELETE_MSG == md.name: break
-            else:
-                self.error(
-                    p.decl.loc,
-                   "managed protocol `%s' requires a `delete()' message to be declared",
-                    p.name)
-        else:
+        if ptype.isToplevel():
             cycles = checkcycles(p.decl.type)
             if cycles:
                 self.error(
