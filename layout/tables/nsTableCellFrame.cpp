@@ -957,7 +957,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowInput,
               wm, kidOrigin, containerSize, 0, aStatus);
-  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
+  if (aStatus.IsOverflowIncomplete()) {
     // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
     //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
     NS_FRAME_SET_INCOMPLETE(aStatus);
