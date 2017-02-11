@@ -27,15 +27,13 @@ add_task(function* test_enabledStatus_observe() {
   // _enabled = _getStatus() => No need to trigger onStatusChanged
   formAutofillParent._enabled = true;
   formAutofillParent._getStatus.returns(true);
-  formAutofillParent.observe();
+  formAutofillParent.observe(null, "nsPref:changed", "browser.formautofill.enabled");
   do_check_eq(formAutofillParent._onStatusChanged.called, false);
 
   // _enabled != _getStatus() => Need to trigger onStatusChanged
   formAutofillParent._getStatus.returns(false);
-  formAutofillParent.observe();
+  formAutofillParent.observe(null, "nsPref:changed", "browser.formautofill.enabled");
   do_check_eq(formAutofillParent._onStatusChanged.called, true);
-
-  formAutofillParent._uninit();
 });
 
 add_task(function* test_enabledStatus_getStatus() {
