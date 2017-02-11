@@ -9,6 +9,10 @@ function runtimeApiFactory(context) {
 
       onMessage: context.messenger.onMessage("runtime.onMessage"),
 
+      onConnectExternal: context.messenger.onConnectExternal("runtime.onConnectExternal"),
+
+      onMessageExternal: context.messenger.onMessageExternal("runtime.onMessageExternal"),
+
       connect: function(extensionId, connectInfo) {
         let name = connectInfo !== null && connectInfo.name || "";
         extensionId = extensionId || extension.id;
@@ -47,7 +51,6 @@ function runtimeApiFactory(context) {
         if (options != null && typeof options != "object") {
           return Promise.reject({message: "runtime.sendMessage's options argument is invalid"});
         }
-        // TODO(robwu): Validate option keys and values when we support it.
 
         extensionId = extensionId || extension.id;
         let recipient = {extensionId};

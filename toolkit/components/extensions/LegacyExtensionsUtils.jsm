@@ -64,7 +64,7 @@ var LegacyExtensionContext = class extends BaseContext {
       {value: cloneScope, enumerable: true, configurable: true, writable: true}
     );
 
-    let sender = {id: targetExtension.uuid};
+    let sender = {id: targetExtension.id};
     let filter = {extensionId: targetExtension.id};
     // Legacy addons live in the main process. Messages from other addons are
     // Messages from WebExtensions are sent to the main process and forwarded via

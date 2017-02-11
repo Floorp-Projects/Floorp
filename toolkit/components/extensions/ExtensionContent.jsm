@@ -467,7 +467,7 @@ class ContentScriptContextChild extends BaseContext {
 
 defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
   // The |sender| parameter is passed directly to the extension.
-  let sender = {id: this.extension.uuid, frameId: this.frameId, url: this.url};
+  let sender = {id: this.extension.id, frameId: this.frameId, url: this.url};
   let filter = {extensionId: this.extension.id};
   let optionalFilter = {frameId: this.frameId};
 
