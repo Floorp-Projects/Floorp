@@ -114,6 +114,36 @@ class Simulator;
 #endif
 } // namespace jit
 
+// JS Engine Threading
+//
+// Multiple threads may interact with a JS runtime. JS has run-to-completion
+// semantics, which means that scripts cannot observe changes in behavior
+// due to activities performed on other threads (there is an exception to this
+// for shared array buffers and related APIs).
+//
+// The main way we ensure that run-to-completion semantics are preserved is
+// by dividing content into zone groups. Pieces of web content will be in the
+// the same zone group if they have the same tab/origin or can otherwise
+// observe changes in each other via Window.opener and so forth. When a thread
+// executes JS in a zone group, it acquires that group --- including exclusive
+// access to most of the group's content --- and does not relinquish control of
+// the zone group until the script finishes executing.
+//
+// Threads interacting with a runtime are divided into two categories:
+//
+// - Cooperating threads are capable of running JS. At most one cooperating
+//   thread may be |active| at a time in a runtime, but they may yield control
+//   to each other so that their execution is interleaved. As described above,
+//   each thread owns the zone groups it is operating on so that this
+//   interleaving does not cause observable changes in a script's behavior.
+//
+// - Helper threads do not run JS, and are controlled or triggered by activity
+//   in the cooperating threads. Helper threads may have exclusive access to
+//   zone groups created for them, for parsing and similar tasks, but their
+//   activities do not cause observable changes in script behaviors. Activity
+//   on helper threads may be referred to as happening 'off thread' or on a
+//   background thread in some parts of the VM.
+
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
@@ -134,13 +164,13 @@ class FreeOp : public JSFreeOp
     explicit FreeOp(JSRuntime* maybeRuntime);
     ~FreeOp();
 
-    bool onMainThread() const {
+    bool onActiveCooperatingThread() const {
         return runtime_ != nullptr;
     }
 
-    bool maybeOffMainThread() const {
-        // Sometimes background finalization happens on the main thread so
-        // runtime_ being null doesn't always mean we are off the main thread.
+    bool maybeOnHelperThread() const {
+        // Sometimes background finalization happens on the active thread so
+        // runtime_ being null doesn't always mean we are off thread.
         return !runtime_;
     }
 
@@ -534,14 +564,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * be accessed simultaneously by multiple threads.
      *
      * Locking this only occurs if there is actually a thread other than the
-     * main thread which could access such data.
+     * active thread which could access such data.
      */
     js::Mutex exclusiveAccessLock;
 #ifdef DEBUG
-    bool mainThreadHasExclusiveAccess;
+    bool activeThreadHasExclusiveAccess;
 #endif
 
-    /* Number of non-main threads with exclusive access to some zone. */
+    /* Number of non-cooperating threads with exclusive access to some zone. */
     js::UnprotectedData<size_t> numExclusiveThreads;
 
     friend class js::AutoLockForExclusiveAccess;
@@ -556,13 +586,13 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
 #ifdef DEBUG
     bool currentThreadHasExclusiveAccess() const {
-        return (!exclusiveThreadsPresent() && mainThreadHasExclusiveAccess) ||
+        return (!exclusiveThreadsPresent() && activeThreadHasExclusiveAccess) ||
             exclusiveAccessLock.ownedByCurrentThread();
     }
 #endif
 
     // How many compartments there are across all zones. This number includes
-    // off main thread context compartments, so it isn't necessarily equal to the
+    // off thread context compartments, so it isn't necessarily equal to the
     // number of compartments visited by CompartmentsIter.
     js::ActiveThreadData<size_t> numCompartments;
 
@@ -614,24 +644,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
     bool hasJitRuntime() const {
         return !!jitRuntime_;
-    }
-
-    // These will be removed soon.
-  private:
-    JSContext* singletonContext;
-    js::ZoneGroup* singletonZoneGroup;
-  public:
-
-    JSContext* unsafeContextFromAnyThread() const { return singletonContext; }
-    JSContext* contextFromMainThread() const {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return singletonContext;
-    }
-
-    js::ZoneGroup* zoneGroupFromAnyThread() const { return singletonZoneGroup; }
-    js::ZoneGroup* zoneGroupFromMainThread() const {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
-        return singletonZoneGroup;
     }
 
   private:

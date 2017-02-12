@@ -367,10 +367,10 @@ SavedFrame::protoAccessors[] = {
 /* static */ void
 SavedFrame::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     JSPrincipals* p = obj->as<SavedFrame>().getPrincipals();
     if (p) {
-        JSRuntime* rt = obj->runtimeFromMainThread();
+        JSRuntime* rt = obj->runtimeFromActiveCooperatingThread();
         JS_DropPrincipals(rt->activeContextFromOwnThread(), p);
     }
 }

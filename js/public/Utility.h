@@ -55,11 +55,11 @@ namespace oom {
  * To make testing OOM in certain helper threads more effective,
  * allow restricting the OOM testing to a certain helper thread
  * type. This allows us to fail e.g. in off-thread script parsing
- * without causing an OOM in the main thread first.
+ * without causing an OOM in the active thread first.
  */
 enum ThreadType {
     THREAD_TYPE_NONE = 0,       // 0
-    THREAD_TYPE_MAIN,           // 1
+    THREAD_TYPE_COOPERATING,    // 1
     THREAD_TYPE_WASM,           // 2
     THREAD_TYPE_ION,            // 3
     THREAD_TYPE_PARSE,          // 4

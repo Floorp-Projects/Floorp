@@ -60,6 +60,12 @@ class CodeSegment
     // The profiling mode may be changed dynamically.
     bool profilingEnabled_;
 
+  public:
+#ifdef MOZ_VTUNE
+    unsigned vtune_method_id_; // Zero if unset.
+#endif
+
+  protected:
     CodeSegment() { PodZero(this); }
     template <class> friend struct js::MallocProvider;
 

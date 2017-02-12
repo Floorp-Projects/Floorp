@@ -13,6 +13,9 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "jit/x64/SharedICHelpers-x64.h"
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jit/MacroAssembler-inl.h"
 
@@ -340,6 +343,9 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "EnterJIT");
 #endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "EnterJIT");
+#endif
 
     return code;
 }
@@ -388,6 +394,9 @@ JitRuntime::generateInvalidator(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "Invalidator");
+#endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "Invalidator");
 #endif
 
     return code;
@@ -548,6 +557,9 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ArgumentsRectifier");
 #endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "ArgumentsRectifier");
+#endif
 
     if (returnAddrOut)
         *returnAddrOut = (void*)(code->raw() + returnOffset);
@@ -632,6 +644,9 @@ JitRuntime::generateBailoutHandler(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutHandler");
+#endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "BailoutHandler");
 #endif
 
     return code;
@@ -818,6 +833,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(wrapper, "VMWrapper");
 #endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(wrapper, "VMWrapper");
+#endif
 
     // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
     // use relookupOrAdd instead of add.
@@ -853,6 +871,9 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "PreBarrier");
+#endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "PreBarrier");
 #endif
 
     return code;
@@ -930,6 +951,9 @@ JitRuntime::generateDebugTrapHandler(JSContext* cx)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(codeDbg, "DebugTrapHandler");
 #endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(codeDbg, "DebugTrapHandler");
+#endif
 
     return codeDbg;
 }
@@ -947,6 +971,9 @@ JitRuntime::generateExceptionTailStub(JSContext* cx, void* handler)
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ExceptionTailStub");
 #endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "ExceptionTailStub");
+#endif
 
     return code;
 }
@@ -963,6 +990,9 @@ JitRuntime::generateBailoutTailStub(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutTailStub");
+#endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "BailoutTailStub");
 #endif
 
     return code;
@@ -1297,6 +1327,9 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ProfilerExitFrameStub");
+#endif
+#ifdef MOZ_VTUNE
+    vtune::MarkStub(code, "ProfilerExitFrameStub");
 #endif
 
     return code;

@@ -29,12 +29,12 @@ function run_test() {
 
 function finish_test() {
   do_execute_soon(function() {
-    test_generator.close();
+    test_generator.return();
     do_test_finished();
   });
 }
 
-function do_run_test() {
+function* do_run_test() {
   // Set up a profile.
   this.profile = do_get_profile();
 
@@ -136,7 +136,7 @@ function check_garbage_file(file)
   do_check_false(file.exists());
 }
 
-function run_test_1(generator)
+function* run_test_1(generator)
 {
   // Create a garbage database file.
   create_garbage_file(cookieFile);
@@ -165,7 +165,7 @@ function run_test_1(generator)
   do_run_generator(generator);
 }
 
-function run_test_2(generator)
+function* run_test_2(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
@@ -196,7 +196,7 @@ function run_test_2(generator)
   do_run_generator(generator);
 }
 
-function run_test_3(generator, schema)
+function* run_test_3(generator, schema)
 {
   // Manually create a schema 2 database, populate it, and set the schema
   // version to the desired number.
@@ -224,7 +224,7 @@ function run_test_3(generator, schema)
   do_run_generator(generator);
 }
 
-function run_test_4_exists(generator, schema, stmt)
+function* run_test_4_exists(generator, schema, stmt)
 {
   // Manually create a database, populate it, and add the desired column.
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), schema);
@@ -254,7 +254,7 @@ function run_test_4_exists(generator, schema, stmt)
   do_run_generator(generator);
 }
 
-function run_test_4_baseDomain(generator)
+function* run_test_4_baseDomain(generator)
 {
   // Manually create a database and populate it with a bad host.
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);

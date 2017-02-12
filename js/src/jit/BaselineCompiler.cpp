@@ -35,6 +35,9 @@
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 using namespace js;
 using namespace js::jit;
@@ -225,10 +228,6 @@ BaselineCompiler::compile()
             (void*) baselineScript.get(), (void*) code->raw(),
             script->filename(), script->lineno());
 
-#ifdef JS_ION_PERF
-    writePerfSpewerBaselineProfile(script, code);
-#endif
-
     MOZ_ASSERT(pcMappingIndexEntries.length() > 0);
     baselineScript->copyPCMappingIndexEntries(&pcMappingIndexEntries[0]);
 
@@ -306,6 +305,14 @@ BaselineCompiler::compile()
     }
 
     script->setBaselineScript(cx->runtime(), baselineScript.release());
+
+#ifdef JS_ION_PERF
+    writePerfSpewerBaselineProfile(script, code);
+#endif
+
+#ifdef MOZ_VTUNE
+    vtune::MarkScript(code, script, "baseline");
+#endif
 
     return Method_Compiled;
 }

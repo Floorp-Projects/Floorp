@@ -71,7 +71,7 @@ add_task(function* test_contentscript_create_iframe() {
     let testGetManifest = window.GET_MANIFEST();
 
     let manifest = browser.runtime.getManifest();
-    let availableAPIs = Object.keys(browser);
+    let availableAPIs = Object.keys(browser).filter(key => browser[key]);
 
     browser.runtime.sendMessage({
       name: "content-script-iframe-loaded",

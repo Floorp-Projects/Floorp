@@ -39,7 +39,7 @@ PendingGlobalHistoryEntry::ApplyChanges(IHistory* aHistory)
   mVisits.Clear();
 
   for (const URITitle& title : mTitles) {
-    aHistory->SetURITitle(title.mURI, title.mTitle);
+    rv = aHistory->SetURITitle(title.mURI, title.mTitle);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mTitles.Clear();

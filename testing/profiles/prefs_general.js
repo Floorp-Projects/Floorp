@@ -357,3 +357,6 @@ user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // Disable password capture, so that mochitests that include forms aren't
 // influenced by the presence of the persistent doorhanger notification.
 user_pref("signon.rememberSignons", false);
+
+// Enable form autofill feature testing.
+user_pref("browser.formautofill.experimental", true);

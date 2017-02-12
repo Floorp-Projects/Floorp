@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const dbName1 = "upgrade_test";
   const dbName2 = "testing.foobar";

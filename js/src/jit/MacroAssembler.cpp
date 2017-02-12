@@ -163,7 +163,7 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
     MOZ_ASSERT_IF(types->getObjectCount() > 0, scratch != InvalidReg);
 
     // Note: this method elides read barriers on values read from type sets, as
-    // this may be called off the main thread during Ion compilation. This is
+    // this may be called off thread during Ion compilation. This is
     // safe to do as the final JitCode object will be allocated during the
     // incremental GC (or the compilation canceled before we start sweeping),
     // see CodeGenerator::link. Other callers should use TypeSet::readBarrier

@@ -61,7 +61,9 @@ var ExtensionAPIs = {
     Services.scriptloader.loadSubScript(script, api.sandbox, "UTF-8");
 
     api.loadPromise = Schemas.load(schema).then(() => {
-      return Cu.evalInSandbox("API", api.sandbox);
+      let API = Cu.evalInSandbox("API", api.sandbox);
+      API.prototype.namespace = apiName;
+      return API;
     });
 
     return api.loadPromise;

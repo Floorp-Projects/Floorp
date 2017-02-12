@@ -616,7 +616,9 @@ if CONFIG['JS_HAS_CTYPES']:
 
 if CONFIG['MOZ_VTUNE']:
     SOURCES += [
-        'vtune/jitprofiling.c'
+        'vtune/ittnotify_static.c',
+        'vtune/jitprofiling.c',
+        'vtune/VTuneWrapper.cpp',
     ]
 
 if CONFIG['HAVE_LINUX_PERF_EVENT_H']:

@@ -314,15 +314,16 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     const auto dstOrigin = gl::OriginPos::BottomLeft;
 
     if (srcFormat != dstFormat) {
-        webgl->GenerateWarning("%s: Conversion requires pixel reformatting.", funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting.",
+                                   funcName);
     } else if (mSrcIsPremult != dstIsPremult) {
-        webgl->GenerateWarning("%s: Conversion requires change in"
-                               "alpha-premultiplication.",
-                               funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires change in"
+                                   "alpha-premultiplication.",
+                                   funcName);
     } else if (srcOrigin != dstOrigin) {
-        webgl->GenerateWarning("%s: Conversion requires y-flip.", funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires y-flip.", funcName);
     } else if (srcStride != dstStride) {
-        webgl->GenerateWarning("%s: Conversion requires change in stride.", funcName);
+        webgl->GeneratePerfWarning("%s: Conversion requires change in stride.", funcName);
     } else {
         return true;
     }
@@ -642,9 +643,9 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         return true;
     } while (false);
 
-    webgl->GenerateWarning("%s: Failed to hit GPU-copy fast-path. Falling back to CPU"
-                           " upload.",
-                           funcName);
+    webgl->GeneratePerfWarning("%s: Failed to hit GPU-copy fast-path. Falling back to CPU"
+                               " upload.",
+                               funcName);
 
     const RefPtr<gfx::SourceSurface> surf = mImage->GetAsSourceSurface();
 

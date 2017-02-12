@@ -454,8 +454,7 @@ JitcodeGlobalTable::lookupForSamplerInfallible(void* ptr, JSRuntime* rt, uint32_
     // barrier is not needed. Any JS frames sampled during the sweep phase of
     // the GC must be on stack, and on-stack frames must already be marked at
     // the beginning of the sweep phase. It's not possible to assert this here
-    // as we may not be running on the main thread when called from the gecko
-    // profiler.
+    // as we may not be off thread when called from the gecko profiler.
 
     return *entry;
 }

@@ -363,10 +363,10 @@ add_task(function* test_read_limit() {
 // use native messaging.
 add_task(function* test_ext_permission() {
   function background() {
-    browser.test.assertFalse("connectNative" in chrome.runtime, "chrome.runtime.connectNative does not exist without nativeMessaging permission");
-    browser.test.assertFalse("connectNative" in browser.runtime, "browser.runtime.connectNative does not exist without nativeMessaging permission");
-    browser.test.assertFalse("sendNativeMessage" in chrome.runtime, "chrome.runtime.sendNativeMessage does not exist without nativeMessaging permission");
-    browser.test.assertFalse("sendNativeMessage" in browser.runtime, "browser.runtime.sendNativeMessage does not exist without nativeMessaging permission");
+    browser.test.assertEq(chrome.runtime.connectNative, undefined, "chrome.runtime.connectNative does not exist without nativeMessaging permission");
+    browser.test.assertEq(browser.runtime.connectNative, undefined, "browser.runtime.connectNative does not exist without nativeMessaging permission");
+    browser.test.assertEq(chrome.runtime.sendNativeMessage, undefined, "chrome.runtime.sendNativeMessage does not exist without nativeMessaging permission");
+    browser.test.assertEq(browser.runtime.sendNativeMessage, undefined, "browser.runtime.sendNativeMessage does not exist without nativeMessaging permission");
     browser.test.sendMessage("finished");
   }
 

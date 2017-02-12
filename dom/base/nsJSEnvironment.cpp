@@ -111,7 +111,8 @@ const size_t gStackSize = 8192;
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
 
-// If we haven't painted in 100ms, we allow for a longer GC budget
+// If we haven't painted in 100ms, or we're in e10s parent process and
+// user isn't active, we allow for a longer GC budget.
 #define NS_INTERSLICE_GC_BUDGET     40 // ms
 
 // The amount of time we wait between a request to CC (after GC ran)
@@ -188,7 +189,8 @@ static bool sNeedsFullGC = false;
 static bool sNeedsGCAfterCC = false;
 static bool sIncrementalCC = false;
 static bool sDidPaintAfterPreviousICCSlice = false;
-
+static bool sUserActive = false;
+static int32_t sActiveIntersliceGCBudget = 0; // ms;
 static nsScriptNameSpaceManager *gNameSpaceManager;
 
 static PRTime sFirstCollectionTime;
@@ -348,10 +350,12 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-inactive")) {
+    sUserActive = false;
     if (sCompactOnUserInactive) {
       nsJSContext::PokeShrinkingGC();
     }
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-active")) {
+    sUserActive = true;
     nsJSContext::KillShrinkingGCTimer();
     if (sIsCompactingOnUserInactive) {
       JS::AbortIncrementalGC(sContext);
@@ -1726,10 +1730,13 @@ void
 InterSliceGCTimerFired(nsITimer *aTimer, void *aClosure)
 {
   nsJSContext::KillInterSliceGCTimer();
+  bool e10sParent = XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
+  int64_t budget = e10sParent && sUserActive && sActiveIntersliceGCBudget ?
+    sActiveIntersliceGCBudget : NS_INTERSLICE_GC_BUDGET;
   nsJSContext::GarbageCollectNow(JS::gcreason::INTER_SLICE_GC,
                                  nsJSContext::IncrementalGC,
                                  nsJSContext::NonShrinkingGC,
-                                 NS_INTERSLICE_GC_BUDGET);
+                                 budget);
 }
 
 // static
@@ -2320,6 +2327,7 @@ SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000)
+    sActiveIntersliceGCBudget = pref;
     JS_SetGCParameter(sContext, JSGC_SLICE_TIME_BUDGET, pref);
 }
 

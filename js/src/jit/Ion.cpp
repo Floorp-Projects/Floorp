@@ -51,6 +51,9 @@
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
@@ -371,7 +374,7 @@ void
 JitZoneGroup::patchIonBackedges(JSContext* cx, BackedgeTarget target)
 {
     if (target == BackedgeLoopHeader) {
-        // We must be on the main thread. The caller must use
+        // We must be on the active thread. The caller must use
         // AutoPreventBackedgePatching to ensure we don't reenter.
         MOZ_ASSERT(cx->runtime()->jitRuntime()->preventBackedgePatching());
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
@@ -810,6 +813,10 @@ JitCode::finalize(FreeOp* fop)
     }
 #endif
 
+#ifdef MOZ_VTUNE
+    vtune::UnmarkCode(this);
+#endif
+
     MOZ_ASSERT(pool_);
 
     // With W^X JIT code, reprotecting memory for each JitCode instance is
@@ -828,6 +835,7 @@ JitCode::finalize(FreeOp* fop)
     // memory instead.
     if (!PerfEnabled())
         pool_->release(headerSize_ + bufferSize_, CodeKind(kind_));
+
     pool_ = nullptr;
 }
 
@@ -1379,7 +1387,7 @@ IonScript::unlinkFromRuntime(FreeOp* fop)
 void
 jit::ToggleBarriers(JS::Zone* zone, bool needs)
 {
-    JSRuntime* rt = zone->runtimeFromMainThread();
+    JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
     if (!rt->hasJitRuntime())
         return;
 
@@ -2422,8 +2430,8 @@ CheckScriptSize(JSContext* cx, JSScript* script)
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
 
-    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
-        numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
+    if (script->length() > MAX_ACTIVE_THREAD_SCRIPT_SIZE ||
+        numLocalsAndArgs > MAX_ACTIVE_THREAD_LOCALS_AND_ARGS)
     {
         if (!OffThreadCompilationAvailable(cx)) {
             JitSpew(JitSpew_IonAbort, "Script too large (%" PRIuSIZE " bytes) (%u locals/args)",
@@ -2541,9 +2549,9 @@ bool
 jit::OffThreadCompilationAvailable(JSContext* cx)
 {
     // Even if off thread compilation is enabled, compilation must still occur
-    // on the main thread in some cases.
+    // on the active thread in some cases.
     //
-    // Require cpuCount > 1 so that Ion compilation jobs and main-thread
+    // Require cpuCount > 1 so that Ion compilation jobs and active-thread
     // execution are not competing for the same resources.
     return cx->runtime()->canUseOffthreadIonCompilation()
         && HelperThreadState().cpuCount > 1

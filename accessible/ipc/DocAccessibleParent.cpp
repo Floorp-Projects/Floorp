@@ -534,7 +534,6 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
   }
 
   Accessible* outerDoc = OuterDocOfRemoteBrowser();
-  MOZ_ASSERT(outerDoc);
 
   IAccessible* rawNative = nullptr;
   if (outerDoc) {

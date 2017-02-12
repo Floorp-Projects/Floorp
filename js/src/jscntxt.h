@@ -449,12 +449,12 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<bool> ionCompilingSafeForMinorGC;
 
     // Whether this thread is currently performing GC.  This thread could be the
-    // main thread or a helper thread while the main thread is running the
+    // active thread or a helper thread while the active thread is running the
     // collector.
     js::ThreadLocalData<bool> performingGC;
 
     // Whether this thread is currently sweeping GC things.  This thread could
-    // be the main thread or a helper thread while the main thread is running
+    // be the active thread or a helper thread while the active thread is running
     // the mutator.  This is used to assert that destruction of GCPtr only
     // happens when we are sweeping.
     js::ThreadLocalData<bool> gcSweeping;
@@ -516,9 +516,9 @@ struct JSContext : public JS::RootingContext,
     // with AutoDisableCompactingGC which uses this counter.
     js::ThreadLocalData<unsigned> compactingDisabledCount;
 
-    // Count of AutoKeepAtoms instances on the main thread's stack. When any
+    // Count of AutoKeepAtoms instances on the current thread's stack. When any
     // instances exist, atoms in the runtime will not be collected. Threads
-    // off the main thread do not increment this value, but the presence
+    // parsing off the active thread do not increment this value, but the presence
     // of any such threads also inhibits collection of atoms. We don't scan the
     // stacks of exclusive threads, so we need to avoid collecting their
     // objects in another way. The only GC thing pointers they have are to
@@ -779,9 +779,9 @@ struct JSContext : public JS::RootingContext,
         RequestInterruptCanWait
     };
 
-    // Any thread can call requestInterrupt() to request that the main JS thread
+    // Any thread can call requestInterrupt() to request that this thread
     // stop running and call the interrupt callback (allowing the interrupt
-    // callback to halt execution). To stop the main JS thread, requestInterrupt
+    // callback to halt execution). To stop this thread, requestInterrupt
     // sets two fields: interrupt_ (set to true) and jitStackLimit_ (set to
     // UINTPTR_MAX). The JS engine must continually poll one of these fields
     // and call handleInterrupt if either field has the interrupt value. (The
@@ -792,7 +792,7 @@ struct JSContext : public JS::RootingContext,
     //
     // Note that the writes to interrupt_ and jitStackLimit_ use a Relaxed
     // Atomic so, while the writes are guaranteed to eventually be visible to
-    // the main thread, it can happen in any order. handleInterrupt calls the
+    // this thread, it can happen in any order. handleInterrupt calls the
     // interrupt callback if either is set, so it really doesn't matter as long
     // as the JS engine is continually polling at least one field. In corner
     // cases, this relaxed ordering could lead to an interrupt handler being
@@ -1134,9 +1134,9 @@ class MOZ_RAII AutoLockForExclusiveAccess
         if (runtime->numExclusiveThreads) {
             runtime->exclusiveAccessLock.lock();
         } else {
-            MOZ_ASSERT(!runtime->mainThreadHasExclusiveAccess);
+            MOZ_ASSERT(!runtime->activeThreadHasExclusiveAccess);
 #ifdef DEBUG
-            runtime->mainThreadHasExclusiveAccess = true;
+            runtime->activeThreadHasExclusiveAccess = true;
 #endif
         }
     }
@@ -1154,9 +1154,9 @@ class MOZ_RAII AutoLockForExclusiveAccess
         if (runtime->numExclusiveThreads) {
             runtime->exclusiveAccessLock.unlock();
         } else {
-            MOZ_ASSERT(runtime->mainThreadHasExclusiveAccess);
+            MOZ_ASSERT(runtime->activeThreadHasExclusiveAccess);
 #ifdef DEBUG
-            runtime->mainThreadHasExclusiveAccess = false;
+            runtime->activeThreadHasExclusiveAccess = false;
 #endif
         }
     }

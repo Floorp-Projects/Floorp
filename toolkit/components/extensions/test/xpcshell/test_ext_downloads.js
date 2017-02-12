@@ -31,7 +31,7 @@ add_task(function* test_downloads_api_namespace_and_permissions() {
 
 add_task(function* test_downloads_open_permission() {
   function backgroundScript() {
-    browser.test.assertFalse("open" in browser.downloads,
+    browser.test.assertEq(browser.downloads.open, undefined,
                              "`downloads.open` permission is required.");
     browser.test.notifyPass("downloads tests");
   }

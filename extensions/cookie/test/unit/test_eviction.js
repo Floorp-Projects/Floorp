@@ -26,7 +26,7 @@ function repeat_test()
   gShortExpiry *= 2;
 
   do_execute_soon(function() {
-    test_generator.close();
+    test_generator.return();
     test_generator = do_run_test();
     do_run_generator(test_generator);
   });
@@ -53,7 +53,7 @@ function get_expiry_delay()
   return gShortExpiry * 1000 + 100;
 }
 
-function do_run_test()
+function* do_run_test()
 {
   // Set up a profile.
   let profile = do_get_profile();

@@ -318,8 +318,8 @@ class TraceLoggerThreadState
 #endif
 
     bool enabledTextIds[TraceLogger_Last];
-    bool mainThreadEnabled;
-    bool offThreadEnabled;
+    bool cooperatingThreadEnabled;
+    bool helperThreadEnabled;
     bool graphSpewingEnabled;
     bool spewErrors;
     mozilla::LinkedList<TraceLoggerThread> threadLoggers;
@@ -345,8 +345,8 @@ class TraceLoggerThreadState
 #ifdef DEBUG
         initialized(false),
 #endif
-        mainThreadEnabled(false),
-        offThreadEnabled(false),
+        cooperatingThreadEnabled(false),
+        helperThreadEnabled(false),
         graphSpewingEnabled(false),
         spewErrors(false),
         nextTextId(TraceLogger_Last),

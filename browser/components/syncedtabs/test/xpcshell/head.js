@@ -13,12 +13,12 @@ do_get_profile(); // fxa needs a profile directory for storage.
 
 // Create a window polyfill so sinon can load
 let window = {
-    document: {},
-    location: {},
-    setTimeout,
-    setInterval,
-    clearTimeout,
-    clearinterval: clearInterval
+  document: {},
+  location: {},
+  setTimeout,
+  setInterval,
+  clearTimeout,
+  clearInterval,
 };
 let self = window;
 

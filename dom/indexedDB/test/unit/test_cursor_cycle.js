@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const Bob = { ss: "237-23-7732", name: "Bob" };
 

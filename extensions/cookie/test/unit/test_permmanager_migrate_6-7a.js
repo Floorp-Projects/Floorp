@@ -17,7 +17,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test() {
+add_task(function* test() {
   /* Create and set up the permissions database */
   let profile = do_get_profile();
 

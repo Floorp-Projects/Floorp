@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   const openParams = [
     // This one lives in storage/default/http+++localhost

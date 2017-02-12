@@ -54,7 +54,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function() {
+add_task(function*() {
   // Simple change, shouldn't cause a warning
   do_print("Checking that a simple change doesn't cause a warning");
   let buf = makeBuffer(100);

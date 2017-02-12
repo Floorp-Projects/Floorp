@@ -17,7 +17,7 @@ function continue_test()
   do_run_generator(test_generator);
 }
 
-function do_run_test()
+function* do_run_test()
 {
   // Set the base domain limit to 50 so we have a known value.
   Services.prefs.setIntPref("network.cookie.maxPerHost", 50);
