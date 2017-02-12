@@ -27,18 +27,13 @@ function getSplitConsole(dbg) {
 
 add_task(function* () {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
-  const dbg = yield initDebugger(
-    "doc-script-switching.html"
-  );
+  const dbg = yield initDebugger("doc-script-switching.html");
 
   yield selectSource(dbg, "switching-01");
 
   // open the console
-  const jsterm = yield getSplitConsole(dbg);
+  yield getSplitConsole(dbg);
   ok(dbg.toolbox.splitConsole, "Split console is shown.");
-
-  info("Evaluating a script in the console");
-  yield jsterm.execute("1+1");
 
   // close the console
   clickElement(dbg, "codeMirror");

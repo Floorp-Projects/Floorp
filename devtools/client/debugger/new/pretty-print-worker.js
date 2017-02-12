@@ -1,19 +1,34 @@
-(function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
-		define([], factory);
-	else {
-		var a = factory();
-		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
-	}
-})(this, function() {
-return /******/ (function(modules) { // webpackBootstrap
+var Debugger =
+/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
+/******/ 		// SingleModulePlugin
+/******/ 		const smpCache = this.smpCache = this.smpCache || {};
+/******/ 		const smpMap = this.smpMap = this.smpMap || new Map();
+/******/ 		function sanitizeString(text) {
+/******/ 		   return text.replace(/__webpack_require__\(\d+\)/g,"");
+/******/ 		}
+/******/ 		function getModuleBody(id) {
+/******/ 		  if (smpCache.hasOwnProperty(id)) {
+/******/ 		    return smpCache[id];
+/******/ 		  }
+/******/
+/******/ 		  const body = sanitizeString(String(modules[id]));
+/******/ 		  smpCache[id] = body;
+/******/ 		  return body;
+/******/ 		}
+/******/ 		if (!installedModules[moduleId]) {
+/******/ 			const body = getModuleBody(moduleId);
+/******/ 			if (smpMap.has(body)) {
+/******/ 				installedModules[moduleId] = installedModules[smpMap.get(body)];
+/******/ 			}
+/******/ 			else {
+/******/ 				smpMap.set(body, moduleId)
+/******/ 			}
+/******/ 		}
 /******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
@@ -55,19 +70,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(527);
+	module.exports = __webpack_require__(679);
 
 
 /***/ },
 
-/***/ 197:
+/***/ 252:
 /***/ function(module, exports) {
 
-	"use strict";
-	
 	function assert(condition, message) {
 	  if (!condition) {
-	    throw new Error(`Assertion failure: ${message}`);
+	    throw new Error(`Assertion failure: ${ message }`);
 	  }
 	}
 	
@@ -75,13 +88,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 527:
+/***/ 679:
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-	
-	var prettyFast = __webpack_require__(528);
-	var assert = __webpack_require__(197);
+	var prettyFast = __webpack_require__(680);
+	var assert = __webpack_require__(252);
 	
 	function prettyPrint(_ref) {
 	  var url = _ref.url,
@@ -99,7 +110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      mappings: prettified.map._mappings
 	    };
 	  } catch (e) {
-	    throw new Error(`${e.message}\n${e.stack}`);
+	    return new Error(`${ e.message }\n${ e.stack }`);
 	  }
 	}
 	
@@ -145,7 +156,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 528:
+/***/ 680:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
@@ -167,8 +178,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}(this, function () {
 	  "use strict";
 	
-	  var acorn = this.acorn || __webpack_require__(529);
-	  var sourceMap = this.sourceMap || __webpack_require__(530);
+	  var acorn = this.acorn || __webpack_require__(681);
+	  var sourceMap = this.sourceMap || __webpack_require__(682);
 	  var SourceNode = sourceMap.SourceNode;
 	
 	  // If any of these tokens are seen before a "[" token, we know that "[" token
@@ -1027,7 +1038,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 529:
+/***/ 681:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// Acorn is a tiny, fast JavaScript parser written in JavaScript.
@@ -3687,7 +3698,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 530:
+/***/ 682:
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -3695,14 +3706,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(531).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(537).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(539).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(683).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(689).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(691).SourceNode;
 
 
 /***/ },
 
-/***/ 531:
+/***/ 683:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3716,10 +3727,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64VLQ = __webpack_require__(532);
-	  var util = __webpack_require__(534);
-	  var ArraySet = __webpack_require__(535).ArraySet;
-	  var MappingList = __webpack_require__(536).MappingList;
+	  var base64VLQ = __webpack_require__(684);
+	  var util = __webpack_require__(686);
+	  var ArraySet = __webpack_require__(687).ArraySet;
+	  var MappingList = __webpack_require__(688).MappingList;
 	
 	  /**
 	   * An instance of the SourceMapGenerator represents a source map which is
@@ -4109,7 +4120,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 532:
+/***/ 684:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4153,7 +4164,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64 = __webpack_require__(533);
+	  var base64 = __webpack_require__(685);
 	
 	  // A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	  // length quantities we use in the source map spec, the first bit is the sign,
@@ -4258,7 +4269,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 533:
+/***/ 685:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4307,7 +4318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 534:
+/***/ 686:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4633,7 +4644,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 535:
+/***/ 687:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4647,7 +4658,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(534);
+	  var util = __webpack_require__(686);
 	
 	  /**
 	   * A data structure which is a combination of an array and a set. Adding a new
@@ -4737,7 +4748,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 536:
+/***/ 688:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4751,7 +4762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(534);
+	  var util = __webpack_require__(686);
 	
 	  /**
 	   * Determine whether mappingB is after mappingA with respect to generated
@@ -4830,7 +4841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 537:
+/***/ 689:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4844,10 +4855,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(534);
-	  var binarySearch = __webpack_require__(538);
-	  var ArraySet = __webpack_require__(535).ArraySet;
-	  var base64VLQ = __webpack_require__(532);
+	  var util = __webpack_require__(686);
+	  var binarySearch = __webpack_require__(690);
+	  var ArraySet = __webpack_require__(687).ArraySet;
+	  var base64VLQ = __webpack_require__(684);
 	
 	  /**
 	   * A SourceMapConsumer instance represents a parsed source map which we can
@@ -5412,7 +5423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 538:
+/***/ 690:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5499,7 +5510,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 539:
+/***/ 691:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5513,8 +5524,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var SourceMapGenerator = __webpack_require__(531).SourceMapGenerator;
-	  var util = __webpack_require__(534);
+	  var SourceMapGenerator = __webpack_require__(683).SourceMapGenerator;
+	  var util = __webpack_require__(686);
 	
 	  // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	  // operating systems these days (capturing the result).
@@ -5920,7 +5931,5 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }
 
-/******/ })
-});
-;
+/******/ });
 //# sourceMappingURL=pretty-print-worker.js.map
