@@ -104,6 +104,38 @@ ShouldForceOpaque(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat)
   return IgnoreAlpha(aSrcFormat) != IgnoreAlpha(aDstFormat);
 }
 
+#ifdef USE_SSE2
+/**
+ * SSE2 optimizations
+ */
+
+template<bool aSwapRB, bool aOpaqueAlpha>
+void Premultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define PREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Premultiply_SSE2 \
+      <ShouldSwapRB(aSrcFormat, aDstFormat), \
+       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+
+template<bool aSwapRB>
+void Unpremultiply_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define UNPREMULTIPLY_SSE2(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Unpremultiply_SSE2<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+
+template<bool aSwapRB, bool aOpaqueAlpha>
+void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define SWIZZLE_SSE2(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Swizzle_SSE2 \
+      <ShouldSwapRB(aSrcFormat, aDstFormat), \
+       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+
+#endif
+
 /**
  * Premultiplying
  */
@@ -214,6 +246,20 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
+#ifdef USE_SSE2
+  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
+  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  PREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
+  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  PREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+  default: break;
+  }
+#endif
+
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   PREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
   PREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
@@ -311,6 +357,16 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
   MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
+
+#ifdef USE_SSE2
+  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+  UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+  UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  default: break;
+  }
+#endif
 
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   UNPREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
@@ -589,6 +645,20 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
   MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
+
+#ifdef USE_SSE2
+  switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
+  SWIZZLE_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+  SWIZZLE_SSE2(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
+  SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
+  SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+  SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+  default: break;
+  }
+#endif
 
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
 
