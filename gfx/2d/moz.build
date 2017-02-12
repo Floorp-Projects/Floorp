@@ -53,6 +53,7 @@ EXPORTS.mozilla.gfx += [
     'SourceSurfaceCairo.h',
     'SourceSurfaceRawData.h',
     'StackArray.h',
+    'Swizzle.h',
     'Tools.h',
     'Triangle.h',
     'Types.h',
@@ -177,6 +178,7 @@ UNIFIED_SOURCES += [
     'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
+    'Swizzle.cpp',
 ]
 
 SOURCES += [
