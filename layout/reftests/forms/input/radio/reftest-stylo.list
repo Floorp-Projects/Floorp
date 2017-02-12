@@ -3,7 +3,7 @@
 # == checked.html checked.html
 == checked-native.html checked-native.html
 # == checked.html checked.html
-fails == checked-notref.html checked-notref.html
+# == checked-notref.html checked-notref.html
 == checked-native.html checked-native.html
 == checked-native-notref.html checked-native-notref.html
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height.html
