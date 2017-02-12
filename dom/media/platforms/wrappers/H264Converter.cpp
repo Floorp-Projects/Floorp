@@ -53,8 +53,8 @@ H264Converter::Init()
 RefPtr<MediaDataDecoder::DecodePromise>
 H264Converter::Decode(MediaRawData* aSample)
 {
-  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists() &&
-                     !mInitPromiseRequest.Exists(),
+  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists()
+                     && !mInitPromiseRequest.Exists(),
                      "Can't request a new decode until previous one completed");
 
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
@@ -97,8 +97,8 @@ H264Converter::Decode(MediaRawData* aSample)
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
 
-  if (!mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
+  if (!mNeedAVCC
+      && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("ConvertSampleToAnnexB")),
@@ -176,8 +176,8 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(mCurrentConfig.mExtraData, spsdata)) {
     // Do some format check here.
     // WMF H.264 Video Decoder and Apple ATDecoder do not support YUV444 format.
-    if (spsdata.profile_idc == 244 /* Hi444PP */ ||
-        spsdata.chroma_format_idc == PDMFactory::kYUV444) {
+    if (spsdata.profile_idc == 244 /* Hi444PP */
+        || spsdata.chroma_format_idc == PDMFactory::kYUV444) {
       mLastError = NS_ERROR_FAILURE;
       if (aDiagnostics) {
         aDiagnostics->SetVideoNotSupported();
@@ -246,8 +246,8 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
     mDecodePromise.ResolveIfExists(DecodedData(), __func__);
   }
   mNeedKeyframe = false;
-  if (!mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
+  if (!mNeedAVCC
+      && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
     mDecodePromise.RejectIfExists(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("ConvertSampleToAnnexB")),
@@ -283,14 +283,14 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
-  if (!mp4_demuxer::AnnexB::HasSPS(extra_data) ||
-      mp4_demuxer::AnnexB::CompareExtraData(extra_data,
-                                            mCurrentConfig.mExtraData)) {
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)
+      || mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                               mCurrentConfig.mExtraData)) {
         return NS_OK;
       }
 
-  if (MediaPrefs::MediaDecoderCheckRecycling() &&
-      mDecoder->SupportDecoderRecycling()) {
+  if (MediaPrefs::MediaDecoderCheckRecycling()
+      && mDecoder->SupportDecoderRecycling()) {
     // Do not recreate the decoder, reuse it.
     UpdateConfigFromExtraData(extra_data);
     mNeedKeyframe = true;
@@ -307,8 +307,9 @@ void
 H264Converter::UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
 {
   mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
-      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata)
+      && spsdata.pic_width > 0
+      && spsdata.pic_height > 0) {
     mp4_demuxer::H264::EnsureSPSIsSane(spsdata);
     mCurrentConfig.mImage.width = spsdata.pic_width;
     mCurrentConfig.mImage.height = spsdata.pic_height;
