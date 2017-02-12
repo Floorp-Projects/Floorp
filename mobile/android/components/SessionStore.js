@@ -784,8 +784,7 @@ SessionStore.prototype = {
       return;
     }
 
-    let browsers = aWindow.document.getElementById("browsers");
-    let index = browsers.selectedIndex;
+    let index = aWindow.BrowserApp.selectedTabIndex;
     this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
 
     let tab = aWindow.BrowserApp.getTabForBrowser(aBrowser);
@@ -1111,8 +1110,7 @@ SessionStore.prototype = {
     let winData = this._windows[aWindow.__SSID];
     winData.tabs = [];
 
-    let browsers = aWindow.document.getElementById("browsers");
-    let index = browsers.selectedIndex;
+    let index = aWindow.BrowserApp.selectedTabIndex;
     winData.selected = parseInt(index) + 1; // 1-based
 
     let tabs = aWindow.BrowserApp.tabs;
