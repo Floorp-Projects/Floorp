@@ -209,8 +209,7 @@ OutputParser.prototype = {
               BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
             this._appendCubicBezier(token.text, options);
           } else if (Services.prefs.getBoolPref(CSS_GRID_ENABLED_PREF) &&
-                     options.expectDisplay && token.text === "grid" &&
-                     text === token.text) {
+                     this._isDisplayGrid(text, token, options)) {
             this._appendGrid(token.text, options);
           } else if (colorOK() &&
                      colorUtils.isValidCSSColor(token.text, this.cssColor4)) {
@@ -283,6 +282,24 @@ OutputParser.prototype = {
     }
 
     return result;
+  },
+
+  /**
+   * Return true if it's a display:[inline-]grid token.
+   *
+   * @param  {String} text
+   *         the parsed text.
+   *
+   * @param  {Object} token
+   *         the parsed token.
+   *
+   * @param  {Object} options
+   *         the options given to _parse.
+   */
+  _isDisplayGrid: function (text, token, options) {
+    return options.expectDisplay &&
+      (token.text === "grid" || token.text === "inline-grid") &&
+      text === token.text;
   },
 
   /**
