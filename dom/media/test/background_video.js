@@ -51,7 +51,7 @@ function waitUntilEnded(video) {
   Log(video.token, "Waiting for ended");
   if (video.ended) {
     ok(true, video.token + " already ended");
-    return Promise.success();
+    return Promise.resolve();
   }
 
   return once(video, 'ended', () => { ok(true, video.token + " ended"); });
