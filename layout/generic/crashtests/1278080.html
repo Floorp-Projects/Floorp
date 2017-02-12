@@ -1,0 +1,31 @@
+<style>
+.columns {
+  -moz-columns: 5;
+       columns: 5;
+  -moz-column-fill: auto;
+       column-fill: auto;
+  height: 100px;
+}
+.grid {
+  display: grid;
+  max-height: 180px;
+  grid-auto-rows: 30px;
+  grid-gap: 12px;
+}
+span {
+  grid-row: 2;
+}
+i { 
+  display: block; 
+  height: 60px; 
+}
+</style>
+<div class="columns"><div class="grid"><span><i></i></span></div></div>
+<script>
+window.onload = function(){
+  var x = document.createElementNS("http://www.w3.org/1999/xhtml", "x");
+  var r = new Range();
+  r.selectNode(document.getElementsByTagName('span')[0]);
+  setTimeout(function(){ r.surroundContents(x); }, 1);
+};
+</script>

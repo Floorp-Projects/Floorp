@@ -575,6 +575,7 @@ input[type="checkbox"] {
   -moz-binding: unset;
   border: unset;
   background-color: unset;
+  color: unset;
 }
 
 input[type="radio"]:disabled,
@@ -611,6 +612,7 @@ input[type="radio"],
 input[type="checkbox"] {
   inline-size: 13px;
   block-size: 13px;
+  color: -moz-FieldText;
   border: 2px inset ThreeDLightShadow;
   background-repeat: no-repeat;
   background-position: center;
