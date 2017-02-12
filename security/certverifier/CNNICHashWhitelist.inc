@@ -12,7 +12,8 @@
 #define CNNIC_WHITELIST_HASH_LEN 32
 
 struct WhitelistedCNNICHash {
- const uint8_t hash[CNNIC_WHITELIST_HASH_LEN];
+  // See bug 1338873 about making this field const.
+  uint8_t hash[CNNIC_WHITELIST_HASH_LEN];
 };
 
 static const struct WhitelistedCNNICHash WhitelistedCNNICHashes[] = {
