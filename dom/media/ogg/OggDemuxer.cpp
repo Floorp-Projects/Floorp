@@ -305,7 +305,7 @@ OggDemuxer::ReadHeaders(TrackInfo::TrackType aType,
 {
   while (!aState->DoneReadingHeaders()) {
     DemuxUntilPacketAvailable(aType, aState);
-    ogg_packet* packet = aState->PacketOut();
+    OggPacketPtr packet = aState->PacketOut();
     if (!packet) {
       OGG_DEBUG("Ran out of header packets early; deactivating stream %ld", aState->mSerial);
       aState->Deactivate();
@@ -314,7 +314,7 @@ OggDemuxer::ReadHeaders(TrackInfo::TrackType aType,
 
     // Local OggCodecState needs to decode headers in order to process
     // packet granulepos -> time mappings, etc.
-    if (!aState->DecodeHeader(packet)) {
+    if (!aState->DecodeHeader(Move(packet))) {
       OGG_DEBUG("Failed to decode ogg header packet; deactivating stream %ld", aState->mSerial);
       aState->Deactivate();
       return false;
@@ -837,7 +837,7 @@ OggDemuxer::GetNextPacket(TrackInfo::TrackType aType)
 
   while (true) {
     if (packet) {
-      OggCodecState::ReleasePacket(state->PacketOut());
+      Unused << state->PacketOut();
     }
     DemuxUntilPacketAvailable(aType, state);
 
@@ -1119,12 +1119,11 @@ OggDemuxer::SeekInternal(TrackInfo::TrackType aType, const TimeUnit& aTarget)
     if (foundKeyframe && startTstamp == adjustedTarget) {
       break;
     }
-    ogg_packet* releaseMe = state->PacketOut();
     if (foundKeyframe) {
-      tempPackets.Append(releaseMe);
+      tempPackets.Append(state->PacketOut());
     } else {
       // Discard video packets before the first keyframe.
-      OggCodecState::ReleasePacket(releaseMe);
+      Unused << state->PacketOut();
     }
   }
   // Re-add all packet into the codec state in order.
