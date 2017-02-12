@@ -38,4 +38,4 @@ needs-focus == text-shadow-selected-2.html text-shadow-selected-2.html
 needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1.html
 needs-focus == text-shadow-on-selection-2.html text-shadow-on-selection-2.html
 
-fails == overflow-decoration.html overflow-decoration.html
+== overflow-decoration.html overflow-decoration.html
