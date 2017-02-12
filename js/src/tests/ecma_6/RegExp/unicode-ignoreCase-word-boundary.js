@@ -21,5 +21,26 @@ assertEq(/\B/i.test('\u212A'), true);
 assertEq(/\B/u.test('\u212A'), true);
 assertEq(/\B/.test('\u212A'), true);
 
+// Bug 1338779 - More testcases.
+assertEq(/(i\B\u017F)/ui.test("is"), true);
+assertEq(/(i\B\u017F)/ui.test("it"), false);
+assertEq(/(i\B\u017F)+/ui.test("is"), true);
+assertEq(/(i\B\u017F)+/ui.test("it"), false);
+
+assertEq(/(\u017F\Bi)/ui.test("si"), true);
+assertEq(/(\u017F\Bi)/ui.test("ti"), false);
+assertEq(/(\u017F\Bi)+/ui.test("si"), true);
+assertEq(/(\u017F\Bi)+/ui.test("ti"), false);
+
+assertEq(/(i\B\u212A)/ui.test("ik"), true);
+assertEq(/(i\B\u212A)/ui.test("it"), false);
+assertEq(/(i\B\u212A)+/ui.test("ik"), true);
+assertEq(/(i\B\u212A)+/ui.test("it"), false);
+
+assertEq(/(\u212A\Bi)/ui.test("ki"), true);
+assertEq(/(\u212A\Bi)/ui.test("ti"), false);
+assertEq(/(\u212A\Bi)+/ui.test("ki"), true);
+assertEq(/(\u212A\Bi)+/ui.test("ti"), false);
+
 if (typeof reportCompare === "function")
     reportCompare(true, true);
