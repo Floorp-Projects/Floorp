@@ -1738,167 +1738,149 @@
     "n_values": 12,
     "description": "Whether the URL gets redirected?  (0=200, 1=301, 2=302, 3=304, 4=307, 5=308, 6=400, 7=401, 8=403, 9=404, 10=500, 11=other)"
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QSMALL_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QSMALL_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and small queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and small queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QMED_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QMED_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and medium queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and medium queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QBIG_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QBIG_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and large queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a normal priority and large queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QSMALL_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QSMALL_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and small queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and small queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QMED_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QMED_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and medium queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and medium queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_QBIG_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTART_QBIG_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and large queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) for requests with a high priority and large queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QSMALL_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QSMALL_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and small queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and small queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QMED_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QMED_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and medium queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and medium queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QBIG_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QBIG_NORMALPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and large queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a normal priority and large queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QSMALL_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QSMALL_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and small queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and small queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QMED_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QMED_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and medium queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and medium queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_QBIG_HIGHPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_QBIG_HIGHPRI_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and large queue. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and large queue. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_SMALL": {
+  "HTTP_NET_VS_CACHE_ONSTOP_SMALL_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1325090],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a small size (<256K). Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a small size (<256K). Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_LARGE": {
+  "HTTP_NET_VS_CACHE_ONSTOP_LARGE_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1325090],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a large size (>=256K). Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a large size (>=256K). Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_REVALIDATED": {
+  "HTTP_NET_VS_CACHE_ONSTART_REVALIDATED_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) revalidated cache entries. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference revalidated cache entries. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_NOTREVALIDATED": {
+  "HTTP_NET_VS_CACHE_ONSTART_NOTREVALIDATED_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) not revalidated cache entries. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStartRequest) difference (ms) not revalidated cache entries. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_REVALIDATED": {
+  "HTTP_NET_VS_CACHE_ONSTOP_REVALIDATED_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) revalidated cache entries. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) revalidated cache entries. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
-  "HTTP_NET_VS_CACHE_ONSTOP_NOTREVALIDATED": {
+  "HTTP_NET_VS_CACHE_ONSTOP_NOTREVALIDATED_V2": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) not revalidated cache entries. Offset by 500 ms."
+      "bug_numbers": [1325322],
+      "kind": "enumerated",
+      "n_values": 80,
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) not revalidated cache entries. Cache wins: 41-50 for 1-100ms, 51-59 for 101-1000ms, 60-68 for 1-10s, 69-73 for 11-60s and 74 for > 1m. Network wins: 39-30 for 1-100ms, 29-21 for 101-1000ms, 20-12 for 1-10s, 11-7 for 11-60s and 6 for > 1m."
   },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
