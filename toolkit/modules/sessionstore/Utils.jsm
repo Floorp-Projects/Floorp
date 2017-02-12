@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
 
+function debug(msg) {
+  Services.console.logStringMessage("Utils: " + msg);
+}
+
 this.Utils = Object.freeze({
   makeURI: function (url) {
     return Services.io.newURI(url, null, null);
@@ -91,9 +95,13 @@ this.Utils = Object.freeze({
     if (!principal_b64)
       return null;
 
-    let principal = serializationHelper.deserializeObject(principal_b64);
-    principal.QueryInterface(Ci.nsIPrincipal);
-
-    return principal;
+    try {
+      let principal = serializationHelper.deserializeObject(principal_b64);
+      principal.QueryInterface(Ci.nsIPrincipal);
+      return principal;
+    } catch (e) {
+      debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
+    }
+    return null;
   }
 });
