@@ -360,10 +360,11 @@ SessionStore.prototype = {
         // If we skipped restoring a zombified tab before backgrounding,
         // we might have to do it now instead.
         let window = Services.wm.getMostRecentWindow("navigator:browser");
-        let tab = window.BrowserApp.selectedTab;
-
-        if (tab.browser.__SS_restore) {
-          this._restoreZombieTab(tab.browser, tab.id);
+        if (window) { // Might not yet be ready during a cold startup.
+          let tab = window.BrowserApp.selectedTab;
+          if (tab.browser.__SS_restore) {
+            this._restoreZombieTab(tab.browser, tab.id);
+          }
         }
         break;
       case "ClosedTabs:StartNotifications":
