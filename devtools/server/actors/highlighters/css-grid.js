@@ -54,7 +54,7 @@ const COLUMN_KEY = {};
 
 /**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
- * display:grid elements.
+ * display:[inline-]grid elements.
  *
  * Usage example:
  * let h = new CssGridHighlighter(env);

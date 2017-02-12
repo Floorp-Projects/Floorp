@@ -3729,7 +3729,7 @@
                 browser.docShellIsActive = true;
                 if (!tabParent) {
                   this.onLayersReady(browser);
-		}
+                }
               } else if (state == this.STATE_UNLOADING) {
                 browser.docShellIsActive = false;
                 if (!tabParent) {
@@ -4173,9 +4173,9 @@
             },
 
             activateBrowserForPrintPreview(browser) {
-	      let tab = this.tabbrowser.getTabForBrowser(browser);
-	      this.setTabState(tab, this.STATE_LOADING);
-	    },
+              let tab = this.tabbrowser.getTabForBrowser(browser);
+              this.setTabState(tab, this.STATE_LOADING);
+            },
 
             // Called when the user asks to switch to a given tab.
             requestTab(tab) {
@@ -4804,8 +4804,8 @@
                 tab.setUserContextId(data.userContextId);
               }
 
-	      // We don't want to update the container icon and identifier if
-	      // this is not the selected browser.
+              // We don't want to update the container icon and identifier if
+              // this is not the selected browser.
               if (browser == gBrowser.selectedBrowser) {
                 updateUserContextUIIndicator();
               }
