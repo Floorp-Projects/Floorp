@@ -176,10 +176,28 @@ js::DestroyContext(JSContext* cx)
 
     cx->checkNoGCRooters();
 
-    js_delete(cx->ionPcScriptCache.ref());
+    // Cancel all off thread Ion compiles before destroying a cooperative
+    // context. Completed Ion compiles may try to interrupt arbitrary
+    // cooperative contexts which they have read off the owner context of a
+    // zone group. See HelperThread::handleIonWorkload.
+    CancelOffThreadIonCompile(cx->runtime());
 
-    cx->runtime()->destroyRuntime();
-    js_delete(cx->runtime());
+    if (cx->runtime()->cooperatingContexts().length() == 1) {
+        // Destroy the runtime along with its last context.
+        cx->runtime()->destroyRuntime();
+        js_delete(cx->runtime());
+    } else {
+        DebugOnly<bool> found = false;
+        for (size_t i = 0; i < cx->runtime()->cooperatingContexts().length(); i++) {
+            CooperatingContext& target = cx->runtime()->cooperatingContexts()[i];
+            if (cx == target.context()) {
+                cx->runtime()->cooperatingContexts().erase(&target);
+                found = true;
+                break;
+            }
+        }
+        MOZ_ASSERT(found);
+    }
 
     js_delete_poison(cx);
 }
@@ -1033,6 +1051,8 @@ JSContext::~JSContext()
 
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);
+
+    js_delete(ionPcScriptCache.ref());
 
     if (dtoaState)
         DestroyDtoaState(dtoaState);

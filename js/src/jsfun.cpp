@@ -618,7 +618,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
     if (mode == XDR_DECODE) {
         RootedObject proto(cx);
         if (firstword & IsStarGenerator) {
-            // If we are off the main thread, the generator meta-objects have
+            // If we are off thread, the generator meta-objects have
             // already been created by js::StartOffThreadParseTask, so
             // JSContext* will not be necessary.
             JSContext* context = cx->helperThread() ? nullptr : cx;

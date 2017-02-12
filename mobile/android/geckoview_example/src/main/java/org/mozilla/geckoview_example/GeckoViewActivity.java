@@ -35,6 +35,7 @@ public class GeckoViewActivity extends Activity {
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
         mGeckoView.setChromeDelegate(new MyGeckoViewChrome());
         mGeckoView.setContentListener(new MyGeckoViewContent());
+        mGeckoView.setProgressListener(new MyGeckoViewProgress());
     }
 
     @Override
@@ -93,6 +94,33 @@ public class GeckoViewActivity extends Activity {
         @Override
         public void onTitleChanged(GeckoView view, String title) {
             Log.i(LOGTAG, "Content title changed to " + title);
+        }
+    }
+
+    private class MyGeckoViewProgress implements GeckoView.ProgressListener {
+        @Override
+        public void onPageStart(GeckoView view, String url) {
+            Log.i(LOGTAG, "Starting to load page at " + url);
+        }
+
+        @Override
+        public void onPageStop(GeckoView view, boolean success) {
+            Log.i(LOGTAG, "Stopping page load " + (success ? "successfully" : "unsuccessfully"));
+        }
+
+        @Override
+        public void onSecurityChanged(GeckoView view, int status) {
+            String statusString;
+            if ((status & STATE_IS_BROKEN) != 0) {
+                statusString = "broken";
+            } else if ((status & STATE_IS_SECURE) != 0) {
+                statusString = "secure";
+            } else if ((status & STATE_IS_INSECURE) != 0) {
+                statusString = "insecure";
+            } else {
+                statusString = "unknown";
+            }
+            Log.i(LOGTAG, "Security status changed to " + statusString);
         }
     }
 }

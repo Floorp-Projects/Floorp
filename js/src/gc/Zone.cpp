@@ -105,7 +105,7 @@ Zone::setNeedsIncrementalBarrier(bool needs, ShouldUpdateJit updateJit)
         jitUsingBarriers_ = needs;
     }
 
-    MOZ_ASSERT_IF(needs && isAtomsZone(), !runtimeFromMainThread()->exclusiveThreadsPresent());
+    MOZ_ASSERT_IF(needs && isAtomsZone(), !runtimeFromActiveCooperatingThread()->exclusiveThreadsPresent());
     MOZ_ASSERT_IF(needs, canCollect());
     needsIncrementalBarrier_ = needs;
 }
@@ -274,8 +274,8 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 
         /*
          * Free all control flow graphs that are cached on BaselineScripts.
-         * Assuming this happens on the mainthread and all control flow
-         * graph reads happen on the mainthread, this is save.
+         * Assuming this happens on the active thread and all control flow
+         * graph reads happen on the active thread, this is safe.
          */
         jitZone()->cfgSpace()->lifoAlloc().freeAll();
     }
@@ -295,7 +295,7 @@ Zone::gcNumber()
 {
     // Zones in use by exclusive threads are not collected, and threads using
     // them cannot access the main runtime's gcNumber without racing.
-    return usedByExclusiveThread ? 0 : runtimeFromMainThread()->gc.gcNumber();
+    return usedByExclusiveThread ? 0 : runtimeFromActiveCooperatingThread()->gc.gcNumber();
 }
 
 js::jit::JitZone*

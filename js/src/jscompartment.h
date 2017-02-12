@@ -395,7 +395,7 @@ struct JSCompartment
     JS::CompartmentBehaviors& behaviors() { return behaviors_; }
     const JS::CompartmentBehaviors& behaviors() const { return behaviors_; }
 
-    JSRuntime* runtimeFromMainThread() const {
+    JSRuntime* runtimeFromActiveCooperatingThread() const {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
         return runtime_;
     }
@@ -404,10 +404,6 @@ struct JSCompartment
     // thread can easily lead to races. Use this method very carefully.
     JSRuntime* runtimeFromAnyThread() const {
         return runtime_;
-    }
-
-    JSContext* contextFromMainThread() const {
-        return runtime_->contextFromMainThread();
     }
 
     /*

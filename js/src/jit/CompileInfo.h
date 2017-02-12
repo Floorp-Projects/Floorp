@@ -536,7 +536,7 @@ class CompileInfo
     AnalysisMode analysisMode_;
 
     // Whether a script needs an arguments object is unstable over compilation
-    // since the arguments optimization could be marked as failed on the main
+    // since the arguments optimization could be marked as failed on the active
     // thread, so cache a value here and use it throughout for consistency.
     bool scriptNeedsArgsObj_;
 

@@ -340,9 +340,16 @@ let ProfileAutocomplete = {
  */
 var FormAutofillContent = {
   init() {
-    ProfileAutocomplete.ensureRegistered();
-
     addEventListener("DOMContentLoaded", this);
+
+    addMessageListener("FormAutofill:enabledStatus", (result) => {
+      if (result.data) {
+        ProfileAutocomplete.ensureRegistered();
+      } else {
+        ProfileAutocomplete.ensureUnregistered();
+      }
+    });
+    sendAsyncMessage("FormAutofill:getEnabledStatus");
   },
 
   handleEvent(evt) {

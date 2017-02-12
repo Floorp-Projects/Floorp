@@ -44,7 +44,7 @@ function clearAllDatabases(callback) {
 var testHarnessGenerator = testHarnessSteps();
 testHarnessGenerator.next();
 
-function testHarnessSteps() {
+function* testHarnessSteps() {
   function nextTestHarnessStep(val) {
     testHarnessGenerator.next(val);
   }
