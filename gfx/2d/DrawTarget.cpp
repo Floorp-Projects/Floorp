@@ -52,5 +52,18 @@ DrawTarget::PushDeviceSpaceClipRects(const IntRect* aRects, uint32_t aCount)
   SetTransform(oldTransform);
 }
 
+void
+DrawTarget::StrokeGlyphs(ScaledFont* aFont,
+                         const GlyphBuffer& aBuffer,
+                         const Pattern& aPattern,
+                         const StrokeOptions& aStrokeOptions,
+                         const DrawOptions& aOptions,
+                         const GlyphRenderingOptions* aRenderingOptions)
+{
+  RefPtr<Path> path = aFont->GetPathForGlyphs(aBuffer, this);
+  Stroke(path, aPattern, aStrokeOptions, aOptions);
+}
+
+
 } // namespace gfx
 } // namespace mozilla
