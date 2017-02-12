@@ -19,7 +19,7 @@
 
 #include "prlog.h"
 
-#include <deque>
+#include "DurationMap.h"
 #include <jni.h>
 
 
@@ -150,10 +150,8 @@ public:
 
     void HandleOutput(Sample::Param aSample) override
     {
-      Maybe<int64_t> durationUs = mDecoder->mInputDurations.Get();
-      if (!durationUs) {
-        return;
-      }
+      UniquePtr<VideoData::Listener>
+        releaseSample(new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
 
       BufferInfo::LocalRef info = aSample->Info();
 
@@ -175,26 +173,30 @@ public:
         return;
       }
 
+      bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+      int64_t durationUs;
+      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs) && !isEOS) {
+        return;
+      }
+
       if (size > 0) {
         RefPtr<layers::Image> img = new SurfaceTextureImage(
           mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          mDecoder->mConfig, offset, presentationTimeUs, durationUs.value(),
+          mDecoder->mConfig, offset, presentationTimeUs, durationUs,
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           presentationTimeUs,
           gfx::IntRect(0, 0, mDecoder->mConfig.mDisplay.width,
                        mDecoder->mConfig.mDisplay.height));
 
-        UniquePtr<VideoData::Listener> listener(
-          new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
-        v->SetListener(Move(listener));
+        v->SetListener(Move(releaseSample));
 
         mDecoder->Output(v);
       }
 
-      if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
+      if (isEOS) {
         mDecoder->DrainComplete();
       }
     }
@@ -263,15 +265,9 @@ public:
     return RemoteDataDecoder::Flush();
   }
 
-  RefPtr<MediaDataDecoder::DecodePromise> Drain() override
-  {
-    mInputDurations.Put(0);
-    return RemoteDataDecoder::Drain();
-  }
-
   RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override
   {
-    mInputDurations.Put(aSample->mDuration);
+    mInputDurations.Insert(aSample->mDuration, aSample->mTime);
     return RemoteDataDecoder::Decode(aSample);
   }
 
@@ -281,46 +277,10 @@ public:
   }
 
 private:
-  class DurationQueue
-  {
-  public:
-
-    DurationQueue() : mMutex("Video duration queue") { }
-
-    void Clear()
-    {
-      MutexAutoLock lock(mMutex);
-      mValues.clear();
-    }
-
-    void Put(int64_t aDurationUs)
-    {
-      MutexAutoLock lock(mMutex);
-      mValues.emplace_back(aDurationUs);
-    }
-
-    Maybe<int64_t> Get()
-    {
-      MutexAutoLock lock(mMutex);
-      if (mValues.empty()) {
-        return Nothing();
-      }
-
-      auto value = Some(mValues.front());
-      mValues.pop_front();
-
-      return value;
-    }
-
-  private:
-    Mutex mMutex; // To protect mValues.
-    std::deque<int64_t> mValues;
-  };
-
   layers::ImageContainer* mImageContainer;
   const VideoInfo mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
-  DurationQueue mInputDurations;
+  DurationMap mInputDurations;
   bool mIsCodecSupportAdaptivePlayback = false;
 };
 

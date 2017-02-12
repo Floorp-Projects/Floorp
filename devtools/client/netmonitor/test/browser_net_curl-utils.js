@@ -13,10 +13,11 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
-  let { NetMonitorView, gNetwork } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire, gNetwork } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1, 3);
   yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
@@ -25,10 +26,10 @@ add_task(function* () {
   yield wait;
 
   let requests = {
-    get: RequestsMenu.getItemAtIndex(0),
-    post: RequestsMenu.getItemAtIndex(1),
-    multipart: RequestsMenu.getItemAtIndex(2),
-    multipartForm: RequestsMenu.getItemAtIndex(3)
+    get: getSortedRequests(gStore.getState()).get(0),
+    post: getSortedRequests(gStore.getState()).get(1),
+    multipart: getSortedRequests(gStore.getState()).get(2),
+    multipartForm: getSortedRequests(gStore.getState()).get(3),
   };
 
   let data = yield createCurlData(requests.get, gNetwork);

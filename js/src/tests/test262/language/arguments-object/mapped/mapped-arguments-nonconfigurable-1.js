@@ -15,3 +15,5 @@ function argumentsNonConfigurable(a) {
   assert.sameValue(arguments[0], 1);
 }
 argumentsNonConfigurable(1);
+
+reportCompare(0, 0);

@@ -1,0 +1,13 @@
+[package]
+name = "ansi_term"
+description = "Library for ANSI terminal colours and styles (bold, underline)"
+
+authors = [ "ogham@bsago.me", "Ryan Scheel (Havvy) <ryan.havvy@gmail.com>" ]
+documentation = "https://docs.rs/ansi_term/0.9.0/ansi_term/"
+homepage = "https://github.com/ogham/rust-ansi-term"
+license = "MIT"
+readme = "README.md"
+version = "0.9.0"
+
+[lib]
+name = "ansi_term"

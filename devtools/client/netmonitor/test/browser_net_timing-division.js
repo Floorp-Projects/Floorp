@@ -11,10 +11,11 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
-  let { $all, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 2);
   // Timeout needed for having enough divisions on the time scale.
@@ -23,9 +24,12 @@ add_task(function* () {
   });
   yield wait;
 
-  let milDivs = $all(".requests-menu-timings-division[data-division-scale=millisecond]");
-  let secDivs = $all(".requests-menu-timings-division[data-division-scale=second]");
-  let minDivs = $all(".requests-menu-timings-division[data-division-scale=minute]");
+  let milDivs = document.querySelectorAll(
+    ".requests-menu-timings-division[data-division-scale=millisecond]");
+  let secDivs = document.querySelectorAll(
+    ".requests-menu-timings-division[data-division-scale=second]");
+  let minDivs = document.querySelectorAll(
+    ".requests-menu-timings-division[data-division-scale=minute]");
 
   info("Number of millisecond divisions: " + milDivs.length);
   info("Number of second divisions: " + secDivs.length);
@@ -35,10 +39,10 @@ add_task(function* () {
   secDivs.forEach(div => info(`Second division: ${div.textContent}`));
   minDivs.forEach(div => info(`Minute division: ${div.textContent}`));
 
-  is(RequestsMenu.itemCount, 2, "There should be only two requests made.");
+  is(gStore.getState().requests.requests.size, 2, "There should be only two requests made.");
 
-  let firstRequest = RequestsMenu.getItemAtIndex(0);
-  let lastRequest = RequestsMenu.getItemAtIndex(1);
+  let firstRequest = getSortedRequests(gStore.getState()).get(0);
+  let lastRequest = getSortedRequests(gStore.getState()).get(1);
 
   info("First request happened at: " +
     firstRequest.responseHeaders.headers.find(e => e.name == "Date").value);

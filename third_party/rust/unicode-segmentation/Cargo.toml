@@ -1,0 +1,25 @@
+[package]
+
+name = "unicode-segmentation"
+version = "1.1.0"
+authors = ["kwantam <kwantam@gmail.com>"]
+
+homepage = "https://github.com/unicode-rs/unicode-segmentation"
+repository = "https://github.com/unicode-rs/unicode-segmentation"
+documentation = "https://unicode-rs.github.io/unicode-segmentation"
+
+license = "MIT/Apache-2.0"
+keywords = ["text", "unicode", "grapheme", "word", "boundary"]
+readme = "README.md"
+description = """
+This crate provides Grapheme Cluster and Word boundaries
+according to Unicode Standard Annex #29 rules.
+"""
+
+exclude = [ "target/*", "Cargo.lock", "scripts/tmp", "*.txt" ]
+
+[features]
+no_std = [] # This is a no-op, preserved for backward compatibility only.
+
+[dev-dependencies]
+quickcheck = "0.4"

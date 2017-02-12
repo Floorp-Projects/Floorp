@@ -1,0 +1,11 @@
+language: rust
+rust: nightly
+sudo: false
+env:
+    matrix:
+        - FEATURES=
+        - FEATURES="serde"
+        - FEATURES="rustc-serialize"
+        - FEATURES="serde rustc-serialize"
+script:
+    - cargo test -v --features "$FEATURES"

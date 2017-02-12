@@ -13,24 +13,30 @@ function test() {
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { NetMonitorView } = monitor.panelWin;
-    let { RequestsMenu } = NetMonitorView;
+    let { document, gStore, windowRequire } = monitor.panelWin;
+    let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+    let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+    let {
+      getDisplayedRequests,
+      getSelectedRequest,
+      getSortedRequests,
+    } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-    RequestsMenu.lazyUpdate = false;
+    gStore.dispatch(Actions.batchEnable(false));
 
     waitForNetworkEvents(monitor, 1)
       .then(() => teardown(monitor))
       .then(finish);
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.NETWORK_EVENT, () => {
-      is(RequestsMenu.selectedItem, null,
+    monitor.panelWin.once(EVENTS.NETWORK_EVENT, () => {
+      is(getSelectedRequest(gStore.getState()), null,
         "There shouldn't be any selected item in the requests menu.");
-      is(RequestsMenu.itemCount, 1,
+      is(gStore.getState().requests.requests.size, 1,
         "The requests menu should not be empty after the first request.");
       is(!!document.querySelector(".network-details-panel"), false,
         "The network details panel should still be hidden after first request.");
 
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(typeof requestItem.id, "string",
         "The attached request id is incorrect.");
@@ -68,8 +74,6 @@ function test() {
       is(requestItem.contentSize, undefined,
         "The contentSize should not yet be set.");
 
-      is(requestItem.mimeType, undefined,
-        "The mimeType should not yet be set.");
       is(requestItem.responseContent, undefined,
         "The responseContent should not yet be set.");
 
@@ -78,11 +82,17 @@ function test() {
       is(requestItem.eventTimings, undefined,
         "The eventTimings should not yet be set.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_HEADERS, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_HEADERS, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
       ok(requestItem.requestHeaders,
         "There should be a requestHeaders data available.");
       is(requestItem.requestHeaders.headers.length, 10,
@@ -92,26 +102,38 @@ function test() {
       // Can't test for the exact request headers size because the value may
       // vary across platforms ("User-Agent" header differs).
 
-      verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_COOKIES, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_COOKIES, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.requestCookies,
         "There should be a requestCookies data available.");
       is(requestItem.requestCookies.cookies.length, 2,
         "The requestCookies data has an incorrect |cookies| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
+    monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
       ok(false, "Trap listener: this request doesn't have any post data.");
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_HEADERS, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_HEADERS, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.responseHeaders,
         "There should be a responseHeaders data available.");
@@ -120,22 +142,34 @@ function test() {
       is(requestItem.responseHeaders.headersSize, 330,
         "The responseHeaders data has an incorrect |headersSize| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_COOKIES, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_COOKIES, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.responseCookies,
         "There should be a responseCookies data available.");
       is(requestItem.responseCookies.cookies.length, 2,
         "The responseCookies data has an incorrect |cookies| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS);
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.STARTED_RECEIVING_RESPONSE, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.STARTED_RECEIVING_RESPONSE, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(requestItem.httpVersion, "HTTP/1.1",
         "The httpVersion data has an incorrect value.");
@@ -146,14 +180,21 @@ function test() {
       is(requestItem.headersSize, 330,
         "The headersSize data has an incorrect value.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
-        status: "200",
-        statusText: "Och Aye"
-      });
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          status: "200",
+          statusText: "Och Aye"
+        }
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_RESPONSE_CONTENT, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.UPDATING_RESPONSE_CONTENT, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(requestItem.transferredSize, "12",
         "The transferredSize data has an incorrect value.");
@@ -162,16 +203,23 @@ function test() {
       is(requestItem.mimeType, "text/plain; charset=utf-8",
         "The mimeType data has an incorrect value.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
-        type: "plain",
-        fullMimeType: "text/plain; charset=utf-8",
-        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-      });
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+        }
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.responseContent,
         "There should be a responseContent data available.");
@@ -185,29 +233,43 @@ function test() {
         12,
         "The responseContent data has an incorrect |content.size| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
-        type: "plain",
-        fullMimeType: "text/plain; charset=utf-8",
-        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
-      });
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          type: "plain",
+          fullMimeType: "text/plain; charset=utf-8",
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
+        }
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_EVENT_TIMINGS, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.UPDATING_EVENT_TIMINGS, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(typeof requestItem.totalTime, "number",
         "The attached totalTime is incorrect.");
       ok(requestItem.totalTime >= 0,
         "The attached totalTime should be positive.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
-        time: true
-      });
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          time: true
+        }
+      );
     });
 
-    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_EVENT_TIMINGS, () => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
+    monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS, () => {
+      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.eventTimings,
         "There should be a eventTimings data available.");
@@ -226,9 +288,16 @@ function test() {
       is(typeof requestItem.eventTimings.totalTime, "number",
         "The eventTimings data has an incorrect |totalTime| property.");
 
-      verifyRequestItemTarget(RequestsMenu, requestItem, "GET", SIMPLE_SJS, {
-        time: true
-      });
+      verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        requestItem,
+        "GET",
+        SIMPLE_SJS,
+        {
+          time: true
+        }
+      );
     });
 
     tab.linkedBrowser.reload();

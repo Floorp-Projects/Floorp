@@ -129,8 +129,8 @@ class EncryptionRemoteTransformer {
       if (record.ciphertext) {
         throw new Error("Attempt to reencrypt??");
       }
-      let id = record.id;
-      if (!record.id) {
+      let id = yield self.getEncodedRecordId(record);
+      if (!id) {
         throw new Error("Record ID is missing or invalid");
       }
 
@@ -139,9 +139,16 @@ class EncryptionRemoteTransformer {
                                           keyBundle.encryptionKeyB64, IV);
       let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
       const encryptedResult = {ciphertext, IV, hmac, id};
+
+      // Copy over the _status field, so that we handle concurrency
+      // headers (If-Match, If-None-Match) correctly.
+      // DON'T copy over "deleted" status, because then we'd leak
+      // plaintext deletes.
+      encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
       if (record.hasOwnProperty("last_modified")) {
         encryptedResult.last_modified = record.last_modified;
       }
+
       return encryptedResult;
     });
   }
@@ -172,15 +179,15 @@ class EncryptionRemoteTransformer {
         throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
       }
 
-      // Verify that the encrypted id matches the requested record's id.
-      // This should always be true, because we compute the HMAC over
-      // the original record's ID, and that was verified already (above).
-      if (jsonResult.id != record.id) {
-        throw new Error("Record id mismatch: " + jsonResult.id + " != " + record.id);
-      }
-
       if (record.hasOwnProperty("last_modified")) {
         jsonResult.last_modified = record.last_modified;
+      }
+
+      // _status: deleted records were deleted on a client, but
+      // uploaded as an encrypted blob so we don't leak deletions.
+      // If we get such a record, flag it as deleted.
+      if (jsonResult._status == "deleted") {
+        jsonResult.deleted = true;
       }
 
       return jsonResult;
@@ -194,6 +201,19 @@ class EncryptionRemoteTransformer {
    */
   getKeys() {
     throw new Error("override getKeys in a subclass");
+  }
+
+  /**
+   * Compute the record ID to use for the encoded version of the
+   * record.
+   *
+   * The default version just re-uses the record's ID.
+   *
+   * @param {Object} record The record being encoded.
+   * @returns {Promise<string>} The ID to use.
+   */
+  getEncodedRecordId(record) {
+    return Promise.resolve(record.id);
   }
 }
 // You can inject this
