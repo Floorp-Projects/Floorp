@@ -720,6 +720,10 @@ SessionStore.prototype = {
       // As _collectTabData() doesn't save any form data, we need to manually
       // capture it to bridge the time until the next input event arrives.
       this.onTabInput(aWindow, aBrowser);
+      // A similar thing applies for the scroll position, otherwise a stray
+      // DOMTitleChanged event can clobber the scroll position if the user
+      // doesn't scroll again afterwards.
+      this.onTabScroll(aWindow, aBrowser);
     }
 
     log("onTabLoad() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
