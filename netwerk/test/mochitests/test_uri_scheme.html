@@ -31,6 +31,12 @@ function dotest2()
   o.protocol = "http:";
   try { o.href = "http://localhost/"; } catch(e) { }
   ok(o.protocol, "http:");
+  dotest3();
+}
+
+function dotest3()
+{
+  is(new URL("resource://123/").href, "resource://123/");
   SimpleTest.finish();
 }
 </script>
