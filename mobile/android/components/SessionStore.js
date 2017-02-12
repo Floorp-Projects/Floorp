@@ -1640,7 +1640,7 @@ SessionStore.prototype = {
 
       let parentId = tabData.parentId;
       if (parentId > -1) {
-        tab.setParentId(parentId);
+        tab.parentId = parentId;
       }
 
       tab.browser.__SS_data = tabData;
