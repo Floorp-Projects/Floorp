@@ -27,12 +27,12 @@ function run_test() {
 
 function finish_test() {
   do_execute_soon(function() {
-    test_generator.close();
+    test_generator.return();
     do_test_finished();
   });
 }
 
-function do_run_test() {
+function* do_run_test() {
   // Set up a profile.
   this.profile = do_get_profile();
 
@@ -118,7 +118,7 @@ function do_corrupt_db(file)
   return size;
 }
 
-function run_test_1(generator)
+function* run_test_1(generator)
 {
   // Load the profile and populate it.
   let uri = NetUtil.newURI("http://foo.com/");
@@ -207,7 +207,7 @@ function run_test_1(generator)
   do_run_generator(generator);
 }
 
-function run_test_2(generator)
+function* run_test_2(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
@@ -273,7 +273,7 @@ function run_test_2(generator)
   do_run_generator(generator);
 }
 
-function run_test_3(generator)
+function* run_test_3(generator)
 {
   // Set the maximum cookies per base domain limit to a large value, so that
   // corrupting the database is easier.
@@ -368,7 +368,7 @@ function run_test_3(generator)
   do_run_generator(generator);
 }
 
-function run_test_4(generator)
+function* run_test_4(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
@@ -436,7 +436,7 @@ function run_test_4(generator)
   do_run_generator(generator);
 }
 
-function run_test_4(generator)
+function* run_test_4(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
@@ -508,7 +508,7 @@ function run_test_4(generator)
   do_run_generator(generator);
 }
 
-function run_test_5(generator)
+function* run_test_5(generator)
 {
   // Load the profile and populate it.
   do_load_profile();

@@ -70,7 +70,7 @@ SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
 
 void
 ResetSimulatedOOM() {
-    if (targetThread != THREAD_TYPE_NONE && targetThread != THREAD_TYPE_MAIN)
+    if (targetThread != THREAD_TYPE_NONE && targetThread != THREAD_TYPE_COOPERATING)
         HelperThreadState().waitForAllThreads();
     targetThread = THREAD_TYPE_NONE;
     maxAllocations = UINT64_MAX;

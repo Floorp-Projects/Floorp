@@ -493,7 +493,7 @@ MozCrashWarningReporter(JSContext*, JSErrorReport*)
 }
 
 nsresult
-CycleCollectedJSContext::Initialize(JSContext* aParentContext,
+CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
                                     uint32_t aMaxBytes,
                                     uint32_t aMaxNurseryBytes)
 {
@@ -504,7 +504,7 @@ CycleCollectedJSContext::Initialize(JSContext* aParentContext,
   mBaseRecursionDepth = RecursionDepth();
 
   mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentContext);
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
   if (!mJSContext) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

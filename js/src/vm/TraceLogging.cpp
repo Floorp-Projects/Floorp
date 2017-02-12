@@ -847,7 +847,7 @@ TraceLoggerThreadState::init()
                 "\n"
                 "usage: TLOPTIONS=option,option,option,... where options can be:\n"
                 "\n"
-                "  EnableMainThread        Start logging the main thread immediately.\n"
+                "  EnableCooperatingThread Start logging cooperating threads immediately.\n"
                 "  EnableOffThread         Start logging helper threads immediately.\n"
                 "  EnableGraph             Enable spewing the tracelogging graph to a file.\n"
                 "  Errors                  Report errors during tracing to stderr.\n"
@@ -857,10 +857,10 @@ TraceLoggerThreadState::init()
             /*NOTREACHED*/
         }
 
-        if (strstr(options, "EnableMainThread"))
-            mainThreadEnabled = true;
+        if (strstr(options, "EnableActiveThread"))
+            cooperatingThreadEnabled = true;
         if (strstr(options, "EnableOffThread"))
-            offThreadEnabled = true;
+            helperThreadEnabled = true;
         if (strstr(options, "EnableGraph"))
             graphSpewingEnabled = true;
         if (strstr(options, "Errors"))
@@ -963,7 +963,7 @@ TraceLoggerThreadState::forCurrentThread(JSContext* maybecx)
         if (graphSpewingEnabled)
             logger->initGraph();
 
-        if (CurrentHelperThread() ? offThreadEnabled : mainThreadEnabled)
+        if (CurrentHelperThread() ? helperThreadEnabled : cooperatingThreadEnabled)
             logger->enable();
     }
 

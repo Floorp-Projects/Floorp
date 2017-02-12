@@ -922,7 +922,7 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < obj->slotSpan())
             obj->freeSlot(cx, oldSlot);
-        /* Note: The optimization based on propertyRemovals is only relevant to the main thread. */
+        /* Note: The optimization based on propertyRemovals is only relevant to the active thread. */
         if (!cx->helperThread())
             ++cx->propertyRemovals;
     }
@@ -1705,7 +1705,7 @@ EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape, HandleObject pr
      * nativeEmpty() result and generate the appropriate properties if found.
      * Clearing the cache entry avoids this duplicate regeneration.
      *
-     * Clearing is not necessary when this context is running off the main
+     * Clearing is not necessary when this context is running off
      * thread, as it will not use the new object cache for allocations.
      */
     if (!cx->helperThread())

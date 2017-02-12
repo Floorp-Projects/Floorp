@@ -1,6 +1,7 @@
 [
   {
     "namespace": "manifest",
+    "permissions": [],
     "types": [
       {
         "id": "WebExtensionManifest",

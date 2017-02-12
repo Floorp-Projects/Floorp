@@ -85,7 +85,7 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
     }
 
     // Compute the snapshot offset from the bailout ID.
-    JSRuntime* rt = activation->compartment()->runtimeFromMainThread();
+    JSRuntime* rt = activation->compartment()->runtimeFromActiveCooperatingThread();
     JitCode* code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());

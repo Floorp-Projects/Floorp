@@ -130,42 +130,6 @@ class ZoneGroup
     mozilla::LinkedList<js::Debugger>& debuggerList() { return debuggerList_.ref(); }
 };
 
-class MOZ_RAII AutoAccessZoneGroup
-{
-    ZoneGroup* group;
-
-  public:
-    explicit AutoAccessZoneGroup(ZoneGroup* group)
-      : group(group)
-    {
-        group->enter();
-    }
-
-    ~AutoAccessZoneGroup() {
-        group->leave();
-    }
-};
-
-class MOZ_RAII AutoAccessZoneGroups
-{
-    Vector<ZoneGroup*, 4, SystemAllocPolicy> acquiredGroups;
-
-  public:
-    AutoAccessZoneGroups() {}
-
-    ~AutoAccessZoneGroups() {
-        for (size_t i = 0; i < acquiredGroups.length(); i++)
-            acquiredGroups[i]->leave();
-    }
-
-    void access(ZoneGroup* group) {
-        group->enter();
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!acquiredGroups.append(group))
-            oomUnsafe.crash("acquiredGroups.append failed");
-    }
-};
-
 } // namespace js
 
 #endif // gc_Zone_h

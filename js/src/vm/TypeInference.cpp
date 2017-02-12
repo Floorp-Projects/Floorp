@@ -1023,21 +1023,21 @@ TypeSet::intersectSets(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* allo
 // Constraints generated during Ion compilation capture assumptions made about
 // heap properties that will trigger invalidation of the resulting Ion code if
 // the constraint is violated. Constraints can only be attached to type sets on
-// the main thread, so to allow compilation to occur almost entirely off thread
+// the active thread, so to allow compilation to occur almost entirely off thread
 // the generation is split into two phases.
 //
 // During compilation, CompilerConstraint values are constructed in a list,
 // recording the heap property type set which was read from and its expected
 // contents, along with the assumption made about those contents.
 //
-// At the end of compilation, when linking the result on the main thread, the
+// At the end of compilation, when linking the result on the active thread, the
 // list of compiler constraints are read and converted to type constraints and
 // attached to the type sets. If the property type sets have changed so that the
 // assumptions no longer hold then the compilation is aborted and its result
 // discarded.
 
 // Superclass of all constraints generated during Ion compilation. These may
-// be allocated off the main thread, using the current JIT context's allocator.
+// be allocated off thread, using the current JIT context's allocator.
 class CompilerConstraint
 {
   public:
@@ -1046,7 +1046,7 @@ class CompilerConstraint
 
     // Contents of the property at the point when the query was performed. This
     // may differ from the actual property types later in compilation as the
-    // main thread performs side effects.
+    // active thread performs side effects.
     TemporaryTypeSet* expected;
 
     CompilerConstraint(LifoAlloc* alloc, const HeapTypeSetKey& property)
@@ -1311,7 +1311,7 @@ TypeSet::ObjectKey::ensureTrackedProperty(JSContext* cx, jsid id)
 {
     // If we are accessing a lazily defined property which actually exists in
     // the VM and has not been instantiated yet, instantiate it now if we are
-    // on the main thread and able to do so.
+    // on the active thread and able to do so.
     if (!JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
         if (isSingleton()) {
@@ -1535,7 +1535,7 @@ js::InvalidateCompilerOutputsForScript(JSContext* cx, HandleScript script)
 static void
 CheckDefinitePropertiesTypeSet(JSContext* cx, TemporaryTypeSet* frozen, StackTypeSet* actual)
 {
-    // The definite properties analysis happens on the main thread, so no new
+    // The definite properties analysis happens on the active thread, so no new
     // types can have been added to actual. The analysis may have updated the
     // contents of |frozen| though with new speculative types, and these need
     // to be reflected in |actual| for AddClearDefiniteFunctionUsesInScript
@@ -3083,7 +3083,7 @@ ObjectGroup::clearNewScript(JSContext* cx, ObjectGroup* replacement /* = nullptr
             }
         }
     } else {
-        // Threads off the main thread are not allowed to run scripts.
+        // Helper threads are not allowed to run scripts.
         MOZ_ASSERT(!cx->activation());
     }
 
@@ -4324,7 +4324,7 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 
     if (maybeUnboxedLayout()) {
         // Remove unboxed layouts that are about to be finalized from the
-        // compartment wide list while we are still on the main thread.
+        // compartment wide list while we are still on the active thread.
         ObjectGroup* group = this;
         if (IsAboutToBeFinalizedUnbarriered(&group))
             unboxedLayout().detachFromCompartment();
@@ -4597,7 +4597,7 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
     zone->types.setSweepingTypes(false);
 
     if (oom) {
-        JSRuntime* rt = zone->runtimeFromMainThread();
+        JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
         js::CancelOffThreadIonCompile(rt);
         zone->setPreservingCode(false);
         zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ false);
