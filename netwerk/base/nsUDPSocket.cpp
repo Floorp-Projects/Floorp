@@ -472,12 +472,6 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   // support the maximum size of jumbo frames
   char buff[9216];
   count = PR_RecvFrom(mFD, buff, sizeof(buff), 0, &prClientAddr, PR_INTERVAL_NO_WAIT);
-
-  if (count < 1) {
-    NS_WARNING("error of recvfrom on UDP socket");
-    mCondition = NS_ERROR_UNEXPECTED;
-    return;
-  }
   mByteReadCount += count;
 
   FallibleTArray<uint8_t> data;
@@ -1194,8 +1188,11 @@ nsUDPSocket::Send(const nsACString &aHost, uint16_t aPort,
                   const uint8_t *aData, uint32_t aDataLength,
                   uint32_t *_retval)
 {
-  NS_ENSURE_ARG(aData);
   NS_ENSURE_ARG_POINTER(_retval);
+  if (!((aData && aDataLength > 0) ||
+        (!aData && !aDataLength))) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *_retval = 0;
 
