@@ -24,6 +24,7 @@ namespace mozilla {
 namespace gfx {
 
 class SourceSurfaceSkia;
+class BorrowedCGContext;
 
 class DrawTargetSkia : public DrawTarget
 {
@@ -79,21 +80,18 @@ public:
   virtual void Fill(const Path *aPath,
                     const Pattern &aPattern,
                     const DrawOptions &aOptions = DrawOptions()) override;
-#ifdef MOZ_WIDGET_COCOA
-  CGContextRef BorrowCGContext(const DrawOptions &aOptions);
-  void ReturnCGContext(CGContextRef);
-  bool FillGlyphsWithCG(ScaledFont *aFont,
-                        const GlyphBuffer &aBuffer,
-                        const Pattern &aPattern,
-                        const DrawOptions &aOptions = DrawOptions(),
-                        const GlyphRenderingOptions *aRenderingOptions = nullptr);
-#endif
 
   virtual void FillGlyphs(ScaledFont *aFont,
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions = DrawOptions(),
                           const GlyphRenderingOptions *aRenderingOptions = nullptr) override;
+  virtual void StrokeGlyphs(ScaledFont* aFont,
+                            const GlyphBuffer& aBuffer,
+                            const Pattern& aPattern,
+                            const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                            const DrawOptions& aOptions = DrawOptions(),
+                            const GlyphRenderingOptions* aRenderingOptions = nullptr) override;
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
                     const DrawOptions &aOptions = DrawOptions()) override;
@@ -168,6 +166,13 @@ private:
 
   bool ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode);
 
+  void DrawGlyphs(ScaledFont* aFont,
+                  const GlyphBuffer& aBuffer,
+                  const Pattern& aPattern,
+                  const StrokeOptions* aStrokeOptions = nullptr,
+                  const DrawOptions& aOptions = DrawOptions(),
+                  const GlyphRenderingOptions* aRenderingOptions = nullptr);
+
   bool UsingSkiaGPU() const;
 
   struct PushedLayer
@@ -204,6 +209,16 @@ private:
   SourceSurfaceSkia* mSnapshot;
 
 #ifdef MOZ_WIDGET_COCOA
+  friend class BorrowedCGContext;
+
+  CGContextRef BorrowCGContext(const DrawOptions &aOptions);
+  void ReturnCGContext(CGContextRef);
+  bool FillGlyphsWithCG(ScaledFont* aFont,
+                        const GlyphBuffer& aBuffer,
+                        const Pattern& aPattern,
+                        const DrawOptions& aOptions = DrawOptions(),
+                        const GlyphRenderingOptions* aRenderingOptions = nullptr);
+
   CGContextRef mCG;
   CGColorSpaceRef mColorSpace;
   uint8_t* mCanvasData;
