@@ -22,3 +22,5 @@ function argumentsAndDeleteSetMutableBinding(a) {
   assert.sameValue(arguments[0], 2);
 }
 argumentsAndDeleteSetMutableBinding(1);
+
+reportCompare(0, 0);

@@ -5,18 +5,18 @@
 description: Object.getOwnPropertyDescriptors should filter out undefined OwnPropertyDescriptors
 esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
-featurewws: [Proxy]
+features: [Proxy]
 includes: [proxyTrapsHelper.js]
 ---*/
 
 var key = "a";
 var ownKeys = [key];
-var badProxyHandlers = {
+var badProxyHandlers = allowProxyTraps({
   getOwnPropertyDescriptor: function () {},
   ownKeys: function () {
-    return ownKeys;
+	return ownKeys;
   }
-};
+});
 var proxy = new Proxy({}, badProxyHandlers);
 
 var keys = Reflect.ownKeys(proxy);
@@ -30,3 +30,5 @@ assert.sameValue(descriptor, undefined, "Descriptor matches result of [[GetOwnPr
 
 var result = Object.getOwnPropertyDescriptors(proxy);
 assert.sameValue(key in result, false, "key is not present in result");
+
+reportCompare(0, 0);

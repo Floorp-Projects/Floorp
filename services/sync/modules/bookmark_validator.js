@@ -4,7 +4,7 @@
 
 "use strict";
 
-const Cu = Components.utils;
+const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
@@ -12,17 +12,73 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/utils.js");
+
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
 const LEFT_PANE_ROOT_ANNO = "PlacesOrganizer/OrganizerFolder";
 const LEFT_PANE_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
+const QUERY_PROTOCOL = "place:";
 
 // Indicates if a local bookmark tree node should be excluded from syncing.
 function isNodeIgnored(treeNode) {
   return treeNode.annos && treeNode.annos.some(anno => anno.name == LEFT_PANE_ROOT_ANNO ||
                                                        anno.name == LEFT_PANE_QUERY_ANNO);
 }
+
+function areURLsEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (a.startsWith(QUERY_PROTOCOL) != b.startsWith(QUERY_PROTOCOL)) {
+    return false;
+  }
+  // Tag queries are special because we rewrite them to point to the
+  // local tag folder ID. It's expected that the folders won't match,
+  // but all other params should.
+  let aParams = new URLSearchParams(a.slice(QUERY_PROTOCOL.length));
+  let aType = +aParams.get("type");
+  if (aType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
+    return false;
+  }
+  let bParams = new URLSearchParams(b.slice(QUERY_PROTOCOL.length));
+  let bType = +bParams.get("type");
+  if (bType != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
+    return false;
+  }
+  let aKeys = new Set(aParams.keys());
+  let bKeys = new Set(bParams.keys());
+  if (aKeys.size != bKeys.size) {
+    return false;
+  }
+  // Tag queries shouldn't reference multiple folders, or named folders like
+  // "TOOLBAR" or "BOOKMARKS_MENU". Just in case, we make sure all folder IDs
+  // are numeric. If they are, we ignore them when comparing the query params.
+  if (aKeys.has("folder") && aParams.getAll("folder").every(isFinite)) {
+    aKeys.delete("folder");
+  }
+  if (bKeys.has("folder") && bParams.getAll("folder").every(isFinite)) {
+    bKeys.delete("folder");
+  }
+  for (let key of aKeys) {
+    if (!bKeys.has(key)) {
+      return false;
+    }
+    if (!CommonUtils.arrayEqual(aParams.getAll(key).sort(),
+                                bParams.getAll(key).sort())) {
+      return false;
+    }
+  }
+  for (let key of bKeys) {
+    if (!aKeys.has(key)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 const BOOKMARK_VALIDATOR_VERSION = 1;
 
 /**
@@ -168,7 +224,7 @@ class BookmarkValidator {
 
   _followQueries(recordMap) {
     for (let [guid, entry] of recordMap) {
-      if (entry.type !== "query" && (!entry.bmkUri || !entry.bmkUri.startsWith("place:"))) {
+      if (entry.type !== "query" && (!entry.bmkUri || !entry.bmkUri.startsWith(QUERY_PROTOCOL))) {
         continue;
       }
       // Might be worth trying to parse the place: query instead so that this
@@ -238,7 +294,7 @@ class BookmarkValidator {
       switch (treeNode.type) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:
           let query = null;
-          if (treeNode.annos && treeNode.uri.startsWith("place:")) {
+          if (treeNode.annos && treeNode.uri.startsWith(QUERY_PROTOCOL)) {
             query = treeNode.annos.find(({name}) =>
               name === PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
           }
@@ -685,16 +741,16 @@ class BookmarkValidator {
       }
 
       if (client.tags || server.tags) {
-        let cl = client.tags || [];
-        let sl = server.tags || [];
-        if (cl.length !== sl.length || !cl.every((tag, i) => sl.indexOf(tag) >= 0)) {
+        let cl = client.tags ? [...client.tags].sort() : [];
+        let sl = server.tags ? [...server.tags].sort() : [];
+        if (!CommonUtils.arrayEqual(cl, sl)) {
           differences.push("tags");
         }
       }
 
       let sameType = client.type === server.type;
       if (!sameType) {
-        if (server.type === "query" && client.type === "bookmark" && client.bmkUri.startsWith("place:")) {
+        if (server.type === "query" && client.type === "bookmark" && client.bmkUri.startsWith(QUERY_PROTOCOL)) {
           sameType = true;
         }
       }
@@ -706,7 +762,7 @@ class BookmarkValidator {
         switch (server.type) {
           case "bookmark":
           case "query":
-            if (server.bmkUri !== client.bmkUri) {
+            if (!areURLsEqual(server.bmkUri, client.bmkUri)) {
               differences.push("bmkUri");
             }
             break;
@@ -727,7 +783,7 @@ class BookmarkValidator {
             if (client.childGUIDs || server.childGUIDs) {
               let cl = client.childGUIDs || [];
               let sl = server.childGUIDs || [];
-              if (cl.length !== sl.length || !cl.every((id, i) => sl[i] === id)) {
+              if (!CommonUtils.arrayEqual(cl, sl)) {
                 structuralDifferences.push("childGUIDs");
               }
             }

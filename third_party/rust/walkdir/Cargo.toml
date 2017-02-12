@@ -1,0 +1,24 @@
+[package]
+name = "walkdir"
+version = "1.0.7"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Recursively walk a directory."
+documentation = "https://docs.rs/walkdir/"
+homepage = "https://github.com/BurntSushi/walkdir"
+repository = "https://github.com/BurntSushi/walkdir"
+readme = "README.md"
+keywords = ["directory", "recursive", "walk", "iterator"]
+license = "Unlicense/MIT"
+
+[dependencies]
+same-file = "0.1.1"
+
+[target.'cfg(windows)'.dependencies]
+kernel32-sys = "0.2"
+winapi = "0.2"
+
+[dev-dependencies]
+docopt = "0.7"
+quickcheck = { version = "0.4", default-features = false }
+rand = "0.3"
+rustc-serialize = "0.3"

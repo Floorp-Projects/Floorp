@@ -12,7 +12,8 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { EVENTS } = monitor.panelWin;
+  let { windowRequire } = monitor.panelWin;
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
 
   yield testNavigate();
   yield testNavigateBack();

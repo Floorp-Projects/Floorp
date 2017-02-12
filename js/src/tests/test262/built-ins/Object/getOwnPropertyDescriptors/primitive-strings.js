@@ -3,7 +3,7 @@
 
 /*---
 description: Object.getOwnPropertyDescriptors accepts string primitives.
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 ---*/
 
@@ -31,3 +31,5 @@ assert.sameValue(result[2].enumerable, true, 'index 2 is enumerable');
 assert.sameValue(result[2].writable, false, 'index 2 is not writable');
 assert.sameValue(result[2].value, 'c', 'index 2 is "c"');
 
+
+reportCompare(0, 0);

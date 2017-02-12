@@ -1,0 +1,18 @@
+[package]
+name = "xdg"
+version = "2.0.0"
+description = "A library for storing and retrieving files according to XDG Base Directory specification"
+homepage = "https://github.com/whitequark/rust-xdg"
+documentation = "https://whitequark.github.io/rust-xdg/xdg/"
+repository = "https://github.com/whitequark/rust-xdg"
+readme = "README.md"
+keywords = ["linux", "configuration"]
+license = "Apache-2.0/MIT"
+authors = [
+    "Ben Longbons <b.r.longbons@gmail.com>",
+    "whitequark <whitequark@whitequark.org>"
+]
+
+[lib]
+name = "xdg"
+doctest = false

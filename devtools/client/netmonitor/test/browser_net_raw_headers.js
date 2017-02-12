@@ -11,10 +11,11 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 0, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -22,10 +23,9 @@ add_task(function* () {
   });
   yield wait;
 
-  let origItem = RequestsMenu.getItemAtIndex(0);
-
   wait = waitForDOM(document, ".headers-overview");
-  RequestsMenu.selectedItem = origItem;
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]);
   yield wait;
 
   wait = waitForDOM(document, ".raw-headers-container textarea", 2);
@@ -33,7 +33,7 @@ add_task(function* () {
     document.querySelectorAll(".headers-summary .tool-button")[1]);
   yield wait;
 
-  testShowRawHeaders(origItem);
+  testShowRawHeaders(getSortedRequests(gStore.getState()).get(0));
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelectorAll(".headers-summary .tool-button")[1]);

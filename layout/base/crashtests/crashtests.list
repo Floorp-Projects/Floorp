@@ -211,7 +211,7 @@ load 403454.html
 load 403569-1.xhtml
 load 403569-2.xhtml
 load 403569-3.xhtml
-load 404218-1.xhtml
+skip-if(stylo) load 404218-1.xhtml # bug 1338761
 load 404491-1.html
 load 404721-1.xhtml
 load 404721-2.xhtml

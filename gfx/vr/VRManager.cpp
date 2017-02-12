@@ -192,7 +192,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
       TimeDuration duration = TimeStamp::Now() - mLastRefreshTime;
       if (duration.ToMilliseconds() > kVRDisplayRefreshMaxDuration) {
         RefreshVRDisplays();
-        RefreshVRControllers();
+        if (bHaveControllerListener) {
+          RefreshVRControllers();
+        }
         mLastRefreshTime = TimeStamp::Now();
       }
     }

@@ -16,10 +16,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 0, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -27,8 +31,13 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
-    "POST", SIMPLE_SJS + "?foo=bar&baz=42&type=urlencoded", {
+  verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(0),
+    "POST",
+    SIMPLE_SJS + "?foo=bar&baz=42&type=urlencoded",
+    {
       status: 200,
       statusText: "Och Aye",
       type: "plain",
@@ -36,8 +45,13 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(1),
-    "POST", SIMPLE_SJS + "?foo=bar&baz=42&type=multipart", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(1),
+    "POST",
+    SIMPLE_SJS + "?foo=bar&baz=42&type=multipart",
+    {
       status: 200,
       statusText: "Och Aye",
       type: "plain",
@@ -49,15 +63,17 @@ add_task(function* () {
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector(".network-details-panel-toggle"));
-  document.querySelector("#params-tab").click();
+    document.querySelectorAll(".request-list-item")[0]);
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#params-tab"));
   yield wait;
   yield testParamsTab("urlencoded");
 
   // Wait for all tree sections and editor updated by react
   let waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
   let waitForEditor = waitForDOM(document, "#params-panel .editor-mount iframe");
-  RequestsMenu.selectedIndex = 1;
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]);
   let [, editorFrames] = yield Promise.all([waitForSections, waitForEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");

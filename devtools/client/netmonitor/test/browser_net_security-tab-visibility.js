@@ -32,10 +32,11 @@ add_task(function* () {
   ];
 
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   for (let testcase of TEST_DATA) {
     info("Testing Security tab visibility for " + testcase.desc);
@@ -54,9 +55,10 @@ add_task(function* () {
     yield onNewItem;
 
     info("Selecting the request.");
-    RequestsMenu.selectedIndex = 0;
+    EventUtils.sendMouseEvent({ type: "mousedown" },
+      document.querySelectorAll(".request-list-item")[0]);
 
-    is(RequestsMenu.selectedItem.securityState, undefined,
+    is(getSelectedRequest(gStore.getState()).securityState, undefined,
        "Security state has not yet arrived.");
     is(!!document.querySelector("#security-tab"), testcase.visibleOnNewEvent,
       "Security tab is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
@@ -65,7 +67,7 @@ add_task(function* () {
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
 
-    ok(RequestsMenu.selectedItem.securityState,
+    ok(getSelectedRequest(gStore.getState()).securityState,
        "Security state arrived.");
     is(!!document.querySelector("#security-tab"), testcase.visibleOnSecurityInfo,
        "Security tab is " + (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
@@ -79,7 +81,7 @@ add_task(function* () {
        " after request has been completed.");
 
     info("Clearing requests.");
-    RequestsMenu.clear();
+    gStore.dispatch(Actions.clearRequests());
   }
 
   return teardown(monitor);
