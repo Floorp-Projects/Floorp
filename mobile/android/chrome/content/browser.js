@@ -3430,10 +3430,6 @@ function Tab(aURL, aParams) {
   this.id = 0;
   this._parentId = -1;
   this.lastTouchedAt = Date.now();
-  this._zoom = 1.0;
-  this._drawZoom = 1.0;
-  this._restoreZoom = false;
-  this.userScrollPos = { x: 0, y: 0 };
   this.contentDocumentIsDisplayed = true;
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
@@ -4509,47 +4505,17 @@ Tab.prototype = {
     // notifications using nsBrowserStatusFilter.
   },
 
-  _getGeckoZoom: function() {
-    let res = {};
-    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.getResolution(res);
-    let zoom = res.value * window.devicePixelRatio;
-    return zoom;
-  },
-
-  saveSessionZoom: function(aZoom) {
-    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setResolutionAndScaleTo(aZoom / window.devicePixelRatio);
-  },
-
-  restoredSessionZoom: function() {
-    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-    if (this._restoreZoom && cwu.isResolutionSet) {
-      return this._getGeckoZoom();
-    }
-    return null;
-  },
-
-  _updateZoomFromHistoryEvent: function(aHistoryEventName) {
-    // Restore zoom only when moving in session history, not for new page loads.
-    this._restoreZoom = aHistoryEventName !== "New";
-  },
-
   OnHistoryNewEntry: function(newURI, oldIndex) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
-    this._updateZoomFromHistoryEvent("New");
   },
 
   OnHistoryGoBack: function(backURI) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
-    this._updateZoomFromHistoryEvent("Back");
     return true;
   },
 
   OnHistoryGoForward: function(forwardURI) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
-    this._updateZoomFromHistoryEvent("Forward");
     return true;
   },
 
@@ -4560,7 +4526,6 @@ Tab.prototype = {
 
   OnHistoryGotoIndex: function(index, gotoURI) {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
-    this._updateZoomFromHistoryEvent("Goto");
     return true;
   },
 
@@ -4654,10 +4619,6 @@ Tab.prototype = {
     if (!this.browser)
       return null;
     return this.browser.contentWindow;
-  },
-
-  get scale() {
-    return this._zoom;
   },
 
   QueryInterface: XPCOMUtils.generateQI([
