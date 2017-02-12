@@ -122,20 +122,19 @@ static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 #define OVR_MINOR_VERSION   10
 
 static const ovrButton kOculusTouchLButton[] = {
+  ovrButton_LThumb,
   ovrButton_X,
-  ovrButton_Y,
-  ovrButton_LThumb
+  ovrButton_Y
 };
 
 static const ovrButton kOculusTouchRButton[] = {
+  ovrButton_RThumb,
   ovrButton_A,
   ovrButton_B,
-  ovrButton_RThumb
 };
 
 static const uint32_t kNumOculusButton = sizeof(kOculusTouchLButton) /
                                          sizeof(ovrButton);
-static const uint32_t kNumOculusAxis = 2;
 static const uint32_t kNumOculusHaptcs = 0;  // TODO: Bug 1305892
 
 static bool
@@ -837,11 +836,34 @@ VRControllerOculus::VRControllerOculus()
   : VRControllerHost(VRDeviceType::Oculus)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOculus, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch Controller");
+  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch");
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = GamepadHand::_empty;
   mControllerInfo.mNumButtons = kNumOculusButton;
-  mControllerInfo.mNumAxes = kNumOculusAxis;
+  mControllerInfo.mNumAxes = static_cast<uint32_t>(
+                             OculusControllerAxisType::NumVRControllerAxisType);;
+}
+
+float
+VRControllerOculus::GetAxisMove(uint32_t aAxis)
+{
+  return mAxisMove[aAxis];
+}
+
+void
+VRControllerOculus::SetAxisMove(uint32_t aAxis, float aValue)
+{
+  mAxisMove[aAxis] = aValue;
+}
+
+void
+VRControllerOculus::SetHand(dom::GamepadHand aHand)
+{
+  VRControllerHost::SetHand(aHand);
+  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch (");
+  mControllerInfo.mControllerName.AppendPrintf("%s%s",
+                                               GamepadHandValues::strings[uint32_t(aHand)].value,
+                                               ")");
 }
 
 VRControllerOculus::~VRControllerOculus()
@@ -939,7 +961,7 @@ VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 void
 VRSystemManagerOculus::HandleInput()
 {
-   // mSession is available after VRDisplay is created
+  // mSession is available after VRDisplay is created
   // at GetHMDs().
   if (!mSession) {
     return;
@@ -947,6 +969,7 @@ VRSystemManagerOculus::HandleInput()
 
   RefPtr<impl::VRControllerOculus> controller;
   ovrInputState inputState;
+  uint32_t axis = 0;
   bool hasInputState = ovr_GetInputState(mSession, ovrControllerType_Touch,
                                          &inputState) == ovrSuccess;
 
@@ -957,6 +980,18 @@ VRSystemManagerOculus::HandleInput()
   for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
     controller = mOculusController[i];
     HandleButtonPress(controller->GetIndex(), inputState.Buttons);
+
+    axis = static_cast<uint32_t>(OculusControllerAxisType::IndexTrigger);
+    HandleAxisMove(controller->GetIndex(), axis, inputState.IndexTrigger[i]);
+
+    axis = static_cast<uint32_t>(OculusControllerAxisType::HandTrigger);
+    HandleAxisMove(controller->GetIndex(), axis, inputState.HandTrigger[i]);
+
+    axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickXAxis);
+    HandleAxisMove(controller->GetIndex(), axis, inputState.Thumbstick[i].x);
+
+    axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickYAxis);
+    HandleAxisMove(controller->GetIndex(), axis, -inputState.Thumbstick[i].y);
   }
 }
 
@@ -964,14 +999,51 @@ void
 VRSystemManagerOculus::HandleButtonPress(uint32_t aControllerIdx,
                                          uint64_t aButtonPressed)
 {
-  // TODO: Bug 1305890
+  MOZ_ASSERT(sizeof(kOculusTouchLButton) / sizeof(ovrButton) ==
+             sizeof(kOculusTouchRButton) / sizeof(ovrButton));
+
+  RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+  GamepadHand hand = controller->GetHand();
+  uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
+  uint32_t buttonMask = 0;
+
+  for (uint32_t i = 0; i < kNumOculusButton; ++i) {
+    switch (hand) {
+      case mozilla::dom::GamepadHand::Left:
+        buttonMask = kOculusTouchLButton[i];
+        break;
+      case mozilla::dom::GamepadHand::Right:
+        buttonMask = kOculusTouchRButton[i];
+        break;
+      default:
+        MOZ_ASSERT(false);
+        break;
+    }
+    if (diff & buttonMask) {
+      NewButtonEvent(aControllerIdx, i, diff & aButtonPressed);
+    }
+  }
+
+  controller->SetButtonPressed(aButtonPressed);
 }
 
 void
 VRSystemManagerOculus::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                                       float aValue)
 {
-  // TODO: Bug 1305890
+  RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+  float value = aValue;
+
+  if (abs(aValue) < 0.0000009f) {
+    value = 0.0f; // Clear noise signal
+  }
+
+  if (controller->GetAxisMove(aAxis) != value) {
+    NewAxisMove(aControllerIdx, aAxis, value);
+    controller->SetAxisMove(aAxis, value);
+  }
 }
 
 void

@@ -3,28 +3,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-disable mozilla/reject-some-requires */
-/* globals window, NetMonitorView, gStore, dumpn */
+/* globals window, NetMonitorView, gStore, gNetwork, dumpn */
 
 "use strict";
 
 const promise = require("promise");
 const Services = require("Services");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
-const Editor = require("devtools/client/sourceeditor/editor");
-const {TimelineFront} = require("devtools/shared/fronts/timeline");
-const {Task} = require("devtools/shared/task");
+const { TimelineFront } = require("devtools/shared/fronts/timeline");
+const { CurlUtils } = require("devtools/client/shared/curl");
+const { Task } = require("devtools/shared/task");
 const { ACTIVITY_TYPE } = require("./constants");
 const { EVENTS } = require("./events");
 const { configureStore } = require("./store");
 const Actions = require("./actions/index");
-const { getDisplayedRequestById } = require("./selectors/index");
-const { Prefs } = require("./prefs");
-
-XPCOMUtils.defineConstant(window, "EVENTS", EVENTS);
-XPCOMUtils.defineConstant(window, "ACTIVITY_TYPE", ACTIVITY_TYPE);
-XPCOMUtils.defineConstant(window, "Editor", Editor);
-XPCOMUtils.defineConstant(window, "Prefs", Prefs);
+const {
+  fetchHeaders,
+  formDataURI,
+} = require("./request-utils");
+const {
+  getRequestById,
+  getDisplayedRequestById,
+} = require("./selectors/index");
 
 // Initialize the global Redux store
 window.gStore = configureStore();
@@ -418,7 +418,8 @@ TargetEventsHandler.prototype = {
       case "will-navigate": {
         // Reset UI.
         if (!Services.prefs.getBoolPref("devtools.webconsole.persistlog")) {
-          NetMonitorView.RequestsMenu.reset();
+          gStore.dispatch(Actions.batchReset());
+          gStore.dispatch(Actions.clearRequests());
         } else {
           // If the log is persistent, just clear all accumulated timing markers.
           gStore.dispatch(Actions.clearTimingMarkers());
@@ -446,6 +447,8 @@ TargetEventsHandler.prototype = {
  * Functions handling target network events.
  */
 function NetworkEventsHandler() {
+  this.addRequest = this.addRequest.bind(this);
+  this.updateRequest = this.updateRequest.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onDocLoadingMarker = this._onDocLoadingMarker.bind(this);
@@ -455,6 +458,7 @@ function NetworkEventsHandler() {
   this._onResponseHeaders = this._onResponseHeaders.bind(this);
   this._onResponseCookies = this._onResponseCookies.bind(this);
   this._onResponseContent = this._onResponseContent.bind(this);
+  this._onSecurityInfo = this._onSecurityInfo.bind(this);
   this._onEventTimings = this._onEventTimings.bind(this);
 }
 
@@ -548,11 +552,152 @@ NetworkEventsHandler.prototype = {
       fromServiceWorker
     } = networkInfo;
 
-    NetMonitorView.RequestsMenu.addRequest(
+    this.addRequest(
       actor, {startedDateTime, method, url, isXHR, cause, fromCache, fromServiceWorker}
     );
     window.emit(EVENTS.NETWORK_EVENT, actor);
   },
+
+  addRequest(id, data) {
+    let { method, url, isXHR, cause, startedDateTime, fromCache,
+          fromServiceWorker } = data;
+
+    gStore.dispatch(Actions.addRequest(
+      id,
+      {
+        // Convert the received date/time string to a unix timestamp.
+        startedMillis: Date.parse(startedDateTime),
+        method,
+        url,
+        isXHR,
+        cause,
+        fromCache,
+        fromServiceWorker,
+      },
+      true
+    ))
+    .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
+  },
+
+  updateRequest: Task.async(function* (id, data) {
+    const action = Actions.updateRequest(id, data, true);
+    yield gStore.dispatch(action);
+    let {
+      responseContent,
+      responseCookies,
+      responseHeaders,
+      requestCookies,
+      requestHeaders,
+      requestPostData,
+    } = action.data;
+    let request = getRequestById(gStore.getState(), action.id);
+
+    if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
+      let headers = yield fetchHeaders(
+        requestHeaders, gNetwork.getString.bind(gNetwork));
+      if (headers) {
+        yield gStore.dispatch(Actions.updateRequest(
+          action.id,
+          { requestHeaders: headers },
+          true,
+        ));
+      }
+    }
+
+    if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
+      let headers = yield fetchHeaders(
+        responseHeaders, gNetwork.getString.bind(gNetwork));
+      if (headers) {
+        yield gStore.dispatch(Actions.updateRequest(
+          action.id,
+          { responseHeaders: headers },
+          true,
+        ));
+      }
+    }
+
+    if (request && responseContent && responseContent.content) {
+      let { mimeType } = request;
+      let { text, encoding } = responseContent.content;
+      let response = yield gNetwork.getString(text);
+      let payload = {};
+
+      if (mimeType.includes("image/")) {
+        payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
+      }
+
+      responseContent.content.text = response;
+      payload.responseContent = responseContent;
+
+      yield gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+
+      if (mimeType.includes("image/")) {
+        window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
+      }
+    }
+
+    // Search the POST data upload stream for request headers and add
+    // them as a separate property, different from the classic headers.
+    if (requestPostData && requestPostData.postData) {
+      let { text } = requestPostData.postData;
+      let postData = yield gNetwork.getString(text);
+      const headers = CurlUtils.getHeadersFromMultipartText(postData);
+      const headersSize = headers.reduce((acc, { name, value }) => {
+        return acc + name.length + value.length + 2;
+      }, 0);
+      let payload = {};
+      requestPostData.postData.text = postData;
+      payload.requestPostData = Object.assign({}, requestPostData);
+      payload.requestHeadersFromUploadStream = { headers, headersSize };
+
+      yield gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+    }
+
+    // Fetch request and response cookies long value.
+    // Actor does not provide full sized cookie value when the value is too long
+    // To display values correctly, we need fetch them in each request.
+    if (requestCookies) {
+      let reqCookies = [];
+      // request store cookies in requestCookies or requestCookies.cookies
+      let cookies = requestCookies.cookies ?
+        requestCookies.cookies : requestCookies;
+      // make sure cookies is iterable
+      if (typeof cookies[Symbol.iterator] === "function") {
+        for (let cookie of cookies) {
+          reqCookies.push(Object.assign({}, cookie, {
+            value: yield gNetwork.getString(cookie.value),
+          }));
+        }
+        if (reqCookies.length) {
+          yield gStore.dispatch(Actions.updateRequest(
+            action.id,
+            { requestCookies: reqCookies },
+            true));
+        }
+      }
+    }
+
+    if (responseCookies) {
+      let resCookies = [];
+      // response store cookies in responseCookies or responseCookies.cookies
+      let cookies = responseCookies.cookies ?
+        responseCookies.cookies : responseCookies;
+      // make sure cookies is iterable
+      if (typeof cookies[Symbol.iterator] === "function") {
+        for (let cookie of cookies) {
+          resCookies.push(Object.assign({}, cookie, {
+            value: yield gNetwork.getString(cookie.value),
+          }));
+        }
+        if (resCookies.length) {
+          yield gStore.dispatch(Actions.updateRequest(
+            action.id,
+            { responseCookies: resCookies },
+            true));
+        }
+      }
+    }
+  }),
 
   /**
    * The "networkEventUpdate" message type handler.
@@ -566,7 +711,6 @@ NetworkEventsHandler.prototype = {
    */
   _onNetworkEventUpdate: function (type, { packet, networkInfo }) {
     let { actor } = networkInfo;
-
     switch (packet.updateType) {
       case "requestHeaders":
         this.webConsoleClient.getRequestHeaders(actor, this._onRequestHeaders);
@@ -582,7 +726,7 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_REQUEST_POST_DATA, actor);
         break;
       case "securityInfo":
-        NetMonitorView.RequestsMenu.updateRequest(actor, {
+        this.updateRequest(actor, {
           securityState: networkInfo.securityInfo,
         });
         this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
@@ -599,7 +743,7 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_RESPONSE_COOKIES, actor);
         break;
       case "responseStart":
-        NetMonitorView.RequestsMenu.updateRequest(actor, {
+        this.updateRequest(actor, {
           httpVersion: networkInfo.response.httpVersion,
           remoteAddress: networkInfo.response.remoteAddress,
           remotePort: networkInfo.response.remotePort,
@@ -610,7 +754,7 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         break;
       case "responseContent":
-        NetMonitorView.RequestsMenu.updateRequest(actor, {
+        this.updateRequest(actor, {
           contentSize: networkInfo.response.bodySize,
           transferredSize: networkInfo.response.transferredSize,
           mimeType: networkInfo.response.content.mimeType
@@ -620,7 +764,7 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
         break;
       case "eventTimings":
-        NetMonitorView.RequestsMenu.updateRequest(actor, {
+        this.updateRequest(actor, {
           totalTime: networkInfo.totalTime
         });
         this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
@@ -636,7 +780,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onRequestHeaders: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       requestHeaders: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_REQUEST_HEADERS, response.from);
@@ -650,7 +794,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onRequestCookies: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       requestCookies: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_REQUEST_COOKIES, response.from);
@@ -664,7 +808,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onRequestPostData: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       requestPostData: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
@@ -678,7 +822,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onSecurityInfo: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       securityInfo: response.securityInfo
     }).then(() => {
       window.emit(EVENTS.RECEIVED_SECURITY_INFO, response.from);
@@ -692,7 +836,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onResponseHeaders: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       responseHeaders: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_RESPONSE_HEADERS, response.from);
@@ -706,7 +850,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onResponseCookies: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       responseCookies: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_RESPONSE_COOKIES, response.from);
@@ -720,7 +864,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onResponseContent: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       responseContent: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_RESPONSE_CONTENT, response.from);
@@ -734,7 +878,7 @@ NetworkEventsHandler.prototype = {
    *        The message received from the server.
    */
   _onEventTimings: function (response) {
-    NetMonitorView.RequestsMenu.updateRequest(response.from, {
+    this.updateRequest(response.from, {
       eventTimings: response
     }).then(() => {
       window.emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);

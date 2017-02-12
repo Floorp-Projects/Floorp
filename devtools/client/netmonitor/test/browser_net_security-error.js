@@ -9,9 +9,11 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
 
-  NetMonitorView.RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   info("Requesting a resource that has a certificate problem.");
 
@@ -22,9 +24,10 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, "#security-panel");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
+  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
-  document.querySelector("#security-tab").click();
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#security-tab"));
   yield wait;
 
   let errormsg = document.querySelector(".security-info-value");

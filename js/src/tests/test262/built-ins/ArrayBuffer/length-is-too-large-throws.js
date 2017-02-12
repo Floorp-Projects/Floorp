@@ -30,3 +30,5 @@ assert.throws(RangeError, function() {
 assert.throws(RangeError, function() {
   new ArrayBuffer(Infinity);
 }, "`length` parameter is positive Infinity");
+
+reportCompare(0, 0);

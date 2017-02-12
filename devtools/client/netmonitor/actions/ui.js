@@ -24,9 +24,9 @@ function openNetworkDetails(open) {
 }
 
 /**
- * Change performance statistics view open state.
+ * Change performance statistics panel open state.
  *
- * @param {boolean} visible - expected performance statistics open state
+ * @param {boolean} visible - expected performance statistics panel open state
  */
 function openStatistics(open) {
   return {
@@ -66,10 +66,11 @@ function toggleNetworkDetails() {
 }
 
 /**
- * Toggle to show/hide performance statistics view.
+ * Toggle performance statistics panel.
  */
 function toggleStatistics() {
-  return (dispatch, getState) => dispatch(openStatistics(!getState().ui.statisticsOpen));
+  return (dispatch, getState) =>
+    dispatch(openStatistics(!getState().ui.statisticsOpen));
 }
 
 module.exports = {

@@ -1,0 +1,16 @@
+[package]
+name = "thread_local"
+version = "0.3.2"
+authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
+description = "Per-object thread-local storage"
+documentation = "https://amanieu.github.io/thread_local-rs/thread_local/index.html"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/Amanieu/thread_local-rs"
+readme = "README.md"
+keywords = ["thread_local", "concurrent", "thread"]
+
+[dependencies]
+unreachable = "0.1"
+
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+thread-id = "3.0"

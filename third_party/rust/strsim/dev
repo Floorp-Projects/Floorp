@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import os
+from subprocess import call
+import sys
+
+try:
+    call(['docker', 'run', '-it', '--rm', '-v', os.getcwd() + ':/source',
+          'jimmycuadra/rust:1.14.0'])
+except OSError:
+    print('Please install Docker.', file=sys.stderr)
+

@@ -17,3 +17,5 @@ function argumentsAndSetMutableBinding(a) {
   assert.sameValue(arguments[0], 2);
 }
 argumentsAndSetMutableBinding(1);
+
+reportCompare(0, 0);
