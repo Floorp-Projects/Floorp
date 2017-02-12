@@ -770,10 +770,12 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         if (NS_FAILED(rv)) {
             return rv;
         }
-        nsAutoCString ipString;
-        rv = NormalizeIPv4(encHost, ipString);
-        if (NS_SUCCEEDED(rv)) {
-          encHost = ipString;
+        if (!SegmentIs(spec, mScheme, "resource") &&
+            !SegmentIs(spec, mScheme, "chrome")) {
+            nsAutoCString ipString;
+            if (NS_SUCCEEDED(NormalizeIPv4(encHost, ipString))) {
+                encHost = ipString;
+            }
         }
 
         // NormalizeIDN always copies, if the call was successful.
@@ -2010,10 +2012,11 @@ nsStandardURL::SetHost(const nsACString &input)
         return rv;
     }
 
-    nsAutoCString ipString;
-    rv = NormalizeIPv4(hostBuf, ipString);
-    if (NS_SUCCEEDED(rv)) {
-      hostBuf = ipString;
+    if (!SegmentIs(mScheme, "resource") && !SegmentIs(mScheme, "chrome")) {
+        nsAutoCString ipString;
+        if (NS_SUCCEEDED(NormalizeIPv4(hostBuf, ipString))) {
+          hostBuf = ipString;
+        }
     }
 
     // NormalizeIDN always copies if the call was successful
