@@ -8,6 +8,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 
+#ifdef BUILD_ARM_NEON
+#include "mozilla/arm.h"
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -131,6 +135,38 @@ void Swizzle_SSE2(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
 #define SWIZZLE_SSE2(aSrcFormat, aDstFormat) \
   FORMAT_CASE(aSrcFormat, aDstFormat, \
     Swizzle_SSE2 \
+      <ShouldSwapRB(aSrcFormat, aDstFormat), \
+       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+
+#endif
+
+#ifdef BUILD_ARM_NEON
+/**
+ * ARM NEON optimizations
+ */
+
+template<bool aSwapRB, bool aOpaqueAlpha>
+void Premultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define PREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Premultiply_NEON \
+      <ShouldSwapRB(aSrcFormat, aDstFormat), \
+       ShouldForceOpaque(aSrcFormat, aDstFormat)>)
+
+template<bool aSwapRB>
+void Unpremultiply_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define UNPREMULTIPLY_NEON(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Unpremultiply_NEON<ShouldSwapRB(aSrcFormat, aDstFormat)>)
+
+template<bool aSwapRB, bool aOpaqueAlpha>
+void Swizzle_NEON(const uint8_t*, int32_t, uint8_t*, int32_t, IntSize);
+
+#define SWIZZLE_NEON(aSrcFormat, aDstFormat) \
+  FORMAT_CASE(aSrcFormat, aDstFormat, \
+    Swizzle_NEON \
       <ShouldSwapRB(aSrcFormat, aDstFormat), \
        ShouldForceOpaque(aSrcFormat, aDstFormat)>)
 
@@ -260,6 +296,20 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
   }
 #endif
 
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8X8)
+  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  PREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8X8)
+  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  PREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+  default: break;
+  }
+#endif
+
   switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
   PREMULTIPLY_FALLBACK(SurfaceFormat::B8G8R8A8)
   PREMULTIPLY_FALLBACK(SurfaceFormat::R8G8B8A8)
@@ -364,6 +414,16 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
   UNPREMULTIPLY_SSE2(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
   UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
   UNPREMULTIPLY_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  default: break;
+  }
+#endif
+
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::B8G8R8A8)
+  UNPREMULTIPLY_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::R8G8B8A8)
+  UNPREMULTIPLY_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
   default: break;
   }
 #endif
@@ -656,6 +716,20 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
   SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
   SWIZZLE_SSE2(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
   SWIZZLE_SSE2(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
+  default: break;
+  }
+#endif
+
+#ifdef BUILD_ARM_NEON
+  if (mozilla::supports_neon()) switch (FORMAT_KEY(aSrcFormat, aDstFormat)) {
+  SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8A8)
+  SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8X8)
+  SWIZZLE_NEON(SurfaceFormat::B8G8R8A8, SurfaceFormat::R8G8B8X8)
+  SWIZZLE_NEON(SurfaceFormat::B8G8R8X8, SurfaceFormat::R8G8B8A8)
+  SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8A8)
+  SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8X8)
+  SWIZZLE_NEON(SurfaceFormat::R8G8B8A8, SurfaceFormat::B8G8R8X8)
+  SWIZZLE_NEON(SurfaceFormat::R8G8B8X8, SurfaceFormat::B8G8R8A8)
   default: break;
   }
 #endif
