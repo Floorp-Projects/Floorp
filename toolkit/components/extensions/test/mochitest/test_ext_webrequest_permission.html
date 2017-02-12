@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_permissions() {
+  function background() {
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      if (details.url.includes("_original")) {
+        let redirectUrl = details.url
+                                 .replace("mochi.test:8888", "example.com")
+                                 .replace("_original", "_redirected");
+        return {redirectUrl};
+      }
+      return {};
+    }, {urls: ["<all_urls>"]}, ["blocking"]);
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+    background,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  function* check() {
+    let iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+
+    let promise = new Promise(resolve => {
+      let listener = event => {
+        window.removeEventListener("message", listener);
+        resolve(event.data);
+      };
+      window.addEventListener("message", listener);
+    });
+
+    iframe.setAttribute("src", "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_WebRequest_permission_original.html");
+    let result = yield promise;
+    document.body.removeChild(iframe);
+    return result;
+  }
+
+  let results = yield check();
+  is(results.page, "redirected", "Regular webRequest redirect works on an unprivileged page");
+  is(results.script, "redirected", "Regular webRequest redirect works from an unprivileged page");
+
+  yield SpecialPowers.pushPrefEnv({
+    set: [["extensions.webapi.testing", true]],
+  });
+
+  results = yield check();
+  is(results.page, "original", "webRequest redirect fails on a privileged page");
+  is(results.script, "original", "webRequest redirect fails from a privileged page");
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

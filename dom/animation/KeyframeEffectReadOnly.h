@@ -284,13 +284,17 @@ public:
   // in detail which change hint can be ignored.
   bool CanIgnoreIfNotVisible() const;
 
-  // Returns true if the effect is run on the compositor for |aProperty| and
-  // needs a base style to composite with.
-  bool NeedsBaseStyle(nsCSSPropertyID aProperty) const;
-
   // Returns true if the effect is current state and has scale animation.
   // |aFrame| is used for calculation of scale values.
   bool ContainsAnimatedScale(const nsIFrame* aFrame) const;
+
+  StyleAnimationValue BaseStyle(nsCSSPropertyID aProperty) const
+  {
+    StyleAnimationValue result;
+    DebugOnly<bool> hasProperty = mBaseStyleValues.Get(aProperty, &result);
+    MOZ_ASSERT(hasProperty || result.IsNull());
+    return result;
+  }
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
@@ -351,18 +355,6 @@ protected:
   // infinite recursion.
   already_AddRefed<nsStyleContext> GetTargetStyleContext();
 
-  // Similar to the above but ignoring animation rules. We use this to get base
-  // styles (which don't include animation rules).
-  already_AddRefed<nsStyleContext>
-  GetTargetStyleContextWithoutAnimation();
-
-  enum AnimationStyle {
-    Skip,
-    Include
-  };
-  template<AnimationStyle aAnimationStyle>
-  already_AddRefed<nsStyleContext> DoGetTargetStyleContext();
-
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
@@ -382,14 +374,13 @@ protected:
     nsCSSPropertyID aProperty,
     const RefPtr<AnimValuesStyleRule>& aAnimationRule);
 
-  // Set a bit in mNeedsBaseStyleSet if |aProperty| can be run on the
-  // compositor.
-  void SetNeedsBaseStyle(nsCSSPropertyID aProperty);
+  // Ensure the base styles is available for any properties in |aProperties|.
+  void EnsureBaseStyles(nsStyleContext* aStyleContext,
+                        const nsTArray<AnimationProperty>& aProperties);
 
-  // Ensure the base styles is available for any properties that can be run on
-  // the compositor and which are not includes in |aPropertiesToSkip|.
-  void EnsureBaseStylesForCompositor(
-    const nsCSSPropertyIDSet& aPropertiesToSkip);
+  // Returns the base style resolved by |aStyleContext| for |aProperty|.
+  StyleAnimationValue ResolveBaseStyle(nsCSSPropertyID aProperty,
+                                       nsStyleContext* aStyleContext);
 
   Maybe<OwningAnimationTarget> mTarget;
 
@@ -415,10 +406,10 @@ protected:
   // we need to re-evaluate the cascade of animations when that changes.
   bool mInEffectOnLastAnimationTimingUpdate;
 
-  // Represents whether or not the corresponding property requires a base style
-  // to composite with. This is only set when the property is run on the
-  // compositor.
-  nsCSSPropertyIDSet mNeedsBaseStyleSet;
+  // The non-animated values for properties in this effect that contain at
+  // least one animation value that is composited with the underlying value
+  // (i.e. it uses the additive or accumulate composite mode).
+  nsDataHashtable<nsUint32HashKey, StyleAnimationValue> mBaseStyleValues;
 
 private:
   nsChangeHint mCumulativeChangeHint;
