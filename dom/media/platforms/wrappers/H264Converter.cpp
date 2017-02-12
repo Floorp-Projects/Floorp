@@ -135,9 +135,17 @@ H264Converter::Drain()
 RefPtr<ShutdownPromise>
 H264Converter::Shutdown()
 {
+  mInitPromiseRequest.DisconnectIfExists();
+  mDecodePromiseRequest.DisconnectIfExists();
+  mFlushRequest.DisconnectIfExists();
+  mShutdownRequest.DisconnectIfExists();
+  mPendingSample = nullptr;
+  if (mShutdownPromise) {
+    // We have a shutdown in progress, return that promise instead as we can't
+    // shutdown a decoder twice.
+    return mShutdownPromise.forget();
+  }
   if (mDecoder) {
-    mInitPromiseRequest.DisconnectIfExists();
-    mDecodePromiseRequest.DisconnectIfExists();
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
     return decoder->Shutdown();
   }
@@ -243,12 +251,12 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
   mInitPromiseRequest.Complete();
   RefPtr<MediaRawData> sample = mPendingSample.forget();
   if (mNeedKeyframe && !sample->mKeyframe) {
-    mDecodePromise.ResolveIfExists(DecodedData(), __func__);
+    mDecodePromise.Resolve(DecodedData(), __func__);
   }
   mNeedKeyframe = false;
   if (!mNeedAVCC
       && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
-    mDecodePromise.RejectIfExists(
+    mDecodePromise.Reject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("ConvertSampleToAnnexB")),
       __func__);
@@ -259,11 +267,11 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
     ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
            [self, this](const MediaDataDecoder::DecodedData& aResults) {
              mDecodePromiseRequest.Complete();
-             mDecodePromise.ResolveIfExists(aResults, __func__);
+             mDecodePromise.Resolve(aResults, __func__);
            },
            [self, this](const MediaResult& aError) {
              mDecodePromiseRequest.Complete();
-             mDecodePromise.RejectIfExists(aError, __func__);
+             mDecodePromise.Reject(aError, __func__);
            })
     ->Track(mDecodePromiseRequest);
 }
@@ -272,7 +280,7 @@ void
 H264Converter::OnDecoderInitFailed(const MediaResult& aError)
 {
   mInitPromiseRequest.Complete();
-  mDecodePromise.RejectIfExists(
+  mDecodePromise.Reject(
     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                 RESULT_DETAIL("Unable to initialize H264 decoder")),
     __func__);
@@ -298,9 +306,39 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   }
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
-  mDecoder->Flush();
-  Shutdown();
-  return CreateDecoderAndInit(aSample);
+  mPendingSample = aSample;
+  RefPtr<H264Converter> self = this;
+  mDecoder->Flush()
+    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+           __func__,
+           [self, this]() {
+             mFlushRequest.Complete();
+             mShutdownPromise = Shutdown();
+             mShutdownPromise
+               ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+                      __func__,
+                      [self, this]() {
+                        mShutdownRequest.Complete();
+                        mShutdownPromise = nullptr;
+                        RefPtr<MediaRawData> sample = mPendingSample.forget();
+                        nsresult rv = CreateDecoderAndInit(sample);
+                        if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
+                          // All good so far, will continue later.
+                          return;
+                        }
+                        MOZ_ASSERT(NS_FAILED(rv));
+                        mDecodePromise.Reject(rv, __func__);
+                        return;
+                      },
+                      [] { MOZ_CRASH("Can't reach here'"); })
+               ->Track(mShutdownRequest);
+           },
+           [self, this](const MediaResult& aError) {
+             mFlushRequest.Complete();
+             mDecodePromise.Reject(aError, __func__);
+           })
+    ->Track(mFlushRequest);
+  return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
 }
 
 void

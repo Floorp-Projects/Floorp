@@ -72,6 +72,10 @@ private:
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseRequestHolder<FlushPromise> mFlushRequest;
+  MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
+  RefPtr<ShutdownPromise> mShutdownPromise;
+
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   bool mNeedAVCC;
   nsresult mLastError;
