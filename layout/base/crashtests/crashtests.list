@@ -476,8 +476,11 @@ skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1261351.html # bug 1323
 load 1270797-1.html
 load 1278455-1.html
 load 1286889.html
-load 1297835.html
 load 1288608.html
+load 1288946-1.html
+load 1288946-2a.html
+load 1288946-2b.html
+load 1297835.html
 load 1299736-1.html
 load 1308793.svg
 load 1308848-1.html
