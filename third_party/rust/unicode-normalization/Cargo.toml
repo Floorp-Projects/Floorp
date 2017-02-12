@@ -1,7 +1,7 @@
 [package]
 
 name = "unicode-normalization"
-version = "0.1.2"
+version = "0.1.4"
 authors = ["kwantam <kwantam@gmail.com>"]
 
 homepage = "https://github.com/unicode-rs/unicode-normalization"
@@ -18,4 +18,4 @@ Decomposition and Recomposition, as described in
 Unicode Standard Annex #15.
 """
 
-exclude = [ "target/*", "Cargo.lock", "scripts/tmp" ]
+exclude = [ "target/*", "Cargo.lock", "scripts/tmp", "*.txt" ]

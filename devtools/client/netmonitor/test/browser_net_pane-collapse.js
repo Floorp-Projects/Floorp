@@ -11,7 +11,8 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, Prefs } = monitor.panelWin;
+  let { document, windowRequire } = monitor.panelWin;
+  let { Prefs } = windowRequire("devtools/client/netmonitor/prefs");
   let detailsPaneToggleButton = document.querySelector(".network-details-panel-toggle");
 
   let wait = waitForNetworkEvents(monitor, 1);
@@ -22,7 +23,7 @@ add_task(function* () {
      detailsPaneToggleButton.classList.contains("pane-collapsed"),
     "The details panel should initially be hidden.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, detailsPaneToggleButton);
+  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
 
   is(~~(document.querySelector(".network-details-panel").clientWidth),
     Prefs.networkDetailsWidth,
@@ -31,13 +32,13 @@ add_task(function* () {
      !detailsPaneToggleButton.classList.contains("pane-collapsed"),
     "The details panel should at this point be visible.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, detailsPaneToggleButton);
+  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
 
   ok(!document.querySelector(".network-details-panel") &&
      detailsPaneToggleButton.classList.contains("pane-collapsed"),
     "The details panel should not be visible after collapsing.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, detailsPaneToggleButton);
+  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
 
   is(~~(document.querySelector(".network-details-panel").clientWidth),
     Prefs.networkDetailsWidth,

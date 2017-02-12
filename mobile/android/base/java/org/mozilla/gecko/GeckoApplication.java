@@ -43,6 +43,7 @@ public class GeckoApplication extends Application
 
     private boolean mInBackground;
     private boolean mPausedGecko;
+    private boolean mIsInitialResume;
 
     private LightweightTheme mLightweightTheme;
 
@@ -123,18 +124,21 @@ public class GeckoApplication extends Application
                     db.expireHistory(getContentResolver(), BrowserContract.ExpirePriority.NORMAL);
                 }
             });
+
+            GeckoNetworkManager.getInstance().stop();
         }
-        GeckoNetworkManager.getInstance().stop();
     }
 
     public void onActivityResume(GeckoActivityStatus activity) {
-        if (mPausedGecko) {
+        if (mIsInitialResume) {
+            GeckoBatteryManager.getInstance().start(this);
+            GeckoNetworkManager.getInstance().start(this);
+            mIsInitialResume = false;
+        } else if (mPausedGecko) {
             GeckoThread.onResume();
             mPausedGecko = false;
+            GeckoNetworkManager.getInstance().start(this);
         }
-
-        GeckoBatteryManager.getInstance().start(this);
-        GeckoNetworkManager.getInstance().start(this);
 
         mInBackground = false;
     }
@@ -142,6 +146,7 @@ public class GeckoApplication extends Application
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "zerdatime " + SystemClock.uptimeMillis() + " - Fennec application start");
+        mIsInitialResume = true;
 
         mRefWatcher = LeakCanary.install(this);
 

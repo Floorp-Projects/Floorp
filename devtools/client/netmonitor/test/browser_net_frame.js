@@ -157,15 +157,21 @@ add_task(function* () {
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
-  let { NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
-  RequestsMenu.lazyUpdate = false;
+
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
+
+  gStore.dispatch(Actions.batchEnable(false));
 
   tab.linkedBrowser.loadURI(TOP_URL, null, null);
 
   yield waitForNetworkEvents(monitor, REQUEST_COUNT);
 
-  is(RequestsMenu.itemCount, REQUEST_COUNT,
+  is(gStore.getState().requests.requests.size, REQUEST_COUNT,
     "All the page events should be recorded.");
 
   // While there is a defined order for requests in each document separately, the requests
@@ -174,7 +180,7 @@ add_task(function* () {
   let currentTop = 0;
   let currentSub = 0;
   for (let i = 0; i < REQUEST_COUNT; i++) {
-    let requestItem = RequestsMenu.getItemAtIndex(i);
+    let requestItem = getSortedRequests(gStore.getState()).get(i);
 
     let itemUrl = requestItem.url;
     let itemCauseUri = requestItem.cause.loadingDocumentUri;
@@ -186,8 +192,13 @@ add_task(function* () {
     }
     let { method, url, causeType, causeUri, stack } = spec;
 
-    verifyRequestItemTarget(RequestsMenu, requestItem,
-      method, url, { cause: { type: causeType, loadingDocumentUri: causeUri } }
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      requestItem,
+      method,
+      url,
+      { cause: { type: causeType, loadingDocumentUri: causeUri } }
     );
 
     let { stacktrace } = requestItem.cause;

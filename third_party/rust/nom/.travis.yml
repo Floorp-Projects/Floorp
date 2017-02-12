@@ -1,0 +1,46 @@
+language: rust
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+
+rust:
+  - nightly
+  - beta
+  - stable
+  - 1.2.0
+
+before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+
+script:
+  - |
+      travis-cargo --only 1.2     test  -- --features regexp &&
+      travis-cargo --only stable  test  -- --features "regexp regexp_macros" &&
+      travis-cargo --only beta    test  -- --features "regexp regexp_macros" &&
+      travis-cargo --only nightly build -- --features "nightly core regexp" &&
+      travis-cargo --only nightly test  -- --features "regexp" &&
+      travis-cargo bench &&
+      travis-cargo --only stable doc -- --features "regexp"
+
+after_success:
+  - travis-cargo coveralls --no-sudo
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/9c035a194ac4fd4cc061
+    on_success: change
+    on_failure: always
+    on_start: false
+
+
+env:
+  global:
+    # override the default `--features unstable` used for the nightly branch (optional)
+    - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
+
+sudo: false
