@@ -1425,30 +1425,16 @@ SessionStore.prototype = {
     // FF55 will remove the triggeringPrincipal_b64, see Bug 1301666.
     if (aEntry.triggeringPrincipal_base64 || aEntry.principalToInherit_base64) {
       if (aEntry.triggeringPrincipal_base64) {
-        try {
-          shEntry.triggeringPrincipal =
-            Utils.deserializePrincipal(aEntry.triggeringPrincipal_base64);
-        }
-        catch (e) {
-          dump(e);
-        }
+        shEntry.triggeringPrincipal =
+          Utils.deserializePrincipal(aEntry.triggeringPrincipal_base64);
       }
       if (aEntry.principalToInherit_base64) {
-        try {
-          shEntry.principalToInherit =
-            Utils.deserializePrincipal(aEntry.principalToInherit_base64);
-        } catch (e) {
-          dump(e);
-        }
+        shEntry.principalToInherit =
+          Utils.deserializePrincipal(aEntry.principalToInherit_base64);
       }
     } else if (aEntry.triggeringPrincipal_b64) {
-      try {
-        shEntry.triggeringPrincipal = Utils.deserializePrincipal(aEntry.triggeringPrincipal_b64);
-        shEntry.principalToInherit = shEntry.triggeringPrincipal;
-      }
-      catch (e) {
-        dump(e);
-      }
+      shEntry.triggeringPrincipal = Utils.deserializePrincipal(aEntry.triggeringPrincipal_b64);
+      shEntry.principalToInherit = shEntry.triggeringPrincipal;
     }
 
     if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {
