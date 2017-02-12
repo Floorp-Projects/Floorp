@@ -26,16 +26,12 @@ class nsIThread;
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
-
-namespace mozilla {
-namespace dom {
-class PCrashReporterParent;
-class CrashReporterParent;
-}
-}
 #endif
 
 namespace mozilla {
+namespace ipc {
+class CrashReporterHost;
+} // namespace ipc
 namespace gmp {
 
 class GMPCapability
@@ -166,12 +162,11 @@ private:
   RefPtr<GenericPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
 #ifdef MOZ_CRASHREPORTER
   void WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes);
-  void GetCrashID(nsString& aResult);
+  bool GetCrashID(nsString& aResult);
 #endif
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  PCrashReporterParent* AllocPCrashReporterParent(const NativeThreadId& aThread) override;
-  bool DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter) override;
+  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem) override;
 
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent() override;
@@ -229,6 +224,10 @@ private:
   // its reference to us, we stay alive long enough for the child process
   // to terminate gracefully.
   bool mHoldingSelfRef;
+
+#ifdef MOZ_CRASHREPORTER
+  UniquePtr<ipc::CrashReporterHost> mCrashReporter;
+#endif
 };
 
 } // namespace gmp
