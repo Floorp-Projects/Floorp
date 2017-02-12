@@ -174,7 +174,7 @@ public:
       }
 
       bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-      int64_t durationUs;
+      int64_t durationUs = 0;
       if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs) && !isEOS) {
         return;
       }
