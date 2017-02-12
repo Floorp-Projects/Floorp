@@ -19,9 +19,7 @@
  * <ARGUMENT_COUNT> is an integer literal specifying the total number of
  * replaceable arguments in the following format string.
  *
- * <EXCEPTION_NAME> is an exception index from the enum in jsexn.c;
- * JSEXN_NONE for none.  The given exception index will be raised by the
- * engine when the corresponding error occurs.
+ * <EXCEPTION_NAME> is an enum JSExnType value, defined in jsapi.h.
  *
  * <FORMAT_STRING> is a string literal, optionally containing sequences
  * {X} where X  is an integer representing the argument number that will
@@ -29,7 +27,7 @@
  *
  * e.g.
  *
- * MSG_DEF(JSMSG_NOT_A_SUBSPECIES, 2, JSEXN_NONE,
+ * MSG_DEF(JSMSG_NOT_A_SUBSPECIES, 2, JSEXN_TYPEERROR,
  *         "{0} is not a member of the {1} family")
  *
  * can be used:
@@ -38,7 +36,7 @@
  *
  * to report:
  *
- * "Rhino is not a member of the Monkey family"
+ * "TypeError: Rhino is not a member of the Monkey family"
  */
 
 MSG_DEF(JSMSG_NOT_AN_ERROR,            0, JSEXN_ERR, "<Error #0 is reserved>")
