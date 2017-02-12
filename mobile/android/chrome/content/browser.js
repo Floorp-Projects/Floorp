@@ -3428,6 +3428,7 @@ function Tab(aURL, aParams) {
   this.filter = null;
   this.browser = null;
   this.id = 0;
+  this._parentId = -1;
   this.lastTouchedAt = Date.now();
   this._zoom = 1.0;
   this._drawZoom = 1.0;
@@ -3555,7 +3556,7 @@ Tab.prototype = {
       }
 
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
-      this.parentId = ("parentId" in aParams && typeof aParams.parentId == "number")
+      this._parentId = ("parentId" in aParams && typeof aParams.parentId == "number")
                       ? aParams.parentId : -1;
 
       let message = {
@@ -3959,9 +3960,13 @@ Tab.prototype = {
     }
   },
 
-  setParentId: function(aParentId) {
+  get parentId() {
+    return this._parentId;
+  },
+
+  set parentId(aParentId) {
     let newParentId = (typeof aParentId == "number") ? aParentId : -1;
-    this.parentId = newParentId;
+    this._parentId = newParentId;
     GlobalEventDispatcher.sendRequest({
       type: "Tab:SetParentId",
       tabID: this.id,
