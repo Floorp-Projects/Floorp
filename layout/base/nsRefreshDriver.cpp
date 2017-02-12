@@ -252,6 +252,16 @@ public:
                             nsLayoutUtils::IdlePeriodDeadlineLimit()));
   }
 
+  void SetLastGCCCDuration(TimeDuration aDuration)
+  {
+    mLastGCCCDuration = aDuration;
+  }
+
+  TimeDuration LastGCCCDuration()
+  {
+    return mLastGCCCDuration;
+  }
+
 protected:
   virtual void StartTimer() = 0;
   virtual void StopTimer() = 0;
@@ -329,6 +339,8 @@ protected:
   bool mLastFireSkipped;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
+
+  TimeDuration mLastGCCCDuration;
 
   nsTArray<RefPtr<nsRefreshDriver> > mContentRefreshDrivers;
   nsTArray<RefPtr<nsRefreshDriver> > mRootRefreshDrivers;
@@ -578,6 +590,9 @@ private:
         mProcessedVsync = true;
       } else {
         mLastChildTick = TimeStamp::Now();
+        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
+          return;
+        }
       }
       MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
 
@@ -585,7 +600,19 @@ private:
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
       if (mVsyncRefreshDriverTimer) {
+        // Clear the old GC/CC duration.
+        mVsyncRefreshDriverTimer->SetLastGCCCDuration(TimeDuration());
         mVsyncRefreshDriverTimer->RunRefreshDrivers(aVsyncTimestamp);
+      }
+
+      if (!XRE_IsParentProcess()) {
+        TimeDuration tickDuration = TimeStamp::Now() - mLastChildTick;
+        mBlockUntil = aVsyncTimestamp + tickDuration;
+        if (mVsyncRefreshDriverTimer) {
+          // Since GC/CC slices may run during the tick, but after the actual
+          // layout processing, they are not considered as part of the tick time.
+          mBlockUntil -= mVsyncRefreshDriverTimer->LastGCCCDuration();
+        }
       }
     }
 
@@ -596,6 +623,7 @@ private:
     Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
     TimeStamp mLastChildTick;
+    TimeStamp mBlockUntil;
     TimeDuration mVsyncRate;
     bool mProcessedVsync;
   }; // RefreshDriverVsyncObserver
@@ -2011,8 +2039,12 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
 
   if (notifyGC && nsContentUtils::XPConnect()) {
+    TimeStamp startGCCC = TimeStamp::Now();
     nsContentUtils::XPConnect()->NotifyDidPaint();
     nsJSContext::NotifyDidPaint();
+    if (mActiveTimer) {
+      mActiveTimer->SetLastGCCCDuration(TimeStamp::Now() - startGCCC);
+    }
   }
 }
 

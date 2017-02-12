@@ -347,6 +347,7 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
 #define FOR_EACH_GC_PARAM(_)                                                    \
     _("maxBytes",                   JSGC_MAX_BYTES,                      true)  \
     _("maxMallocBytes",             JSGC_MAX_MALLOC_BYTES,               true)  \
+    _("maxNurseryBytes",            JSGC_MAX_NURSERY_BYTES,              true)  \
     _("gcBytes",                    JSGC_BYTES,                          false) \
     _("gcNumber",                   JSGC_NUMBER,                         false) \
     _("mode",                       JSGC_MODE,                           true)  \
@@ -421,9 +422,16 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (disableOOMFunctions && (param == JSGC_MAX_BYTES || param == JSGC_MAX_MALLOC_BYTES)) {
-        args.rval().setUndefined();
-        return true;
+    if (disableOOMFunctions) {
+        switch (param) {
+          case JSGC_MAX_BYTES:
+          case JSGC_MAX_MALLOC_BYTES:
+          case JSGC_MAX_NURSERY_BYTES:
+            args.rval().setUndefined();
+            return true;
+          default:
+            break;
+        }
     }
 
     double d;
@@ -1335,7 +1343,7 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t targetThread = js::oom::THREAD_TYPE_MAIN;
+    uint32_t targetThread = js::oom::THREAD_TYPE_COOPERATING;
     if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
         return false;
 
@@ -1409,13 +1417,13 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
 
     bool verbose = EnvVarIsDefined("OOM_VERBOSE");
 
-    unsigned threadStart = oom::THREAD_TYPE_MAIN;
+    unsigned threadStart = oom::THREAD_TYPE_COOPERATING;
     unsigned threadEnd = oom::THREAD_TYPE_MAX;
 
     // Test a single thread type if specified by the OOM_THREAD environment variable.
     int threadOption = 0;
     if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
-        if (threadOption < oom::THREAD_TYPE_MAIN || threadOption > oom::THREAD_TYPE_MAX) {
+        if (threadOption < oom::THREAD_TYPE_COOPERATING || threadOption > oom::THREAD_TYPE_MAX) {
             JS_ReportErrorASCII(cx, "OOM_THREAD value out of range.");
             return false;
         }
@@ -4586,18 +4594,16 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("helperThreadCount", HelperThreadCount, 0, 0,
 "helperThreadCount()",
-"  Returns the number of helper threads available for off-main-thread tasks."),
+"  Returns the number of helper threads available for off-thread tasks."),
 
 #ifdef JS_TRACE_LOGGING
     JS_FN_HELP("startTraceLogger", EnableTraceLogger, 0, 0,
 "startTraceLogger()",
-"  Start logging the mainThread.\n"
-"  Note: tracelogging starts automatically. Disable it by setting environment variable\n"
-"  TLOPTIONS=disableMainThread"),
+"  Start logging this thread.\n"),
 
     JS_FN_HELP("stopTraceLogger", DisableTraceLogger, 0, 0,
 "stopTraceLogger()",
-"  Stop logging the mainThread."),
+"  Stop logging this thread."),
 #endif
 
     JS_FN_HELP("reportOutOfMemory", ReportOutOfMemory, 0, 0,

@@ -209,7 +209,7 @@ MapIteratorObject::create(JSContext* cx, HandleObject mapobj, ValueMap* data,
 void
 MapIteratorObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     fop->delete_(MapIteratorObjectRange(static_cast<NativeObject*>(obj)));
 }
 
@@ -548,7 +548,7 @@ MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 void
 MapObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     if (ValueMap* map = obj->as<MapObject>().getData())
         fop->delete_(map);
 }
@@ -946,7 +946,7 @@ SetIteratorObject::create(JSContext* cx, HandleObject setobj, ValueSet* data,
 void
 SetIteratorObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     fop->delete_(SetIteratorObjectRange(static_cast<NativeObject*>(obj)));
 }
 
@@ -1140,7 +1140,7 @@ SetObject::trace(JSTracer* trc, JSObject* obj)
 void
 SetObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onMainThread());
+    MOZ_ASSERT(fop->onActiveCooperatingThread());
     SetObject* setobj = static_cast<SetObject*>(obj);
     if (ValueSet* set = setobj->getData())
         fop->delete_(set);

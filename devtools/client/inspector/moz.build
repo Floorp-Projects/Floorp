@@ -17,6 +17,8 @@ DevToolsModules(
     'inspector-commands.js',
     'inspector-search.js',
     'panel.js',
+    'reducers.js',
+    'store.js',
     'toolsidebar.js',
 )
 

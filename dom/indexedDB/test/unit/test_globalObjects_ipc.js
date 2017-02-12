@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   // Test for IDBKeyRange and indexedDB availability in ipcshell.
   run_test_in_child("./GlobalObjectsChild.js", function() {

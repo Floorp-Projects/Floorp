@@ -5,7 +5,7 @@
 
 var testGenerator = testSteps();
 
-function testSteps()
+function* testSteps()
 {
   // This lives in storage/default/http+++www.mozilla.org
   const url = "http://www.mozilla.org";

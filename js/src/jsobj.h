@@ -479,7 +479,7 @@ class JSObject : public js::gc::Cell
     //
     // These cases are:
     //  1) The off-thread parsing task uses a dummy global since it cannot
-    //     share with the actual global being used concurrently on the main
+    //     share with the actual global being used concurrently on the active
     //     thread.
     //  2) A GC may occur when creating the GlobalObject, in which case the
     //     compartment global pointer may not yet be set. In this case there is

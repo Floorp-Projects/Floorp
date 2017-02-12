@@ -1,10 +1,10 @@
-/*
+/* <copyright>
   This file is provided under a dual BSD/GPLv2 license.  When using or
   redistributing this file, you may do so under either license.
 
   GPL LICENSE SUMMARY
 
-  Copyright (c) 2005-2012 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of version 2 of the GNU General Public License as
@@ -26,7 +26,7 @@
 
   BSD LICENSE
 
-  Copyright (c) 2005-2012 Intel Corporation. All rights reserved.
+  Copyright (c) 2005-2014 Intel Corporation. All rights reserved.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,8 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+</copyright> */
+
 #ifndef _ITTNOTIFY_TYPES_H_
 #define _ITTNOTIFY_TYPES_H_
 

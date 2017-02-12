@@ -34,6 +34,8 @@ const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
+const Store = require("devtools/client/inspector/store");
+
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
       new LocalizationHelper("devtools/client/locales/inspector.properties");
@@ -92,6 +94,7 @@ function Inspector(toolbox) {
   this.panelWin.inspector = this;
 
   this.highlighters = new HighlightersOverlay(this);
+  this.store = Store();
   this.telemetry = new Telemetry();
 
   this.nodeMenuTriggerInfo = null;
@@ -910,7 +913,6 @@ Inspector.prototype = {
     this.cancelUpdate();
 
     this.target.off("will-navigate", this._onBeforeNavigate);
-
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
     this._toolbox.off("select", this.updateDebuggerPausedWarning);
@@ -942,8 +944,6 @@ Inspector.prototype = {
 
     this.teardownSplitter();
 
-    this.sidebar = null;
-
     this.teardownToolbar();
     this.breadcrumbs.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
@@ -951,12 +951,14 @@ Inspector.prototype = {
 
     let markupDestroyer = this._destroyMarkup();
 
-    this.panelWin.inspector = null;
-    this.target = null;
-    this.panelDoc = null;
-    this.panelWin = null;
-    this.breadcrumbs = null;
     this._toolbox = null;
+    this.breadcrumbs = null;
+    this.panelDoc = null;
+    this.panelWin.inspector = null;
+    this.panelWin = null;
+    this.sidebar = null;
+    this.store = null;
+    this.target = null;
 
     this.highlighters.destroy();
     this.highlighters = null;

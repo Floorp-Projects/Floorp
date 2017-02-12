@@ -2,6 +2,8 @@
 
 Components.utils.import("resource://gre/modules/Schemas.jsm");
 
+const global = this;
+
 let schemaJson = [
   {
     namespace: "noAllowedContexts",
@@ -66,13 +68,15 @@ let schemaJson = [
     },
   },
 ];
+
 add_task(function* testRestrictions() {
   let url = "data:," + JSON.stringify(schemaJson);
   yield Schemas.load(url);
   let results = {};
   let localWrapper = {
+    cloneScope: global,
     shouldInject(ns, name, allowedContexts) {
-      name = name === null ? ns : ns + "." + name;
+      name = ns ? ns + "." + name : name;
       results[name] = allowedContexts.join(",");
       return true;
     },
@@ -98,7 +102,7 @@ add_task(function* testRestrictions() {
     }
 
     let result = results[path];
-    equal(result, expected);
+    equal(result, expected, path);
   }
 
   verify("noAllowedContexts", "");

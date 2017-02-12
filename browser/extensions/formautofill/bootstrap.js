@@ -21,7 +21,8 @@ function startup() {
     return;
   }
 
-  FormAutofillParent.init();
+  let parent = new FormAutofillParent();
+  parent.init();
   Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillContent.js", true);
 }
 

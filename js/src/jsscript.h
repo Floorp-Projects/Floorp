@@ -360,8 +360,8 @@ class ScriptSource
     uint32_t refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
-    // modified by the main thread, and all members are always safe to access
-    // on the main thread.
+    // modified by the active thread, and all members are always safe to access
+    // on the active thread.
 
     // Indicate which field in the |data| union is active.
 
@@ -889,6 +889,14 @@ class JSScript : public js::gc::TenuredCell
     /* Range of characters in scriptSource which contains this script's source. */
     uint32_t        sourceStart_;
     uint32_t        sourceEnd_;
+
+#ifdef MOZ_VTUNE
+    // Unique Method ID passed to the VTune profiler, or 0 if unset.
+    // Allows attribution of different jitcode to the same source script.
+    uint32_t        vtuneMethodId_;
+    // Extra padding to maintain JSScript as a multiple of gc::CellSize.
+    uint32_t        __vtune_unused_padding_;
+#endif
 
     // Number of times the script has been called or has had backedges taken.
     // When running in ion, also increased for any inlined scripts. Reset if
@@ -1555,6 +1563,10 @@ class JSScript : public js::gc::TenuredCell
     bool mutedErrors() const { return scriptSource()->mutedErrors(); }
     const char* filename() const { return scriptSource()->filename(); }
     const char* maybeForwardedFilename() const { return maybeForwardedScriptSource()->filename(); }
+
+#ifdef MOZ_VTUNE
+    uint32_t vtuneMethodID() const { return vtuneMethodId_; }
+#endif
 
   public:
 

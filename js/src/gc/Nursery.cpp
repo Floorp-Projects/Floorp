@@ -553,7 +553,6 @@ void
 js::Nursery::collect(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT(!TlsContext.get()->suppressGC);
-    MOZ_RELEASE_ASSERT(zoneGroup()->ownedByCurrentThread());
 
     if (!isEnabled() || isEmpty()) {
         // Our barriers are not always exact, and there may be entries in the
@@ -802,7 +801,7 @@ js::Nursery::freeMallocedBuffers()
     }
 
     if (!started)
-        freeMallocedBuffersTask->runFromMainThread(zoneGroup()->runtime);
+        freeMallocedBuffersTask->runFromActiveCooperatingThread(zoneGroup()->runtime);
 
     MOZ_ASSERT(mallocedBuffers.empty());
 }

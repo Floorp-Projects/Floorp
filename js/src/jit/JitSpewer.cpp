@@ -211,7 +211,7 @@ IonSpewer::beginFunction()
 {
     // If we are doing a synchronous logging then we spew everything as we go,
     // as this is useful in case of failure during the compilation. On the other
-    // hand, it is recommended to disabled off main thread compilation.
+    // hand, it is recommended to disable off thread compilation.
     if (!getAsyncLogging() && !firstFunction_) {
         LockGuard<Mutex> guard(outputLock_);
         jsonOutput_.put(","); // separate functions
