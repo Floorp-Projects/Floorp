@@ -371,6 +371,9 @@ var BrowserApp = {
     return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
   },
 
+  // Note that the deck list order does not necessarily reflect the user visible tab order (see
+  // bug 1331154 for the reason), so deck.selectedIndex should not be used (though
+  // deck.selectedPanel is still valid) - use selectedTabIndex instead.
   deck: null,
 
   startup: function startup() {
@@ -1171,6 +1174,11 @@ var BrowserApp = {
         return tabs[i].browser;
     }
     return null;
+  },
+
+  // Use this instead of deck.selectedIndex (which is invalid for this purpose).
+  get selectedTabIndex() {
+    return this._tabs.indexOf(this._selectedTab);
   },
 
   loadURI: function loadURI(aURI, aBrowser, aParams) {
@@ -3505,7 +3513,7 @@ Tab.prototype = {
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
     let selectedPanel = BrowserApp.deck.selectedPanel;
-    BrowserApp.deck.insertBefore(this.browser, aParams.sibling || null);
+    BrowserApp.deck.appendChild(this.browser);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     let attrs = {};
@@ -3777,14 +3785,13 @@ Tab.prototype = {
     let evt = new UIEvent("TabPreZombify", {"bubbles":true, "cancelable":false, "view":window});
     browser.dispatchEvent(evt);
 
-    // We need this data to correctly create and position the new browser
+    // We need this data to correctly create the new browser
     // If this browser is already a zombie, fallback to the session data
     let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
-    let sibling = browser.nextSibling;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
 
     this.destroy();
-    this.create(currentURL, { sibling: sibling, zombifying: true, delayLoad: true, isPrivate: isPrivate });
+    this.create(currentURL, { zombifying: true, delayLoad: true, isPrivate: isPrivate });
 
     // Reattach session store data and flag this browser so it is restored on select
     browser = this.browser;
