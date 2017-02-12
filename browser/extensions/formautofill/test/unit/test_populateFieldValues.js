@@ -34,9 +34,10 @@ const TEST_PROFILE = {
 };
 
 add_task(function* test_populateFieldValues() {
-  FormAutofillParent.init();
+  let formAutofillParent = new FormAutofillParent();
+  formAutofillParent.init();
 
-  let store = FormAutofillParent.getProfileStore();
+  let store = formAutofillParent.getProfileStore();
   do_check_neq(store, null);
 
   store.get = function(guid) {
@@ -51,7 +52,7 @@ add_task(function* test_populateFieldValues() {
   };
 
   yield new Promise((resolve) => {
-    FormAutofillParent.receiveMessage({
+    formAutofillParent.receiveMessage({
       name: "FormAutofill:PopulateFieldValues",
       data: {
         guid: TEST_GUID,
@@ -78,15 +79,16 @@ add_task(function* test_populateFieldValues() {
 
   do_check_eq(notifyUsedCalledCount, 1);
 
-  FormAutofillParent._uninit();
-  do_check_null(FormAutofillParent.getProfileStore());
+  formAutofillParent._uninit();
+  do_check_null(formAutofillParent.getProfileStore());
 });
 
 add_task(function* test_populateFieldValues_with_invalid_guid() {
-  FormAutofillParent.init();
+  let formAutofillParent = new FormAutofillParent();
+  formAutofillParent.init();
 
   Assert.throws(() => {
-    FormAutofillParent.receiveMessage({
+    formAutofillParent.receiveMessage({
       name: "FormAutofill:PopulateFieldValues",
       data: {
         guid: "invalid-guid",
@@ -96,5 +98,5 @@ add_task(function* test_populateFieldValues_with_invalid_guid() {
     });
   }, /No matching profile\./);
 
-  FormAutofillParent._uninit();
+  formAutofillParent._uninit();
 });

@@ -74,7 +74,7 @@ JSObject::finalize(js::FreeOp* fop)
 #ifdef DEBUG
     MOZ_ASSERT(isTenured());
     if (!IsBackgroundFinalized(asTenured().getAllocKind())) {
-        /* Assert we're on the main thread. */
+        /* Assert we're on the active thread. */
         MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
     }
 #endif
@@ -299,7 +299,7 @@ SetNewObjectMetadata(JSContext* cx, JSObject* obj)
 {
     MOZ_ASSERT(!cx->compartment()->hasObjectPendingMetadata());
 
-    // The metadata builder is invoked for each object created on the main
+    // The metadata builder is invoked for each object created on the active
     // thread, except when analysis/compilation is active, to avoid recursion.
     if (!cx->helperThread()) {
         if (MOZ_UNLIKELY((size_t)cx->compartment()->hasAllocationMetadataBuilder()) &&
@@ -337,7 +337,7 @@ JSObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
     uint32_t finalizeFlags = flags & FinalizeMask;
 
     // Classes with a finalizer must specify whether instances will be finalized
-    // on the main thread or in the background, except proxies whose behaviour
+    // on the active thread or in the background, except proxies whose behaviour
     // depends on the target object.
     if (clasp->hasFinalize() && !clasp->isProxy()) {
         MOZ_ASSERT(finalizeFlags == JSCLASS_FOREGROUND_FINALIZE ||

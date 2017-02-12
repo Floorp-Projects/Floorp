@@ -453,3 +453,20 @@ webrtc.nicer:
     record_in_processes:
       - 'main'
       - 'content'
+
+# The following section contains content process base counters.
+dom.contentprocess:
+  troubled_due_to_memory:
+    bug_numbers:
+      - 1305091
+    description: >
+      The number of content processes that were marked as troubled because
+      it was running low on virtual memory.
+    expires: "58"
+    kind: uint
+    notification_emails:
+      - benjamin@smedbergs.us
+      - mconley@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'

@@ -463,18 +463,14 @@ JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 #endif
 
 JS_PUBLIC_API(JSContext*)
-JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSContext* parentContext)
+JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime)
 {
     MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Running,
                "must call JS_Init prior to creating any JSContexts");
 
     // Make sure that all parent runtimes are the topmost parent.
-    JSRuntime* parentRuntime = nullptr;
-    if (parentContext) {
-        parentRuntime = parentContext->runtime();
-        while (parentRuntime && parentRuntime->parentRuntime)
-            parentRuntime = parentRuntime->parentRuntime;
-    }
+    while (parentRuntime && parentRuntime->parentRuntime)
+        parentRuntime = parentRuntime->parentRuntime;
 
     return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
@@ -546,10 +542,10 @@ JS_EndRequest(JSContext* cx)
     StopRequest(cx);
 }
 
-JS_PUBLIC_API(JSContext*)
-JS_GetParentContext(JSContext* cx)
+JS_PUBLIC_API(JSRuntime*)
+JS_GetParentRuntime(JSContext* cx)
 {
-    return cx->runtime()->parentRuntime ? cx->runtime()->parentRuntime->unsafeContextFromAnyThread() : cx;
+    return cx->runtime()->parentRuntime ? cx->runtime()->parentRuntime : cx->runtime();
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -1743,16 +1739,42 @@ JS::CompartmentBehaviors::extraWarnings(JSContext* cx) const
 }
 
 JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setZone(ZoneSpecifier spec)
+JS::CompartmentCreationOptions::setSystemZone()
 {
-    zone_.spec = spec;
+    zoneSpec_ = JS::SystemZone;
+    zonePointer_ = nullptr;
     return *this;
 }
 
 JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setSameZoneAs(JSObject* obj)
+JS::CompartmentCreationOptions::setExistingZone(JSObject* obj)
 {
-    zone_.pointer = static_cast<void*>(obj->zone());
+    zoneSpec_ = JS::ExistingZone;
+    zonePointer_ = obj->zone();
+    return *this;
+}
+
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setNewZoneInNewZoneGroup()
+{
+    zoneSpec_ = JS::NewZoneInNewZoneGroup;
+    zonePointer_ = nullptr;
+    return *this;
+}
+
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setNewZoneInSystemZoneGroup()
+{
+    zoneSpec_ = JS::NewZoneInSystemZoneGroup;
+    zonePointer_ = nullptr;
+    return *this;
+}
+
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setNewZoneInExistingZoneGroup(JSObject* obj)
+{
+    zoneSpec_ = JS::NewZoneInExistingZoneGroup;
+    zonePointer_ = obj->zone()->group();
     return *this;
 }
 
@@ -4086,13 +4108,13 @@ JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, si
     // These are heuristics which the caller may choose to ignore (e.g., for
     // testing purposes).
     if (!options.forceAsync) {
-        // Compiling off the main thread inolves creating a new Zone and other
+        // Compiling off the active thread inolves creating a new Zone and other
         // significant overheads.  Don't bother if the script is tiny.
         if (length < TINY_LENGTH)
             return false;
 
         // If the parsing task would have to wait for GC to complete, it'll probably
-        // be faster to just start it synchronously on the main thread unless the
+        // be faster to just start it synchronously on the active thread unless the
         // script is huge.
         if (OffThreadParsingMustWaitForGC(cx->runtime()) && length < HUGE_LENGTH)
             return false;

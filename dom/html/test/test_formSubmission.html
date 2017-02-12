@@ -681,9 +681,7 @@ function setDisabled(list, state) {
 var gen;
 function onFilesSet() {
   gen = runTest();
-  addLoadEvent(function() {
-    gen.next();
-  });
+  gen.next();
 }
 
 function* runTest() {

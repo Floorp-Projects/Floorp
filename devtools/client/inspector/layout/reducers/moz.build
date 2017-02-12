@@ -8,5 +8,4 @@ DevToolsModules(
     'box-model.js',
     'grids.js',
     'highlighter-settings.js',
-    'index.js',
 )

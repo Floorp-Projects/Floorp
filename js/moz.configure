@@ -145,8 +145,11 @@ add_old_configure_assignment('MOZ_PROFILING', profiling)
 
 @depends(profiling, target)
 def imply_vtune(value, target):
-    if value and (target.kernel == 'WINNT' or (target.kernel == 'Linux' and
-                                               target.os == 'GNU')):
+    ok_cpu    = target.cpu in ['x86', 'x86_64']
+    ok_kernel = target.kernel == 'WINNT' or \
+                (target.kernel == 'Linux' and target.os == 'GNU')
+
+    if value and ok_cpu and ok_kernel:
         return True
 
 set_config('MOZ_PROFILING', profiling)
@@ -154,7 +157,7 @@ set_define('MOZ_PROFILING', profiling)
 imply_option('--enable-vtune', imply_vtune, reason='--enable-profiling')
 
 
-js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable vtune profiling')
+js_option('--enable-vtune', env='MOZ_VTUNE', help='Enable VTune profiling')
 
 @depends('--enable-vtune')
 def vtune(value):

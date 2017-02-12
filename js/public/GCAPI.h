@@ -697,7 +697,7 @@ ExposeScriptToActiveJS(JSScript* script)
 static MOZ_ALWAYS_INLINE void
 MarkStringAsLive(Zone* zone, JSString* string)
 {
-    JSRuntime* rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromMainThread();
+    JSRuntime* rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromActiveCooperatingThread();
     js::gc::MarkGCThingAsLive(rt, GCCellPtr(string));
 }
 

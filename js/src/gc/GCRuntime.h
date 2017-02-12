@@ -72,8 +72,8 @@ class ChunkPool
     };
 };
 
-// Performs extra allocation off the main thread so that when memory is
-// required on the main thread it will already be available and waiting.
+// Performs extra allocation off thread so that when memory is required on the
+// active thread it will already be available and waiting.
 class BackgroundAllocTask : public GCParallelTask
 {
     // Guarded by the GC lock.
@@ -867,9 +867,9 @@ class GCRuntime
     static void checkIncrementalZoneState(JSContext* cx, T* t);
     static TenuredCell* refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind,
                                                     size_t thingSize);
-    static TenuredCell* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind,
-                                                     size_t thingSize);
-    static TenuredCell* refillFreeListOffMainThread(JSContext* cx, AllocKind thingKind);
+    static TenuredCell* refillFreeListFromActiveCooperatingThread(JSContext* cx, AllocKind thingKind,
+                                                                  size_t thingSize);
+    static TenuredCell* refillFreeListFromHelperThread(JSContext* cx, AllocKind thingKind);
 
     /*
      * Return the list of chunks that can be released outside the GC lock.
@@ -980,8 +980,9 @@ class GCRuntime
   public:
     JSRuntime* const rt;
 
-    /* Embedders can use this zone however they wish. */
+    /* Embedders can use this zone and group however they wish. */
     UnprotectedData<JS::Zone*> systemZone;
+    UnprotectedData<ZoneGroup*> systemZoneGroup;
 
     // List of all zone groups (protected by the GC lock).
     ActiveThreadOrGCTaskData<ZoneGroupVector> groups;
@@ -1275,7 +1276,7 @@ class GCRuntime
     ActiveThreadData<bool> arenasEmptyAtShutdown;
 #endif
 
-    /* Synchronize GC heap access among GC helper threads and main threads. */
+    /* Synchronize GC heap access among GC helper threads and active threads. */
     friend class js::AutoLockGC;
     js::Mutex lock;
 

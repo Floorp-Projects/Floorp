@@ -2389,7 +2389,7 @@ class MethodDefiner(PropertyDefiner):
                 "methodInfo": False,
                 "selfHostedName": "ArrayValues",
                 "length": 0,
-                "flags": "JSPROP_ENUMERATE",
+                "flags": "0", # Not enumerable, per spec.
                 "condition": MemberCondition()
             })
 
@@ -3073,25 +3073,28 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                                    symbolJSID=symbolJSID))
                     defineFn = "JS_DefinePropertyById"
                     prop = "iteratorId"
+                    enumFlags = "0" # Not enumerable, per spec.
                 elif alias.startswith("@@"):
                     raise TypeError("Can't handle any well-known Symbol other than @@iterator")
                 else:
                     getSymbolJSID = None
                     defineFn = "JS_DefineProperty"
                     prop = '"%s"' % alias
-                return CGList([
-                    getSymbolJSID,
                     # XXX If we ever create non-enumerable properties that can
                     #     be aliased, we should consider making the aliases
                     #     match the enumerability of the property being aliased.
+                    enumFlags = "JSPROP_ENUMERATE"
+                return CGList([
+                    getSymbolJSID,
                     CGGeneric(fill(
                         """
-                        if (!${defineFn}(aCx, proto, ${prop}, aliasedVal, JSPROP_ENUMERATE)) {
+                        if (!${defineFn}(aCx, proto, ${prop}, aliasedVal, ${enumFlags})) {
                           $*{failureCode}
                         }
                         """,
                         defineFn=defineFn,
                         prop=prop,
+                        enumFlags=enumFlags,
                         failureCode=failureCode))
                 ], "\n")
 

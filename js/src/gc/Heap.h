@@ -32,19 +32,13 @@
 
 struct JSRuntime;
 
-namespace JS {
-namespace shadow {
-struct Runtime;
-} // namespace shadow
-} // namespace JS
-
 namespace js {
 
 class AutoLockGC;
 class FreeOp;
 
 extern bool
-RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone);
+RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone);
 
 #ifdef DEBUG
 
@@ -256,13 +250,11 @@ struct Cell
     MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
     MOZ_ALWAYS_INLINE TenuredCell& asTenured();
 
-    inline JSRuntime* runtimeFromMainThread() const;
-    inline JS::shadow::Runtime* shadowRuntimeFromMainThread() const;
+    inline JSRuntime* runtimeFromActiveCooperatingThread() const;
 
     // Note: Unrestricted access to the runtime of a GC thing from an arbitrary
     // thread can easily lead to races. Use this method very carefully.
     inline JSRuntime* runtimeFromAnyThread() const;
-    inline JS::shadow::Runtime* shadowRuntimeFromAnyThread() const;
 
     // May be overridden by GC thing kinds that have a compartment pointer.
     inline JSCompartment* maybeCompartment() const { return nullptr; }
@@ -1070,7 +1062,7 @@ class HeapUsage
      * The approximate number of bytes in use on the GC heap, to the nearest
      * ArenaSize. This does not include any malloc data. It also does not
      * include not-actively-used addresses that are still reserved at the OS
-     * level for GC usage. It is atomic because it is updated by both the main
+     * level for GC usage. It is atomic because it is updated by both the active
      * and GC helper threads.
      */
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes_;
@@ -1141,29 +1133,17 @@ Cell::asTenured()
 }
 
 inline JSRuntime*
-Cell::runtimeFromMainThread() const
+Cell::runtimeFromActiveCooperatingThread() const
 {
     JSRuntime* rt = chunk()->trailer.runtime;
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     return rt;
 }
 
-inline JS::shadow::Runtime*
-Cell::shadowRuntimeFromMainThread() const
-{
-    return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromMainThread());
-}
-
 inline JSRuntime*
 Cell::runtimeFromAnyThread() const
 {
     return chunk()->trailer.runtime;
-}
-
-inline JS::shadow::Runtime*
-Cell::shadowRuntimeFromAnyThread() const
-{
-    return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread());
 }
 
 inline uintptr_t
@@ -1305,22 +1285,22 @@ TenuredCell::readBarrier(TenuredCell* thing)
     // at the moment this can happen e.g. when rekeying tables containing
     // read-barriered GC things after a moving GC.
     //
-    // TODO: Fix this and assert we're not collecting if we're on the main
+    // TODO: Fix this and assert we're not collecting if we're on the active
     // thread.
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
-        // Barriers are only enabled on the main thread and are disabled while collecting.
-        MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+        // Barriers are only enabled on the active thread and are disabled while collecting.
+        MOZ_ASSERT(!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone));
         Cell* tmp = thing;
         TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "read barrier");
         MOZ_ASSERT(tmp == thing);
     }
 
     if (thing->isMarked(GRAY)) {
-        // There shouldn't be anything marked grey unless we're on the main thread.
+        // There shouldn't be anything marked grey unless we're on the active thread.
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
-        if (!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone))
+        if (!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone))
             UnmarkGrayCellRecursively(thing, thing->getTraceKind());
     }
 }
@@ -1340,10 +1320,10 @@ TenuredCell::writeBarrierPre(TenuredCell* thing)
     // those on the Atoms Zone. Normally, we never enter a parse task when
     // collecting in the atoms zone, so will filter out atoms below.
     // Unfortuantely, If we try that when verifying pre-barriers, we'd never be
-    // able to handle OMT parse tasks at all as we switch on the verifier any
-    // time we're not doing GC. This would cause us to deadlock, as OMT parsing
+    // able to handle off thread parse tasks at all as we switch on the verifier any
+    // time we're not doing GC. This would cause us to deadlock, as off thread parsing
     // is meant to resume after GC work completes. Instead we filter out any
-    // OMT barriers that reach us and assert that they would normally not be
+    // off thread barriers that reach us and assert that they would normally not be
     // possible.
     if (!CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread())) {
         AssertSafeToSkipBarrier(thing);
@@ -1353,7 +1333,7 @@ TenuredCell::writeBarrierPre(TenuredCell* thing)
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
-        MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
+        MOZ_ASSERT(!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone));
         Cell* tmp = thing;
         TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "pre barrier");
         MOZ_ASSERT(tmp == thing);

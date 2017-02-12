@@ -70,6 +70,7 @@ let context;
 function generateAPIs(extraWrapper, apiObj) {
   context = new StubContext();
   let localWrapper = {
+    cloneScope: global,
     shouldInject() {
       return true;
     },
