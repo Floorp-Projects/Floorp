@@ -1334,11 +1334,12 @@ CanDrawFont(ScaledFont* aFont)
 }
 
 void
-DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
-                           const GlyphBuffer &aBuffer,
-                           const Pattern &aPattern,
-                           const DrawOptions &aOptions,
-                           const GlyphRenderingOptions *aRenderingOptions)
+DrawTargetSkia::DrawGlyphs(ScaledFont* aFont,
+                           const GlyphBuffer& aBuffer,
+                           const Pattern& aPattern,
+                           const StrokeOptions* aStrokeOptions,
+                           const DrawOptions& aOptions,
+                           const GlyphRenderingOptions* aRenderingOptions)
 {
   if (!CanDrawFont(aFont)) {
     return;
@@ -1347,7 +1348,8 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   MarkChanged();
 
 #ifdef MOZ_WIDGET_COCOA
-  if (ShouldUseCGToFillGlyphs(aRenderingOptions, aPattern)) {
+  if (!aStrokeOptions &&
+      ShouldUseCGToFillGlyphs(aRenderingOptions, aPattern)) {
     if (FillGlyphsWithCG(aFont, aBuffer, aPattern, aOptions, aRenderingOptions)) {
       return;
     }
@@ -1361,6 +1363,11 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   }
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
+  if (aStrokeOptions &&
+      !StrokeOptionsToPaint(paint.mPaint, *aStrokeOptions)) {
+    return;
+  }
+
   AntialiasMode aaMode = aFont->GetDefaultAAMode();
   if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
     aaMode = aOptions.mAntialiasMode;
@@ -1446,6 +1453,27 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   }
 
   mCanvas->drawPosText(&indices.front(), aBuffer.mNumGlyphs*2, &offsets.front(), paint.mPaint);
+}
+
+void
+DrawTargetSkia::FillGlyphs(ScaledFont* aFont,
+                           const GlyphBuffer& aBuffer,
+                           const Pattern& aPattern,
+                           const DrawOptions& aOptions,
+                           const GlyphRenderingOptions* aRenderingOptions)
+{
+  DrawGlyphs(aFont, aBuffer, aPattern, nullptr, aOptions, aRenderingOptions);
+}
+
+void
+DrawTargetSkia::StrokeGlyphs(ScaledFont* aFont,
+                             const GlyphBuffer& aBuffer,
+                             const Pattern& aPattern,
+                             const StrokeOptions& aStrokeOptions,
+                             const DrawOptions& aOptions,
+                             const GlyphRenderingOptions* aRenderingOptions)
+{
+  DrawGlyphs(aFont, aBuffer, aPattern, &aStrokeOptions, aOptions, aRenderingOptions);
 }
 
 void
