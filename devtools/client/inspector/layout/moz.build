@@ -13,6 +13,5 @@ DIRS += [
 
 DevToolsModules(
     'layout.js',
-    'store.js',
     'types.js',
 )

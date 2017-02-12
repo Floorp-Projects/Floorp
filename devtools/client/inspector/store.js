@@ -6,7 +6,7 @@
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("./reducers/index");
+const reducers = require("devtools/client/inspector/reducers");
 const flags = require("devtools/shared/flags");
 
 module.exports = function () {

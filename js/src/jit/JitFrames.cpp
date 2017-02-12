@@ -2760,7 +2760,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 
     JSRuntime* rt = TlsContext.get()->runtime();
 
-    // Don't verify on non-main-thread.
+    // Don't verify while off thread.
     if (!CurrentThreadCanAccessRuntime(rt))
         return true;
 
