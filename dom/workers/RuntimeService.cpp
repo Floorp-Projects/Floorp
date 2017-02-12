@@ -2767,16 +2767,6 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
   }
 }
 
-void
-RuntimeService::JSVersionChanged(const char* /* aPrefName */, void* /* aClosure */)
-{
-  AssertIsOnMainThread();
-
-  bool useLatest = Preferences::GetBool("dom.workers.latestJSVersion", false);
-  JS::CompartmentOptions& options = sDefaultJSSettings.content.compartmentOptions;
-  options.behaviors().setVersion(useLatest ? JSVERSION_LATEST : JSVERSION_DEFAULT);
-}
-
 bool
 LogViolationDetailsRunnable::MainThreadRun()
 {
