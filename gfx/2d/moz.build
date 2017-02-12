@@ -123,6 +123,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'FilterProcessingSSE2.cpp',
         'ImageScalingSSE2.cpp',
         'ssse3-scaler.c',
+        'SwizzleSSE2.cpp',
     ]
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES += [
@@ -134,6 +135,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['SwizzleSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ssse3-scaler.c'].flags += CONFIG['SSSE3_FLAGS']
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
