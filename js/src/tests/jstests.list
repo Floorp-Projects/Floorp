@@ -165,12 +165,6 @@ skip script test262/language/expressions/assignment/fn-name-lhs-member.js
 skip script test262/language/expressions/function/name.js
 skip script test262/language/expressions/generators/name.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317376
-skip script test262/built-ins/Promise/prototype/then/resolve-pending-fulfilled-self.js
-skip script test262/built-ins/Promise/prototype/then/resolve-pending-rejected-self.js
-skip script test262/built-ins/Promise/prototype/then/resolve-settled-fulfilled-self.js
-skip script test262/built-ins/Promise/prototype/then/resolve-settled-rejected-self.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317422
 skip script test262/built-ins/global/property-descriptor.js
 skip script test262/built-ins/global/global-object.js
@@ -433,9 +427,6 @@ skip script test262/built-ins/RegExp/prototype/exec/success-lastindex-no-access.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1329187
-skip script test262/built-ins/ArrayBuffer/data-allocation-after-object-creation.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317394
 skip script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
 skip script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
@@ -446,9 +437,6 @@ skip script test262/built-ins/DataView/excessive-byteoffset-throws.js
 skip script test262/built-ins/DataView/excessive-bytelength-throws.js
 skip script test262/built-ins/DataView/negative-byteoffset-throws.js
 skip script test262/built-ins/DataView/negative-bytelength-throws.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1326503
-skip script test262/built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317391
 skip script test262/language/statements/class/subclass/class-definition-null-proto-missing-return-override.js
@@ -461,148 +449,6 @@ skip script test262/language/expressions/tagged-template/cache-differing-express
 skip script test262/language/expressions/tagged-template/cache-identical-source.js
 skip script test262/language/expressions/tagged-template/cache-identical-source-new-function.js
 skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317375
-skip script test262/language/expressions/tagged-template/invalid-escape-sequences.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1147371
-skip script test262/language/expressions/arrow-function/dstr-ary-init-iter-close.js
-skip script test262/language/expressions/arrow-function/dstr-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-nrml-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-rtrn-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-thrw-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-iter-thrw-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-elision-iter-nrml-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-nrml-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-thrw-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elem-trlg-iter-rest-thrw-close.js
-skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-elision-iter-nrml-close.js
-skip script test262/language/expressions/assignment/dstr-array-empty-iter-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-empty-iter-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-empty-iter-close.js
-skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close-null.js
-skip script test262/language/expressions/assignment/dstr-array-rest-iter-rtrn-close.js
-skip script test262/language/expressions/assignment/dstr-array-rest-iter-thrw-close-err.js
-skip script test262/language/expressions/assignment/dstr-array-rest-iter-thrw-close.js
-skip script test262/language/expressions/assignment/dstr-array-rest-lref-err.js
-skip script test262/language/expressions/class/dstr-gen-meth-ary-init-iter-close.js    
-skip script test262/language/expressions/class/dstr-gen-meth-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-gen-meth-static-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-gen-meth-static-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-meth-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-meth-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-meth-static-ary-init-iter-close.js
-skip script test262/language/expressions/class/dstr-meth-static-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/function/dstr-ary-init-iter-close.js
-skip script test262/language/expressions/function/dstr-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/generators/dstr-ary-init-iter-close.js
-skip script test262/language/expressions/generators/dstr-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/object/dstr-gen-meth-ary-init-iter-close.js
-skip script test262/language/expressions/object/dstr-gen-meth-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/object/dstr-meth-ary-init-iter-close.js
-skip script test262/language/expressions/object/dstr-meth-dflt-ary-init-iter-close.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-done-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-done-no-value.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-value-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-res-value-final.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-call-non-obj.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-get-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-rtrn-rtrn-invoke.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-thrw-call-non-obj.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-no-rtrn.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-call-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-call-non-obj.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-get-err.js
-skip script test262/language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-invoke.js
-skip script test262/language/statements/class/dstr-gen-meth-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-gen-meth-dflt-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-gen-meth-static-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-gen-meth-static-dflt-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-meth-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-meth-dflt-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-meth-static-ary-init-iter-close.js
-skip script test262/language/statements/class/dstr-meth-static-dflt-ary-init-iter-close.js
-skip script test262/language/statements/const/dstr-ary-init-iter-close.js
-skip script test262/language/statements/for/dstr-const-ary-init-iter-close.js
-skip script test262/language/statements/for/dstr-let-ary-init-iter-close.js
-skip script test262/language/statements/for/dstr-var-ary-init-iter-close.js
-skip script test262/language/statements/for-of/body-dstr-assign-error.js
-skip script test262/language/statements/for-of/body-put-error.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-nrml-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-rtrn-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-thrw-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-iter-thrw-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-elision-iter-nrml-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-nrml-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-thrw-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elem-trlg-iter-rest-thrw-close.js
-skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close-err.js
-skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close-null.js
-skip script test262/language/statements/for-of/dstr-array-elision-iter-nrml-close.js
-skip script test262/language/statements/for-of/dstr-array-empty-iter-close-err.js
-skip script test262/language/statements/for-of/dstr-array-empty-iter-close-null.js
-skip script test262/language/statements/for-of/dstr-array-empty-iter-close.js
-skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close-err.js
-skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close-null.js
-skip script test262/language/statements/for-of/dstr-array-rest-iter-rtrn-close.js
-skip script test262/language/statements/for-of/dstr-array-rest-iter-thrw-close-err.js
-skip script test262/language/statements/for-of/dstr-array-rest-iter-thrw-close.js
-skip script test262/language/statements/for-of/dstr-array-rest-lref-err.js
-skip script test262/language/statements/for-of/dstr-const-ary-init-iter-close.js
-skip script test262/language/statements/for-of/dstr-let-ary-init-iter-close.js
-skip script test262/language/statements/for-of/dstr-var-ary-init-iter-close.js
-skip script test262/language/statements/for-of/generator-close-via-break.js
-skip script test262/language/statements/for-of/generator-close-via-return.js
-skip script test262/language/statements/for-of/generator-close-via-throw.js
-skip script test262/language/statements/for-of/iterator-close-get-method-error.js
-skip script test262/language/statements/for-of/iterator-close-non-object.js
-skip script test262/language/statements/for-of/iterator-close-via-break.js
-skip script test262/language/statements/for-of/iterator-close-via-return.js
-skip script test262/language/statements/for-of/iterator-close-via-throw.js
-skip script test262/language/statements/function/dstr-ary-init-iter-close.js
-skip script test262/language/statements/function/dstr-dflt-ary-init-iter-close.js
-skip script test262/language/statements/generators/dstr-ary-init-iter-close.js
-skip script test262/language/statements/generators/dstr-dflt-ary-init-iter-close.js
-skip script test262/language/statements/let/dstr-ary-init-iter-close.js
-skip script test262/language/statements/try/dstr-ary-init-iter-close.js
-skip script test262/language/statements/variable/dstr-ary-init-iter-close.js
 
 # We're still waiting for a final decision on https://github.com/tc39/ecma402/pull/84.
 skip script test262/intl402/Collator/10.1.1_1.js
@@ -693,16 +539,6 @@ skip script test262/built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js
 skip script test262/built-ins/String/prototype/toLowerCase/special_casing.js
 skip script test262/built-ins/String/prototype/toLowerCase/special_casing_conditional.js
 skip script test262/built-ins/String/prototype/toUpperCase/special_casing.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317374
-skip script test262/annexB/language/function-code/if-decl-no-else-func-skip-param.js
-skip script test262/annexB/language/function-code/switch-case-func-skip-param.js
-skip script test262/annexB/language/function-code/switch-dflt-func-skip-param.js
-skip script test262/annexB/language/function-code/block-decl-func-skip-param.js
-skip script test262/annexB/language/function-code/if-decl-else-stmt-func-skip-param.js
-skip script test262/annexB/language/function-code/if-decl-else-decl-a-func-skip-param.js
-skip script test262/annexB/language/function-code/if-decl-else-decl-b-func-skip-param.js
-skip script test262/annexB/language/function-code/if-stmt-else-decl-func-skip-param.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317373
 skip script test262/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-exsting-global-init.js
