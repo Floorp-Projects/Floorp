@@ -12,10 +12,12 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let RequestListContextMenu = windowRequire(
+    "devtools/client/netmonitor/components/request-list-context-menu");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   // Execute one POST request on the page and wait till its done.
   let wait = waitForNetworkEvents(monitor, 0, 1);
@@ -25,7 +27,8 @@ add_task(function* () {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let jsonString = yield RequestsMenu.contextMenu.copyAllAsHar();
+  let contextMenu = new RequestListContextMenu({});
+  let jsonString = yield contextMenu.copyAllAsHar();
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.

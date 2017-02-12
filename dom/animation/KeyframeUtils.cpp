@@ -1487,7 +1487,9 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     size_t i = 0;
 
     for (const nsString& stringValue : pair.mValues) {
-      double offset = i++ / double(n);
+      // For single-valued lists, the single value should be added to a
+      // keyframe with offset 1.
+      double offset = n ? i++ / double(n) : 1;
       Keyframe* keyframe = processedKeyframes.LookupOrAdd(offset);
       if (keyframe->mPropertyValues.IsEmpty()) {
         keyframe->mTimingFunction = easing;

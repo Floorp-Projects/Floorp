@@ -3,7 +3,7 @@
 
 /*---
 description: Object.getOwnPropertyDescriptors does not see inherited properties.
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 ---*/
 
@@ -41,3 +41,5 @@ assert.sameValue(
   2,
   'result has same number of own property names as f'
 );
+
+reportCompare(0, 0);

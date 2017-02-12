@@ -16,8 +16,12 @@ function* throttleUploadTest(actuallyThrottle) {
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
-  let { NetMonitorController, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let RequestListContextMenu = windowRequire(
+    "devtools/client/netmonitor/components/request-list-context-menu");
+
+  gStore.dispatch(Actions.batchEnable(false));
 
   const size = 4096;
   const uploadSize = actuallyThrottle ? size / 3 : 0;
@@ -35,13 +39,11 @@ function* throttleUploadTest(actuallyThrottle) {
   let client = NetMonitorController.webConsoleClient;
 
   info("sending throttle request");
-  let deferred = promise.defer();
-  client.setPreferences(request, response => {
-    deferred.resolve(response);
+  yield new Promise((resolve) => {
+    client.setPreferences(request, response => {
+      resolve(response);
+    });
   });
-  yield deferred.promise;
-
-  RequestsMenu.lazyUpdate = false;
 
   // Execute one POST request on the page and wait till its done.
   let wait = waitForNetworkEvents(monitor, 0, 1);
@@ -51,7 +53,8 @@ function* throttleUploadTest(actuallyThrottle) {
   yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
-  let jsonString = yield RequestsMenu.contextMenu.copyAllAsHar();
+  let contextMenu = new RequestListContextMenu({});
+  let jsonString = yield contextMenu.copyAllAsHar();
   let har = JSON.parse(jsonString);
 
   // Check out the HAR log.

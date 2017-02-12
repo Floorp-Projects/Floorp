@@ -1,0 +1,18 @@
+[package]
+name = "encoding-index-korean"
+version = "1.20141219.5"
+authors = ["Kang Seonghoon <public+rust@mearie.org>"]
+
+description = "Index tables for Korean character encodings"
+homepage = "https://github.com/lifthrasiir/rust-encoding"
+readme = "../../../README.md"
+license = "CC0-1.0"
+
+[lib]
+name = "encoding_index_korean"
+path = "lib.rs"
+
+[dependencies.encoding_index_tests]
+# TODO consider using dev-dependencies instead (Cargo issue #860)
+version = "0.1.4"
+path = "../tests"

@@ -64,6 +64,7 @@ VRDisplayEvent::Constructor(mozilla::dom::EventTarget* aOwner,
   if (aEventInitDict.mReason.WasPassed()) {
     e->mReason = Some(aEventInitDict.mReason.Value());
   }
+  e->mDisplay = aEventInitDict.mDisplay;
   e->SetTrusted(trusted);
   e->SetComposed(aEventInitDict.mComposed);
   return e.forget();

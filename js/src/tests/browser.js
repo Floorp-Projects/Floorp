@@ -12,6 +12,188 @@
 //       better modularity/resilience against tests that must do particularly
 //       bizarre things that might break the harness.
 
+(function initializeUtilityExports(global, parent) {
+  /**********************************************************************
+   * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
+   **********************************************************************/
+
+  var Error = global.Error;
+  var String = global.String;
+  var GlobalEval = global.eval;
+  var ReflectApply = global.Reflect.apply;
+  var FunctionToString = global.Function.prototype.toString;
+  var ObjectDefineProperty = global.Object.defineProperty;
+
+  // BEWARE: ObjectGetOwnPropertyDescriptor is only safe to use if its result
+  //         is inspected using own-property-examining functionality.  Directly
+  //         accessing properties on a returned descriptor without first
+  //         verifying the property's existence can invoke user-modifiable
+  //         behavior.
+  var ObjectGetOwnPropertyDescriptor = global.Object.getOwnPropertyDescriptor;
+
+  var Worker = global.Worker;
+  var Blob = global.Blob;
+  var URL = global.URL;
+
+  var document = global.document;
+  var documentDocumentElement = global.document.documentElement;
+  var DocumentCreateElement = global.document.createElement;
+
+  var EventTargetPrototypeAddEventListener = global.EventTarget.prototype.addEventListener;
+  var HTMLElementPrototypeStyleSetter =
+    ObjectGetOwnPropertyDescriptor(global.HTMLElement.prototype, "style").set;
+  var HTMLIFramePrototypeContentWindowGetter =
+    ObjectGetOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
+  var HTMLScriptElementTextSetter =
+    ObjectGetOwnPropertyDescriptor(global.HTMLScriptElement.prototype, "text").set;
+  var NodePrototypeAppendChild = global.Node.prototype.appendChild;
+  var NodePrototypeRemoveChild = global.Node.prototype.removeChild;
+  var {get: WindowOnErrorGetter, set: WindowOnErrorSetter} =
+    ObjectGetOwnPropertyDescriptor(global, "onerror");
+  var WorkerPrototypePostMessage = Worker.prototype.postMessage;
+  var URLCreateObjectURL = URL.createObjectURL;
+
+  // List of saved window.onerror handlers.
+  var savedGlobalOnError = [];
+
+  // Set |newOnError| as the current window.onerror handler.
+  function setGlobalOnError(newOnError) {
+    var currentOnError = ReflectApply(WindowOnErrorGetter, global, []);
+    ArrayPush(savedGlobalOnError, currentOnError);
+    ReflectApply(WindowOnErrorSetter, global, [newOnError]);
+  }
+
+  // Restore the previous window.onerror handler.
+  function restoreGlobalOnError() {
+    var previousOnError = ArrayPop(savedGlobalOnError);
+    ReflectApply(WindowOnErrorSetter, global, [previousOnError]);
+  }
+
+  /****************************
+   * GENERAL HELPER FUNCTIONS *
+   ****************************/
+
+  function ArrayPush(array, value) {
+    ReflectApply(ObjectDefineProperty, null, [
+      array, array.length,
+      {__proto__: null, value, writable: true, enumerable: true, configurable: true}
+    ]);
+  }
+
+  function ArrayPop(array) {
+    if (array.length) {
+      var item = array[array.length - 1];
+      array.length -= 1;
+      return item;
+    }
+  }
+
+  function AppendChild(elt, kid) {
+    ReflectApply(NodePrototypeAppendChild, elt, [kid]);
+  }
+
+  function CreateElement(name) {
+    return ReflectApply(DocumentCreateElement, document, [name]);
+  }
+
+  function RemoveChild(elt, kid) {
+    ReflectApply(NodePrototypeRemoveChild, elt, [kid]);
+  }
+
+  function CreateWorker(script) {
+    var blob = new Blob([script], {__proto__: null, type: "text/javascript"});
+    return new Worker(URLCreateObjectURL(blob));
+  }
+
+  /****************************
+   * UTILITY FUNCTION EXPORTS *
+   ****************************/
+
+  var evaluate = global.evaluate;
+  if (typeof evaluate !== "function") {
+    // Shim in "evaluate".
+    evaluate = function evaluate(code) {
+      if (typeof code !== "string")
+        throw Error("Expected string argument for evaluate()");
+
+      return GlobalEval(code);
+    };
+
+    global.evaluate = evaluate;
+  }
+
+  var evaluateScript = global.evaluateScript;
+  if (typeof evaluateScript !== "function") {
+    evaluateScript = function evaluateScript(code) {
+      code = String(code);
+      var script = CreateElement("script");
+
+      // Temporarily install a new onerror handler to catch script errors.
+      var hasUncaughtError = false;
+      var uncaughtError;
+      var eventOptions = {__proto__: null, once: true};
+      ReflectApply(EventTargetPrototypeAddEventListener, script, [
+        "beforescriptexecute", function() {
+          setGlobalOnError(function(messageOrEvent, source, lineno, colno, error) {
+            hasUncaughtError = true;
+            uncaughtError = error;
+            return true;
+          });
+        }, eventOptions
+      ]);
+      ReflectApply(EventTargetPrototypeAddEventListener, script, [
+        "afterscriptexecute", function() {
+          restoreGlobalOnError();
+        }, eventOptions
+      ]);
+
+      ReflectApply(HTMLScriptElementTextSetter, script, [code]);
+      AppendChild(documentDocumentElement, script);
+      RemoveChild(documentDocumentElement, script);
+
+      if (hasUncaughtError)
+        throw uncaughtError;
+    };
+
+    global.evaluateScript = evaluateScript;
+  }
+
+  var newGlobal = global.newGlobal;
+  if (typeof newGlobal !== "function") {
+    // Reuse the parent's newGlobal to ensure iframes can be added to the DOM.
+    newGlobal = parent ? parent.newGlobal : function newGlobal() {
+      var iframe = CreateElement("iframe");
+      AppendChild(documentDocumentElement, iframe);
+      var win =
+        ReflectApply(HTMLIFramePrototypeContentWindowGetter, iframe, []);
+
+      // Removing the iframe breaks evaluateScript() and detachArrayBuffer().
+      ReflectApply(HTMLElementPrototypeStyleSetter, iframe, ["display:none"]);
+
+      // Create utility functions in the new global object.
+      var initFunction = ReflectApply(FunctionToString, initializeUtilityExports, []);
+      win.Function("parent", initFunction + "; initializeUtilityExports(this, parent);")(global);
+
+      return win;
+    };
+
+    global.newGlobal = newGlobal;
+  }
+
+  var detachArrayBuffer = global.detachArrayBuffer;
+  if (typeof detachArrayBuffer !== "function") {
+    var worker = null;
+    detachArrayBuffer = function detachArrayBuffer(arrayBuffer) {
+      if (worker === null) {
+        worker = CreateWorker("/* black hole */");
+      }
+      ReflectApply(WorkerPrototypePostMessage, worker, ["detach", [arrayBuffer]]);
+    };
+
+    global.detachArrayBuffer = detachArrayBuffer;
+  }
+})(this);
+
 (function(global) {
   /**********************************************************************
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
@@ -26,18 +208,14 @@
   //         behavior.
   var ObjectGetOwnPropertyDescriptor = global.Object.getOwnPropertyDescriptor;
 
+  var String = global.String;
+
   var document = global.document;
-  var documentBody = global.document.body;
-  var documentDocumentElement = global.document.documentElement;
   var DocumentCreateElement = global.document.createElement;
-  var ElementInnerHTMLSetter =
-    ObjectGetOwnPropertyDescriptor(global.Element.prototype, "innerHTML").set;
-  var HTMLIFramePrototypeContentWindowGetter =
-    ObjectGetOwnPropertyDescriptor(global.HTMLIFrameElement.prototype, "contentWindow").get;
-  var HTMLIFramePrototypeRemove = global.HTMLIFrameElement.prototype.remove;
   var NodePrototypeAppendChild = global.Node.prototype.appendChild;
   var NodePrototypeTextContentSetter =
     ObjectGetOwnPropertyDescriptor(global.Node.prototype, "textContent").set;
+  var HTMLElementPrototypeSetAttribute = global.Element.prototype.setAttribute;
 
   // Cached DOM nodes used by the test harness itself.  (We assume the test
   // doesn't misbehave in a way that actively interferes with what the test
@@ -65,26 +243,6 @@
 
   function SetTextContent(element, text) {
     ReflectApply(NodePrototypeTextContentSetter, element, [text]);
-  }
-
-  /****************************
-   * UTILITY FUNCTION EXPORTS *
-   ****************************/
-
-  var newGlobal = global.newGlobal;
-  if (typeof newGlobal !== "function") {
-    newGlobal = function newGlobal() {
-      var iframe = CreateElement("iframe");
-      AppendChild(documentDocumentElement, iframe);
-      var win =
-        ReflectApply(HTMLIFramePrototypeContentWindowGetter, iframe, []);
-      ReflectApply(HTMLIFramePrototypeRemove, iframe, []);
-
-      // Shim in "evaluate"
-      win.evaluate = win.eval;
-      return win;
-    };
-    global.newGlobal = newGlobal;
   }
 
   // This function is *only* used by shell.js's for-browsers |print()| function!

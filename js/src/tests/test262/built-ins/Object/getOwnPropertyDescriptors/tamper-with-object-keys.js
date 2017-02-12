@@ -4,7 +4,7 @@
 /*---
 description: >
     Object.getOwnPropertyDescriptors should not have its behavior impacted by modifications to Object.getOwnPropertyDescriptor
-esid: pending
+esid: sec-object.getownpropertydescriptors
 author: Jordan Harband
 ---*/
 
@@ -20,3 +20,5 @@ assert.sameValue(
 );
 
 assert.sameValue(Object.keys(Object.getOwnPropertyDescriptors({ a: 1 })).length, 1, 'Expected object with 1 key to have 1 descriptor');
+
+reportCompare(0, 0);

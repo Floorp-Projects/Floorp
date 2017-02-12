@@ -13,8 +13,8 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  ok(monitor.panelWin.Prefs,
-    "Should have a preferences object available on the panel window.");
+  let { windowRequire } = monitor.panelWin;
+  let { Prefs } = windowRequire("devtools/client/netmonitor/prefs");
 
   testL10N();
   testPrefs();
@@ -29,8 +29,6 @@ add_task(function* () {
   }
 
   function testPrefs() {
-    let { Prefs } = monitor.panelWin;
-
     is(Prefs.networkDetailsWidth,
       Services.prefs.getIntPref("devtools.netmonitor.panes-network-details-width"),
       "Getting a pref should work correctly.");

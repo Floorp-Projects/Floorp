@@ -1,0 +1,38 @@
+language: rust
+sudo: false
+
+rust:
+- 1.9.0
+- stable
+- beta
+- nightly
+
+before_script:
+- |
+  pip install 'travis-cargo<0.2' --user &&
+  export PATH=$HOME/.local/bin:$PATH
+
+script:
+- cd core;
+- travis-cargo build;
+- cd ..;
+- travis-cargo build
+- travis-cargo test
+- travis-cargo doc -- --no-deps -p parking_lot -p parking_lot_core
+- if [ "$TRAVIS_RUST_VERSION" != "1.8.0" ]; then
+      cd benchmark;
+      travis-cargo build;
+      travis-cargo run -- --release --bin mutex 2 1 0 1;
+      travis-cargo run -- --release --bin rwlock 1 1 1 0 1;
+      cd ..;
+  fi
+
+after_success:
+- travis-cargo --only nightly doc-upload
+
+env:
+  global:
+  - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
+
+notifications:
+  email: false

@@ -1,0 +1,27 @@
+[package]
+name = "serde_json"
+version = "0.9.5"
+authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "A JSON serialization file format"
+repository = "https://github.com/serde-rs/json"
+documentation = "http://docs.serde.rs/serde_json/"
+readme = "../README.md"
+keywords = ["json", "serde", "serialization"]
+categories = ["encoding"]
+
+[badges]
+travis-ci = { repository = "serde-rs/json" }
+
+[features]
+preserve_order = ["linked-hash-map"]
+
+[dependencies]
+serde = "0.9.4"
+num-traits = "0.1.32"
+linked-hash-map = { version = "0.3", optional = true }
+itoa = "0.3"
+dtoa = "0.4"
+
+[dev-dependencies]
+serde_derive = "0.9"

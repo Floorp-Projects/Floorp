@@ -24,3 +24,5 @@ function argumentsNonWritableThenNonConfigurableWithInterveningDefineOwnProperty
   assert.sameValue(arguments[0], 2);
 }
 argumentsNonWritableThenNonConfigurableWithInterveningDefineOwnProperty(1);
+
+reportCompare(0, 0);

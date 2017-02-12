@@ -70,6 +70,23 @@ this.CommonUtils = {
   },
 
   /**
+   * Checks elements in two arrays for equality, as determined by the `===`
+   * operator. This function does not perform a deep comparison; see Sync's
+   * `Util.deepEquals` for that.
+   */
+  arrayEqual(a, b) {
+    if (a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * Encode byte string as base64URL (RFC 4648).
    *
    * @param bytes

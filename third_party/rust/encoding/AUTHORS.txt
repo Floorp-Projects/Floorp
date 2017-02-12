@@ -1,0 +1,34 @@
+Encoding is mainly written by Kang Seonghoon <public+rust@mearie.org>,
+and also the following people (in ascending order):
+
+Aaron Weiss <aaronweiss74@gmail.com>
+Alex Crichton <alex@alexcrichton.com>
+Andrew Cann <shum@canndrew.org>
+Aneesh Agrawal <aneeshusa@gmail.com>
+Björn Steinbrink <bsteinbr@gmail.com>
+Brian Koropoff <bkoropoff@gmail.com>
+Clark Gaebel <cgaebel@mozilla.com>
+D.K <dan.kozlowski@gmail.com>
+Filipe Gonçalves <filipe@codinghighway.com>
+Florian Gilcher <florian.gilcher@asquera.de>
+Frank Denis <github@pureftpd.org>
+Jack Moffitt <jack@metajack.im>
+Jason Ozias <jason.g.ozias@gmail.com>
+Jason Ozias <jason.ozias@ipaper.com>
+Joonas Javanainen <joonas.javanainen@gmail.com>
+Joshua DeSeno <jdeseno@gmail.com>
+Keegan McAllister <kmcallister@mozilla.com>
+Ken Tossell <ken@tossell.net>
+Kyle Dewey <kyledewey@cs.ucsb.edu>
+Manish Goregaokar <manishsmail@gmail.com>
+Matt Brubeck <mbrubeck@limpet.net>
+Michael Neumann <mneumann@ntecs.de>
+Michael Sproul <micsproul@gmail.com>
+Peter Atashian <retep998@gmail.com>
+Pierre Baillet <pierre@baillet.name>
+Robert Straw <drbawb@fatalsyntax.com>
+Simon Sapin <simon.sapin@exyr.org>
+Son <leson.phung@gmail.com>
+Steve Klabnik <steve@steveklabnik.com>
+klutzy <klutzytheklutzy@gmail.com>
+Сухарик <suhr@i2pmail.org>

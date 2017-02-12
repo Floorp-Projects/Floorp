@@ -36,3 +36,5 @@ assert.throws(DummyError, function() {
   // Math.pow(1024, 5) = 1125899906842624
   Reflect.construct(ArrayBuffer, [7 * 1125899906842624], newTarget);
 });
+
+reportCompare(0, 0);

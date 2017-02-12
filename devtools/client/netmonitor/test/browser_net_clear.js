@@ -11,18 +11,20 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let detailsPane = document.querySelector("#details-pane");
   let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
   let clearButton = document.querySelector("#requests-menu-clear-button");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   // Make sure we start in a sane state
-  assertNoRequestState(RequestsMenu, detailsPanelToggleButton);
+  assertNoRequestState();
 
   // Load one request and assert it shows up in the list
-  let networkEvent = monitor.panelWin.once(monitor.panelWin.EVENTS.NETWORK_EVENT);
+  let networkEvent = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
   yield networkEvent;
 
@@ -33,14 +35,14 @@ add_task(function* () {
   assertNoRequestState();
 
   // Load a second request and make sure they still show up
-  networkEvent = monitor.panelWin.once(monitor.panelWin.EVENTS.NETWORK_EVENT);
+  networkEvent = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
   yield networkEvent;
 
   assertSingleRequestState();
 
   // Make sure we can now open the network details panel
-  EventUtils.sendMouseEvent({ type: "mousedown" }, detailsPanelToggleButton);
+  EventUtils.sendMouseEvent({ type: "click" }, detailsPanelToggleButton);
 
   ok(document.querySelector(".network-details-panel") &&
     !detailsPanelToggleButton.classList.contains("pane-collapsed"),
@@ -48,9 +50,9 @@ add_task(function* () {
 
   // Click clear and make sure the details pane closes
   EventUtils.sendMouseEvent({ type: "click" }, clearButton);
+
   assertNoRequestState();
-  ok(!document.querySelector(".network-details-panel") &&
-    detailsPanelToggleButton.classList.contains("pane-collapsed"),
+  ok(!document.querySelector(".network-details-panel"),
     "The details pane should not be visible clicking 'clear'.");
 
   return teardown(monitor);
@@ -59,7 +61,7 @@ add_task(function* () {
    * Asserts the state of the network monitor when one request has loaded
    */
   function assertSingleRequestState() {
-    is(RequestsMenu.itemCount, 1,
+    is(gStore.getState().requests.requests.size, 1,
       "The request menu should have one item at this point.");
     is(detailsPanelToggleButton.hasAttribute("disabled"), false,
       "The pane toggle button should be enabled after a request is made.");
@@ -69,7 +71,7 @@ add_task(function* () {
    * Asserts the state of the network monitor when no requests have loaded
    */
   function assertNoRequestState() {
-    is(RequestsMenu.itemCount, 0,
+    is(gStore.getState().requests.requests.size, 0,
       "The request menu should be empty at this point.");
     is(detailsPanelToggleButton.hasAttribute("disabled"), true,
       "The pane toggle button should be disabled when the request menu is cleared.");

@@ -1,4 +1,20 @@
-//! Helper module to enable serializing bytes more efficiently
+//! Wrapper types to enable optimized handling of `&[u8]` and `Vec<u8>`.
+//!
+//! Without specialization, Rust forces us to treat `&[u8]` just like any other
+//! slice and `Vec<u8>` just like any other vector. In reality this particular
+//! slice and vector can often be serialized and deserialized in a more
+//! efficient, compact representation in many formats.
+//!
+//! When working with such a format, you can opt into specialized handling of
+//! `&[u8]` by wrapping it in `bytes::Bytes` and `Vec<u8>` by wrapping it in
+//! `bytes::ByteBuf`.
+//!
+//! Rust support for specialization is being tracked in
+//! [rust-lang/rust#31844][specialization]. Once it lands in the stable compiler
+//! we will be deprecating these wrapper types in favor of optimizing `&[u8]`
+//! and `Vec<u8>` out of the box.
+//!
+//! [specialization]: https://github.com/rust-lang/rust/issues/31844
 
 use core::{ops, fmt, char, iter, slice};
 use core::fmt::Write;
@@ -6,14 +22,36 @@ use core::fmt::Write;
 use ser;
 
 #[cfg(any(feature = "std", feature = "collections"))]
-pub use self::bytebuf::{ByteBuf, ByteBufVisitor};
+pub use self::bytebuf::ByteBuf;
+
+#[cfg(any(feature = "std", feature = "collections"))]
+#[doc(hidden)] // does anybody need this?
+pub use self::bytebuf::ByteBufVisitor;
 
 #[cfg(feature = "collections")]
 use collections::Vec;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/// `Bytes` wraps a `&[u8]` in order to serialize into a byte array.
+/// Wraps a `&[u8]` in order to serialize in an efficient way. Does not support
+/// deserialization.
+///
+/// ```rust
+/// # #[macro_use] extern crate serde_derive;
+/// # extern crate serde;
+/// # use std::net::IpAddr;
+/// #
+/// use serde::bytes::Bytes;
+///
+/// # #[allow(dead_code)]
+/// #[derive(Serialize)]
+/// struct Packet<'a> {
+///     destination: IpAddr,
+///     payload: Bytes<'a>,
+/// }
+/// #
+/// # fn main() {}
+/// ```
 #[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Bytes<'a> {
     bytes: &'a [u8],
@@ -65,7 +103,7 @@ impl<'a> ops::Deref for Bytes<'a> {
 
 impl<'a> ser::Serialize for Bytes<'a> {
     #[inline]
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: ser::Serializer
     {
         serializer.serialize_bytes(self.bytes)
@@ -86,7 +124,25 @@ mod bytebuf {
     #[cfg(feature = "collections")]
     use collections::{String, Vec};
 
-    /// `ByteBuf` wraps a `Vec<u8>` and serializes as a byte array.
+    /// Wraps a `Vec<u8>` in order to serialize and deserialize in an efficient
+    /// way.
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_derive;
+    /// # extern crate serde;
+    /// # use std::net::IpAddr;
+    /// #
+    /// use serde::bytes::ByteBuf;
+    ///
+    /// # #[allow(dead_code)]
+    /// #[derive(Serialize, Deserialize)]
+    /// struct Packet {
+    ///     destination: IpAddr,
+    ///     payload: ByteBuf,
+    /// }
+    /// #
+    /// # fn main() {}
+    /// ```
     #[derive(Clone, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
     pub struct ByteBuf {
         bytes: Vec<u8>,
@@ -168,7 +224,7 @@ mod bytebuf {
     }
 
     impl ser::Serialize for ByteBuf {
-        fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where S: ser::Serializer
         {
             serializer.serialize_bytes(self)
@@ -181,15 +237,19 @@ mod bytebuf {
     impl de::Visitor for ByteBufVisitor {
         type Value = ByteBuf;
 
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("byte array")
+        }
+
         #[inline]
-        fn visit_unit<E>(&mut self) -> Result<ByteBuf, E>
+        fn visit_unit<E>(self) -> Result<ByteBuf, E>
             where E: de::Error,
         {
             Ok(ByteBuf::new())
         }
 
         #[inline]
-        fn visit_seq<V>(&mut self, mut visitor: V) -> Result<ByteBuf, V::Error>
+        fn visit_seq<V>(self, mut visitor: V) -> Result<ByteBuf, V::Error>
             where V: de::SeqVisitor,
         {
             let (len, _) = visitor.size_hint();
@@ -199,32 +259,30 @@ mod bytebuf {
                 values.push(value);
             }
 
-            try!(visitor.end());
-
             Ok(ByteBuf::from(values))
         }
 
         #[inline]
-        fn visit_bytes<E>(&mut self, v: &[u8]) -> Result<ByteBuf, E>
+        fn visit_bytes<E>(self, v: &[u8]) -> Result<ByteBuf, E>
             where E: de::Error,
         {
             Ok(ByteBuf::from(v))
         }
 
         #[inline]
-        fn visit_byte_buf<E>(&mut self, v: Vec<u8>) -> Result<ByteBuf, E>
+        fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<ByteBuf, E>
             where E: de::Error,
         {
             Ok(ByteBuf::from(v))
         }
 
-        fn visit_str<E>(&mut self, v: &str) -> Result<ByteBuf, E>
+        fn visit_str<E>(self, v: &str) -> Result<ByteBuf, E>
             where E: de::Error,
         {
             Ok(ByteBuf::from(v))
         }
 
-        fn visit_string<E>(&mut self, v: String) -> Result<ByteBuf, E>
+        fn visit_string<E>(self, v: String) -> Result<ByteBuf, E>
             where E: de::Error,
         {
             Ok(ByteBuf::from(v))
@@ -233,10 +291,10 @@ mod bytebuf {
 
     impl de::Deserialize for ByteBuf {
         #[inline]
-        fn deserialize<D>(deserializer: &mut D) -> Result<ByteBuf, D::Error>
+        fn deserialize<D>(deserializer: D) -> Result<ByteBuf, D::Error>
             where D: de::Deserializer
         {
-            deserializer.deserialize_bytes(ByteBufVisitor)
+            deserializer.deserialize_byte_buf(ByteBufVisitor)
         }
     }
 }

@@ -17,10 +17,10 @@ const TEST_CASES = [
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   for (let test of TEST_CASES) {
     info("Testing site with " + test.desc);
@@ -41,7 +41,8 @@ add_task(function* () {
     if (!document.querySelector("#security-tab[aria-selected=true]")) {
       info("Selecting security tab.");
       wait = waitForDOM(document, "#security-panel .properties-view");
-      document.querySelector("#security-tab").click();
+      EventUtils.sendMouseEvent({ type: "click" },
+        document.querySelector("#security-tab"));
       yield wait;
     }
 
@@ -49,7 +50,7 @@ add_task(function* () {
       test.warnCipher,
       "Cipher suite warning is hidden.");
 
-    RequestsMenu.clear();
+    gStore.dispatch(Actions.clearRequests());
   }
 
   return teardown(monitor);

@@ -102,7 +102,8 @@ pub fn compose(a: char, b: char) -> Option<char> {
     })
 }
 
-// Constants from Unicode 7.0.0 Section 3.12 Conjoining Jamo Behavior
+// Constants from Unicode 9.0.0 Section 3.12 Conjoining Jamo Behavior
+// http://www.unicode.org/versions/Unicode9.0.0/ch03.pdf#M9.32468.Heading.310.Combining.Jamo.Behavior
 const S_BASE: u32 = 0xAC00;
 const L_BASE: u32 = 0x1100;
 const V_BASE: u32 = 0x1161;
@@ -145,12 +146,15 @@ fn compose_hangul(a: char, b: char) -> Option<char> {
     let l = a as u32;
     let v = b as u32;
     // Compose an LPart and a VPart
-    if L_BASE <= l && l < (L_BASE + L_COUNT) && V_BASE <= v && v < (V_BASE + V_COUNT) {
+    if L_BASE <= l && l < (L_BASE + L_COUNT) // l should be an L choseong jamo
+        && V_BASE <= v && v < (V_BASE + V_COUNT) { // v should be a V jungseong jamo
         let r = S_BASE + (l - L_BASE) * N_COUNT + (v - V_BASE) * T_COUNT;
         return unsafe { Some(transmute(r)) };
     }
     // Compose an LVPart and a TPart
-    if S_BASE <= l && l <= (S_BASE+S_COUNT-T_COUNT) && T_BASE <= v && v < (T_BASE+T_COUNT) {
+    if S_BASE <= l && l <= (S_BASE+S_COUNT-T_COUNT) // l should be a syllable block
+        && T_BASE <= v && v < (T_BASE+T_COUNT) // v should be a T jongseong jamo
+        && (l - S_BASE) % T_COUNT == 0 { // l should be an LV syllable block (not LVT)
         let r = l + (v - T_BASE);
         return unsafe { Some(transmute(r)) };
     }
