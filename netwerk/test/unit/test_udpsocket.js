@@ -7,6 +7,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 const HELLO_WORLD = "Hello World";
+const EMPTY_MESSAGE = "";
 
 add_test(function test_udp_message_raw_data() {
   do_print("test for nsIUDPMessage.rawData");
@@ -55,6 +56,30 @@ add_test(function test_udp_send_stream() {
   let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
   stream.setData(HELLO_WORLD, HELLO_WORLD.length);
   socket.sendBinaryStream("127.0.0.1", socket.port, stream);
+});
+
+add_test(function test_udp_message_zero_length() {
+  do_print("test for nsIUDPMessage with zero length");
+
+  let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
+
+  socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
+  do_print("Port assigned : " + socket.port);
+  socket.asyncListen({
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
+    onPacketReceived : function(aSocket, aMessage){
+      let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
+      do_check_eq(recv_data, EMPTY_MESSAGE);
+      do_check_eq(recv_data, aMessage.data);
+      socket.close();
+      run_next_test();
+    },
+    onStopListening: function(aSocket, aStatus){}
+  });
+
+  let rawData = new Uint8Array(EMPTY_MESSAGE.length);
+  let written = socket.send("127.0.0.1", socket.port, rawData, rawData.length);
+  do_check_eq(written, EMPTY_MESSAGE.length);
 });
 
 function run_test(){

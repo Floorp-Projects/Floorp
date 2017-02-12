@@ -17,7 +17,7 @@ this information is documented on the
 A very quick version:
 
 ```
-$ hg clone http://hg.mozilla.org/integration/fx-team
+$ hg clone https://hg.mozilla.org/integration/mozilla-inbound
 $ ./mach build
 $ ./mach run -P development
 ```
