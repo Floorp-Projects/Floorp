@@ -183,9 +183,6 @@ public:
     CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
                                              SurfaceFormat aFormat);
 
-    static const uint8_t sUnpremultiplyTable[256*256];
-    static const uint8_t sPremultiplyTable[256*256];
-
     /**
      * Return a color that can be used to identify a frame with a given frame number.
      * The colors will cycle after sNumFrameColors.  You can query colors 0 .. sNumFrameColors-1

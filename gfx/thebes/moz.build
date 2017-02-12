@@ -249,11 +249,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-GENERATED_FILES = [
-    'DeprecatedPremultiplyTables.h',
-]
-GENERATED_FILES['DeprecatedPremultiplyTables.h'].script = 'genTables.py:generate'
-
 LOCAL_INCLUDES += [
     '/dom/workers',
     '/dom/xml',
@@ -279,7 +274,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
-LOCAL_INCLUDES += ['/media/libyuv/include']
 
 DEFINES['GRAPHITE2_STATIC'] = True
 
