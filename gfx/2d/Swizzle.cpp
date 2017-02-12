@@ -319,7 +319,7 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
 
 #undef FORMAT_CASE_CALL
 
-  gfxCriticalError() << "Unsupported premultiply formats: " << aSrcFormat << " -> " << aDstFormat;
+  MOZ_ASSERT(false, "Unsupported premultiply formats");
   return false;
 }
 
@@ -437,7 +437,7 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
 
 #undef FORMAT_CASE_CALL
 
-  gfxCriticalError() << "Unsupported unpremultiply formats: " << aSrcFormat << " -> " << aDstFormat;
+  MOZ_ASSERT(false, "Unsupported unpremultiply formats");
   return false;
 }
 
@@ -785,7 +785,7 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
 
 #undef FORMAT_CASE_CALL
 
-  gfxCriticalError() << "Unsupported swizzle formats: " << aSrcFormat << " -> " << aDstFormat;
+  MOZ_ASSERT(false, "Unsupported swizzle formats");
   return false;
 }
 
