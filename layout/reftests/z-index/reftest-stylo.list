@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == 480053-1.html 480053-1.html
-fails == z-index-1.html z-index-1.html
+== z-index-1.html z-index-1.html
 == stacking-context-yes.html stacking-context-yes.html
 # == stacking-context-perspective.html stacking-context-perspective.html
 == stacking-context-backface-visibility.html stacking-context-backface-visibility.html

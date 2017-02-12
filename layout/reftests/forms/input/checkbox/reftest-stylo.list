@@ -4,7 +4,7 @@ fails-if(Android) == radio-stretched.html radio-stretched.html
 # == checked.html checked.html
 == checked-native.html checked-native.html
 # == checked.html checked.html
-fails == checked-notref.html checked-notref.html
+# == checked-notref.html checked-notref.html
 == checked-native.html checked-native.html
 == checked-native-notref.html checked-native-notref.html
 # == indeterminate-checked.html indeterminate-checked.html
