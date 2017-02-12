@@ -11,10 +11,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 6);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -22,7 +22,7 @@ add_task(function* () {
   });
   yield wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
+  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
 
   ok(document.querySelector("#headers-tab[aria-selected=true]"),
@@ -42,9 +42,7 @@ add_task(function* () {
     "The preview panel should be visible now.");
 
   let iframe = document.querySelector("#preview-panel iframe");
-  console.log(123)
   yield once(iframe, "DOMContentLoaded");
-  console.log(123)
 
   ok(iframe,
     "There should be a response preview iframe available.");

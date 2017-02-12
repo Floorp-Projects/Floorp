@@ -300,7 +300,7 @@ TaskImpl.prototype = {
    * @param aSendResolved
    *        If true, indicates that we should continue into the generator
    *        function regularly (if we were waiting on a promise, it was
-   *        resolved). If true, indicates that we should cause an exception to
+   *        resolved). If false, indicates that we should cause an exception to
    *        be thrown into the generator function (if we were waiting on a
    *        promise, it was rejected).
    * @param aSendValue

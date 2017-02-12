@@ -19,3 +19,5 @@ function argumentsAndStrictDelete(a) {
   assert.sameValue(arguments[0], 1);
 }
 argumentsAndStrictDelete(1);
+
+reportCompare(0, 0);

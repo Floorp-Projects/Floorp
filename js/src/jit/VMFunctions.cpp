@@ -401,8 +401,25 @@ SetArrayLength(JSContext* cx, HandleObject obj, HandleValue value, bool strict)
 
     RootedId id(cx, NameToId(cx->names().length));
     ObjectOpResult result;
-    return ArraySetLength(cx, array, id, JSPROP_PERMANENT, value, result) &&
-           result.checkStrictErrorOrWarning(cx, obj, id, strict);
+
+    // SetArrayLength is called by IC stubs for SetProp and SetElem on arrays'
+    // "length" property.
+    //
+    // ArraySetLength below coerces |value| before checking for length being
+    // writable, and in the case of illegal values, will throw RangeError even
+    // when "length" is not writable. This is incorrect observable behavior,
+    // as a regular [[Set]] operation will check for "length" being
+    // writable before attempting any assignment.
+    //
+    // So, perform ArraySetLength if and only if "length" is writable.
+    if (array->lengthIsWritable()) {
+        if (!ArraySetLength(cx, array, id, JSPROP_PERMANENT, value, result))
+            return false;
+    } else {
+        MOZ_ALWAYS_TRUE(result.fail(JSMSG_READ_ONLY));
+    }
+
+    return result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
 
 bool

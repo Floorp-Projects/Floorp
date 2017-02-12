@@ -1,0 +1,13 @@
+language: rust
+rust:
+  - 1.10.0
+  - stable
+  - beta
+  - nightly
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc
+branches:
+  only:
+    - master

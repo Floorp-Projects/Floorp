@@ -1,0 +1,10 @@
+[package]
+name = "atomic_refcell"
+version = "0.1.0"
+authors = ["Bobby Holley <bobbyholley@gmail.com>"]
+description = "Threadsafe RefCell"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/bholley/atomic_refcell"
+documentation = "https://docs.rs/atomic_refcell/"
+
+[dependencies]

@@ -36,30 +36,3 @@ def filter_target_tasks(graph, parameters):
     attr = parameters.get('target_tasks_method', 'all_tasks')
     fn = target_tasks.get_method(attr)
     return fn(graph, parameters)
-
-
-@filter_task('check_servo')
-def filter_servo(graph, parameters):
-    """Filters out tasks requiring Servo if Servo isn't present."""
-    # This filter is temporary until Servo's dependencies are vendored.
-    cargo = os.path.join(GECKO, 'toolkit', 'library', 'rust', 'shared',
-                         'Cargo.toml')
-    with open(cargo, 'rb') as fh:
-        cargo = fh.read()
-
-    if b'servo/ports/geckolib' in cargo:
-        return graph.tasks.keys()
-
-    logger.info('real servo geckolib not used; removing tasks requiring it')
-
-    SERVO_PLATFORMS = {
-        'linux64-stylo',
-    }
-
-    def fltr(task):
-        if task.attributes.get('build_platform') in SERVO_PLATFORMS:
-            return False
-
-        return True
-
-    return [l for l, t in graph.tasks.iteritems() if fltr(t)]

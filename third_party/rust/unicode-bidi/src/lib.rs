@@ -138,6 +138,7 @@ pub fn process_text(text: &str, level: Option<u8>) -> BidiInfo {
 /// http://www.unicode.org/reports/tr9/#BD2
 pub fn is_ltr(level: u8) -> bool { level % 2 == 0 }
 
+#[inline]
 /// Odd levels are right-to-left.
 ///
 /// http://www.unicode.org/reports/tr9/#BD2

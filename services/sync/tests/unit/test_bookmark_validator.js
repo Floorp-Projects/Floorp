@@ -231,6 +231,44 @@ add_task(async function test_cswc_differences() {
   }
 });
 
+add_task(async function test_cswc_differentURLs() {
+  let {server, client} = getDummyServerAndClient();
+  client.children[0].children.push({
+    guid: "dddddddddddd",
+    title: "Tag query",
+    "type": "text/x-moz-place",
+    "uri": "place:type=7&folder=80",
+  }, {
+    guid: "eeeeeeeeeeee",
+    title: "Firefox",
+    "type": "text/x-moz-place",
+    "uri": "http://getfirefox.com",
+  });
+  server.push({
+    id: "dddddddddddd",
+    parentid: "menu",
+    parentName: "foo",
+    title: "Tag query",
+    type: "query",
+    folderName: "taggy",
+    bmkUri: "place:type=7&folder=90",
+  }, {
+    id: "eeeeeeeeeeee",
+    parentid: "menu",
+    parentName: "foo",
+    title: "Firefox",
+    type: "bookmark",
+    bmkUri: "https://mozilla.org/firefox",
+  });
+
+  let c = (await compareServerWithClient(server, client)).problemData;
+  equal(c.differences.length, 1);
+  deepEqual(c.differences, [{
+    id: "eeeeeeeeeeee",
+    differences: ["bmkUri"],
+  }]);
+});
+
 add_task(async function test_cswc_serverUnexpected() {
   let {server, client} = getDummyServerAndClient();
   client.children.push({
