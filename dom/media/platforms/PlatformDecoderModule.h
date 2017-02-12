@@ -141,8 +141,9 @@ public:
   virtual nsresult Startup() { return NS_OK; };
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
-  virtual bool SupportsMimeType(const nsACString& aMimeType,
-                                DecoderDoctorDiagnostics* aDiagnostics) const = 0;
+  virtual bool SupportsMimeType(
+    const nsACString& aMimeType,
+    DecoderDoctorDiagnostics* aDiagnostics) const = 0;
   virtual bool Supports(const TrackInfo& aTrackInfo,
                         DecoderDoctorDiagnostics* aDiagnostics) const
   {
@@ -161,11 +162,12 @@ public:
   // Indicates that the decoder requires a specific format.
   // The PlatformDecoderModule will convert the demuxed data accordingly before
   // feeding it to MediaDataDecoder::Input.
-  virtual ConversionRequired DecoderNeedsConversion(const TrackInfo& aConfig) const = 0;
+  virtual ConversionRequired DecoderNeedsConversion(
+    const TrackInfo& aConfig) const = 0;
 
 protected:
-  PlatformDecoderModule() {}
-  virtual ~PlatformDecoderModule() {}
+  PlatformDecoderModule() { }
+  virtual ~PlatformDecoderModule() { }
 
   friend class H264Converter;
   friend class PDMFactory;
@@ -276,7 +278,11 @@ public:
   // Called from the state machine task queue or main thread. Decoder needs to
   // decide whether or not hardware acceleration is supported after creating.
   // It doesn't need to call Init() before calling this function.
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const { return false; }
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const
+  {
+    return false;
+  }
+
 
   // Return the name of the MediaDataDecoder, only used for decoding.
   // Only return a static const string, as the information may be accessed
