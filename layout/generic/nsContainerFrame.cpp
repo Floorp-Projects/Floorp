@@ -1294,8 +1294,8 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
         // Acquire a next-in-flow, creating it if necessary
         nsIFrame* nif = frame->GetNextInFlow();
         if (!nif) {
-          NS_ASSERTION(frameStatus & NS_FRAME_REFLOW_NEXTINFLOW,
-                       "Someone forgot a REFLOW_NEXTINFLOW flag");
+          NS_ASSERTION(frameStatus.NextInFlowNeedsReflow(),
+                       "Someone forgot a NextInFlowNeedsReflow flag");
           nif = aPresContext->PresShell()->FrameConstructor()->
             CreateContinuingFrame(aPresContext, frame, this);
         }
@@ -2195,11 +2195,11 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
     }
 
     mOverflowContList->InsertFrame(mParent, mPrevOverflowCont, aOverflowCont);
-    aReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    aReflowStatus.SetNextInFlowNeedsReflow();
   }
 
   // If we need to reflow it, mark it dirty
-  if (aReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW)
+  if (aReflowStatus.NextInFlowNeedsReflow())
     aOverflowCont->AddStateBits(NS_FRAME_IS_DIRTY);
 
   // It's in our list, just step forward

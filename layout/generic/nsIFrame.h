@@ -195,19 +195,6 @@ enum nsSpread {
 #define NS_CARRIED_BOTTOM_MARGIN_IS_AUTO 0x2
 
 //----------------------------------------------------------------------
-
-/**
- * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
- * dirty, and also needs to be reflowed. This status only makes sense
- * for a frame that is not complete, i.e. you wouldn't set both
- * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW.
- *
- * The low 8 bits of the nsReflowStatus are reserved for future extensions;
- * the remaining 24 bits are zero (and available for extensions; however
- * API's that accept/return nsReflowStatus must not receive/return any
- * extension bits).
- */
-
 // Reflow status returned by the Reflow() methods.
 class nsReflowStatus final {
 public:
@@ -215,12 +202,14 @@ public:
     : mStatus(0)
     , mIncomplete(false)
     , mOverflowIncomplete(false)
+    , mNextInFlowNeedsReflow(false)
   {}
 
   // Reset all the bit-fields.
   void Reset() {
     mIncomplete = false;
     mOverflowIncomplete = false;
+    mNextInFlowNeedsReflow = false;
   }
 
   nsReflowStatus(uint32_t aStatus)
@@ -290,12 +279,20 @@ public:
     mOverflowIncomplete = true;
   }
 
+  // mNextInFlowNeedsReflow bit flag means that the next-in-flow is dirty,
+  // and also needs to be reflowed. This status only makes sense for a frame
+  // that is not complete, i.e. you wouldn't set mNextInFlowNeedsReflow when
+  // IsComplete() is true.
+  bool NextInFlowNeedsReflow() const { return mNextInFlowNeedsReflow; }
+  void SetNextInFlowNeedsReflow() { mNextInFlowNeedsReflow = true; }
+
 private:
   uint32_t mStatus;
 
   // Frame completion status bit flags.
   bool mIncomplete : 1;
   bool mOverflowIncomplete : 1;
+  bool mNextInFlowNeedsReflow : 1;
 };
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!

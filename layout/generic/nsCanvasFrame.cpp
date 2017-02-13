@@ -717,7 +717,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
     if (!aStatus.IsFullyComplete()) {
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
-      NS_ASSERTION(nextFrame || aStatus & NS_FRAME_REFLOW_NEXTINFLOW,
+      NS_ASSERTION(nextFrame || aStatus.NextInFlowNeedsReflow(),
         "If it's incomplete and has no nif yet, it must flag a nif reflow.");
       if (!nextFrame) {
         nextFrame = aPresContext->PresShell()->FrameConstructor()->
