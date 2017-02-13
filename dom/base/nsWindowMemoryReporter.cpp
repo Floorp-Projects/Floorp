@@ -656,8 +656,9 @@ nsWindowMemoryReporter::AsyncCheckForGhostWindows()
   mCheckTimer = do_CreateInstance("@mozilla.org/timer;1");
 
   if (mCheckTimer) {
-    mCheckTimer->InitWithFuncCallback(CheckTimerFired, nullptr,
-                                      timerDelay, nsITimer::TYPE_ONE_SHOT);
+    mCheckTimer->InitWithNamedFuncCallback(CheckTimerFired, nullptr,
+                                           timerDelay, nsITimer::TYPE_ONE_SHOT,
+                                           "nsWindowMemoryReporter::AsyncCheckForGhostWindows_timer");
   }
 }
 
