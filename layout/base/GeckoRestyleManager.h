@@ -12,7 +12,7 @@
 #define mozilla_RestyleManager_h
 
 #include "mozilla/RestyleLogging.h"
-#include "mozilla/RestyleManagerBase.h"
+#include "mozilla/RestyleManager.h"
 #include "nsISupportsImpl.h"
 #include "nsChangeHint.h"
 #include "RestyleTracker.h"

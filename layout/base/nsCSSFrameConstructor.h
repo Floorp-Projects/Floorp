@@ -13,7 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/RestyleManagerBase.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerHandle.h"
 
 #include "nsCOMPtr.h"
