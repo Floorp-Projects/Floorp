@@ -20,6 +20,14 @@ config = {
         for f in ["debug", "nightly", "l10n-nightly", "l10n-release", "release"]
     ] + [
         # File, from, to
+        ("{}/{}".format(d, f),
+        "ac_add_options --with-l10n-base=../../mozilla-aurora",
+        "ac_add_options --with-l10n-base=../../mozilla-beta")
+        for d in ["mobile/android/config/mozconfigs/android-api-15/",
+                  "mobile/android/config/mozconfigs/android-x86/"]
+        for f in ["l10n-nightly", "l10n-release"]
+    ] + [
+        # File, from, to
         ("browser/confvars.sh",
          "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release",
          "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release"),
