@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Task } = require("devtools/shared/task");
 const {
   setImageTooltip,
   getImageDimensions,
@@ -19,24 +18,24 @@ const REQUESTS_TOOLTIP_STACK_TRACE_WIDTH = 600;
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const setTooltipImageContent = Task.async(function* (tooltip, itemEl, requestItem) {
+async function setTooltipImageContent(tooltip, itemEl, requestItem) {
   let { mimeType, text, encoding } = requestItem.responseContent.content;
 
   if (!mimeType || !mimeType.includes("image/")) {
     return false;
   }
 
-  let string = yield window.gNetwork.getString(text);
+  let string = await window.gNetwork.getString(text);
   let src = formDataURI(mimeType, encoding, string);
   let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
-  let { naturalWidth, naturalHeight } = yield getImageDimensions(tooltip.doc, src);
+  let { naturalWidth, naturalHeight } = await getImageDimensions(tooltip.doc, src);
   let options = { maxDim, naturalWidth, naturalHeight };
   setImageTooltip(tooltip, tooltip.doc, src, options);
 
   return itemEl.querySelector(".requests-menu-icon");
-});
+}
 
-const setTooltipStackTraceContent = Task.async(function* (tooltip, requestItem) {
+async function setTooltipStackTraceContent(tooltip, requestItem) {
   let {stacktrace} = requestItem.cause;
 
   if (!stacktrace || stacktrace.length == 0) {
@@ -99,7 +98,7 @@ const setTooltipStackTraceContent = Task.async(function* (tooltip, requestItem) 
   tooltip.setContent(el, {width: REQUESTS_TOOLTIP_STACK_TRACE_WIDTH});
 
   return true;
-});
+}
 
 module.exports = {
   setTooltipImageContent,

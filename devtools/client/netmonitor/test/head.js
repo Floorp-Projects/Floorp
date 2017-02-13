@@ -249,16 +249,6 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
   return deferred.promise;
 }
 
-/**
- * Convert a store record (model) to the rendered element. Tests that need to use
- * this should be rewritten - test the rendered markup at unit level, integration
- * mochitest should check only the store state.
- */
-function getItemTarget(requestList, requestItem) {
-  const items = requestList.mountPoint.querySelectorAll(".request-list-item");
-  return [...items].find(el => el.dataset.id == requestItem.id);
-}
-
 function verifyRequestItemTarget(document, requestList, requestItem, aMethod,
                                  aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
