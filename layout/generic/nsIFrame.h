@@ -203,6 +203,7 @@ public:
     , mIncomplete(false)
     , mOverflowIncomplete(false)
     , mNextInFlowNeedsReflow(false)
+    , mTruncated(false)
   {}
 
   // Reset all the bit-fields.
@@ -210,6 +211,7 @@ public:
     mIncomplete = false;
     mOverflowIncomplete = false;
     mNextInFlowNeedsReflow = false;
+    mTruncated = false;
   }
 
   nsReflowStatus(uint32_t aStatus)
@@ -286,6 +288,12 @@ public:
   bool NextInFlowNeedsReflow() const { return mNextInFlowNeedsReflow; }
   void SetNextInFlowNeedsReflow() { mNextInFlowNeedsReflow = true; }
 
+  // mTruncated bit flag means that the part of the frame before the first
+  // possible break point was unable to fit in the available space.
+  // Therefore, the entire frame should be moved to the next continuation of
+  // the parent frame. A frame that begins at the top of the page must never
+  // be truncated. Doing so would likely cause an infinite loop.
+  bool IsTruncated() const { return mTruncated; }
   void UpdateTruncated(const mozilla::ReflowInput& aReflowInput,
                        const mozilla::ReflowOutput& aMetrics);
 
@@ -296,6 +304,7 @@ private:
   bool mIncomplete : 1;
   bool mOverflowIncomplete : 1;
   bool mNextInFlowNeedsReflow : 1;
+  bool mTruncated : 1;
 };
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
@@ -352,14 +361,8 @@ private:
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
-// A frame is "truncated" if the part of the frame before the first
-// possible break point was unable to fit in the available vertical
-// space.  Therefore, the entire frame should be moved to the next page.
-// A frame that begins at the top of the page must never be "truncated".
-// Doing so would likely cause an infinite loop.
 #define NS_FRAME_TRUNCATED  0x0010
-#define NS_FRAME_IS_TRUNCATED(status) \
-  (0 != ((status) & NS_FRAME_TRUNCATED))
+
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);
 

@@ -1177,7 +1177,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowInput,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  bool fullyComplete = aStatus.IsComplete() && !NS_FRAME_IS_TRUNCATED(aStatus);
+  bool fullyComplete = aStatus.IsComplete() && !aStatus.IsTruncated();
   if (fullyComplete) {
     desiredSize.BSize(wm) = aAvailableBSize;
   }
