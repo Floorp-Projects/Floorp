@@ -61,6 +61,7 @@ parent:
    */
   nested(inside_cpow) sync GetCookieString(URIParams host,
                                            bool isForeign,
+                                           bool fromHttp,
                                            OriginAttributes attrs)
        returns (nsCString result);
 
@@ -97,6 +98,7 @@ parent:
                                             bool isForeign,
                                             nsCString cookieString,
                                             nsCString serverTime,
+                                            bool fromHttp,
                                             OriginAttributes attrs);
 
   async __delete__();

@@ -42,12 +42,14 @@ protected:
 
   nsresult GetCookieStringInternal(nsIURI *aHostURI,
                                    nsIChannel *aChannel,
-                                   char **aCookieString);
+                                   char **aCookieString,
+                                   bool aFromHttp);
 
   nsresult SetCookieStringInternal(nsIURI *aHostURI,
                                    nsIChannel *aChannel,
                                    const char *aCookieString,
-                                   const char *aServerTime);
+                                   const char *aServerTime,
+                                   bool aFromHttp);
 
   void PrefChanged(nsIPrefBranch *aPrefBranch);
 
