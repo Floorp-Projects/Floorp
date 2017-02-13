@@ -325,11 +325,6 @@ public:
                         nsChangeHint aMinChangeHint,
                         const RestyleHintData* aRestyleHintData = nullptr);
 
-  void PostRestyleEventForLazyConstruction()
-  {
-    PostRestyleEventInternal(true);
-  }
-
 public:
   /**
    * Asynchronously clear style data from the root frame downwards and ensure
