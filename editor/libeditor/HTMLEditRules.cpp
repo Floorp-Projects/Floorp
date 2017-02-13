@@ -7685,7 +7685,9 @@ HTMLEditRules::RemoveEmptyNodes()
     if (idx != skipList.NoIndex) {
       // This node is on our skip list.  Skip processing for this node, and
       // replace its value in the skip list with the value of its parent
-      skipList[idx] = parent;
+      if (parent) {
+        skipList[idx] = parent;
+      }
     } else {
       bool bIsCandidate = false;
       bool bIsEmptyNode = false;
@@ -7732,7 +7734,7 @@ HTMLEditRules::RemoveEmptyNodes()
         }
       }
 
-      if (!bIsEmptyNode) {
+      if (!bIsEmptyNode && parent) {
         // put parent on skip list
         skipList.AppendElement(*parent);
       }
