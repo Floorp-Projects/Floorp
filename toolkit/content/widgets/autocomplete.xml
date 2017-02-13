@@ -1534,6 +1534,28 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         // recalculate an item's height and width.
         this.classList.add("forceHandleUnderflow");
       ]]></constructor>
+
+      <property name="_learnMoreString">
+        <getter><![CDATA[
+          if (!this.__learnMoreString) {
+            this.__learnMoreString =
+              Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties").
+              GetStringFromName("insecureFieldWarningLearnMore");
+          }
+          return this.__learnMoreString;
+        ]]></getter>
+      </property>
+
+      <!-- Override _getSearchTokens to have the Learn More text emphasized -->
+      <method name="_getSearchTokens">
+        <parameter name="aSearch"/>
+        <body>
+          <![CDATA[
+            return [this._learnMoreString.toLowerCase()];
+          ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 
