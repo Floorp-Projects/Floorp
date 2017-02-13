@@ -3754,6 +3754,8 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
     // @see nsDocument::GetEventTargetParent.
     mIsDocumentLoaded = true;
 
+    mTimeoutManager->OnDocumentLoaded();
+
     nsCOMPtr<Element> element = GetOuterWindow()->GetFrameElementInternal();
     nsIDocShell* docShell = GetDocShell();
     if (element && GetParentInternal() &&
