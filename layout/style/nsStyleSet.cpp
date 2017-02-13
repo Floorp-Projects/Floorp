@@ -1774,7 +1774,8 @@ nsStyleSet::ResolveStyleByRemovingAnimation(dom::Element* aTarget,
   MOZ_ASSERT(PresContext()->RestyleManager()->IsGecko(),
              "stylo: the style set and restyle manager must have the same "
              "StyleBackendType");
-  RestyleManager* restyleManager = PresContext()->RestyleManager()->AsGecko();
+  GeckoRestyleManager* restyleManager =
+    PresContext()->RestyleManager()->AsGecko();
 
   bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
   restyleManager->SetSkipAnimationRules(true);
@@ -1793,7 +1794,8 @@ already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithoutAnimation(Element* aTarget,
                                          nsStyleContext* aParentContext)
 {
-  RestyleManager* restyleManager = PresContext()->RestyleManager()->AsGecko();
+  GeckoRestyleManager* restyleManager =
+    PresContext()->RestyleManager()->AsGecko();
 
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aTarget->OwnerDoc());

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_RestyleManagerBase_h
-#define mozilla_RestyleManagerBase_h
+#ifndef mozilla_RestyleManager_h
+#define mozilla_RestyleManager_h
 
 #include "mozilla/OverflowChangedTracker.h"
 #include "nsChangeHint.h"
@@ -18,7 +18,7 @@ class nsStyleChangeList;
 namespace mozilla {
 
 class EventStates;
-class RestyleManager;
+class GeckoRestyleManager;
 class ServoRestyleManager;
 
 namespace dom {
@@ -26,13 +26,13 @@ class Element;
 }
 
 /**
- * Class for sharing data and logic common to both RestyleManager and
+ * Class for sharing data and logic common to both GeckoRestyleManager and
  * ServoRestyleManager.
  */
-class RestyleManagerBase
+class RestyleManager
 {
 protected:
-  explicit RestyleManagerBase(nsPresContext* aPresContext);
+  explicit RestyleManager(nsPresContext* aPresContext);
 
 public:
   typedef mozilla::dom::Element Element;
@@ -92,7 +92,7 @@ public:
     // ensure that aRestyleManager lives at least as long as the
     // object.  (This is generally easy since the caller is typically a
     // method of RestyleManager.)
-    explicit AnimationsWithDestroyedFrame(RestyleManagerBase* aRestyleManager);
+    explicit AnimationsWithDestroyedFrame(RestyleManager* aRestyleManager);
 
     // This method takes the content node for the generated content for
     // animation/transition on ::before and ::after, rather than the
@@ -119,7 +119,7 @@ public:
     void StopAnimationsWithoutFrame(nsTArray<RefPtr<nsIContent>>& aArray,
                                     CSSPseudoElementType aPseudoType);
 
-    RestyleManagerBase* mRestyleManager;
+    RestyleManager* mRestyleManager;
     AutoRestore<AnimationsWithDestroyedFrame*> mRestorePointer;
 
     // Below three arrays might include elements that have already had their
@@ -142,7 +142,7 @@ public:
   }
 
 protected:
-  ~RestyleManagerBase() {
+  ~RestyleManager() {
     MOZ_ASSERT(!mAnimationsWithDestroyedFrame,
                "leaving dangling pointers from AnimationsWithDestroyedFrame");
   }

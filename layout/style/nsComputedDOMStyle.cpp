@@ -566,7 +566,7 @@ public:
   }
 
 private:
-  RestyleManager* mRestyleManager = nullptr;
+  GeckoRestyleManager* mRestyleManager = nullptr;
   bool mOldSkipAnimationRules = false;
   nsComputedDOMStyle::AnimationFlag mAnimationFlag;
 };

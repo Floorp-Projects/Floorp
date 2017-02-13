@@ -19,7 +19,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
-  : RestyleManagerBase(aPresContext)
+  : RestyleManager(aPresContext)
   , mReentrantChanges(nullptr)
 {
 }
