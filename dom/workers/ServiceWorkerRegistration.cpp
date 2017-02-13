@@ -574,7 +574,7 @@ class FulfillUnregisterPromiseRunnable final : public WorkerRunnable
   Maybe<bool> mState;
 public:
   FulfillUnregisterPromiseRunnable(PromiseWorkerProxy* aProxy,
-                                   Maybe<bool> aState)
+                                   const Maybe<bool>& aState)
     : WorkerRunnable(aProxy->GetWorkerPrivate())
     , mPromiseWorkerProxy(aProxy)
     , mState(aState)
@@ -631,7 +631,7 @@ private:
   {}
 
   void
-  Finish(Maybe<bool> aState)
+  Finish(const Maybe<bool>& aState)
   {
     AssertIsOnMainThread();
     if (!mPromiseWorkerProxy) {
