@@ -8,7 +8,7 @@
  * changes need to happen, scheduling them, and doing them.
  */
 
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
 
 #include <algorithm> // For std::max
 #include "mozilla/EffectSet.h"

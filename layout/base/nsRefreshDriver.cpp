@@ -46,7 +46,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
 #include "Layers.h"
