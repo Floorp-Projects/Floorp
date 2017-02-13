@@ -272,7 +272,7 @@ public:
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override
   {
-    mInputDurations.Insert(aSample->mDuration, aSample->mTime);
+    mInputDurations.Insert(aSample->mTime, aSample->mDuration);
     return RemoteDataDecoder::Decode(aSample);
   }
 
