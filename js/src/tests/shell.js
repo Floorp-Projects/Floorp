@@ -16,16 +16,25 @@
 
   var undefined; // sigh
 
+  var document = global.document;
   var Error = global.Error;
+  var eval = global.eval;
   var Number = global.Number;
+  var RegExp = global.RegExp;
   var String = global.String;
+  var Symbol = global.Symbol;
   var TypeError = global.TypeError;
 
   var ArrayIsArray = global.Array.isArray;
+  var MathAbs = global.Math.abs;
   var ObjectCreate = global.Object.create;
   var ObjectDefineProperty = global.Object.defineProperty;
   var ReflectApply = global.Reflect.apply;
+  var RegExpPrototypeExec = global.RegExp.prototype.exec;
+  var StringPrototypeCharCodeAt = global.String.prototype.charCodeAt;
   var StringPrototypeEndsWith = global.String.prototype.endsWith;
+  var StringPrototypeIndexOf = global.String.prototype.indexOf;
+  var StringPrototypeSubstring = global.String.prototype.substring;
 
   var runningInBrowser = typeof global.window !== "undefined";
   if (runningInBrowser) {
@@ -37,6 +46,8 @@
   }
 
   var runningInShell = typeof window === "undefined";
+
+  var isReftest = typeof document === "object" && /jsreftest.html/.test(document.location.href);
 
   var evaluate = global.evaluate;
 
@@ -74,8 +85,55 @@
     ObjectDefineProperty(arr, arr.length, desc);
   }
 
+  function StringCharCodeAt(str, index) {
+    return ReflectApply(StringPrototypeCharCodeAt, str, [index]);
+  }
+
   function StringEndsWith(str, needle) {
     return ReflectApply(StringPrototypeEndsWith, str, [needle]);
+  }
+
+  function StringReplace(str, regexp, replacement) {
+    assertEq(typeof str === "string" && typeof regexp === "object" &&
+             typeof replacement === "function", true,
+             "StringReplace must be called with a string, a RegExp object and a function");
+
+    regexp.lastIndex = 0;
+
+    var result = "";
+    var last = 0;
+    while (true) {
+      var match = ReflectApply(RegExpPrototypeExec, regexp, [str]);
+      if (!match) {
+        result += ReflectApply(StringPrototypeSubstring, str, [last]);
+        return result;
+      }
+
+      result += ReflectApply(StringPrototypeSubstring, str, [last, match.index]);
+      result += ReflectApply(replacement, null, match);
+      last = match.index + match[0].length;
+    }
+  }
+
+  function StringSplit(str, delimiter) {
+    assertEq(typeof str === "string" && typeof delimiter === "string", true,
+             "StringSplit must be called with two string arguments");
+    assertEq(delimiter.length > 0, true,
+             "StringSplit doesn't support an empty delimiter string");
+
+    var parts = [];
+    var last = 0;
+    while (true) {
+      var i = ReflectApply(StringPrototypeIndexOf, str, [delimiter, last]);
+      if (i < 0) {
+        if (last < str.length)
+          ArrayPush(parts, ReflectApply(StringPrototypeSubstring, str, [last]));
+        return parts;
+      }
+
+      ArrayPush(parts, ReflectApply(StringPrototypeSubstring, str, [last, i]));
+      last = i + delimiter.length;
+    }
   }
 
   /****************************
@@ -235,42 +293,47 @@
   // consider to remove its use in that file.
   function toPrinted(value) {
     value = String(value);
-    value = value.replace(/\\n/g, 'NL')
-                 .replace(/\n/g, 'NL')
-                 .replace(/\\r/g, 'CR')
-                 .replace(/[^\x20-\x7E]+/g, escapeString);
-    return value;
-  }
-  global.toPrinted = toPrinted;
 
-  function escapeString(str) {
-    var a, b, c, d;
-    var len = str.length;
+    var digits = "0123456789ABCDEF";
     var result = "";
-    var digits = ["0", "1", "2", "3", "4", "5", "6", "7",
-                  "8", "9", "A", "B", "C", "D", "E", "F"];
-
-    for (var i = 0; i < len; i++) {
-      var ch = str.charCodeAt(i);
-
-      a = digits[ch & 0xf];
-      ch >>= 4;
-      b = digits[ch & 0xf];
-      ch >>= 4;
-
-      if (ch) {
-        c = digits[ch & 0xf];
+    for (var i = 0; i < value.length; i++) {
+      var ch = StringCharCodeAt(value, i);
+      if (ch === 0x5C && i + 1 < value.length) {
+        var d = value[i + 1];
+        if (d === "n") {
+          result += "NL";
+          i++;
+        } else if (d === "r") {
+          result += "CR";
+          i++;
+        } else {
+          result += "\\";
+        }
+      } else if (c === 0x0A) {
+        result += "NL";
+      } else if (ch < 0x20 || ch > 0x7E) {
+        var a = digits[ch & 0xf];
         ch >>= 4;
-        d = digits[ch & 0xf];
+        var b = digits[ch & 0xf];
+        ch >>= 4;
 
-        result += "\\u" + d + c + b + a;
+        if (ch) {
+          var c = digits[ch & 0xf];
+          ch >>= 4;
+          var d = digits[ch & 0xf];
+
+          result += "\\u" + d + c + b + a;
+        } else {
+          result += "\\x" + b + a;
+        }
       } else {
-        result += "\\x" + b + a;
+        result += value[i];
       }
     }
 
     return result;
   }
+  global.toPrinted = toPrinted;
 
   /*
    * An xorshift pseudo-random number generator see:
@@ -404,11 +467,12 @@
     this.passed = getTestCaseResult(e, a);
     this.reason = '';
     this.bugnumber = typeof BUGNUMER !== 'undefined' ? BUGNUMBER : '';
-    this.type = typeof window === 'undefined' ? 'shell' : 'browser';
-    ({}).constructor.defineProperty(
+    this.type = runningInShell ? 'shell' : 'browser';
+    ObjectDefineProperty(
       gTestcases,
       gTc++,
       {
+        __proto__: null,
         value: this,
         enumerable: true,
         configurable: true,
@@ -421,7 +485,7 @@
   TestCase.prototype.dump = function () {
     // let reftest handle error reporting, otherwise
     // output a summary line.
-    if (typeof document !== "object" || !document.location.href.match(/jsreftest.html/)) {
+    if (!isReftest) {
       dump('\njstest: ' + this.path + ' ' +
           'bug: '         + this.bugnumber + ' ' +
           'result: '      + (this.passed ? 'PASSED' : 'FAILED') + ' ' +
@@ -463,7 +527,7 @@
    * Report a failure in the 'accepted' manner
    */
   function reportFailure(msg) {
-    var lines = msg.split("\n");
+    var lines = StringSplit(msg, "\n");
     var funcName = currentFunc();
     var prefix = funcName ? "[reported from " + funcName + "] ": "";
 
@@ -476,12 +540,8 @@
    * Print a non-failure message.
    */
   function printStatus(msg) {
-  /* js1_6 had...
-     msg = String(msg);
-     msg = msg.toString();
-  */
-    msg = msg.toString();
-    var lines = msg.split("\n");
+    msg = String(msg);
+    var lines = StringSplit(msg, "\n");
 
     for (var i = 0; i < lines.length; i++)
       print(STATUS + lines[i]);
@@ -524,7 +584,7 @@
     testcase.reason = output;
 
     // if running under reftest, let it handle result reporting.
-    if (typeof document !== "object" || !document.location.href.match(/jsreftest.html/)) {
+    if (!isReftest) {
       if (testcase.passed) {
         print(PASSED + description);
       } else {
@@ -554,7 +614,7 @@
         ", actual type " + actual_t + " ";
     }
 
-    var matches = expectedRegExp.test(actual);
+    var matches = ReflectApply(RegExpPrototypeExec, expectedRegExp, [actual]) !== null;
     if (!matches) {
       output += "Expected match to '" + toPrinted(expectedRegExp) +
         "', Actual value '" + toPrinted(actual) + "' ";
@@ -564,7 +624,7 @@
     testcase.reason = output;
 
     // if running under reftest, let it handle result reporting.
-    if (typeof document !== "object" || !document.location.href.match(/jsreftest.html/)) {
+    if (!isReftest) {
       if (testcase.passed) {
         print(PASSED + description);
       } else {
@@ -575,21 +635,22 @@
   }
   global.reportMatch = reportMatch;
 
+  function normalizeSource(source) {
+    source = String(source);
+    source = StringReplace(source, /([(){},.:\[\]])/mg, (_, punctuator) => ` ${punctuator} `);
+    source = StringReplace(source, /(\w+)/mg, (_, word) => ` ${word} `);
+    source = StringReplace(source, /<(\/)? (\w+) (\/)?>/mg,
+                           (_, left = "", tagName, right = "") => `<${left}${tagName}${right}>`);
+    source = StringReplace(source, /\s+/mg, _ => ' ');
+    source = StringReplace(source, /new (\w+)\s*\(\s*\)/mg, (_, name) => `new ${name}`);
+
+    return source;
+  }
+
   function compareSource(expect, actual, summary) {
     // compare source
-    var expectP = expect.
-      replace(/([(){},.:\[\]])/mg, ' $1 ').
-      replace(/(\w+)/mg, ' $1 ').
-      replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-      replace(/\s+/mg, ' ').
-      replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
-
-    var actualP = actual.
-      replace(/([(){},.:\[\]])/mg, ' $1 ').
-      replace(/(\w+)/mg, ' $1 ').
-      replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-      replace(/\s+/mg, ' ').
-      replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
+    var expectP = normalizeSource(expect);
+    var actualP = normalizeSource(actual);
 
     print('expect:\n' + expectP);
     print('actual:\n' + actualP);
@@ -631,7 +692,7 @@
 
     // Tolerate a certain degree of error.
     if (actual !== expected)
-      return Math.abs(actual - expected) <= 1E-10;
+      return MathAbs(actual - expected) <= 1E-10;
 
     // Here would be a good place to distinguish 0 and -0, if we wanted
     // to.  However, doing so would introduce a number of failures in
@@ -668,7 +729,7 @@
   function writeTestCaseResult(expect, actual, string) {
     var passed = getTestCaseResult(expect, actual);
     // if running under reftest, let it handle result reporting.
-    if (typeof document !== "object" || !document.location.href.match(/jsreftest.html/)) {
+    if (!isReftest) {
       writeFormattedResult(expect, actual, string, passed);
     }
     return passed;
