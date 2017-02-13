@@ -489,7 +489,7 @@ ClientEngine.prototype = {
    * @param args Array of arguments/data for command
    * @param clientId Client to send command to
    */
-  _sendCommandToClient: function sendCommandToClient(command, args, clientId, flowID = null) {
+  _sendCommandToClient(command, args, clientId, telemetryExtra) {
     this._log.trace("Sending " + command + " to " + clientId);
 
     let client = this._store._remoteClients[clientId];
@@ -503,18 +503,19 @@ ClientEngine.prototype = {
     let action = {
       command,
       args,
-      flowID: flowID || Utils.makeGUID(), // used for telemetry.
+      // We send the flowID to the other client so *it* can report it in its
+      // telemetry - we record it in ours below.
+      flowID: telemetryExtra.flowID,
     };
 
     if (this._addClientCommand(clientId, action)) {
       this._log.trace(`Client ${clientId} got a new action`, [command, args]);
       this._tracker.addChangedID(clientId);
-      let deviceID;
       try {
-        deviceID = this.service.identity.hashedDeviceID(clientId);
+        telemetryExtra.deviceID = this.service.identity.hashedDeviceID(clientId);
       } catch (_) {}
-      this.service.recordTelemetryEvent("sendcommand", command, undefined,
-                                        { flowID: action.flowID, deviceID });
+
+      this.service.recordTelemetryEvent("sendcommand", command, undefined, telemetryExtra);
     } else {
       this._log.trace(`Client ${clientId} got a duplicate action`, [command, args]);
     }
@@ -599,7 +600,7 @@ ClientEngine.prototype = {
    *        A unique identifier used to track success for this operation across
    *        devices.
    */
-  sendCommand: function sendCommand(command, args, clientId, flowID = null) {
+  sendCommand(command, args, clientId = null, telemetryExtra = {}) {
     let commandData = this._commands[command];
     // Don't send commands that we don't know about.
     if (!commandData) {
@@ -612,12 +613,18 @@ ClientEngine.prototype = {
       return;
     }
 
+    // We allocate a "flowID" here, so it is used for each client.
+    telemetryExtra = Object.assign({}, telemetryExtra); // don't clobber the caller's object
+    if (!telemetryExtra.flowID) {
+      telemetryExtra.flowID = Utils.makeGUID();
+    }
+
     if (clientId) {
-      this._sendCommandToClient(command, args, clientId, flowID);
+      this._sendCommandToClient(command, args, clientId, telemetryExtra);
     } else {
       for (let [id, record] of Object.entries(this._store._remoteClients)) {
         if (!record.stale) {
-          this._sendCommandToClient(command, args, id, flowID);
+          this._sendCommandToClient(command, args, id, telemetryExtra);
         }
       }
     }
