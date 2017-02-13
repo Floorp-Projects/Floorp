@@ -924,7 +924,8 @@ BookmarksTracker.prototype = {
         this._log.debug("Restore succeeded: wiping server and other clients.");
         this.engine.service.resetClient([this.name]);
         this.engine.service.wipeServer([this.name]);
-        this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name]);
+        this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name],
+                                                      null, { reason: "bookmark-restore" });
         break;
       case "bookmarks-restore-failed":
         this._log.debug("Tracking all items on failed import.");
