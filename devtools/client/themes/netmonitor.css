@@ -119,17 +119,17 @@
 
 /* Network requests table */
 
-#requests-list-toolbar {
+.requests-list-toolbar {
   display: flex;
   padding: 0;
 }
 
-#requests-list-filter-buttons {
+.requests-list-filter-buttons {
   display: flex;
   flex-wrap: nowrap;
 }
 
-.theme-firebug #requests-list-toolbar {
+.theme-firebug .requests-list-toolbar {
   height: 19px !important;
 }
 
@@ -805,7 +805,7 @@
 
 /* Performance analysis buttons */
 
-#requests-list-network-summary-button {
+.requests-list-network-summary-button {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -818,7 +818,7 @@
   min-width: 0;
 }
 
-#requests-list-network-summary-button > .summary-info-icon {
+.requests-list-network-summary-button > .summary-info-icon {
   background-image: url(images/profiler-stopwatch.svg);
   filter: var(--icon-filter);
   width: 16px;
@@ -826,13 +826,13 @@
   opacity: 0.8;
 }
 
-#requests-list-network-summary-button > .summary-info-text {
+.requests-list-network-summary-button > .summary-info-text {
   opacity: 0.8;
   margin-inline-start: 0.5em;
 }
 
-#requests-list-network-summary-button:hover > .summary-info-icon,
-#requests-list-network-summary-button:hover > .summary-info-text {
+.requests-list-network-summary-button:hover > .summary-info-icon,
+.requests-list-network-summary-button:hover > .summary-info-text {
   opacity: 1;
 }
 
@@ -1010,11 +1010,11 @@
 @media (max-width: 700px) {
   #toolbar-spacer,
   .network-details-panel-toggle,
-  #requests-list-network-summary-button > .summary-info-text {
+  .requests-list-network-summary-button > .summary-info-text {
     display: none;
   }
 
-  #requests-list-toolbar {
+  .requests-list-toolbar {
     height: 22px;
   }
 
