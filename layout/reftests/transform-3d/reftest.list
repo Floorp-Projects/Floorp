@@ -77,7 +77,7 @@ fuzzy(1,2000) fails-if(webrender) == opacity-preserve3d-1.html opacity-preserve3
 fuzzy(1,15000) == opacity-preserve3d-2.html opacity-preserve3d-2-ref.html
 fuzzy(1,10000) == opacity-preserve3d-3.html opacity-preserve3d-3-ref.html
 fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
-+== opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
+== opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 fails-if(webrender) == snap-perspective-1.html snap-perspective-1-ref.html
 fails-if(webrender) == mask-layer-1.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-2.html mask-layer-ref.html
