@@ -58,7 +58,6 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/Promise.h"
@@ -2591,57 +2590,6 @@ WorkerPrivateParent<Derived>::GetDocument() const
   }
   // couldn't query a document, give up and return nullptr
   return nullptr;
-}
-
-template <class Derived>
-nsresult
-WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
-                                                     const nsACString& aCSPReportOnlyHeaderValue)
-{
-  AssertIsOnMainThread();
-  MOZ_DIAGNOSTIC_ASSERT(!mLoadInfo.mCSP);
-
-  NS_ConvertASCIItoUTF16 cspHeaderValue(aCSPHeaderValue);
-  NS_ConvertASCIItoUTF16 cspROHeaderValue(aCSPReportOnlyHeaderValue);
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = mLoadInfo.mPrincipal->EnsureCSP(nullptr, getter_AddRefs(csp));
-  if (!csp) {
-    return NS_OK;
-  }
-
-  // If there's a CSP header, apply it.
-  if (!cspHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  // If there's a report-only CSP header, apply it.
-  if (!cspROHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Set evalAllowed, default value is set in GetAllowsEval
-  bool evalAllowed = false;
-  bool reportEvalViolations = false;
-  rv = csp->GetAllowsEval(&reportEvalViolations, &evalAllowed);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set ReferrerPolicy, default value is set in GetReferrerPolicy
-  bool hasReferrerPolicy = false;
-  uint32_t rp = mozilla::net::RP_Unset;
-  rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mLoadInfo.mCSP = csp;
-  mLoadInfo.mEvalAllowed = evalAllowed;
-  mLoadInfo.mReportCSPViolations = reportEvalViolations;
-
-  if (hasReferrerPolicy) {
-    mLoadInfo.mReferrerPolicy = static_cast<net::ReferrerPolicy>(rp);
-  }
-
-  return NS_OK;
 }
 
 

@@ -1134,9 +1134,48 @@ private:
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
       if (!mWorkerPrivate->GetCSP() && CSPService::sCSPEnabled) {
-        rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
-                                                    tCspROHeaderValue);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+        NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
+
+        nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+        MOZ_ASSERT(principal, "Should not be null");
+
+        nsCOMPtr<nsIContentSecurityPolicy> csp;
+        rv = principal->EnsureCSP(nullptr, getter_AddRefs(csp));
+
+        if (csp) {
+          // If there's a CSP header, apply it.
+          if (!cspHeaderValue.IsEmpty()) {
+            rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+          // If there's a report-only CSP header, apply it.
+          if (!cspROHeaderValue.IsEmpty()) {
+            rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+
+          // Set evalAllowed, default value is set in GetAllowsEval
+          bool evalAllowed = false;
+          bool reportEvalViolations = false;
+          rv = csp->GetAllowsEval(&reportEvalViolations, &evalAllowed);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          mWorkerPrivate->SetCSP(csp);
+          mWorkerPrivate->SetEvalAllowed(evalAllowed);
+          mWorkerPrivate->SetReportCSPViolations(reportEvalViolations);
+
+          // Set ReferrerPolicy, default value is set in GetReferrerPolicy
+          bool hasReferrerPolicy = false;
+          uint32_t rp = mozilla::net::RP_Unset;
+          rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+
+          if (hasReferrerPolicy) { //FIXME bug 1307366: move RP out of CSP code
+            mWorkerPrivate->SetReferrerPolicy(static_cast<net::ReferrerPolicy>(rp));
+          }
+        }
       }
       WorkerPrivate* parent = mWorkerPrivate->GetParent();
       if (parent) {
