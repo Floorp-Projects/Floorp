@@ -502,16 +502,20 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (aBuilder->IsForEventDelivery() ||
           !StyleBackground()->IsTransparent(this) ||
           StyleDisplay()->mAppearance) {
-        if (!tableFrame->IsBorderCollapse() ||
-            aBuilder->IsAtRootOfPseudoStackingContext() ||
-            aBuilder->IsForEventDelivery()) {
-          // The cell background was not painted by the nsTablePainter,
-          // so we need to do it. We have special background processing here
-          // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
+        if (!tableFrame->IsBorderCollapse()) {
           nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder,
               this,
               GetRectRelativeToSelf(),
               aLists.BorderBackground());
+        } else if (aBuilder->IsAtRootOfPseudoStackingContext() ||
+                   aBuilder->IsForEventDelivery()) {
+          // The cell background was not painted by the nsTablePainter,
+          // so we need to do it. We have special background processing here
+          // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
+          nsDisplayTableItem* item =
+            new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
+          aLists.BorderBackground()->AppendNewToTop(item);
+          item->UpdateForFrameBackground(this);
         } else {
           // The nsTablePainter will paint our background. Make sure it
           // knows if we're background-attachment:fixed.
