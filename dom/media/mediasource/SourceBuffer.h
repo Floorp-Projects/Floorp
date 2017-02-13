@@ -164,7 +164,7 @@ private:
                                                   uint32_t aLength,
                                                   ErrorResult& aRv);
 
-  void AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResult aResult);
+  void AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBufferResult& aResult);
   void AppendDataErrored(const MediaResult& aError);
 
   RefPtr<MediaSource> mMediaSource;
