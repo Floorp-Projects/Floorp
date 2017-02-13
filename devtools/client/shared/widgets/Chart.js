@@ -94,7 +94,7 @@ function PieTableChart(node, pie, table) {
  *           - "click", when the mouse enters a slice or a row
  */
 function createPieTableChart(document,
-                             { title, diameter, data, strings, totals, sorted, header }) {
+                             { title, diameter, data, strings, totals, sorted }) {
   if (data && sorted) {
     data = data.slice().sort((a, b) => +(a.size < b.size));
   }
@@ -108,8 +108,7 @@ function createPieTableChart(document,
     title: title,
     data: data,
     strings: strings,
-    totals: totals,
-    header: header,
+    totals: totals
   });
 
   let container = document.createElement("div");
@@ -328,7 +327,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
  *           - "mouseout", when the mouse leaves a row
  *           - "click", when the mouse clicks a row
  */
-function createTableChart(document, { title, data, strings, totals, header }) {
+function createTableChart(document, { title, data, strings, totals }) {
   strings = strings || {};
   totals = totals || {};
   let isPlaceholder = false;
@@ -362,24 +361,6 @@ function createTableChart(document, { title, data, strings, totals, header }) {
   tableNode.className = "plain table-chart-grid";
   tableNode.setAttribute("style", "-moz-box-orient: vertical");
   container.appendChild(tableNode);
-
-  const headerNode = document.createElement("div");
-  headerNode.className = "table-chart-row";
-
-  const headerBoxNode = document.createElement("div");
-  headerBoxNode.className = "table-chart-row-box";
-  headerNode.appendChild(headerBoxNode);
-
-  for (let [key, value] of Object.entries(header)) {
-    let headerLabelNode = document.createElement("span");
-    headerLabelNode.className = "plain table-chart-row-label";
-    headerLabelNode.setAttribute("name", key)
-    headerLabelNode.textContent = value;
-
-    headerNode.appendChild(headerLabelNode);
-  }
-
-  tableNode.appendChild(headerNode);
 
   for (let rowInfo of data) {
     let rowNode = document.createElement("div");
