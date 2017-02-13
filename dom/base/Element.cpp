@@ -164,10 +164,9 @@ nsIContent::DoGetID() const
 }
 
 const nsAttrValue*
-nsIContent::DoGetClasses() const
+Element::DoGetClasses() const
 {
   MOZ_ASSERT(HasFlag(NODE_MAY_HAVE_CLASS), "Unexpected call");
-  MOZ_ASSERT(IsElement(), "Only elements can have classes");
 
   if (IsSVGElement()) {
     const nsAttrValue* animClass =
@@ -177,7 +176,7 @@ nsIContent::DoGetClasses() const
     }
   }
 
-  return AsElement()->GetParsedAttr(nsGkAtoms::_class);
+  return GetParsedAttr(nsGkAtoms::_class);
 }
 
 NS_IMETHODIMP
