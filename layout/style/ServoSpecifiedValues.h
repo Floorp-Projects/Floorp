@@ -24,81 +24,80 @@ public:
   ServoSpecifiedValues(nsPresContext* aContext, RawServoDeclarationBlock* aDecl);
 
   // GenericSpecifiedValues overrides
-  bool PropertyIsSet(nsCSSPropertyID aId) {
-    return false;
-  }
+  bool PropertyIsSet(nsCSSPropertyID aId);
 
   void SetIdentStringValue(nsCSSPropertyID aId,
-                           const nsString& aValue) {
-
-  }
+                           const nsString& aValue);
 
   void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
                                   const nsString& aValue) {
-
+    if (!PropertyIsSet(aId)) {
+      SetIdentStringValue(aId, aValue);
+    }
   }
 
   void SetKeywordValue(nsCSSPropertyID aId,
-                       int32_t aValue) {
-  }
+                       int32_t aValue);
 
   void SetKeywordValueIfUnset(nsCSSPropertyID aId,
                               int32_t aValue) {
-
+    if (!PropertyIsSet(aId)) {
+      SetKeywordValue(aId, aValue);
+    }
   }
 
 
   void SetIntValue(nsCSSPropertyID aId,
-                   int32_t aValue) {
-  }
+                   int32_t aValue);
 
   void SetPixelValue(nsCSSPropertyID aId,
-                     float aValue) {
-  }
+                     float aValue);
 
   void SetPixelValueIfUnset(nsCSSPropertyID aId,
                             float aValue) {
+    if (!PropertyIsSet(aId)) {
+      SetPixelValue(aId, aValue);
+    }
   }
 
   void SetPercentValue(nsCSSPropertyID aId,
-                       float aValue) {
-  }
+                       float aValue);
 
-  void SetAutoValue(nsCSSPropertyID aId) {
-  }
+  void SetAutoValue(nsCSSPropertyID aId);
 
   void SetAutoValueIfUnset(nsCSSPropertyID aId) {
+    if (!PropertyIsSet(aId)) {
+      SetAutoValue(aId);
+    }
   }
 
   void SetPercentValueIfUnset(nsCSSPropertyID aId,
                               float aValue) {
-
+    if (!PropertyIsSet(aId)) {
+      SetPercentValue(aId, aValue);
+    }
   }
 
-  void SetCurrentColor(nsCSSPropertyID aId) {
-
-  }
+  void SetCurrentColor(nsCSSPropertyID aId);
 
   void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
-
+    if (!PropertyIsSet(aId)) {
+      SetCurrentColor(aId);
+    }
   }
 
   void SetColorValue(nsCSSPropertyID aId,
-                     nscolor aValue) {
-
-  }
+                     nscolor aValue);
 
   void SetColorValueIfUnset(nsCSSPropertyID aId,
                             nscolor aValue) {
-
+    if (!PropertyIsSet(aId)) {
+      SetColorValue(aId, aValue);
+    }
   }
 
-  void SetFontFamily(const nsString& aValue) {
-
-  }
-  void SetTextDecorationColorOverride() {
-
-  }
+  void SetFontFamily(const nsString& aValue);
+  void SetTextDecorationColorOverride();
 
 private:
   RefPtr<RawServoDeclarationBlock> mDecl;
