@@ -108,6 +108,8 @@ public:
   inline bool IsApplicable() const;
   inline bool HasRules() const;
 
+  virtual bool IsModified() const = 0;
+
   // style sheet owner info
   enum DocumentAssociationMode {
     // OwnedByDocument means mDocument owns us (possibly via a chain of other

@@ -135,7 +135,7 @@ public:
                                         nsIDocument* aCloneDocument,
                                         nsINode* aCloneOwningNode) const;
 
-  bool IsModified() const { return mDirty; }
+  bool IsModified() const final { return mDirty; }
 
   void SetModifiedByChildRule() {
     NS_ASSERTION(mDirty,
