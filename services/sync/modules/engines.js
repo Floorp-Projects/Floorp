@@ -250,7 +250,20 @@ Tracker.prototype = {
           this.onEngineEnabledChanged(this.engine.enabled);
         }
     }
-  }
+  },
+
+  async finalize() {
+    // Stop listening for tracking and engine enabled change notifications.
+    // Important for tests where we unregister the engine during cleanup.
+    Svc.Obs.remove("weave:engine:start-tracking", this);
+    Svc.Obs.remove("weave:engine:stop-tracking", this);
+    Svc.Prefs.ignore("engine." + this.engine.prefName, this);
+
+    // Persist all pending tracked changes to disk, and wait for the final write
+    // to finish.
+    this._saveChangedIDs();
+    await this._storage.finalize();
+  },
 };
 
 
@@ -733,9 +746,7 @@ Engine.prototype = {
   },
 
   finalize() {
-    // Persist all pending tracked changes to disk.
-    this._tracker._saveChangedIDs();
-    Async.promiseSpinningly(this._tracker._storage.finalize());
+    Async.promiseSpinningly(this._tracker.finalize());
   },
 };
 
