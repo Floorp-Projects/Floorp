@@ -1649,6 +1649,8 @@ typedef (DOMString or Function) TimerHandler;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface WindowOrWorkerGlobalScope {
+  [Replaceable] readonly attribute USVString origin;
+
   // base64 utility methods
   DOMString btoa(DOMString btoa);
   DOMString atob(DOMString atob);

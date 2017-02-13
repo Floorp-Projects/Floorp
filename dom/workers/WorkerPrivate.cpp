@@ -1820,6 +1820,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mPrincipalInfo = aOther.mPrincipalInfo.forget();
 
   mDomain = aOther.mDomain;
+  mOrigin = aOther.mOrigin;
   mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
   mLoadFlags = aOther.mLoadFlags;
   mWindowID = aOther.mWindowID;
@@ -1872,6 +1873,9 @@ WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
   mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
 
   rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsContentUtils::GetUTFOrigin(aPrincipal, mOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
