@@ -849,18 +849,28 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
       // current timeout in the list.
       Timeout* nextTimeout = timeout->getNext();
 
-      // It is safe to remove and re-insert because When() is now
-      // strictly smaller than it used to be, so we know we'll insert
-      // |timeout| before nextTimeout.
-      NS_ASSERTION(!nextTimeout ||
-                   timeout->When() < nextTimeout->When(), "How did that happen?");
-      timeout->remove();
-      // Insert() will addref |timeout| and reset mFiringDepth.  Make sure to
-      // undo that after calling it.
-      uint32_t firingDepth = timeout->mFiringDepth;
-      Insert(timeout, aSortBy);
-      timeout->mFiringDepth = firingDepth;
-      timeout->Release();
+      // Since we are only reducing intervals in this method we can
+      // make an optimization here.  If the reduction does not cause us
+      // to fall before our previous timeout then we do not have to
+      // remove and re-insert the current timeout.  This is important
+      // because re-insertion makes this algorithm O(n^2).  Since we
+      // will typically be shifting a lot of timers at once this
+      // optimization saves us a lot of work.
+      Timeout* prevTimeout = timeout->getPrevious();
+      if (prevTimeout && prevTimeout->When() > timeout->When()) {
+        // It is safe to remove and re-insert because When() is now
+        // strictly smaller than it used to be, so we know we'll insert
+        // |timeout| before nextTimeout.
+        NS_ASSERTION(!nextTimeout ||
+                     timeout->When() < nextTimeout->When(), "How did that happen?");
+        timeout->remove();
+        // Insert() will addref |timeout| and reset mFiringDepth.  Make sure to
+        // undo that after calling it.
+        uint32_t firingDepth = timeout->mFiringDepth;
+        Insert(timeout, aSortBy);
+        timeout->mFiringDepth = firingDepth;
+        timeout->Release();
+      }
 
       nsresult rv = timeout->InitTimer(aQueue, delay.ToMilliseconds());
 
