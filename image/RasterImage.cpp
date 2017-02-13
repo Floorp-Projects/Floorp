@@ -479,7 +479,7 @@ NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 RasterImage::GetFrame(uint32_t aWhichFrame,
                       uint32_t aFlags)
 {
-  return GetFrameAtSize(mSize, aWhichFrame, aFlags);
+  return GetFrameInternal(mSize, aWhichFrame, aFlags).second().forget();
 }
 
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
@@ -487,12 +487,7 @@ RasterImage::GetFrameAtSize(const IntSize& aSize,
                             uint32_t aWhichFrame,
                             uint32_t aFlags)
 {
-  RefPtr<SourceSurface> surf =
-    GetFrameInternal(aSize, aWhichFrame, aFlags).second().forget();
-  // If we are here, it suggests the image is embedded in a canvas or some
-  // other path besides layers, and we won't need the file handle.
-  MarkSurfaceShared(surf);
-  return surf.forget();
+  return GetFrameInternal(aSize, aWhichFrame, aFlags).second().forget();
 }
 
 Pair<DrawResult, RefPtr<SourceSurface>>
