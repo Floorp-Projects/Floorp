@@ -421,22 +421,6 @@ SetAnimatable(nsCSSPropertyID aProperty,
 }
 
 static void
-SetBaseAnimationStyle(nsCSSPropertyID aProperty,
-                      nsIFrame* aFrame,
-                      const TransformReferenceBox& aRefBox,
-                      layers::Animatable& aBaseStyle)
-{
-  MOZ_ASSERT(aFrame);
-
-  StyleAnimationValue baseValue =
-    EffectCompositor::GetBaseStyle(aProperty, aFrame);
-  MOZ_ASSERT(!baseValue.IsNull(),
-             "The base value should be already there");
-
-  SetAnimatable(aProperty, baseValue, aFrame, aRefBox, aBaseStyle);
-}
-
-static void
 AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                         dom::Animation* aAnimation, Layer* aLayer,
                         AnimationData& aData, bool aPending)
@@ -511,11 +495,16 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
   // If the animation is additive or accumulates, we need to pass its base value
   // to the compositor.
-  if (aAnimation->GetEffect()->AsKeyframeEffect()->
-        NeedsBaseStyle(aProperty.mProperty)) {
-    SetBaseAnimationStyle(aProperty.mProperty,
-                          aFrame, refBox,
-                          animation->baseStyle());
+
+  StyleAnimationValue baseStyle =
+    aAnimation->GetEffect()->AsKeyframeEffect()->BaseStyle(aProperty.mProperty);
+  if (!baseStyle.IsNull()) {
+    // FIXME: Bug 1311257: We need to get the baseValue for
+    //        RawServoAnimationValue.
+    SetAnimatable(aProperty.mProperty,
+                  baseStyle,
+                  aFrame, refBox,
+                  animation->baseStyle());
   } else {
     animation->baseStyle() = null_t();
   }
