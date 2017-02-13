@@ -1757,7 +1757,7 @@ MediaFormatReader::HandleDemuxedSamples(
   // Decode all our demuxed frames.
   while (decoder.mQueuedSamples.Length()) {
     RefPtr<MediaRawData> sample = decoder.mQueuedSamples[0];
-    RefPtr<SharedTrackInfo> info = sample->mTrackInfo;
+    RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
     if (info && decoder.mLastStreamSourceID != info->GetID()) {
       bool supportRecycling = MediaPrefs::MediaDecoderCheckRecycling()
