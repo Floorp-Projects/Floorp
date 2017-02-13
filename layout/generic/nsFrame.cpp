@@ -196,13 +196,13 @@ nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
   if (aReflowInput.GetWritingMode().IsOrthogonalTo(containerWM)) {
     // Orthogonal flows are always reflowed with an unconstrained dimension,
     // so should never end up truncated (see ReflowInput::Init()).
-    mStatus &= ~NS_FRAME_TRUNCATED;
+    mTruncated = false;
   } else if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
              aReflowInput.AvailableBSize() < aMetrics.BSize(containerWM) &&
              !aReflowInput.mFlags.mIsTopOfPage) {
-    mStatus |= NS_FRAME_TRUNCATED;
+    mTruncated = true;
   } else {
-    mStatus &= ~NS_FRAME_TRUNCATED;
+    mTruncated = false;
   }
 }
 
