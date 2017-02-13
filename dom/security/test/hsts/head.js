@@ -431,11 +431,5 @@ async function execute_test(test, mimetype) {
       test, test_settings[which_test].type,
       test_settings[which_test].timeout);
 
-  let tab = openTab(src);
-  test_servers[test]['tab'] = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-
-  await BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.withNewTab(src, () => {});
 }
