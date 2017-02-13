@@ -52,6 +52,7 @@ var DEFAULT_PREFERENCES =
   "enhanceTextSelection": false,
   "renderer": "canvas",
   "renderInteractiveForms": false,
+  "enablePrintAutoRotate": false,
   "disablePageLabels": false
 }
 
