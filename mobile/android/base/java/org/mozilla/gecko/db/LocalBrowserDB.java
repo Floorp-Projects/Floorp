@@ -110,7 +110,6 @@ public class LocalBrowserDB extends BrowserDB {
     public static final String HISTORY_VISITS_URL = "url";
 
     private static final String TELEMETRY_HISTOGRAM_ACTIVITY_STREAM_TOPSITES = "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS";
-    private static final String TELEMETRY_HISTOGRAM_ACTIVITY_STREAM_HIGHLIGHTS = "FENNEC_ACTIVITY_STREAM_HIGHLIGHTS_LOADER_TIME_MS";
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
@@ -121,7 +120,7 @@ public class LocalBrowserDB extends BrowserDB {
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
     private final Uri mTopSitesUriWithProfile;
-    private final Uri mHighlightsUriWithProfile;
+    private final Uri mHighlightCandidatesUriWithProfile;
     private final Uri mSearchHistoryUri;
     private final Uri mActivityStreamBlockedUriWithProfile;
     private final Uri mPageMetadataWithProfile;
@@ -150,7 +149,7 @@ public class LocalBrowserDB extends BrowserDB {
         mCombinedUriWithProfile = DBUtils.appendProfile(profile, Combined.CONTENT_URI);
         mFaviconsUriWithProfile = DBUtils.appendProfile(profile, Favicons.CONTENT_URI);
         mTopSitesUriWithProfile = DBUtils.appendProfile(profile, TopSites.CONTENT_URI);
-        mHighlightsUriWithProfile = DBUtils.appendProfile(profile, Highlights.CONTENT_URI);
+        mHighlightCandidatesUriWithProfile = DBUtils.appendProfile(profile, BrowserContract.HighlightCandidates.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
         mActivityStreamBlockedUriWithProfile = DBUtils.appendProfile(profile, ActivityStreamBlocklist.CONTENT_URI);
 
@@ -1975,13 +1974,13 @@ public class LocalBrowserDB extends BrowserDB {
     }
 
     @Override
-    public CursorLoader getHighlights(Context context, int limit) {
-        final Uri uri = mHighlightsUriWithProfile.buildUpon()
+    @Nullable
+    public Cursor getHighlightCandidates(ContentResolver contentResolver, int limit) {
+        final Uri uri = mHighlightCandidatesUriWithProfile.buildUpon()
                 .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
                 .build();
 
-        return new TelemetrisedCursorLoader(context, uri, null, null, null, null,
-                TELEMETRY_HISTOGRAM_ACTIVITY_STREAM_HIGHLIGHTS);
+        return contentResolver.query(uri, null, null, null, null, null);
     }
 
     @Override
