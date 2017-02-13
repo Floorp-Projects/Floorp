@@ -1776,6 +1776,11 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
   std::vector<std::string> extraArgs;
+
+  if (gSafeMode) {
+    extraArgs.push_back("-safeMode");
+  }
+
   if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
     MarkAsDead();
     return false;
