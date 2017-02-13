@@ -12,6 +12,7 @@
 #include "mozilla/gfx/TiledRegion.h"    // for TiledRegion
 #include "mozilla/gfx/Types.h"          // for SamplingFilter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
+#include "mozilla/layers/WebRenderLayersLogging.h"
 #include "nsAString.h"
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsRegion.h"                   // for nsRegion, nsIntRegion
