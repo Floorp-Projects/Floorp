@@ -266,27 +266,27 @@ public:
   float WritableUnrestrictedFloat() const;
   void SetWritableUnrestrictedFloat(float);
   Nullable<float> GetWritableNullableFloat() const;
-  void SetWritableNullableFloat(Nullable<float>);
+  void SetWritableNullableFloat(const Nullable<float>&);
   Nullable<float> GetWritableNullableUnrestrictedFloat() const;
-  void SetWritableNullableUnrestrictedFloat(Nullable<float>);
+  void SetWritableNullableUnrestrictedFloat(const Nullable<float>&);
   double WritableDouble() const;
   void SetWritableDouble(double);
   double WritableUnrestrictedDouble() const;
   void SetWritableUnrestrictedDouble(double);
   Nullable<double> GetWritableNullableDouble() const;
-  void SetWritableNullableDouble(Nullable<double>);
+  void SetWritableNullableDouble(const Nullable<double>&);
   Nullable<double> GetWritableNullableUnrestrictedDouble() const;
-  void SetWritableNullableUnrestrictedDouble(Nullable<double>);
-  void PassFloat(float, float, Nullable<float>, Nullable<float>,
-                 double, double, Nullable<double>, Nullable<double>,
+  void SetWritableNullableUnrestrictedDouble(const Nullable<double>&);
+  void PassFloat(float, float, const Nullable<float>&, const Nullable<float>&,
+                 double, double, const Nullable<double>&, const Nullable<double>&,
                  const Sequence<float>&, const Sequence<float>&,
                  const Sequence<Nullable<float> >&,
                  const Sequence<Nullable<float> >&,
                  const Sequence<double>&, const Sequence<double>&,
                  const Sequence<Nullable<double> >&,
                  const Sequence<Nullable<double> >&);
-  void PassLenientFloat(float, float, Nullable<float>, Nullable<float>,
-                        double, double, Nullable<double>, Nullable<double>,
+  void PassLenientFloat(float, float, const Nullable<float>&, const Nullable<float>&,
+                        double, double, const Nullable<double>&, const Nullable<double>&,
                         const Sequence<float>&, const Sequence<float>&,
                         const Sequence<Nullable<float> >&,
                         const Sequence<Nullable<float> >&,
