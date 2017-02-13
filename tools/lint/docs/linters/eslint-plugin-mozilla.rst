@@ -168,6 +168,11 @@ object is assigned to another variable e.g.::
    var b = gBrowser;
    b.content // Would not be detected as a CPOW.
 
+use-ownerGlobal
+---------------
+
+Require .ownerGlobal instead of .ownerDocument.defaultView.
+
 
 var-only-at-top-level
 ---------------------
