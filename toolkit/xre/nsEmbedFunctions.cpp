@@ -681,6 +681,10 @@ XRE_InitChildProcess(int aArgc,
               foundAppdir = true;
             }
 
+            if (aArgv[idx] && !strcmp(aArgv[idx], "-safeMode")) {
+              gSafeMode = true;
+            }
+
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
             if (aArgv[idx] && !strcmp(aArgv[idx], "-profile")) {
               MOZ_ASSERT(!foundProfile);
@@ -691,13 +695,6 @@ XRE_InitChildProcess(int aArgc,
               profile.Assign(nsDependentCString(aArgv[idx+1]));
               static_cast<ContentProcess*>(process.get())->SetProfile(profile);
               foundProfile = true;
-            }
-            if (foundProfile && foundAppdir) {
-              break;
-            }
-#else
-            if (foundAppdir) {
-              break;
             }
 #endif /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
           }
