@@ -14,6 +14,55 @@
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
+// Utils functions
+function withFrame(url) {
+  return new Promise(resolve => {
+    let iframe = document.createElement("iframe");
+    iframe.onload = function () {
+      resolve(iframe);
+    };
+    iframe.src = url;
+    document.body.appendChild(iframe);
+  });
+}
+
+function navigateFrame(iframe, url) {
+  return new Promise(resolve => {
+    iframe.onload = function () {
+      resolve(iframe);
+    };
+    iframe.src = url;
+  });
+}
+
+function forceReloadFrame(iframe) {
+  return new Promise(resolve => {
+    iframe.onload = function () {
+      resolve(iframe);
+    };
+    iframe.contentWindow.location.reload(true);
+  });
+}
+
+function messageServiceWorker(win, scope, message) {
+  return win.navigator.serviceWorker.getRegistration(scope).then(swr => {
+    return new Promise(resolve => {
+      win.navigator.serviceWorker.onmessage = evt => {
+        resolve();
+      };
+      let sw = swr.active || swr.waiting || swr.installing;
+      sw.postMessage({ type: "PING", message: message });
+    });
+  });
+}
+
+function unregisterServiceWorker(win) {
+  return win.navigator.serviceWorker.ready.then(swr => {
+    return swr.unregister();
+  });
+}
+
+// Test
 let BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
 let SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
 let SCOPE = BASE_URL + "foo/";
