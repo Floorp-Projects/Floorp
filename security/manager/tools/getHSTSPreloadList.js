@@ -330,8 +330,9 @@ function output(sortedStatuses, currentList) {
     const PREFIX = "\n" +
       "struct nsSTSPreload\n" +
       "{\n" +
-      "  const uint32_t mHostIndex : 31;\n" +
-      "  const uint32_t mIncludeSubdomains : 1;\n" +
+      "  // See bug 1338873 about making these fields const.\n" +
+      "  uint32_t mHostIndex : 31;\n" +
+      "  uint32_t mIncludeSubdomains : 1;\n" +
       "};\n" +
       "\n" +
       "static const nsSTSPreload kSTSPreloadList[] = {\n";

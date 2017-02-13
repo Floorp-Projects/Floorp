@@ -1742,11 +1742,11 @@ private:
 
     void FlushStroke(gfx::GlyphBuffer& aBuf, const Pattern& aPattern)
     {
-        RefPtr<Path> path =
-            mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
-        mRunParams.dt->Stroke(path, aPattern, *mRunParams.strokeOpts,
-                              (mRunParams.drawOpts) ? *mRunParams.drawOpts
-                                                    : DrawOptions());
+        mRunParams.dt->StrokeGlyphs(mFontParams.scaledFont, aBuf,
+                                    aPattern,
+                                    *mRunParams.strokeOpts,
+                                    mFontParams.drawOptions,
+                                    mFontParams.renderingOptions);
     }
 
     Glyph        mGlyphBuffer[GLYPH_BUFFER_SIZE];

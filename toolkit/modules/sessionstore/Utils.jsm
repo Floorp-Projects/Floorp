@@ -22,6 +22,10 @@ XPCOMUtils.defineLazyGetter(this, "SERIALIZED_SYSTEMPRINCIPAL", function() {
   return Utils.serializePrincipal(Services.scriptSecurityManager.getSystemPrincipal());
 });
 
+function debug(msg) {
+  Services.console.logStringMessage("Utils: " + msg);
+}
+
 this.Utils = Object.freeze({
   get SERIALIZED_SYSTEMPRINCIPAL() { return SERIALIZED_SYSTEMPRINCIPAL; },
 
@@ -132,9 +136,13 @@ this.Utils = Object.freeze({
     if (!principal_b64)
       return null;
 
-    let principal = serializationHelper.deserializeObject(principal_b64);
-    principal.QueryInterface(Ci.nsIPrincipal);
-
-    return principal;
+    try {
+      let principal = serializationHelper.deserializeObject(principal_b64);
+      principal.QueryInterface(Ci.nsIPrincipal);
+      return principal;
+    } catch (e) {
+      debug(`Failed to deserialize principal_b64 '${principal_b64}' ${e}`);
+    }
+    return null;
   }
 });

@@ -29,12 +29,15 @@ public:
   CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem);
 
 #ifdef MOZ_CRASHREPORTER
-  void GenerateCrashReport(base::ProcessId aPid) {
+  bool GenerateCrashReport(base::ProcessId aPid,
+                           const AnnotationTable* aExtraNotes = nullptr,
+                           nsString* aOutMinidumpID = nullptr)
+  {
     RefPtr<nsIFile> crashDump;
     if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
-      return;
+      return false;
     }
-    GenerateCrashReport(crashDump);
+    return GenerateCrashReport(crashDump, aExtraNotes, aOutMinidumpID);
   }
 
   // This is a static helper function to notify the crash service that a
@@ -49,7 +52,9 @@ public:
 #endif
 
 private:
-  void GenerateCrashReport(RefPtr<nsIFile> aCrashDump);
+  bool GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
+                           const AnnotationTable* aExtraNotes,
+                           nsString* aOutMinidumpID);
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
 
