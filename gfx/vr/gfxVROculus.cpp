@@ -972,19 +972,19 @@ VRSystemManagerOculus::HandleInput()
 
   for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
     controller = mOculusController[i];
-    HandleButtonPress(controller->GetIndex(), inputState.Buttons);
+    HandleButtonPress(i, inputState.Buttons);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::IndexTrigger);
-    HandleAxisMove(controller->GetIndex(), axis, inputState.IndexTrigger[i]);
+    HandleAxisMove(i, axis, inputState.IndexTrigger[i]);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::HandTrigger);
-    HandleAxisMove(controller->GetIndex(), axis, inputState.HandTrigger[i]);
+    HandleAxisMove(i, axis, inputState.HandTrigger[i]);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickXAxis);
-    HandleAxisMove(controller->GetIndex(), axis, inputState.Thumbstick[i].x);
+    HandleAxisMove(i, axis, inputState.Thumbstick[i].x);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickYAxis);
-    HandleAxisMove(controller->GetIndex(), axis, -inputState.Thumbstick[i].y);
+    HandleAxisMove(i, axis, -inputState.Thumbstick[i].y);
 
     // Start to process pose
     ovrTrackingState state = ovr_GetTrackingState(mSession, 0.0, false);
@@ -1020,7 +1020,7 @@ VRSystemManagerOculus::HandleInput()
       poseState.linearAcceleration[1] = pose.LinearAcceleration.y;
       poseState.linearAcceleration[2] = pose.LinearAcceleration.z;
     }
-    HandlePoseTracking(controller->GetIndex(), poseState, controller);
+    HandlePoseTracking(i, poseState, controller);
   }
 }
 
@@ -1128,7 +1128,7 @@ VRSystemManagerOculus::ScanForControllers()
   if (newControllerCount != mControllerCount) {
     // controller count is changed, removing the existing gamepads first.
     for (uint32_t i = 0; i < mOculusController.Length(); ++i) {
-      RemoveGamepad(mOculusController[i]->GetIndex());
+      RemoveGamepad(i);
     }
 
     mControllerCount = 0;
