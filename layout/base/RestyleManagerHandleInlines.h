@@ -7,7 +7,7 @@
 #ifndef mozilla_RestyleManagerHandleInlines_h
 #define mozilla_RestyleManagerHandleInlines_h
 
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/ServoRestyleManager.h"
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
