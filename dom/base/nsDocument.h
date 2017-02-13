@@ -1305,7 +1305,7 @@ protected:
 
   void UpdateScreenOrientation();
 
-  virtual FlashClassification DocumentFlashClassification() override;
+  virtual mozilla::dom::FlashClassification DocumentFlashClassification() override;
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                        \
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -1329,11 +1329,11 @@ protected:
 
   // Retrieves the classification of the Flash plugins in the document based on
   // the classification lists.
-  FlashClassification PrincipalFlashClassification(bool aIsTopLevel);
+  mozilla::dom::FlashClassification PrincipalFlashClassification(bool aIsTopLevel);
 
   // Attempts to determine the Flash classification of this page based on the
   // the classification lists and the classification of parent documents.
-  FlashClassification ComputeFlashClassification();
+  mozilla::dom::FlashClassification ComputeFlashClassification();
 
   nsTArray<nsIObserver*> mCharSetObservers;
 
@@ -1379,7 +1379,7 @@ protected:
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
 
-  FlashClassification mFlashClassification;
+  mozilla::dom::FlashClassification mFlashClassification;
 private:
   static bool CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
 
