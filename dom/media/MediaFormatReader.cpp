@@ -289,6 +289,10 @@ public:
   {
     return mDecoder->SupportDecoderRecycling();
   }
+  void ConfigurationChanged(const TrackInfo& aConfig) override
+  {
+    mDecoder->ConfigurationChanged(aConfig);
+  }
   RefPtr<ShutdownPromise> Shutdown() override
   {
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
@@ -1760,19 +1764,15 @@ MediaFormatReader::HandleDemuxedSamples(
     RefPtr<TrackInfoSharedPtr> info = sample->mTrackInfo;
 
     if (info && decoder.mLastStreamSourceID != info->GetID()) {
-      bool supportRecycling = MediaPrefs::MediaDecoderCheckRecycling()
-                              && decoder.mDecoder->SupportDecoderRecycling();
       if (decoder.mNextStreamSourceID.isNothing()
           || decoder.mNextStreamSourceID.ref() != info->GetID()) {
-        if (!supportRecycling) {
-          LOG("%s stream id has changed from:%d to:%d, draining decoder.",
-            TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
-            info->GetID());
-          decoder.RequestDrain();
-          decoder.mNextStreamSourceID = Some(info->GetID());
-          ScheduleUpdate(aTrack);
-          return;
-        }
+        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+          TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
+          info->GetID());
+        decoder.RequestDrain();
+        decoder.mNextStreamSourceID = Some(info->GetID());
+        ScheduleUpdate(aTrack);
+        return;
       }
 
       LOG("%s stream id has changed from:%d to:%d.",
@@ -1780,9 +1780,9 @@ MediaFormatReader::HandleDemuxedSamples(
           info->GetID());
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
-      decoder.mInfo = info;
 
-      if (!supportRecycling) {
+      if (!MediaPrefs::MediaDecoderCheckRecycling()
+          || !decoder.mDecoder->SupportDecoderRecycling()) {
         LOG("Decoder does not support recycling, recreate decoder.");
         // If flushing is required, it will clear our array of queued samples.
         // So make a copy now.
@@ -1791,7 +1791,12 @@ MediaFormatReader::HandleDemuxedSamples(
         if (sample->mKeyframe) {
           decoder.mQueuedSamples.AppendElements(Move(samples));
         }
+      } else if (decoder.mInfo && *decoder.mInfo != *info) {
+        const TrackInfo* trackInfo = *info;
+        decoder.mDecoder->ConfigurationChanged(*trackInfo);
       }
+
+      decoder.mInfo = info;
 
       if (sample->mKeyframe) {
         ScheduleUpdate(aTrack);
