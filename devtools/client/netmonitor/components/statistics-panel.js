@@ -21,6 +21,7 @@ const {
 } = require("../utils/format-utils");
 
 const { button, div } = DOM;
+const MediaQueryList = window.matchMedia("(min-width: 700px)");
 
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
 const BACK_BUTTON = L10N.getStr("netmonitor.backButton");
@@ -41,7 +42,15 @@ const StatisticsPanel = createClass({
     requests: PropTypes.object,
   },
 
+  getInitialState() {
+    return {
+      isVerticalSpliter: MediaQueryList.matches,
+    };
+  },
+
   componentDidUpdate(prevProps) {
+    MediaQueryList.addListener(this.onLayoutChange);
+
     const { requests } = this.props;
     let ready = requests && !requests.isEmpty() && requests.every((req) =>
       req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
@@ -59,6 +68,10 @@ const StatisticsPanel = createClass({
       title: CHARTS_CACHE_DISABLED,
       data: ready ? this.sanitizeChartDataSource(requests, true) : null,
     });
+  },
+
+  componentWillUnmount() {
+    MediaQueryList.removeListener(this.onLayoutChange);
   },
 
   createChart({ id, title, data }) {
@@ -217,8 +230,22 @@ const StatisticsPanel = createClass({
     return false;
   },
 
+  onLayoutChange() {
+    this.setState({
+      isVerticalSpliter: MediaQueryList.matches,
+    });
+  },
+
   render() {
     const { closeStatistics } = this.props;
+    let splitterClassName = ["splitter"];
+
+    if (this.state.isVerticalSpliter) {
+      splitterClassName.push("devtools-side-splitter");
+    } else {
+      splitterClassName.push("devtools-horizontal-splitter");
+    }
+
     return (
       div({ className: "statistics-panel" },
         button({
@@ -227,9 +254,9 @@ const StatisticsPanel = createClass({
           title: BACK_BUTTON,
           onClick: closeStatistics,
         }, BACK_BUTTON),
-        div({ className: "charts-container devtools-responsive-container" },
+        div({ className: "charts-container" },
           div({ ref: "primedCacheChart", className: "charts primed-cache-chart" }),
-          div({ className: "splitter devtools-side-splitter" }),
+          div({ className: splitterClassName.join(" ") }),
           div({ ref: "emptyCacheChart", className: "charts empty-cache-chart" }),
         ),
       )

@@ -138,12 +138,8 @@
   flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
-
   --timings-scale: 1;
   --timings-rev-scale: 1;
-
-  /* Devtools panel view height - tabbar height - toolbar height */
-  height: calc(100vh - 48px);
 }
 
 .requests-menu-subitem {
@@ -152,6 +148,7 @@
   box-sizing: border-box;
   align-items: center;
   padding: 3px;
+  cursor: default;
 }
 
 .subitem-label {
@@ -860,7 +857,7 @@
   border-color: rgba(0,0,0,0.2);
   cursor: default;
   pointer-events: none;
-  height: 100vh;
+  height: 100%;
 }
 
 .statistics-panel .charts-container {
@@ -874,12 +871,22 @@
   height: 100%;
 }
 
+.pie-table-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .statistics-panel .pie-chart-container {
   margin-inline-start: 3vw;
   margin-inline-end: 1vw;
 }
 
 .statistics-panel .table-chart-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 240px;
   margin-inline-start: 1vw;
   margin-inline-end: 3vw;
 }
@@ -924,6 +931,10 @@
   background: var(--theme-highlight-red);
 }
 
+.table-chart-row {
+  display: flex;
+}
+
 .table-chart-row-label[name=cached] {
   display: none;
 }
@@ -935,14 +946,22 @@
 
 .table-chart-row-label[name=label] {
   width: 7em;
+  text-align: start;
 }
 
 .table-chart-row-label[name=size] {
   width: 7em;
+  text-align: start;
 }
 
 .table-chart-row-label[name=time] {
   width: 7em;
+  text-align: start;
+}
+
+.table-chart-totals {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Firebug theme support for network charts */
@@ -1041,11 +1060,13 @@
 
   .statistics-panel .charts-container {
     flex-direction: column;
+    /* Minus 4em for statistics back button width */
+    width: calc(100% - 4em);
   }
 
   .statistics-panel .splitter {
-    width: 100vw;
-    height: 0;
+    width: 100%;
+    height: 1px;
   }
 }
 
@@ -1255,12 +1276,6 @@
   height: 100%;
 }
 
-.monitor-panel {
-  width: 100vw;
-  /* Devtools panel height - devtools toolbar height */
-  height: calc(100vh - 24px);
-}
-
 .network-details-panel {
   width: 100%;
   height: 100%;
@@ -1268,10 +1283,16 @@
 }
 
 .split-box {
-  width: 100vw;
+  overflow: hidden;
 }
 
-.network-monitor {
-  width: 100vw;
-  height: 100vh;
+html,
+body,
+.root,
+.network-monitor,
+.monitor-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }

@@ -22,7 +22,7 @@ const { div } = DOM;
  */
 function NetworkMonitor({ statisticsOpen }) {
   return (
-    div({ className: "network-monitor theme-sidebar" },
+    div({ className: "network-monitor" },
       !statisticsOpen ? MonitoPanel() : StatisticsPanel()
     )
   );
