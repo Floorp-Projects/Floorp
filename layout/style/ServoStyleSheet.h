@@ -68,6 +68,8 @@ public:
   void WillDirty() {}
   void DidDirty() {}
 
+  bool IsModified() const final { return false; }
+
 protected:
   virtual ~ServoStyleSheet();
 
