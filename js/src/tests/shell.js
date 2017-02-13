@@ -231,6 +231,64 @@
     global.evaluateScript = evaluateScript;
   }
 
+  // XXX: This function is only exported for a single test file, we should
+  // consider to remove its use in that file.
+  function toPrinted(value) {
+    value = String(value);
+    value = value.replace(/\\n/g, 'NL')
+                 .replace(/\n/g, 'NL')
+                 .replace(/\\r/g, 'CR')
+                 .replace(/[^\x20-\x7E]+/g, escapeString);
+    return value;
+  }
+  global.toPrinted = toPrinted;
+
+  function escapeString(str) {
+    var a, b, c, d;
+    var len = str.length;
+    var result = "";
+    var digits = ["0", "1", "2", "3", "4", "5", "6", "7",
+                  "8", "9", "A", "B", "C", "D", "E", "F"];
+
+    for (var i = 0; i < len; i++) {
+      var ch = str.charCodeAt(i);
+
+      a = digits[ch & 0xf];
+      ch >>= 4;
+      b = digits[ch & 0xf];
+      ch >>= 4;
+
+      if (ch) {
+        c = digits[ch & 0xf];
+        ch >>= 4;
+        d = digits[ch & 0xf];
+
+        result += "\\u" + d + c + b + a;
+      } else {
+        result += "\\x" + b + a;
+      }
+    }
+
+    return result;
+  }
+
+  /*
+   * An xorshift pseudo-random number generator see:
+   * https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
+   * This generator will always produce a value, n, where
+   * 0 <= n <= 255
+   */
+  function *XorShiftGenerator(seed, size) {
+      let x = seed;
+      for (let i = 0; i < size; i++) {
+          x ^= x >> 12;
+          x ^= x << 25;
+          x ^= x >> 27;
+          yield x % 256;
+      }
+  }
+  global.XorShiftGenerator = XorShiftGenerator;
+
   /******************************************************
    * TEST METADATA EXPORTS (these are of dubious value) *
    ******************************************************/
@@ -511,50 +569,6 @@ function printBugNumber (num)
   print ('BUGNUMBER: ' + num);
 }
 
-function toPrinted(value)
-{
-  value = String(value);
-  value = value.replace(/\\n/g, 'NL')
-               .replace(/\n/g, 'NL')
-               .replace(/\\r/g, 'CR')
-               .replace(/[^\x20-\x7E]+/g, escapeString);
-  return value;
-}
-
-function escapeString (str)
-{
-  var a, b, c, d;
-  var len = str.length;
-  var result = "";
-  var digits = ["0", "1", "2", "3", "4", "5", "6", "7",
-                "8", "9", "A", "B", "C", "D", "E", "F"];
-
-  for (var i=0; i<len; i++)
-  {
-    var ch = str.charCodeAt(i);
-
-    a = digits[ch & 0xf];
-    ch >>= 4;
-    b = digits[ch & 0xf];
-    ch >>= 4;
-
-    if (ch)
-    {
-      c = digits[ch & 0xf];
-      ch >>= 4;
-      d = digits[ch & 0xf];
-
-      result += "\\u" + d + c + b + a;
-    }
-    else
-    {
-      result += "\\x" + b + a;
-    }
-  }
-
-  return result;
-}
-
 /*
  * Compare expected result to actual result, if they differ (in value and/or
  * type) report a failure.  If description is provided, include it in the
@@ -637,22 +651,6 @@ function reportMatch (expectedRegExp, actual, description) {
     }
   }
   return testcase.passed;
-}
-
-/*
- * An xorshift pseudo-random number generator see:
- * https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
- * This generator will always produce a value, n, where
- * 0 <= n <= 255
- */
-function *XorShiftGenerator(seed, size) {
-    let x = seed;
-    for (let i = 0; i < size; i++) {
-        x ^= x >> 12;
-        x ^= x << 25;
-        x ^= x >> 27;
-        yield x % 256;
-    }
 }
 
 function compareSource(expect, actual, summary)
