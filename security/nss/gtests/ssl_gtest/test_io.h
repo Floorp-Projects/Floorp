@@ -15,6 +15,7 @@
 #include <string>
 
 #include "databuffer.h"
+#include "dummy_io.h"
 #include "prio.h"
 #include "scoped_ptrs.h"
 
@@ -49,7 +50,7 @@ inline std::ostream& operator<<(std::ostream& os, Mode m) {
   return os << ((m == STREAM) ? "TLS" : "DTLS");
 }
 
-class DummyPrSocket {
+class DummyPrSocket : public DummyIOLayerMethods {
  public:
   DummyPrSocket(const std::string& name, Mode mode)
       : name_(name),
@@ -71,9 +72,10 @@ class DummyPrSocket {
   void Reset();
 
   void PacketReceived(const DataBuffer& data);
-  int32_t Read(void* data, int32_t len);
-  int32_t Recv(void* buf, int32_t buflen);
-  int32_t Write(const void* buf, int32_t length);
+  int32_t Read(PRFileDesc* f, void* data, int32_t len) override;
+  int32_t Recv(PRFileDesc* f, void* buf, int32_t buflen, int32_t flags,
+               PRIntervalTime to) override;
+  int32_t Write(PRFileDesc* f, const void* buf, int32_t length) override;
   void CloseWrites() { writeable_ = false; }
 
   Mode mode() const { return mode_; }
@@ -141,6 +143,7 @@ class Poller {
   class Waiter {
    public:
     Waiter(std::shared_ptr<DummyPrSocket> io) : io_(io) {
+      memset(&targets_[0], 0, sizeof(targets_));
       memset(&callbacks_[0], 0, sizeof(callbacks_));
     }
 

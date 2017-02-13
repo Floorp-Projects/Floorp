@@ -17,7 +17,6 @@
   ],
   'target_defaults': {
     'include_dirs': [
-      'gtest/include/',
       'gtest'
     ],
   },
