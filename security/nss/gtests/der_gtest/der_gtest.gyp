@@ -24,12 +24,6 @@
       ]
     }
   ],
-  'target_defaults': {
-    'include_dirs': [
-      '../../gtests/google_test/gtest/include',
-      '../../gtests/common'
-    ]
-  },
   'variables': {
     'module': 'nss'
   }

@@ -39,8 +39,6 @@
   ],
   'target_defaults': {
     'include_dirs': [
-      '<(DEPTH)/gtests/google_test/gtest/include',
-      '<(DEPTH)/gtests/common',
       '<(DEPTH)/lib/freebl/mpi',
     ]
   },
