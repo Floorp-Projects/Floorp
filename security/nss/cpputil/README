@@ -1,0 +1,11 @@
+######################################
+## PLEASE READ BEFORE USING CPPUTIL ##
+######################################
+
+This is a static library supposed to be mainly used by NSS internally. We use
+it for testing, fuzzing, and a few new tools written in C++ that we're
+experimenting with.
+
+You might find it handy to use for your own projects but please be aware that
+we will make no promises your application won't break in the future. We will
+provide no support if you decide to link against it.

@@ -12,8 +12,6 @@
 #include "keyhi.h"
 #include "pk11pub.h"
 
-namespace nss_test {
-
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
   void operator()(CERTCertificateList* list) {
@@ -58,6 +56,4 @@ SCOPED(SECKEYPrivateKey);
 
 #undef SCOPED
 
-}  // namespace nss_test
-
-#endif
+#endif  // scoped_ptrs_h__

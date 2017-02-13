@@ -93,6 +93,8 @@
 #define CKA_NSS_JPAKE_X2 (CKA_NSS + 32)
 #define CKA_NSS_JPAKE_X2S (CKA_NSS + 33)
 
+#define CKA_NSS_MOZILLA_CA_POLICY (CKA_NSS + 34)
+
 /*
  * Trust attributes:
  *
