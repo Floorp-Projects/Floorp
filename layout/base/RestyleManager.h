@@ -142,6 +142,9 @@ public:
 
   void PostRestyleEventForLazyConstruction() { PostRestyleEventInternal(true); }
 
+  void ContentInserted(nsINode* aContainer, nsIContent* aChild);
+  void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent);
+
   MOZ_DECL_STYLO_METHODS(GeckoRestyleManager, ServoRestyleManager)
 
   inline void PostRestyleEvent(dom::Element* aElement,
@@ -152,10 +155,6 @@ public:
   inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                            nsRestyleHint aRestyleHint);
   inline void ProcessPendingRestyles();
-  inline void ContentInserted(nsINode* aContainer,
-                              nsIContent* aChild);
-  inline void ContentAppended(nsIContent* aContainer,
-                              nsIContent* aFirstNewContent);
   inline void ContentRemoved(nsINode* aContainer,
                              nsIContent* aOldChild,
                              nsIContent* aFollowingSibling);

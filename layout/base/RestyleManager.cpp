@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsIFrame.h"
 #include "nsIPresShellInlines.h"
@@ -21,6 +22,18 @@ RestyleManager::RestyleManager(StyleBackendType aType,
   , mInStyleRefresh(false)
 {
   MOZ_ASSERT(mPresContext);
+}
+
+void
+RestyleManager::ContentInserted(nsINode* aContainer, nsIContent* aChild)
+{
+  RestyleForInsertOrChange(aContainer, aChild);
+}
+
+void
+RestyleManager::ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent)
+{
+  RestyleForAppend(aContainer, aFirstNewContent);
 }
 
 /**

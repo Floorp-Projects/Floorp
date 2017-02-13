@@ -220,18 +220,6 @@ private:
   void RestyleForEmptyChange(Element* aContainer);
 
 public:
-  // Handle ContentInserted notifications.
-  void ContentInserted(nsINode* aContainer, nsIContent* aChild)
-  {
-    RestyleForInsertOrChange(aContainer, aChild);
-  }
-
-  // Handle ContentAppended notifications.
-  void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent)
-  {
-    RestyleForAppend(aContainer, aFirstNewContent);
-  }
-
   // Handle ContentRemoved notifications.
   //
   // This would be have the same logic as RestyleForInsertOrChange if we got the
