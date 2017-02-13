@@ -37,9 +37,16 @@
   box-sizing: border-box;
 }
 
-#root,
+:root,
+input,
+select,
+button {
+  font-size: 11px;
+}
+
 html,
-body {
+body,
+#root {
   height: 100%;
   margin: 0;
 }
@@ -91,7 +98,6 @@ select {
   padding: 0 8px;
   text-align: center;
   text-overflow: ellipsis;
-  font-size: 11px;
 }
 
 select.selected {
@@ -199,7 +205,6 @@ select > option.divider {
   margin: 0 8px;
   -moz-user-select: none;
   color: var(--viewport-color);
-  font-size: 11px;
   height: 15px;
 }
 
@@ -485,14 +490,12 @@ select > option.divider {
 }
 
 .device-header {
-  font-size: 11px;
   font-weight: bold;
   text-transform: capitalize;
   padding: 0 0 3px 23px;
 }
 
 .device-label {
-  font-size: 11px;
   padding-bottom: 3px;
   display: flex;
   align-items: center;
@@ -606,8 +609,4 @@ select > option.divider {
   display: inline-block;
   margin-right: 5px;
   min-width: 35px;
-}
-
-#device-adder #device-adder-save {
-  margin-top: 5px;
 }
