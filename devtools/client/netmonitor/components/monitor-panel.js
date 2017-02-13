@@ -103,7 +103,7 @@ const MonitorPanel = createClass({
       div({ className: "monitor-panel" },
         Toolbar(),
         SplitBox({
-          className: "devtools-responsive-container split-box",
+          className: "devtools-responsive-container",
           initialWidth: `${Prefs.networkDetailsWidth}px`,
           initialHeight: `${Prefs.networkDetailsHeight}px`,
           minSize: "50px",

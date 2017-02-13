@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
@@ -218,11 +217,11 @@ RequestListContextMenu.prototype = {
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
-  copyPostData: Task.async(function* () {
+  async copyPostData() {
     let selected = this.selectedRequest;
 
     // Try to extract any form data parameters.
-    let formDataSections = yield getFormDataSections(
+    let formDataSections = await getFormDataSections(
       selected.requestHeaders,
       selected.requestHeadersFromUploadStream,
       selected.requestPostData,
@@ -243,19 +242,19 @@ RequestListContextMenu.prototype = {
     // Fall back to raw payload.
     if (!string) {
       let postData = selected.requestPostData.postData.text;
-      string = yield window.gNetwork.getString(postData);
+      string = await window.gNetwork.getString(postData);
       if (Services.appinfo.OS !== "WINNT") {
         string = string.replace(/\r/g, "");
       }
     }
 
     clipboardHelper.copyString(string);
-  }),
+  },
 
   /**
    * Copy a cURL command from the currently selected item.
    */
-  copyAsCurl: Task.async(function* () {
+  async copyAsCurl() {
     let selected = this.selectedRequest;
 
     // Create a sanitized object for the Curl command generator.
@@ -269,18 +268,18 @@ RequestListContextMenu.prototype = {
 
     // Fetch header values.
     for (let { name, value } of selected.requestHeaders.headers) {
-      let text = yield window.gNetwork.getString(value);
+      let text = await window.gNetwork.getString(value);
       data.headers.push({ name: name, value: text });
     }
 
     // Fetch the request payload.
     if (selected.requestPostData) {
       let postData = selected.requestPostData.postData.text;
-      data.postDataText = yield window.gNetwork.getString(postData);
+      data.postDataText = await window.gNetwork.getString(postData);
     }
 
     clipboardHelper.copyString(Curl.generateCommand(data));
-  }),
+  },
 
   /**
    * Copy the raw request headers from the currently selected item.

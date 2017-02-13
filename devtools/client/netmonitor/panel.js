@@ -12,7 +12,7 @@ function NetMonitorPanel(iframeWindow, toolbox) {
 }
 
 NetMonitorPanel.prototype = {
-  open: async function () {
+  async open() {
     if (!this.toolbox.target.isRemote) {
       await this.toolbox.target.makeRemote();
     }
@@ -22,7 +22,7 @@ NetMonitorPanel.prototype = {
     return this;
   },
 
-  destroy: async function () {
+  async destroy() {
     await this.netmonitor.destroy();
     this.emit("destroyed");
     return this;
