@@ -10,12 +10,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-Service.engineManager.clear();
-Service.engineManager.register(RotaryEngine);
-var engine = Service.engineManager.get("rotary");
-var tracker = engine._tracker;
-engine.enabled = true;
-
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();
 var upd = collectionsHelper.with_updated_collection;
@@ -44,7 +38,9 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
+  let engineInfo = registerRotaryEngine();
   await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
+  return engineInfo;
 }
 
 function run_test() {
@@ -56,6 +52,8 @@ function run_test() {
 }
 
 add_test(function test_tracker_score_updated() {
+  let { engine, tracker } = registerRotaryEngine();
+
   let scoreUpdated = 0;
 
   function onScoreUpdated() {
@@ -74,13 +72,15 @@ add_test(function test_tracker_score_updated() {
   } finally {
     Svc.Obs.remove("weave:engine:score:updated", onScoreUpdated);
     tracker.resetScore();
+    tracker.clearChangedIDs();
+    Service.engineManager.unregister(engine);
     run_next_test();
   }
 });
 
 add_task(async function test_sync_triggered() {
   let server = sync_httpd_setup();
-  await setUp(server);
+  let { engine, tracker } = await setUp(server);
 
   Service.login();
 
@@ -90,8 +90,11 @@ add_task(async function test_sync_triggered() {
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
   tracker.score += SCORE_INCREMENT_XLARGE;
 
-  await promiseOneObserver("weave:service:sync:finish")
+  await promiseOneObserver("weave:service:sync:finish");
   await promiseStopServer(server);
+
+  tracker.clearChangedIDs();
+  Service.engineManager.unregister(engine);
 });
 
 add_task(async function test_clients_engine_sync_triggered() {
@@ -102,7 +105,7 @@ add_task(async function test_clients_engine_sync_triggered() {
   // global score tracker gives it that treatment. See bug 676042 for more.
 
   let server = sync_httpd_setup();
-  await setUp(server);
+  let { engine, tracker } = await setUp(server);
   Service.login();
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
@@ -112,12 +115,15 @@ add_task(async function test_clients_engine_sync_triggered() {
   await promiseOneObserver("weave:service:sync:finish");
   _("Sync due to clients engine change completed.");
   await promiseStopServer(server);
+
+  tracker.clearChangedIDs();
+  Service.engineManager.unregister(engine);
 });
 
 add_task(async function test_incorrect_credentials_sync_not_triggered() {
   _("Ensure that score changes don't trigger a sync if Status.login != LOGIN_SUCCEEDED.");
   let server = sync_httpd_setup();
-  await setUp(server);
+  let { engine, tracker } = await setUp(server);
 
   // Ensure we don't actually try to sync.
   function onSyncStart() {
@@ -141,4 +147,7 @@ add_task(async function test_incorrect_credentials_sync_not_triggered() {
 
   Service.startOver();
   await promiseStopServer(server);
+
+  tracker.clearChangedIDs();
+  Service.engineManager.unregister(engine);
 });

@@ -60,10 +60,10 @@ function BogusEngine(service) {
 BogusEngine.prototype = Object.create(SteamEngine.prototype);
 
 async function cleanAndGo(engine, server) {
+  engine._tracker.clearChangedIDs();
   Svc.Prefs.resetBranch("");
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   Service.recordManager.clearCache();
-  engine._tracker.clearChangedIDs();
   await promiseStopServer(server);
 }
 
@@ -242,6 +242,7 @@ add_task(async function test_upload_failed() {
 
   } finally {
     await cleanAndGo(engine, server);
+    await engine.finalize();
   }
 });
 
@@ -324,6 +325,7 @@ add_task(async function test_sync_partialUpload() {
 
   } finally {
     await cleanAndGo(engine, server);
+    await engine.finalize();
   }
 });
 
