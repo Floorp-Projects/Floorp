@@ -140,6 +140,42 @@ public:
     return mAnimationsWithDestroyedFrame;
   }
 
+  MOZ_DECL_STYLO_METHODS(GeckoRestyleManager, ServoRestyleManager)
+
+  inline void PostRestyleEvent(dom::Element* aElement,
+                               nsRestyleHint aRestyleHint,
+                               nsChangeHint aMinChangeHint);
+  inline void PostRestyleEventForLazyConstruction();
+  inline void RebuildAllStyleData(nsChangeHint aExtraHint,
+                                  nsRestyleHint aRestyleHint);
+  inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
+                                           nsRestyleHint aRestyleHint);
+  inline void ProcessPendingRestyles();
+  inline void ContentInserted(nsINode* aContainer,
+                              nsIContent* aChild);
+  inline void ContentAppended(nsIContent* aContainer,
+                              nsIContent* aFirstNewContent);
+  inline void ContentRemoved(nsINode* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aFollowingSibling);
+  inline void RestyleForInsertOrChange(nsINode* aContainer,
+                                       nsIContent* aChild);
+  inline void RestyleForAppend(nsIContent* aContainer,
+                               nsIContent* aFirstNewContent);
+  inline nsresult ContentStateChanged(nsIContent* aContent,
+                                      EventStates aStateMask);
+  inline void AttributeWillChange(dom::Element* aElement,
+                                  int32_t aNameSpaceID,
+                                  nsIAtom* aAttribute,
+                                  int32_t aModType,
+                                  const nsAttrValue* aNewValue);
+  inline void AttributeChanged(dom::Element* aElement,
+                               int32_t aNameSpaceID,
+                               nsIAtom* aAttribute,
+                               int32_t aModType,
+                               const nsAttrValue* aOldValue);
+  inline nsresult ReparentStyleContext(nsIFrame* aFrame);
+
 protected:
   RestyleManager(StyleBackendType aType, nsPresContext* aPresContext);
 
@@ -177,8 +213,6 @@ protected:
   nsCSSFrameConstructor* FrameConstructor() const {
     return PresContext()->FrameConstructor();
   }
-
-  MOZ_DECL_STYLO_METHODS(GeckoRestyleManager, ServoRestyleManager)
 
 private:
   nsPresContext* mPresContext; // weak, can be null after Disconnect().
