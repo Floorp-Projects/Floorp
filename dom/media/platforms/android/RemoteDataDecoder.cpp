@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 
+#include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 #include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
@@ -180,6 +181,8 @@ public:
       }
 
       if (size > 0) {
+        MutexAutoLock lock(mDecoder->mMutex);
+
         RefPtr<layers::Image> img = new SurfaceTextureImage(
           mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
           gl::OriginPos::BottomLeft);
@@ -219,6 +222,7 @@ public:
     : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                         aFormat, aDrmStubId, aTaskQueue)
     , mImageContainer(aImageContainer)
+    , mMutex("RemoteVideoDecoder Mutex")
     , mConfig(aConfig)
   {
   }
@@ -275,13 +279,20 @@ public:
   {
     return mIsCodecSupportAdaptivePlayback;
   }
+  void ConfigurationChanged(const TrackInfo& aConfig) override
+  {
+    MOZ_ASSERT(aConfig.GetAsVideoInfo());
+    MutexAutoLock lock(mMutex);
+    mConfig = *aConfig.GetAsVideoInfo();
+  }
 
 private:
   layers::ImageContainer* mImageContainer;
-  const VideoInfo mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
   DurationMap mInputDurations;
   bool mIsCodecSupportAdaptivePlayback = false;
+  Mutex mMutex; // Protects mConfig
+  VideoInfo mConfig;
 };
 
 class RemoteAudioDecoder : public RemoteDataDecoder
