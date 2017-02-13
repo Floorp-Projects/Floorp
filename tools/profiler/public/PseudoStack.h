@@ -212,7 +212,7 @@ private:
 // Stub eventMarker function for js-engine event generation.
 void ProfilerJSEventMarker(const char* aEvent);
 
-// Note that some of these fields (e.g. mSleepId, mPrivacyMode) aren't really
+// Note that some of these fields (e.g. mSleep, mPrivacyMode) aren't really
 // part of the PseudoStack, but they are part of this class so they can be
 // stored in TLS.
 //
@@ -223,9 +223,7 @@ struct PseudoStack
 public:
   PseudoStack()
     : mStackPointer(0)
-    , mSleepId(0)
-    , mSleepIdObserved(0)
-    , mSleeping(false)
+    , mSleep(AWAKE)
     , mContext(nullptr)
     , mStartJSSampling(false)
     , mPrivacyMode(false)
@@ -248,9 +246,10 @@ public:
   void reinitializeOnResume()
   {
     // This is needed to cause an initial sample to be taken from sleeping
-    // threads. Otherwise sleeping threads would not have any samples to copy
-    // forward while sleeping.
-    mSleepId++;
+    // threads that had been observed prior to the profiler stopping and
+    // restarting. Otherwise sleeping threads would not have any samples to
+    // copy forward while sleeping.
+    (void)mSleep.compareExchange(SLEEPING_OBSERVED, SLEEPING_NOT_OBSERVED);
   }
 
   void addMarker(const char* aMarkerStr, ProfilerMarkerPayload* aPayload,
@@ -381,35 +380,37 @@ public:
     return n;
   }
 
-  enum SleepState { NOT_SLEEPING, SLEEPING_FIRST, SLEEPING_AGAIN };
-
-  // The first time this is called per sleep cycle we return SLEEPING_FIRST.
-  // And any other subsequent call within the same sleep cycle we return
-  // SLEEPING_AGAIN.
-  SleepState observeSleeping()
+  // This returns true for the second and subsequent calls in each sleep cycle.
+  bool CanDuplicateLastSampleDueToSleep()
   {
-    if (mSleeping != 0) {
-      if (mSleepIdObserved == mSleepId) {
-        return SLEEPING_AGAIN;
-      } else {
-        mSleepIdObserved = mSleepId;
-        return SLEEPING_FIRST;
-      }
-    } else {
-      return NOT_SLEEPING;
+    if (mSleep == AWAKE) {
+      return false;
     }
+
+    if (mSleep.compareExchange(SLEEPING_NOT_OBSERVED, SLEEPING_OBSERVED)) {
+      return false;
+    }
+
+    return true;
   }
 
-  // Call this whenever the current thread sleeps or wakes up. Calling
-  // setSleeping with the same value twice in a row is an error.
-  void setSleeping(int sleeping)
+  // Call this whenever the current thread sleeps. Calling it twice in a row
+  // without an intervening setAwake() call is an error.
+  void setSleeping()
   {
-    MOZ_ASSERT(mSleeping != sleeping);
-    mSleepId++;
-    mSleeping = sleeping;
+    MOZ_ASSERT(mSleep == AWAKE);
+    mSleep = SLEEPING_NOT_OBSERVED;
   }
 
-  bool isSleeping() { return !!mSleeping; }
+  // Call this whenever the current thread wakes. Calling it twice in a row
+  // without an intervening setSleeping() call is an error.
+  void setAwake()
+  {
+    MOZ_ASSERT(mSleep != AWAKE);
+    mSleep = AWAKE;
+  }
+
+  bool isSleeping() { return mSleep != AWAKE; }
 
 private:
   // No copying.
@@ -430,16 +431,44 @@ private:
   // to determine the number of valid samples in mStack.
   mozilla::sig_safe_t mStackPointer;
 
-  // Incremented at every sleep/wake up of the thread.
-  int mSleepId;
-
-  // Previous id observed. If this is not the same as mSleepId, this thread is
-  // not sleeping in the same place any more.
-  mozilla::Atomic<int> mSleepIdObserved;
-
-  // Keeps track of whether the thread is sleeping or not (1 when sleeping; 0
-  // when awake).
-  mozilla::Atomic<int> mSleeping;
+  // mSleep tracks whether the thread is sleeping, and if so, whether it has
+  // been previously observed. This is used for an optimization: in some cases,
+  // when a thread is asleep, we duplicate the previous sample, which is
+  // cheaper than taking a new sample.
+  //
+  // mSleep is atomic because it is accessed from multiple threads.
+  //
+  // - It is written only by this thread, via setSleeping() and setAwake().
+  //
+  // - It is read by the SamplerThread (on Win32 and Mac) or SignalSender
+  //   thread (on Linux and Android).
+  //
+  // There are two cases where racing between threads can cause an issue.
+  //
+  // - If CanDuplicateLastSampleDueToSleep() returns false but that result is
+  //   invalidated before being acted upon, we will take a full sample
+  //   unnecessarily. This is additional work but won't cause any correctness
+  //   issues. (In actual fact, this case is impossible. In order to go from
+  //   CanDuplicateLastSampleDueToSleep() returning false to it returning true
+  //   requires an intermediate call to it in order for mSleep to go from
+  //   SLEEPING_NOT_OBSERVED to SLEEPING_OBSERVED.)
+  //
+  // - If CanDuplicateLastSampleDueToSleep() returns true but that result is
+  //   invalidated before being acted upon -- i.e. the thread wakes up before
+  //   DuplicateLastSample() is called -- we will duplicate the previous
+  //   sample. This is inaccurate, but only slightly... we will effectively
+  //   treat the thread as having slept a tiny bit longer than it really did.
+  //
+  // This latter inaccuracy could be avoided by moving the
+  // CanDuplicateLastSampleDueToSleep() check within the thread-freezing code,
+  // e.g. the section where Tick() is called. But that would reduce the
+  // effectiveness of the optimization because more code would have to be run
+  // before we can tell that duplication is allowed.
+  //
+  static const int AWAKE = 0;
+  static const int SLEEPING_NOT_OBSERVED = 1;
+  static const int SLEEPING_OBSERVED = 2;
+  mozilla::Atomic<int> mSleep;
 
 public:
   // The context being sampled.
