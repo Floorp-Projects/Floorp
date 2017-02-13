@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals gNetwork, NetMonitorController */
-
 "use strict";
 
 const {
@@ -55,7 +53,6 @@ const MonitorPanel = createClass({
 
   componentWillReceiveProps(nextProps) {
     let {
-      openNetworkDetails,
       request = {},
       updateRequest,
     } = nextProps;
@@ -66,19 +63,13 @@ const MonitorPanel = createClass({
       requestPostData,
     } = request;
 
-    if (nextProps.isEmpty) {
-      openNetworkDetails(false);
-    } else if (nextProps.request && nextProps.request !== this.props.request) {
-      openNetworkDetails(true);
-    }
-
     if (!formDataSections && requestHeaders &&
         requestHeadersFromUploadStream && requestPostData) {
       getFormDataSections(
         requestHeaders,
         requestHeadersFromUploadStream,
         requestPostData,
-        gNetwork.getString.bind(gNetwork),
+        window.gNetwork.getString.bind(window.gNetwork),
       ).then((newFormDataSections) => {
         updateRequest(
           request.id,
@@ -122,7 +113,7 @@ const MonitorPanel = createClass({
           endPanel: networkDetailsOpen ?
             NetworkDetailsPanel({
               ref: "networkDetailsPanel",
-              toolbox: NetMonitorController._toolbox,
+              toolbox: window.NetMonitorController._toolbox,
             }) : null,
           endPanelControl: true,
           vert: this.state.isVerticalSpliter,

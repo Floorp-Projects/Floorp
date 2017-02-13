@@ -6,11 +6,13 @@
 
 const I = require("devtools/client/shared/vendor/immutable");
 const {
+  CLEAR_REQUESTS,
   OPEN_NETWORK_DETAILS,
   OPEN_STATISTICS,
   REMOVE_SELECTED_CUSTOM_REQUEST,
   SELECT_DETAILS_PANEL_TAB,
   SEND_CUSTOM_REQUEST,
+  SELECT_REQUEST,
   WATERFALL_RESIZE,
 } = require("../constants");
 
@@ -42,6 +44,8 @@ function setDetailsPanelTab(state, action) {
 
 function ui(state = new UI(), action) {
   switch (action.type) {
+    case CLEAR_REQUESTS:
+      return openNetworkDetails(state, { open: false });
     case OPEN_NETWORK_DETAILS:
       return openNetworkDetails(state, action);
     case OPEN_STATISTICS:
@@ -51,6 +55,8 @@ function ui(state = new UI(), action) {
       return openNetworkDetails(state, { open: false });
     case SELECT_DETAILS_PANEL_TAB:
       return setDetailsPanelTab(state, action);
+    case SELECT_REQUEST:
+      return openNetworkDetails(state, { open: true });
     case WATERFALL_RESIZE:
       return resizeWaterfall(state, action);
     default:

@@ -31,9 +31,7 @@ add_task(function* () {
 
   gStore.dispatch(Actions.openStatistics(true));
 
-  let body = document.querySelector("#body");
-
-  is(body.selectedPanel.id, "react-statistics-panel-hook",
+  ok(document.querySelector(".statistics-panel"),
     "The main panel is switched to the statistics panel.");
 
   yield waitUntil(
@@ -43,8 +41,8 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".pie-chart-slice"));
 
-  is(body.selectedPanel.id, "react-monitor-panel-hook",
-    "The main panel is switched back to the inspector panel.");
+  ok(document.querySelector(".monitor-panel"),
+    "The main panel is switched back to the monitor panel.");
 
   testFilterButtons(monitor, "html");
   info("The correct filtering predicate is used when exiting perf. analysis mode.");

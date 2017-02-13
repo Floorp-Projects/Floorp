@@ -14,16 +14,6 @@
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="netmonitor.js"/>
 
-  <deck id="body"
-        class="theme-sidebar"
-        flex="1"
-        data-localization-bundle="devtools/client/locales/netmonitor.properties">
-    <html:div xmlns="http://www.w3.org/1999/xhtml"
-              id="react-monitor-panel-hook">
-    </html:div>
-    <html:div xmlns="http://www.w3.org/1999/xhtml"
-              id="react-statistics-panel-hook">
-    </html:div>
-  </deck>
-
+  <html:div xmlns="http://www.w3.org/1999/xhtml"
+               id="react-network-monitor-hook"/>
 </window>

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals gNetwork, NetMonitorController */
-
 "use strict";
 
 const { Task } = require("devtools/shared/task");
@@ -28,7 +26,7 @@ const setTooltipImageContent = Task.async(function* (tooltip, itemEl, requestIte
     return false;
   }
 
-  let string = yield gNetwork.getString(text);
+  let string = yield window.gNetwork.getString(text);
   let src = formDataURI(mimeType, encoding, string);
   let maxDim = REQUESTS_TOOLTIP_IMAGE_MAX_DIM;
   let { naturalWidth, naturalHeight } = yield getImageDimensions(tooltip.doc, src);
@@ -92,7 +90,7 @@ const setTooltipStackTraceContent = Task.async(function* (tooltip, requestItem) 
     frameEl.addEventListener("click", () => {
       // hide the tooltip immediately, not after delay
       tooltip.hide();
-      NetMonitorController.viewSourceInDebugger(filename, lineNumber);
+      window.NetMonitorController.viewSourceInDebugger(filename, lineNumber);
     });
 
     el.appendChild(frameEl);
