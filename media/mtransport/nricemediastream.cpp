@@ -228,8 +228,8 @@ nsresult NrIceMediaStream::ParseAttributes(std::vector<std::string>&
 
   std::vector<char *> attributes_in;
 
-  for (size_t i=0; i<attributes.size(); ++i) {
-    attributes_in.push_back(const_cast<char *>(attributes[i].c_str()));
+  for (auto& attribute : attributes) {
+    attributes_in.push_back(const_cast<char *>(attribute.c_str()));
   }
 
   // Still need to call nr_ice_ctx_parse_stream_attributes.

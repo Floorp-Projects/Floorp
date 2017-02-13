@@ -702,9 +702,9 @@ NrIceStats NrIceCtx::Destroy() {
   // designed to be called more than once so if stats are desired, this can be
   // called just prior to the destructor
   MOZ_MTLOG(ML_DEBUG, "Destroying ICE ctx '" << name_ <<"'");
-  for (auto stream = streams_.begin(); stream != streams_.end(); stream++) {
-    if (*stream) {
-      (*stream)->Close();
+  for (auto& stream : streams_) {
+    if (stream) {
+      stream->Close();
     }
   }
 
@@ -921,9 +921,9 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
 
 RefPtr<NrIceMediaStream> NrIceCtx::FindStream(
     nr_ice_media_stream *stream) {
-  for (size_t i=0; i<streams_.size(); ++i) {
-    if (streams_[i] && (streams_[i]->stream() == stream)) {
-      return streams_[i];
+  for (auto& stream_ : streams_) {
+    if (stream_ && (stream_->stream() == stream)) {
+      return stream_;
     }
   }
 
@@ -955,8 +955,8 @@ std::vector<std::string> NrIceCtx::GetGlobalAttributes() {
 nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
   std::vector<char *> attrs_in;
 
-  for (size_t i=0; i<attrs.size(); ++i) {
-    attrs_in.push_back(const_cast<char *>(attrs[i].c_str()));
+  for (auto& attr : attrs) {
+    attrs_in.push_back(const_cast<char *>(attr.c_str()));
   }
 
   int r = nr_ice_peer_ctx_parse_global_attributes(peer_,
@@ -1040,8 +1040,8 @@ void NrIceCtx::SetConnectionState(ConnectionState state) {
     MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): dumping r_log ringbuffer... ");
     std::deque<std::string> logs;
     RLogConnector::GetInstance()->GetAny(0, &logs);
-    for (auto l = logs.begin(); l != logs.end(); ++l) {
-      MOZ_MTLOG(ML_INFO, *l);
+    for (auto& log : logs) {
+      MOZ_MTLOG(ML_INFO, log);
     }
   }
 
