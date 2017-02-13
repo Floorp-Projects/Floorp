@@ -1037,7 +1037,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
       //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the AudioTrackList object referenced by the audioTracks attribute on the HTMLMediaElement.
       mAudioTracks.mBuffers.AppendElement(TrackBuffer());
       // 10. Add the track description for this track to the track buffer.
-      mAudioTracks.mInfo = new SharedTrackInfo(info.mAudio, streamID);
+      mAudioTracks.mInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
       mAudioTracks.mLastInfo = mAudioTracks.mInfo;
     }
 
@@ -1069,7 +1069,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
       //   11. Queue a task to fire a trusted event named addtrack, that does not bubble and is not cancelable, and that uses the TrackEvent interface, at the VideoTrackList object referenced by the videoTracks attribute on the HTMLMediaElement.
       mVideoTracks.mBuffers.AppendElement(TrackBuffer());
       // 10. Add the track description for this track to the track buffer.
-      mVideoTracks.mInfo = new SharedTrackInfo(info.mVideo, streamID);
+      mVideoTracks.mInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
       mVideoTracks.mLastInfo = mVideoTracks.mInfo;
     }
     // 4. For each text track in the initialization segment, run following steps:
@@ -1082,8 +1082,8 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 6. Set first initialization segment received flag to true.
     mFirstInitializationSegmentReceived = true;
   } else {
-    mAudioTracks.mLastInfo = new SharedTrackInfo(info.mAudio, streamID);
-    mVideoTracks.mLastInfo = new SharedTrackInfo(info.mVideo, streamID);
+    mAudioTracks.mLastInfo = new TrackInfoSharedPtr(info.mAudio, streamID);
+    mVideoTracks.mLastInfo = new TrackInfoSharedPtr(info.mVideo, streamID);
   }
 
   UniquePtr<EncryptionInfo> crypto = mInputDemuxer->GetCrypto();
