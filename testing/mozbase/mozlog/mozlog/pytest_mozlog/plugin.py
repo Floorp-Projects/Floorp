@@ -33,8 +33,16 @@ def pytest_configure(config):
 class MozLog(object):
 
     def __init__(self):
+        self._started = False
         self.results = {}
         self.start_time = int(time.time() * 1000)  # in ms for Mozlog compatibility
+
+    def _log_suite_start(self, tests):
+        if not self._started:
+            # As this is called for each node when using pytest-xdist, we want
+            # to avoid logging multiple suite_start messages.
+            self.logger.suite_start(tests=tests, time=self.start_time)
+            self._started = True
 
     def pytest_configure(self, config):
         mozlog.commandline.setup_logging('pytest', config.known_args_namespace,
@@ -45,9 +53,13 @@ class MozLog(object):
         '''Called before test collection; records suite start time to log later'''
         self.start_time = int(time.time() * 1000)  # in ms for Mozlog compatibility
 
-    def pytest_collection_modifyitems(self, items):
+    def pytest_collection_finish(self, session):
         '''Called after test collection is completed, just before tests are run (suite start)'''
-        self.logger.suite_start(tests=items, time=self.start_time)
+        self._log_suite_start([item.nodeid for item in session.items])
+
+    def pytest_xdist_node_collection_finished(self, node, ids):
+        '''Called after each pytest-xdist node collection is completed'''
+        self._log_suite_start(ids)
 
     def pytest_sessionfinish(self, session, exitstatus):
         self.logger.suite_end()
