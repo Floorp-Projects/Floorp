@@ -10,13 +10,6 @@
 // work. For the shell, we use just a filename; for the browser, see browser.js.
 var workerDir = '';
 
-// explicitly turn on js185
-// XXX: The browser currently only supports up to version 1.8
-if (typeof version != 'undefined')
-{
-  version(185);
-}
-
 // Assert that cloning b does the right thing as far as we can tell.
 // Caveat: getters in b must produce the same value each time they're
 // called. We may call them several times.
