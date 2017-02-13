@@ -197,27 +197,6 @@ enum nsSpread {
 //----------------------------------------------------------------------
 
 /**
- * Reflow status returned by the reflow methods. There are three
- * completion statuses, represented by two bit flags.
- *
- * NS_FRAME_COMPLETE means the frame is fully complete.
- *
- * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
- * content, and that the parent frame should create a continuing frame.
- * If this bit isn't set it means the frame does map all its content.
- * This bit is mutually exclusive with NS_FRAME_OVERFLOW_INCOMPLETE.
- *
- * NS_FRAME_OVERFLOW_INCOMPLETE bit flag means that the frame has
- * overflow that is not complete, but its own box is complete.
- * (This happens when content overflows a fixed-height box.)
- * The reflower should place and size the frame and continue its reflow,
- * but needs to create an overflow container as a continuation for this
- * frame. See nsContainerFrame.h for more information.
- * This bit is mutually exclusive with NS_FRAME_NOT_COMPLETE.
- * 
- * Please use the SET macro for handling
- * NS_FRAME_NOT_COMPLETE and NS_FRAME_OVERFLOW_INCOMPLETE.
- *
  * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
  * dirty, and also needs to be reflowed. This status only makes sense
  * for a frame that is not complete, i.e. you wouldn't set both
@@ -227,15 +206,22 @@ enum nsSpread {
  * the remaining 24 bits are zero (and available for extensions; however
  * API's that accept/return nsReflowStatus must not receive/return any
  * extension bits).
- *
- * @see #Reflow()
  */
 
+// Reflow status returned by the Reflow() methods.
 class nsReflowStatus final {
 public:
   nsReflowStatus()
     : mStatus(0)
+    , mIncomplete(false)
+    , mOverflowIncomplete(false)
   {}
+
+  // Reset all the bit-fields.
+  void Reset() {
+    mIncomplete = false;
+    mOverflowIncomplete = false;
+  }
 
   nsReflowStatus(uint32_t aStatus)
     : mStatus(aStatus)
@@ -274,8 +260,42 @@ public:
     return !(*this == aRhs);
   }
 
+  // mIncomplete bit flag means the frame does not map all its content, and
+  // that the parent frame should create a continuing frame. If this bit
+  // isn't set, it means the frame does map all its content. This bit is
+  // mutually exclusive with mOverflowIncomplete.
+  //
+  // mOverflowIncomplete bit flag means that the frame has overflow that is
+  // not complete, but its own box is complete. (This happens when content
+  // overflows a fixed-height box.) The reflower should place and size the
+  // frame and continue its reflow, but needs to create an overflow
+  // container as a continuation for this frame. See nsContainerFrame.h for
+  // more information. This bit is mutually exclusive with mIncomplete.
+  //
+  // If both mIncomplete and mOverflowIncomplete are not set, the frame is
+  // fully complete.
+  bool IsComplete() const { return !mIncomplete; }
+  bool IsIncomplete() const { return mIncomplete; }
+  bool IsOverflowIncomplete() const { return mOverflowIncomplete; }
+  bool IsFullyComplete() const {
+    return !IsIncomplete() && !IsOverflowIncomplete();
+  }
+
+  void SetIncomplete() {
+    mIncomplete = true;
+    mOverflowIncomplete = false;
+  }
+  void SetOverflowIncomplete() {
+    mIncomplete = false;
+    mOverflowIncomplete = true;
+  }
+
 private:
   uint32_t mStatus;
+
+  // Frame completion status bit flags.
+  bool mIncomplete : 1;
+  bool mOverflowIncomplete : 1;
 };
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
