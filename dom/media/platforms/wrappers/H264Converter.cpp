@@ -252,6 +252,7 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
   RefPtr<MediaRawData> sample = mPendingSample.forget();
   if (mNeedKeyframe && !sample->mKeyframe) {
     mDecodePromise.Resolve(DecodedData(), __func__);
+    return;
   }
   mNeedKeyframe = false;
   if (!mNeedAVCC
