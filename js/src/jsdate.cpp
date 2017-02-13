@@ -2981,7 +2981,7 @@ date_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
     JSType hint;
     if (!GetFirstArgumentAsTypeHint(cx, args, &hint))
         return false;
-    if (hint == JSTYPE_VOID)
+    if (hint == JSTYPE_UNDEFINED)
         hint = JSTYPE_STRING;
 
     args.rval().set(args.thisv());

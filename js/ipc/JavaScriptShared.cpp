@@ -236,7 +236,7 @@ bool
 JavaScriptShared::toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to)
 {
     switch (JS_TypeOfValue(cx, from)) {
-      case JSTYPE_VOID:
+      case JSTYPE_UNDEFINED:
         *to = UndefinedVariant();
         return true;
 
