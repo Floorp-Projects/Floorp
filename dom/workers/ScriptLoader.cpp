@@ -470,8 +470,6 @@ private:
   nsCOMPtr<nsIURI> mBaseURI;
   mozilla::dom::ChannelInfo mChannelInfo;
   UniquePtr<PrincipalInfo> mPrincipalInfo;
-  nsCString mCSPHeaderValue;
-  nsCString mCSPReportOnlyHeaderValue;
 };
 
 NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
@@ -1164,9 +1162,7 @@ private:
   DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
                         uint32_t aStringLen,
                         const mozilla::dom::ChannelInfo& aChannelInfo,
-                        UniquePtr<PrincipalInfo> aPrincipalInfo,
-                        const nsACString& aCSPHeaderValue,
-                        const nsACString& aCSPReportOnlyHeaderValue)
+                        UniquePtr<PrincipalInfo> aPrincipalInfo)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
@@ -1221,10 +1217,6 @@ private:
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-      rv = mWorkerPrivate->SetCSPFromHeaderValues(aCSPHeaderValue,
-                                                  aCSPReportOnlyHeaderValue);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     }
 
@@ -1634,14 +1626,6 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  InternalHeaders* headers = response->GetInternalHeaders();
-
-  IgnoredErrorResult ignored;
-  headers->Get(NS_LITERAL_CSTRING("content-security-policy"),
-               mCSPHeaderValue, ignored);
-  headers->Get(NS_LITERAL_CSTRING("content-security-policy-report-only"),
-               mCSPReportOnlyHeaderValue, ignored);
-
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
   mChannelInfo = response->GetChannelInfo();
@@ -1653,8 +1637,7 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mRunnable->DataReceivedFromCache(mIndex, (uint8_t*)"", 0, mChannelInfo,
-                                     Move(mPrincipalInfo), mCSPHeaderValue,
-                                     mCSPReportOnlyHeaderValue);
+                                     Move(mPrincipalInfo));
     return;
   }
 
@@ -1714,8 +1697,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 
   MOZ_ASSERT(mPrincipalInfo);
   mRunnable->DataReceivedFromCache(mIndex, aString, aStringLen, mChannelInfo,
-                                   Move(mPrincipalInfo), mCSPHeaderValue,
-                                   mCSPReportOnlyHeaderValue);
+                                   Move(mPrincipalInfo));
   return NS_OK;
 }
 
