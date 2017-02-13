@@ -16,6 +16,16 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        beta {
+            initWith debug
+
+            applicationIdSuffix ".beta"
+        }
+
+        debug {
+            applicationIdSuffix ".debug"
+        }
     }
     productFlavors {
         webkit {
@@ -46,4 +56,6 @@ task buildBlocklists(type:Exec) {
 
 project.afterEvaluate{
     prepareWebkitDebugDependencies.dependsOn("buildBlocklists")
+    prepareWebkitBetaDependencies.dependsOn("buildBlocklists")
+    prepareWebkitReleaseDependencies.dependsOn("buildBlocklists")
 }
