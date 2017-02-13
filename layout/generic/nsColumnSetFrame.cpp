@@ -683,7 +683,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
     // Build a continuation column if necessary
     nsIFrame* kidNextInFlow = child->GetNextInFlow();
 
-    if (aStatus.IsFullyComplete() && !NS_FRAME_IS_TRUNCATED(aStatus)) {
+    if (aStatus.IsFullyComplete() && !aStatus.IsTruncated()) {
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
       child = nullptr;
       break;
@@ -829,10 +829,10 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
 
 #ifdef DEBUG_roc
   printf("*** DONE PASS feasible=%d\n", allFit && aStatus.IsFullyComplete()
-         && !NS_FRAME_IS_TRUNCATED(aStatus));
+         && !aStatus.IsTruncated());
 #endif
   return allFit && aStatus.IsFullyComplete()
-    && !NS_FRAME_IS_TRUNCATED(aStatus);
+    && !aStatus.IsTruncated();
 }
 
 void
