@@ -8,8 +8,8 @@
 
 // Keep others in (case-insensitive) order:
 #include "DrawResult.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
