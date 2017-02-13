@@ -1467,7 +1467,6 @@ add_task(async function ensureSameFlowIDs() {
     let server    = serverForUsers({"foo": "password"}, contents);
     await SyncTestingInfrastructure(server);
 
-    let collection = server.getCollection("foo", "clients");
     let remoteId   = Utils.makeGUID();
     let remoteId2  = Utils.makeGUID();
 
