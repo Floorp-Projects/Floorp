@@ -833,9 +833,10 @@ nsGlobalWindow::RequestIdleCallback(JSContext* aCx,
   }
 
   // If the list of idle callback requests is not empty it means that
-  // we've already dispatched the first idle request. It is the
-  // responsibility of that to dispatch the next.
-  bool needsScheduling = mIdleRequestCallbacks.isEmpty();
+  // we've already dispatched the first idle request. If we're
+  // suspended we should only queue the idle callback and not schedule
+  // it to run, that will be done in ResumeIdleRequest.
+  bool needsScheduling = !IsSuspended() && mIdleRequestCallbacks.isEmpty();
   // mIdleRequestCallbacks now owns request
   InsertIdleCallback(request);
 
