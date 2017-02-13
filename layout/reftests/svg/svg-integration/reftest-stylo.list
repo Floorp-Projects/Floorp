@@ -17,8 +17,8 @@ fails == clipPath-html-06-extref.xhtml clipPath-html-06-extref.xhtml
 fails == clipPath-html-07.xhtml clipPath-html-07.xhtml
 fails == clipPath-html-08.xhtml clipPath-html-08.xhtml
 fails == clipPath-html-zoomed-01.xhtml clipPath-html-zoomed-01.xhtml
-fails == clipPath-transformed-html-01.xhtml clipPath-transformed-html-01.xhtml
-fails == clipPath-transformed-html-02.xhtml clipPath-transformed-html-02.xhtml
+== clipPath-transformed-html-01.xhtml clipPath-transformed-html-01.xhtml
+== clipPath-transformed-html-02.xhtml clipPath-transformed-html-02.xhtml
 fails == conditions-outer-svg-01.xhtml conditions-outer-svg-01.xhtml
 fails == conditions-outer-svg-02.xhtml conditions-outer-svg-02.xhtml
 fails == dynamic-conditions-outer-svg-01.xhtml dynamic-conditions-outer-svg-01.xhtml
@@ -33,8 +33,8 @@ fails == mask-html-01-extref-01.xhtml mask-html-01-extref-01.xhtml
 random == mask-html-01-extref-02.xhtml mask-html-01-extref-02.xhtml
 fails == mask-html-zoomed-01.xhtml mask-html-zoomed-01.xhtml
 fails == mask-html-xbl-bound-01.html mask-html-xbl-bound-01.html
-fails == mask-transformed-html-01.xhtml mask-transformed-html-01.xhtml
-fails == mask-transformed-html-02.xhtml mask-transformed-html-02.xhtml
+== mask-transformed-html-01.xhtml mask-transformed-html-01.xhtml
+== mask-transformed-html-02.xhtml mask-transformed-html-02.xhtml
 fails == patterned-svg-under-transformed-html-01.xhtml patterned-svg-under-transformed-html-01.xhtml
 fails == patterned-svg-under-transformed-html-02.xhtml patterned-svg-under-transformed-html-02.xhtml
 
