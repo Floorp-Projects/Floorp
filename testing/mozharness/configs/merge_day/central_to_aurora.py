@@ -29,11 +29,12 @@ config = {
         for f in ["debug", "nightly", "l10n-mozconfig"]
     ] + [
         # File, from, to
-        ("{}/l10n-nightly".format(d),
+        ("{}/{}".format(d, f),
         "ac_add_options --with-l10n-base=../../l10n-central",
-        "ac_add_options --with-l10n-base=..")
+        "ac_add_options --with-l10n-base=../../mozilla-aurora")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-x86/"]
+        for f in ["l10n-mozconfig", "l10n-release"]
     ] + [
         # File, from, to
         (f, "ac_add_options --enable-profiling", "") for f in
