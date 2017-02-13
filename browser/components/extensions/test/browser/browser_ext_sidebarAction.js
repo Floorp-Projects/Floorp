@@ -91,6 +91,11 @@ add_task(function* sidebar_windows() {
   // Test sidebar is opened on install
   yield extension.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible in first window");
+  // Check that the menuitem has our image styling.
+  let elements = document.getElementsByClassName("webextension-menuitem");
+  is(elements.length, 1, "have one menuitem");
+  let style = elements[0].getAttribute("style");
+  ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
   let secondSidebar = extension.awaitMessage("sidebar");
 
@@ -100,6 +105,11 @@ add_task(function* sidebar_windows() {
 
   yield secondSidebar;
   ok(!win.document.getElementById("sidebar-box").hidden, "sidebar box is visible in second window");
+  // Check that the menuitem has our image styling.
+  elements = win.document.getElementsByClassName("webextension-menuitem");
+  is(elements.length, 1, "have one menuitem");
+  style = elements[0].getAttribute("style");
+  ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
   yield extension.unload();
   yield BrowserTestUtils.closeWindow(win);
