@@ -1225,6 +1225,35 @@ NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
   return obj;
 }
 
+namespace {
+
+// The number of queued runnables within the TabGroup ThrottledEventQueue
+// at which to begin applying back pressure to the window.
+#define DEFAULT_THROTTLED_EVENT_QUEUE_BACK_PRESSURE 5000
+static uint32_t gThrottledEventQueueBackPressure;
+
+// The amount of delay to apply to timers when back pressure is triggered.
+// As the length of the ThrottledEventQueue grows delay is increased.  The
+// delay is scaled such that every kThrottledEventQueueBackPressure runnables
+// in the queue equates to an additional kBackPressureDelayMS.
+#define DEFAULT_BACK_PRESSURE_DELAY_MS 250
+static uint32_t gBackPressureDelayMS;
+
+// This defines a limit for how much the delay must drop before we actually
+// reduce back pressure throttle amount.  This makes the throttle delay
+// a bit "sticky" once we enter back pressure.
+#define DEFAULT_BACK_PRESSURE_DELAY_REDUCTION_THRESHOLD_MS 1000
+static uint32_t gBackPressureDelayReductionThresholdMS;
+
+// The minimum delay we can reduce back pressure to before we just floor
+// the value back to zero.  This allows us to ensure that we can exit
+// back pressure event if there are always a small number of runnables
+// queued up.
+#define DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS 100
+static uint32_t gBackPressureDelayMinimumMS;
+
+} // anonymous namespace
+
 //*****************************************************************************
 //***    nsGlobalWindow: Object Management
 //*****************************************************************************
@@ -1342,6 +1371,20 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Preferences::AddUintVarCache(&gThrottledIdlePeriodLength,
                                  "dom.idle_period.throttled_length",
                                  DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH);
+
+    Preferences::AddUintVarCache(&gThrottledEventQueueBackPressure,
+                                 "dom.timeout.throttled_event_queue_back_pressure",
+                                 DEFAULT_THROTTLED_EVENT_QUEUE_BACK_PRESSURE);
+    Preferences::AddUintVarCache(&gBackPressureDelayMS,
+                                 "dom.timeout.back_pressure_delay_ms",
+                                 DEFAULT_BACK_PRESSURE_DELAY_MS);
+    Preferences::AddUintVarCache(&gBackPressureDelayReductionThresholdMS,
+                                 "dom.timeout.back_pressure_delay_reduction_threshold_ms",
+                                 DEFAULT_BACK_PRESSURE_DELAY_REDUCTION_THRESHOLD_MS);
+    Preferences::AddUintVarCache(&gBackPressureDelayMinimumMS,
+                                 "dom.timeout.back_pressure_delay_minimum_ms",
+                                 DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS);
+
     sFirstTime = false;
   }
 
@@ -3656,35 +3699,14 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
 
 namespace {
 
-// The number of queued runnables within the TabGroup ThrottledEventQueue
-// at which to begin applying back pressure to the window.
-const uint32_t kThrottledEventQueueBackPressure = 5000;
-
-// The amount of delay to apply to timers when back pressure is triggered.
-// As the length of the ThrottledEventQueue grows delay is increased.  The
-// delay is scaled such that every kThrottledEventQueueBackPressure runnables
-// in the queue equates to an additional kBackPressureDelayMS.
-const double kBackPressureDelayMS = 250;
-
-// This defines a limit for how much the delay must drop before we actually
-// reduce back pressure throttle amount.  This makes the throttle delay
-// a bit "sticky" once we enter back pressure.
-const double kBackPressureDelayReductionThresholdMS = 1000;
-
-// The minimum delay we can reduce back pressure to before we just floor
-// the value back to zero.  This allows us to ensure that we can exit
-// back pressure event if there are always a small number of runnables
-// queued up.
-const double kBackPressureDelayMinimumMS = 100;
-
 // Convert a ThrottledEventQueue length to a timer delay in milliseconds.
 // This will return a value between 0 and INT32_MAX.
 int32_t
 CalculateNewBackPressureDelayMS(uint32_t aBacklogDepth)
 {
   double multiplier = static_cast<double>(aBacklogDepth) /
-                      static_cast<double>(kThrottledEventQueueBackPressure);
-  double value = kBackPressureDelayMS * multiplier;
+                      static_cast<double>(gThrottledEventQueueBackPressure);
+  double value = static_cast<double>(gBackPressureDelayMS) * multiplier;
   // Avoid overflow
   if (value > INT32_MAX) {
     value = INT32_MAX;
@@ -3693,7 +3715,7 @@ CalculateNewBackPressureDelayMS(uint32_t aBacklogDepth)
   // Once we get close to an empty queue just floor the delay back to zero.
   // We want to ensure we don't get stuck in a condition where there is a
   // small amount of delay remaining due to an active, but reasonable, queue.
-  else if (value < kBackPressureDelayMinimumMS) {
+  else if (value < static_cast<double>(gBackPressureDelayMinimumMS)) {
     value = 0;
   }
   return static_cast<int32_t>(value);
@@ -3723,7 +3745,7 @@ nsGlobalWindow::MaybeApplyBackPressure()
   // rarely fire under normaly circumstances.  Its low enough, though,
   // that we should have time to slow new runnables from being added before an
   // OOM occurs.
-  if (queue->Length() < kThrottledEventQueueBackPressure) {
+  if (queue->Length() < gThrottledEventQueueBackPressure) {
     return;
   }
 
@@ -3764,8 +3786,8 @@ nsGlobalWindow::CancelOrUpdateBackPressure()
   // can be quite expensive.  We only want to call that method if the back log
   // is really clearing.
   else if (newBackPressureDelayMS == 0 ||
-           (mBackPressureDelayMS >
-           (newBackPressureDelayMS + kBackPressureDelayReductionThresholdMS))) {
+           (static_cast<uint32_t>(mBackPressureDelayMS) >
+           (newBackPressureDelayMS + gBackPressureDelayReductionThresholdMS))) {
     int32_t oldBackPressureDelayMS = mBackPressureDelayMS;
     mBackPressureDelayMS = newBackPressureDelayMS;
 
