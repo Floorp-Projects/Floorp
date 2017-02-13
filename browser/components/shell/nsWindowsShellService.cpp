@@ -209,8 +209,8 @@ nsWindowsShellService::ShortcutMaintenance()
 }
 
 static bool
-IsAARDefault(const RefPtr<IApplicationAssociationRegistration>& pAAR,
-             LPCWSTR aClassName)
+IsPathDefaultForClass(const RefPtr<IApplicationAssociationRegistration>& pAAR,
+                      wchar_t *exePath, LPCWSTR aClassName)
 {
   // Make sure the Prog ID matches what we have
   LPWSTR registeredApp;
@@ -224,7 +224,33 @@ IsAARDefault(const RefPtr<IApplicationAssociationRegistration>& pAAR,
 
   LPCWSTR progID = isProtocol ? L"FirefoxURL" : L"FirefoxHTML";
   bool isDefault = !wcsnicmp(registeredApp, progID, wcslen(progID));
+
+  nsAutoString regAppName(registeredApp);
   CoTaskMemFree(registeredApp);
+
+  if (isDefault) {
+    // Make sure the application path for this progID is this installation.
+    regAppName.AppendLiteral("\\shell\\open\\command");
+    HKEY theKey;
+    nsresult rv = OpenKeyForReading(HKEY_CLASSES_ROOT, regAppName, &theKey);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    wchar_t cmdFromReg[MAX_BUF] = L"";
+    DWORD len = sizeof(cmdFromReg);
+    DWORD res = ::RegQueryValueExW(theKey, nullptr, nullptr, nullptr,
+                                   (LPBYTE)cmdFromReg, &len);
+    ::RegCloseKey(theKey);
+    if (REG_FAILED(res)) {
+      return false;
+    }
+
+    wchar_t fullCmd[MAX_BUF] = L"";
+    _snwprintf(fullCmd, MAX_BUF, L"\"%s\" -osint -url \"%%1\"", exePath);
+
+    isDefault = _wcsicmp(fullCmd, cmdFromReg) == 0;
+  }
 
   return isDefault;
 }
@@ -279,9 +305,19 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     return NS_OK;
   }
 
-  *aIsDefaultBrowser = IsAARDefault(pAAR, L"http");
+  wchar_t exePath[MAX_BUF] = L"";
+  if (!::GetModuleFileNameW(0, exePath, MAX_BUF)) {
+    return NS_OK;
+  }
+  // Convert the path to a long path since GetModuleFileNameW returns the path
+  // that was used to launch Firefox which is not necessarily a long path.
+  if (!::GetLongPathNameW(exePath, exePath, MAX_BUF)) {
+    return NS_OK;
+  }
+
+  *aIsDefaultBrowser = IsPathDefaultForClass(pAAR, exePath, L"http");
   if (*aIsDefaultBrowser && aForAllTypes) {
-    *aIsDefaultBrowser = IsAARDefault(pAAR, L".html");
+    *aIsDefaultBrowser = IsPathDefaultForClass(pAAR, exePath, L".html");
   }
   return NS_OK;
 }
