@@ -123,13 +123,15 @@
 }
 
 .ruleview-computedlist,
+.ruleview-overridden-items[hidden],
 .ruleview-overridden-rule-filter[hidden],
 .ruleview-warning[hidden] {
   display: none;
 }
 
 .ruleview-computedlist[user-open],
-.ruleview-computedlist[filter-open] {
+.ruleview-computedlist[filter-open],
+.ruleview-overridden-items {
   display: block;
 }
 
@@ -360,6 +362,42 @@
 
 .ruleview-computed {
   margin-inline-start: 35px;
+}
+
+.ruleview-overridden-items {
+  margin: 0px 0px 0px 5px;
+  list-style: none;
+  line-height: 1.5em;
+}
+
+.ruleview-overridden-item {
+  position: relative;
+}
+
+.ruleview-overridden-item::before {
+  position: absolute;
+  left: -15px;
+  top: 0px;
+  content: '';
+  display: block;
+  border-left: 1px solid var(--theme-highlight-gray);
+  height: 0.7em;
+  border-bottom: 1px solid var(--theme-highlight-gray);
+  width: 10px;
+}
+
+.ruleview-overridden-item::after {
+  position: absolute;
+  left: -15px;
+  bottom: -7px;
+  content: '';
+  display: block;
+  border-left: 1px solid var(--theme-highlight-gray);
+  height: 100%;
+}
+
+.ruleview-overridden-item:last-child:after {
+  display: none;
 }
 
 .ruleview-grid,
