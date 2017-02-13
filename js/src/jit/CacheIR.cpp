@@ -6,6 +6,7 @@
 
 #include "jit/CacheIR.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jit/BaselineIC.h"
@@ -20,6 +21,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 const char* js::jit::CacheKindNames[] = {
@@ -2367,12 +2369,16 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
         return false;
     }
 
-    // Watch out for resolve or addProperty hooks.
-    if (ClassMayResolveId(cx_->names(), obj->getClass(), id, obj) ||
-        obj->getClass()->getAddProperty())
-    {
+    // Watch out for resolve hooks.
+    if (ClassMayResolveId(cx_->names(), obj->getClass(), id, obj))
         return false;
-    }
+
+    // Also watch out for addProperty hooks. Ignore the Array addProperty hook,
+    // because it doesn't do anything for non-index properties.
+    DebugOnly<uint32_t> index;
+    MOZ_ASSERT_IF(obj->is<ArrayObject>(), !IdIsIndex(id, &index));
+    if (!obj->is<ArrayObject>() && obj->getClass()->getAddProperty())
+        return false;
 
     // Walk up the object prototype chain and ensure that all prototypes are
     // native, and that all prototypes have no setter defined on the property.

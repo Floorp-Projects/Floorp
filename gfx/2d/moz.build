@@ -53,6 +53,7 @@ EXPORTS.mozilla.gfx += [
     'SourceSurfaceCairo.h',
     'SourceSurfaceRawData.h',
     'StackArray.h',
+    'Swizzle.h',
     'Tools.h',
     'Triangle.h',
     'Types.h',
@@ -122,6 +123,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'FilterProcessingSSE2.cpp',
         'ImageScalingSSE2.cpp',
         'ssse3-scaler.c',
+        'SwizzleSSE2.cpp',
     ]
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES += [
@@ -133,6 +135,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['SwizzleSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ssse3-scaler.c'].flags += CONFIG['SSSE3_FLAGS']
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -177,6 +180,7 @@ UNIFIED_SOURCES += [
     'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
+    'Swizzle.cpp',
 ]
 
 SOURCES += [
@@ -200,8 +204,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    SOURCES += ['BlurNEON.cpp']
+    SOURCES += [
+        'BlurNEON.cpp',
+        'SwizzleNEON.cpp',
+    ]
     SOURCES['BlurNEON.cpp'].flags += CONFIG['NEON_FLAGS']
+    SOURCES['SwizzleNEON.cpp'].flags += CONFIG['NEON_FLAGS']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

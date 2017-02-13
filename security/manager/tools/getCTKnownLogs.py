@@ -44,21 +44,23 @@ OUTPUT_TEMPLATE = """\
 
 struct CTLogInfo
 {
-  const char* const name;
+  // See bug 1338873 about making these fields const.
+  const char* name;
   // Index within kCTLogOperatorList.
-  const mozilla::ct::CTLogStatus status;
+  mozilla::ct::CTLogStatus status;
   // 0 for qualified logs, disqualification time for disqualified logs
   // (in milliseconds, measured since the epoch, ignoring leap seconds).
-  const uint64_t disqualificationTime;
-  const size_t operatorIndex;
-  const char* const key;
-  const size_t keyLength;
+  uint64_t disqualificationTime;
+  size_t operatorIndex;
+  const char* key;
+  size_t keyLength;
 };
 
 struct CTLogOperatorInfo
 {
-  const char* const name;
-  const mozilla::ct::CTLogOperatorId id;
+  // See bug 1338873 about making these fields const.
+  const char* name;
+  mozilla::ct::CTLogOperatorId id;
 };
 
 const CTLogInfo kCTLogList[] = {

@@ -29,7 +29,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
                         QueryInterface(Ci.nsIInterfaceRequestor).
                         getInterface(Ci.nsIDOMWindowUtils);
   try {
-    is(winUtils.layerManagerType, "None", "windowless browser's layerManagerType should be 'None'");
+    is(winUtils.layerManagerType, "Basic", "windowless browser's layerManagerType should be 'Basic'");
   } catch (e) {
     // The windowless browser may not have a layermanager at all yet, and that's ok.
     // The troubleshooting code similarly skips over windows with no layer managers.

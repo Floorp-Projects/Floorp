@@ -46,9 +46,6 @@ private:
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
 
-  PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) override;
-  bool DeallocPCrashReporterChild(PCrashReporterChild*) override;
-
   PGMPTimerChild* AllocPGMPTimerChild() override;
   bool DeallocPGMPTimerChild(PGMPTimerChild* aActor) override;
 
