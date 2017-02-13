@@ -12,7 +12,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "LiveResizeListener.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -250,7 +249,6 @@ WidgetShutdownObserver::Unregister()
 void
 nsBaseWidget::Shutdown()
 {
-  NotifyLiveResizeStopped();
   RevokeTransactionIdAllocator();
   DestroyCompositor();
   FreeShutdownObserver();
@@ -2093,41 +2091,6 @@ nsBaseWidget::UpdateSynthesizedTouchState(MultiTouchInput* aState,
   }
 
   return inputToDispatch;
-}
-
-void
-nsBaseWidget::NotifyLiveResizeStarted()
-{
-  // If we have mLiveResizeListeners already non-empty, we should notify those
-  // listeners that the resize stopped before starting anew. In theory this
-  // should never happen because we shouldn't get nested live resize actions.
-  NotifyLiveResizeStopped();
-  MOZ_ASSERT(mLiveResizeListeners.IsEmpty());
-
-  // If we can get the active tab parent for the current widget, suppress
-  // the displayport on it during the live resize.
-  if (!mWidgetListener) {
-    return;
-  }
-  nsCOMPtr<nsIXULWindow> xulWindow = mWidgetListener->GetXULWindow();
-  if (!xulWindow) {
-    return;
-  }
-  mLiveResizeListeners = xulWindow->GetLiveResizeListeners();
-  for (uint32_t i = 0; i < mLiveResizeListeners.Length(); i++) {
-    mLiveResizeListeners[i]->LiveResizeStarted();
-  }
-}
-
-void
-nsBaseWidget::NotifyLiveResizeStopped()
-{
-  if (!mLiveResizeListeners.IsEmpty()) {
-    for (uint32_t i = 0; i < mLiveResizeListeners.Length(); i++) {
-      mLiveResizeListeners[i]->LiveResizeStopped();
-    }
-    mLiveResizeListeners.Clear();
-  }
 }
 
 void
