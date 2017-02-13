@@ -1251,9 +1251,11 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     nsBlockFrame* nif = static_cast<nsBlockFrame*>(GetNextInFlow());
     while (nif) {
       if (nif->HasPushedFloatsFromPrevContinuation()) {
-        bool oc = nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER;
-        NS_MergeReflowStatusInto(&state.mReflowStatus,
-            oc ? NS_FRAME_OVERFLOW_INCOMPLETE : NS_FRAME_NOT_COMPLETE);
+        if (nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+          state.mReflowStatus.SetOverflowIncomplete();
+        } else {
+          state.mReflowStatus.SetIncomplete();
+        }
         break;
       }
 
@@ -1261,8 +1263,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  NS_MergeReflowStatusInto(&state.mReflowStatus, ocStatus);
-  NS_MergeReflowStatusInto(&state.mReflowStatus, fcStatus);
+  state.mReflowStatus.MergeCompletionStatusFrom(ocStatus);
+  state.mReflowStatus.MergeCompletionStatusFrom(fcStatus);
 
   // If we end in a BR with clear and affected floats continue,
   // we need to continue, too.
@@ -3719,7 +3721,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
             // Put it in our overflow list
             aState.mOverflowTracker->Insert(nextFrame, frameReflowStatus);
-            NS_MergeReflowStatusInto(&aState.mReflowStatus, frameReflowStatus);
+            aState.mReflowStatus.MergeCompletionStatusFrom(frameReflowStatus);
 
 #ifdef NOISY_BLOCK_DIR_MARGINS
             ListTag(stdout);
