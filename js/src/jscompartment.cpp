@@ -250,8 +250,23 @@ JSCompartment::checkWrapperMapAfterMovingGC()
 #endif
 
 bool
-JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
-                          const js::Value& wrapper)
+JSCompartment::putNewWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
+                             const js::Value& wrapper)
+{
+    MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
+    MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
+
+    if (!crossCompartmentWrappers.putNew(wrapped, wrapper)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+JSCompartment::putWrapperMaybeUpdate(JSContext* cx, const CrossCompartmentKey& wrapped,
+                                     const js::Value& wrapper)
 {
     MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
     MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
@@ -342,7 +357,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
     JSString* copy = CopyStringPure(cx, str);
     if (!copy)
         return false;
-    if (!putWrapper(cx, CrossCompartmentKey(key), StringValue(copy)))
+    if (!putNewWrapper(cx, CrossCompartmentKey(key), StringValue(copy)))
         return false;
 
     strp.set(copy);
@@ -432,7 +447,7 @@ JSCompartment::getOrCreateWrapper(JSContext* cx, HandleObject existing, MutableH
     // map is always directly wrapped by the value.
     MOZ_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
 
-    if (!putWrapper(cx, CrossCompartmentKey(key), ObjectValue(*wrapper))) {
+    if (!putNewWrapper(cx, CrossCompartmentKey(key), ObjectValue(*wrapper))) {
         // Enforce the invariant that all cross-compartment wrapper object are
         // in the map by nuking the wrapper if we couldn't add it.
         // Unfortunately it's possible for the wrapper to still be marked if we
