@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals window, NetMonitorView, gStore, gNetwork */
-
 "use strict";
 
 const promise = require("promise");
@@ -25,8 +23,7 @@ const {
   getDisplayedRequestById,
 } = require("./selectors/index");
 
-// Initialize the global Redux store
-window.gStore = configureStore();
+const gStore = window.gStore = configureStore();
 
 /**
  * Object defining the network monitor controller components.
@@ -43,10 +40,7 @@ var NetMonitorController = {
       return this._startup.promise;
     }
     this._startup = promise.defer();
-    {
-      NetMonitorView.initialize();
-      yield this.connect();
-    }
+    yield this.connect();
     this._startup.resolve();
     return undefined;
   }),
@@ -62,13 +56,10 @@ var NetMonitorController = {
       return this._shutdown.promise;
     }
     this._shutdown = promise.defer();
-    {
-      gStore.dispatch(Actions.batchReset());
-      NetMonitorView.destroy();
-      this.TargetEventsHandler.disconnect();
-      this.NetworkEventsHandler.disconnect();
-      yield this.disconnect();
-    }
+    gStore.dispatch(Actions.batchReset());
+    this.TargetEventsHandler.disconnect();
+    this.NetworkEventsHandler.disconnect();
+    yield this.disconnect();
     this._shutdown.resolve();
     return undefined;
   }),
@@ -446,6 +437,7 @@ TargetEventsHandler.prototype = {
 function NetworkEventsHandler() {
   this.addRequest = this.addRequest.bind(this);
   this.updateRequest = this.updateRequest.bind(this);
+  this.getString = this.getString.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onDocLoadingMarker = this._onDocLoadingMarker.bind(this);
@@ -588,8 +580,7 @@ NetworkEventsHandler.prototype = {
     let request = getRequestById(gStore.getState(), action.id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
-      let headers = yield fetchHeaders(
-        requestHeaders, gNetwork.getString.bind(gNetwork));
+      let headers = yield fetchHeaders(requestHeaders, this.getString);
       if (headers) {
         yield gStore.dispatch(Actions.updateRequest(
           action.id,
@@ -600,8 +591,7 @@ NetworkEventsHandler.prototype = {
     }
 
     if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
-      let headers = yield fetchHeaders(
-        responseHeaders, gNetwork.getString.bind(gNetwork));
+      let headers = yield fetchHeaders(responseHeaders, this.getString);
       if (headers) {
         yield gStore.dispatch(Actions.updateRequest(
           action.id,
@@ -614,7 +604,7 @@ NetworkEventsHandler.prototype = {
     if (request && responseContent && responseContent.content) {
       let { mimeType } = request;
       let { text, encoding } = responseContent.content;
-      let response = yield gNetwork.getString(text);
+      let response = yield this.getString(text);
       let payload = {};
 
       if (mimeType.includes("image/")) {
@@ -635,7 +625,7 @@ NetworkEventsHandler.prototype = {
     // them as a separate property, different from the classic headers.
     if (requestPostData && requestPostData.postData) {
       let { text } = requestPostData.postData;
-      let postData = yield gNetwork.getString(text);
+      let postData = yield this.getString(text);
       const headers = CurlUtils.getHeadersFromMultipartText(postData);
       const headersSize = headers.reduce((acc, { name, value }) => {
         return acc + name.length + value.length + 2;
@@ -660,7 +650,7 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           reqCookies.push(Object.assign({}, cookie, {
-            value: yield gNetwork.getString(cookie.value),
+            value: yield this.getString(cookie.value),
           }));
         }
         if (reqCookies.length) {
@@ -681,7 +671,7 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           resCookies.push(Object.assign({}, cookie, {
-            value: yield gNetwork.getString(cookie.value),
+            value: yield this.getString(cookie.value),
           }));
         }
         if (resCookies.length) {

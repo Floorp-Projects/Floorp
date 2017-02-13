@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorController */
-
 "use strict";
 
 const { KeyCodes } = require("devtools/client/shared/keycodes");
@@ -58,7 +56,10 @@ const RequestListContent = createClass({
       cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
       openStatistics: (open) => dispatch(Actions.openStatistics(open)),
     });
-    this.tooltip = new HTMLTooltip(NetMonitorController._toolbox.doc, { type: "arrow" });
+    this.tooltip = new HTMLTooltip(
+      window.NetMonitorController._toolbox.doc,
+      { type: "arrow" }
+     );
   },
 
   componentDidMount() {

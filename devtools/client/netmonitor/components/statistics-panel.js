@@ -43,7 +43,7 @@ const StatisticsPanel = createClass({
 
   componentDidUpdate(prevProps) {
     const { requests } = this.props;
-    let ready = requests && requests.every((req) =>
+    let ready = requests && !requests.isEmpty() && requests.every((req) =>
       req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
       req.status !== undefined && req.totalTime !== undefined
     );

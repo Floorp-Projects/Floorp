@@ -19,7 +19,6 @@ DevToolsModules(
     'filter-predicates.js',
     'l10n.js',
     'netmonitor-controller.js',
-    'netmonitor-view.js',
     'panel.js',
     'prefs.js',
     'request-list-context-menu.js',

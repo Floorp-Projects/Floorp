@@ -4,71 +4,29 @@
 
 "use strict";
 
-const promise = require("promise");
-const EventEmitter = require("devtools/shared/event-emitter");
-const { Task } = require("devtools/shared/task");
-const { localizeMarkup } = require("devtools/shared/l10n");
-
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this.panelDoc = iframeWindow.document;
-  this._toolbox = toolbox;
-
-  this._netmonitor = new iframeWindow.Netmonitor(toolbox);
-
-  EventEmitter.decorate(this);
+  this.toolbox = toolbox;
+  this.netmonitor = new iframeWindow.Netmonitor(toolbox);
 }
 
-exports.NetMonitorPanel = NetMonitorPanel;
-
 NetMonitorPanel.prototype = {
-  /**
-   * Open is effectively an asynchronous constructor.
-   *
-   * @return object
-   *         A promise that is resolved when the NetMonitor completes opening.
-   */
-  open: Task.async(function* () {
-    if (this._opening) {
-      return this._opening;
+  open: async function () {
+    if (!this.toolbox.target.isRemote) {
+      await this.toolbox.target.makeRemote();
     }
-    // Localize all the nodes containing a data-localization attribute.
-    localizeMarkup(this.panelDoc);
-
-    let deferred = promise.defer();
-    this._opening = deferred.promise;
-
-    // Local monitoring needs to make the target remote.
-    if (!this.target.isRemote) {
-      yield this.target.makeRemote();
-    }
-
-    yield this._netmonitor.init();
-
-    this.isReady = true;
+    await this.netmonitor.init();
     this.emit("ready");
-
-    deferred.resolve(this);
-    return this._opening;
-  }),
-
-  // DevToolPanel API
-
-  get target() {
-    return this._toolbox.target;
+    this.isReady = true;
+    return this;
   },
 
-  destroy: Task.async(function* () {
-    if (this._destroying) {
-      return this._destroying;
-    }
-    let deferred = promise.defer();
-    this._destroying = deferred.promise;
-
-    yield this._netmonitor.destroy();
+  destroy: async function () {
+    await this.netmonitor.destroy();
     this.emit("destroyed");
-
-    deferred.resolve();
-    return this._destroying;
-  })
+    return this;
+  },
 };
+
+exports.NetMonitorPanel = NetMonitorPanel;
