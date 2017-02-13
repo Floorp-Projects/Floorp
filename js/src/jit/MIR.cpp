@@ -3905,7 +3905,7 @@ MTypeOf::foldsTo(TempAllocator& alloc)
         type = JSTYPE_OBJECT;
         break;
       case MIRType::Undefined:
-        type = JSTYPE_VOID;
+        type = JSTYPE_UNDEFINED;
         break;
       case MIRType::Boolean:
         type = JSTYPE_BOOLEAN;
@@ -4449,7 +4449,7 @@ MCompare::tryFoldTypeOf(bool* result)
     }
 
     const JSAtomState& names = GetJitContext()->runtime->names();
-    if (constant->toString() == TypeName(JSTYPE_VOID, names)) {
+    if (constant->toString() == TypeName(JSTYPE_UNDEFINED, names)) {
         if (!typeOf->input()->mightBeType(MIRType::Undefined) &&
             !typeOf->inputMaybeCallableOrEmulatesUndefined())
         {

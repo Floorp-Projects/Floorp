@@ -195,7 +195,7 @@ TypeName(JSType type, const JSAtomState& names)
     JS_STATIC_ASSERT(offsetof(JSAtomState, undefined) +
                      JSTYPE_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
                      sizeof(JSAtomState));
-    JS_STATIC_ASSERT(JSTYPE_VOID == 0);
+    JS_STATIC_ASSERT(JSTYPE_UNDEFINED == 0);
     return (&names.undefined)[type];
 }
 

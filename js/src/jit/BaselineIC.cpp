@@ -4931,7 +4931,7 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler& masm)
 
     Label failure;
     switch(type_) {
-      case JSTYPE_VOID:
+      case JSTYPE_UNDEFINED:
         masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
         break;
 
