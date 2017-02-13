@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == fallback-01.xhtml fallback-01.xhtml
-fails == font-selection-by-lang-01.html font-selection-by-lang-01.html
+== font-selection-by-lang-01.html font-selection-by-lang-01.html
 fails HTTP(..) == font-selection-fallback-1.html font-selection-fallback-1.html
 fails HTTP(..) == font-selection-generic-1.html font-selection-generic-1.html
 == font-size-adjust-01.html font-size-adjust-01.html
@@ -147,8 +147,8 @@ fails == word-spacing-01.html word-spacing-01.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
 random-if(cocoaWidget) random-if(gtkWidget) HTTP(..) == zwnj-01.xhtml zwnj-01.xhtml
-fails HTTP(..) == zwnj-02.xhtml zwnj-02.xhtml
-fails == zwnj-01.html zwnj-01.html
+HTTP(..) == zwnj-02.xhtml zwnj-02.xhtml
+== zwnj-01.html zwnj-01.html
 == initial-zwj-1.html initial-zwj-1.html
 == cgj-01.html cgj-01.html
 fails == 444656.html 444656.html
@@ -244,13 +244,13 @@ fails HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection
 # Tests for hyphenation with hyphens property
 # == auto-hyphenation-1.html auto-hyphenation-1.html
 # == auto-hyphenation-1.html auto-hyphenation-1.html
-fails == auto-hyphenation-1a.html auto-hyphenation-1a.html
-fails == auto-hyphenation-2.html auto-hyphenation-2.html
+== auto-hyphenation-1a.html auto-hyphenation-1a.html
+== auto-hyphenation-2.html auto-hyphenation-2.html
 == auto-hyphenation-3.html auto-hyphenation-3.html
 == auto-hyphenation-4.html auto-hyphenation-4.html
 fails == auto-hyphenation-5.html auto-hyphenation-5.html
-fails == auto-hyphenation-6.html auto-hyphenation-6.html
-fails == auto-hyphenation-7.html auto-hyphenation-7.html
+== auto-hyphenation-6.html auto-hyphenation-6.html
+== auto-hyphenation-7.html auto-hyphenation-7.html
 == auto-hyphenation-8.html auto-hyphenation-8.html
 == auto-hyphenation-9.html auto-hyphenation-9.html
 == auto-hyphenation-10.html auto-hyphenation-10.html
@@ -268,52 +268,52 @@ fails == auto-hyphenation-xmllang-7.xhtml auto-hyphenation-xmllang-7.xhtml
 == auto-hyphenation-xmllang-10.xhtml auto-hyphenation-xmllang-10.xhtml
 fails == auto-hyphenation-xmllang-11a.xhtml auto-hyphenation-xmllang-11a.xhtml
 fails == auto-hyphenation-xmllang-11b.xhtml auto-hyphenation-xmllang-11b.xhtml
-== auto-hyphenation-xmllang-12a.xhtml auto-hyphenation-xmllang-12a.xhtml
-== auto-hyphenation-xmllang-12b.xhtml auto-hyphenation-xmllang-12b.xhtml
+fails == auto-hyphenation-xmllang-12a.xhtml auto-hyphenation-xmllang-12a.xhtml
+fails == auto-hyphenation-xmllang-12b.xhtml auto-hyphenation-xmllang-12b.xhtml
 fails == auto-hyphenation-xmllang-13a.xhtml auto-hyphenation-xmllang-13a.xhtml
-fails == auto-hyphenation-xmllang-13b.xhtml auto-hyphenation-xmllang-13b.xhtml
-== auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-xmllang-14a.xhtml
+== auto-hyphenation-xmllang-13b.xhtml auto-hyphenation-xmllang-13b.xhtml
+fails == auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-xmllang-14a.xhtml
 == auto-hyphenation-xmllang-14b.xhtml auto-hyphenation-xmllang-14b.xhtml
-fails == auto-hyphenation-af-1.html auto-hyphenation-af-1.html
-fails == auto-hyphenation-bg-1.html auto-hyphenation-bg-1.html
-fails == auto-hyphenation-ca-1.html auto-hyphenation-ca-1.html
-fails == auto-hyphenation-cy-1.html auto-hyphenation-cy-1.html
-fails == auto-hyphenation-da-1.html auto-hyphenation-da-1.html
+== auto-hyphenation-af-1.html auto-hyphenation-af-1.html
+== auto-hyphenation-bg-1.html auto-hyphenation-bg-1.html
+== auto-hyphenation-ca-1.html auto-hyphenation-ca-1.html
+== auto-hyphenation-cy-1.html auto-hyphenation-cy-1.html
+== auto-hyphenation-da-1.html auto-hyphenation-da-1.html
 # == auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
-fails == auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1.html
+== auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1.html
 # == auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
-fails == auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1.html
-fails == auto-hyphenation-eo-1.html auto-hyphenation-eo-1.html
-fails == auto-hyphenation-es-1.html auto-hyphenation-es-1.html
-fails == auto-hyphenation-et-1.html auto-hyphenation-et-1.html
-fails == auto-hyphenation-fi-1.html auto-hyphenation-fi-1.html
-fails == auto-hyphenation-fr-1.html auto-hyphenation-fr-1.html
-fails == auto-hyphenation-gl-1.html auto-hyphenation-gl-1.html
-fails == auto-hyphenation-hr-1.html auto-hyphenation-hr-1.html
-fails == auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1.html
-fails == auto-hyphenation-hu-1.html auto-hyphenation-hu-1.html
-fails == auto-hyphenation-ia-1.html auto-hyphenation-ia-1.html
-fails == auto-hyphenation-is-1.html auto-hyphenation-is-1.html
-fails == auto-hyphenation-it-1.html auto-hyphenation-it-1.html
-fails == auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1.html
-fails == auto-hyphenation-la-1.html auto-hyphenation-la-1.html
-fails == auto-hyphenation-lt-1.html auto-hyphenation-lt-1.html
-fails == auto-hyphenation-mn-1.html auto-hyphenation-mn-1.html
-fails == auto-hyphenation-nb-1.html auto-hyphenation-nb-1.html
-fails == auto-hyphenation-nl-1.html auto-hyphenation-nl-1.html
-fails == auto-hyphenation-nn-1.html auto-hyphenation-nn-1.html
+== auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1.html
+== auto-hyphenation-eo-1.html auto-hyphenation-eo-1.html
+== auto-hyphenation-es-1.html auto-hyphenation-es-1.html
+== auto-hyphenation-et-1.html auto-hyphenation-et-1.html
+== auto-hyphenation-fi-1.html auto-hyphenation-fi-1.html
+== auto-hyphenation-fr-1.html auto-hyphenation-fr-1.html
+== auto-hyphenation-gl-1.html auto-hyphenation-gl-1.html
+== auto-hyphenation-hr-1.html auto-hyphenation-hr-1.html
+== auto-hyphenation-hsb-1.html auto-hyphenation-hsb-1.html
+== auto-hyphenation-hu-1.html auto-hyphenation-hu-1.html
+== auto-hyphenation-ia-1.html auto-hyphenation-ia-1.html
+== auto-hyphenation-is-1.html auto-hyphenation-is-1.html
+== auto-hyphenation-it-1.html auto-hyphenation-it-1.html
+== auto-hyphenation-kmr-1.html auto-hyphenation-kmr-1.html
+== auto-hyphenation-la-1.html auto-hyphenation-la-1.html
+== auto-hyphenation-lt-1.html auto-hyphenation-lt-1.html
+== auto-hyphenation-mn-1.html auto-hyphenation-mn-1.html
+== auto-hyphenation-nb-1.html auto-hyphenation-nb-1.html
+== auto-hyphenation-nl-1.html auto-hyphenation-nl-1.html
+== auto-hyphenation-nn-1.html auto-hyphenation-nn-1.html
 fails == auto-hyphenation-pl-1.html auto-hyphenation-pl-1.html
-fails == auto-hyphenation-pt-1.html auto-hyphenation-pt-1.html
-fails == auto-hyphenation-ru-1.html auto-hyphenation-ru-1.html
-fails == auto-hyphenation-sh-1.html auto-hyphenation-sh-1.html
-fails == auto-hyphenation-sl-1.html auto-hyphenation-sl-1.html
-fails == auto-hyphenation-sr-1.html auto-hyphenation-sr-1.html
+== auto-hyphenation-pt-1.html auto-hyphenation-pt-1.html
+== auto-hyphenation-ru-1.html auto-hyphenation-ru-1.html
+== auto-hyphenation-sh-1.html auto-hyphenation-sh-1.html
+== auto-hyphenation-sl-1.html auto-hyphenation-sl-1.html
+== auto-hyphenation-sr-1.html auto-hyphenation-sr-1.html
 # == auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
 # == auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
-fails == auto-hyphenation-tr-1.html auto-hyphenation-tr-1.html
-fails == auto-hyphenation-uk-1.html auto-hyphenation-uk-1.html
+== auto-hyphenation-tr-1.html auto-hyphenation-tr-1.html
+== auto-hyphenation-uk-1.html auto-hyphenation-uk-1.html
 
-fails == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1.html
+== auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
 # fails-if(!cocoaWidget||OSX==1006||OSX==1007) == osx-font-smoothing.html osx-font-smoothing.html

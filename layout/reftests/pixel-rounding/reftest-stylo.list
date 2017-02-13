@@ -125,7 +125,7 @@
 == image-width-left-6.html image-width-left-6.html
 
 
-fails pref(image.downscale-during-decode.enabled,true) == image-high-quality-scaling-1.html image-high-quality-scaling-1.html
+pref(image.downscale-during-decode.enabled,true) == image-high-quality-scaling-1.html image-high-quality-scaling-1.html
 
 
 == offscreen-0-ref.html offscreen-0-ref.html

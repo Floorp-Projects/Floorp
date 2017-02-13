@@ -85,7 +85,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * mapped attribute not supported
   * test_bug363146.html [2]
   * test_bug389464.html: also font-size computation [1]
-  * test_html_attribute_computed_values.html: also list-style-type [9]
+  * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: getComputedStyle value not updated bug 1331294 ##important## (when that gets fixed, servo/servo#15006) [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [2]
 * console support:
@@ -130,7 +130,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_counter_style.html [1]
   * test_rule_insertion.html `@counter-style` [4]
   * test_value_storage.html `symbols(` [30]
-  * ... `list-style-type` [74]
+  * ... `list-style-type` [60]
   * ... `'list-style'` [30]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * @font-face support bug 1290237
@@ -412,7 +412,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `mask-repeat` [24]
   * lack glue for function values of content property bug 1296477
     * test_rule_insertion.html `decimal counter` [3]
-    * test_value_storage.html `'content` [38]
+    * test_value_storage.html `'content` [41]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
