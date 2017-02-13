@@ -275,53 +275,6 @@ EmitUnstowICValues(MacroAssembler& masm, int values, bool discard = false)
     masm.adjustFrame(-values * sizeof(Value));
 }
 
-inline void
-EmitCallTypeUpdateIC(MacroAssembler& masm, JitCode* code, uint32_t objectOffset)
-{
-    // R0 contains the value that needs to be typechecked.
-    // The object we're updating is a boxed Value on the stack, at offset
-    // objectOffset from stack top, excluding the return address.
-
-    // Save the current ICStubReg to stack
-    masm.push(ICStubReg);
-
-    // This is expected to be called from within an IC, when ICStubReg
-    // is properly initialized to point to the stub.
-    masm.loadPtr(Address(ICStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
-                 ICStubReg);
-
-    // Call the stubcode.
-    masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
-
-    // Restore the old stub reg.
-    masm.pop(ICStubReg);
-
-    // The update IC will store 0 or 1 in R1.scratchReg() reflecting if the
-    // value in R0 type-checked properly or not.
-    Label success;
-    masm.cmp32(R1.scratchReg(), Imm32(1));
-    masm.j(Assembler::Equal, &success);
-
-    // If the IC failed, then call the update fallback function.
-    EmitBaselineEnterStubFrame(masm, R1.scratchReg());
-
-    masm.loadValue(Address(BaselineStackReg, STUB_FRAME_SIZE + objectOffset), R1);
-
-    masm.Push(R0);
-    masm.Push(R1);
-    masm.Push(ICStubReg);
-
-    // Load previous frame pointer, push BaselineFrame*.
-    masm.loadPtr(Address(BaselineFrameReg, 0), R0.scratchReg());
-    masm.pushBaselineFramePtr(R0.scratchReg(), R0.scratchReg());
-
-    EmitBaselineCallVM(code, masm);
-    EmitBaselineLeaveStubFrame(masm);
-
-    // Success at end.
-    masm.bind(&success);
-}
-
 template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)

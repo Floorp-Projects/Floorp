@@ -51,7 +51,6 @@ namespace jit {
     _(GetElem_Fallback)                          \
                                                  \
     _(SetElem_Fallback)                          \
-    _(SetElem_DenseOrUnboxedArrayAdd)            \
     _(SetElem_TypedArray)                        \
                                                  \
     _(In_Fallback)                               \

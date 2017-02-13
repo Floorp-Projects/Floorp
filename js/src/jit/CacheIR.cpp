@@ -1916,7 +1916,11 @@ SetPropIRGenerator::tryAttachStub()
         if (maybeGuardInt32Index(idVal_, setElemKeyValueId(), &index, &indexId)) {
             if (tryAttachSetDenseElement(obj, objId, index, indexId, rhsValId))
                 return true;
+            if (tryAttachSetDenseElementHole(obj, objId, index, indexId, rhsValId))
+                return true;
             if (tryAttachSetUnboxedArrayElement(obj, objId, index, indexId, rhsValId))
+                return true;
+            if (tryAttachSetUnboxedArrayElementHole(obj, objId, index, indexId, rhsValId))
                 return true;
             return false;
         }
@@ -2266,9 +2270,126 @@ SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj, ObjOperandId objI
     return true;
 }
 
+static bool
+CanAttachAddElement(JSObject* obj, bool isInit)
+{
+    // Make sure the objects on the prototype don't have any indexed properties
+    // or that such properties can't appear without a shape change.
+    do {
+        // The first two checks are also relevant to the receiver object.
+        if (obj->isIndexed())
+            return false;
+
+        const Class* clasp = obj->getClass();
+        if ((clasp != &ArrayObject::class_ && clasp != &UnboxedArrayObject::class_) &&
+            (clasp->getAddProperty() ||
+             clasp->getResolve() ||
+             clasp->getOpsLookupProperty() ||
+             clasp->getSetProperty() ||
+             clasp->getOpsSetProperty()))
+        {
+            return false;
+        }
+
+        // If we're initializing a property instead of setting one, the objects
+        // on the prototype are not relevant.
+        if (isInit)
+            break;
+
+        JSObject* proto = obj->staticPrototype();
+        if (!proto)
+            break;
+
+        if (!proto->isNative())
+            return false;
+
+        obj = proto;
+    } while (true);
+
+    return true;
+}
+
+static void
+ShapeGuardProtoChain(CacheIRWriter& writer, JSObject* obj, ObjOperandId objId)
+{
+    while (true) {
+        // Guard on the proto if the shape does not imply the proto. Singleton
+        // objects always trigger a shape change when the proto changes, so we
+        // don't need a guard in that case.
+        bool guardProto = obj->hasUncacheableProto() && !obj->isSingleton();
+
+        obj = obj->staticPrototype();
+        if (!obj)
+            return;
+
+        objId = writer.loadProto(objId);
+        if (guardProto)
+            writer.guardSpecificObject(objId, obj);
+        writer.guardShape(objId, obj->as<NativeObject>().shape());
+    }
+}
+
 bool
-SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperandId objId, uint32_t index,
-                                                    Int32OperandId indexId, ValOperandId rhsId)
+SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId,
+                                                 uint32_t index, Int32OperandId indexId,
+                                                 ValOperandId rhsId)
+{
+    if (!obj->isNative() || rhsVal_.isMagic(JS_ELEMENTS_HOLE))
+        return false;
+
+    JSOp op = JSOp(*pc_);
+    MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
+
+    if (op == JSOP_INITHIDDENELEM)
+        return false;
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj->getElementsHeader()->isFrozen())
+        return false;
+
+    uint32_t capacity = nobj->getDenseCapacity();
+    uint32_t initLength = nobj->getDenseInitializedLength();
+
+    // Optimize if we're adding an element at initLength or writing to a hole.
+    // Don't handle the adding case if the current accesss is in bounds, to
+    // ensure we always call noteArrayWriteHole.
+    bool isAdd = index == initLength;
+    bool isHoleInBounds = index < initLength && !nobj->containsDenseElement(index);
+    if (!isAdd && !isHoleInBounds)
+        return false;
+
+    // Checking the capacity also checks for arrays with non-writable length,
+    // as the capacity is always less than or equal to the length in this case.
+    if (index >= capacity)
+        return false;
+
+    MOZ_ASSERT(!nobj->is<TypedArrayObject>());
+
+    // Check for other indexed properties or class hooks.
+    if (!CanAttachAddElement(nobj, IsPropertyInitOp(op)))
+        return false;
+
+    writer.guardGroup(objId, nobj->group());
+    writer.guardShape(objId, nobj->shape());
+
+    // Also shape guard the proto chain, unless this is an INITELEM.
+    if (IsPropertySetOp(op))
+        ShapeGuardProtoChain(writer, obj, objId);
+
+    writer.storeDenseElementHole(objId, indexId, rhsId, isAdd);
+    writer.returnFromIC();
+
+    // Type inference uses JSID_VOID for the element types.
+    setUpdateStubInfo(nobj->group(), JSID_VOID);
+
+    trackAttached(isAdd ? "AddDenseElement" : "StoreDenseElementHole");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
+                                                    uint32_t index, Int32OperandId indexId,
+                                                    ValOperandId rhsId)
 {
     if (!obj->is<UnboxedArrayObject>())
         return false;
@@ -2291,6 +2412,52 @@ SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperand
     setUpdateStubInfo(obj->group(), JSID_VOID);
 
     trackAttached("SetUnboxedArrayElement");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOperandId objId,
+                                                        uint32_t index, Int32OperandId indexId,
+                                                        ValOperandId rhsId)
+{
+    if (!obj->is<UnboxedArrayObject>() || rhsVal_.isMagic(JS_ELEMENTS_HOLE))
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    JSOp op = JSOp(*pc_);
+    MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
+
+    if (op == JSOP_INITHIDDENELEM)
+        return false;
+
+    // Optimize if we're adding an element at initLength. Unboxed arrays don't
+    // have holes at indexes < initLength.
+    UnboxedArrayObject* aobj = &obj->as<UnboxedArrayObject>();
+    if (index != aobj->initializedLength() || index >= aobj->capacity())
+        return false;
+
+    // Check for other indexed properties or class hooks.
+    if (!CanAttachAddElement(aobj, IsPropertyInitOp(op)))
+        return false;
+
+    writer.guardGroup(objId, aobj->group());
+
+    JSValueType elementType = aobj->group()->unboxedLayoutDontCheckGeneration().elementType();
+    EmitGuardUnboxedPropertyType(writer, elementType, rhsId);
+
+    // Also shape guard the proto chain, unless this is an INITELEM.
+    if (IsPropertySetOp(op))
+        ShapeGuardProtoChain(writer, aobj, objId);
+
+    writer.storeUnboxedArrayElementHole(objId, indexId, rhsId, elementType);
+    writer.returnFromIC();
+
+    // Type inference uses JSID_VOID for the element types.
+    setUpdateStubInfo(aobj->group(), JSID_VOID);
+
+    trackAttached("StoreUnboxedArrayElementHole");
     return true;
 }
 
@@ -2419,24 +2586,7 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     }
     writer.guardShape(holderId, oldShape);
 
-    // Shape guard the objects on the proto chain.
-    JSObject* lastObj = obj;
-    ObjOperandId lastObjId = objId;
-    while (true) {
-        // Guard on the proto if the shape does not imply the proto. Singleton
-        // objects always trigger a shape change when the proto changes, so we
-        // don't need a guard in that case.
-        bool guardProto = lastObj->hasUncacheableProto() && !lastObj->isSingleton();
-
-        lastObj = lastObj->staticPrototype();
-        if (!lastObj)
-            break;
-
-        lastObjId = writer.loadProto(lastObjId);
-        if (guardProto)
-            writer.guardSpecificObject(lastObjId, lastObj);
-        writer.guardShape(lastObjId, lastObj->as<NativeObject>().shape());
-    }
+    ShapeGuardProtoChain(writer, obj, objId);
 
     ObjectGroup* newGroup = obj->group();
 
