@@ -9,7 +9,7 @@
 
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/RestyleManagerBase.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "nsChangeHint.h"
