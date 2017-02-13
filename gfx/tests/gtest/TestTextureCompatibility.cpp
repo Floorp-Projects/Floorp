@@ -44,7 +44,7 @@ CreateTextureWithBackend(LayersBackend& aLayersBackend,
 
   for (uint32_t i = 0; i < aTextureClients.Length(); i++) {
     aTextureHosts.AppendElement(
-      TestCreateTextureHost(aTextureClients[i], aLayersBackend));
+      CreateTextureHostWithBackend(aTextureClients[i], aLayersBackend));
   }
 }
 
