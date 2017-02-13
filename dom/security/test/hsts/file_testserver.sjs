@@ -56,7 +56,7 @@ function handleRequest(request, response)
       // and set header appropriately
       if (request.hasHeader('Upgrade-Insecure-Requests')) {
         var expected = query.get('primer');
-        if (expected == 'prime-hsts') {
+        if (expected == 'prime-hsts' || expected == 'top-level') {
           // set it for 5 minutes
           response.setHeader("Strict-Transport-Security", "max-age="+(60*5), false);
         } else if (expected == 'reject-upgrade') {
