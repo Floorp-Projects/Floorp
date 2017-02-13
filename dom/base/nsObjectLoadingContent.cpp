@@ -3359,11 +3359,11 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   NS_ENSURE_TRUE(topDoc, false);
 
   // Check the flash blocking status for this page (this applies to Flash only)
-  nsIDocument::FlashClassification documentClassification = nsIDocument::FlashClassification::Allowed;
+  FlashClassification documentClassification = FlashClassification::Allowed;
   if (IsFlashMIME(mContentType)) {
     documentClassification = ownerDoc->DocumentFlashClassification();
   }
-  if (documentClassification == nsIDocument::FlashClassification::Denied) {
+  if (documentClassification == FlashClassification::Denied) {
     aReason = eFallbackSuppressed;
     return false;
   }
@@ -3436,7 +3436,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
 
   switch (enabledState) {
   case nsIPluginTag::STATE_ENABLED:
-    return documentClassification == nsIDocument::FlashClassification::Allowed;
+    return documentClassification == FlashClassification::Allowed;
   case nsIPluginTag::STATE_CLICKTOPLAY:
     return false;
   }
