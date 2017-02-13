@@ -70,91 +70,161 @@ class NurseryAwareHashMap
 {
     using BarrieredValue = detail::UnsafeBareReadBarriered<Value>;
     using MapType = GCRekeyableHashMap<Key, BarrieredValue, HashPolicy, AllocPolicy>;
-    MapType map;
 
-    // Keep a list of all keys for which JS::GCPolicy<Key>::isTenured is false.
-    // This lets us avoid a full traveral of the map on each minor GC, keeping
-    // the minor GC times proportional to the nursery heap size.
-    Vector<Key, 0, AllocPolicy> nurseryEntries;
+    // Contains entries that have a nursery-allocated key or value (or both).
+    MapType nurseryMap_;
+
+    // All entries in this map have a tenured key and value.
+    MapType tenuredMap_;
+
+    // Keys and values usually have the same lifetime (for the WrapperMap we
+    // ensure this when we allocate the wrapper object). If this flag is set,
+    // it means nurseryMap_ contains a tenured key with a nursery allocated
+    // value.
+    bool nurseryMapContainsTenuredKeys_;
 
   public:
     using Lookup = typename MapType::Lookup;
-    using Ptr = typename MapType::Ptr;
-    using Range = typename MapType::Range;
 
-    explicit NurseryAwareHashMap(AllocPolicy a = AllocPolicy()) : map(a) {}
+    class Ptr {
+        friend class NurseryAwareHashMap;
 
-    MOZ_MUST_USE bool init(uint32_t len = 16) { return map.init(len); }
+        typename MapType::Ptr ptr_;
+        bool isNurseryMap_;
 
-    bool empty() const { return map.empty(); }
-    Ptr lookup(const Lookup& l) const { return map.lookup(l); }
-    void remove(Ptr p) { map.remove(p); }
-    Range all() const { return map.all(); }
-    struct Enum : public MapType::Enum {
-        explicit Enum(NurseryAwareHashMap& namap) : MapType::Enum(namap.map) {}
+      public:
+        Ptr(typename MapType::Ptr ptr, bool isNurseryMap)
+          : ptr_(ptr), isNurseryMap_(isNurseryMap)
+        {}
+
+        const typename MapType::Entry& operator*() const { return *ptr_; }
+        const typename MapType::Entry* operator->() const { return &*ptr_; }
+
+        bool found() const { return ptr_.found(); }
+        explicit operator bool() const { return bool(ptr_); }
     };
+
+    explicit NurseryAwareHashMap(AllocPolicy a = AllocPolicy())
+      : nurseryMap_(a), tenuredMap_(a), nurseryMapContainsTenuredKeys_(false)
+    {}
+
+    MOZ_MUST_USE bool init(uint32_t len = 16) {
+        return nurseryMap_.init(len) && tenuredMap_.init(len);
+    }
+
+    bool empty() const { return nurseryMap_.empty() && tenuredMap_.empty(); }
+
+    Ptr lookup(const Lookup& l) const {
+        if (JS::GCPolicy<Key>::isTenured(l)) {
+            // If we find the key in the tenuredMap_, we're done. If we don't
+            // find it there and we know nurseryMap_ contains tenured keys
+            // (hopefully uncommon), we have to try nurseryMap_ as well.
+            typename MapType::Ptr p = tenuredMap_.lookup(l);
+            if (p || !nurseryMapContainsTenuredKeys_)
+                return Ptr(p, /* isNurseryMap = */ false);
+        }
+        return Ptr(nurseryMap_.lookup(l), /* isNurseryMap = */ true);
+    }
+
+    void remove(Ptr p) {
+        if (p.isNurseryMap_)
+            nurseryMap_.remove(p.ptr_);
+        else
+            tenuredMap_.remove(p.ptr_);
+    }
+
+    class Enum {
+        // First iterate over the nursery map. When nurseryEnum_ becomes
+        // empty() we switch to tenuredEnum_.
+        typename MapType::Enum nurseryEnum_;
+        typename MapType::Enum tenuredEnum_;
+
+        const typename MapType::Enum& currentEnum() const {
+            return nurseryEnum_.empty() ? tenuredEnum_ : nurseryEnum_;
+        }
+        typename MapType::Enum& currentEnum() {
+            return nurseryEnum_.empty() ? tenuredEnum_ : nurseryEnum_;
+        }
+
+      public:
+        explicit Enum(NurseryAwareHashMap& namap)
+          : nurseryEnum_(namap.nurseryMap_), tenuredEnum_(namap.tenuredMap_)
+        {}
+
+        typename MapType::Entry& front() const { return currentEnum().front(); }
+        void popFront() { currentEnum().popFront(); }
+        void removeFront() { currentEnum().removeFront(); }
+
+        bool empty() const { return nurseryEnum_.empty() && tenuredEnum_.empty(); }
+    };
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfExcludingThis(mallocSizeOf);
+        size_t size = nurseryMap_.sizeOfExcludingThis(mallocSizeOf);
+        size += tenuredMap_.sizeOfExcludingThis(mallocSizeOf);
+        return size;
     }
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfIncludingThis(mallocSizeOf);
+        size_t size = nurseryMap_.sizeOfIncludingThis(mallocSizeOf);
+        size += tenuredMap_.sizeOfIncludingThis(mallocSizeOf);
+        return size;
+    }
+
+    MOZ_MUST_USE bool putNew(const Key& k, const Value& v) {
+        MOZ_ASSERT(!tenuredMap_.has(k));
+        MOZ_ASSERT(!nurseryMap_.has(k));
+
+        bool tenuredKey = JS::GCPolicy<Key>::isTenured(k);
+        if (tenuredKey && JS::GCPolicy<Value>::isTenured(v))
+            return tenuredMap_.putNew(k, v);
+
+        if (tenuredKey)
+            nurseryMapContainsTenuredKeys_ = true;
+
+        return nurseryMap_.putNew(k, v);
     }
 
     MOZ_MUST_USE bool put(const Key& k, const Value& v) {
-        auto p = map.lookupForAdd(k);
-        if (p) {
-            if (!JS::GCPolicy<Key>::isTenured(k) || !JS::GCPolicy<Value>::isTenured(v)) {
-                if (!nurseryEntries.append(k))
-                    return false;
-            }
-            p->value() = v;
-            return true;
-        }
-
-        bool ok = map.add(p, k, v);
-        if (!ok)
-            return false;
-
-        if (!JS::GCPolicy<Key>::isTenured(k) || !JS::GCPolicy<Value>::isTenured(v)) {
-            if (!nurseryEntries.append(k)) {
-                map.remove(k);
-                return false;
-            }
-        }
-
-        return true;
+        // For simplicity, just remove the entry and forward to putNew for now.
+        // Performance-sensitive callers should prefer putNew.
+        if (Ptr p = lookup(k))
+            remove(p);
+        return putNew(k, v);
     }
 
     void sweepAfterMinorGC(JSTracer* trc) {
-        for (auto& key : nurseryEntries) {
-            auto p = map.lookup(key);
-            if (!p)
-                continue;
+        for (typename MapType::Enum e(nurseryMap_); !e.empty(); e.popFront()) {
+            auto& key = e.front().key();
+            auto& value = e.front().value();
 
             // Drop the entry if the value is not marked.
-            if (JS::GCPolicy<BarrieredValue>::needsSweep(&p->value())) {
-                map.remove(key);
+            if (JS::GCPolicy<BarrieredValue>::needsSweep(&value))
                 continue;
-            }
 
-            // Update and relocate the key, if the value is still needed.
+            // Insert the key/value in the tenured map, if the value is still
+            // needed.
             //
-            // Note that this currently assumes that all Value will contain a
+            // Note that this currently assumes that each Value will contain a
             // strong reference to Key, as per its use as the
             // CrossCompartmentWrapperMap. We may need to make the following
             // behavior more dynamic if we use this map in other nursery-aware
             // contexts.
-            Key copy(key);
-            mozilla::DebugOnly<bool> sweepKey = JS::GCPolicy<Key>::needsSweep(&copy);
+
+            Key keyCopy(key);
+            mozilla::DebugOnly<bool> sweepKey = JS::GCPolicy<Key>::needsSweep(&keyCopy);
             MOZ_ASSERT(!sweepKey);
-            map.rekeyIfMoved(key, copy);
+
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!tenuredMap_.putNew(keyCopy, value))
+                oomUnsafe.crash("NurseryAwareHashMap sweepAfterMinorGC");
         }
-        nurseryEntries.clear();
+
+        nurseryMap_.clear();
+        nurseryMapContainsTenuredKeys_ = false;
     }
 
     void sweep() {
-        MOZ_ASSERT(nurseryEntries.empty());
-        map.sweep();
+        MOZ_ASSERT(nurseryMap_.empty());
+        tenuredMap_.sweep();
     }
 };
 

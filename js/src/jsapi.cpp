@@ -912,8 +912,11 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
         if (!JSObject::swap(cx, origobj, newIdentityWrapper))
             MOZ_CRASH();
-        if (!origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv))
+        if (!origobj->compartment()->putWrapperMaybeUpdate(cx, CrossCompartmentKey(newIdentity),
+                                                           origv))
+        {
             MOZ_CRASH();
+        }
     }
 
     // The new identity object might be one of several things. Return it to avoid
