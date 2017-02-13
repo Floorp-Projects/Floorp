@@ -187,7 +187,7 @@ fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
 fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
-fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
+# == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
 fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
 fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
 

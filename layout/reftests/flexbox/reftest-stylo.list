@@ -34,8 +34,8 @@ fails == flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-ve
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2.xhtml
 == flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3.xhtml
 == flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4.xhtml
-fails == flexbox-dyn-changeOrder-1a.html flexbox-dyn-changeOrder-1a.html
-fails == flexbox-dyn-changeOrder-1b.html flexbox-dyn-changeOrder-1b.html
+== flexbox-dyn-changeOrder-1a.html flexbox-dyn-changeOrder-1a.html
+== flexbox-dyn-changeOrder-1b.html flexbox-dyn-changeOrder-1b.html
 == flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1a.xhtml
 == flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1b.xhtml
 

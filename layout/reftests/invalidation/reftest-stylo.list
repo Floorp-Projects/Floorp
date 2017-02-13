@@ -78,7 +78,7 @@ fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolli
 == background-position-2f.html background-position-2f.html
 == zero-opacity-animation.html zero-opacity-animation.html
 == zero-opacity-text.html zero-opacity-text.html
-fails == negative-w-component.html negative-w-component.html
+== negative-w-component.html negative-w-component.html
 
 fails == mask-invalidation-1a.html mask-invalidation-1a.html
 fails == mask-invalidation-1b.html mask-invalidation-1b.html

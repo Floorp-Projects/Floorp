@@ -99,7 +99,7 @@ fails == 97777-2.html 97777-2.html
 # == 99850-1b.html 99850-1b.html # bug 1337695
 fails == 99850-1c.html 99850-1c.html
 # == 99850-1d.html 99850-1d.html # bug 1337695
-asserts-if(stylo,8) == 105030-1.html 105030-1.html # bug 1324661
+asserts-if(stylo,6-8) == 105030-1.html 105030-1.html # bug 1324661
 == 109735-1.html 109735-1.html
 == 116882-1.html 116882-1.html
 == 120834-1a.html 120834-1a.html
@@ -659,9 +659,9 @@ fails == 372768-1.html 372768-1.html
 fails == 373295-1.html 373295-1.html
 fails == 373298-1.html 373298-1.html
 == 373381-1.html 373381-1.html
-fails == 373381-2.html 373381-2.html
+== 373381-2.html 373381-2.html
 fails-if(Android) random-if(d2d) == 373381-3.html 373381-3.html
-fails == 373381-4.html 373381-4.html
+== 373381-4.html 373381-4.html
 == 373383-1.html 373383-1.html
 fails == 373433-1.html 373433-1.html
 == 373533-1.xhtml 373533-1.xhtml
@@ -671,7 +671,7 @@ fails == 373433-1.html 373433-1.html
 == 374038-2.xul 374038-2.xul
 random-if(d2d) == 374719-1.xul 374719-1.xul
 == 374927-1.html 374927-1.html
-fails == 375508-1.html 375508-1.html
+== 375508-1.html 375508-1.html
 == 375716-1.html 375716-1.html
 asserts-if(stylo,6) == 375827-1.html 375827-1.html # bug 1324661
 fails == 376375-1.html 376375-1.html
@@ -1031,15 +1031,15 @@ fails-if(Android) == 424074-1.xul 424074-1.xul
 random-if(gtkWidget) == 424074-1-ref2.xul 424074-1-ref2.xul
 == 424236-1.html 424236-1.html
 == 424236-2.html 424236-2.html
-fails == 424236-3.html 424236-3.html
+== 424236-3.html 424236-3.html
 == 424236-4.html 424236-4.html
-fails == 424236-5.html 424236-5.html
+== 424236-5.html 424236-5.html
 == 424236-6.html 424236-6.html
 == 424236-7.html 424236-7.html
-fails == 424236-8.html 424236-8.html
-fails == 424236-9.html 424236-9.html
+== 424236-8.html 424236-8.html
+== 424236-9.html 424236-9.html
 == 424236-10.html 424236-10.html
-fails == 424236-11.html 424236-11.html
+== 424236-11.html 424236-11.html
 asserts-if(stylo,4) == 424434-1.html 424434-1.html # bug 1324661
 fails asserts-if(stylo,4) == 424465-1.html 424465-1.html # bug 1324661
 == 424631-1.html 424631-1.html
@@ -1431,7 +1431,7 @@ fails HTTP(..) == 518172-1a.html 518172-1a.html
 fails == 518172-1b.html 518172-1b.html
 fails HTTP(..) == 518172-2a.html 518172-2a.html
 fails == 518172-2b.html 518172-2b.html
-fails == 520421-1.html 520421-1.html
+== 520421-1.html 520421-1.html
 == 520563-1.xhtml 520563-1.xhtml
 fails == 521525-1.html 521525-1.html
 == 521525-2.html 521525-2.html
@@ -1939,7 +1939,7 @@ fails == 1174332-1.html 1174332-1.html
 == 1179078-1.html 1179078-1.html
 == 1179288-1.html 1179288-1.html
 == 1190635-1.html 1190635-1.html
-fails == 1202512-1.html 1202512-1.html
+== 1202512-1.html 1202512-1.html
 fails == 1202512-2.html 1202512-2.html
 == 1207326-1.html 1207326-1.html
 == 1209603-1.html 1209603-1.html

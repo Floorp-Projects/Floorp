@@ -379,8 +379,9 @@ add_task(async function test_send_command() {
 
   let action = "testCommand";
   let args = ["foo", "bar"];
+  let extra = { flowID: "flowy" }
 
-  engine._sendCommandToClient(action, args, remoteId);
+  engine._sendCommandToClient(action, args, remoteId, extra);
 
   let newRecord = store._remoteClients[remoteId];
   let clientCommands = engine._readCommands()[remoteId];
@@ -1423,6 +1424,88 @@ add_task(async function test_command_sync() {
     } finally {
       await promiseStopServer(server);
     }
+  }
+});
+
+add_task(async function ensureSameFlowIDs() {
+  let events = []
+  let origRecordTelemetryEvent = Service.recordTelemetryEvent;
+  Service.recordTelemetryEvent = (object, method, value, extra) => {
+    events.push({ object, method, value, extra });
+  }
+
+  try {
+    // Setup 2 clients, send them a command, and ensure we get to events
+    // written, both with the same flowID.
+    let contents = {
+      meta: {global: {engines: {clients: {version: engine.version,
+                                          syncID: engine.syncID}}}},
+      clients: {},
+      crypto: {}
+    };
+    let server    = serverForUsers({"foo": "password"}, contents);
+    await SyncTestingInfrastructure(server);
+
+    let remoteId   = Utils.makeGUID();
+    let remoteId2  = Utils.makeGUID();
+
+    _("Create remote client record 1");
+    server.insertWBO("foo", "clients", new ServerWBO(remoteId, encryptPayload({
+      id: remoteId,
+      name: "Remote client",
+      type: "desktop",
+      commands: [],
+      version: "48",
+      protocols: ["1.5"]
+    }), Date.now() / 1000));
+
+    _("Create remote client record 2");
+    server.insertWBO("foo", "clients", new ServerWBO(remoteId2, encryptPayload({
+      id: remoteId2,
+      name: "Remote client 2",
+      type: "mobile",
+      commands: [],
+      version: "48",
+      protocols: ["1.5"]
+    }), Date.now() / 1000));
+
+    engine._sync();
+    engine.sendCommand("wipeAll", []);
+    engine._sync();
+    equal(events.length, 2);
+    // we don't know what the flowID is, but do know it should be the same.
+    equal(events[0].extra.flowID, events[1].extra.flowID);
+
+    // check it's correctly used when we specify a flow ID
+    events.length = 0;
+    let flowID = Utils.makeGUID();
+    engine.sendCommand("wipeAll", [], null, { flowID });
+    engine._sync();
+    equal(events.length, 2);
+    equal(events[0].extra.flowID, flowID);
+    equal(events[1].extra.flowID, flowID);
+
+    // and that it works when something else is in "extra"
+    events.length = 0;
+    engine.sendCommand("wipeAll", [], null, { reason: "testing" });
+    engine._sync();
+    equal(events.length, 2);
+    equal(events[0].extra.flowID, events[1].extra.flowID);
+    equal(events[0].extra.reason, "testing");
+    equal(events[1].extra.reason, "testing");
+
+    // and when both are specified.
+    events.length = 0;
+    engine.sendCommand("wipeAll", [], null, { reason: "testing", flowID });
+    engine._sync();
+    equal(events.length, 2);
+    equal(events[0].extra.flowID, flowID);
+    equal(events[1].extra.flowID, flowID);
+    equal(events[0].extra.reason, "testing");
+    equal(events[1].extra.reason, "testing");
+
+  } finally {
+    Service.recordTelemetryEvent = origRecordTelemetryEvent;
   }
 });
 

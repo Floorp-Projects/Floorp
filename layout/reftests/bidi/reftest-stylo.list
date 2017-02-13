@@ -79,7 +79,7 @@ fails == 263359-4.html 263359-4.html
 fails == 267459-1.html 267459-1.html
 fails == 267459-2.html 267459-2.html
 == 299065-1.html 299065-1.html
-== 305643-1.html 305643-1.html
+# == 305643-1.html 305643-1.html
 fails asserts-if(stylo,7) == 332655-1.html 332655-1.html # bug 1335314
 fails asserts-if(stylo,7) == 332655-2.html 332655-2.html # bug 1335314
 fails == 381279-1.html 381279-1.html
