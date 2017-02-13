@@ -8780,7 +8780,7 @@
   },
   "WEAVE_WIPE_SERVER_SUCCEEDED": {
     "expires_in_version": "55",
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "kind": "boolean",
     "bug_numbers": [1241699],
     "description": "Stores 1 if a wipeServer call succeeded, and 0 if it failed."
@@ -9871,7 +9871,7 @@
     "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
   },
   "FXA_CONFIGURED": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1236383],
     "expires_in_version": "never",
     "kind": "flag",
@@ -9879,7 +9879,7 @@
     "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1232050],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9888,7 +9888,7 @@
     "description": "Number of desktop devices (including this device) associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_DEVICE_COUNT_MOBILE": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1232050],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9897,7 +9897,7 @@
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_ENGINE_SYNC_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1236383],
     "expires_in_version": "never",
     "kind": "count",
