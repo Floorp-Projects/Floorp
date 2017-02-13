@@ -6,10 +6,8 @@
 #ifndef GMPPlatform_h_
 #define GMPPlatform_h_
 
-#include "mozilla/Mutex.h"
 #include "gmp-platform.h"
-#include "base/thread.h"
-#include "mozilla/ReentrantMonitor.h"
+#include <functional>
 
 namespace mozilla {
 namespace gmp {
@@ -20,35 +18,11 @@ void InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild);
 
 GMPErr RunOnMainThread(GMPTask* aTask);
 
-class GMPThreadImpl : public GMPThread
-{
-public:
-  GMPThreadImpl();
-  virtual ~GMPThreadImpl();
+GMPTask*
+NewGMPTask(std::function<void()>&& aFunction);
 
-  // GMPThread
-  void Post(GMPTask* aTask) override;
-  void Join() override;
-
-private:
-  Mutex mMutex;
-  base::Thread mThread;
-};
-
-class GMPMutexImpl : public GMPMutex
-{
-public:
-  GMPMutexImpl();
-  virtual ~GMPMutexImpl();
-
-  // GMPMutex
-  void Acquire() override;
-  void Release() override;
-  void Destroy() override;
-
-private:
-  ReentrantMonitor mMonitor;
-};
+GMPErr
+SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS);
 
 } // namespace gmp
 } // namespace mozilla
