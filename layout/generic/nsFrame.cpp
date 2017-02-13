@@ -43,8 +43,8 @@
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
 #include "mozilla/GeckoRestyleManager.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -700,8 +700,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
     RestyleManager::AnimationsWithDestroyedFrame* adf =
-      presContext->RestyleManager()->AsBase()
-                 ->GetAnimationsWithDestroyedFrame();
+      presContext->RestyleManager()->GetAnimationsWithDestroyedFrame();
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mStyleContext);
