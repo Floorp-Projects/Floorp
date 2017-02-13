@@ -483,3 +483,13 @@ function promiseNextTick() {
 Utils.getDefaultDeviceName = function() {
   return "Test device name";
 };
+
+function registerRotaryEngine() {
+  Service.engineManager.clear();
+
+  Service.engineManager.register(RotaryEngine);
+  let engine = Service.engineManager.get("rotary");
+  engine.enabled = true;
+
+  return { engine, tracker: engine._tracker };
+}

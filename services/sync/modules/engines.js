@@ -629,13 +629,15 @@ EngineManager.prototype = {
     if (name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
-      engine.finalize();
+      Async.promiseSpinningly(engine.finalize());
     }
   },
 
   clear() {
     for (let name in this._engines) {
+      let engine = this._engines[name];
       delete this._engines[name];
+      Async.promiseSpinningly(engine.finalize());
     }
   },
 };
@@ -745,8 +747,8 @@ Engine.prototype = {
     return null;
   },
 
-  finalize() {
-    Async.promiseSpinningly(this._tracker.finalize());
+  async finalize() {
+    await this._tracker.finalize();
   },
 };
 
