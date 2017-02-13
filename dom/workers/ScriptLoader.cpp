@@ -1210,6 +1210,7 @@ private:
 
     nsCOMPtr<nsIPrincipal> responsePrincipal =
       PrincipalInfoToPrincipal(*aPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(responsePrincipal);
 
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
     if (!principal) {
@@ -1237,14 +1238,21 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
-      mozilla::DebugOnly<nsIPrincipal*> principal = mWorkerPrivate->GetPrincipal();
-      MOZ_ASSERT(principal);
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
-      MOZ_ASSERT(loadGroup);
+      MOZ_DIAGNOSTIC_ASSERT(loadGroup);
 
-      mozilla::DebugOnly<bool> equal = false;
-      MOZ_ASSERT(responsePrincipal && NS_SUCCEEDED(responsePrincipal->Equals(principal, &equal)));
-      MOZ_ASSERT(equal);
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+      nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+      MOZ_DIAGNOSTIC_ASSERT(principal);
+
+      bool equal = false;
+      MOZ_ALWAYS_SUCCEEDS(responsePrincipal->Equals(principal, &equal));
+      MOZ_DIAGNOSTIC_ASSERT(equal);
+
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      MOZ_ALWAYS_SUCCEEDS(responsePrincipal->GetCsp(getter_AddRefs(csp)));
+      MOZ_DIAGNOSTIC_ASSERT(!csp);
+#endif
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
