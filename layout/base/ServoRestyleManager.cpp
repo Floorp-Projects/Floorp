@@ -85,12 +85,6 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
 }
 
 void
-ServoRestyleManager::PostRestyleEventForLazyConstruction()
-{
-  PostRestyleEventInternal(true);
-}
-
-void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {

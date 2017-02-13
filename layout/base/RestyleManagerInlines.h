@@ -25,12 +25,6 @@ RestyleManager::PostRestyleEvent(dom::Element* aElement,
 }
 
 void
-RestyleManager::PostRestyleEventForLazyConstruction()
-{
-  MOZ_STYLO_FORWARD(PostRestyleEventForLazyConstruction, ());
-}
-
-void
 RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint)
 {
