@@ -680,7 +680,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // onto the stack.
     MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
     MOZ_MUST_USE bool emitIteratorClose(
-        mozilla::Maybe<JumpTarget> yieldStarTryStart = mozilla::Nothing(),
+        const mozilla::Maybe<JumpTarget>& yieldStarTryStart = mozilla::Nothing(),
         bool allowSelfHosted = false);
 
     template <typename InnerEmitter>

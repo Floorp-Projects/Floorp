@@ -719,74 +719,74 @@ class FunctionCompiler
     }
 
   public:
-    MDefinition* load(MDefinition* base, MemoryAccessDesc access, ValType result)
+    MDefinition* load(MDefinition* base, MemoryAccessDesc* access, ValType result)
     {
         if (inDeadCode())
             return nullptr;
 
         MInstruction* load = nullptr;
-        if (access.isPlainAsmJS()) {
-            MOZ_ASSERT(access.offset() == 0);
-            load = MAsmJSLoadHeap::New(alloc(), base, access.type());
+        if (access->isPlainAsmJS()) {
+            MOZ_ASSERT(access->offset() == 0);
+            load = MAsmJSLoadHeap::New(alloc(), base, access->type());
         } else {
-            checkOffsetAndBounds(&access, &base);
-            load = MWasmLoad::New(alloc(), base, access, ToMIRType(result));
+            checkOffsetAndBounds(access, &base);
+            load = MWasmLoad::New(alloc(), base, *access, ToMIRType(result));
         }
 
         curBlock_->add(load);
         return load;
     }
 
-    void store(MDefinition* base, MemoryAccessDesc access, MDefinition* v)
+    void store(MDefinition* base, MemoryAccessDesc* access, MDefinition* v)
     {
         if (inDeadCode())
             return;
 
         MInstruction* store = nullptr;
-        if (access.isPlainAsmJS()) {
-            MOZ_ASSERT(access.offset() == 0);
-            store = MAsmJSStoreHeap::New(alloc(), base, access.type(), v);
+        if (access->isPlainAsmJS()) {
+            MOZ_ASSERT(access->offset() == 0);
+            store = MAsmJSStoreHeap::New(alloc(), base, access->type(), v);
         } else {
-            checkOffsetAndBounds(&access, &base);
-            store = MWasmStore::New(alloc(), base, access, v);
+            checkOffsetAndBounds(access, &base);
+            store = MWasmStore::New(alloc(), base, *access, v);
         }
 
         curBlock_->add(store);
     }
 
-    MDefinition* atomicCompareExchangeHeap(MDefinition* base, MemoryAccessDesc access,
+    MDefinition* atomicCompareExchangeHeap(MDefinition* base, MemoryAccessDesc* access,
                                            MDefinition* oldv, MDefinition* newv)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(&access, &base);
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, access, oldv, newv, tlsPointer_);
+        checkOffsetAndBounds(access, &base);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, *access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
 
-    MDefinition* atomicExchangeHeap(MDefinition* base, MemoryAccessDesc access,
+    MDefinition* atomicExchangeHeap(MDefinition* base, MemoryAccessDesc* access,
                                     MDefinition* value)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(&access, &base);
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, access, value, tlsPointer_);
+        checkOffsetAndBounds(access, &base);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, *access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
 
     MDefinition* atomicBinopHeap(js::jit::AtomicOp op,
-                                 MDefinition* base, MemoryAccessDesc access,
+                                 MDefinition* base, MemoryAccessDesc* access,
                                  MDefinition* v)
     {
         if (inDeadCode())
             return nullptr;
 
-        checkOffsetAndBounds(&access, &base);
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, access, v, tlsPointer_);
+        checkOffsetAndBounds(access, &base);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, *access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
     }
@@ -2319,7 +2319,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
         return false;
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
-    f.iter().setResult(f.load(addr.base, access, type));
+    f.iter().setResult(f.load(addr.base, &access, type));
     return true;
 }
 
@@ -2333,7 +2333,7 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
 
-    f.store(addr.base, access, value);
+    f.store(addr.base, &access, value);
     return true;
 }
 
@@ -2347,7 +2347,7 @@ EmitTeeStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
 
-    f.store(addr.base, access, value);
+    f.store(addr.base, &access, value);
     return true;
 }
 
@@ -2368,7 +2368,7 @@ EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type v
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
 
-    f.store(addr.base, access, value);
+    f.store(addr.base, &access, value);
     return true;
 }
 
@@ -2441,7 +2441,7 @@ EmitAtomicsLoad(FunctionCompiler& f)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), 0,
                             MembarBeforeLoad, MembarAfterLoad);
 
-    f.iter().setResult(f.load(addr.base, access, ValType::I32));
+    f.iter().setResult(f.load(addr.base, &access, ValType::I32));
     return true;
 }
 
@@ -2457,7 +2457,7 @@ EmitAtomicsStore(FunctionCompiler& f)
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), 0,
                             MembarBeforeStore, MembarAfterStore);
 
-    f.store(addr.base, access, value);
+    f.store(addr.base, &access, value);
     f.iter().setResult(value);
     return true;
 }
@@ -2474,7 +2474,7 @@ EmitAtomicsBinOp(FunctionCompiler& f)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
-    f.iter().setResult(f.atomicBinopHeap(op, addr.base, access, value));
+    f.iter().setResult(f.atomicBinopHeap(op, addr.base, &access, value));
     return true;
 }
 
@@ -2490,7 +2490,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
-    f.iter().setResult(f.atomicCompareExchangeHeap(addr.base, access, oldValue, newValue));
+    f.iter().setResult(f.atomicCompareExchangeHeap(addr.base, &access, oldValue, newValue));
     return true;
 }
 
@@ -2505,7 +2505,7 @@ EmitAtomicsExchange(FunctionCompiler& f)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
 
-    f.iter().setResult(f.atomicExchangeHeap(addr.base, access, value));
+    f.iter().setResult(f.atomicExchangeHeap(addr.base, &access, value));
     return true;
 }
 
@@ -2728,7 +2728,7 @@ EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), numElems);
 
-    f.iter().setResult(f.load(addr.base, access, resultType));
+    f.iter().setResult(f.load(addr.base, &access, resultType));
     return true;
 }
 
@@ -2748,7 +2748,7 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
 
     MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), numElems);
 
-    f.store(addr.base, access, value);
+    f.store(addr.base, &access, value);
     return true;
 }
 
