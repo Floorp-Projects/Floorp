@@ -391,8 +391,34 @@ function* largeAllocSuccessTests() {
     });
   });
 
-  // XXX: Make sure to reset dom.ipc.processCount.webLargeAllocation if adding a
-  // test after the above test.
+  // XXX: Important - reset the process count, as it was set to 1 by the
+  // previous test.
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount.webLargeAllocation", 20]],
+  });
+
+  // view-source tabs should not be considered to be in a large-allocation process.
+  yield BrowserTestUtils.withNewTab("about:blank", function*(aBrowser) {
+    info("Starting test 8");
+    let pid1 = yield getPID(aBrowser);
+    is(false, yield getInLAProc(aBrowser));
+
+    // Fail the test if we create a process
+    let stopExpectNoProcess = expectNoProcess();
+
+    yield ContentTask.spawn(aBrowser, null, () => {
+      content.document.location = "view-source:http://example.com";
+    });
+
+    yield BrowserTestUtils.browserLoaded(aBrowser);
+
+    let pid2 = yield getPID(aBrowser);
+
+    is(pid1, pid2, "The PID should not have changed");
+    is(false, yield getInLAProc(aBrowser));
+
+    stopExpectNoProcess();
+  });
 }
 
 function* largeAllocFailTests() {
