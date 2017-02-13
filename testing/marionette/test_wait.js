@@ -21,7 +21,7 @@ add_task(function* test_until_timeoutElapse() {
   });
   let end = new Date().getTime();
   greaterOrEqual((end - start), 2000);
-  greaterOrEqual(nevals, 150);
+  greaterOrEqual(nevals, 15);
 });
 
 add_task(function* test_until_rethrowError() {
