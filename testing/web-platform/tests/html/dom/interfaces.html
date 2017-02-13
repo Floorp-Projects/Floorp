@@ -202,7 +202,7 @@ function doTest([untested, tested]) {
     AbstractWorker: [],
     Worker: [],
     SharedWorker: [],
-    MessageEvent: [],
+    MessageEvent: ['new MessageEvent("message", { data: 5 })'],
     MessageChannel: [],
     MessagePort: [],
     HTMLAppletElement: ['document.createElement("applet")'],
