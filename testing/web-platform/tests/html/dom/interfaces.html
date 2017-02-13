@@ -2498,23 +2498,27 @@ interface WindowEventHandlers {
            attribute EventHandler onunload;
 };
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
-interface WindowBase64 {
-  DOMString btoa(DOMString btoa);
-  DOMString atob(DOMString atob);
-};
-Window implements WindowBase64;
+typedef (DOMString or Function) TimerHandler;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
-interface WindowTimers {
-  long setTimeout(Function handler, optional long timeout = 0, any... arguments);
-  long setTimeout(DOMString handler, optional long timeout = 0, any... arguments);
+interface WindowOrWorkerGlobalScope {
+  // base64 utility methods
+  DOMString btoa(DOMString btoa);
+  DOMString atob(DOMString atob);
+
+  // timers
+  long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
   void clearTimeout(optional long handle = 0);
-  long setInterval(Function handler, optional long timeout = 0, any... arguments);
-  long setInterval(DOMString handler, optional long timeout = 0, any... arguments);
+  long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
   void clearInterval(optional long handle = 0);
+
+  // ImageBitmap
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
 };
-Window implements WindowTimers;
+
+Window implements WindowOrWorkerGlobalScope;
+WorkerGlobalScope implements WindowOrWorkerGlobalScope;
 
 [NoInterfaceObject]
 interface WindowModal {
@@ -2628,12 +2632,14 @@ typedef (HTMLImageElement or
          CanvasRenderingContext2D or
          ImageBitmap) ImageBitmapSource;
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
-interface ImageBitmapFactories {
-  Promise createImageBitmap(ImageBitmapSource image, optional long sx, long sy, long sw, long sh);
+dictionary ImageBitmapOptions {
+  ImageOrientation imageOrientation = "none";
+  PremultiplyAlpha premultiplyAlpha = "default";
+  ColorSpaceConversion colorSpaceConversion = "default";
+  [EnforceRange] unsigned long resizeWidth;
+  [EnforceRange] unsigned long resizeHeight;
+  ResizeQuality resizeQuality = "low";
 };
-Window implements ImageBitmapFactories;
-WorkerGlobalScope implements ImageBitmapFactories;
 
 [Constructor(DOMString type, optional MessageEventInit eventInitDict), Exposed=(Window,Worker)]
 interface MessageEvent : Event {
@@ -2795,8 +2801,6 @@ partial interface WorkerGlobalScope { // not obsolete
   void importScripts(DOMString... urls);
   readonly attribute WorkerNavigator navigator;
 };
-WorkerGlobalScope implements WindowTimers;
-WorkerGlobalScope implements WindowBase64;
 
 [Exposed=Worker]
 interface WorkerNavigator {};
