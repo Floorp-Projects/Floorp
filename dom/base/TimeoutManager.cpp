@@ -645,8 +645,8 @@ TimeoutManager::CancelOrUpdateBackPressure(nsGlobalWindow* aWindow)
   // can be quite expensive.  We only want to call that method if the back log
   // is really clearing.
   else if (newBackPressureDelayMS == 0 ||
-           (newBackPressureDelayMS <=
-           (mBackPressureDelayMS - kBackPressureDelayReductionThresholdMS))) {
+           (mBackPressureDelayMS >
+           (newBackPressureDelayMS + kBackPressureDelayReductionThresholdMS))) {
     int32_t oldBackPressureDelayMS = mBackPressureDelayMS;
     mBackPressureDelayMS = newBackPressureDelayMS;
 
