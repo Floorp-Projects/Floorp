@@ -22,6 +22,7 @@ public class Metadata {
     }
 
     private String provider;
+    private String imageUrl;
 
     private Metadata(String json) {
         if (TextUtils.isEmpty(json)) {
@@ -34,6 +35,7 @@ public class Metadata {
             JSONObject object = new JSONObject(json);
 
             provider = object.optString("provider");
+            imageUrl = object.optString("image_url");
         } catch (JSONException e) {
             Log.w(LOGTAG, "JSONException while parsing metadata", e);
         }
@@ -41,6 +43,18 @@ public class Metadata {
 
     public boolean hasProvider() {
         return !TextUtils.isEmpty(provider);
+    }
+
+    /**
+     * Returns the URL of an image representing this site. Returns null if no image could be found.
+     * Use hasImageUrl() to avoid dealing with null values.
+     */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public boolean hasImageUrl() {
+        return imageUrl != null;
     }
 
     public String getProvider() {
