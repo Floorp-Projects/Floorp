@@ -617,6 +617,18 @@ public:
   virtual uint32_t GetAttrCount() const override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
+  /**
+   * Get the class list of this element (this corresponds to the value of the
+   * class attribute).  This may be null if there are no classes, but that's not
+   * guaranteed (e.g. we could have class="").
+   */
+  const nsAttrValue* GetClasses() const {
+    if (HasFlag(NODE_MAY_HAVE_CLASS)) {
+      return DoGetClasses();
+    }
+    return nullptr;
+  }
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override
   {
@@ -1438,6 +1450,12 @@ protected:
   nsDataHashtable<nsPtrHashKey<DOMIntersectionObserver>, int32_t>* RegisteredIntersectionObservers();
 
 private:
+  /**
+   * Hook for implementing GetClasses.  This is guaranteed to only be
+   * called if the NODE_MAY_HAVE_CLASS flag is set.
+   */
+  const nsAttrValue* DoGetClasses() const;
+
   /**
    * Get this element's client area rect in app units.
    * @return the frame's client area
