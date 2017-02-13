@@ -337,8 +337,7 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
     nsSVGFilterInstance svgFilterInstance(aFilter, aTargetFrame,
                                           mTargetContent,
                                           mMetrics, mTargetBBox,
-                                          mUserSpaceToFilterSpaceScale,
-                                          mFilterSpaceToUserSpaceScale);
+                                          mUserSpaceToFilterSpaceScale);
     if (!svgFilterInstance.IsInitialized()) {
       return NS_ERROR_FAILURE;
     }

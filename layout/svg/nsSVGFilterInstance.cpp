@@ -29,14 +29,12 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
                                          nsIContent* aTargetContent,
                                          const UserSpaceMetrics& aMetrics,
                                          const gfxRect& aTargetBBox,
-                                         const gfxSize& aUserSpaceToFilterSpaceScale,
-                                         const gfxSize& aFilterSpaceToUserSpaceScale) :
+                                         const gfxSize& aUserSpaceToFilterSpaceScale) :
   mFilter(aFilter),
   mTargetContent(aTargetContent),
   mMetrics(aMetrics),
   mTargetBBox(aTargetBBox),
   mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
-  mFilterSpaceToUserSpaceScale(aFilterSpaceToUserSpaceScale),
   mSourceAlphaAvailable(false),
   mInitialized(false) {
 
@@ -56,8 +54,7 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
   mPrimitiveUnits =
     mFilterFrame->GetEnumValue(SVGFilterElement::PRIMITIVEUNITS);
 
-  nsresult rv = ComputeBounds();
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(ComputeBounds())) {
     return;
   }
 
@@ -108,8 +105,6 @@ nsSVGFilterInstance::ComputeBounds()
     // The filter region is way too big if there is float -> int overflow.
     return NS_ERROR_FAILURE;
   }
-
-  mUserSpaceBounds = FilterSpaceToUserSpace(filterSpaceBounds);
 
   return NS_OK;
 }
@@ -214,15 +209,6 @@ nsSVGFilterInstance::UserSpaceToFilterSpace(const gfxRect& aUserSpaceRect) const
   filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale.width,
                         mUserSpaceToFilterSpaceScale.height);
   return filterSpaceRect;
-}
-
-gfxRect
-nsSVGFilterInstance::FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const
-{
-  gfxRect userSpaceRect = aFilterSpaceRect;
-  userSpaceRect.Scale(mFilterSpaceToUserSpaceScale.width,
-                      mFilterSpaceToUserSpaceScale.height);
-  return userSpaceRect;
 }
 
 IntRect
