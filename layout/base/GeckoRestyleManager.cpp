@@ -84,7 +84,7 @@ ElementTagToString(dom::Element* aElement)
 #endif
 
 GeckoRestyleManager::GeckoRestyleManager(nsPresContext* aPresContext)
-  : RestyleManager(aPresContext)
+  : RestyleManager(StyleBackendType::Gecko, aPresContext)
   , mDoRebuildAllStyleData(false)
   , mInRebuildAllStyleData(false)
   , mSkipAnimationRules(false)
