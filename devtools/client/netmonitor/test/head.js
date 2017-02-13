@@ -385,7 +385,7 @@ function waitFor(subject, eventName) {
  */
 function testFilterButtons(monitor, filterType) {
   let doc = monitor.panelWin.document;
-  let target = doc.querySelector("#requests-list-filter-" + filterType + "-button");
+  let target = doc.querySelector(".requests-list-filter-" + filterType + "-button");
   ok(target, `Filter button '${filterType}' was found`);
   let buttons = [...doc.querySelectorAll("#requests-list-filter-buttons button")];
   ok(buttons.length > 0, "More than zero filter buttons were found");

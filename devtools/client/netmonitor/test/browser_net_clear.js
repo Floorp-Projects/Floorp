@@ -16,7 +16,7 @@ add_task(function* () {
   let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let detailsPane = document.querySelector("#details-pane");
   let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
-  let clearButton = document.querySelector("#requests-list-clear-button");
+  let clearButton = document.querySelector(".requests-list-clear-button");
 
   gStore.dispatch(Actions.batchEnable(false));
 
