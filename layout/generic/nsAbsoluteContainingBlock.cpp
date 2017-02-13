@@ -151,7 +151,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
         // See bug 154892. Not sure how to do it "right" yet; probably want
         // to keep continuations within an nsAbsoluteContainingBlock eventually.
         tracker.Insert(nextFrame, kidStatus);
-        NS_MergeReflowStatusInto(&reflowStatus, kidStatus);
+        reflowStatus.MergeCompletionStatusFrom(kidStatus);
       }
       else {
         // Delete any continuations
@@ -194,7 +194,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
   if (reflowStatus.IsIncomplete())
     reflowStatus.SetOverflowIncomplete();
 
-  NS_MergeReflowStatusInto(&aReflowStatus, reflowStatus);
+  aReflowStatus.MergeCompletionStatusFrom(reflowStatus);
 }
 
 static inline bool IsFixedPaddingSize(const nsStyleCoord& aCoord)

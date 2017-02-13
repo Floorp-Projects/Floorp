@@ -851,7 +851,9 @@ public:
     NS_PRECONDITION(aChild, "null ptr");
     if (aChild == mSentry) {
       StepForward();
-      NS_MergeReflowStatusInto(&aReflowStatus, NS_FRAME_OVERFLOW_INCOMPLETE);
+      if (aReflowStatus.IsComplete()) {
+        aReflowStatus.SetOverflowIncomplete();
+      }
     }
   }
 
