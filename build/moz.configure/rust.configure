@@ -20,6 +20,24 @@ def rustc_info(rustc):
     )
 
 @depends_if(cargo)
+@checking('cargo version', lambda info: info.version)
+@imports('re')
+def cargo_info(cargo):
+    # |cargo --version| doesn't have pleasant-to-parse output like rustc
+    # does. So we have to resort to regexes.
+    out = check_cmd_output(cargo, '--version').splitlines()[0]
+    VERSION_FORMAT = r'^cargo (\d\.\d+\.\d+).*'
+
+    m = re.search(VERSION_FORMAT, out)
+    # Fail fast if cargo changes its output on us.
+    if not m:
+        die('Could not determine cargo version from output: %s', out)
+
+    return namespace(
+        version=Version(m.group(1)),
+    )
+
+@depends_if(cargo)
 @checking('cargo support for --frozen')
 @imports('subprocess')
 @imports('os')
@@ -37,9 +55,9 @@ def cargo_supports_frozen(cargo):
 
 set_config('MOZ_CARGO_SUPPORTS_FROZEN', cargo_supports_frozen)
 
-@depends(rustc, rustc_info)
+@depends(rustc, cargo, rustc_info)
 @imports(_from='textwrap', _import='dedent')
-def rust_compiler(rustc, rustc_info):
+def rust_compiler(rustc, cargo, rustc_info):
     if not rustc:
         die(dedent('''\
         Rust compiler not found.
@@ -49,9 +67,11 @@ def rust_compiler(rustc, rustc_info):
         You can install rust by running './mach bootstrap'
         or by directly running the installer from https://rustup.rs/
         '''))
+    rustc_min_version = Version('1.15.1')
+    cargo_min_version = Version('0.{}'.format(rustc_min_version.minor + 1))
+
     version = rustc_info.version
-    min_version = Version('1.15.1')
-    if version < min_version:
+    if version < rustc_min_version:
         die(dedent('''\
         Rust compiler {} is too old.
 
@@ -64,7 +84,27 @@ def rust_compiler(rustc, rustc_info):
         If you have the 'rustup' tool installed you can upgrade
         to the latest release by typing 'rustup update'. The
         installer is available from https://rustup.rs/
-        '''.format(version, min_version)))
+        '''.format(version, rustc_min_version)))
+
+        if not cargo:
+            die(dedent('''\
+            Cargo package manager not found.
+            To compile Rust language sources, you must have 'cargo' in your path.
+            See https://www.rust-lang.org/ for more information.
+
+            You can install cargo by running './mach bootstrap'
+            or by directly running the installer from https://rustup.rs/
+            '''))
+        version = cargo_info.version
+        if version < cargo_min_version:
+            die(dedent('''\
+            Cargo package manager {} is too old.
+
+            To compile Rust language sources please install at least
+            version {} of 'cargo' and make sure it is first in your path.
+
+            You can verify this by typing 'cargo --version'.
+            ''').format(version, cargo_min_version))
     return True
 
 set_config('MOZ_RUST', rust_compiler)
