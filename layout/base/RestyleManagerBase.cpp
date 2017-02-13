@@ -1233,6 +1233,13 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         hint |= nsChangeHint_RepaintFrame;
       }
 
+      // Opacity disables preserve-3d, so if we toggle it, then we also need
+      // to update the overflow areas of all potentially affected frames.
+      if ((hint & nsChangeHint_UpdateUsesOpacity) &&
+          frame->StyleDisplay()->mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
+        hint |= nsChangeHint_UpdateSubtreeOverflow;
+      }
+
       if (hint & nsChangeHint_UpdateBackgroundPosition) {
         // For most frame types, DLBI can detect background position changes,
         // so we only need to schedule a paint.
