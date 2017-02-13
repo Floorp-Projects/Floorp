@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'TestRect.cpp',
     'TestRegion.cpp',
     'TestSkipChars.cpp',
+    'TestSwizzle.cpp',
     # Hangs on linux in ApplyGdkScreenFontOptions
     #'gfxFontSelectionTest.cpp',
     'TestTextures.cpp',

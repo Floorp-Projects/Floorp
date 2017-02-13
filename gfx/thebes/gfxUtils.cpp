@@ -12,7 +12,6 @@
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
 #include "imgIEncoder.h"
-#include "libyuv.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -21,6 +20,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -47,8 +47,6 @@ using namespace mozilla;
 using namespace mozilla::image;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
-
-#include "DeprecatedPremultiplyTables.h"
 
 #undef compress
 #include "mozilla/Compression.h"
@@ -92,93 +90,6 @@ void mozilla_dump_image(void* bytes, int width, int height, int bytepp,
 
 }
 
-static uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
-    return gfxUtils::sPremultiplyTable[a*256+v];
-}
-
-static uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
-    return gfxUtils::sUnpremultiplyTable[a*256+v];
-}
-
-static void
-PremultiplyData(const uint8_t* srcData,
-                size_t srcStride,  // row-to-row stride in bytes
-                uint8_t* destData,
-                size_t destStride, // row-to-row stride in bytes
-                size_t pixelWidth,
-                size_t rowCount)
-{
-    MOZ_ASSERT(srcData && destData);
-
-    for (size_t y = 0; y < rowCount; ++y) {
-        const uint8_t* src  = srcData  + y * srcStride;
-        uint8_t* dest       = destData + y * destStride;
-
-        for (size_t x = 0; x < pixelWidth; ++x) {
-#ifdef IS_LITTLE_ENDIAN
-            uint8_t b = *src++;
-            uint8_t g = *src++;
-            uint8_t r = *src++;
-            uint8_t a = *src++;
-
-            *dest++ = PremultiplyValue(a, b);
-            *dest++ = PremultiplyValue(a, g);
-            *dest++ = PremultiplyValue(a, r);
-            *dest++ = a;
-#else
-            uint8_t a = *src++;
-            uint8_t r = *src++;
-            uint8_t g = *src++;
-            uint8_t b = *src++;
-
-            *dest++ = a;
-            *dest++ = PremultiplyValue(a, r);
-            *dest++ = PremultiplyValue(a, g);
-            *dest++ = PremultiplyValue(a, b);
-#endif
-        }
-    }
-}
-static void
-UnpremultiplyData(const uint8_t* srcData,
-                  size_t srcStride,  // row-to-row stride in bytes
-                  uint8_t* destData,
-                  size_t destStride, // row-to-row stride in bytes
-                  size_t pixelWidth,
-                  size_t rowCount)
-{
-    MOZ_ASSERT(srcData && destData);
-
-    for (size_t y = 0; y < rowCount; ++y) {
-        const uint8_t* src  = srcData  + y * srcStride;
-        uint8_t* dest       = destData + y * destStride;
-
-        for (size_t x = 0; x < pixelWidth; ++x) {
-#ifdef IS_LITTLE_ENDIAN
-            uint8_t b = *src++;
-            uint8_t g = *src++;
-            uint8_t r = *src++;
-            uint8_t a = *src++;
-
-            *dest++ = UnpremultiplyValue(a, b);
-            *dest++ = UnpremultiplyValue(a, g);
-            *dest++ = UnpremultiplyValue(a, r);
-            *dest++ = a;
-#else
-            uint8_t a = *src++;
-            uint8_t r = *src++;
-            uint8_t g = *src++;
-            uint8_t b = *src++;
-
-            *dest++ = a;
-            *dest++ = UnpremultiplyValue(a, r);
-            *dest++ = UnpremultiplyValue(a, g);
-            *dest++ = UnpremultiplyValue(a, b);
-#endif
-        }
-    }
-}
-
 static bool
 MapSrcDest(DataSourceSurface* srcSurf,
            DataSourceSurface* destSurf,
@@ -188,16 +99,7 @@ MapSrcDest(DataSourceSurface* srcSurf,
     MOZ_ASSERT(srcSurf && destSurf);
     MOZ_ASSERT(out_srcMap && out_destMap);
 
-    if (srcSurf->GetFormat()  != SurfaceFormat::B8G8R8A8 ||
-        destSurf->GetFormat() != SurfaceFormat::B8G8R8A8)
-    {
-        MOZ_ASSERT(false, "Only operate on BGRA8 surfs.");
-        return false;
-    }
-
-    if (srcSurf->GetSize().width  != destSurf->GetSize().width ||
-        srcSurf->GetSize().height != destSurf->GetSize().height)
-    {
+    if (srcSurf->GetSize() != destSurf->GetSize()) {
         MOZ_ASSERT(false, "Width and height must match.");
         return false;
     }
@@ -257,10 +159,9 @@ gfxUtils::PremultiplyDataSurface(DataSourceSurface* srcSurf,
     if (!MapSrcDest(srcSurf, destSurf, &srcMap, &destMap))
         return false;
 
-    PremultiplyData(srcMap.mData, srcMap.mStride,
-                    destMap.mData, destMap.mStride,
-                    srcSurf->GetSize().width,
-                    srcSurf->GetSize().height);
+    PremultiplyData(srcMap.mData, srcMap.mStride, srcSurf->GetFormat(),
+                    destMap.mData, destMap.mStride, destSurf->GetFormat(),
+                    srcSurf->GetSize());
 
     UnmapSrcDest(srcSurf, destSurf);
     return true;
@@ -277,10 +178,9 @@ gfxUtils::UnpremultiplyDataSurface(DataSourceSurface* srcSurf,
     if (!MapSrcDest(srcSurf, destSurf, &srcMap, &destMap))
         return false;
 
-    UnpremultiplyData(srcMap.mData, srcMap.mStride,
-                      destMap.mData, destMap.mStride,
-                      srcSurf->GetSize().width,
-                      srcSurf->GetSize().height);
+    UnpremultiplyData(srcMap.mData, srcMap.mStride, srcSurf->GetFormat(),
+                      destMap.mData, destMap.mStride, destSurf->GetFormat(),
+                      srcSurf->GetSize());
 
     UnmapSrcDest(srcSurf, destSurf);
     return true;
@@ -294,11 +194,6 @@ MapSrcAndCreateMappedDest(DataSourceSurface* srcSurf,
 {
     MOZ_ASSERT(srcSurf);
     MOZ_ASSERT(out_destSurf && out_srcMap && out_destMap);
-
-    if (srcSurf->GetFormat() != SurfaceFormat::B8G8R8A8) {
-        MOZ_ASSERT(false, "Only operate on BGRA8.");
-        return false;
-    }
 
     // Ok, map source for reading.
     DataSourceSurface::MappedSurface srcMap;
@@ -341,10 +236,9 @@ gfxUtils::CreatePremultipliedDataSurface(DataSourceSurface* srcSurf)
         return surface.forget();
     }
 
-    PremultiplyData(srcMap.mData, srcMap.mStride,
-                    destMap.mData, destMap.mStride,
-                    srcSurf->GetSize().width,
-                    srcSurf->GetSize().height);
+    PremultiplyData(srcMap.mData, srcMap.mStride, srcSurf->GetFormat(),
+                    destMap.mData, destMap.mStride, destSurf->GetFormat(),
+                    srcSurf->GetSize());
 
     UnmapSrcDest(srcSurf, destSurf);
     return destSurf.forget();
@@ -362,10 +256,9 @@ gfxUtils::CreateUnpremultipliedDataSurface(DataSourceSurface* srcSurf)
         return surface.forget();
     }
 
-    UnpremultiplyData(srcMap.mData, srcMap.mStride,
-                      destMap.mData, destMap.mStride,
-                      srcSurf->GetSize().width,
-                      srcSurf->GetSize().height);
+    UnpremultiplyData(srcMap.mData, srcMap.mStride, srcSurf->GetFormat(),
+                      destMap.mData, destMap.mStride, destSurf->GetFormat(),
+                      srcSurf->GetSize());
 
     UnmapSrcDest(srcSurf, destSurf);
     return destSurf.forget();
@@ -375,7 +268,9 @@ void
 gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
 {
     MOZ_ASSERT((aLength % 4) == 0, "Loop below will pass srcEnd!");
-    libyuv::ABGRToARGB(aData, aLength, aData, aLength, aLength / 4, 1);
+    SwizzleData(aData, aLength, SurfaceFormat::B8G8R8A8,
+                aData, aLength, SurfaceFormat::R8G8B8A8,
+                IntSize(aLength / 4, 1));
 }
 
 #if !defined(MOZ_GFX_OPTIMIZE_MOBILE)

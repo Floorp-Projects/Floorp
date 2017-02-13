@@ -18,8 +18,7 @@
 namespace mozilla {
 namespace ipc {
 
-CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
-                                     const Shmem& aShmem)
+CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem)
  : mProcessType(aProcessType),
    mShmem(aShmem),
    mStartTime(::time(nullptr))
@@ -27,12 +26,14 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
 }
 
 #ifdef MOZ_CRASHREPORTER
-void
-CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump)
+bool
+CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
+                                       const AnnotationTable* aExtraNotes,
+                                       nsString* aOutMinidumpID)
 {
   nsString dumpID;
   if (!CrashReporter::GetIDFromMinidump(aCrashDump, dumpID)) {
-    return;
+    return false;
   }
 
   CrashReporter::AnnotationTable notes;
@@ -60,9 +61,15 @@ CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump)
   notes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
   CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
-
+  if (aExtraNotes) {
+    CrashReporter::AppendExtraData(dumpID, *aExtraNotes);
+  }
   CrashReporter::AppendExtraData(dumpID, notes);
+
   NotifyCrashService(mProcessType, dumpID, &notes);
+
+  *aOutMinidumpID = dumpID;
+  return true;
 }
 
 /**
