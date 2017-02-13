@@ -443,7 +443,7 @@ var Printing = {
     let data = message.data;
     switch (message.name) {
       case "Printing:Preview:Enter": {
-        this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID), data.simplifiedMode);
+        this.enterPrintPreview(Services.wm.getOuterWindowWithId(data.windowID), data.simplifiedMode, data.defaultPrinterName);
         break;
       }
 
@@ -468,20 +468,20 @@ var Printing = {
       }
 
       case "Printing:Print": {
-        this.print(Services.wm.getOuterWindowWithId(data.windowID), data.simplifiedMode);
+        this.print(Services.wm.getOuterWindowWithId(data.windowID), data.simplifiedMode, data.defaultPrinterName);
         break;
       }
     }
   },
 
-  getPrintSettings() {
+  getPrintSettings(defaultPrinterName) {
     try {
       let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
                     .getService(Ci.nsIPrintSettingsService);
 
       let printSettings = PSSVC.globalPrintSettings;
       if (!printSettings.printerName) {
-        printSettings.printerName = PSSVC.defaultPrinterName;
+        printSettings.printerName = defaultPrinterName;
       }
       // First get any defaults from the printer
       PSSVC.initPrintSettingsFromPrinter(printSettings.printerName,
@@ -620,7 +620,7 @@ var Printing = {
     });
   },
 
-  enterPrintPreview(contentWindow, simplifiedMode) {
+  enterPrintPreview(contentWindow, simplifiedMode, defaultPrinterName) {
     // We'll call this whenever we've finished reflowing the document, or if
     // we errored out while attempting to print preview (in which case, we'll
     // notify the parent that we've failed).
@@ -643,7 +643,7 @@ var Printing = {
     addEventListener("printPreviewUpdate", onPrintPreviewReady);
 
     try {
-      let printSettings = this.getPrintSettings();
+      let printSettings = this.getPrintSettings(defaultPrinterName);
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
@@ -664,8 +664,8 @@ var Printing = {
     docShell.printPreview.exitPrintPreview();
   },
 
-  print(contentWindow, simplifiedMode) {
-    let printSettings = this.getPrintSettings();
+  print(contentWindow, simplifiedMode, defaultPrinterName) {
+    let printSettings = this.getPrintSettings(defaultPrinterName);
 
     // If we happen to be on simplified mode, we need to set docURL in order
     // to generate header/footer content correctly, since simplified tab has
