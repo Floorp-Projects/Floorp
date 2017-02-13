@@ -70,7 +70,7 @@ add_task(function* () {
 
   info("Testing html filtering.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-filter-html-button"));
+    document.querySelector(".requests-list-filter-html-button"));
   testFilterButtons(monitor, "html");
   testContents([6, 4, 5, 0, 1, 2, 3], 1, 6);
 
