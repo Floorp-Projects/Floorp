@@ -135,7 +135,7 @@ def rust_triple_alias(host_or_target):
         #
         # The canonical list of targets supported can be derived from:
         #
-        # https://github.com/rust-lang/rust/tree/master/mk/cfg
+        # https://github.com/rust-lang/rust/blob/master/src/librustc_back/target/mod.rs
 
         # Avoid having to write out os+kernel for all the platforms where
         # they don't differ.
@@ -144,26 +144,34 @@ def rust_triple_alias(host_or_target):
             # DragonFly
             ('x86_64', 'DragonFly'): 'x86_64-unknown-dragonfly',
             # FreeBSD
+            ('aarch64', 'FreeBSD'): 'aarch64-unknown-freebsd',
             ('x86', 'FreeBSD'): 'i686-unknown-freebsd',
             ('x86_64', 'FreeBSD'): 'x86_64-unknown-freebsd',
             # NetBSD
+            ('sparc64', 'NetBSD'): 'sparc64-unknown-netbsd',
+            ('x86', 'NetBSD'): 'i686-unknown-netbsd',
             ('x86_64', 'NetBSD'): 'x86_64-unknown-netbsd',
             # OpenBSD
             ('x86', 'OpenBSD'): 'i686-unknown-openbsd',
             ('x86_64', 'OpenBSD'): 'x86_64-unknown-openbsd',
             # Linux
-            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
-            # Linux
-            ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
             ('aarch64', 'Linux'): 'aarch64-unknown-linux-gnu',
-            # OS X and iOS
+            ('arm', 'Linux'): 'armv7-unknown-linux-gnueabihf',
+            ('sparc64', 'Linux'): 'sparc64-unknown-linux-gnu',
+            ('x86', 'Linux'): 'i686-unknown-linux-gnu',
+            ('x86_64', 'Linux'): 'x86_64-unknown-linux-gnu',
+            # OS X
             ('x86', 'OSX'): 'i686-apple-darwin',
-            ('x86', 'iOS'): 'i386-apple-ios',
             ('x86_64', 'OSX'): 'x86_64-apple-darwin',
+            # iOS
+            ('aarch64', 'iOS'): 'aarch64-apple-ios',
+            ('arm', 'iOS'): 'armv7s-apple-ios',
+            ('x86', 'iOS'): 'i386-apple-ios',
+            ('x86_64', 'iOS'): 'x86_64-apple-ios',
             # Android
-            ('x86', 'Android'): 'i686-linux-android',
-            ('arm', 'Android'): 'armv7-linux-androideabi',
             ('aarch64', 'Android'): 'aarch64-linux-android',
+            ('arm', 'Android'): 'armv7-linux-androideabi',
+            ('x86', 'Android'): 'i686-linux-android',
             # Windows
             # XXX better detection of CXX needed here, to figure out whether
             # we need i686-pc-windows-gnu instead, since mingw32 builds work.
