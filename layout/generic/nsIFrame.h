@@ -297,6 +297,18 @@ public:
   void UpdateTruncated(const mozilla::ReflowInput& aReflowInput,
                        const mozilla::ReflowOutput& aMetrics);
 
+  // Merge the frame completion status bits from aStatus into this.
+  void MergeCompletionStatusFrom(const nsReflowStatus& aStatus)
+  {
+    mIncomplete |= aStatus.mIncomplete;
+    mOverflowIncomplete |= aStatus.mOverflowIncomplete;
+    mNextInFlowNeedsReflow |= aStatus.mNextInFlowNeedsReflow;
+    mTruncated |= aStatus.mTruncated;
+    if (mIncomplete) {
+      mOverflowIncomplete = false;
+    }
+  }
+
 private:
   uint32_t mStatus;
 
@@ -309,7 +321,6 @@ private:
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
 #define NS_FRAME_NOT_COMPLETE         0x1
-#define NS_FRAME_REFLOW_NEXTINFLOW    0x2
 #define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
 // This bit is set, when a break is requested. This bit is orthogonal
@@ -361,15 +372,8 @@ private:
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
-#define NS_FRAME_TRUNCATED  0x0010
-
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);
-
-// Merge the incompleteness, truncation and NS_FRAME_REFLOW_NEXTINFLOW
-// status from aSecondary into aPrimary.
-void NS_MergeReflowStatusInto(nsReflowStatus* aPrimary,
-                              nsReflowStatus aSecondary);
 
 //----------------------------------------------------------------------
 
