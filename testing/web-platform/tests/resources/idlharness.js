@@ -455,7 +455,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
             // Nothing we can do.
             return;
         }
-        this.assert_type_is(value[0], type.idlType.idlType);
+        this.assert_type_is(value[0], type.idlType);
         return;
     }
 
@@ -464,6 +464,18 @@ IdlArray.prototype.assert_type_is = function(value, type)
         // TODO: Ideally, we would check on project fulfillment
         // that we get the right type
         // but that would require making the type check async
+        return;
+    }
+
+    if (type.generic === "FrozenArray") {
+        assert_true(Array.isArray(value), "Value should be array");
+        assert_true(Object.isFrozen(value), "Value should be frozen");
+        if (!value.length)
+        {
+            // Nothing we can do.
+            return;
+        }
+        this.assert_type_is(value[0], type.idlType);
         return;
     }
 
