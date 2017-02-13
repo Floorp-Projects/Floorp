@@ -373,6 +373,377 @@
     };
   global.writeFormattedResult = writeFormattedResult;
 
+  /*
+   * Signals to results.py that the current test case should be considered to
+   * have passed if it doesn't throw an exception.
+   *
+   * When the test suite is run in the browser, this function gets overridden by
+   * the same-named function in browser.js.
+   */
+  // Note: browser.js overrides this function.
+  // XXX: Remove this function - it's no longer used.
+  function testPassesUnlessItThrows() {
+    print(PASSED);
+  }
+  global.testPassesUnlessItThrows = testPassesUnlessItThrows;
+
+  /*
+   * wrapper for test case constructor that doesn't require the SECTION
+   * argument.
+   */
+  function AddTestCase( description, expect, actual ) {
+    new TestCase( SECTION, description, expect, actual );
+  }
+  global.AddTestCase = AddTestCase;
+
+  function TestCase(n, d, e, a)
+  {
+    this.name = n;
+    this.description = d;
+    this.expect = e;
+    this.actual = a;
+    this.passed = getTestCaseResult(e, a);
+    this.reason = '';
+    this.bugnumber = typeof(BUGNUMER) != 'undefined' ? BUGNUMBER : '';
+    this.type = (typeof window == 'undefined' ? 'shell' : 'browser');
+    ({}).constructor.defineProperty(
+      gTestcases,
+      gTc++,
+      {
+        value: this,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      }
+    );
+  }
+  global.TestCase = TestCase;
+
+  TestCase.prototype.dump = function () {
+    // let reftest handle error reporting, otherwise
+    // output a summary line.
+    if (typeof document != "object" ||
+        !document.location.href.match(/jsreftest.html/))
+    {
+      dump('\njstest: ' + this.path + ' ' +
+          'bug: '         + this.bugnumber + ' ' +
+          'result: '      + (this.passed ? 'PASSED':'FAILED') + ' ' +
+          'type: '        + this.type + ' ' +
+          'description: ' + toPrinted(this.description) + ' ' +
+  //       'expected: '    + toPrinted(this.expect) + ' ' +
+  //       'actual: '      + toPrinted(this.actual) + ' ' +
+          'reason: '      + toPrinted(this.reason) + '\n');
+    }
+  };
+
+  TestCase.prototype.testPassed = (function TestCase_testPassed() { return this.passed; });
+  TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
+  TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
+
+  function getTestCases()
+  {
+    return gTestcases;
+  }
+  global.getTestCases = getTestCases;
+
+  /*
+   * The test driver searches for such a phrase in the test output.
+   * If such phrase exists, it will set n as the expected exit code.
+   */
+  function expectExitCode(n)
+  {
+    print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
+  }
+  global.expectExitCode = expectExitCode;
+
+  /*
+   * Statuses current section of a test
+   */
+  function inSection(x)
+  {
+    return "Section " + x + " of test - ";
+  }
+  global.inSection = inSection;
+
+  /*
+   * Report a failure in the 'accepted' manner
+   */
+  function reportFailure (msg)
+  {
+    var lines = msg.split ("\n");
+    var l;
+    var funcName = currentFunc();
+    var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
+
+    for (var i=0; i<lines.length; i++)
+      print (FAILED + prefix + lines[i]);
+  }
+  global.reportFailure = reportFailure;
+
+  /*
+   * Print a non-failure message.
+   */
+  function printStatus (msg)
+  {
+  /* js1_6 had...
+     msg = String(msg);
+     msg = msg.toString();
+  */
+    msg = msg.toString();
+    var lines = msg.split ("\n");
+    var l;
+
+    for (var i=0; i<lines.length; i++)
+      print (STATUS + lines[i]);
+  }
+  global.printStatus = printStatus;
+
+  /*
+  * Print a bugnumber message.
+  */
+  function printBugNumber (num)
+  {
+    BUGNUMBER = num;
+    print ('BUGNUMBER: ' + num);
+  }
+  global.printBugNumber = printBugNumber;
+
+  /*
+   * Compare expected result to actual result, if they differ (in value and/or
+   * type) report a failure.  If description is provided, include it in the
+   * failure report.
+   */
+  function reportCompare (expected, actual, description) {
+    var expected_t = typeof expected;
+    var actual_t = typeof actual;
+    var output = "";
+
+    if (typeof description == "undefined")
+      description = '';
+
+    if (expected_t != actual_t) {
+      output += "Type mismatch, expected type " + expected_t +
+        ", actual type " + actual_t + " ";
+    }
+
+    if (expected != actual) {
+      output += "Expected value '" + toPrinted(expected) +
+        "', Actual value '" + toPrinted(actual) + "' ";
+    }
+
+    var testcase = new TestCase("unknown-test-name", description, expected, actual);
+    testcase.reason = output;
+
+    // if running under reftest, let it handle result reporting.
+    if (typeof document != "object" ||
+        !document.location.href.match(/jsreftest.html/)) {
+      if (testcase.passed)
+      {
+        print(PASSED + description);
+      }
+      else
+      {
+        reportFailure (description + " : " + output);
+      }
+    }
+    return testcase.passed;
+  }
+  global.reportCompare = reportCompare;
+
+  /*
+   * Attempt to match a regular expression describing the result to
+   * the actual result, if they differ (in value and/or
+   * type) report a failure.  If description is provided, include it in the
+   * failure report.
+   */
+  function reportMatch (expectedRegExp, actual, description) {
+    var expected_t = "string";
+    var actual_t = typeof actual;
+    var output = "";
+
+    if (typeof description == "undefined")
+      description = '';
+
+    if (expected_t != actual_t) {
+      output += "Type mismatch, expected type " + expected_t +
+        ", actual type " + actual_t + " ";
+    }
+
+    var matches = expectedRegExp.test(actual);
+    if (!matches) {
+      output += "Expected match to '" + toPrinted(expectedRegExp) +
+        "', Actual value '" + toPrinted(actual) + "' ";
+    }
+
+    var testcase = new TestCase("unknown-test-name", description, true, matches);
+    testcase.reason = output;
+
+    // if running under reftest, let it handle result reporting.
+    if (typeof document != "object" ||
+        !document.location.href.match(/jsreftest.html/)) {
+      if (testcase.passed)
+      {
+        print(PASSED + description);
+      }
+      else
+      {
+        reportFailure (description + " : " + output);
+      }
+    }
+    return testcase.passed;
+  }
+  global.reportMatch = reportMatch;
+
+  function compareSource(expect, actual, summary)
+  {
+    // compare source
+    var expectP = expect.
+      replace(/([(){},.:\[\]])/mg, ' $1 ').
+      replace(/(\w+)/mg, ' $1 ').
+      replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
+      replace(/\s+/mg, ' ').
+      replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
+
+    var actualP = actual.
+      replace(/([(){},.:\[\]])/mg, ' $1 ').
+      replace(/(\w+)/mg, ' $1 ').
+      replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
+      replace(/\s+/mg, ' ').
+      replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
+
+    print('expect:\n' + expectP);
+    print('actual:\n' + actualP);
+
+    reportCompare(expectP, actualP, summary);
+
+    // actual must be compilable if expect is?
+    try
+    {
+      var expectCompile = 'No Error';
+      var actualCompile;
+
+      eval(expect);
+      try
+      {
+        eval(actual);
+        actualCompile = 'No Error';
+      }
+      catch(ex1)
+      {
+        actualCompile = ex1 + '';
+      }
+      reportCompare(expectCompile, actualCompile,
+                    summary + ': compile actual');
+    }
+    catch(ex)
+    {
+    }
+  }
+  global.compareSource = compareSource;
+
+  function getTestCaseResult(expected, actual)
+  {
+    if (typeof expected != typeof actual)
+      return false;
+    if (typeof expected != 'number')
+      // Note that many tests depend on the use of '==' here, not '==='.
+      return actual == expected;
+
+    // Distinguish NaN from other values.  Using x != x comparisons here
+    // works even if tests redefine isNaN.
+    if (actual != actual)
+      return expected != expected;
+    if (expected != expected)
+      return false;
+
+    // Tolerate a certain degree of error.
+    if (actual != expected)
+      return Math.abs(actual - expected) <= 1E-10;
+
+    // Here would be a good place to distinguish 0 and -0, if we wanted
+    // to.  However, doing so would introduce a number of failures in
+    // areas where they don't seem important.  For example, the WeekDay
+    // function in ECMA-262 returns -0 for Sundays before the epoch, but
+    // the Date functions in SpiderMonkey specified in terms of WeekDay
+    // often don't.  This seems unimportant.
+    return true;
+  }
+
+  function test() {
+    for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
+      // temporary hack to work around some unknown issue in 1.7
+      try
+      {
+        gTestcases[gTc].passed = writeTestCaseResult(
+          gTestcases[gTc].expect,
+          gTestcases[gTc].actual,
+          gTestcases[gTc].description +" = "+ gTestcases[gTc].actual );
+        gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
+      }
+      catch(e)
+      {
+        print('test(): empty testcase for gTc = ' + gTc + ' ' + e);
+      }
+    }
+    return ( gTestcases );
+  }
+  global.test = test;
+
+  /*
+   * Begin printing functions.  These functions use the shell's
+   * print function.  When running tests in the browser, browser.js
+   * overrides these functions to write to the page.
+   */
+  function writeTestCaseResult( expect, actual, string ) {
+    var passed = getTestCaseResult( expect, actual );
+    // if running under reftest, let it handle result reporting.
+    if (typeof document != "object" ||
+        !document.location.href.match(/jsreftest.html/)) {
+      writeFormattedResult( expect, actual, string, passed );
+    }
+    return passed;
+  }
+  global.writeTestCaseResult = writeTestCaseResult;
+
+  // Note: browser.js overrides this function.
+  function writeHeaderToLog( string ) {
+    print( string );
+  }
+  global.writeHeaderToLog = writeHeaderToLog;
+  /* end of print functions */
+
+  // Note: browser.js overrides this function.
+  function jsTestDriverEnd()
+  {
+    // gDelayTestDriverEnd is used to
+    // delay collection of the test result and
+    // signal to Spider so that tests can continue
+    // to run after page load has fired. They are
+    // responsible for setting gDelayTestDriverEnd = true
+    // then when completed, setting gDelayTestDriverEnd = false
+    // then calling jsTestDriverEnd()
+
+    if (gDelayTestDriverEnd)
+    {
+      return;
+    }
+
+    try
+    {
+      optionsReset();
+    }
+    catch(ex)
+    {
+      dump('jsTestDriverEnd ' + ex);
+    }
+
+    for (var i = 0; i < gTestcases.length; i++)
+    {
+      gTestcases[i].dump();
+    }
+  }
+  global.jsTestDriverEnd = jsTestDriverEnd;
+
   /*****************************************************
    * RHINO-SPECIFIC EXPORTS (are these used any more?) *
    *****************************************************/
@@ -425,6 +796,7 @@
 var STATUS = "STATUS: ";
 
 var gDelayTestDriverEnd = false;
+var gFailureExpected = false;
 
 var gTestcases = new Array();
 var gTc = gTestcases.length;
@@ -441,263 +813,6 @@ var GLOBAL = this + '';
 
 var DESCRIPTION;
 var EXPECTED;
-
-/*
- * Signals to results.py that the current test case should be considered to
- * have passed if it doesn't throw an exception.
- *
- * When the test suite is run in the browser, this function gets overridden by
- * the same-named function in browser.js.
- */
-function testPassesUnlessItThrows() {
-  print(PASSED);
-}
-
-/*
- * wrapper for test case constructor that doesn't require the SECTION
- * argument.
- */
-
-function AddTestCase( description, expect, actual ) {
-  new TestCase( SECTION, description, expect, actual );
-}
-
-function TestCase(n, d, e, a)
-{
-  this.name = n;
-  this.description = d;
-  this.expect = e;
-  this.actual = a;
-  this.passed = getTestCaseResult(e, a);
-  this.reason = '';
-  this.bugnumber = typeof(BUGNUMER) != 'undefined' ? BUGNUMBER : '';
-  this.type = (typeof window == 'undefined' ? 'shell' : 'browser');
-  ({}).constructor.defineProperty(
-    gTestcases,
-    gTc++,
-    {
-      value: this,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    }
-  );
-}
-
-gFailureExpected = false;
-
-TestCase.prototype.dump = function () {
-  // let reftest handle error reporting, otherwise
-  // output a summary line.
-  if (typeof document != "object" ||
-      !document.location.href.match(/jsreftest.html/))
-  {
-    dump('\njstest: ' + this.path + ' ' +
-         'bug: '         + this.bugnumber + ' ' +
-         'result: '      + (this.passed ? 'PASSED':'FAILED') + ' ' +
-         'type: '        + this.type + ' ' +
-         'description: ' + toPrinted(this.description) + ' ' +
-//       'expected: '    + toPrinted(this.expect) + ' ' +
-//       'actual: '      + toPrinted(this.actual) + ' ' +
-         'reason: '      + toPrinted(this.reason) + '\n');
-  }
-};
-
-TestCase.prototype.testPassed = (function TestCase_testPassed() { return this.passed; });
-TestCase.prototype.testFailed = (function TestCase_testFailed() { return !this.passed; });
-TestCase.prototype.testDescription = (function TestCase_testDescription() { return this.description + ' ' + this.reason; });
-
-function getTestCases()
-{
-  return gTestcases;
-}
-
-/*
- * The test driver searches for such a phrase in the test output.
- * If such phrase exists, it will set n as the expected exit code.
- */
-function expectExitCode(n)
-{
-  print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
-}
-
-/*
- * Statuses current section of a test
- */
-function inSection(x)
-{
-  return "Section " + x + " of test - ";
-}
-
-/*
- * Report a failure in the 'accepted' manner
- */
-function reportFailure (msg)
-{
-  var lines = msg.split ("\n");
-  var l;
-  var funcName = currentFunc();
-  var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
-
-  for (var i=0; i<lines.length; i++)
-    print (FAILED + prefix + lines[i]);
-}
-
-/*
- * Print a non-failure message.
- */
-function printStatus (msg)
-{
-/* js1_6 had...
-   msg = String(msg);
-   msg = msg.toString();
-*/
-  msg = msg.toString();
-  var lines = msg.split ("\n");
-  var l;
-
-  for (var i=0; i<lines.length; i++)
-    print (STATUS + lines[i]);
-}
-
-/*
- * Print a bugnumber message.
- */
-function printBugNumber (num)
-{
-  BUGNUMBER = num;
-  print ('BUGNUMBER: ' + num);
-}
-
-/*
- * Compare expected result to actual result, if they differ (in value and/or
- * type) report a failure.  If description is provided, include it in the
- * failure report.
- */
-function reportCompare (expected, actual, description) {
-  var expected_t = typeof expected;
-  var actual_t = typeof actual;
-  var output = "";
-
-  if (typeof description == "undefined")
-    description = '';
-
-  if (expected_t != actual_t) {
-    output += "Type mismatch, expected type " + expected_t +
-      ", actual type " + actual_t + " ";
-  }
-
-  if (expected != actual) {
-    output += "Expected value '" + toPrinted(expected) +
-      "', Actual value '" + toPrinted(actual) + "' ";
-  }
-
-  var testcase = new TestCase("unknown-test-name", description, expected, actual);
-  testcase.reason = output;
-
-  // if running under reftest, let it handle result reporting.
-  if (typeof document != "object" ||
-      !document.location.href.match(/jsreftest.html/)) {
-    if (testcase.passed)
-    {
-      print(PASSED + description);
-    }
-    else
-    {
-      reportFailure (description + " : " + output);
-    }
-  }
-  return testcase.passed;
-}
-
-/*
- * Attempt to match a regular expression describing the result to
- * the actual result, if they differ (in value and/or
- * type) report a failure.  If description is provided, include it in the
- * failure report.
- */
-function reportMatch (expectedRegExp, actual, description) {
-  var expected_t = "string";
-  var actual_t = typeof actual;
-  var output = "";
-
-  if (typeof description == "undefined")
-    description = '';
-
-  if (expected_t != actual_t) {
-    output += "Type mismatch, expected type " + expected_t +
-      ", actual type " + actual_t + " ";
-  }
-
-  var matches = expectedRegExp.test(actual);
-  if (!matches) {
-    output += "Expected match to '" + toPrinted(expectedRegExp) +
-      "', Actual value '" + toPrinted(actual) + "' ";
-  }
-
-  var testcase = new TestCase("unknown-test-name", description, true, matches);
-  testcase.reason = output;
-
-  // if running under reftest, let it handle result reporting.
-  if (typeof document != "object" ||
-      !document.location.href.match(/jsreftest.html/)) {
-    if (testcase.passed)
-    {
-      print(PASSED + description);
-    }
-    else
-    {
-      reportFailure (description + " : " + output);
-    }
-  }
-  return testcase.passed;
-}
-
-function compareSource(expect, actual, summary)
-{
-  // compare source
-  var expectP = expect.
-    replace(/([(){},.:\[\]])/mg, ' $1 ').
-    replace(/(\w+)/mg, ' $1 ').
-    replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-    replace(/\s+/mg, ' ').
-    replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
-
-  var actualP = actual.
-    replace(/([(){},.:\[\]])/mg, ' $1 ').
-    replace(/(\w+)/mg, ' $1 ').
-    replace(/<(\/)? (\w+) (\/)?>/mg, '<$1$2$3>').
-    replace(/\s+/mg, ' ').
-    replace(/new (\w+)\s*\(\s*\)/mg, 'new $1');
-
-  print('expect:\n' + expectP);
-  print('actual:\n' + actualP);
-
-  reportCompare(expectP, actualP, summary);
-
-  // actual must be compilable if expect is?
-  try
-  {
-    var expectCompile = 'No Error';
-    var actualCompile;
-
-    eval(expect);
-    try
-    {
-      eval(actual);
-      actualCompile = 'No Error';
-    }
-    catch(ex1)
-    {
-      actualCompile = ex1 + '';
-    }
-    reportCompare(expectCompile, actualCompile,
-                  summary + ': compile actual');
-  }
-  catch(ex)
-  {
-  }
-}
 
 function optionsInit() {
 
@@ -797,104 +912,4 @@ if (typeof options == 'function')
 {
   optionsInit();
   optionsClear();
-}
-
-function getTestCaseResult(expected, actual)
-{
-  if (typeof expected != typeof actual)
-    return false;
-  if (typeof expected != 'number')
-    // Note that many tests depend on the use of '==' here, not '==='.
-    return actual == expected;
-
-  // Distinguish NaN from other values.  Using x != x comparisons here
-  // works even if tests redefine isNaN.
-  if (actual != actual)
-    return expected != expected;
-  if (expected != expected)
-    return false;
-
-  // Tolerate a certain degree of error.
-  if (actual != expected)
-    return Math.abs(actual - expected) <= 1E-10;
-
-  // Here would be a good place to distinguish 0 and -0, if we wanted
-  // to.  However, doing so would introduce a number of failures in
-  // areas where they don't seem important.  For example, the WeekDay
-  // function in ECMA-262 returns -0 for Sundays before the epoch, but
-  // the Date functions in SpiderMonkey specified in terms of WeekDay
-  // often don't.  This seems unimportant.
-  return true;
-}
-
-function test() {
-  for ( gTc=0; gTc < gTestcases.length; gTc++ ) {
-    // temporary hack to work around some unknown issue in 1.7
-    try
-    {
-      gTestcases[gTc].passed = writeTestCaseResult(
-        gTestcases[gTc].expect,
-        gTestcases[gTc].actual,
-        gTestcases[gTc].description +" = "+ gTestcases[gTc].actual );
-      gTestcases[gTc].reason += ( gTestcases[gTc].passed ) ? "" : "wrong value ";
-    }
-    catch(e)
-    {
-      print('test(): empty testcase for gTc = ' + gTc + ' ' + e);
-    }
-  }
-  return ( gTestcases );
-}
-
-/*
- * Begin printing functions.  These functions use the shell's
- * print function.  When running tests in the browser, browser.js
- * overrides these functions to write to the page.
- */
-
-function writeTestCaseResult( expect, actual, string ) {
-  var passed = getTestCaseResult( expect, actual );
-  // if running under reftest, let it handle result reporting.
-  if (typeof document != "object" ||
-      !document.location.href.match(/jsreftest.html/)) {
-    writeFormattedResult( expect, actual, string, passed );
-  }
-  return passed;
-}
-
-function writeHeaderToLog( string ) {
-  print( string );
-}
-/* end of print functions */
-
-
-function jsTestDriverEnd()
-{
-  // gDelayTestDriverEnd is used to
-  // delay collection of the test result and
-  // signal to Spider so that tests can continue
-  // to run after page load has fired. They are
-  // responsible for setting gDelayTestDriverEnd = true
-  // then when completed, setting gDelayTestDriverEnd = false
-  // then calling jsTestDriverEnd()
-
-  if (gDelayTestDriverEnd)
-  {
-    return;
-  }
-
-  try
-  {
-    optionsReset();
-  }
-  catch(ex)
-  {
-    dump('jsTestDriverEnd ' + ex);
-  }
-
-  for (var i = 0; i < gTestcases.length; i++)
-  {
-    gTestcases[i].dump();
-  }
-
 }
