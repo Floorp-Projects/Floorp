@@ -113,10 +113,22 @@ class SidebarAction {
     menuitem.setAttribute("observes", this.id);
     menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
 
+    this.setMenuIcon(menuitem, details);
+
     document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
 
     return menuitem;
+  }
+
+  setMenuIcon(menuitem, details) {
+    let getIcon = size => IconDetails.escapeUrl(
+      IconDetails.getPreferredIcon(details.icon, this.extension, size).icon);
+
+    menuitem.setAttribute("style", `
+      --webextension-menuitem-image: url("${getIcon(16)}");
+      --webextension-menuitem-image-2x: url("${getIcon(32)}");
+    `);
   }
 
   /**
@@ -147,13 +159,7 @@ class SidebarAction {
       broadcaster.setAttribute("sidebarurl", url);
     }
 
-    let getIcon = size => IconDetails.escapeUrl(
-      IconDetails.getPreferredIcon(tabData.icon, this.extension, size).icon);
-
-    menu.setAttribute("style", `
-      --webextension-menuitem-image: url("${getIcon(16)}");
-      --webextension-menuitem-image-2x: url("${getIcon(32)}");
-    `);
+    this.setMenuIcon(menu, tabData);
 
     // Update the sidebar if this extension is the current sidebar.
     if (SidebarUI.currentID === this.id) {
