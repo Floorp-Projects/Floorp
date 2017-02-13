@@ -188,7 +188,9 @@ extern const char* CacheKindNames[];
     _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
     _(StoreDenseElement)                  \
+    _(StoreDenseElementHole)              \
     _(StoreUnboxedArrayElement)           \
+    _(StoreUnboxedArrayElementHole)       \
     _(CallNativeSetter)                   \
     _(CallScriptedSetter)                 \
     _(CallSetArrayLength)                 \
@@ -663,6 +665,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(elementType));
     }
+    void storeUnboxedArrayElementHole(ObjOperandId obj, Int32OperandId index, ValOperandId rhs,
+                                      JSValueType elementType)
+    {
+        writeOpWithOperandId(CacheOp::StoreUnboxedArrayElementHole, obj);
+        writeOperandId(index);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(elementType));
+    }
+    void storeDenseElementHole(ObjOperandId obj, Int32OperandId index, ValOperandId rhs,
+                               bool handleAdd)
+    {
+        writeOpWithOperandId(CacheOp::StoreDenseElementHole, obj);
+        writeOperandId(index);
+        writeOperandId(rhs);
+        buffer_.writeByte(handleAdd);
+    }
     void callScriptedSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
         addStubField(uintptr_t(setter), StubField::Type::JSObject);
@@ -1040,6 +1058,11 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                   Int32OperandId indexId, ValOperandId rhsId);
     bool tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperandId objId, uint32_t index,
                                          Int32OperandId indexId, ValOperandId rhsId);    
+
+    bool tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId, uint32_t index,
+                                      Int32OperandId indexId, ValOperandId rhsId);
+    bool tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOperandId objId, uint32_t index,
+                                             Int32OperandId indexId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
