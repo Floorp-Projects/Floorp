@@ -377,7 +377,7 @@ public:
    *   2. Reflows all our overflow container kids
    *   3. Expands aOverflowRect as necessary to accomodate these children.
    *   4. Sets aStatus's mOverflowIncomplete flag (along with
-   *      NS_FRAME_REFLOW_NEXTINFLOW as necessary) if any overflow children
+   *      mNextInFlowNeedsReflow as necessary) if any overflow children
    *      are incomplete and
    *   5. Prepends a list of their continuations to our excess overflow
    *      container list, to be drained into our next-in-flow when it is
