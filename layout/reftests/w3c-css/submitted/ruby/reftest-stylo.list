@@ -7,10 +7,10 @@ fails == ruby-inlinize-blocks-002.html ruby-inlinize-blocks-002.html
 # == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005.html
 
 # Tests for autohiding base-identical annotations
-fails == ruby-autohide-001.html ruby-autohide-001.html
-fails == ruby-autohide-002.html ruby-autohide-002.html
-fails == ruby-autohide-003.html ruby-autohide-003.html
-fails == ruby-autohide-004.html ruby-autohide-004.html
+== ruby-autohide-001.html ruby-autohide-001.html
+== ruby-autohide-002.html ruby-autohide-002.html
+== ruby-autohide-003.html ruby-autohide-003.html
+== ruby-autohide-004.html ruby-autohide-004.html
 
 # Tests for ruby with text-combine-upright
 fails == ruby-text-combine-upright-001a.html ruby-text-combine-upright-001a.html
