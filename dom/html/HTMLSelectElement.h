@@ -252,7 +252,7 @@ public:
     mOptions->IndexedSetter(aIndex, aOption, aRv);
   }
 
-  static bool MatchSelectedOptions(nsIContent* aContent, int32_t, nsIAtom*,
+  static bool MatchSelectedOptions(Element* aElement, int32_t, nsIAtom*,
                                    void*);
 
   nsIHTMLCollection* SelectedOptions();
