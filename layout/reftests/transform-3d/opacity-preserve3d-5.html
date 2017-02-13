@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+    .outer {
+        transform-style: preserve-3d;
+        width: 200px;
+        height: 200px;
+    }
+    .inner {
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: green;
+        position:relative;
+        width: 200px;
+        height: 200px;
+    }
+</style>
+</head>
+<body>
+
+<div id="outer" class="outer">
+    <div class="inner">
+    </div>
+</div>
+<script>
+  function doTest() {
+    document.getElementById("outer").style.opacity = 0.7;
+    document.documentElement.removeAttribute("class");
+  }
+    
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
+
