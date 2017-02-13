@@ -45,20 +45,6 @@ RestyleManager::ProcessPendingRestyles()
 }
 
 void
-RestyleManager::ContentInserted(nsINode* aContainer,
-                                nsIContent* aChild)
-{
-  MOZ_STYLO_FORWARD(ContentInserted, (aContainer, aChild));
-}
-
-void
-RestyleManager::ContentAppended(nsIContent* aContainer,
-                                nsIContent* aFirstNewContent)
-{
-  MOZ_STYLO_FORWARD(ContentAppended, (aContainer, aFirstNewContent));
-}
-
-void
 RestyleManager::ContentRemoved(nsINode* aContainer,
                                nsIContent* aOldChild,
 			       nsIContent* aFollowingSibling)
