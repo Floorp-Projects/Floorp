@@ -249,7 +249,7 @@ CssLogic.prototype = {
       cssSheet._passId = this._passId;
 
       // Find import and keyframes rules.
-      for (let aDomRule of domSheet.cssRules) {
+      for (let aDomRule of cssSheet.getCssRules()) {
         if (aDomRule.type == CSSRule.IMPORT_RULE &&
             aDomRule.styleSheet &&
             this.mediaMatches(aDomRule)) {
@@ -821,9 +821,29 @@ CssSheet.prototype = {
    * @return {number} the number of nsIDOMCSSRule objects in this stylesheet.
    */
   get ruleCount() {
-    return this._ruleCount > -1 ?
-      this._ruleCount :
-      this.domSheet.cssRules.length;
+    try {
+      return this._ruleCount > -1 ?
+        this._ruleCount :
+        this.getCssRules().length;
+    } catch (e) {
+      return 0;
+    }
+  },
+
+  /**
+   * Retrieve the array of css rules for this stylesheet.
+   *
+   * Accessing cssRules on a stylesheet that is not completely loaded can throw a
+   * DOMException (Bug 625013). This wrapper will return an empty array instead.
+   *
+   * @return {Array} array of css rules.
+   **/
+  getCssRules: function () {
+    try {
+      return this.domSheet.cssRules;
+    } catch (e) {
+      return [];
+    }
   },
 
   /**
