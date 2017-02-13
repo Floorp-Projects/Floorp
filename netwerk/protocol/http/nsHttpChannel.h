@@ -439,7 +439,6 @@ private:
 
     // Report net vs cache time telemetry
     void ReportNetVSCacheTelemetry();
-    int64_t ComputeTelemetryBucketNumber(int64_t difftime_ms);
 
     // Create a aggregate set of the current notification callbacks
     // and ensure the transaction is updated to use it.
