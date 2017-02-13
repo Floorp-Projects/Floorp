@@ -44,28 +44,6 @@ RestyleManager::ProcessPendingRestyles()
   MOZ_STYLO_FORWARD(ProcessPendingRestyles, ());
 }
 
-void
-RestyleManager::ContentRemoved(nsINode* aContainer,
-                               nsIContent* aOldChild,
-			       nsIContent* aFollowingSibling)
-{
-  MOZ_STYLO_FORWARD(ContentRemoved, (aContainer, aOldChild, aFollowingSibling));
-}
-
-void
-RestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
-                                         nsIContent* aChild)
-{
-  MOZ_STYLO_FORWARD(RestyleForInsertOrChange, (aContainer, aChild));
-}
-
-void
-RestyleManager::RestyleForAppend(nsIContent* aContainer,
-                                 nsIContent* aFirstNewContent)
-{
-  MOZ_STYLO_FORWARD(RestyleForAppend, (aContainer, aFirstNewContent));
-}
-
 nsresult
 RestyleManager::ContentStateChanged(nsIContent* aContent,
                                     EventStates aStateMask)
