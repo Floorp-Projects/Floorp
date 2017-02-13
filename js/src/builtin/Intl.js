@@ -1215,8 +1215,10 @@ var intlFallbackSymbolHolder = { value: undefined };
  */
 function intlFallbackSymbol() {
     var fallbackSymbol = intlFallbackSymbolHolder.value;
-    if (!fallbackSymbol)
-        intlFallbackSymbolHolder.value = fallbackSymbol = std_Symbol();
+    if (!fallbackSymbol) {
+        fallbackSymbol = std_Symbol("IntlLegacyConstructedSymbol");
+        intlFallbackSymbolHolder.value = fallbackSymbol;
+    }
     return fallbackSymbol;
 }
 
@@ -1819,9 +1821,8 @@ function getNumberFormatInternals(obj) {
  */
 function UnwrapNumberFormat(nf, methodName) {
     // Step 1.
-    if ((!IsObject(nf) || !IsNumberFormat(nf)) && nf instanceof GetNumberFormatConstructor()) {
+    if (IsObject(nf) && !IsNumberFormat(nf) && nf instanceof GetNumberFormatConstructor())
         nf = nf[intlFallbackSymbol()];
-    }
 
     // Step 2.
     if (!IsObject(nf) || !IsNumberFormat(nf))
@@ -1991,10 +1992,9 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // computed and install it.
     initializeIntlObject(numberFormat, "NumberFormat", lazyNumberFormatData);
 
-    if (numberFormat !== thisValue && thisValue instanceof GetNumberFormatConstructor()) {
-        if (!IsObject(thisValue))
-            ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, typeof thisValue);
-
+    if (numberFormat !== thisValue && IsObject(thisValue) &&
+        thisValue instanceof GetNumberFormatConstructor())
+    {
         _DefineDataProperty(thisValue, intlFallbackSymbol(), numberFormat,
                             ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
 
@@ -2278,11 +2278,8 @@ function getDateTimeFormatInternals(obj) {
  */
 function UnwrapDateTimeFormat(dtf, methodName) {
     // Step 1.
-    if ((!IsObject(dtf) || !IsDateTimeFormat(dtf)) &&
-        dtf instanceof GetDateTimeFormatConstructor())
-    {
+    if (IsObject(dtf) && !IsDateTimeFormat(dtf) && dtf instanceof GetDateTimeFormatConstructor())
         dtf = dtf[intlFallbackSymbol()];
-    }
 
     // Step 2.
     if (!IsObject(dtf) || !IsDateTimeFormat(dtf)) {
@@ -2426,10 +2423,9 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options) {
     // computed and install it.
     initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
-    if (dateTimeFormat !== thisValue && thisValue instanceof GetDateTimeFormatConstructor()) {
-        if (!IsObject(thisValue))
-            ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, typeof thisValue);
-
+    if (dateTimeFormat !== thisValue && IsObject(thisValue) &&
+        thisValue instanceof GetDateTimeFormatConstructor())
+    {
         _DefineDataProperty(thisValue, intlFallbackSymbol(), dateTimeFormat,
                             ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
 
