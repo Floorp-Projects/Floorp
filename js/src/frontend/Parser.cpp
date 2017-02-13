@@ -2294,7 +2294,7 @@ template <>
 ParseNode*
 Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
                                              HandleScope enclosingScope,
-                                             Maybe<uint32_t> parameterListEnd,
+                                             const Maybe<uint32_t>& parameterListEnd,
                                              GeneratorKind generatorKind,
                                              FunctionAsyncKind asyncKind,
                                              Directives inheritedDirectives,
@@ -3398,7 +3398,7 @@ bool
 Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
                                                       YieldHandling yieldHandling,
                                                       Node pn, FunctionSyntaxKind kind,
-                                                      Maybe<uint32_t> parameterListEnd /* = Nothing() */,
+                                                      const Maybe<uint32_t>& parameterListEnd /* = Nothing() */,
                                                       bool isStandaloneFunction /* = false */)
 {
     // Given a properly initialized parse context, try to parse an actual
@@ -4037,7 +4037,8 @@ Parser<ParseHandler>::PossibleError::transferErrorsTo(PossibleError* other)
 
 template <>
 bool
-Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<DeclarationKind> maybeDecl)
+Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr,
+                                                 const Maybe<DeclarationKind>& maybeDecl)
 {
     MOZ_ASSERT(!handler.isUnparenthesizedDestructuringPattern(expr));
 
