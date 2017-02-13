@@ -8700,7 +8700,8 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
   // we expect, we need to make them narrow to their children's outline.
   // aOutValid is set to false if the returned nsRect is not valid
   // and should not be included in the outline rectangle.
-  aOutValid = !aFrame->IsFrameOfType(nsIFrame::eSVGContainer)
+  aOutValid = !(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)
+              || !aFrame->IsFrameOfType(nsIFrame::eSVGContainer)
               || aFrame->GetType() == nsGkAtoms::svgTextFrame;
 
   nsRect u;
