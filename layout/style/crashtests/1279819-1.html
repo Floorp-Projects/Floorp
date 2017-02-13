@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function start() {
+  o0=window.document;
+  o1=window.document.documentElement;
+  o1.hidden^=true;
+  document.replaceChild(o0.documentElement,document.documentElement);
+  o132=o0.createElement('form');
+  o0.documentElement.appendChild(o132);
+  o132.innerHTML=
+"<svg id><style id>@font-face{ font-family: font7; src: url('eot');}{}\n"+
+"*{ font-size: 85rem!important; all: initial;<style>@keyframes{{}}*{ animation-name: key12; animation-duration: 0.001s}{}\n"+
+"@keyframes key12{ from{ font: larger Helvetica";
+  document.documentElement.classList.remove("reftest-wait");
+}
+window.setTimeout("start()",4);
+</script>
