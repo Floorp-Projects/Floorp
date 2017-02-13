@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    .outer {
+        transform-style: preserve-3d;
+        width: 200px;
+        height: 200px;
+        opacity: 0.7;
+    }
+    .inner {
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: green;
+        position:relative;
+        width: 200px;
+        height: 200px;
+    }
+</style>
+</head>
+<body>
+
+<div id="outer" class="outer">
+    <div class="inner">
+    </div>
+</div>
+</body>
+</html>
+
