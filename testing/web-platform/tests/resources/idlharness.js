@@ -307,6 +307,24 @@ IdlArray.prototype.recursively_get_implements = function(interface_name)
     return ret;
 };
 
+function exposure_set(object, default_set) {
+    var exposed = object.extAttrs.filter(function(a) { return a.name == "Exposed" });
+    if (exposed.length > 1 || exposed.length < 0) {
+        throw "Unexpected Exposed extended attributes on " + memberName + ": " + exposed;
+    }
+
+    if (exposed.length === 0) {
+        return default_set;
+    }
+
+    var set = exposed[0].rhs.value;
+    // Could be a list or a string.
+    if (typeof set == "string") {
+        set = [ set ];
+    }
+    return set;
+}
+
 function exposed_in(globals) {
     if ('document' in self) {
         return globals.indexOf("Window") >= 0;
@@ -381,15 +399,9 @@ IdlArray.prototype.test = function()
             return;
         }
 
-        var exposed = member.extAttrs.filter(function(a) { return a.name == "Exposed" });
-        if (exposed.length > 1) {
-            throw "Unexpected Exposed extended attributes on " + memberName + ": " + exposed;
-        }
-
-        var globals = exposed.length === 1
-                    ? exposed[0].rhs.value
-                    : ["Window"];
+        var globals = exposure_set(member, ["Window"]);
         member.exposed = exposed_in(globals);
+        member.exposureSet = globals;
     }.bind(this));
 
     // Now run test() on every member, and test_object() for every object.
@@ -1412,6 +1424,19 @@ IdlInterface.prototype.test_members = function()
             continue;
         }
 
+        if (!exposed_in(exposure_set(member, this.exposureSet))) {
+            test(function() {
+                // It's not exposed, so we shouldn't find it anywhere.
+                assert_false(member.name in self[this.name],
+                             "The interface object must not have a property " +
+                             format_value(member.name));
+                assert_false(member.name in self[this.name].prototype,
+                             "The prototype object must not have a property " +
+                             format_value(member.name));
+            }.bind(this), this.name + " interface: member " + member.name);
+            continue;
+        }
+
         switch (member.type) {
         case "const":
             this.test_member_const(member);
@@ -1542,6 +1567,12 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
     for (var i = 0; i < this.members.length; i++)
     {
         var member = this.members[i];
+        if (!exposed_in(exposure_set(member, this.exposureSet))) {
+            test(function() {
+                assert_false(member.name in obj);
+            }.bind(this), this.name + "interface: " + desc + 'must not have property "' + member.name + '"');
+            continue;
+        }
         if (member.type == "attribute" && member.isUnforgeable)
         {
             var a_test = async_test(this.name + " interface: " + desc + ' must have own property "' + member.name + '"');
