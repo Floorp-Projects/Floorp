@@ -35,9 +35,6 @@ CreateDataSourceSurfaceWithStrideFromData(const IntSize &aSize,
                                           const uint8_t* aData,
                                           int32_t aDataStride);
 
-void
-ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, const int32_t aStride);
-
 /**
  * Copy the pixel data from aSrc and pack it into aDst. aSrcSize, aSrcStride
  * and aBytesPerPixel give the size, stride and bytes per pixel for aSrc's

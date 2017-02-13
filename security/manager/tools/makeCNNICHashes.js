@@ -37,7 +37,8 @@ const HEADER = "// This Source Code Form is subject to the terms of the Mozilla 
 
 const PREAMBLE = "#define CNNIC_WHITELIST_HASH_LEN 32\n\n" +
 "struct WhitelistedCNNICHash {\n" +
-" const uint8_t hash[CNNIC_WHITELIST_HASH_LEN];\n" +
+"  // See bug 1338873 about making this field const.\n" +
+"  uint8_t hash[CNNIC_WHITELIST_HASH_LEN];\n" +
 "};\n\n" +
 "static const struct WhitelistedCNNICHash WhitelistedCNNICHashes[] = {\n";
 
