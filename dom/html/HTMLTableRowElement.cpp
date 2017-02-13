@@ -120,10 +120,10 @@ HTMLTableRowElement::SectionRowIndex() const
 }
 
 static bool
-IsCell(nsIContent *aContent, int32_t aNamespaceID,
+IsCell(Element *aElement, int32_t aNamespaceID,
        nsIAtom* aAtom, void *aData)
 {
-  return aContent->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th);
+  return aElement->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th);
 }
 
 nsIHTMLCollection*
