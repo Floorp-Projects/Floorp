@@ -145,6 +145,25 @@ public:
   void ContentInserted(nsINode* aContainer, nsIContent* aChild);
   void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent);
 
+  // This would be have the same logic as RestyleForInsertOrChange if we got the
+  // notification before the removal.  However, we get it after, so we need the
+  // following sibling in addition to the old child.  |aContainer| must be
+  // non-null; when the container is null, no work is needed.  aFollowingSibling
+  // is the sibling that used to come after aOldChild before the removal.
+  void ContentRemoved(nsINode* aContainer,
+                      nsIContent* aOldChild,
+                      nsIContent* aFollowingSibling);
+
+  // Restyling for a ContentInserted (notification after insertion) or
+  // for a CharacterDataChanged.  |aContainer| must be non-null; when
+  // the container is null, no work is needed.
+  void RestyleForInsertOrChange(nsINode* aContainer, nsIContent* aChild);
+
+  // Restyling for a ContentAppended (notification after insertion) or
+  // for a CharacterDataChanged.  |aContainer| must be non-null; when
+  // the container is null, no work is needed.
+  void RestyleForAppend(nsIContent* aContainer, nsIContent* aFirstNewContent);
+
   MOZ_DECL_STYLO_METHODS(GeckoRestyleManager, ServoRestyleManager)
 
   inline void PostRestyleEvent(dom::Element* aElement,
@@ -155,13 +174,6 @@ public:
   inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                            nsRestyleHint aRestyleHint);
   inline void ProcessPendingRestyles();
-  inline void ContentRemoved(nsINode* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aFollowingSibling);
-  inline void RestyleForInsertOrChange(nsINode* aContainer,
-                                       nsIContent* aChild);
-  inline void RestyleForAppend(nsIContent* aContainer,
-                               nsIContent* aFirstNewContent);
   inline nsresult ContentStateChanged(nsIContent* aContent,
                                       EventStates aStateMask);
   inline void AttributeWillChange(dom::Element* aElement,
@@ -184,6 +196,8 @@ protected:
     MOZ_ASSERT(!mAnimationsWithDestroyedFrame,
                "leaving dangling pointers from AnimationsWithDestroyedFrame");
   }
+
+  void RestyleForEmptyChange(Element* aContainer);
 
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,
