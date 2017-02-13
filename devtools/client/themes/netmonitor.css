@@ -11,7 +11,7 @@
   box-sizing: border-box;
 }
 
-#toolbar-labels {
+.toolbar-labels {
   overflow: hidden;
   display: flex;
   flex: auto;
@@ -96,22 +96,22 @@
   font-size: 120%;
 }
 
-#notice-perf-message {
+.notice-perf-message {
   margin-top: 2px;
 }
 
-#requests-list-perf-notice-button {
+.requests-list-perf-notice-button {
   min-width: 30px;
   min-height: 26px;
   margin: 0 5px;
   vertical-align: middle;
 }
 
-#requests-list-perf-notice-button::before {
+.requests-list-perf-notice-button::before {
   background-image: url(images/profiler-stopwatch.svg);
 }
 
-#requests-list-reload-notice-button {
+.requests-list-reload-notice-button {
   font-size: inherit;
   min-height: 26px;
   margin: 0 5px;
