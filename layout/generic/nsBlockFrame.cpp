@@ -1274,7 +1274,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   if (!state.mReflowStatus.IsFullyComplete()) {
     if (HasOverflowLines() || HasPushedFloats()) {
-      state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      state.mReflowStatus.SetNextInFlowNeedsReflow();
     }
 
 #ifdef DEBUG_kipp
@@ -2684,7 +2684,7 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
     }
 
     if (aState.mReflowStatus.IsIncomplete()) {
-      aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      aState.mReflowStatus.SetNextInFlowNeedsReflow();
     } //XXXfr shouldn't set this flag when nextinflow has no lines
   }
 
@@ -3650,7 +3650,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
               mFrames.InsertFrame(nullptr, frame, nextFrame);
               madeContinuation = true; // needs to be added to mLines
               nextFrame->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-              frameReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+              frameReflowStatus.SetNextInFlowNeedsReflow();
             }
 
             // Push continuation to a new line, but only if we actually made one.
@@ -3664,8 +3664,8 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
             // If we need to reflow the continuation of the block child,
             // then we'd better reflow our continuation
-            if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
-              aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+            if (frameReflowStatus.NextInFlowNeedsReflow()) {
+              aState.mReflowStatus.SetNextInFlowNeedsReflow();
               // We also need to make that continuation's line dirty so
               // it gets reflowed when we reflow our next in flow. The
               // nif's line must always be either a line of the nif's
@@ -4107,7 +4107,7 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
     if (iter.Next() && iter.GetLine()->IsInline()) {
       iter.GetLine()->MarkDirty();
       if (iter.GetContainer() != this) {
-        aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+        aState.mReflowStatus.SetNextInFlowNeedsReflow();
       }
     }
   }
@@ -4150,7 +4150,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
   bool           pushedFrame;
   aLineLayout.ReflowFrame(aFrame, frameReflowStatus, nullptr, pushedFrame);
 
-  if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
+  if (frameReflowStatus.NextInFlowNeedsReflow()) {
     aLineLayout.SetDirtyNextLine();
   }
 
@@ -6283,8 +6283,8 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
     aReflowStatus = NS_FRAME_COMPLETE;
   }
 
-  if (aReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
-    aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+  if (aReflowStatus.NextInFlowNeedsReflow()) {
+    aState.mReflowStatus.SetNextInFlowNeedsReflow();
   }
 
   if (aFloat->GetType() == nsGkAtoms::letterFrame) {
@@ -7433,7 +7433,7 @@ nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
                                       aContentBSize);
       aStatus->SetIncomplete();
       if (!GetNextInFlow())
-        *aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+        aStatus->SetNextInFlowNeedsReflow();
     }
   }
 }

@@ -5518,7 +5518,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
     childAvailableSize = bEndRow;
     if (aStatus.IsComplete()) {
       aStatus.SetOverflowIncomplete();
-      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      aStatus.SetNextInFlowNeedsReflow();
     }
   } else {
     // Children always have the full size of the rows in this fragment.
@@ -5704,7 +5704,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
       !overflowIncompleteItems.IsEmpty()) {
     if (aStatus.IsComplete()) {
       aStatus.SetOverflowIncomplete();
-      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      aStatus.SetNextInFlowNeedsReflow();
     }
     // Iterate the children in normal document order and append them (or a NIF)
     // to one of the following frame lists according to their status.
@@ -6174,7 +6174,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   if (HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     if (!aStatus.IsComplete()) {
       aStatus.SetOverflowIncomplete();
-      aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      aStatus.SetNextInFlowNeedsReflow();
     }
     bSize = 0;
     desiredSize.BSize(wm) = bSize + bp.BStartEnd(wm);
