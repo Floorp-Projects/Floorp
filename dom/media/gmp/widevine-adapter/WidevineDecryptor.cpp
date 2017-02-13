@@ -198,7 +198,8 @@ private:
 
 void
 WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
-                           GMPEncryptedBufferMetadata* aMetadata)
+                           GMPEncryptedBufferMetadata* aMetadata,
+                           uint64_t aDurationUsecs)
 {
   if (!mCallback) {
     Log("WidevineDecryptor::Decrypt() this=%p FAIL; !mCallback", this);

@@ -63,7 +63,8 @@ public:
   }
 
   void Decrypt(GMPBuffer* aBuffer,
-               GMPEncryptedBufferMetadata* aMetadata) override
+               GMPEncryptedBufferMetadata* aMetadata,
+               uint64_t aDurationUses) override
   {
   }
 
