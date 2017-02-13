@@ -559,6 +559,7 @@ function SignonClearFilter() {
 
   signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionAll");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAll.label"));
+  removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAll.accesskey"));
 }
 
 function FocusFilterBox() {
@@ -628,6 +629,7 @@ function FilterPasswords() {
 
   signonsIntro.textContent = kSignonBundle.getString("loginsDescriptionFiltered");
   removeAllButton.setAttribute("label", kSignonBundle.getString("removeAllShown.label"));
+  removeAllButton.setAttribute("accesskey", kSignonBundle.getString("removeAllShown.accesskey"));
 }
 
 function CopyPassword() {

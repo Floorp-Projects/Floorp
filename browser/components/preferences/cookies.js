@@ -877,9 +877,15 @@ var gCookiesWindow = {
   _updateRemoveAllButton: function gCookiesWindow__updateRemoveAllButton() {
     let removeAllCookies = document.getElementById("removeAllCookies");
     removeAllCookies.disabled = this._view._rowCount == 0;
-    let label = this._view._filtered ?
-      this._bundle.getString("removeAllShownCookies.label") : this._bundle.getString("removeAllCookies.label");
-    removeAllCookies.setAttribute("label", label);
+
+    let labelStringID = "removeAllCookies.label";
+    let accessKeyStringID = "removeAllCookies.accesskey";
+    if (this._view._filtered) {
+      labelStringID = "removeAllShownCookies.label";
+      accessKeyStringID = "removeAllShownCookies.accesskey";
+    }
+    removeAllCookies.setAttribute("label", this._bundle.getString(labelStringID));
+    removeAllCookies.setAttribute("accesskey", this._bundle.getString(accessKeyStringID));
   },
 
   filter() {
