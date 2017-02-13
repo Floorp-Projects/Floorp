@@ -11,10 +11,12 @@
 
 namespace mozilla {
 
-RestyleManager::RestyleManager(nsPresContext* aPresContext)
+RestyleManager::RestyleManager(StyleBackendType aType,
+                               nsPresContext* aPresContext)
   : mPresContext(aPresContext)
   , mRestyleGeneration(1)
   , mHoverGeneration(0)
+  , mType(aType)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
 {
