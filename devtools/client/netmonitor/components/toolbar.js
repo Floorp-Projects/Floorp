@@ -57,13 +57,12 @@ function Toolbar({
     toggleButtonClassName.push("pane-collapsed");
   }
 
-  let { count, contentSize, transferredSize, millis } = summary;
+  let { count, bytes, millis } = summary;
   const text = (count === 0) ? L10N.getStr("networkMenu.empty") :
-    PluralForm.get(count, L10N.getStr("networkMenu.summary2"))
+    PluralForm.get(count, L10N.getStr("networkMenu.summary"))
     .replace("#1", count)
-    .replace("#2", getSizeWithDecimals(contentSize/ 1024))
-    .replace("#3", getSizeWithDecimals(transferredSize/ 1024))
-    .replace("#4", getTimeWithDecimals(millis / 1000));
+    .replace("#2", getSizeWithDecimals(bytes / 1024))
+    .replace("#3", getTimeWithDecimals(millis / 1000));
 
   const buttons = requestFilterTypes.entrySeq().map(([type, checked]) => {
     let classList = ["menu-filter-button"];

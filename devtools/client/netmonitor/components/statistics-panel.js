@@ -53,13 +53,13 @@ const StatisticsPanel = createClass({
     this.createChart({
       id: "primedCacheChart",
       title: CHARTS_CACHE_ENABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, false) : null
+      data: ready ? this.sanitizeChartDataSource(requests, false) : null,
     });
 
     this.createChart({
       id: "emptyCacheChart",
       title: CHARTS_CACHE_DISABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, true) : null
+      data: ready ? this.sanitizeChartDataSource(requests, true) : null,
     });
   },
 
@@ -68,30 +68,18 @@ const StatisticsPanel = createClass({
     let chart = Chart.PieTable(document, {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title,
-      header: {
-        cached: "",
-        count: "",
-        label: L10N.getStr("charts.type"),
-        size: L10N.getStr("charts.size"),
-        transferredSize: L10N.getStr("charts.transferred"),
-        time: L10N.getStr("charts.time")
-      },
       data,
       strings: {
         size: (value) =>
           L10N.getFormatStr("charts.sizeKB", getSizeWithDecimals(value / 1024)),
-        transferredSize: (value) =>
-          L10N.getFormatStr("charts.transferredSizeKB", getSizeWithDecimals(value / 1024)),
         time: (value) =>
-          L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000))
+          L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
       },
       totals: {
         cached: (total) => L10N.getFormatStr("charts.totalCached", total),
         count: (total) => L10N.getFormatStr("charts.totalCount", total),
         size: (total) =>
           L10N.getFormatStr("charts.totalSize", getSizeWithDecimals(total / 1024)),
-        transferredSize: total =>
-          L10N.getFormatStr("charts.totalTransferredSize", getSizeWithDecimals(total / 1024)),
         time: (total) => {
           let seconds = total / 1000;
           let string = getTimeWithDecimals(seconds);
@@ -119,16 +107,9 @@ const StatisticsPanel = createClass({
   },
 
   sanitizeChartDataSource(requests, emptyCache) {
-    const data = [
+    let data = [
       "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
-    ].map((type) => ({
-      cached: 0,
-      count: 0,
-      label: type,
-      size: 0,
-      transferredSize: 0,
-      time: 0
-    }));
+    ].map((type) => ({ cached: 0, count: 0, label: type, size: 0, time: 0 }));
 
     for (let request of requests) {
       let type;
@@ -169,7 +150,6 @@ const StatisticsPanel = createClass({
       if (emptyCache || !this.responseIsFresh(request)) {
         data[type].time += request.totalTime || 0;
         data[type].size += request.contentSize || 0;
-        data[type].transferredSize += request.transferredSize || 0;
       } else {
         data[type].cached++;
       }
