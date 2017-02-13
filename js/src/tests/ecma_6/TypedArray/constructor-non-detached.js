@@ -1,5 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer
-
 for (var constructor of typedArrayConstructors) {
     var buf = new constructor();
     detachArrayBuffer(buf.buffer);
