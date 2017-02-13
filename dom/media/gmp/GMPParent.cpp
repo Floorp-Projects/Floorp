@@ -26,12 +26,11 @@
 #include "MediaPrefs.h"
 #include "VideoUtils.h"
 
-#include "mozilla/dom/CrashReporterParent.h"
-using mozilla::dom::CrashReporterParent;
 using mozilla::ipc::GeckoChildProcessHost;
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsPrintfCString.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 using CrashReporter::AnnotationTable;
 using CrashReporter::GetIDFromMinidump;
 #endif
@@ -466,28 +465,20 @@ GMPParent::WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes)
   notes.Put(NS_LITERAL_CSTRING("PluginVersion"), mVersion);
 }
 
-void
+bool
 GMPParent::GetCrashID(nsString& aResult)
 {
-  CrashReporterParent* cr =
-    static_cast<CrashReporterParent*>(LoneManagedOrNullAsserts(ManagedPCrashReporterParent()));
-  if (NS_WARN_IF(!cr)) {
-    return;
+  if (!mCrashReporter) {
+    return false;
   }
 
   AnnotationTable notes(4);
   WriteExtraDataForMinidump(notes);
-  nsCOMPtr<nsIFile> dumpFile;
-  TakeMinidump(getter_AddRefs(dumpFile), nullptr);
-  if (!dumpFile) {
-    NS_WARNING("GMP crash without crash report");
-    aResult = mName;
-    aResult += '-';
-    AppendUTF8toUTF16(mVersion, aResult);
-    return;
-  }
-  GetIDFromMinidump(dumpFile, aResult);
-  cr->GenerateCrashReportForMinidump(dumpFile, &notes);
+
+  return mCrashReporter->GenerateCrashReport(
+    OtherPid(),
+    &notes,
+    &aResult);
 }
 
 static void
@@ -519,7 +510,12 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
                           NS_LITERAL_CSTRING("gmplugin"), 1);
     nsString dumpID;
-    GetCrashID(dumpID);
+    if (!GetCrashID(dumpID)) {
+      NS_WARNING("GMP crash without crash report");
+      dumpID = mName;
+      dumpID += '-';
+      AppendUTF8toUTF16(mVersion, dumpID);
+    }
 
     // NotifyObservers is mainthread-only
     NS_DispatchToMainThread(WrapRunnableNM(&GMPNotifyObservers,
@@ -544,22 +540,15 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-mozilla::dom::PCrashReporterParent*
-GMPParent::AllocPCrashReporterParent(const NativeThreadId& aThread)
+mozilla::ipc::IPCResult
+GMPParent::RecvInitCrashReporter(Shmem&& aShmem)
 {
-#ifndef MOZ_CRASHREPORTER
-  MOZ_ASSERT(false, "Should only be sent if crash reporting is enabled.");
+#ifdef MOZ_CRASHREPORTER
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
+    GeckoProcessType_GMPlugin,
+    aShmem);
 #endif
-  CrashReporterParent* cr = new CrashReporterParent();
-  cr->SetChildData(aThread, GeckoProcessType_GMPlugin);
-  return cr;
-}
-
-bool
-GMPParent::DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter)
-{
-  delete aCrashReporter;
-  return true;
+  return IPC_OK();
 }
 
 PGMPStorageParent*

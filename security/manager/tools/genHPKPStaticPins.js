@@ -47,17 +47,19 @@ const FILE_HEADER = "/* This Source Code Form is subject to the terms of the Moz
 
 const DOMAINHEADER = "/* Domainlist */\n" +
   "struct TransportSecurityPreload {\n" +
+  "  // See bug 1338873 about making these fields const.\n" +
   "  const char* mHost;\n" +
-  "  const bool mIncludeSubdomains;\n" +
-  "  const bool mTestMode;\n" +
-  "  const bool mIsMoz;\n" +
-  "  const int32_t mId;\n" +
+  "  bool mIncludeSubdomains;\n" +
+  "  bool mTestMode;\n" +
+  "  bool mIsMoz;\n" +
+  "  int32_t mId;\n" +
   "  const StaticFingerprints* pinset;\n" +
   "};\n\n";
 
 const PINSETDEF = "/* Pinsets are each an ordered list by the actual value of the fingerprint */\n" +
   "struct StaticFingerprints {\n" +
-  "  const size_t size;\n" +
+  "  // See bug 1338873 about making these fields const.\n" +
+  "  size_t size;\n" +
   "  const char* const* data;\n" +
   "};\n\n";
 
