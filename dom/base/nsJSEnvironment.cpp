@@ -2326,9 +2326,10 @@ SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
-  if (pref > 0 && pref < 100000)
+  if (pref > 0 && pref < 100000) {
     sActiveIntersliceGCBudget = pref;
     JS_SetGCParameter(sContext, JSGC_SLICE_TIME_BUDGET, pref);
+  }
 }
 
 static void

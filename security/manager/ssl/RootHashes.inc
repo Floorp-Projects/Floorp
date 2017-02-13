@@ -9,8 +9,9 @@
 
 #define HASH_LEN 32
 struct CertAuthorityHash {
- const uint8_t hash[HASH_LEN];
- const int32_t binNumber;
+  // See bug 1338873 about making these fields const.
+  uint8_t hash[HASH_LEN];
+  int32_t binNumber;
 };
 
 static const struct CertAuthorityHash ROOT_TABLE[] = {

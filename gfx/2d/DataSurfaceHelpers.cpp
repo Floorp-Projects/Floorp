@@ -10,6 +10,7 @@
 #include "Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
+#include "Swizzle.h"
 #include "Tools.h"
 
 namespace mozilla {
@@ -104,23 +105,6 @@ SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint)
 }
 
 void
-ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, const int32_t aStride)
-{
-  int height = aSize.height, width = aSize.width * 4;
-
-  for (int row = 0; row < height; ++row) {
-    for (int column = 0; column < width; column += 4) {
-#ifdef IS_BIG_ENDIAN
-      aData[column] = 0xFF;
-#else
-      aData[column + 3] = 0xFF;
-#endif
-    }
-    aData += aStride;
-  }
-}
-
-void
 CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
                              int32_t aSrcStride, int32_t aBytesPerPixel)
 {
@@ -141,29 +125,6 @@ CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
       aSrc += aSrcStride;
       aDst += packedStride;
     }
-  }
-}
-
-void
-CopyBGRXSurfaceDataToPackedBGRArray(uint8_t* aSrc, uint8_t* aDst,
-                                    IntSize aSrcSize, int32_t aSrcStride)
-{
-  int packedStride = aSrcSize.width * 3;
-
-  uint8_t* srcPx = aSrc;
-  uint8_t* dstPx = aDst;
-
-  for (int row = 0; row < aSrcSize.height; ++row) {
-    for (int col = 0; col < aSrcSize.width; ++col) {
-      dstPx[0] = srcPx[0];
-      dstPx[1] = srcPx[1];
-      dstPx[2] = srcPx[2];
-      // srcPx[3] (unused or alpha component) dropped on floor
-      srcPx += 4;
-      dstPx += 3;
-    }
-    srcPx = aSrc += aSrcStride;
-    dstPx = aDst += packedStride;
   }
 }
 
@@ -195,7 +156,9 @@ SurfaceToPackedBGRA(DataSourceSurface *aSurface)
 
   if (format == SurfaceFormat::B8G8R8X8) {
     // Convert BGRX to BGRA by setting a to 255.
-    ConvertBGRXToBGRA(imageBuffer.get(), size, size.width * sizeof(uint32_t));
+    SwizzleData(imageBuffer.get(), size.width * sizeof(uint32_t), SurfaceFormat::X8R8G8B8_UINT32,
+                imageBuffer.get(), size.width * sizeof(uint32_t), SurfaceFormat::A8R8G8B8_UINT32,
+                size);
   }
 
   return imageBuffer;
@@ -225,8 +188,9 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface)
     return nullptr;
   }
 
-  CopyBGRXSurfaceDataToPackedBGRArray(map.mData, imageBuffer, size,
-                                      map.mStride);
+  SwizzleData(map.mData, map.mStride, SurfaceFormat::B8G8R8X8,
+              imageBuffer, size.width * 3, SurfaceFormat::B8G8R8,
+              size);
 
   aSurface->Unmap();
 
@@ -338,23 +302,11 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
   }
 
   uint8_t* sourceData = DataAtOffset(aSrc, srcMap.GetMappedSurface(), aSrcRect.TopLeft());
-  uint32_t sourceStride = srcMap.GetStride();
   uint8_t* destData = DataAtOffset(aDest, destMap.GetMappedSurface(), aDestPoint);
-  uint32_t destStride = destMap.GetStride();
 
-  if (BytesPerPixel(aSrc->GetFormat()) == 4) {
-    for (int32_t y = 0; y < aSrcRect.height; y++) {
-      PodCopy((int32_t*)destData, (int32_t*)sourceData, aSrcRect.width);
-      sourceData += sourceStride;
-      destData += destStride;
-    }
-  } else if (BytesPerPixel(aSrc->GetFormat()) == 1) {
-    for (int32_t y = 0; y < aSrcRect.height; y++) {
-      PodCopy(destData, sourceData, aSrcRect.width);
-      sourceData += sourceStride;
-      destData += destStride;
-    }
-  }
+  SwizzleData(sourceData, srcMap.GetStride(), aSrc->GetFormat(),
+              destData, destMap.GetStride(), aDest->GetFormat(),
+              aSrcRect.Size());
 
   return true;
 }

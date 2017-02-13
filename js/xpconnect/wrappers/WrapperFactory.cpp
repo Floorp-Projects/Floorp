@@ -354,8 +354,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
 #endif
 
 static const Wrapper*
-SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
-              bool waiveXrays, bool originIsXBLScope, JSObject* obj)
+SelectWrapper(bool securityWrapper, XrayType xrayType, bool waiveXrays, JSObject* obj)
 {
     // Waived Xray uses a modified CCW that has transparent behavior but
     // transitively waives Xrays on arguments.
@@ -366,7 +365,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
 
     // If we don't want or can't use Xrays, select a wrapper that's either
     // entirely transparent or entirely opaque.
-    if (!wantXrays || xrayType == NotXray) {
+    if (xrayType == NotXray) {
         if (!securityWrapper)
             return &CrossCompartmentWrapper::singleton;
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
@@ -398,7 +397,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     // functions exposed from the XBL scope. We could remove this exception,
     // if needed, by using ExportFunction to generate the content-side
     // representations of XBL methods.
-    if (xrayType == XrayForJSObject && originIsXBLScope)
+    if (xrayType == XrayForJSObject && IsInContentXBLScope(obj))
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
@@ -451,7 +450,6 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
                                   AccessCheck::subsumesConsideringDomain(target, origin) :
                                   AccessCheck::subsumesConsideringDomainIgnoringFPD(target, origin);
     bool sameOrigin = targetSubsumesOrigin && originSubsumesTarget;
-    XrayType xrayType = GetXrayType(obj);
 
     const Wrapper* wrapper;
 
@@ -531,18 +529,15 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
                                CompartmentPrivate::Get(target)->wantXrays;
         bool wantXrays = !sameOrigin || sameOriginXrays;
 
+        XrayType xrayType = wantXrays ? GetXrayType(obj) : NotXray;
+
         // If Xrays are warranted, the caller may waive them for non-security
         // wrappers (unless explicitly forbidden from doing so).
         bool waiveXrays = wantXrays && !securityWrapper &&
                           CompartmentPrivate::Get(target)->allowWaivers &&
                           HasWaiveXrayFlag(obj);
 
-        // We have slightly different behavior for the case when the object
-        // being wrapped is in an XBL scope.
-        bool originIsContentXBLScope = IsContentXBLScope(origin);
-
-        wrapper = SelectWrapper(securityWrapper, wantXrays, xrayType, waiveXrays,
-                                originIsContentXBLScope, obj);
+        wrapper = SelectWrapper(securityWrapper, xrayType, waiveXrays, obj);
 
         // If we want to apply add-on interposition in the target compartment,
         // then we try to "upgrade" the wrapper to an interposing one.

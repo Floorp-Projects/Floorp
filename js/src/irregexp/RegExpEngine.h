@@ -799,8 +799,9 @@ class TextNode : public SeqRegExpNode
     enum TextEmitPassType {
         NON_ASCII_MATCH,             // Check for characters that can't match.
         SIMPLE_CHARACTER_MATCH,      // Case-dependent single character check.
-        NON_LETTER_CHARACTER_MATCH,  // Check characters that have no case equivs.
-        CASE_CHARACTER_MATCH,        // Case-independent single character check.
+        CASE_SINGLE_CHARACTER_MATCH, // Case-independent single character check.
+        CASE_MUTLI_CHARACTER_MATCH,  // Case-independent single character with
+                                     // multiple variation.
         CHARACTER_CLASS_MATCH        // Character class.
     };
     static bool SkipPass(int pass, bool ignore_case);
