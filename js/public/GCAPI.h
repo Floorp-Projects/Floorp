@@ -425,25 +425,27 @@ extern JS_PUBLIC_API(bool)
 IsIncrementalGCInProgress(JSContext* cx);
 
 /*
- * Returns true when writes to GC things must call an incremental (pre) barrier.
- * This is generally only true when running mutator code in-between GC slices.
- * At other times, the barrier may be elided for performance.
+ * Returns true when writes to GC thing pointers (and reads from weak pointers)
+ * must call an incremental barrier. This is generally only true when running
+ * mutator code in-between GC slices. At other times, the barrier may be elided
+ * for performance.
  */
 extern JS_PUBLIC_API(bool)
 IsIncrementalBarrierNeeded(JSContext* cx);
 
 /*
- * Notify the GC that a reference to a GC thing is about to be overwritten.
- * These methods must be called if IsIncrementalBarrierNeeded.
+ * Notify the GC that a reference to a JSObject is about to be overwritten.
+ * This method must be called if IsIncrementalBarrierNeeded.
  */
 extern JS_PUBLIC_API(void)
-IncrementalReferenceBarrier(GCCellPtr thing);
+IncrementalPreWriteBarrier(JSObject* obj);
 
+/*
+ * Notify the GC that a weak reference to a GC thing has been read.
+ * This method must be called if IsIncrementalBarrierNeeded.
+ */
 extern JS_PUBLIC_API(void)
-IncrementalValueBarrier(const Value& v);
-
-extern JS_PUBLIC_API(void)
-IncrementalObjectBarrier(JSObject* obj);
+IncrementalReadBarrier(GCCellPtr thing);
 
 /**
  * Returns true if the most recent GC ran incrementally.
@@ -643,13 +645,15 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     MOZ_DIAGNOSTIC_ASSERT(BarriersAreAllowedOnCurrentThread());
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
-        JS::IncrementalReferenceBarrier(thing);
-    else if (!thing.mayBeOwnedByOtherRuntime() && js::gc::detail::CellIsMarkedGray(thing.asCell()))
+        JS::IncrementalReadBarrier(thing);
+    else if (js::gc::detail::CellIsMarkedGray(thing.asCell()))
         JS::UnmarkGrayGCThingRecursively(thing);
+
+    MOZ_ASSERT(!js::gc::detail::CellIsMarkedGray(thing.asCell()));
 }
 
 static MOZ_ALWAYS_INLINE void
-MarkGCThingAsLive(JSRuntime* aRt, JS::GCCellPtr thing)
+GCThingReadBarrier(JS::GCCellPtr thing)
 {
     // Any object in the nursery will not be freed during any GC running at that
     // time.
@@ -664,7 +668,7 @@ MarkGCThingAsLive(JSRuntime* aRt, JS::GCCellPtr thing)
     MOZ_DIAGNOSTIC_ASSERT(BarriersAreAllowedOnCurrentThread());
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(thing))
-        JS::IncrementalReferenceBarrier(thing);
+        JS::IncrementalReadBarrier(thing);
 }
 
 } /* namespace gc */
@@ -695,10 +699,10 @@ ExposeScriptToActiveJS(JSScript* script)
  * If a GC is currently marking, mark the string black.
  */
 static MOZ_ALWAYS_INLINE void
-MarkStringAsLive(Zone* zone, JSString* string)
+StringReadBarrier(JSString* string)
 {
-    JSRuntime* rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromActiveCooperatingThread();
-    js::gc::MarkGCThingAsLive(rt, GCCellPtr(string));
+    MOZ_ASSERT(js::CurrentThreadCanAccessZone(GetStringZone(string)));
+    js::gc::GCThingReadBarrier(GCCellPtr(string));
 }
 
 /*

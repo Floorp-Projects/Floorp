@@ -7490,34 +7490,28 @@ JS::IsIncrementalBarrierNeeded(JSContext* cx)
     return cx->runtime()->gc.state() == gc::State::Mark && !JS::CurrentThreadIsHeapBusy();
 }
 
-struct IncrementalReferenceBarrierFunctor {
-    template <typename T> void operator()(T* t) { T::writeBarrierPre(t); }
-};
-
 JS_PUBLIC_API(void)
-JS::IncrementalReferenceBarrier(GCCellPtr thing)
-{
-    if (!thing)
-        return;
-
-    DispatchTyped(IncrementalReferenceBarrierFunctor(), thing);
-}
-
-JS_PUBLIC_API(void)
-JS::IncrementalValueBarrier(const Value& v)
-{
-    js::GCPtrValue::writeBarrierPre(v);
-}
-
-JS_PUBLIC_API(void)
-JS::IncrementalObjectBarrier(JSObject* obj)
+JS::IncrementalPreWriteBarrier(JSObject* obj)
 {
     if (!obj)
         return;
 
     MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
-
     JSObject::writeBarrierPre(obj);
+}
+
+struct IncrementalReadBarrierFunctor {
+    template <typename T> void operator()(T* t) { T::readBarrier(t); }
+};
+
+JS_PUBLIC_API(void)
+JS::IncrementalReadBarrier(GCCellPtr thing)
+{
+    if (!thing)
+        return;
+
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
+    DispatchTyped(IncrementalReadBarrierFunctor(), thing);
 }
 
 JS_PUBLIC_API(bool)
