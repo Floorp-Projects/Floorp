@@ -77,19 +77,19 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
                   "Element has unexpected document");
 
   LOG_RESTYLE("aRestyleHint = %s, aChangeHint = %s",
-              RestyleManager::RestyleHintToString(aRestyleHint).get(),
-              RestyleManager::ChangeHintToString(aChangeHint).get());
+              GeckoRestyleManager::RestyleHintToString(aRestyleHint).get(),
+              GeckoRestyleManager::ChangeHintToString(aChangeHint).get());
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
   if (aRestyleHint & ~eRestyle_LaterSiblings) {
 #ifdef RESTYLE_LOGGING
     if (ShouldLogRestyle() && primaryFrame &&
-        RestyleManager::StructsToLog() != 0) {
+        GeckoRestyleManager::StructsToLog() != 0) {
       LOG_RESTYLE("style context tree before restyle:");
       LOG_RESTYLE_INDENT();
       primaryFrame->StyleContext()->LogStyleContextTree(
-          LoggingDepth(), RestyleManager::StructsToLog());
+          LoggingDepth(), GeckoRestyleManager::StructsToLog());
     }
 #endif
     mRestyleManager->RestyleElement(aElement, primaryFrame, aChangeHint,
@@ -146,7 +146,7 @@ RestyleTracker::DoProcessRestyles()
   // EndReconstruct so those style contexts go away before
   // EndReconstruct.
   {
-    RestyleManager::ReframingStyleContexts
+    GeckoRestyleManager::ReframingStyleContexts
       reframingStyleContexts(mRestyleManager);
 
     mRestyleManager->BeginProcessingRestyles(*this);

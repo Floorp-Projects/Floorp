@@ -8,8 +8,8 @@
  * changes need to happen, scheduling them, and doing them.
  */
 
-#ifndef mozilla_RestyleManager_h
-#define mozilla_RestyleManager_h
+#ifndef mozilla_GeckoRestyleManager_h
+#define mozilla_GeckoRestyleManager_h
 
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/RestyleManager.h"
@@ -34,26 +34,26 @@ namespace dom {
   class Element;
 } // namespace dom
 
-class RestyleManager final : public RestyleManagerBase
+class GeckoRestyleManager final : public RestyleManager
 {
 public:
-  typedef RestyleManagerBase base_type;
+  typedef RestyleManager base_type;
 
   friend class RestyleTracker;
   friend class ElementRestyler;
 
-  explicit RestyleManager(nsPresContext* aPresContext);
+  explicit GeckoRestyleManager(nsPresContext* aPresContext);
 
 private:
   // Private destructor, to discourage deletion outside of Release():
-  ~RestyleManager()
+  ~GeckoRestyleManager()
   {
     MOZ_ASSERT(!mReframingStyleContexts,
                "temporary member should be nulled out before destruction");
   }
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(mozilla::RestyleManager)
+  NS_INLINE_DECL_REFCOUNTING(mozilla::GeckoRestyleManager)
 
   // Forwarded nsIDocumentObserver method, to handle restyling (and
   // passing the notification to the frame).
@@ -155,7 +155,7 @@ public:
      * object.  (This is generally easy since the caller is typically a
      * method of RestyleManager.)
      */
-    explicit ReframingStyleContexts(RestyleManager* aRestyleManager);
+    explicit ReframingStyleContexts(GeckoRestyleManager* aRestyleManager);
     ~ReframingStyleContexts();
 
     void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
@@ -190,7 +190,7 @@ public:
       return nullptr;
     }
   private:
-    RestyleManager* mRestyleManager;
+    GeckoRestyleManager* mRestyleManager;
     AutoRestore<ReframingStyleContexts*> mRestorePointer;
     ReframingStyleContextTable mElementContexts;
     ReframingStyleContextTable mBeforePseudoContexts;
@@ -356,7 +356,7 @@ public:
 #ifdef RESTYLE_LOGGING
   /**
    * Returns whether a restyle event currently being processed by this
-   * RestyleManager should be logged.
+   * GeckoRestyleManager should be logged.
    */
   bool ShouldLogRestyle() {
     return ShouldLogRestyle(PresContext());
@@ -397,7 +397,7 @@ public:
 private:
   inline nsStyleSet* StyleSet() const {
     MOZ_ASSERT(PresContext()->StyleSet()->IsGecko(),
-               "RestyleManager should only be used with a Gecko-flavored "
+               "GeckoRestyleManager should only be used with a Gecko-flavored "
                "style backend");
     return PresContext()->StyleSet()->AsGecko();
   }
@@ -540,7 +540,7 @@ public:
   nsChangeHint HintsHandledForFrame() { return mHintsHandled; }
 
   /**
-   * Called from RestyleManager::ComputeAndProcessStyleChange to restyle
+   * Called from GeckoRestyleManager::ComputeAndProcessStyleChange to restyle
    * children of a display:contents element.
    */
   void RestyleChildrenOfDisplayContentsElement(nsIFrame*       aParentFrame,
@@ -567,7 +567,7 @@ public:
 
 #ifdef RESTYLE_LOGGING
   bool ShouldLogRestyle() {
-    return RestyleManager::ShouldLogRestyle(mPresContext);
+    return GeckoRestyleManager::ShouldLogRestyle(mPresContext);
   }
 #endif
 
@@ -820,4 +820,4 @@ private:
 
 } // namespace mozilla
 
-#endif /* mozilla_RestyleManager_h */
+#endif /* mozilla_GeckoRestyleManager_h */
