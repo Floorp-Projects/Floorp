@@ -130,7 +130,9 @@ var observer = {
       }
 
       case "contextmenu": {
-        gLastContextMenuEventTimeStamp = aEvent.timeStamp;
+        // Date.now() is used instead of event.timeStamp since
+        // dom.event.highrestimestamp.enabled isn't true on all channels yet.
+        gLastContextMenuEventTimeStamp = Date.now();
         break;
       }
 
@@ -578,11 +580,15 @@ var LoginManagerContent = {
      * overlapping so we spin the event loop to see if a `contextmenu` event is coming next. If no
      * `contextmenu` event was seen and the focused field is still focused by the form fill
      * controller then show the autocomplete popup.
+     * Date.now() is used instead of event.timeStamp since dom.event.highrestimestamp.enabled isn't
+     * true on all channels yet.
      */
+    let timestamp = Date.now();
     setTimeout(function maybeOpenAutocompleteAfterFocus() {
-      // Even though the `focus` event happens first, its .timeStamp is greater in
-      // testing and I don't want to rely on that so the absolute value is used.
-      let timeDiff = Math.abs(gLastContextMenuEventTimeStamp - event.timeStamp);
+      // Even though the `focus` event happens first in testing, I don't want to
+      // rely on that since it was supposedly in the opposite order before. Use
+      // the absolute value to handle both orders.
+      let timeDiff = Math.abs(gLastContextMenuEventTimeStamp - timestamp);
       if (timeDiff < AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS) {
         log("Not opening autocomplete after focus since a context menu was opened within",
             timeDiff, "ms");
