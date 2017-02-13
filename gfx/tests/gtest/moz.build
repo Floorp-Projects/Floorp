@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'TestSwizzle.cpp',
     # Hangs on linux in ApplyGdkScreenFontOptions
     #'gfxFontSelectionTest.cpp',
+    'TestTextureCompatibility.cpp',
     'TestTextures.cpp',
     'TestTreeTraversal.cpp',
     # Test works but it doesn't assert anything
@@ -49,6 +50,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/gfx/2d',
     '/gfx/2d/unittest',
+    '/gfx/config',
     '/gfx/layers',
     '/gfx/qcms',
 ]
