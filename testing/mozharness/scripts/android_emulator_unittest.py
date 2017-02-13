@@ -416,7 +416,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _query_package_name(self):
         if self.app_name is None:
-            #find appname from package-name.txt - assumes download-and-extract has completed successfully
+            # Find appname from package-name.txt - assumes download-and-extract
+            # has completed successfully.
+            # The app/package name will typically be org.mozilla.fennec,
+            # but org.mozilla.firefox for release builds, and there may be
+            # other variations. 'aapt dump badging <apk>' could be used as an
+            # alternative to package-name.txt, but introduces a dependency
+            # on aapt, found currently in the Android SDK build-tools component.
             apk_dir = self.abs_dirs['abs_work_dir']
             self.apk_path = os.path.join(apk_dir, self.installer_path)
             unzip = self.query_exe("unzip")
@@ -452,7 +458,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
                                           '%s_errorsummary.log' % self.test_suite)
         str_format_values = {
-            'app': self._query_package_name(),
             'remote_webserver': c['remote_webserver'],
             'xre_path': self.xre_path,
             'utility_path': self.xre_path,
@@ -482,7 +487,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             if opt == '--total-chunks' and self.total_chunks is not None:
                 continue
-            cmd.extend([option % str_format_values])
+            if opt == 'app':
+                # only query package name if requested
+                cmd.extend([option % self._query_package_name()])
+            else:
+                cmd.extend([option % str_format_values])
 
         if self.this_chunk is not None:
             cmd.extend(['--this-chunk', self.this_chunk])
@@ -723,7 +732,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'shell', 'getprop', 'ro.build.version.sdk'])
 
         # Install Fennec
-        install_ok = self._retry(3, 30, self._install_fennec_apk, "Install Fennec APK")
+        install_ok = self._retry(3, 30, self._install_fennec_apk, "Install app APK")
         if not install_ok:
             self.fatal('INFRA-ERROR: Failed to install %s on %s' %
                 (self.installer_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
