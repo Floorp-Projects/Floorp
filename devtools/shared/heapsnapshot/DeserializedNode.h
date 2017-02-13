@@ -78,7 +78,7 @@ struct DeserializedNode {
                    const char16_t* typeName,
                    uint64_t size,
                    EdgeVector&& edges,
-                   Maybe<StackFrameId> allocationStack,
+                   const Maybe<StackFrameId>& allocationStack,
                    const char* className,
                    const char* filename,
                    HeapSnapshot& owner)
