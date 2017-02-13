@@ -64,7 +64,6 @@ Decoder::Decoder(RasterImage* aImage)
   , mDecodeDone(false)
   , mError(false)
   , mShouldReportError(false)
-  , mFinalizeFrames(true)
 { }
 
 Decoder::~Decoder()
@@ -456,7 +455,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
   mFinishedNewFrame = true;
 
   mCurrentFrame->Finish(aFrameOpacity, aDisposalMethod, aTimeout,
-                        aBlendMethod, aBlendRect, mFinalizeFrames);
+                        aBlendMethod, aBlendRect);
 
   mProgress |= FLAG_FRAME_COMPLETE;
 

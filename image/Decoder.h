@@ -262,10 +262,6 @@ public:
   bool HasError() const { return mError; }
   bool ShouldReportError() const { return mShouldReportError; }
 
-  // Finalize frames
-  void SetFinalizeFrames(bool aFinalize) { mFinalizeFrames = aFinalize; }
-  bool GetFinalizeFrames() const { return mFinalizeFrames; }
-
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
   {
@@ -550,7 +546,6 @@ private:
   bool mDecodeDone : 1;
   bool mError : 1;
   bool mShouldReportError : 1;
-  bool mFinalizeFrames : 1;
 };
 
 } // namespace image
