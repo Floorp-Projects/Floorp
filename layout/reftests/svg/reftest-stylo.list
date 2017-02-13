@@ -330,7 +330,7 @@ HTTP(..) == text-gradient-04.svg text-gradient-04.svg
 == text-in-link-02.svg text-in-link-02.svg
 == text-in-link-03.svg text-in-link-03.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
-fails == text-language-00.xhtml text-language-00.xhtml
+== text-language-00.xhtml text-language-00.xhtml
 random-if(gtkWidget) == text-language-01.xhtml text-language-01.xhtml
 fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01.svg
 == text-layout-02.svg text-layout-02.svg
@@ -409,7 +409,7 @@ fails == viewBox-valid-02.xhtml viewBox-valid-02.xhtml
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in.xhtml
 fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles.svg
-fails == mask-img.html mask-img.html
+== mask-img.html mask-img.html
 
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge.svg
