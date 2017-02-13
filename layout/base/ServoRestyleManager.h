@@ -40,8 +40,6 @@ class ServoRestyleManager : public RestyleManager
 public:
   typedef RestyleManager base_type;
 
-  NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
-
   explicit ServoRestyleManager(nsPresContext* aPresContext);
 
   void PostRestyleEvent(dom::Element* aElement,
@@ -101,7 +99,10 @@ public:
   static void ClearDirtyDescendantsFromSubtree(Element* aElement);
 
 protected:
-  ~ServoRestyleManager() { MOZ_ASSERT(!mReentrantChanges); }
+  ~ServoRestyleManager() override
+  {
+    MOZ_ASSERT(!mReentrantChanges);
+  }
 
 private:
   /**
