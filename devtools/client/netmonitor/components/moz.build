@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'monitor-panel.js',
+    'network-monitor.js',
     'request-list-content.js',
     'request-list-empty.js',
     'request-list-header.js',

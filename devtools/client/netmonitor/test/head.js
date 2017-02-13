@@ -152,7 +152,7 @@ function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
   return Task.spawn(function* () {
-    let tab = monitor.target.tab;
+    let tab = monitor.toolbox.target.tab;
     let url = newUrl || tab.linkedBrowser.currentURI.spec;
 
     let onDestroyed = monitor.once("destroyed");
@@ -167,7 +167,7 @@ function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
   return Task.spawn(function* () {
-    let tab = monitor.target.tab;
+    let tab = monitor.toolbox.target.tab;
 
     let onDestroyed = monitor.once("destroyed");
     yield removeTab(tab);

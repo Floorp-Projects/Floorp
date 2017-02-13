@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorController */
-
 "use strict";
 
 const {
@@ -162,7 +160,7 @@ const HeadersPanel = createClass({
             readOnly: true,
             value: `${status} ${statusText}`,
           }),
-          NetMonitorController.supportsCustomRequest && button({
+          window.NetMonitorController.supportsCustomRequest && button({
             className: "devtools-button",
             onClick: cloneSelectedRequest,
           }, EDIT_AND_RESEND),

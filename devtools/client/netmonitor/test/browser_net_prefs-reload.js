@@ -62,7 +62,7 @@ add_task(function* () {
   yield testWindow();
 
   info("Moving toolbox back to the bottom...");
-  yield monitor._toolbox.switchHost(Toolbox.HostType.BOTTOM);
+  yield monitor.toolbox.switchHost(Toolbox.HostType.BOTTOM);
   return teardown(monitor);
 
   function storeFirstPrefValues() {
@@ -212,7 +212,7 @@ add_task(function* () {
 
     info("Moving toolbox to the side...");
 
-    yield monitor._toolbox.switchHost(Toolbox.HostType.SIDE);
+    yield monitor.toolbox.switchHost(Toolbox.HostType.SIDE);
     info("Testing prefs reload for a side host.");
     storeFirstPrefValues();
 
@@ -237,7 +237,7 @@ add_task(function* () {
 
     info("Moving toolbox into a window...");
 
-    yield monitor._toolbox.switchHost(Toolbox.HostType.WINDOW);
+    yield monitor.toolbox.switchHost(Toolbox.HostType.WINDOW);
     info("Testing prefs reload for a window host.");
     storeFirstPrefValues();
 
