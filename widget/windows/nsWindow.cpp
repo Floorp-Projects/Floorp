@@ -5644,7 +5644,13 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // within a ENTERSIZEMOVE to consider this a live resize event.
       if (mResizeState == IN_SIZEMOVE) {
         mResizeState = RESIZING;
-        NotifyLiveResizeStarted();
+        nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService();
+
+        if (observerService) {
+          observerService->NotifyObservers(nullptr, "live-resize-start",
+                                           nullptr);
+        }
       }
       break;
     }
@@ -6071,7 +6077,10 @@ void
 nsWindow::FinishLiveResizing(ResizeState aNewState)
 {
   if (mResizeState == RESIZING) {
-    NotifyLiveResizeStopped();
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(nullptr, "live-resize-end", nullptr);
+    }
   }
   mResizeState = aNewState;
   ForcePresent();
