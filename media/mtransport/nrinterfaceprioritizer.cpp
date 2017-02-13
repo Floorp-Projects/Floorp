@@ -187,12 +187,11 @@ public:
   int sort() {
     UCHAR tmp_pref = 127;
     preference_map_.clear();
-    for (std::set<LocalAddress>::iterator i = local_addrs_.begin();
-         i != local_addrs_.end(); ++i) {
+    for (const auto& local_addr : local_addrs_) {
       if (tmp_pref == 0) {
         return R_FAILED;
       }
-      preference_map_.insert(make_pair(i->GetKey(), tmp_pref--));
+      preference_map_.insert(make_pair(local_addr.GetKey(), tmp_pref--));
     }
     sorted_ = true;
     return 0;

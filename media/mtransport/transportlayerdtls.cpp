@@ -664,15 +664,14 @@ bool TransportLayerDtls::SetupAlpn(UniquePRFileDesc& ssl_fd) const {
 
   unsigned char buf[MAX_ALPN_LENGTH];
   size_t offset = 0;
-  for (auto tag = alpn_allowed_.begin();
-       tag != alpn_allowed_.end(); ++tag) {
-    if ((offset + 1 + tag->length()) >= sizeof(buf)) {
+  for (const auto& tag : alpn_allowed_) {
+    if ((offset + 1 + tag.length()) >= sizeof(buf)) {
       MOZ_MTLOG(ML_ERROR, "ALPN too long");
       return false;
     }
-    buf[offset++] = tag->length();
-    memcpy(buf + offset, tag->c_str(), tag->length());
-    offset += tag->length();
+    buf[offset++] = tag.length();
+    memcpy(buf + offset, tag.c_str(), tag.length());
+    offset += tag.length();
   }
   rv = SSL_SetNextProtoNego(ssl_fd.get(), buf, offset);
   if (rv != SECSuccess) {
@@ -1232,8 +1231,7 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
 
         // Checking functions call PR_SetError()
         SECStatus rv = SECFailure;
-        for (size_t i = 0; i < digests_.size(); i++) {
-          RefPtr<VerificationDigest> digest = digests_[i];
+        for (auto digest : digests_) {
           rv = CheckDigest(digest, peer_cert);
 
           // Matches a digest, we are good to go

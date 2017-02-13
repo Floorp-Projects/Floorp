@@ -33,8 +33,8 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
 
   std::string name;
   char chunk[3];
-  for (size_t i = 0; i < sizeof(random_name); ++i) {
-    SprintfLiteral(chunk, "%.2x", random_name[i]);
+  for (unsigned char r_name : random_name) {
+    SprintfLiteral(chunk, "%.2x", r_name);
     name += chunk;
   }
 

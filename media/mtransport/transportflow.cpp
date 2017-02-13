@@ -203,8 +203,8 @@ TransportResult TransportFlow::SendPacket(const unsigned char *data,
 
 bool TransportFlow::Contains(TransportLayer *layer) const {
   if (layers_) {
-    for (auto l = layers_->begin(); l != layers_->end(); ++l) {
-      if (*l == layer) {
+    for (auto& l : *layers_) {
+      if (l == layer) {
         return true;
       }
     }

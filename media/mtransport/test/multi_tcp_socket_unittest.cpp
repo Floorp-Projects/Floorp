@@ -76,9 +76,8 @@ class MultiTcpSocketTest : public MtransportTest {
 
   void Shutdown_s() {
     ice_ctx_ = nullptr;
-    for (std::vector<nr_socket *>::iterator it=socks.begin();
-         it!=socks.end(); ++it) {
-      nr_socket_destroy(&(*it));
+    for (auto& sock : socks) {
+      nr_socket_destroy(&sock);
     }
   }
 
