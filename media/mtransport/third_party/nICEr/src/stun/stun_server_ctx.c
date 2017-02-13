@@ -339,10 +339,10 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
 
     _status=0;
   abort:
-    if (NR_STUN_GET_TYPE_CLASS(req->header.type) == NR_CLASS_INDICATION)
+    if (!res)
         goto skip_response;
 
-    if (!res)
+    if (NR_STUN_GET_TYPE_CLASS(req->header.type) == NR_CLASS_INDICATION)
         goto skip_response;
 
     /* Now respond */
