@@ -21,6 +21,7 @@
 #include "mediasink/OutputStreamManager.h"
 #include "mediasink/VideoSink.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IndexSequence.h"
 #include "mozilla/Logging.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/MathAlgorithms.h"
@@ -29,6 +30,7 @@
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Tuple.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -284,17 +286,35 @@ protected:
   MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
   MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
 
+  template <class S, typename... Args, size_t... Indexes>
+  auto
+  CallEnterMemberFunction(S* aS,
+                          Tuple<Args...>& aTuple,
+                          IndexSequence<Indexes...>)
+    -> decltype(ReturnTypeHelper(&S::Enter))
+  {
+    return aS->Enter(Move(Get<Indexes>(aTuple))...);
+  }
+
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
   template <class S, typename... Ts>
-  auto SetState(Ts... aArgs)
+  auto SetState(Ts&&... aArgs)
     -> decltype(ReturnTypeHelper(&S::Enter))
   {
+    // |aArgs| must be passed by reference to avoid passing MOZ_NON_PARAM class
+    // SeekJob by value.  See bug 1287006 and bug 1338374.  But we still *must*
+    // copy the parameters, because |Exit()| can modify them.  See bug 1312321.
+    // So we 1) pass the parameters by reference, but then 2) immediately copy
+    // them into a Tuple to be safe against modification, and finally 3) move
+    // the elements of the Tuple into the final function call.
+    auto copiedArgs = MakeTuple(Forward<Ts>(aArgs)...);
+
     // keep mMaster in a local object because mMaster will become invalid after
     // the current state object is deleted.
     auto master = mMaster;
 
-    auto s = new S(master);
+    auto* s = new S(master);
 
     MOZ_ASSERT(GetState() != s->GetState()
                || GetState() == DECODER_STATE_SEEKING);
@@ -304,7 +324,8 @@ protected:
     Exit();
 
     master->mStateObj.reset(s);
-    return s->Enter(Move(aArgs)...);
+    return CallEnterMemberFunction(s, copiedArgs,
+                                   typename IndexSequenceFor<Ts...>::Type());
   }
 
   RefPtr<MediaDecoder::SeekPromise>
@@ -904,7 +925,7 @@ class MediaDecoderStateMachine::SeekingState
 public:
   explicit SeekingState(Master* aPtr) : StateObject(aPtr) { }
 
-  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
@@ -982,7 +1003,7 @@ public:
   {
   }
 
-  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsAccurate() || aSeekJob.mTarget->IsFast());
@@ -1441,7 +1462,7 @@ public:
   {
   }
 
-  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob aSeekJob,
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
   {
     MOZ_ASSERT(aSeekJob.mTarget->IsNextFrame());

@@ -425,7 +425,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 }
 
 void
-SourceBuffer::AppendDataCompletedWithSuccess(SourceBufferTask::AppendBufferResult aResult)
+SourceBuffer::AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBufferResult& aResult)
 {
   MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
