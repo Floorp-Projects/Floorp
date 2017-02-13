@@ -69,12 +69,12 @@ const uint32_t kThrottledEventQueueBackPressure = 5000;
 // As the length of the ThrottledEventQueue grows delay is increased.  The
 // delay is scaled such that every kThrottledEventQueueBackPressure runnables
 // in the queue equates to an additional kBackPressureDelayMS.
-const double kBackPressureDelayMS = 500;
+const double kBackPressureDelayMS = 250;
 
 // This defines a limit for how much the delay must drop before we actually
 // reduce back pressure throttle amount.  This makes the throttle delay
 // a bit "sticky" once we enter back pressure.
-const double kBackPressureDelayReductionThresholdMS = 400;
+const double kBackPressureDelayReductionThresholdMS = 1000;
 
 // The minimum delay we can reduce back pressure to before we just floor
 // the value back to zero.  This allows us to ensure that we can exit
