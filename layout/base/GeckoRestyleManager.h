@@ -44,17 +44,14 @@ public:
 
   explicit GeckoRestyleManager(nsPresContext* aPresContext);
 
-private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~GeckoRestyleManager()
+protected:
+  ~GeckoRestyleManager() override
   {
     MOZ_ASSERT(!mReframingStyleContexts,
                "temporary member should be nulled out before destruction");
   }
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(mozilla::GeckoRestyleManager)
-
   // Forwarded nsIDocumentObserver method, to handle restyling (and
   // passing the notification to the frame).
   nsresult ContentStateChanged(nsIContent*   aContent,
