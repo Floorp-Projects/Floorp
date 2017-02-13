@@ -47,7 +47,7 @@ interface HTMLOptionsCollection : HTMLCollection {
 
 typedef sequence<any> PropertyValueArray;
 
-[OverrideBuiltins, Exposed=(Window,Worker)]
+[OverrideBuiltins]
 interface DOMStringMap {
   getter DOMString (DOMString name);
   setter creator void (DOMString name, DOMString value);
@@ -1461,7 +1461,7 @@ interface History {
   [SameObject] readonly attribute USVString[] ancestorOrigins;
 };
 
-[Constructor(DOMString type, optional PopStateEventInit eventInitDict), Exposed=(Window,Worker)]
+[Constructor(DOMString type, optional PopStateEventInit eventInitDict)]
 interface PopStateEvent : Event {
   readonly attribute any state;
 };
@@ -1470,7 +1470,7 @@ dictionary PopStateEventInit : EventInit {
   any state;
 };
 
-[Constructor(DOMString type, optional HashChangeEventInit eventInitDict), Exposed=(Window,Worker)]
+[Constructor(DOMString type, optional HashChangeEventInit eventInitDict)]
 interface HashChangeEvent : Event {
   readonly attribute DOMString oldURL;
   readonly attribute DOMString newURL;
@@ -1481,7 +1481,7 @@ dictionary HashChangeEventInit : EventInit {
   DOMString newURL;
 };
 
-[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict), Exposed=(Window,Worker)]
+[Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)]
 interface PageTransitionEvent : Event {
   readonly attribute boolean persisted;
 };
@@ -1686,11 +1686,11 @@ Navigator implements NavigatorConcurrentHardware;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorID {
-  [Exposed=Window] readonly attribute DOMString appCodeName; // constant "Mozilla"
+  readonly attribute DOMString appCodeName; // constant "Mozilla"
   readonly attribute DOMString appName; // constant "Netscape"
   readonly attribute DOMString appVersion;
   readonly attribute DOMString platform;
-  [Exposed=Window] readonly attribute DOMString product; // constant "Gecko"
+  readonly attribute DOMString product; // constant "Gecko"
   [Exposed=Window] readonly attribute DOMString productSub;
   readonly attribute DOMString userAgent;
   [Exposed=Window] readonly attribute DOMString vendor;
@@ -1901,8 +1901,9 @@ interface BroadcastChannel : EventTarget {
 interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerGlobalScope self;
   readonly attribute WorkerLocation location;
+  readonly attribute WorkerNavigator navigator;
+  void importScripts(USVString... urls);
 
-  void close();
            attribute OnErrorEventHandler onerror;
            attribute EventHandler onlanguagechange;
            attribute EventHandler onoffline;
@@ -1943,11 +1944,6 @@ interface SharedWorker : EventTarget {
   readonly attribute MessagePort port;
 };
 SharedWorker implements AbstractWorker;
-
-partial interface WorkerGlobalScope { // not obsolete
-  void importScripts(DOMString... urls);
-  readonly attribute WorkerNavigator navigator;
-};
 
 [Exposed=Worker]
 interface WorkerNavigator {};
