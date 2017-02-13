@@ -832,13 +832,16 @@ VRDisplayOculus::NotifyVSync()
   mDisplayInfo.mIsConnected = (ovr == ovrSuccess && sessionStatus.HmdPresent);
 }
 
-VRControllerOculus::VRControllerOculus()
+VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand)
   : VRControllerHost(VRDeviceType::Oculus)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOculus, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch");
+  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch (");
+  mControllerInfo.mControllerName.AppendPrintf("%s%s",
+                                               GamepadHandValues::strings[uint32_t(aHand)].value,
+                                               ")");
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
-  mControllerInfo.mHand = GamepadHand::_empty;
+  mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = kNumOculusButton;
   mControllerInfo.mNumAxes = static_cast<uint32_t>(
                              OculusControllerAxisType::NumVRControllerAxisType);;
@@ -854,16 +857,6 @@ void
 VRControllerOculus::SetAxisMove(uint32_t aAxis, float aValue)
 {
   mAxisMove[aAxis] = aValue;
-}
-
-void
-VRControllerOculus::SetHand(dom::GamepadHand aHand)
-{
-  VRControllerHost::SetHand(aHand);
-  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch (");
-  mControllerInfo.mControllerName.AppendPrintf("%s%s",
-                                               GamepadHandValues::strings[uint32_t(aHand)].value,
-                                               ")");
 }
 
 VRControllerOculus::~VRControllerOculus()
@@ -1153,9 +1146,8 @@ VRSystemManagerOculus::ScanForControllers()
           hand = GamepadHand::Right;
           break;
       }
-      RefPtr<VRControllerOculus> oculusController = new VRControllerOculus();
+      RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand);
       oculusController->SetIndex(mControllerCount);
-      oculusController->SetHand(hand);
       mOculusController.AppendElement(oculusController);
 
       // Not already present, add it.

@@ -72,7 +72,7 @@ protected:
 class VRControllerOpenVR : public VRControllerHost
 {
 public:
-  explicit VRControllerOpenVR();
+  explicit VRControllerOpenVR(dom::GamepadHand aHand);
   void SetTrackedIndex(uint32_t aTrackedIndex);
   uint32_t GetTrackedIndex();
 
