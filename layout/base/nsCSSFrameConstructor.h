@@ -55,7 +55,7 @@ public:
   typedef mozilla::dom::Element Element;
 
   friend class mozilla::RestyleManager;
-  friend class mozilla::RestyleManagerBase;
+  friend class mozilla::GeckoRestyleManager;
   friend class mozilla::ServoRestyleManager;
 
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
