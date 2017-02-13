@@ -446,7 +446,7 @@ JsepSessionImpl::SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
 
 nsresult
 JsepSessionImpl::SetupOfferMSectionsByType(SdpMediaSection::MediaType mediatype,
-                                           Maybe<size_t> offerToReceiveMaybe,
+                                           const Maybe<size_t>& offerToReceiveMaybe,
                                            Sdp* sdp)
 {
   // Convert the Maybe into a size_t*, since that is more readable, especially
