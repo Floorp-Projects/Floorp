@@ -1932,26 +1932,26 @@ XULDocument::StartLayout(void)
 
 /* static */
 bool
-XULDocument::MatchAttribute(nsIContent* aContent,
+XULDocument::MatchAttribute(Element* aElement,
                             int32_t aNamespaceID,
                             nsIAtom* aAttrName,
                             void* aData)
 {
-    NS_PRECONDITION(aContent, "Must have content node to work with!");
+    NS_PRECONDITION(aElement, "Must have content node to work with!");
     nsString* attrValue = static_cast<nsString*>(aData);
     if (aNamespaceID != kNameSpaceID_Unknown &&
         aNamespaceID != kNameSpaceID_Wildcard) {
         return attrValue->EqualsLiteral("*") ?
-            aContent->HasAttr(aNamespaceID, aAttrName) :
-            aContent->AttrValueIs(aNamespaceID, aAttrName, *attrValue,
+            aElement->HasAttr(aNamespaceID, aAttrName) :
+            aElement->AttrValueIs(aNamespaceID, aAttrName, *attrValue,
                                   eCaseMatters);
     }
 
     // Qualified name match. This takes more work.
 
-    uint32_t count = aContent->GetAttrCount();
+    uint32_t count = aElement->GetAttrCount();
     for (uint32_t i = 0; i < count; ++i) {
-        const nsAttrName* name = aContent->GetAttrNameAt(i);
+        const nsAttrName* name = aElement->GetAttrNameAt(i);
         bool nameMatch;
         if (name->IsAtom()) {
             nameMatch = name->Atom() == aAttrName;
@@ -1963,7 +1963,7 @@ XULDocument::MatchAttribute(nsIContent* aContent,
 
         if (nameMatch) {
             return attrValue->EqualsLiteral("*") ||
-                aContent->AttrValueIs(name->NamespaceID(), name->LocalName(),
+                aElement->AttrValueIs(name->NamespaceID(), name->LocalName(),
                                       *attrValue, eCaseMatters);
         }
     }
