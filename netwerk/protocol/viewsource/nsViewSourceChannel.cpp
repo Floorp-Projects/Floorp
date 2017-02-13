@@ -907,7 +907,11 @@ nsViewSourceChannel::GetResponseHeader(const nsACString & aHeader,
                         nsCaseInsensitiveCStringComparator()) &&
         !aHeader.Equals(NS_LITERAL_CSTRING("X-Frame-Options"),
                         nsCaseInsensitiveCStringComparator())) {
-        return NS_OK;
+        // We simulate the NS_ERROR_NOT_AVAILABLE error which is produced by
+        // GetResponseHeader via nsHttpHeaderArray::GetHeader when the entry is
+        // not present, such that it appears as though no headers except for the
+        // whitelisted ones were set on this channel.
+        return NS_ERROR_NOT_AVAILABLE;
     }
 
     return mHttpChannel->GetResponseHeader(aHeader, aValue);
