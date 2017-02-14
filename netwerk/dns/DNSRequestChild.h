@@ -24,7 +24,9 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICANCELABLE
 
-  DNSRequestChild(const nsCString& aHost, const uint32_t& aFlags,
+  DNSRequestChild(const nsCString& aHost,
+                  const OriginAttributes& aOriginAttributes,
+                  const uint32_t& aFlags,
                   const nsCString& aNetworkInterface,
                   nsIDNSListener *aListener, nsIEventTarget *target);
 
@@ -50,6 +52,7 @@ protected:
   nsCOMPtr<nsIDNSRecord>    mResultRecord;
   nsresult                  mResultStatus;
   nsCString                 mHost;
+  const OriginAttributes    mOriginAttributes;
   uint16_t                  mFlags;
   nsCString                 mNetworkInterface;
   bool                      mIPCOpen;
