@@ -261,7 +261,7 @@ public:
         ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
         if (cache && buf == cache->mBuffer && length == cache->mLength) {
             MOZ_ASSERT(JS::GetStringZone(cache->mString) == zone);
-            JS::MarkStringAsLive(zone, cache->mString);
+            JS::StringReadBarrier(cache->mString);
             rval.setString(cache->mString);
             *sharedBuffer = false;
             return true;

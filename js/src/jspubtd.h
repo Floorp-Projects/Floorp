@@ -64,7 +64,7 @@ enum JSVersion {
 
 /* Result of typeof operator enumeration. */
 enum JSType {
-    JSTYPE_VOID,                /* undefined */
+    JSTYPE_UNDEFINED,           /* undefined */
     JSTYPE_OBJECT,              /* object */
     JSTYPE_FUNCTION,            /* function */
     JSTYPE_STRING,              /* string */

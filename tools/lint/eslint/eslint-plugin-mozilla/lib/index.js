@@ -33,6 +33,7 @@ module.exports = {
     "no-useless-removeEventListener": require("../lib/rules/no-useless-removeEventListener"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
+    "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
@@ -51,6 +52,7 @@ module.exports = {
     "no-useless-removeEventListener": 0,
     "reject-importGlobalProperties": 0,
     "reject-some-requires": 0,
+    "use-ownerGlobal": 0,
     "var-only-at-top-level": 0
   }
 };

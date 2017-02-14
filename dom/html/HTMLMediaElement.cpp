@@ -855,11 +855,6 @@ private:
   {
     MOZ_ASSERT(mAudioChannelAgent);
 
-    // This is needed to pass nsContentUtils::IsCallerChrome().
-    // AudioChannel API should not called from content but it can happen that
-    // this method has some content JS in its stack.
-    AutoNoJSAPI nojsapi;
-
     if (aPlaying) {
       AudioPlaybackConfig config;
       nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
