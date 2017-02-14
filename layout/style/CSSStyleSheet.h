@@ -128,7 +128,9 @@ public:
   // Workaround overloaded-virtual warning in GCC.
   using StyleSheet::GetOwnerRule;
 
-  nsXMLNameSpaceMap* GetNameSpaceMap() const { return mInner->mNameSpaceMap; }
+  nsXMLNameSpaceMap* GetNameSpaceMap() const {
+    return Inner()->mNameSpaceMap;
+  }
 
   already_AddRefed<CSSStyleSheet> Clone(CSSStyleSheet* aCloneParent,
                                         css::ImportRule* aCloneOwnerRule,
@@ -207,6 +209,11 @@ protected:
   // Drop our reference to mRuleCollection
   void DropRuleCollection();
 
+  CSSStyleSheetInner* Inner() const
+  {
+    return static_cast<CSSStyleSheetInner*>(mInner);
+  }
+
   // Unlink our inner, if needed, for cycle collection
   void UnlinkInner();
   // Traverse our inner, if needed, for cycle collection
@@ -227,8 +234,6 @@ protected:
   bool                  mDirty; // has been modified 
   bool                  mInRuleProcessorCache;
   RefPtr<dom::Element> mScopeElement;
-
-  CSSStyleSheetInner*   mInner;
 
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
   nsTArray<nsStyleSet*> mStyleSets;
