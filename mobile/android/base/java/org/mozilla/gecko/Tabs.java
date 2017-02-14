@@ -115,6 +115,7 @@ public class Tabs implements BundleEventListener {
     private Tabs() {
         EventDispatcher.getInstance().registerUiThreadListener(this,
             "Content:LocationChange",
+            "Content:SubframeNavigation",
             "Content:SecurityChange",
             "Content:StateChange",
             "Content:LoadError",
@@ -536,6 +537,10 @@ public class Tabs implements BundleEventListener {
 
         } else if ("Content:LocationChange".equals(event)) {
             tab.handleLocationChange(message);
+
+        } else if ("Content:SubframeNavigation".equals(event)) {
+            tab.handleButtonStateChange(message);
+            notifyListeners(tab, TabEvents.LOCATION_CHANGE, tab.getURL());
 
         } else if ("Content:SecurityChange".equals(event)) {
             tab.updateIdentityData(message.getBundle("identity"));

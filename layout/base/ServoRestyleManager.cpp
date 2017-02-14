@@ -143,7 +143,11 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
-  if (changeHint) {
+  // Although we shouldn't generate non-ReconstructFrame hints for elements with
+  // no frames, we can still get them here if they were explicitly posted by
+  // PostRestyleEvent, such as a RepaintFrame hint when a :link changes to be
+  // :visited.  Skip processing these hints if there is no frame.
+  if ((primaryFrame || changeHint & nsChangeHint_ReconstructFrame) && changeHint) {
     aChangeListToProcess.AppendChange(primaryFrame, aElement, changeHint);
   }
 
