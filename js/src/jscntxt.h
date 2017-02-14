@@ -501,6 +501,11 @@ struct JSContext : public JS::RootingContext,
     js::ThreadLocalData<bool> runningOOMTest;
 #endif
 
+    // True if we should assert that
+    //     !comp->validAccessPtr || *comp->validAccessPtr
+    // is true for every |comp| that we run JS code in.
+    js::ThreadLocalData<unsigned> enableAccessValidation;
+
     /*
      * Some regions of code are hard for the static rooting hazard analysis to
      * understand. In those cases, we trade the static analysis for a dynamic

@@ -355,9 +355,9 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvSizeModeChanged(const nsSizeMode& aSizeMode) override;
 
-  virtual mozilla::ipc::IPCResult RecvActivate() override;
+  mozilla::ipc::IPCResult RecvActivate();
 
-  virtual mozilla::ipc::IPCResult RecvDeactivate() override;
+  mozilla::ipc::IPCResult RecvDeactivate();
 
   virtual mozilla::ipc::IPCResult RecvMouseEvent(const nsString& aType,
                                                  const float& aX,
@@ -699,7 +699,7 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvSuppressDisplayport(const bool& aEnabled) override;
 
-  virtual mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated) override;
+  mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
 
   virtual mozilla::ipc::IPCResult RecvSetKeyboardIndicators(const UIStateChangeType& aShowAccelerators,
                                                             const UIStateChangeType& aShowFocusRings) override;

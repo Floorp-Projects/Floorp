@@ -134,7 +134,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     mExistingJPEGRequest = baseChannel;
   }
 
-  if (rv == NS_ERROR_REMOTE_XUL) {
+  if (rv == NS_ERROR_REMOTE_XUL || rv == NS_ERROR_DOCSHELL_DYING) {
     aRequest->Cancel(rv);
     *aAbortProcess = true;
     return NS_OK;

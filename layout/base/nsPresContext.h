@@ -799,7 +799,8 @@ public:
     eScrollInteraction
   };
 
-  void RecordInteractionTime(InteractionType aType);
+  void RecordInteractionTime(InteractionType aType,
+                             const mozilla::TimeStamp& aTimeStamp);
 
   void DisableInteractionTimeRecording()
   {
@@ -1361,7 +1362,7 @@ protected:
 
   // Time of various first interaction types, used to report time from
   // first paint of the top level content pres shell to first interaction.
-  mozilla::TimeStamp    mFirstPaintTime;
+  mozilla::TimeStamp    mFirstNonBlankPaintTime;
   mozilla::TimeStamp    mFirstClickTime;
   mozilla::TimeStamp    mFirstKeyTime;
   mozilla::TimeStamp    mFirstMouseMoveTime;

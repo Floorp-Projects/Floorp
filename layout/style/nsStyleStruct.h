@@ -939,7 +939,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
 
   nsChangeHint CalcDifference(const nsStyleBackground& aNewData) const;
   static nsChangeHint MaxDifference() {
-     return nsChangeHint_UpdateEffects |
+    return nsChangeHint_UpdateEffects |
            nsChangeHint_RepaintFrame |
            nsChangeHint_UpdateBackgroundPosition |
            nsChangeHint_NeutralChange;

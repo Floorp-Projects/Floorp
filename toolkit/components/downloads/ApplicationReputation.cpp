@@ -390,7 +390,7 @@ PendingLookup::~PendingLookup()
   LOG(("Destroying pending lookup [this = %p]", this));
 }
 
-static const char16_t* kBinaryFileExtensions[] = {
+static const char16_t* const kBinaryFileExtensions[] = {
     // Extracted from the "File Type Policies" Chrome extension
     //u".001",
     //u".7z",

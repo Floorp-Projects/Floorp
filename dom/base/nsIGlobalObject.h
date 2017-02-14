@@ -7,7 +7,7 @@
 #ifndef nsIGlobalObject_h__
 #define nsIGlobalObject_h__
 
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/dom/DispatcherTrait.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"

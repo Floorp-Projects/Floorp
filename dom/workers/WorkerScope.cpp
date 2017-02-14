@@ -336,6 +336,13 @@ WorkerGlobalScope::ClearInterval(int32_t aHandle)
 }
 
 void
+WorkerGlobalScope::GetOrigin(nsAString& aOrigin) const
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  aOrigin = mWorkerPrivate->Origin();
+}
+
+void
 WorkerGlobalScope::Atob(const nsAString& aAtob, nsAString& aOutput, ErrorResult& aRv) const
 {
   mWorkerPrivate->AssertIsOnWorkerThread();

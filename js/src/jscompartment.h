@@ -375,7 +375,6 @@ struct JSCompartment
     js::ReadBarrieredGlobalObject global_;
 
     unsigned                     enterCompartmentDepth;
-    int64_t                      startInterval;
 
   public:
     js::PerformanceGroupHolder performanceMonitoring;
@@ -572,6 +571,16 @@ struct JSCompartment
 
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
+
+  private:
+    // This pointer is controlled by the embedder. If it is non-null, and if
+    // cx->enableAccessValidation is true, then we assert that *validAccessPtr
+    // is true before running any code in this compartment.
+    bool* validAccessPtr;
+
+  public:
+    bool isAccessValid() const { return validAccessPtr ? *validAccessPtr : true; }
+    void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
 
   public:
     JSCompartment(JS::Zone* zone, const JS::CompartmentOptions& options);

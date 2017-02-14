@@ -7,15 +7,19 @@
 #ifndef TabGroup_h
 #define TabGroup_h
 
-#include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
+
+class mozIDOMWindowProxy;
+class nsIDocShellTreeItem;
+class nsIDocument;
+class nsPIDOMWindowOuter;
 
 namespace mozilla {
 class AbstractThread;
@@ -39,7 +43,7 @@ namespace dom {
 
 class DocGroup;
 
-class TabGroup final : public Dispatcher
+class TabGroup final : public ValidatingDispatcher
 {
 private:
   class HashEntry : public nsCStringHashKey
@@ -52,12 +56,13 @@ private:
   };
 
   typedef nsTHashtable<HashEntry> DocGroupMap;
+
 public:
   typedef DocGroupMap::Iterator Iterator;
 
   friend class DocGroup;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TabGroup, override)
 
   static TabGroup*
   GetChromeTabGroup();
@@ -111,21 +116,16 @@ public:
 
   nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
 
-  // This method is always safe to call off the main thread.
-  virtual nsresult Dispatch(const char* aName,
-                            TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
-
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+
+private:
+  virtual AbstractThread*
+  AbstractMainThreadForImpl(TaskCategory aCategory) override;
 
   TabGroup* AsTabGroup() override { return this; }
 
-  virtual AbstractThread*
-  AbstractMainThreadFor(TaskCategory aCategory) override;
-
-private:
   void EnsureThrottledEventQueues();
 
   ~TabGroup();
@@ -138,8 +138,6 @@ private:
   // Main thread only
   DocGroupMap mDocGroups;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
-  nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
-  RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
 
 } // namespace dom
