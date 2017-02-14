@@ -293,7 +293,7 @@ nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsDateTimeControlFrame::Reflow: size=%d,%d",

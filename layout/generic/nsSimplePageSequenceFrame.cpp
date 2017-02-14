@@ -156,7 +156,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
-  aStatus = NS_FRAME_COMPLETE;  // we're always complete
+  aStatus.Reset();  // we're always complete
 
   // Don't do incremental reflow until we've taught tables how to do
   // it right in paginated mode.

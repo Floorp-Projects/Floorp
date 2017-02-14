@@ -363,7 +363,7 @@ nsRangeFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }

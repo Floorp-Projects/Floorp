@@ -32,8 +32,8 @@ NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrame
 NS_IMPL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
 nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext), mLastBalanceBSize(NS_INTRINSICSIZE),
-    mLastFrameStatus(NS_FRAME_COMPLETE)
+  : nsContainerFrame(aContext)
+  , mLastBalanceBSize(NS_INTRINSICSIZE)
 {
 }
 
@@ -1036,7 +1036,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
   // Initialize OUT parameter
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   // Our children depend on our block-size if we have a fixed block-size.
   if (aReflowInput.ComputedBSize() != NS_AUTOHEIGHT) {
@@ -1057,7 +1057,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 #endif
 
   nsOverflowAreas ocBounds;
-  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(aPresContext, aReflowInput, ocBounds, 0,
                                     ocStatus);
@@ -1102,7 +1102,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
       aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
     // In this situation, we might be lying about our reflow status, because
     // our last kid (the one that got interrupted) was incomplete.  Fix that.
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
   }
 
   NS_ASSERTION(aStatus.IsFullyComplete() ||

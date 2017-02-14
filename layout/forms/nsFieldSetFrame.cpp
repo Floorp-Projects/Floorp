@@ -339,10 +339,10 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                   "Should have a precomputed inline-size!");
 
   // Initialize OUT parameter
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   nsOverflowAreas ocBounds;
-  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(aPresContext, aReflowInput, ocBounds, 0,
                                     ocStatus);

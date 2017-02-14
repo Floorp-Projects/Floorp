@@ -261,6 +261,17 @@ public:
     return !(*this == aRhs);
   }
 
+  // Return true if all flags are cleared.
+  bool IsEmpty() const {
+    return (!mIncomplete &&
+            !mOverflowIncomplete &&
+            !mNextInFlowNeedsReflow &&
+            !mTruncated &&
+            !mInlineBreak &&
+            !mInlineBreakAfter &&
+            !mFirstLetterComplete);
+  }
+
   // mIncomplete bit flag means the frame does not map all its content, and
   // that the parent frame should create a continuing frame. If this bit
   // isn't set, it means the frame does map all its content. This bit is
@@ -368,8 +379,6 @@ private:
   bool mInlineBreakAfter : 1;
   bool mFirstLetterComplete : 1;
 };
-
-#define NS_FRAME_COMPLETE             0       // Note: not a bit!
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);

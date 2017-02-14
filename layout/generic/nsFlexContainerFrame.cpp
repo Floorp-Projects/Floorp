@@ -4329,7 +4329,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    nsTArray<StrutInfo>& aStruts,
                                    const FlexboxAxisTracker& aAxisTracker)
 {
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   LinkedList<FlexLine> lines;
   nsTArray<nsIFrame*> placeholderKids;

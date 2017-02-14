@@ -959,7 +959,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   // see if we have a frozen size (i.e. a fixed width and height)
   if (HaveFixedSize(aReflowInput)) {

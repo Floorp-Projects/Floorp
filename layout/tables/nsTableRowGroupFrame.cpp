@@ -1256,7 +1256,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         else {
           // We can't push children, so let our parent reflow us again with more space
           aDesiredSize.Height() = rowRect.YMost();
-          aStatus = NS_FRAME_COMPLETE;
+          aStatus.Reset();
           break;
         }
       }
@@ -1276,7 +1276,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           else {
             // We can't push children, so let our parent reflow us again with more space
             aDesiredSize.Height() = rowRect.YMost();
-            aStatus = NS_FRAME_COMPLETE;
+            aStatus.Reset();
             UndoContinuedRow(aPresContext, contRow);
             contRow = nullptr;
           }
@@ -1313,7 +1313,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
             else {
               // Let our parent reflow us again with more space
               aDesiredSize.Height() = rowRect.YMost();
-              aStatus = NS_FRAME_COMPLETE;
+              aStatus.Reset();
               UndoContinuedRow(aPresContext, contRow);
               contRow = nullptr;
             }
@@ -1368,7 +1368,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
-  aStatus     = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   // Row geometry may be going to change so we need to invalidate any row cursor.
   ClearRowCursor();

@@ -116,7 +116,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   if (!aReflowInput.mLineLayout) {
     NS_ASSERTION(aReflowInput.mLineLayout,
                  "No line layout provided to RubyFrame reflow method.");
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 
@@ -143,7 +143,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   aReflowInput.mLineLayout->BeginSpan(this, &aReflowInput,
                                       startEdge, availableISize, &mBaseline);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   for (RubySegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
     ReflowSegment(aPresContext, aReflowInput, e.GetBaseContainer(), aStatus);
 
@@ -155,7 +155,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   }
 
   ContinuationTraversingState pullState(this);
-  while (aStatus == NS_FRAME_COMPLETE) {
+  while (aStatus.IsEmpty()) {
     nsRubyBaseContainerFrame* baseContainer =
       PullOneSegment(aReflowInput.mLineLayout, pullState);
     if (!baseContainer) {
@@ -305,10 +305,10 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     textReflowInput.mLineLayout = aReflowInput.mLineLayout;
     textContainer->Reflow(aPresContext, textMetrics,
                           textReflowInput, textReflowStatus);
-    // Ruby text containers always return NS_FRAME_COMPLETE even when
+    // Ruby text containers always return complete reflow status even when
     // they have continuations, because the breaking has already been
     // handled when reflowing the base containers.
-    NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
+    NS_ASSERTION(textReflowStatus.IsEmpty(),
                  "Ruby text container must not break itself inside");
     // The metrics is initialized with reflow state of this ruby frame,
     // hence the writing-mode is tied to rubyWM instead of rtcWM.

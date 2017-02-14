@@ -104,7 +104,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   FloatManager()->GetTranslation(mFloatManagerI, mFloatManagerB);
   FloatManager()->PushState(&mFloatManagerStateBefore); // never popped
 
-  mReflowStatus = NS_FRAME_COMPLETE;
+  mReflowStatus.Reset();
 
   mNextInFlow = static_cast<nsBlockFrame*>(mBlock->GetNextInFlow());
 
