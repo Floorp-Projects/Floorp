@@ -10,7 +10,7 @@
 </head>
 <body>
 <script>
-  ok(!self.isSecureContext, "This test should not be running in a secure context");
+  ok(self.isSecureContext, "This test should be running in a secure context");
 </script>
 <script class="testbody" type="text/javascript">
 workerTestExec("test_worker_interfaces.js");
