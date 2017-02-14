@@ -26,6 +26,8 @@
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "nsIWidget.h"                  // For plugin window configuration information structs
 
+class nsDisplayListBuilder;
+
 namespace mozilla {
 namespace layers {
 

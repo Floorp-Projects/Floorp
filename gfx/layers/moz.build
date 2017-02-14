@@ -293,6 +293,7 @@ UNIFIED_SOURCES += [
     'basic/BasicColorLayer.cpp',
     'basic/BasicCompositor.cpp',
     'basic/BasicContainerLayer.cpp',
+    'basic/BasicDisplayItemLayer.cpp',
     'basic/BasicImages.cpp',
     'basic/BasicLayerManager.cpp',
     'basic/BasicLayersImpl.cpp',
