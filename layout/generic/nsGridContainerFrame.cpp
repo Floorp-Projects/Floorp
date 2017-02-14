@@ -5679,7 +5679,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
         NS_ERROR("got BREAK_BEFORE again after growing the row?");
         childStatus.SetIncomplete();
       }
-    } else if (NS_INLINE_IS_BREAK_AFTER(childStatus)) {
+    } else if (childStatus.IsInlineBreakAfter()) {
       MOZ_ASSERT_UNREACHABLE("unexpected child reflow status");
     }
 

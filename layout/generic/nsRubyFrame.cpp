@@ -224,7 +224,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // break occurs. Break before has been processed above. However,
     // it is possible that break after happens with the frame reflow
     // completed. It happens if there is a force break at the end.
-    MOZ_ASSERT(NS_INLINE_IS_BREAK_AFTER(aStatus));
+    MOZ_ASSERT(aStatus.IsInlineBreakAfter());
     // Find the previous sibling which we will
     // insert new continuations after.
     nsIFrame* lastChild;
