@@ -1055,6 +1055,7 @@ sys/statvfs.h
 sys/syscall.h
 sys/sysctl.h
 sys/sysinfo.h
+sys/sysmacros.h
 sys/sysmp.h
 sys/syssgi.h
 sys/system_properties.h
