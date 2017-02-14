@@ -253,9 +253,10 @@ public:
 
     already_AddRefed<AltSvcMapping> GetAltServiceMapping(const nsACString &scheme,
                                                          const nsACString &host,
-                                                         int32_t port, bool pb)
+                                                         int32_t port, bool pb,
+                                                         const OriginAttributes &originAttributes)
     {
-        return mConnMgr->GetAltServiceMapping(scheme, host, port, pb);
+        return mConnMgr->GetAltServiceMapping(scheme, host, port, pb, originAttributes);
     }
 
     //

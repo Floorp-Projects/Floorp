@@ -5949,7 +5949,8 @@ nsHttpChannel::BeginConnect()
         (!proxyInfo || proxyInfo->IsDirect()) &&
         (mapping = gHttpHandler->GetAltServiceMapping(scheme,
                                                       host, port,
-                                                      mPrivateBrowsing))) {
+                                                      mPrivateBrowsing,
+                                                      originAttributes))) {
         LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
              this, scheme.get(), mapping->AlternateHost().get(),
              mapping->AlternatePort(), mapping->HashKey().get()));
