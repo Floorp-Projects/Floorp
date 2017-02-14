@@ -141,11 +141,7 @@ public:
 
   nsresult Cancel() override
   {
-    // Since nsTimerImpl is not thread-safe, we should release |mTimer|
-    // here in the target thread to avoid race condition. Otherwise,
-    // ~nsTimerEvent() which calls nsTimerImpl::Release() could run in the
-    // timer thread and result in race condition.
-    mTimer = nullptr;
+    mTimer->Cancel();
     return NS_OK;
   }
 
@@ -282,11 +278,6 @@ nsTimerEvent::GetName(nsACString& aName)
 NS_IMETHODIMP
 nsTimerEvent::Run()
 {
-  if (!mTimer) {
-    MOZ_ASSERT(false);
-    return NS_OK;
-  }
-
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     TimeStamp now = TimeStamp::Now();
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
@@ -296,9 +287,7 @@ nsTimerEvent::Run()
 
   mTimer->Fire(mGeneration);
 
-  // We call Cancel() to correctly release mTimer.
-  // Read more in the Cancel() implementation.
-  return Cancel();
+  return NS_OK;
 }
 
 nsresult
