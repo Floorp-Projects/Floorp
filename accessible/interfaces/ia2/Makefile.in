@@ -53,11 +53,10 @@ CSRCS = \
 
 MIDL_GENERATED_FILES = \
   dlldata.c \
-  $(MIDL_ENUMS:%.idl=%.h) \
   $(MIDL_INTERFACES:%.idl=%_p.c) \
   $(MIDL_INTERFACES:%.idl=%_i.c) \
   $(MIDL_INTERFACES:%.idl=%.h) \
-  $(MIDL_LIBRARIES:%.idl=%.tlb) \
+  $(MIDL_ENUMS:%.idl=%.h) \
   $(NULL)
 
 # We want to generate a .tlb from MIDL_LIBRARIES, but midl also generates
@@ -100,7 +99,7 @@ midl_done : $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
 
 # The intent of this rule is to generate the .tlb file that is referenced in the
 # .rc file for IA2Marshal.dll
-typelib_done : $(addprefix $(srcdir)/,$(MIDL_LIBRARIES))
+typelib_done : $(MIDL_LIBRARIES)
 	for idl in $?; do \
 		$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -D _MIDL_DECLARE_WIREM_HANDLE -dlldata `basename $$idl .idl`.c -Oicf $$idl; \
 	done
