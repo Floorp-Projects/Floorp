@@ -25,7 +25,6 @@ class CDMProxy;
 class MediaFormatReader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
-  typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> NotifyDataArrivedPromise;
 
 public:
   MediaFormatReader(AbstractMediaDecoder* aDecoder,
@@ -49,10 +48,11 @@ public:
   RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;
 
 protected:
-  void NotifyDataArrived() override;
-  void UpdateBuffered() override;
+  void NotifyDataArrivedInternal() override;
 
 public:
+  media::TimeIntervals GetBuffered() override;
+
   // For Media Resource Management
   void ReleaseResources() override;
 
@@ -89,8 +89,10 @@ private:
   bool IsWaitingOnCDMResource();
 
   bool InitDemuxer();
-  // Notify the track demuxers that new data has been received.
-  void NotifyTrackDemuxers();
+  // Notify the demuxer that new data has been received.
+  // The next queued task calling GetBuffered() is guaranteed to have up to date
+  // buffered ranges.
+  void NotifyDemuxer();
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
@@ -477,14 +479,12 @@ private:
   DecoderData& GetDecoderData(TrackType aTrack);
 
   // Demuxer objects.
-  class DemuxerProxy;
-  UniquePtr<DemuxerProxy> mDemuxer;
+  RefPtr<MediaDataDemuxer> mDemuxer;
   bool mDemuxerInitDone;
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
-  MozPromiseRequestHolder<NotifyDataArrivedPromise> mNotifyDataArrivedPromise;
-  void OnDemuxFailed(TrackType aTrack, const MediaResult &aError);
+  void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);
 
   void DoDemuxVideo();
   void OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);
