@@ -31,9 +31,7 @@ TransportLayerLogging::SendPacket(const unsigned char *data, size_t len) {
   if (downward_) {
     return downward_->SendPacket(data, len);
   }
-  else {
-    return static_cast<TransportResult>(len);
-  }
+  return static_cast<TransportResult>(len);
 }
 
 void TransportLayerLogging::StateChange(TransportLayer *layer, State state) {
