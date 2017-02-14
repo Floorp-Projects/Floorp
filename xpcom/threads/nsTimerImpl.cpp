@@ -434,6 +434,7 @@ nsTimerImpl::Fire(int32_t aGeneration)
   uint8_t oldType;
   uint32_t oldDelay;
   TimeStamp oldTimeout;
+  nsCOMPtr<nsITimer> kungFuDeathGrip;
 
   {
     // Don't fire callbacks or fiddle with refcounts when the mutex is locked.
@@ -447,6 +448,10 @@ nsTimerImpl::Fire(int32_t aGeneration)
     oldType = mType;
     oldDelay = mDelay;
     oldTimeout = mTimeout;
+    // Ensure that the nsITimer does not unhook from the nsTimerImpl during
+    // Fire; this will cause null pointer crashes if the user of the timer drops
+    // its reference, and then uses the nsITimer* passed in the callback.
+    kungFuDeathGrip = mITimer;
   }
 
   PROFILER_LABEL("Timer", "Fire",
