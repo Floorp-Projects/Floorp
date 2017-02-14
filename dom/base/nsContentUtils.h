@@ -2830,7 +2830,8 @@ private:
 
   static void DropFragmentParsers();
 
-  static bool MatchClassNames(nsIContent* aContent, int32_t aNamespaceID,
+  static bool MatchClassNames(mozilla::dom::Element* aElement,
+                              int32_t aNamespaceID,
                               nsIAtom* aAtom, void* aData);
   static void DestroyClassNameArray(void* aData);
   static void* AllocClassMatchingInfo(nsINode* aRootNode,
