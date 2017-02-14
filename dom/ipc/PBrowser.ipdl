@@ -647,15 +647,6 @@ child:
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
-    /**
-     * Sending an activate message moves focus to the child.
-     */
-    async Activate();
-
-    async Deactivate();
-
-    async ParentActivated(bool aActivated);
-
     async SetKeyboardIndicators(UIStateChangeType showAccelerators,
                                 UIStateChangeType showFocusRings);
 

@@ -119,41 +119,28 @@ runNetworkTest(() => {
     .then(() => makePC()))
   // This set of tests check that warnings work. See Bug 1254839 for more.
   .then(() => {
-    var consoleService = SpecialPowers.Cc["@mozilla.org/consoleservice;1"]
-                         .getService(SpecialPowers.Ci.nsIConsoleService);
-    var warning = "";
-    var listener = SpecialPowers.wrapCallbackObject({
-      QueryInterface(iid) {
-        if (![SpecialPowers.Ci.nsIConsoleListener,
-              SpecialPowers.Ci.nsISupports].some(i => iid.equals(i))) {
-          throw SpecialPowers.Cr.NS_NOINTERFACE;
+    let promise = new Promise(resolve => {
+      SpecialPowers.registerConsoleListener(msg => {
+        if (msg.message.includes("onaddstream")) {
+          SpecialPowers.postConsoleSentinel();
+          resolve(msg.message);
         }
-        return this;
-      },
-
-      observe(msg) {
-        if (msg.message.includes("JavaScript Warning")) {
-          warning = msg.message;
-        }
-      }
+      });
     });
-    consoleService.registerListener(listener);
     lineNumberAndFunction.func();
-    // Console output is asynchronous, so we must queue a task.
-    return wait(0).then(() => {
-      is(warning.split('"')[1],
-         "onaddstream is deprecated! Use peerConnection.ontrack instead.",
-         "warning logged");
-      var remainder = warning.split('"').slice(2).join('"');
-      info(remainder);
-      ok(remainder.includes('file: "' + window.location + '"'),
-         "warning has this file");
-      ok(remainder.includes('line: ' + lineNumberAndFunction.line),
-         "warning has correct line number");
-      consoleService.unregisterListener(listener);
-    });
-  })
-  .then(networkTestFinished);
+    return promise;
+  }).then(warning => {
+    is(warning.split('"')[1],
+       "onaddstream is deprecated! Use peerConnection.ontrack instead.",
+       "warning logged");
+    var remainder = warning.split('"').slice(2).join('"');
+    info(remainder);
+    ok(remainder.includes('file: "' + window.location + '"'),
+       "warning has this file");
+    ok(remainder.includes('line: ' + lineNumberAndFunction.line),
+       "warning has correct line number");
+    })
+    .then(networkTestFinished);
 });
 </script>
 </pre>

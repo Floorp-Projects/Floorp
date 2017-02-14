@@ -105,6 +105,8 @@ class WidgetRenderingContext;
 - (void)setTransparent:(BOOL)transparent; // Method of NSTitlebarView and
                                           // NSTitlebarContainerView
 
+// Available since 10.7.4:
+- (void)viewDidChangeBackingProperties;
 @end
 
 @interface ChildView : NSView<

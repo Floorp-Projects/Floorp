@@ -2893,6 +2893,20 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoAssertNoContentJS)
     bool prevAllowContentJS_;
 };
 
+// Turn on assertions so that we assert that
+//     !comp->validAccessPtr || *comp->validAccessPtr
+// is true for every |comp| that we run JS code in. The compartment's validAccessPtr
+// is set via SetCompartmentValidAccessPtr.
+extern JS_FRIEND_API(void)
+EnableAccessValidation(JSContext* cx, bool enabled);
+
+// See EnableAccessValidation above. The caller must guarantee that accessp will
+// live at least as long as |global| is alive. The JS engine reads accessp from
+// threads that are allowed to run code on |global|, so all changes to *accessp
+// should be made from whichever thread owns |global| at a given time.
+extern JS_FRIEND_API(void)
+SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
+
 } /* namespace js */
 
 class NativeProfiler

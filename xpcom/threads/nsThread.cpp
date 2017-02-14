@@ -22,6 +22,7 @@
 #include "nsQueryObject.h"
 #include "pratom.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/Dispatcher.h"
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
 #include "mozilla/HangMonitor.h"
@@ -1196,8 +1197,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // and repeat the nested event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
+  Maybe<ValidatingDispatcher::AutoProcessEvent> ape;
   if (mIsMainThread == MAIN_THREAD) {
     DoMainThreadSpecificProcessing(reallyWait);
+    ape.emplace();
   }
 
   ++mNestedEventLoopDepth;

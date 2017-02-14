@@ -17,12 +17,6 @@
 
 namespace mozilla {
 
-bool
-WebGL2Context::ValidateUniformMatrixTranspose(bool /*transpose*/, const char* /*info*/)
-{
-    return true;
-}
-
 // -------------------------------------------------------------------------
 // Uniforms
 

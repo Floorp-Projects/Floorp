@@ -1000,6 +1000,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     runningOOMTest(false),
 #endif
+    enableAccessValidation(false),
     inUnsafeRegion(0),
     generationalDisabled(0),
     compactingDisabledCount(0),
