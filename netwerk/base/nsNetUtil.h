@@ -955,6 +955,7 @@ nsresult NS_ShouldSecureUpgrade(nsIURI* aURI,
                                 nsIPrincipal* aChannelResultPrincipal,
                                 bool aPrivateBrowsing,
                                 bool aAllowSTS,
+                                const mozilla::OriginAttributes& aOriginAttributes,
                                 bool& aShouldUpgrade);
 
 /**
