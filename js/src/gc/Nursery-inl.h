@@ -39,22 +39,28 @@ template <typename T>
 static inline T*
 AllocateObjectBuffer(JSContext* cx, uint32_t count)
 {
-    size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
-    T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
-    if (!buffer)
-        ReportOutOfMemory(cx);
-    return buffer;
+    if (!cx->helperThread()) {
+        size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
+        T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
+        if (!buffer)
+            ReportOutOfMemory(cx);
+        return buffer;
+    }
+    return cx->zone()->pod_malloc<T>(count);
 }
 
 template <typename T>
 static inline T*
 AllocateObjectBuffer(JSContext* cx, JSObject* obj, uint32_t count)
 {
-    size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
-    T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
-    if (!buffer)
-        ReportOutOfMemory(cx);
-    return buffer;
+    if (!cx->helperThread()) {
+        size_t nbytes = JS_ROUNDUP(count * sizeof(T), sizeof(Value));
+        T* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
+        if (!buffer)
+            ReportOutOfMemory(cx);
+        return buffer;
+    }
+    return obj->zone()->pod_malloc<T>(count);
 }
 
 // If this returns null then the old buffer will be left alone.
@@ -63,12 +69,15 @@ static inline T*
 ReallocateObjectBuffer(JSContext* cx, JSObject* obj, T* oldBuffer,
                        uint32_t oldCount, uint32_t newCount)
 {
-    T* buffer =  static_cast<T*>(cx->nursery().reallocateBuffer(obj, oldBuffer,
-                                                                oldCount * sizeof(T),
-                                                                newCount * sizeof(T)));
-    if (!buffer)
-        ReportOutOfMemory(cx);
-    return buffer;
+    if (!cx->helperThread()) {
+        T* buffer =  static_cast<T*>(cx->nursery().reallocateBuffer(obj, oldBuffer,
+                                                                    oldCount * sizeof(T),
+                                                                    newCount * sizeof(T)));
+        if (!buffer)
+            ReportOutOfMemory(cx);
+        return buffer;
+    }
+    return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
 }
 
 static inline void

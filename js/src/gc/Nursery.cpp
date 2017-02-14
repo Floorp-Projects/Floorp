@@ -298,7 +298,6 @@ js::Nursery::allocate(size_t size)
 {
     MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(zoneGroup()->runtime));
     MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_, position() >= currentStartPosition_);
     MOZ_ASSERT(position() % gc::CellSize == 0);
     MOZ_ASSERT(size % gc::CellSize == 0);

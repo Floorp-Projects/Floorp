@@ -1484,10 +1484,8 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
                 // We can't use a direct forwarding pointer here, as there might
                 // not be enough bytes available, and other views might have data
                 // pointers whose forwarding pointers would overlap this one.
-                if (trc->isTenuringTracer()) {
-                    Nursery& nursery = obj->zoneFromAnyThread()->group()->nursery();
-                    nursery.maybeSetForwardingPointer(trc, srcData, dstData, /* direct = */ false);
-                }
+                Nursery& nursery = obj->zoneFromAnyThread()->group()->nursery();
+                nursery.maybeSetForwardingPointer(trc, srcData, dstData, /* direct = */ false);
             } else {
                 MOZ_ASSERT_IF(buf.dataPointer() == nullptr, offset == 0);
 
