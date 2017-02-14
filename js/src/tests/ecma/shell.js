@@ -630,9 +630,3 @@ function ToInteger( t ) {
 
   return ( sign * Math.floor( Math.abs( t ) ) );
 }
-function Enumerate ( o ) {
-  var p;
-  for ( p in o ) {
-    print( p +": " + o[p] );
-  }
-}
