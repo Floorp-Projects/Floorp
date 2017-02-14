@@ -552,9 +552,9 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
             return nullptr;
 
         JSObject* obj;
-        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                                            GetInitialHeap(GenericObject, clasp),
-                                                            shape, group));
+        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                                                GetInitialHeap(GenericObject, clasp),
+                                                                shape, group));
 
         PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 

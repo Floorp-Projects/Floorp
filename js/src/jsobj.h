@@ -178,14 +178,6 @@ class JSObject : public js::gc::Cell
     inline js::Shape* maybeShape() const;
     inline js::Shape* ensureShape(JSContext* cx);
 
-    /*
-     * Make a non-array object with the specified initial state. This method
-     * takes ownership of any extantSlots it is passed.
-     */
-    static inline JS::Result<JSObject*, JS::OOM&>
-    create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-           js::HandleShape shape, js::HandleObjectGroup group);
-
     // Set the initial slots and elements of an object. These pointers are only
     // valid for native objects, but during initialization are set for all
     // objects. For non-native objects, these must not be dynamically allocated
@@ -352,6 +344,15 @@ class JSObject : public js::gc::Cell
         /* Direct field access for use by GC. */
         return group_;
     }
+
+#ifdef DEBUG
+    static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,
+                                    js::gc::AllocKind allocKind, js::gc::InitialHeap heap);
+#else
+    static void debugCheckNewObject(js::ObjectGroup* group, js::Shape* shape,
+                                    js::gc::AllocKind allocKind, js::gc::InitialHeap heap)
+    {}
+#endif
 
     /*
      * We permit proxies to dynamically compute their prototype if desired.

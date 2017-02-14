@@ -202,8 +202,7 @@ public:
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack,
-                            nsIntRegion* aUpdatedRegionBack) override
+                            const nsIntRegion& aOldValidRegionBack) override
   {
     NS_ERROR("N/A for tiled layers");
     return false;

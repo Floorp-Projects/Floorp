@@ -19,6 +19,7 @@ EXPORTS.mozilla.ipc += [
     'CrashReporterHost.h',
     'CrashReporterMetadataShmem.h',
     'CrossProcessMutex.h',
+    'CrossProcessSemaphore.h',
     'FileDescriptor.h',
     'FileDescriptorSetChild.h',
     'FileDescriptorSetParent.h',
@@ -79,6 +80,19 @@ elif not CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD'):
 else:
     UNIFIED_SOURCES += [
         'CrossProcessMutex_unimplemented.cpp',
+    ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'CrossProcessSemaphore_windows.cpp',
+    ]
+elif not CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'Darwin'):
+    UNIFIED_SOURCES += [
+        'CrossProcessSemaphore_posix.cpp',
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'CrossProcessSemaphore_unimplemented.cpp',
     ]
 
 # Android has its own,

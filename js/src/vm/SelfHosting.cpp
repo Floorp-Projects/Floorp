@@ -2764,7 +2764,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         &shgClassOps
     };
 
-    AutoCompartment ac(cx, compartment);
+    AutoCompartmentUnchecked ac(cx, compartment);
     Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
     if (!shg)
         return nullptr;

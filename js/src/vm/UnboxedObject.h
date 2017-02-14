@@ -220,6 +220,14 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     static bool makeConstructorCode(JSContext* cx, HandleObjectGroup group);
 };
 
+class UnboxedObject : public JSObject
+{
+  protected:
+    static JS::Result<UnboxedObject*, JS::OOM&>
+    createInternal(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+                   js::HandleObjectGroup group);
+};
+
 // Class for expando objects holding extra properties given to an unboxed plain
 // object. These objects behave identically to normal native plain objects, and
 // have a separate Class to distinguish them for memory usage reporting.
@@ -233,7 +241,7 @@ class UnboxedExpandoObject : public NativeObject
 // layout of these objects is identical to that of an InlineTypedObject, though
 // these objects use an UnboxedLayout instead of a TypeDescr to keep track of
 // how their properties are stored.
-class UnboxedPlainObject : public JSObject
+class UnboxedPlainObject : public UnboxedObject
 {
     // Optional object which stores extra properties on this object. This is
     // not automatically barriered to avoid problems if the object is converted
@@ -337,7 +345,7 @@ UnboxedLayout::getAllocKind() const
 }
 
 // Class for an array object using an unboxed representation.
-class UnboxedArrayObject : public JSObject
+class UnboxedArrayObject : public UnboxedObject
 {
     // Elements pointer for the object.
     uint8_t* elements_;

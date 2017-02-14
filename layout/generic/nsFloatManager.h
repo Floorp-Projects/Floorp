@@ -567,8 +567,8 @@ protected:
   ReflowInput &mReflowInput;
   mozilla::UniquePtr<nsFloatManager> mNew;
 
- // A non-owning pointer, which points to the object owned by
- // nsAutoFloatManager::mNew.
+  // A non-owning pointer, which points to the object owned by
+  // nsAutoFloatManager::mNew.
   nsFloatManager* mOld;
 };
 

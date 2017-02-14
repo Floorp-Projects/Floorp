@@ -112,6 +112,21 @@ LIRGeneratorShared::visitConstant(MConstant* ins)
 }
 
 void
+LIRGeneratorShared::visitWasmFloatConstant(MWasmFloatConstant* ins)
+{
+    switch (ins->type()) {
+      case MIRType::Double:
+        define(new(alloc()) LDouble(ins->toDouble()), ins);
+        break;
+      case MIRType::Float32:
+        define(new(alloc()) LFloat32(ins->toFloat32()), ins);
+        break;
+      default:
+        MOZ_CRASH("unexpected constant type");
+    }
+}
+
+void
 LIRGeneratorShared::defineTypedPhi(MPhi* phi, size_t lirIndex)
 {
     LPhi* lir = current->getPhi(lirIndex);

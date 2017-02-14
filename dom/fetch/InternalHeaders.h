@@ -102,6 +102,7 @@ public:
   void Fill(const InternalHeaders& aInit, ErrorResult& aRv);
   void Fill(const Sequence<Sequence<nsCString>>& aInit, ErrorResult& aRv);
   void Fill(const MozMap<nsCString>& aInit, ErrorResult& aRv);
+  void FillResponseHeaders(nsIRequest* aRequest);
 
   bool HasOnlySimpleHeaders() const;
 

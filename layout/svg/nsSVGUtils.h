@@ -198,7 +198,7 @@ public:
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
    * must be an SVG frame.
    */
-  static nsIFrame* GetNearestSVGParent(nsIFrame *aFrame);
+  static nsIFrame* GetNearestSVGViewport(nsIFrame *aFrame);
 
   /**
    * Returns the frame's post-filter visual overflow rect when passed the

@@ -28,6 +28,8 @@ struct DtoaState;
 
 namespace js {
 
+class AutoCompartment;
+
 namespace jit {
 class JitContext;
 class DebugModeOSRVolatileJitFrameIterator;
@@ -197,10 +199,16 @@ struct JSContext : public JS::RootingContext,
     }
 #endif
 
+  private:
     // If |c| or |oldCompartment| is the atoms compartment, the
     // |exclusiveAccessLock| must be held.
     inline void enterCompartment(JSCompartment* c,
                                  const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    friend class js::AutoCompartment;
+
+  public:
+    template <typename T>
+    inline void enterCompartmentOf(const T& target);
     inline void enterNullCompartment();
     inline void leaveCompartment(JSCompartment* oldCompartment,
                                  const js::AutoLockForExclusiveAccess* maybeLock = nullptr);

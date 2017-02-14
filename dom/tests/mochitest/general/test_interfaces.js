@@ -1,0 +1,1387 @@
+/** Test for Bug 766694 **/
+
+// This is a list of all interfaces that are exposed to every webpage.
+// Please only add things to this list with great care and proper review
+// from the associated module peers.
+
+// This file lists global interfaces we want exposed and verifies they
+// are what we intend. Each entry in the arrays below can either be a
+// simple string with the interface name, or an object with a 'name'
+// property giving the interface name as a string, and additional
+// properties which qualify the exposure of that interface. For example:
+//
+// [
+//   "AGlobalInterface",
+//   {name: "ExperimentalThing", release: false},
+//   {name: "ReallyExperimentalThing", nightly: true},
+//   {name: "DesktopOnlyThing", desktop: true},
+//   {name: "FancyControl", xbl: true},
+//   {name: "DisabledEverywhere", disabled: true},
+// ];
+//
+// See createInterfaceMap() below for a complete list of properties.
+
+// IMPORTANT: Do not change this list without review from
+//            a JavaScript Engine peer!
+var ecmaGlobals =
+  [
+    "Array",
+    "ArrayBuffer",
+    "Atomics",
+    "Boolean",
+    "DataView",
+    "Date",
+    "Error",
+    "EvalError",
+    "Float32Array",
+    "Float64Array",
+    "Function",
+    // NB: We haven't bothered to resolve constants like Infinity and NaN on
+    // Xrayed windows (which are seen from the XBL scope). We could support
+    // this if needed with some refactoring.
+    {name: "Infinity", xbl: false},
+    "Int16Array",
+    "Int32Array",
+    "Int8Array",
+    "InternalError",
+    "Intl",
+    "Iterator",
+    "JSON",
+    "Map",
+    "Math",
+    {name: "NaN", xbl: false},
+    "Number",
+    "Object",
+    "Promise",
+    "Proxy",
+    "RangeError",
+    "ReferenceError",
+    "Reflect",
+    "RegExp",
+    "Set",
+    "SharedArrayBuffer",
+    {name: "SIMD", nightly: true},
+    "StopIteration",
+    "String",
+    "Symbol",
+    "SyntaxError",
+    {name: "TypedObject", nightly: true},
+    "TypeError",
+    "Uint16Array",
+    "Uint32Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "URIError",
+    "WeakMap",
+    "WeakSet",
+  ];
+// IMPORTANT: Do not change the list above without review from
+//            a JavaScript Engine peer!
+
+// IMPORTANT: Do not change the list below without review from a DOM peer,
+//            except to remove items from it!
+//
+// This is a list of interfaces that were prefixed with 'moz' instead of 'Moz'.
+// We should never to that again, interfaces in the DOM start with an uppercase
+// letter. If you think you need to add an interface here, DON'T. Rename your
+// interface.
+var legacyMozPrefixedInterfaces =
+  [
+    "mozContact",
+    "mozRTCIceCandidate",
+    "mozRTCPeerConnection",
+    "mozRTCSessionDescription",
+  ];
+// IMPORTANT: Do not change the list above without review from a DOM peer,
+//            except to remove items from it!
+
+// IMPORTANT: Do not change the list below without review from a DOM peer!
+var interfaceNamesInGlobalScope =
+  [
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AnalyserNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "Animation"},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationEffectReadOnly", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationEffectTiming", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationEffectTimingReadOnly", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AnimationEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationPlaybackEvent", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AnimationTimeline", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Attr",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Audio",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioBuffer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioBufferSourceNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioDestinationNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioListener",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioParam",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioProcessingEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioScheduledSourceNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "AudioStreamTrack",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BarProp",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BaseAudioContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BatteryManager",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BeforeUnloadEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BiquadFilterNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Blob",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BlobEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "BoxObject", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "BroadcastChannel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Cache",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CacheStorage",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CanvasCaptureMediaStream",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CanvasGradient",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CanvasPattern",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CanvasRenderingContext2D",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CaretPosition",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CDATASection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ChannelMergerNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ChannelSplitterNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CharacterData",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ChromeNodeList", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ChromeWindow", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ClipboardEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CloseEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CommandEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Comment",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CompositionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ConstantSourceNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Controllers",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ConvolverNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Crypto",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CryptoKey",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSS",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSS2Properties",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "CSSAnimation", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSConditionRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSCounterStyleRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSFontFaceRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSFontFeatureValuesRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSGroupingRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSImportRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSKeyframeRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSKeyframesRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSMediaRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSMozDocumentRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSNamespaceRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSPageRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSPrimitiveValue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "CSSPseudoElement", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSRuleList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSStyleDeclaration",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSStyleRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSStyleSheet",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSSupportsRule",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "CSSTransition", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSValue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CSSValueList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CustomElementRegistry",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "CustomEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DataChannel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DataTransfer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DataTransferItem",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DataTransferItemList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DelayNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DesktopNotification",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DesktopNotificationCenter",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DeviceLightEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DeviceMotionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DeviceOrientationEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DeviceProximityEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DeviceStorageAreaChangedEvent", desktop: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DeviceStorageAreaListener", desktop: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DeviceStorage", desktop: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DeviceStorageChangeEvent", desktop: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Directory",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Document",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DocumentFragment",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "DocumentTimeline", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DocumentType",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "DOMConstructor", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMCursor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMError",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMException",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMImplementation",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMMatrix",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMMatrixReadOnly",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMParser",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMPoint",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMPointReadOnly",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMQuad",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMRect",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMRectList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMRectReadOnly",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMStringList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMStringMap",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DOMTokenList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DragEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DynamicsCompressorNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Element",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ErrorEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Event",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "EventSource",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "EventTarget",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "External",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "File",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileReader",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileSystem",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileSystemDirectoryEntry",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileSystemDirectoryReader",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileSystemEntry",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FileSystemFileEntry",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FocusEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FormData",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FontFace",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FontFaceSet",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "FontFaceSetLoadEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "GainNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Gamepad",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "GamepadAxisMoveEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "GamepadButtonEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "GamepadButton",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "GamepadEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "GamepadPose", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HashChangeEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Headers",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "History",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLAllCollection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLAnchorElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLAppletElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLAreaElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLAudioElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLBaseElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLBodyElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLBRElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLButtonElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLCanvasElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLCollection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLContentElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDataElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDataListElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDetailsElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "HTMLDialogElement", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDirectoryElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDivElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDListElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLDocument",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLEmbedElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFieldSetElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFontElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFormControlsCollection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFormElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFrameElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLFrameSetElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLHeadElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLHeadingElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLHRElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLHtmlElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLIFrameElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLImageElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLInputElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLLabelElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLLegendElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLLIElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLLinkElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMapElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMediaElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMenuElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMenuItemElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMetaElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLMeterElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLModElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLObjectElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLOListElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLOptGroupElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLOptionElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLOptionsCollection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLOutputElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLParagraphElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLParamElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLPreElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLPictureElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLProgressElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLQuoteElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLScriptElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLSelectElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLShadowElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLSourceElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLSpanElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLStyleElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableCaptionElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableCellElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableColElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableRowElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTableSectionElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTemplateElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTextAreaElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTimeElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTitleElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLTrackElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLUListElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLUnknownElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "HTMLVideoElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "IdleDeadline", nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBCursor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBCursorWithValue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBDatabase",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBFactory",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBFileHandle",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBFileRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBIndex",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBKeyRange",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBMutableFile",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBObjectStore",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBOpenDBRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBTransaction",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IDBVersionChangeEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "IIRFilterNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Image",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ImageBitmap",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ImageBitmapRenderingContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ImageCapture", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ImageCaptureErrorEvent", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ImageData",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "InputEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "InstallTrigger",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "IntersectionObserver", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "IntersectionObserverEntry", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "KeyEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "KeyboardEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "KeyframeEffectReadOnly", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "KeyframeEffect", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "LocalMediaStream",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Location",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaDeviceInfo",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaDevices",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaElementAudioSourceNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaError",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeyError",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaEncryptedEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeys",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeySession",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeySystemAccess",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeyMessageEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaKeyStatusMap",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaQueryList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaRecorder",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaSource",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStream",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStreamAudioDestinationNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStreamAudioSourceNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStreamEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStreamTrackEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MediaStreamTrack",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "MenuBoxObject", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MessageChannel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MessageEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MessagePort",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MimeType",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MimeTypeArray",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MouseEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MouseScrollEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "mozRTCIceCandidate",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "mozRTCPeerConnection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "mozRTCSessionDescription",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MutationEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MutationObserver",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "MutationRecord",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "NamedNodeMap",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Navigator",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "NetworkInformation", desktop: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Node",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "NodeFilter",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "NodeIterator",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "NodeList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Notification",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "OffscreenCanvas", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "OfflineAudioCompletionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "OfflineAudioContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "OfflineResourceList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Option",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "OscillatorNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PageTransitionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PaintRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PaintRequestList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PannerNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Path2D",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Performance",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceEntry",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceMark",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceMeasure",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceNavigation",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PerformanceObserver", nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PerformanceObserverEntryList", nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceResourceTiming",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PerformanceTiming",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PeriodicWave",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Permissions",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PermissionStatus",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Plugin",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PluginArray",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PointerEvent", nightly: true, desktop: true, disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PopStateEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PopupBlockedEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PopupBoxObject", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationDeviceInfoManager",
+     disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "Presentation", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationAvailability", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationConnection", desktop: false, release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationConnectionAvailableEvent", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationConnectionCloseEvent", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationConnectionList", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationReceiver", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PresentationRequest", desktop: false, release: false },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ProcessingInstruction",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ProgressEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PushManager",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PushSubscription",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "PushSubscriptionOptions",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RadioNodeList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Range",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RecordErrorEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Rect",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Request",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Response",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RGBColor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCCertificate",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCDataChannelEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCDTMFSender",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCDTMFToneChangeEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCIceCandidate",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCPeerConnection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCPeerConnectionIceEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCRtpReceiver",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCRtpSender",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCSessionDescription",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCStatsReport",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "RTCTrackEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Screen",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ScreenOrientation",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ScriptProcessorNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ScrollAreaEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Selection",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ServiceWorker",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ServiceWorkerContainer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ServiceWorkerMessageEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ServiceWorkerRegistration",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ScopedCredential", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "ScopedCredentialInfo", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ShadowRoot", // Bogus, but the test harness forces it on.  See bug 1159768.
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SharedWorker",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SimpleGestureEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SimpleTest", xbl: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SourceBuffer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SourceBufferList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpeechSynthesisErrorEvent", android: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpeechSynthesisEvent", android: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpeechSynthesis", android: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpeechSynthesisUtterance", android: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpeechSynthesisVoice", android: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "SpecialPowers", xbl: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "StereoPannerNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Storage",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "StorageEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "StorageManager", nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "StyleSheet",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "StyleSheetList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SubtleCrypto",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAngle",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedAngle",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedBoolean",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedEnumeration",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedInteger",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedLength",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedLengthList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedNumber",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedNumberList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedPreserveAspectRatio",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedRect",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedString",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimatedTransformList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimateElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimateMotionElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimateTransformElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGAnimationElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGCircleElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGClipPathElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGComponentTransferFunctionElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGDefsElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGDescElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGEllipseElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEBlendElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEColorMatrixElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEComponentTransferElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFECompositeElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEConvolveMatrixElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEDiffuseLightingElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEDisplacementMapElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEDistantLightElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEDropShadowElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEFloodElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEFuncAElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEFuncBElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEFuncGElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEFuncRElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEGaussianBlurElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEImageElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEMergeElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEMergeNodeElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEMorphologyElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEOffsetElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFEPointLightElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFESpecularLightingElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFESpotLightElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFETileElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFETurbulenceElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGFilterElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGForeignObjectElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGGElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGGeometryElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGGradientElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGGraphicsElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGImageElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGLength",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGLengthList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGLinearGradientElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGLineElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGMarkerElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGMaskElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGMatrix",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGMetadataElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGMPathElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGNumber",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGNumberList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSeg",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegArcAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegArcRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegClosePath",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoCubicAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoCubicRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoCubicSmoothAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoCubicSmoothRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoQuadraticAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoQuadraticRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoQuadraticSmoothAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegCurvetoQuadraticSmoothRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoHorizontalAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoHorizontalRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoVerticalAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegLinetoVerticalRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegMovetoAbs",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPathSegMovetoRel",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPatternElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPoint",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPointList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPolygonElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPolylineElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGPreserveAspectRatio",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGRadialGradientElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGRect",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGRectElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGScriptElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGSetElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGStopElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGStringList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGStyleElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGSVGElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGSwitchElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGSymbolElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTextContentElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTextElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTextPathElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTextPositioningElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTitleElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTransform",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTransformList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGTSpanElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGUnitTypes",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGUseElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGViewElement",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGZoomAndPan",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "SVGZoomEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Text",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextDecoder",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextEncoder",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextMetrics",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextTrack",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextTrackCue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextTrackCueList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TextTrackList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TimeEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TimeRanges",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Touch",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TouchEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TouchList",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TrackEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TransitionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "TreeColumn", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "TreeColumns", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "TreeContentView", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "TreeSelection", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "TreeWalker",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "U2F", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "UIEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "URL",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "URLSearchParams",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "UserProximityEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "ValidityState",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "VideoPlaybackQuality",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "VideoStreamTrack",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRDisplay", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRDisplayCapabilities", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRDisplayEvent", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VREyeParameters", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRFieldOfView", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRFrameData", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRPose", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VRStageParameters", release: false},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "VTTCue",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "VTTRegion", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WaveShaperNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "WebAuthnAssertion", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "WebAuthnAttestation", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "WebAuthentication", disabled: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLActiveInfo",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLBuffer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLContextEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLFramebuffer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLProgram",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLQuery",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLRenderbuffer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLRenderingContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGL2RenderingContext",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLSampler",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLShader",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLShaderPrecisionFormat",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLSync",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLTexture",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLTransformFeedback",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLUniformLocation",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebGLVertexArrayObject",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebKitCSSMatrix",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WebSocket",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "WheelEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Window",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "Worker",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLDocument",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLHttpRequest",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLHttpRequestEventTarget",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLHttpRequestUpload",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLSerializer",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XMLStylesheetProcessingInstruction",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XPathEvaluator",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XPathExpression",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XPathResult",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "XSLTProcessor",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULButtonElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULCheckboxElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULCommandDispatcher", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULCommandEvent", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULControlElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULControllers", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULDocument", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULLabeledControlElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULPopupElement", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULTemplateBuilder", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "XULTreeBuilder", xbl: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+  ];
+// IMPORTANT: Do not change the list above without review from a DOM peer!
+
+function createInterfaceMap(isXBLScope) {
+  var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+  var isNightly = version.endsWith("a1");
+  var isRelease = !version.includes("a");
+  var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+  var isMac = /Mac OS/.test(navigator.oscpu);
+  var isWindows = /Windows/.test(navigator.oscpu);
+  var isAndroid = navigator.userAgent.includes("Android");
+  var isLinux = /Linux/.test(navigator.oscpu) && !isAndroid;
+
+  var interfaceMap = {};
+
+  function addInterfaces(interfaces)
+  {
+    for (var entry of interfaces) {
+      if (typeof(entry) === "string") {
+        interfaceMap[entry] = true;
+      } else {
+        ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
+        if ((entry.nightly === !isNightly) ||
+            (entry.nightlyAndroid === !(isAndroid && isNightly) && isAndroid) ||
+            (entry.xbl === !isXBLScope) ||
+            (entry.desktop === !isDesktop) ||
+            (entry.windows === !isWindows) ||
+            (entry.mac === !isMac) ||
+            (entry.linux === !isLinux) ||
+            (entry.android === !isAndroid && !entry.nightlyAndroid) ||
+            (entry.release === !isRelease) ||
+            entry.disabled) {
+          interfaceMap[entry.name] = false;
+        } else {
+          interfaceMap[entry.name] = true;
+        }
+      }
+    }
+  }
+
+  addInterfaces(ecmaGlobals);
+  addInterfaces(interfaceNamesInGlobalScope);
+  if (isXBLScope) {
+    // We expose QueryInterface to XBL scopes. It's not an interface but we
+    // need to handle it because it's an own property of the global and the
+    // property name starts with an uppercase letter.
+    interfaceMap["QueryInterface"] = true;
+  }
+
+  return interfaceMap;
+}
+
+function runTest(isXBLScope) {
+  var interfaceMap = createInterfaceMap(isXBLScope);
+  for (var name of Object.getOwnPropertyNames(window)) {
+    // An interface name should start with an upper case character.
+    // However, we have a couple of legacy interfaces that start with 'moz', so
+    // we want to allow those until we can remove them.
+    if (!/^[A-Z]/.test(name) && legacyMozPrefixedInterfaces.indexOf(name) < 0) {
+      continue;
+    }
+    ok(interfaceMap[name],
+       "If this is failing: DANGER, are you sure you want to expose the new interface " + name +
+       " to all webpages as a property on the window (XBL: " + isXBLScope + ")? Do not make a change to this file without a " +
+       " review from a DOM peer for that specific change!!! (or a JS peer for changes to ecmaGlobals)");
+    delete interfaceMap[name];
+  }
+  for (var name of Object.keys(interfaceMap)) {
+    ok(name in window === interfaceMap[name],
+       name + " should " + (interfaceMap[name] ? "" : " NOT") + " be defined on the " + (isXBLScope ? "XBL" : "global") +" scope");
+    if (!interfaceMap[name]) {
+      delete interfaceMap[name];
+    }
+  }
+  if (isXBLScope) {
+    todo_is(Object.keys(interfaceMap).length, 0,
+            "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
+  } else {
+    is(Object.keys(interfaceMap).length, 0,
+       "The following interface(s) are not enumerated: " + Object.keys(interfaceMap).join(", "));
+  }
+}
+
+runTest(false);
+SimpleTest.waitForExplicitFinish();

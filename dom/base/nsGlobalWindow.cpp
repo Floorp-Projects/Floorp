@@ -690,6 +690,23 @@ nsGlobalWindow::ScheduleIdleRequestDispatch()
 }
 
 void
+nsGlobalWindow::SuspendIdleRequests()
+{
+  if (mIdleRequestExecutor) {
+    mIdleRequestExecutor->Cancel();
+    mIdleRequestExecutor = nullptr;
+  }
+}
+
+void
+nsGlobalWindow::ResumeIdleRequests()
+{
+  MOZ_ASSERT(!mIdleRequestExecutor);
+
+  ScheduleIdleRequestDispatch();
+}
+
+void
 nsGlobalWindow::InsertIdleCallback(IdleRequest* aRequest)
 {
   AssertIsOnMainThread();
@@ -816,9 +833,10 @@ nsGlobalWindow::RequestIdleCallback(JSContext* aCx,
   }
 
   // If the list of idle callback requests is not empty it means that
-  // we've already dispatched the first idle request. It is the
-  // responsibility of that to dispatch the next.
-  bool needsScheduling = mIdleRequestCallbacks.isEmpty();
+  // we've already dispatched the first idle request. If we're
+  // suspended we should only queue the idle callback and not schedule
+  // it to run, that will be done in ResumeIdleRequest.
+  bool needsScheduling = !IsSuspended() && mIdleRequestCallbacks.isEmpty();
   // mIdleRequestCallbacks now owns request
   InsertIdleCallback(request);
 
@@ -3753,6 +3771,8 @@ nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
     // This is page load event since load events don't propagate to |window|.
     // @see nsDocument::GetEventTargetParent.
     mIsDocumentLoaded = true;
+
+    mTimeoutManager->OnDocumentLoaded();
 
     nsCOMPtr<Element> element = GetOuterWindow()->GetFrameElementInternal();
     nsIDocShell* docShell = GetDocShell();
@@ -12146,6 +12166,8 @@ nsGlobalWindow::Suspend()
 
   mozilla::dom::workers::SuspendWorkersForWindow(AsInner());
 
+  SuspendIdleRequests();
+
   mTimeoutManager->Suspend();
 
   // Suspend all of the AudioContexts for this window
@@ -12199,6 +12221,8 @@ nsGlobalWindow::Resume()
   }
 
   mTimeoutManager->Resume();
+
+  ResumeIdleRequests();
 
   // Resume all of the workers for this window.  We must do this
   // after timeouts since workers may have queued events that can trigger

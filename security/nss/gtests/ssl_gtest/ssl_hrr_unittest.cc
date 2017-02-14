@@ -67,6 +67,87 @@ TEST_P(TlsConnectTls13, HelloRetryRequestAbortsZeroRtt) {
   EXPECT_FALSE(capture_early_data->captured());
 }
 
+// This filter only works for DTLS 1.3 where there is exactly one handshake
+// packet. If the record is split into two packets, or there are multiple
+// handshake packets, this will break.
+class CorrectMessageSeqAfterHrrFilter : public TlsRecordFilter {
+ protected:
+  PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                    const DataBuffer& record, size_t* offset,
+                                    DataBuffer* output) {
+    if (filtered_packets() > 0 || header.content_type() != content_handshake) {
+      return KEEP;
+    }
+
+    DataBuffer buffer(record);
+    TlsRecordHeader new_header = {header.version(), header.content_type(),
+                                  header.sequence_number() + 1};
+
+    // Correct message_seq.
+    buffer.Write(4, 1U, 2);
+
+    *offset = new_header.Write(output, *offset, buffer);
+    return CHANGE;
+  }
+};
+
+TEST_P(TlsConnectTls13, SecondClientHelloRejectEarlyDataXtn) {
+  static const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1,
+                                                    ssl_grp_ec_secp521r1};
+
+  SetupForZeroRtt();
+  ExpectResumption(RESUME_TICKET);
+
+  client_->ConfigNamedGroups(groups);
+  server_->ConfigNamedGroups(groups);
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+
+  // A new client that tries to resume with 0-RTT but doesn't send the
+  // correct key share(s). The server will respond with an HRR.
+  auto orig_client =
+      std::make_shared<TlsAgent>(client_->name(), TlsAgent::CLIENT, mode_);
+  client_.swap(orig_client);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->ConfigureSessionCache(RESUME_BOTH);
+  client_->Set0RttEnabled(true);
+  client_->StartConnect();
+
+  // Swap in the new client.
+  client_->SetPeer(server_);
+  server_->SetPeer(client_);
+
+  // Send the ClientHello.
+  client_->Handshake();
+  // Process the CH, send an HRR.
+  server_->Handshake();
+
+  // Swap the client we created manually with the one that successfully
+  // received a PSK, and try to resume with 0-RTT. The client doesn't know
+  // about the HRR so it will send the early_data xtn as well as 0-RTT data.
+  client_.swap(orig_client);
+  orig_client.reset();
+
+  // Correct the DTLS message sequence number after an HRR.
+  if (mode_ == DGRAM) {
+    client_->SetPacketFilter(
+        std::make_shared<CorrectMessageSeqAfterHrrFilter>());
+  }
+
+  server_->SetPeer(client_);
+  client_->Handshake();
+
+  // Send 0-RTT data.
+  const char* k0RttData = "ABCDEF";
+  const PRInt32 k0RttDataLen = static_cast<PRInt32>(strlen(k0RttData));
+  PRInt32 rv = PR_Write(client_->ssl_fd(), k0RttData, k0RttDataLen);
+  EXPECT_EQ(k0RttDataLen, rv);
+
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT);
+}
+
 class KeyShareReplayer : public TlsExtensionFilter {
  public:
   KeyShareReplayer() {}
