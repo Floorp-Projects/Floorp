@@ -1176,7 +1176,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
         if (!aRowForcedPageBreak && !aStatus.IsFullyComplete() &&
             ShouldAvoidBreakInside(aReflowInput)) {
-          aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+          aStatus.SetInlineLineBreakBeforeAndReset();
           break;
         }
 
@@ -1242,7 +1242,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
       if (!rowIsOnPage) {
         NS_ASSERTION(!contRow, "We should not have created a continuation if none of this row fits");
         if (!aRowForcedPageBreak && ShouldAvoidBreakInside(aReflowInput)) {
-          aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+          aStatus.SetInlineLineBreakBeforeAndReset();
           break;
         }
         if (prevRowFrame) {

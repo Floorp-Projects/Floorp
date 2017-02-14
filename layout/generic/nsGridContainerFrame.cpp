@@ -5388,7 +5388,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
       // Propagate break-before on the first row to the container unless we're
       // already at top-of-page.
       if ((itemStartRow == 0 && !isTopOfPage) || avoidBreakInside) {
-        aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        aStatus.SetInlineLineBreakBeforeAndReset();
         return aState.mFragBStart;
       }
       if ((itemStartRow > startRow ||
@@ -5427,7 +5427,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
 
   // Honor break-inside:avoid if we can't fit all rows.
   if (avoidBreakInside && endRow < numRows) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    aStatus.SetInlineLineBreakBeforeAndReset();
     return aState.mFragBStart;
   }
 
@@ -5463,7 +5463,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
   bool overflow = bSize + bpBEnd > childAvailableSize;
   if (overflow) {
     if (avoidBreakInside) {
-      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      aStatus.SetInlineLineBreakBeforeAndReset();
       return aState.mFragBStart;
     }
     bool breakAfterLastRow = endRow == numRows && aFragmentainer.mCanBreakAtEnd;
