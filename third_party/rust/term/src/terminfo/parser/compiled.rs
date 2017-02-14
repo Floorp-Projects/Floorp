@@ -102,17 +102,17 @@ pub fn parse(file: &mut io::Read, longnames: bool) -> Result<TermInfo> {
     };
 
     let term_names: Vec<String> = names_str.split('|')
-                                           .map(|s| s.to_string())
+                                           .map(|s| s.to_owned())
                                            .collect();
     // consume NUL
     if try!(read_byte(file)) != b'\0' {
         return Err(NamesMissingNull.into());
     }
 
-    let bools_map: HashMap<String, bool> = try! {
+    let bools_map: HashMap<&str, bool> = try! {
         (0..bools_bytes).filter_map(|i| match read_byte(file) {
             Err(e) => Some(Err(e)),
-            Ok(1) => Some(Ok((bnames[i].to_string(), true))),
+            Ok(1) => Some(Ok((bnames[i], true))),
             Ok(_) => None
         }).collect()
     };
@@ -121,15 +121,15 @@ pub fn parse(file: &mut io::Read, longnames: bool) -> Result<TermInfo> {
         try!(read_byte(file)); // compensate for padding
     }
 
-    let numbers_map: HashMap<String, u16> = try! {
+    let numbers_map: HashMap<&str, u16> = try! {
         (0..numbers_count).filter_map(|i| match read_le_u16(file) {
             Ok(0xFFFF) => None,
-            Ok(n) => Some(Ok((nnames[i].to_string(), n))),
+            Ok(n) => Some(Ok((nnames[i], n))),
             Err(e) => Some(Err(e))
         }).collect()
     };
 
-    let string_map: HashMap<String, Vec<u8>> = if string_offsets_count > 0 {
+    let string_map: HashMap<&str, Vec<u8>> = if string_offsets_count > 0 {
         let string_offsets: Vec<u16> = try!((0..string_offsets_count)
                                                 .map(|_| read_le_u16(file))
                                                 .collect());
@@ -156,7 +156,7 @@ pub fn parse(file: &mut io::Read, longnames: bool) -> Result<TermInfo> {
                                    // undocumented: FFFE indicates cap@, which means the capability
                                    // is not present
                                    // unsure if the handling for this is correct
-                                   return Ok((name.to_string(), Vec::new()));
+                                   return Ok((name, Vec::new()));
                                }
 
                                // Find the offset of the NUL we want to go to
@@ -165,7 +165,7 @@ pub fn parse(file: &mut io::Read, longnames: bool) -> Result<TermInfo> {
                                                 .position(|&b| b == 0);
                                match nulpos {
                                    Some(len) => {
-                                       Ok((name.to_string(),
+                                       Ok((name,
                                            string_table[offset..offset + len].to_vec()))
                                    }
                                    None => return Err(::Error::TerminfoParsing(StringsMissingNull)),
@@ -185,19 +185,19 @@ pub fn parse(file: &mut io::Read, longnames: bool) -> Result<TermInfo> {
     })
 }
 
-/// Create a dummy TermInfo struct for msys terminals
+/// Create a dummy `TermInfo` struct for msys terminals
 pub fn msys_terminfo() -> TermInfo {
     let mut strings = HashMap::new();
-    strings.insert("sgr0".to_string(), b"\x1B[0m".to_vec());
-    strings.insert("bold".to_string(), b"\x1B[1m".to_vec());
-    strings.insert("setaf".to_string(), b"\x1B[3%p1%dm".to_vec());
-    strings.insert("setab".to_string(), b"\x1B[4%p1%dm".to_vec());
+    strings.insert("sgr0", b"\x1B[0m".to_vec());
+    strings.insert("bold", b"\x1B[1m".to_vec());
+    strings.insert("setaf", b"\x1B[3%p1%dm".to_vec());
+    strings.insert("setab", b"\x1B[4%p1%dm".to_vec());
 
     let mut numbers = HashMap::new();
-    numbers.insert("colors".to_string(), 8u16);
+    numbers.insert("colors", 8u16);
 
     TermInfo {
-        names: vec!["cygwin".to_string()], // msys is a fork of an older cygwin version
+        names: vec!["cygwin".to_owned()], // msys is a fork of an older cygwin version
         bools: HashMap::new(),
         numbers: numbers,
         strings: strings,

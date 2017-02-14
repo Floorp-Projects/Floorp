@@ -8,7 +8,7 @@
 // except according to those terms.
 use libc::c_void;
 
-use base::{CFOptionFlags, CFIndex, CFAllocatorRef, Boolean, CFTypeID};
+use base::{CFOptionFlags, CFIndex, CFAllocatorRef, Boolean, CFTypeID, SInt32};
 use string::CFStringRef;
 
 #[repr(C)]
@@ -100,23 +100,23 @@ extern {
     //                         baseURL: CFURLRef) -> CFURLRef;
 
     /* Accessing the Parts of a URL */
-    //fn CFURLCanBeDecomposed
-    //fn CFURLCopyFileSystemPath
-    //fn CFURLCopyFragment
-    //fn CFURLCopyHostName
-    //fn CFURLCopyLastPathComponent
-    //fn CFURLCopyNetLocation
-    //fn CFURLCopyParameterString
-    //fn CFURLCopyPassword
-    //fn CFURLCopyPath
-    //fn CFURLCopyPathExtension
-    //fn CFURLCopyQueryString
-    //fn CFURLCopyResourceSpecifier
-    //fn CFURLCopyScheme
-    //fn CFURLCopyStrictPath
-    //fn CFURLCopyUserName
-    //fn CFURLGetPortNumber
-    //fn CFURLHasDirectoryPath
+    pub fn CFURLCanBeDecomposed(anURL: CFURLRef) -> Boolean;
+    pub fn CFURLCopyFileSystemPath(anURL: CFURLRef, pathStyle: CFURLPathStyle) -> CFStringRef;
+    pub fn CFURLCopyFragment(anURL: CFURLRef, charactersToLeaveEscaped: CFStringRef) -> CFStringRef;
+    pub fn CFURLCopyHostName(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyLastPathComponent(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyNetLocation(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyParameterString(anURL: CFURLRef, charactersToLeaveEscaped: CFStringRef) -> CFStringRef;
+    pub fn CFURLCopyPassword(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyPath(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyPathExtension(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyQueryString(anURL: CFURLRef, charactersToLeaveEscaped: CFStringRef) -> CFStringRef;
+    pub fn CFURLCopyResourceSpecifier(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyScheme(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLCopyStrictPath(anURL: CFURLRef, isAbsolute: *mut Boolean) -> CFStringRef;
+    pub fn CFURLCopyUserName(anURL: CFURLRef) -> CFStringRef;
+    pub fn CFURLGetPortNumber(anURL: CFURLRef) -> SInt32;
+    pub fn CFURLHasDirectoryPath(anURL: CFURLRef) -> Boolean;
 
     /* Converting URLs to Other Representations */
     //fn CFURLCreateData(allocator: CFAllocatorRef, url: CFURLRef,

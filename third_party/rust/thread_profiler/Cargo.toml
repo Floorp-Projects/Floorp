@@ -1,0 +1,18 @@
+[package]
+name = "thread_profiler"
+version = "0.1.1"
+authors = ["Glenn Watson <github@intuitionlibrary.com>"]
+description = "A thread profiling library that outputs profiles in the chromium trace format."
+repository = "https://github.com/glennw/thread_profiler"
+documentation = "https://github.com/glennw/thread_profiler"
+homepage = "https://github.com/glennw/thread_profiler"
+keywords = ["profiler", "trace"]
+license = "Apache-2.0/MIT"
+
+[dependencies]
+time = { version = "0.1.36", optional = true }
+json = { version = "0.11.5", optional = true }
+lazy_static = { version = "0.2.2", optional = true }
+
+[features]
+thread_profiler = ["time", "json", "lazy_static"]

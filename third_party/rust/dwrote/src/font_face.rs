@@ -8,7 +8,7 @@ use std::cell::UnsafeCell;
 use std::mem::zeroed;
 
 use comptr::ComPtr;
-use super::{FontMetrics, FontFile};
+use super::{FontMetrics, FontFile, DefaultDWriteRenderParams};
 
 use winapi;
 
@@ -133,5 +133,38 @@ impl FontFace {
 
             Some(table_bytes)
         }
+    }
+
+    pub fn get_recommended_rendering_mode(&self,
+                                          em_size: f32,
+                                          pixels_per_dip: f32,
+                                          measure_mode: winapi::DWRITE_MEASURING_MODE,
+                                          rendering_params: *mut winapi::IDWriteRenderingParams) ->
+                                          winapi::DWRITE_RENDERING_MODE {
+      unsafe {
+        let mut render_mode : winapi::DWRITE_RENDERING_MODE = winapi::DWRITE_RENDERING_MODE_DEFAULT;
+        let hr = (*self.native.get()).GetRecommendedRenderingMode(em_size,
+                                                                  pixels_per_dip,
+                                                                  measure_mode,
+                                                                  rendering_params,
+                                                                  &mut render_mode);
+
+        if !(hr != 0) {
+          return winapi::DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
+        }
+
+        render_mode
+      }
+    }
+
+    pub fn get_recommended_rendering_mode_default_params(&self,
+                                                        em_size: f32,
+                                                        pixels_per_dip: f32,
+                                                        measure_mode: winapi::DWRITE_MEASURING_MODE) ->
+                                                        winapi::DWRITE_RENDERING_MODE {
+      self.get_recommended_rendering_mode(em_size,
+                                          pixels_per_dip,
+                                          measure_mode,
+                                          DefaultDWriteRenderParams())
     }
 }

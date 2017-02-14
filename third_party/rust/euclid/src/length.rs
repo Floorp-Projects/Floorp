@@ -196,57 +196,93 @@ impl<Unit, T: Zero> Zero for Length<T, Unit> {
 #[cfg(test)]
 mod tests {
     use super::Length;
+    use num::Zero;
+
+    use heapsize::HeapSizeOf;
     use num_traits::Saturating;
     use scale_factor::ScaleFactor;
+    use std::f32::INFINITY;
+
+    extern crate serde_test;
+    use self::serde_test::Token;
+    use self::serde_test::assert_tokens;
 
     enum Inch {}
     enum Mm {}
+    enum Cm {}
+    enum Second {}
 
     #[test]
-    fn test_length() {
-        let mm_per_inch: ScaleFactor<f32, Inch, Mm> = ScaleFactor::new(25.4);
+    fn test_clone() {
+        // A cloned Length is a separate length with the state matching the
+        // original Length at the point it was cloned.
+        let mut variable_length: Length<f32, Inch> = Length::new(12.0);
 
-        let one_foot: Length<f32, Inch> = Length::new(12.0);
-        let two_feet = one_foot.clone() + one_foot.clone();
-        let zero_feet = one_foot.clone() - one_foot.clone();
+        let one_foot = variable_length.clone();
+        variable_length.0 = 24.0;
 
         assert_eq!(one_foot.get(), 12.0);
-        assert_eq!(two_feet.get(), 24.0);
-        assert_eq!(zero_feet.get(), 0.0);
+        assert_eq!(variable_length.get(), 24.0);
+    }
 
-        assert!(one_foot == one_foot);
-        assert!(two_feet != one_foot);
+    #[test]
+    fn test_heapsizeof_builtins() {
+        // Heap size of built-ins is zero by default.
+        let one_foot: Length<f32, Inch> = Length::new(12.0);
 
-        assert!(zero_feet <  one_foot);
-        assert!(zero_feet <= one_foot);
-        assert!(two_feet  >  one_foot);
-        assert!(two_feet  >= one_foot);
+        let heap_size_length_f32 = one_foot.heap_size_of_children();
 
-        assert!(  two_feet <= two_feet);
-        assert!(  two_feet >= two_feet);
-        assert!(!(two_feet >  two_feet));
-        assert!(!(two_feet <  two_feet));
+        assert_eq!(heap_size_length_f32, 0);
+    }
 
-        let one_foot_in_mm: Length<f32, Mm> = one_foot * mm_per_inch;
+    #[test]
+    fn test_heapsizeof_length_vector() {
+        // Heap size of any Length is just the heap size of the length value.
+        for n in 0..5 {
+            let length: Length<Vec<f32>, Inch> = Length::new(Vec::with_capacity(n));
 
-        assert_eq!(one_foot_in_mm, Length::new(304.8));
-        assert_eq!(one_foot_in_mm / one_foot, mm_per_inch);
+            assert_eq!(length.heap_size_of_children(), length.0.heap_size_of_children());
+        }
+    }
 
-        let back_to_inches: Length<f32, Inch> = one_foot_in_mm / mm_per_inch;
-        assert_eq!(one_foot, back_to_inches);
+    #[test]
+    fn test_length_serde() {
+        let one_cm: Length<f32, Mm> = Length::new(10.0);
 
-        let int_foot: Length<isize, Inch> = one_foot.cast().unwrap();
-        assert_eq!(int_foot.get(), 12);
+        assert_tokens(&one_cm, &[Token::F32(10.0)]);
+    }
 
-        let negative_one_foot = -one_foot;
-        assert_eq!(negative_one_foot.get(), -12.0);
+    #[test]
+    fn test_get_clones_length_value() {
+        // Calling get returns a clone of the Length's value.
+        // To test this, we need something clone-able - hence a vector.
+        let mut length: Length<Vec<i32>, Inch> = Length::new(vec![1, 2, 3]);
 
-        let negative_two_feet = -two_feet;
-        assert_eq!(negative_two_feet.get(), -24.0);
+        let value = length.get();
+        length.0.push(4);
 
-        let zero_feet: Length<f32, Inch> = Length::new(0.0);
-        let negative_zero_feet = -zero_feet;
-        assert_eq!(negative_zero_feet.get(), 0.0);
+        assert_eq!(value, vec![1, 2, 3]);
+        assert_eq!(length.get(), vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_fmt_debug() {
+        // Debug and display format the value only.
+        let one_cm: Length<f32, Mm> = Length::new(10.0);
+
+        let result = format!("{:?}", one_cm);
+
+        assert_eq!(result, "10");
+    }
+
+    #[test]
+    fn test_fmt_display() {
+        // Debug and display format the value only.
+        let one_cm: Length<f32, Mm> = Length::new(10.0);
+
+        let result = format!("{}", one_cm);
+
+        assert_eq!(result, "10");
     }
 
     #[test]
@@ -257,6 +293,36 @@ mod tests {
         let result = length1 + length2;
 
         assert_eq!(result.get(), 255);
+    }
+
+    #[test]
+    fn test_addassign() {
+        let one_cm: Length<f32, Mm> = Length::new(10.0);
+        let mut measurement: Length<f32, Mm> = Length::new(5.0);
+
+        measurement += one_cm;
+
+        assert_eq!(measurement.get(), 15.0);
+    }
+
+    #[test]
+    fn test_sub() {
+        let length1: Length<u8, Mm> = Length::new(250);
+        let length2: Length<u8, Mm> = Length::new(5);
+
+        let result = length1 - length2;
+
+        assert_eq!(result.get(), 245);
+    }
+
+    #[test]
+    fn test_subassign() {
+        let one_cm: Length<f32, Mm> = Length::new(10.0);
+        let mut measurement: Length<f32, Mm> = Length::new(5.0);
+
+        measurement -= one_cm;
+
+        assert_eq!(measurement.get(), -5.0);
     }
 
     #[test]
@@ -280,22 +346,103 @@ mod tests {
     }
 
     #[test]
-    fn test_addassign() {
-        let one_cm: Length<f32, Mm> = Length::new(10.0);
-        let mut measurement: Length<f32, Mm> = Length::new(5.0);
+    fn test_division_by_length() {
+        // Division results in a ScaleFactor from denominator units
+        // to numerator units.
+        let length: Length<f32, Cm> = Length::new(5.0);
+        let duration: Length<f32, Second> = Length::new(10.0);
 
-        measurement += one_cm;
+        let result = length / duration;
 
-        assert_eq!(measurement.get(), 15.0);
+        let expected: ScaleFactor<f32, Second, Cm> = ScaleFactor::new(0.5);
+        assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_subassign() {
-        let one_cm: Length<f32, Mm> = Length::new(10.0);
-        let mut measurement: Length<f32, Mm> = Length::new(5.0);
+    fn test_multiplication() {
+        let length_mm: Length<f32, Mm> = Length::new(10.0);
+        let cm_per_mm: ScaleFactor<f32, Mm, Cm> = ScaleFactor::new(0.1);
 
-        measurement -= one_cm;
+        let result = length_mm * cm_per_mm;
 
-        assert_eq!(measurement.get(), -5.0);
+        let expected: Length<f32, Cm> = Length::new(1.0);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_division_by_scalefactor() {
+        let length: Length<f32, Cm> = Length::new(5.0);
+        let cm_per_second: ScaleFactor<f32, Second, Cm> = ScaleFactor::new(10.0);
+
+        let result = length / cm_per_second;
+
+        let expected: Length<f32, Second> = Length::new(0.5);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_negation() {
+        let length: Length<f32, Cm> = Length::new(5.0);
+
+        let result = -length;
+
+        let expected: Length<f32, Cm> = Length::new(-5.0);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_cast() {
+        let length_as_i32: Length<i32, Cm> = Length::new(5);
+
+        let result: Length<f32, Cm> = length_as_i32.cast().unwrap();
+
+        let length_as_f32: Length<f32, Cm> = Length::new(5.0);
+        assert_eq!(result, length_as_f32);
+    }
+
+    #[test]
+    fn test_equality() {
+        let length_5_point_0: Length<f32, Cm> = Length::new(5.0);
+        let length_5_point_1: Length<f32, Cm> = Length::new(5.1);
+        let length_0_point_1: Length<f32, Cm> = Length::new(0.1);
+
+        assert!(length_5_point_0 == length_5_point_1 - length_0_point_1);
+        assert!(length_5_point_0 != length_5_point_1);
+    }
+
+    #[test]
+    fn test_order() {
+        let length_5_point_0: Length<f32, Cm> = Length::new(5.0);
+        let length_5_point_1: Length<f32, Cm> = Length::new(5.1);
+        let length_0_point_1: Length<f32, Cm> = Length::new(0.1);
+
+        assert!(length_5_point_0 < length_5_point_1);
+        assert!(length_5_point_0 <= length_5_point_1);
+        assert!(length_5_point_0 <= length_5_point_1 - length_0_point_1);
+        assert!(length_5_point_1 > length_5_point_0);
+        assert!(length_5_point_1 >= length_5_point_0);
+        assert!(length_5_point_0 >= length_5_point_1 - length_0_point_1);
+    }
+
+    #[test]
+    fn test_zero_add() {
+        type LengthCm = Length<f32, Cm>;
+        let length: LengthCm = Length::new(5.0);
+
+        let result = length - LengthCm::zero();
+
+        assert_eq!(result, length);
+    }
+
+    #[test]
+    fn test_zero_division() {
+        type LengthCm = Length<f32, Cm>;
+        let length: LengthCm = Length::new(5.0);
+        let length_zero: LengthCm = Length::zero();
+
+        let result = length / length_zero;
+
+        let expected: ScaleFactor<f32, Cm, Cm> = ScaleFactor::new(INFINITY);
+        assert_eq!(result, expected);
     }
 }

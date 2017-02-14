@@ -26,6 +26,7 @@ include!("types.rs");
 
 use winapi::DWRITE_FACTORY_TYPE_SHARED;
 use winapi::IDWriteFactory;
+use winapi::IDWriteRenderingParams;
 use std::ffi::CString;
 
 use comptr::ComPtr;
@@ -86,6 +87,7 @@ mod font_file_loader_impl;
 DEFINE_GUID!{UuidOfIDWriteFactory, 0xb859ee5a, 0xd838, 0x4b5b, 0xa2, 0xe8, 0x1a, 0xdc, 0x7d, 0x93, 0xdb, 0x48}
 
 unsafe impl Sync for ComPtr<IDWriteFactory> { }
+unsafe impl Sync for ComPtr<IDWriteRenderingParams> {}
 
 lazy_static! {
     static ref DWRITE_FACTORY_RAW_PTR: usize = {
@@ -111,7 +113,18 @@ lazy_static! {
             factory.forget() as usize
         }
     };
-}
+
+  static ref DEFAULT_DWRITE_RENDERING_PARAMS_RAW_PTR: usize = {
+    unsafe {
+      let mut default_rendering_params: ComPtr<IDWriteRenderingParams> = ComPtr::new();
+      let hr = (*DWriteFactory()).CreateRenderingParams(default_rendering_params.getter_addrefs());
+      assert!(hr == S_OK);
+
+      default_rendering_params.forget() as usize
+    }
+  };
+
+} // end lazy static
 
 // FIXME vlad would be nice to return, say, FactoryPtr<IDWriteFactory>
 // that has a DerefMut impl, so that we can write
@@ -120,4 +133,9 @@ lazy_static! {
 #[allow(non_snake_case)]
 fn DWriteFactory() -> *mut IDWriteFactory {
     (*DWRITE_FACTORY_RAW_PTR) as *mut IDWriteFactory
+}
+
+#[allow(non_snake_case)]
+fn DefaultDWriteRenderParams() -> *mut IDWriteRenderingParams {
+  (*DEFAULT_DWRITE_RENDERING_PARAMS_RAW_PTR) as *mut IDWriteRenderingParams
 }
