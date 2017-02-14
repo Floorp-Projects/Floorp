@@ -28,7 +28,7 @@ public:
                                     const gfxPoint& aPoint);
 private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
-                                 const StyleShapeSource aClipPathStyle)
+                                 const StyleClipPath aClipPathStyle)
     : mTargetFrame(aFrame)
     , mClipPathStyle(aClipPathStyle)
   {
@@ -53,7 +53,7 @@ private:
    * The frame for the element that is currently being clipped.
    */
   nsIFrame* mTargetFrame;
-  StyleShapeSource mClipPathStyle;
+  StyleClipPath mClipPathStyle;
 };
 
 } // namespace mozilla
