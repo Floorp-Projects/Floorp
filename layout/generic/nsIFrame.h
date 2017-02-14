@@ -201,8 +201,7 @@ class nsReflowStatus final {
 
 public:
   nsReflowStatus()
-    : mStatus(0)
-    , mBreakType(StyleClear::None)
+    : mBreakType(StyleClear::None)
     , mIncomplete(false)
     , mOverflowIncomplete(false)
     , mNextInFlowNeedsReflow(false)
@@ -222,43 +221,6 @@ public:
     mInlineBreak = false;
     mInlineBreakAfter = false;
     mFirstLetterComplete = false;
-  }
-
-  nsReflowStatus(uint32_t aStatus)
-    : mStatus(aStatus)
-  {}
-
-  uint32_t& operator=(uint32_t aRhs) {
-    mStatus = aRhs;
-    return mStatus;
-  }
-
-  uint32_t operator&(uint32_t aRhs) const {
-    return mStatus & aRhs;
-  }
-
-  uint32_t operator&=(uint32_t aRhs) {
-    return mStatus = mStatus & aRhs;
-  }
-
-  uint32_t operator|(uint32_t aRhs) const {
-    return mStatus | aRhs;
-  }
-
-  uint32_t operator|=(uint32_t aRhs) {
-    return mStatus = mStatus | aRhs;
-  }
-
-  uint32_t operator>>(uint32_t aRhs) const {
-    return mStatus >> aRhs;
-  }
-
-  bool operator==(uint32_t aRhs) const {
-    return mStatus == aRhs;
-  }
-
-  bool operator!=(uint32_t aRhs) const {
-    return !(*this == aRhs);
   }
 
   // Return true if all flags are cleared.
@@ -364,8 +326,6 @@ public:
   void SetFirstLetterComplete() { mFirstLetterComplete = true; }
 
 private:
-  uint32_t mStatus;
-
   StyleClear mBreakType;
 
   // Frame completion status bit flags.
