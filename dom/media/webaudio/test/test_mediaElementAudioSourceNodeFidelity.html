@@ -10,27 +10,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-// Get an Opus file containing a sine wave at maximum amplitude, of duration
-// `lengthSeconds`, and of frequency `frequency`.
-function getSineWaveFile(frequency, lengthSeconds, callback) {
-  var chunks = [];
-  var off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
-  var osc = off.createOscillator();
-  var rec = new MediaRecorder(osc);
-  rec.ondataavailable = function(e) {
-    chunks.push(e.data);
-  };
-  rec.onstop = function(e) {
-    var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-    callback(blob);
-  }
-  osc.frequency.value = 1.0;
-  osc.start();
-  rec.start();
-  off.startRendering().then(function(buffer) {
-    rec.stop();
-  });
-}
 
 function binIndexForFrequency(frequency, analyser) {
   return 1 + Math.round(frequency *
@@ -76,60 +55,74 @@ function checkFrequency(an) {
       return false;
     }
   }
+
+  // On the other hand, we should find a peak at 440Hz. Our sine wave is not
+  // attenuated, we're expecting the peak to reach 0dBFs.
+  index = binIndexForFrequency(440, an);
+  info("energy at 440: " + frequencyArray[index] + ", threshold " + (an.maxDecibels - 10));
+  if (frequencyArray[index] < (an.maxDecibels - 10)) {
+    return false;
+  }
+
   return true;
 }
 
-function test() {
-  getSineWaveFile(440, 1, (blob) => {
-      var audioElement = new Audio();
-      audioElement.src = URL.createObjectURL(blob);
-      audioElement.loop = true;
-      var ac = new AudioContext();
-      var mediaElementSource = ac.createMediaElementSource(audioElement);
-      var an = ac.createAnalyser();
-      frequencyArray = new Float32Array(an.frequencyBinCount);
+var audioElement = new Audio();
+audioElement.src = 'sine-440-10s.opus'
+audioElement.loop = true;
+var ac = new AudioContext();
+var mediaElementSource = ac.createMediaElementSource(audioElement);
+var an = ac.createAnalyser();
+frequencyArray = new Float32Array(an.frequencyBinCount);
 
-      // Uncomment this to check what the analyser is doing.
-      // debugCanvas(an);
+// Uncomment this to check what the analyser is doing.
+// debugCanvas(an);
 
-      mediaElementSource.connect(an);
+mediaElementSource.connect(an)
 
-      audioElement.play();
-      // We want to check the we have the expected audio for at least one loop of
-      // the HTMLMediaElement. The file is one second, and we use the default FFT
-      // size.
-      var lastCurrentTime = 0;
-      var looped = false;
-      audioElement.onplaying = function() {
-        audioElement.ontimeupdate = function() {
-          if (checkFrequency(an)) {
-            ok(true, "Found correct audio signal during analysis");
-            dump(lastCurrentTime + " " + audioElement.currentTime + "\n");
-            if (lastCurrentTime > audioElement.currentTime) {
-              if (looped) {
-                audioElement.ontimeupdate = null;
-                audioElement.onplaying = null;
-                SimpleTest.finish()
-              }
-              lastCurrentTime = audioElement.currentTime;
-              looped = true;
-            } else {
-              lastCurrentTime = audioElement.currentTime;
-            }
-          } else {
-            ok(false, "Found unexpected noise during analysis.");
-            audioElement.ontimeupdate = null;
-            audioElement.onplaying = null;
-            ac.close();
-            audioElement.src = '';
-            SimpleTest.finish()
-          }
-        }
+audioElement.play();
+// We want to check the we have the expected audio for at least two loop of
+// the HTMLMediaElement, piped into an AudioContext. The file is ten seconds,
+// and we use the default FFT size.
+var lastCurrentTime = 0;
+var loopCount = 0;
+audioElement.onplaying = function() {
+  audioElement.ontimeupdate = function() {
+    // We don't run the analysis when close to loop point or at the
+    // beginning, since looping is not seamless, there could be an
+    // unpredictable amount of silence
+    var rv = checkFrequency(an);
+    info("currentTime: " + audioElement.currentTime);
+    if (audioElement.currentTime < 4 ||
+        audioElement.currentTIme > 8){
+      return;
+    }
+    if (!rv) {
+      ok(false, "Found unexpected noise during analysis.");
+      audioElement.ontimeupdate = null;
+      audioElement.onplaying = null;
+      ac.close();
+      audioElement.src = '';
+      SimpleTest.finish()
+      return;
+    }
+    ok(true, "Found correct audio signal during analysis");
+    info(lastCurrentTime + " " + audioElement.currentTime);
+    if (lastCurrentTime > audioElement.currentTime) {
+      info("loopCount: " + loopCount);
+      if (loopCount > 1) {
+        audioElement.ontimeupdate = null;
+        audioElement.onplaying = null;
+        ac.close();
+        audioElement.src = '';
+        SimpleTest.finish();
       }
-  });
+      lastCurrentTime = audioElement.currentTime;
+      loopCount++;
+    } else {
+      lastCurrentTime = audioElement.currentTime;
+    }
+  }
 }
-
-SpecialPowers.pushPrefEnv(
-    {'set': [['media.recorder.audio_node.enabled', true]]}, test);
 
 </script>
