@@ -5413,7 +5413,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
       } else {
         // Propagate break-after on the last row to the container, we may still
         // find a break-before on this row though (and reset aStatus).
-        aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus); // tentative
+        aStatus.SetInlineLineBreakAfter(); // tentative
       }
     }
   }

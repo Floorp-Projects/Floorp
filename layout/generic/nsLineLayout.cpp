@@ -1136,7 +1136,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                           optionalBreakAfterFits,
                                           gfxBreakPriority::eNormalBreak)) {
             // If this returns true then we are being told to actually break here.
-            aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
+            aReflowStatus.SetInlineLineBreakAfter();
           }
         }
       }
