@@ -336,18 +336,18 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MConstant* constant = MConstant::NewRawFloat32(alloc(), f);
-        curBlock_->add(constant);
-        return constant;
+        auto* cst = MWasmFloatConstant::NewFloat32(alloc(), f);
+        curBlock_->add(cst);
+        return cst;
     }
 
     MDefinition* constant(double d)
     {
         if (inDeadCode())
             return nullptr;
-        MConstant* constant = MConstant::NewRawDouble(alloc(), d);
-        curBlock_->add(constant);
-        return constant;
+        auto* cst = MWasmFloatConstant::NewDouble(alloc(), d);
+        curBlock_->add(cst);
+        return cst;
     }
 
     MDefinition* constant(int64_t i)

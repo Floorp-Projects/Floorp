@@ -52,7 +52,7 @@ sync protocol PLayerTransaction {
 parent:
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
-  sync Update(TransactionInfo txn) returns (EditReply[] reply);
+  sync Update(TransactionInfo txn);
 
   async PaintTime(uint64_t id, TimeDuration paintTime);
 

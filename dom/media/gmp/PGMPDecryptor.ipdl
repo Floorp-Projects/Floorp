@@ -46,7 +46,8 @@ child:
 
   async Decrypt(uint32_t aId,
                 uint8_t[] aBuffer,
-                GMPDecryptionData aMetadata);
+                GMPDecryptionData aMetadata,
+                uint64_t aDurationUsecs);
 
   async DecryptingComplete();
 

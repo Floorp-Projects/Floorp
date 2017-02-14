@@ -60,12 +60,9 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     AutoSetNewObjectMetadata metadata(cx);
     // Note: this will initialize the object's |data| to strange values, but we
     // will immediately overwrite those below.
-    RootedObject obj(cx, NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind,
-                                                       newKind));
-    if (!obj)
-        return nullptr;
+    ProxyObject* proxy;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, proxy, create(cx, clasp, proto, allocKind, newKind));
 
-    Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
     new (proxy->data.values) detail::ProxyValueArray;
     proxy->data.handler = handler;
     proxy->setCrossCompartmentPrivate(priv);
@@ -129,6 +126,51 @@ ProxyObject::nuke()
     // compartments to be kept alive. Note that these are slots cannot hold
     // cross compartment pointers, so this cannot cause the target compartment
     // to leak.
+}
+
+/* static */ JS::Result<ProxyObject*, JS::OOM&>
+ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto,
+                    gc::AllocKind allocKind, NewObjectKind newKind)
+{
+    MOZ_ASSERT(clasp->isProxy());
+
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr));
+    if (!group)
+        return cx->alreadyReportedOOM();
+
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0));
+    if (!shape)
+        return cx->alreadyReportedOOM();
+
+    gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+    debugCheckNewObject(group, shape, allocKind, heap);
+
+    // Proxy objects overlay the |slots| field with a ProxyValueArray.
+    static_assert(sizeof(js::detail::ProxyValueArray) % sizeof(js::HeapSlot) == 0,
+                  "ProxyValueArray must be a multiple of HeapSlot");
+    static const size_t NumDynamicSlots = sizeof(js::detail::ProxyValueArray) / sizeof(HeapSlot);
+
+    JSObject* obj = js::Allocate<JSObject>(cx, allocKind, NumDynamicSlots, heap, clasp);
+    if (!obj)
+        return cx->alreadyReportedOOM();
+
+    ProxyObject* pobj = static_cast<ProxyObject*>(obj);
+    pobj->group_.init(group);
+    pobj->initShape(shape);
+
+    MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+    cx->compartment()->setObjectPendingMetadata(cx, pobj);
+
+    js::gc::TraceCreateObject(pobj);
+
+    if (newKind == SingletonObject) {
+        Rooted<ProxyObject*> pobjRoot(cx, pobj);
+        if (!JSObject::setSingleton(cx, pobjRoot))
+            return cx->alreadyReportedOOM();
+        pobj = pobjRoot;
+    }
+
+    return pobj;
 }
 
 JS_FRIEND_API(void)

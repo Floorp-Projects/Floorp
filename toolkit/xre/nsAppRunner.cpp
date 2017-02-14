@@ -2261,7 +2261,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     if (gDoProfileReset) {
       // If we're resetting a profile, create a new one and use it to startup.
       nsCOMPtr<nsIToolkitProfile> newProfile;
-      rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
+      rv = CreateResetProfile(aProfileSvc, gResetOldProfileName, getter_AddRefs(newProfile));
       if (NS_SUCCEEDED(rv)) {
         rv = newProfile->GetRootDir(getter_AddRefs(lf));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2407,20 +2407,20 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
             return ProfileLockedDialog(profile, unlocker, aNative, &tempProfileLock);
         }
 
-        nsCOMPtr<nsIToolkitProfile> newProfile;
-        rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Failed to create a profile to reset to.");
-          gDoProfileReset = false;
-        } else {
-          nsresult gotName = profile->GetName(gResetOldProfileName);
-          if (NS_SUCCEEDED(gotName)) {
-            profile = newProfile;
-          } else {
-            NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
-            gResetOldProfileName.Truncate(0);
+        nsresult gotName = profile->GetName(gResetOldProfileName);
+        if (NS_SUCCEEDED(gotName)) {
+          nsCOMPtr<nsIToolkitProfile> newProfile;
+          rv = CreateResetProfile(aProfileSvc, gResetOldProfileName, getter_AddRefs(newProfile));
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to create a profile to reset to.");
             gDoProfileReset = false;
+          } else {
+            profile = newProfile;
           }
+        } else {
+          NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
+          gResetOldProfileName.Truncate(0);
+          gDoProfileReset = false;
         }
       }
 
@@ -2515,20 +2515,22 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
             return ProfileLockedDialog(profile, unlocker, aNative, &tempProfileLock);
         }
 
-        nsCOMPtr<nsIToolkitProfile> newProfile;
-        rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Failed to create a profile to reset to.");
-          gDoProfileReset = false;
-        } else {
-          nsresult gotName = profile->GetName(gResetOldProfileName);
-          if (NS_SUCCEEDED(gotName)) {
-            profile = newProfile;
-          } else {
-            NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
-            gResetOldProfileName.Truncate(0);
+        nsresult gotName = profile->GetName(gResetOldProfileName);
+        if (NS_SUCCEEDED(gotName)) {
+          nsCOMPtr<nsIToolkitProfile> newProfile;
+          rv = CreateResetProfile(aProfileSvc, gResetOldProfileName, getter_AddRefs(newProfile));
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Failed to create a profile to reset to.");
             gDoProfileReset = false;
           }
+          else {
+            profile = newProfile;
+          }
+        }
+        else {
+          NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
+          gResetOldProfileName.Truncate(0);
+          gDoProfileReset = false;
         }
       }
 

@@ -182,6 +182,7 @@ struct MappedYCbCrTextureData {
 };
 
 class ReadLockDescriptor;
+class NonBlockingTextureReadLock;
 
 // A class to help implement copy-on-write semantics for shared textures.
 //
@@ -209,27 +210,37 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadLock)
 
-  virtual int32_t ReadLock() = 0;
+  virtual bool ReadLock() = 0;
+  virtual bool TryReadLock(TimeDuration aTimeout) { return ReadLock(); }
   virtual int32_t ReadUnlock() = 0;
-  virtual int32_t GetReadCount() = 0;
   virtual bool IsValid() const = 0;
-
-  static already_AddRefed<TextureReadLock>
-  Create(LayersIPCChannel* aAllocator);
 
   static already_AddRefed<TextureReadLock>
   Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) = 0;
 
   enum LockType {
-    TYPE_MEMORY,
-    TYPE_SHMEM
+    TYPE_NONBLOCKING_MEMORY,
+    TYPE_NONBLOCKING_SHMEM,
+    TYPE_CROSS_PROCESS_SEMAPHORE
   };
   virtual LockType GetType() = 0;
 
+  virtual NonBlockingTextureReadLock* AsNonBlockingLock() { return nullptr; }
+
 protected:
   NS_DECL_OWNINGTHREAD
+};
+
+class NonBlockingTextureReadLock : public TextureReadLock {
+public:
+  virtual int32_t GetReadCount() = 0;
+
+  static already_AddRefed<TextureReadLock>
+  Create(LayersIPCChannel* aAllocator);
+
+  virtual NonBlockingTextureReadLock* AsNonBlockingLock() override { return this; }
 };
 
 #ifdef XP_WIN
@@ -633,10 +644,14 @@ public:
   uint64_t GetLastFwdTransactionId() { return mFwdTransactionId; }
 
   void EnableReadLock();
+  void EnableBlockingReadLock();
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   bool IsReadLocked() const;
+
+  bool TryReadLock();
+  void ReadUnlock();
 
   void SerializeReadLock(ReadLockDescriptor& aDescriptor);
 
@@ -710,6 +725,7 @@ protected:
   uint32_t mExpectedDtRefs;
 #endif
   bool mIsLocked;
+  bool mIsReadLocked;
   // This member tracks that the texture was written into until the update
   // is sent to the compositor. We need this remember to lock mReadLock on
   // behalf of the compositor just before sending the notification.
@@ -733,6 +749,8 @@ protected:
   friend class TextureChild;
   friend void TestTextureClientSurface(TextureClient*, gfxImageSurface*);
   friend void TestTextureClientYCbCr(TextureClient*, PlanarYCbCrData&);
+  friend already_AddRefed<TextureHost> CreateTextureHostWithBackend(
+    TextureClient*, LayersBackend&);
 
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
 public:
