@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=766694
 </div>
 <pre id="test">
 <script>
-  ok(!self.isSecureContext, "The test should not be running in a secure context");
+  ok(self.isSecureContext, "The test should be running in a secure context");
 </script>
 <script type="text/javascript" src="test_interfaces.js"></script>
 <span id="span" style="-moz-binding: url(file_interfaces.xml)"></span>
