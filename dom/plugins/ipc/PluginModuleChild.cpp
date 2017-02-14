@@ -1106,20 +1106,20 @@ _getvalue(NPP aNPP,
             *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().isOffline();
             return NPERR_NO_ERROR;
         case NPNVSupportsXEmbedBool:
-            // We don't support windowed xembed any more. But we still deliver
-            // events based on X/GTK, not Xt, so we continue to return true
-            // (and Flash requires that we return true).
-            *(NPBool*)aValue = true;
+            *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().supportsXembed();
             return NPERR_NO_ERROR;
         case NPNVSupportsWindowless:
-            *(NPBool*)aValue = true;
+            *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().supportsWindowless();
             return NPERR_NO_ERROR;
 #if defined(MOZ_WIDGET_GTK)
         case NPNVxDisplay: {
-            if (!aNPP) {
-                return NPERR_INVALID_INSTANCE_ERROR;
-            }
-            return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+            if (aNPP) {
+                return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+            } 
+            else {
+                *(void **)aValue = xt_client_get_display();
+            }          
+            return NPERR_NO_ERROR;
         }
         case NPNVxtAppContext:
             return NPERR_GENERIC_ERROR;

@@ -152,6 +152,9 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mAsyncInvalidateTask(0)
     , mCachedWindowActor(nullptr)
     , mCachedElementActor(nullptr)
+#ifdef MOZ_WIDGET_GTK
+    , mXEmbed(false)
+#endif // MOZ_WIDGET_GTK
 #if defined(OS_WIN)
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
@@ -198,6 +201,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     memset(&mWsInfo, 0, sizeof(mWsInfo));
 #ifdef MOZ_WIDGET_GTK
     mWsInfo.display = nullptr;
+    mXtClient.top_widget = nullptr;
 #else
     mWsInfo.display = DefaultXDisplay();
 #endif
@@ -260,9 +264,25 @@ PluginInstanceChild::DoNPP_New()
         return rv;
     }
 
-    if (!Initialize()) {
-        rv = NPERR_MODULE_LOAD_FAILED_ERROR;
+    Initialize();
+
+#if defined(XP_MACOSX) && defined(__i386__)
+    // If an i386 Mac OS X plugin has selected the Carbon event model then
+    // we have to fail. We do not support putting Carbon event model plugins
+    // out of process. Note that Carbon is the default model so out of process
+    // plugins need to actively negotiate something else in order to work
+    // out of process.
+    if (EventModel() == NPEventModelCarbon) {
+      // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+      // users can be notified that restarting the browser in i386 mode may allow
+      // them to use the plugin.
+      SendNegotiatedCarbon();
+
+      // Fail to instantiate.
+      rv = NPERR_MODULE_LOAD_FAILED_ERROR;
     }
+#endif
+
     return rv;
 }
 
@@ -369,14 +389,12 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVxDisplay:
         if (!mWsInfo.display) {
             // We are called before Initialize() so we have to call it now.
-           if (!Initialize()) {
-               return NPERR_GENERIC_ERROR;
-           }
+           Initialize();
            NS_ASSERTION(mWsInfo.display, "We should have a valid display!");
         }
         *(void **)aValue = mWsInfo.display;
         return NPERR_NO_ERROR;
-
+    
 #elif defined(OS_WIN)
     case NPNVToolkit:
         return NPERR_GENERIC_ERROR;
@@ -577,14 +595,24 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         NPError rv;
         bool windowed = (NPBool) (intptr_t) aValue;
 
-        if (windowed) {
-            return NPERR_GENERIC_ERROR;
-        }
-
         if (!CallNPN_SetValue_NPPVpluginWindow(windowed, &rv))
             return NPERR_GENERIC_ERROR;
 
-        mWindow.type = NPWindowTypeDrawable;
+        NPWindowType newWindowType = windowed ? NPWindowTypeWindow : NPWindowTypeDrawable;
+#ifdef MOZ_WIDGET_GTK
+        if (mWindow.type != newWindowType && mWsInfo.display) {
+           // plugin type has been changed but we already have a valid display
+           // so update it for the recent plugin mode
+           if (mXEmbed || !windowed) {
+               // Use default GTK display for XEmbed and windowless plugins
+               mWsInfo.display = DefaultXDisplay();
+           }
+           else {
+               mWsInfo.display = xt_client_get_display();
+           }
+        }
+#endif
+        mWindow.type = newWindowType;
         return rv;
     }
 
@@ -695,6 +723,40 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(
     }
     *wantsAllStreams = value;
     return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
+    bool* needs, NPError* rv)
+{
+    AssertPluginThread();
+    AutoStackHelper guard(this);
+
+#ifdef MOZ_X11
+    // The documentation on the types for many variables in NP(N|P)_GetValue
+    // is vague.  Often boolean values are NPBool (1 byte), but
+    // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
+    // treats NPPVpluginNeedsXEmbed as PRBool (int), and
+    // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
+    // thus we can't use NPBool for needsXEmbed, or the three bytes above
+    // it on the stack would get clobbered. so protect with the larger bool.
+    int needsXEmbed = 0;
+    if (!mPluginIface->getvalue) {
+        *rv = NPERR_GENERIC_ERROR;
+    }
+    else {
+        *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginNeedsXEmbed,
+                                     &needsXEmbed);
+    }
+    *needs = needsXEmbed;
+    return IPC_OK();
+
+#else
+
+    NS_RUNTIMEABORT("shouldn't be called on non-X11 platforms");
+    return IPC_FAIL_NO_REASON(this);               // not reached
+
+#endif
 }
 
 mozilla::ipc::IPCResult
@@ -1119,6 +1181,58 @@ PluginInstanceChild::RecvContentsScaleFactorChanged(const double& aContentsScale
 #endif
 }
 
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+// Create a new window from NPWindow
+bool PluginInstanceChild::CreateWindow(const NPRemoteWindow& aWindow)
+{ 
+    PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                      FULLFUNCTION,
+                      aWindow.window,
+                      aWindow.x, aWindow.y,
+                      aWindow.width, aWindow.height));
+
+#ifdef MOZ_WIDGET_GTK
+    if (mXEmbed) {
+        mWindow.window = reinterpret_cast<void*>(aWindow.window);
+    }
+    else {
+        Window browserSocket = (Window)(aWindow.window);
+        xt_client_init(&mXtClient, mWsInfo.visual, mWsInfo.colormap, mWsInfo.depth);
+        xt_client_create(&mXtClient, browserSocket, mWindow.width, mWindow.height); 
+        mWindow.window = (void *)XtWindow(mXtClient.child_widget);
+    }  
+#else
+    mWindow.window = reinterpret_cast<void*>(aWindow.window);
+#endif
+
+    return true;
+}
+
+// Destroy window
+void PluginInstanceChild::DeleteWindow()
+{
+  PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                    FULLFUNCTION,
+                    mWindow.window,
+                    mWindow.x, mWindow.y,
+                    mWindow.width, mWindow.height));
+
+  if (!mWindow.window)
+      return;
+
+#ifdef MOZ_WIDGET_GTK
+  if (mXtClient.top_widget) {     
+      xt_client_unrealize(&mXtClient);
+      xt_client_destroy(&mXtClient); 
+      mXtClient.top_widget = nullptr;
+  }
+#endif
+
+  // We don't have to keep the plug-in window ID any longer.
+  mWindow.window = nullptr;
+}
+#endif
+
 mozilla::ipc::IPCResult
 PluginInstanceChild::AnswerCreateChildPluginWindow(NativeWindowHandle* aChildPluginWindow)
 {
@@ -1183,6 +1297,45 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     FindVisualAndDepth(mWsInfo.display, aWindow.visualID,
                        &mWsInfo.visual, &depth);
     mWsInfo.depth = depth;
+
+    if (!mWindow.window && mWindow.type == NPWindowTypeWindow) {
+        CreateWindow(aWindow);
+    }
+
+#ifdef MOZ_WIDGET_GTK
+    if (mXEmbed && gtk_check_version(2,18,7) != nullptr) { // older
+        if (aWindow.type == NPWindowTypeWindow) {
+            GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));
+            if (socket_window) {
+                // A GdkWindow for the socket already exists.  Need to
+                // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
+                // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
+                g_object_set_data(G_OBJECT(socket_window),
+                                  "moz-existed-before-set-window",
+                                  GUINT_TO_POINTER(1));
+            }
+        }
+
+        if (aWindow.visualID != X11None
+            && gtk_check_version(2, 12, 10) != nullptr) { // older
+            // Workaround for a bug in Gtk+ (prior to 2.12.10) where deleting
+            // a foreign GdkColormap will also free the XColormap.
+            // http://git.gnome.org/browse/gtk+/log/gdk/x11/gdkcolor-x11.c?id=GTK_2_12_10
+            GdkVisual *gdkvisual = gdkx_visual_get(aWindow.visualID);
+            GdkColormap *gdkcolor =
+                gdk_x11_colormap_foreign_new(gdkvisual, aWindow.colormap);
+
+            if (g_object_get_data(G_OBJECT(gdkcolor), "moz-have-extra-ref")) {
+                // We already have a ref to keep the object alive.
+                g_object_unref(gdkcolor);
+            } else {
+                // leak and mark as already leaked
+                g_object_set_data(G_OBJECT(gdkcolor),
+                                  "moz-have-extra-ref", GUINT_TO_POINTER(1));
+            }
+        }
+    }
+#endif
 
     PLUGIN_LOG_DEBUG(
         ("[InstanceChild][%p] Answer_SetWindow w=<x=%d,y=%d, w=%d,h=%d>, clip=<l=%d,t=%d,r=%d,b=%d>",
@@ -1273,29 +1426,31 @@ bool
 PluginInstanceChild::Initialize()
 {
 #ifdef MOZ_WIDGET_GTK
+    NPError rv;
+
     if (mWsInfo.display) {
         // Already initialized
-        return true;
+        return false;
     }
 
     // Request for windowless plugins is set in newp(), before this call.
     if (mWindow.type == NPWindowTypeWindow) {
-        return false;
+        AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(&mXEmbed, &rv);
+
+        // Set up Xt loop for windowed plugins without XEmbed support
+        if (!mXEmbed) {
+           xt_client_xloop_create();
+        }
     }
 
-    mWsInfo.display = DefaultXDisplay();
-#endif
-
-#if defined(XP_MACOSX) && defined(__i386__)
-    // If an i386 Mac OS X plugin has selected the Carbon event model then
-    // we have to fail. We do not support putting Carbon event model plugins
-    // out of process. Note that Carbon is the default model so out of process
-    // plugins need to actively negotiate something else in order to work
-    // out of process.
-    if (EventModel() == NPEventModelCarbon) {
-        return false;
+    // Use default GTK display for XEmbed and windowless plugins
+    if (mXEmbed || mWindow.type != NPWindowTypeWindow) {
+        mWsInfo.display = DefaultXDisplay();
     }
-#endif
+    else {
+        mWsInfo.display = xt_client_get_display();
+    }
+#endif 
 
     return true;
 }
@@ -4352,6 +4507,15 @@ PluginInstanceChild::Destroy()
         mPendingAsyncCalls[i]->Cancel();
 
     mPendingAsyncCalls.Clear();
+    
+#ifdef MOZ_WIDGET_GTK
+    if (mWindow.type == NPWindowTypeWindow && !mXEmbed) {
+      xt_client_xloop_destroy();
+    }
+#endif
+#if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
+    DeleteWindow();
+#endif
 }
 
 mozilla::ipc::IPCResult
