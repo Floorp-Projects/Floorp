@@ -33,12 +33,13 @@ highlight for which the menu is being displayed.
 
 Top Site interactions
 ---------------------
-Two event types are recorded:
+Three event types are recorded:
 
 1) User clicked on a Top Site: event="loadurl.1", method="listitem"
 2) User clicked on the menu button: event="show.1", method="contextmenu"
+3) User swiped left/right (only for Activity Stream topsites): event="action.1", method="list", extras="swipe_forward"/"swipe_back"
 
-For each event, in addition to global extras, the following information is recorded:
+For each click event (1/2), in addition to global extras, the following information is recorded:
 
 .. code-block:: js
 
