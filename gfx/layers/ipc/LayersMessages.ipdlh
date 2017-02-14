@@ -51,6 +51,7 @@ using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
+using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 
 namespace mozilla {
 namespace layers {
@@ -336,8 +337,13 @@ struct ShmemSection {
   size_t size;
 };
 
+struct CrossProcessSemaphoreDescriptor {
+  CrossProcessSemaphoreHandle sem;
+};
+
 union ReadLockDescriptor {
   ShmemSection;
+  CrossProcessSemaphoreDescriptor;
   uintptr_t;
   null_t;
 };
