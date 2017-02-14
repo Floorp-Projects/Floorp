@@ -51,6 +51,8 @@ public class GeckoView extends LayerView
     /* package */ ProgressListener mProgressListener;
     private InputConnectionListener mInputConnectionListener;
 
+    private GeckoViewSettings mSettings;
+
     protected boolean onAttachedToWindowCalled;
     protected String chromeURI;
     protected int screenId = 0; // default to the primary screen
@@ -191,6 +193,8 @@ public class GeckoView extends LayerView
 
         initializeView();
         listener.registerListeners();
+
+        mSettings = new GeckoViewSettings(getEventDispatcher());
     }
 
     @Override
@@ -325,6 +329,10 @@ public class GeckoView extends LayerView
     */
     public void goForward() {
         eventDispatcher.dispatch("GeckoView:GoForward", null);
+    }
+
+    public GeckoViewSettings getSettings() {
+        return mSettings;
     }
 
     @Override
