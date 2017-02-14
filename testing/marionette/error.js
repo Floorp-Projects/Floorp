@@ -48,10 +48,21 @@ this.EXPORTED_SYMBOLS = ["error"].concat(Array.from(ERRORS));
 this.error = {};
 
 /**
- * Checks if obj is an instance of the Error prototype in a safe manner.
- * Prefer using this over using instanceof since the Error prototype
- * isn't unique across browsers, and XPCOM nsIException's are special
- * snowflakes.
+ * Check if |val| is an instance of the |Error| prototype.
+ *
+ * Because error objects may originate from different globals, comparing
+ * the prototype of the left hand side with the prototype property from
+ * the right hand side, which is what |instanceof| does, will not work.
+ * If the LHS and RHS come from different globals, this check will always
+ * fail because the two objects will not have the same identity.
+ *
+ * Therefore it is not safe to use |instanceof| in any multi-global
+ * situation, e.g. in content across multiple Window objects or anywhere
+ * in chrome scope.
+ *
+ * This function also contains a special check if |val| is an XPCOM
+ * |nsIException| because they are special snowflakes and may indeed
+ * cause Firefox to crash if used with |instanceof|.
  *
  * @param {*} val
  *     Any value that should be undergo the test for errorness.
