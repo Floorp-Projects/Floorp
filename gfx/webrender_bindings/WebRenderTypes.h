@@ -9,48 +9,128 @@
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/gfx/Tools.h"
 
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
 namespace mozilla {
 namespace wr {
 
-static inline WrMixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
+typedef WrMixBlendMode MixBlendMode;
+typedef WrImageRendering ImageRendering;
+typedef WrImageFormat ImageFormat;
+typedef WrWindowId WindowId;
+typedef WrPipelineId PipelineId;
+typedef WrImageKey ImageKey;
+typedef WrFontKey FontKey;
+typedef WrEpoch Epoch;
+
+inline WindowId NewWindowId(uint64_t aId) {
+  WindowId id;
+  id.mHandle = aId;
+  return id;
+}
+
+inline Epoch NewEpoch(uint32_t aEpoch) {
+  Epoch e;
+  e.mHandle = aEpoch;
+  return e;
+}
+
+inline Maybe<WrImageFormat>
+SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
+  switch (aFormat) {
+    case gfx::SurfaceFormat::B8G8R8X8:
+      // TODO: WebRender will have a BGRA + opaque flag for this but does not
+      // have it yet (cf. issue #732).
+    case gfx::SurfaceFormat::B8G8R8A8:
+      return Some(WrImageFormat::RGBA8);
+    case gfx::SurfaceFormat::B8G8R8:
+      return Some(WrImageFormat::RGB8);
+    case gfx::SurfaceFormat::A8:
+      return Some(WrImageFormat::A8);
+    case gfx::SurfaceFormat::UNKNOWN:
+      return Some(WrImageFormat::Invalid);
+    default:
+      return Nothing();
+  }
+}
+
+struct ImageDescriptor: public WrImageDescriptor {
+  ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat)
+  {
+    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    width = aSize.width;
+    height = aSize.height;
+    stride = 0;
+    is_opaque = gfx::IsOpaqueFormat(aFormat);
+  }
+
+  ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride, gfx::SurfaceFormat aFormat)
+  {
+    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    width = aSize.width;
+    height = aSize.height;
+    stride = aByteStride;
+    is_opaque = gfx::IsOpaqueFormat(aFormat);
+  }
+};
+
+// Whenever possible, use wr::PipelineId instead of manipulating uint64_t.
+inline uint64_t AsUint64(const PipelineId& aId) {
+  return (static_cast<uint64_t>(aId.mNamespace) << 32)
+        + static_cast<uint64_t>(aId.mHandle);
+}
+
+inline PipelineId AsPipelineId(const uint64_t& aId) {
+  PipelineId pipeline;
+  pipeline.mNamespace = aId >> 32;
+  pipeline.mHandle = aId;
+  return pipeline;
+}
+
+inline ImageRendering ToImageRendering(gfx::SamplingFilter aFilter)
+{
+  return aFilter == gfx::SamplingFilter::POINT ? ImageRendering::Pixelated
+                                               : ImageRendering::Auto;
+}
+
+static inline MixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
 {
   switch (compositionOp)
   {
       case gfx::CompositionOp::OP_MULTIPLY:
-        return WrMixBlendMode::Multiply;
+        return MixBlendMode::Multiply;
       case gfx::CompositionOp::OP_SCREEN:
-        return WrMixBlendMode::Screen;
+        return MixBlendMode::Screen;
       case gfx::CompositionOp::OP_OVERLAY:
-        return WrMixBlendMode::Overlay;
+        return MixBlendMode::Overlay;
       case gfx::CompositionOp::OP_DARKEN:
-        return WrMixBlendMode::Darken;
+        return MixBlendMode::Darken;
       case gfx::CompositionOp::OP_LIGHTEN:
-        return WrMixBlendMode::Lighten;
+        return MixBlendMode::Lighten;
       case gfx::CompositionOp::OP_COLOR_DODGE:
-        return WrMixBlendMode::ColorDodge;
+        return MixBlendMode::ColorDodge;
       case gfx::CompositionOp::OP_COLOR_BURN:
-        return WrMixBlendMode::ColorBurn;
+        return MixBlendMode::ColorBurn;
       case gfx::CompositionOp::OP_HARD_LIGHT:
-        return WrMixBlendMode::HardLight;
+        return MixBlendMode::HardLight;
       case gfx::CompositionOp::OP_SOFT_LIGHT:
-        return WrMixBlendMode::SoftLight;
+        return MixBlendMode::SoftLight;
       case gfx::CompositionOp::OP_DIFFERENCE:
-        return WrMixBlendMode::Difference;
+        return MixBlendMode::Difference;
       case gfx::CompositionOp::OP_EXCLUSION:
-        return WrMixBlendMode::Exclusion;
+        return MixBlendMode::Exclusion;
       case gfx::CompositionOp::OP_HUE:
-        return WrMixBlendMode::Hue;
+        return MixBlendMode::Hue;
       case gfx::CompositionOp::OP_SATURATION:
-        return WrMixBlendMode::Saturation;
+        return MixBlendMode::Saturation;
       case gfx::CompositionOp::OP_COLOR:
-        return WrMixBlendMode::Color;
+        return MixBlendMode::Color;
       case gfx::CompositionOp::OP_LUMINOSITY:
-        return WrMixBlendMode::Luminosity;
+        return MixBlendMode::Luminosity;
       default:
-        return WrMixBlendMode::Normal;
+        return MixBlendMode::Normal;
   }
 }
 
@@ -185,53 +265,6 @@ struct ByteBuffer
   uint8_t* mData;
   bool mOwned;
 };
-
-struct WindowId {
-  explicit WindowId(WrWindowId aHandle) : mHandle(aHandle) {}
-  WindowId() : mHandle(0) {}
-  bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
-  bool operator==(const WindowId& aOther) const { return mHandle == aOther.mHandle; }
-
-  WrWindowId mHandle;
-};
-
-struct PipelineId {
-  explicit PipelineId(WrPipelineId aHandle) : mHandle(aHandle) {}
-  PipelineId() : mHandle(0) {}
-  bool operator<(const PipelineId& aOther) const { return mHandle < aOther.mHandle; }
-  bool operator==(const PipelineId& aOther) const { return mHandle == aOther.mHandle; }
-
-  WrPipelineId mHandle;
-};
-
-// TODO: We need to merge this with the notion of transaction id.
-struct Epoch {
-  explicit Epoch(WrEpoch aHandle) : mHandle(aHandle) {}
-  Epoch() : mHandle(0) {}
-  bool operator<(const Epoch& aOther) const { return mHandle < aOther.mHandle; }
-  bool operator==(const Epoch& aOther) const { return mHandle == aOther.mHandle; }
-
-  WrEpoch mHandle;
-};
-
-struct FontKey {
-  explicit FontKey(WrFontKey aHandle) : mHandle(aHandle) {}
-  FontKey() : mHandle(0) {}
-  bool operator<(const FontKey& aOther) const { return mHandle < aOther.mHandle; }
-  bool operator==(const FontKey& aOther) const { return mHandle == aOther.mHandle; }
-
-  WrFontKey mHandle;
-};
-
-struct ImageKey {
-  explicit ImageKey(WrImageKey aHandle) : mHandle(aHandle) {}
-  ImageKey() : mHandle(0) {}
-  bool operator<(const ImageKey& aOther) const { return mHandle < aOther.mHandle; }
-  bool operator==(const ImageKey& aOther) const { return mHandle == aOther.mHandle; }
-
-  WrImageKey mHandle;
-};
-
 
 } // namespace wr
 } // namespace mozilla

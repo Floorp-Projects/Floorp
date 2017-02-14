@@ -117,7 +117,7 @@ WebRenderLayer::buildMaskLayer() {
           wr::ImageKey maskKey;
           WrBridge()->SendAddImage(size, map.GetStride(), SurfaceFormat::A8, buf, &maskKey);
 
-          imageMask.image = maskKey.mHandle;
+          imageMask.image = maskKey;
           imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
           WrManager()->AddImageKeyForDiscard(maskKey);
@@ -195,14 +195,14 @@ WebRenderLayerManager::AsKnowsCompositor()
 
 void
 WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
-                                  uint64_t aLayersId,
+                                  wr::PipelineId aLayersId,
                                   TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(mWrChild == nullptr);
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(wr::PipelineId(aLayersId),
+  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
                                                                             &textureFactoryIdentifier);
   MOZ_ASSERT(bridge);
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);

@@ -150,7 +150,8 @@ WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  *aOutImageKey = mApi->AddImageBuffer(aSize, aStride, aFormat,
+  wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
+  *aOutImageKey = mApi->AddImageBuffer(descriptor,
                                        aBuffer.AsSlice());
 
   return IPC_OK();
@@ -166,7 +167,8 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  mApi->UpdateImageBuffer(aImageKey, aSize, aFormat, aBuffer.AsSlice());
+  wr::ImageDescriptor descriptor(aSize, aFormat);
+  mApi->UpdateImageBuffer(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
 }
@@ -214,7 +216,7 @@ WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommand
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ProcessWebrenderCommands(aCommands, wr::Epoch(aTransactionId));
+  ProcessWebrenderCommands(aCommands, wr::NewEpoch(aTransactionId));
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -262,6 +264,15 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPopStackingContext: {
         builder.PopStackingContext();
+        break;
+      }
+      case WebRenderCommand::TOpDPPushScrollLayer: {
+        const OpDPPushScrollLayer& op = cmd.get_OpDPPushScrollLayer();
+        builder.PushScrollLayer(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr));
+        break;
+      }
+      case WebRenderCommand::TOpDPPopScrollLayer: {
+        builder.PopScrollLayer();
         break;
       }
       case WebRenderCommand::TOpDPPushRect: {
@@ -321,9 +332,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
           break;
         }
 
+        wr::ImageDescriptor descriptor(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8);
         wr::ImageKey key;
         auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
-        key = mApi->AddImageBuffer(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8, slice);
+        key = mApi->AddImageBuffer(descriptor, slice);
 
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
@@ -379,7 +391,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   }
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), true);
   }
 }
 
@@ -505,7 +517,7 @@ WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverE
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
-  mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), false);
+  mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), false);
   return IPC_OK();
 }
 

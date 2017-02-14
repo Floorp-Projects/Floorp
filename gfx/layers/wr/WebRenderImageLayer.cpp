@@ -141,7 +141,7 @@ WebRenderImageLayer::RenderLayer()
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   Maybe<WrImageMask> mask = buildMaskLayer();
-  WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
+  wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {
