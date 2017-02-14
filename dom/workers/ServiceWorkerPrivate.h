@@ -173,11 +173,11 @@ private:
   };
 
   // Timer callbacks
-  static void
-  NoteIdleWorkerCallback(nsITimer* aTimer, void* aPrivate);
+  void
+  NoteIdleWorkerCallback(nsITimer* aTimer);
 
-  static void
-  TerminateWorkerCallback(nsITimer* aTimer, void *aPrivate);
+  void
+  TerminateWorkerCallback(nsITimer* aTimer);
 
   void
   RenewKeepAliveToken(WakeUpReason aWhy);
