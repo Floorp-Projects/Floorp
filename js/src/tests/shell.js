@@ -437,20 +437,6 @@
   global.writeFormattedResult = writeFormattedResult;
 
   /*
-   * Signals to results.py that the current test case should be considered to
-   * have passed if it doesn't throw an exception.
-   *
-   * When the test suite is run in the browser, this function gets overridden by
-   * the same-named function in browser.js.
-   */
-  // Note: browser.js overrides this function.
-  // XXX: Remove this function - it's no longer used.
-  function testPassesUnlessItThrows() {
-    print(PASSED);
-  }
-  global.testPassesUnlessItThrows = testPassesUnlessItThrows;
-
-  /*
    * wrapper for test case constructor that doesn't require the SECTION
    * argument.
    */
