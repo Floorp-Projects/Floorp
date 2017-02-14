@@ -5,6 +5,8 @@
 
 /* the interface (to internal code) for retrieving computed style data */
 
+#include "nsStyleContext.h"
+
 #include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -24,7 +26,6 @@
 #include "nsIPresShell.h"
 
 #include "nsRuleNode.h"
-#include "nsStyleContext.h"
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
