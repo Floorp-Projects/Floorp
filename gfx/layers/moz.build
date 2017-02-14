@@ -399,6 +399,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderCompositableHolder.cpp',
     'wr/WebRenderCompositorOGL.cpp',
     'wr/WebRenderContainerLayer.cpp',
+    'wr/WebRenderDisplayItemLayer.cpp',
     'wr/WebRenderImageHost.cpp',
     'wr/WebRenderImageLayer.cpp',
     'wr/WebRenderLayerManager.cpp',

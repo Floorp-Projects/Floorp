@@ -534,5 +534,11 @@ WebRenderLayerManager::CreateBorderLayer()
   return MakeAndAddRef<WebRenderBorderLayer>(this);
 }
 
+already_AddRefed<DisplayItemLayer>
+WebRenderLayerManager::CreateDisplayItemLayer()
+{
+  return MakeAndAddRef<WebRenderDisplayItemLayer>(this);
+}
+
 } // namespace layers
 } // namespace mozilla
