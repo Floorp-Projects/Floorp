@@ -2,20 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable no-use-before-define */
-
 /*
- * Form Autofill frame script.
+ * Form Autofill content process module.
  */
+
+/* eslint-disable no-use-before-define */
 
 "use strict";
 
+this.EXPORTED_SYMBOLS = ["FormAutofillContent"];
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
                                   "resource://formautofill/ProfileAutoCompleteResult.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHandler",
+                                  "resource://formautofill/FormAutofillHandler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
                                   "resource://gre/modules/FormLikeFactory.jsm");
 
@@ -23,153 +28,6 @@ const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);
 
 const AUTOFILL_FIELDS_THRESHOLD = 3;
-
-/**
- * Returns the autocomplete information of fields according to heuristics.
- */
-let FormAutofillHeuristics = {
-  VALID_FIELDS: [
-    "organization",
-    "street-address",
-    "address-level2",
-    "address-level1",
-    "postal-code",
-    "country",
-    "tel",
-    "email",
-  ],
-
-  getInfo(element) {
-    if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
-      return null;
-    }
-
-    let info = element.getAutocompleteInfo();
-    if (!info || !info.fieldName ||
-        !this.VALID_FIELDS.includes(info.fieldName)) {
-      return null;
-    }
-
-    return info;
-  },
-};
-
-/**
- * Handles profile autofill for a DOM Form element.
- * @param {HTMLFormElement} form Form that need to be auto filled
- */
-function FormAutofillHandler(form) {
-  this.form = form;
-  this.fieldDetails = [];
-}
-
-FormAutofillHandler.prototype = {
-  /**
-   * DOM Form element to which this object is attached.
-   */
-  form: null,
-
-  /**
-   * Array of collected data about relevant form fields.  Each item is an object
-   * storing the identifying details of the field and a reference to the
-   * originally associated element from the form.
-   *
-   * The "section", "addressType", "contactType", and "fieldName" values are
-   * used to identify the exact field when the serializable data is received
-   * from the backend.  There cannot be multiple fields which have
-   * the same exact combination of these values.
-   *
-   * A direct reference to the associated element cannot be sent to the user
-   * interface because processing may be done in the parent process.
-   */
-  fieldDetails: null,
-
-  /**
-   * Returns information from the form about fields that can be autofilled, and
-   * populates the fieldDetails array on this object accordingly.
-   *
-   * @returns {Array<Object>} Serializable data structure that can be sent to the user
-   *          interface, or null if the operation failed because the constraints
-   *          on the allowed fields were not honored.
-   */
-  collectFormFields() {
-    let autofillData = [];
-
-    for (let element of this.form.elements) {
-      // Exclude elements to which no autocomplete field has been assigned.
-      let info = FormAutofillHeuristics.getInfo(element);
-      if (!info) {
-        continue;
-      }
-
-      // Store the association between the field metadata and the element.
-      if (this.fieldDetails.some(f => f.section == info.section &&
-                                      f.addressType == info.addressType &&
-                                      f.contactType == info.contactType &&
-                                      f.fieldName == info.fieldName)) {
-        // A field with the same identifier already exists.
-        return null;
-      }
-
-      let inputFormat = {
-        section: info.section,
-        addressType: info.addressType,
-        contactType: info.contactType,
-        fieldName: info.fieldName,
-      };
-      // Clone the inputFormat for caching the fields and elements together
-      let formatWithElement = Object.assign({}, inputFormat);
-
-      inputFormat.index = autofillData.length;
-      autofillData.push(inputFormat);
-
-      formatWithElement.element = element;
-      this.fieldDetails.push(formatWithElement);
-    }
-
-    return autofillData;
-  },
-
-  /**
-   * Processes form fields that can be autofilled, and populates them with the
-   * data provided by backend.
-   *
-   * @param {Array<Object>} autofillResult
-   *        Data returned by the user interface.
-   *        [{
-   *          section: Value originally provided to the user interface.
-   *          addressType: Value originally provided to the user interface.
-   *          contactType: Value originally provided to the user interface.
-   *          fieldName: Value originally provided to the user interface.
-   *          value: String with which the field should be updated.
-   *          index: Index to match the input in fieldDetails
-   *        }],
-   *        }
-   */
-  autofillFormFields(autofillResult) {
-    for (let field of autofillResult) {
-      // Get the field details, if it was processed by the user interface.
-      let fieldDetail = this.fieldDetails[field.index];
-
-      // Avoid the invalid value set
-      if (!fieldDetail || !field.value) {
-        continue;
-      }
-
-      let info = FormAutofillHeuristics.getInfo(fieldDetail.element);
-      if (!info ||
-          field.section != info.section ||
-          field.addressType != info.addressType ||
-          field.contactType != info.contactType ||
-          field.fieldName != info.fieldName) {
-        Cu.reportError("Autocomplete tokens mismatched");
-        continue;
-      }
-
-      fieldDetail.element.setUserInput(field.value);
-    }
-  },
-};
 
 // Register/unregister a constructor as a factory.
 function AutocompleteFactory() {}
@@ -267,12 +125,12 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   getProfiles(data) {
     return new Promise((resolve) => {
-      addMessageListener("FormAutofill:Profiles", function getResult(result) {
-        removeMessageListener("FormAutofill:Profiles", getResult);
+      Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
+        Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
         resolve(result.data);
       });
 
-      sendAsyncMessage("FormAutofill:GetProfiles", data);
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetProfiles", data);
     });
   },
 
@@ -328,38 +186,24 @@ let ProfileAutocomplete = {
 };
 
 /**
- * Handles content's interactions.
+ * Handles content's interactions for the process.
  *
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
 var FormAutofillContent = {
-  init() {
-    addEventListener("DOMContentLoaded", this);
+  _formsDetails: [],
 
-    addMessageListener("FormAutofill:enabledStatus", (result) => {
+  init() {
+    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", (result) => {
       if (result.data) {
         ProfileAutocomplete.ensureRegistered();
       } else {
         ProfileAutocomplete.ensureUnregistered();
       }
     });
-    sendAsyncMessage("FormAutofill:getEnabledStatus");
-  },
-
-  handleEvent(evt) {
-    if (!evt.isTrusted) {
-      return;
-    }
-
-    switch (evt.type) {
-      case "DOMContentLoaded":
-        let doc = evt.target;
-        if (!(doc instanceof Ci.nsIDOMHTMLDocument)) {
-          return;
-        }
-        this._identifyAutofillFields(doc);
-        break;
-    }
+    Services.cpmm.sendAsyncMessage("FormAutofill:getEnabledStatus");
+    // TODO: use initialProcessData:
+    // Services.cpmm.initialProcessData.autofillEnabled
   },
 
   /**
@@ -415,7 +259,6 @@ var FormAutofillContent = {
 
   _identifyAutofillFields(doc) {
     let forms = [];
-    this._formsDetails = [];
 
     // Collects root forms from inputs.
     for (let field of doc.getElementsByTagName("input")) {

@@ -75,7 +75,7 @@ FormAutofillParent.prototype = {
     // Force to trigger the onStatusChanged function for setting listeners properly
     // while initizlization
     this._onStatusChanged();
-    Services.mm.addMessageListener("FormAutofill:getEnabledStatus", this);
+    Services.ppmm.addMessageListener("FormAutofill:getEnabledStatus", this);
   },
 
   observe(subject, topic, data) {
@@ -112,14 +112,14 @@ FormAutofillParent.prototype = {
    */
   _onStatusChanged() {
     if (this._enabled) {
-      Services.mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
-      Services.mm.addMessageListener("FormAutofill:GetProfiles", this);
+      Services.ppmm.addMessageListener("FormAutofill:PopulateFieldValues", this);
+      Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
     } else {
-      Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
-      Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
+      Services.ppmm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
+      Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     }
 
-    Services.mm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
   },
 
   /**
@@ -148,8 +148,8 @@ FormAutofillParent.prototype = {
         this._getProfiles(data, target);
         break;
       case "FormAutofill:getEnabledStatus":
-        target.messageManager.sendAsyncMessage("FormAutofill:enabledStatus",
-                                               this._enabled);
+        Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus",
+                                            this._enabled);
         break;
     }
   },
@@ -176,8 +176,8 @@ FormAutofillParent.prototype = {
       this._profileStore = null;
     }
 
-    Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
-    Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
+    Services.ppmm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
+    Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
   },
@@ -220,7 +220,7 @@ FormAutofillParent.prototype = {
       profiles = this._profileStore.getAll();
     }
 
-    target.messageManager.sendAsyncMessage("FormAutofill:Profiles", profiles);
+    target.sendAsyncMessage("FormAutofill:Profiles", profiles);
   },
 
   /**
