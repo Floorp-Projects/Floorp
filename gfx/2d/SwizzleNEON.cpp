@@ -13,47 +13,38 @@ namespace gfx {
 static MOZ_ALWAYS_INLINE uint16x8_t
 LoadRemainder_NEON(const uint8_t* aSrc, size_t aLength)
 {
-  uint16x8_t px;
+  const uint32_t* src32 = reinterpret_cast<const uint32_t*>(aSrc);
+  uint32x4_t dst32;
   if (aLength >= 2) {
     // Load first 2 pixels
-    px =
-      vreinterpretq_u16_u64(
-        vld1q_lane_u64(reinterpret_cast<const uint64_t*>(aSrc),
-                       vdupq_n_u64(0), 0));
+    dst32 = vcombine_u32(vld1_u32(src32), vdup_n_u32(0));
     // Load third pixel
     if (aLength >= 3) {
-      px =
-        vreinterpretq_u16_u32(
-          vld1q_lane_u32(reinterpret_cast<const uint32_t*>(aSrc + 2 * 4),
-                         vreinterpretq_u32_u16(px), 2));
+      dst32 = vld1q_lane_u32(src32 + 2, dst32, 2);
     }
   } else {
     // Load single pixel
-    px =
-      vreinterpretq_u16_u32(
-        vld1q_lane_u32(reinterpret_cast<const uint32_t*>(aSrc),
-                       vdupq_n_u32(0), 0));
+    dst32 = vld1q_lane_u32(src32, vdupq_n_u32(0), 0);
   }
-  return px;
+  return vreinterpretq_u16_u32(dst32);
 }
 
 // Store 1-3 pixels from a vector into memory without overwriting.
 static MOZ_ALWAYS_INLINE void
 StoreRemainder_NEON(uint8_t* aDst, size_t aLength, const uint16x8_t& aSrc)
 {
+  uint32_t* dst32 = reinterpret_cast<uint32_t*>(aDst);
+  uint32x4_t src32 = vreinterpretq_u32_u16(aSrc);
   if (aLength >= 2) {
     // Store first 2 pixels
-    vst1q_lane_u64(reinterpret_cast<uint64_t*>(aDst),
-                   vreinterpretq_u64_u16(aSrc), 0);
+    vst1_u32(dst32, vget_low_u32(src32));
     // Store third pixel
     if (aLength >= 3) {
-      vst1q_lane_u32(reinterpret_cast<uint32_t*>(aDst + 2 * 4),
-                     vreinterpretq_u32_u16(aSrc), 2);
+      vst1q_lane_u32(dst32 + 2, src32, 2);
     }
   } else {
     // Store single pixel
-    vst1q_lane_u32(reinterpret_cast<uint32_t*>(aDst),
-                   vreinterpretq_u32_u16(aSrc), 0);
+    vst1q_lane_u32(dst32, src32, 0);
   }
 }
 
