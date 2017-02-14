@@ -73,7 +73,7 @@ WebRenderCanvasLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   Maybe<WrImageMask> mask = buildMaskLayer();
-  WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
+  wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {

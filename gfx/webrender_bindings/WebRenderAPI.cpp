@@ -13,25 +13,6 @@
 namespace mozilla {
 namespace wr {
 
-Maybe<WrImageFormat>
-SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
-  switch (aFormat) {
-    case gfx::SurfaceFormat::B8G8R8X8:
-      // TODO: WebRender will have a BGRA + opaque flag for this but does not
-      // have it yet (cf. issue #732).
-    case gfx::SurfaceFormat::B8G8R8A8:
-      return Some(WrImageFormat::RGBA8);
-    case gfx::SurfaceFormat::B8G8R8:
-      return Some(WrImageFormat::RGB8);
-    case gfx::SurfaceFormat::A8:
-      return Some(WrImageFormat::A8);
-    case gfx::SurfaceFormat::UNKNOWN:
-      return Some(WrImageFormat::Invalid);
-    default:
-      return Nothing();
-  }
-}
-
 class NewRenderer : public RendererEvent
 {
 public:
@@ -69,7 +50,9 @@ public:
     wr_gl_init(gl.get());
 
     WrRenderer* wrRenderer = nullptr;
-    wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWrApi, &wrRenderer);
+    if (!wr_window_new(aWindowId, this->mEnableProfiler, mWrApi, &wrRenderer)) {
+      return;
+    }
     MOZ_ASSERT(wrRenderer);
 
     RefPtr<RenderThread> thread = &aRenderThread;
@@ -127,7 +110,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
   MOZ_ASSERT(aWidget);
 
   static uint64_t sNextId = 1;
-  WindowId id(sNextId++);
+  auto id = NewWindowId(sNextId++);
 
   WrAPI* wrApi = nullptr;
   GLint maxTextureSize = 0;
@@ -166,7 +149,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  DisplayListBuilder& aBuilder)
 {
   wr_api_set_root_display_list(mWrApi, aBuilder.mWrState,
-                               aEpoch.mHandle,
+                               aEpoch,
                                aViewportSize.width, aViewportSize.height);
 }
 
@@ -216,19 +199,15 @@ WebRenderAPI::Readback(gfx::IntSize size,
 void
 WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
-  wr_api_set_root_pipeline(mWrApi, aPipeline.mHandle);
+  wr_api_set_root_pipeline(mWrApi, aPipeline);
 }
 
 ImageKey
-WebRenderAPI::AddImageBuffer(gfx::IntSize aSize,
-                             uint32_t aStride,
-                             gfx::SurfaceFormat aFormat,
+WebRenderAPI::AddImageBuffer(const ImageDescriptor& aDescritptor,
                              Range<uint8_t> aBytes)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   return ImageKey(wr_api_add_image(mWrApi,
-                                   aSize.width, aSize.height,
-                                   aStride, format,
+                                   &aDescritptor,
                                    &aBytes[0], aBytes.length()));
 }
 
@@ -245,21 +224,19 @@ WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
 
 void
 WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
-                                gfx::IntSize aSize,
-                                gfx::SurfaceFormat aFormat,
+                                const ImageDescriptor& aDescritptor,
                                 Range<uint8_t> aBytes)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_update_image(mWrApi,
-                      aKey.mHandle,
-                      aSize.width, aSize.height, format,
+                      aKey,
+                      &aDescritptor,
                       &aBytes[0], aBytes.length());
 }
 
 void
 WebRenderAPI::DeleteImage(ImageKey aKey)
 {
-  wr_api_delete_image(mWrApi, aKey.mHandle);
+  wr_api_delete_image(mWrApi, aKey);
 }
 
 wr::FontKey
@@ -317,7 +294,7 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aSize.width, aSize.height, aId.mHandle);
+  mWrState = wr_state_new(aSize.width, aSize.height, aId);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
@@ -335,7 +312,7 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 void
 DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
 {
-  wr_dp_end(mWrState, aApi.mWrApi, aEpoch.mHandle);
+  wr_dp_end(mWrState, aApi.mWrApi, aEpoch);
 }
 
 void
@@ -357,6 +334,20 @@ DisplayListBuilder::PopStackingContext()
 }
 
 void
+DisplayListBuilder::PushScrollLayer(const WrRect& aBounds,
+                                    const WrRect& aOverflow,
+                                    const WrImageMask* aMask)
+{
+  wr_dp_push_scroll_layer(mWrState, aBounds, aOverflow, aMask);
+}
+
+void
+DisplayListBuilder::PopScrollLayer()
+{
+  wr_dp_pop_scroll_layer(mWrState);
+}
+
+void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
                              const WrRect& aClip,
                              const WrColor& aColor)
@@ -368,10 +359,10 @@ void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
                               const WrRect& aClip,
                               const WrImageMask* aMask,
-                              const WrTextureFilter aFilter,
+                              wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage.mHandle);
+  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage);
 }
 
 void
@@ -379,7 +370,7 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
                                const WrRect& aClip,
                                PipelineId aPipeline)
 {
-  wr_dp_push_iframe(mWrState, aBounds, aClip, aPipeline.mHandle);
+  wr_dp_push_iframe(mWrState, aBounds, aClip, aPipeline);
 }
 
 void
@@ -406,7 +397,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
 {
   wr_dp_push_text(mWrState, aBounds, aClip,
                   ToWrColor(aColor),
-                  aFontKey.mHandle,
+                  aFontKey,
                   &aGlyphBuffer[0], aGlyphBuffer.length(),
                   aGlyphSize);
 }

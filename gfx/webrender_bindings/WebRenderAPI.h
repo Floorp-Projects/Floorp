@@ -48,9 +48,7 @@ public:
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
-  wr::ImageKey AddImageBuffer(gfx::IntSize aSize,
-                              uint32_t aStride,
-                              gfx::SurfaceFormat aFormat,
+  wr::ImageKey AddImageBuffer(const ImageDescriptor& aDescriptor,
                               Range<uint8_t> aBytes);
 
   wr::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
@@ -58,8 +56,7 @@ public:
                                       uint64_t aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
-                         gfx::IntSize aSize,
-                         gfx::SurfaceFormat aFormat,
+                         const ImageDescriptor& aDescriptor,
                          Range<uint8_t> aBytes);
 
   void DeleteImage(wr::ImageKey aKey);
@@ -114,6 +111,13 @@ public:
 
   void PopStackingContext();
 
+  void PushScrollLayer(const WrRect& aBounds, // TODO: We should work with strongly typed rects
+                       const WrRect& aOverflow,
+                       const WrImageMask* aMask); // TODO: needs a wrapper.
+
+  void PopScrollLayer();
+
+
   void PushRect(const WrRect& aBounds,
                 const WrRect& aClip,
                 const WrColor& aColor);
@@ -121,7 +125,7 @@ public:
   void PushImage(const WrRect& aBounds,
                  const WrRect& aClip,
                  const WrImageMask* aMask,
-                 const WrTextureFilter aFilter,
+                 wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushIFrame(const WrRect& aBounds,

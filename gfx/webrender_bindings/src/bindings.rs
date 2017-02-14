@@ -3,23 +3,60 @@ use std::{mem, slice};
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
-use webrender_traits::{PipelineId, ClipRegion};
+use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ColorF, GlyphInstance, ImageDescriptor};
 use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
+use webrender_traits::ServoScrollRootId;
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use app_units::Au;
 
 extern crate webrender_traits;
 
-fn pipeline_id_to_u64(id: PipelineId) -> u64 { ((id.0 as u64) << 32) + id.1 as u64 }
-fn u64_to_pipeline_id(id: u64) -> PipelineId { PipelineId((id >> 32) as u32, id as u32) }
+// This macro adds some checks to make sure we notice when the memory representation of
+// types change.
+macro_rules! check_ffi_type {
+    ($check_sizes_match:ident struct $TypeName:ident as ($T1:ident, $T2:ident)) => (
+        fn $check_sizes_match() {
+            #[repr(C)] struct TestType($T1, $T2);
+            let _ = mem::transmute::<$TypeName, TestType>;
+        }
+    );
+    ($check_sizes_match:ident struct $TypeName:ident as ($T:ident)) => (
+        fn $check_sizes_match() {
+            #[repr(C)] struct TestType($T);
+            let _ = mem::transmute::<$TypeName, TestType>;
+        }
+    );
+    ($check_sizes_match:ident enum $TypeName:ident as $T:ident) => (
+        fn $check_sizes_match() { let _ = mem::transmute::<$TypeName, $T>; }
+    );
+}
+ 
+check_ffi_type!(_pipeline_id_repr struct PipelineId as (u32, u32));
+check_ffi_type!(_image_key_repr struct ImageKey as (u32, u32));
+check_ffi_type!(_font_key_repr struct FontKey as (u32, u32));
+check_ffi_type!(_epoch_repr struct Epoch as (u32));
+check_ffi_type!(_image_format_repr enum ImageFormat as u32);
+check_ffi_type!(_border_style_repr enum BorderStyle as u32);
+check_ffi_type!(_image_rendering_repr enum ImageRendering as u32);
 
-fn font_key_to_u64(key: FontKey) -> u64 { unsafe { mem::transmute(key) } }
-fn u64_to_font_key(key: u64) -> FontKey { unsafe { mem::transmute(key) } }
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct WrWindowId(u64);
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct WrImageDescriptor {
+    pub format: ImageFormat,
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub is_opaque: bool,
+} 
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
@@ -109,18 +146,23 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id));
+    // See the documentation of set_root_display_list in api.rs. I don't think
+    // it makes a difference in gecko at the moment(until APZ is figured out)
+    // but I suppose it is a good default.
+    let preserve_frame_state = true;
     //let (dl_builder, aux_builder) = fb.dl_builder.finalize();
     api.set_root_display_list(Some(root_background_color),
                               epoch,
                               LayoutSize::new(viewport_width, viewport_height),
-                              frame_builder.dl_builder);
-    api.generate_frame();
+                              frame_builder.dl_builder,
+                              preserve_frame_state);
+    api.generate_frame(None);
 }
 #[no_mangle]
-pub extern fn wr_window_new(window_id: u64,
+pub extern fn wr_window_new(window_id: WrWindowId,
                             enable_profiler: bool,
                             out_api: &mut *mut RenderApi,
-                            out_renderer: &mut *mut Renderer) {
+                            out_renderer: &mut *mut Renderer) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
     let opts = RendererOptions {
@@ -129,7 +171,6 @@ pub extern fn wr_window_new(window_id: u64,
         enable_aa: false,
         enable_subpixel_aa: false,
         enable_profiler: enable_profiler,
-        enable_recording: false,
         enable_scrollbars: false,
         precache_shaders: false,
         renderer_kind: RendererKind::Native,
@@ -137,13 +178,24 @@ pub extern fn wr_window_new(window_id: u64,
         clear_framebuffer: true,
         render_target_debug: false,
         clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
+        recorder: None,
+        workers: None,
     };
 
-    let (renderer, sender) = Renderer::new(opts);
+    let (renderer, sender) = match Renderer::new(opts) {
+        Ok((renderer, sender)) => { (renderer, sender) }
+        Err(e) => {
+            println!(" Failed to create a Renderer: {:?}", e);
+            return false;
+        }
+    };
+
     renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
 
     *out_api = Box::into_raw(Box::new(sender.create_api()));
     *out_renderer = Box::into_raw(Box::new(renderer));
+
+    return true;
 }
 
 // Call MakeCurrent before this.
@@ -160,9 +212,8 @@ pub extern fn wr_gl_init(gl_context: *mut c_void) {
 }
 
 #[no_mangle]
-pub extern fn wr_state_new(width: u32, height: u32, pipeline: u64) -> *mut WrState {
+pub extern fn wr_state_new(width: u32, height: u32, pipeline_id: PipelineId) -> *mut WrState {
     assert!(unsafe { is_in_compositor_thread() });
-    let pipeline_id = u64_to_pipeline_id(pipeline);
 
     let state = Box::new(WrState {
         size: (width, height),
@@ -197,8 +248,8 @@ pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
         bounds,
         ClipRegion::simple(&bounds),
         0,
-        &LayoutTransform::identity(),
-        &LayoutTransform::identity(),
+        PropertyBinding::Value(LayoutTransform::identity()),
+        LayoutTransform::identity(),
         webrender_traits::MixBlendMode::Normal,
         Vec::new(),
     );
@@ -215,11 +266,13 @@ pub extern fn wr_dp_end(state: &mut WrState, api: &mut RenderApi, epoch: u32) {
 
     let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
 
+    let preserve_frame_state = true;
     api.set_root_display_list(Some(root_background_color),
                               Epoch(epoch),
                               LayoutSize::new(width as f32, height as f32),
-                              fb.dl_builder);
-    api.generate_frame();
+                              fb.dl_builder,
+                              preserve_frame_state);
+    api.generate_frame(None);
 }
 
 #[no_mangle]
@@ -231,11 +284,11 @@ pub unsafe extern fn wr_renderer_flush_rendered_epochs(renderer: &mut Renderer) 
 
 #[no_mangle]
 pub unsafe extern fn wr_rendered_epochs_next(pipeline_epochs: &mut Vec<(PipelineId, Epoch)>,
-                                         out_pipeline: &mut u64,
-                                         out_epoch: &mut u32) -> bool {
+                                             out_pipeline: &mut PipelineId,
+                                             out_epoch: &mut Epoch) -> bool {
     if let Some((pipeline, epoch)) = pipeline_epochs.pop() {
-        *out_pipeline = mem::transmute(pipeline);
-        *out_epoch = mem::transmute(epoch);
+        *out_pipeline = pipeline;
+        *out_epoch = epoch;
         return true;
     }
     return false;
@@ -248,16 +301,15 @@ pub unsafe extern fn wr_rendered_epochs_delete(pipeline_epochs: *mut Vec<(Pipeli
 
 
 struct CppNotifier {
-    window_id: u64,
+    window_id: WrWindowId,
 }
 
 unsafe impl Send for CppNotifier {}
 
 extern {
-    fn wr_notifier_new_frame_ready(window_id: u64);
-    fn wr_notifier_new_scroll_frame_ready(window_id: u64, composite_needed: bool);
-    fn wr_notifier_pipeline_size_changed(window_id: u64, pipeline: u64, new_width: f32, new_height: f32);
-    fn wr_notifier_external_event(window_id: u64, raw_event: usize);
+    fn wr_notifier_new_frame_ready(window_id: WrWindowId);
+    fn wr_notifier_new_scroll_frame_ready(window_id: WrWindowId, composite_needed: bool);
+    fn wr_notifier_external_event(window_id: WrWindowId, raw_event: usize);
 }
 
 impl webrender_traits::RenderNotifier for CppNotifier {
@@ -270,20 +322,6 @@ impl webrender_traits::RenderNotifier for CppNotifier {
     fn new_scroll_frame_ready(&mut self, composite_needed: bool) {
         unsafe {
             wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
-        }
-    }
-
-    fn pipeline_size_changed(&mut self,
-                             pipeline_id: PipelineId,
-                             new_size: Option<LayoutSize>) {
-        let (w, h) = if let Some(size) = new_size {
-            (size.width, size.height)
-        } else {
-            (0.0, 0.0)
-        };
-        unsafe {
-            let id = pipeline_id_to_u64(pipeline_id);
-            wr_notifier_pipeline_size_changed(self.window_id, id, w, h);
         }
     }
 
@@ -443,26 +481,29 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
-    let overflow = overflow.to_rect();
+    let mut overflow = overflow.to_rect();
     let mix_blend_mode = mix_blend_mode.to_mix_blend_mode();
+    //println!("stacking context: {:?} {:?} {:?} {:?} {:?}", state.pipeline_id, bounds, overflow, mask, transform);
     // convert from the C type to the Rust type
     let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
 
+    let clip_region2 = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], None);
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
 
     let mut filters: Vec<FilterOp> = Vec::new();
     if opacity < 1.0 {
-        filters.push(FilterOp::Opacity(opacity));
+        filters.push(FilterOp::Opacity(PropertyBinding::Value(opacity)));
     }
 
     state.frame_builder.dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
-                                  clip_region,
+                                  clip_region2,
                                   state.z_index,
-                                  transform,
-                                  &LayoutTransform::identity(),
+                                  PropertyBinding::Value(*transform),
+                                  LayoutTransform::identity(),
                                   mix_blend_mode,
                                   filters);
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, ServoScrollRootId(1));
 
 }
 
@@ -470,38 +511,73 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
 pub extern fn wr_dp_pop_stacking_context(state: &mut WrState)
 {
     assert!( unsafe { is_in_compositor_thread() });
-    state.frame_builder.dl_builder.pop_stacking_context()
+    state.frame_builder.dl_builder.pop_scroll_layer();
+    state.frame_builder.dl_builder.pop_stacking_context();
+    //println!("pop_stacking {:?}", state.pipeline_id);
 }
 
 #[no_mangle]
-pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: u64) {
-    api.set_root_pipeline(u64_to_pipeline_id(pipeline_id));
-    api.generate_frame();
+pub extern fn wr_dp_push_scroll_layer(state: &mut WrState, bounds: WrRect, overflow: WrRect, mask: Option<&WrImageMask>)
+{
+    let bounds = bounds.to_rect();
+    let overflow = overflow.to_rect();
+    let mask = mask.map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat});
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, ServoScrollRootId(1));
 }
 
 #[no_mangle]
-pub extern fn wr_api_add_image(api: &mut RenderApi, width: u32, height: u32, stride: u32, format: ImageFormat, bytes: * const u8, size: usize) -> ImageKey {
+pub extern fn wr_dp_pop_scroll_layer(state: &mut WrState)
+{
+    assert!( unsafe { is_in_compositor_thread() });
+    state.frame_builder.dl_builder.pop_scroll_layer();
+}
+
+#[no_mangle]
+pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: PipelineId) {
+    api.set_root_pipeline(pipeline_id);
+    api.generate_frame(None);
+}
+
+#[no_mangle]
+pub extern fn wr_api_add_image(api: &mut RenderApi, descriptor: &WrImageDescriptor, bytes: * const u8, size: usize) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    let stride_option = match stride {
-        0 => None,
-        _ => Some(stride),
-    };
-
-    api.add_image(ImageDescriptor{width: width, height: height, stride: stride_option, format: format, is_opaque: false}, ImageData::new(bytes))
+    return api.add_image(
+        ImageDescriptor {
+            width: descriptor.width,
+            height: descriptor.height,
+            stride: if descriptor.stride != 0 { Some(descriptor.stride) } else { None },
+            format: descriptor.format,
+            is_opaque: descriptor.is_opaque,
+        },
+        ImageData::new(bytes)
+    );
 }
 
 #[no_mangle]
 pub extern fn wr_api_add_external_image_texture(api: &mut RenderApi, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
-    api.add_image(ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false}, ImageData::External(ExternalImageId(external_image_id)))
+    unimplemented!(); // TODO
+    //api.add_image(ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false}, ImageData::External(ExternalImageId(external_image_id)))
 }
 
 #[no_mangle]
-pub extern fn wr_api_update_image(api: &mut RenderApi, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
+pub extern fn wr_api_update_image(api: &mut RenderApi, key: ImageKey, descriptor: &WrImageDescriptor, bytes: * const u8, size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    api.update_image(key, ImageDescriptor{width:width, height:height, stride:None, format:format, is_opaque: false}, bytes);
+
+    api.update_image(
+        key,
+        ImageDescriptor {
+            width: descriptor.width,
+            height: descriptor.height,
+            stride: if descriptor.stride != 0 { Some(descriptor.stride) } else { None },
+            format: descriptor.format,
+            is_opaque: descriptor.is_opaque,
+        },
+        bytes
+    );
 }
 #[no_mangle]
 pub extern fn wr_api_delete_image(api: &mut RenderApi, key: ImageKey) {
@@ -545,13 +621,12 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, pipeline_id: PipelineId) {
     assert!( unsafe { is_in_compositor_thread() });
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
                                                                      Vec::new(),
                                                                      None);
-    let pipeline_id = u64_to_pipeline_id(layers_id);
     state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
                                                clip_region,
                                                pipeline_id);
@@ -657,34 +732,17 @@ impl WrImageMask
     }
 }
 
-#[repr(C)]
-pub enum WrTextureFilter
-{
-    Linear,
-    Point,
-}
-impl WrTextureFilter
-{
-    pub fn to_image_rendering(self) -> ImageRendering
-    {
-        match self
-        {
-            WrTextureFilter::Linear => ImageRendering::Auto,
-            WrTextureFilter::Point => ImageRendering::Pixelated,
-        }
-    }
-}
-
 #[no_mangle]
-pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, filter: WrTextureFilter, key: ImageKey) {
+pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, filter: ImageRendering, key: ImageKey) {
     assert!( unsafe { is_in_compositor_thread() });
 
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
 
+    //println!("push_image bounds {:?} clip {:?}", bounds, clip);
     // convert from the C type to the Rust type, mapping NULL to None
     let mask = unsafe { mask.as_ref().map(|m| m.to_image_mask()) };
-    let image_rendering = filter.to_image_rendering();
+    let image_rendering = filter;
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip, Vec::new(), mask);
     state.frame_builder.dl_builder.push_image(
@@ -700,7 +758,7 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
 #[no_mangle]
 pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
                                   font_buffer: *mut u8,
-                                  buffer_size: usize) -> u64
+                                  buffer_size: usize) -> FontKey
 {
     assert!( unsafe { is_in_compositor_thread() });
 
@@ -710,7 +768,7 @@ pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    return font_key_to_u64(api.add_raw_font(font_vector));
+    return api.add_raw_font(font_vector);
 }
 
 #[no_mangle]
@@ -718,14 +776,12 @@ pub extern fn wr_dp_push_text(state: &mut WrState,
                               bounds: WrRect,
                               clip: WrRect,
                               color: WrColor,
-                              font_key: u64,
+                              font_key: FontKey,
                               glyphs: *mut GlyphInstance,
                               glyph_count: u32,
                               glyph_size: f32)
 {
     assert!( unsafe { is_in_compositor_thread() });
-
-    let font_key = u64_to_font_key(font_key);
 
     let glyph_slice = unsafe {
         slice::from_raw_parts(glyphs, glyph_count as usize)
@@ -737,12 +793,14 @@ pub extern fn wr_dp_push_text(state: &mut WrState,
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
+    let glyph_options = None; // TODO
     state.frame_builder.dl_builder.push_text(bounds.to_rect(),
                                              clip_region,
                                              glyph_vector,
                                              font_key,
                                              colorf,
                                              Au::from_f32_px(glyph_size),
-                                             Au::from_px(0));
+                                             Au::from_px(0),
+                                             glyph_options);
 }
 

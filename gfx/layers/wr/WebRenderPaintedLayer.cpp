@@ -167,7 +167,7 @@ WebRenderPaintedLayer::RenderLayer()
                               transform,
                               mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
+  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), wr::ImageRendering::Auto, mExternalImageId));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 

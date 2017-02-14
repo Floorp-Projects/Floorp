@@ -41,13 +41,15 @@ struct ParamTraits<mozilla::wr::ImageKey>
   static void
   Write(Message* aMsg, const mozilla::wr::ImageKey& aParam)
   {
+    WriteParam(aMsg, aParam.mNamespace);
     WriteParam(aMsg, aParam.mHandle);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::ImageKey* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mHandle);
+    return ReadParam(aMsg, aIter, &aResult->mNamespace)
+        && ReadParam(aMsg, aIter, &aResult->mHandle);
   }
 };
 
@@ -57,13 +59,15 @@ struct ParamTraits<mozilla::wr::FontKey>
   static void
   Write(Message* aMsg, const mozilla::wr::FontKey& aParam)
   {
+    WriteParam(aMsg, aParam.mNamespace);
     WriteParam(aMsg, aParam.mHandle);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::FontKey* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mHandle);
+    return ReadParam(aMsg, aIter, &aResult->mNamespace)
+        && ReadParam(aMsg, aIter, &aResult->mHandle);
   }
 };
 
@@ -73,13 +77,15 @@ struct ParamTraits<mozilla::wr::PipelineId>
   static void
   Write(Message* aMsg, const mozilla::wr::PipelineId& aParam)
   {
+    WriteParam(aMsg, aParam.mNamespace);
     WriteParam(aMsg, aParam.mHandle);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::PipelineId* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mHandle);
+    return ReadParam(aMsg, aIter, &aResult->mNamespace)
+        && ReadParam(aMsg, aIter, &aResult->mHandle);
   }
 };
 
@@ -286,11 +292,11 @@ struct ParamTraits<WrImageMask>
 };
 
 template<>
-struct ParamTraits<WrTextureFilter>
+struct ParamTraits<WrImageRendering>
   : public ContiguousEnumSerializer<
-        WrTextureFilter,
-        WrTextureFilter::Linear,
-        WrTextureFilter::Sentinel>
+        WrImageRendering,
+        WrImageRendering::Auto,
+        WrImageRendering::Sentinel>
 {
 };
 
