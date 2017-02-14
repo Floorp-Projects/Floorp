@@ -9288,6 +9288,13 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
            parent->mColumnFill,
            NS_STYLE_COLUMN_FILL_BALANCE);
 
+  // column-span: enum
+  SetValue(*aRuleData->ValueForColumnSpan(),
+           column->mColumnSpan, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parent->mColumnSpan,
+           NS_STYLE_COLUMN_SPAN_NONE);
+
   COMPUTE_END_RESET(Column, column)
 }
 
