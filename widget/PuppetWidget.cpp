@@ -10,6 +10,7 @@
 #include "ClientLayerManager.h"
 #include "gfxPlatform.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/APZChild.h"
@@ -598,10 +599,10 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
       return mLayerManager;
     }
 
-    if (!mTabChild) {
-      return nullptr;
-    }
-    if (mTabChild->GetCompositorOptions().UseWebRender()) {
+    bool useWebRender = mTabChild
+        ? mTabChild->GetCompositorOptions().UseWebRender()
+        : gfxVars::UseWebRender();
+    if (useWebRender) {
       mLayerManager = new WebRenderLayerManager(this);
     } else {
       mLayerManager = new ClientLayerManager(this);
