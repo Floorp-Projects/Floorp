@@ -7,6 +7,7 @@
 #define TelemetryIPCAccumulator_h__
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Maybe.h"
 #include "TelemetryComms.h"
 
 class nsIRunnable;
@@ -30,6 +31,13 @@ void RecordChildScalarAction(mozilla::Telemetry::ScalarID aId,
 void RecordChildKeyedScalarAction(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                                   mozilla::Telemetry::ScalarActionType aAction,
                                   const mozilla::Telemetry::ScalarVariant& aValue);
+
+void RecordChildEvent(double timestamp,
+                      const nsACString& category,
+                      const nsACString& method,
+                      const nsACString& object,
+                      const mozilla::Maybe<nsCString>& value,
+                      const nsTArray<mozilla::Telemetry::EventExtraEntry>& extra);
 
 void IPCTimerFired(nsITimer* aTimer, void* aClosure);
 void DeInitializeGlobalState();
