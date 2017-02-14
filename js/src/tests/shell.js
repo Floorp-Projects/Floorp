@@ -754,27 +754,6 @@
     }
   }
   global.jsTestDriverEnd = jsTestDriverEnd;
-
-  /*****************************************************
-   * RHINO-SPECIFIC EXPORTS (are these used any more?) *
-   *****************************************************/
-
-  function inRhino() {
-    return typeof global.defineClass === "function";
-  }
-  global.inRhino = inRhino;
-
-  function GetContext() {
-    return global.Packages.com.netscape.javascript.Context.getCurrentContext();
-  }
-  global.GetContext = GetContext;
-
-  function OptLevel(i) {
-    i = Number(i);
-    var cx = GetContext();
-    cx.setOptimizationLevel(i);
-  }
-  global.OptLevel = OptLevel;
 })(this);
 
 (function(global) {
