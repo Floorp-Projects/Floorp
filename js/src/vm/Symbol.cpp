@@ -49,7 +49,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     AutoLockForExclusiveAccess lock(cx);
     Symbol* sym;
     {
-        AutoCompartment ac(cx, cx->atomsCompartment(lock), &lock);
+        AutoAtomsCompartment ac(cx, lock);
         sym = newInternal(cx, code, cx->compartment()->randomHashCode(), atom, lock);
     }
     cx->markAtom(sym);
@@ -74,7 +74,7 @@ Symbol::for_(JSContext* cx, HandleString description)
 
     Symbol* sym;
     {
-        AutoCompartment ac(cx, cx->atomsCompartment(lock), &lock);
+        AutoAtomsCompartment ac(cx, lock);
         sym = newInternal(cx, SymbolCode::InSymbolRegistry, atom->hash(), atom, lock);
         if (!sym)
             return nullptr;

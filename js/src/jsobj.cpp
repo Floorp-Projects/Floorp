@@ -1506,9 +1506,10 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
                IsBackgroundFinalized(b->asTenured().getAllocKind()));
     MOZ_ASSERT(a->compartment() == b->compartment());
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
+    // You must have entered the objects' compartment before calling this.
+    MOZ_ASSERT(cx->compartment() == a->compartment());
 
-    AutoCompartment ac(cx, a);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
     if (!JSObject::getGroup(cx, a))
         oomUnsafe.crash("JSObject::swap");
