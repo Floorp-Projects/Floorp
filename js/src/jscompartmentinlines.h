@@ -34,19 +34,20 @@ JSCompartment::unsafeUnbarrieredMaybeGlobal() const
     return *global_.unsafeGet();
 }
 
-js::AutoCompartment::AutoCompartment(JSContext* cx, JSObject* target,
-                                     js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+template <typename T>
+js::AutoCompartment::AutoCompartment(JSContext* cx, const T& target)
   : cx_(cx),
     origin_(cx->compartment()),
-    maybeLock_(maybeLock)
+    maybeLock_(nullptr)
 {
-    cx_->enterCompartment(target->compartment(), maybeLock);
+    cx_->enterCompartmentOf(target);
 }
 
+// Protected constructor that bypasses assertions in enterCompartmentOf.
 js::AutoCompartment::AutoCompartment(JSContext* cx, JSCompartment* target,
                                      js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
   : cx_(cx),
-    origin_(cx_->compartment()),
+    origin_(cx->compartment()),
     maybeLock_(maybeLock)
 {
     cx_->enterCompartment(target, maybeLock);
@@ -56,6 +57,15 @@ js::AutoCompartment::~AutoCompartment()
 {
     cx_->leaveCompartment(origin_, maybeLock_);
 }
+
+js::AutoAtomsCompartment::AutoAtomsCompartment(JSContext* cx,
+                                               js::AutoLockForExclusiveAccess& lock)
+  : AutoCompartment(cx, cx->atomsCompartment(lock), &lock)
+{}
+
+js::AutoCompartmentUnchecked::AutoCompartmentUnchecked(JSContext* cx, JSCompartment* target)
+  : AutoCompartment(cx, target)
+{}
 
 inline bool
 JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)

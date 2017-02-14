@@ -966,21 +966,38 @@ class AutoCompartment
 {
     JSContext * const cx_;
     JSCompartment * const origin_;
-    const js::AutoLockForExclusiveAccess* maybeLock_;
+    const AutoLockForExclusiveAccess* maybeLock_;
 
   public:
-    inline AutoCompartment(JSContext* cx, JSObject* target,
-                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
-    inline AutoCompartment(JSContext* cx, JSCompartment* target,
-                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    template <typename T>
+    inline AutoCompartment(JSContext* cx, const T& target);
     inline ~AutoCompartment();
 
     JSContext* context() const { return cx_; }
     JSCompartment* origin() const { return origin_; }
 
+  protected:
+    inline AutoCompartment(JSContext* cx, JSCompartment* target,
+                           AutoLockForExclusiveAccess* maybeLock = nullptr);
+
   private:
     AutoCompartment(const AutoCompartment&) = delete;
     AutoCompartment & operator=(const AutoCompartment&) = delete;
+};
+
+class AutoAtomsCompartment : protected AutoCompartment
+{
+  public:
+    inline AutoAtomsCompartment(JSContext* cx, AutoLockForExclusiveAccess& lock);
+};
+
+// Enter a compartment directly. Only use this where there's no target GC thing
+// to pass to AutoCompartment or where you need to avoid the assertions in
+// JS::Compartment::enterCompartmentOf().
+class AutoCompartmentUnchecked : protected AutoCompartment
+{
+  public:
+    inline AutoCompartmentUnchecked(JSContext* cx, JSCompartment* target);
 };
 
 /*
