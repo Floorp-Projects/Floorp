@@ -259,7 +259,7 @@ RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
   // Compute new status
   uint32_t newS = record[index];
-  if (NS_INLINE_IS_BREAK(aFrameReflowStatus)) {
+  if (aFrameReflowStatus.IsInlineBreak()) {
     if (aFrameReflowStatus.IsInlineBreakBefore()) {
       newS |= 1;
     }
@@ -4181,7 +4181,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
   // block or we are an inline. This makes a total of 10 cases
   // (fortunately, there is some overlap).
   aLine->SetBreakTypeAfter(StyleClear::None);
-  if (NS_INLINE_IS_BREAK(frameReflowStatus) ||
+  if (frameReflowStatus.IsInlineBreak() ||
       StyleClear::None != aState.mFloatBreakType) {
     // Always abort the line reflow (because a line break is the
     // minimal amount of break we do).
