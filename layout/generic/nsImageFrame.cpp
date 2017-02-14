@@ -1012,7 +1012,8 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     // our desired height was greater than 0, so to avoid infinite
     // splitting, use 1 pixel as the min
     aMetrics.Height() = std::max(nsPresContext::CSSPixelsToAppUnits(1), aReflowInput.AvailableHeight());
-    aStatus = NS_FRAME_NOT_COMPLETE;
+    aStatus.Reset();
+    aStatus.SetIncomplete();
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();

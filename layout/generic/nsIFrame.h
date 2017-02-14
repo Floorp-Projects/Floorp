@@ -370,7 +370,6 @@ private:
 };
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
-#define NS_FRAME_NOT_COMPLETE         0x1
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);
@@ -2349,7 +2348,7 @@ public:
    * frame state will be cleared.
    *
    * XXX This doesn't make sense. If the frame is reflowed but not complete, then
-   * the status should be NS_FRAME_NOT_COMPLETE and not NS_FRAME_COMPLETE
+   * the status should have mIncomplete bit set.
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
