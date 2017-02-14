@@ -375,7 +375,6 @@ struct JSCompartment
     js::ReadBarrieredGlobalObject global_;
 
     unsigned                     enterCompartmentDepth;
-    int64_t                      startInterval;
 
   public:
     js::PerformanceGroupHolder performanceMonitoring;
@@ -433,9 +432,6 @@ struct JSCompartment
     js::SavedStacks              savedStacks_;
 
     js::WrapperMap               crossCompartmentWrappers;
-
-    using CCKeyVector = mozilla::Vector<js::CrossCompartmentKey, 0, js::SystemAllocPolicy>;
-    CCKeyVector                  nurseryCCKeys;
 
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
@@ -576,6 +572,16 @@ struct JSCompartment
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
 
+  private:
+    // This pointer is controlled by the embedder. If it is non-null, and if
+    // cx->enableAccessValidation is true, then we assert that *validAccessPtr
+    // is true before running any code in this compartment.
+    bool* validAccessPtr;
+
+  public:
+    bool isAccessValid() const { return validAccessPtr ? *validAccessPtr : true; }
+    void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
+
   public:
     JSCompartment(JS::Zone* zone, const JS::CompartmentOptions& options);
     ~JSCompartment();
@@ -590,8 +596,10 @@ struct JSCompartment
     MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<JS::GCVector<JS::Value>> vec);
     MOZ_MUST_USE bool rewrap(JSContext* cx, JS::MutableHandleObject obj, JS::HandleObject existing);
 
-    MOZ_MUST_USE bool putWrapper(JSContext* cx, const js::CrossCompartmentKey& wrapped,
-                                 const js::Value& wrapper);
+    MOZ_MUST_USE bool putNewWrapper(JSContext* cx, const js::CrossCompartmentKey& wrapped,
+                                    const js::Value& wrapper);
+    MOZ_MUST_USE bool putWrapperMaybeUpdate(JSContext* cx, const js::CrossCompartmentKey& wrapped,
+                                            const js::Value& wrapper);
 
     js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) const {
         return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(wrapped));

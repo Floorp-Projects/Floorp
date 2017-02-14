@@ -16,8 +16,7 @@ SimpleTest.waitForExplicitFinish();
 
 let expectedPageErrors = [];
 
-function doPageErrors()
-{
+function doPageErrors() {
   expectedPageErrors = {
     "document.body.style.color = 'fooColor';": {
       errorMessage: /fooColor/,
@@ -128,44 +127,41 @@ function doPageErrors()
   }
 }
 
-function startTest()
-{
+function startTest() {
   removeEventListener("load", startTest);
 
   attachConsole(["PageError"], onAttach);
 }
 
-function onAttach(aState, aResponse)
-{
-  onPageError = onPageError.bind(null, aState);
-  aState.dbgClient.addListener("pageError", onPageError);
+function onAttach(state, response) {
+  onPageError = onPageError.bind(null, state);
+  state.dbgClient.addListener("pageError", onPageError);
   doPageErrors();
 }
 
 let pageErrors = [];
 
-function onPageError(aState, aType, aPacket)
-{
-  if (!aPacket.pageError.sourceName.includes("test_page_errors")) {
-    info("Ignoring error from unknown source: " + aPacket.pageError.sourceName);
+function onPageError(state, type, packet) {
+  if (!packet.pageError.sourceName.includes("test_page_errors")) {
+    info("Ignoring error from unknown source: " + packet.pageError.sourceName);
     return;
   }
 
-  is(aPacket.from, aState.actor, "page error actor");
+  is(packet.from, state.actor, "page error actor");
 
-  pageErrors.push(aPacket.pageError);
+  pageErrors.push(packet.pageError);
   if (pageErrors.length != Object.keys(expectedPageErrors).length) {
     return;
   }
 
-  aState.dbgClient.removeListener("pageError", onPageError);
+  state.dbgClient.removeListener("pageError", onPageError);
 
-  Object.values(expectedPageErrors).forEach(function(aMessage, aIndex) {
-    info("checking received page error #" + aIndex);
-    checkObject(pageErrors[aIndex], Object.values(expectedPageErrors)[aIndex]);
+  Object.values(expectedPageErrors).forEach(function(message, index) {
+    info("checking received page error #" + index);
+    checkObject(pageErrors[index], Object.values(expectedPageErrors)[index]);
   });
 
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     SimpleTest.finish();
   });
 }

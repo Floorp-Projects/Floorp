@@ -329,7 +329,7 @@ private:
   void ProcessPendingUpdatesForView(nsView *aView,
                                     bool aFlushDirtyRegion = true);
   void ProcessPendingUpdatesRecurse(nsView* aView,
-                                    nsTArray<nsCOMPtr<nsIWidget> >& aWidgets);
+                                    AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets);
   void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
 
   void FlushDirtyRegionToWidget(nsView* aView);

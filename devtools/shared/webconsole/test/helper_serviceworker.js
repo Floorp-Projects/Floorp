@@ -1,3 +1,5 @@
+"use strict";
+
 console.log("script evaluation");
 
 addEventListener("install", function (evt) {

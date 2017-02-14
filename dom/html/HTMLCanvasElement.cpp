@@ -837,6 +837,21 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
 
+  nsIntSize elemSize = GetWidthHeight();
+  if (elemSize.width == 0 || elemSize.height == 0) {
+    // According to spec, blob should return null if either its horizontal
+    // dimension or its vertical dimension is zero. See link below.
+    // https://html.spec.whatwg.org/multipage/scripting.html#dom-canvas-toblob
+    OwnerDoc()->Dispatch("FireNullBlobEvent",
+                  TaskCategory::Other,
+                  NewRunnableMethod<Blob*, const char*>(
+                          &aCallback,
+                          static_cast<void(BlobCallback::*)(
+                            Blob*, const char*)>(&BlobCallback::Call),
+                          nullptr, nullptr));
+    return;
+  }
+
   CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType,
                                        aParams, aRv);
 

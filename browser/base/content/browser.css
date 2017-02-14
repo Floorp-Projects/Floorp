@@ -349,6 +349,11 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
   }
 }
 
+toolbarbutton.webextension-menuitem > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
 toolbarpaletteitem[removable="false"] {
   opacity: 0.5;
   cursor: default;

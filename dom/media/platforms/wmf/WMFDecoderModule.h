@@ -14,9 +14,6 @@ namespace mozilla {
 class WMFDecoderModule : public PlatformDecoderModule
 {
 public:
-  WMFDecoderModule();
-  virtual ~WMFDecoderModule();
-
   // Initializes the module, loads required dynamic libraries, etc.
   nsresult Startup() override;
 
@@ -49,7 +46,9 @@ public:
   static bool HasH264();
 
 private:
-  bool mWMFInitialized;
+  virtual ~WMFDecoderModule();
+
+  bool mWMFInitialized = false;
 };
 
 } // namespace mozilla

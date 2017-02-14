@@ -179,8 +179,7 @@ class SamplerThread
             continue;
           }
 
-          PseudoStack::SleepState sleeping = info->Stack()->observeSleeping();
-          if (sleeping == PseudoStack::SLEEPING_AGAIN) {
+          if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
             info->DuplicateLastSample();
             continue;
           }

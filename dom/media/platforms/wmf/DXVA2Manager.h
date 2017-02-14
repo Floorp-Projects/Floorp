@@ -6,10 +6,10 @@
 #if !defined(DXVA2Manager_h_)
 #define DXVA2Manager_h_
 
-#include "WMF.h"
 #include "MediaInfo.h"
-#include "nsAutoPtr.h"
+#include "WMF.h"
 #include "mozilla/Mutex.h"
+#include "nsAutoPtr.h"
 #include "nsRect.h"
 
 namespace mozilla {
@@ -20,15 +20,18 @@ class ImageContainer;
 class KnowsCompositor;
 }
 
-class DXVA2Manager {
+class DXVA2Manager
+{
 public:
 
   // Creates and initializes a DXVA2Manager. We can use DXVA2 via either
   // D3D9Ex or D3D11.
-  static DXVA2Manager* CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
-                                      nsACString& aFailureReason);
-  static DXVA2Manager* CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
-                                       nsACString& aFailureReason);
+  static DXVA2Manager* CreateD3D9DXVA(
+    layers::KnowsCompositor* aKnowsCompositor,
+    nsACString& aFailureReason);
+  static DXVA2Manager* CreateD3D11DXVA(
+    layers::KnowsCompositor* aKnowsCompositor,
+    nsACString& aFailureReason);
 
   // Returns a pointer to the D3D device manager responsible for managing the
   // device we're using for hardware accelerated video decoding. If we're using
@@ -41,7 +44,10 @@ public:
                               const nsIntRect& aRegion,
                               layers::Image** aOutImage) = 0;
 
-  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) { return S_OK; }
+  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
+  {
+    return S_OK;
+  }
 
   virtual bool IsD3D11() { return false; }
 
@@ -63,7 +69,7 @@ protected:
                                const uint32_t& aHeight,
                                const float& aFramerate) const;
 
-  bool mIsAMDPreUVD4;
+  bool mIsAMDPreUVD4 = false;
 };
 
 } // namespace mozilla
