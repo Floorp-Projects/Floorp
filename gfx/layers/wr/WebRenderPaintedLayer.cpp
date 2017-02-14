@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 
 namespace mozilla {
