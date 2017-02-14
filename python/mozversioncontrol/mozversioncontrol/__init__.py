@@ -61,6 +61,11 @@ class Repository(object):
         working copy.'''
         raise NotImplementedError
 
+    def get_added_files(self):
+        '''Return a list of files that are added in this repository's
+        working copy.'''
+        raise NotImplementedError
+
     def add_remove_files(self, path):
         '''Add and remove files under `path` in this repository's working copy.
         '''
@@ -78,7 +83,12 @@ class HgRepository(Repository):
         self._env[b'HGPLAIN'] = b'1'
 
     def get_modified_files(self):
-        return [line.strip().split()[1] for line in self._run('status', '--modified').splitlines()]
+        # Use --no-status to print just the filename.
+        return self._run('status', '--modified', '--no-status').splitlines()
+
+    def get_added_files(self):
+        # Use --no-status to print just the filename.
+        return self._run('status', '--added', '--no-status').splitlines()
 
     def add_remove_files(self, path):
         args = ['addremove', path]
@@ -96,6 +106,9 @@ class GitRepository(Repository):
 
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
+
+    def get_added_files(self):
+        return self._run('diff', '--diff-filter=A', '--name-only').splitlines()
 
     def add_remove_files(self, path):
         self._run('add', path)
