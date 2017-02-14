@@ -635,6 +635,7 @@ NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor)
 
 PDNSRequestParent*
 NeckoParent::AllocPDNSRequestParent(const nsCString& aHost,
+                                    const OriginAttributes& aOriginAttributes,
                                     const uint32_t& aFlags,
                                     const nsCString& aNetworkInterface)
 {
@@ -646,10 +647,13 @@ NeckoParent::AllocPDNSRequestParent(const nsCString& aHost,
 mozilla::ipc::IPCResult
 NeckoParent::RecvPDNSRequestConstructor(PDNSRequestParent* aActor,
                                         const nsCString& aHost,
+                                        const OriginAttributes& aOriginAttributes,
                                         const uint32_t& aFlags,
                                         const nsCString& aNetworkInterface)
 {
-  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(aHost, aFlags,
+  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(aHost,
+                                                         aOriginAttributes,
+                                                         aFlags,
                                                          aNetworkInterface);
   return IPC_OK();
 }

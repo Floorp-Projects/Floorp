@@ -24,12 +24,15 @@ public:
 
   DNSRequestParent();
 
-  void DoAsyncResolve(const nsACString  &hostname, uint32_t flags,
+  void DoAsyncResolve(const nsACString  &hostname,
+                      const OriginAttributes &originAttributes,
+                      uint32_t flags,
                       const nsACString  &networkInterface);
 
   // Pass args here rather than storing them in the parent; they are only
   // needed if the request is to be canceled.
   mozilla::ipc::IPCResult RecvCancelDNSRequest(const nsCString& hostName,
+                                               const OriginAttributes& originAttributes,
                                                const uint32_t& flags,
                                                const nsCString& networkInterface,
                                                const nsresult& reason) override;
