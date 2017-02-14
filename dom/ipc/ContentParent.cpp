@@ -5078,6 +5078,13 @@ ContentParent::RecvUpdateChildKeyedScalars(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents)
+{
+  TelemetryIPC::RecordChildEvents(GeckoProcessType_Content, aEvents);
+  return IPC_OK();
+}
+
 PURLClassifierParent*
 ContentParent::AllocPURLClassifierParent(const Principal& aPrincipal,
                                          const bool& aUseTrackingProtection,

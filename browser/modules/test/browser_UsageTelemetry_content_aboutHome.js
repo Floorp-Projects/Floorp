@@ -81,7 +81,8 @@ add_task(function* test_abouthome_simpleQuery() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = events.filter(e => e[1] == "navigation" && e[2] == "search");
+  Assert.ok("default" in events, "We should have recorded events in the parent process.");
+  events = events.default.filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_home", "enter", {engine: "other-MozSearch"}]]);
 
   yield BrowserTestUtils.removeTab(tab);
