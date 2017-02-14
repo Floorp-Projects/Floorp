@@ -66,6 +66,11 @@ class Repository(object):
         '''
         raise NotImplementedError
 
+    def forget_add_remove_files(self, path):
+        '''Undo the effects of a previous add_remove_files call for `path`.
+        '''
+        raise NotImplementedError
+
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
     def __init__(self, path):
@@ -81,6 +86,9 @@ class HgRepository(Repository):
             args = ['--config', 'extensions.automv='] + args
         self._run(*args)
 
+    def forget_add_remove_files(self, path):
+        self._run('forget', path)
+
 class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
     def __init__(self, path):
@@ -91,6 +99,9 @@ class GitRepository(Repository):
 
     def add_remove_files(self, path):
         self._run('add', path)
+
+    def forget_add_remove_files(self, path):
+        self._run('reset', path)
 
 def get_repository_object(path):
     '''Get a repository object for the repository at `path`.
