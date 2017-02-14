@@ -23,11 +23,6 @@ namespace js {
 // associated with the data, consider using the ExclusiveData class instead.
 // Otherwise, ProtectedData should be used to document whatever synchronization
 // method is used.
-//
-// Note that several of the checks below are currently disabled
-// (e.g. ThreadLocalData, ZoneGroupData). These will be fixed soon (bug 1323066),
-// but for now this class is largely documenting how we would like data to be
-// protected, rather than how it actually is protected.
 
 #define DECLARE_ONE_BOOL_OPERATOR(OP, T)        \
     template <typename U>                       \
@@ -179,10 +174,7 @@ class CheckThreadLocal
     {}
 
     inline void check() const {
-        // This check is currently disabled because JSContexts used for off
-        // thread parsing are created on different threads than where they run.
-        // This will be fixed soon (bug 1323066).
-        //MOZ_ASSERT(id == ThisThread::GetId());
+        MOZ_ASSERT(id == ThisThread::GetId());
     }
 #endif
 };
@@ -239,7 +231,8 @@ class CheckZoneGroup
 };
 
 // Data which may only be accessed by threads with exclusive access to the
-// associated zone group.
+// associated zone group, or by the runtime's cooperatively scheduled
+// active thread for zone groups which are not in use by a helper thread.
 template <typename T>
 using ZoneGroupData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedHelperThread::None>, T>;

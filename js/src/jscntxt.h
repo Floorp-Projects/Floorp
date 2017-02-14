@@ -1144,7 +1144,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
 
     void init(JSRuntime* rt) {
         runtime = rt;
-        if (runtime->numExclusiveThreads) {
+        if (runtime->hasHelperThreadZones()) {
             runtime->exclusiveAccessLock.lock();
         } else {
             MOZ_ASSERT(!runtime->activeThreadHasExclusiveAccess);
@@ -1164,7 +1164,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
         init(rt);
     }
     ~AutoLockForExclusiveAccess() {
-        if (runtime->numExclusiveThreads) {
+        if (runtime->hasHelperThreadZones()) {
             runtime->exclusiveAccessLock.unlock();
         } else {
             MOZ_ASSERT(runtime->activeThreadHasExclusiveAccess);
