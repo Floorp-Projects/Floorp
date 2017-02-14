@@ -172,6 +172,8 @@ private:
                         bool aRequireIncludeSubdomains, uint32_t aFlags,
                         bool* aResult, bool* aCached);
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
+  nsresult IsSecureHost(uint32_t aType, const nsACString& aHost,
+                        uint32_t aFlags, bool* aCached, bool* aResult);
 
   uint64_t mMaxMaxAge;
   bool mUsePreloadList;

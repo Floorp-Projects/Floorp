@@ -194,10 +194,10 @@ class TestNat;
 
 class NrIceStats {
  public:
-  uint16_t stun_retransmits;
-  uint16_t turn_401s;
-  uint16_t turn_403s;
-  uint16_t turn_438s;
+  uint16_t stun_retransmits = 0;
+  uint16_t turn_401s = 0;
+  uint16_t turn_403s = 0;
+  uint16_t turn_438s = 0;
 };
 
 class NrIceCtx {

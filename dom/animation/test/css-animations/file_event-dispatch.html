@@ -30,22 +30,26 @@ function AnimationEventHandler(target) {
   this.target.onanimationend = function(evt) {
     this.animationend = evt.elapsedTime;
   }.bind(this);
+  this.target.onanimationcancel = function(evt) {
+    this.animationcancel = evt.elapsedTime;
+  }.bind(this);
 }
 AnimationEventHandler.prototype.clear = function() {
-  this.animationstart = undefined;
+  this.animationstart     = undefined;
   this.animationiteration = undefined;
-  this.animationend = undefined;
+  this.animationend       = undefined;
+  this.animationcancel    = undefined;
 }
 
 function setupAnimation(t, animationStyle) {
   var div = addDiv(t, { style: "animation: " + animationStyle });
   var watcher = new EventWatcher(t, div, [ 'animationstart',
                                            'animationiteration',
-                                           'animationend' ]);
-  var handler = new AnimationEventHandler(div);
+                                           'animationend',
+                                           'animationcancel' ]);
   var animation = div.getAnimations()[0];
 
-  return [animation, watcher, handler, div];
+  return [animation, watcher, div];
 }
 
 promise_test(function(t) {
@@ -58,7 +62,8 @@ promise_test(function(t) {
 }, 'Idle -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s');
+  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -70,7 +75,7 @@ promise_test(function(t) {
 }, 'Idle -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s paused');
 
   return animation.ready.then(function() {
@@ -83,8 +88,9 @@ promise_test(function(t) {
 }, 'Before -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(function() {
     // Seek to After phase.
@@ -97,7 +103,45 @@ promise_test(function(t) {
 }, 'Before -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] = setupAnimation(t, 'anim 100s paused');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    div.style.display = 'none';
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    assert_equals(evt.elapsedTime, 0.0);
+  });
+}, 'Active -> Idle, display: none');
+
+promise_test(function(t) {
+  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    animation.currentTime = 100.0;
+    // Make idle
+    animation.timeline = null;
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    assert_times_equal(evt.elapsedTime, 0.1);
+  });
+}, 'Active -> Idle, setting Animation.timeline = null');
+
+promise_test(function(t) {
+  // we should NOT pause animation since calling cancel synchronously.
+  const [animation, watcher, div] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    animation.currentTime = 50.0;
+    animation.cancel();
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    assert_times_equal(evt.elapsedTime, 0.05);
+  });
+}, 'Active -> Idle, calling Animation.cancel()');
+
+promise_test(function(t) {
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s paused');
 
   // Seek to Active phase.
@@ -112,7 +156,7 @@ promise_test(function(t) {
 }, 'Active -> Before');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s paused');
+  const [animation, watcher] = setupAnimation(t, 'anim 100s paused');
 
   return watcher.wait_for('animationstart').then(function(evt) {
     // Seek to After phase.
@@ -124,8 +168,9 @@ promise_test(function(t) {
 }, 'Active -> After');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -142,8 +187,9 @@ promise_test(function(t) {
 }, 'After -> Before');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s 100s paused');
+  const handler = new AnimationEventHandler(div);
 
   // Seek to After phase.
   animation.finish();
@@ -159,8 +205,9 @@ promise_test(function(t) {
 }, 'After -> Active');
 
 promise_test(function(t) {
-  const [animation, watcher, handler]
+  const [animation, watcher, div]
     = setupAnimation(t, 'anim 100s 100s 3 paused');
+  const handler = new AnimationEventHandler(div);
 
   return animation.ready.then(function() {
     // Seek to iteration 0 (no animationiteration event should be dispatched)
@@ -182,7 +229,7 @@ promise_test(function(t) {
 }, 'Active -> Active (forwards)');
 
 promise_test(function(t) {
-  const [animation, watcher, handler] = setupAnimation(t, 'anim 100s 100s 3');
+  const [animation, watcher] = setupAnimation(t, 'anim 100s 100s 3');
 
   // Seek to After phase.
   animation.finish();
@@ -205,15 +252,15 @@ promise_test(function(t) {
 }, 'Active -> Active (backwards)');
 
 promise_test(function(t) {
-  const [animation, watcher, handler, div] =
+  const [animation, watcher, div] =
     setupAnimation(t, 'anim 100s paused');
   return watcher.wait_for('animationstart').then(function(evt) {
     // Seek to Idle phase.
     div.style.display = 'none';
     flushComputedStyle(div);
 
-    // FIXME: bug 1302648: Add test for animationcancel event here.
-
+    return watcher.wait_for('animationcancel');
+  }).then(function() {
     // Restart this animation.
     div.style.display = '';
     return watcher.wait_for('animationstart');
@@ -221,7 +268,7 @@ promise_test(function(t) {
 }, 'Active -> Idle -> Active: animationstart is fired by restarting animation');
 
 promise_test(function(t) {
-  const [animation, watcher, handler, div] =
+  const [animation, watcher] =
     setupAnimation(t, 'anim 100s 100s 2 paused');
 
   // Make After.
@@ -245,6 +292,88 @@ promise_test(function(t) {
     assert_equals(animation.playState, 'running'); // delay
   });
 }, 'Negative playbackRate sanity test(Before -> Active -> Before)');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    animation.cancel();
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    animation.cancel();
+    // Then wait a couple of frames and check that no event was dispatched.
+    return waitForAnimationFrames(2);
+  });
+}, 'Call Animation.cancel after cancelling animation.');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    animation.cancel();
+    animation.play();
+    return watcher.wait_for([ 'animationcancel',
+                              'animationstart' ]);
+  });
+}, 'Restart animation after cancelling animation immediately.');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    animation.cancel();
+    animation.play();
+    animation.cancel();
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    // Then wait a couple of frames and check that no event was dispatched.
+    return waitForAnimationFrames(2);
+  });
+}, 'Call Animation.cancel after restarting animation immediately.');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    animation.timeline = null;
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    animation.timeline = document.timeline;
+    animation.play();
+    return watcher.wait_for('animationstart');
+  });
+}, 'Set timeline and play transition after clearing the timeline.');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    // Make idle
+    animation.cancel();
+    return watcher.wait_for('animationcancel');
+  }).then(function(evt) {
+    animation.effect = null;
+    // Then wait a couple of frames and check that no event was dispatched.
+    return waitForAnimationFrames(2);
+  });
+}, 'Set null target effect after cancelling the animation.');
+
+promise_test(function(t) {
+  const [animation, watcher] = setupAnimation(t, 'anim 100s');
+
+  return watcher.wait_for('animationstart').then(function(evt) {
+    animation.effect = null;
+    return watcher.wait_for('animationend');
+  }).then(function(evt) {
+    animation.cancel();
+    // Then wait a couple of frames and check that no event was dispatched.
+    return waitForAnimationFrames(2);
+  });
+}, 'Cancel the animation after clearing the target effect.');
 
 done();
 </script>
