@@ -100,6 +100,19 @@ var PrintUtils = {
     return true;
   },
 
+  getDefaultPrinterName() {
+    try {
+      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Ci.nsIPrintSettingsService);
+
+      return PSSVC.defaultPrinterName;
+    } catch (e) {
+      Components.utils.reportError(e);
+    }
+
+    return null;
+  },
+
   /**
    * Starts the process of printing the contents of a window.
    *
@@ -110,9 +123,11 @@ var PrintUtils = {
    */
   printWindow(aWindowID, aBrowser) {
     let mm = aBrowser.messageManager;
+    let defaultPrinterName = this.getDefaultPrinterName();
     mm.sendAsyncMessage("Printing:Print", {
       windowID: aWindowID,
       simplifiedMode: this._shouldSimplify,
+      defaultPrinterName,
     });
   },
 
@@ -491,11 +506,13 @@ var PrintUtils = {
     // listener.
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
+    let defaultPrinterName = this.getDefaultPrinterName();
 
     let sendEnterPreviewMessage = function(browser, simplified) {
       mm.sendAsyncMessage("Printing:Preview:Enter", {
         windowID: browser.outerWindowID,
         simplifiedMode: simplified,
+        defaultPrinterName,
       });
     };
 

@@ -425,7 +425,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
   }
 
-  aChildDoc->mParent = outerDoc;
+  aChildDoc->SetParent(outerDoc);
   outerDoc->SetChildDoc(aChildDoc);
   mChildDocs.AppendElement(aChildDoc);
   aChildDoc->mParentDoc = this;

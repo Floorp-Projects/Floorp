@@ -1624,7 +1624,8 @@ nsRefreshDriver::DispatchPendingEvents()
 static bool
 CollectDocuments(nsIDocument* aDocument, void* aDocArray)
 {
-  static_cast<nsCOMArray<nsIDocument>*>(aDocArray)->AppendObject(aDocument);
+  static_cast<AutoTArray<nsCOMPtr<nsIDocument>, 32>*>(aDocArray)->
+    AppendElement(aDocument);
   aDocument->EnumerateSubDocuments(CollectDocuments, aDocArray);
   return true;
 }
@@ -1636,10 +1637,10 @@ nsRefreshDriver::DispatchAnimationEvents()
     return;
   }
 
-  nsCOMArray<nsIDocument> documents;
+  AutoTArray<nsCOMPtr<nsIDocument>, 32> documents;
   CollectDocuments(mPresContext->Document(), &documents);
 
-  for (int32_t i = 0; i < documents.Count(); ++i) {
+  for (uint32_t i = 0; i < documents.Length(); ++i) {
     nsIDocument* doc = documents[i];
     nsIPresShell* shell = doc->GetShell();
     if (!shell) {

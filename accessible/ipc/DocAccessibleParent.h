@@ -95,7 +95,7 @@ public:
       parent->RemoveChildDoc(this);
     }
 
-    mParent = nullptr;
+    SetParent(nullptr);
   }
 
   virtual mozilla::ipc::IPCResult RecvShutdown() override;

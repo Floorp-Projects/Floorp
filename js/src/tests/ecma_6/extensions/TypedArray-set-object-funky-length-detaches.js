@@ -1,4 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- needs detachArrayBuffer()
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
