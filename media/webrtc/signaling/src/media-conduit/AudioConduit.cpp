@@ -536,19 +536,16 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
       error = mPtrVoEBase->LastError();
       CSFLogError(logTag,  "%s SetRecvCodec Failed %d ",__FUNCTION__, error);
       continue;
-    } else {
-      CSFLogDebug(logTag, "%s Successfully Set RecvCodec %s", __FUNCTION__,
-                                          codec->mName.c_str());
-      //copy this to local database
-      if(CopyCodecToDB(codec))
-      {
-        success = true;
-      } else {
+    }
+    CSFLogDebug(logTag, "%s Successfully Set RecvCodec %s", __FUNCTION__,
+                                        codec->mName.c_str());
+
+    //copy this to local database
+    if(!CopyCodecToDB(codec)) {
         CSFLogError(logTag,"%s Unable to updated Codec Database", __FUNCTION__);
         return kMediaConduitUnknownError;
-      }
-
     }
+    success = true;
 
   } //end for
 
@@ -927,23 +924,22 @@ WebrtcAudioConduit::SendRtp(const uint8_t* data,
   // with the Call API update in the webrtc.org codebase.
   // The only field in it is the packet_id, which is used when the header
   // extension for TransportSequenceNumber is being used, which we don't.
-  (void) options;
+  (void)options;
   if(mTransmitterTransport &&
      (mTransmitterTransport->SendRtpPacket(data, len) == NS_OK))
   {
     CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);
     return true;
-  } else {
-    CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
-    return false;
   }
+  CSFLogError(logTag, "%s RTP Packet Send Failed ", __FUNCTION__);
+  return false;
 }
 
 // Called on WebRTC Process thread and perhaps others
 bool
 WebrtcAudioConduit::SendRtcp(const uint8_t* data, size_t len)
 {
-  CSFLogDebug(logTag,  "%s : len %lu, first rtcp = %u ",
+  CSFLogDebug(logTag, "%s : len %lu, first rtcp = %u ",
               __FUNCTION__,
               (unsigned long) len,
               static_cast<unsigned>(data[1]));
@@ -958,14 +954,14 @@ WebrtcAudioConduit::SendRtcp(const uint8_t* data, size_t len)
     // Might be a sender report, might be a receiver report, we don't know.
     CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
     return true;
-  } else if(mTransmitterTransport &&
-            (mTransmitterTransport->SendRtcpPacket(data, len) == NS_OK)) {
-      CSFLogDebug(logTag, "%s Sent RTCP Packet (sender report) ", __FUNCTION__);
-      return true;
-  } else {
-    CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
-    return false;
   }
+  if (mTransmitterTransport &&
+      (mTransmitterTransport->SendRtcpPacket(data, len) == NS_OK)) {
+    CSFLogDebug(logTag, "%s Sent RTCP Packet (sender report) ", __FUNCTION__);
+    return true;
+  }
+  CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
+  return false;
 }
 
 /**
@@ -975,7 +971,7 @@ WebrtcAudioConduit::SendRtcp(const uint8_t* data, size_t len)
 bool
 WebrtcAudioConduit::CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
                                               webrtc::CodecInst& cinst)
- {
+{
   const unsigned int plNameLength = codecInfo->mName.length();
   memset(&cinst, 0, sizeof(webrtc::CodecInst));
   if(sizeof(cinst.plname) < plNameLength+1)
@@ -996,27 +992,22 @@ WebrtcAudioConduit::CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
   }
   cinst.channels =  codecInfo->mChannels;
   return true;
- }
+}
 
 /**
-  *  Supported Sampling Frequncies.
+  *  Supported Sampling Frequencies.
   */
 bool
 WebrtcAudioConduit::IsSamplingFreqSupported(int freq) const
 {
-  if(GetNum10msSamplesForFrequency(freq))
-  {
-    return true;
-  } else {
-    return false;
-  }
+  return GetNum10msSamplesForFrequency(freq) != 0;
 }
 
 /* Return block-length of 10 ms audio frame in number of samples */
 unsigned int
 WebrtcAudioConduit::GetNum10msSamplesForFrequency(int samplingFreqHz) const
 {
-  switch(samplingFreqHz)
+  switch (samplingFreqHz)
   {
     case 16000: return 160; //160 samples
     case 32000: return 320; //320 samples
