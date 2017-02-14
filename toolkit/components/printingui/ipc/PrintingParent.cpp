@@ -129,14 +129,24 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   rv = settings->SetPrintSilent(printSilently);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsXPIDLString printerName;
+  settings->GetPrinterName(getter_Copies(printerName));
+#ifdef MOZ_X11
+  // Requesting the default printer name on Linux has been removed in the child,
+  // because it was causing a sandbox violation (see Bug 1329216).
+  // If no printer name is set at this point, use the print settings service
+  // to get the default printer name.
+  if (printerName.IsEmpty()) {
+    mPrintSettingsSvc->GetDefaultPrinterName(getter_Copies(printerName));
+    settings->SetPrinterName(printerName);
+  }
+  mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
+#endif
+
   // If this is for print preview or we are printing silently then we just need
   // to initialize the print settings with anything specific from the printer.
   if (isPrintPreview || printSilently ||
       Preferences::GetBool("print.always_print_silent", printSilently)) {
-    nsXPIDLString printerName;
-    rv = settings->GetPrinterName(getter_Copies(printerName));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     settings->SetIsInitializedFromPrinter(false);
     mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
   } else {

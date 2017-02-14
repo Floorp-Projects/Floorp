@@ -1067,10 +1067,6 @@ class ICStubCompiler
     // Emits a normal (non-tail) call to a VMFunction wrapper.
     MOZ_MUST_USE bool callVM(const VMFunction& fun, MacroAssembler& masm);
 
-    // Emits a call to a type-update IC, assuming that the value to be
-    // checked is already in R0.
-    MOZ_MUST_USE bool callTypeUpdateIC(MacroAssembler& masm, uint32_t objectOffset);
-
     // A stub frame is used when a stub wants to call into the VM without
     // performing a tail call. This is required for the return address
     // to pc mapping to work.

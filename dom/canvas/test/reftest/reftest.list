@@ -163,7 +163,7 @@ pref(canvas.customfocusring.enabled,true) skip-if(Android||cocoaWidget||winWidge
 # Check that captureStream() displays in a local video element
 == capturestream.html wrapper.html?green.png
 
-fuzzy-if(azureSkia,16,2) fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) fails-if(webrender) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
+fuzzy-if(azureSkia,16,2) fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
 
 # Canvas Filter Reftests
 include filters/reftest.list

@@ -380,7 +380,12 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
 nsresult Decoder::InitInternal() { return NS_OK; }
 nsresult Decoder::BeforeFinishInternal() { return NS_OK; }
 nsresult Decoder::FinishInternal() { return NS_OK; }
-nsresult Decoder::FinishWithErrorInternal() { return NS_OK; }
+
+nsresult Decoder::FinishWithErrorInternal()
+{
+  MOZ_ASSERT(!mInFrame);
+  return NS_OK;
+}
 
 /*
  * Progress Notifications

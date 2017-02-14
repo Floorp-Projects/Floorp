@@ -74,6 +74,36 @@ add_task(function* testTempPermissionOnReload() {
   });
 });
 
+// Test that temporary permissions are not removed when reloading all tabs.
+add_task(function* testTempPermissionOnReloadAllTabs() {
+  let uri = NetUtil.newURI("https://example.com");
+  let id = "geo";
+
+  yield BrowserTestUtils.withNewTab(uri.spec, function*(browser) {
+    SitePermissions.set(uri, id, SitePermissions.BLOCK, SitePermissions.SCOPE_TEMPORARY, browser);
+
+    // Open the tab context menu.
+    let contextMenu = document.getElementById("tabContextMenu");
+    let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(gBrowser.selectedTab, {type: "contextmenu", button: 2});
+    yield popupShownPromise;
+
+    let reloadMenuItem = document.getElementById("context_reloadAllTabs");
+
+    let reloaded = Promise.all(gBrowser.visibleTabs.map(
+      tab => BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab))));
+    EventUtils.synthesizeMouseAtCenter(reloadMenuItem, {});
+    yield reloaded;
+
+    Assert.deepEqual(SitePermissions.get(uri, id, browser), {
+      state: SitePermissions.BLOCK,
+      scope: SitePermissions.SCOPE_TEMPORARY,
+    });
+
+    SitePermissions.remove(uri, id, browser);
+  });
+});
+
 // Test that temporary permissions are persisted through navigation in a tab.
 add_task(function* testTempPermissionOnNavigation() {
   let uri = NetUtil.newURI("https://example.com/");

@@ -122,6 +122,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   get window() {
+    // ownerGlobal doesn't exist in content privileged windows.
+    // eslint-disable-next-line mozilla/use-ownerGlobal
     return this.node.ownerDocument.defaultView;
   },
 
@@ -537,6 +539,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     // either getAnimationPlayersForNode is called again or
     // stopAnimationPlayerUpdates is called.
     this.stopAnimationPlayerUpdates();
+    // ownerGlobal doesn't exist in content privileged windows.
+    // eslint-disable-next-line mozilla/use-ownerGlobal
     let win = nodeActor.rawNode.ownerDocument.defaultView;
     this.observer = new win.MutationObserver(this.onAnimationMutation);
     this.observer.observe(nodeActor.rawNode, {

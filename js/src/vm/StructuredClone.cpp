@@ -524,6 +524,10 @@ ReportDataCloneError(JSContext* cx,
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_UNSUPPORTED_TYPE);
         break;
 
+      case JS_SCERR_SAB_TRANSFERABLE:
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_TRANSFERABLE);
+        break;
+
       default:
         MOZ_CRASH("Unkown errorId");
         break;
@@ -1009,13 +1013,8 @@ JSStructuredCloneWriter::parseTransferable()
             return reportDataCloneError(JS_SCERR_TRANSFERABLE);
         tObj = &v.toObject();
 
-        // Backward compatibility, see bug 1302036 and bug 1302037.
-        if (tObj->is<SharedArrayBufferObject>()) {
-            if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage,
-                                                   nullptr, JSMSG_SC_SAB_TRANSFER))
-                return false;
-            continue;
-        }
+        if (tObj->is<SharedArrayBufferObject>())
+            return reportDataCloneError(JS_SCERR_SAB_TRANSFERABLE);
 
         // No duplicates allowed
         auto p = transferableObjects.lookupForAdd(tObj);
