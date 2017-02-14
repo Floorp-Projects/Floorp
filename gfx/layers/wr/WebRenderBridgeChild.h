@@ -31,6 +31,7 @@ public:
   explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
+  void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
   void DPEnd(bool aIsSync, uint64_t aTransactionId);
