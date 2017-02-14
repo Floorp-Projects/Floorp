@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -87,35 +85,8 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
   }
 
   // Check the output.
-  uint8_t fuzz = aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0;
-  IntRect truncRect = aTestCase.mTruncatedRect;
-  auto colored = BGRAColor::Green();
-  if (truncRect.IsEmpty()) {
-    EXPECT_TRUE(IsSolidColor(surface, colored, fuzz));
-  } else {
-    IntSize size = surface->GetSize();
-    IntRect partialRow = aTestCase.mTruncatedPartialRow;
-    auto cleared = BGRAColor::Transparent();
-    if (aTestCase.mFlags & TEST_CASE_HAS_TRUNCATED_COLOR) {
-      cleared = aTestCase.mTruncatedColor;
-    } else if (surface->GetFormat() == SurfaceFormat::B8G8R8X8) {
-      cleared = BGRAColor::White();
-    }
-
-    EXPECT_TRUE(RowsAreSolidColor(surface, 0, truncRect.y, cleared, 0));
-    EXPECT_TRUE(RowsAreSolidColor(surface, truncRect.y, truncRect.height,
-                                  colored, fuzz));
-    EXPECT_TRUE(RowsAreSolidColor(surface,
-                                  truncRect.y + truncRect.height +
-                                    partialRow.height,
-                                  size.height, cleared, 0));
-    if (!partialRow.IsEmpty()) {
-      EXPECT_TRUE(RectIsSolidColor(surface, partialRow, colored, fuzz));
-      partialRow.x += partialRow.width;
-      partialRow.width = size.width - partialRow.x;
-      EXPECT_TRUE(RectIsSolidColor(surface, partialRow, cleared, 0));
-    }
-  }
+  EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green(),
+                           aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
 }
 
 template <typename Func>
@@ -130,8 +101,6 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
   uint64_t length;
   nsresult rv = inputStream->Available(&length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  length -= aTestCase.mTruncatedBytes;
 
   // Write the data into a SourceBuffer.
   NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
@@ -255,11 +224,6 @@ TEST_F(ImageDecoders, PNGDownscaleDuringDecode)
   CheckDownscaleDuringDecode(DownscaledPNGTestCase());
 }
 
-TEST_F(ImageDecoders, PNGTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedPNGTestCase());
-}
-
 TEST_F(ImageDecoders, GIFSingleChunk)
 {
   CheckDecoderSingleChunk(GreenGIFTestCase());
@@ -275,11 +239,6 @@ TEST_F(ImageDecoders, GIFDownscaleDuringDecode)
   CheckDownscaleDuringDecode(DownscaledGIFTestCase());
 }
 
-TEST_F(ImageDecoders, GIFTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedGIFTestCase());
-}
-
 TEST_F(ImageDecoders, JPGSingleChunk)
 {
   CheckDecoderSingleChunk(GreenJPGTestCase());
@@ -288,11 +247,6 @@ TEST_F(ImageDecoders, JPGSingleChunk)
 TEST_F(ImageDecoders, JPGMultiChunk)
 {
   CheckDecoderMultiChunk(GreenJPGTestCase());
-}
-
-TEST_F(ImageDecoders, JPGTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedJPGTestCase());
 }
 
 TEST_F(ImageDecoders, JPGDownscaleDuringDecode)
@@ -315,11 +269,6 @@ TEST_F(ImageDecoders, BMPDownscaleDuringDecode)
   CheckDownscaleDuringDecode(DownscaledBMPTestCase());
 }
 
-TEST_F(ImageDecoders, BMPTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedBMPTestCase());
-}
-
 TEST_F(ImageDecoders, ICOSingleChunk)
 {
   CheckDecoderSingleChunk(GreenICOTestCase());
@@ -340,11 +289,6 @@ TEST_F(ImageDecoders, ICOWithANDMaskDownscaleDuringDecode)
   CheckDownscaleDuringDecode(DownscaledTransparentICOWithANDMaskTestCase());
 }
 
-TEST_F(ImageDecoders, ICOTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedICOTestCase());
-}
-
 TEST_F(ImageDecoders, IconSingleChunk)
 {
   CheckDecoderSingleChunk(GreenIconTestCase());
@@ -358,11 +302,6 @@ TEST_F(ImageDecoders, IconMultiChunk)
 TEST_F(ImageDecoders, IconDownscaleDuringDecode)
 {
   CheckDownscaleDuringDecode(DownscaledIconTestCase());
-}
-
-TEST_F(ImageDecoders, IconTruncated)
-{
-  CheckDecoderSingleChunk(TruncatedIconTestCase());
 }
 
 TEST_F(ImageDecoders, AnimatedGIFSingleChunk)

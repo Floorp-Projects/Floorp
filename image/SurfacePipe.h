@@ -106,17 +106,6 @@ public:
   virtual ~SurfaceFilter() { }
 
   /**
-   * Called when there are no more pixels from the caller to write. It will
-   * ensure that any unwritten pixels are cleared with an appropriate value.
-   */
-  void ZeroOutRestOfSurface()
-  {
-    DoZeroOutRestOfSurface();
-    mCol = 0;
-    mRowPointer = nullptr;
-  }
-
-  /**
    * Reset this surface to the first row. It's legal for this filter to throw
    * away any previously written data at this point, as all rows must be written
    * to on every pass.
@@ -310,11 +299,7 @@ public:
       NS_WARNING("Provided starting column is out-of-bounds in WriteBuffer");
     }
 
-    uint8_t clear = 0;
-    bool clearRequired = GetClearValue(clear);
-    if (clearRequired) {
-      memset(dest, clear, mInputSize.width * sizeof(PixelType));
-    }
+    memset(dest, 0, mInputSize.width * sizeof(PixelType));
     dest += prefixLength;
 
     // Write |aLength| pixels from |aSource| into the row, with bounds checking.
@@ -329,9 +314,7 @@ public:
 
     // Clear the rest of the row.
     const size_t suffixLength = mInputSize.width - (prefixLength + bufferLength);
-    if (clearRequired) {
-      memset(dest, clear, suffixLength * sizeof(PixelType));
-    }
+    memset(dest, 0, suffixLength * sizeof(PixelType));
 
     AdvanceRow();
 
@@ -352,17 +335,12 @@ public:
       return WriteState::FINISHED;  // Already done.
     }
 
-    uint8_t clear = 0;
-    if (GetClearValue(clear)) {
-      memset(mRowPointer, clear, mInputSize.width * mPixelSize);
-    }
+    memset(mRowPointer, 0, mInputSize.width * mPixelSize);
     AdvanceRow();
 
     return IsSurfaceFinished() ? WriteState::FINISHED
                                : WriteState::NEED_MORE_DATA;
   }
-
-  virtual bool GetClearValue(uint8_t& aValue) const = 0;
 
   /**
    * Write a row to the surface by calling a lambda that uses a pointer to
@@ -428,13 +406,6 @@ public:
   virtual Maybe<SurfaceInvalidRect> TakeInvalidRect() = 0;
 
 protected:
-  /// @return the column for the next pixel to be written in the current row.
-  int32_t CurrentColumn() const { return mCol; }
-
-  /* Called by ZeroOutRestOfSurface() to actually perform the clearing of the
-   * unwritten pixels.
-   */
-  virtual void DoZeroOutRestOfSurface() = 0;
 
   /**
    * Called by ResetToFirstRow() to actually perform the reset. It's legal to
@@ -450,6 +421,7 @@ protected:
    *         that we've finished the entire surface.
    */
   virtual uint8_t* DoAdvanceRow() = 0;
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Methods For Internal Use By Subclasses
@@ -512,7 +484,7 @@ private:
           return Some(WriteState::NEED_MORE_DATA);
 
         case WriteState::FINISHED:
-          ZeroOutRestOfSurface();
+          ZeroOutRestOfSurface<PixelType>();
           return Some(WriteState::FINISHED);
 
         case WriteState::FAILURE:
@@ -528,6 +500,12 @@ private:
 
     return IsSurfaceFinished() ? Some(WriteState::FINISHED)
                                : Nothing();
+  }
+
+  template <typename PixelType>
+  void ZeroOutRestOfSurface()
+  {
+    WritePixels<PixelType>([]{ return AsVariant(PixelType(0)); });
   }
 
   gfx::IntSize mInputSize;  /// The size of the input this filter expects.
@@ -565,10 +543,7 @@ public:
 
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override { return Nothing(); }
 
-  bool GetClearValue(uint8_t& aValue) const override { return false; }
-
 protected:
-  void DoZeroOutRestOfSurface() override { }
   uint8_t* DoResetToFirstRow() override { return nullptr; }
   uint8_t* DoAdvanceRow() override { return nullptr; }
 
@@ -688,22 +663,6 @@ public:
     return mHead->WriteEmptyRow();
   }
 
-  /**
-   * Write all remaining unset rows to an empty row to the surface. If some pixels
-   * have already been written to this row, they'll be discarded.
-   *
-   * @see SurfaceFilter::WriteEmptyRow() for the canonical documentation.
-   */
-  void ZeroOutRestOfSurface()
-  {
-    mHead->ZeroOutRestOfSurface();
-  }
-
-  bool GetClearValue(uint8_t& aValue) const
-  {
-    return mHead->GetClearValue(aValue);
-  }
-
   /// @return true if we've finished writing to the surface.
   bool IsSurfaceFinished() const { return mHead->IsSurfaceFinished(); }
 
@@ -739,34 +698,21 @@ public:
     , mImageDataLength(0)
     , mRow(0)
     , mFlipVertically(false)
-    , mClearRequired(false)
-    , mClearValue(0)
   { }
 
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override final;
 
-  bool GetClearValue(uint8_t& aValue) const override final
-  {
-    aValue = mClearValue;
-    return mClearRequired;
-  }
-
 protected:
-  void DoZeroOutRestOfSurface() override final;
   uint8_t* DoResetToFirstRow() override final;
   uint8_t* DoAdvanceRow() override final;
   virtual uint8_t* GetRowPointer() const = 0;
 
   gfx::IntRect mInvalidRect;  /// The region of the surface that has been written
                               /// to since the last call to TakeInvalidRect().
-  gfx::IntRect mWrittenRect;  /// The region of the surface that has been written
-                              /// to at least once.
   uint8_t*  mImageData;       /// A pointer to the beginning of the surface data.
   uint32_t  mImageDataLength; /// The length of the surface data.
   uint32_t  mRow;             /// The row to which we're writing. (0-indexed)
   bool      mFlipVertically;  /// If true, write the rows from top to bottom.
-  bool      mClearRequired;   /// If true, pixels need to be cleared to given.
-  uint8_t   mClearValue;      /// Value written to cleared pixels.
 };
 
 class SurfaceSink;

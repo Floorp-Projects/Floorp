@@ -285,8 +285,7 @@ AssertCorrectPipelineFinalState(SurfaceFilter* aFilter,
 void
 CheckGeneratedImage(Decoder* aDecoder,
                     const IntRect& aRect,
-                    uint8_t aFuzz /* = 0 */,
-                    bool aPartial /* = false */)
+                    uint8_t aFuzz /* = 0 */)
 {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
@@ -306,11 +305,6 @@ CheckGeneratedImage(Decoder* aDecoder,
 
   // Check that the output rect itself is green. (Region 'C'.)
   EXPECT_TRUE(RectIsSolidColor(surface, aRect, BGRAColor::Green(), aFuzz));
-
-  // We only assume everything is written if it is a complete image.
-  if (aPartial) {
-    return;
-  }
 
   // Check that the area above the output rect is transparent. (Region 'A'.)
   EXPECT_TRUE(RectIsSolidColor(surface,
@@ -336,7 +330,7 @@ CheckGeneratedImage(Decoder* aDecoder,
 }
 
 void
-CheckGeneratedPalettedImage(Decoder* aDecoder, const IntRect& aRect, bool aPartial /* = false */)
+CheckGeneratedPalettedImage(Decoder* aDecoder, const IntRect& aRect)
 {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   IntSize imageSize = currentFrame->GetImageSize();
@@ -355,10 +349,6 @@ CheckGeneratedPalettedImage(Decoder* aDecoder, const IntRect& aRect, bool aParti
 
   // Check that the output rect itself is all 255's. (Region 'C'.)
   EXPECT_TRUE(PalettedRectIsSolidColor(aDecoder, aRect, 255));
-
-  if (aPartial) {
-    return;
-  }
 
   // Check that the area above the output rect is all 0's. (Region 'A'.)
   EXPECT_TRUE(PalettedRectIsSolidColor(aDecoder,
@@ -686,58 +676,6 @@ ImageTestCase DownscaledTransparentICOWithANDMaskTestCase()
 ImageTestCase TruncatedSmallGIFTestCase()
 {
   return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1));
-}
-
-ImageTestCase TruncatedJPGTestCase()
-{
-  auto test = ImageTestCase("green.jpg", "image/jpeg", IntSize(100, 100),
-                            TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_FUZZY);
-  test.Truncate(1, IntRect(0, 0, 100, 94));
-  return test;
-}
-
-ImageTestCase TruncatedPNGTestCase()
-{
-  auto test = ImageTestCase("green.png", "image/png", IntSize(100, 100),
-                            TEST_CASE_IS_TRANSPARENT);
-  test.Truncate(32, IntRect(0, 0, 100, 91));
-  return test;
-}
-
-ImageTestCase TruncatedGIFTestCase()
-{
-  auto test = GreenGIFTestCase();
-  test.Truncate(32, IntRect(0, 0, 100, 62),
-                    IntRect(0, 62, 16, 1));
-  return test;
-}
-
-ImageTestCase TruncatedIconTestCase()
-{
-  auto test = GreenIconTestCase();
-  test.Truncate(32, IntRect(0, 0, 100, 99));
-  return test;
-}
-
-ImageTestCase TruncatedBMPTestCase()
-{
-  auto test = ImageTestCase("green.bmp", "image/bmp", IntSize(100, 100),
-                            TEST_CASE_HAS_TRUNCATED_COLOR);
-  test.Truncate(32, IntRect(0, 1, 100, 99),
-                IntRect(), BGRAColor::Black());
-  return test;
-}
-
-ImageTestCase TruncatedICOTestCase()
-{
-  // This ICO contains a 32-bit BMP, and we use a BMP's alpha data by default
-  // when the BMP is embedded in an ICO, so it's transparent.
-  auto test = ImageTestCase("green.ico", "image/x-icon", IntSize(100, 100),
-                            TEST_CASE_IS_TRANSPARENT |
-                            TEST_CASE_HAS_TRUNCATED_COLOR);
-  test.Truncate(2048, IntRect(0, 2, 100, 98),
-                IntRect(), BGRAColor::Black());
-  return test;
 }
 
 } // namespace image
