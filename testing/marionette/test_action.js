@@ -34,9 +34,12 @@ add_test(function test_defaultPointerParameters() {
 add_test(function test_processPointerParameters() {
   let check = (regex, message, arg) => checkErrors(
       regex, action.PointerParameters.fromJson, [arg], message);
-  let parametersData = {pointerType: "foo"};
-  let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
-  check(/Unknown pointerType/, message, parametersData);
+  let parametersData;
+  for (let d of ["foo", "", "get", "Get"]) {
+    parametersData = {pointerType: d};
+    let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
+    check(/Unknown pointerType/, message, parametersData);
+  }
   parametersData.pointerType = "pen";
   deepEqual(action.PointerParameters.fromJson(parametersData),
       {pointerType: action.PointerType.Pen});
@@ -85,20 +88,49 @@ add_test(function test_validateActionDurationAndCoordinates() {
   run_next_test();
 });
 
-add_test(function test_processPointerMoveActionElementValidation() {
+add_test(function test_processPointerMoveActionOriginValidation() {
   let actionSequence = {type: "pointer", id: "some_id"};
   let actionItem = {duration: 5000, type: "pointerMove"};
-  for (let d of [-1, "a", {a: "blah"}]) {
-    actionItem.element = d;
-    checkErrors(/Expected 'actionItem.element' to be a web element reference/,
+  for (let d of [-1, {a: "blah"}, []]) {
+    actionItem.origin = d;
+    checkErrors(/Expected \'origin\' to be a string or a web element reference/,
         action.Action.fromJson,
         [actionSequence, actionItem],
-        `actionItem.element: (${getTypeString(d)})`);
+        `actionItem.origin: (${getTypeString(d)})`);
   }
-  actionItem.element = {[element.Key]: "something"};
-  let a = action.Action.fromJson(actionSequence, actionItem);
-  deepEqual(a.element, actionItem.element);
 
+  run_next_test();
+});
+
+add_test(function test_processPointerMoveActionOriginStringValidation() {
+  let actionSequence = {type: "pointer", id: "some_id"};
+  let actionItem = {duration: 5000, type: "pointerMove"};
+  for (let d of ["a", "", "get", "Get"]) {
+    actionItem.origin = d;
+    checkErrors(/Unknown pointer-move origin/,
+        action.Action.fromJson,
+        [actionSequence, actionItem],
+        `actionItem.origin: ${d}`);
+  }
+
+  run_next_test();
+});
+
+add_test(function test_processPointerMoveActionElementOrigin() {
+  let actionSequence = {type: "pointer", id: "some_id"};
+  let actionItem = {duration: 5000, type: "pointerMove"};
+  actionItem.origin = {[element.Key]: "something"};
+  let a = action.Action.fromJson(actionSequence, actionItem);
+  deepEqual(a.origin, actionItem.origin);
+  run_next_test();
+});
+
+add_test(function test_processPointerMoveActionDefaultOrigin() {
+  let actionSequence = {type: "pointer", id: "some_id"};
+  // origin left undefined
+  let actionItem = {duration: 5000, type: "pointerMove"};
+  let a = action.Action.fromJson(actionSequence, actionItem);
+  deepEqual(a.origin, action.PointerOrigin.Viewport);
   run_next_test();
 });
 
@@ -108,14 +140,14 @@ add_test(function test_processPointerMoveAction() {
     {
       duration: 5000,
       type: "pointerMove",
-      element: undefined,
+      origin: undefined,
       x: undefined,
       y: undefined,
     },
     {
       duration: undefined,
       type: "pointerMove",
-      element: {[element.Key]: "id", [element.LegacyKey]: "id"},
+      origin: {[element.Key]: "id", [element.LegacyKey]: "id"},
       x: undefined,
       y: undefined,
     },
@@ -124,23 +156,29 @@ add_test(function test_processPointerMoveAction() {
       type: "pointerMove",
       x: 0,
       y: undefined,
-      element: undefined,
+      origin: undefined,
     },
     {
       duration: 5000,
       type: "pointerMove",
       x: 1,
       y: 2,
-      element: undefined,
+      origin: undefined,
     },
   ];
   for (let expected of actionItems) {
     let actual = action.Action.fromJson(actionSequence, expected);
     ok(actual instanceof action.Action);
     equal(actual.duration, expected.duration);
-    equal(actual.element, expected.element);
     equal(actual.x, expected.x);
     equal(actual.y, expected.y);
+
+    let origin = expected.origin;
+    if (typeof origin == "undefined") {
+      origin = action.PointerOrigin.Viewport;
+    }
+    deepEqual(actual.origin, origin);
+
   }
   run_next_test();
 });
