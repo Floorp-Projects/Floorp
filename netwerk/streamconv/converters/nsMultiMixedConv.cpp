@@ -807,9 +807,14 @@ nsMultiMixedConv::SwitchToControlParsing()
 nsMultiMixedConv::nsMultiMixedConv() :
     mCurrentPartID(0),
     mInOnDataAvailable(false),
-    mTokenizer([this](Token const& token, mozilla::IncrementalTokenizer&) -> nsresult {
-        return this->ConsumeToken(token);
-    })
+    // XXX: This is a hack to bypass the raw pointer to refcounted object in
+    // lambda analysis. It should be removed and replaced when the
+    // IncrementalTokenizer API is improved to avoid the need for such
+    // workarounds.
+    //
+    // This is safe because `mTokenizer` will not outlive `this`, meaning that
+    // this std::bind object will be destroyed before `this` dies.
+    mTokenizer(std::bind(&nsMultiMixedConv::ConsumeToken, this, std::placeholders::_1))
 {
     mContentLength      = UINT64_MAX;
     mByteRangeStart     = 0;
