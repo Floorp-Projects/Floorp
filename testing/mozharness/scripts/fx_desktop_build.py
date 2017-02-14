@@ -21,6 +21,7 @@ import os
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
+import mozharness.base.script as script
 from mozharness.mozilla.building.buildbase import BUILD_BASE_CONFIG_OPTIONS, \
     BuildingConfig, BuildOptionParser, BuildScript
 from mozharness.base.config import parse_config_file
@@ -246,6 +247,13 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
     def set_extra_try_arguments(self, action, success=None):
         """ Override unneeded method from TryToolsMixin """
         pass
+
+    @script.PreScriptRun
+    def suppress_windows_modal_dialogs(self, *args, **kwargs):
+        if self._is_windows():
+            # Suppress Windows modal dialogs to avoid hangs
+            import ctypes
+            ctypes.windll.kernel32.SetErrorMode(0x8001)
 
 if __name__ == '__main__':
     fx_desktop_build = FxDesktopBuild()
