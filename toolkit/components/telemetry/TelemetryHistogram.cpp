@@ -1271,11 +1271,6 @@ namespace {
 void
 internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
 {
-  if (!internal_IsHistogramEnumId(aID)) {
-    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
-    return;
-  }
-
   if (gHistograms[aID].keyed) {
     const nsDependentCString id(gHistograms[aID].id());
     KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
@@ -1330,9 +1325,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
 
 void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
 {
-  bool isValid = internal_IsHistogramEnumId(aHistogram);
-  MOZ_ASSERT(isValid, "Accumulation using invalid id");
-  if (!internal_CanRecordBase() || !isValid ||
+  if (!internal_CanRecordBase() ||
       internal_RemoteAccumulate(aHistogram, aSample)) {
     return;
   }
@@ -1347,9 +1340,7 @@ void
 internal_Accumulate(mozilla::Telemetry::ID aID,
                     const nsCString& aKey, uint32_t aSample)
 {
-  bool isValid = internal_IsHistogramEnumId(aID);
-  MOZ_ASSERT(isValid, "Child keyed telemetry accumulation using invalid id");
-  if (!gInitDone || !internal_CanRecordBase() || !isValid ||
+  if (!gInitDone || !internal_CanRecordBase() ||
       internal_RemoteAccumulate(aID, aKey, aSample)) {
     return;
   }
@@ -2091,6 +2082,11 @@ void
 TelemetryHistogram::SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID,
                                                  bool aEnabled)
 {
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aID))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_SetHistogramRecordingEnabled(aID, aEnabled);
 }
@@ -2119,17 +2115,27 @@ TelemetryHistogram::SetHistogramRecordingEnabled(const nsACString &id,
 
 
 void
-TelemetryHistogram::Accumulate(mozilla::Telemetry::ID aHistogram,
+TelemetryHistogram::Accumulate(mozilla::Telemetry::ID aID,
                                uint32_t aSample)
 {
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aID))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  internal_Accumulate(aHistogram, aSample);
+  internal_Accumulate(aID, aSample);
 }
 
 void
 TelemetryHistogram::Accumulate(mozilla::Telemetry::ID aID,
                                const nsCString& aKey, uint32_t aSample)
 {
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aID))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_Accumulate(aID, aKey, aSample);
 }
@@ -2168,6 +2174,11 @@ void
 TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::ID aId,
                                           const nsCString& label)
 {
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (!internal_CanRecordBase()) {
     return;
@@ -2184,14 +2195,14 @@ TelemetryHistogram::AccumulateChild(GeckoProcessType aProcessType,
                                     const nsTArray<Accumulation>& aAccumulations)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (!internal_CanRecordBase()) {
     return;
   }
   for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
-    bool isValid = internal_IsHistogramEnumId(aAccumulations[i].mId);
-    MOZ_ASSERT(isValid);
-    if (!isValid) {
+    if (NS_WARN_IF(!internal_IsHistogramEnumId(aAccumulations[i].mId))) {
+      MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
       continue;
     }
     internal_AccumulateChild(aProcessType, aAccumulations[i].mId, aAccumulations[i].mSample);
@@ -2208,9 +2219,8 @@ TelemetryHistogram::AccumulateChildKeyed(GeckoProcessType aProcessType,
     return;
   }
   for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
-    bool isValid = internal_IsHistogramEnumId(aAccumulations[i].mId);
-    MOZ_ASSERT(isValid);
-    if (!isValid) {
+    if (NS_WARN_IF(!internal_IsHistogramEnumId(aAccumulations[i].mId))) {
+      MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
       continue;
     }
     internal_AccumulateChildKeyed(aProcessType,
@@ -2254,6 +2264,11 @@ TelemetryHistogram::GetKeyedHistogramById(const nsACString &name,
 const char*
 TelemetryHistogram::GetHistogramName(mozilla::Telemetry::ID id)
 {
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(id))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return nullptr;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   const HistogramInfo& h = gHistograms[id];
   return h.id();
