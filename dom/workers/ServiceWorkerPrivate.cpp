@@ -1743,23 +1743,23 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mStorageAllowed = access > nsContentUtils::StorageAccess::ePrivateBrowsing;
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
+  // The ServiceWorkerRegistration principal should never have any CSP
+  // set.  The CSP from the page that registered the SW should not be
+  // inherited.  Verify this is the case in non-release builds
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = info.mPrincipal->GetCsp(getter_AddRefs(csp));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  info.mCSP = csp;
-  if (info.mCSP) {
-    rv = info.mCSP->GetAllowsEval(&info.mReportCSPViolations,
-                                  &info.mEvalAllowed);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else {
-    info.mEvalAllowed = true;
-    info.mReportCSPViolations = false;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!csp);
+#endif
+
+  // Default CSP permissions for now.  These will be overrided if necessary
+  // based on the script CSP headers during load in ScriptLoader.
+  info.mEvalAllowed = true;
+  info.mReportCSPViolations = false;
 
   WorkerPrivate::OverrideLoadInfoLoadGroup(info);
 
