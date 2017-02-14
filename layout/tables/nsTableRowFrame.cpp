@@ -1120,7 +1120,7 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
 
   if (aPresContext->IsPaginated() && !aStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aReflowInput)) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    aStatus.SetInlineLineBreakBeforeAndReset();
   }
 
   // Just set our isize to what was available.

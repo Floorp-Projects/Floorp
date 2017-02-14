@@ -1418,7 +1418,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #ifdef NOISY_CAN_PLACE_FRAME
   printf("   ==> didn't fit\n");
 #endif
-  aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  aStatus.SetInlineLineBreakBeforeAndReset();
   return false;
 }
 

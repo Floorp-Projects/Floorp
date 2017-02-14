@@ -3406,7 +3406,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       aState.mPrevBEndMargin = incomingMargin;
       *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
-        aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
       } else {
         PushLines(aState, aLine.prev());
         aState.mReflowStatus.SetIncomplete();
@@ -3583,7 +3583,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       // None of the child block fits.
       *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
-        aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
       } else {
         PushLines(aState, aLine.prev());
         aState.mReflowStatus.SetIncomplete();
@@ -3757,7 +3757,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
           // If it's our very first line *or* we're not at the top of the page
           // and we have page-break-inside:avoid, then we need to be pushed to
           // our parent's next-in-flow.
-          aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+          aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
         } else {
           // Push the line that didn't fit and any lines that follow it
           // to our next-in-flow.
@@ -4644,7 +4644,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
   if (!aState.mReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aState.mReflowInput)) {
     aLine->AppendFloats(aState.mCurrentLineFloats);
-    aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
     return true;
   }
 
@@ -4655,7 +4655,7 @@ nsBlockFrame::PlaceLine(BlockReflowInput& aState,
     NS_ASSERTION(aState.mCurrentLine == aLine, "oops");
     if (ShouldAvoidBreakInside(aState.mReflowInput)) {
       // All our content doesn't fit, start on the next page.
-      aState.mReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+      aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
     } else {
       // Push aLine and all of its children and anything else that
       // follows to our next-in-flow.
@@ -6277,7 +6277,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
 
   if (!aReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(floatRS)) {
-    aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    aReflowStatus.SetInlineLineBreakBeforeAndReset();
   } else if (aReflowStatus.IsIncomplete() &&
              (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.BSize(wm))) {
     // An incomplete reflow status means we should split the float
@@ -7423,7 +7423,7 @@ nsBlockFrame::ComputeFinalBSize(const ReflowInput& aReflowInput,
         NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize() &&
         aFinalSize.BSize(wm) > aReflowInput.AvailableBSize()) {
       if (ShouldAvoidBreakInside(aReflowInput)) {
-        *aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+        aStatus->SetInlineLineBreakBeforeAndReset();
         return;
       }
       // We don't fit and we consumed some of the computed height,

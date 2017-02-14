@@ -197,21 +197,29 @@ enum nsSpread {
 //----------------------------------------------------------------------
 // Reflow status returned by the Reflow() methods.
 class nsReflowStatus final {
+  using StyleClear = mozilla::StyleClear;
+
 public:
   nsReflowStatus()
     : mStatus(0)
+    , mBreakType(StyleClear::None)
     , mIncomplete(false)
     , mOverflowIncomplete(false)
     , mNextInFlowNeedsReflow(false)
     , mTruncated(false)
+    , mInlineBreak(false)
+    , mInlineBreakAfter(false)
   {}
 
   // Reset all the bit-fields.
   void Reset() {
+    mBreakType = StyleClear::None;
     mIncomplete = false;
     mOverflowIncomplete = false;
     mNextInFlowNeedsReflow = false;
     mTruncated = false;
+    mInlineBreak = false;
+    mInlineBreakAfter = false;
   }
 
   nsReflowStatus(uint32_t aStatus)
@@ -309,28 +317,43 @@ public:
     }
   }
 
+  // mInlineBreak bit flag means a break is requested.
+
+  // Suppose a break is requested. When mInlineBreakAfter is set, the break
+  // should occur after the frame just reflowed; when mInlineBreakAfter is
+  // clear, the break should occur before the frame just reflowed.
+
+  // Set the inline line-break-before status, and reset other bit flags. The
+  // break type is StyleClear::Line. Note that other frame completion status
+  // isn't expected to matter after calling this method.
+  void SetInlineLineBreakBeforeAndReset() {
+    Reset();
+    mBreakType = StyleClear::Line;
+    mInlineBreak = true;
+    mInlineBreakAfter = false;
+  }
+
 private:
   uint32_t mStatus;
+
+  StyleClear mBreakType;
 
   // Frame completion status bit flags.
   bool mIncomplete : 1;
   bool mOverflowIncomplete : 1;
   bool mNextInFlowNeedsReflow : 1;
   bool mTruncated : 1;
+
+  // Inline break status bit flags.
+  bool mInlineBreak : 1;
+  bool mInlineBreakAfter : 1;
 };
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
 #define NS_FRAME_NOT_COMPLETE         0x1
 #define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
-// This bit is set, when a break is requested. This bit is orthogonal
-// to the nsIFrame::nsReflowStatus completion bits.
 #define NS_INLINE_BREAK              0x0100
-
-// When a break is requested, this bit when set indicates that the
-// break should occur after the frame just reflowed; when the bit is
-// clear the break should occur before the frame just reflowed.
-#define NS_INLINE_BREAK_BEFORE       0x0000
 #define NS_INLINE_BREAK_AFTER        0x0200
 
 // The type of break requested can be found in these bits.
@@ -355,14 +378,6 @@ private:
   (static_cast<StyleClear>(((_status) >> 12) & 0xF))
 
 #define NS_INLINE_MAKE_BREAK_TYPE(_type)  (static_cast<int>(_type) << 12)
-
-// Construct a line-break-before status. Note that there is no
-// completion status for a line-break before because we *know* that
-// the frame will be reflowed later and hence its current completion
-// status doesn't matter.
-#define NS_INLINE_LINE_BREAK_BEFORE()                                   \
-  (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
-   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
 // Take a completion status and add to it the desire to have a
 // line-break after. For this macro we do need the completion status
