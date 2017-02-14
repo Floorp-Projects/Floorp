@@ -553,6 +553,10 @@ class TypedObject : public ShapedObject
         return group()->typeDescr();
     }
 
+    static JS::Result<TypedObject*, JS::OOM&>
+    create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+           js::HandleShape shape, js::HandleObjectGroup group);
+
     uint32_t offset() const;
     uint32_t length() const;
     uint8_t* typedMem(const JS::AutoRequireNoGC&) const { return typedMem(); }
