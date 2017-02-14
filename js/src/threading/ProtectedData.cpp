@@ -47,7 +47,7 @@ CheckActiveThread<Helper>::check() const
         return;
 
     JSContext* cx = TlsContext.get();
-    MOZ_ASSERT(cx == cx->runtime()->activeContext());
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 #endif // XP_WIN
 }
 
@@ -63,10 +63,22 @@ CheckZoneGroup<Helper>::check() const
         return;
 
     if (group) {
-        // This check is disabled for now because helper thread parse tasks
-        // access data in the same zone group that the single active thread is
-        // using. This will be fixed soon (bug 1323066).
-        //MOZ_ASSERT(group->context && group->context == TlsContext.get());
+        if (group->usedByHelperThread) {
+            MOZ_ASSERT(group->ownedByCurrentThread());
+        } else {
+            // This check is disabled on windows for the same reason as in
+            // CheckActiveThread.
+#ifndef XP_WIN
+            // In a cooperatively scheduled runtime the active thread is
+            // permitted access to all zone groups --- even those it has not
+            // entered --- for GC and similar purposes. Since all other
+            // cooperative threads are suspended, these accesses are threadsafe
+            // if the zone group is not in use by a helper thread which is not
+            // cooperatively scheduled.
+            JSContext* cx = TlsContext.get();
+            MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+#endif
+        }
     } else {
         // |group| will be null for data in the atoms zone. This is protected
         // by the exclusive access lock.
