@@ -73,27 +73,24 @@ class MozLog(object):
         status = expected = 'PASS'
         message = stack = None
         if hasattr(report, 'wasxfail'):
-            # Pytest reporting for xfail tests is somewhat counterinutitive:
-            # If an xfail test fails as expected, its 'call' report has .skipped,
-            # so we record status FAIL (== expected) and log an expected result.
-            # If an xfail unexpectedly passes, the 'call' report has .failed (Pytest 2)
-            # or .passed (Pytest 3), so we leave status as PASS (!= expected)
-            # to log an unexpected result.
             expected = 'FAIL'
-            if report.skipped:  # indicates expected failure (passing test)
-                status = 'FAIL'
-        elif report.failed:
+        if report.failed:
             status = 'FAIL' if report.when == 'call' else 'ERROR'
-            try:
-                crash = report.longrepr.reprcrash  # here longrepr is a ReprExceptionInfo
-                message = "{0} (line {1})".format(crash.message, crash.lineno)
-                stack = report.longrepr.reprtraceback
-            except AttributeError:
+        if report.skipped:
+            status = 'SKIP' if not hasattr(report, 'wasxfail') else 'FAIL'
+        if report.longrepr is not None:
+            if isinstance(report.longrepr, basestring):
                 # When using pytest-xdist, longrepr is serialised as a str
                 message = stack = report.longrepr
-        elif report.skipped:  # indicates true skip
-            status = expected = 'SKIP'
-            message = report.longrepr[-1]  # here longrepr is a tuple (file, lineno, reason)
+            else:
+                try:
+                    # For failures, longrepr is a ReprExceptionInfo
+                    crash = report.longrepr.reprcrash
+                    message = "{0} (line {1})".format(crash.message, crash.lineno)
+                    stack = report.longrepr.reprtraceback
+                except AttributeError:
+                    # For skips, longrepr is a tuple of (file, lineno, reason)
+                    message = report.longrepr[-1]
         if status != expected or expected != 'PASS':
             self.results[test] = (status, expected, message, stack)
         if report.when == 'teardown':
