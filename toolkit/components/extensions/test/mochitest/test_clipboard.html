@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>clipboard permission test</title>
+  <title>Clipboard permissions tests</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
@@ -13,22 +13,34 @@
 <script>
 "use strict";
 
-function doCopy(txt) {
+/* globals doCopy, doPaste */
+function shared() {
   let field = document.createElement("textarea");
   document.body.appendChild(field);
-  field.value = txt;
-  field.select();
-  return document.execCommand("copy");
+  field.contentEditable = true;
+
+  this.doCopy = function(txt) {
+    field.value = txt;
+    field.select();
+    return document.execCommand("copy");
+  };
+
+  this.doPaste = function() {
+    field.select();
+    return document.execCommand("paste") && field.value;
+  };
 }
 
-add_task(function* no_permission_deny_copy() {
+add_task(function* test_background_clipboard_permissions() {
   function backgroundScript() {
     browser.test.assertEq(false, doCopy("whatever"),
       "copy should be denied without permission");
+    browser.test.assertEq(false, doPaste(),
+      "paste should be denied without permission");
     browser.test.sendMessage("ready");
   }
   let extensionData = {
-    background: `${doCopy};(${backgroundScript})();`,
+    background: `(${shared})();(${backgroundScript})();`,
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
@@ -69,21 +81,24 @@ add_task(function* with_permission_allow_copy() {
   yield extension.unload();
 }); */
 
-add_task(function* content_script_no_permission_deny_copy() {
+add_task(function* test_contentscript_clipboard_permissions() {
   function contentScript() {
     browser.test.assertEq(false, doCopy("whatever"),
       "copy should be denied without permission");
+    browser.test.assertEq(false, doPaste(),
+      "paste should be denied without permission");
     browser.test.sendMessage("ready");
   }
   let extensionData = {
     manifest: {
       content_scripts: [{
-        js: ["contentscript.js"],
+        js: ["shared.js", "contentscript.js"],
         matches: ["http://mochi.test/*/file_sample.html"],
       }],
     },
     files: {
-      "contentscript.js": `${doCopy};(${contentScript})();`,
+      "shared.js": shared,
+      "contentscript.js": contentScript,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -96,7 +111,7 @@ add_task(function* content_script_no_permission_deny_copy() {
   yield extension.unload();
 });
 
-add_task(function* content_script_with_permission_allow_copy() {
+add_task(function* test_contentscript_clipboard_copy() {
   function contentScript() {
     browser.test.onMessage.addListener(txt => {
       browser.test.assertEq(true, doCopy(txt),
@@ -107,7 +122,7 @@ add_task(function* content_script_with_permission_allow_copy() {
   let extensionData = {
     manifest: {
       content_scripts: [{
-        js: ["contentscript.js"],
+        js: ["shared.js", "contentscript.js"],
         matches: ["http://mochi.test/*/file_sample.html"],
       }],
       permissions: [
@@ -115,7 +130,8 @@ add_task(function* content_script_with_permission_allow_copy() {
       ],
     },
     files: {
-      "contentscript.js": `${doCopy};(${contentScript})();`,
+      "shared.js": shared,
+      "contentscript.js": contentScript,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -135,6 +151,39 @@ add_task(function* content_script_with_permission_allow_copy() {
 
   yield extension.unload();
 });
+
+add_task(function* test_contentscript_clipboard_paste() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "clipboardRead",
+      ],
+      content_scripts: [{
+        matches: ["http://mochi.test/*/file_sample.html"],
+        js: ["shared.js", "content_script.js"],
+      }],
+    },
+    files: {
+      "shared.js": shared,
+      "content_script.js": () => {
+        browser.test.sendMessage("paste", doPaste());
+      },
+    },
+  });
+
+  const STRANGE = "A Strange Thing";
+  SpecialPowers.clipboardCopyString(STRANGE);
+
+  yield extension.startup();
+  const win = window.open("file_sample.html");
+
+  const paste = yield extension.awaitMessage("paste");
+  is(paste, STRANGE, "the correct string was pasted");
+
+  win.close();
+  yield extension.unload();
+});
+
 </script>
 </body>
 </html>

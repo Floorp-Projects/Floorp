@@ -152,6 +152,7 @@ nr_stun_process_request(nr_stun_message *req, nr_stun_message *res)
 
     if (req->comprehension_required_unknown_attributes > 0) {
         nr_stun_form_error_response(req, res, 420, "Unknown Attributes");
+        r_log(NR_LOG_STUN, LOG_WARNING, "Request contains comprehension required but unknown attributes");
 
         TAILQ_FOREACH(attr, &req->attributes, entry) {
             if (attr->name == 0) {
@@ -188,8 +189,10 @@ nr_stun_process_indication(nr_stun_message *ind)
     int _status;
 #ifdef USE_STUN_PEDANTIC
 
-    if (ind->comprehension_required_unknown_attributes > 0)
+    if (ind->comprehension_required_unknown_attributes > 0) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Indication contains comprehension required but unknown attributes");
         ABORT(R_REJECTED);
+    }
 #endif /* USE_STUN_PEDANTIC */
 
     _status=0;
@@ -211,8 +214,10 @@ nr_stun_process_success_response(nr_stun_message *res)
     int _status;
 
 #ifdef USE_STUN_PEDANTIC
-    if (res->comprehension_required_unknown_attributes > 0)
+    if (res->comprehension_required_unknown_attributes > 0) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Response contains comprehension required but unknown attributes");
         ABORT(R_REJECTED);
+    }
 #endif /* USE_STUN_PEDANTIC */
 
     if (NR_STUN_GET_TYPE_METHOD(res->header.type) == NR_METHOD_BINDING) {
@@ -236,6 +241,7 @@ nr_stun_process_error_response(nr_stun_message *res, UINT2 *error_code)
     nr_stun_message_attribute *attr;
 
     if (res->comprehension_required_unknown_attributes > 0) {
+        r_log(NR_LOG_STUN, LOG_WARNING, "Error response contains comprehension required but unknown attributes");
         ABORT(R_REJECTED);
     }
 

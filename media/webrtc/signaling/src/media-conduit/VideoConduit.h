@@ -475,9 +475,6 @@ private:
   int mNegotiatedMaxBitrate;
   int mMinBitrateEstimate;
 
-  bool mRtpStreamIdEnabled;
-  uint8_t mRtpStreamIdExtId;
-
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;
   static const unsigned int sRoundingPadding = 1024;

@@ -381,7 +381,11 @@ public:
 
 protected:
   // This state is constant for a given block frame doing line layout
+
+  // A non-owning pointer, which points to the object owned by
+  // nsAutoFloatManager::mNew.
   nsFloatManager* mFloatManager;
+
   const nsStyleText* mStyleText; // for the block
   const ReflowInput* mBlockReflowInput;
 
