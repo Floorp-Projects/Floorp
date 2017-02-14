@@ -2,13 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen
 
 MIDL_GENERATED_FILES = \
-	IGeckoCustom.h \
-	IGeckoCustom_p.c \
-	IGeckoCustom_i.c \
-	$(NULL)
+  dlldata.c \
+  IGeckoCustom.h \
+  IGeckoCustom_p.c \
+  IGeckoCustom_i.c \
+  IGeckoCustom.tlb \
+  $(NULL)
 
 $(MIDL_GENERATED_FILES): done_gen
 

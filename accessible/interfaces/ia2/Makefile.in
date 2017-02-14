@@ -6,6 +6,8 @@ IA2DIR        = $(topsrcdir)/other-licenses/ia2
 
 GARBAGE       += $(MIDL_GENERATED_FILES) \
                  $(MIDL_UNUSED_GENERATED_FILES) \
+                 midl_done \
+                 typelib_done \
                  $(NULL)
 
 # Please keep this list in sync with the moz.build file until the rest of this
@@ -53,10 +55,11 @@ CSRCS = \
 
 MIDL_GENERATED_FILES = \
   dlldata.c \
+  $(MIDL_ENUMS:%.idl=%.h) \
   $(MIDL_INTERFACES:%.idl=%_p.c) \
   $(MIDL_INTERFACES:%.idl=%_i.c) \
   $(MIDL_INTERFACES:%.idl=%.h) \
-  $(MIDL_ENUMS:%.idl=%.h) \
+  $(MIDL_LIBRARIES:%.idl=%.tlb) \
   $(NULL)
 
 # We want to generate a .tlb from MIDL_LIBRARIES, but midl also generates
@@ -80,8 +83,8 @@ export:: midl
 include $(topsrcdir)/config/rules.mk
 
 # generate list of to-be-generated files that are missing
-# but ignore special file dlldata.c
-missing:=$(strip $(foreach onefile,$(strip $(subst dlldata.c,,$(MIDL_GENERATED_FILES))),$(if $(wildcard $(onefile)),,$(onefile))))
+# but ignore special file dlldata.c and .tlb files
+missing:=$(strip $(foreach onefile,$(strip $(patsubst %.tlb,,$(subst dlldata.c,,$(MIDL_GENERATED_FILES)))),$(if $(wildcard $(onefile)),,$(onefile))))
 
 missing_base:=$(sort $(basename $(subst _p.c,,$(subst _i.c,,$(missing)))))
 
@@ -99,9 +102,9 @@ midl_done : $(addprefix $(IA2DIR)/,$(MIDL_INTERFACES) $(MIDL_ENUMS))
 
 # The intent of this rule is to generate the .tlb file that is referenced in the
 # .rc file for IA2Marshal.dll
-typelib_done : $(MIDL_LIBRARIES)
+typelib_done : $(addprefix $(srcdir)/,$(MIDL_LIBRARIES))
 	for idl in $?; do \
-		$(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -D _MIDL_DECLARE_WIREM_HANDLE -dlldata `basename $$idl .idl`.c -Oicf $$idl; \
+	  $(MIDL) $(MIDL_FLAGS) -app_config -I $(IA2DIR) -D _MIDL_DECLARE_WIREM_HANDLE -dlldata `basename $$idl .idl`.c -Oicf $$idl; \
 	done
 	touch $@
 
