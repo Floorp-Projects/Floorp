@@ -87,6 +87,8 @@ parent:
   async Decoded(CDMVideoFrame aFrame);
   async DecodeFailed(uint32_t aStatus);
 
+  async ResetVideoDecoderComplete();
+
   async Shutdown();
 };
 
