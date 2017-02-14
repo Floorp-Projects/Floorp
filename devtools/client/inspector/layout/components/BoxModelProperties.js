@@ -65,15 +65,15 @@ module.exports = createClass({
             className: "boxmodel-properties-expander theme-twisty",
             open: this.state.isOpen,
             onClick: this.onToggleExpander,
-          },
+          }
         ),
         dom.span(
           {
             className: "boxmodel-properties-label",
             title: BOXMODEL_L10N.getStr("boxmodel.propertiesLabel"),
           },
-          BOXMODEL_L10N.getStr("boxmodel.propertiesLabel"),
-        ),
+          BOXMODEL_L10N.getStr("boxmodel.propertiesLabel")
+        )
       ),
       dom.div(
         {
@@ -81,8 +81,8 @@ module.exports = createClass({
           hidden: !this.state.isOpen,
           tabIndex: 0,
         },
-        properties,
-      ),
+        properties
+      )
     );
   },
 
