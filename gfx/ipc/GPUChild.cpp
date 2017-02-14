@@ -173,6 +173,13 @@ GPUChild::RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aSca
 }
 
 mozilla::ipc::IPCResult
+GPUChild::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents)
+{
+  TelemetryIPC::RecordChildEvents(GeckoProcessType_GPU, aEvents);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 GPUChild::RecvNotifyDeviceReset()
 {
   mHost->mListener->OnProcessDeviceReset(mHost);
