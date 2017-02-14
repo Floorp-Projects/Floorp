@@ -870,7 +870,7 @@ function optionsPop()
 
   optionsClear();
 
-  for (optionName in optionsframe)
+  for (var optionName in optionsframe)
   {
     options(optionName);
   }
