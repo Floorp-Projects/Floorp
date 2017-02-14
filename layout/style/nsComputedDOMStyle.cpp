@@ -1219,6 +1219,15 @@ nsComputedDOMStyle::DoGetColumnFill()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetColumnSpan()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleColumn()->mColumnSpan,
+                                               nsCSSProps::kColumnSpanKTable));
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetColumnRuleWidth()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
