@@ -1,0 +1,7 @@
+include protocol SyncAsyncManager;
+
+sync protocol SyncAsyncManagee {
+    manager SyncAsyncManager;
+child:
+    async __delete__();
+};

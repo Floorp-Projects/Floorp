@@ -689,7 +689,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
                   || si.h != mLastSeenFrameHeight.value())) {
             mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
             mSharedVideoTrackInfo =
-              new SharedTrackInfo(mInfo.mVideo, ++sStreamSourceID);
+              new TrackInfoSharedPtr(mInfo.mVideo, ++sStreamSourceID);
           }
           mLastSeenFrameWidth = Some(si.w);
           mLastSeenFrameHeight = Some(si.h);
