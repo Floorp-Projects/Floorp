@@ -7,33 +7,12 @@
 /* exported startup, shutdown, install, uninstall */
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-const STYLESHEET_URI = "chrome://formautofill/content/formautofill.css";
-const CACHED_STYLESHEETS = [];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillParent",
                                   "resource://formautofill/FormAutofillParent.jsm");
-
-let windowListener = {
-  onOpenWindow: function(aWindow) {
-    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-
-    domWindow.addEventListener("load", function onWindowLoaded() {
-      insertStyleSheet(domWindow, STYLESHEET_URI);
-    }, { once: true });
-  }
-};
-
-function insertStyleSheet(domWindow, url) {
-  let doc = domWindow.document;
-  let styleSheetAttr = `href="${url}" type="text/css"`;
-  let styleSheet = doc.createProcessingInstruction("xml-stylesheet", styleSheetAttr);
-
-  doc.insertBefore(styleSheet, doc.documentElement);
-  CACHED_STYLESHEETS.push(styleSheet);
-}
 
 function startup() {
   // Besides this pref, we'll need dom.forms.autocomplete.experimental enabled
@@ -43,29 +22,10 @@ function startup() {
   }
 
   let parent = new FormAutofillParent();
-  let enumerator = Services.wm.getEnumerator("navigator:browser");
-  // Load stylesheet to already opened windows
-  while(enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    let domWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-
-    insertStyleSheet(domWindow, STYLESHEET_URI);
-  }
-
-  Services.wm.addListener(windowListener);
-
   parent.init();
   Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillContent.js", true);
 }
 
-function shutdown() {
-  Services.wm.removeListener(windowListener);
-
-  let styleNode;
-  while(styleNode = CACHED_STYLESHEETS.pop()) {
-    styleNode.remove();
-  }
-}
-
+function shutdown() {}
 function install() {}
 function uninstall() {}
