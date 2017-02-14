@@ -21,6 +21,8 @@ namespace mozilla {
 // sandbox for our namespace painful.
 namespace sandboxing {
 
+class PermissionsService;
+
 /**
  * Initializes (if required) and returns the Chromium sandbox TargetServices.
  *
@@ -40,6 +42,8 @@ void LowerSandbox();
  * @return the BrokerServices or null if the creation or initialization failed.
  */
 sandbox::BrokerServices* GetInitializedBrokerServices();
+
+PermissionsService* GetPermissionsService();
 
 } // sandboxing
 } // mozilla
