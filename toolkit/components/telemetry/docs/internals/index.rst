@@ -7,3 +7,4 @@ Internals
    :titlesonly:
 
    preferences
+   pingsender

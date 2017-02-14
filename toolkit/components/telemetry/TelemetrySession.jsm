@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/ClientID.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -66,7 +67,7 @@ const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
-
+const PREF_SERVER = PREF_BRANCH + "server";
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_THREAD_HANGS = "Telemetry:ChildThreadHangs";
@@ -203,12 +204,25 @@ function getPingType(aPayload) {
 /**
  * Annotate the current session ID with the crash reporter to map potential
  * crash pings with the related main ping.
+ *
+ * @param sessionId {String} The telemetry session ID
+ * @param clientId {String} The telemetry client ID
+ * @param telemetryServer {String} The URL of the telemetry server
  */
-function annotateCrashReport(sessionId) {
+function annotateCrashReport(sessionId, clientId, telemetryServer) {
   try {
     const cr = Cc["@mozilla.org/toolkit/crash-reporter;1"];
     if (cr) {
-      cr.getService(Ci.nsICrashReporter).setTelemetrySessionId(sessionId);
+      const crs = cr.getService(Ci.nsICrashReporter);
+
+      crs.setTelemetrySessionId(sessionId);
+
+      // We do not annotate the crash if telemetry is disabled to prevent the
+      // crashreporter client from sending the crash ping.
+      if (Utils.isTelemetryEnabled) {
+        crs.annotateCrashReport("TelemetryClientId", clientId);
+        crs.annotateCrashReport("TelemetryServerURL", telemetryServer);
+      }
     }
   } catch (e) {
     // Ignore errors when crash reporting is disabled
@@ -1471,7 +1485,10 @@ var Impl = {
     // the very same value for |_sessionStartDate|.
     this._sessionStartDate = this._subsessionStartDate;
 
-    annotateCrashReport(this._sessionId);
+    // Annotate crash reports using the cached client ID which can be accessed
+    // synchronously. If it is not available yet, we'll update it later.
+    annotateCrashReport(this._sessionId, ClientID.getCachedClientID(),
+                        Preferences.get(PREF_SERVER, undefined));
 
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
@@ -1498,13 +1515,13 @@ var Impl = {
     ppml.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
     ppml.addMessageListener(MESSAGE_TELEMETRY_THREAD_HANGS, this);
     ppml.addMessageListener(MESSAGE_TELEMETRY_USS, this);
-},
+  },
 
-/**
-  * Does the "heavy" Telemetry initialization later on, so we
-  * don't impact startup performance.
-  * @return {Promise} Resolved when the initialization completes.
-  */
+  /**
+   * Does the "heavy" Telemetry initialization later on, so we
+   * don't impact startup performance.
+   * @return {Promise} Resolved when the initialization completes.
+   */
   delayedInit() {
     this._log.trace("delayedInit");
 
@@ -1525,6 +1542,10 @@ var Impl = {
         }
 
         Telemetry.asyncFetchTelemetryData(function() {});
+
+        // Update the crash annotation with the proper client ID.
+        annotateCrashReport(this._sessionId, yield ClientID.getClientID(),
+                            Preferences.get(PREF_SERVER, undefined));
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.

@@ -627,6 +627,35 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
     return true;
 }
 
+/* static */ JS::Result<UnboxedObject*, JS::OOM&>
+UnboxedObject::createInternal(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+                              js::HandleObjectGroup group)
+{
+    const js::Class* clasp = group->clasp();
+    MOZ_ASSERT(clasp == &UnboxedPlainObject::class_ || clasp == &UnboxedArrayObject::class_);
+
+    MOZ_ASSERT(CanBeFinalizedInBackground(kind, clasp));
+    kind = GetBackgroundAllocKind(kind);
+
+    debugCheckNewObject(group, /* shape = */ nullptr, kind, heap);
+
+    JSObject* obj = js::Allocate<JSObject>(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
+    if (!obj)
+        return cx->alreadyReportedOOM();
+
+    UnboxedObject* uobj = static_cast<UnboxedObject*>(obj);
+    uobj->group_.init(group);
+
+    if (clasp->shouldDelayMetadataBuilder())
+        cx->compartment()->setObjectPendingMetadata(cx, uobj);
+    else
+        uobj = SetNewObjectMetadata(cx, uobj);
+
+    js::gc::TraceCreateObject(uobj);
+
+    return uobj;
+}
+
 /* static */
 UnboxedPlainObject*
 UnboxedPlainObject::create(JSContext* cx, HandleObjectGroup group, NewObjectKind newKind)
@@ -635,11 +664,13 @@ UnboxedPlainObject::create(JSContext* cx, HandleObjectGroup group, NewObjectKind
 
     MOZ_ASSERT(group->clasp() == &class_);
     gc::AllocKind allocKind = group->unboxedLayout().getAllocKind();
+    gc::InitialHeap heap = GetInitialHeap(newKind, &class_);
 
-    UnboxedPlainObject* res =
-        NewObjectWithGroup<UnboxedPlainObject>(cx, group, allocKind, newKind);
-    if (!res)
-        return nullptr;
+    MOZ_ASSERT(newKind != SingletonObject);
+
+    UnboxedObject* res_;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, res_, createInternal(cx, allocKind, heap, group));
+    UnboxedPlainObject* res = &res_->as<UnboxedPlainObject>();
 
     // Overwrite the dummy shape which was written to the object's expando field.
     res->initExpando();
@@ -1061,6 +1092,8 @@ UnboxedArrayObject::create(JSContext* cx, HandleObjectGroup group, uint32_t leng
     uint32_t capacity = Min(length, maxLength);
     uint32_t nbytes = offsetOfInlineElements() + elementSize * capacity;
 
+    gc::InitialHeap heap = GetInitialHeap(newKind, &class_);
+
     UnboxedArrayObject* res;
     if (nbytes <= JSObject::MAX_BYTE_SIZE) {
         gc::AllocKind allocKind = gc::GetGCObjectKindForBytes(nbytes);
@@ -1070,9 +1103,10 @@ UnboxedArrayObject::create(JSContext* cx, HandleObjectGroup group, uint32_t leng
         if (capacity == 0)
             allocKind = gc::AllocKind::OBJECT8;
 
-        res = NewObjectWithGroup<UnboxedArrayObject>(cx, group, allocKind, newKind);
-        if (!res)
-            return nullptr;
+        UnboxedObject* res_;
+        JS_TRY_VAR_OR_RETURN_NULL(cx, res_, createInternal(cx, allocKind, heap, group));
+        res = &res_->as<UnboxedArrayObject>();
+
         res->setInitializedLengthNoBarrier(0);
         res->setInlineElements();
 
@@ -1080,9 +1114,11 @@ UnboxedArrayObject::create(JSContext* cx, HandleObjectGroup group, uint32_t leng
         MOZ_ASSERT(actualCapacity >= capacity);
         res->setCapacityIndex(exactCapacityIndex(actualCapacity));
     } else {
-        res = NewObjectWithGroup<UnboxedArrayObject>(cx, group, gc::AllocKind::OBJECT0, newKind);
-        if (!res)
-            return nullptr;
+        UnboxedObject* res_;
+        JS_TRY_VAR_OR_RETURN_NULL(cx, res_,
+                                  createInternal(cx, gc::AllocKind::OBJECT0, heap, group));
+        res = &res_->as<UnboxedArrayObject>();
+
         res->setInitializedLengthNoBarrier(0);
 
         uint32_t capacityIndex = (capacity == length)

@@ -404,6 +404,58 @@ NativeObject::isInWholeCellBuffer() const
     return cells && cells->hasCell(cell);
 }
 
+/* static */ inline JS::Result<NativeObject*, JS::OOM&>
+NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+                     js::HandleShape shape, js::HandleObjectGroup group)
+{
+    debugCheckNewObject(group, shape, kind, heap);
+
+    const js::Class* clasp = group->clasp();
+    MOZ_ASSERT(clasp->isNative());
+
+    size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
+
+    JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
+    if (!obj)
+        return cx->alreadyReportedOOM();
+
+    NativeObject* nobj = static_cast<NativeObject*>(obj);
+    nobj->group_.init(group);
+    nobj->initShape(shape);
+
+    // Note: slots are created and assigned internally by Allocate<JSObject>.
+    nobj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
+
+    if (clasp->hasPrivate())
+        nobj->privateRef(shape->numFixedSlots()) = nullptr;
+
+    if (size_t span = shape->slotSpan())
+        nobj->initializeSlotRange(0, span);
+
+    // JSFunction's fixed slots expect POD-style initialization.
+    if (clasp->isJSFunction()) {
+        MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
+                   kind == js::gc::AllocKind::FUNCTION_EXTENDED);
+        size_t size =
+            kind == js::gc::AllocKind::FUNCTION ? sizeof(JSFunction) : sizeof(js::FunctionExtended);
+        memset(nobj->as<JSFunction>().fixedSlots(), 0, size - sizeof(js::NativeObject));
+        if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
+            // SetNewObjectMetadata may gc, which will be unhappy if flags &
+            // EXTENDED doesn't match the arena's AllocKind.
+            nobj->as<JSFunction>().setFlags(JSFunction::EXTENDED);
+        }
+    }
+
+    if (clasp->shouldDelayMetadataBuilder())
+        cx->compartment()->setObjectPendingMetadata(cx, nobj);
+    else
+        nobj = SetNewObjectMetadata(cx, nobj);
+
+    js::gc::TraceCreateObject(nobj);
+
+    return nobj;
+}
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline PlainObject*
 CopyInitializerObject(JSContext* cx, HandlePlainObject baseobj, NewObjectKind newKind = GenericObject)

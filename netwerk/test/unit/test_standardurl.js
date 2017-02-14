@@ -409,6 +409,7 @@ add_test(function test_ipv4Normalize()
      "http://000177.0.00000.0x0001",
      "http://127.0.0.1.",
     ].map(stringToURL);
+
   var url;
   for (url of localIPv4s) {
     do_check_eq(url.spec, "http://127.0.0.1/");
@@ -431,12 +432,18 @@ add_test(function test_ipv4Normalize()
      "http://1.2.3.4../",
      "http://1..2/",
      "http://.1.2.3.4/",
+     "resource://123/",
+     "resource://4294967296/",
     ];
   var spec;
   for (spec of nonIPv4s) {
     url = stringToURL(spec);
     do_check_eq(url.spec, spec);
   }
+
+  var url = stringToURL("resource://path/to/resource/");
+  url.host = "123";
+  do_check_eq(url.host, "123");
 
   run_next_test();
 });
