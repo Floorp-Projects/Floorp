@@ -119,7 +119,16 @@ impl Layer {
     pub fn update_transform(&mut self,
                             parent_world_transform: &ScrollToWorldTransform,
                             parent_viewport_rect: &ScrollLayerRect) {
-        let inv_transform = self.local_transform.inverse().unwrap();
+        let inv_transform = match self.local_transform.inverse() {
+            Some(transform) => transform,
+            None => {
+                // If a transform function causes the current transformation matrix of an object
+                // to be non-invertible, the object and its content do not get displayed.
+                self.combined_local_viewport_rect = LayerRect::zero();
+                return;
+            }
+        };
+
         let parent_viewport_rect_in_local_space = inv_transform.transform_rect(parent_viewport_rect)
                                                                .translate(&-self.scrolling.offset);
         let local_viewport_rect = self.local_viewport_rect.translate(&-self.scrolling.offset);
