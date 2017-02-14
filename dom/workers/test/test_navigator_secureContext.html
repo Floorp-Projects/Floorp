@@ -19,7 +19,7 @@ Tests of DOM Worker Navigator
 </div>
 <pre id="test">
 <script>
-  ok(!self.isSecureContext, "This test should not be running in a secure context");
+  ok(self.isSecureContext, "This test should be running in a secure context");
 </script>
 <script type="text/javascript" src="test_navigator.js"></script>
 </pre>
