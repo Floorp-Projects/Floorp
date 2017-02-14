@@ -29,7 +29,7 @@ function run_test() {
   const testLet = "let foobar = {a: ''}; const blargh = {a: 1};";
 
   let sandbox = Components.utils.Sandbox("http://example.com");
-  let dbg = new Debugger;
+  let dbg = new Debugger();
   let dbgObject = dbg.addDebuggee(sandbox);
   let dbgEnv = dbgObject.asEnvironment();
   Components.utils.evalInSandbox(testArray, sandbox);
@@ -42,7 +42,6 @@ function run_test() {
 
   do_print("Running tests with dbgEnv");
   runChecks(null, dbgEnv);
-
 }
 
 function runChecks(dbgObject, dbgEnv) {
@@ -129,7 +128,8 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[10].");
   do_check_null(results);
 
-  do_print("Test that no suggestions are given if an index is not numerical somewhere in the chain.");
+  do_print("Test that no suggestions are given if an index is not numerical "
+           + "somewhere in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[0]['propC'][0].");
   do_check_null(results);
 
@@ -149,22 +149,22 @@ function runChecks(dbgObject, dbgEnv) {
 
 /**
  * A helper that ensures an empty array of results were found.
- * @param Object aResults
+ * @param Object results
  *        The results returned by JSPropertyProvider.
  */
-function test_has_no_results(aResults) {
-  do_check_neq(aResults, null);
-  do_check_eq(aResults.matches.length, 0);
+function test_has_no_results(results) {
+  do_check_neq(results, null);
+  do_check_eq(results.matches.length, 0);
 }
 /**
  * A helper that ensures (required) results were found.
- * @param Object aResults
+ * @param Object results
  *        The results returned by JSPropertyProvider.
- * @param String aRequiredSuggestion
+ * @param String requiredSuggestion
  *        A suggestion that must be found from the results.
  */
-function test_has_result(aResults, aRequiredSuggestion) {
-  do_check_neq(aResults, null);
-  do_check_true(aResults.matches.length > 0);
-  do_check_true(aResults.matches.indexOf(aRequiredSuggestion) !== -1);
+function test_has_result(results, requiredSuggestion) {
+  do_check_neq(results, null);
+  do_check_true(results.matches.length > 0);
+  do_check_true(results.matches.indexOf(requiredSuggestion) !== -1);
 }

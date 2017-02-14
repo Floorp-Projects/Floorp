@@ -3428,6 +3428,7 @@ function Tab(aURL, aParams) {
   this.filter = null;
   this.browser = null;
   this.id = 0;
+  this._parentId = -1;
   this.lastTouchedAt = Date.now();
   this._zoom = 1.0;
   this._drawZoom = 1.0;
@@ -3555,7 +3556,7 @@ Tab.prototype = {
       }
 
       this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
-      this.parentId = ("parentId" in aParams && typeof aParams.parentId == "number")
+      this._parentId = ("parentId" in aParams && typeof aParams.parentId == "number")
                       ? aParams.parentId : -1;
 
       let message = {
@@ -3959,9 +3960,13 @@ Tab.prototype = {
     }
   },
 
-  setParentId: function(aParentId) {
+  get parentId() {
+    return this._parentId;
+  },
+
+  set parentId(aParentId) {
     let newParentId = (typeof aParentId == "number") ? aParentId : -1;
-    this.parentId = newParentId;
+    this._parentId = newParentId;
     GlobalEventDispatcher.sendRequest({
       type: "Tab:SetParentId",
       tabID: this.id,
@@ -4339,12 +4344,23 @@ Tab.prototype = {
 
   onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
+    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
 
     // Browser webapps may load content inside iframes that can not reach across the app/frame boundary
     // i.e. even though the page is loaded in an iframe window.top != webapp
     // Make cure this window is a top level tab before moving on.
-    if (BrowserApp.getBrowserForWindow(contentWin) == null)
+    if (BrowserApp.getBrowserForWindow(contentWin) == null) {
+      // We still need to update the back/forward button state, though.
+      let message = {
+        type: "Content:SubframeNavigation",
+        tabID: this.id,
+        canGoBack: webNav.canGoBack,
+        canGoForward: webNav.canGoForward,
+      };
+
+      GlobalEventDispatcher.sendRequest(message);
       return;
+    }
 
     this._hostChanged = true;
 
@@ -4428,8 +4444,6 @@ Tab.prototype = {
       ExternalApps.updatePageActionUri(fixedURI);
     }
 
-    let webNav = contentWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-
     let message = {
       type: "Content:LocationChange",
       tabID: this.id,
@@ -4439,8 +4453,6 @@ Tab.prototype = {
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument,
 
-      historyIndex: webNav.sessionHistory.index,
-      historySize: webNav.sessionHistory.count,
       canGoBack: webNav.canGoBack,
       canGoForward: webNav.canGoForward,
     };

@@ -1182,9 +1182,7 @@ PeerConnectionImpl::GetDatachannelParameters(
     uint16_t* level) const {
 
   auto trackPairs = mJsepSession->GetNegotiatedTrackPairs();
-  for (auto j = trackPairs.begin(); j != trackPairs.end(); ++j) {
-    JsepTrackPair& trackPair = *j;
-
+  for (auto& trackPair : trackPairs) {
     bool sendDataChannel =
       trackPair.mSending &&
       trackPair.mSending->GetMediaType() == SdpMediaSection::kApplication;
@@ -1906,9 +1904,7 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
 
   // Group new tracks by stream id
   std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
-  for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
-    RefPtr<JsepTrack> track = *i;
-
+  for (auto track : newTracks) {
     if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
       // Ignore datachannel
       continue;
@@ -1917,9 +1913,9 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
     tracksByStreamId[track->GetStreamId()].push_back(track);
   }
 
-  for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
-    std::string streamId = i->first;
-    std::vector<RefPtr<JsepTrack>>& tracks = i->second;
+  for (auto& id : tracksByStreamId) {
+    std::string streamId = id.first;
+    std::vector<RefPtr<JsepTrack>>& tracks = id.second;
 
     bool newStream = false;
     RefPtr<RemoteSourceStreamInfo> info =
@@ -2056,9 +2052,9 @@ PeerConnectionImpl::RemoveOldRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
   std::vector<RefPtr<JsepTrack>> removedTracks =
     mJsepSession->GetRemoteTracksRemoved();
 
-  for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
-    const std::string& streamId = (*i)->GetStreamId();
-    const std::string& trackId = (*i)->GetTrackId();
+  for (auto& removedTrack : removedTracks) {
+    const std::string& streamId = removedTrack->GetStreamId();
+    const std::string& trackId = removedTrack->GetTrackId();
 
     RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
     if (!info) {
@@ -3687,23 +3683,23 @@ static void ToRTCIceCandidateStats(
     RTCStatsReportInternal* report) {
 
   MOZ_ASSERT(report);
-  for (auto c = candidates.begin(); c != candidates.end(); ++c) {
+  for (const auto& candidate : candidates) {
     RTCIceCandidateStats cand;
     cand.mType.Construct(candidateType);
-    NS_ConvertASCIItoUTF16 codeword(c->codeword.c_str());
+    NS_ConvertASCIItoUTF16 codeword(candidate.codeword.c_str());
     cand.mComponentId.Construct(componentId);
     cand.mId.Construct(codeword);
     cand.mTimestamp.Construct(now);
     cand.mCandidateType.Construct(
-        RTCStatsIceCandidateType(c->type));
+        RTCStatsIceCandidateType(candidate.type));
     cand.mIpAddress.Construct(
-        NS_ConvertASCIItoUTF16(c->cand_addr.host.c_str()));
-    cand.mPortNumber.Construct(c->cand_addr.port);
+        NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
+    cand.mPortNumber.Construct(candidate.cand_addr.port);
     cand.mTransport.Construct(
-        NS_ConvertASCIItoUTF16(c->cand_addr.transport.c_str()));
+        NS_ConvertASCIItoUTF16(candidate.cand_addr.transport.c_str()));
     if (candidateType == RTCStatsType::Local_candidate) {
       cand.mMozLocalTransport.Construct(
-          NS_ConvertASCIItoUTF16(c->local_addr.transport.c_str()));
+          NS_ConvertASCIItoUTF16(candidate.local_addr.transport.c_str()));
     }
     report->mIceCandidateStats.Value().AppendElement(cand, fallible);
   }
@@ -3724,10 +3720,10 @@ static void RecordIceStats_s(
     return;
   }
 
-  for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
-    NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
-    NS_ConvertASCIItoUTF16 localCodeword(p->local.codeword.c_str());
-    NS_ConvertASCIItoUTF16 remoteCodeword(p->remote.codeword.c_str());
+  for (auto& candPair : candPairs) {
+    NS_ConvertASCIItoUTF16 codeword(candPair.codeword.c_str());
+    NS_ConvertASCIItoUTF16 localCodeword(candPair.local.codeword.c_str());
+    NS_ConvertASCIItoUTF16 remoteCodeword(candPair.remote.codeword.c_str());
     // Only expose candidate-pair statistics to chrome, until we've thought
     // through the implications of exposing it to content.
 
@@ -3738,10 +3734,10 @@ static void RecordIceStats_s(
     s.mType.Construct(RTCStatsType::Candidate_pair);
     s.mLocalCandidateId.Construct(localCodeword);
     s.mRemoteCandidateId.Construct(remoteCodeword);
-    s.mNominated.Construct(p->nominated);
-    s.mPriority.Construct(p->priority);
-    s.mSelected.Construct(p->selected);
-    s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
+    s.mNominated.Construct(candPair.nominated);
+    s.mPriority.Construct(candPair.priority);
+    s.mSelected.Construct(candPair.selected);
+    s.mState.Construct(RTCStatsIceCandidatePairState(candPair.state));
     report->mIceCandidatePairStats.Value().AppendElement(s, fallible);
   }
 

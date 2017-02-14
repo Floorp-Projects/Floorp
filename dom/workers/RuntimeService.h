@@ -271,9 +271,6 @@ private:
   static void
   WorkerPrefChanged(const char* aPrefName, void* aClosure);
 
-  static void
-  JSVersionChanged(const char* aPrefName, void* aClosure);
-
   nsresult
   CreateSharedWorkerFromLoadInfo(JSContext* aCx,
                                  WorkerLoadInfo* aLoadInfo,

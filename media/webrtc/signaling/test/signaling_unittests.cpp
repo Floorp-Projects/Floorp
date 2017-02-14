@@ -118,12 +118,12 @@ std::string indent(const std::string &s, int width = 4) {
   std::string out;
   char previous = '\n';
   prefix.assign(width, ' ');
-  for (std::string::const_iterator i = s.begin(); i != s.end(); i++) {
+  for (char c : s) {
     if (previous == '\n') {
       out += prefix;
     }
-    out += *i;
-    previous = *i;
+    out += c;
+    previous = c;
   }
   return out;
 }
@@ -225,8 +225,8 @@ public:
   size_t MatchingCandidates(const std::string& cand) {
     size_t count = 0;
 
-    for (size_t i=0; i<candidates.size(); ++i) {
-      if (candidates[i].find(cand) != std::string::npos)
+    for (auto& candidate : candidates) {
+      if (candidate.find(cand) != std::string::npos)
         ++count;
     }
 
@@ -612,9 +612,9 @@ class ParsedSDP {
   std::vector<std::string> GetLines(std::string objType) const
   {
     std::vector<std::string> values;
-    for (auto it = sdp_lines_.begin(); it != sdp_lines_.end(); ++it) {
-      if (it->first == objType) {
-        std::string value = it->second;
+    for (const auto& sdp_line : sdp_lines_) {
+      if (sdp_line.first == objType) {
+        std::string value = sdp_line.second;
         if (value.find("\r") != std::string::npos) {
           value = value.substr(0, value.find("\r"));
         } else {
@@ -649,12 +649,12 @@ class ParsedSDP {
   {
     std::string sdp;
 
-    for (auto it = sdp_lines_.begin(); it != sdp_lines_.end(); ++it) {
-      sdp += it->first;
-      if (it->second != "\r\n") {
+    for (const auto& sdp_line : sdp_lines_) {
+      sdp += sdp_line.first;
+      if (sdp_line.second != "\r\n") {
         sdp += " ";
       }
-      sdp += it->second;
+      sdp += sdp_line.second;
     }
 
     return sdp;
@@ -1151,9 +1151,9 @@ class SignalingAgent {
       const std::map<Msid, SdpMediaSection::MediaType>& tracks) const
   {
     std::ostringstream oss;
-    for (auto it = tracks.begin(); it != tracks.end(); ++it) {
-      oss << it->first.streamId << "/" << it->first.trackId
-          << " (" << it->second << ")" << std::endl;
+    for (const auto& track : tracks) {
+      oss << track.first.streamId << "/" << track.first.trackId
+          << " (" << track.second << ")" << std::endl;
     }
 
     return oss.str();
@@ -1418,13 +1418,11 @@ class SignalingAgent {
     }
 
     mRemoteDescriptionSet = true;
-    for (auto i = deferredCandidates_.begin();
-         i != deferredCandidates_.end();
-         ++i) {
-      AddIceCandidate(i->candidate.c_str(),
-                      i->mid.c_str(),
-                      i->level,
-                      i->expectSuccess);
+    for (auto& deferredCandidate : deferredCandidates_) {
+      AddIceCandidate(deferredCandidate.candidate.c_str(),
+                      deferredCandidate.mid.c_str(),
+                      deferredCandidate.level,
+                      deferredCandidate.expectSuccess);
     }
     deferredCandidates_.clear();
   }
@@ -1534,8 +1532,8 @@ class SignalingAgent {
   //Stops generating new audio data for transmission.
   //Should be called before Cleanup of the peer connection.
   void CloseSendStreams() {
-    for (auto i = domMediaStreams_.begin(); i != domMediaStreams_.end(); ++i) {
-      static_cast<Fake_MediaStream*>((*i)->GetStream())->StopStream();
+    for (auto& domMediaStream : domMediaStreams_) {
+      static_cast<Fake_MediaStream*>(domMediaStream->GetStream())->StopStream();
     }
   }
 
@@ -1544,8 +1542,8 @@ class SignalingAgent {
   void CloseReceiveStreams() {
     std::vector<DOMMediaStream *> streams =
                             pObserver->GetStreams();
-    for (size_t i = 0; i < streams.size(); i++) {
-      streams[i]->GetStream()->AsSourceStream()->StopStream();
+    for (auto& stream : streams) {
+      stream->GetStream()->AsSourceStream()->StopStream();
     }
   }
 
@@ -1576,10 +1574,10 @@ class SignalingAgent {
 
     const auto &pipelines = streamInfo->GetPipelines();
 
-    for (auto i = pipelines.begin(); i != pipelines.end(); ++i) {
-      if (i->second->IsVideo() == video) {
-        std::cout << "Got MediaPipeline " << i->second->trackid();
-        return i->second;
+    for (const auto& pipeline : pipelines) {
+      if (pipeline.second->IsVideo() == video) {
+        std::cout << "Got MediaPipeline " << pipeline.second->trackid();
+        return pipeline.second;
       }
     }
     return nullptr;
@@ -1683,8 +1681,8 @@ class SignalingAgentTest : public ::testing::Test {
 
   void TearDown() {
     // Delete all the agents.
-    for (size_t i=0; i < agents_.size(); i++) {
-      delete agents_[i];
+    for (auto& agent : agents_) {
+      delete agent;
     }
   }
 
