@@ -138,7 +138,7 @@ public:
     if (parent) {
       aChildDoc->Parent()->ClearChildDoc(aChildDoc);
     }
-    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc);
+    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->IProtocol::Id());
     aChildDoc->mParentDoc = kNoParentDoc;
     MOZ_ASSERT(result);
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
@@ -167,7 +167,9 @@ public:
 
   size_t ChildDocCount() const { return mChildDocs.Length(); }
   const DocAccessibleParent* ChildDocAt(size_t aIdx) const
-    { return mChildDocs[aIdx]; }
+  { return const_cast<DocAccessibleParent*>(this)->ChildDocAt(aIdx); }
+  DocAccessibleParent* ChildDocAt(size_t aIdx)
+    { return LiveDocs().Get(mChildDocs[aIdx]); }
 
 #if defined(XP_WIN)
   void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
@@ -214,7 +216,7 @@ private:
   MOZ_MUST_USE bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
-  nsTArray<DocAccessibleParent*> mChildDocs;
+  nsTArray<int32_t> mChildDocs;
   int32_t mParentDoc;
 
 #if defined(XP_WIN)
