@@ -1853,8 +1853,8 @@ namespace JS {
  * Convert obj to a primitive value. On success, store the result in vp and
  * return true.
  *
- * The hint argument must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no
- * hint).
+ * The hint argument must be JSTYPE_STRING, JSTYPE_NUMBER, or
+ * JSTYPE_UNDEFINED (no hint).
  *
  * Implements: ES6 7.1.1 ToPrimitive(input, [PreferredType]).
  */
@@ -1863,7 +1863,7 @@ ToPrimitive(JSContext* cx, JS::HandleObject obj, JSType hint, JS::MutableHandleV
 
 /**
  * If args.get(0) is one of the strings "string", "number", or "default", set
- * *result to JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID accordingly and
+ * result to JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_UNDEFINED accordingly and
  * return true. Otherwise, return false with a TypeError pending.
  *
  * This can be useful in implementing a @@toPrimitive method.

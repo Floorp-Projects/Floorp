@@ -181,8 +181,6 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   MOZ_ASSERT(HasSize());
 
   bool hasTransparency = CheckForTransparency(aFrameRect);
-  gfx::SurfaceFormat format = hasTransparency ? SurfaceFormat::B8G8R8A8
-                                              : SurfaceFormat::B8G8R8X8;
 
   // Make sure there's no animation if we're downscaling.
   MOZ_ASSERT_IF(Size() != OutputSize(), !GetImageMetadata().HasAnimation());
@@ -193,6 +191,9 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
 
   Maybe<SurfacePipe> pipe;
   if (mGIFStruct.images_decoded == 0) {
+    gfx::SurfaceFormat format = hasTransparency ? SurfaceFormat::B8G8R8A8
+                                                : SurfaceFormat::B8G8R8X8;
+
     // The first frame may be displayed progressively.
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
 
@@ -204,10 +205,17 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   } else {
     // This is an animation frame (and not the first). To minimize the memory
     // usage of animations, the image data is stored in paletted form.
+    //
+    // We should never use paletted surfaces with a draw target directly, so
+    // the only practical difference between B8G8R8A8 and B8G8R8X8 is the
+    // cleared pixel value if we get truncated. We want 0 in that case to
+    // ensure it is an acceptable value for the color map as was the case
+    // historically.
     MOZ_ASSERT(Size() == OutputSize());
     pipe =
       SurfacePipeFactory::CreatePalettedSurfacePipe(this, mGIFStruct.images_decoded,
-                                                    Size(), aFrameRect, format,
+                                                    Size(), aFrameRect,
+                                                    SurfaceFormat::B8G8R8A8,
                                                     aDepth, pipeFlags);
   }
 

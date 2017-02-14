@@ -365,7 +365,8 @@ static const char kthawte_Primary_Root_CA___G3Fingerprint[] =
 
 /* Pinsets are each an ordered list by the actual value of the fingerprint */
 struct StaticFingerprints {
-  const size_t size;
+  // See bug 1338873 about making these fields const.
+  size_t size;
   const char* const* data;
 };
 
@@ -662,11 +663,12 @@ static const StaticFingerprints kPinset_nightx = {
 
 /* Domainlist */
 struct TransportSecurityPreload {
+  // See bug 1338873 about making these fields const.
   const char* mHost;
-  const bool mIncludeSubdomains;
-  const bool mTestMode;
-  const bool mIsMoz;
-  const int32_t mId;
+  bool mIncludeSubdomains;
+  bool mTestMode;
+  bool mIsMoz;
+  int32_t mId;
   const StaticFingerprints* pinset;
 };
 
@@ -1155,4 +1157,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1495379956043000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1495465368089000);

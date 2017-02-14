@@ -11,6 +11,7 @@ module.exports = {
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
+    "mozilla/use-ownerGlobal": "error",
 
     // No (!foo in bar) or (!object instanceof Class)
     "no-unsafe-negation": "error",

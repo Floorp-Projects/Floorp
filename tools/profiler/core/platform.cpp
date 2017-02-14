@@ -2050,7 +2050,7 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 
 #ifdef MOZ_TASK_TRACER
-  if (mTaskTracer) {
+  if (gTaskTracer) {
     mozilla::tasktracer::StartLogging();
   }
 #endif
@@ -2211,7 +2211,7 @@ profiler_stop()
   }
 
 #ifdef MOZ_TASK_TRACER
-  if (mTaskTracer) {
+  if (gTaskTracer) {
     mozilla::tasktracer::StopLogging();
   }
 #endif

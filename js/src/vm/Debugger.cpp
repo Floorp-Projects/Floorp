@@ -1138,7 +1138,7 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
         }
 
         CrossCompartmentKey key(object, env, CrossCompartmentKey::DebuggerEnvironment);
-        if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
+        if (!object->compartment()->putNewWrapper(cx, key, ObjectValue(*envobj))) {
             NukeDebuggerWrapper(envobj);
             environments.remove(env);
             return false;
@@ -1225,7 +1225,7 @@ Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
 
         if (obj->compartment() != object->compartment()) {
             CrossCompartmentKey key(object, obj, CrossCompartmentKey::DebuggerObject);
-            if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
+            if (!object->compartment()->putNewWrapper(cx, key, ObjectValue(*dobj))) {
                 NukeDebuggerWrapper(dobj);
                 objects.remove(obj);
                 ReportOutOfMemory(cx);
@@ -5521,7 +5521,7 @@ Debugger::wrapVariantReferent(JSContext* cx, Map& map, Handle<CrossCompartmentKe
             return nullptr;
         }
 
-        if (!object->compartment()->putWrapper(cx, key, ObjectValue(*wrapper))) {
+        if (!object->compartment()->putNewWrapper(cx, key, ObjectValue(*wrapper))) {
             NukeDebuggerWrapper(wrapper);
             map.remove(untaggedReferent);
             ReportOutOfMemory(cx);

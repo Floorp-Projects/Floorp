@@ -1633,7 +1633,7 @@ CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch* baab)
         masm.ma_tst(ToRegister(baab->left()), Imm32(ToInt32(baab->right())), scratch);
     else
         masm.ma_tst(ToRegister(baab->left()), ToRegister(baab->right()));
-    emitBranch(Assembler::NonZero, baab->ifTrue(), baab->ifFalse());
+    emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
 
 void

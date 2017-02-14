@@ -167,6 +167,47 @@ ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const
   return chromeDoc ? chromeDoc->GetAccessible(frame) : nullptr;
 }
 
+template<class Derived>
+void
+ProxyAccessibleBase<Derived>::SetParent(Derived* aParent)
+{
+  MOZ_ASSERT(IsDoc(), "we should only reparent documents");
+  if (!aParent) {
+    mParent = kNoParent;
+  } else {
+    MOZ_ASSERT(!aParent->IsDoc());
+    mParent = aParent->ID();
+  }
+}
+
+template<class Derived>
+Derived*
+ProxyAccessibleBase<Derived>::Parent() const
+{
+  if (mParent == kNoParent) {
+    return nullptr;
+  }
+
+  // if we are not a document then are parent is another proxy in the same
+  // document.  That means we can just ask our document for the proxy with our
+  // parent id.
+  if (!IsDoc()) {
+    return Document()->GetAccessible(mParent);
+  }
+
+  // If we are a top level document then our parent is not a proxy.
+  if (AsDoc()->IsTopLevel()) {
+    return nullptr;
+  }
+
+  // Finally if we are a non top level document then our parent id is for a
+  // proxy in our parent document so get the proxy from there.
+  DocAccessibleParent* parentDoc = AsDoc()->ParentDoc();
+  MOZ_ASSERT(parentDoc);
+  MOZ_ASSERT(mParent);
+  return parentDoc->GetAccessible(mParent);
+}
+
 template class ProxyAccessibleBase<ProxyAccessible>;
 
 } // namespace a11y

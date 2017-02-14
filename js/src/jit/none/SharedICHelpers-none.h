@@ -29,7 +29,6 @@ inline void EmitBaselineEnterStubFrame(MacroAssembler&, Register) { MOZ_CRASH();
 inline void EmitBaselineLeaveStubFrame(MacroAssembler&, bool v = false) { MOZ_CRASH(); }
 inline void EmitStowICValues(MacroAssembler&, int) { MOZ_CRASH(); }
 inline void EmitUnstowICValues(MacroAssembler&, int, bool v = false) { MOZ_CRASH(); }
-inline void EmitCallTypeUpdateIC(MacroAssembler&, JitCode*, uint32_t) { MOZ_CRASH(); }
 inline void EmitStubGuardFailure(MacroAssembler&) { MOZ_CRASH(); }
 
 template <typename T> inline void EmitPreBarrier(MacroAssembler&, T, MIRType) { MOZ_CRASH(); }
