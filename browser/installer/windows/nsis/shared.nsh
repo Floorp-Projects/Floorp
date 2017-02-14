@@ -1160,6 +1160,7 @@
   ; should be ${FileMainEXE} so if it is in use the CheckForFilesInUse macro
   ; returns after the first check.
   Push "end"
+  Push "AccessibleHandler.dll"
   Push "AccessibleMarshal.dll"
   Push "IA2Marshal.dll"
   Push "freebl3.dll"
