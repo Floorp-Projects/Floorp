@@ -235,9 +235,9 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
   }
   PeerConnectionCtx *ctx = PeerConnectionCtx::GetInstance();
 
-  for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
-    PeerConnectionImpl::ExecuteStatsQuery_s(*q);
-    auto& r = *(*q)->report;
+  for (auto & q : *aQueryList) {
+    PeerConnectionImpl::ExecuteStatsQuery_s(q);
+    auto& r = *q->report;
     if (r.mInboundRTPStreamStats.WasPassed()) {
       // First, get reports from a second ago, if any, for calculations below
       const Sequence<RTCInboundRTPStreamStats> *lastInboundStats = nullptr;
@@ -316,8 +316,8 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
   }
   // Steal and hang on to reports for the next second
   ctx->mLastReports.Clear();
-  for (auto q = aQueryList->begin(); q != aQueryList->end(); ++q) {
-    ctx->mLastReports.AppendElement((*q)->report.forget()); // steal avoids copy
+  for (auto & q : *aQueryList) {
+    ctx->mLastReports.AppendElement(q->report.forget()); // steal avoids copy
   }
   // Container must be freed back on main thread
   NS_DispatchToMainThread(WrapRunnableNM(&FreeOnMain_m, aQueryList),

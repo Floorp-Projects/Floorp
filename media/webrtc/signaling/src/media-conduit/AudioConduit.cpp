@@ -69,9 +69,9 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
-  for(std::vector<AudioCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)
+  for(auto & codec : mRecvCodecList)
   {
-    delete mRecvCodecList[i];
+    delete codec;
   }
 
   // The first one of a pair to be deleted shuts down media for both
@@ -516,16 +516,16 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   // Try Applying the codecs in the list.
   // We succeed if at least one codec was applied and reception was
   // started successfully.
-  for(std::vector<AudioCodecConfig*>::size_type i=0 ;i<codecConfigList.size();i++)
+  for(auto codec : codecConfigList)
   {
     //if the codec param is invalid or diplicate, return error
-    if((condError = ValidateCodecConfig(codecConfigList[i],false)) != kMediaConduitNoError)
+    if((condError = ValidateCodecConfig(codec,false)) != kMediaConduitNoError)
     {
       return condError;
     }
 
     webrtc::CodecInst cinst;
-    if(!CodecConfigToWebRTCCodec(codecConfigList[i],cinst))
+    if(!CodecConfigToWebRTCCodec(codec,cinst))
     {
       CSFLogError(logTag,"%s CodecConfig to WebRTC Codec Failed ",__FUNCTION__);
       continue;
@@ -538,9 +538,9 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
       continue;
     } else {
       CSFLogDebug(logTag, "%s Successfully Set RecvCodec %s", __FUNCTION__,
-                                          codecConfigList[i]->mName.c_str());
+                                          codec->mName.c_str());
       //copy this to local database
-      if(CopyCodecToDB(codecConfigList[i]))
+      if(CopyCodecToDB(codec))
       {
         success = true;
       } else {
@@ -1074,9 +1074,9 @@ bool
 WebrtcAudioConduit::CheckCodecForMatch(const AudioCodecConfig* codecInfo) const
 {
   //the db should have atleast one codec
-  for(std::vector<AudioCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)
+  for(auto codec : mRecvCodecList)
   {
-    if(CheckCodecsForMatch(mRecvCodecList[i],codecInfo))
+    if(CheckCodecsForMatch(codec,codecInfo))
     {
       //match
       return true;
@@ -1137,14 +1137,14 @@ WebrtcAudioConduit::ValidateCodecConfig(const AudioCodecConfig* codecInfo,
 void
 WebrtcAudioConduit::DumpCodecDB() const
  {
-    for(std::vector<AudioCodecConfig*>::size_type i=0;i < mRecvCodecList.size();i++)
+    for(auto& codec : mRecvCodecList)
     {
-      CSFLogDebug(logTag,"Payload Name: %s", mRecvCodecList[i]->mName.c_str());
-      CSFLogDebug(logTag,"Payload Type: %d", mRecvCodecList[i]->mType);
-      CSFLogDebug(logTag,"Payload Frequency: %d", mRecvCodecList[i]->mFreq);
-      CSFLogDebug(logTag,"Payload PacketSize: %d", mRecvCodecList[i]->mPacSize);
-      CSFLogDebug(logTag,"Payload Channels: %d", mRecvCodecList[i]->mChannels);
-      CSFLogDebug(logTag,"Payload Sampling Rate: %d", mRecvCodecList[i]->mRate);
+      CSFLogDebug(logTag,"Payload Name: %s", codec->mName.c_str());
+      CSFLogDebug(logTag,"Payload Type: %d", codec->mType);
+      CSFLogDebug(logTag,"Payload Frequency: %d", codec->mFreq);
+      CSFLogDebug(logTag,"Payload PacketSize: %d", codec->mPacSize);
+      CSFLogDebug(logTag,"Payload Channels: %d", codec->mChannels);
+      CSFLogDebug(logTag,"Payload Sampling Rate: %d", codec->mRate);
     }
  }
 }// end namespace

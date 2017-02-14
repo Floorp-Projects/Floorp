@@ -719,8 +719,8 @@ Finish()
   // |n - 1|, and would be appropriate if we were using a random sample of a
   // larger population.
   double sumOfSquaredDeviations = 0;
-  for (auto iter = gTotals_W.begin(); iter != gTotals_W.end(); ++iter) {
-    double deviation = (*iter - mean);
+  for (double & iter : gTotals_W) {
+    double deviation = (iter - mean);
     sumOfSquaredDeviations += deviation * deviation;
   }
   double popStdDev = sqrt(sumOfSquaredDeviations / n);
