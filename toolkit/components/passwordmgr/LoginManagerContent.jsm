@@ -1484,17 +1484,16 @@ UserAutoCompleteResult.prototype = {
       throw new Error("Index out of range.");
     }
 
-    if (this._showInsecureFieldWarning && index === 0) {
-      return this._stringBundle.GetStringFromName("insecureFieldWarningDescription");
-    }
-
-    let that = this;
-
-    function getLocalizedString(key, formatArgs) {
+    let getLocalizedString = (key, formatArgs = null) => {
       if (formatArgs) {
-        return that._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+        return this._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
       }
-      return that._stringBundle.GetStringFromName(key);
+      return this._stringBundle.GetStringFromName(key);
+    };
+
+    if (this._showInsecureFieldWarning && index === 0) {
+      let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
+      return getLocalizedString("insecureFieldWarningDescription3", [learnMoreString]);
     }
 
     let login = this.logins[index - this._showInsecureFieldWarning];

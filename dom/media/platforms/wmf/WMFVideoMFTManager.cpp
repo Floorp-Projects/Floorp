@@ -5,34 +5,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
-#include <winsdkver.h>
 #include <psapi.h>
+#include <winsdkver.h>
+
 #include "WMFVideoMFTManager.h"
-#include "MediaDecoderReader.h"
-#include "gfxPrefs.h"
-#include "WMFUtils.h"
-#include "ImageContainer.h"
-#include "VideoUtils.h"
 #include "DXVA2Manager.h"
-#include "nsThreadUtils.h"
+#include "GMPUtils.h" // For SplitAt. TODO: Move SplitAt to a central place.
+#include "IMFYCbCrImage.h"
+#include "ImageContainer.h"
 #include "Layers.h"
+#include "MP4Decoder.h"
+#include "MediaDecoderReader.h"
+#include "MediaInfo.h"
+#include "MediaTelemetryConstants.h"
+#include "VPXDecoder.h"
+#include "VideoUtils.h"
+#include "WMFUtils.h"
+#include "gfx2DGlue.h"
+#include "gfxPrefs.h"
+#include "gfxWindowsPlatform.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "MediaInfo.h"
 #include "mozilla/Logging.h"
-#include "nsWindowsHelpers.h"
-#include "gfx2DGlue.h"
-#include "gfxWindowsPlatform.h"
-#include "IMFYCbCrImage.h"
-#include "mozilla/WindowsVersion.h"
-#include "mozilla/Telemetry.h"
-#include "nsPrintfCString.h"
-#include "MediaTelemetryConstants.h"
-#include "GMPUtils.h" // For SplitAt. TODO: Move SplitAt to a central place.
-#include "MP4Decoder.h"
-#include "VPXDecoder.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
+#include "nsWindowsHelpers.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -90,10 +91,6 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mKnowsCompositor(aKnowsCompositor)
-  , mNullOutputCount(0)
-  , mGotValidOutputAfterNullOutput(false)
-  , mGotExcessiveNullOutput(false)
-  , mIsValid(true)
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
   // Init().
 {
@@ -121,15 +118,21 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
 
   // Record whether the video decoder successfully decoded, or output null
   // samples but did/didn't recover.
-  uint32_t telemetry = (mNullOutputCount == 0) ? 0 :
-                       (mGotValidOutputAfterNullOutput && mGotExcessiveNullOutput) ? 1 :
-                       mGotExcessiveNullOutput ? 2 :
-                       mGotValidOutputAfterNullOutput ? 3 :
-                       4;
+  uint32_t telemetry =
+    (mNullOutputCount == 0)
+    ? 0
+    : (mGotValidOutputAfterNullOutput && mGotExcessiveNullOutput)
+      ? 1
+      : mGotExcessiveNullOutput
+        ? 2
+        : mGotValidOutputAfterNullOutput ? 3 : 4;
 
   nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() -> void {
-    LOG(nsPrintfCString("Reporting telemetry VIDEO_MFT_OUTPUT_NULL_SAMPLES=%d", telemetry).get());
-    Telemetry::Accumulate(Telemetry::ID::VIDEO_MFT_OUTPUT_NULL_SAMPLES, telemetry);
+    LOG(nsPrintfCString("Reporting telemetry VIDEO_MFT_OUTPUT_NULL_SAMPLES=%d",
+                        telemetry)
+        .get());
+    Telemetry::Accumulate(Telemetry::ID::VIDEO_MFT_OUTPUT_NULL_SAMPLES,
+                          telemetry);
   });
   // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
   AbstractThread::MainThread()->Dispatch(task.forget());
@@ -171,9 +174,10 @@ StaticAutoPtr<D3DDLLBlacklistingCache> sD3D9BlacklistingCache;
 
 // If a blacklisted DLL is found, return its information, otherwise "".
 static const nsCString&
-FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingCache,
-                       const nsCString& aBlacklist,
-                       const char* aDLLBlacklistPrefName)
+FindDXVABlacklistedDLL(
+  StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingCache,
+  const nsCString& aBlacklist,
+  const char* aDLLBlacklistPrefName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
 
@@ -207,7 +211,8 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
     EnumProcessModules(hProcess, nullptr, 0, &modulesSize);
     modulesNum = modulesSize / sizeof(HMODULE);
     hMods = mozilla::MakeUnique<HMODULE[]>(modulesNum);
-    EnumProcessModules(hProcess, hMods.get(), modulesNum * sizeof(HMODULE), &modulesSize);
+    EnumProcessModules(
+      hProcess, hMods.get(), modulesNum * sizeof(HMODULE), &modulesSize);
   }
 
   // media.wmf.disable-d3d*-for-dlls format: (whitespace is trimmed)
@@ -230,12 +235,14 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
       WCHAR dllPath[MAX_PATH + 1];
 
       if (i < modulesNum) {
-        if (!GetModuleFileNameEx(hProcess, hMods[i], dllPath, sizeof(dllPath) / sizeof(WCHAR))) {
+        if (!GetModuleFileNameEx(
+              hProcess, hMods[i], dllPath, sizeof(dllPath) / sizeof(WCHAR))) {
           continue;
         }
 
         nsCOMPtr<nsIFile> file;
-        if (NS_WARN_IF(NS_FAILED(NS_NewLocalFile(nsDependentString(dllPath), false, getter_AddRefs(file))))) {
+        if (NS_WARN_IF(NS_FAILED(NS_NewLocalFile(
+              nsDependentString(dllPath), false, getter_AddRefs(file))))) {
           continue;
         }
 
@@ -277,8 +284,10 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
         nsTArray<nsCString> numberStrings;
         SplitAt(".", version, numberStrings);
         if (numberStrings.Length() != 4) {
-          NS_WARNING(nsPrintfCString("Skipping incorrect '%s' a.b.c.d version format",
-                                     aDLLBlacklistPrefName).get());
+          NS_WARNING(
+            nsPrintfCString("Skipping incorrect '%s' a.b.c.d version format",
+                            aDLLBlacklistPrefName)
+            .get());
           continue;
         }
         DWORD numbers[4];
@@ -296,8 +305,10 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
         }
 
         if (NS_FAILED(errorCode)) {
-          NS_WARNING(nsPrintfCString("Skipping incorrect '%s' a.b.c.d version format",
-                                     aDLLBlacklistPrefName).get());
+          NS_WARNING(
+            nsPrintfCString("Skipping incorrect '%s' a.b.c.d version format",
+                            aDLLBlacklistPrefName)
+            .get());
           continue;
         }
 
@@ -307,7 +318,11 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
           aDLLBlacklistingCache->mBlacklistedDLL.SetLength(0);
           aDLLBlacklistingCache->mBlacklistedDLL.AppendPrintf(
             "%s (%lu.%lu.%lu.%lu)",
-            nameAndVersions[0].get(), numbers[0], numbers[1], numbers[2], numbers[3]);
+            nameAndVersions[0].get(),
+            numbers[0],
+            numbers[1],
+            numbers[2],
+            numbers[3]);
           return aDLLBlacklistingCache->mBlacklistedDLL;
         }
       }
@@ -320,20 +335,23 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
 }
 
 static const nsCString&
-FindD3D11BlacklistedDLL() {
+FindD3D11BlacklistedDLL()
+{
   return FindDXVABlacklistedDLL(sD3D11BlacklistingCache,
                                 gfx::gfxVars::PDMWMFDisableD3D11Dlls(),
                                 "media.wmf.disable-d3d11-for-dlls");
 }
 
 static const nsCString&
-FindD3D9BlacklistedDLL() {
+FindD3D9BlacklistedDLL()
+{
   return FindDXVABlacklistedDLL(sD3D9BlacklistingCache,
                                 gfx::gfxVars::PDMWMFDisableD3D9Dlls(),
                                 "media.wmf.disable-d3d9-for-dlls");
 }
 
-class CreateDXVAManagerEvent : public Runnable {
+class CreateDXVAManagerEvent : public Runnable
+{
 public:
   CreateDXVAManagerEvent(LayersBackend aBackend,
                          layers::KnowsCompositor* aKnowsCompositor,
@@ -341,7 +359,8 @@ public:
     : mBackend(aBackend)
     , mKnowsCompositor(aKnowsCompositor)
     , mFailureReason(aFailureReason)
-  {}
+  {
+  }
 
   NS_IMETHOD Run() override {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
@@ -354,7 +373,8 @@ public:
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
                                     blacklistedDLL.get());
       } else {
-        mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(mKnowsCompositor, *failureReason);
+        mDXVA2Manager =
+          DXVA2Manager::CreateD3D11DXVA(mKnowsCompositor, *failureReason);
         if (mDXVA2Manager) {
           return NS_OK;
         }
@@ -370,7 +390,8 @@ public:
       mFailureReason.AppendPrintf("D3D9 blacklisted with DLL %s",
                                   blacklistedDLL.get());
     } else {
-      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, *failureReason);
+      mDXVA2Manager =
+        DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, *failureReason);
       // Make sure we include the messages from both attempts (if applicable).
       mFailureReason.Append(secondFailureReason);
     }
@@ -389,13 +410,14 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   // readback of decoded video frames from GPU to CPU memory grinds painting
   // to a halt, and makes playback performance *worse*.
   if (!mDXVAEnabled) {
-    mDXVAFailureReason.AssignLiteral("Hardware video decoding disabled or blacklisted");
+    mDXVAFailureReason.AssignLiteral(
+      "Hardware video decoding disabled or blacklisted");
     return false;
   }
   MOZ_ASSERT(!mDXVA2Manager);
   LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
-  if (backend != LayersBackend::LAYERS_D3D9 &&
-      backend != LayersBackend::LAYERS_D3D11) {
+  if (backend != LayersBackend::LAYERS_D3D9
+      && backend != LayersBackend::LAYERS_D3D11) {
     mDXVAFailureReason.AssignLiteral("Unsupported layers backend");
     return false;
   }
@@ -428,9 +450,9 @@ WMFVideoMFTManager::ValidateVideoInfo()
   // we just reject streams which are less than the documented minimum.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
   static const int32_t MIN_H264_FRAME_DIMENSION = 48;
-  if (mStreamType == H264 &&
-      (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION ||
-       mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
+  if (mStreamType == H264
+      && (mVideoInfo.mImage.width < MIN_H264_FRAME_DIMENSION
+          || mVideoInfo.mImage.height < MIN_H264_FRAME_DIMENSION)) {
     LogToBrowserConsole(NS_LITERAL_STRING(
       "Can't decode H.264 stream with width or height less than 48 pixels."));
     mIsValid = false;
@@ -500,11 +522,13 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
         mUseHwAccel = true;
       } else {
         DeleteOnMainThread(mDXVA2Manager);
-        mDXVAFailureReason = nsPrintfCString("MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
+        mDXVAFailureReason = nsPrintfCString(
+          "MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
       }
     }
     else {
-      mDXVAFailureReason.AssignLiteral("Decoder returned false for MF_SA_D3D_AWARE");
+      mDXVAFailureReason.AssignLiteral(
+        "Decoder returned false for MF_SA_D3D_AWARE");
     }
   }
 
@@ -521,7 +545,8 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   hr = SetDecoderMediaTypes();
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
+  LOG("Video Decoder initialized, Using DXVA: %s",
+      (mUseHwAccel ? "Yes" : "No"));
 
   return true;
 }
@@ -540,15 +565,20 @@ WMFVideoMFTManager::SetDecoderMediaTypes()
   hr = inputType->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
+  hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE,
+                            MFVideoInterlace_MixedInterlaceOrProgressive);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // MSFT MFT needs this frame size set for VP9?
   if (mStreamType == VP9 || mStreamType == VP8) {
-    hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    hr =
+      inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    hr = MFSetAttributeSize(inputType, MF_MT_FRAME_SIZE, mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+    hr = MFSetAttributeSize(inputType,
+                            MF_MT_FRAME_SIZE,
+                            mVideoInfo.ImageRect().width,
+                            mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   }
 
@@ -594,14 +624,18 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
 
 class SupportsConfigEvent : public Runnable {
 public:
-  SupportsConfigEvent(DXVA2Manager* aDXVA2Manager, IMFMediaType* aMediaType, float aFramerate)
+  SupportsConfigEvent(DXVA2Manager* aDXVA2Manager,
+                      IMFMediaType* aMediaType,
+                      float aFramerate)
     : mDXVA2Manager(aDXVA2Manager)
     , mMediaType(aMediaType)
     , mFramerate(aFramerate)
     , mSupportsConfig(false)
-  {}
+  {
+  }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run()
+  {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
     mSupportsConfig = mDXVA2Manager->SupportsConfig(mMediaType, mFramerate);
     return NS_OK;
@@ -743,7 +777,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   BYTE* data = nullptr;
   LONG stride = 0;
   RefPtr<IMF2DBuffer> twoDBuffer;
-  hr = buffer->QueryInterface(static_cast<IMF2DBuffer**>(getter_AddRefs(twoDBuffer)));
+  hr = buffer->QueryInterface(
+    static_cast<IMF2DBuffer**>(getter_AddRefs(twoDBuffer)));
   if (SUCCEEDED(hr)) {
     hr = twoDBuffer->Lock2D(&data, &stride);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -941,7 +976,8 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
         // not work in this situation.
         ++mNullOutputCount;
         if (mNullOutputCount > 250) {
-          LOG("Excessive Video MFTDecoder returning success but no output; giving up");
+          LOG("Excessive Video MFTDecoder returning success but no output; "
+              "giving up");
           mGotExcessiveNullOutput = true;
           return E_FAIL;
         }

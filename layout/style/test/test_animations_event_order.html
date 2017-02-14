@@ -46,6 +46,7 @@ var gDisplay = document.getElementById('display');
 [ 'animationstart',
   'animationiteration',
   'animationend',
+  'animationcancel',
   'transitionrun',
   'transitionstart',
   'transitionend',
@@ -659,6 +660,35 @@ checkEventOrder([ divs[0], 'transitionrun' ],
 
 divs.forEach(div => div.remove());
 divs = [];
+
+
+// 4k. Test sorting animations with cancel
+
+divs = [ document.createElement('div'),
+         document.createElement('div') ];
+
+divs.forEach((div, i) => {
+  gDisplay.appendChild(div);
+  div.style.marginLeft = '0px';
+  div.setAttribute('id', 'div' + i);
+});
+
+divs[0].style.animation = 'anim 10s 5s';
+divs[1].style.animation = 'anim 10s';
+
+getComputedStyle(divs[0]).animation; // flush
+
+advance_clock(0);  // divs[1]'s animation start
+advance_clock(5 * 1000);  // divs[0]'s animation start
+divs.forEach(div => div.style.display = 'none' );
+getComputedStyle(divs[0]).display;
+advance_clock(10 * 1000);
+
+checkEventOrder([ divs[1], 'animationstart' ],
+                [ divs[0], 'animationstart' ],
+                [ divs[1], 'animationcancel' ],
+                [ divs[0], 'animationcancel' ],
+                'Simultaneous animationcancel on siblings');
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 

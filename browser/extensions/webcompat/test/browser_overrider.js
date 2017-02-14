@@ -22,7 +22,7 @@ add_task(function test() {
     }
   ]);
 
-  let finalUA = overrider.getUAForURI(getnsIURI("http://www.example.org/foobar/"));
+  let finalUA = overrider.lookupUAOverride(getnsIURI("http://www.example.org/foobar/"));
   is(finalUA, "Test UA", "Overrides the UA without a matcher function");
 });
 
@@ -35,6 +35,6 @@ add_task(function test() {
     }
   ]);
 
-  let finalUA = overrider.getUAForURI(getnsIURI("http://www.example.org/foobar/"));
+  let finalUA = overrider.lookupUAOverride(getnsIURI("http://www.example.org/foobar/"));
   isnot(finalUA, "Test UA", "Does not override the UA with the matcher returning false");
 });

@@ -6943,6 +6943,60 @@
     "n_values": 17,
     "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
   },
+  "WEBRTC_DTLS_CLIENT_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that DTLS succeeded."
+  },
+  "WEBRTC_DTLS_CLIENT_ABORT_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
+  },
+  "WEBRTC_DTLS_CLIENT_FAILURE_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that it failed."
+  },
+  "WEBRTC_DTLS_SERVER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that DTLS succeeded."
+  },
+  "WEBRTC_DTLS_SERVER_ABORT_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
+  },
+  "WEBRTC_DTLS_SERVER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that it failed."
+  },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1319268],
