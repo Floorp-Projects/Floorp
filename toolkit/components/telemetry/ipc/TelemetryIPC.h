@@ -20,6 +20,7 @@ struct Accumulation;
 struct KeyedAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
+struct ChildEventData;
 
 }
 
@@ -28,6 +29,7 @@ namespace TelemetryIPC {
 /**
  * Accumulate child process data into histograms for the given process type.
  *
+ * @param aProcessType - the process type to accumulate the histograms for
  * @param aAccumulations - accumulation actions to perform
  */
 void AccumulateChildHistograms(GeckoProcessType aProcessType, const nsTArray<Telemetry::Accumulation>& aAccumulations);
@@ -35,6 +37,7 @@ void AccumulateChildHistograms(GeckoProcessType aProcessType, const nsTArray<Tel
 /**
  * Accumulate child process data into keyed histograms for the given process type.
  *
+ * @param aProcessType - the process type to accumulate the keyed histograms for
  * @param aAccumulations - accumulation actions to perform
  */
 void AccumulateChildKeyedHistograms(GeckoProcessType aProcessType, const nsTArray<Telemetry::KeyedAccumulation>& aAccumulations);
@@ -42,16 +45,26 @@ void AccumulateChildKeyedHistograms(GeckoProcessType aProcessType, const nsTArra
 /**
  * Update scalars for the given process type with the data coming from child process.
  *
+ * @param aProcessType - the process type to process the scalar actions for
  * @param aScalarActions - actions to update the scalar data
  */
 void UpdateChildScalars(GeckoProcessType aProcessType, const nsTArray<Telemetry::ScalarAction>& aScalarActions);
 
 /**
- * Update keyed  scalars for the given process type with the data coming from child process.
+ * Update keyed scalars for the given process type with the data coming from child process.
  *
+ * @param aProcessType - the process type to process the keyed scalar actions for
  * @param aScalarActions - actions to update the keyed scalar data
  */
 void UpdateChildKeyedScalars(GeckoProcessType aProcessType, const nsTArray<Telemetry::KeyedScalarAction>& aScalarActions);
+
+/**
+ * Record events for the given process type with the data coming from child process.
+ *
+ * @param aProcessType - the process type to record the events for
+ * @param aEvents - events to record
+ */
+void RecordChildEvents(GeckoProcessType aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents);
 
 }
 }
