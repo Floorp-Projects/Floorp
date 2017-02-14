@@ -3148,6 +3148,17 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
+  // Ask the JS engine to assert that it's valid to access our DocGroup whenever
+  // it runs JS code for this compartment. We skip the check if this window is
+  // for chrome JS or an add-on.
+  nsCOMPtr<nsIPrincipal> principal = mDoc->NodePrincipal();
+  nsString addonId;
+  principal->GetAddonId(addonId);
+  if (GetDocGroup() && !nsContentUtils::IsSystemPrincipal(principal) && addonId.IsEmpty()) {
+    js::SetCompartmentValidAccessPtr(cx, newInnerGlobal,
+                                     newInnerWindow->GetDocGroup()->GetValidAccessPtr());
+  }
+
   nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT, GetWrapperPreserveColor());
   kungFuDeathGrip->DidInitializeContext();
 
@@ -6475,6 +6486,7 @@ nsGlobalWindow::WindowExists(const nsAString& aName,
 
   nsCOMPtr<nsIDocShellTreeItem> namedItem;
   mDocShell->FindItemWithName(aName, nullptr, caller,
+                              /* aSkipTabGroup = */ false,
                               getter_AddRefs(namedItem));
   return namedItem != nullptr;
 }
@@ -9974,6 +9986,13 @@ nsGlobalWindow::Find(const nsAString& aString, bool aCaseSensitive,
                             (aString, aCaseSensitive, aBackwards, aWrapAround,
                              aWholeWord, aSearchInFrames, aShowDialog, aError),
                             aError, false);
+}
+
+void
+nsGlobalWindow::GetOrigin(nsAString& aOrigin)
+{
+  MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());
+  nsContentUtils::GetUTFOrigin(GetPrincipal(), aOrigin);
 }
 
 void

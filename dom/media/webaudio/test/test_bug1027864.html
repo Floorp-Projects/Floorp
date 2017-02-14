@@ -29,10 +29,10 @@ function id(node) {
   return SpecialPowers.getPrivilegedProps(node, "id");
 }
 
-SpecialPowers.addObserver(observer, "webaudio-node-demise", false);
+SpecialPowers.addAsyncObserver(observer, "webaudio-node-demise", false);
 
 SimpleTest.registerCleanupFunction(function() {
-  SpecialPowers.removeObserver(observer, "webaudio-node-demise");
+  SpecialPowers.removeAsyncObserver(observer, "webaudio-node-demise");
 });
 
 var ac = new AudioContext();

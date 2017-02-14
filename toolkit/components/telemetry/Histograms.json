@@ -10657,41 +10657,50 @@
     "n_values": 4,
     "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
   },
-  "TIME_TO_FIRST_CLICK": {
+  "TIME_TO_FIRST_CLICK_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first click per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_KEY_INPUT": {
+  "TIME_TO_FIRST_KEY_INPUT_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first key input per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next key event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_MOUSE_MOVE": {
+  "TIME_TO_FIRST_MOUSE_MOVE_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first mouse move per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next mouse move event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_SCROLL": {
+  "TIME_TO_FIRST_SCROLL_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first scroll per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next scroll event per top-level content browsing context."
+  },
+  "TIME_TO_FIRST_INTERACTION_MS": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1332511],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click, key, mouse or scroll event per top-level content browsing context."
   },
   "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
     "alert_emails": ["dev-platform@lists.mozilla.org"],

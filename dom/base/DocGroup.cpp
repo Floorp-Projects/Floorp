@@ -49,8 +49,6 @@ DocGroup::~DocGroup()
   mTabGroup->mDocGroups.RemoveEntry(mKey);
 }
 
-NS_IMPL_ISUPPORTS(DocGroup, nsISupports)
-
 nsresult
 DocGroup::Dispatch(const char* aName,
                    TaskCategory aCategory,
@@ -66,10 +64,16 @@ DocGroup::EventTargetFor(TaskCategory aCategory) const
 }
 
 AbstractThread*
-DocGroup::AbstractMainThreadFor(TaskCategory aCategory)
+DocGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   return mTabGroup->AbstractMainThreadFor(aCategory);
+}
+
+bool*
+DocGroup::GetValidAccessPtr()
+{
+  return mTabGroup->GetValidAccessPtr();
 }
 
 }

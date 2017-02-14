@@ -78,32 +78,15 @@ http://creativecommons.org/licenses/publicdomain/
 
   add_task(function* reportDecryptionError() {
     var message = yield new Promise(resolve => {
-      var consoleService = SpecialPowers.Cc["@mozilla.org/consoleservice;1"]
-        .getService(SpecialPowers.Ci.nsIConsoleService);
-
-      var listener = SpecialPowers.wrapCallbackObject({
-        QueryInterface(iid) {
-          if (!SpecialPowers.Ci.nsISupports.equals(iid) &&
-              !SpecialPowers.Ci.nsIConsoleListener.equals(iid)) {
-            throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-          }
-          return this;
-        },
-
-        observe(message) {
-          let error = message;
-          try {
-            error.QueryInterface(SpecialPowers.Ci.nsIScriptError);
-          } catch (error) {
-            return;
-          }
-          if (message.innerWindowID == controlledFrame.innerWindowId()) {
-            consoleService.unregisterListener(listener);
-            resolve(error);
-          }
-        },
+      SpecialPowers.registerConsoleListener(message => {
+        if (!message.isScriptError) {
+          return;
+        }
+        if (message.innerWindowID == controlledFrame.innerWindowId()) {
+          SpecialPowers.postConsoleSentinel();
+          resolve(message);
+        }
       });
-      consoleService.registerListener(listener);
 
       var principal = SpecialPowers.wrap(document).nodePrincipal;
       pushNotifier.notifyError(registration.scope, principal, "Push error",
