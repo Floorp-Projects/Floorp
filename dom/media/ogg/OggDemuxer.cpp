@@ -725,7 +725,7 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     }
     // Setup a new TrackInfo so that the MediaFormatReader will flush the
     // current decoder.
-    mSharedAudioTrackInfo = new SharedTrackInfo(mInfo.mAudio, ++sStreamSourceID);
+    mSharedAudioTrackInfo = new TrackInfoSharedPtr(mInfo.mAudio, ++sStreamSourceID);
     return true;
   }
 

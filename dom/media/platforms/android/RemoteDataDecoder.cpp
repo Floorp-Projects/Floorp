@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 
+#include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 #include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
@@ -80,8 +81,9 @@ public:
   {
     if (!mCanceled) {
       HandleError(
-        aIsFatal ? MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__)
-                 : MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
+        aIsFatal
+        ? MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__)
+        : MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
     }
   }
 
@@ -145,7 +147,7 @@ public:
 
     void HandleInputExhausted() override
     {
-      mDecoder->InputExhausted();
+      mDecoder->ReturnDecodedData();
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -180,6 +182,8 @@ public:
       }
 
       if (size > 0) {
+        MutexAutoLock lock(mDecoder->mMutex);
+
         RefPtr<layers::Image> img = new SurfaceTextureImage(
           mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
           gl::OriginPos::BottomLeft);
@@ -219,6 +223,7 @@ public:
     : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                         aFormat, aDrmStubId, aTaskQueue)
     , mImageContainer(aImageContainer)
+    , mMutex("RemoteVideoDecoder Mutex")
     , mConfig(aConfig)
   {
   }
@@ -267,7 +272,7 @@ public:
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override
   {
-    mInputDurations.Insert(aSample->mDuration, aSample->mTime);
+    mInputDurations.Insert(aSample->mTime, aSample->mDuration);
     return RemoteDataDecoder::Decode(aSample);
   }
 
@@ -275,13 +280,20 @@ public:
   {
     return mIsCodecSupportAdaptivePlayback;
   }
+  void ConfigurationChanged(const TrackInfo& aConfig) override
+  {
+    MOZ_ASSERT(aConfig.GetAsVideoInfo());
+    MutexAutoLock lock(mMutex);
+    mConfig = *aConfig.GetAsVideoInfo();
+  }
 
 private:
   layers::ImageContainer* mImageContainer;
-  const VideoInfo mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
   DurationMap mInputDurations;
   bool mIsCodecSupportAdaptivePlayback = false;
+  Mutex mMutex; // Protects mConfig
+  VideoInfo mConfig;
 };
 
 class RemoteAudioDecoder : public RemoteDataDecoder
@@ -303,7 +315,7 @@ public:
     if (!formatHasCSD && aConfig.mCodecSpecificConfig->Length() >= 2) {
       jni::ByteBuffer::LocalRef buffer(env);
       buffer = jni::ByteBuffer::New(aConfig.mCodecSpecificConfig->Elements(),
-          aConfig.mCodecSpecificConfig->Length());
+                                    aConfig.mCodecSpecificConfig->Length());
       NS_ENSURE_SUCCESS_VOID(
         aFormat->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer));
     }
@@ -336,7 +348,7 @@ private:
 
     void HandleInputExhausted() override
     {
-      mDecoder->InputExhausted();
+      mDecoder->ReturnDecodedData();
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -471,8 +483,10 @@ RemoteDataDecoder::Flush()
 {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    mDecodedData.Clear();
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mDrainStatus = DrainStatus::DRAINED;
     mJavaDecoder->Flush();
     return FlushPromise::CreateAndResolve(true, __func__);
   });
@@ -483,14 +497,26 @@ RemoteDataDecoder::Drain()
 {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
+    if (mDrainStatus == DrainStatus::DRAINED) {
+      // There's no operation to perform other than returning any already
+      // decoded data.
+      ReturnDecodedData();
+      return p;
+    }
+
+    if (mDrainStatus == DrainStatus::DRAINING) {
+      // Draining operation already pending, let it complete its course.
+      return p;
+    }
+
     BufferInfo::LocalRef bufferInfo;
     nsresult rv = BufferInfo::New(&bufferInfo);
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
+    mDrainStatus = DrainStatus::DRAINING;
     bufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
-
-    RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
     mJavaDecoder->Input(nullptr, bufferInfo, nullptr);
     return p;
   });
@@ -544,6 +570,7 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
     }
     bufferInfo->Set(0, sample->Size(), sample->mTime, 0);
 
+    mDrainStatus = DrainStatus::DRAINABLE;
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
     mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(sample));
     return p;
@@ -563,22 +590,29 @@ RemoteDataDecoder::Output(MediaData* aSample)
     return;
   }
   mDecodedData.AppendElement(aSample);
+  ReturnDecodedData();
 }
 
 void
-RemoteDataDecoder::InputExhausted()
+RemoteDataDecoder::ReturnDecodedData()
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod(this, &RemoteDataDecoder::InputExhausted));
+      NewRunnableMethod(this, &RemoteDataDecoder::ReturnDecodedData));
     return;
   }
   AssertOnTaskQueue();
   if (mShutdown) {
     return;
   }
-  mDecodePromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  // We only want to clear mDecodedData when we have resolved the promises.
+  if (!mDecodePromise.IsEmpty()) {
+    mDecodePromise.Resolve(mDecodedData, __func__);
+    mDecodedData.Clear();
+  } else if (!mDrainPromise.IsEmpty()) {
+    mDrainPromise.Resolve(mDecodedData, __func__);
+    mDecodedData.Clear();
+  }
 }
 
 void
@@ -593,8 +627,8 @@ RemoteDataDecoder::DrainComplete()
   if (mShutdown) {
     return;
   }
-  mDrainPromise.ResolveIfExists(mDecodedData, __func__);
-  mDecodedData.Clear();
+  mDrainStatus = DrainStatus::DRAINED;
+  ReturnDecodedData();
 }
 
 void
@@ -611,7 +645,6 @@ RemoteDataDecoder::Error(const MediaResult& aError)
   }
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
-  mDecodedData.Clear();
 }
 
 } // mozilla
