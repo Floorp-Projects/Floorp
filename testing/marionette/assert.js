@@ -287,6 +287,8 @@ assert.string = function (obj, msg = "") {
 assert.object = function (obj, msg = "") {
   msg = msg || error.pprint`Expected ${obj} to be an object`;
   return assert.that(o => {
+    // unable to use instanceof because LHS and RHS may come from
+    // different globals
     let s = Object.prototype.toString.call(o);
     return s == "[object Object]" || s == "[object nsJSIID]";
   })(obj);
