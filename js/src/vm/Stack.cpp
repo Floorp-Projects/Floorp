@@ -1554,7 +1554,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
         // Frames are often rematerialized with the cx inside a Debugger's
         // compartment. To recover slots and to create CallObjects, we need to
         // be in the activation's compartment.
-        AutoCompartment ac(cx, compartment_);
+        AutoCompartmentUnchecked ac(cx, compartment_);
 
         if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover,
                                                             p->value()))

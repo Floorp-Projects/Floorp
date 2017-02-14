@@ -327,7 +327,7 @@ void
 ParseTask::activate(JSRuntime* rt)
 {
     rt->setUsedByExclusiveThread(exclusiveContextGlobal->zone());
-    cx->enterCompartment(exclusiveContextGlobal->compartment());
+    cx->enterCompartmentOf(exclusiveContextGlobal);
 }
 
 bool

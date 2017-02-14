@@ -1119,7 +1119,7 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
             capture = JS::StackCapture(JS::MaxFrames(max));
     }
 
-    JSCompartment* targetCompartment = cx->compartment();
+    RootedObject compartmentObject(cx);
     if (args.length() >= 2) {
         if (!args[1].isObject()) {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
@@ -1127,15 +1127,16 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
                                   "not an object", NULL);
             return false;
         }
-        RootedObject obj(cx, UncheckedUnwrap(&args[1].toObject()));
-        if (!obj)
+        compartmentObject = UncheckedUnwrap(&args[1].toObject());
+        if (!compartmentObject)
             return false;
-        targetCompartment = obj->compartment();
     }
 
     RootedObject stack(cx);
     {
-        AutoCompartment ac(cx, targetCompartment);
+        Maybe<AutoCompartment> ac;
+        if (compartmentObject)
+            ac.emplace(cx, compartmentObject);
         if (!JS::CaptureCurrentStack(cx, &stack, mozilla::Move(capture)))
             return false;
     }

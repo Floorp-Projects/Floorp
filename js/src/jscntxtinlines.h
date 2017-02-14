@@ -450,6 +450,14 @@ JSContext::enterCompartment(
     setCompartment(c, maybeLock);
 }
 
+template <typename T>
+inline void
+JSContext::enterCompartmentOf(const T& target)
+{
+    MOZ_ASSERT(!js::gc::detail::CellIsMarkedGrayIfKnown(target));
+    enterCompartment(target->compartment(), nullptr);
+}
+
 inline void
 JSContext::enterNullCompartment()
 {
@@ -490,6 +498,8 @@ JSContext::setCompartment(JSCompartment* comp,
 
     // Only one thread can be in the atoms compartment at a time.
     MOZ_ASSERT_IF(runtime_->isAtomsCompartment(comp), maybeLock != nullptr);
+    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(comp) || runtime_->isAtomsCompartment(compartment_),
+                  runtime_->currentThreadHasExclusiveAccess());
 
     // Make sure that the atoms compartment has its own zone.
     MOZ_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),

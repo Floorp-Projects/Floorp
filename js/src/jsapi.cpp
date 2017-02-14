@@ -687,10 +687,9 @@ JS_EnterCompartment(JSContext* cx, JSObject* target)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    MOZ_ASSERT(!JS::ObjectIsMarkedGray(target));
 
     JSCompartment* oldCompartment = cx->compartment();
-    cx->enterCompartment(target->compartment());
+    cx->enterCompartmentOf(target);
     return oldCompartment;
 }
 
@@ -709,8 +708,7 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSObject* target
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(!JS::ObjectIsMarkedGray(target));
-    cx_->enterCompartment(target->compartment());
+    cx_->enterCompartmentOf(target);
 }
 
 JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
@@ -720,8 +718,7 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(!JS::ScriptIsMarkedGray(target));
-    cx_->enterCompartment(target->compartment());
+    cx_->enterCompartmentOf(target);
 }
 
 JSAutoCompartment::~JSAutoCompartment()
@@ -737,12 +734,10 @@ JSAutoNullableCompartment::JSAutoNullableCompartment(JSContext* cx,
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (targetOrNull) {
-        MOZ_ASSERT(!JS::ObjectIsMarkedGray(targetOrNull));
-        cx_->enterCompartment(targetOrNull->compartment());
-    } else {
+    if (targetOrNull)
+        cx_->enterCompartmentOf(targetOrNull);
+    else
         cx_->enterNullCompartment();
-    }
 }
 
 JSAutoNullableCompartment::~JSAutoNullableCompartment()
@@ -877,6 +872,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         // destination, then we know that we won't find a wrapper in the
         // destination's cross compartment map and that the same
         // object will continue to work.
+        AutoCompartment ac(cx, origobj);
         if (!JSObject::swap(cx, origobj, target))
             MOZ_CRASH();
         newIdentity = origobj;
@@ -891,6 +887,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         destination->removeWrapper(p);
         NukeCrossCompartmentWrapper(cx, newIdentity);
 
+        AutoCompartment ac(cx, newIdentity);
         if (!JSObject::swap(cx, newIdentity, target))
             MOZ_CRASH();
     } else {
