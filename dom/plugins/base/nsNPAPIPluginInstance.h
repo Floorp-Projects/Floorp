@@ -301,6 +301,10 @@ public:
   NPError FinalizeAsyncSurface(NPAsyncSurface *surface);
   void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
 
+  // Called when the instance fails to instantiate beceause the Carbon
+  // event model is not supported.
+  void CarbonNPAPIFailure();
+
   // Returns the contents scale factor of the screen the plugin is drawn on.
   double GetContentsScaleFactor();
 

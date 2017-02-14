@@ -4,13 +4,12 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=545812
 
 Test plugins with DOM full-screen API:
+* Presence of plugins has no effect on request for full-screen on MacOS.
 * Request for full-screen is denied when windowed plugin in current doc is present.
 * Request for full-screen is denied when windowed plugin in subdocument is present.
 * Request for full-screen is not denied when the only plugin present is windowless.
 * Adding an existing (out-of-doc) windowed plugin to a full-screen document causes document to exit full-screen.
 * Create windowed plugin and adding it to full-screen document caused exit from full-screen.
-* On non-Windows, plugins can only be windowless, so the presence of plugins
-  should have no effect on request for full-screen.
 
 -->
 <head>
@@ -66,7 +65,7 @@ function removeElement(e) {
   e.remove();
 }
 
-const supportsWindowedMode = navigator.appVersion.indexOf("Windows") != -1;
+const isMacOs = navigator.appVersion.indexOf("Macintosh") != -1;
 
 var windowedPlugin = null;
 
@@ -84,38 +83,37 @@ function startTest() {
   ok(!document.fullscreenElement, "Should not be in full-screen mode initially");
   document.body.requestFullscreen();
 
-  // Focus the windowed plugin. On non-Windows we should still enter
-  // full-screen mode, on Windows the pending request for full-screen should
-  // be denied.
+  // Focus the windowed plugin. On MacOS we should still enter full-screen mode,
+  // on windows the pending request for full-screen should be denied.
   e("windowed-plugin").focus();
-
-  if (!supportsWindowedMode) {
-    // If all plugins are effectively windowless, request for full-screen should be granted.
-    // Continue test in the "fullscreenchange" handler.
-    addFullscreenChangeContinuation("enter", windowlessFullScreenChange1);
+  
+  if (isMacOs) {
+    // Running on MacOS, all plugins are effectively windowless, request for full-screen should be granted.
+    // Continue test in the (mac-specific) "fullscreenchange" handler.
+    addFullscreenChangeContinuation("enter", macFullScreenChange1);
   } else {
-    // On Windows, request should be denied, carry on the test after receiving error event.
-    addFullscreenErrorContinuation(windowsTest);
+    // Non-MacOS, request should be denied, carry on the test after receiving error event.
+    addFullscreenErrorContinuation(nonMacTest);
   }
 }
 
-function windowsTest() {
+function nonMacTest() {
   ok(!document.fullscreenElement, "Request for full-screen with focused windowed plugin should be denied.");
 
   // Focus a regular html element, and re-request full-screen, request should be granted.
   e("windowless-plugin").focus();
-  addFullscreenChangeContinuation("enter", windowsTest2);
+  addFullscreenChangeContinuation("enter", nonMacTest2);
   document.body.requestFullscreen();
 }
 
-function windowsTest2() {
+function nonMacTest2() {
   ok(document.fullscreenElement, "Request for full-screen with non-plugin focused should be granted.");
   // Focus a windowed plugin, full-screen should be revoked.
-  addFullscreenChangeContinuation("exit", windowsTest3);
+  addFullscreenChangeContinuation("exit", nonMacTest3);
   e("windowed-plugin").focus();
 }
 
-function windowsTest3() {
+function nonMacTest3() {
   ok(!document.fullscreenElement, "Full-screen should have been revoked when windowed-plugin was focused.");
   // Remove windowed plugins before closing the window
   // to work around bug 1237853.
@@ -133,25 +131,25 @@ function createWindowedPlugin() {
   return p;
 }
 
-function windowlessFullScreenChange1(event) {
-  ok(document.fullscreenElement, "Requests for full-screen with focused windowed plugins should be granted on non-Windows");
+function macFullScreenChange1(event) {
+  ok(document.fullscreenElement, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
   
-  // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS/Linux.
+  // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS.
   windowedPlugin = createWindowedPlugin();
   document.body.appendChild(windowedPlugin);
   
-  // Focus windowed plugin. Should not exit full-screen mode on MacOS/Linux.
+  // Focus windowed plugin. Should not exit full-screen mode on MacOS.
   windowedPlugin.focus();
   
   setTimeout(
     function() {
-      ok(document.fullscreenElement, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS/Linux.");
-      addFullscreenChangeContinuation("exit", windowlessFullScreenChange2);
+      ok(document.fullscreenElement, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
+      addFullscreenChangeContinuation("exit", macFullScreenChange2);
       document.exitFullscreen();
     }, 0);
 }
 
-function windowlessFullScreenChange2(event) {
+function macFullScreenChange2(event) {
   ok(!document.fullscreenElement, "Should have left full-screen mode after calling document.exitFullscreen().");
   opener.nextTest();
 }
