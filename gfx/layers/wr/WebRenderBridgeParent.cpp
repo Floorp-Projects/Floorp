@@ -359,13 +359,13 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         const OpDPPushText& op = cmd.get_OpDPPushText();
         const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
 
+        // TODO: We are leaking the key
+        wr::FontKey fontKey;
+        auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
+        fontKey = mApi->AddRawFont(slice);
+
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
-
-          // TODO: We are leaking the key
-          wr::FontKey fontKey;
-          auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
-          fontKey = mApi->AddRawFont(slice);
           builder.PushText(op.bounds(),
                            op.clip(),
                            glyph_array[i].color,
