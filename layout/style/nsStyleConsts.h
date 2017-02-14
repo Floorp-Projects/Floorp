@@ -84,8 +84,8 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
-// Define geometry box for clip-path's reference-box, shape-outside's shape
-// box, background-clip, background-origin, mask-clip and mask-origin.
+// Define geometry box for clip-path's reference-box, background-clip,
+// background-origin, mask-clip and mask-origin.
 enum class StyleGeometryBox : uint8_t {
   Content,
   Padding,

@@ -1437,19 +1437,16 @@ bool
 nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const
 {
   switch (StyleDisplay()->mShapeOutside.GetReferenceBox()) {
-    case StyleGeometryBox::NoBox:
+    case StyleShapeOutsideShapeBox::NoBox:
       return false;
-    case StyleGeometryBox::Content:
+    case StyleShapeOutsideShapeBox::Content:
       return GetContentBoxBorderRadii(aRadii);
-    case StyleGeometryBox::Padding:
+    case StyleShapeOutsideShapeBox::Padding:
       return GetPaddingBoxBorderRadii(aRadii);
-    case StyleGeometryBox::Border:
+    case StyleShapeOutsideShapeBox::Border:
       return GetBorderRadii(aRadii);
-    case StyleGeometryBox::Margin:
+    case StyleShapeOutsideShapeBox::Margin:
       return GetMarginBoxBorderRadii(aRadii);
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected box value");
-      return false;
   }
   return false;
 }

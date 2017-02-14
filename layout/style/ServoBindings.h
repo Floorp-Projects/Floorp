@@ -281,9 +281,9 @@ void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 // Set an nsStyleCoord to a computed `calc()` value
 void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyleCoord::CalcValue calc);
 
-void Gecko_CopyClipPathValueFrom(mozilla::StyleShapeSource* dst, const mozilla::StyleShapeSource* src);
+void Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* dst, const mozilla::StyleClipPath* src);
 
-void Gecko_DestroyClipPath(mozilla::StyleShapeSource* clip);
+void Gecko_DestroyClipPath(mozilla::StyleClipPath* clip);
 mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
