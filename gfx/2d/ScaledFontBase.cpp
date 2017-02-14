@@ -5,8 +5,6 @@
 
 #include "ScaledFontBase.h"
 
-#include "gfxPrefs.h"
-
 #ifdef USE_SKIA
 #include "PathSkia.h"
 #include "skia/include/core/SkPaint.h"
@@ -25,16 +23,6 @@ using namespace std;
 
 namespace mozilla {
 namespace gfx {
-
-AntialiasMode
-ScaledFont::GetDefaultAAMode()
-{
-  if (gfxPrefs::DisableAllTextAA()) {
-    return AntialiasMode::NONE;
-  }
-
-  return AntialiasMode::DEFAULT;
-}
 
 ScaledFontBase::~ScaledFontBase()
 {
@@ -265,7 +253,7 @@ ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
 
   if (font == mScaledFont)
     return;
-
+ 
   if (mScaledFont)
     cairo_scaled_font_destroy(mScaledFont);
 
