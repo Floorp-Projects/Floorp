@@ -49,6 +49,13 @@ WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
   mCommands.AppendElement(aCmd);
 }
 
+void
+WebRenderBridgeChild::AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands)
+{
+  MOZ_ASSERT(mIsInTransaction);
+  mCommands.AppendElements(aCommands);
+}
+
 bool
 WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
