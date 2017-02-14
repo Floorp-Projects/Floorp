@@ -827,7 +827,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     CreateNextInFlow(aFrame);
   }
 
-  if (NS_INLINE_IS_BREAK_AFTER(aStatus)) {
+  if (aStatus.IsInlineBreakAfter()) {
     nsIFrame* nextFrame = aFrame->GetNextSibling();
     if (nextFrame) {
       aStatus.SetIncomplete();

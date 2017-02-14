@@ -509,7 +509,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
     }
   }
 
-  if (!e.AtEnd() && NS_INLINE_IS_BREAK_AFTER(reflowStatus)) {
+  if (!e.AtEnd() && reflowStatus.IsInlineBreakAfter()) {
     // The current column has been successfully placed.
     // Skip to the next column and mark break before.
     e.Next();
@@ -559,7 +559,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
           textFrame, textFrame->GetPrevSibling());
       }
     }
-  } else if (NS_INLINE_IS_BREAK_AFTER(reflowStatus)) {
+  } else if (reflowStatus.IsInlineBreakAfter()) {
     // |reflowStatus| being break after here may only happen when
     // there is a break after the column just pulled, or the whole
     // segment has been completely reflowed. In those cases, we do
