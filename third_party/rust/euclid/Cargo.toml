@@ -1,6 +1,6 @@
 [package]
 name = "euclid"
-version = "0.10.3"
+version = "0.10.5"
 authors = ["The Servo Project Developers"]
 description = "Geometry primitives"
 documentation = "http://doc.servo.org/euclid/"
@@ -19,3 +19,4 @@ serde = "0.8"
 
 [dev-dependencies]
 rand = "0.3.7"
+serde_test = "0.8"

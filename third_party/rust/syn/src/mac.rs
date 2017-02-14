@@ -114,17 +114,16 @@ pub mod parsing {
     use super::*;
     use Lifetime;
     use generics::parsing::lifetime;
-    use ident::parsing::word;
+    use ident::parsing::{ident, word};
     use lit::parsing::lit;
     use space::{block_comment, whitespace};
-    use ty::parsing::path;
 
     named!(pub mac -> Mac, do_parse!(
-        what: path >>
+        name: ident >>
         punct!("!") >>
         body: delimited >>
         (Mac {
-            path: what,
+            path: name.into(),
             tts: vec![TokenTree::Delimited(body)],
         })
     ));

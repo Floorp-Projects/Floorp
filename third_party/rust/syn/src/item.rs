@@ -280,7 +280,7 @@ pub mod parsing {
 
     named!(item_mac -> Item, do_parse!(
         attrs: many0!(outer_attr) >>
-        what: path >>
+        path: ident >>
         punct!("!") >>
         name: option!(ident) >>
         body: delimited >>
@@ -293,7 +293,7 @@ pub mod parsing {
             vis: Visibility::Inherited,
             attrs: attrs,
             node: ItemKind::Mac(Mac {
-                path: what,
+                path: path.into(),
                 tts: vec![TokenTree::Delimited(body)],
             }),
         })
@@ -821,7 +821,7 @@ pub mod parsing {
 
     named!(trait_item_mac -> TraitItem, do_parse!(
         attrs: many0!(outer_attr) >>
-        what: path >>
+        id: ident >>
         punct!("!") >>
         body: delimited >>
         cond!(match body.delim {
@@ -829,10 +829,10 @@ pub mod parsing {
             DelimToken::Brace => false,
         }, punct!(";")) >>
         (TraitItem {
-            ident: Ident::new(""),
+            ident: id.clone(),
             attrs: attrs,
             node: TraitItemKind::Macro(Mac {
-                path: what,
+                path: id.into(),
                 tts: vec![TokenTree::Delimited(body)],
             }),
         })
@@ -976,7 +976,7 @@ pub mod parsing {
 
     named!(impl_item_macro -> ImplItem, do_parse!(
         attrs: many0!(outer_attr) >>
-        what: path >>
+        id: ident >>
         punct!("!") >>
         body: delimited >>
         cond!(match body.delim {
@@ -984,12 +984,12 @@ pub mod parsing {
             DelimToken::Brace => false,
         }, punct!(";")) >>
         (ImplItem {
-            ident: Ident::new(""),
+            ident: id.clone(),
             vis: Visibility::Inherited,
             defaultness: Defaultness::Final,
             attrs: attrs,
             node: ImplItemKind::Macro(Mac {
-                path: what,
+                path: id.into(),
                 tts: vec![TokenTree::Delimited(body)],
             }),
         })
