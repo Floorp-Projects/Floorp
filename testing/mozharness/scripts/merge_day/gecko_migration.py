@@ -453,10 +453,9 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         next_version = list(version)
         # bump the second digit
         next_version[1] = str(int(next_version[1]) + 1)
-        # in case we have third digit, reset it to 0
-        if len(next_version) > 2:
-            next_version[2] = '0'
-        next_version = ".".join(next_version)
+        # Take major+minor and append '0' accordng to Firefox version schema.
+        # 52.0 will become 52.1.0, not 52.1
+        next_version = ".".join(next_version[:2] + ['0'])
         for f in self.config["version_files"]:
             self.replace(os.path.join(dirs['abs_to_dir'], f["file"]),
                          curr_version, next_version + f["suffix"])
