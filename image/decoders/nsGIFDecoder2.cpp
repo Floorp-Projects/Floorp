@@ -105,7 +105,6 @@ nsresult
 nsGIFDecoder2::FinishInternal()
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call FinishInternal after error!");
-  mPipe.ZeroOutRestOfSurface();
 
   // If the GIF got cut off, handle it anyway
   if (!IsMetadataDecode() && mGIFOpen) {
@@ -236,7 +235,6 @@ nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
 void
 nsGIFDecoder2::EndImageFrame()
 {
-  mPipe.ZeroOutRestOfSurface();
   Opacity opacity = Opacity::SOME_TRANSPARENCY;
 
   if (mGIFStruct.images_decoded == 0) {

@@ -72,7 +72,6 @@ class DownscalingFilter final : public SurfaceFilter
 {
 public:
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override { return Nothing(); }
-  bool GetClearValue(uint8_t& aValue) const override { return false; }
 
   template <typename... Rest>
   nsresult Configure(const DownscalingConfig& aConfig, Rest... aRest)
@@ -81,7 +80,6 @@ public:
   }
 
 protected:
-  void DoZeroOutRestOfSurface() override { }
   uint8_t* DoResetToFirstRow() override { MOZ_CRASH(); return nullptr; }
   uint8_t* DoAdvanceRow() override { MOZ_CRASH(); return nullptr; }
 };
@@ -173,9 +171,7 @@ public:
     }
 
     // Clear the buffer to avoid writing uninitialized memory to the output.
-    uint8_t clear = 0;
-    GetClearValue(clear);
-    memset(mRowBuffer.get(), clear, PaddedWidthInBytes(mInputSize.width));
+    memset(mRowBuffer.get(), 0, PaddedWidthInBytes(mInputSize.width));
 
     // Allocate the window, which contains horizontally downscaled scanlines. (We
     // can store scanlines which are already downscaled because our downscaling
@@ -218,19 +214,7 @@ public:
     return invalidRect;
   }
 
-  bool GetClearValue(uint8_t& aValue) const override
-  {
-    return mNext.GetClearValue(aValue);
-  }
-
 protected:
-  void DoZeroOutRestOfSurface() override
-  {
-    mNext.ZeroOutRestOfSurface();
-    mInputRow = mInputSize.height;
-    mOutputRow = mNext.InputSize().height;
-  }
-
   uint8_t* DoResetToFirstRow() override
   {
     mNext.ResetToFirstRow();

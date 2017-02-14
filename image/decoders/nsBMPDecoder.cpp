@@ -994,36 +994,33 @@ nsBMPDecoder::ReadRLEDelta(const char* aData)
   MOZ_ASSERT(mMayHaveTransparency);
   mDoesHaveTransparency = true;
 
-  // Handle the XDelta. This clears to the end of the row, which
-  // which is perfect if there's a Y delta and harmless if not.
-  uint8_t xDelta = uint8_t(aData[0]);
-  int32_t finalPos = std::min<int32_t>(mH.mWidth, mCurrentPos + xDelta);
-  uint32_t* dst = RowBuffer();
-  while (mCurrentPos < mH.mWidth) {
-    SetPixel(dst, 0, 0, 0, 0);
-    ++mCurrentPos;
+  if (mDownscaler) {
+    // Clear the skipped pixels. (This clears to the end of the row,
+    // which is perfect if there's a Y delta and harmless if not).
+    mDownscaler->ClearRestOfRow(/* aStartingAtCol = */ mCurrentPos);
+  }
+
+  // Handle the XDelta.
+  mCurrentPos += uint8_t(aData[0]);
+  if (mCurrentPos > mH.mWidth) {
+    mCurrentPos = mH.mWidth;
   }
 
   // Handle the Y Delta.
   int32_t yDelta = std::min<int32_t>(uint8_t(aData[1]), mCurrentRow);
-  if (yDelta > 0) {
+  mCurrentRow -= yDelta;
+
+  if (mDownscaler && yDelta > 0) {
     // Commit the current row (the first of the skipped rows).
-    mCurrentPos = 0;
-    FinishRow();
+    mDownscaler->CommitRow();
 
     // Clear and commit the remaining skipped rows.
     for (int32_t line = 1; line < yDelta; line++) {
-      dst = RowBuffer();
-      while (mCurrentPos < mH.mWidth) {
-        SetPixel(dst, 0, 0, 0, 0);
-        ++mCurrentPos;
-      }
-      mCurrentPos = 0;
-      FinishRow();
+      mDownscaler->ClearRow();
+      mDownscaler->CommitRow();
     }
   }
 
-  mCurrentPos = finalPos;
   return mCurrentRow == 0
        ? Transition::TerminateSuccess()
        : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
