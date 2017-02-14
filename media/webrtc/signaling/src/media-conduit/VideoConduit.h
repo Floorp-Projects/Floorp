@@ -81,9 +81,8 @@ public:
   * TODO(@@NG) promote this the MediaConduitInterface when the VoE rework
   * hits Webrtc.org.
   */
-  void AddLocalRTPExtensions(bool aIsSend,
-                             const std::vector<webrtc::RtpExtension>& extensions) override;
-  std::vector<webrtc::RtpExtension> GetLocalRTPExtensions(bool aIsSend) const override;
+  void AddLocalRTPExtensions(const std::vector<webrtc::RtpExtension>& extensions) override;
+  std::vector<webrtc::RtpExtension> GetLocalRTPExtensions() const override;
 
   /**
    * Set up A/V sync between this (incoming) VideoConduit and an audio conduit.
