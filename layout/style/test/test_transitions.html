@@ -714,7 +714,7 @@ function check_descendant_tests() {
                                    time_portion.delay + time_portion.duration,
                                    values[prop][0], values[prop][1],
                                    test.childCS.getPropertyValue(prop),
-                                   "descendant test, property " + prop);
+                                   `descendant test #${Number(i)+1}, property ${prop}`);
         }
     }
 }
