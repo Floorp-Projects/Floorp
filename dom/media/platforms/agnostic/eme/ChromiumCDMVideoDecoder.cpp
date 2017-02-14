@@ -117,9 +117,10 @@ ChromiumCDMVideoDecoder::Decode(MediaRawData* aSample)
 RefPtr<MediaDataDecoder::FlushPromise>
 ChromiumCDMVideoDecoder::Flush()
 {
-  return FlushPromise::CreateAndReject(
-    MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, RESULT_DETAIL("Unimplemented")),
-    __func__);
+  MOZ_ASSERT(mCDMParent);
+  RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
+  return InvokeAsync(
+    mGMPThread, __func__, [cdm]() { return cdm->FlushVideoDecoder(); });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
