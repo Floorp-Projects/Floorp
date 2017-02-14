@@ -540,7 +540,7 @@ function jsTestDriverBrowserInit()
   // test path hierarchy.
   var prepath = "";
   var i = 0;
-  for (end = testpathparts.length - 1; i < end; i++) {
+  for (var end = testpathparts.length - 1; i < end; i++) {
     prepath += testpathparts[i] + "/";
     outputscripttag(prepath + "shell.js", properties);
     outputscripttag(prepath + "browser.js", properties);
