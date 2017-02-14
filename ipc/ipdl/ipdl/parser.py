@@ -111,8 +111,6 @@ reserved = set((
         'class',
         'compress',
         'compressall',
-        '__delete__',
-        'delete',                       # reserve 'delete' to prevent its use
         'from',
         'include',
         'intr',
@@ -440,25 +438,16 @@ def p_MessageDecl(p):
     p[0] = msg
 
 def p_MessageBody(p):
-    """MessageBody : MessageId MessageInParams MessageOutParams OptionalMessageModifiers"""
+    """MessageBody : ID MessageInParams MessageOutParams OptionalMessageModifiers"""
     # FIXME/cjones: need better loc info: use one of the quals
-    loc, name = p[1]
-    msg = MessageDecl(loc)
+    name = p[1]
+    msg = MessageDecl(locFromTok(p, 1))
     msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
     msg.addModifiers(p[4])
 
     p[0] = msg
-
-def p_MessageId(p):
-    """MessageId : ID
-                 | __DELETE__
-                 | DELETE"""
-    loc = locFromTok(p, 1)
-    if 'delete' == p[1]:
-        _error(loc, "`delete' is a reserved identifier")
-    p[0] = [ loc, p[1] ]
 
 def p_MessageInParams(p):
     """MessageInParams : '(' ParamList ')'"""
