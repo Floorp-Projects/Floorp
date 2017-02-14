@@ -4,14 +4,14 @@
 
 use display_list::AuxiliaryListsBuilder;
 use {FilterOp, MixBlendMode, ScrollPolicy, StackingContext};
-use {LayoutTransform, LayoutRect};
+use {LayoutTransform, LayoutRect, PropertyBinding};
 
 impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
                bounds: LayoutRect,
                z_index: i32,
-               transform: &LayoutTransform,
-               perspective: &LayoutTransform,
+               transform: PropertyBinding<LayoutTransform>,
+               perspective: LayoutTransform,
                mix_blend_mode: MixBlendMode,
                filters: Vec<FilterOp>,
                auxiliary_lists_builder: &mut AuxiliaryListsBuilder)
@@ -20,8 +20,8 @@ impl StackingContext {
             scroll_policy: scroll_policy,
             bounds: bounds,
             z_index: z_index,
-            transform: transform.clone(),
-            perspective: perspective.clone(),
+            transform: transform,
+            perspective: perspective,
             mix_blend_mode: mix_blend_mode,
             filters: auxiliary_lists_builder.add_filters(&filters),
         }

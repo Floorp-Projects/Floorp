@@ -4,83 +4,79 @@
 
 use bincode::serde::serialize;
 use bincode;
+use std::fmt::Debug;
 use std::mem;
 use std::any::TypeId;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::Write;
-use std::ops::DerefMut;
-use std::sync::Mutex;
+use std::path::PathBuf;
 use webrender_traits::ApiMsg;
 use byteorder::{LittleEndian, WriteBytesExt};
 
-lazy_static! {
-    static ref WEBRENDER_RECORDING_DETOUR: Mutex<Option<Box<ApiRecordingReceiver>>> = Mutex::new(None);
-}
-
 pub static WEBRENDER_RECORDING_HEADER: u64 = 0xbeefbeefbeefbe01u64;
-static mut CURRENT_FRAME_NUMBER: u32 = 0xffffffffu32;
 
-pub trait ApiRecordingReceiver: Send {
+pub trait ApiRecordingReceiver: Send + Debug {
     fn write_msg(&mut self, frame: u32, msg: &ApiMsg);
     fn write_payload(&mut self, frame: u32, data: &[u8]);
 }
 
-pub fn set_recording_detour(detour: Option<Box<ApiRecordingReceiver>>) {
-    let mut recorder = WEBRENDER_RECORDING_DETOUR.lock();
-    *recorder.as_mut().unwrap().deref_mut() = detour;
+#[derive(Debug)]
+pub struct BinaryRecorder {
+    file: File,
 }
 
-fn write_data(frame: u32, data: &[u8]) {
-    let filename = format!("record/frame_{}.bin", frame);
-    let mut file = if unsafe { CURRENT_FRAME_NUMBER != frame } {
-        unsafe { CURRENT_FRAME_NUMBER = frame; }
+impl BinaryRecorder {
+    pub fn new(dest: &PathBuf) -> BinaryRecorder {
+        let mut file = File::create(dest).unwrap();
 
-        let mut file = File::create(filename).unwrap();
+        // write the header
         let apimsg_type_id = unsafe {
             assert!(mem::size_of::<TypeId>() == mem::size_of::<u64>());
             mem::transmute::<TypeId, u64>(TypeId::of::<ApiMsg>())
         };
-
         file.write_u64::<LittleEndian>(WEBRENDER_RECORDING_HEADER).ok();
         file.write_u64::<LittleEndian>(apimsg_type_id).ok();
-        file
-    } else {
-        OpenOptions::new().append(true).create(false).open(filename).unwrap()
-    };
-    file.write_u32::<LittleEndian>(data.len() as u32).ok();
-    file.write(data).ok();
+
+        BinaryRecorder {
+            file: file,
+        }
+    }
+
+    fn write_length_and_data(&mut self, data: &[u8]) {
+        self.file.write_u32::<LittleEndian>(data.len() as u32).ok();
+        self.file.write(data).ok();
+    }
 }
 
-pub fn write_msg(frame: u32, msg: &ApiMsg) {
+impl ApiRecordingReceiver for BinaryRecorder {
+    fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
+        if should_record_msg(msg) {
+            let buf = serialize(msg, bincode::SizeLimit::Infinite).unwrap();
+            self.write_length_and_data(&buf);
+        }
+    }
+
+    fn write_payload(&mut self, _: u32, data: &[u8]) {
+        // signal payload with a 0 length
+        self.file.write_u32::<LittleEndian>(0).ok();
+        self.write_length_and_data(data);
+    }
+}
+
+pub fn should_record_msg(msg: &ApiMsg) -> bool {
     match msg {
         &ApiMsg::AddRawFont(..) |
         &ApiMsg::AddNativeFont(..) |
         &ApiMsg::AddImage(..) |
+        &ApiMsg::GenerateFrame(..) |
         &ApiMsg::UpdateImage(..) |
-        &ApiMsg::DeleteImage(..)|
+        &ApiMsg::DeleteImage(..) |
         &ApiMsg::SetRootDisplayList(..) |
         &ApiMsg::SetRootPipeline(..) |
         &ApiMsg::Scroll(..) |
         &ApiMsg::TickScrollingBounce |
-        &ApiMsg::WebGLCommand(..) => {
-            let mut recorder = WEBRENDER_RECORDING_DETOUR.lock();
-            if let Some(ref mut recorder) = recorder.as_mut().unwrap().as_mut() {
-                recorder.write_msg(frame, &msg);
-            } else {
-                let buff = serialize(msg, bincode::SizeLimit::Infinite).unwrap();
-                write_data(frame, &buff);
-            }
-       }
-       _ => {}
-    }
-}
-
-pub fn write_payload(frame: u32, data: &[u8]) {
-    let mut recorder = WEBRENDER_RECORDING_DETOUR.lock();
-    if let Some(ref mut recorder) = recorder.as_mut().unwrap().as_mut() {
-        recorder.write_payload(frame, data);
-    } else {
-        write_data(frame, &[]); //signal the payload
-        write_data(frame, data);
+        &ApiMsg::WebGLCommand(..) =>
+            true,
+        _ => false
     }
 }
