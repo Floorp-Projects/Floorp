@@ -101,8 +101,7 @@ CookieServiceChild::RequireThirdPartyCheck()
 nsresult
 CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
                                             nsIChannel *aChannel,
-                                            char **aCookieString,
-                                            bool aFromHttp)
+                                            char **aCookieString)
 {
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG_POINTER(aCookieString);
@@ -134,7 +133,7 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
 
   // Synchronously call the parent.
   nsAutoCString result;
-  SendGetCookieString(uriParams, !!isForeign, aFromHttp, attrs, &result);
+  SendGetCookieString(uriParams, !!isForeign, attrs, &result);
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
@@ -145,8 +144,7 @@ nsresult
 CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
                                             nsIChannel *aChannel,
                                             const char *aCookieString,
-                                            const char *aServerTime,
-                                            bool aFromHttp)
+                                            const char *aServerTime)
 {
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG_POINTER(aCookieString);
@@ -181,7 +179,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 
   // Synchronously call the parent.
   SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
-                      aFromHttp, attrs);
+                      attrs);
   return NS_OK;
 }
 
@@ -204,7 +202,7 @@ CookieServiceChild::GetCookieString(nsIURI *aHostURI,
                                     nsIChannel *aChannel,
                                     char **aCookieString)
 {
-  return GetCookieStringInternal(aHostURI, aChannel, aCookieString, false);
+  return GetCookieStringInternal(aHostURI, aChannel, aCookieString);
 }
 
 NS_IMETHODIMP
@@ -213,7 +211,7 @@ CookieServiceChild::GetCookieStringFromHttp(nsIURI *aHostURI,
                                             nsIChannel *aChannel,
                                             char **aCookieString)
 {
-  return GetCookieStringInternal(aHostURI, aChannel, aCookieString, true);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -222,8 +220,7 @@ CookieServiceChild::SetCookieString(nsIURI *aHostURI,
                                     const char *aCookieString,
                                     nsIChannel *aChannel)
 {
-  return SetCookieStringInternal(aHostURI, aChannel, aCookieString,
-                                 nullptr, false);
+  return SetCookieStringInternal(aHostURI, aChannel, aCookieString, nullptr);
 }
 
 NS_IMETHODIMP
@@ -234,8 +231,7 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                             const char *aServerTime,
                                             nsIChannel *aChannel) 
 {
-  return SetCookieStringInternal(aHostURI, aChannel, aCookieString,
-                                 aServerTime, true);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 } // namespace net

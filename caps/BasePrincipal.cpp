@@ -33,6 +33,23 @@ namespace mozilla {
 
 using dom::URLParams;
 
+bool OriginAttributes::sFirstPartyIsolation = false;
+bool OriginAttributes::sRestrictedOpenerAccess = false;
+
+void
+OriginAttributes::InitPrefs()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static bool sInited = false;
+  if (!sInited) {
+    sInited = true;
+    Preferences::AddBoolVarCache(&sFirstPartyIsolation,
+                                 "privacy.firstparty.isolate");
+    Preferences::AddBoolVarCache(&sRestrictedOpenerAccess,
+                                 "privacy.firstparty.isolate.restrict_opener_access");
+  }
+}
+
 void
 OriginAttributes::Inherit(const OriginAttributes& aAttrs)
 {
@@ -267,46 +284,6 @@ void
 OriginAttributes::SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing)
 {
   mPrivateBrowsingId = aInPrivateBrowsing ? 1 : 0;
-}
-
-/* static */
-bool
-OriginAttributes::IsFirstPartyEnabled()
-{
-  // Cache the privacy.firstparty.isolate pref.
-  static bool sFirstPartyIsolation = false;
-  static bool sCachedFirstPartyPref = false;
-  if (!sCachedFirstPartyPref) {
-    sCachedFirstPartyPref = true;
-    Preferences::AddBoolVarCache(&sFirstPartyIsolation, "privacy.firstparty.isolate");
-  }
-
-  return sFirstPartyIsolation;
-}
-
-/* static */
-bool
-OriginAttributes::IsRestrictOpenerAccessForFPI()
-{
-  bool isFirstPartyEnabled = IsFirstPartyEnabled();
-
-  // Cache the privacy.firstparty.isolate.restrict_opener_access pref.
-  static bool sRestrictedOpenerAccess = false;
-  static bool sCachedRestrictedAccessPref = false;
-  if (!sCachedRestrictedAccessPref) {
-    MOZ_ASSERT(NS_IsMainThread());
-    sCachedRestrictedAccessPref = true;
-    Preferences::AddBoolVarCache(&sRestrictedOpenerAccess,
-                                 "privacy.firstparty.isolate.restrict_opener_access");
-  }
-
-  // We always want to restrict window.opener if first party isolation is
-  // disabled.
-  if (!isFirstPartyEnabled) {
-    return true;
-  }
-
-  return isFirstPartyEnabled && sRestrictedOpenerAccess;
 }
 
 /* static */

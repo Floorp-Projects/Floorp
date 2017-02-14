@@ -32,7 +32,7 @@
 #include "certt.h"
 #include "certdb.h"
 
-/* #include "secmod.h" */
+#include "secmod.h"
 #include "pk11func.h"
 #include "secoid.h"
 
@@ -3229,6 +3229,8 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     SECStatus rv;
     SECItem data;
     CERTCertTrust certTrust;
+    PK11SlotList *slotList;
+    const char *moz_policy_ca_info = NULL;
 
     data.data = cert->derCert.data;
     data.len = cert->derCert.len;
@@ -3238,6 +3240,34 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     if (rv) {
         return (SECFailure);
     }
+
+    slotList = PK11_GetAllSlotsForCert(cert, NULL);
+    if (slotList) {
+        PK11SlotListElement *se = PK11_GetFirstSafe(slotList);
+        for (; se; se = PK11_GetNextSafe(slotList, se, PR_FALSE)) {
+            CK_OBJECT_HANDLE handle = PK11_FindCertInSlot(se->slot, cert, NULL);
+            if (handle != CK_INVALID_HANDLE) {
+                PORT_SetError(0);
+                if (PK11_HasAttributeSet(se->slot, handle,
+                                         CKA_NSS_MOZILLA_CA_POLICY, PR_FALSE)) {
+                    moz_policy_ca_info = "true (attribute present)";
+                } else {
+                    if (PORT_GetError() != 0) {
+                        moz_policy_ca_info = "false (attribute missing)";
+                    } else {
+                        moz_policy_ca_info = "false (attribute present)";
+                    }
+                }
+            }
+        }
+        PK11_FreeSlotList(slotList);
+    }
+
+    if (moz_policy_ca_info) {
+        SECU_Indent(stdout, 1);
+        printf("Mozilla-CA-Policy: %s\n", moz_policy_ca_info);
+    }
+
     if (trust) {
         SECU_PrintTrustFlags(stdout, trust,
                              "Certificate Trust Flags", 1);

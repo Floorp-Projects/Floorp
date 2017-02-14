@@ -1312,7 +1312,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
                 // youngest frame of the async stack as the parent of the oldest
                 // frame of this activation. We still need to iterate over other
                 // frames in this activation before reaching the oldest frame.
-                AutoCompartment ac(cx, iter.compartment());
+                AutoCompartmentUnchecked ac(cx, iter.compartment());
                 const char* cause = activation.asyncCause();
                 UTF8Chars utf8Chars(cause, strlen(cause));
                 size_t twoByteCharsLen = 0;
@@ -1335,7 +1335,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
 
         Rooted<LocationValue> location(cx);
         {
-            AutoCompartment ac(cx, iter.compartment());
+            AutoCompartmentUnchecked ac(cx, iter.compartment());
             if (!cx->compartment()->savedStacks().getLocation(cx, iter, &location))
                 return false;
         }

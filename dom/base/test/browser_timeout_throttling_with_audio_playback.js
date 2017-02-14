@@ -36,12 +36,14 @@ function* runTest(url) {
       let before = new Date();
       content.window.setTimeout(function() {
         let after = new Date();
-        resolve(after - before);
+        // Sometimes due to rounding errors, we may get a result of 9ms here, so
+        // let's round up by 1 to protect against such intermittent failures.
+        resolve(after - before + 1);
       }, 0);
     });
   });
   ok(timeout >= kMinTimeoutForeground &&
-     timeout <= kMinTimeoutBackground, `Got the correct timeout (${timeout})`);
+     timeout <  kMinTimeoutBackground, `Got the correct timeout (${timeout})`);
 
   // All done.
   yield BrowserTestUtils.removeTab(newTab);

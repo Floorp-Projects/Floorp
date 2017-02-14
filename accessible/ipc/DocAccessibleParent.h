@@ -131,8 +131,9 @@ public:
     if (parent) {
       aChildDoc->Parent()->ClearChildDoc(aChildDoc);
     }
-    mChildDocs.RemoveElement(aChildDoc);
+    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc);
     aChildDoc->mParentDoc = nullptr;
+    MOZ_ASSERT(result);
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
   }
 

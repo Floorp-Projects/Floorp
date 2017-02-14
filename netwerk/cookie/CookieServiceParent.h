@@ -25,7 +25,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvGetCookieString(const URIParams& aHost,
                                                       const bool& aIsForeign,
-                                                      const bool& aFromHttp,
                                                       const OriginAttributes& aAttrs,
                                                       nsCString* aResult) override;
 
@@ -33,7 +32,6 @@ protected:
                                                       const bool& aIsForeign,
                                                       const nsCString& aCookieString,
                                                       const nsCString& aServerTime,
-                                                      const bool& aFromHttp,
                                                       const OriginAttributes& aAttrs) override;
 
   RefPtr<nsCookieService> mCookieService;
