@@ -5321,7 +5321,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
                                             Fragmentainer&       aFragmentainer,
                                             const nsSize&        aContainerSize)
 {
-  MOZ_ASSERT(aStatus == NS_FRAME_COMPLETE);
+  MOZ_ASSERT(aStatus.IsEmpty());
   MOZ_ASSERT(aState.mReflowInput);
 
   // Collect our grid items and sort them in row order.  Collect placeholders
@@ -5397,7 +5397,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
         endRow = itemStartRow;
         isForcedBreak = true;
         // reset any BREAK_AFTER we found on an earlier item
-        aStatus = NS_FRAME_COMPLETE;
+        aStatus.Reset();
         break;  // we're done since the items are sorted in row order
       }
     }
@@ -5674,7 +5674,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
           continue;
         }
         NS_ERROR("got BREAK_BEFORE at top-of-page");
-        childStatus = NS_FRAME_COMPLETE;
+        childStatus.Reset();
       } else {
         NS_ERROR("got BREAK_BEFORE again after growing the row?");
         childStatus.SetIncomplete();
@@ -5824,9 +5824,9 @@ nsGridContainerFrame::ReflowChildren(GridReflowInput&     aState,
 {
   MOZ_ASSERT(aState.mReflowInput);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   nsOverflowAreas ocBounds;
-  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(PresContext(), *aState.mReflowInput,
                                     ocBounds, 0, ocStatus,

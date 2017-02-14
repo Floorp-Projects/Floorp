@@ -119,7 +119,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   AbsPosReflowFlags        aFlags,
                                   nsOverflowAreas*         aOverflowAreas)
 {
-  nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus reflowStatus;
 
   const bool reflowAll = aReflowInput.ShouldReflowAllKids();
   const bool isGrid = !!(aFlags & AbsPosReflowFlags::eIsGridContainerCB);
@@ -132,7 +132,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                               !!(aFlags & AbsPosReflowFlags::eCBHeightChanged));
     if (kidNeedsReflow && !aPresContext->HasPendingInterrupt()) {
       // Reflow the frame
-      nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
+      nsReflowStatus kidStatus;
       const nsRect& cb = isGrid ? nsGridContainerFrame::GridItemCB(kidFrame)
                                 : aContainingBlock;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowInput, cb,

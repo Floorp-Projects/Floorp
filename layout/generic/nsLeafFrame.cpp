@@ -85,7 +85,7 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
   WritingMode wm = aReflowInput.GetWritingMode();
   aMetrics.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding());
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsLeafFrame::DoReflow: size=%d,%d",

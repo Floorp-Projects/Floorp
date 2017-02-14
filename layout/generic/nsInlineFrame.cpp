@@ -574,7 +574,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   nsLineLayout* lineLayout = aReflowInput.mLineLayout;
   bool inFirstLine = aReflowInput.mLineLayout->GetInFirstLine();
