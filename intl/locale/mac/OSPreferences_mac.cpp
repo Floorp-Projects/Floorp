@@ -20,6 +20,7 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 
   AutoTArray<UniChar, 32> buffer;
   int size = ::CFStringGetLength(userLocaleStr);
+  buffer.SetLength(size);
 
   CFRange range = ::CFRangeMake(0, size);
   ::CFStringGetCharacters(userLocaleStr, range, buffer.Elements());

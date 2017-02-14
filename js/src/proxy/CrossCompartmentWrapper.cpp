@@ -620,8 +620,11 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // Update the entry in the compartment's wrapper map to point to the old
     // wrapper, which has now been updated (via reuse or swap).
     MOZ_ASSERT(wobj->is<WrapperObject>());
-    if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget), ObjectValue(*wobj)))
+    if (!wcompartment->putWrapperMaybeUpdate(cx, CrossCompartmentKey(newTarget),
+                                             ObjectValue(*wobj)))
+    {
         MOZ_CRASH();
+    }
 }
 
 // Remap all cross-compartment wrappers pointing to |oldTarget| to point to
