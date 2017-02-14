@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
@@ -21,11 +23,35 @@ public class TopPanel extends StreamItem {
 
     private final ViewPager topSitesPager;
 
+    private static class SwipeListener extends ViewPager.SimpleOnPageChangeListener {
+        int currentPosition = 0;
+
+        @Override
+        public void onPageSelected(int newPosition) {
+            final String extra;
+            if (newPosition > currentPosition) {
+                extra = "swipe_forward";
+            } else if (newPosition < currentPosition) {
+                extra = "swipe_back";
+            } else {
+                // Selected the same page - this could happen if framework behaviour differs across
+                // Android versions of manufacturers.
+                return;
+            }
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.LIST, extra);
+            currentPosition = newPosition;
+        }
+    }
+
+    private final SwipeListener swipeListener = new SwipeListener();
+
     public TopPanel(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(itemView);
 
         topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
         topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener, onUrlOpenInBackgroundListener));
+        topSitesPager.addOnPageChangeListener(swipeListener);
 
         CirclePageIndicator indicator = (CirclePageIndicator) itemView.findViewById(R.id.topsites_indicator);
         indicator.setViewPager(topSitesPager);
@@ -43,5 +69,10 @@ public class TopPanel extends StreamItem {
         ViewGroup.LayoutParams layoutParams = topSitesPager.getLayoutParams();
         layoutParams.height = tilesHeight + tilesMargin + textHeight;
         topSitesPager.setLayoutParams(layoutParams);
+
+        // Reset the page position: binding a new Cursor means that topsites reverts to the first page,
+        // no event is sent in that case, but we need to know the right page number to send correct
+        // page swipe events
+        swipeListener.currentPosition = 0;
     }
 }
