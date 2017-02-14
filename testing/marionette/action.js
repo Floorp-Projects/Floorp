@@ -327,6 +327,42 @@ const KEY_CODE_LOOKUP = {
   "\uE004": "Tab",
 };
 
+/** Represents possible values for a pointer-move origin. */
+action.PointerOrigin = {
+  Viewport: "viewport",
+  Pointer: "pointer",
+};
+
+/**
+ * Look up a PointerOrigin.
+ *
+ * @param {?} obj
+ *     Origin for a pointerMove action.
+ *
+ * @return {?}
+ *     A pointer origin that is either "viewport" (default), "pointer", or a
+ *     web-element reference.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |obj| is not a valid origin.
+ */
+action.PointerOrigin.get = function(obj) {
+  let origin = obj;
+  if (typeof obj == "undefined") {
+    origin = this.Viewport;
+  } else if (typeof obj == "string") {
+    let name = capitalize(obj);
+    if (!(name in this)) {
+      throw new InvalidArgumentError(`Unknown pointer-move origin: ${obj}`);
+    }
+    origin = this[name];
+  } else if (!element.isWebElementReference(obj)) {
+    throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
+      `web element reference, got: ${obj}`);
+  }
+  return origin;
+};
+
 /** Represents possible subtypes for a pointer input source. */
 action.PointerType = {
   Mouse: "mouse",
@@ -613,14 +649,7 @@ action.Action = class {
           assert.positiveInteger(item.duration,
               error.pprint`Expected 'duration' (${item.duration}) to be >= 0`);
         }
-        if (typeof actionItem.element != "undefined" &&
-            !element.isWebElementReference(actionItem.element)) {
-          throw new InvalidArgumentError(
-              "Expected 'actionItem.element' to be a web element reference, " +
-              `got: ${actionItem.element}`);
-        }
-        item.element = actionItem.element;
-
+        item.origin = action.PointerOrigin.get(actionItem.origin);
         item.x = actionItem.x;
         if (typeof item.x != "undefined") {
           assert.positiveInteger(item.x, error.pprint`Expected 'x' (${item.x}) to be >= 0`);
