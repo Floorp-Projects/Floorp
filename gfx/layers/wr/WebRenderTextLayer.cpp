@@ -16,9 +16,9 @@ namespace layers {
 using namespace mozilla::gfx;
 
 static void
-DWriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
-                   float aGlyphSize, uint32_t aVariationCount,
-                   const ScaledFont::VariationSetting* aVariations, void* aBaton)
+WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
+                  float aGlyphSize, uint32_t aVariationCount,
+                  const ScaledFont::VariationSetting* aVariations, void* aBaton)
 {
     WebRenderTextLayer* layer = static_cast<WebRenderTextLayer*>(aBaton);
 
@@ -46,8 +46,9 @@ WebRenderTextLayer::RenderLayer()
       clip = rect;
     }
 
-    MOZ_ASSERT(mFont->GetType() == FontType::DWRITE);
-    mFont->GetFontFileData(&DWriteFontFileData, this);
+    MOZ_ASSERT((mFont->GetType() == FontType::DWRITE) ||
+                (mFont->GetType() == FontType::MAC));
+    mFont->GetFontFileData(&WriteFontFileData, this);
     wr::ByteBuffer fontBuffer(mFontDataLength, mFontData);
 
     nsTArray<WrGlyphArray> wr_glyphs;
