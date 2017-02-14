@@ -20,6 +20,9 @@
   const validtrack_url = "http://mochi.test:8888/" + track_path;
 
   var video = document.createElement("video");
+  video.src = "seek.webm";
+  video.crossOrigin = "anonymous";
+
   document.body.appendChild(video);
 
   function testValidTrack() {
