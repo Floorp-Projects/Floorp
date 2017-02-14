@@ -9560,7 +9560,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   if (completedFirstLetter) {
     aLineLayout.SetFirstLetterStyleOK(false);
-    aStatus |= NS_INLINE_BREAK_FIRST_LETTER_COMPLETE;
+    aStatus.SetFirstLetterComplete();
   }
 
   // Updated the cached NewlineProperty, or delete it.
