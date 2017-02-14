@@ -62,59 +62,6 @@ AbstractSurfaceSink::TakeInvalidRect()
   return Some(invalidRect);
 }
 
-void
-AbstractSurfaceSink::DoZeroOutRestOfSurface()
-{
-  // If there is no explicit clear value, we know the surface was already
-  // zeroed out by default.
-  if (!mClearRequired) {
-    return;
-  }
-
-  // The reason we do not use the typical WritePixels methods here is
-  // because if it is a progressively decoded image, we know that we
-  // already have valid data written to the buffer, just not the final
-  // result. There is no need to clear the buffers in that case.
-  const int32_t width = InputSize().width;
-  const int32_t height = InputSize().height;
-  const int32_t pixelSize = IsValidPalettedPipe() ? sizeof(uint8_t)
-                                                  : sizeof(uint32_t);
-  const int32_t stride = width * pixelSize;
-
-  // In addition to fully unwritten rows, the current row may be partially
-  // written (i.e. mCol > 0). Since the row was not advanced, we have yet to
-  // update mWrittenRect so it would be cleared without the exception below.
-  const int32_t col = CurrentColumn();
-  if (MOZ_UNLIKELY(col > 0 && col <= width)) {
-    uint8_t* rowPtr = CurrentRowPointer();
-    MOZ_ASSERT(rowPtr);
-    memset(rowPtr + col * pixelSize, mClearValue, (width - col) * pixelSize);
-    AdvanceRow(); // updates mInvalidRect and mWrittenRect
-  }
-
-  MOZ_ASSERT(mWrittenRect.x == 0);
-  MOZ_ASSERT(mWrittenRect.width == 0 || mWrittenRect.width == width);
-
-  if (MOZ_UNLIKELY(mWrittenRect.y > 0)) {
-    const uint32_t length = mWrittenRect.y * stride;
-    auto updateRect = IntRect(0, 0, width, mWrittenRect.y);
-    MOZ_ASSERT(mImageDataLength >= length);
-    memset(mImageData, mClearValue, length);
-    mInvalidRect.UnionRect(mInvalidRect, updateRect);
-    mWrittenRect.UnionRect(mWrittenRect, updateRect);
-  }
-
-  const int32_t top = mWrittenRect.y + mWrittenRect.height;
-  if (MOZ_UNLIKELY(top < height)) {
-    const int32_t remainder = height - top;
-    auto updateRect = IntRect(0, top, width, remainder);
-    MOZ_ASSERT(mImageDataLength >= (uint32_t)(height * stride));
-    memset(mImageData + top * stride, mClearValue, remainder * stride);
-    mInvalidRect.UnionRect(mInvalidRect, updateRect);
-    mWrittenRect.UnionRect(mWrittenRect, updateRect);
-  }
-}
-
 uint8_t*
 AbstractSurfaceSink::DoResetToFirstRow()
 {
@@ -136,7 +83,6 @@ AbstractSurfaceSink::DoAdvanceRow()
                    : mRow;
   mInvalidRect.UnionRect(mInvalidRect,
                          IntRect(0, invalidY, InputSize().width, 1));
-  mWrittenRect.UnionRect(mWrittenRect, mInvalidRect);
 
   mRow = min(uint32_t(InputSize().height), mRow + 1);
 
@@ -170,14 +116,6 @@ SurfaceSink::Configure(const SurfaceConfig& aConfig)
   mImageDataLength = aConfig.mDecoder->mImageDataLength;
   mFlipVertically = aConfig.mFlipVertically;
 
-  if (aConfig.mFormat == SurfaceFormat::B8G8R8X8) {
-    mClearRequired = true;
-    mClearValue = 0xFF;
-  } else if (aConfig.mDecoder->mCurrentFrame->OnHeap()) {
-    mClearRequired = true;
-    mClearValue = 0;
-  }
-
   MOZ_ASSERT(mImageData);
   MOZ_ASSERT(mImageDataLength ==
                uint32_t(surfaceSize.width * surfaceSize.height * sizeof(uint32_t)));
@@ -210,7 +148,6 @@ nsresult
 PalettedSurfaceSink::Configure(const PalettedSurfaceConfig& aConfig)
 {
   MOZ_ASSERT(aConfig.mFormat == SurfaceFormat::B8G8R8A8);
-  MOZ_ASSERT(mClearValue == 0);
 
   // For paletted surfaces, the surface size is the size of the frame rect.
   IntSize surfaceSize = aConfig.mFrameRect.Size();
@@ -232,7 +169,6 @@ PalettedSurfaceSink::Configure(const PalettedSurfaceConfig& aConfig)
   mImageDataLength = aConfig.mDecoder->mImageDataLength;
   mFlipVertically = aConfig.mFlipVertically;
   mFrameRect = aConfig.mFrameRect;
-  mClearRequired = true;
 
   MOZ_ASSERT(mImageData);
   MOZ_ASSERT(mImageDataLength ==

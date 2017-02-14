@@ -169,51 +169,9 @@ nsJPEGDecoder::InitInternal()
   return NS_OK;
 }
 
-void
-nsJPEGDecoder::ClearRemainingRows()
-{
-  if (mDownscaler) {
-    mDownscaler->ClearRemainingRows();
-    return;
-  }
-
-  if (!mImageData) {
-    return;
-  }
-
-  uint32_t offset = 0;
-  switch (mState) {
-    case JPEG_DECOMPRESS_PROGRESSIVE:
-      // If we already made one progressive pass, then we know we have written
-      // something valid to the output buffer.
-      if (mInfo.output_scan_number > 0) {
-        return;
-      }
-      MOZ_FALLTHROUGH;
-    case JPEG_DECOMPRESS_SEQUENTIAL:
-    case JPEG_HEADER:
-    case JPEG_START_DECOMPRESS:
-      offset = mInfo.output_scanline * mInfo.output_width * sizeof(uint32_t);
-      if (offset < mImageDataLength) {
-        break;
-      }
-      MOZ_FALLTHROUGH;
-    default:
-      return;
-  }
-
-  uint32_t length = mImageDataLength - offset;
-  MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-         ("nsJPEGDecoder::ClearRemainingRows: %p clear %u unset bytes",
-          this, length));
-  memset(mImageData + offset, 0xFF, length);
-}
-
 nsresult
 nsJPEGDecoder::FinishInternal()
 {
-  ClearRemainingRows();
-
   // If we're not in any sort of error case, force our state to JPEG_DONE.
   if ((mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) &&
       (mState != JPEG_ERROR) &&

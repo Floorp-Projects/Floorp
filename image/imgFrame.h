@@ -329,8 +329,6 @@ public:
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
-  bool OnHeap() const;
-
   bool GetIsPaletted() const;
   void GetPaletteData(uint32_t** aPalette, uint32_t* length) const;
   uint32_t* GetPaletteData() const;

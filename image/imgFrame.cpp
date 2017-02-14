@@ -254,6 +254,12 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    if (!ClearSurface(mRawSurface, mFrameRect.Size(), mFormat)) {
+      NS_WARNING("Could not clear allocated buffer");
+      mAborted = true;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_OK;
@@ -650,13 +656,6 @@ imgFrame::GetImageData() const
   uint32_t length;
   GetImageData(&data, &length);
   return data;
-}
-
-bool
-imgFrame::OnHeap() const
-{
-  MonitorAutoLock lock(mMonitor);
-  return mRawSurface ? mRawSurface->OnHeap() : true;
 }
 
 bool

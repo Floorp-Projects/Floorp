@@ -27,13 +27,6 @@ nsIconDecoder::nsIconDecoder(RasterImage* aImage)
 nsIconDecoder::~nsIconDecoder()
 { }
 
-nsresult
-nsIconDecoder::FinishInternal()
-{
-  mPipe.ZeroOutRestOfSurface();
-  return NS_OK;
-}
-
 LexerResult
 nsIconDecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 {
