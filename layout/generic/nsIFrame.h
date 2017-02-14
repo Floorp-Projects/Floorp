@@ -318,6 +318,7 @@ public:
   }
 
   // mInlineBreak bit flag means a break is requested.
+  bool IsInlineBreak() const { return mInlineBreak; }
 
   // Suppose a break is requested. When mInlineBreakAfter is set, the break
   // should occur after the frame just reflowed; when mInlineBreakAfter is
@@ -364,16 +365,8 @@ private:
 #define NS_FRAME_NOT_COMPLETE         0x1
 #define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
-#define NS_INLINE_BREAK              0x0100
-
 // Set when a break was induced by completion of a first-letter
 #define NS_INLINE_BREAK_FIRST_LETTER_COMPLETE 0x10000
-
-//----------------------------------------
-// Macros that use those bits
-
-#define NS_INLINE_IS_BREAK(_status) \
-  (0 != ((_status) & NS_INLINE_BREAK))
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);
