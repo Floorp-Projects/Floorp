@@ -813,17 +813,6 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
 
   const std::vector<uint32_t>* ssrcs;
 
-  const JsepTrackNegotiatedDetails* details = aTrack.GetNegotiatedDetails();
-  std::vector<webrtc::RtpExtension> extmaps;
-  if (details) {
-    // @@NG read extmap from track
-    details->ForEachRTPHeaderExtension(
-      [&extmaps](const SdpExtmapAttributeList::Extmap& extmap)
-    {
-      extmaps.emplace_back(extmap.extensionname,extmap.entry);
-    });
-  }
-
   if (receiving) {
     // NOTE(pkerr) - the Call API requires the both local_ssrc and remote_ssrc be
     // set to a non-zero value or the CreateVideo...Stream call will fail.
@@ -851,9 +840,6 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     }
     conduit->SetRemoteSSRC(ssrcs->front());
 
-    if (!extmaps.empty()) {
-      conduit->AddLocalRTPExtensions(false, extmaps);
-    }
     auto error = conduit->ConfigureRecvMediaCodecs(configs.values);
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureRecvMediaCodecs failed: " << error);
@@ -879,14 +865,24 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
       return rv;
     }
 
-    if (!extmaps.empty()) {
-      conduit->AddLocalRTPExtensions(true, extmaps);
-    }
     auto error = conduit->ConfigureSendMediaCodec(configs.values[0]);
+
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureSendMediaCodec failed: " << error);
       return NS_ERROR_FAILURE;
     }
+  }
+
+  const JsepTrackNegotiatedDetails* details = aTrack.GetNegotiatedDetails();
+  if (details) {
+    // @@NG read extmap from track
+    std::vector<webrtc::RtpExtension> extmaps;
+    details->ForEachRTPHeaderExtension(
+      [&conduit,&extmaps](const SdpExtmapAttributeList::Extmap& extmap)
+    {
+      extmaps.emplace_back(extmap.extensionname,extmap.entry);
+    });
+    conduit->AddLocalRTPExtensions(extmaps);
   }
 
   *aConduitp = conduit;
