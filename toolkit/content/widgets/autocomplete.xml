@@ -1304,66 +1304,66 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // Process maxRows per chunk to improve performance and user experience
           for (let i = 0; i < this.maxRows; i++) {
-            if (this._currentIndex >= matchCount) {
+            if (this._currentIndex >= matchCount)
               break;
-            }
-            let item;
-            let reusable = false;
-            let itemExists = this._currentIndex < existingItemsCount;
 
-            let originalValue, originalText;
-            let value = controller.getValueAt(this._currentIndex);
-            let label = controller.getLabelAt(this._currentIndex);
-            let comment = controller.getCommentAt(this._currentIndex);
-            let style = controller.getStyleAt(this._currentIndex);
-            let image = controller.getImageAt(this._currentIndex);
+            var item;
+
             // trim the leading/trailing whitespace
-            let trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");
+            var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");
 
-            if (itemExists) {
+            let url = controller.getValueAt(this._currentIndex);
+
+            if (this._currentIndex < existingItemsCount) {
+              // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
+              item.setAttribute("dir", this.style.direction);
 
-              originalValue = item.getAttribute("ac-value");
-              originalText = item.getAttribute("ac-text");
-
-              reusable = item.getAttribute("originaltype") === style;
+              // Completely reuse the existing richlistitem for invalidation
+              // due to new results, but only when: the item is the same, *OR*
+              // we are about to replace the currently mouse-selected item, to
+              // avoid surprising the user.
+              let iface = Components.interfaces.nsIAutoCompletePopup;
+              if (item.getAttribute("text") == trimmedSearchString &&
+                  invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
+                  (item.getAttribute("url") == url ||
+                   this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
+                // Additionally, if the item is a searchengine action, then it
+                // should only be reused if the engine name is the same as the
+                // popup's override engine name, if any.
+                let action = item._parseActionUrl(url);
+                if (!action ||
+                    action.type != "searchengine" ||
+                    !this.overrideSearchEngineName ||
+                    action.params.engineName == this.overrideSearchEngineName) {
+                  item.collapsed = false;
+                  // Call adjustSiteIconStart only after setting collapsed=
+                  // false.  The calculations it does may be wrong otherwise.
+                  item.adjustSiteIconStart(this._siteIconStart);
+                  // The popup may have changed size between now and the last
+                  // time the item was shown, so always handle over/underflow.
+                  item.handleOverUnderflow();
+                  this._currentIndex++;
+                  continue;
+                }
+              }
             } else {
               // need to create a new item
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
+              item.setAttribute("dir", this.style.direction);
             }
 
-            item.setAttribute("dir", this.style.direction);
-            item.setAttribute("ac-image", image);
-            item.setAttribute("ac-value", value);
-            item.setAttribute("ac-comment", comment);
-            item.setAttribute("ac-text", trimmedSearchString);
+            // set these attributes before we set the class
+            // so that we can use them from the constructor
+            let iconURI = controller.getImageAt(this._currentIndex);
+            item.setAttribute("image", iconURI);
+            item.setAttribute("url", url);
+            item.setAttribute("title", controller.getCommentAt(this._currentIndex));
+            item.setAttribute("originaltype", controller.getStyleAt(this._currentIndex));
+            item.setAttribute("text", trimmedSearchString);
 
-            // Completely reuse the existing richlistitem for invalidation
-            // due to new results, but only when: the item is the same, *OR*
-            // we are about to replace the currently mouse-selected item, to
-            // avoid surprising the user.
-            let iface = Components.interfaces.nsIAutoCompletePopup;
-            if (reusable &&
-                originalText == trimmedSearchString &&
-                invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
-                (originalValue == value ||
-                 this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
-
-              // try to re-use the existing item
-              let reused = item._reuseAcItem();
-              if (reused) {
-                this._currentIndex++;
-                continue;
-              }
-            } else {
-              if (typeof item._cleanup == "function") {
-                item._cleanup();
-              }
-
-              item.setAttribute("originaltype", style);
-            }
-
-            if (itemExists) {
+            if (this._currentIndex < existingItemsCount) {
+              // re-use the existing item
               item._adjustAcItem();
               item.collapsed = false;
             } else {
@@ -1373,12 +1373,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
-            if (typeof item.onChanged == "function") {
-              // The binding may have not been applied yet.
-              setTimeout(() => {
-                item.onChanged();
-              }, 0);
-            }
+            // The binding may have not been applied yet.
+            setTimeout(() => {
+              let changed = item.adjustSiteIconStart(this._siteIconStart);
+              if (changed) {
+                item.handleOverUnderflow();
+              }
+            }, 0);
 
             this._currentIndex++;
           }
@@ -1644,18 +1645,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._adjustAcItem();
         ]]>
       </constructor>
-
-      <method name="_cleanup">
-        <body>
-        <![CDATA[
-          this.removeAttribute("url");
-          this.removeAttribute("image");
-          this.removeAttribute("title");
-          this.removeAttribute("text");
-          this.removeAttribute("displayurl");
-        ]]>
-        </body>
-      </method>
 
       <property name="label" readonly="true">
         <getter>
@@ -2043,58 +2032,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
-      <method name="_onChanged">
-        <body>
-          <![CDATA[
-            let  iconChanged = item.adjustSiteIconStart(this.popup._siteIconStart);
-
-            if (iconChanged) {
-              item.handleOverUnderflow();
-            }
-          ]]>
-        </body>
-      </method>
-
-
-      <method name="_reuseAcItem">
-        <body>
-          <![CDATA[
-            let action = this._parseActionUrl(this.getAttribute("url"));
-            let popup = this.parentNode.parentNode;
-
-            // If the item is a searchengine action, then it should
-            // only be reused if the engine name is the same as the
-            // popup's override engine name, if any.
-            if (!action ||
-                action.type != "searchengine" ||
-                !popup.overrideSearchEngineName ||
-                action.params.engineName == popup.overrideSearchEngineName) {
-
-              this.collapsed = false;
-              // Call adjustSiteIconStart only after setting collapsed=
-              // false.  The calculations it does may be wrong otherwise.
-              this.adjustSiteIconStart(popup._siteIconStart);
-              // The popup may have changed size between now and the last
-              // time the item was shown, so always handle over/underflow.
-              this.handleOverUnderflow();
-
-              return true;
-            }
-
-            return false;
-          ]]>
-        </body>
-      </method>
-
-
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          this.setAttribute("url", this.getAttribute("ac-value"));
-          this.setAttribute("image", this.getAttribute("ac-image"));
-          this.setAttribute("title", this.getAttribute("ac-title"));
-          this.setAttribute("text", this.getAttribute("ac-text"));
-
           let popup = this.parentNode.parentNode;
           if (!popup.popupOpen) {
             // Removing the max-width and resetting it later when overflow is
