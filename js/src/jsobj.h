@@ -1051,7 +1051,7 @@ ToPrimitive(JSContext* cx, MutableHandleValue vp)
 {
     if (vp.isPrimitive())
         return true;
-    return ToPrimitiveSlow(cx, JSTYPE_VOID, vp);
+    return ToPrimitiveSlow(cx, JSTYPE_UNDEFINED, vp);
 }
 
 inline bool
