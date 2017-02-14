@@ -309,40 +309,12 @@ var gPageCompleted;
 var GLOBAL = this + '';
 
 // Variables local to jstests harness.
-var jstestsTestPassesUnlessItThrows = false;
-var jstestsRestoreFunction;
 var jstestsOptions;
-
-/*
- * Signals to this script that the current test case should be considered to
- * have passed if it doesn't throw an exception.
- *
- * Overrides the same-named function in shell.js.
- */
-function testPassesUnlessItThrows() {
-  jstestsTestPassesUnlessItThrows = true;
-}
-
-/*
- * Sets a restore function which restores the standard built-in ECMAScript
- * properties after a destructive test case, and which will be called after
- * the test case terminates.
- */
-function setRestoreFunction(restore) {
-  jstestsRestoreFunction = restore;
-}
 
 window.onerror = function (msg, page, line)
 {
-  jstestsTestPassesUnlessItThrows = false;
-
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
-
-  // Restore the ECMAScript environment after potentially destructive tests.
-  if (typeof jstestsRestoreFunction === "function") {
-    jstestsRestoreFunction();
-  }
 
   optionsPush();
 
@@ -631,17 +603,6 @@ function jsTestDriverEnd()
 
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
-
-  // Restore the ECMAScript environment after potentially destructive tests.
-  if (typeof jstestsRestoreFunction === "function") {
-    jstestsRestoreFunction();
-  }
-
-  if (jstestsTestPassesUnlessItThrows) {
-    var testcase = new TestCase("unknown-test-name", "", true, true);
-    print(PASSED);
-    jstestsTestPassesUnlessItThrows = false;
-  }
 
   try
   {
