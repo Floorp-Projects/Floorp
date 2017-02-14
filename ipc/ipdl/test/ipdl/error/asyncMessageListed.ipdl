@@ -1,0 +1,4 @@
+protocol asyncMessageListed {
+parent:
+    async Msg();
+};
