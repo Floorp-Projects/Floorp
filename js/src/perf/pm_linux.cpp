@@ -302,9 +302,8 @@ PerfMeasurement::canMeasureSomething()
     if (fd >= 0) {
         close(fd);
         return true;
-    } else {
-        return errno != ENOSYS;
     }
+    return errno != ENOSYS;
 }
 
 } // namespace JS
