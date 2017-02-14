@@ -22,6 +22,14 @@ from .geckoinstance import GeckoInstance
 from .keys import Keys
 from .timeout import Timeouts
 
+try:
+    from mozbuild.base import (
+        MozbuildObject
+    )
+    build = MozbuildObject.from_environment()
+except ImportError:
+    build = None
+
 WEBELEMENT_KEY = "ELEMENT"
 W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 
@@ -580,7 +588,10 @@ class Marionette(object):
         """
         self.host = host
         self.port = self.local_port = int(port)
-        self.bin = bin
+        if bin is None and build is not None:
+            self.bin = build.get_binary_path()
+        else:
+            self.bin = bin
         self.client = None
         self.instance = None
         self.session = None
