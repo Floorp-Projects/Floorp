@@ -1028,7 +1028,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #ifdef DEBUG
   // Note: break-before means ignore the reflow metrics since the
   // frame will be reflowed another time.
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+  if (!aReflowStatus.IsInlineBreakBefore()) {
     if ((CRAZY_SIZE(reflowOutput.ISize(lineWM)) ||
          CRAZY_SIZE(reflowOutput.BSize(lineWM))) &&
         !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
@@ -1067,7 +1067,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     *aMetrics = reflowOutput;
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+  if (!aReflowStatus.IsInlineBreakBefore()) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting

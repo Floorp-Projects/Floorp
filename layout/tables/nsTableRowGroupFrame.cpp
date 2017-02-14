@@ -1211,7 +1211,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           // reflowed with a constrained height yet (we will find out when SplitSpanningCells is
           // called below)
           if (rowMetrics.Height() > availSize.height ||
-              (NS_INLINE_IS_BREAK_BEFORE(aStatus) && !aRowForcedPageBreak)) {
+              (aStatus.IsInlineBreakBefore() && !aRowForcedPageBreak)) {
             // cases (1) and (2)
             if (isTopOfPage) {
               // We're on top of the page, so keep the row on this page. There will be data loss.

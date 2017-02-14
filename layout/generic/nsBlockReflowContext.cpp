@@ -307,7 +307,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
   mOuterReflowInput.mFloatManager->Translate(-tI, -tB);
 
 #ifdef DEBUG
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+  if (!aFrameReflowStatus.IsInlineBreakBefore()) {
     if ((CRAZY_SIZE(mMetrics.ISize(mWritingMode)) ||
          CRAZY_SIZE(mMetrics.BSize(mWritingMode))) &&
         !mFrame->GetParent()->IsCrazySizeAssertSuppressed()) {
@@ -330,7 +330,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     mMetrics.SetOverflowAreasToDesiredBounds();
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||
+  if (!aFrameReflowStatus.IsInlineBreakBefore() ||
       (mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
