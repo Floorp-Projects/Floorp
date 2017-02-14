@@ -45,21 +45,6 @@ Components.manager.addBootstrappedManifestLocation(extensionDir);
 // with a file that is still pending deletion highly unlikely.
 let gFileCounter = Math.floor(Math.random() * 1000000);
 
-function loadFormAutofillContent() {
-  let facGlobal = {
-    addEventListener() {},
-    addMessageListener() {},
-    sendAsyncMessage() {},
-  };
-  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-               .getService(Ci.mozIJSSubScriptLoader);
-  loader.loadSubScriptWithOptions("chrome://formautofill/content/FormAutofillContent.js", {
-    target: facGlobal,
-  });
-
-  return facGlobal;
-}
-
 /**
  * Returns a reference to a temporary file, that is guaranteed not to exist, and
  * to have never been created before.
