@@ -371,7 +371,6 @@ private:
 
 #define NS_FRAME_COMPLETE             0       // Note: not a bit!
 #define NS_FRAME_NOT_COMPLETE         0x1
-#define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);

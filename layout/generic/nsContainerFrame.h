@@ -328,7 +328,7 @@ public:
    * list (to be drained by the next-in-flow when it calls
    * ReflowOverflowContainerChildren). The parent continues reflow as if
    * the frame was complete once it ran out of computed height, but returns
-   * either an NS_FRAME_NOT_COMPLETE or NS_FRAME_OVERFLOW_INCOMPLETE reflow
+   * with either the mIncomplete or mOverflowIncomplete bit set in reflow
    * status to request a next-in-flow. The parent's next-in-flow is then
    * responsible for calling ReflowOverflowContainerChildren to (drain and)
    * reflow these overflow continuations. Overflow containers do not affect
@@ -839,7 +839,7 @@ public:
 
   /**
    * This function should be called for each child that isn't reflowed.
-   * It increments our walker and sets the NS_FRAME_OVERFLOW_INCOMPLETE
+   * It increments our walker and sets the mOverflowIncomplete
    * reflow flag if it encounters an overflow continuation so that our
    * next-in-flow doesn't get prematurely deleted. It MUST be called on
    * each unreflowed child that has an overflow container continuation;
