@@ -277,7 +277,13 @@ OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+OfflineCacheUpdateParent::GetUseTrackingProtection(bool *aUseTrackingProtection)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+OfflineCacheUpdateParent::SetUseTrackingProtection(bool aUseTrackingProtection)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
