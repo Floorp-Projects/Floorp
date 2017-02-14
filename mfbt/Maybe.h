@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TypeTraits.h"
 
 #include <new>  // for placement new
@@ -458,7 +459,7 @@ public:
   void emplace(Args&&... aArgs)
   {
     MOZ_ASSERT(!mIsSome);
-    ::new (mStorage.addr()) T(Forward<Args>(aArgs)...);
+    ::new (KnownNotNull, mStorage.addr()) T(Forward<Args>(aArgs)...);
     mIsSome = true;
   }
 
