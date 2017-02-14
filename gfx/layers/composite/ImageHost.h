@@ -67,8 +67,6 @@ public:
 
   gfx::IntSize GetImageSize() const override;
 
-  virtual LayerRenderState GetRenderState() override;
-
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   virtual void Dump(std::stringstream& aStream,

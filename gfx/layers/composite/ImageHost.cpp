@@ -238,8 +238,7 @@ ImageHost::Composite(LayerComposite* aLayer,
         !(mCurrentTextureHost->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
     RefPtr<TexturedEffect> effect =
         CreateTexturedEffect(mCurrentTextureHost,
-            mCurrentTextureSource.get(), aSamplingFilter, isAlphaPremultiplied,
-            GetRenderState());
+            mCurrentTextureSource.get(), aSamplingFilter, isAlphaPremultiplied);
     if (!effect) {
       return;
     }
@@ -384,17 +383,6 @@ ImageHost::Dump(std::stringstream& aStream,
   }
 }
 
-LayerRenderState
-ImageHost::GetRenderState()
-{
-  TimedImage* img = ChooseImage();
-  if (img) {
-    SetCurrentTextureHost(img->mTextureHost);
-    return img->mTextureHost->GetRenderState();
-  }
-  return LayerRenderState();
-}
-
 already_AddRefed<gfx::DataSourceSurface>
 ImageHost::GetAsSurface()
 {
@@ -484,8 +472,7 @@ ImageHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
   return CreateTexturedEffect(mCurrentTextureHost,
                               mCurrentTextureSource,
                               aSamplingFilter,
-                              isAlphaPremultiplied,
-                              GetRenderState());
+                              isAlphaPremultiplied);
 }
 
 } // namespace layers
