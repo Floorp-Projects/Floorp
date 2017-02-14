@@ -4,6 +4,8 @@
 
 'use strict';
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 class Viewport {
   constructor() {
     this._viewerContainer = document.getElementById('viewerContainer');
@@ -39,6 +41,7 @@ class Viewport {
     this.onPasswordRequest = null;
 
     this._viewportController.addEventListener('scroll', this);
+    this._viewportController.addEventListener('copy', this);
     window.addEventListener('resize', this);
   }
 
@@ -475,6 +478,15 @@ class Viewport {
     }
   }
 
+  _copyToClipboard(text) {
+    if (!text) {
+      return;
+    }
+    const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"]
+                                .getService(Ci.nsIClipboardHelper);
+    gClipboardHelper.copyString(text);
+  }
+
   verifyPassword(password) {
     this._doAction({
       type: 'getPasswordComplete',
@@ -494,6 +506,12 @@ class Viewport {
             this._runtimePosition.y != position.y) {
           this._refresh();
         }
+        break;
+      case 'copy':
+        this._doAction({
+          type: 'getSelectedText'
+        })
+        evt.preventDefault();
         break;
     }
   }
@@ -607,6 +625,11 @@ class Viewport {
         break;
       case 'getPassword':
         this.onPasswordRequest && this.onPasswordRequest();
+        break;
+      case 'getSelectedTextReply':
+        // For now this message is used only by text copy so we handle just
+        // that case.
+        this._copyToClipboard(message.selectedText);
         break;
     }
   }
