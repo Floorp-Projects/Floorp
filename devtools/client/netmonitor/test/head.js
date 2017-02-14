@@ -397,7 +397,7 @@ function testFilterButtons(monitor, filterType) {
   let doc = monitor.panelWin.document;
   let target = doc.querySelector("#requests-menu-filter-" + filterType + "-button");
   ok(target, `Filter button '${filterType}' was found`);
-  let buttons = [...doc.querySelectorAll(".menu-filter-button")];
+  let buttons = [...doc.querySelectorAll("#requests-menu-filter-buttons button")];
   ok(buttons.length > 0, "More than zero filter buttons were found");
 
   // Only target should be checked.
@@ -415,7 +415,7 @@ function testFilterButtons(monitor, filterType) {
  */
 function testFilterButtonsCustom(aMonitor, aIsChecked) {
   let doc = aMonitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".menu-filter-button");
+  let buttons = doc.querySelectorAll("#requests-menu-filter-buttons button");
   for (let i = 0; i < aIsChecked.length; i++) {
     let button = buttons[i];
     if (aIsChecked[i]) {
