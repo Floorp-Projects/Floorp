@@ -28,7 +28,7 @@ class DocAccessibleParent : public ProxyAccessible,
 {
 public:
   DocAccessibleParent() :
-    ProxyAccessible(this), mParentDoc(nullptr),
+    ProxyAccessible(this), mParentDoc(kNoParentDoc),
     mTopLevel(false), mShutdown(false)
 #if defined(XP_WIN)
                                       , mEmulatedWindowHandle(nullptr)
@@ -117,7 +117,8 @@ public:
    * Return the main processes representation of the parent document (if any)
    * of the document this object represents.
    */
-  DocAccessibleParent* ParentDoc() const { return mParentDoc; }
+  DocAccessibleParent* ParentDoc() const;
+  static const int32_t kNoParentDoc = INT32_MIN;
 
   /*
    * Called when a document in a content process notifies the main process of a
@@ -138,7 +139,7 @@ public:
       aChildDoc->Parent()->ClearChildDoc(aChildDoc);
     }
     DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc);
-    aChildDoc->mParentDoc = nullptr;
+    aChildDoc->mParentDoc = kNoParentDoc;
     MOZ_ASSERT(result);
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
   }
@@ -214,7 +215,7 @@ private:
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
   nsTArray<DocAccessibleParent*> mChildDocs;
-  DocAccessibleParent* mParentDoc;
+  int32_t mParentDoc;
 
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
