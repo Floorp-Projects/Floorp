@@ -68,15 +68,6 @@ CanvasLayerComposite::SetLayerManager(HostLayerManager* aManager)
   }
 }
 
-LayerRenderState
-CanvasLayerComposite::GetRenderState()
-{
-  if (mDestroyed || !mCompositableHost || !mCompositableHost->IsAttached()) {
-    return LayerRenderState();
-  }
-  return mCompositableHost->GetRenderState();
-}
-
 void
 CanvasLayerComposite::RenderLayer(const IntRect& aClipRect,
                                   const Maybe<gfx::Polygon>& aGeometry)
