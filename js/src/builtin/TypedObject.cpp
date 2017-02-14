@@ -1636,10 +1636,8 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
         newData += reinterpret_cast<uint8_t*>(owner) - reinterpret_cast<uint8_t*>(oldOwner);
         typedObj.setData(newData);
 
-        if (trc->isTenuringTracer()) {
-            Nursery& nursery = typedObj.zoneFromAnyThread()->group()->nursery();
-            nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
-        }
+        Nursery& nursery = typedObj.zoneFromAnyThread()->group()->nursery();
+        nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
     }
 
     if (!descr.opaque() || !typedObj.isAttached())
