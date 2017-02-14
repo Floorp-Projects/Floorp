@@ -18,13 +18,24 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+// -------------------------------
+// CSS Style Sheet Inner Data Container
+//
+
+ServoStyleSheetInner::ServoStyleSheetInner(CORSMode aCORSMode,
+                                           ReferrerPolicy aReferrerPolicy,
+                                           const SRIMetadata& aIntegrity)
+  : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
+{
+}
+
 ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
                                  CORSMode aCORSMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Servo, aParsingMode)
 {
-  mInner = new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity);
+  mInner = new ServoStyleSheetInner(aCORSMode, aReferrerPolicy, aIntegrity);
   mInner->AddSheet(this);
 }
 
@@ -54,7 +65,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 bool
 ServoStyleSheet::HasRules() const
 {
-  return mSheet && Servo_StyleSheet_HasRules(mSheet);
+  return Inner()->mSheet && Servo_StyleSheet_HasRules(Inner()->mSheet);
 }
 
 nsresult
@@ -75,13 +86,13 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertUTF16toUTF8 input(aInput);
-  if (!mSheet) {
-    mSheet =
+  if (!Inner()->mSheet) {
+    Inner()->mSheet =
       Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input, mParsingMode,
                                      &baseString, base, referrer,
                                      principal).Consume();
   } else {
-    Servo_StyleSheet_ClearAndUpdate(mSheet, aLoader, this, &input, base,
+    Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader, this, &input, base,
                                     referrer, principal);
   }
 
@@ -91,7 +102,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 void
 ServoStyleSheet::LoadFailed()
 {
-  mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+  Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
 }
 
 void
@@ -114,7 +125,8 @@ CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
   if (!mRuleList) {
-    RefPtr<ServoCssRules> rawRules = Servo_StyleSheet_GetRules(mSheet).Consume();
+    RefPtr<ServoCssRules> rawRules =
+      Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
     mRuleList = new ServoCSSRuleList(this, rawRules.forget());
   }
   return mRuleList;
