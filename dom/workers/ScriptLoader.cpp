@@ -1222,6 +1222,12 @@ private:
 #endif
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
+
+      // Override the principal on the WorkerPrivate.  We just asserted that
+      // this is the same as our current WorkerPrivate principal, so this is
+      // almost a no-op.  We must do, it though, in order to avoid accidentally
+      // propagating the CSP object back to the ServiceWorkerRegistration
+      // principal.  If bug 965637 is fixed then this can be removed.
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
