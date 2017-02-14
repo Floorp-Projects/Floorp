@@ -113,7 +113,6 @@ devtools/server/tests/browser/**
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
 devtools/shared/heapsnapshot/**
-devtools/shared/webconsole/test/**
 
 # Ignore devtools pre-processed files
 devtools/client/framework/toolbox-process-window.js

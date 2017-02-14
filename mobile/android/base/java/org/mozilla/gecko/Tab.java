@@ -95,8 +95,6 @@ public class Tab {
      */
     private Bundle mMostRecentHomePanelData;
 
-    private int mHistoryIndex;
-    private int mHistorySize;
     private boolean mCanDoBack;
     private boolean mCanDoForward;
 
@@ -135,7 +133,6 @@ public class Tab {
         mParentId = parentId;
         mTitle = title == null ? "" : title;
         mSiteIdentity = new SiteIdentity();
-        mHistoryIndex = -1;
         mContentType = "";
         mPluginViews = new ArrayList<View>();
         mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
@@ -391,14 +388,6 @@ public class Tab {
         return mContentType;
     }
 
-    public int getHistoryIndex() {
-        return mHistoryIndex;
-    }
-
-    public int getHistorySize() {
-        return mHistorySize;
-    }
-
     public synchronized void updateTitle(String title) {
         // Keep the title unchanged while entering reader mode.
         if (mEnteringReaderMode) {
@@ -612,10 +601,7 @@ public class Tab {
         final String oldUrl = getURL();
         final boolean sameDocument = message.getBoolean("sameDocument");
         mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(oldUrl, uri);
-        mHistoryIndex = message.getInt("historyIndex");
-        mHistorySize = message.getInt("historySize");
-        mCanDoBack = message.getBoolean("canGoBack");
-        mCanDoForward = message.getBoolean("canGoForward");
+        handleButtonStateChange(message);
 
         if (!TextUtils.equals(oldUrl, uri)) {
             updateURL(uri);
@@ -661,6 +647,11 @@ public class Tab {
         setLoadProgressIfLoading(LOAD_PROGRESS_LOCATION_CHANGE);
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
+    }
+
+    void handleButtonStateChange(final GeckoBundle message) {
+        mCanDoBack = message.getBoolean("canGoBack");
+        mCanDoForward = message.getBoolean("canGoForward");
     }
 
     private static boolean shouldShowProgress(final String url) {

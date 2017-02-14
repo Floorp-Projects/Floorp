@@ -12,11 +12,12 @@
 <p>Test for cached messages</p>
 
 <script class="testbody" type="application/javascript;version=1.8">
+var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+                          .getService(Ci.nsIConsoleAPIStorage);
 let expectedConsoleCalls = [];
 let expectedPageErrors = [];
 
-function doPageErrors()
-{
+function doPageErrors() {
   Services.console.reset();
 
   expectedPageErrors = [
@@ -57,8 +58,7 @@ function doPageErrors()
   document.body.removeChild(container);
 }
 
-function doConsoleCalls()
-{
+function doConsoleCalls() {
   ConsoleAPIStorage.clearEvents();
 
   top.console.log("foobarBaz-log", undefined);
@@ -96,17 +96,18 @@ function doConsoleCalls()
 
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
+var {ConsoleServiceListener, ConsoleAPIListener} =
+  require("devtools/server/actors/utils/webconsole-listeners");
 
 let consoleAPIListener, consoleServiceListener;
 let consoleAPICalls = 0;
 let pageErrors = 0;
 
 let handlers = {
-  onConsoleAPICall: function onConsoleAPICall(aMessage)
-  {
+  onConsoleAPICall: function onConsoleAPICall(message) {
     for (let msg of expectedConsoleCalls) {
-      if (msg.functionName == aMessage.functionName &&
-          msg.filename.test(aMessage.filename)) {
+      if (msg.functionName == message.functionName &&
+          msg.filename.test(message.filename)) {
         consoleAPICalls++;
         break;
       }
@@ -116,14 +117,13 @@ let handlers = {
     }
   },
 
-  onConsoleServiceMessage: function onConsoleServiceMessage(aMessage)
-  {
-    if (!(aMessage instanceof Ci.nsIScriptError)) {
+  onConsoleServiceMessage: function onConsoleServiceMessage(message) {
+    if (!(message instanceof Ci.nsIScriptError)) {
       return;
     }
     for (let msg of expectedPageErrors) {
-      if (msg.category == aMessage.category &&
-          msg.errorMessage.test(aMessage.errorMessage)) {
+      if (msg.category == message.category &&
+          msg.errorMessage.test(message.errorMessage)) {
         pageErrors++;
         break;
       }
@@ -134,8 +134,7 @@ let handlers = {
   },
 };
 
-function startTest()
-{
+function startTest() {
   removeEventListener("load", startTest);
 
   consoleAPIListener = new ConsoleAPIListener(top, handlers);
@@ -144,22 +143,19 @@ function startTest()
   doConsoleCalls();
 }
 
-function checkConsoleAPICache()
-{
+function checkConsoleAPICache() {
   consoleAPIListener.destroy();
   consoleAPIListener = null;
   attachConsole(["ConsoleAPI"], onAttach1);
 }
 
-function onAttach1(aState, aResponse)
-{
-  aState.client.getCachedMessages(["ConsoleAPI"],
-                                  onCachedConsoleAPI.bind(null, aState));
+function onAttach1(state, response) {
+  state.client.getCachedMessages(["ConsoleAPI"],
+                                  onCachedConsoleAPI.bind(null, state));
 }
 
-function onCachedConsoleAPI(aState, aResponse)
-{
-  let msgs = aResponse.messages;
+function onCachedConsoleAPI(state, response) {
+  let msgs = response.messages;
   info("cached console messages: " + msgs.length);
 
   ok(msgs.length >= expectedConsoleCalls.length,
@@ -178,29 +174,26 @@ function onCachedConsoleAPI(aState, aResponse)
 
   is(expectedConsoleCalls.length, 0, "all expected messages have been found");
 
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     consoleServiceListener = new ConsoleServiceListener(null, handlers);
     consoleServiceListener.init();
     doPageErrors();
   });
 }
 
-function testPageErrors()
-{
+function testPageErrors() {
   consoleServiceListener.destroy();
   consoleServiceListener = null;
   attachConsole(["PageError"], onAttach2);
 }
 
-function onAttach2(aState, aResponse)
-{
-  aState.client.getCachedMessages(["PageError"],
-                                  onCachedPageErrors.bind(null, aState));
+function onAttach2(state, response) {
+  state.client.getCachedMessages(["PageError"],
+                                  onCachedPageErrors.bind(null, state));
 }
 
-function onCachedPageErrors(aState, aResponse)
-{
-  let msgs = aResponse.messages;
+function onCachedPageErrors(state, response) {
+  let msgs = response.messages;
   info("cached page errors: " + msgs.length);
 
   ok(msgs.length >= expectedPageErrors.length,
@@ -219,7 +212,7 @@ function onCachedPageErrors(aState, aResponse)
 
   is(expectedPageErrors.length, 0, "all expected messages have been found");
 
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     SimpleTest.finish();
   });
 }

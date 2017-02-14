@@ -576,9 +576,9 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     }
 
     video_stream.max_qp = kQpMax;
-    video_stream.SetRid(simulcastEncoding.rid);
     simulcast_config.jsScaleDownBy = simulcastEncoding.constraints.scaleDownBy;
     simulcast_config.jsMaxBitrate = simulcastEncoding.constraints.maxBr; // bps
+    mSendStreamConfig.rtp.rids.push_back(simulcastEncoding.rid);
 
     if (codecConfig->mName == "H264") {
       if (codecConfig->mEncodingConstraints.maxMbps > 0) {

@@ -1608,12 +1608,12 @@ StartsWithIDNALabel(Input id)
 {
   static const uint8_t IDN_ALABEL_PREFIX[4] = { 'x', 'n', '-', '-' };
   Reader input(id);
-  for (size_t i = 0; i < sizeof(IDN_ALABEL_PREFIX); ++i) {
+  for (const uint8_t prefixByte : IDN_ALABEL_PREFIX) {
     uint8_t b;
     if (input.Read(b) != Success) {
       return false;
     }
-    if (b != IDN_ALABEL_PREFIX[i]) {
+    if (b != prefixByte) {
       return false;
     }
   }

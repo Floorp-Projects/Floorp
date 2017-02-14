@@ -6,33 +6,24 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+/* exported ObjectClient, attachConsole, attachConsoleToTab, attachConsoleToWorker,
+   closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
+   withActiveServiceWorker, Services */
 
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 // This gives logging to stdout for tests
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {Task} = require("devtools/shared/task");
+const {DebuggerServer} = require("devtools/server/main");
+const {DebuggerClient, ObjectClient} = require("devtools/shared/client/main");
+const Services = require("Services");
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var Services = require("Services");
-var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-var {Task} = require("devtools/shared/task");
-
-var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-                          .getService(Ci.nsIConsoleAPIStorage);
-var {DebuggerServer} = require("devtools/server/main");
-var {DebuggerClient, ObjectClient} = require("devtools/shared/client/main");
-
-var {ConsoleServiceListener, ConsoleAPIListener} =
-  require("devtools/server/actors/utils/webconsole-listeners");
-
-function initCommon()
-{
+function initCommon() {
   // Services.prefs.setBoolPref("devtools.debugger.log", true);
 }
 
-function initDebuggerServer()
-{
+function initDebuggerServer() {
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
@@ -40,8 +31,7 @@ function initDebuggerServer()
   DebuggerServer.allowChromeProcess = true;
 }
 
-function connectToDebugger(aCallback)
-{
+function connectToDebugger() {
   initCommon();
   initDebuggerServer();
 
@@ -49,187 +39,174 @@ function connectToDebugger(aCallback)
   let client = new DebuggerClient(transport);
 
   let dbgState = { dbgClient: client };
-  client.connect().then(response => aCallback(dbgState, response));
+  return new Promise(resolve => {
+    client.connect().then(response => resolve([dbgState, response]));
+  });
 }
 
-function attachConsole(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback);
+function attachConsole(listeners, callback) {
+  _attachConsole(listeners, callback);
 }
-function attachConsoleToTab(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback, true);
+function attachConsoleToTab(listeners, callback) {
+  _attachConsole(listeners, callback, true);
 }
-function attachConsoleToWorker(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback, true, true);
+function attachConsoleToWorker(listeners, callback) {
+  _attachConsole(listeners, callback, true, true);
 }
 
-function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
-{
-  function _onAttachConsole(aState, aResponse, aWebConsoleClient)
-  {
-    if (aResponse.error) {
-      console.error("attachConsole failed: " + aResponse.error + " " +
-                    aResponse.message);
+var _attachConsole = Task.async(function* (
+  listeners, callback, attachToTab, attachToWorker
+) {
+  function _onAttachConsole(state, response, webConsoleClient) {
+    if (response.error) {
+      console.error("attachConsole failed: " + response.error + " " +
+                    response.message);
     }
 
-    aState.client = aWebConsoleClient;
+    state.client = webConsoleClient;
 
-    aCallback(aState, aResponse);
+    callback(state, response);
   }
 
-  connectToDebugger(function _onConnect(aState, aResponse) {
-    if (aResponse.error) {
-      console.error("client.connect() failed: " + aResponse.error + " " +
-                    aResponse.message);
-      aCallback(aState, aResponse);
+  function waitForMessage(target) {
+    return new Promise(resolve => {
+      target.addEventListener("message", resolve, { once: true });
+    });
+  }
+
+  let [state, response] = yield connectToDebugger();
+  if (response.error) {
+    console.error("client.connect() failed: " + response.error + " " +
+                  response.message);
+    callback(state, response);
+    return;
+  }
+
+  if (!attachToTab) {
+    response = yield state.dbgClient.getProcess();
+    yield state.dbgClient.attachTab(response.form.actor);
+    let consoleActor = response.form.consoleActor;
+    state.actor = consoleActor;
+    state.dbgClient.attachConsole(consoleActor, listeners,
+                                  _onAttachConsole.bind(null, state));
+    return;
+  }
+  response = yield state.dbgClient.listTabs();
+  if (response.error) {
+    console.error("listTabs failed: " + response.error + " " +
+                  response.message);
+    callback(state, response);
+    return;
+  }
+  let tab = response.tabs[response.selected];
+  let [, tabClient] = yield state.dbgClient.attachTab(tab.actor);
+  if (attachToWorker) {
+    let workerName = "console-test-worker.js#" + new Date().getTime();
+    let worker = new Worker(workerName);
+    // Keep a strong reference to the Worker to avoid it being
+    // GCd during the test (bug 1237492).
+    // eslint-disable-next-line camelcase
+    state._worker_ref = worker;
+    yield waitForMessage(worker);
+
+    let { workers } = yield tabClient.listWorkers();
+    let workerActor = workers.filter(w => w.url == workerName)[0].actor;
+    if (!workerActor) {
+      console.error("listWorkers failed. Unable to find the " +
+                    "worker actor\n");
       return;
     }
-
-    if (aAttachToTab) {
-      aState.dbgClient.listTabs(function _onListTabs(aResponse) {
-        if (aResponse.error) {
-          console.error("listTabs failed: " + aResponse.error + " " +
-                        aResponse.message);
-          aCallback(aState, aResponse);
-          return;
-        }
-        let tab = aResponse.tabs[aResponse.selected];
-        aState.dbgClient.attachTab(tab.actor, function (response, tabClient) {
-          if (aAttachToWorker) {
-            let workerName = "console-test-worker.js#" + new Date().getTime();
-            var worker = new Worker(workerName);
-            // Keep a strong reference to the Worker to avoid it being
-            // GCd during the test (bug 1237492).
-            aState._worker_ref = worker;
-            worker.addEventListener("message", function () {
-              tabClient.listWorkers(function (response) {
-                let worker = response.workers.filter(w => w.url == workerName)[0];
-                if (!worker) {
-                  console.error("listWorkers failed. Unable to find the " +
-                                "worker actor\n");
-                  return;
-                }
-                tabClient.attachWorker(worker.actor, function (response, workerClient) {
-                  if (!workerClient || response.error) {
-                    console.error("attachWorker failed. No worker client or " +
-                                  " error: " + response.error);
-                    return;
-                  }
-                  workerClient.attachThread({}, function (aResponse) {
-                    aState.actor = workerClient.consoleActor;
-                    aState.dbgClient.attachConsole(workerClient.consoleActor, aListeners,
-                                                   _onAttachConsole.bind(null, aState));
-                  });
-                });
-              });
-            }, {once: true});
-          } else {
-            aState.actor = tab.consoleActor;
-            aState.dbgClient.attachConsole(tab.consoleActor, aListeners,
-                                           _onAttachConsole.bind(null, aState));
-          }
-        });
-      });
-    } else {
-      aState.dbgClient.getProcess().then(response => {
-        aState.dbgClient.attachTab(response.form.actor, function () {
-          let consoleActor = response.form.consoleActor;
-          aState.actor = consoleActor;
-          aState.dbgClient.attachConsole(consoleActor, aListeners,
-                                         _onAttachConsole.bind(null, aState));
-        });
-      });
+    let [workerResponse, workerClient] = yield tabClient.attachWorker(workerActor);
+    if (!workerClient || workerResponse.error) {
+      console.error("attachWorker failed. No worker client or " +
+                    " error: " + workerResponse.error);
+      return;
     }
-  });
+    yield workerClient.attachThread({});
+    state.actor = workerClient.consoleActor;
+    state.dbgClient.attachConsole(workerClient.consoleActor, listeners,
+                                  _onAttachConsole.bind(null, state));
+  } else {
+    state.actor = tab.consoleActor;
+    state.dbgClient.attachConsole(tab.consoleActor, listeners,
+                                   _onAttachConsole.bind(null, state));
+  }
+});
+
+function closeDebugger(state, callback) {
+  state.dbgClient.close().then(callback);
+  state.dbgClient = null;
+  state.client = null;
 }
 
-function closeDebugger(aState, aCallback)
-{
-  aState.dbgClient.close().then(aCallback);
-  aState.dbgClient = null;
-  aState.client = null;
-}
-
-function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls)
-{
+function checkConsoleAPICalls(consoleCalls, expectedConsoleCalls) {
   is(consoleCalls.length, expectedConsoleCalls.length,
     "received correct number of console calls");
-  expectedConsoleCalls.forEach(function (aMessage, aIndex) {
-    info("checking received console call #" + aIndex);
-    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+  expectedConsoleCalls.forEach(function (message, index) {
+    info("checking received console call #" + index);
+    checkConsoleAPICall(consoleCalls[index], expectedConsoleCalls[index]);
   });
 }
 
-function checkConsoleAPICall(aCall, aExpected)
-{
-  if (aExpected.level != "trace" && aExpected.arguments) {
-    is(aCall.arguments.length, aExpected.arguments.length,
+function checkConsoleAPICall(call, expected) {
+  if (expected.level != "trace" && expected.arguments) {
+    is(call.arguments.length, expected.arguments.length,
        "number of arguments");
   }
 
-  checkObject(aCall, aExpected);
+  checkObject(call, expected);
 }
 
-function checkObject(aObject, aExpected)
-{
-  for (let name of Object.keys(aExpected))
-  {
-    let expected = aExpected[name];
-    let value = aObject[name];
-    checkValue(name, value, expected);
-  }
-}
-
-function checkValue(aName, aValue, aExpected)
-{
-  if (aExpected === null) {
-    ok(!aValue, "'" + aName + "' is null");
-  }
-  else if (aValue === undefined) {
-    ok(false, "'" + aName + "' is undefined");
-  }
-  else if (aValue === null) {
-    ok(false, "'" + aName + "' is null");
-  }
-  else if (typeof aExpected == "string" || typeof aExpected == "number" ||
-           typeof aExpected == "boolean") {
-    is(aValue, aExpected, "property '" + aName + "'");
-  }
-  else if (aExpected instanceof RegExp) {
-    ok(aExpected.test(aValue), aName + ": " + aExpected + " matched " + aValue);
-  }
-  else if (Array.isArray(aExpected)) {
-    info("checking array for property '" + aName + "'");
-    checkObject(aValue, aExpected);
-  }
-  else if (typeof aExpected == "object") {
-    info("checking object for property '" + aName + "'");
-    checkObject(aValue, aExpected);
+function checkObject(object, expected) {
+  for (let name of Object.keys(expected)) {
+    let expectedValue = expected[name];
+    let value = object[name];
+    checkValue(name, value, expectedValue);
   }
 }
 
-function checkHeadersOrCookies(aArray, aExpected)
-{
+function checkValue(name, value, expected) {
+  if (expected === null) {
+    ok(!value, "'" + name + "' is null");
+  } else if (value === undefined) {
+    ok(false, "'" + name + "' is undefined");
+  } else if (value === null) {
+    ok(false, "'" + name + "' is null");
+  } else if (typeof expected == "string" || typeof expected == "number" ||
+             typeof expected == "boolean") {
+    is(value, expected, "property '" + name + "'");
+  } else if (expected instanceof RegExp) {
+    ok(expected.test(value), name + ": " + expected + " matched " + value);
+  } else if (Array.isArray(expected)) {
+    info("checking array for property '" + name + "'");
+    checkObject(value, expected);
+  } else if (typeof expected == "object") {
+    info("checking object for property '" + name + "'");
+    checkObject(value, expected);
+  }
+}
+
+function checkHeadersOrCookies(array, expected) {
   let foundHeaders = {};
 
-  for (let elem of aArray) {
-    if (!(elem.name in aExpected)) {
+  for (let elem of array) {
+    if (!(elem.name in expected)) {
       continue;
     }
     foundHeaders[elem.name] = true;
     info("checking value of header " + elem.name);
-    checkValue(elem.name, elem.value, aExpected[elem.name]);
+    checkValue(elem.name, elem.value, expected[elem.name]);
   }
 
-  for (let header in aExpected) {
+  for (let header in expected) {
     if (!(header in foundHeaders)) {
       ok(false, header + " was not found");
     }
   }
 }
 
-function checkRawHeaders(aText, aExpected)
-{
-  let headers = aText.split(/\r\n|\n|\r/);
+function checkRawHeaders(text, expected) {
+  let headers = text.split(/\r\n|\n|\r/);
   let arr = [];
   for (let header of headers) {
     let index = header.indexOf(": ");
@@ -242,61 +219,29 @@ function checkRawHeaders(aText, aExpected)
     });
   }
 
-  checkHeadersOrCookies(arr, aExpected);
+  checkHeadersOrCookies(arr, expected);
 }
 
 var gTestState = {};
 
-function runTests(aTests, aEndCallback)
-{
-  function* driver()
-  {
+function runTests(tests, endCallback) {
+  function* driver() {
     let lastResult, sendToNext;
-    for (let i = 0; i < aTests.length; i++) {
+    for (let i = 0; i < tests.length; i++) {
       gTestState.index = i;
-      let fn = aTests[i];
+      let fn = tests[i];
       info("will run test #" + i + ": " + fn.name);
       lastResult = fn(sendToNext, lastResult);
       sendToNext = yield lastResult;
     }
-    yield aEndCallback(sendToNext, lastResult);
+    yield endCallback(sendToNext, lastResult);
   }
   gTestState.driver = driver();
   return gTestState.driver.next();
 }
 
-function nextTest(aMessage)
-{
-  return gTestState.driver.next(aMessage);
-}
-
-function withFrame(url) {
-  return new Promise(resolve => {
-    let iframe = document.createElement("iframe");
-    iframe.onload = function () {
-      resolve(iframe);
-    };
-    iframe.src = url;
-    document.body.appendChild(iframe);
-  });
-}
-
-function navigateFrame(iframe, url) {
-  return new Promise(resolve => {
-    iframe.onload = function () {
-      resolve(iframe);
-    };
-    iframe.src = url;
-  });
-}
-
-function forceReloadFrame(iframe) {
-  return new Promise(resolve => {
-    iframe.onload = function () {
-      resolve(iframe);
-    };
-    iframe.contentWindow.location.reload(true);
-  });
+function nextTest(message) {
+  return gTestState.driver.next(message);
 }
 
 function withActiveServiceWorker(win, url, scope) {
@@ -322,23 +267,5 @@ function withActiveServiceWorker(win, url, scope) {
         }
       });
     });
-  });
-}
-
-function messageServiceWorker(win, scope, message) {
-  return win.navigator.serviceWorker.getRegistration(scope).then(swr => {
-    return new Promise(resolve => {
-      win.navigator.serviceWorker.onmessage = evt => {
-        resolve();
-      };
-      let sw = swr.active || swr.waiting || swr.installing;
-      sw.postMessage({ type: "PING", message: message });
-    });
-  });
-}
-
-function unregisterServiceWorker(win) {
-  return win.navigator.serviceWorker.ready.then(swr => {
-    return swr.unregister();
   });
 }
