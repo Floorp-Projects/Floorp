@@ -209,6 +209,33 @@ nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
 // Formerly the nsIFrameDebug interface
 
 #ifdef DEBUG
+std::ostream& operator<<(std::ostream& aStream,
+                         const nsReflowStatus& aStatus)
+{
+  char complete = 'Y';
+  if (aStatus.IsIncomplete()) {
+    complete = 'N';
+  } else if (aStatus.IsOverflowIncomplete()) {
+    complete = 'O';
+  }
+
+  char brk = 'N';
+  if (aStatus.IsInlineBreakBefore()) {
+    brk = 'B';
+  } else if (aStatus.IsInlineBreakAfter()) {
+    brk = 'A';
+  }
+
+  aStream << "["
+          << "Complete=" << complete << ","
+          << "NIF=" << (aStatus.NextInFlowNeedsReflow() ? 'Y' : 'N') << ","
+          << "Truncated=" << (aStatus.IsTruncated() ? 'Y' : 'N') << ","
+          << "Break=" << brk << ","
+          << "FirstLetter=" << (aStatus.FirstLetterComplete() ? 'Y' : 'N')
+          << "]";
+  return aStream;
+}
+
 static bool gShowFrameBorders = false;
 
 void nsFrame::ShowFrameBorders(bool aEnable)
@@ -11232,7 +11259,7 @@ void nsFrame::DisplayReflowExit(nsPresContext* aPresContext,
     printf("Reflow d=%s,%s", width, height);
 
     if (!aStatus.IsFullyComplete()) {
-      printf(" status=0x%x", aStatus);
+      printf(" status=%s", ToString(aStatus).c_str());
     }
     if (aFrame->HasOverflowAreas()) {
       DR_state->PrettyUC(aMetrics.VisualOverflow().x, x, 16);

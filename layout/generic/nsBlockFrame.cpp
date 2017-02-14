@@ -1473,8 +1473,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
-           aStatus, aStatus.IsComplete() ? "" : "not ",
+    printf(": status=%s metrics=%d,%d carriedMargin=%d",
+           ToString(aStatus).c_str(),
            aMetrics.ISize(parentWM), aMetrics.BSize(parentWM),
            aMetrics.mCarriedOutBEndMargin.get());
     if (HasOverflowAreas()) {
@@ -2745,8 +2745,8 @@ nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState)
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent - 1);
     ListTag(stdout);
-    printf(": done reflowing dirty lines (status=%x)\n",
-           aState.mReflowStatus);
+    printf(": done reflowing dirty lines (status=%s)\n",
+           ToString(aState.mReflowStatus).c_str());
   }
 #endif
 }

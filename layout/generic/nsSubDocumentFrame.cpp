@@ -805,8 +805,8 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("exit nsSubDocumentFrame::Reflow: size=%d,%d status=%x",
-      aDesiredSize.Width(), aDesiredSize.Height(), aStatus));
+     ("exit nsSubDocumentFrame::Reflow: size=%d,%d status=%s",
+      aDesiredSize.Width(), aDesiredSize.Height(), ToString(aStatus).c_str()));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
