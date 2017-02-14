@@ -23,6 +23,20 @@ class Loader;
 class Rule;
 }
 
+// -------------------------------
+// Servo Style Sheet Inner Data Container
+//
+
+struct ServoStyleSheetInner : public StyleSheetInfo
+{
+  ServoStyleSheetInner(CORSMode aCORSMode,
+                       ReferrerPolicy aReferrerPolicy,
+                       const dom::SRIMetadata& aIntegrity);
+
+  RefPtr<RawServoStyleSheet> mSheet;
+};
+
+
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
  */
@@ -53,10 +67,12 @@ public:
    */
   void LoadFailed();
 
-  RawServoStyleSheet* RawSheet() const { return mSheet; }
+  RawServoStyleSheet* RawSheet() const {
+    return Inner()->mSheet;
+  }
   void SetSheetForImport(RawServoStyleSheet* aSheet) {
-    MOZ_ASSERT(!mSheet);
-    mSheet = aSheet;
+    MOZ_ASSERT(!Inner()->mSheet);
+    Inner()->mSheet = aSheet;
   }
 
   // WebIDL CSSStyleSheet API
@@ -73,6 +89,11 @@ public:
 protected:
   virtual ~ServoStyleSheet();
 
+  ServoStyleSheetInner* Inner() const
+  {
+    return static_cast<ServoStyleSheetInner*>(mInner);
+  }
+
   // Internal methods which do not have security check and completeness check.
   dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
   uint32_t InsertRuleInternal(const nsAString& aRule,
@@ -84,7 +105,6 @@ protected:
 private:
   void DropRuleList();
 
-  RefPtr<RawServoStyleSheet> mSheet;
   RefPtr<ServoCSSRuleList> mRuleList;
 
   friend class StyleSheet;
