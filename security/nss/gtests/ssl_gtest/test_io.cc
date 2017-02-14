@@ -19,260 +19,27 @@ extern bool g_ssl_gtest_verbose;
 
 namespace nss_test {
 
-static PRDescIdentity test_fd_identity = PR_INVALID_IO_LAYER;
-
-#define UNIMPLEMENTED()                                                        \
-  std::cerr << "Call to unimplemented function " << __FUNCTION__ << std::endl; \
-  PR_ASSERT(PR_FALSE);                                                         \
-  PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0)
-
 #define LOG(a) std::cerr << name_ << ": " << a << std::endl
 #define LOGV(a)                      \
   do {                               \
     if (g_ssl_gtest_verbose) LOG(a); \
   } while (false)
 
-// Implementation of NSPR methods
-static PRStatus DummyClose(PRFileDesc *f) {
-  f->secret = nullptr;
-  f->dtor(f);
-  return PR_SUCCESS;
-}
-
-static int32_t DummyRead(PRFileDesc *f, void *buf, int32_t length) {
-  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
-  return io->Read(buf, length);
-}
-
-static int32_t DummyWrite(PRFileDesc *f, const void *buf, int32_t length) {
-  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
-  return io->Write(buf, length);
-}
-
-static int32_t DummyAvailable(PRFileDesc *f) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int64_t DummyAvailable64(PRFileDesc *f) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static PRStatus DummySync(PRFileDesc *f) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static int32_t DummySeek(PRFileDesc *f, int32_t offset, PRSeekWhence how) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int64_t DummySeek64(PRFileDesc *f, int64_t offset, PRSeekWhence how) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static PRStatus DummyFileInfo(PRFileDesc *f, PRFileInfo *info) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static PRStatus DummyFileInfo64(PRFileDesc *f, PRFileInfo64 *info) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static int32_t DummyWritev(PRFileDesc *f, const PRIOVec *iov, int32_t iov_size,
-                           PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static PRStatus DummyConnect(PRFileDesc *f, const PRNetAddr *addr,
-                             PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static PRFileDesc *DummyAccept(PRFileDesc *sd, PRNetAddr *addr,
-                               PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return nullptr;
-}
-
-static PRStatus DummyBind(PRFileDesc *f, const PRNetAddr *addr) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static PRStatus DummyListen(PRFileDesc *f, int32_t depth) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static PRStatus DummyShutdown(PRFileDesc *f, int32_t how) { return PR_SUCCESS; }
-
-// This function does not support peek.
-static int32_t DummyRecv(PRFileDesc *f, void *buf, int32_t buflen,
-                         int32_t flags, PRIntervalTime to) {
-  PR_ASSERT(flags == 0);
-  if (flags != 0) {
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
-  }
-
-  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
-
-  if (io->mode() == DGRAM) {
-    return io->Recv(buf, buflen);
-  } else {
-    return io->Read(buf, buflen);
-  }
-}
-
-// Note: this is always nonblocking and assumes a zero timeout.
-static int32_t DummySend(PRFileDesc *f, const void *buf, int32_t amount,
-                         int32_t flags, PRIntervalTime to) {
-  int32_t written = DummyWrite(f, buf, amount);
-  return written;
-}
-
-static int32_t DummyRecvfrom(PRFileDesc *f, void *buf, int32_t amount,
-                             int32_t flags, PRNetAddr *addr,
-                             PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int32_t DummySendto(PRFileDesc *f, const void *buf, int32_t amount,
-                           int32_t flags, const PRNetAddr *addr,
-                           PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int16_t DummyPoll(PRFileDesc *f, int16_t in_flags, int16_t *out_flags) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int32_t DummyAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
-                               PRNetAddr **raddr, void *buf, int32_t amount,
-                               PRIntervalTime t) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static int32_t DummyTransmitFile(PRFileDesc *sd, PRFileDesc *f,
-                                 const void *headers, int32_t hlen,
-                                 PRTransmitFileFlags flags, PRIntervalTime t) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static PRStatus DummyGetpeername(PRFileDesc *f, PRNetAddr *addr) {
-  // TODO: Modify to return unique names for each channel
-  // somehow, as opposed to always the same static address. The current
-  // implementation messes up the session cache, which is why it's off
-  // elsewhere
-  addr->inet.family = PR_AF_INET;
-  addr->inet.port = 0;
-  addr->inet.ip = 0;
-
-  return PR_SUCCESS;
-}
-
-static PRStatus DummyGetsockname(PRFileDesc *f, PRNetAddr *addr) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static PRStatus DummyGetsockoption(PRFileDesc *f, PRSocketOptionData *opt) {
-  switch (opt->option) {
-    case PR_SockOpt_Nonblocking:
-      opt->value.non_blocking = PR_TRUE;
-      return PR_SUCCESS;
-    default:
-      UNIMPLEMENTED();
-      break;
-  }
-
-  return PR_FAILURE;
-}
-
-// Imitate setting socket options. These are mostly noops.
-static PRStatus DummySetsockoption(PRFileDesc *f,
-                                   const PRSocketOptionData *opt) {
-  switch (opt->option) {
-    case PR_SockOpt_Nonblocking:
-      return PR_SUCCESS;
-    case PR_SockOpt_NoDelay:
-      return PR_SUCCESS;
-    default:
-      UNIMPLEMENTED();
-      break;
-  }
-
-  return PR_FAILURE;
-}
-
-static int32_t DummySendfile(PRFileDesc *out, PRSendFileData *in,
-                             PRTransmitFileFlags flags, PRIntervalTime to) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
-static PRStatus DummyConnectContinue(PRFileDesc *f, int16_t flags) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
-}
-
-static int32_t DummyReserved(PRFileDesc *f) {
-  UNIMPLEMENTED();
-  return -1;
-}
-
 void DummyPrSocket::SetPacketFilter(std::shared_ptr<PacketFilter> filter) {
   filter_ = filter;
 }
 
-static const struct PRIOMethods DummyMethods = {
-    PR_DESC_LAYERED,    DummyClose,
-    DummyRead,          DummyWrite,
-    DummyAvailable,     DummyAvailable64,
-    DummySync,          DummySeek,
-    DummySeek64,        DummyFileInfo,
-    DummyFileInfo64,    DummyWritev,
-    DummyConnect,       DummyAccept,
-    DummyBind,          DummyListen,
-    DummyShutdown,      DummyRecv,
-    DummySend,          DummyRecvfrom,
-    DummySendto,        DummyPoll,
-    DummyAcceptRead,    DummyTransmitFile,
-    DummyGetsockname,   DummyGetpeername,
-    DummyReserved,      DummyReserved,
-    DummyGetsockoption, DummySetsockoption,
-    DummySendfile,      DummyConnectContinue,
-    DummyReserved,      DummyReserved,
-    DummyReserved,      DummyReserved};
-
 ScopedPRFileDesc DummyPrSocket::CreateFD() {
-  if (test_fd_identity == PR_INVALID_IO_LAYER) {
-    test_fd_identity = PR_GetUniqueIdentity("testtransportadapter");
-  }
-
-  ScopedPRFileDesc fd(PR_CreateIOLayerStub(test_fd_identity, &DummyMethods));
-  fd->secret = reinterpret_cast<PRFilePrivate *>(this);
-  return fd;
+  static PRDescIdentity test_fd_identity =
+      PR_GetUniqueIdentity("testtransportadapter");
+  return DummyIOLayerMethods::CreateFD(test_fd_identity, this);
 }
 
 void DummyPrSocket::PacketReceived(const DataBuffer &packet) {
   input_.push(Packet(packet));
 }
 
-int32_t DummyPrSocket::Read(void *data, int32_t len) {
+int32_t DummyPrSocket::Read(PRFileDesc *f, void *data, int32_t len) {
   PR_ASSERT(mode_ == STREAM);
 
   if (mode_ != STREAM) {
@@ -300,7 +67,18 @@ int32_t DummyPrSocket::Read(void *data, int32_t len) {
   return static_cast<int32_t>(to_read);
 }
 
-int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
+int32_t DummyPrSocket::Recv(PRFileDesc *f, void *buf, int32_t buflen,
+                            int32_t flags, PRIntervalTime to) {
+  PR_ASSERT(flags == 0);
+  if (flags != 0) {
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+  }
+
+  if (mode() != DGRAM) {
+    return Read(f, buf, buflen);
+  }
+
   if (input_.empty()) {
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     return -1;
@@ -320,7 +98,7 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
   return static_cast<int32_t>(count);
 }
 
-int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
+int32_t DummyPrSocket::Write(PRFileDesc *f, const void *buf, int32_t length) {
   auto peer = peer_.lock();
   if (!peer || !writeable_) {
     PR_SetError(PR_IO_ERROR, 0);

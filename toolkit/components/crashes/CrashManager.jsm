@@ -55,7 +55,9 @@ function parseAndRemoveField(obj, field, parseAsJson = true) {
 
   if (field in obj) {
     if (!parseAsJson) {
-      value = obj[field];
+      // We split extra files on LF characters but Windows-generated ones might
+      // contain trailing CR characters so trim them here.
+      value = obj[field].trim();
     } else {
       try {
         value = JSON.parse(obj[field]);
@@ -638,6 +640,9 @@ this.CrashManager.prototype = Object.freeze({
     let sessionId = parseAndRemoveField(reportMeta, "TelemetrySessionId",
                                         /* parseAsJson */ false);
     let stackTraces = parseAndRemoveField(reportMeta, "StackTraces");
+    // If CrashPingUUID is not present then Telemetry will generate a new UUID
+    let pingId = parseAndRemoveField(reportMeta, "CrashPingUUID",
+                                     /* parseAsJson */ false);
 
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
@@ -657,6 +662,7 @@ this.CrashManager.prototype = Object.freeze({
         addClientId: true,
         addEnvironment: true,
         overrideEnvironment: crashEnvironment,
+        overridePingId: pingId
       }
     );
   },

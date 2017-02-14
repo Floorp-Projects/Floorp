@@ -1,0 +1,34 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['OS_TARGET'] != 'Android':
+    Program('pingsender')
+
+    UNIFIED_SOURCES += [
+        'pingsender.cpp',
+    ]
+
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/google-breakpad/src',
+    ]
+
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        OS_LIBS += [
+            'wininet',
+        ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'pingsender_win.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'Darwin' or CONFIG['OS_ARCH'] == 'Linux':
+    UNIFIED_SOURCES += [
+        'pingsender_unix_common.cpp',
+    ]
+
+# Don't use the STL wrappers; we don't link with -lmozalloc, and it really
+# doesn't matter here anyway.
+DISABLE_STL_WRAPPING = True

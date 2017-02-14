@@ -79,7 +79,6 @@
   "file_url.jsm": ["checkFromJSM"],
   "file_worker_url.jsm": ["checkFromJSM"],
   "Finder.jsm": ["Finder", "GetClipboardSearchString"],
-  "FormAutofillContent.jsm": ["FormAutofillHandler"],
   "forms.js": ["FormEngine", "FormRec", "FormValidator"],
   "forms.jsm": ["FormData"],
   "frame.js": ["Collector", "Runner", "events", "runTestFile", "log", "timers", "persisted", "shutdownApplication"],

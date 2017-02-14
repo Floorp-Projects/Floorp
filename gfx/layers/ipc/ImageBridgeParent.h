@@ -43,7 +43,6 @@ class ImageBridgeParent final : public PImageBridgeParent,
 public:
   typedef InfallibleTArray<CompositableOperation> EditArray;
   typedef InfallibleTArray<OpDestroy> OpDestroyArray;
-  typedef InfallibleTArray<EditReply> EditReplyArray;
 
 protected:
   ImageBridgeParent(MessageLoop* aLoop, ProcessId aChildProcessId);
@@ -72,8 +71,7 @@ public:
   // PImageBridge
   virtual mozilla::ipc::IPCResult RecvImageBridgeThreadId(const PlatformThreadId& aThreadId) override;
   virtual mozilla::ipc::IPCResult RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-                                          const uint64_t& aFwdTransactionId,
-                                          EditReplyArray* aReply) override;
+                                          const uint64_t& aFwdTransactionId) override;
   virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
                                                 const uint64_t& aFwdTransactionId) override;
 

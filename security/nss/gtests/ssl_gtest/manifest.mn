@@ -12,6 +12,8 @@ CSRCS = \
       $(NULL)
 
 CPPSRCS = \
+      $(CORE_DEPTH)/cpputil/dummy_io.cc \
+      $(CORE_DEPTH)/cpputil/dummy_io_fwd.cc \
       ssl_0rtt_unittest.cc \
       ssl_agent_unittest.cc \
       ssl_auth_unittest.cc \
@@ -46,7 +48,8 @@ CPPSRCS = \
       $(NULL)
 
 INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
-            -I$(CORE_DEPTH)/gtests/common
+            -I$(CORE_DEPTH)/gtests/common \
+            -I$(CORE_DEPTH)/cpputil
 
 REQUIRES = nspr nss libdbm gtest
 

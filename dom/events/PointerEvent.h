@@ -44,8 +44,10 @@ public:
   int32_t Width();
   int32_t Height();
   float Pressure();
+  float TangentialPressure();
   int32_t TiltX();
   int32_t TiltY();
+  int32_t Twist();
   bool IsPrimary();
   void GetPointerType(nsAString& aPointerType);
 };

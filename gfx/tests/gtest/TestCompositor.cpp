@@ -15,10 +15,8 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/widget/InProcessCompositorWidget.h"
+#include "MockWidget.h"
 #include "nsBaseWidget.h"
-#include "GLContext.h"
-#include "GLContextProvider.h"
 #include <vector>
 
 const int gCompWidth = 256;
@@ -28,69 +26,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
-
-class MockWidget : public nsBaseWidget
-{
-public:
-  MockWidget() {}
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual LayoutDeviceIntRect GetClientBounds() override {
-    return LayoutDeviceIntRect(0, 0, gCompWidth, gCompHeight);
-  }
-  virtual LayoutDeviceIntRect GetBounds() override {
-    return GetClientBounds();
-  }
-
-  void* GetNativeData(uint32_t aDataType) override {
-    if (aDataType == NS_NATIVE_OPENGL_CONTEXT) {
-      mozilla::gl::SurfaceCaps caps = mozilla::gl::SurfaceCaps::ForRGB();
-      caps.preserve = false;
-      caps.bpp16 = false;
-      nsCString discardFailureId;
-      RefPtr<GLContext> context = GLContextProvider::CreateOffscreen(
-        IntSize(gCompWidth, gCompHeight), caps,
-        CreateContextFlags::REQUIRE_COMPAT_PROFILE,
-        &discardFailureId);
-      return context.forget().take();
-    }
-    return nullptr;
-  }
-
-  virtual nsresult        Create(nsIWidget* aParent,
-                                 nsNativeWidget aNativeParent,
-                                 const LayoutDeviceIntRect& aRect,
-                                 nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
-  virtual nsresult        Create(nsIWidget* aParent,
-                                 nsNativeWidget aNativeParent,
-                                 const DesktopIntRect& aRect,
-                                 nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
-  virtual void            Show(bool aState) override {}
-  virtual bool            IsVisible() const override { return true; }
-  virtual void            Move(double aX, double aY) override {}
-  virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override {}
-  virtual void            Resize(double aX, double aY,
-                                 double aWidth, double aHeight, bool aRepaint) override {}
-
-  virtual void            Enable(bool aState) override {}
-  virtual bool            IsEnabled() const override { return true; }
-  virtual nsresult        SetFocus(bool aRaise) override { return NS_OK; }
-  virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
-  virtual void            Invalidate(const LayoutDeviceIntRect& aRect) override {}
-  virtual nsresult        SetTitle(const nsAString& title) override { return NS_OK; }
-  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
-  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                                        nsEventStatus& aStatus) override { return NS_OK; }
-  virtual void            SetInputContext(const InputContext& aContext,
-                                          const InputContextAction& aAction) override {}
-  virtual InputContext    GetInputContext() override { abort(); }
-
-private:
-  ~MockWidget() {}
-};
-
-NS_IMPL_ISUPPORTS_INHERITED0(MockWidget, nsBaseWidget)
 
 struct LayerManagerData {
   RefPtr<MockWidget> mWidget;
@@ -152,7 +87,7 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
   for (size_t i = 0; i < aBackends.size(); i++) {
     auto backend = aBackends[i];
 
-    RefPtr<MockWidget> widget = new MockWidget();
+    RefPtr<MockWidget> widget = new MockWidget(gCompWidth, gCompHeight);
     CompositorOptions options;
     RefPtr<widget::CompositorWidget> proxy = new widget::InProcessCompositorWidget(options, widget);
     RefPtr<Compositor> compositor = CreateTestCompositor(backend, proxy);

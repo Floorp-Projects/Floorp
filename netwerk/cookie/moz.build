@@ -39,7 +39,6 @@ if CONFIG['NECKO_COOKIES']:
 
     XPCSHELL_TESTS_MANIFESTS += [
         'test/unit/xpcshell.ini',
-        'test/unit_ipc/xpcshell.ini',
     ]
 
     BROWSER_CHROME_MANIFESTS += [
