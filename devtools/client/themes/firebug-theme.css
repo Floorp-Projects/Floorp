@@ -154,7 +154,6 @@
 
 .theme-firebug #toolbox-tab-options {
   margin-inline-end: 4px;
-  background-color: white;
 }
 
 .theme-firebug #toolbox-tab-options::before {
@@ -172,9 +171,6 @@
   border: none;
 }
 
-.theme-firebug #command-button-pick {
-    top: 6px;
-}
 /* Toolbar */
 
 .theme-firebug .theme-toolbar,
@@ -192,7 +188,7 @@
 
 /* Space around toolbar buttons */
 .theme-firebug .devtools-toolbar {
-  padding: 3px;
+  padding: 2px 3px;
 }
 
 /* The height is the same for all toolbars and side panels tabs */
@@ -216,33 +212,6 @@
 .theme-firebug .theme-toolbar label,
 .theme-firebug .theme-toolbar .label {
   font-family: var(--proportional-font-family);
-}
-
-/* Toolbar Buttons */
-
-.theme-firebug .theme-toolbar button,
-.theme-firebug .devtools-button,
-.theme-firebug toolbarbutton {
-  margin: 1px;
-  border-radius: 2px;
-  color: var(--theme-body-color);
-  line-height: var(--theme-toolbar-font-size);
-  font-size: var(--theme-toolbar-font-size);
-}
-
-.theme-firebug .theme-toolbar button,
-.theme-firebug .devtools-button {
-  border-width: 1px !important;
-  min-width: 24px;
-}
-
-.theme-firebug .devtools-toolbarbutton {
-  min-width: 24px;
-}
-
-
-.theme-firebug #element-picker {
-  min-height: 21px;
 }
 
 /* Make sure the toolbar buttons shrink nicely. */

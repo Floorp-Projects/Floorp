@@ -24,7 +24,7 @@ const Rep = createFactory(REPS.Rep);
 // Components
 const PropertiesView = createFactory(require("./properties-view"));
 
-const { a, div, input, textarea } = DOM;
+const { a, button, div, input, textarea } = DOM;
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
 const RAW_HEADERS = L10N.getStr("netmonitor.summary.rawHeaders");
 const RAW_HEADERS_REQUEST = L10N.getStr("netmonitor.summary.rawHeaders.requestHeaders");
@@ -162,18 +162,14 @@ const HeadersPanel = createClass({
             readOnly: true,
             value: `${status} ${statusText}`,
           }),
-          NetMonitorController.supportsCustomRequest && input({
-            className: "tool-button",
+          NetMonitorController.supportsCustomRequest && button({
+            className: "devtools-button",
             onClick: cloneSelectedRequest,
-            type: "button",
-            value: EDIT_AND_RESEND,
-          }),
-          input({
-            className: "tool-button",
+          }, EDIT_AND_RESEND),
+          button({
+            className: "devtools-button",
             onClick: this.toggleRawHeaders,
-            type: "button",
-            value: RAW_HEADERS,
-          }),
+          }, RAW_HEADERS),
         )
       );
     }
