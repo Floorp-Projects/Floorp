@@ -81,8 +81,8 @@
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
-#include "mozilla/layers/WebrenderLayerManager.h"
-#include "mozilla/layers/WebrenderMessages.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderMessages.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
