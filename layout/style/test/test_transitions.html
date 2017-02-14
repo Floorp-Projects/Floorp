@@ -121,12 +121,14 @@ var div = document.getElementById("display");
 // Set up all the elements on which we are going to initiate transitions.
 
 // We have two reference elements to check the expected timing range.
-// They both have 8s linear transitions from 0 to 1000px.
+// They both have 16s linear transitions from 0 to 1000px.
+// This means they move through 62.5 pixels per second.
+const REF_PX_PER_SEC = 62.5;
 function make_reference_p() {
     var p = document.createElement("p");
     p.appendChild(document.createTextNode("reference"));
     p.style.textIndent = "0px";
-    p.style.transition = "8s text-indent linear";
+    p.style.transition = "16s text-indent linear";
     div.appendChild(p);
     return p;
 }
@@ -476,8 +478,8 @@ function check_transition_value(func, start_time, end_time,
             uns_range = [val, val];
         }
     } else {
-        time_range = [ px_to_num(earlyrefcs.textIndent) / 125,
-                       px_to_num(laterefcs.textIndent) / 125 ];
+        time_range = [ px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC,
+                       px_to_num(laterefcs.textIndent) / REF_PX_PER_SEC ];
         // seconds
         uns_range = [ value_at(time_range[0], -1),
                       value_at(time_range[1], 1) ];
@@ -501,8 +503,8 @@ function check_ref_range()
     // This is the only test where we compare the progress of the
     // transitions to an actual time; we need considerable tolerance at
     // the low end (we are using half a second).
-    var expected_range = [ (gCurrentTime - gStartTime2 - 40) / 8,
-                           (Date.now() - gStartTime1 + 20) / 8 ];
+    var expected_range = [ (gCurrentTime - gStartTime2 - 40) / 16,
+                           (Date.now() - gStartTime1 + 20) / 16 ];
     if (expected_range[0] > 1000) {
         expected_range[0] = 1000;
     }
@@ -517,7 +519,8 @@ function check_ref_range()
            desc + ": computed value " + value + "px should be between " +
            expected_range[0].toFixed(6) + "px and " +
            expected_range[1].toFixed(6) + "px at time between " +
-           expected_range[0]/125 + "s and " + expected_range[1]/125 + "s.");
+           expected_range[0]/REF_PX_PER_SEC + "s and " +
+           expected_range[1]/REF_PX_PER_SEC + "s.");
     }
     check("early reference", px_to_num(earlyrefcs.textIndent));
     check("late reference", px_to_num(laterefcs.textIndent));
@@ -588,8 +591,8 @@ function check_delay_zero_test(time)
     for (var d in delay_zero_tests) {
         var p = delay_zero_tests[d];
 
-        time_range = [ px_to_num(earlyrefcs.textIndent) / 125,
-                       px_to_num(laterefcs.textIndent) / 125 ];
+        time_range = [ px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC,
+                       px_to_num(laterefcs.textIndent) / REF_PX_PER_SEC ];
         var m = getComputedStyle(p, "").marginLeft;
         var desc = "delay_zero test for delay " + d + "s";
         if (time_range[0] < d && time_range[1] < d) {
@@ -641,7 +644,7 @@ function check_descendant_tests() {
     values["letter-spacing"] = [ 10, 5 ];
     var tf = timingFunctions["ease"];
 
-    var time = px_to_num(earlyrefcs.textIndent) / 125;
+    var time = px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC;
 
     for (var i in descendant_tests) {
         var test = descendant_tests[i];
