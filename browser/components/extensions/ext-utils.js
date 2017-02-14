@@ -544,8 +544,9 @@ class Tab extends TabBase {
 
     if (extension.tabManager.hasTabPermission(tabData)) {
       let entries = tabData.state ? tabData.state.entries : tabData.entries;
-      result.url = entries[0].url;
-      result.title = entries[0].title;
+      let entry = entries[entries.length - 1];
+      result.url = entry.url;
+      result.title = entry.title;
       if (tabData.image) {
         result.favIconUrl = tabData.image;
       }
