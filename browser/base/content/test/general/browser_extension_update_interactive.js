@@ -120,8 +120,12 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
     if (manualUpdatePromise) {
       yield manualUpdatePromise;
 
-      let item = win.document.getElementById("addon-list")
-                    .children.find(_item => _item.value == ID);
+      let list = win.document.getElementById("addon-list");
+
+      // Make sure we have XBL bindings
+      list.clientHeight;
+
+      let item = list.children.find(_item => _item.value == ID);
       EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
     }
   }

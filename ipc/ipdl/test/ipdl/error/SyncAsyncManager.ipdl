@@ -1,0 +1,7 @@
+include protocol SyncAsyncManagee;
+
+async protocol SyncAsyncManager {
+    manages SyncAsyncManagee;
+parent:
+    async SyncAsyncManagee();
+};

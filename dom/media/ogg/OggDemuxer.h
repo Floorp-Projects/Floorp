@@ -326,7 +326,7 @@ private:
   // It is updated once a chained ogg is encountered.
   // As Ogg chaining is only supported for audio, we only need an audio track
   // info.
-  RefPtr<SharedTrackInfo> mSharedAudioTrackInfo;
+  RefPtr<TrackInfoSharedPtr> mSharedAudioTrackInfo;
 
   friend class OggTrackDemuxer;
 };

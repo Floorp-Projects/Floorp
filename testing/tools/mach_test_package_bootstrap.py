@@ -158,6 +158,8 @@ def normalize_test_path(test_root, path):
         test_path = os.path.join(parent, path)
         if os.path.exists(test_path):
             return os.path.normpath(os.path.abspath(test_path))
+    # Not a valid path? Return as is and let test harness deal with it
+    return path
 
 
 def bootstrap(test_package_root):
