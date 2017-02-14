@@ -344,11 +344,12 @@ Function .onInit
     Quit
   ${EndIf}
 
-  ${If} ${RunningX64}
-    StrCpy $INSTDIR "${DefaultInstDir64bit}"
-  ${Else}
+  ; Bug 1338583: disable 64-bit as default until Flash issues are resolved
+  ;${If} ${RunningX64}
+  ;  StrCpy $INSTDIR "${DefaultInstDir64bit}"
+  ;${Else}
     StrCpy $INSTDIR "${DefaultInstDir32bit}"
-  ${EndIf}
+  ;${EndIf}
 
   ; Require elevation if the user can elevate
   ${ElevateUAC}
@@ -461,11 +462,12 @@ Function .onInit
   StrCpy $CheckboxInstallMaintSvc "0"
 !endif
   StrCpy $WasOptionsButtonClicked "0"
-  ${If} ${RunningX64}
-    StrCpy $DroplistArch "$(VERSION_64BIT)"
-  ${Else}
+  ; Bug 1338583: disable 64-bit as default until Flash issues are resolved
+  ;${If} ${RunningX64}
+    ;StrCpy $DroplistArch "$(VERSION_64BIT)"
+  ;${Else}
     StrCpy $DroplistArch "$(VERSION_32BIT)"
-  ${EndIf}
+  ;${EndIf}
 
   StrCpy $0 ""
 !ifdef FONT_FILE1
@@ -1163,7 +1165,8 @@ Function createOptions
     System::Call 'uxtheme::SetWindowTheme(i $DroplistArch, w " ", w " ")'
     SetCtlColors $DroplistArch ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
     SendMessage $DroplistArch ${WM_SETFONT} $FontNormal 0
-    ${NSD_CB_SelectString} $DroplistArch "$(VERSION_64BIT)"
+    ; Bug 1338583: disable 64-bit as default until Flash issues are resolved
+    ${NSD_CB_SelectString} $DroplistArch "$(VERSION_32BIT)"
   ${EndIf}
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
