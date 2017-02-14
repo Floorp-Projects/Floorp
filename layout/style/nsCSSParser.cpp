@@ -1678,7 +1678,6 @@ void
 CSSParserImpl::ReleaseScanner()
 {
   mScanner = nullptr;
-  mIsSVGMode = false;
   mReporter = nullptr;
   mBaseURI = nullptr;
   mSheetURI = nullptr;
