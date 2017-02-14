@@ -125,7 +125,7 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
   if (!data->Data()) {
     // OOM
     Error(NS_ERROR_OUT_OF_MEMORY);
-    return IPC_OK();
+    return true;
   }
   data->mOffset = aData.base().offset();
   data->mTime = aData.base().time();
