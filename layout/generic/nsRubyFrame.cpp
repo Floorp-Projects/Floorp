@@ -209,7 +209,9 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     if (aBaseContainer != mFrames.FirstChild()) {
       // Some segments may have been reflowed before, hence it is not
       // a break-before for the ruby container.
-      aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_NOT_COMPLETE);
+      aStatus.Reset();
+      aStatus.SetInlineLineBreakAfter();
+      aStatus.SetIncomplete();
       PushChildren(aBaseContainer, aBaseContainer->GetPrevSibling());
       aReflowInput.mLineLayout->SetDirtyNextLine();
     }

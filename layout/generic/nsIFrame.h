@@ -333,6 +333,14 @@ public:
     mInlineBreakAfter = false;
   }
 
+  // Set the inline line-break-after status. The break type can be changed
+  // via the optional aBreakType param.
+  void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::Line) {
+    mBreakType = aBreakType;
+    mInlineBreak = true;
+    mInlineBreakAfter = true;
+  }
+
 private:
   uint32_t mStatus;
 
@@ -376,16 +384,6 @@ private:
 
 #define NS_INLINE_GET_BREAK_TYPE(_status) \
   (static_cast<StyleClear>(((_status) >> 12) & 0xF))
-
-#define NS_INLINE_MAKE_BREAK_TYPE(_type)  (static_cast<int>(_type) << 12)
-
-// Take a completion status and add to it the desire to have a
-// line-break after. For this macro we do need the completion status
-// because the user of the status will need to know whether to
-// continue the frame or not.
-#define NS_INLINE_LINE_BREAK_AFTER(_completionStatus)                   \
-  ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
-   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);

@@ -154,8 +154,8 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       breakType = StyleClear::Line;
     }
 
-    aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
-      NS_INLINE_MAKE_BREAK_TYPE(breakType);
+    aStatus.Reset();
+    aStatus.SetInlineLineBreakAfter(breakType);
     ll->SetLineEndsInBR(true);
   }
   else {

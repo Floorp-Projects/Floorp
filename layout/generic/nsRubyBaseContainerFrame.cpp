@@ -527,7 +527,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
       aStatus.SetInlineLineBreakBeforeAndReset();
       return 0;
     }
-    aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
+    aStatus.SetInlineLineBreakAfter();
     MOZ_ASSERT(aStatus.IsComplete() || aReflowInput.mAllowLineBreak);
 
     // If we are on an intra-level whitespace column, null values in
@@ -565,7 +565,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
     // segment has been completely reflowed. In those cases, we do
     // not need to push anything.
     MOZ_ASSERT(e.AtEnd());
-    aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
+    aStatus.SetInlineLineBreakAfter();
   }
 
   return icoord;
