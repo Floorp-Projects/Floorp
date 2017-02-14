@@ -30,18 +30,6 @@ skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 skip script test262/language/expressions/yield/iter-value-specified.js
 skip script test262/language/expressions/yield/iter-value-unspecified.js
 
-# Test file modifies built-in, leads to error when reportCompare() is executed.
-skip script test262/language/statements/function/13.2-17-1.js
-
-# Test files adds properties to Object.prototype, breaks jstest harness.
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-223-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-226-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-228-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-253-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-256-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-3-258-1.js
-skip script test262/built-ins/Object/defineProperty/15.2.3.6-4-602.js
-
 
 #####################################
 # Test262 tests disabled on browser #
@@ -147,9 +135,6 @@ skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3
 # Fails because window has a "name" property on WindowProxy.
 skip-if(!xulRuntime.shell) script test262/language/expressions/object/method-definition/generator-name-prop-symbol.js
 skip-if(!xulRuntime.shell) script test262/language/expressions/object/method-definition/name-name-prop-symbol.js
-
-# Removes RegExp.prototype[Symbol.match] which breaks the jstests harness.
-skip-if(!xulRuntime.shell) script test262/built-ins/RegExp/prototype/Symbol.match/prop-desc.js
 
 
 ##################################################

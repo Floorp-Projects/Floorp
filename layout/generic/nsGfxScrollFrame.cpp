@@ -2912,7 +2912,8 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   }
 
   presContext->RecordInteractionTime(
-    nsPresContext::InteractionType::eScrollInteraction);
+    nsPresContext::InteractionType::eScrollInteraction,
+    TimeStamp::Now());
 
   PostScrollEvent();
 

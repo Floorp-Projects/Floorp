@@ -2441,7 +2441,7 @@ profiler_sleep_start()
   if (stack == nullptr) {
     return;
   }
-  stack->setSleeping(1);
+  stack->setSleeping();
 }
 
 void
@@ -2457,7 +2457,7 @@ profiler_sleep_end()
   if (stack == nullptr) {
     return;
   }
-  stack->setSleeping(0);
+  stack->setAwake();
 }
 
 bool

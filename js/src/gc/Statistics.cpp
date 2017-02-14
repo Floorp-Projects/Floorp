@@ -101,7 +101,7 @@ struct PhaseInfo
     Phase index;
     const char* name;
     Phase parent;
-    const uint8_t telemetryBucket;
+    uint8_t telemetryBucket;
 };
 
 // The zeroth entry in the timing arrays is used for phases that have a

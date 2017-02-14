@@ -1879,7 +1879,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     }
 
     nsAutoString classes;
-    const nsAttrValue* classAttrValue = tmp->GetClasses();
+    const nsAttrValue* classAttrValue = tmp->IsElement() ?
+      tmp->AsElement()->GetClasses() : nullptr;
     if (classAttrValue) {
       classes.AppendLiteral(" class='");
       nsAutoString classString;

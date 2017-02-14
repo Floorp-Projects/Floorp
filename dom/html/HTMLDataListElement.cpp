@@ -35,11 +35,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLDataListElement)
 
 bool
-HTMLDataListElement::MatchOptions(nsIContent* aContent, int32_t aNamespaceID,
+HTMLDataListElement::MatchOptions(Element* aElement, int32_t aNamespaceID,
                                   nsIAtom* aAtom, void* aData)
 {
-  return aContent->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML) &&
-         !aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  return aElement->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML) &&
+         !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
 }
 
 } // namespace dom

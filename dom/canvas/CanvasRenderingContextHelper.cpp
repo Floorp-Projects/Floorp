@@ -65,16 +65,6 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
     RefPtr<BlobCallback> mBlobCallback;
   };
 
-   nsIntSize elemSize = GetWidthHeight();
-   if (elemSize.width == 0 || elemSize.height == 0) {
-     // According to spec, blob should return null if either its horizontal
-     // dimension or its vertical dimension is zero. See link below.
-     // https://html.spec.whatwg.org/multipage/scripting.html#dom-canvas-toblob
-     BlobCallback* blobCallback = &aCallback;
-     blobCallback->Call(nullptr, aRv);
-     return;
-   }
-
   RefPtr<EncodeCompleteCallback> callback =
     new EncodeCallback(aGlobal, &aCallback);
 

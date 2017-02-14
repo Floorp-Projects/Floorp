@@ -591,6 +591,11 @@ public:
     return mLoadInfo.mPrincipal;
   }
 
+  const nsAString& Origin() const
+  {
+    return mLoadInfo.mOrigin;
+  }
+
   nsILoadGroup*
   GetLoadGroup() const
   {

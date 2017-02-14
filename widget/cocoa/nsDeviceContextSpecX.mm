@@ -196,11 +196,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
       if (status == noErr) {
         CFStringRef sourcePathRef =
           CFURLCopyFileSystemPath(pdfURL, kCFURLPOSIXPathStyle);
+        NSString* sourcePath = (NSString*) sourcePathRef;
+#ifdef DEBUG
         CFStringRef destPathRef =
           CFURLCopyFileSystemPath(destURL, kCFURLPOSIXPathStyle);
-        NSString* sourcePath = (NSString*) sourcePathRef;
         NSString* destPath = (NSString*) destPathRef;
-#ifdef DEBUG
         NSString* destPathExt = [destPath pathExtension];
         MOZ_ASSERT([destPathExt isEqualToString: @"pdf"],
                    "nsDeviceContextSpecX::Init only allows '.pdf' for now");

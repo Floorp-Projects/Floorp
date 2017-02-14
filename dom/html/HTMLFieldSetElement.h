@@ -125,8 +125,8 @@ private:
   void NotifyElementsForFirstLegendChange(bool aNotify);
 
   // This function is used to generate the nsContentList (listed form elements).
-  static bool MatchListedElements(nsIContent* aContent, int32_t aNamespaceID,
-                                    nsIAtom* aAtom, void* aData);
+  static bool MatchListedElements(Element* aElement, int32_t aNamespaceID,
+                                  nsIAtom* aAtom, void* aData);
 
   // listed form controls elements.
   RefPtr<nsContentList> mElements;

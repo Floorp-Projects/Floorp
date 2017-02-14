@@ -125,8 +125,10 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
       contentData.AppendLiteral(" id:");
       contentData.Append(tmp);
     }
-    if (content->GetClasses()) {
-      content->GetClasses()->ToString(tmp);
+    const nsAttrValue* classes = content->IsElement() ?
+      content->AsElement()->GetClasses() : nullptr;
+    if (classes) {
+      classes->ToString(tmp);
       contentData.AppendLiteral(" class:");
       contentData.Append(tmp);
     }

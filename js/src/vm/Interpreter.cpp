@@ -367,6 +367,9 @@ js::RunScript(JSContext* cx, RunState& state)
     MOZ_DIAGNOSTIC_ASSERT(cx->compartment()->isSystem() ||
                           cx->runtime()->allowContentJS());
 
+    MOZ_ASSERT(!cx->enableAccessValidation ||
+               cx->compartment()->isAccessValid());
+
     if (!Debugger::checkNoExecute(cx, state.script()))
         return false;
 

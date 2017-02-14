@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/HTMLAllCollectionBinding.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/Element.h"
 #include "nsHTMLDocument.h"
 
 namespace mozilla {
@@ -86,14 +87,14 @@ IsAllNamedElement(nsIContent* aContent)
 }
 
 static bool
-DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
+DocAllResultMatch(Element* aElement, int32_t aNamespaceID, nsIAtom* aAtom,
                   void* aData)
 {
-  if (aContent->GetID() == aAtom) {
+  if (aElement->GetID() == aAtom) {
     return true;
   }
 
-  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aElement);
   if (!elm) {
     return false;
   }

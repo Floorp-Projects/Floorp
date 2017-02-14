@@ -208,7 +208,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 bool
 nsDragService::IsValidType(NSString* availableType, bool allowFileURL)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // Prevent exposing fileURL for non-fileURL type.
   // We need URL provided by dropped webloc file, but don't need file's URL.
@@ -220,7 +220,7 @@ nsDragService::IsValidType(NSString* availableType, bool allowFileURL)
 
   return true;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK(false);
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 NSString*
