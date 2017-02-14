@@ -639,9 +639,6 @@ function jsTestDriverEnd()
   }
 }
 
-//var dlog = (function (s) { print('debug: ' + s); });
-var dlog = (function (s) {});
-
 // dialog closer from http://bclary.com/projects/spider/spider/chrome/content/spider/dialog-closer.js
 
 var gDialogCloser;
