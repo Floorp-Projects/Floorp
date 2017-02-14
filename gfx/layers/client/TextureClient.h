@@ -210,18 +210,20 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadLock)
 
-  virtual int32_t ReadLock() = 0;
+  virtual bool ReadLock() = 0;
+  virtual bool TryReadLock(TimeDuration aTimeout) { return ReadLock(); }
   virtual int32_t ReadUnlock() = 0;
   virtual bool IsValid() const = 0;
 
   static already_AddRefed<TextureReadLock>
   Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) = 0;
 
   enum LockType {
     TYPE_NONBLOCKING_MEMORY,
-    TYPE_NONBLOCKING_SHMEM
+    TYPE_NONBLOCKING_SHMEM,
+    TYPE_CROSS_PROCESS_SEMAPHORE
   };
   virtual LockType GetType() = 0;
 
@@ -642,6 +644,7 @@ public:
   uint64_t GetLastFwdTransactionId() { return mFwdTransactionId; }
 
   void EnableReadLock();
+  void EnableBlockingReadLock();
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
