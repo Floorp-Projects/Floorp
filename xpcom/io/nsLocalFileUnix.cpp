@@ -26,6 +26,7 @@
 #define USE_LINUX_QUOTACTL
 #include <sys/mount.h>
 #include <sys/quota.h>
+#include <sys/sysmacros.h>
 #ifndef BLOCK_SIZE
 #define BLOCK_SIZE 1024 /* kernel block size */
 #endif
