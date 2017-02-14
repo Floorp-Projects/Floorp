@@ -265,7 +265,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+  if (!aReflowStatus.IsInlineBreakBefore()) {
     // Create a continuation or remove existing continuations based on
     // the reflow completion status.
     if (aReflowStatus.IsComplete()) {

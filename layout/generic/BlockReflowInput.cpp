@@ -920,8 +920,8 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // (controlled by the pref "layout.float-fragments-inside-column.enabled")
   //
   // Likewise, if none of the float fit, and it needs to be pushed in
-  // its entirety to the next page (IsTruncated() or
-  // NS_INLINE_IS_BREAK_BEFORE), we need to do the same.
+  // its entirety to the next page (IsTruncated() or IsInlineBreakBefore()),
+  // we need to do the same.
   if ((ContentBSize() != NS_UNCONSTRAINEDSIZE &&
        !mFlags.mFloatFragmentsInsideColumnEnabled &&
        adjustedAvailableSpace.BSize(wm) == NS_UNCONSTRAINEDSIZE &&
@@ -929,7 +929,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
        ContentBEnd() - floatPos.B(wm)) ||
       reflowStatus.IsTruncated() ||
-      NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+      reflowStatus.IsInlineBreakBefore()) {
     PushFloatPastBreak(aFloat);
     return false;
   }
