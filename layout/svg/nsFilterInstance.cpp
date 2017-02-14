@@ -249,7 +249,7 @@ nsFilterInstance::ComputeTargetBBoxInFilterSpace()
   // anyway to shrink the size of surface that we are going to create later in
   // BuildSourcePaint and BuildSourceImage.
   MOZ_ASSERT(mTargetFrame->IsFrameOfType(nsIFrame::eSVG));
-  nsIFrame* svgFrame = nsSVGUtils::GetNearestSVGParent(mTargetFrame);
+  nsIFrame* svgFrame = nsSVGUtils::GetNearestSVGViewport(mTargetFrame);
   if (svgFrame) {
     nscoord A2D = svgFrame->PresContext()->AppUnitsPerCSSPixel();
     nsIntRect bounds =

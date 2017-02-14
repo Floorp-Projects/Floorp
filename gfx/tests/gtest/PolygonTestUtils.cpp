@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+typedef mozilla::gfx::Polygon MozPolygon;
+
 namespace mozilla {
 namespace gfx {
 
@@ -49,7 +51,7 @@ bool operator==(const Triangle& lhs, const Triangle& rhs)
 
 // Compares the points of two polygons and ensures
 // that the points are in the same winding order.
-bool operator==(const Polygon& lhs, const Polygon& rhs)
+bool operator==(const MozPolygon& lhs, const MozPolygon& rhs)
 {
   const auto& left = lhs.GetPoints();
   const auto& right = rhs.GetPoints();
@@ -109,7 +111,7 @@ TEST(PolygonTestUtils, TestSanity)
   EXPECT_FALSE(FuzzyEquals(Point3D(0.01f, 0.01f, 0.01f),
                            Point3D(0.0f, 0.0f, 0.0f)));
 
-  Polygon p1 {
+  MozPolygon p1 {
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(1.0f, 0.0f, 1.0f),
     Point3D(1.0f, 1.0f, 1.0f),
@@ -117,21 +119,21 @@ TEST(PolygonTestUtils, TestSanity)
   };
 
   // Same points as above shifted forward by one position.
-  Polygon shifted {
+  MozPolygon shifted {
     Point3D(0.0f, 1.0f, 1.0f),
     Point3D(0.0f, 0.0f, 1.0f),
     Point3D(1.0f, 0.0f, 1.0f),
     Point3D(1.0f, 1.0f, 1.0f)
   };
 
-  Polygon p2 {
+  MozPolygon p2 {
     Point3D(0.00001f, 0.00001f, 1.00001f),
     Point3D(1.00001f, 0.00001f, 1.00001f),
     Point3D(1.00001f, 1.00001f, 1.00001f),
     Point3D(0.00001f, 1.00001f, 1.00001f)
   };
 
-  Polygon p3 {
+  MozPolygon p3 {
     Point3D(0.01f, 0.01f, 1.01f),
     Point3D(1.01f, 0.01f, 1.01f),
     Point3D(1.01f, 1.01f, 1.01f),

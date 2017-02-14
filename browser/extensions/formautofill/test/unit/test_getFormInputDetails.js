@@ -1,11 +1,11 @@
 "use strict";
 
-let {FormAutofillContent} = loadFormAutofillContent();
+Cu.import("resource://formautofill/FormAutofillContent.jsm");
 
 const TESTCASES = [
   {
     description: "Form containing 5 fields with autocomplete attribute.",
-    document: `<form>
+    document: `<form id="form1">
                  <input id="street-addr" autocomplete="street-address">
                  <input id="city" autocomplete="address-level2">
                  <input id="country" autocomplete="country">
@@ -15,6 +15,7 @@ const TESTCASES = [
     targetInput: ["street-addr", "country"],
     expectedResult: [{
       input: {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+      formId: "form1",
       form: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
@@ -25,6 +26,7 @@ const TESTCASES = [
     },
     {
       input: {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      formId: "form1",
       form: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
@@ -36,12 +38,12 @@ const TESTCASES = [
   },
   {
     description: "2 forms that are able to be auto filled",
-    document: `<form>
+    document: `<form id="form2">
                  <input id="home-addr" autocomplete="street-address">
                  <input id="city" autocomplete="address-level2">
                  <input id="country" autocomplete="country">
                </form>
-               <form>
+               <form id="form3">
                  <input id="office-addr" autocomplete="street-address">
                  <input id="email" autocomplete="email">
                  <input id="tel" autocomplete="tel">
@@ -49,6 +51,7 @@ const TESTCASES = [
     targetInput: ["home-addr", "office-addr"],
     expectedResult: [{
       input: {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+      formId: "form2",
       form: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
@@ -57,6 +60,7 @@ const TESTCASES = [
     },
     {
       input: {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+      formId: "form3",
       form: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
@@ -78,12 +82,22 @@ TESTCASES.forEach(testcase => {
     for (let i in testcase.targetInput) {
       let input = doc.getElementById(testcase.targetInput[i]);
 
+      // Put the input element reference to `element` to make sure the result of
+      // `getInputDetails` contains the same input element.
+      testcase.expectedResult[i].input.element = input;
       Assert.deepEqual(FormAutofillContent.getInputDetails(input),
                        testcase.expectedResult[i].input,
                        "Check if returned input information is correct.");
 
+      let formDetails = testcase.expectedResult[i].form;
+      for (let formDetail of formDetails) {
+        // Compose a query string to get the exact reference of the input
+        // element, e.g. #form1 > input[autocomplete="street-address"]
+        let queryString = "#" + testcase.expectedResult[i].formId + " > input[autocomplete=" + formDetail.fieldName + "]";
+        formDetail.element = doc.querySelector(queryString);
+      }
       Assert.deepEqual(FormAutofillContent.getFormDetails(input),
-                       testcase.expectedResult[i].form,
+                       formDetails,
                        "Check if returned form information is correct.");
     }
   });

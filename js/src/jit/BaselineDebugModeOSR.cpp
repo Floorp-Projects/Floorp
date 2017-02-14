@@ -874,7 +874,7 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext* cx,
     // crash.
     for (size_t i = 0; i < entries.length(); i++) {
         JSScript* script = entries[i].script;
-        AutoCompartment ac(cx, script->compartment());
+        AutoCompartment ac(cx, script);
         if (!RecompileBaselineScriptForDebugMode(cx, script, observing) ||
             !CloneOldBaselineStub(cx, entries, i))
         {
@@ -1033,7 +1033,7 @@ JitRuntime::getBaselineDebugModeOSRHandler(JSContext* cx)
 {
     if (!baselineDebugModeOSRHandler_) {
         AutoLockForExclusiveAccess lock(cx);
-        AutoCompartment ac(cx, cx->runtime()->atomsCompartment(lock), &lock);
+        AutoAtomsCompartment ac(cx, lock);
         uint32_t offset;
         if (JitCode* code = generateBaselineDebugModeOSRHandler(cx, &offset)) {
             baselineDebugModeOSRHandler_ = code;

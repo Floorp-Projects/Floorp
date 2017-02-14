@@ -597,7 +597,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
-    AutoCompartment ac(cx, wobj);
+    AutoCompartmentUnchecked ac(cx, wcompartment);
     if (!wcompartment->rewrap(cx, &tobj, wobj))
         MOZ_CRASH();
 

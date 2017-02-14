@@ -15,10 +15,14 @@ fetch_dist
 if [ ! -d "nss/fuzz/corpus/$type" ]; then
   mkdir -p nss/fuzz/corpus/$type
 
+  set +x
+
   # Create a corpus out of what we have.
   for f in $(find nss/fuzz/corpus -type f); do
     cp $f "nss/fuzz/corpus/$type"
   done
+
+  set -x
 fi
 
 # Fetch objdir name.

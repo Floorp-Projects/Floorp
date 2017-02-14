@@ -108,7 +108,7 @@ public:
   }
 
 protected:
-  void PaintThebes();
+  void PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates);
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 

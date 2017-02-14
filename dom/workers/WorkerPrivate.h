@@ -665,6 +665,10 @@ public:
     mLoadInfo.mCSP = aCSP;
   }
 
+  nsresult
+  SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
+                         const nsACString& aCSPReportOnlyHeaderValue);
+
   net::ReferrerPolicy
   GetReferrerPolicy() const
   {
@@ -862,6 +866,11 @@ public:
   void
   AssertInnerWindowIsCorrect() const
   { }
+#endif
+
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+  bool
+  PrincipalIsValid() const;
 #endif
 };
 
