@@ -1220,6 +1220,8 @@ SyncObjectD3D11::Init()
         !DeviceManagerDx::Get()->HasDeviceReset())
     {
       gfxDevCrash(LogReason::D3D11FinalizeFrame) << "Without device reset: " << hexa(hr);
+    } else {
+      return false;
     }
   }
 
