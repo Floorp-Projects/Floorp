@@ -507,7 +507,7 @@ bool Pickle::WriteBytes(const void* data, uint32_t data_len, uint32_t alignment)
 }
 
 bool Pickle::WriteString(const std::string& value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
   std::string v(value);
   Singleton<mozilla::ipc::Faulty>::get()->FuzzString(v);
   if (!WriteInt(static_cast<int>(v.size())))
@@ -523,7 +523,7 @@ bool Pickle::WriteString(const std::string& value) {
 }
 
 bool Pickle::WriteWString(const std::wstring& value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
   std::wstring v(value);
   Singleton<mozilla::ipc::Faulty>::get()->FuzzWString(v);
   if (!WriteInt(static_cast<int>(v.size())))
@@ -541,7 +541,7 @@ bool Pickle::WriteWString(const std::wstring& value) {
 }
 
 bool Pickle::WriteData(const char* data, uint32_t length) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
   std::string v(data, length);
   Singleton<mozilla::ipc::Faulty>::get()->FuzzData(v, v.size());
   return WriteInt(v.size()) && WriteBytes(v.data(), v.size());
