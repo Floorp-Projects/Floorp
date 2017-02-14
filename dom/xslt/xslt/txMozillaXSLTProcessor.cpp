@@ -1126,9 +1126,12 @@ txMozillaXSLTProcessor::notifyError()
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
     IgnoredErrorResult rv;
+    ElementCreationOptionsOrString options;
+    options.SetAsString();
+
     nsCOMPtr<Element> element =
         document->CreateElementNS(ns, NS_LITERAL_STRING("parsererror"),
-                                  ElementCreationOptions(), rv);
+                                  options, rv);
     if (rv.Failed()) {
         return;
     }
@@ -1146,9 +1149,12 @@ txMozillaXSLTProcessor::notifyError()
     }
 
     if (!mSourceText.IsEmpty()) {
+        ElementCreationOptionsOrString options;
+        options.SetAsString();
+
         nsCOMPtr<Element> sourceElement =
             document->CreateElementNS(ns, NS_LITERAL_STRING("sourcetext"),
-                                      ElementCreationOptions(), rv);
+                                      options, rv);
         if (rv.Failed()) {
             return;
         }
