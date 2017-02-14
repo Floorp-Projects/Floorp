@@ -383,7 +383,7 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   }
 
   nsCOMPtr<nsIPresShell> rootShell(mPresShell);
-  nsTArray<nsCOMPtr<nsIWidget> > widgets;
+  AutoTArray<nsCOMPtr<nsIWidget>, 1> widgets;
   aView->GetViewManager()->ProcessPendingUpdatesRecurse(aView, widgets);
   for (uint32_t i = 0; i < widgets.Length(); ++i) {
     nsView* view = nsView::GetViewFor(widgets[i]);
@@ -422,7 +422,7 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
 
 void
 nsViewManager::ProcessPendingUpdatesRecurse(nsView* aView,
-                                            nsTArray<nsCOMPtr<nsIWidget> >& aWidgets)
+                                            AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets)
 {
   if (mPresShell && mPresShell->IsNeverPainting()) {
     return;
