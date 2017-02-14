@@ -8984,7 +8984,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // but not inside a cell. For now, just don't reflow.
   if (!aReflowInput.mLineLayout) {
     ClearMetrics(aMetrics);
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 
@@ -9060,7 +9060,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // We don't need to reflow if there is no content.
   if (!maxContentLength) {
     ClearMetrics(aMetrics);
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 
@@ -9217,7 +9217,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   if (!mTextRun) {
     ClearMetrics(aMetrics);
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 

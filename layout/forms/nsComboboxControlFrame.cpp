@@ -901,7 +901,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
       !aStatus.IsFullyComplete()) {
     // This frame didn't fit inside a fragmentation container.  Splitting
     // a nsComboboxControlFrame makes no sense, so we override the status here.
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
   }
 }
 
@@ -1328,7 +1328,7 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
   }
   state.SetComputedISize(computedISize);
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
-  aStatus = NS_FRAME_COMPLETE; // this type of frame can't be split
+  aStatus.Reset(); // this type of frame can't be split
 }
 
 void

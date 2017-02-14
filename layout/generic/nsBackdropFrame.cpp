@@ -92,5 +92,5 @@ nsBackdropFrame::Reflow(nsPresContext* aPresContext,
   nscoord isize = aReflowInput.ComputedISize() + borderPadding.IStartEnd(wm);
   nscoord bsize = aReflowInput.ComputedBSize() + borderPadding.BStartEnd(wm);
   aDesiredSize.SetSize(wm, LogicalSize(wm, isize, bsize));
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 }

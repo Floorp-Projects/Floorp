@@ -9217,7 +9217,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   NS_ASSERTION(target == rootFrame ||
                desiredSize.ScrollableOverflow().IsEqualEdges(boundsRelativeToTarget),
                "non-root reflow roots must not have scrollable overflow");
-  NS_ASSERTION(status == NS_FRAME_COMPLETE,
+  NS_ASSERTION(status.IsEmpty(),
                "reflow roots should never split");
 
   target->SetSize(boundsRelativeToTarget.Size());

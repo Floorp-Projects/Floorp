@@ -214,13 +214,13 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   // else, we ignore child overflow -- anything that overflows beyond our
   // own border-box will get clipped when painting.
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
                                  aReflowInput, aStatus);
 
   // We're always complete and we don't support overflow containers
   // so we shouldn't have a next-in-flow ever.
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   MOZ_ASSERT(!GetNextInFlow());
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);

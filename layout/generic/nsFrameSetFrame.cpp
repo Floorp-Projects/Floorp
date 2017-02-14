@@ -849,7 +849,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   // If the number of cols or rows has changed, the frame for the frameset
   // will be re-created.
   if (mNumRows != rows || mNumCols != cols) {
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     mDrag.UnSet();
     NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
     return;
@@ -1084,7 +1084,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
     mChildBorderColors.reset();
   }
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   mDrag.UnSet();
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -1394,7 +1394,7 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*           aPresContext,
   SizeToAvailSize(aReflowInput, aDesiredSize);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 }
 
 class nsDisplayFramesetBorder : public nsDisplayItem {
@@ -1609,7 +1609,7 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*           aPresContext,
   SizeToAvailSize(aReflowInput, aDesiredSize);
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 }
 
 class nsDisplayFramesetBlank : public nsDisplayItem {

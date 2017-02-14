@@ -152,7 +152,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   // place and size children
   FinalizeReflow(aReflowInput.mRenderingContext->GetDrawTarget(), aDesiredSize);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

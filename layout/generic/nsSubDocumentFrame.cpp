@@ -752,7 +752,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
                "Shouldn't have unconstrained stuff here "
                "thanks to ComputeAutoSize");
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");

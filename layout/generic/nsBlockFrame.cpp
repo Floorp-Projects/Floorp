@@ -1195,7 +1195,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   // Handle paginated overflow (see nsContainerFrame.h)
   nsOverflowAreas ocBounds;
-  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus ocStatus;
   if (GetPrevInFlow()) {
     ReflowOverflowContainerChildren(aPresContext, *reflowInput, ocBounds, 0,
                                     ocStatus);
@@ -1209,7 +1209,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // Drain & handle pushed floats
   DrainPushedFloats();
   nsOverflowAreas fcBounds;
-  nsReflowStatus fcStatus = NS_FRAME_COMPLETE;
+  nsReflowStatus fcStatus;
   ReflowPushedFloats(state, fcBounds, fcStatus);
 
   // If we're not dirty (which means we'll mark everything dirty later)
@@ -3458,7 +3458,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
           aState.mReflowInput.mDiscoveredClearance;
       }
 
-      frameReflowStatus = NS_FRAME_COMPLETE;
+      frameReflowStatus.Reset();
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
                       clearance, aState.IsAdjacentWithTop(),
                       aLine.get(), *blockHtmlRI, frameReflowStatus, aState);
@@ -6215,7 +6215,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
   NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                   "aFloat must be an out-of-flow frame");
   // Reflow the float.
-  aReflowStatus = NS_FRAME_COMPLETE;
+  aReflowStatus.Reset();
 
   WritingMode wm = aState.mReflowInput.GetWritingMode();
 #ifdef NOISY_FLOAT
@@ -6282,7 +6282,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
              (NS_UNCONSTRAINEDSIZE == aAdjustedAvailableSpace.BSize(wm))) {
     // An incomplete reflow status means we should split the float
     // if the height is constrained (bug 145305).
-    aReflowStatus = NS_FRAME_COMPLETE;
+    aReflowStatus.Reset();
   }
 
   if (aReflowStatus.NextInFlowNeedsReflow()) {
@@ -6294,7 +6294,7 @@ nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
     // such frames simply means that there is more content to be
     // reflowed on the line.
     if (aReflowStatus.IsIncomplete())
-      aReflowStatus = NS_FRAME_COMPLETE;
+      aReflowStatus.Reset();
   }
 
   // Capture the margin and offsets information for the caller

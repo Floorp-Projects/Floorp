@@ -159,7 +159,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
     ll->SetLineEndsInBR(true);
   }
   else {
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
   }
 
   aMetrics.SetSize(wm, finalSize);
