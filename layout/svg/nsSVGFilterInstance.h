@@ -192,7 +192,7 @@ private:
    * Compute the filter region in user space, filter space, and filter
    * space.
    */
-  nsresult ComputeBounds();
+  bool ComputeBounds();
 
   /**
    * The SVG reference filter originally from the style system.
