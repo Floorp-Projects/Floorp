@@ -43,7 +43,7 @@ fails-if(webrender) == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-origin-1b.html perspective-origin-1a.html
 fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html perspective-origin-3-ref.html
-fails-if(webrender) == perspective-origin-4a.html perspective-origin-4-ref.html
+== perspective-origin-4a.html perspective-origin-4-ref.html
 fails-if(webrender) == perspective-zindex.html green-rect.html
 fails-if(webrender) == perspective-zindex-2.html green-rect.html
 fails-if(webrender) != sorting-1a.html sorting-1-ref.html
@@ -71,7 +71,7 @@ fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixe
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) fails-if(webrender) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
-fails-if(webrender) == animate-backface-hidden.html about:blank
+== animate-backface-hidden.html about:blank
 fails-if(webrender) == 1245450-1.html green-rect.html
 fuzzy(1,2000) fails-if(webrender) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html
 fuzzy(1,15000) == opacity-preserve3d-2.html opacity-preserve3d-2-ref.html

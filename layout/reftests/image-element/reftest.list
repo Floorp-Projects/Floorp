@@ -8,7 +8,7 @@ fails-if(webrender) == canvas-outside-document.html canvas-inside-document.html
 fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 == element-paint-simple.html element-paint-simple-ref.html
-fails-if(webrender) == element-paint-repeated.html element-paint-repeated-ref.html
+== element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
 HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
