@@ -208,6 +208,13 @@ class nsCSSScanner {
   void SetErrorReporter(mozilla::css::ErrorReporter* aReporter) {
     mReporter = aReporter;
   }
+  // Set whether or not we are processing SVG
+  void SetSVGMode(bool aSVGMode) {
+    mSVGMode = aSVGMode;
+  }
+  bool IsSVGMode() const {
+    return mSVGMode;
+  }
 
   // Reset or check whether a BAD_URL or BAD_STRING token has been seen.
   void ClearSeenBadToken() { mSeenBadToken = false; }
@@ -358,6 +365,8 @@ protected:
 
   mozilla::css::ErrorReporter *mReporter;
 
+  // True if we are in SVG mode; false in "normal" CSS
+  bool mSVGMode;
   bool mRecording;
   bool mSeenBadToken;
   bool mSeenVariableReference;

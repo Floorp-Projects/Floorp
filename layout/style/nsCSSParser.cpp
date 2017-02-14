@@ -596,6 +596,11 @@ protected:
       nsAutoSuppressErrors mErrorSuppresser;
   };
 
+
+  bool IsSVGMode() const {
+    return mScanner->IsSVGMode();
+  }
+
   /**
    * Saves the current input state, which includes any currently pushed
    * back token, and the current position of the scanner.
@@ -1459,10 +1464,6 @@ protected:
   // True if we are in parsing rules for the chrome.
   bool mIsChrome : 1;
 
-  // True if we're parsing SVG presentation attributes
-  // These attributes allow non-calc lengths to be unitless (mapping to px)
-  bool mIsSVGMode : 1;
-
   // True if viewport units should be allowed.
   bool mViewportUnitsEnabled : 1;
 
@@ -1676,7 +1677,6 @@ void
 CSSParserImpl::ReleaseScanner()
 {
   mScanner = nullptr;
-  mIsSVGMode = false;
   mReporter = nullptr;
   mBaseURI = nullptr;
   mSheetURI = nullptr;
@@ -1991,7 +1991,7 @@ CSSParserImpl::ParseProperty(const nsCSSPropertyID aPropID,
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURI);
   InitScanner(scanner, reporter, aSheetURI, aBaseURI, aSheetPrincipal);
   mSection = eCSSSection_General;
-  mIsSVGMode = aIsSVGMode;
+  scanner.SetSVGMode(aIsSVGMode);
 
   *aChanged = false;
 
@@ -7791,7 +7791,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
   }
 
-  if (mIsSVGMode && !IsParsingCompoundProperty()) {
+  if (IsSVGMode() && !IsParsingCompoundProperty()) {
     // STANDARD: SVG Spec states that lengths and coordinates can be unitless
     // in which case they default to user-units (1 px = 1 user unit)
     if (((aVariantMask & VARIANT_LENGTH) != 0) &&
@@ -17773,6 +17773,7 @@ CSSParserImpl::IsValueValidForProperty(const nsCSSPropertyID aPropID,
   nsAutoSuppressErrors suppressErrors(this);
 
   mSection = eCSSSection_General;
+  scanner.SetSVGMode(false);
 
   // Check for unknown properties
   if (eCSSProperty_UNKNOWN == aPropID) {
