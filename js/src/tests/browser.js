@@ -13,6 +13,8 @@
 //       bizarre things that might break the harness.
 
 (function initializeUtilityExports(global, parent) {
+  "use strict";
+
   /**********************************************************************
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
    **********************************************************************/
@@ -195,6 +197,8 @@
 })(this);
 
 (function(global) {
+  "use strict";
+
   /**********************************************************************
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
    **********************************************************************/
