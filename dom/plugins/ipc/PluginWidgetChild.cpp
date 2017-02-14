@@ -12,7 +12,9 @@
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 
+#if defined(XP_WIN)
 #include "mozilla/plugins/PluginInstanceParent.h"
+#endif
 
 #define PWLOG(...)
 //#define PWLOG(...) printf_stderr(__VA_ARGS__)

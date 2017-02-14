@@ -252,6 +252,9 @@ public:
     RecvRedrawPlugin() override;
 
     virtual mozilla::ipc::IPCResult
+    RecvNegotiatedCarbon() override;
+
+    virtual mozilla::ipc::IPCResult
     RecvAsyncNPP_NewResult(const NPError& aResult) override;
 
     virtual mozilla::ipc::IPCResult
