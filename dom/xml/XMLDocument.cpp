@@ -164,9 +164,11 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 
   if (!aQualifiedName.IsEmpty()) {
     ErrorResult result;
+    ElementCreationOptionsOrString options;
+    options.SetAsString();
+
     nsCOMPtr<Element> root =
-      doc->CreateElementNS(aNamespaceURI, aQualifiedName,
-                           ElementCreationOptions(), result);
+      doc->CreateElementNS(aNamespaceURI, aQualifiedName, options, result);
     if (NS_WARN_IF(result.Failed())) {
       return result.StealNSResult();
     }
