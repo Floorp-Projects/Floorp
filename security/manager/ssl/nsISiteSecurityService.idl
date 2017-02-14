@@ -23,6 +23,7 @@ namespace mozilla
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 // [infallible] attributes are only allowed on [builtinclass]
 [scriptable, uuid(31313372-842c-4110-bdf1-6aea17c845ad), builtinclass]
@@ -32,6 +33,9 @@ interface nsISiteSecurityState : nsISupports
   [infallible] readonly attribute long long expireTime;
   [infallible] readonly attribute short securityPropertyState;
   [infallible] readonly attribute boolean includeSubdomains;
+
+  [implicit_jscontext]
+  readonly attribute jsval originAttributes;
 
   /*
    * SECURITY_PROPERTY_SET and SECURITY_PROPERTY_UNSET correspond to indicating
@@ -103,6 +107,11 @@ interface nsISiteSecurityService : nsISupports
      * @param aSSLStatus the SSLStatus of the current channel.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      * @param aMaxAge the parsed max-age directive of the header.
      * @param aIncludeSubdomains the parsed includeSubdomains directive.
      * @param aFailureResult a more specific failure result if NS_ERROR_FAILURE
@@ -112,11 +121,24 @@ interface nsISiteSecurityService : nsISupports
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
      *                          if there are unrecognized tokens in the header.
      */
+    [binaryname(ProcessHeader), noscript]
+    void processHeaderNative(in uint32_t aType,
+                             in nsIURI aSourceURI,
+                             in ACString aHeader,
+                             in nsISSLStatus aSSLStatus,
+                             in uint32_t aFlags,
+                             in const_OriginAttributesRef aOriginAttributes,
+                             [optional] out unsigned long long aMaxAge,
+                             [optional] out boolean aIncludeSubdomains,
+                             [optional] out uint32_t aFailureResult);
+
+    [binaryname(ProcessHeaderScriptable), implicit_jscontext, optional_argc]
     void processHeader(in uint32_t aType,
                        in nsIURI aSourceURI,
                        in ACString aHeader,
                        in nsISSLStatus aSSLStatus,
                        in uint32_t aFlags,
+                       [optional] in jsval aOriginAttributes,
                        [optional] out unsigned long long aMaxAge,
                        [optional] out boolean aIncludeSubdomains,
                        [optional] out uint32_t aFailureResult);
@@ -130,10 +152,17 @@ interface nsISiteSecurityService : nsISupports
      * @param aURI    the URI of the target host
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      */
+    [implicit_jscontext, optional_argc]
     void removeState(in uint32_t aType,
                      in nsIURI aURI,
-                     in uint32_t aFlags);
+                     in uint32_t aFlags,
+                     [optional] in jsval aOriginAttributes);
 
     /**
      * Checks whether or not the URI's hostname has a given security state set.
@@ -148,10 +177,23 @@ interface nsISiteSecurityService : nsISupports
      * @param aURI the URI to query for STS state.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      * @param aCached true if we have cached information regarding whether or not
      *                  the host is HSTS, false otherwise.
      */
+    [binaryname(IsSecureURI), noscript]
+    boolean isSecureURINative(in uint32_t aType, in nsIURI aURI,
+                              in uint32_t aFlags,
+                              in const_OriginAttributesRef aOriginAttributes,
+                              [optional] out boolean aCached);
+
+    [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc]
     boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags,
+                        [optional] in jsval aOriginAttributes,
                         [optional] out boolean aCached);
 
     /**
@@ -174,14 +216,21 @@ interface nsISiteSecurityService : nsISupports
      * @param aHostname the hostname (punycode) to be queried about
      * @param evalTime the time at which the pins should be valid. This is in
               mozilla::pkix::Time which uses internally seconds since 0 AD.
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      * @param aPinArray the set of sha256-hashed key pins for the given domain
      * @param aIncludeSubdomains true if the pins apply to subdomains of the
      *        given domain
      */
-    [noscript] boolean getKeyPinsForHostname(in ACString aHostname,
-                                             in mozillaPkixTime evalTime,
-                                             out nsCStringTArrayRef aPinArray,
-                                             out boolean aIncludeSubdomains);
+    [noscript] boolean getKeyPinsForHostname(
+      in ACString aHostname,
+      in mozillaPkixTime evalTime,
+      in const_OriginAttributesRef aOriginAttributes,
+      out nsCStringTArrayRef aPinArray,
+      out boolean aIncludeSubdomains);
 
     /**
      * Set public-key pins for a host. The resulting pins will be permanent
@@ -195,11 +244,18 @@ interface nsISiteSecurityService : nsISupports
      * @param aSha256Pins array of hashed key fingerprints (SHA-256, base64)
      * @param aIsPreload are these key pins for a preload entry? (false by
      *        default)
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      */
-     boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
-                        in int64_t aExpires, in unsigned long aPinCount,
-                        [array, size_is(aPinCount)] in string aSha256Pins,
-                        [optional] in boolean aIsPreload);
+    [implicit_jscontext, optional_argc]
+    boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
+                       in int64_t aExpires, in unsigned long aPinCount,
+                       [array, size_is(aPinCount)] in string aSha256Pins,
+                       [optional] in boolean aIsPreload,
+                       [optional] in jsval aOriginAttributes);
 
     /**
      * Set an HSTS preload entry for a host. The resulting entries will be
@@ -211,8 +267,9 @@ interface nsISiteSecurityService : nsISupports
      * @param aIncludeSubdomains whether this entry also applies to subdomains
      * @param aExpires the time this entry should expire (millis since epoch)
      */
-     boolean setHSTSPreload(in ACString aHost, in boolean aIncludesSubdomains,
-                            in int64_t aExpires);
+    boolean setHSTSPreload(in ACString aHost,
+                           in boolean aIncludesSubdomains,
+                           in int64_t aExpires);
 
     /**
      * Mark a host as declining to provide a given security state so that features
@@ -220,8 +277,15 @@ interface nsISiteSecurityService : nsISupports
      *
      * @param aURI the nsIURI that this applies to
      * @param aMaxAge lifetime (in seconds) of this negative cache
+     * @param aOriginAttributes the origin attributes that isolate this origin,
+     *                          (note that this implementation does not isolate
+     *                          by userContextId because of the risk of man-in-
+     *                          the-middle attacks before trust-on-second-use
+     *                          happens).
      */
-    [noscript] void cacheNegativeHSTSResult(in nsIURI aURI, in unsigned long long aMaxAge);
+    [noscript] void cacheNegativeHSTSResult(
+      in nsIURI aURI, in unsigned long long aMaxAge,
+      in const_OriginAttributesRef aOriginAttributes);
 
     /**
      * Returns an enumerator of the nsISiteSecurityService storage. Each item in
