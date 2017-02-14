@@ -322,6 +322,7 @@ public:
   // Suppose a break is requested. When mInlineBreakAfter is set, the break
   // should occur after the frame just reflowed; when mInlineBreakAfter is
   // clear, the break should occur before the frame just reflowed.
+  bool IsInlineBreakBefore() const { return mInlineBreak && !mInlineBreakAfter; }
   StyleClear BreakType() const { return mBreakType; }
 
   // Set the inline line-break-before status, and reset other bit flags. The
@@ -376,9 +377,6 @@ private:
 
 #define NS_INLINE_IS_BREAK_AFTER(_status) \
   (0 != ((_status) & NS_INLINE_BREAK_AFTER))
-
-#define NS_INLINE_IS_BREAK_BEFORE(_status) \
-  (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_AFTER)))
 
 #define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
   aStatus.UpdateTruncated(aReflowInput, aMetrics);

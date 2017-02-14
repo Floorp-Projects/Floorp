@@ -404,9 +404,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
   // If there exists any span, the columns must either be completely
   // reflowed, or be not reflowed at all.
-  MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
+  MOZ_ASSERT(aStatus.IsInlineBreakBefore() ||
              aStatus.IsComplete() || !hasSpan);
-  if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
+  if (!aStatus.IsInlineBreakBefore() &&
       aStatus.IsComplete() && hasSpan) {
     // Reflow spans
     RubyReflowInput reflowInput = {
@@ -480,7 +480,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
   for (; !e.AtEnd(); e.Next()) {
     e.GetColumn(column);
     icoord += ReflowOneColumn(aReflowInput, columnIndex, column, reflowStatus);
-    if (!NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+    if (!reflowStatus.IsInlineBreakBefore()) {
       columnIndex++;
     }
     if (NS_INLINE_IS_BREAK(reflowStatus)) {
@@ -504,7 +504,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
       break;
     }
     icoord += ReflowOneColumn(aReflowInput, columnIndex, column, reflowStatus);
-    if (!NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+    if (!reflowStatus.IsInlineBreakBefore()) {
       columnIndex++;
     }
   }
@@ -520,7 +520,7 @@ nsRubyBaseContainerFrame::ReflowColumns(const RubyReflowInput& aReflowInput,
     aStatus.SetIncomplete();
   }
 
-  if (NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+  if (reflowStatus.IsInlineBreakBefore()) {
     if (!columnIndex || !aReflowInput.mAllowLineBreak) {
       // If no column has been placed yet, or we have any span,
       // the whole container should be in the next line.

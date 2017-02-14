@@ -260,7 +260,7 @@ RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
   // Compute new status
   uint32_t newS = record[index];
   if (NS_INLINE_IS_BREAK(aFrameReflowStatus)) {
-    if (NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+    if (aFrameReflowStatus.IsInlineBreakBefore()) {
       newS |= 1;
     }
     else if (aFrameReflowStatus.IsIncomplete()) {
@@ -1668,7 +1668,7 @@ nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       aState.mReflowStatus.SetOverflowIncomplete();
     }
   } else if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
-             !NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus) &&
+             !aState.mReflowStatus.IsInlineBreakBefore() &&
              aState.mReflowStatus.IsComplete()) {
     // Currently only used for grid items, but could be used in other contexts.
     // The FragStretchBSizeProperty is our expected non-fragmented block-size
@@ -3579,7 +3579,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
     RecordReflowStatus(true, frameReflowStatus);
 #endif
 
-    if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
+    if (frameReflowStatus.IsInlineBreakBefore()) {
       // None of the child block fits.
       *aKeepReflowGoing = false;
       if (ShouldAvoidBreakInside(aState.mReflowInput)) {
@@ -4078,7 +4078,7 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
            LineReflowStatus::RedoNoPull != lineReflowStatus) {
     // If we are propagating out a break-before status then there is
     // no point in placing the line.
-    if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
+    if (!aState.mReflowStatus.IsInlineBreakBefore()) {
       if (!PlaceLine(aState, aLineLayout, aLine, aFloatStateBeforeLine,
                      aFloatAvailableSpace.mRect, aAvailableSpaceBSize,
                      aKeepReflowGoing)) {
@@ -4192,7 +4192,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
     MOZ_ASSERT(StyleClear::None != breakType ||
                StyleClear::None != aState.mFloatBreakType, "bad break type");
 
-    if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
+    if (frameReflowStatus.IsInlineBreakBefore()) {
       // Break-before cases.
       if (aFrame == aLine->mFirstChild) {
         // If we break before the first frame on the line then we must

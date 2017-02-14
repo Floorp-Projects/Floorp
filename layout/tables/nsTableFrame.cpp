@@ -3171,7 +3171,7 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // see if the rowgroup did not fit on this page might be pushed on
       // the next page
       if (isPaginated &&
-          (NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
+          (aStatus.IsInlineBreakBefore() ||
            (aStatus.IsComplete() &&
             (NS_UNCONSTRAINEDSIZE != kidReflowInput.AvailableHeight()) &&
             kidReflowInput.AvailableHeight() < desiredSize.Height()))) {

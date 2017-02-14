@@ -205,7 +205,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   aReflowInput.mLineLayout->ReflowFrame(aBaseContainer, aStatus,
                                         &baseMetrics, pushedFrame);
 
-  if (NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
+  if (aStatus.IsInlineBreakBefore()) {
     if (aBaseContainer != mFrames.FirstChild()) {
       // Some segments may have been reflowed before, hence it is not
       // a break-before for the ruby container.
