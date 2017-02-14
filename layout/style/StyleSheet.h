@@ -258,6 +258,10 @@ protected:
   // NotOwnedByDocument when mDocument is null.
   DocumentAssociationMode mDocumentAssociationMode;
 
+  // Core information we get from parsed sheets, which are shared amongst
+  // StyleSheet clones.
+  StyleSheetInfo* mInner;
+
   friend class ::nsCSSRuleProcessor;
   friend struct mozilla::ChildSheetListBuilder;
 

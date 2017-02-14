@@ -26,6 +26,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mType(aType)
   , mDisabled(false)
   , mDocumentAssociationMode(NotOwnedByDocument)
+  , mInner(nullptr)
 {
 }
 
@@ -42,6 +43,7 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
     // We only use this constructor during cloning.  It's the cloner's
     // responsibility to notify us if we end up being owned by a document.
   , mDocumentAssociationMode(NotOwnedByDocument)
+  , mInner(aCopy.mInner) // Shallow copy, but concrete subclasses will fix up.
 {
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
