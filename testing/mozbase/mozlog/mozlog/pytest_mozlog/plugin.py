@@ -84,9 +84,13 @@ class MozLog(object):
                 status = 'FAIL'
         elif report.failed:
             status = 'FAIL' if report.when == 'call' else 'ERROR'
-            crash = report.longrepr.reprcrash  # here longrepr is a ReprExceptionInfo
-            message = "{0} (line {1})".format(crash.message, crash.lineno)
-            stack = report.longrepr.reprtraceback
+            try:
+                crash = report.longrepr.reprcrash  # here longrepr is a ReprExceptionInfo
+                message = "{0} (line {1})".format(crash.message, crash.lineno)
+                stack = report.longrepr.reprtraceback
+            except AttributeError:
+                # When using pytest-xdist, longrepr is serialised as a str
+                message = stack = report.longrepr
         elif report.skipped:  # indicates true skip
             status = expected = 'SKIP'
             message = report.longrepr[-1]  # here longrepr is a tuple (file, lineno, reason)
