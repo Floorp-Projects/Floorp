@@ -720,7 +720,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #endif
       if (nullptr == frame) {
         if (!isComplete) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
+          aStatus.Reset();
+          aStatus.SetIncomplete();
         }
         break;
       }

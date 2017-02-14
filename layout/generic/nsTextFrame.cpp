@@ -9545,8 +9545,10 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   // Compute reflow status
-  aStatus = contentLength == maxContentLength
-    ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
+  aStatus.Reset();
+  if (contentLength != maxContentLength) {
+    aStatus.SetIncomplete();
+  }
 
   if (charsFit == 0 && length > 0 && !usedHyphenation) {
     // Couldn't place any text
