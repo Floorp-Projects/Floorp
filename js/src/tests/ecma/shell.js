@@ -636,16 +636,3 @@ function Enumerate ( o ) {
     print( p +": " + o[p] );
   }
 }
-
-/* these functions are useful for running tests manually in Rhino */
-
-function GetContext() {
-  return Packages.com.netscape.javascript.Context.getCurrentContext();
-}
-function OptLevel( i ) {
-  i = Number(i);
-  var cx = GetContext();
-  cx.setOptimizationLevel(i);
-}
-/* end of Rhino functions */
-
