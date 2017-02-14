@@ -157,12 +157,6 @@ WebRenderImageHost::Dump(std::stringstream& aStream,
   }
 }
 
-LayerRenderState
-WebRenderImageHost::GetRenderState()
-{
-  return LayerRenderState();
-}
-
 already_AddRefed<gfx::DataSourceSurface>
 WebRenderImageHost::GetAsSurface()
 {

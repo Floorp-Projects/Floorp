@@ -118,12 +118,6 @@ InProcessCompositorWidget::GetGLFrameBufferFormat()
   return mWidget->GetGLFrameBufferFormat();
 }
 
-layers::Composer2D*
-InProcessCompositorWidget::GetComposer2D()
-{
-  return mWidget->GetComposer2D();
-}
-
 uintptr_t
 InProcessCompositorWidget::GetWidgetKey()
 {
