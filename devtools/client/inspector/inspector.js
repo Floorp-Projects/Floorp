@@ -1455,7 +1455,7 @@ Inspector.prototype = {
   },
 
   onEyeDropperButtonClicked: function () {
-    this.eyeDropperButton.hasAttribute("checked")
+    this.eyeDropperButton.classList.contains("checked")
       ? this.hideEyeDropper()
       : this.showEyeDropper();
   },
@@ -1473,7 +1473,7 @@ Inspector.prototype = {
   },
 
   onEyeDropperDone: function () {
-    this.eyeDropperButton.removeAttribute("checked");
+    this.eyeDropperButton.classList.remove("checked");
     this.stopEyeDropperListeners();
   },
 
@@ -1489,7 +1489,7 @@ Inspector.prototype = {
     }
 
     this.telemetry.toolOpened("toolbareyedropper");
-    this.eyeDropperButton.setAttribute("checked", "true");
+    this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
     return this.inspector.pickColorFromPage(this.toolbox, {copyOnSelect: true})
                          .catch(e => console.error(e));
@@ -1506,7 +1506,7 @@ Inspector.prototype = {
       return null;
     }
 
-    this.eyeDropperButton.removeAttribute("checked");
+    this.eyeDropperButton.classList.remove("checked");
     this.stopEyeDropperListeners();
     return this.inspector.cancelPickColorFromPage()
                          .catch(e => console.error(e));

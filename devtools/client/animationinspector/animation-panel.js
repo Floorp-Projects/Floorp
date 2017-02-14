@@ -200,11 +200,11 @@ var AnimationsPanel = {
   },
 
   onPickerStarted: function () {
-    this.pickerButtonEl.setAttribute("checked", "true");
+    this.pickerButtonEl.classList.add("checked");
   },
 
   onPickerStopped: function () {
-    this.pickerButtonEl.removeAttribute("checked");
+    this.pickerButtonEl.classList.remove("checked");
   },
 
   onToggleAllClicked: function () {
