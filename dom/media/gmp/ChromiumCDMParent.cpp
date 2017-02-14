@@ -445,6 +445,9 @@ ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
 ipc::IPCResult
 ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
 {
+  if (mDecodePromise.IsEmpty()) {
+    return IPC_OK();
+  }
   VideoData::YCbCrBuffer b;
   nsTArray<uint8_t> data;
   data = aFrame.mData();
@@ -584,6 +587,25 @@ ChromiumCDMParent::DecryptAndDecodeFrame(MediaRawData* aSample)
   }
 
   return mDecodePromise.Ensure(__func__);
+}
+
+RefPtr<MediaDataDecoder::FlushPromise>
+ChromiumCDMParent::FlushVideoDecoder()
+{
+  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  if (!SendResetVideoDecoder()) {
+    return MediaDataDecoder::FlushPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, "Failed to send flush to CDM."),
+      __func__);
+  }
+  return mFlushDecoderPromise.Ensure(__func__);
+}
+
+ipc::IPCResult
+ChromiumCDMParent::RecvResetVideoDecoderComplete()
+{
+  mFlushDecoderPromise.Resolve(true, __func__);
+  return IPC_OK();
 }
 
 } // namespace gmp
