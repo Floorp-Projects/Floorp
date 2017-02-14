@@ -1843,7 +1843,6 @@ WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadGroup, aPrincipal));
-  MOZ_ASSERT(!mPrincipalInfo);
 
   mPrincipal = aPrincipal;
   mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
