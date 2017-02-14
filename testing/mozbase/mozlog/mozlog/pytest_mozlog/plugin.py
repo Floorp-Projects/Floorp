@@ -82,6 +82,10 @@ class MozLog(object):
             if isinstance(report.longrepr, basestring):
                 # When using pytest-xdist, longrepr is serialised as a str
                 message = stack = report.longrepr
+                if report.longrepr.startswith('[XPASS(strict)]'):
+                    # Strict expected failures have an outcome of failed when
+                    # they unexpectedly pass.
+                    expected, status = ('FAIL', 'PASS')
             else:
                 try:
                     # For failures, longrepr is a ReprExceptionInfo
