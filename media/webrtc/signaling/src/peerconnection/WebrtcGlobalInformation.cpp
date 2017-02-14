@@ -420,7 +420,8 @@ RunStatsQuery(
 
   if (NS_FAILED(rv)) {
     return rv;
-  } else if (!stsThread) {
+  }
+  if (!stsThread) {
     return NS_ERROR_FAILURE;
   }
 
@@ -542,7 +543,8 @@ RunLogQuery(const nsCString& aPattern,
 
   if (NS_FAILED(rv)) {
     return rv;
-  } else if (!stsThread) {
+  }
+  if (!stsThread) {
     return NS_ERROR_FAILURE;
   }
 
