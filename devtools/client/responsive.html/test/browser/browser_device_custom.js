@@ -93,7 +93,10 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Remove previously added custom device");
   let deviceRemoveButton = document.querySelector(".device-remove-button");
-  let removed = waitUntilState(store, state => state.devices.custom.length == 0);
+  let removed = Promise.all([
+    waitUntilState(store, state => state.devices.custom.length == 0),
+    once(ui, "device-removed")
+  ]);
   Simulate.click(deviceRemoveButton);
   yield removed;
   Simulate.click(submitButton);
@@ -103,6 +106,9 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   is(deviceSelector.value, "", "Device selector reset to no device");
   let selectorOption = [...deviceSelector.options].find(opt => opt.value == device.name);
   ok(!selectorOption, "Custom device option removed from device selector");
+
+  info("Ensure device properties like UA have been reset");
+  yield testUserAgent(ui, navigator.userAgent);
 });
 
 function testDeviceAdder(ui, expected) {

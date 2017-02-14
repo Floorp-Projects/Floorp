@@ -173,8 +173,8 @@ void SourceStreamInfo::DetachTransport_s()
   ASSERT_ON_THREAD(mParent->GetSTSThread());
   // walk through all the MediaPipelines and call the shutdown
   // transport functions. Must be on the STS thread.
-  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
-    it->second->DetachTransport_s();
+  for (auto& pipeline : mPipelines) {
+    pipeline.second->DetachTransport_s();
   }
 }
 
@@ -184,8 +184,8 @@ void SourceStreamInfo::DetachMedia_m()
 
   // walk through all the MediaPipelines and call the shutdown
   // media functions. Must be on the main thread.
-  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
-    it->second->ShutdownMedia_m();
+  for (auto& pipeline : mPipelines) {
+    pipeline.second->ShutdownMedia_m();
   }
   mMediaStream = nullptr;
 }
@@ -551,8 +551,8 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
                 static_cast<unsigned>(aComponentCount));
 
     std::vector<std::string> attrs;
-    for (auto i = aCandidateList.begin(); i != aCandidateList.end(); ++i) {
-      attrs.push_back("candidate:" + *i);
+    for (const auto& candidate : aCandidateList) {
+      attrs.push_back("candidate:" + candidate);
     }
     attrs.push_back("ice-ufrag:" + aUfrag);
     attrs.push_back("ice-pwd:" + aPassword);
@@ -584,9 +584,7 @@ nsresult PeerConnectionMedia::UpdateMediaPipelines(
   MediaPipelineFactory factory(this);
   nsresult rv;
 
-  for (auto i = trackPairs.begin(); i != trackPairs.end(); ++i) {
-    JsepTrackPair pair = *i;
-
+  for (auto pair : trackPairs) {
     if (pair.mReceiving) {
 
       rv = factory.CreateOrUpdateMediaPipeline(pair, *pair.mReceiving);
@@ -640,8 +638,8 @@ PeerConnectionMedia::StartIceChecks_s(
 
   if (!aIceOptionsList.empty()) {
     attributes.push_back("ice-options:");
-    for (auto i = aIceOptionsList.begin(); i != aIceOptionsList.end(); ++i) {
-      attributes.back() += *i + ' ';
+    for (const auto& option : aIceOptionsList) {
+      attributes.back() += option + ' ';
     }
   }
 
@@ -741,10 +739,8 @@ PeerConnectionMedia::FinalizeIceRestart_s()
   ASSERT_ON_THREAD(mSTSThread);
 
   // reset old streams since we don't need them anymore
-  for (auto i = mTransportFlows.begin();
-       i != mTransportFlows.end();
-       ++i) {
-    RefPtr<TransportFlow> aFlow = i->second;
+  for (auto& transportFlow : mTransportFlows) {
+    RefPtr<TransportFlow> aFlow = transportFlow.second;
     if (!aFlow) continue;
     TransportLayerIce* ice =
       static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
@@ -780,10 +776,8 @@ PeerConnectionMedia::RollbackIceRestart_s()
   RefPtr<NrIceCtx> restartCtx = mIceCtxHdlr->ctx();
 
   // restore old streams since we're rolling back
-  for (auto i = mTransportFlows.begin();
-       i != mTransportFlows.end();
-       ++i) {
-    RefPtr<TransportFlow> aFlow = i->second;
+  for (auto& transportFlow : mTransportFlows) {
+    RefPtr<TransportFlow> aFlow = transportFlow.second;
     if (!aFlow) continue;
     TransportLayerIce* ice =
       static_cast<TransportLayerIce*>(aFlow->GetLayer(TransportLayerIce::ID()));
@@ -914,10 +908,8 @@ PeerConnectionMedia::FlushIceCtxOperationQueueIfReady()
   ASSERT_ON_THREAD(mMainThread);
 
   if (IsIceCtxReady()) {
-    for (auto i = mQueuedIceCtxOperations.begin();
-         i != mQueuedIceCtxOperations.end();
-         ++i) {
-      GetSTSThread()->Dispatch(*i, NS_DISPATCH_NORMAL);
+    for (auto& mQueuedIceCtxOperation : mQueuedIceCtxOperations) {
+      GetSTSThread()->Dispatch(mQueuedIceCtxOperation, NS_DISPATCH_NORMAL);
     }
     mQueuedIceCtxOperations.clear();
   }
@@ -1539,9 +1531,9 @@ LocalSourceStreamInfo::UpdateSinkIdentity_m(MediaStreamTrack* aTrack,
                                             nsIPrincipal* aPrincipal,
                                             const PeerIdentity* aSinkIdentity)
 {
-  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
+  for (auto& pipeline_ : mPipelines) {
     MediaPipelineTransmit* pipeline =
-      static_cast<MediaPipelineTransmit*>((*it).second.get());
+      static_cast<MediaPipelineTransmit*>(pipeline_.second.get());
     pipeline->UpdateSinkIdentity_m(aTrack, aPrincipal, aSinkIdentity);
   }
 }
@@ -1587,8 +1579,8 @@ bool
 SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
 {
   // Scan the videoConduits for this plugin ID
-  for (auto it = mPipelines.begin(); it != mPipelines.end(); ++it) {
-    if (it->second->Conduit()->CodecPluginID() == aPluginID) {
+  for (auto& pipeline : mPipelines) {
+    if (pipeline.second->Conduit()->CodecPluginID() == aPluginID) {
       return true;
     }
   }

@@ -503,6 +503,9 @@ public:
   // aWindow can be either outer or inner window.
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
+  // Check if the principal is chrome or an addon with the permission.
+  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsAString& aPerm);
+
   // Check if the JS caller is chrome or an addon with the permission.
   static bool CallerHasPermission(JSContext* aCx, const nsAString& aPerm);
 
@@ -2827,7 +2830,8 @@ private:
 
   static void DropFragmentParsers();
 
-  static bool MatchClassNames(nsIContent* aContent, int32_t aNamespaceID,
+  static bool MatchClassNames(mozilla::dom::Element* aElement,
+                              int32_t aNamespaceID,
                               nsIAtom* aAtom, void* aData);
   static void DestroyClassNameArray(void* aData);
   static void* AllocClassMatchingInfo(nsINode* aRootNode,

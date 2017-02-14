@@ -113,8 +113,8 @@ class ViEChannel : public VCMFrameTypeCallback,
   int SetReceiveVideoRotationStatus(bool enable, int id);
   int SetSendTransportSequenceNumber(bool enable, int id);
   int SetReceiveTransportSequenceNumber(bool enable, int id);
-  int SetSendRtpStreamId(bool enable, int id); // RtpStreamId (RID)
-	int SetReceiveRtpStreamId(bool enable, int id); // RtpStreamId (RID)
+  int SetSendRtpStreamId(bool enable, int id, std::vector<std::string> rids);
+  int SetReceiveRtpStreamId(bool enable, int id);
   void SetRtcpXrRrtrStatus(bool enable);
   void EnableTMMBR(bool enable);
 
@@ -463,7 +463,6 @@ int32_t GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const;
   int64_t rtt_sum_ms_ GUARDED_BY(crit_);
   int64_t last_rtt_ms_ GUARDED_BY(crit_);
   size_t num_rtts_ GUARDED_BY(crit_);
-	int rid_extension_id_; // RtpStreamId (RID)
 
   // RtpRtcp modules, declared last as they use other members on construction.
   const std::vector<RtpRtcp*> rtp_rtcp_modules_;

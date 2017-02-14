@@ -470,11 +470,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                     setPrivateMode(tab.isPrivate());
                     // Fall through.
                 case LOAD_ERROR:
-                    flags.add(UpdateFlags.TITLE);
-                    // Fall through.
                 case LOCATION_CHANGE:
-                    // A successful location change will cause Tab to notify
-                    // us of a title change, so we don't update the title here.
+                    // We're displaying the tab URL in place of the title,
+                    // so we always need to update our "title" here as well.
+                    flags.add(UpdateFlags.TITLE);
                     flags.add(UpdateFlags.FAVICON);
                     flags.add(UpdateFlags.SITE_IDENTITY);
 

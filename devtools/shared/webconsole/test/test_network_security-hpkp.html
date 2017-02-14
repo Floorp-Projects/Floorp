@@ -39,8 +39,7 @@ const TEST_CASES = [
   }
 ];
 
-function startTest()
-{
+function startTest() {
   // Need to enable this pref or pinning headers are rejected due test
   // certificate.
   Services.prefs.setBoolPref(HPKP_PREF, true);
@@ -64,19 +63,18 @@ function startTest()
   attachConsoleToTab(["NetworkActivity"], onAttach);
 }
 
-function onAttach(aState, aResponse)
-{
-  onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
-  aState.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
+function onAttach(state, response) {
+  onNetworkEventUpdate = onNetworkEventUpdate.bind(null, state);
+  state.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
 
-  runNextCase(aState);
+  runNextCase(state);
 }
 
-function runNextCase(aState) {
+function runNextCase(state) {
   gCurrentTestCase++;
   if (gCurrentTestCase === TEST_CASES.length) {
     info("Tests ran. Cleaning up.");
-    closeDebugger(aState, SimpleTest.finish);
+    closeDebugger(state, SimpleTest.finish);
     return;
   }
 
@@ -87,18 +85,17 @@ function runNextCase(aState) {
   iframe.wrappedJSObject.makeXhrCallback("GET", url);
 }
 
-function onNetworkEventUpdate(aState, aType, aPacket)
-{
-  function onSecurityInfo(packet) {
+function onNetworkEventUpdate(state, type, packet) {
+  function onSecurityInfo(received) {
     let data = TEST_CASES[gCurrentTestCase];
-    is(packet.securityInfo.hpkp, data.usesPinning,
+    is(received.securityInfo.hpkp, data.usesPinning,
       "Public Key Pinning detected correctly.");
 
-    runNextCase(aState);
+    runNextCase(state);
   }
 
-  if (aPacket.updateType === "securityInfo") {
-    aState.client.getSecurityInfo(aPacket.from, onSecurityInfo);
+  if (packet.updateType === "securityInfo") {
+    state.client.getSecurityInfo(packet.from, onSecurityInfo);
   }
 }
 

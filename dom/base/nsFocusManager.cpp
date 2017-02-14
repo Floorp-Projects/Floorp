@@ -1142,7 +1142,7 @@ bool
 ActivateOrDeactivateChild(TabParent* aParent, void* aArg)
 {
   bool active = static_cast<bool>(aArg);
-  Unused << aParent->SendParentActivated(active);
+  Unused << aParent->Manager()->AsContentParent()->SendParentActivated(aParent, active);
   return false;
 }
 
@@ -2204,10 +2204,18 @@ nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow)
 
   if (sTestMode) {
     // In test mode, emulate the existing window being lowered and the new
-    // window being raised.
-    if (mActiveWindow)
-      WindowLowered(mActiveWindow);
-    WindowRaised(aWindow);
+    // window being raised. This happens in a separate runnable to avoid
+    // touching multiple windows in the current runnable.
+    nsCOMPtr<nsPIDOMWindowOuter> active(mActiveWindow);
+    nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
+    RefPtr<nsFocusManager> self(this);
+    NS_DispatchToCurrentThread(
+      NS_NewRunnableFunction([self, active, window] () -> void {
+        if (active) {
+          self->WindowLowered(active);
+        }
+        self->WindowRaised(window);
+      }));
     return;
   }
 

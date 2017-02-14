@@ -204,6 +204,10 @@ RTPSender::~RTPSender() {
     delete it->second;
     payload_type_map_.erase(it);
   }
+
+  if (rid_) {
+    delete[] rid_;
+  }
 }
 
 void RTPSender::SetTargetBitrate(uint32_t bitrate) {
@@ -702,6 +706,11 @@ size_t RTPSender::SendPadData(size_t bytes,
       transport_feedback_observer_->AddPacket(options.packet_id, length, true);
     }
 
+    if (packet_history_.PutRTPPacket(padding_packet, length,
+                                     capture_time_ms,
+                                     kAllowRetransmission) != 0) {
+      return 0;
+    }
     if (!SendPacketToNetwork(padding_packet, length, options))
       break;
 

@@ -363,9 +363,9 @@ protected:
 };
 
 struct ScopedBindPBO final
-    : public ScopedGLWrapper<ScopedPackState>
+    : public ScopedGLWrapper<ScopedBindPBO>
 {
-    friend struct ScopedGLWrapper<ScopedPackState>;
+    friend struct ScopedGLWrapper<ScopedBindPBO>;
 
 protected:
     const GLenum mTarget;

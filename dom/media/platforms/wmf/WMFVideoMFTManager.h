@@ -7,18 +7,19 @@
 #if !defined(WMFVideoMFTManager_h_)
 #define WMFVideoMFTManager_h_
 
-#include "WMF.h"
 #include "MFTDecoder.h"
-#include "nsAutoPtr.h"
-#include "nsRect.h"
+#include "WMF.h"
 #include "WMFMediaDataDecoder.h"
 #include "mozilla/RefPtr.h"
+#include "nsAutoPtr.h"
+#include "nsRect.h"
 
 namespace mozilla {
 
 class DXVA2Manager;
 
-class WMFVideoMFTManager : public MFTManager {
+class WMFVideoMFTManager : public MFTManager
+{
 public:
   WMFVideoMFTManager(const VideoInfo& aConfig,
                      layers::KnowsCompositor* aKnowsCompositor,
@@ -36,9 +37,7 @@ public:
 
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
-  TrackInfo::TrackType GetType() override {
-    return TrackInfo::kVideoTrack;
-  }
+  TrackInfo::TrackType GetType() override { return TrackInfo::kVideoTrack; }
 
   const char* GetDescriptionName() const override
   {
@@ -61,7 +60,6 @@ public:
   }
 
 private:
-
   bool ValidateVideoInfo();
 
   bool InitializeDXVA(bool aForceD3D9);
@@ -102,7 +100,8 @@ private:
 
   nsCString mDXVAFailureReason;
 
-  enum StreamType {
+  enum StreamType
+  {
     Unknown,
     H264,
     VP8,
@@ -114,10 +113,10 @@ private:
   const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
 
-  uint32_t mNullOutputCount;
-  bool mGotValidOutputAfterNullOutput;
-  bool mGotExcessiveNullOutput;
-  bool mIsValid;
+  uint32_t mNullOutputCount = 0;
+  bool mGotValidOutputAfterNullOutput = false;
+  bool mGotExcessiveNullOutput = false;
+  bool mIsValid = true;
 };
 
 } // namespace mozilla

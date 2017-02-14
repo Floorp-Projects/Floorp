@@ -62,6 +62,7 @@
           ok(test._remote_answer.sdp.match(/a=simulcast:/), "Modified answer has simulcast");
           ok(test._remote_answer.sdp.match(/a=rid:foo/), "Modified answer has rid foo");
           ok(test._remote_answer.sdp.match(/a=rid:bar/), "Modified answer has rid bar");
+          ok(test._remote_answer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified answer has RID");
         }
       ]);
 

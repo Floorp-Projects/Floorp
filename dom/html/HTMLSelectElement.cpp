@@ -748,12 +748,12 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
 
 /* static */
 bool
-HTMLSelectElement::MatchSelectedOptions(nsIContent* aContent,
+HTMLSelectElement::MatchSelectedOptions(Element* aElement,
                                         int32_t /* unused */,
                                         nsIAtom* /* unused */,
                                         void* /* unused*/)
 {
-  HTMLOptionElement* option = HTMLOptionElement::FromContent(aContent);
+  HTMLOptionElement* option = HTMLOptionElement::FromContent(aElement);
   return option && option->Selected();
 }
 

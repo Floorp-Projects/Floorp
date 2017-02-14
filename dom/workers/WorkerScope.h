@@ -140,6 +140,9 @@ public:
   ClearInterval(int32_t aHandle);
 
   void
+  GetOrigin(nsAString& aOrigin) const;
+
+  void
   Atob(const nsAString& aAtob, nsAString& aOutput, ErrorResult& aRv) const;
   void
   Btoa(const nsAString& aBtoa, nsAString& aOutput, ErrorResult& aRv) const;

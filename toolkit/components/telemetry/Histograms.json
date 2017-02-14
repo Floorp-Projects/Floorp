@@ -6943,6 +6943,60 @@
     "n_values": 17,
     "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
   },
+  "WEBRTC_DTLS_CLIENT_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that DTLS succeeded."
+  },
+  "WEBRTC_DTLS_CLIENT_ABORT_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
+  },
+  "WEBRTC_DTLS_CLIENT_FAILURE_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that it failed."
+  },
+  "WEBRTC_DTLS_SERVER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that DTLS succeeded."
+  },
+  "WEBRTC_DTLS_SERVER_ABORT_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
+  },
+  "WEBRTC_DTLS_SERVER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1336182],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that it failed."
+  },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1319268],
@@ -8780,7 +8834,7 @@
   },
   "WEAVE_WIPE_SERVER_SUCCEEDED": {
     "expires_in_version": "55",
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "kind": "boolean",
     "bug_numbers": [1241699],
     "description": "Stores 1 if a wipeServer call succeeded, and 0 if it failed."
@@ -9871,7 +9925,7 @@
     "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
   },
   "FXA_CONFIGURED": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1236383],
     "expires_in_version": "never",
     "kind": "flag",
@@ -9879,7 +9933,7 @@
     "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1232050],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9888,7 +9942,7 @@
     "description": "Number of desktop devices (including this device) associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_DEVICE_COUNT_MOBILE": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1232050],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9897,7 +9951,7 @@
     "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_ENGINE_SYNC_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
+    "alert_emails": ["sync-dev@mozilla.org"],
     "bug_numbers": [1236383],
     "expires_in_version": "never",
     "kind": "count",
@@ -10603,41 +10657,50 @@
     "n_values": 4,
     "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
   },
-  "TIME_TO_FIRST_CLICK": {
+  "TIME_TO_FIRST_CLICK_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first click per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_KEY_INPUT": {
+  "TIME_TO_FIRST_KEY_INPUT_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first key input per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next key event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_MOUSE_MOVE": {
+  "TIME_TO_FIRST_MOUSE_MOVE_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first mouse move per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next mouse move event per top-level content browsing context."
   },
-  "TIME_TO_FIRST_SCROLL": {
+  "TIME_TO_FIRST_SCROLL_MS": {
     "alert_emails": ["hkirschner@mozilla.com"],
-    "bug_numbers": [1307675],
+    "bug_numbers": [1307675, 1332511],
     "expires_in_version": "58",
     "kind": "exponential",
-    "high": 100000,
-    "n_buckets": 30,
-    "description": "Time in milliseconds from first paint to first scroll per top-level content browsing context."
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next scroll event per top-level content browsing context."
+  },
+  "TIME_TO_FIRST_INTERACTION_MS": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1332511],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click, key, mouse or scroll event per top-level content browsing context."
   },
   "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
     "alert_emails": ["dev-platform@lists.mozilla.org"],

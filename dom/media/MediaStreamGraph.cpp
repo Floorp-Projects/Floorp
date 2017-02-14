@@ -47,22 +47,10 @@ using namespace mozilla::media;
 namespace mozilla {
 
 LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
-#define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
-
-// #define ENABLE_LIFECYCLE_LOG
-
-// We don't use NSPR log here because we want this interleaved with adb logcat
-// on Android/B2G
-#ifdef ENABLE_LIFECYCLE_LOG
-#  ifdef ANDROID
-#    include "android/log.h"
-#    define LIFECYCLE_LOG(...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG", ## __VA_ARGS__);
-#  else
-#    define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
-#  endif
-#else
-#  define LIFECYCLE_LOG(...)
-#endif
+#ifdef LOG
+#undef LOG
+#endif // LOG
+#define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 enum SourceMediaStream::TrackCommands : uint32_t {
   TRACK_CREATE = TrackEventCommand::TRACK_EVENT_CREATED,
@@ -79,8 +67,8 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
 {
   NS_ASSERTION(IsEmpty(),
                "All streams should have been destroyed by messages from the main thread");
-  STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p destroyed", this));
-  LIFECYCLE_LOG("MediaStreamGraphImpl::~MediaStreamGraphImpl\n");
+  LOG(LogLevel::Debug, ("MediaStreamGraph %p destroyed", this));
+  LOG(LogLevel::Debug, ("MediaStreamGraphImpl::~MediaStreamGraphImpl"));
 }
 
 void
@@ -88,14 +76,15 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
 {
   if (aStream->mFinished)
     return;
-  STREAM_LOG(LogLevel::Debug, ("MediaStream %p will finish", aStream));
+  LOG(LogLevel::Debug, ("MediaStream %p will finish", aStream));
 #ifdef DEBUG
   for (StreamTracks::TrackIter track(aStream->mTracks);
          !track.IsEnded(); track.Next()) {
     if (!track->IsEnded()) {
-      STREAM_LOG(LogLevel::Error,
-                 ("MediaStream %p will finish, but track %d has not ended.",
-                  aStream, track->GetID()));
+      LOG(LogLevel::Error,
+          ("MediaStream %p will finish, but track %d has not ended.",
+           aStream,
+           track->GetID()));
       NS_ASSERTION(false, "Finished stream cannot contain live track");
     }
   }
@@ -121,11 +110,21 @@ MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
 
   if (aStream->IsSuspended()) {
     mSuspendedStreams.AppendElement(aStream);
-    STREAM_LOG(LogLevel::Debug, ("Adding media stream %p to the graph, in the suspended stream array", aStream));
+    LOG(LogLevel::Debug,
+        ("Adding media stream %p to the graph, in the suspended stream array",
+         aStream));
   } else {
     mStreams.AppendElement(aStream);
-    STREAM_LOG(LogLevel::Debug, ("Adding media stream %p to graph %p, count %lu", aStream, this, mStreams.Length()));
-    LIFECYCLE_LOG("Adding media stream %p to graph %p, count %lu", aStream, this, (long)mStreams.Length());
+    LOG(LogLevel::Debug,
+        ("Adding media stream %p to graph %p, count %lu",
+         aStream,
+         this,
+         mStreams.Length()));
+    LOG(LogLevel::Debug,
+        ("Adding media stream %p to graph %p, count %lu",
+         aStream,
+         this,
+         (long)mStreams.Length()));
   }
 
   SetStreamOrderDirty();
@@ -155,10 +154,16 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
     mStreams.RemoveElement(aStream);
   }
 
-  STREAM_LOG(LogLevel::Debug, ("Removed media stream %p from graph %p, count %lu",
-                               aStream, this, mStreams.Length()));
-  LIFECYCLE_LOG("Removed media stream %p from graph %p, count %lu",
-                aStream, this, (long)mStreams.Length());
+  LOG(LogLevel::Debug,
+      ("Removed media stream %p from graph %p, count %lu",
+       aStream,
+       this,
+       mStreams.Length()));
+  LOG(LogLevel::Debug,
+      ("Removed media stream %p from graph %p, count %lu",
+       aStream,
+       this,
+       (long)mStreams.Length()));
 
   NS_RELEASE(aStream); // probably destroying it
 }
@@ -176,16 +181,21 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       // Compute how much stream time we'll need assuming we don't block
       // the stream at all.
       StreamTime t = aStream->GraphTimeToStreamTime(aDesiredUpToTime);
-      STREAM_LOG(LogLevel::Verbose, ("Calling NotifyPull aStream=%p t=%f current end=%f", aStream,
-                                  MediaTimeToSeconds(t),
-                                  MediaTimeToSeconds(aStream->mTracks.GetEnd())));
+      LOG(LogLevel::Verbose,
+          ("Calling NotifyPull aStream=%p t=%f current end=%f",
+           aStream,
+           MediaTimeToSeconds(t),
+           MediaTimeToSeconds(aStream->mTracks.GetEnd())));
       if (t > aStream->mTracks.GetEnd()) {
         *aEnsureNextIteration = true;
 #ifdef DEBUG
         if (aStream->mListeners.Length() == 0) {
-          STREAM_LOG(LogLevel::Error, ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
-                                    aStream, MediaTimeToSeconds(t),
-                                    MediaTimeToSeconds(aStream->mTracks.GetEnd())));
+          LOG(
+            LogLevel::Error,
+            ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
+             aStream,
+             MediaTimeToSeconds(t),
+             MediaTimeToSeconds(aStream->mTracks.GetEnd())));
           aStream->DumpTrackInfo();
         }
 #endif
@@ -258,9 +268,13 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
-        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p creating track %d, start %lld, initial end %lld",
-                                  aStream, data->mID, int64_t(data->mStart),
-                                  int64_t(segment->GetDuration())));
+        LOG(LogLevel::Debug,
+            ("SourceMediaStream %p creating track %d, start %lld, initial end "
+             "%lld",
+             aStream,
+             data->mID,
+             int64_t(data->mStart),
+             int64_t(segment->GetDuration())));
 
         data->mEndOfFlushedData += segment->GetDuration();
         aStream->mTracks.AddTrack(data->mID, data->mStart, segment);
@@ -271,10 +285,12 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         shouldNotifyTrackCreated = true;
       } else if (data->mData->GetDuration() > 0) {
         MediaSegment* dest = aStream->mTracks.FindTrack(data->mID)->GetSegment();
-        STREAM_LOG(LogLevel::Verbose, ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
-                                    aStream, data->mID,
-                                    int64_t(dest->GetDuration()),
-                                    int64_t(dest->GetDuration() + data->mData->GetDuration())));
+        LOG(LogLevel::Verbose,
+            ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
+             aStream,
+             data->mID,
+             int64_t(dest->GetDuration()),
+             int64_t(dest->GetDuration() + data->mData->GetDuration())));
         data->mEndOfFlushedData += data->mData->GetDuration();
         dest->AppendFrom(data->mData);
       }
@@ -328,10 +344,11 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime)
     NS_ASSERTION(blockedTime >= 0, "Error in blocking time");
     stream->AdvanceTimeVaryingValuesToCurrentTime(mStateComputedTime,
                                                   blockedTime);
-    STREAM_LOG(LogLevel::Verbose,
-               ("MediaStream %p bufferStartTime=%f blockedTime=%f", stream,
-                MediaTimeToSeconds(stream->mTracksStartTime),
-                MediaTimeToSeconds(blockedTime)));
+    LOG(LogLevel::Verbose,
+        ("MediaStream %p bufferStartTime=%f blockedTime=%f",
+         stream,
+         MediaTimeToSeconds(stream->mTracksStartTime),
+         MediaTimeToSeconds(blockedTime)));
     stream->mStartBlocking = mStateComputedTime;
 
     if (isAnyUnblocked && stream->mNotifiedBlocked) {
@@ -397,12 +414,13 @@ MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
     PrincipalHandle principalHandle = chunk->GetPrincipalHandle();
     if (principalHandle != aSegment.GetLastPrincipalHandle()) {
       aSegment.SetLastPrincipalHandle(principalHandle);
-      STREAM_LOG(LogLevel::Debug,
-                 ("MediaStream %p track %d, principalHandle "
-                  "changed in %sChunk with duration %lld",
-                  aStream, aTrackID,
-                  aSegment.GetType() == MediaSegment::AUDIO ? "Audio" : "Video",
-                  (long long)chunk->GetDuration()));
+      LOG(LogLevel::Debug,
+          ("MediaStream %p track %d, principalHandle "
+           "changed in %sChunk with duration %lld",
+           aStream,
+           aTrackID,
+           aSegment.GetType() == MediaSegment::AUDIO ? "Audio" : "Video",
+           (long long)chunk->GetDuration()));
       for (const TrackBound<MediaStreamTrackListener>& listener :
            aStream->mTrackListeners) {
         if (listener.mTrackID == aTrackID) {
@@ -456,10 +474,15 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
   GraphTime bufferEnd = aStream->GetTracksEnd() + aStream->mTracksStartTime;
 #ifdef DEBUG
   if (bufferEnd < mProcessedTime) {
-    STREAM_LOG(LogLevel::Error, ("MediaStream %p underrun, "
-                              "bufferEnd %f < mProcessedTime %f (%lld < %lld), Streamtime %lld",
-                              aStream, MediaTimeToSeconds(bufferEnd), MediaTimeToSeconds(mProcessedTime),
-                              bufferEnd, mProcessedTime, aStream->GetTracksEnd()));
+    LOG(LogLevel::Error,
+        ("MediaStream %p underrun, "
+         "bufferEnd %f < mProcessedTime %f (%lld < %lld), Streamtime %lld",
+         aStream,
+         MediaTimeToSeconds(bufferEnd),
+         MediaTimeToSeconds(mProcessedTime),
+         bufferEnd,
+         mProcessedTime,
+         aStream->GetTracksEnd()));
     aStream->DumpTrackInfo();
     NS_ASSERTION(bufferEnd >= mProcessedTime, "Buffer underran");
   }
@@ -786,7 +809,8 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream)
     return;
   }
 
-  STREAM_LOG(LogLevel::Debug, ("Updating AudioOutputStreams for MediaStream %p", aStream));
+  LOG(LogLevel::Debug,
+      ("Updating AudioOutputStreams for MediaStream %p", aStream));
 
   AutoTArray<bool,2> audioOutputStreamsFound;
   for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
@@ -876,19 +900,29 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
       if (blocked) {
         output.InsertNullDataAtStart(toWrite);
         ticksWritten += toWrite;
-        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p writing %ld blocking-silence samples for %f to %f (%ld to %ld)\n",
-                                    aStream, toWrite, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
-                                    offset, offset + toWrite));
+        LOG(LogLevel::Verbose,
+            ("MediaStream %p writing %ld blocking-silence samples for "
+             "%f to %f (%ld to %ld)",
+             aStream,
+             toWrite,
+             MediaTimeToSeconds(t),
+             MediaTimeToSeconds(end),
+             offset,
+             offset + toWrite));
       } else {
         StreamTime endTicksNeeded = offset + toWrite;
         StreamTime endTicksAvailable = audio->GetDuration();
 
         if (endTicksNeeded <= endTicksAvailable) {
-          STREAM_LOG(LogLevel::Verbose,
-                     ("MediaStream %p writing %ld samples for %f to %f "
-                      "(samples %ld to %ld)\n",
-                      aStream, toWrite, MediaTimeToSeconds(t),
-                      MediaTimeToSeconds(end), offset, endTicksNeeded));
+          LOG(LogLevel::Verbose,
+              ("MediaStream %p writing %ld samples for %f to %f "
+               "(samples %ld to %ld)",
+               aStream,
+               toWrite,
+               MediaTimeToSeconds(t),
+               MediaTimeToSeconds(end),
+               offset,
+               endTicksNeeded));
           output.AppendSlice(*audio, offset, endTicksNeeded);
           ticksWritten += toWrite;
           offset = endTicksNeeded;
@@ -899,22 +933,30 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
           if (endTicksNeeded > endTicksAvailable &&
               offset < endTicksAvailable) {
             output.AppendSlice(*audio, offset, endTicksAvailable);
-            STREAM_LOG(LogLevel::Verbose,
-                       ("MediaStream %p writing %ld samples for %f to %f "
-                        "(samples %ld to %ld)\n",
-                        aStream, toWrite, MediaTimeToSeconds(t),
-                        MediaTimeToSeconds(end), offset, endTicksNeeded));
+            LOG(LogLevel::Verbose,
+                ("MediaStream %p writing %ld samples for %f to %f "
+                 "(samples %ld to %ld)",
+                 aStream,
+                 toWrite,
+                 MediaTimeToSeconds(t),
+                 MediaTimeToSeconds(end),
+                 offset,
+                 endTicksNeeded));
             uint32_t available = endTicksAvailable - offset;
             ticksWritten += available;
             toWrite -= available;
             offset = endTicksAvailable;
           }
           output.AppendNullData(toWrite);
-          STREAM_LOG(LogLevel::Verbose,
-                     ("MediaStream %p writing %ld padding slsamples for %f to "
-                      "%f (samples %ld to %ld)\n",
-                      aStream, toWrite, MediaTimeToSeconds(t),
-                      MediaTimeToSeconds(end), offset, endTicksNeeded));
+          LOG(LogLevel::Verbose,
+              ("MediaStream %p writing %ld padding slsamples for %f to "
+               "%f (samples %ld to %ld)",
+               aStream,
+               toWrite,
+               MediaTimeToSeconds(t),
+               MediaTimeToSeconds(end),
+               offset,
+               endTicksNeeded));
           ticksWritten += toWrite;
         }
         output.ApplyVolume(volume);
@@ -964,14 +1006,18 @@ MediaStreamGraphImpl::OpenAudioInputImpl(int aID,
     MonitorAutoLock mon(mMonitor);
     if (mLifecycleState == LIFECYCLE_RUNNING) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-      STREAM_LOG(LogLevel::Debug, ("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver));
-      LIFECYCLE_LOG("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver);
+      LOG(
+        LogLevel::Debug,
+        ("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver));
+      LOG(
+        LogLevel::Debug,
+        ("OpenAudioInput: starting new AudioCallbackDriver(input) %p", driver));
       driver->SetInputListener(aListener);
       CurrentDriver()->SwitchAtNextIteration(driver);
    } else {
-      STREAM_LOG(LogLevel::Error, ("OpenAudioInput in shutdown!"));
-      LIFECYCLE_LOG("OpenAudioInput in shutdown!");
-      NS_ASSERTION(false, "Can't open cubeb inputs in shutdown");
+     LOG(LogLevel::Error, ("OpenAudioInput in shutdown!"));
+     LOG(LogLevel::Debug, ("OpenAudioInput in shutdown!"));
+     NS_ASSERTION(false, "Can't open cubeb inputs in shutdown");
     }
   }
 }
@@ -1033,12 +1079,13 @@ MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
     GraphDriver* driver;
     if (audioTrackPresent) {
       // We still have audio output
-      STREAM_LOG(LogLevel::Debug, ("CloseInput: output present (AudioCallback)"));
+      LOG(LogLevel::Debug, ("CloseInput: output present (AudioCallback)"));
 
       driver = new AudioCallbackDriver(this);
       CurrentDriver()->SwitchAtNextIteration(driver);
     } else if (CurrentDriver()->AsAudioCallbackDriver()) {
-      STREAM_LOG(LogLevel::Debug, ("CloseInput: no output present (SystemClockCallback)"));
+      LOG(LogLevel::Debug,
+          ("CloseInput: no output present (SystemClockCallback)"));
 
       driver = new SystemClockDriver(this);
       CurrentDriver()->SwitchAtNextIteration(driver);
@@ -1276,12 +1323,16 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
       GraphTime endTime = stream->GetStreamTracks().GetAllTracksEnd() +
           stream->mTracksStartTime;
       if (endTime <= mStateComputedTime) {
-        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is blocked due to being finished", stream));
+        LOG(LogLevel::Verbose,
+            ("MediaStream %p is blocked due to being finished", stream));
         stream->mStartBlocking = mStateComputedTime;
       } else {
-        STREAM_LOG(LogLevel::Verbose, ("MediaStream %p is finished, but not blocked yet (end at %f, with blocking at %f)",
-            stream, MediaTimeToSeconds(stream->GetTracksEnd()),
-            MediaTimeToSeconds(endTime)));
+        LOG(LogLevel::Verbose,
+            ("MediaStream %p is finished, but not blocked yet (end at %f, with "
+             "blocking at %f)",
+             stream,
+             MediaTimeToSeconds(stream->GetTracksEnd()),
+             MediaTimeToSeconds(endTime)));
         // Data can't be added to a finished stream, so underruns are irrelevant.
         stream->mStartBlocking = std::min(endTime, aEndBlockingDecisions);
       }
@@ -1389,7 +1440,8 @@ MediaStreamGraphImpl::UpdateMainThreadState()
   if (finalUpdate) {
     // Enter shutdown mode. The stable-state handler will detect this
     // and complete shutdown. Destroy any streams immediately.
-    STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p waiting for main thread cleanup", this));
+    LOG(LogLevel::Debug,
+        ("MediaStreamGraph %p waiting for main thread cleanup", this));
     // We'll shut down this graph object if it does not get restarted.
     mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
     // No need to Destroy streams here. The main-thread owner of each
@@ -1452,7 +1504,7 @@ void
 MediaStreamGraphImpl::ForceShutDown(ShutdownTicket* aShutdownTicket)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
-  STREAM_LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
+  LOG(LogLevel::Debug, ("MediaStreamGraph %p ForceShutdown", this));
 
   MonitorAutoLock lock(mMonitor);
   if (aShutdownTicket) {
@@ -1507,7 +1559,7 @@ public:
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
 
-    LIFECYCLE_LOG("Shutting down graph %p", mGraph.get());
+    LOG(LogLevel::Debug, ("Shutting down graph %p", mGraph.get()));
 
     // We've asserted the graph isn't running.  Use mDriver instead of CurrentDriver
     // to avoid thread-safety checks
@@ -1629,22 +1681,22 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       mPostedRunInStableStateEvent = false;
     }
 
-#ifdef ENABLE_LIFECYCLE_LOG
-  // This should be kept in sync with the LifecycleState enum in
-  // MediaStreamGraphImpl.h
-  const char * LifecycleState_str[] = {
-    "LIFECYCLE_THREAD_NOT_STARTED",
-    "LIFECYCLE_RUNNING",
-    "LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP",
-    "LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN",
-    "LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION"
-  };
+    // This should be kept in sync with the LifecycleState enum in
+    // MediaStreamGraphImpl.h
+    const char* LifecycleState_str[] = {
+      "LIFECYCLE_THREAD_NOT_STARTED",
+      "LIFECYCLE_RUNNING",
+      "LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP",
+      "LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN",
+      "LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION"
+    };
 
-  if (mLifecycleState != LIFECYCLE_RUNNING) {
-    LIFECYCLE_LOG("Running %p in stable state. Current state: %s\n",
-        this, LifecycleState_str[mLifecycleState]);
-  }
-#endif
+    if (mLifecycleState != LIFECYCLE_RUNNING) {
+      LOG(LogLevel::Debug,
+          ("Running %p in stable state. Current state: %s",
+           this,
+           LifecycleState_str[mLifecycleState]));
+    }
 
     runnables.SwapElements(mUpdateRunnables);
     for (uint32_t i = 0; i < mStreamUpdates.Length(); ++i) {
@@ -1663,11 +1715,12 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // synchronously because it spins the event loop waiting for threads
         // to shut down, and we don't want to do that in a stable state handler.
         mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
-        LIFECYCLE_LOG("Sending MediaStreamGraphShutDownRunnable %p", this);
+        LOG(LogLevel::Debug,
+            ("Sending MediaStreamGraphShutDownRunnable %p", this));
         nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this );
         NS_DispatchToMainThread(event.forget());
 
-        LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
+        LOG(LogLevel::Debug, ("Disconnecting MediaStreamGraph %p", this));
         MediaStreamGraphImpl* graph;
         if (gGraphs.Get(uint32_t(mAudioChannel), &graph) && graph == this) {
           // null out gGraph if that's the graph being shut down
@@ -1692,9 +1745,11 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
         {
-          LIFECYCLE_LOG("Reviving a graph (%p) ! %s\n",
-              this, CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
-                                                               "SystemDriver");
+          LOG(LogLevel::Debug,
+              ("Reviving a graph (%p) ! %s",
+               this,
+               CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver"
+                                                        : "SystemDriver"));
           RefPtr<GraphDriver> driver = CurrentDriver();
           MonitorAutoUnlock unlock(mMonitor);
           driver->Revive();
@@ -1713,10 +1768,11 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       {
         // We should exit the monitor for now, because starting a stream might
         // take locks, and we don't want to deadlock.
-        LIFECYCLE_LOG("Starting a graph (%p) ! %s\n",
-                      this,
-                      CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
-                                                                 "SystemDriver");
+        LOG(LogLevel::Debug,
+            ("Starting a graph (%p) ! %s",
+             this,
+             CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver"
+                                                      : "SystemDriver"));
         RefPtr<GraphDriver> driver = CurrentDriver();
         MonitorAutoUnlock unlock(mMonitor);
         driver->Start();
@@ -2114,16 +2170,16 @@ MediaStream::SetAudioOutputVolume(void* aKey, float aVolume)
 void
 MediaStream::AddAudioOutputImpl(void* aKey)
 {
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Adding AudioOutput for key %p",
-                              this, aKey));
+  LOG(LogLevel::Info,
+      ("MediaStream %p Adding AudioOutput for key %p", this, aKey));
   mAudioOutputs.AppendElement(AudioOutput(aKey));
 }
 
 void
 MediaStream::RemoveAudioOutputImpl(void* aKey)
 {
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Removing AudioOutput for key %p",
-                              this, aKey));
+  LOG(LogLevel::Info,
+      ("MediaStream %p Removing AudioOutput for key %p", this, aKey));
   for (uint32_t i = 0; i < mAudioOutputs.Length(); ++i) {
     if (mAudioOutputs[i].mKey == aKey) {
       mAudioOutputs.RemoveElementAt(i);
@@ -2154,8 +2210,10 @@ MediaStream::AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
                                 TrackID aID)
 {
   RefPtr<MediaStreamVideoSink> sink = aSink;
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Adding MediaStreamVideoSink %p as output",
-                              this, sink.get()));
+  LOG(LogLevel::Info,
+      ("MediaStream %p Adding MediaStreamVideoSink %p as output",
+       this,
+       sink.get()));
   MOZ_ASSERT(aID != TRACK_NONE);
    for (auto entry : mVideoOutputs) {
      if (entry.mListener == sink &&
@@ -2174,8 +2232,9 @@ void
 MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink,
                                    TrackID aID)
 {
-  STREAM_LOG(LogLevel::Info, ("MediaStream %p Removing MediaStreamVideoSink %p as output",
-                              this, aSink));
+  LOG(
+    LogLevel::Info,
+    ("MediaStream %p Removing MediaStreamVideoSink %p as output", this, aSink));
   MOZ_ASSERT(aID != TRACK_NONE);
 
   // Ensure that any frames currently queued for playback by the compositor
@@ -2700,7 +2759,10 @@ SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aSt
   nsTArray<TrackData> *track_data = (aFlags & ADDTRACK_QUEUED) ?
                                     &mPendingTracks : &mUpdateTracks;
   TrackData* data = track_data->AppendElement();
-  LIFECYCLE_LOG("AddTrackInternal: %lu/%lu", (long)mPendingTracks.Length(), (long)mUpdateTracks.Length());
+  LOG(LogLevel::Debug,
+      ("AddTrackInternal: %lu/%lu",
+       (long)mPendingTracks.Length(),
+       (long)mUpdateTracks.Length()));
   data->mID = aID;
   data->mInputRate = aRate;
   data->mResamplerChannelCount = 0;
@@ -2726,7 +2788,10 @@ SourceMediaStream::FinishAddTracks()
 {
   MutexAutoLock lock(mMutex);
   mUpdateTracks.AppendElements(Move(mPendingTracks));
-  LIFECYCLE_LOG("FinishAddTracks: %lu/%lu", (long)mPendingTracks.Length(), (long)mUpdateTracks.Length());
+  LOG(LogLevel::Debug,
+      ("FinishAddTracks: %lu/%lu",
+       (long)mPendingTracks.Length(),
+       (long)mUpdateTracks.Length()));
   if (GraphImpl()) {
     GraphImpl()->EnsureNextIteration();
   }
@@ -2895,8 +2960,11 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
   bool isAudio = false;
   bool isVideo = false;
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
-  STREAM_LOG(LogLevel::Debug, ("Adding direct track listener %p bound to track %d to source stream %p",
-             listener.get(), aTrackID, this));
+  LOG(LogLevel::Debug,
+      ("Adding direct track listener %p bound to track %d to source stream %p",
+       listener.get(),
+       aTrackID,
+       this));
 
   {
     MutexAutoLock lock(mMutex);
@@ -2939,21 +3007,24 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
     }
   }
   if (!track) {
-    STREAM_LOG(LogLevel::Warning, ("Couldn't find source track for direct track listener %p",
-                                   listener.get()));
+    LOG(LogLevel::Warning,
+        ("Couldn't find source track for direct track listener %p",
+         listener.get()));
     listener->NotifyDirectListenerInstalled(
       DirectMediaStreamTrackListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
     return;
   }
   if (!isAudio && !isVideo) {
-    STREAM_LOG(LogLevel::Warning, ("Source track for direct track listener %p is unknown",
-                                   listener.get()));
+    LOG(
+      LogLevel::Warning,
+      ("Source track for direct track listener %p is unknown", listener.get()));
     // It is not a video or audio track.
     MOZ_ASSERT(true);
     return;
   }
-  STREAM_LOG(LogLevel::Debug, ("Added direct track listener %p. ended=%d",
-                               listener.get(), !updateData));
+  LOG(
+    LogLevel::Debug,
+    ("Added direct track listener %p. ended=%d", listener.get(), !updateData));
   listener->NotifyDirectListenerInstalled(
     DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
   if (!updateData) {
@@ -3036,14 +3107,18 @@ SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode
       DisabledTrackMode oldMode = GetDisabledTrackMode(aTrackID);
       bool oldEnabled = oldMode == DisabledTrackMode::ENABLED;
       if (!oldEnabled && aMode == DisabledTrackMode::ENABLED) {
-        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
-                                     "direct listener enabled",
-                                     this, aTrackID));
+        LOG(LogLevel::Debug,
+            ("SourceMediaStream %p track %d setting "
+             "direct listener enabled",
+             this,
+             aTrackID));
         l.mListener->DecreaseDisabled(oldMode);
       } else if (oldEnabled && aMode != DisabledTrackMode::ENABLED) {
-        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
-                                     "direct listener disabled",
-                                     this, aTrackID));
+        LOG(LogLevel::Debug,
+            ("SourceMediaStream %p track %d setting "
+             "direct listener disabled",
+             this,
+             aTrackID));
         l.mListener->IncreaseDisabled(aMode);
       }
     }
@@ -3101,8 +3176,11 @@ SourceMediaStream::HasPendingAudioTrack()
 void
 MediaInputPort::Init()
 {
-  STREAM_LOG(LogLevel::Debug, ("Adding MediaInputPort %p (from %p to %p) to the graph",
-             this, mSource, mDest));
+  LOG(LogLevel::Debug,
+      ("Adding MediaInputPort %p (from %p to %p) to the graph",
+       this,
+       mSource,
+       mDest));
   mSource->AddConsumer(this);
   mDest->AddInput(this);
   // mPortCount decremented via MediaInputPort::Destroy's message
@@ -3454,9 +3532,10 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
 
     gGraphs.Put(channel, graph);
 
-    STREAM_LOG(LogLevel::Debug,
+    LOG(LogLevel::Debug,
         ("Starting up MediaStreamGraph %p for channel %s",
-         graph, AudioChannelValues::strings[channel].value));
+         graph,
+         AudioChannelValues::strings[channel].value));
   }
 
   return graph;
@@ -3472,7 +3551,7 @@ MediaStreamGraph::CreateNonRealtimeInstance(TrackRate aSampleRate)
                              aSampleRate,
                              AudioChannel::Normal);
 
-  STREAM_LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
+  LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
 
   return graph;
 }
@@ -3772,9 +3851,11 @@ MediaStreamGraphImpl::SuspendOrResumeStreams(AudioContextOperation aAudioContext
       IncrementSuspendCount(stream);
     }
   }
-  STREAM_LOG(LogLevel::Debug, ("Moving streams between suspended and running"
-      "state: mStreams: %d, mSuspendedStreams: %d\n", mStreams.Length(),
-      mSuspendedStreams.Length()));
+  LOG(LogLevel::Debug,
+      ("Moving streams between suspended and running"
+       "state: mStreams: %d, mSuspendedStreams: %d",
+       mStreams.Length(),
+       mSuspendedStreams.Length()));
 #ifdef DEBUG
   // The intersection of the two arrays should be null.
   for (uint32_t i = 0; i < mStreams.Length(); i++) {

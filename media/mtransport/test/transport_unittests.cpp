@@ -72,11 +72,11 @@ class TransportLayerDummy : public TransportLayer {
     *destroyed_ = true;
   }
 
-  virtual nsresult InitInternal() {
+  nsresult InitInternal() override {
     return allow_init_ ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
+  TransportResult SendPacket(const unsigned char *data, size_t len) override {
     MOZ_CRASH();  // Should never be called.
     return 0;
   }
@@ -102,7 +102,7 @@ class TransportLayerLossy : public TransportLayer {
   TransportLayerLossy() : loss_mask_(0), packet_(0), inspector_(nullptr) {}
   ~TransportLayerLossy () {}
 
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
+  TransportResult SendPacket(const unsigned char *data, size_t len) override {
     MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "SendPacket(" << len << ")");
 
     if (loss_mask_ & (1 << (packet_ % 32))) {
@@ -139,7 +139,7 @@ class TransportLayerLossy : public TransportLayer {
   TRANSPORT_LAYER_ID("lossy")
 
  protected:
-  virtual void WasInserted() {
+  void WasInserted() override {
     downward_->SignalPacketReceived.
         connect(this,
                 &TransportLayerLossy::PacketReceived);
@@ -578,13 +578,11 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void TweakCiphers(PRFileDesc* fd) {
-    for (auto it = enabled_cipersuites_.begin();
-         it != enabled_cipersuites_.end(); ++it) {
-      SSL_CipherPrefSet(fd, *it, PR_TRUE);
+    for (unsigned short& enabled_cipersuite : enabled_cipersuites_) {
+      SSL_CipherPrefSet(fd, enabled_cipersuite, PR_TRUE);
     }
-    for (auto it = disabled_cipersuites_.begin();
-         it != disabled_cipersuites_.end(); ++it) {
-      SSL_CipherPrefSet(fd, *it, PR_FALSE);
+    for (unsigned short& disabled_cipersuite : disabled_cipersuites_) {
+      SSL_CipherPrefSet(fd, disabled_cipersuite, PR_FALSE);
     }
   }
 

@@ -33,7 +33,7 @@ class TransportLayerPrsock : public TransportLayer {
 
 
   // Internal initializer
-  virtual nsresult InitInternal();
+  nsresult InitInternal() override;
 
   void Import(PRFileDesc *fd, nsresult *result);
 
@@ -42,7 +42,7 @@ class TransportLayerPrsock : public TransportLayer {
   }
 
   // Implement TransportLayer
-  virtual TransportResult SendPacket(const unsigned char *data, size_t len);
+  TransportResult SendPacket(const unsigned char *data, size_t len) override;
 
   TRANSPORT_LAYER_ID("prsock")
 

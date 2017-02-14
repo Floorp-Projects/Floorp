@@ -829,43 +829,70 @@ gfxMacPlatformFontList::InitSingleFaceList()
     AutoTArray<nsString, 10> singleFaceFonts;
     gfxFontUtils::GetPrefsFontList("font.single-face-list", singleFaceFonts);
 
-    uint32_t numFonts = singleFaceFonts.Length();
-    for (uint32_t i = 0; i < numFonts; i++) {
+    for (const auto& singleFaceFamily : singleFaceFonts) {
         LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
-                      NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
-        nsAutoString familyName(singleFaceFonts[i]);
+                      NS_ConvertUTF16toUTF8(singleFaceFamily).get()));
+        // Each entry in the "single face families" list is expected to be a
+        // colon-separated pair of FaceName:Family,
+        // where FaceName is the individual face name (psname) of a font
+        // that should be exposed as a separate family name,
+        // and Family is the standard family to which that face belongs.
+        // The only such face listed by default is
+        //    Osaka-Mono:Osaka
+        nsAutoString familyName(singleFaceFamily);
         auto colon = familyName.FindChar(':');
-        if (colon != kNotFound) {
-            nsAutoString key(Substring(familyName, colon + 1));
-            ToLowerCase(key);
-            if (!mFontFamilies.GetWeak(key)) {
-                continue;
-            }
-            familyName.Truncate(colon);
+        if (colon == kNotFound) {
+            continue;
         }
-        gfxFontEntry *fontEntry = LookupLocalFont(familyName,
-                                                  400, 0,
-                                                  NS_FONT_STYLE_NORMAL);
-        if (fontEntry) {
-            nsAutoString key;
-            GenerateFontListKey(familyName, key);
-            LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
+
+        // Look for the parent family in the main font family list,
+        // and ensure we have loaded its list of available faces.
+        nsAutoString key(Substring(familyName, colon + 1));
+        ToLowerCase(key);
+        gfxFontFamily* family = mFontFamilies.GetWeak(key);
+        if (!family) {
+            continue;
+        }
+        family->FindStyleVariations();
+
+        // Truncate the entry from prefs at the colon, so now it is just the
+        // desired single-face-family name.
+        familyName.Truncate(colon);
+
+        // Look through the family's faces to see if this one is present.
+        const gfxFontEntry* fe = nullptr;
+        for (const auto& face : family->GetFontList()) {
+            if (face->Name().Equals(familyName)) {
+                fe = face;
+                break;
+            }
+        }
+        if (!fe) {
+            continue;
+        }
+
+        // We found the correct face, so create the single-face family record.
+        GenerateFontListKey(familyName, key);
+        LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
+                      NS_ConvertUTF16toUTF8(familyName).get(),
+                      NS_ConvertUTF16toUTF8(key).get()));
+
+        // add only if doesn't exist already
+        if (!mFontFamilies.GetWeak(key)) {
+            RefPtr<gfxFontFamily> familyEntry =
+                new gfxSingleFaceMacFontFamily(familyName);
+            // We need a separate font entry, because its family name will
+            // differ from the one we found in the main list.
+            MacOSFontEntry* fontEntry =
+                new MacOSFontEntry(fe->Name(), fe->mWeight, true,
+                                   static_cast<const MacOSFontEntry*>(fe)->
+                                       mSizeHint);
+            familyEntry->AddFontEntry(fontEntry);
+            familyEntry->SetHasStyles(true);
+            mFontFamilies.Put(key, familyEntry);
+            LOG_FONTLIST(("(fontlist-singleface) added new family\n",
                           NS_ConvertUTF16toUTF8(familyName).get(),
                           NS_ConvertUTF16toUTF8(key).get()));
-
-            // add only if doesn't exist already
-            if (!mFontFamilies.GetWeak(key)) {
-                RefPtr<gfxFontFamily> familyEntry =
-                    new gfxSingleFaceMacFontFamily(familyName);
-                // LookupLocalFont sets this, need to clear
-                fontEntry->mIsLocalUserFont = false;
-                familyEntry->AddFontEntry(fontEntry);
-                familyEntry->SetHasStyles(true);
-                mFontFamilies.Put(key, familyEntry);
-                LOG_FONTLIST(("(fontlist-singleface) added new family\n",
-                              NS_ConvertUTF16toUTF8(familyName).get(),
-                              NS_ConvertUTF16toUTF8(key).get()));
-            }
         }
     }
 }

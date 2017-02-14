@@ -201,7 +201,7 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
   StickyTimeDuration intervalEndTime;
 
   if (!mEffect) {
-    currentPhase      = GetTransitionPhaseWithoutEffect();
+    currentPhase = GetAnimationPhaseWithoutEffect<TransitionPhase>(*this);
   } else {
     ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
@@ -324,23 +324,6 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
                                             evt.mTimeStamp,
                                             this));
   }
-}
-
-CSSTransition::TransitionPhase
-CSSTransition::GetTransitionPhaseWithoutEffect() const
-{
-  MOZ_ASSERT(!mEffect, "Should only be called when we do not have an effect");
-
-  Nullable<TimeDuration> currentTime = GetCurrentTime();
-  if (currentTime.IsNull()) {
-    return TransitionPhase::Idle;
-  }
-
-  // If we don't have a target effect, the duration will be zero so the phase is
-  // 'before' if the current time is less than zero.
-  return currentTime.Value() < TimeDuration()
-         ? TransitionPhase::Before
-         : TransitionPhase::After;
 }
 
 void

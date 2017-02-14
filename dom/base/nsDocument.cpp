@@ -1294,6 +1294,7 @@ nsIDocument::nsIDocument()
     mBidiEnabled(false),
     mMathMLEnabled(false),
     mIsInitialDocumentInWindow(false),
+    mIgnoreDocGroupMismatches(false),
     mLoadedAsData(false),
     mLoadedAsInteractiveData(false),
     mMayStartLayout(true),
@@ -4527,6 +4528,7 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
         if (NS_SUCCEEDED(rv)) {
           MOZ_RELEASE_ASSERT(mDocGroup->MatchesKey(docGroupKey));
         }
+        MOZ_RELEASE_ASSERT(mDocGroup->GetTabGroup() == tabgroup);
       } else {
         mDocGroup = tabgroup->AddDocument(docGroupKey, this);
         MOZ_ASSERT(mDocGroup);
@@ -4986,6 +4988,14 @@ nsDocument::MaybeEndOutermostXBLUpdate()
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
+  // If the document is going away, then it's probably okay to do things to it
+  // in the wrong DocGroup. We're unlikely to run JS or do anything else
+  // observable at this point. We reach this point when cycle collecting a
+  // <link> element and the unlink code removes a style sheet.
+  if (mDocGroup && !mIsGoingAway && !mIgnoreDocGroupMismatches) {
+    mDocGroup->ValidateAccess();
+  }
+
   if (mUpdateNestLevel == 0 && !mInXBLUpdate) {
     mInXBLUpdate = true;
     BindingManager()->BeginOutermostUpdate();
@@ -7841,6 +7851,11 @@ nsDocument::GetExistingListenerManager() const
 nsresult
 nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
+  if (mDocGroup && aVisitor.mEvent->mMessage != eVoidEvent &&
+      !mIgnoreDocGroupMismatches) {
+    mDocGroup->ValidateAccess();
+  }
+
   aVisitor.mCanHandle = true;
    // FIXME! This is a hack to make middle mouse paste working also in Editor.
    // Bug 329119
@@ -9220,12 +9235,17 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   clone->mDocumentBaseURI = mDocumentBaseURI;
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
 
-  // Set scripting object
   bool hasHadScriptObject = true;
   nsIScriptGlobalObject* scriptObject =
     GetScriptHandlingObject(hasHadScriptObject);
   NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
-  if (scriptObject) {
+  if (mCreatingStaticClone) {
+    // If we're doing a static clone (print, print preview), then we're going to
+    // be setting a scope object after the clone. It's better to set it only
+    // once, so we don't do that here. However, we do want to act as if there is
+    // a script handling object. So we set mHasHadScriptHandlingObject.
+    clone->mHasHadScriptHandlingObject = true;
+  } else if (scriptObject) {
     clone->SetScriptHandlingObject(scriptObject);
   } else {
     clone->SetScopeObject(GetScopeObject());
