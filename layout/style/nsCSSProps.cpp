@@ -2341,10 +2341,10 @@ const KTableEntry nsCSSProps::kMaskTypeKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kShapeOutsideShapeBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleGeometryBox::Content },
-  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
-  { eCSSKeyword_border_box, StyleGeometryBox::Border },
-  { eCSSKeyword_margin_box, StyleGeometryBox::Margin },
+  { eCSSKeyword_content_box, StyleShapeOutsideShapeBox::Content },
+  { eCSSKeyword_padding_box, StyleShapeOutsideShapeBox::Padding },
+  { eCSSKeyword_border_box, StyleShapeOutsideShapeBox::Border },
+  { eCSSKeyword_margin_box, StyleShapeOutsideShapeBox::Margin },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
