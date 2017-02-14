@@ -224,7 +224,8 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
     return false;
 
   nsIContent* content = aFrame->GetContent();
-  return content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+  return content->IsXULElement(nsGkAtoms::button) &&
+         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                               NS_LITERAL_STRING("menu"), eCaseMatters);
 }
 

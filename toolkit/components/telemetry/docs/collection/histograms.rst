@@ -26,6 +26,8 @@ The histogram below is taken from Firefox's ``about:telemetry`` page. It shows a
 
 The histograms on the ``about:telemetry`` page only show the non-empty buckets in a histogram except for the bucket to the left of the first non-empty bucket and the bucket to the right of the last non-empty bucket.
 
+.. _choosing-histogram-type:
+
 Choosing a Histogram Type
 =========================
 

@@ -91,6 +91,8 @@ this.InsecurePasswordUtils = {
    */
   isFormSecure(aForm) {
     // Ignores window.opener, see top level documentation.
+    // ownerGlobal doesn't exist in content privileged windows.
+    // eslint-disable-next-line mozilla/use-ownerGlobal
     let isSafePage = aForm.ownerDocument.defaultView.isSecureContextIfOpenerIgnored;
     let { isFormSubmitSecure, isFormSubmitHTTP } = this._checkFormSecurity(aForm);
 

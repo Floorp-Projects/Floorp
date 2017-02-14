@@ -90,7 +90,7 @@ public:
   /**
    * Return the proxy for the parent of the wrapped accessible.
    */
-  Derived* Parent() const { return mParent; }
+  Derived* Parent() const;
 
   Accessible* OuterDocOfRemoteBrowser() const;
 
@@ -158,7 +158,7 @@ protected:
   ProxyAccessibleBase(uint64_t aID, Derived* aParent,
                       DocAccessibleParent* aDoc, role aRole,
                       uint32_t aInterfaces)
-    : mParent(aParent)
+    : mParent(aParent->ID())
     , mDoc(aDoc)
     , mWrapper(0)
     , mID(aID)
@@ -172,15 +172,18 @@ protected:
   }
 
   explicit ProxyAccessibleBase(DocAccessibleParent* aThisAsDoc) :
-    mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
+    mParent(kNoParent), mDoc(aThisAsDoc), mWrapper(0), mID(0),
     mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true), mHasValue(false),
     mIsHyperLink(false), mIsHyperText(false)
   {}
 
 protected:
-  Derived* mParent;
+  void SetParent(Derived* aParent);
 
 private:
+  uintptr_t mParent;
+  static const uintptr_t kNoParent = UINTPTR_MAX;
+
   friend Derived;
 
   nsTArray<Derived*> mChildren;

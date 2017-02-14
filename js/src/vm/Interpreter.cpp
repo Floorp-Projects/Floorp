@@ -367,6 +367,9 @@ js::RunScript(JSContext* cx, RunState& state)
     MOZ_DIAGNOSTIC_ASSERT(cx->compartment()->isSystem() ||
                           cx->runtime()->allowContentJS());
 
+    MOZ_ASSERT(!cx->enableAccessValidation ||
+               cx->compartment()->isAccessValid());
+
     if (!Debugger::checkNoExecute(cx, state.script()))
         return false;
 
@@ -934,7 +937,7 @@ JSType
 js::TypeOfObject(JSObject* obj)
 {
     if (EmulatesUndefined(obj))
-        return JSTYPE_VOID;
+        return JSTYPE_UNDEFINED;
     if (obj->isCallable())
         return JSTYPE_FUNCTION;
     return JSTYPE_OBJECT;
@@ -950,7 +953,7 @@ js::TypeOfValue(const Value& v)
     if (v.isNull())
         return JSTYPE_OBJECT;
     if (v.isUndefined())
-        return JSTYPE_VOID;
+        return JSTYPE_UNDEFINED;
     if (v.isObject())
         return TypeOfObject(&v.toObject());
     if (v.isBoolean())

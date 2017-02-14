@@ -2050,7 +2050,7 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 
 #ifdef MOZ_TASK_TRACER
-  if (mTaskTracer) {
+  if (gTaskTracer) {
     mozilla::tasktracer::StartLogging();
   }
 #endif
@@ -2211,7 +2211,7 @@ profiler_stop()
   }
 
 #ifdef MOZ_TASK_TRACER
-  if (mTaskTracer) {
+  if (gTaskTracer) {
     mozilla::tasktracer::StopLogging();
   }
 #endif
@@ -2441,7 +2441,7 @@ profiler_sleep_start()
   if (stack == nullptr) {
     return;
   }
-  stack->setSleeping(1);
+  stack->setSleeping();
 }
 
 void
@@ -2457,7 +2457,7 @@ profiler_sleep_end()
   if (stack == nullptr) {
     return;
   }
-  stack->setSleeping(0);
+  stack->setAwake();
 }
 
 bool

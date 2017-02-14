@@ -29,7 +29,7 @@ enum {
 };
 
 #define TRANSPORT_LAYER_ID(name) \
-  virtual const std::string id() const { return name; } \
+  const std::string id() const override { return name; } \
   static std::string ID() { return name; }
 
 // Abstract base class for network transport layers.

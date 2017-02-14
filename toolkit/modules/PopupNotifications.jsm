@@ -1227,7 +1227,10 @@ PopupNotifications.prototype = {
     // Ensure we move focus into the panel because it's opened through user interaction:
     this.panel.removeAttribute("noautofocus");
 
-    this._reshowNotifications(anchor);
+    // Avoid reshowing notifications that are already shown and have not been dismissed.
+    if (this.panel.state == "closed" || anchor != this._currentAnchorElement) {
+      this._reshowNotifications(anchor);
+    }
 
     // If the user re-selects the current notification, focus it.
     if (anchor == this._currentAnchorElement && this.panel.firstChild) {

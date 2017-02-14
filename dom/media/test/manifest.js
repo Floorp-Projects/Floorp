@@ -1422,6 +1422,30 @@ var gEMETests = [
     sessionCount:2,
     duration:1.60,
   },
+  {
+    name: "WebM vorbis audio & vp9 video clearkey with subsample encryption",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/webm; codecs=\"vorbis\"",
+        fragments:[ "sintel-short-clearkey-subsample-encrypted-audio.webm",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/webm; codecs=\"vp9\"",
+        fragments:[ "sintel-short-clearkey-subsample-encrypted-video.webm",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "2cdb0ed6119853e7850671c3e9906c3c" : "808B9ADAC384DE1E4F56140F4AD76194",
+    },
+    sessionType:"temporary",
+    sessionCount:2,
+    duration:2.0,
+  },
 ];
 
 var gEMENonMSEFailTests = [

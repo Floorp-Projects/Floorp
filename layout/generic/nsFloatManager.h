@@ -549,9 +549,9 @@ class nsAutoFloatManager {
 
 public:
   explicit nsAutoFloatManager(ReflowInput& aReflowInput)
-    : mReflowInput(aReflowInput),
-      mNew(nullptr),
-      mOld(nullptr) {}
+    : mReflowInput(aReflowInput)
+    , mOld(nullptr)
+  {}
 
   ~nsAutoFloatManager();
 
@@ -565,8 +565,11 @@ public:
 
 protected:
   ReflowInput &mReflowInput;
-  nsFloatManager *mNew;
-  nsFloatManager *mOld;
+  mozilla::UniquePtr<nsFloatManager> mNew;
+
+ // A non-owning pointer, which points to the object owned by
+ // nsAutoFloatManager::mNew.
+  nsFloatManager* mOld;
 };
 
 #endif /* !defined(nsFloatManager_h_) */

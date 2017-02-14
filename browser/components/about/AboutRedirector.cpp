@@ -105,7 +105,6 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
 };
-static const int kRedirTotal = ArrayLength(kRedirMap);
 
 static nsAutoCString
 GetAboutModuleName(nsIURI *aURI)
@@ -139,8 +138,8 @@ AboutRedirector::NewChannel(nsIURI* aURI,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (int i = 0; i < kRedirTotal; i++) {
-    if (!strcmp(path.get(), kRedirMap[i].id)) {
+  for (auto & redir : kRedirMap) {
+    if (!strcmp(path.get(), redir.id)) {
       nsAutoCString url;
 
       if (path.EqualsLiteral("newtab")) {
@@ -163,7 +162,7 @@ AboutRedirector::NewChannel(nsIURI* aURI,
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {
-        url.AssignASCII(kRedirMap[i].url);
+        url.AssignASCII(redir.url);
       }
 
       nsCOMPtr<nsIChannel> tempChannel;
@@ -209,9 +208,9 @@ AboutRedirector::GetURIFlags(nsIURI *aURI, uint32_t *result)
 
   nsAutoCString name = GetAboutModuleName(aURI);
 
-  for (int i = 0; i < kRedirTotal; i++) {
-    if (name.Equals(kRedirMap[i].id)) {
-      *result = kRedirMap[i].flags;
+  for (auto & redir : kRedirMap) {
+    if (name.Equals(redir.id)) {
+      *result = redir.flags;
       return NS_OK;
     }
   }

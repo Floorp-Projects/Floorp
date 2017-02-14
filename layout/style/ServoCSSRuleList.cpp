@@ -71,7 +71,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       case nsIDOMCSSRule::NAMESPACE_RULE:
         // XXX create corresponding rules
       default:
-        NS_ERROR("stylo: not implemented yet");
+        NS_WARNING("stylo: not implemented yet");
         return nullptr;
     }
     ruleObj->SetStyleSheet(mStyleSheet);

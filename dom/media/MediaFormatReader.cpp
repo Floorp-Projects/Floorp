@@ -1373,13 +1373,13 @@ MediaFormatReader::OnDemuxFailed(TrackType aTrack, const MediaResult& aError)
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
       if (!decoder.mWaitingForData) {
-        decoder.mNeedDraining = true;
+        decoder.RequestDrain();
       }
       NotifyEndOfStream(aTrack);
       break;
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
       if (!decoder.mWaitingForData) {
-        decoder.mNeedDraining = true;
+        decoder.RequestDrain();
       }
       NotifyWaitingForData(aTrack);
       break;
@@ -1517,16 +1517,6 @@ MediaFormatReader::NotifyNewOutput(
     decoder.mNumOfConsecutiveError = 0;
   }
   LOG("Done processing new %s samples", TrackTypeToStr(aTrack));
-  ScheduleUpdate(aTrack);
-}
-
-void
-MediaFormatReader::NotifyDrainComplete(TrackType aTrack)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  auto& decoder = GetDecoderData(aTrack);
-  LOG("%s", TrackTypeToStr(aTrack));
-  decoder.mDrainComplete = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -1778,7 +1768,7 @@ MediaFormatReader::HandleDemuxedSamples(
           LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
             info->GetID());
-          decoder.mNeedDraining = true;
+          decoder.RequestDrain();
           decoder.mNextStreamSourceID = Some(info->GetID());
           ScheduleUpdate(aTrack);
           return;
@@ -1887,18 +1877,21 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
 
   auto& decoder = GetDecoderData(aTrack);
-  if (!decoder.mNeedDraining || decoder.mDraining) {
+  if (decoder.mDrainState == DrainState::Draining) {
     return;
   }
-  decoder.mNeedDraining = false;
-  decoder.mDraining = true;
   if (!decoder.mDecoder
-      || decoder.mNumSamplesInput == decoder.mNumSamplesOutput) {
+      || (decoder.mDrainState != DrainState::PartialDrainPending
+          && decoder.mNumSamplesInput == decoder.mNumSamplesOutput)) {
     // No frames to drain.
     LOGV("Draining %s with nothing to drain", TrackTypeToStr(aTrack));
-    NotifyDrainComplete(aTrack);
+    decoder.mDrainState = DrainState::DrainAborted;
+    ScheduleUpdate(aTrack);
     return;
   }
+
+  decoder.mDrainState = DrainState::Draining;
+
   RefPtr<MediaFormatReader> self = this;
   decoder.mDecoder->Drain()
     ->Then(mTaskQueue, __func__,
@@ -1906,13 +1899,13 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
            (const MediaDataDecoder::DecodedData& aResults) {
              decoder.mDrainRequest.Complete();
              if (aResults.IsEmpty()) {
-               NotifyDrainComplete(aTrack);
+               decoder.mDrainState = DrainState::DrainCompleted;
              } else {
                NotifyNewOutput(aTrack, aResults);
                // Let's see if we have any more data available to drain.
-               decoder.mNeedDraining = true;
-               decoder.mDraining = false;
+               decoder.mDrainState = DrainState::PartialDrainPending;
              }
+             ScheduleUpdate(aTrack);
            },
            [self, this, aTrack, &decoder](const MediaResult& aError) {
              decoder.mDrainRequest.Complete();
@@ -2032,14 +2025,15 @@ MediaFormatReader::Update(TrackType aTrack)
       LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
       decoder.RejectPromise(decoder.mError.ref(), __func__);
       return;
-    } else if (decoder.mDrainComplete) {
-      decoder.mDrainComplete = false;
-      decoder.mDraining = false;
+    } else if (decoder.mDrainState == DrainState::DrainCompleted
+               || decoder.mDrainState == DrainState::DrainAborted) {
       if (decoder.mDemuxEOS) {
         LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
       } else if (decoder.mWaitingForData) {
-        if (decoder.mLastSampleTime && !decoder.mNextStreamSourceID) {
+        if (decoder.mDrainState == DrainState::DrainCompleted
+            && decoder.mLastSampleTime
+            && !decoder.mNextStreamSourceID) {
           // We have completed draining the decoder following WaitingForData.
           // Set up the internal seek machinery to be able to resume from the
           // last sample decoded.
@@ -2053,6 +2047,9 @@ MediaFormatReader::Update(TrackType aTrack)
           decoder.RejectPromise(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
         }
       }
+
+      decoder.mDrainState = DrainState::None;
+
       // Now that draining has completed, we check if we have received
       // new data again as the result may now be different from the earlier
       // run.
@@ -2060,8 +2057,9 @@ MediaFormatReader::Update(TrackType aTrack)
         LOGV("Nothing more to do");
         return;
       }
-    } else if (decoder.mDemuxEOS && !decoder.mNeedDraining &&
-               !decoder.HasPendingDrain() && decoder.mQueuedSamples.IsEmpty()) {
+    } else if (decoder.mDemuxEOS
+               && !decoder.HasPendingDrain()
+               && decoder.mQueuedSamples.IsEmpty()) {
       // It is possible to transition from WAITING_FOR_DATA directly to EOS
       // state during the internal seek; in which case no draining would occur.
       // There is no more samples left to be decoded and we are already in
@@ -2075,8 +2073,11 @@ MediaFormatReader::Update(TrackType aTrack)
     }
   }
 
-  if (decoder.mNeedDraining) {
-    DrainDecoder(aTrack);
+  if (decoder.mDrainState == DrainState::DrainRequested
+      || decoder.mDrainState == DrainState::PartialDrainPending) {
+    if (decoder.mOutput.IsEmpty()) {
+      DrainDecoder(aTrack);
+    }
     return;
   }
 

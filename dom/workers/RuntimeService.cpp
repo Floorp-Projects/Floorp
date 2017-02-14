@@ -2767,16 +2767,6 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
   }
 }
 
-void
-RuntimeService::JSVersionChanged(const char* /* aPrefName */, void* /* aClosure */)
-{
-  AssertIsOnMainThread();
-
-  bool useLatest = Preferences::GetBool("dom.workers.latestJSVersion", false);
-  JS::CompartmentOptions& options = sDefaultJSSettings.content.compartmentOptions;
-  options.behaviors().setVersion(useLatest ? JSVERSION_LATEST : JSVERSION_DEFAULT);
-}
-
 bool
 LogViolationDetailsRunnable::MainThreadRun()
 {
@@ -2896,9 +2886,6 @@ WorkerThreadPrimaryRunnable::Run()
 
 #ifdef MOZ_GECKO_PROFILER
       if (stack) {
-        // XXX: this is currently a no-op because control ends up
-        // PseudoStack::flushSamplerOnJSShutdown() which is a no-op for any
-        // thread other than the main thread. See the comment in that function.
         stack->sampleContext(nullptr);
       }
 #endif

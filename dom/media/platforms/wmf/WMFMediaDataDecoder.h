@@ -7,12 +7,11 @@
 #if !defined(WMFMediaDataDecoder_h_)
 #define WMFMediaDataDecoder_h_
 
-
-#include "WMF.h"
 #include "MFTDecoder.h"
+#include "PlatformDecoderModule.h"
+#include "WMF.h"
 #include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
-#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -22,7 +21,7 @@ namespace mozilla {
 class MFTManager
 {
 public:
-  virtual ~MFTManager() {}
+  virtual ~MFTManager() { }
 
   // Submit a compressed sample for decoding.
   // This should forward to the MFTDecoder after performing
@@ -54,7 +53,10 @@ public:
   // Destroys all resources.
   virtual void Shutdown() = 0;
 
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const { return false; }
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const
+  {
+    return false;
+  }
 
   virtual TrackInfo::TrackType GetType() = 0;
 
@@ -80,8 +82,7 @@ protected:
 class WMFMediaDataDecoder : public MediaDataDecoder
 {
 public:
-  WMFMediaDataDecoder(MFTManager* aOutputSource,
-                      TaskQueue* aTaskQueue);
+  WMFMediaDataDecoder(MFTManager* aOutputSource, TaskQueue* aTaskQueue);
   ~WMFMediaDataDecoder();
 
   RefPtr<MediaDataDecoder::InitPromise> Init() override;
@@ -131,10 +132,17 @@ private:
   // This is used to approximate the decoder's position in the media resource.
   int64_t mLastStreamOffset;
 
-  bool mIsShutDown;
+  bool mIsShutDown = false;
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
+  enum class DrainStatus
+  {
+    DRAINED,
+    DRAINABLE,
+    DRAINING,
+  };
+  DrainStatus mDrainStatus = DrainStatus::DRAINED;
 
   // For telemetry
   bool mHasSuccessfulOutput = false;
