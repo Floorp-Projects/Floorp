@@ -937,7 +937,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // allow the table to determine if/how the table needs to be rebalanced
         // If any of the cells are not complete, then we're not complete
         if (status.IsIncomplete()) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
+          aStatus.Reset();
+          aStatus.SetIncomplete();
         }
       } else {
         if (iCoord != origKidNormalPosition.I(wm)) {
@@ -1026,7 +1027,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       iCoord += kidFrame->ISize(wm);
 
       if (kidFrame->GetNextInFlow()) {
-        aStatus = NS_FRAME_NOT_COMPLETE;
+        aStatus.Reset();
+        aStatus.SetIncomplete();
       }
     }
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
