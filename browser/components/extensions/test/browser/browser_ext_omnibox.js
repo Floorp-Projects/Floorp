@@ -118,6 +118,26 @@ add_task(function* () {
     EventUtils.synthesizeKey(" ", {});
     yield expectEvent("on-input-started-fired");
 
+    // Test canceling the input before any changed events fire.
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
+    yield expectEvent("on-input-cancelled-fired");
+
+    EventUtils.synthesizeKey(" ", {});
+    yield expectEvent("on-input-started-fired");
+
+    // Test submitting the input before any changed events fire.
+    EventUtils.synthesizeKey("VK_RETURN", {});
+    yield expectEvent("on-input-entered-fired");
+
+    gURLBar.focus();
+
+    // Start an input session by typing in <keyword><space>.
+    for (let letter of keyword) {
+      EventUtils.synthesizeKey(letter, {});
+    }
+    EventUtils.synthesizeKey(" ", {});
+    yield expectEvent("on-input-started-fired");
+
     // We should expect input changed events now that the keyword is active.
     EventUtils.synthesizeKey("b", {});
     yield expectEvent("on-input-changed-fired", {text: "b"});
