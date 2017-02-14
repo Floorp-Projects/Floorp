@@ -7,8 +7,8 @@
 #include "WMFMediaDataDecoder.h"
 #include "VideoUtils.h"
 #include "WMFUtils.h"
-#include "nsTArray.h"
 #include "mozilla/Telemetry.h"
+#include "nsTArray.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
@@ -21,7 +21,6 @@ WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager,
                                          TaskQueue* aTaskQueue)
   : mTaskQueue(aTaskQueue)
   , mMFTManager(aMFTManager)
-  , mIsShutDown(false)
 {
 }
 
@@ -128,6 +127,7 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
       __func__);
   }
 
+  mDrainStatus = DrainStatus::DRAINABLE;
   mLastStreamOffset = aSample->mOffset;
 
   RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
@@ -141,12 +141,19 @@ WMFMediaDataDecoder::ProcessOutput()
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
   DecodedData results;
-  while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output)) &&
-         output) {
+  while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output))) {
+    MOZ_ASSERT(output.get(), "Upon success, we must receive an output");
     mHasSuccessfulOutput = true;
     results.AppendElement(Move(output));
+    if (mDrainStatus == DrainStatus::DRAINING) {
+      break;
+    }
   }
-  if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+
+  if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+    if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT && !mDrainPromise.IsEmpty()) {
+      mDrainStatus = DrainStatus::DRAINED;
+    }
     if (!mDecodePromise.IsEmpty()) {
       mDecodePromise.Resolve(Move(results), __func__);
     } else {
@@ -154,21 +161,20 @@ WMFMediaDataDecoder::ProcessOutput()
     }
     return;
   }
-  if (FAILED(hr)) {
-    NS_WARNING("WMFMediaDataDecoder failed to output data");
-    const auto error = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                   RESULT_DETAIL("MFTManager::Output:%x", hr));
-    if (!mDecodePromise.IsEmpty()) {
-      mDecodePromise.Reject(error, __func__);
-    }
-    else {
-      mDrainPromise.Reject(error, __func__);
-    }
 
-    if (!mRecordedError) {
-      SendTelemetry(hr);
-      mRecordedError = true;
-    }
+  NS_WARNING("WMFMediaDataDecoder failed to output data");
+  const auto error = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                  RESULT_DETAIL("MFTManager::Output:%x", hr));
+  if (!mDecodePromise.IsEmpty()) {
+    mDecodePromise.Reject(error, __func__);
+  }
+  else {
+    mDrainPromise.Reject(error, __func__);
+  }
+
+  if (!mRecordedError) {
+    SendTelemetry(hr);
+    mRecordedError = true;
   }
 }
 
@@ -178,6 +184,7 @@ WMFMediaDataDecoder::ProcessFlush()
   if (mMFTManager) {
     mMFTManager->Flush();
   }
+  mDrainStatus = DrainStatus::DRAINED;
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
@@ -193,11 +200,14 @@ WMFMediaDataDecoder::Flush()
 RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::ProcessDrain()
 {
-  if (!mMFTManager) {
+  if (!mMFTManager || mDrainStatus == DrainStatus::DRAINED) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
-  // Order the decoder to drain...
-  mMFTManager->Drain();
+  if (mDrainStatus != DrainStatus::DRAINING) {
+    // Order the decoder to drain...
+    mMFTManager->Drain();
+    mDrainStatus = DrainStatus::DRAINING;
+  }
   // Then extract all available output.
   RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
   ProcessOutput();

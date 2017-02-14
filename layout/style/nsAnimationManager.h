@@ -110,8 +110,6 @@ public:
   void PauseFromStyle();
   void CancelFromStyle() override
   {
-    mOwningElement = OwningElementRef();
-
     // When an animation is disassociated with style it enters an odd state
     // where its composite order is undefined until it first transitions
     // out of the idle state.
@@ -126,10 +124,15 @@ public:
     mNeedsNewAnimationIndexWhenRun = true;
 
     Animation::CancelFromStyle();
+
+    // We need to do this *after* calling CancelFromStyle() since
+    // CancelFromStyle might synchronously trigger a cancel event for which
+    // we need an owning element to target the event at.
+    mOwningElement = OwningElementRef();
   }
 
   void Tick() override;
-  void QueueEvents();
+  void QueueEvents(StickyTimeDuration aActiveTime = StickyTimeDuration());
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
@@ -157,6 +160,10 @@ public:
   // True for animations that are generated from CSS markup and continue to
   // reflect changes to that markup.
   bool IsTiedToMarkup() const { return mOwningElement.IsSet(); }
+
+  void MaybeQueueCancelEvent(StickyTimeDuration aActiveTime) override {
+    QueueEvents(aActiveTime);
+  }
 
 protected:
   virtual ~CSSAnimation()

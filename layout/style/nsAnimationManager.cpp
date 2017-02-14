@@ -161,12 +161,8 @@ CSSAnimation::HasLowerCompositeOrderThan(const CSSAnimation& aOther) const
 }
 
 void
-CSSAnimation::QueueEvents()
+CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
 {
-  if (!mEffect) {
-    return;
-  }
-
   // If the animation is pending, we ignore animation events until we finish
   // pending.
   if (mPendingState != PendingState::NotPending) {
@@ -200,37 +196,58 @@ CSSAnimation::QueueEvents()
     return;
   }
   nsAnimationManager* manager = presContext->AnimationManager();
-  ComputedTiming computedTiming = mEffect->GetComputedTiming();
-
-  AnimationPhase currentPhase = computedTiming.mPhase;
-  uint64_t currentIteration  = computedTiming.mCurrentIteration;
-  if (currentPhase == mPreviousPhase &&
-      currentIteration == mPreviousIteration) {
-    return;
-  }
 
   const StickyTimeDuration zeroDuration;
-  StickyTimeDuration intervalStartTime =
-    std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().mDelay),
-                      computedTiming.mActiveDuration),
-             zeroDuration);
-  StickyTimeDuration intervalEndTime =
-    std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().mDelay),
-                      computedTiming.mActiveDuration),
-             zeroDuration);
+  uint64_t currentIteration = 0;
+  ComputedTiming::AnimationPhase currentPhase;
+  StickyTimeDuration intervalStartTime;
+  StickyTimeDuration intervalEndTime;
+  StickyTimeDuration iterationStartTime;
 
-  uint64_t iterationBoundary = mPreviousIteration > currentIteration
-                               ? currentIteration + 1
-                               : currentIteration;
-  StickyTimeDuration iterationStartTime  =
-    computedTiming.mDuration.MultDouble(
-      (iterationBoundary - computedTiming.mIterationStart));
+  if (!mEffect) {
+    currentPhase = GetAnimationPhaseWithoutEffect
+      <ComputedTiming::AnimationPhase>(*this);
+  } else {
+    ComputedTiming computedTiming = mEffect->GetComputedTiming();
+    currentPhase = computedTiming.mPhase;
+    currentIteration = computedTiming.mCurrentIteration;
+    if (currentPhase == mPreviousPhase &&
+        currentIteration == mPreviousIteration) {
+      return;
+    }
+    intervalStartTime =
+      std::max(std::min(StickyTimeDuration(-mEffect->SpecifiedTiming().mDelay),
+                        computedTiming.mActiveDuration),
+               zeroDuration);
+    intervalEndTime =
+      std::max(std::min((EffectEnd() - mEffect->SpecifiedTiming().mDelay),
+                        computedTiming.mActiveDuration),
+               zeroDuration);
+
+    uint64_t iterationBoundary = mPreviousIteration > currentIteration
+                                 ? currentIteration + 1
+                                 : currentIteration;
+    iterationStartTime  =
+      computedTiming.mDuration.MultDouble(
+        (iterationBoundary - computedTiming.mIterationStart));
+  }
 
   TimeStamp startTimeStamp     = ElapsedTimeToTimeStamp(intervalStartTime);
   TimeStamp endTimeStamp       = ElapsedTimeToTimeStamp(intervalEndTime);
   TimeStamp iterationTimeStamp = ElapsedTimeToTimeStamp(iterationStartTime);
 
   AutoTArray<AnimationEventParams, 2> events;
+
+  // Handle cancel event first
+  if ((mPreviousPhase != AnimationPhase::Idle &&
+       mPreviousPhase != AnimationPhase::After) &&
+      currentPhase == AnimationPhase::Idle) {
+    TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(aActiveTime);
+    events.AppendElement(AnimationEventParams{ eAnimationCancel,
+                                               aActiveTime,
+                                               activeTimeStamp });
+  }
+
   switch (mPreviousPhase) {
     case AnimationPhase::Idle:
     case AnimationPhase::Before:

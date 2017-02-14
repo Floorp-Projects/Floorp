@@ -162,18 +162,6 @@ public:
 
     Animation::CancelFromStyle();
 
-    // The above call to Animation::CancelFromStyle may cause a transitioncancel
-    // event to be queued. However, it will also remove the transition from its
-    // timeline. If this transition was the last animation attached to
-    // the timeline, the timeline will stop observing the refresh driver and
-    // there may be no subsequent tick fro dispatching animation events.
-    //
-    // To ensure the cancel event is dispatched we tell the timeline it needs to
-    // observe the refresh driver for at least one more tick.
-    if (mTimeline) {
-      mTimeline->NotifyAnimationUpdated(*this);
-    }
-
     // It is important we do this *after* calling CancelFromStyle().
     // This is because CancelFromStyle() will end up posting a restyle and
     // that restyle should target the *transitions* level of the cascade.
@@ -245,9 +233,6 @@ protected:
 
 
   enum class TransitionPhase;
-  // Return the TransitionPhase to use when the transition doesn't have a target
-  // effect.
-  TransitionPhase GetTransitionPhaseWithoutEffect() const;
 
   // The (pseudo-)element whose computed transition-property refers to this
   // transition (if any).

@@ -92,9 +92,10 @@ extern "C" {
 #define NESTEGG_ENCODING_COMPRESSION 0 /**< Content encoding type is compression. */
 #define NESTEGG_ENCODING_ENCRYPTION  1 /**< Content encoding type is encryption. */
 
-#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE       0 /**< Packet does not have signal byte */
-#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED 1 /**< Packet has signal byte and is unencrypted */
-#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED   2 /**< Packet has signal byte and is encrypted */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE         0 /**< Packet does not have signal byte */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED   1 /**< Packet has signal byte and is unencrypted */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED     2 /**< Packet has signal byte and is encrypted */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED   4 /**< Packet has signal byte and is partitioned */
 
 #define NESTEGG_PACKET_HAS_KEYFRAME_FALSE   0 /**< Packet contains only keyframes. */
 #define NESTEGG_PACKET_HAS_KEYFRAME_TRUE    1 /**< Packet does not contain any keyframes */
@@ -424,6 +425,8 @@ int nestegg_packet_discard_padding(nestegg_packet * packet,
              set, encryption information not read from packet.
     @retval  #NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED Encrypted bit set,
              encryption infomation read from packet.
+    @retval  #NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED Partitioned bit set,
+             encryption and parition information read from packet.
     @retval -1 Error.*/
 int nestegg_packet_encryption(nestegg_packet * packet);
 
@@ -438,6 +441,18 @@ int nestegg_packet_encryption(nestegg_packet * packet);
   */
 int nestegg_packet_iv(nestegg_packet * packet, unsigned char const ** iv,
                       size_t * length);
+
+/** Query the packet for offsets.
+@param packet            Packet initialized by #nestegg_read_packet.
+@param partition_offsets Storage for queried offsets.
+@param num_offsets       Length of returned offsets, may be 0.
+The data is owned by the #nestegg_packet packet.
+@retval  0 Success.
+@retval -1 Error.
+*/
+int nestegg_packet_offsets(nestegg_packet * packet,
+                           uint32_t const ** partition_offsets,
+                           uint8_t * num_offsets);
 
 /** Returns reference_block given packet
     @param packet          Packet initialized by #nestegg_read_packet.

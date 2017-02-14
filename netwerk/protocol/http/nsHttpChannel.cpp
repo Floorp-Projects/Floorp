@@ -49,6 +49,7 @@
 #include "nsPrintfCString.h"
 #include "nsAlgorithm.h"
 #include "nsQueryObject.h"
+#include "nsThreadUtils.h"
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Attributes.h"
@@ -291,6 +292,27 @@ nsHttpChannel::~nsHttpChannel()
 
     if (mAuthProvider)
         mAuthProvider->Disconnect(NS_ERROR_ABORT);
+
+    ReleaseMainThreadOnlyReferences();
+}
+
+void
+nsHttpChannel::ReleaseMainThreadOnlyReferences()
+{
+    if (NS_IsMainThread()) {
+        // Already on main thread, let dtor to
+        // take care of releasing references
+        return;
+    }
+
+    nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
+    arrayToRelease.AppendElement(mApplicationCacheForWrite.forget());
+    arrayToRelease.AppendElement(mAuthProvider.forget());
+    arrayToRelease.AppendElement(mRedirectURI.forget());
+    arrayToRelease.AppendElement(mRedirectChannel.forget());
+    arrayToRelease.AppendElement(mPreflightChannel.forget());
+
+    NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
 }
 
 nsresult

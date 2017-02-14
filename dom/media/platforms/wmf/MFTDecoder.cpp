@@ -5,17 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MFTDecoder.h"
-#include "nsThreadUtils.h"
 #include "WMFUtils.h"
 #include "mozilla/Logging.h"
+#include "nsThreadUtils.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
 
 MFTDecoder::MFTDecoder()
-  : mMFTProvidesOutputSamples(false)
-  , mDiscontinuity(true)
 {
   memset(&mInputStreamInfo, 0, sizeof(MFT_INPUT_STREAM_INFO));
   memset(&mOutputStreamInfo, 0, sizeof(MFT_OUTPUT_STREAM_INFO));
@@ -34,7 +32,8 @@ MFTDecoder::Create(const GUID& aMFTClsID)
                         nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IMFTransform,
-                        reinterpret_cast<void**>(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
+                        reinterpret_cast<void**>(static_cast<IMFTransform**>(
+                          getter_AddRefs(mDecoder))));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   return S_OK;
@@ -86,9 +85,11 @@ MFTDecoder::SetDecoderOutputType(ConfigureOutputCallback aCallback, void* aData)
   HRESULT hr;
   RefPtr<IMFMediaType> outputType;
   UINT32 typeIndex = 0;
-  while (SUCCEEDED(mDecoder->GetOutputAvailableType(0, typeIndex++, getter_AddRefs(outputType)))) {
+  while (SUCCEEDED(mDecoder->GetOutputAvailableType(
+    0, typeIndex++, getter_AddRefs(outputType)))) {
     BOOL resultMatch;
-    hr = mOutputType->Compare(outputType, MF_ATTRIBUTES_MATCH_OUR_ITEMS, &resultMatch);
+    hr = mOutputType->Compare(
+      outputType, MF_ATTRIBUTES_MATCH_OUR_ITEMS, &resultMatch);
     if (SUCCEEDED(hr) && resultMatch == TRUE) {
       if (aCallback) {
         hr = aCallback(outputType, aData);
@@ -100,7 +101,8 @@ MFTDecoder::SetDecoderOutputType(ConfigureOutputCallback aCallback, void* aData)
       hr = mDecoder->GetOutputStreamInfo(0, &mOutputStreamInfo);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-      mMFTProvidesOutputSamples = IsFlagSet(mOutputStreamInfo.dwFlags, MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
+      mMFTProvidesOutputSamples = IsFlagSet(mOutputStreamInfo.dwFlags,
+                                            MFT_OUTPUT_STREAM_PROVIDES_SAMPLES);
 
       return S_OK;
     }
@@ -132,9 +134,12 @@ MFTDecoder::CreateInputSample(const uint8_t* aData,
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFMediaBuffer> buffer;
-  int32_t bufferSize = std::max<uint32_t>(uint32_t(mInputStreamInfo.cbSize), aDataSize);
-  UINT32 alignment = (mInputStreamInfo.cbAlignment > 1) ? mInputStreamInfo.cbAlignment - 1 : 0;
-  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, getter_AddRefs(buffer));
+  int32_t bufferSize =
+    std::max<uint32_t>(uint32_t(mInputStreamInfo.cbSize), aDataSize);
+  UINT32 alignment =
+    (mInputStreamInfo.cbAlignment > 1) ? mInputStreamInfo.cbAlignment - 1 : 0;
+  hr = wmf::MFCreateAlignedMemoryBuffer(
+    bufferSize, alignment, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   DWORD maxLength = 0;
@@ -175,8 +180,10 @@ MFTDecoder::CreateOutputSample(RefPtr<IMFSample>* aOutSample)
 
   RefPtr<IMFMediaBuffer> buffer;
   int32_t bufferSize = mOutputStreamInfo.cbSize;
-  UINT32 alignment = (mOutputStreamInfo.cbAlignment > 1) ? mOutputStreamInfo.cbAlignment - 1 : 0;
-  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, getter_AddRefs(buffer));
+  UINT32 alignment =
+    (mOutputStreamInfo.cbAlignment > 1) ? mOutputStreamInfo.cbAlignment - 1 : 0;
+  hr = wmf::MFCreateAlignedMemoryBuffer(
+    bufferSize, alignment, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = sample->AddBuffer(buffer);

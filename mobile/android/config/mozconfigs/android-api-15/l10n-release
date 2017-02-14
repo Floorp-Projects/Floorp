@@ -1,7 +1,7 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 # L10n
-ac_add_options --with-l10n-base=..
+ac_add_options --with-l10n-base=../../l10n-central
 
 # Global options
 ac_add_options --disable-tests

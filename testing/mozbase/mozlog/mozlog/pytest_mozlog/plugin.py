@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozlog
-import os
 import time
 
 
@@ -37,11 +36,6 @@ class MozLog(object):
         self.results = {}
         self.start_time = int(time.time() * 1000)  # in ms for Mozlog compatibility
 
-    def format_nodeid(self, nodeid):
-        '''Helper to Reformat/shorten a "::"-separated pytest test nodeid'''
-        testfile, testname = nodeid.split("::")
-        return " ".join([os.path.basename(testfile), testname])
-
     def pytest_configure(self, config):
         mozlog.commandline.setup_logging('pytest', config.known_args_namespace,
                                          defaults={}, allow_unused_options=True)
@@ -59,7 +53,7 @@ class MozLog(object):
         self.logger.suite_end()
 
     def pytest_runtest_logstart(self, nodeid, location):
-        self.logger.test_start(test=self.format_nodeid(nodeid))
+        self.logger.test_start(test=nodeid)
 
     def pytest_runtest_logreport(self, report):
         '''Called 3 times per test (setup, call, teardown), indicated by report.when'''
@@ -89,6 +83,5 @@ class MozLog(object):
         if report.when == 'teardown':
             defaults = ('PASS', 'PASS', None, None)
             status, expected, message, stack = self.results.get(test, defaults)
-            self.logger.test_end(test=self.format_nodeid(test),
-                                 status=status, expected=expected,
+            self.logger.test_end(test=test, status=status, expected=expected,
                                  message=message, stack=stack)

@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "eTLDService", "@mozilla.org/network/ef
 class UAOverrider {
   constructor(overrides) {
     this._overrides = {};
-    this._overrideForURICache = new Map();
 
     this.initOverrides(overrides);
   }
@@ -49,7 +48,7 @@ class UAOverrider {
     }
 
     let channel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
-    let uaOverride = this.getUAForURI(channel.URI);
+    let uaOverride = this.lookupUAOverride(channel.URI);
 
     if (uaOverride) {
       console.log("The user agent has been overridden for compatibility reasons.");
@@ -57,36 +56,20 @@ class UAOverrider {
     }
   }
 
-  getUAForURI(uri) {
-    let bareUri = uri.specIgnoringRef;
-    if (this._overrideForURICache.has(bareUri)) {
-      // Although the cache could have an entry to a bareUri, `false` is also
-      // a value that could be cached. A `false` cache entry means that there
-      // is no override for this URI.
-      // We cache these to avoid having to walk through all overrides to see
-      // if a domain matches.
-      return this._overrideForURICache.get(bareUri);
-    }
-
-    let finalUA = this.lookupUAOverride(uri);
-    this._overrideForURICache.set(bareUri, finalUA);
-
-    return finalUA;
-  }
-
   /**
-   * This function gets called from within the embedded webextension to check
-   * if the current site has been overriden or not. We only check the cached
-   * URI list here, but that's safe in our case since the tabUpdateHandler will
-   * always run after our message observer.
+   * Try to use the eTLDService to get the base domain (will return example.com
+   * for http://foo.bar.example.com/foo/bar).
+   *
+   * However, the eTLDService is a bit picky and throws whenever we pass a
+   * blank host name or an IP into it, see bug 1337785. Since we do not plan on
+   * override UAs for such cases, we simply catch everything and return false.
    */
-  hasUAForURIInCache(uri) {
-    let bareUri = uri.specIgnoringRef;
-    if (this._overrideForURICache.has(bareUri)) {
-      return !!this._overrideForURICache.get(bareUri);
+  getBaseDomainFromURI(uri) {
+    try {
+      return eTLDService.getBaseDomain(uri);
+    } catch (_) {
+      return false;
     }
-
-    return false;
   }
 
   /**
@@ -106,8 +89,8 @@ class UAOverrider {
    * uriMatchers would return true, the first one gets applied.
    */
   lookupUAOverride(uri) {
-    let baseDomain = eTLDService.getBaseDomain(uri);
-    if (this._overrides[baseDomain]) {
+    let baseDomain = this.getBaseDomainFromURI(uri);
+    if (baseDomain && this._overrides[baseDomain]) {
       for (let uaOverride of this._overrides[baseDomain]) {
         if (uaOverride.uriMatcher(uri.specIgnoringRef)) {
           return uaOverride.uaTransformer(DefaultUA);
