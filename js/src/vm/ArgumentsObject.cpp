@@ -229,7 +229,8 @@ ArgumentsObject::createTemplateObject(JSContext* cx, bool mapped)
 
     AutoSetNewObjectMetadata metadata(cx);
     JSObject* base;
-    JS_TRY_VAR_OR_RETURN_NULL(cx, base, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, group));
+    JS_TRY_VAR_OR_RETURN_NULL(cx, base, NativeObject::create(cx, FINALIZE_KIND, gc::TenuredHeap,
+                                                             shape, group));
 
     ArgumentsObject* obj = &base->as<js::ArgumentsObject>();
     obj->initFixedSlot(ArgumentsObject::DATA_SLOT, PrivateValue(nullptr));
@@ -284,7 +285,8 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
         AutoSetNewObjectMetadata metadata(cx);
 
         JSObject* base;
-        JS_TRY_VAR_OR_RETURN_NULL(cx, base, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, group));
+        JS_TRY_VAR_OR_RETURN_NULL(cx, base, NativeObject::create(cx, FINALIZE_KIND,
+                                                                 gc::DefaultHeap, shape, group));
         obj = &base->as<ArgumentsObject>();
 
         data =
