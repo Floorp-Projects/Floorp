@@ -656,7 +656,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsAutoCString parserCharset;
 
   nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
-  
+
   // For error reporting and referrer policy setting
   nsHtml5TreeOpExecutor* executor = nullptr;
   if (loadAsHtml5) {
@@ -723,7 +723,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       parserCharset = "UTF-16";
       parserCharsetSource = charsetSource < kCharsetFromChannel ?
         kCharsetFromChannel : charsetSource;
-        
+
       nsAutoCString cachedCharset;
       int32_t cachedSource;
       rv = wyciwygChannel->GetCharsetAndSource(&cachedSource, cachedCharset);
@@ -736,7 +736,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         // Don't propagate this error.
         rv = NS_OK;
       }
-      
+
     } else {
       parserCharset = charset;
       parserCharsetSource = charsetSource;
@@ -1260,7 +1260,7 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
-  
+
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service) {
@@ -2834,7 +2834,7 @@ nsHTMLDocument::EditingStateChanged()
   if (spellRecheckAll) {
     nsCOMPtr<nsISelectionController> selcon;
     nsresult rv = editor->GetSelectionController(getter_AddRefs(selcon));
-    NS_ENSURE_SUCCESS(rv, rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISelection> spellCheckSelection;
     rv = selcon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
@@ -3201,7 +3201,8 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   }
 
   bool restricted = commandID.LowerCaseEqualsLiteral("paste");
-  if (restricted && !nsContentUtils::IsSystemPrincipal(&aSubjectPrincipal)) {
+  if (restricted && !nsContentUtils::PrincipalHasPermission(&aSubjectPrincipal,
+                                                            NS_LITERAL_STRING("clipboardRead"))) {
     return false;
   }
 

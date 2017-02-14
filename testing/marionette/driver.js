@@ -36,6 +36,7 @@ Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
+Cu.import("chrome://marionette/content/wait.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
@@ -1156,7 +1157,11 @@ GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
  *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
-  return this.curBrowser.position;
+  let win = this.getCurrentWindow();
+  return {
+    x: win.screenX,
+    y: win.screenY,
+  };
 };
 
 /**
@@ -1172,7 +1177,7 @@ GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
  * @return {Object.<string, number>}
  *     Object with |x| and |y| coordinates.
  */
-GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
+GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
   assert.firefox()
 
   let {x, y} = cmd.parameters;
@@ -1180,7 +1185,17 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
   assert.positiveInteger(y);
 
   let win = this.getCurrentWindow();
+  let orig = {screenX: win.screenX, screenY: win.screenY};
+
   win.moveTo(x, y);
+  yield wait.until((resolve, reject) => {
+    if ((x == win.screenX && y == win.screenY) ||
+      (win.screenX != orig.screenX || win.screenY != orig.screenY)) {
+      resolve();
+    } else {
+      reject();
+    }
+  });
 
   return this.curBrowser.position;
 };
@@ -2401,24 +2416,53 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
  */
 GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
   let win = this.getCurrentWindow();
-  resp.body.width = win.outerWidth;
-  resp.body.height = win.outerHeight;
+  return {
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**
  * Set the size of the browser window currently in focus.
  *
- * Not supported on B2G. The supplied width and height values refer to
- * the window outerWidth and outerHeight values, which include scroll
- * bars, title bars, etc.
+ * The supplied width and height values refer to the window outerWidth
+ * and outerHeight values, which include browser chrome and OS-level
+ * window borders.
+ *
+ * @param {number} width
+ *     Requested window outer width.
+ * @param {number} height
+ *     Requested window outer height.
+ *
+ * @return {Map.<string, number>}
+ *     New outerWidth/outerHeight dimensions.
  */
-GeckoDriver.prototype.setWindowSize = function (cmd, resp) {
+GeckoDriver.prototype.setWindowSize = function* (cmd, resp) {
   assert.firefox()
 
-  let {width, height} = cmd.parameters;
-  let win = this.getCurrentWindow();
-  win.resizeTo(width, height);
-  this.getWindowSize(cmd, resp);
+  const {width, height} = cmd.parameters;
+  const win = this.getCurrentWindow();
+
+  yield new Promise(resolve => {
+    // When the DOM resize event claims that it fires _after_ the document
+    // view has been resized, it is lying.
+    //
+    // Because resize events fire at a high rate, DOM modifications
+    // such as updates to outerWidth/outerHeight are not guaranteed to
+    // have processed.  To overcome this... abomination... of the web
+    // platform, we throttle the event using setTimeout.  If everything
+    // was well in this world we would use requestAnimationFrame, but
+    // it does not seem to like our particular flavour of XUL.
+    const fps15 = 66;
+    const synchronousResize = () => win.setTimeout(resolve, fps15);
+    win.addEventListener("resize", synchronousResize, {once: true});
+    win.resizeTo(width, height);
+  });
+
+  return {
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**

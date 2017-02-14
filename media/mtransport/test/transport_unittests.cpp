@@ -578,13 +578,11 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void TweakCiphers(PRFileDesc* fd) {
-    for (auto it = enabled_cipersuites_.begin();
-         it != enabled_cipersuites_.end(); ++it) {
-      SSL_CipherPrefSet(fd, *it, PR_TRUE);
+    for (unsigned short& enabled_cipersuite : enabled_cipersuites_) {
+      SSL_CipherPrefSet(fd, enabled_cipersuite, PR_TRUE);
     }
-    for (auto it = disabled_cipersuites_.begin();
-         it != disabled_cipersuites_.end(); ++it) {
-      SSL_CipherPrefSet(fd, *it, PR_FALSE);
+    for (unsigned short& disabled_cipersuite : disabled_cipersuites_) {
+      SSL_CipherPrefSet(fd, disabled_cipersuite, PR_FALSE);
     }
   }
 
