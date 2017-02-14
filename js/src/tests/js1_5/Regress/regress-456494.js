@@ -33,15 +33,6 @@ function test()
   }
   f(1);
 
-
-  if (typeof this.tracemonkey != 'undefined')
-  {
-    for (var p in this.tracemonkey)
-    {
-      print(p + ':' + this.tracemonkey[p]);
-    }
-  }
-
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
