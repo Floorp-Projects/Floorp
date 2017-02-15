@@ -25,13 +25,13 @@ extensions.registerSchemaAPI("contextualIdentities", "addon_parent", context => 
           return Promise.resolve(null);
         }
 
-        let identity = ContextualIdentityService.getIdentityFromId(containerId);
+        let identity = ContextualIdentityService.getPublicIdentityFromId(containerId);
         return Promise.resolve(convert(identity));
       },
 
       query(details) {
         let identities = [];
-        ContextualIdentityService.getIdentities().forEach(identity => {
+        ContextualIdentityService.getPublicIdentities().forEach(identity => {
           if (details.name &&
               ContextualIdentityService.getUserContextLabel(identity.userContextId) != details.name) {
             return;
@@ -56,7 +56,7 @@ extensions.registerSchemaAPI("contextualIdentities", "addon_parent", context => 
           return Promise.resolve(null);
         }
 
-        let identity = ContextualIdentityService.getIdentityFromId(containerId);
+        let identity = ContextualIdentityService.getPublicIdentityFromId(containerId);
         if (!identity) {
           return Promise.resolve(null);
         }
@@ -88,7 +88,7 @@ extensions.registerSchemaAPI("contextualIdentities", "addon_parent", context => 
           return Promise.resolve(null);
         }
 
-        let identity = ContextualIdentityService.getIdentityFromId(containerId);
+        let identity = ContextualIdentityService.getPublicIdentityFromId(containerId);
         if (!identity) {
           return Promise.resolve(null);
         }
