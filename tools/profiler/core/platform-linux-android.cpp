@@ -62,7 +62,6 @@
 #include <stdarg.h>
 
 #include "prenv.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/LinuxSignal.h"
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
@@ -146,7 +145,7 @@ static void* setup_atfork() {
 }
 #endif /* !defined(GP_OS_android) */
 
-static mozilla::Atomic<ThreadInfo*> gCurrentThreadInfo;
+static ThreadInfo* gCurrentThreadInfo;
 static sem_t gSignalHandlingDone;
 
 static void SetSampleContext(TickSample* sample, void* context)
@@ -178,13 +177,6 @@ SigprofHandler(int signal, siginfo_t* info, void* context)
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (!gSampler) {
-    sem_post(&gSignalHandlingDone);
-    errno = savedErrno;
-    return;
-  }
-
   TickSample sample_obj;
   TickSample* sample = &sample_obj;
   sample->context = context;
@@ -198,7 +190,6 @@ SigprofHandler(int signal, siginfo_t* info, void* context)
 
   Tick(sample);
 
-  gCurrentThreadInfo = NULL;
   sem_post(&gSignalHandlingDone);
   errno = savedErrno;
 }
@@ -326,8 +317,10 @@ SigprofSender(void* aArg)
 #endif
         }
 
-        // Wait for the signal handler to run before moving on to the next one
+        // Wait for the signal handler to run before moving on to the next one.
         sem_wait(&gSignalHandlingDone);
+
+        gCurrentThreadInfo = nullptr;
         isFirstProfiledThread = false;
       }
 #if defined(USE_LUL_STACKWALK)
