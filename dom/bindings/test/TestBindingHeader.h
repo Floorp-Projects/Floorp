@@ -173,6 +173,21 @@ public:
                                         const LongOrAnyMozMap&,
                                         ErrorResult&);
 
+  static
+  already_AddRefed<TestInterface> Test4(const GlobalObject&,
+                                        const MozMap<MozMap<JS::Value>>&,
+                                        ErrorResult&);
+
+  static
+  already_AddRefed<TestInterface> Test5(const GlobalObject&,
+                                        const MozMap<Sequence<MozMap<MozMap<Sequence<Sequence<JS::Value>>>>>>&,
+                                        ErrorResult&);
+
+  static
+  already_AddRefed<TestInterface> Test6(const GlobalObject&,
+                                        const Sequence<MozMap<Sequence<Sequence<MozMap<MozMap<JS::Value>>>>>>&,
+                                        ErrorResult&);
+
   // Integer types
   int8_t ReadonlyByte();
   int8_t WritableByte();
