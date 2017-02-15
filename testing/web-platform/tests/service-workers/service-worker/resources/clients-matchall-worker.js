@@ -21,5 +21,8 @@ self.onmessage = function(e) {
       // Sort by url
       message.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
       port.postMessage(message);
-    });
+    })
+  .catch(e => {
+      port.postMessage('clients.matchAll() rejected: ' + e);
+    })
 };
