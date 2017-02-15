@@ -1108,7 +1108,11 @@
           return this.mAddon.userDisabled;
         ]]></getter>
         <setter><![CDATA[
-          this.mAddon.userDisabled = val;
+          if (val) {
+            gViewController.commands["cmd_disableItem"].doCommand(this.mAddon);
+          } else {
+            gViewController.commands["cmd_enableItem"].doCommand(this.mAddon);
+          }
         ]]></setter>
       </property>
 
