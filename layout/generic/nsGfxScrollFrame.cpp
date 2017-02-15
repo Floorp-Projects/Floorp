@@ -2991,7 +2991,10 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     uint32_t flags = (aFlags & APPEND_SCROLLBAR_CONTAINER)
                      ? nsDisplayOwnLayer::SCROLLBAR_CONTAINER
                      : 0;
-    newItem = new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource, asr, flags);
+    FrameMetrics::ViewID scrollTarget = (aFlags & APPEND_SCROLLBAR_CONTAINER)
+                                        ? aBuilder->GetCurrentScrollbarTarget()
+                                        : FrameMetrics::NULL_SCROLL_ID;
+    newItem = new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource, asr, flags, scrollTarget);
   } else {
     newItem = new (aBuilder) nsDisplayWrapList(aBuilder, aSourceFrame, aSource, asr);
   }
