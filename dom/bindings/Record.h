@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Class for representing MozMap arguments.  Basically an array under the hood.
+ * Class for representing record arguments.  Basically an array under the hood.
  */
 
-#ifndef mozilla_dom_MozMap_h
-#define mozilla_dom_MozMap_h
+#ifndef mozilla_dom_Record_h
+#define mozilla_dom_Record_h
 
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -23,15 +23,15 @@ namespace dom {
 
 namespace binding_detail {
 template<typename KeyType, typename ValueType>
-class MozMapEntry
+class RecordEntry
 {
 public:
-  MozMapEntry()
+  RecordEntry()
   {
   }
 
-  // Move constructor so we can do MozMaps of MozMaps.
-  MozMapEntry(MozMapEntry<KeyType, ValueType>&& aOther)
+  // Move constructor so we can do Records of Records.
+  RecordEntry(RecordEntry<KeyType, ValueType>&& aOther)
     : mKey(Move(aOther.mKey)),
       mValue(Move(aOther.mValue))
   {
@@ -43,20 +43,19 @@ public:
 
 } // namespace binding_detail
 
-template<typename ValueType>
-class MozMap
+template<typename KeyType, typename ValueType>
+class Record
 {
 public:
-  typedef nsString KeyType;
-  typedef typename binding_detail::MozMapEntry<KeyType, ValueType> EntryType;
-  typedef MozMap<ValueType> SelfType;
+  typedef typename binding_detail::RecordEntry<nsString, ValueType> EntryType;
+  typedef Record<KeyType, ValueType> SelfType;
 
-  MozMap()
+  Record()
   {
   }
 
-  // Move constructor so we can do MozMap of MozMap.
-  MozMap(SelfType&& aOther) :
+  // Move constructor so we can do Record of Record.
+  Record(SelfType&& aOther) :
     mEntries(Move(aOther.mEntries))
   {
   }
@@ -78,4 +77,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_MozMap_h
+#endif // mozilla_dom_Record_h

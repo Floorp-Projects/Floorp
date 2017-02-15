@@ -306,7 +306,7 @@ InternalHeaders::Fill(const Sequence<Sequence<nsCString>>& aInit, ErrorResult& a
 }
 
 void
-InternalHeaders::Fill(const MozMap<nsCString>& aInit, ErrorResult& aRv)
+InternalHeaders::Fill(const Record<nsCString, nsCString>& aInit, ErrorResult& aRv)
 {
   for (auto& entry : aInit.Entries()) {
     Append(NS_ConvertUTF16toUTF8(entry.mKey), entry.mValue, aRv);
