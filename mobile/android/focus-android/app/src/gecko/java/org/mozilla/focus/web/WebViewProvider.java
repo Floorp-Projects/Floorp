@@ -9,9 +9,14 @@ import android.content.Context;
 import android.graphics.Color;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
+import android.support.v4.view.MotionEventCompat;
+import android.support.v4.view.NestedScrollingChild;
+import android.support.v4.view.NestedScrollingChildHelper;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 
 import org.mozilla.gecko.BaseGeckoInterface;
@@ -40,7 +45,7 @@ public class WebViewProvider {
         return geckoView;
     }
 
-    public static class GeckoWebView extends GeckoView implements IWebView {
+    public static class GeckoWebView extends NestedGeckoView implements IWebView {
         private Callback callback;
 
         public GeckoWebView(Context context, AttributeSet attrs) {

@@ -1,96 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <FrameLayout
-        android:id="@+id/urlbar"
+    <org.mozilla.focus.web.IWebView
+        android:id="@+id/webview"
         android:layout_width="match_parent"
-        android:layout_height="81dp"
-        android:background="@color/colorUrlInput"
-        android:paddingTop="25dp">
+        android:layout_height="match_parent" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:animateLayoutChanges="true">
-
-            <ImageView
-                android:id="@+id/lock"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_lock"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/url"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_margin="8dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:lines="1"
-                android:padding="6dp"
-                android:textColor="#ffffff"
-                android:textSize="15sp" />
-
-            <ImageButton
-                android:id="@+id/menu"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center_vertical"
-                android:padding="4dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:src="@drawable/ic_menu"
-                android:background="?android:attr/selectableItemBackgroundBorderless" />
-
-        </LinearLayout>
-
-        <ProgressBar
-            android:id="@+id/progress"
-            style="@android:style/Widget.Material.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_gravity="bottom"
-            android:progress="20"
-            android:visibility="visible" />
-
-    </FrameLayout>
-
-    <FrameLayout
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
 
-        <org.mozilla.focus.web.IWebView
-            android:id="@+id/webview"
+        <FrameLayout
+            android:id="@+id/urlbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="81dp"
+            android:background="@color/colorUrlInput"
+            android:paddingTop="25dp"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/erase"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end|bottom"
-            android:layout_marginBottom="24dp"
-            android:layout_marginEnd="24dp"
-            android:elevation="4dp"
-            android:src="@drawable/ic_delete"
-            app:backgroundTint="@color/colorFloatingActionButtonTint"
-            app:rippleColor="#50FFFFFF" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                android:orientation="horizontal">
 
-    </FrameLayout>
+                <ImageView
+                    android:id="@+id/lock"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_lock"
+                    android:visibility="gone" />
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/url"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_margin="8dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:lines="1"
+                    android:padding="6dp"
+                    android:textColor="#ffffff"
+                    android:textSize="15sp" />
+
+                <ImageButton
+                    android:id="@+id/menu"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_menu" />
+
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progress"
+                style="@android:style/Widget.Material.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_gravity="bottom" />
+
+        </FrameLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/erase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="24dp"
+        android:elevation="4dp"
+        android:src="@drawable/ic_delete"
+        app:backgroundTint="@color/colorFloatingActionButtonTint"
+        app:rippleColor="#50FFFFFF"
+        app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior" />
+
+</android.support.design.widget.CoordinatorLayout>
