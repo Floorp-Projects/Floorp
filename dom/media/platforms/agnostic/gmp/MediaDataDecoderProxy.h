@@ -40,17 +40,10 @@ public:
 
   const char* GetDescriptionName() const override
   {
-    return "GMP proxy data decoder";
+    return mProxyDecoder->GetDescriptionName();
   }
 
 private:
-
-#ifdef DEBUG
-  bool IsOnProxyThread()
-  {
-    return mProxyThread && mProxyThread->IsCurrentThreadIn();
-  }
-#endif
 
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;

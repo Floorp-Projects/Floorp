@@ -13,6 +13,9 @@ MediaDataDecoderProxy::Init()
 {
   MOZ_ASSERT(!mIsShutdown);
 
+  if (!mProxyThread) {
+    return mProxyDecoder->Init();
+  }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
                      [self, this]() { return mProxyDecoder->Init(); });
@@ -21,9 +24,11 @@ MediaDataDecoderProxy::Init()
 RefPtr<MediaDataDecoder::DecodePromise>
 MediaDataDecoderProxy::Decode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
+  if (!mProxyThread) {
+    return mProxyDecoder->Decode(aSample);
+  }
   RefPtr<MediaDataDecoderProxy> self = this;
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(mProxyThread, __func__, [self, this, sample]() {
@@ -34,9 +39,11 @@ MediaDataDecoderProxy::Decode(MediaRawData* aSample)
 RefPtr<MediaDataDecoder::FlushPromise>
 MediaDataDecoderProxy::Flush()
 {
-  MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
+  if (!mProxyThread) {
+    return mProxyDecoder->Flush();
+  }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
                      [self, this]() { return mProxyDecoder->Flush(); });
@@ -45,9 +52,11 @@ MediaDataDecoderProxy::Flush()
 RefPtr<MediaDataDecoder::DecodePromise>
 MediaDataDecoderProxy::Drain()
 {
-  MOZ_ASSERT(!IsOnProxyThread());
   MOZ_ASSERT(!mIsShutdown);
 
+  if (!mProxyThread) {
+    return mProxyDecoder->Drain();
+  }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
                      [self, this]() { return mProxyDecoder->Drain(); });
@@ -56,13 +65,14 @@ MediaDataDecoderProxy::Drain()
 RefPtr<ShutdownPromise>
 MediaDataDecoderProxy::Shutdown()
 {
-  MOZ_ASSERT(!IsOnProxyThread());
-  // Note that this *may* be called from the proxy thread also.
   MOZ_ASSERT(!mIsShutdown);
 #if defined(DEBUG)
   mIsShutdown = true;
 #endif
 
+  if (!mProxyThread) {
+    return mProxyDecoder->Shutdown();
+  }
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
                      [self, this]() { return mProxyDecoder->Shutdown(); });
