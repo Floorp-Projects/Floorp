@@ -612,6 +612,42 @@ a.learn-more-link.webconsole-learn-more-link {
   filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
+/* Old console frontend filters */
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+  -moz-box-orient: horizontal;
+  padding: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+  --toolbarbutton-checked-color: var(--theme-body-color);
+  --toolbarbutton-checked-background: var(--theme-selection-background-semitransparent);
+}
+
+.devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  margin-inline-end: 4px;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  -moz-box-align: center;
+  min-width: 16px;
+}
+
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  -moz-box-align: center;
+  padding: 0 3px;
+}
+
 @media (max-width: 500px) {
   .message > .timestamp {
     display: none;

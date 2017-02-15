@@ -8,9 +8,10 @@
  * values they accept
  */
 
+#include "nsCSSProps.h"
+
 #include "mozilla/ArrayUtils.h"
 
-#include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"

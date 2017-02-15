@@ -6,8 +6,8 @@ macosx64-clang/opt:
     description: "Clang toolchain build"
     treeherder:
         kind: build
-        platform: osx-10-10/opt
-        symbol: Cc(Clang)
+        platform: toolchains/opt
+        symbol: TM(clang)
         tier: 1
     run:
         using: toolchain-script
@@ -31,8 +31,8 @@ macosx64-clang-tidy/opt:
         job-name: macosx64-clang-tidy
     treeherder:
         kind: build
-        platform: osx-10-10/opt
-        symbol: Cc(Clang-Tidy)
+        platform: toolchains/opt
+        symbol: TM(clang-tidy)
         tier: 1
     run:
         using: toolchain-script
@@ -54,8 +54,8 @@ macosx64-cctools-port/opt:
     description: "cctools-port toolchain build"
     treeherder:
         kind: build
-        platform: osx-10-10/opt
-        symbol: Cc(cctools-port)
+        platform: toolchains/opt
+        symbol: TM(cctools)
         tier: 1
     run:
         using: toolchain-script

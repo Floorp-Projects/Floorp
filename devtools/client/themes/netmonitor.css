@@ -111,10 +111,7 @@
 #requests-menu-reload-notice-button {
   font-size: inherit;
   min-height: 26px;
-  padding-left: 10px;
-  padding-right: 10px;
   margin: 0 5px;
-  background-color: var(--theme-toolbar-background);
 }
 
 /* Network requests table */
@@ -780,11 +777,6 @@
   font: message-box;
 }
 
-.custom-request-panel .devtools-button {
-  margin: 3px 1px;
-  min-width: 78px;
-}
-
 .custom-header,
 .custom-method-and-url,
 .custom-request,
@@ -1223,41 +1215,8 @@
   align-items: center;
 }
 
-.headers-summary .tool-button {
+.headers-summary .devtools-button {
   margin-inline-end: 6px;
-}
-
-.tool-button {
-  background: transparent;
-  border: none;
-  border-color: var(--toolbar-button-border-color);
-  color: var(--theme-body-color);
-  min-height: 18px;
-  transition: background 0.05s ease-in-out;
-}
-
-.theme-light .tool-button {
-  background-color: var(--toolbar-tab-hover);
-}
-
-.theme-light .tool-button:hover {
-  background-color: rgba(170, 170, 170, 0.3);
-}
-
-.theme-light .tool-button:hover:active {
-  background-color: var(--toolbar-tab-hover-active);
-}
-
-.theme-dark .tool-button {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-.theme-dark .tool-button:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.theme-dark .tool-button:hover:active {
-  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .headers-summary .requests-menu-status-icon {

@@ -230,10 +230,9 @@ module.exports = createClass({
   _renderInitial(onSnapshotClick) {
     return this._renderHeapView("initial", dom.button(
       {
-        className: "devtools-toolbarbutton take-snapshot",
+        className: "devtools-button take-snapshot",
         onClick: onSnapshotClick,
         "data-standalone": true,
-        "data-text-only": true,
       },
       L10N.getStr("take-snapshot")
     ));

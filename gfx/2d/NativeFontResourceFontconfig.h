@@ -10,6 +10,7 @@
 #include "2D.h"
 
 #include <cairo-ft.h>
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace gfx {

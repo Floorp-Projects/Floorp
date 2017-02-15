@@ -102,7 +102,7 @@ load 861489-1.html
 load 862113.html
 load 867487.html
 load 873222.html
-asserts-if(stylo,2) load 880862.html # bug 1324701
+asserts-if(stylo,1) load 880862.html # bug 1324701
 load 894245-1.html
 load 915440.html
 load 927734-1.html
@@ -168,4 +168,4 @@ HTTP load 1320423-1.html
 load 1321357-1.html
 load 1328535-1.html
 load 1331272.html
-asserts-if(stylo,1) HTTP load 1333001-1.html # bug 1324702
+HTTP load 1333001-1.html
