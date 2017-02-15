@@ -931,44 +931,6 @@ ParserBase::isValidStrictBinding(PropertyName* name)
 }
 
 /*
- * Check that it is permitted to introduce a binding for |name|. Use |pos| for
- * reporting error locations.
- */
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkStrictBinding(PropertyName* name, TokenPos pos)
-{
-    if (!pc->sc()->needStrictChecks())
-        return true;
-
-    if (name == context->names().arguments)
-        return strictModeErrorAt(pos.begin, JSMSG_BAD_BINDING, "arguments");
-
-    if (name == context->names().eval)
-        return strictModeErrorAt(pos.begin, JSMSG_BAD_BINDING, "eval");
-
-    if (name == context->names().let) {
-        errorAt(pos.begin, JSMSG_RESERVED_ID, "let");
-        return false;
-    }
-
-    if (name == context->names().static_) {
-        errorAt(pos.begin, JSMSG_RESERVED_ID, "static");
-        return false;
-    }
-
-    if (name == context->names().yield) {
-        errorAt(pos.begin, JSMSG_RESERVED_ID, "yield");
-        return false;
-    }
-
-    if (IsStrictReservedWord(name))
-        return strictModeErrorAt(pos.begin, JSMSG_RESERVED_ID, ReservedWordToCharZ(name));
-
-    return true;
-}
-
-/*
  * Returns true if all parameter names are valid strict mode binding names and
  * no duplicate parameter names are present.
  */
@@ -1047,9 +1009,6 @@ Parser<ParseHandler>::notePositionalFormalParameter(Node fn, HandlePropertyName 
 
     Node paramNode = newName(name);
     if (!paramNode)
-        return false;
-
-    if (!checkStrictBinding(name, pos()))
         return false;
 
     handler.addFunctionFormalParameter(fn, paramNode);
@@ -1311,9 +1270,6 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
     // optimization, avoid doing any work here.
     if (pc->useAsmOrInsideUseAsm())
         return true;
-
-    if (!checkStrictBinding(name, pos))
-        return false;
 
     switch (kind) {
       case DeclarationKind::Var:
@@ -3526,8 +3482,26 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
 
     if ((kind != Method && !IsConstructorKind(kind)) && fun->explicitName()) {
         RootedPropertyName propertyName(context, fun->explicitName()->asPropertyName());
-        if (!checkStrictBinding(propertyName, handler.getPosition(pn)))
-            return false;
+        // `await` cannot be checked at this point because of different context.
+        // It should already be checked before this point.
+        if (propertyName != context->names().await) {
+            YieldHandling nameYieldHandling;
+            if (kind == Expression) {
+                // Named lambda has binding inside it.
+                nameYieldHandling = bodyYieldHandling;
+            } else {
+                // Otherwise YieldHandling cannot be checked at this point
+                // because of different context.
+                // It should already be checked before this point.
+                nameYieldHandling = YieldIsName;
+            }
+
+            if (!checkBindingIdentifier(propertyName, handler.getPosition(pn).begin,
+                                        nameYieldHandling))
+            {
+                return false;
+            }
+        }
     }
 
     if (bodyType == StatementListBody) {
@@ -4096,6 +4070,9 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr,
         }
 
         RootedPropertyName name(context, expr->name());
+        // `yield` is already checked, so pass YieldIsName to skip that check.
+        if (!checkBindingIdentifier(name, expr->pn_pos.begin, YieldIsName))
+            return false;
         return noteDeclaredName(name, *maybeDecl, expr->pn_pos);
     }
 
@@ -8033,7 +8010,7 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
     // FIXME: Destructuring binding (bug 980828).
 
     MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifier, JSMSG_NO_VARIABLE_NAME);
-    RootedPropertyName name(context, tokenStream.currentName());
+    RootedPropertyName name(context, bindingIdentifier(YieldIsKeyword));
     if (name == context->names().let) {
         error(JSMSG_LET_COMP_BINDING);
         return null();
@@ -8556,12 +8533,16 @@ Parser<ParseHandler>::checkLabelOrIdentifierReference(PropertyName* ident,
 {
     if (ident == context->names().yield) {
         if (yieldHandling == YieldIsKeyword ||
-            pc->sc()->strict() ||
             versionNumber() >= JSVERSION_1_7)
         {
             errorAt(offset, JSMSG_RESERVED_ID, "yield");
             return nullptr;
         }
+        if (pc->sc()->needStrictChecks()) {
+            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "yield"))
+                return nullptr;
+        }
+
         return ident;
     }
 
@@ -8583,20 +8564,49 @@ Parser<ParseHandler>::checkLabelOrIdentifierReference(PropertyName* ident,
         return nullptr;
     }
 
-    if (pc->sc()->strict()) {
+    if (pc->sc()->needStrictChecks()) {
         if (IsStrictReservedWord(ident)) {
-            errorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident));
-            return nullptr;
+            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident)))
+                return nullptr;
+            return ident;
         }
 
         if (ident == context->names().let) {
-            errorAt(offset, JSMSG_RESERVED_ID, "let");
-            return nullptr;
+            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let"))
+                return nullptr;
+            return ident;
         }
 
         if (ident == context->names().static_) {
-            errorAt(offset, JSMSG_RESERVED_ID, "static");
-            return nullptr;
+            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "static"))
+                return nullptr;
+            return ident;
+        }
+    }
+
+    return ident;
+}
+
+template <typename ParseHandler>
+PropertyName*
+Parser<ParseHandler>::checkBindingIdentifier(PropertyName* ident,
+                                             uint32_t offset,
+                                             YieldHandling yieldHandling)
+{
+    if (!checkLabelOrIdentifierReference(ident, offset, yieldHandling))
+        return nullptr;
+
+    if (pc->sc()->needStrictChecks()) {
+        if (ident == context->names().arguments) {
+            if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "arguments"))
+                return nullptr;
+            return ident;
+        }
+
+        if (ident == context->names().eval) {
+            if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "eval"))
+                return nullptr;
+            return ident;
         }
     }
 
@@ -8621,23 +8631,7 @@ template <typename ParseHandler>
 PropertyName*
 Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
 {
-    PropertyName* ident = labelOrIdentifierReference(yieldHandling);
-    if (!ident)
-        return nullptr;
-
-    if (pc->sc()->strict()) {
-        if (ident == context->names().arguments) {
-            error(JSMSG_BAD_STRICT_ASSIGN, "arguments");
-            return nullptr;
-        }
-
-        if (ident == context->names().eval) {
-            error(JSMSG_BAD_STRICT_ASSIGN, "eval");
-            return nullptr;
-        }
-    }
-
-    return ident;
+    return checkBindingIdentifier(tokenStream.currentName(), pos().begin, yieldHandling);
 }
 
 template <typename ParseHandler>
