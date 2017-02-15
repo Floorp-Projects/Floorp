@@ -95,16 +95,16 @@ static pthread_t gSignalSenderThread;
 // use.  Currently only the main thread can call PlatformStart(), so
 // there is no need for a mechanism to ensure that it is only
 // created once in a multi-thread-use situation.
-lul::LUL* sLUL = nullptr;
+lul::LUL* gLUL = nullptr;
 
-// This is the sLUL initialization routine.
-static void sLUL_initialization_routine(void)
+// This is the gLUL initialization routine.
+static void gLUL_initialization_routine(void)
 {
-  MOZ_ASSERT(!sLUL);
+  MOZ_ASSERT(!gLUL);
   MOZ_ASSERT(gettid() == getpid()); /* "this is the main thread" */
-  sLUL = new lul::LUL(logging_sink_for_LUL);
+  gLUL = new lul::LUL(logging_sink_for_LUL);
   // Read all the unwind info currently available.
-  read_procmaps(sLUL);
+  read_procmaps(gLUL);
 }
 #endif
 
@@ -151,8 +151,8 @@ static void* setup_atfork() {
 }
 #endif /* !defined(ANDROID) */
 
-static mozilla::Atomic<ThreadInfo*> sCurrentThreadInfo;
-static sem_t sSignalHandlingDone;
+static mozilla::Atomic<ThreadInfo*> gCurrentThreadInfo;
+static sem_t gSignalHandlingDone;
 
 static void SetSampleContext(TickSample* sample, void* context)
 {
@@ -202,7 +202,7 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
 
   // XXX: this is an off-main-thread(?) use of gSampler
   if (!gSampler) {
-    sem_post(&sSignalHandlingDone);
+    sem_post(&gSignalHandlingDone);
     errno = savedErrno;
     return;
   }
@@ -213,15 +213,15 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
 
   // Extract the current pc and sp.
   SetSampleContext(sample, context);
-  sample->threadInfo = sCurrentThreadInfo;
+  sample->threadInfo = gCurrentThreadInfo;
   sample->timestamp = mozilla::TimeStamp::Now();
   sample->rssMemory = sample->threadInfo->mRssMemory;
   sample->ussMemory = sample->threadInfo->mUssMemory;
 
   Tick(sample);
 
-  sCurrentThreadInfo = NULL;
-  sem_post(&sSignalHandlingDone);
+  gCurrentThreadInfo = NULL;
+  sem_post(&gSignalHandlingDone);
   errno = savedErrno;
 }
 
@@ -285,11 +285,11 @@ static void* SignalSender(void* arg) {
     gBuffer->deleteExpiredStoredMarkers();
 
     if (!gIsPaused) {
-      StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+      StaticMutexAutoLock lock(gRegisteredThreadsMutex);
 
       bool isFirstProfiledThread = true;
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = (*sRegisteredThreads)[i];
+      for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
+        ThreadInfo* info = (*gRegisteredThreads)[i];
 
         // This will be null if we're not interested in profiling this thread.
         if (!info->hasProfile() || info->IsPendingDelete()) {
@@ -303,9 +303,9 @@ static void* SignalSender(void* arg) {
 
         info->UpdateThreadResponsiveness();
 
-        // We use sCurrentThreadInfo to pass the ThreadInfo for the
+        // We use gCurrentThreadInfo to pass the ThreadInfo for the
         // thread we're profiling to the signal handler.
-        sCurrentThreadInfo = info;
+        gCurrentThreadInfo = info;
 
         int threadId = info->ThreadId();
         MOZ_ASSERT(threadId != my_tid);
@@ -313,7 +313,7 @@ static void* SignalSender(void* arg) {
         // Profile from the signal sender for information which is not signal
         // safe, and will have low variation between the emission of the signal
         // and the signal handler catch.
-        ProfilerSignalThread(sCurrentThreadInfo, isFirstProfiledThread);
+        ProfilerSignalThread(gCurrentThreadInfo, isFirstProfiledThread);
 
         // Profile from the signal handler for information which is signal safe
         // and needs to be precise too, such as the stack of the interrupted
@@ -328,7 +328,7 @@ static void* SignalSender(void* arg) {
         }
 
         // Wait for the signal handler to run before moving on to the next one
-        sem_wait(&sSignalHandlingDone);
+        sem_wait(&gSignalHandlingDone);
         isFirstProfiledThread = false;
 
         // The LUL unwind object accumulates frame statistics.
@@ -338,7 +338,7 @@ static void* SignalSender(void* arg) {
         // the unwinder threads, which is why it is done here.
         if ((++nSignalsSent & 0xF) == 0) {
 #          if defined(USE_LUL_STACKWALK)
-           sLUL->MaybeShowStats();
+           gLUL->MaybeShowStats();
 #          endif
         }
       }
@@ -369,14 +369,14 @@ PlatformStart()
 #elif defined(USE_LUL_STACKWALK)
   // NOTE: this isn't thread-safe.  But we expect PlatformStart() to be
   // called only from the main thread, so this is OK in general.
-  if (!sLUL) {
-     sLUL_initialization_routine();
+  if (!gLUL) {
+     gLUL_initialization_routine();
   }
 #endif
 
   // Initialize signal handler communication
-  sCurrentThreadInfo = nullptr;
-  if (sem_init(&sSignalHandlingDone, /* pshared: */ 0, /* value: */ 0) != 0) {
+  gCurrentThreadInfo = nullptr;
+  if (sem_init(&gSignalHandlingDone, /* pshared: */ 0, /* value: */ 0) != 0) {
     LOG("Error initializing semaphore");
     return;
   }
@@ -398,12 +398,12 @@ PlatformStart()
   // Switch into unwind mode.  After this point, we can't add or
   // remove any unwind info to/from this LUL instance.  The only thing
   // we can do with it is Unwind() calls.
-  sLUL->EnableUnwinding();
+  gLUL->EnableUnwinding();
 
   // Has a test been requested?
   if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
      int nTests = 0, nTestsPassed = 0;
-     RunLulUnitTests(&nTests, &nTestsPassed, sLUL);
+     RunLulUnitTests(&nTests, &nTestsPassed, gLUL);
   }
 #endif
 

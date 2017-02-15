@@ -775,7 +775,7 @@ void ProfileBuffer::DuplicateLastSample(int aThreadId)
         return;
       case ProfileEntry::Kind::Time:
         // Copy with new time
-        addTag(ProfileEntry::Time((mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds()));
+        addTag(ProfileEntry::Time((mozilla::TimeStamp::Now() - gStartTime).ToMilliseconds()));
         break;
       case ProfileEntry::Kind::Marker:
         // Don't copy markers
