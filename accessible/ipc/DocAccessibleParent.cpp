@@ -427,8 +427,8 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
 
   aChildDoc->SetParent(outerDoc);
   outerDoc->SetChildDoc(aChildDoc);
-  mChildDocs.AppendElement(aChildDoc);
-  aChildDoc->mParentDoc = this;
+  mChildDocs.AppendElement(aChildDoc->IProtocol::Id());
+  aChildDoc->mParentDoc = IProtocol::Id();
 
   if (aCreating) {
     ProxyCreated(aChildDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
@@ -471,7 +471,7 @@ DocAccessibleParent::Destroy()
   }
 
   for (uint32_t i = childDocCount - 1; i < childDocCount; i--)
-    mChildDocs[i]->Destroy();
+    ChildDocAt(i)->Destroy();
 
   for (auto iter = mAccessibles.Iter(); !iter.Done(); iter.Next()) {
     MOZ_ASSERT(iter.Get()->mProxy != this);
@@ -486,10 +486,20 @@ DocAccessibleParent::Destroy()
 
   DocManager::NotifyOfRemoteDocShutdown(this);
   ProxyDestroyed(this);
-  if (mParentDoc)
-    mParentDoc->RemoveChildDoc(this);
+  if (DocAccessibleParent* parentDoc = ParentDoc())
+    parentDoc->RemoveChildDoc(this);
   else if (IsTopLevel())
     GetAccService()->RemoteDocShutdown(this);
+}
+
+DocAccessibleParent*
+DocAccessibleParent::ParentDoc() const
+{
+  if (mParentDoc == kNoParentDoc) {
+    return nullptr;
+  }
+
+  return LiveDocs().Get(mParentDoc);
 }
 
 bool
@@ -497,10 +507,11 @@ DocAccessibleParent::CheckDocTree() const
 {
   size_t childDocs = mChildDocs.Length();
   for (size_t i = 0; i < childDocs; i++) {
-    if (!mChildDocs[i] || mChildDocs[i]->mParentDoc != this)
+    const DocAccessibleParent* childDoc = ChildDocAt(i);
+    if (!childDoc || childDoc->ParentDoc() != this)
       return false;
 
-    if (!mChildDocs[i]->CheckDocTree()) {
+    if (!childDoc->CheckDocTree()) {
       return false;
     }
   }

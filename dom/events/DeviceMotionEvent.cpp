@@ -33,7 +33,7 @@ DeviceMotionEvent::InitDeviceMotionEvent(
                      const DeviceAccelerationInit& aAcceleration,
                      const DeviceAccelerationInit& aAccelIncludingGravity,
                      const DeviceRotationRateInit& aRotationRate,
-                     Nullable<double> aInterval)
+                     const Nullable<double>& aInterval)
 {
   InitDeviceMotionEvent(aType, aCanBubble, aCancelable, aAcceleration,
                         aAccelIncludingGravity, aRotationRate, aInterval,
@@ -48,8 +48,8 @@ DeviceMotionEvent::InitDeviceMotionEvent(
                      const DeviceAccelerationInit& aAcceleration,
                      const DeviceAccelerationInit& aAccelIncludingGravity,
                      const DeviceRotationRateInit& aRotationRate,
-                     Nullable<double> aInterval,
-                     Nullable<uint64_t> aTimeStamp)
+                     const Nullable<double>& aInterval,
+                     const Nullable<uint64_t>& aTimeStamp)
 {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
@@ -115,9 +115,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DeviceAcceleration, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DeviceAcceleration, Release)
 
 DeviceAcceleration::DeviceAcceleration(DeviceMotionEvent* aOwner,
-                                       Nullable<double> aX,
-                                       Nullable<double> aY,
-                                       Nullable<double> aZ)
+                                       const Nullable<double>& aX,
+                                       const Nullable<double>& aY,
+                                       const Nullable<double>& aZ)
   : mOwner(aOwner)
   , mX(aX)
   , mY(aY)
@@ -139,9 +139,9 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DeviceRotationRate, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DeviceRotationRate, Release)
 
 DeviceRotationRate::DeviceRotationRate(DeviceMotionEvent* aOwner,
-                                       Nullable<double> aAlpha,
-                                       Nullable<double> aBeta,
-                                       Nullable<double> aGamma)
+                                       const Nullable<double>& aAlpha,
+                                       const Nullable<double>& aBeta,
+                                       const Nullable<double>& aGamma)
   : mOwner(aOwner)
   , mAlpha(aAlpha)
   , mBeta(aBeta)

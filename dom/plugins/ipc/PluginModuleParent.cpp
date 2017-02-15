@@ -2690,6 +2690,27 @@ PluginModuleParent::AccumulateModuleInitBlockedTime()
     mTimeBlocked = TimeDuration();
 }
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+static void
+ForceWindowless(InfallibleTArray<nsCString>& names,
+                InfallibleTArray<nsCString>& values)
+{
+    nsCaseInsensitiveUTF8StringArrayComparator comparator;
+    NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
+    NS_NAMED_LITERAL_CSTRING(opaqueAttributeValue, "opaque");
+    auto wmodeAttributeIndex =
+        names.IndexOf(wmodeAttributeName, 0, comparator);
+    if (wmodeAttributeIndex != names.NoIndex) {
+        if (!values[wmodeAttributeIndex].EqualsLiteral("transparent")) {
+            values[wmodeAttributeIndex].Assign(opaqueAttributeValue);
+        }
+    } else {
+        names.AppendElement(wmodeAttributeName);
+        values.AppendElement(opaqueAttributeValue);
+    }
+}
+#endif // windows or linux
+
 nsresult
 PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
                                     uint16_t mode,
@@ -2741,19 +2762,11 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         // async rendering and the sandbox level is 2 or greater.
         if (!supportsAsyncRender && mSandboxLevel >= 2) {
 #endif
-           NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
-           NS_NAMED_LITERAL_CSTRING(opaqueAttributeValue, "opaque");
-           auto wmodeAttributeIndex =
-               names.IndexOf(wmodeAttributeName, 0, comparator);
-           if (wmodeAttributeIndex != names.NoIndex) {
-               if (!values[wmodeAttributeIndex].EqualsLiteral("transparent")) {
-                   values[wmodeAttributeIndex].Assign(opaqueAttributeValue);
-               }
-           } else {
-               names.AppendElement(wmodeAttributeName);
-               values.AppendElement(opaqueAttributeValue);
-           }
+            ForceWindowless(names, values);
         }
+#elif defined(MOZ_WIDGET_GTK)
+        // We no longer support windowed mode on Linux.
+        ForceWindowless(names, values);
 #endif
     }
 

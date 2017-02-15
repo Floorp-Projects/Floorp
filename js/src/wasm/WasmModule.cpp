@@ -604,8 +604,8 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
 }
 
 static bool
-CheckLimits(JSContext* cx, uint32_t declaredMin, Maybe<uint32_t> declaredMax, uint32_t actualLength,
-            Maybe<uint32_t> actualMax, bool isAsmJS, const char* kind)
+CheckLimits(JSContext* cx, uint32_t declaredMin, const Maybe<uint32_t>& declaredMax, uint32_t actualLength,
+            const Maybe<uint32_t>& actualMax, bool isAsmJS, const char* kind)
 {
     if (isAsmJS) {
         MOZ_ASSERT(actualLength >= declaredMin);

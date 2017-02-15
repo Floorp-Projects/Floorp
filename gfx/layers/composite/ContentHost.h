@@ -165,8 +165,6 @@ public:
     mLocked = false;
   }
 
-  LayerRenderState GetRenderState() override;
-
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) override;
 
 protected:

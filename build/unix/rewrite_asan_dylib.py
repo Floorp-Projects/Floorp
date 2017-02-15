@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import re
 import sys
 import os
 import subprocess
@@ -16,6 +17,35 @@ reference it with absolute paths but with @executable_path instead.
 
 # This is the dylib we're looking for
 DYLIB_NAME='libclang_rt.asan_osx_dynamic.dylib'
+
+def resolve_rpath(filename):
+    otoolOut = subprocess.check_output([substs['OTOOL'], '-l', filename])
+    currentCmd = None
+
+    # The lines we need to find look like this:
+    # ...
+    # Load command 22
+    #           cmd LC_RPATH
+    #       cmdsize 80
+    #          path /home/build/src/clang/bin/../lib/clang/3.8.0/lib/darwin (offset 12)
+    # Load command 23
+    # ...
+    # Other load command types have a varying number of fields.
+    for line in otoolOut.splitlines():
+        cmdMatch = re.match(r'^\s+cmd ([A-Z_]+)', line)
+        if cmdMatch is not None:
+            currentCmd = cmdMatch.group(1)
+            continue
+
+        if currentCmd == 'LC_RPATH':
+            pathMatch = re.match(r'^\s+path (.*) \(offset \d+\)', line)
+            if pathMatch is not None:
+                path = pathMatch.group(1)
+                if os.path.isdir(path):
+                    return path
+
+    sys.stderr.write('@rpath could not be resolved from %s\n' % filename)
+    exit(1)
 
 def scan_directory(path):
     dylibCopied = False
@@ -43,16 +73,22 @@ def scan_directory(path):
                         continue
 
                     if not dylibCopied:
+                        if absDylibPath.find('@rpath/') == 0:
+                            rpath = resolve_rpath(filename)
+                            copyDylibPath = absDylibPath.replace('@rpath', rpath)
+                        else:
+                            copyDylibPath = absDylibPath
+
                         # Copy the runtime once to the main directory, which is passed
                         # as the argument to this function.
-                        shutil.copy(absDylibPath, path)
+                        shutil.copy(copyDylibPath, path)
 
                         # Now rewrite the library itself
-                        subprocess.check_call(['install_name_tool', '-id', '@executable_path/' + DYLIB_NAME, os.path.join(path, DYLIB_NAME)])
+                        subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-id', '@executable_path/' + DYLIB_NAME, os.path.join(path, DYLIB_NAME)])
                         dylibCopied = True
 
                     # Now use install_name_tool to rewrite the path in our binary
-                    subprocess.check_call(['install_name_tool', '-change', absDylibPath, '@executable_path/' + DYLIB_NAME, filename])
+                    subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-change', absDylibPath, '@executable_path/' + DYLIB_NAME, filename])
                     break
 
 if __name__ == '__main__':

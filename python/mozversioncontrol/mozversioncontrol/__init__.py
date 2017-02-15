@@ -61,8 +61,18 @@ class Repository(object):
         working copy.'''
         raise NotImplementedError
 
+    def get_added_files(self):
+        '''Return a list of files that are added in this repository's
+        working copy.'''
+        raise NotImplementedError
+
     def add_remove_files(self, path):
         '''Add and remove files under `path` in this repository's working copy.
+        '''
+        raise NotImplementedError
+
+    def forget_add_remove_files(self, path):
+        '''Undo the effects of a previous add_remove_files call for `path`.
         '''
         raise NotImplementedError
 
@@ -73,13 +83,21 @@ class HgRepository(Repository):
         self._env[b'HGPLAIN'] = b'1'
 
     def get_modified_files(self):
-        return [line.strip().split()[1] for line in self._run('status', '--modified').splitlines()]
+        # Use --no-status to print just the filename.
+        return self._run('status', '--modified', '--no-status').splitlines()
+
+    def get_added_files(self):
+        # Use --no-status to print just the filename.
+        return self._run('status', '--added', '--no-status').splitlines()
 
     def add_remove_files(self, path):
         args = ['addremove', path]
         if self.tool_version >= b'3.9':
             args = ['--config', 'extensions.automv='] + args
         self._run(*args)
+
+    def forget_add_remove_files(self, path):
+        self._run('forget', path)
 
 class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
@@ -89,8 +107,14 @@ class GitRepository(Repository):
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
 
+    def get_added_files(self):
+        return self._run('diff', '--diff-filter=A', '--name-only').splitlines()
+
     def add_remove_files(self, path):
         self._run('add', path)
+
+    def forget_add_remove_files(self, path):
+        self._run('reset', path)
 
 def get_repository_object(path):
     '''Get a repository object for the repository at `path`.

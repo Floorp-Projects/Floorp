@@ -20,9 +20,9 @@ class ErrorResult;
 
 namespace dom {
 
-template<typename T> class MozMap;
-class HeadersOrByteStringSequenceSequenceOrByteStringMozMap;
-class OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap;
+template<typename K, typename V> class Record;
+class HeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord;
+class OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord;
 
 /**
  * This Headers class is only used to represent the content facing Headers
@@ -57,17 +57,17 @@ public:
 
   static already_AddRefed<Headers>
   Constructor(const GlobalObject& aGlobal,
-              const Optional<HeadersOrByteStringSequenceSequenceOrByteStringMozMap>& aInit,
+              const Optional<HeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord>& aInit,
               ErrorResult& aRv);
 
   static already_AddRefed<Headers>
   Constructor(const GlobalObject& aGlobal,
-              const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+              const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
               ErrorResult& aRv);
 
   static already_AddRefed<Headers>
   Create(nsIGlobalObject* aGlobalObject,
-         const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+         const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
          ErrorResult& aRv);
 
   void Append(const nsACString& aName, const nsACString& aValue,

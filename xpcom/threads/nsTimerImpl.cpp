@@ -219,7 +219,7 @@ nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
                                         void* aClosure,
                                         uint32_t aDelay,
                                         uint32_t aType,
-                                        Callback::Name aName)
+                                        const Callback::Name& aName)
 {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;

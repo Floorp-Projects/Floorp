@@ -1181,10 +1181,10 @@ protected:
   // Parse a <number> color component. The range of color component is [0, 255].
   // If |aSeparator| is provided, this function will also attempt to parse that
   // character after parsing the color component.
-  bool ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator);
+  bool ParseColorComponent(uint8_t& aComponent, const Maybe<char>& aSeparator);
   // Similar to the previous one, but parse a <percentage> color component.
   // The range of color component is [0.0f, 1.0f].
-  bool ParseColorComponent(float& aComponent, Maybe<char> aSeparator);
+  bool ParseColorComponent(float& aComponent, const Maybe<char>& aSeparator);
 
   // Parse a <hue> component.
   //   <hue> = <number> | <angle>
@@ -6861,7 +6861,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator)
+CSSParserImpl::ParseColorComponent(uint8_t& aComponent, const Maybe<char>& aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
@@ -6889,7 +6889,7 @@ CSSParserImpl::ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator)
 }
 
 bool
-CSSParserImpl::ParseColorComponent(float& aComponent, Maybe<char> aSeparator)
+CSSParserImpl::ParseColorComponent(float& aComponent, const Maybe<char>& aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
