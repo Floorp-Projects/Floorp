@@ -140,7 +140,10 @@ interface OnlyForUseInConstructor {
  NamedConstructor=Test2(DictForConstructor dict, any any1, object obj1,
                         object? obj2, sequence<Dict> seq, optional any any2,
                         optional object obj3, optional object? obj4),
- NamedConstructor=Test3((long or MozMap<any>) arg1)
+ NamedConstructor=Test3((long or MozMap<any>) arg1),
+ NamedConstructor=Test4(MozMap<MozMap<any>> arg1),
+ NamedConstructor=Test5(MozMap<sequence<MozMap<MozMap<sequence<sequence<any>>>>>> arg1),
+ NamedConstructor=Test6(sequence<MozMap<sequence<sequence<MozMap<MozMap<any>>>>>> arg1),
  ]
 interface TestInterface {
   // Integer types

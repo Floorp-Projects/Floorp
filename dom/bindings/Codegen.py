@@ -4873,20 +4873,21 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         templateBody = fill(
             """
-            ${mozMapType} &mozMap = ${mozMapRef};
+            auto& mozMapEntries = ${mozMapRef}.Entries();
 
             JS::Rooted<JSObject*> mozMapObj(cx, &$${val}.toObject());
             JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
             if (!JS_Enumerate(cx, mozMapObj, &ids)) {
               $*{exceptionCode}
             }
+            if (!mozMapEntries.SetCapacity(ids.length(), mozilla::fallible)) {
+              JS_ReportOutOfMemory(cx);
+              $*{exceptionCode}
+            }
             JS::Rooted<JS::Value> propNameValue(cx);
             JS::Rooted<JS::Value> temp(cx);
             JS::Rooted<jsid> curId(cx);
             for (size_t i = 0; i < ids.length(); ++i) {
-              // Make sure we get the value before converting the name, since
-              // getting the value can trigger GC but our name is a dependent
-              // string.
               curId = ids[i];
               binding_detail::FakeString propName;
               bool isSymbol;
@@ -4898,18 +4899,17 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 continue;
               }
 
-              ${valueType}* slotPtr = mozMap.AddEntry(propName);
-              if (!slotPtr) {
-                JS_ReportOutOfMemory(cx);
-                $*{exceptionCode}
-              }
-              ${valueType}& slot = *slotPtr;
+              // Safe to do an infallible append here, because we did a
+              // SetCapacity above to the right capacity.
+              ${mozMapType}::EntryType* entry = mozMapEntries.AppendElement();
+              entry->mKey = propName;
+              ${valueType}& slot = entry->mValue;
               $*{valueConversion}
             }
             """,
             exceptionCode=exceptionCode,
-            mozMapType=mozMapType,
             mozMapRef=mozMapRef,
+            mozMapType=mozMapType,
             valueType=valueInfo.declType.define(),
             valueConversion=valueConversion)
 
@@ -6527,8 +6527,6 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         code = fill(
             """
 
-            nsTArray<nsString> keys;
-            ${result}.GetKeys(keys);
             JS::Rooted<JSObject*> returnObj(cx, JS_NewPlainObject(cx));
             if (!returnObj) {
               $*{exceptionCode}
@@ -6536,15 +6534,16 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             // Scope for 'tmp'
             {
               JS::Rooted<JS::Value> tmp(cx);
-              for (size_t idx = 0; idx < keys.Length(); ++idx) {
-                auto& ${valueName} = ${result}.Get(keys[idx]);
+              for (auto& entry : ${result}.Entries()) {
+                auto& ${valueName} = entry.mValue;
                 // Control block to let us common up the JS_DefineUCProperty calls when there
                 // are different ways to succeed at wrapping the value.
                 do {
                   $*{innerTemplate}
                 } while (0);
-                if (!JS_DefineUCProperty(cx, returnObj, keys[idx].get(),
-                                         keys[idx].Length(), tmp,
+                if (!JS_DefineUCProperty(cx, returnObj,
+                                         entry.mKey.BeginReading(),
+                                         entry.mKey.Length(), tmp,
                                          JSPROP_ENUMERATE)) {
                   $*{exceptionCode}
                 }
@@ -7280,28 +7279,26 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
         return wrapCode
 
     if type.isMozMap():
-        origValue = value
         origType = type
         if type.nullable():
             type = type.inner
-            value = "%s.Value()" % value
+            mozMapRef = "%s.Value()" % value
+        else:
+            mozMapRef = value
         global mapWrapLevel
-        key = "mapName%d" % mapWrapLevel
+        entryRef = "mapEntry%d" % mapWrapLevel
         mapWrapLevel += 1
         wrapElement = wrapTypeIntoCurrentCompartment(type.inner,
-                                                     "%s.Get(%sKeys[%sIndex])" % (value, key, key))
+                                                     "%s.mValue" % entryRef)
         mapWrapLevel -= 1
         if not wrapElement:
             return None
         wrapCode = CGWrapper(CGIndenter(wrapElement),
-                             pre=("""
-                                  nsTArray<nsString> %sKeys;
-                                  %s.GetKeys(%sKeys);
-                                  for (uint32_t %sIndex = 0; %sIndex < %sKeys.Length(); ++%sIndex) {
-                                  """ % (key, value, key, key, key, key, key)),
+                             pre=("for (auto& %s : %s.Entries()) {\n" %
+                                  (entryRef, mozMapRef)),
                              post="}\n")
         if origType.nullable():
-            wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % origValue)
+            wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % value)
         return wrapCode
 
     if type.isDictionary():
