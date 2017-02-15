@@ -8,8 +8,6 @@
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
 
-class Sampler;
-
 namespace mozilla {
 
 class ProfileGatherer final : public nsIObserver
@@ -18,7 +16,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  explicit ProfileGatherer(Sampler* aSampler);
+  explicit ProfileGatherer();
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
   void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
@@ -35,7 +33,7 @@ private:
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
   nsCOMPtr<nsIFile> mFile;
-  Sampler* mSampler;
+  bool mIsCancelled;
   double mSinceTime;
   uint32_t mPendingProfiles;
   bool mGathering;
