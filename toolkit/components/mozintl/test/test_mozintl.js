@@ -19,9 +19,9 @@ function test_methods_presence(mozIntl) {
 }
 
 function test_methods_calling(mozIntl) {
-  let ci = mozIntl.getCalendarInfo('pl');
-  let dn = mozIntl.getDisplayNames('ar');
-  let li = mozIntl.getLocaleInfo('de');
-  let pr = mozIntl.createPluralRules('fr');
+  mozIntl.getCalendarInfo("pl");
+  mozIntl.getDisplayNames("ar");
+  mozIntl.getLocaleInfo("de");
+  mozIntl.createPluralRules("fr");
   ok(true);
 }
