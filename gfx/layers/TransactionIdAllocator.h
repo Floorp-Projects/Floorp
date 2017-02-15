@@ -54,15 +54,6 @@ public:
   virtual void RevokeTransactionId(uint64_t aTransactionId) = 0;
 
   /**
-   * Stop waiting for pending transactions, if any.
-   *
-   * This is used when ClientLayerManager is assigning to another refresh
-   * driver, and the current refresh driver may never receive transaction
-   * completed notifications.
-   */
-  virtual void ClearPendingTransactions() = 0;
-
-  /**
    * Get the start time of the current refresh tick.
    */
   virtual mozilla::TimeStamp GetTransactionStart() = 0;
