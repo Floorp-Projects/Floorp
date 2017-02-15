@@ -307,6 +307,7 @@ add_task(function* setup() {
   yield SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.select_popup_in_parent.enabled", true],
+      ["dom.forms.select.customstyling", true]
     ]
   });
 });
