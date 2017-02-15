@@ -21,7 +21,7 @@
 
 namespace mozilla {
 
-typedef MozPromiseRequestHolder<DecryptPromise> DecryptPromiseRequestHolder;
+typedef MozPromiseRequestHolder<CDMProxy::DecryptPromise> DecryptPromiseRequestHolder;
 extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
 class EMEDecryptor : public MediaDataDecoder
