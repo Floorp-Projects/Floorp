@@ -185,6 +185,8 @@ class ArgumentsObject : public NativeObject
     static bool obj_delProperty(JSContext* cx, HandleObject obj, HandleId id,
                                 ObjectOpResult& result);
 
+    static bool obj_mayResolve(const JSAtomState& names, jsid id, JSObject*);
+
   public:
     static const uint32_t RESERVED_SLOTS = 4;
     static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
