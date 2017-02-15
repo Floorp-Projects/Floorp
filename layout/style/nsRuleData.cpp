@@ -9,6 +9,8 @@
 #include "mozilla/Poison.h"
 #include <stdint.h>
 
+using namespace mozilla;
+
 inline size_t
 nsRuleData::GetPoisonOffset()
 {

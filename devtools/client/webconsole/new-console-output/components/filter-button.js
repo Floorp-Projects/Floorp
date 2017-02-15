@@ -29,7 +29,7 @@ const FilterButton = createClass({
     const {active, label, filterKey} = this.props;
 
     let classList = [
-      "menu-filter-button",
+      "devtools-button",
       filterKey,
     ];
     if (active) {

@@ -78,6 +78,7 @@ qr-tests:
     - jittest
     - jsreftest
     - mochitest-a11y
+    - mochitest-gpu
     - reftest
     - reftest-no-accel
     - xpcshell

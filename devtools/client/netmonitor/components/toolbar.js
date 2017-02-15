@@ -65,7 +65,7 @@ function Toolbar({
     .replace("#3", getTimeWithDecimals(millis / 1000));
 
   const buttons = requestFilterTypes.entrySeq().map(([type, checked]) => {
-    let classList = ["menu-filter-button"];
+    let classList = ["devtools-button"];
     checked && classList.push("checked");
 
     return (

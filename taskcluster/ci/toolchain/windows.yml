@@ -6,8 +6,8 @@ win32-clang-cl/opt:
     description: "Clang-cl toolchain build"
     treeherder:
         kind: build
-        platform: windows-2012-32/opt
-        symbol: Cc(ClangCL)
+        platform: toolchains/opt
+        symbol: TW32(clang-cl)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -26,8 +26,8 @@ win64-clang-cl/opt:
     description: "Clang-cl toolchain build"
     treeherder:
         kind: build
-        platform: windows-2012-64/opt
-        symbol: Cc(ClangCL)
+        platform: toolchains/opt
+        symbol: TW64(clang-cl)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -49,8 +49,8 @@ win32-clang-tidy/opt:
         job-name: win32-clang-tidy
     treeherder:
         kind: build
-        platform: windows-2012-32/opt
-        symbol: Cc(Clang-Tidy)
+        platform: toolchains/opt
+        symbol: TW32(clang-tidy)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -72,8 +72,8 @@ win64-clang-tidy/opt:
         job-name: win64-clang-tidy
     treeherder:
         kind: build
-        platform: windows-2012-64/opt
-        symbol: Cc(Clang-Tidy)
+        platform: toolchains/opt
+        symbol: TW64(clang-tidy)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
