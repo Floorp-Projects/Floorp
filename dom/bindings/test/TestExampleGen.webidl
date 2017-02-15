@@ -17,7 +17,7 @@
  NamedConstructor=Example2(DictForConstructor dict, any any1, object obj1,
                            object? obj2, sequence<Dict> seq, optional any any2,
                            optional object obj3, optional object? obj4),
- NamedConstructor=Example2((long or MozMap<any>) arg1)
+ NamedConstructor=Example2((long or record<DOMString, any>) arg1)
  ]
 interface TestExampleInterface {
   // Integer types
@@ -279,31 +279,31 @@ interface TestExampleInterface {
   //sequence<sequence<long>> receiveSequenceOfSequences();
 
   // MozMap types
-  void passMozMap(MozMap<long> arg);
-  void passNullableMozMap(MozMap<long>? arg);
-  void passMozMapOfNullableInts(MozMap<long?> arg);
-  void passOptionalMozMapOfNullableInts(optional MozMap<long?> arg);
-  void passOptionalNullableMozMapOfNullableInts(optional MozMap<long?>? arg);
-  void passCastableObjectMozMap(MozMap<TestInterface> arg);
-  void passNullableCastableObjectMozMap(MozMap<TestInterface?> arg);
-  void passCastableObjectNullableMozMap(MozMap<TestInterface>? arg);
-  void passNullableCastableObjectNullableMozMap(MozMap<TestInterface?>? arg);
-  void passOptionalMozMap(optional MozMap<long> arg);
-  void passOptionalNullableMozMap(optional MozMap<long>? arg);
-  void passOptionalNullableMozMapWithDefaultValue(optional MozMap<long>? arg = null);
-  void passOptionalObjectMozMap(optional MozMap<TestInterface> arg);
-  void passExternalInterfaceMozMap(MozMap<TestExternalInterface> arg);
-  void passNullableExternalInterfaceMozMap(MozMap<TestExternalInterface?> arg);
-  void passStringMozMap(MozMap<DOMString> arg);
-  void passByteStringMozMap(MozMap<ByteString> arg);
-  void passMozMapOfMozMaps(MozMap<MozMap<long>> arg);
-  MozMap<long> receiveMozMap();
-  MozMap<long>? receiveNullableMozMap();
-  MozMap<long?> receiveMozMapOfNullableInts();
-  MozMap<long?>? receiveNullableMozMapOfNullableInts();
+  void passMozMap(record<DOMString, long> arg);
+  void passNullableMozMap(record<DOMString, long>? arg);
+  void passMozMapOfNullableInts(record<DOMString, long?> arg);
+  void passOptionalMozMapOfNullableInts(optional record<DOMString, long?> arg);
+  void passOptionalNullableMozMapOfNullableInts(optional record<DOMString, long?>? arg);
+  void passCastableObjectMozMap(record<DOMString, TestInterface> arg);
+  void passNullableCastableObjectMozMap(record<DOMString, TestInterface?> arg);
+  void passCastableObjectNullableMozMap(record<DOMString, TestInterface>? arg);
+  void passNullableCastableObjectNullableMozMap(record<DOMString, TestInterface?>? arg);
+  void passOptionalMozMap(optional record<DOMString, long> arg);
+  void passOptionalNullableMozMap(optional record<DOMString, long>? arg);
+  void passOptionalNullableMozMapWithDefaultValue(optional record<DOMString, long>? arg = null);
+  void passOptionalObjectMozMap(optional record<DOMString, TestInterface> arg);
+  void passExternalInterfaceMozMap(record<DOMString, TestExternalInterface> arg);
+  void passNullableExternalInterfaceMozMap(record<DOMString, TestExternalInterface?> arg);
+  void passStringMozMap(record<DOMString, DOMString> arg);
+  void passByteStringMozMap(record<DOMString, ByteString> arg);
+  void passMozMapOfMozMaps(record<DOMString, record<DOMString, long>> arg);
+  record<DOMString, long> receiveMozMap();
+  record<DOMString, long>? receiveNullableMozMap();
+  record<DOMString, long?> receiveMozMapOfNullableInts();
+  record<DOMString, long?>? receiveNullableMozMapOfNullableInts();
   //XXXbz No support for MozMap of MozMaps return values yet.
-  //MozMap<MozMap<long>> receiveMozMapOfMozMaps();
-  MozMap<any> receiveAnyMozMap();
+  //record<DOMString, record<DOMString, long>> receiveMozMapOfMozMaps();
+  record<DOMString, any> receiveAnyMozMap();
 
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
@@ -323,8 +323,8 @@ interface TestExampleInterface {
   void passFloat64Array(Float64Array arg);
   void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
   void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
-  void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
-  void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
+  void passMozMapOfArrayBuffers(record<DOMString, ArrayBuffer> arg);
+  void passMozMapOfNullableArrayBuffers(record<DOMString, ArrayBuffer?> arg);
   void passVariadicTypedArray(Float32Array... arg);
   void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
@@ -400,17 +400,17 @@ interface TestExampleInterface {
   void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
   void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
-  void passMozMapOfAny(MozMap<any> arg);
-  void passNullableMozMapOfAny(MozMap<any>? arg);
-  void passOptionalMozMapOfAny(optional MozMap<any> arg);
-  void passOptionalNullableMozMapOfAny(optional MozMap<any>? arg);
-  void passOptionalMozMapOfAnyWithDefaultValue(optional MozMap<any>? arg = null);
-  void passMozMapOfMozMapOfAny(MozMap<MozMap<any>> arg);
-  void passMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?> arg);
-  void passNullableMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?>? arg);
-  void passOptionalNullableMozMapOfNullableMozMapOfAny(optional MozMap<MozMap<any>?>? arg);
-  void passOptionalNullableMozMapOfNullableSequenceOfAny(optional MozMap<sequence<any>?>? arg);
-  void passOptionalNullableSequenceOfNullableMozMapOfAny(optional sequence<MozMap<any>?>? arg);
+  void passMozMapOfAny(record<DOMString, any> arg);
+  void passNullableMozMapOfAny(record<DOMString, any>? arg);
+  void passOptionalMozMapOfAny(optional record<DOMString, any> arg);
+  void passOptionalNullableMozMapOfAny(optional record<DOMString, any>? arg);
+  void passOptionalMozMapOfAnyWithDefaultValue(optional record<DOMString, any>? arg = null);
+  void passMozMapOfMozMapOfAny(record<DOMString, record<DOMString, any>> arg);
+  void passMozMapOfNullableMozMapOfAny(record<DOMString, record<DOMString, any>?> arg);
+  void passNullableMozMapOfNullableMozMapOfAny(record<DOMString, record<DOMString, any>?>? arg);
+  void passOptionalNullableMozMapOfNullableMozMapOfAny(optional record<DOMString, record<DOMString, any>?>? arg);
+  void passOptionalNullableMozMapOfNullableSequenceOfAny(optional record<DOMString, sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableMozMapOfAny(optional sequence<record<DOMString, any>?>? arg);
   any receiveAny();
 
   // object types
@@ -426,7 +426,7 @@ interface TestExampleInterface {
   void passNullableSequenceOfObject(sequence<object>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
-  void passMozMapOfObject(MozMap<object> arg);
+  void passMozMapOfObject(record<DOMString, object> arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -455,8 +455,8 @@ interface TestExampleInterface {
   void passUnion18((sequence<object> or long) arg);
   void passUnion19(optional (sequence<object> or long) arg);
   void passUnion20(optional (sequence<object> or long) arg = []);
-  void passUnion21((MozMap<long> or long) arg);
-  void passUnion22((MozMap<object> or long) arg);
+  void passUnion21((record<DOMString, long> or long) arg);
+  void passUnion22((record<DOMString, object> or long) arg);
   void passUnion23((sequence<ImageData> or long) arg);
   void passUnion24((sequence<ImageData?> or long) arg);
   void passUnion25((sequence<sequence<ImageData>> or long) arg);
@@ -465,9 +465,9 @@ interface TestExampleInterface {
   void passUnion28(optional (EventInit or sequence<DOMString>) arg);
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
-  void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
-  void passUnionWithMozMapAndSequence((MozMap<DOMString> or sequence<DOMString>) arg);
-  void passUnionWithSequenceAndMozMap((sequence<DOMString> or MozMap<DOMString>) arg);
+  void passUnionWithMozMap((record<DOMString, DOMString> or DOMString) arg);
+  void passUnionWithMozMapAndSequence((record<DOMString, DOMString> or sequence<DOMString>) arg);
+  void passUnionWithSequenceAndMozMap((sequence<DOMString> or record<DOMString, DOMString>) arg);
   void passUnionWithSVS((USVString or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
@@ -546,9 +546,9 @@ interface TestExampleInterface {
 
   void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
   void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
-  void passMozMapOfUnions(MozMap<(CanvasPattern or CanvasGradient)> arg);
+  void passMozMapOfUnions(record<DOMString, (CanvasPattern or CanvasGradient)> arg);
   // XXXbz no move constructor on some unions
-  // void passMozMapOfUnions2(MozMap<(object or long)> arg);
+  // void passMozMapOfUnions2(record<DOMString, (object or long)> arg);
 
   (CanvasPattern or CanvasGradient) receiveUnion();
   (object or long) receiveUnion2();
@@ -568,7 +568,7 @@ interface TestExampleInterface {
   void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
   void passDateSequence(sequence<Date> arg);
   void passNullableDateSequence(sequence<Date?> arg);
-  void passDateMozMap(MozMap<Date> arg);
+  void passDateMozMap(record<DOMString, Date> arg);
   Date receiveDate();
   Date? receiveNullableDate();
 
@@ -607,7 +607,7 @@ interface TestExampleInterface {
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
-  void passMozMapOfDictionaries(MozMap<GrandparentDict> x);
+  void passMozMapOfDictionaries(record<DOMString, GrandparentDict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
   //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);
@@ -693,8 +693,8 @@ interface TestExampleInterface {
   void overload16(long arg);
   void overload16(optional TestInterface? arg);
   void overload17(sequence<long> arg);
-  void overload17(MozMap<long> arg);
-  void overload18(MozMap<DOMString> arg);
+  void overload17(record<DOMString, long> arg);
+  void overload18(record<DOMString, DOMString> arg);
   void overload18(sequence<DOMString> arg);
   void overload19(sequence<long> arg);
   void overload19(optional Dict arg);

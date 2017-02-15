@@ -170,7 +170,7 @@ public:
 
   static
   already_AddRefed<TestInterface> Test3(const GlobalObject&,
-                                        const LongOrAnyMozMap&,
+                                        const LongOrStringAnyRecord&,
                                         ErrorResult&);
 
   static
@@ -665,8 +665,8 @@ public:
   void PassUnion18(JSContext*, const ObjectSequenceOrLong&);
   void PassUnion19(JSContext*, const Optional<ObjectSequenceOrLong>&);
   void PassUnion20(JSContext*, const ObjectSequenceOrLong&);
-  void PassUnion21(const LongMozMapOrLong&);
-  void PassUnion22(JSContext*, const ObjectMozMapOrLong&);
+  void PassUnion21(const StringLongRecordOrLong&);
+  void PassUnion22(JSContext*, const StringObjectRecordOrLong&);
   void PassUnion23(const ImageDataSequenceOrLong&);
   void PassUnion24(const ImageDataOrNullSequenceOrLong&);
   void PassUnion25(const ImageDataSequenceSequenceOrLong&);
@@ -675,9 +675,9 @@ public:
   void PassUnion28(const EventInitOrStringSequence&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
-  void PassUnionWithMozMap(const StringMozMapOrString&);
-  void PassUnionWithMozMapAndSequence(const StringMozMapOrStringSequence&);
-  void PassUnionWithSequenceAndMozMap(const StringSequenceOrStringMozMap&);
+  void PassUnionWithMozMap(const StringStringRecordOrString&);
+  void PassUnionWithMozMapAndSequence(const StringStringRecordOrStringSequence&);
+  void PassUnionWithSequenceAndMozMap(const StringSequenceOrStringStringRecord&);
   void PassUnionWithUSVS(const USVStringOrLong&);
 #endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
