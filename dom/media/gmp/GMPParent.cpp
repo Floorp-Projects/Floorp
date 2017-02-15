@@ -536,12 +536,13 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 mozilla::ipc::IPCResult
-GMPParent::RecvInitCrashReporter(Shmem&& aShmem)
+GMPParent::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
 #ifdef MOZ_CRASHREPORTER
   mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
     GeckoProcessType_GMPlugin,
-    aShmem);
+    aShmem,
+    aThreadId);
 #endif
   return IPC_OK();
 }

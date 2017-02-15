@@ -26,7 +26,9 @@ class CrashReporterHost
   typedef CrashReporter::AnnotationTable AnnotationTable;
 
 public:
-  CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem);
+  CrashReporterHost(GeckoProcessType aProcessType,
+                    const Shmem& aShmem,
+                    CrashReporter::ThreadId aThreadId);
 
 #ifdef MOZ_CRASHREPORTER
   bool GenerateCrashReport(base::ProcessId aPid,
@@ -60,6 +62,7 @@ private:
 private:
   GeckoProcessType mProcessType;
   Shmem mShmem;
+  CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
   AnnotationTable mExtraNotes;
 };

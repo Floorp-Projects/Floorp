@@ -121,10 +121,13 @@ GPUChild::RecvGraphicsError(const nsCString& aError)
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvInitCrashReporter(Shmem&& aShmem)
+GPUChild::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
 #ifdef MOZ_CRASHREPORTER
-  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GPU, aShmem);
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
+    GeckoProcessType_GPU,
+    aShmem,
+    aThreadId);
 #endif
   return IPC_OK();
 }
