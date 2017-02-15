@@ -269,7 +269,7 @@ function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily)
 {
   var elm = getNode(aID);
   var computedStyle = document.defaultView.getComputedStyle(elm);
-  var bgColor = computedStyle.backgroundColor == "rgba(0, 0, 0, 0)" ?
+  var bgColor = computedStyle.backgroundColor == "transparent" ?
     "rgb(255, 255, 255)" : computedStyle.backgroundColor;
 
   var defAttrs = {
