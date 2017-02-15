@@ -161,11 +161,11 @@ class SamplerThread
       gBuffer->deleteExpiredStoredMarkers();
 
       if (!gIsPaused) {
-        mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+        mozilla::StaticMutexAutoLock lock(gRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*sRegisteredThreads)[i];
+        for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
+          ThreadInfo* info = (*gRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
           if (!info->hasProfile() || info->IsPendingDelete()) {
