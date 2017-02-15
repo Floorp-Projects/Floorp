@@ -173,7 +173,7 @@ public:
 
 #if defined(XP_WIN)
   void MaybeInitWindowEmulation();
-  void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
+  void SendParentCOMProxy();
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
       const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
