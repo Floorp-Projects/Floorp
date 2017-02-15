@@ -619,7 +619,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
      * is prepended before "uncaught exception: "
      */
     if (exnType < 0 || exnType >= JSEXN_LIMIT ||
-        exnType == JSEXN_INTERNALERR || exnType == JSEXN_WARN)
+        exnType == JSEXN_INTERNALERR || exnType == JSEXN_WARN || exnType == JSEXN_NOTE)
     {
         return nullptr;
     }
@@ -649,6 +649,7 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     const JSErrorFormatString* errorString = callback(userRef, errorNumber);
     JSExnType exnType = errorString ? static_cast<JSExnType>(errorString->exnType) : JSEXN_ERR;
     MOZ_ASSERT(exnType < JSEXN_LIMIT);
+    MOZ_ASSERT(exnType != JSEXN_NOTE);
 
     if (exnType == JSEXN_WARN) {
         // werror must be enabled, so we use JSEXN_ERR.
@@ -732,7 +733,7 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
      */
     JSExnType type = static_cast<JSExnType>(reportp->exnType);
     RootedString str(cx);
-    if (type != JSEXN_WARN)
+    if (type != JSEXN_WARN && type != JSEXN_NOTE)
         str = ClassName(GetExceptionProtoKey(type), cx);
 
     /*
