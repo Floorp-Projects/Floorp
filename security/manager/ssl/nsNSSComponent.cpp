@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -39,6 +40,7 @@
 #include "nsNSSCertificateDB.h"
 #include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
+#include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -65,11 +67,6 @@
 #include "wincrypt.h"
 #include "nsIWindowsRegKey.h"
 #endif
-
-#ifdef ANDROID
-#include "mozilla/PodOperations.h"
-#include "nsPrintfCString.h"
-#endif // ANDROID
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -1696,9 +1693,7 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
   return NS_OK;
 }
 
-#ifdef ANDROID
 static char sCrashReasonBuffer[1024];
-#endif // ANDROID
 
 nsresult
 nsNSSComponent::InitializeNSS()
@@ -1753,10 +1748,8 @@ nsNSSComponent::InitializeNSS()
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
-#ifdef ANDROID
   PRErrorCode savedPRErrorCode1 = 0;
   PRErrorCode savedPRErrorCode2 = 0;
-#endif // ANDROID
 
   if (!nocertdb && !profileStr.IsEmpty()) {
     // First try to initialize the NSS DB in read/write mode.
@@ -1764,16 +1757,12 @@ nsNSSComponent::InitializeNSS()
     init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false, !inSafeMode);
     // If that fails, attempt read-only mode.
     if (init_rv != SECSuccess) {
-#ifdef ANDROID
       savedPRErrorCode1 = PR_GetError();
-#endif // ANDROID
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init NSS r/w in %s\n", profileStr.get()));
       init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true, !inSafeMode);
     }
     if (init_rv != SECSuccess) {
-#ifdef ANDROID
       savedPRErrorCode2 = PR_GetError();
-#endif // ANDROID
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init in r/o either\n"));
     }
   }
@@ -1782,7 +1771,6 @@ nsNSSComponent::InitializeNSS()
   // pref has been set to "true", attempt to initialize with no DB.
   if (nocertdb || init_rv != SECSuccess) {
     init_rv = NSS_NoDB_Init(nullptr);
-#ifdef ANDROID
     if (init_rv != SECSuccess) {
       PRErrorCode savedPRErrorCode3 = PR_GetError();
       nsPrintfCString message("NSS initialization failed PRErrorCodes %d %d %d",
@@ -1794,7 +1782,6 @@ nsNSSComponent::InitializeNSS()
       MOZ_CRASH_ANNOTATE(sCrashReasonBuffer);
       MOZ_REALLY_CRASH();
     }
-#endif // ANDROID
   }
   if (init_rv != SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("could not initialize NSS - panicking\n"));
