@@ -207,7 +207,7 @@ OuterDocAccessible::GetChildAt(uint32_t aIndex) const
 
 #endif // defined(XP_WIN)
 
-ProxyAccessible*
+DocAccessibleParent*
 OuterDocAccessible::RemoteChildDoc() const
 {
   dom::TabParent* tab = dom::TabParent::GetFrom(GetContent());
