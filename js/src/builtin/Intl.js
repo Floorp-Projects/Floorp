@@ -946,12 +946,17 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     // Steps 9-11.
     var i = 0;
     var len = relevantExtensionKeys.length;
+    var foundLocaleData;
+    if (len > 0) {
+        // In this implementation, localeData is a function, not an object.
+        // Step 11.b.
+        foundLocaleData = localeData(foundLocale);
+    }
     while (i < len) {
-        // Steps 11.a-c.
+        // Step 11.a.
         var key = relevantExtensionKeys[i];
 
-        // In this implementation, localeData is a function, not an object.
-        var foundLocaleData = localeData(foundLocale);
+        // Step 11.c.
         var keyLocaleData = foundLocaleData[key];
 
         // Locale data provides default value.
