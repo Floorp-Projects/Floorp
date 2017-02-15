@@ -6,9 +6,9 @@
 
 /* code for loading in @font-face defined font data */
 
-#include "mozilla/Logging.h"
-
 #include "nsFontFaceLoader.h"
+
+#include "mozilla/Logging.h"
 
 #include "nsError.h"
 #include "nsContentUtils.h"

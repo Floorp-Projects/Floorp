@@ -16,8 +16,9 @@
 #define NS_CASCADEENUMDATA_ARENA_BLOCK_SIZE (4096)
 #include "plarena.h"
 
-#include "nsAutoPtr.h"
 #include "nsCSSRuleProcessor.h"
+
+#include "nsAutoPtr.h"
 #include "nsRuleProcessorData.h"
 #include <algorithm>
 #include "nsIAtom.h"

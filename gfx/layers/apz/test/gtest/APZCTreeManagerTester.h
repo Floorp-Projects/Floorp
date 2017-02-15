@@ -14,6 +14,7 @@
 
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 
 class APZCTreeManagerTester : public APZCTesterBase {
 protected:

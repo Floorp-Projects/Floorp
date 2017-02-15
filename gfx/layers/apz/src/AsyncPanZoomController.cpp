@@ -2210,8 +2210,14 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   // Handling of cross sliding will need to be added in this method after touch-action released
   // enabled by default.
   MOZ_ASSERT(GetCurrentTouchBlock());
+  RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
+    GetCurrentInputBlock()->GetOverscrollHandoffChain();
+  bool canScrollHorizontal = !mX.IsAxisLocked() &&
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::HORIZONTAL);
+  bool canScrollVertical = !mY.IsAxisLocked() &&
+    overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::VERTICAL);
   if (GetCurrentTouchBlock()->TouchActionAllowsPanningXY()) {
-    if (mX.CanScrollNow() && mY.CanScrollNow()) {
+    if (canScrollHorizontal && canScrollVertical) {
       if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
         mY.SetAxisLocked(true);
         SetState(PANNING_LOCKED_X);
@@ -2221,7 +2227,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
       } else {
         SetState(PANNING);
       }
-    } else if (mX.CanScrollNow() || mY.CanScrollNow()) {
+    } else if (canScrollHorizontal || canScrollVertical) {
       SetState(PANNING);
     } else {
       SetState(NOTHING);

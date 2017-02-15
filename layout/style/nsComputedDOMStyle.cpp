@@ -636,7 +636,7 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
   // a throwaway style context chain.
   if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
     if (aStyleType == eDefaultOnly) {
-      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      NS_WARNING("stylo: ServoStyleSets cannot supply UA-only styles yet");
       return nullptr;
     }
     return servoSet->ResolveTransientStyle(aElement, type);
