@@ -15,6 +15,7 @@ category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts extension chrome://extensions/content/ext-extension.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
 category webextension-scripts topSites chrome://extensions/content/ext-topSites.js
+category webextension-scripts privacy chrome://extensions/content/ext-privacy.js
 
 # scripts specific for content process.
 category webextension-scripts-content extension chrome://extensions/content/ext-c-extension.js
@@ -57,9 +58,11 @@ category webextension-schemas idle chrome://extensions/content/schemas/idle.json
 category webextension-schemas management chrome://extensions/content/schemas/management.json
 category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
 category webextension-schemas notifications chrome://extensions/content/schemas/notifications.json
+category webextension-schemas privacy chrome://extensions/content/schemas/privacy.json
 category webextension-schemas runtime chrome://extensions/content/schemas/runtime.json
 category webextension-schemas storage chrome://extensions/content/schemas/storage.json
 category webextension-schemas test chrome://extensions/content/schemas/test.json
 category webextension-schemas top_sites chrome://extensions/content/schemas/top_sites.json
+category webextension-schemas types chrome://extensions/content/schemas/types.json
 category webextension-schemas web_navigation chrome://extensions/content/schemas/web_navigation.json
 category webextension-schemas web_request chrome://extensions/content/schemas/web_request.json
