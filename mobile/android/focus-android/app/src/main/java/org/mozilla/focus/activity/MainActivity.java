@@ -5,7 +5,9 @@
 
 package org.mozilla.focus.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
@@ -14,11 +16,13 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.HomeFragment;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
 public class MainActivity extends AppCompatActivity {
+    private String pendingUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +34,35 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
+            showBrowserScreen(getIntent().getDataString());
+        } else {
+            showHomeScreen();
+        }
+    }
+
+    @Override
+    @SuppressLint("CommitTransaction")
+    protected void onNewIntent(Intent intent) {
+        if (Intent.ACTION_VIEW.equals(intent.getAction())) {
+            // We can't update our fragment right now because we need to wait until the activity is
+            // resumed. So just remember this URL and load it in onResume().
+            pendingUrl = intent.getDataString();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (pendingUrl != null) {
+            // We have received an URL in onNewIntent(). Let's load it now.
+            showBrowserScreen(pendingUrl);
+            pendingUrl = null;
+        }
+    }
+
+    private void showHomeScreen() {
         // We add the home fragment to the layout if it doesn't exist yet. I tried adding the fragment
         // to the layout directly but then I wasn't able to remove it later. It was still visible but
         // without an activity attached. So let's do it manually.
@@ -37,9 +70,17 @@ public class MainActivity extends AppCompatActivity {
         if (fragmentManager.findFragmentByTag(HomeFragment.FRAGMENT_TAG) == null) {
             fragmentManager
                     .beginTransaction()
-                    .add(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                    .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                     .commit();
         }
+    }
+
+    private void showBrowserScreen(String url) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container,
+                        BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
+                .commit();
     }
 
     @Override
