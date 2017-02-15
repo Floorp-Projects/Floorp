@@ -265,8 +265,6 @@ SigprofSender(void* aArg)
   int vm_tgid_ = getpid();
   DebugOnly<int> my_tid = gettid();
 
-  unsigned int nSignalsSent = 0;
-
   TimeDuration lastSleepOverhead = 0;
   TimeStamp sampleStart = TimeStamp::Now();
   while (gIsActive) {
@@ -324,18 +322,15 @@ SigprofSender(void* aArg)
         // Wait for the signal handler to run before moving on to the next one
         sem_wait(&gSignalHandlingDone);
         isFirstProfiledThread = false;
-
-        // The LUL unwind object accumulates frame statistics.
-        // Periodically we should poke it to give it a chance to print
-        // those statistics.  This involves doing I/O (fprintf,
-        // __android_log_print, etc) and so can't safely be done from
-        // the unwinder threads, which is why it is done here.
-        if ((++nSignalsSent & 0xF) == 0) {
-#          if defined(USE_LUL_STACKWALK)
-           gLUL->MaybeShowStats();
-#          endif
-        }
       }
+#if defined(USE_LUL_STACKWALK)
+      // The LUL unwind object accumulates frame statistics. Periodically we
+      // should poke it to give it a chance to print those statistics. This
+      // involves doing I/O (fprintf, __android_log_print, etc.) and so can't
+      // safely be done from the unwinder threads, which is why it is done
+      // here.
+      gLUL->MaybeShowStats();
+#endif
     }
 
     // This off-main-thread use of gInterval is safe due to implicit
