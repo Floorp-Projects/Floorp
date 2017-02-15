@@ -122,11 +122,7 @@ static Vector<std::string> gFeatures;
 // All accesses to gEntrySize are on the main thread, so no locking is needed.
 static int gEntrySize = 0;
 
-// This variable is set on the main thread in profiler_{start,stop}(), and
-// mostly read on the main thread. There is one read off the main thread in
-// SigprofSender() in platform-linux.cc which is safe because there is implicit
-// synchronization between that function and the set points in
-// profiler_{start,stop}().
+// All accesses to gInterval are on the main thread, so no locking is needed.
 static double gInterval = 0;
 
 // XXX: These two variables are used extensively both on and off the main
@@ -1591,7 +1587,7 @@ RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
 
 // Platform-specific init/start/stop actions.
 static void PlatformInit();
-static void PlatformStart();
+static void PlatformStart(double aInterval);
 static void PlatformStop();
 
 void
@@ -2032,7 +2028,7 @@ profiler_start(int aProfileEntries, double aInterval,
   gGatherer = new mozilla::ProfileGatherer();
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
-  PlatformStart();
+  PlatformStart(gInterval);
   MOZ_ASSERT(gIsActive && !gIsPaused);  // PlatformStart() sets gIsActive.
 
   if (gProfileJS || privacyMode) {

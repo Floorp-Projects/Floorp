@@ -145,6 +145,8 @@ static void* setup_atfork() {
 }
 #endif /* !defined(GP_OS_android) */
 
+static int gIntervalMicro;
+
 // Global variables through which data is sent from SigprofSender() to
 // SigprofHandler(). gSignalHandlingDone provides inter-thread synchronization.
 static ThreadInfo* gCurrentThreadInfo;
@@ -342,11 +344,8 @@ SigprofSender(void* aArg)
 #endif
     }
 
-    // This off-main-thread use of gInterval is safe due to implicit
-    // synchronization -- this function cannot run at the same time as
-    // profiler_{start,stop}(), where gInterval is set.
     TimeStamp targetSleepEndTime =
-      sampleStart + TimeDuration::FromMicroseconds(gInterval * 1000);
+      sampleStart + TimeDuration::FromMicroseconds(gIntervalMicro);
     TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
@@ -358,7 +357,7 @@ SigprofSender(void* aArg)
 }
 
 static void
-PlatformStart()
+PlatformStart(double aInterval)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -371,6 +370,11 @@ PlatformStart()
      gLUL_initialization_routine();
   }
 #endif
+
+  gIntervalMicro = floor(aInterval * 1000 + 0.5);
+  if (gIntervalMicro <= 0) {
+    gIntervalMicro = 1;
+  }
 
   // Initialize signal handler communication
   gCurrentThreadInfo = nullptr;
@@ -425,6 +429,8 @@ PlatformStop()
 
   MOZ_ASSERT(gIsActive);
   gIsActive = false;
+
+  gIntervalMicro = 0;
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).
