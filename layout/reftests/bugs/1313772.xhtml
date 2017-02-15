@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
   <head>
     <title>CSS Test: Min/Max Height and Width Constraints on Replaced Elements with Box-Sizing</title>
     <link href="http://fantasai.inkedblade.net/contact" title="Elika J. Etemad" rel="author"></link>
@@ -132,6 +132,22 @@
       }
     </style>
   </head>
+  <script>
+  /* This test is a copy of the original w3c-submitted test at
+   * w3c-css/submitted/ui3/box-sizing-replaced-002.xht.
+   * We need this copy so that we can use non-standard MozReftestInvalidate here
+   * without hindering the w3c testsuite.
+   * Without MozReftestInvalidate, for img3 the right half of the element
+   * simply isn't painted.
+   * This copy can be removed (along with the fuzzy annotation in the original
+   * test) when we've fixed the underlying issue i.e. Bug 1316772.
+   */
+  window.addEventListener("MozReftestInvalidate", endTest);
+
+  function endTest() {
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
   <body>
     <div>All rectangles should be the same size.</div>
     <p><img id="img0" class="with-borderpadding" src="support/replaced-min-max.png" alt="FAIL" title="Test 0"></img></p>
