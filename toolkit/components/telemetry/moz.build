@@ -43,18 +43,20 @@ EXPORTS.mozilla += [
     '!TelemetryEventEnums.h',
     '!TelemetryHistogramEnums.h',
     '!TelemetryScalarEnums.h',
+    'ipc/TelemetryComms.h',
+    'ipc/TelemetryIPC.h',
     'ProcessedStack.h',
     'Telemetry.h',
-    'TelemetryComms.h',
     'ThreadHangStats.h',
 ]
 
 SOURCES += [
+    'ipc/TelemetryIPC.cpp',
+    'ipc/TelemetryIPCAccumulator.cpp',
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
-    'TelemetryIPCAccumulator.cpp',
     'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
 ]
