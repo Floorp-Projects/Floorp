@@ -399,7 +399,7 @@ public:
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
   layers::LayersBackend mBackend;
-  KnowsCompositor* mKnowsCompositor;
+  layers::KnowsCompositor* mKnowsCompositor;
   nsACString& mFailureReason;
 };
 

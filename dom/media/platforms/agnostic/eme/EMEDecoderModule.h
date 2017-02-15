@@ -7,8 +7,8 @@
 #if !defined(EMEDecoderModule_h_)
 #define EMEDecoderModule_h_
 
-#include "PlatformDecoderModule.h"
 #include "PDMFactory.h"
+#include "PlatformDecoderModule.h"
 #include "gmp-decryption.h"
 
 namespace mozilla {
@@ -19,8 +19,6 @@ class EMEDecoderModule : public PlatformDecoderModule
 {
 public:
   EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM);
-
-  virtual ~EMEDecoderModule();
 
 protected:
   // Decode thread.
@@ -35,10 +33,11 @@ protected:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   bool
-  SupportsMimeType(const nsACString& aMimeType,
-                   DecoderDoctorDiagnostics* aDiagnostics) const override;
+  SupportsMimeType(const nsACString &aMimeType,
+                   DecoderDoctorDiagnostics *aDiagnostics) const override;
 
 private:
+  virtual ~EMEDecoderModule();
   RefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
   RefPtr<PDMFactory> mPDM;
