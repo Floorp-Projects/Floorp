@@ -690,7 +690,7 @@ NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
                                  const OriginAttributes& aOriginAttributes,
                                  const uint16_t& flags)
 {
-  nsHTMLDNSPrefetch::Prefetch(hostname, flags);
+  nsHTMLDNSPrefetch::Prefetch(hostname, aOriginAttributes, flags);
   return IPC_OK();
 }
 
@@ -700,7 +700,7 @@ NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
                                        const uint16_t& flags,
                                        const nsresult& reason)
 {
-  nsHTMLDNSPrefetch::CancelPrefetch(hostname, flags, reason);
+  nsHTMLDNSPrefetch::CancelPrefetch(hostname, aOriginAttributes, flags, reason);
   return IPC_OK();
 }
 
