@@ -37,10 +37,18 @@ android {
     }
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
     compile 'com.android.support:appcompat-v7:25.1.1'
     compile 'com.android.support:customtabs:25.1.1'
     compile 'com.android.support:design:25.1.1'
+
+    geckoCompile(name: 'geckoview-195049fabb7a', ext: 'aar')
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.1.4"
