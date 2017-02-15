@@ -44,12 +44,9 @@
 #include "GeckoTaskTracer.h"
 #endif
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-  #include "FennecJNIWrappers.h"
-#endif
-
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
-#include "FennecJNINatives.h"
+#if defined(PROFILE_JAVA)
+# include "FennecJNINatives.h"
+# include "FennecJNIWrappers.h"
 #endif
 
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
@@ -83,7 +80,7 @@ typedef ucontext_t tickcontext_t;
 
 using namespace mozilla;
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
 class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
 private:
@@ -1076,7 +1073,7 @@ SubProcessCallback(const char* aProfile, void* aClosure)
   closure->mWriter->StringElement(aProfile);
 }
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
 static void
 BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 {
@@ -1193,7 +1190,7 @@ StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         }
       }
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
       if (gProfileJava) {
         java::GeckoJavaSampler::Pause();
 
@@ -1669,7 +1666,7 @@ profiler_init(void* stackTop)
 
   set_stderr_callback(profiler_log);
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
   if (mozilla::jni::IsFennec()) {
     GeckoJavaSampler::Init();
   }
@@ -1691,7 +1688,7 @@ profiler_init(void* stackTop)
     || defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
                          , "stackwalk"
 #endif
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
                          , "java"
 #endif
                          };
@@ -2044,11 +2041,9 @@ profiler_start(int aProfileEntries, double aInterval,
   bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
   bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
   gProfileJava = mozilla::jni::IsFennec() &&
                       hasFeature(aFeatures, aFeatureCount, "java");
-#else
-  gProfileJava = false;
 #endif
   gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
   gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
@@ -2087,7 +2082,7 @@ profiler_start(int aProfileEntries, double aInterval,
     }
   }
 
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
   if (gProfileJava) {
     int javaInterval = aInterval;
     // Java sampling doesn't accuratly keep up with 1ms sampling
