@@ -87,11 +87,10 @@ static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 class SamplerThread
 {
  public:
-  explicit SamplerThread(double interval)
+  explicit SamplerThread(double aInterval)
     : mThread(kNoThread)
-    , mInterval(interval)
+    , mInterval(floor(aInterval + 0.5))
   {
-    mInterval = floor(interval + 0.5);
     if (mInterval <= 0) {
       mInterval = 1;
     }
@@ -129,11 +128,11 @@ class SamplerThread
     }
   }
 
-  static void StartSampler() {
+  static void StartSampler(double aInterval) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!mInstance);
 
-    mInstance = new SamplerThread(gInterval);
+    mInstance = new SamplerThread(aInterval);
     mInstance->Start();
   }
 
@@ -273,13 +272,13 @@ PlatformInit()
 }
 
 static void
-PlatformStart()
+PlatformStart(double aInterval)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
-  SamplerThread::StartSampler();
+  SamplerThread::StartSampler(aInterval);
 }
 
 static void
