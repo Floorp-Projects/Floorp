@@ -3,7 +3,7 @@
 
 "use strict";
 
-const HeadersMDN = require("devtools/client/netmonitor/shared/components/headers-mdn");
+const { getHeadersURL } = require("devtools/client/netmonitor/utils/mdn-utils");
 
 /**
  * Tests if "Learn More" links are correctly displayed
@@ -42,7 +42,7 @@ add_task(function* () {
   function testShowLearnMore(data) {
     document.querySelectorAll(".properties-view .treeRow.stringRow").forEach((rowEl, index) => {
       let headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0].textContent;
-      let headerDocURL = HeadersMDN.getURL(headerName);
+      let headerDocURL = getHeadersURL(headerName);
       let learnMoreEl = rowEl.querySelectorAll(".treeValueCell .learn-more-link");
 
       if (headerDocURL === null) {
