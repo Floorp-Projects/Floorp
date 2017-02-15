@@ -55,7 +55,7 @@ interface Document : Node {
   [NewObject, Throws]
   Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
   [NewObject, Throws]
-  Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional ElementCreationOptions options);
+  Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (ElementCreationOptions or DOMString) options);
   [NewObject]
   DocumentFragment createDocumentFragment();
   [NewObject]
