@@ -69,6 +69,52 @@ class DtoaCache {
 #endif
 };
 
+// Cache to speed up the group/shape lookup in ProxyObject::create. A proxy's
+// group/shape is only determined by the Class + proto, so a small cache for
+// this is very effective in practice.
+class NewProxyCache
+{
+    struct Entry {
+        ObjectGroup* group;
+        Shape* shape;
+    };
+    static const size_t NumEntries = 4;
+    mozilla::UniquePtr<Entry[], JS::FreePolicy> entries_;
+
+  public:
+    MOZ_ALWAYS_INLINE bool lookup(const Class* clasp, TaggedProto proto,
+                                  ObjectGroup** group, Shape** shape) const
+    {
+        if (!entries_)
+            return false;
+        for (size_t i = 0; i < NumEntries; i++) {
+            const Entry& entry = entries_[i];
+            if (entry.group && entry.group->clasp() == clasp && entry.group->proto() == proto) {
+                *group = entry.group;
+                *shape = entry.shape;
+                return true;
+            }
+        }
+        return false;
+    }
+    void add(ObjectGroup* group, Shape* shape) {
+        MOZ_ASSERT(group && shape);
+        if (!entries_) {
+            entries_.reset(js_pod_calloc<Entry>(NumEntries));
+            if (!entries_)
+                return;
+        } else {
+            for (size_t i = NumEntries - 1; i > 0; i--)
+                entries_[i] = entries_[i - 1];
+        }
+        entries_[0].group = group;
+        entries_[0].shape = shape;
+    }
+    void purge() {
+        entries_.reset();
+    }
+};
+
 class CrossCompartmentKey
 {
   public:
@@ -695,6 +741,7 @@ struct JSCompartment
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
     js::DtoaCache dtoaCache;
+    js::NewProxyCache newProxyCache;
 
     // Random number generator for Math.random().
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
