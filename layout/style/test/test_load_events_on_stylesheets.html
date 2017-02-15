@@ -53,6 +53,14 @@ window.onmessage = function() {
 }
 window.postMessage("", "*");
 
+function checkSheetComplete(sheet, length) {
+  try {
+    is(sheet.cssRules.length, length, `Should be loaded with ${length} rule(s)`);
+  } catch (e) {
+    ok(false, "Sheet has not been loaded completely");
+  }
+}
+
 document.write('<link rel="stylesheet" href="data:text/css,*{}"\
                 onload="--pendingEventCounter;\
                         ok(true, \'Load event firing on basic stylesheet\')"\
@@ -65,7 +73,7 @@ is(document.styleSheets.length, 3, "Should have three stylesheets");
 // Make sure that the second stylesheet is all loaded
 // If we ever switch away from sync loading of already-complete sheets, this
 // test will need adjusting
-is(document.styleSheets[2].cssRules.length, 1, "Should have one rule");
+checkSheetComplete(document.styleSheets[2], 1);
 
 // Make sure the load event for that stylesheet has not fired yet
 is(pendingEventCounter, 1, "There should be one pending event");
@@ -117,7 +125,7 @@ is(document.styleSheets.length, 7, "Should have seven stylesheets here");
 // Make sure that the sixth stylesheet is all loaded
 // If we ever switch away from sync loading of already-complete sheets, this
 // test will need adjusting
-is(document.styleSheets[6].cssRules.length, 1, "Should have one rule");
+checkSheetComplete(document.styleSheets[6], 1);
 
 ++pendingEventCounter;
 link = document.createElement("link");
