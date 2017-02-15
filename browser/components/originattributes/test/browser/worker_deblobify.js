@@ -2,8 +2,6 @@
 // Obtain the blob, and read the string contained in it.
 // Post back the string.
 
-/* eslint-env worker */
-
 var postStringInBlob = function(blobObject) {
   var fileReader = new FileReaderSync();
   var result = fileReader.readAsText(blobObject);

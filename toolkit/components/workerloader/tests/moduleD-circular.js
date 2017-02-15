@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-env commonjs */
-
 // Module C and module D have circular dependencies.
 // This should not prevent from loading them.
 
