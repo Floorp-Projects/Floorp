@@ -143,7 +143,7 @@ class Configuration(DescriptorProvider):
 
         for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
             while True:
-                if t.isMozMap():
+                if t.isRecord():
                     t = t.inner
                 elif t.unroll() != t:
                     t = t.unroll()

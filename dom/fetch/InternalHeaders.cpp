@@ -306,12 +306,13 @@ InternalHeaders::Fill(const Sequence<Sequence<nsCString>>& aInit, ErrorResult& a
 }
 
 void
-InternalHeaders::Fill(const MozMap<nsCString>& aInit, ErrorResult& aRv)
+InternalHeaders::Fill(const Record<nsCString, nsCString>& aInit, ErrorResult& aRv)
 {
-  nsTArray<nsString> keys;
-  aInit.GetKeys(keys);
-  for (uint32_t i = 0; i < keys.Length() && !aRv.Failed(); ++i) {
-    Append(NS_ConvertUTF16toUTF8(keys[i]), aInit.Get(keys[i]), aRv);
+  for (auto& entry : aInit.Entries()) {
+    Append(entry.mKey, entry.mValue, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 }
 

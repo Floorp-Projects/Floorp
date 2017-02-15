@@ -56,7 +56,7 @@ struct DecoderFinalStatus final
 
 struct DecoderTelemetry final
 {
-  DecoderTelemetry(Maybe<Telemetry::ID> aSpeedHistogram,
+  DecoderTelemetry(const Maybe<Telemetry::ID>& aSpeedHistogram,
                    size_t aBytesDecoded,
                    uint32_t aChunkCount,
                    TimeDuration aDecodeTime)

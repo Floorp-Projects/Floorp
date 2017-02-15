@@ -10,6 +10,8 @@
 //       particularly bizarre things that might break the harness.
 
 (function(global) {
+  "use strict";
+
   /**********************************************************************
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
    **********************************************************************/
@@ -18,7 +20,7 @@
 
   var document = global.document;
   var Error = global.Error;
-  var eval = global.eval;
+  var Function = global.Function;
   var Number = global.Number;
   var RegExp = global.RegExp;
   var String = global.String;
@@ -437,20 +439,6 @@
   global.writeFormattedResult = writeFormattedResult;
 
   /*
-   * Signals to results.py that the current test case should be considered to
-   * have passed if it doesn't throw an exception.
-   *
-   * When the test suite is run in the browser, this function gets overridden by
-   * the same-named function in browser.js.
-   */
-  // Note: browser.js overrides this function.
-  // XXX: Remove this function - it's no longer used.
-  function testPassesUnlessItThrows() {
-    print(PASSED);
-  }
-  global.testPassesUnlessItThrows = testPassesUnlessItThrows;
-
-  /*
    * wrapper for test case constructor that doesn't require the SECTION
    * argument.
    */
@@ -662,9 +650,9 @@
       var expectCompile = 'No Error';
       var actualCompile;
 
-      eval(expect);
+      Function(expect);
       try {
-        eval(actual);
+        Function(actual);
         actualCompile = 'No Error';
       } catch(ex1) {
         actualCompile = ex1 + '';
@@ -769,29 +757,10 @@
   }
   global.jsTestDriverEnd = jsTestDriverEnd;
 
-  /*****************************************************
-   * RHINO-SPECIFIC EXPORTS (are these used any more?) *
-   *****************************************************/
+  /************************************
+   * PROMISE TESTING FUNCTION EXPORTS *
+   ************************************/
 
-  function inRhino() {
-    return typeof global.defineClass === "function";
-  }
-  global.inRhino = inRhino;
-
-  function GetContext() {
-    return global.Packages.com.netscape.javascript.Context.getCurrentContext();
-  }
-  global.GetContext = GetContext;
-
-  function OptLevel(i) {
-    i = Number(i);
-    var cx = GetContext();
-    cx.setOptimizationLevel(i);
-  }
-  global.OptLevel = OptLevel;
-})(this);
-
-(function(global) {
   function getPromiseResult(promise) {
     var result, error, caught = false;
     promise.then(r => { result = r; },
@@ -869,11 +838,7 @@ function optionsClear() {
   for (var i = 0; i < optionNames.length; i++)
   {
     var optionName = optionNames[i];
-    if (optionName &&
-        optionName != "methodjit" &&
-        optionName != "methodjit_always" &&
-        optionName != "ion")
-    {
+    if (optionName && optionName !== "ion") {
       options(optionName);
     }
   }
@@ -905,7 +870,7 @@ function optionsPop()
 
   optionsClear();
 
-  for (optionName in optionsframe)
+  for (var optionName in optionsframe)
   {
     options(optionName);
   }

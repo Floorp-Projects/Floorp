@@ -679,9 +679,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
     MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
-    MOZ_MUST_USE bool emitIteratorClose(
-        mozilla::Maybe<JumpTarget> yieldStarTryStart = mozilla::Nothing(),
-        bool allowSelfHosted = false);
+    MOZ_MUST_USE bool emitIteratorClose(bool allowSelfHosted = false);
 
     template <typename InnerEmitter>
     MOZ_MUST_USE bool wrapWithDestructuringIteratorCloseTryNote(int32_t iterDepth,

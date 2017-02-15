@@ -1377,20 +1377,22 @@ RenderGlobalSection(WasmRenderContext& c, const AstModule& module)
 }
 
 static bool
-RenderResizableMemory(WasmRenderContext& c, Limits memory)
+RenderResizableMemory(WasmRenderContext& c, const Limits& memory)
 {
     if (!c.buffer.append("(memory "))
         return false;
 
-    MOZ_ASSERT(memory.initial % PageSize == 0);
-    memory.initial /= PageSize;
+    Limits resizedMemory = memory;
 
-    if (memory.maximum) {
-        MOZ_ASSERT(*memory.maximum % PageSize == 0);
-        *memory.maximum /= PageSize;
+    MOZ_ASSERT(resizedMemory.initial % PageSize == 0);
+    resizedMemory.initial /= PageSize;
+
+    if (resizedMemory.maximum) {
+        MOZ_ASSERT(*resizedMemory.maximum % PageSize == 0);
+        *resizedMemory.maximum /= PageSize;
     }
 
-    if (!RenderLimits(c, memory))
+    if (!RenderLimits(c, resizedMemory))
         return false;
 
     return c.buffer.append(")");

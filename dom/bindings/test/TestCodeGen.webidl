@@ -22,7 +22,7 @@ callback interface TestCallbackInterface {
   long doSomethingElse(DOMString arg, TestInterface otherArg);
   void doSequenceLongArg(sequence<long> arg);
   void doSequenceStringArg(sequence<DOMString> arg);
-  void doMozMapLongArg(MozMap<long> arg);
+  void doRecordLongArg(record<DOMString, long> arg);
   sequence<long> getSequenceOfLong();
   sequence<TestInterface> getSequenceOfInterfaces();
   sequence<TestInterface>? getNullableSequenceOfInterfaces();
@@ -32,7 +32,7 @@ callback interface TestCallbackInterface {
   sequence<TestCallbackInterface>? getNullableSequenceOfCallbackInterfaces();
   sequence<TestCallbackInterface?> getSequenceOfNullableCallbackInterfaces();
   sequence<TestCallbackInterface?>? getNullableSequenceOfNullableCallbackInterfaces();
-  MozMap<long> getMozMapOfLong();
+  record<DOMString, long> getRecordOfLong();
   Dict? getDictionary();
   void passArrayBuffer(ArrayBuffer arg);
   void passNullableArrayBuffer(ArrayBuffer? arg);
@@ -140,7 +140,10 @@ interface OnlyForUseInConstructor {
  NamedConstructor=Test2(DictForConstructor dict, any any1, object obj1,
                         object? obj2, sequence<Dict> seq, optional any any2,
                         optional object obj3, optional object? obj4),
- NamedConstructor=Test3((long or MozMap<any>) arg1)
+ NamedConstructor=Test3((long or record<DOMString, any>) arg1),
+ NamedConstructor=Test4(record<DOMString, record<DOMString, any>> arg1),
+ NamedConstructor=Test5(record<DOMString, sequence<record<DOMString, record<DOMString, sequence<sequence<any>>>>>> arg1),
+ NamedConstructor=Test6(sequence<record<ByteString, sequence<sequence<record<ByteString, record<USVString, any>>>>>> arg1),
  ]
 interface TestInterface {
   // Integer types
@@ -415,31 +418,31 @@ interface TestInterface {
   sequence<sequence<long>> receiveSequenceOfSequences();
   sequence<sequence<sequence<long>>> receiveSequenceOfSequencesOfSequences();
 
-  // MozMap types
-  void passMozMap(MozMap<long> arg);
-  void passNullableMozMap(MozMap<long>? arg);
-  void passMozMapOfNullableInts(MozMap<long?> arg);
-  void passOptionalMozMapOfNullableInts(optional MozMap<long?> arg);
-  void passOptionalNullableMozMapOfNullableInts(optional MozMap<long?>? arg);
-  void passCastableObjectMozMap(MozMap<TestInterface> arg);
-  void passNullableCastableObjectMozMap(MozMap<TestInterface?> arg);
-  void passCastableObjectNullableMozMap(MozMap<TestInterface>? arg);
-  void passNullableCastableObjectNullableMozMap(MozMap<TestInterface?>? arg);
-  void passOptionalMozMap(optional MozMap<long> arg);
-  void passOptionalNullableMozMap(optional MozMap<long>? arg);
-  void passOptionalNullableMozMapWithDefaultValue(optional MozMap<long>? arg = null);
-  void passOptionalObjectMozMap(optional MozMap<TestInterface> arg);
-  void passExternalInterfaceMozMap(MozMap<TestExternalInterface> arg);
-  void passNullableExternalInterfaceMozMap(MozMap<TestExternalInterface?> arg);
-  void passStringMozMap(MozMap<DOMString> arg);
-  void passByteStringMozMap(MozMap<ByteString> arg);
-  void passMozMapOfMozMaps(MozMap<MozMap<long>> arg);
-  MozMap<long> receiveMozMap();
-  MozMap<long>? receiveNullableMozMap();
-  MozMap<long?> receiveMozMapOfNullableInts();
-  MozMap<long?>? receiveNullableMozMapOfNullableInts();
-  MozMap<MozMap<long>> receiveMozMapOfMozMaps();
-  MozMap<any> receiveAnyMozMap();
+  // record types
+  void passRecord(record<DOMString, long> arg);
+  void passNullableRecord(record<DOMString, long>? arg);
+  void passRecordOfNullableInts(record<DOMString, long?> arg);
+  void passOptionalRecordOfNullableInts(optional record<DOMString, long?> arg);
+  void passOptionalNullableRecordOfNullableInts(optional record<DOMString, long?>? arg);
+  void passCastableObjectRecord(record<DOMString, TestInterface> arg);
+  void passNullableCastableObjectRecord(record<DOMString, TestInterface?> arg);
+  void passCastableObjectNullableRecord(record<DOMString, TestInterface>? arg);
+  void passNullableCastableObjectNullableRecord(record<DOMString, TestInterface?>? arg);
+  void passOptionalRecord(optional record<DOMString, long> arg);
+  void passOptionalNullableRecord(optional record<DOMString, long>? arg);
+  void passOptionalNullableRecordWithDefaultValue(optional record<DOMString, long>? arg = null);
+  void passOptionalObjectRecord(optional record<DOMString, TestInterface> arg);
+  void passExternalInterfaceRecord(record<DOMString, TestExternalInterface> arg);
+  void passNullableExternalInterfaceRecord(record<DOMString, TestExternalInterface?> arg);
+  void passStringRecord(record<DOMString, DOMString> arg);
+  void passByteStringRecord(record<DOMString, ByteString> arg);
+  void passRecordOfRecords(record<DOMString, record<DOMString, long>> arg);
+  record<DOMString, long> receiveRecord();
+  record<DOMString, long>? receiveNullableRecord();
+  record<DOMString, long?> receiveRecordOfNullableInts();
+  record<DOMString, long?>? receiveNullableRecordOfNullableInts();
+  record<DOMString, record<DOMString, long>> receiveRecordOfRecords();
+  record<DOMString, any> receiveAnyRecord();
 
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
@@ -459,8 +462,8 @@ interface TestInterface {
   void passFloat64Array(Float64Array arg);
   void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
   void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
-  void passMozMapOfArrayBuffers(MozMap<ArrayBuffer> arg);
-  void passMozMapOfNullableArrayBuffers(MozMap<ArrayBuffer?> arg);
+  void passRecordOfArrayBuffers(record<DOMString, ArrayBuffer> arg);
+  void passRecordOfNullableArrayBuffers(record<DOMString, ArrayBuffer?> arg);
   void passVariadicTypedArray(Float32Array... arg);
   void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
@@ -565,17 +568,17 @@ interface TestInterface {
   void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
   void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
-  void passMozMapOfAny(MozMap<any> arg);
-  void passNullableMozMapOfAny(MozMap<any>? arg);
-  void passOptionalMozMapOfAny(optional MozMap<any> arg);
-  void passOptionalNullableMozMapOfAny(optional MozMap<any>? arg);
-  void passOptionalMozMapOfAnyWithDefaultValue(optional MozMap<any>? arg = null);
-  void passMozMapOfMozMapOfAny(MozMap<MozMap<any>> arg);
-  void passMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?> arg);
-  void passNullableMozMapOfNullableMozMapOfAny(MozMap<MozMap<any>?>? arg);
-  void passOptionalNullableMozMapOfNullableMozMapOfAny(optional MozMap<MozMap<any>?>? arg);
-  void passOptionalNullableMozMapOfNullableSequenceOfAny(optional MozMap<sequence<any>?>? arg);
-  void passOptionalNullableSequenceOfNullableMozMapOfAny(optional sequence<MozMap<any>?>? arg);
+  void passRecordOfAny(record<DOMString, any> arg);
+  void passNullableRecordOfAny(record<DOMString, any>? arg);
+  void passOptionalRecordOfAny(optional record<DOMString, any> arg);
+  void passOptionalNullableRecordOfAny(optional record<DOMString, any>? arg);
+  void passOptionalRecordOfAnyWithDefaultValue(optional record<DOMString, any>? arg = null);
+  void passRecordOfRecordOfAny(record<DOMString, record<DOMString, any>> arg);
+  void passRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?> arg);
+  void passNullableRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?>? arg);
+  void passOptionalNullableRecordOfNullableRecordOfAny(optional record<DOMString, record<DOMString, any>?>? arg);
+  void passOptionalNullableRecordOfNullableSequenceOfAny(optional record<DOMString, sequence<any>?>? arg);
+  void passOptionalNullableSequenceOfNullableRecordOfAny(optional sequence<record<DOMString, any>?>? arg);
   any receiveAny();
 
   // object types
@@ -591,7 +594,7 @@ interface TestInterface {
   void passNullableSequenceOfObject(sequence<object>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
-  void passMozMapOfObject(MozMap<object> arg);
+  void passRecordOfObject(record<DOMString, object> arg);
   object receiveObject();
   object? receiveNullableObject();
 
@@ -619,8 +622,8 @@ interface TestInterface {
   void passUnion18((sequence<object> or long) arg);
   void passUnion19(optional (sequence<object> or long) arg);
   void passUnion20(optional (sequence<object> or long) arg = []);
-  void passUnion21((MozMap<long> or long) arg);
-  void passUnion22((MozMap<object> or long) arg);
+  void passUnion21((record<DOMString, long> or long) arg);
+  void passUnion22((record<DOMString, object> or long) arg);
   void passUnion23((sequence<ImageData> or long) arg);
   void passUnion24((sequence<ImageData?> or long) arg);
   void passUnion25((sequence<sequence<ImageData>> or long) arg);
@@ -629,9 +632,9 @@ interface TestInterface {
   void passUnion28(optional (EventInit or sequence<DOMString>) arg);
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
-  void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
-  void passUnionWithMozMapAndSequence((MozMap<DOMString> or sequence<DOMString>) arg);
-  void passUnionWithSequenceAndMozMap((sequence<DOMString> or MozMap<DOMString>) arg);
+  void passUnionWithRecord((record<DOMString, DOMString> or DOMString) arg);
+  void passUnionWithRecordAndSequence((record<DOMString, DOMString> or sequence<DOMString>) arg);
+  void passUnionWithSequenceAndRecord((sequence<DOMString> or record<DOMString, DOMString>) arg);
   void passUnionWithUSVS((USVString or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
@@ -710,9 +713,9 @@ interface TestInterface {
 
   void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
   void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
-  void passMozMapOfUnions(MozMap<(CanvasPattern or CanvasGradient)> arg);
+  void passRecordOfUnions(record<DOMString, (CanvasPattern or CanvasGradient)> arg);
   // XXXbz no move constructor on some unions
-  // void passMozMapOfUnions2(MozMap<(object or long)> arg);
+  // void passRecordOfUnions2(record<DOMString, (object or long)> arg);
 
   (CanvasPattern or CanvasGradient) receiveUnion();
   (object or long) receiveUnion2();
@@ -732,7 +735,7 @@ interface TestInterface {
   void passOptionalNullableDateWithDefaultValue(optional Date? arg = null);
   void passDateSequence(sequence<Date> arg);
   void passNullableDateSequence(sequence<Date?> arg);
-  void passDateMozMap(MozMap<Date> arg);
+  void passDateRecord(record<DOMString, Date> arg);
   Date receiveDate();
   Date? receiveNullableDate();
 
@@ -771,7 +774,7 @@ interface TestInterface {
   Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
-  void passMozMapOfDictionaries(MozMap<GrandparentDict> x);
+  void passRecordOfDictionaries(record<DOMString, GrandparentDict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
   //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
   void passDictionaryOrLong(optional Dict x);
@@ -860,8 +863,8 @@ interface TestInterface {
   void overload16(long arg);
   void overload16(optional TestInterface? arg);
   void overload17(sequence<long> arg);
-  void overload17(MozMap<long> arg);
-  void overload18(MozMap<DOMString> arg);
+  void overload17(record<DOMString, long> arg);
+  void overload18(record<DOMString, DOMString> arg);
   void overload18(sequence<DOMString> arg);
   void overload19(sequence<long> arg);
   void overload19(optional Dict arg);
@@ -1116,6 +1119,17 @@ dictionary Dict : ParentDict {
 
   Promise<void> promise;
   sequence<Promise<void>> promiseSequence;
+
+  record<DOMString, long> recordMember;
+  record<DOMString, long>? nullableRecord;
+  record<DOMString, DOMString>? nullableRecordWithDefault = null;
+  record<USVString, long> usvStringRecord;
+  record<USVString, long>? nullableUSVStringRecordWithDefault = null;
+  record<ByteString, long> byteStringRecord;
+  record<ByteString, long>? nullableByteStringRecordWithDefault = null;
+  required record<DOMString, TestInterface> requiredRecord;
+  required record<USVString, TestInterface> requiredUSVRecord;
+  required record<ByteString, TestInterface> requiredByteRecord;
 };
 
 dictionary ParentDict : GrandparentDict {

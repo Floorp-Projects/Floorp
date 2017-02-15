@@ -542,17 +542,6 @@ public:
    */
   PTextureParent* GetIPDLActor();
 
-  /**
-   * Specific to B2G's Composer2D
-   * XXX - more doc here
-   */
-  virtual LayerRenderState GetRenderState()
-  {
-    // By default we return an empty render state, this should be overridden
-    // by the TextureHost implementations that are used on B2G with Composer2D
-    return LayerRenderState();
-  }
-
   // If a texture host holds a reference to shmem, it should override this method
   // to forget about the shmem _without_ releasing it.
   virtual void OnShutdown() {}

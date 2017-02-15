@@ -7,7 +7,7 @@
 #ifndef js_ProfilingFrameIterator_h
 #define js_ProfilingFrameIterator_h
 
-#include "mozilla/Alignment.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
 #include "jsbytecode.h"
@@ -44,7 +44,7 @@ struct ForEachTrackedOptimizationTypeInfoOp;
 // Note that the caller must not do anything that could cause GC to happen while
 // the iterator is alive, since this could invalidate Ion code and cause its
 // contents to become out of date.
-class JS_PUBLIC_API(ProfilingFrameIterator)
+class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
 {
     JSContext* cx_;
     uint32_t sampleBufferGen_;
@@ -56,28 +56,32 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     void* savedPrevJitTop_;
 
     static const unsigned StorageSpace = 8 * sizeof(void*);
-    mozilla::AlignedStorage<StorageSpace> storage_;
+    alignas(void*) unsigned char storage_[StorageSpace];
+
+    void* storage() { return storage_; }
+    const void* storage() const { return storage_; }
+
     js::wasm::ProfilingFrameIterator& wasmIter() {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isWasm());
-        return *reinterpret_cast<js::wasm::ProfilingFrameIterator*>(storage_.addr());
+        return *static_cast<js::wasm::ProfilingFrameIterator*>(storage());
     }
     const js::wasm::ProfilingFrameIterator& wasmIter() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isWasm());
-        return *reinterpret_cast<const js::wasm::ProfilingFrameIterator*>(storage_.addr());
+        return *static_cast<const js::wasm::ProfilingFrameIterator*>(storage());
     }
 
     js::jit::JitProfilingFrameIterator& jitIter() {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isJit());
-        return *reinterpret_cast<js::jit::JitProfilingFrameIterator*>(storage_.addr());
+        return *static_cast<js::jit::JitProfilingFrameIterator*>(storage());
     }
 
     const js::jit::JitProfilingFrameIterator& jitIter() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isJit());
-        return *reinterpret_cast<const js::jit::JitProfilingFrameIterator*>(storage_.addr());
+        return *static_cast<const js::jit::JitProfilingFrameIterator*>(storage());
     }
 
     void settle();

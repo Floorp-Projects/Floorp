@@ -27,15 +27,34 @@ namespace mozilla {
 namespace tl {
 
 /** Compute min/max. */
-template<size_t I, size_t J>
+template<size_t Size, size_t... Rest>
 struct Min
 {
-  static const size_t value = I < J ? I : J;
+  static constexpr size_t value =
+    Size < Min<Rest...>::value
+    ? Size
+    : Min<Rest...>::value;
 };
-template<size_t I, size_t J>
+
+template<size_t Size>
+struct Min<Size>
+{
+  static constexpr size_t value = Size;
+};
+
+template<size_t Size, size_t... Rest>
 struct Max
 {
-  static const size_t value = I > J ? I : J;
+  static constexpr size_t value =
+    Size > Max<Rest...>::value
+    ? Size
+    : Max<Rest...>::value;
+};
+
+template<size_t Size>
+struct Max<Size>
+{
+  static constexpr size_t value = Size;
 };
 
 /** Compute floor(log2(i)). */
