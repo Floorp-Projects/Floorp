@@ -77,4 +77,15 @@ private:
 } // namespace dom
 } // namespace mozilla
 
+template<typename K, typename V>
+class nsDefaultComparator<mozilla::dom::binding_detail::RecordEntry<K, V>, K>
+{
+public:
+  bool Equals(const mozilla::dom::binding_detail::RecordEntry<K, V>& aEntry,
+              const K& aKey) const
+  {
+    return aEntry.mKey == aKey;
+  }
+};
+
 #endif // mozilla_dom_Record_h

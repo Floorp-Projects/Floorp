@@ -4890,13 +4890,16 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         })
 
         keyType = recordKeyType(recordType)
-        if recordType.keyType.isDOMString():
-            keyConversionFunction = "ConvertJSValueToString"
-        elif recordType.keyType.isUSVString():
-            keyConversionFunction = "ConvertJSValueToUSVString"
-        else:
-            assert recordType.keyType.isByteString()
+        if recordType.keyType.isByteString():
             keyConversionFunction = "ConvertJSValueToByteString"
+            hashKeyType = "nsCStringHashKey"
+        else:
+            hashKeyType = "nsStringHashKey"
+            if recordType.keyType.isDOMString():
+                keyConversionFunction = "ConvertJSValueToString"
+            else:
+                assert recordType.keyType.isUSVString()
+                keyConversionFunction = "ConvertJSValueToUSVString"
 
         templateBody = fill(
             """
@@ -4918,6 +4921,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             JS::Rooted<JS::Value> temp(cx);
             JS::Rooted<jsid> curId(cx);
             JS::Rooted<JS::Value> idVal(cx);
+            // Use a hashset to keep track of ids seen, to avoid
+            // introducing nasty O(N^2) behavior scanning for them all the
+            // time.  Ideally we'd use a data structure with O(1) lookup
+            // _and_ ordering for the MozMap, but we don't have one lying
+            // around.
+            nsTHashtable<${hashKeyType}> idsSeen;
             for (size_t i = 0; i < ids.length(); ++i) {
               curId = ids[i];
 
@@ -4944,9 +4953,25 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 $*{exceptionCode}
               }
 
-              // Safe to do an infallible append here, because we did a
-              // SetCapacity above to the right capacity.
-              ${typeName}::EntryType* entry = recordEntries.AppendElement();
+              ${typeName}::EntryType* entry;
+              if (idsSeen.Contains(propName)) {
+                // Find the existing entry.
+                auto idx = recordEntries.IndexOf(propName);
+                MOZ_ASSERT(idx != recordEntries.NoIndex,
+                           "Why is it not found?");
+                // Now blow it away to make it look like it was just added
+                // to the array, because it's not obvious that it's
+                // safe to write to its already-initialized mValue via our
+                // normal codegen conversions.  For example, the value
+                // could be a union and this would change its type, but
+                // codegen assumes we won't do that.
+                entry = recordEntries.ReconstructElementAt(idx);
+              } else {
+                // Safe to do an infallible append here, because we did a
+                // SetCapacity above to the right capacity.
+                entry = recordEntries.AppendElement();
+                idsSeen.PutEntry(propName);
+              }
               entry->mKey = propName;
               ${valueType}& slot = entry->mValue;
               $*{valueConversion}
@@ -4954,6 +4979,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             """,
             exceptionCode=exceptionCode,
             recordRef=recordRef,
+            hashKeyType=hashKeyType,
             keyType=keyType,
             keyConversionFunction=keyConversionFunction,
             typeName=typeName,
