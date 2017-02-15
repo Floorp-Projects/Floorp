@@ -15,6 +15,16 @@ extern crate url;
 use rustc_serialize::json::{self, Json};
 use url::{Url, quirks};
 
+fn check_invariants(url: &Url) {
+    url.check_invariants().unwrap();
+    #[cfg(feature="serde")] {
+        extern crate serde_json;
+        let bytes = serde_json::to_vec(url).unwrap();
+        let new_url: Url = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(url, &new_url);
+    }
+}
+
 
 fn run_parsing(input: String, base: String, expected: Result<ExpectedAttributes, ()>) {
     let base = match Url::parse(&base) {
@@ -28,7 +38,7 @@ fn run_parsing(input: String, base: String, expected: Result<ExpectedAttributes,
         (Ok(_), Err(())) => panic!("Expected a parse error for URL {:?}", input),
     };
 
-    url.assert_invariants();
+    check_invariants(&url);
 
     macro_rules! assert_eq {
         ($expected: expr, $got: expr) => {
@@ -144,11 +154,11 @@ fn collect_setters<F>(add_test: &mut F) where F: FnMut(String, test::TestFn) {
                 let mut expected = test.take("expected").unwrap();
                 add_test(name, test::TestFn::dyn_test_fn(move || {
                     let mut url = Url::parse(&href).unwrap();
-                    url.assert_invariants();
+                    check_invariants(&url);
                     let _ = quirks::$setter(&mut url, &new_value);
                     assert_attributes!(url, expected,
                         href protocol username password host hostname port pathname search hash);
-                    url.assert_invariants();
+                    check_invariants(&url);
                 }))
             }
         }}
