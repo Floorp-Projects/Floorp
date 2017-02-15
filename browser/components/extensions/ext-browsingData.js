@@ -187,21 +187,24 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
 
         // since will be the start of what is returned by Sanitizer.getClearRange
         // divided by 1000 to convert to ms.
-        let since = Sanitizer.getClearRange()[0] / 1000;
+        // If Sanitizer.getClearRange returns undefined that means the range is
+        // currently "Everything", so we should set since to 0.
+        let clearRange = Sanitizer.getClearRange();
+        let since = clearRange ? clearRange[0] / 1000 : 0;
         let options = {since};
 
         let dataToRemove = {};
         let dataRemovalPermitted = {};
 
         for (let item of PREF_LIST) {
-          dataToRemove[item] = Preferences.get(`${PREF_DOMAIN}${item}`);
+          // The property formData needs a different case than the
+          // formdata preference.
+          const name = item === "formdata" ? "formData" : item;
+          dataToRemove[name] = Preferences.get(`${PREF_DOMAIN}${item}`);
           // Firefox doesn't have the same concept of dataRemovalPermitted
           // as Chrome, so it will always be true.
-          dataRemovalPermitted[item] = true;
+          dataRemovalPermitted[name] = true;
         }
-        // formData has a different case than the pref formdata.
-        dataToRemove.formData = Preferences.get(`${PREF_DOMAIN}formdata`);
-        dataRemovalPermitted.formData = true;
 
         return Promise.resolve({options, dataToRemove, dataRemovalPermitted});
       },
