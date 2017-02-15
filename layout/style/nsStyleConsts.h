@@ -85,18 +85,18 @@ enum class StyleClear : uint8_t {
 };
 
 // Define geometry box for clip-path's reference-box, background-clip,
-// background-origin, mask-clip, mask-origin, shape-box and transform-box.
+// background-origin, mask-clip and mask-origin.
 enum class StyleGeometryBox : uint8_t {
-  Content, // Used by everything, except transform-box.
-  Padding, // Used by everything, except transform-box.
+  Content,
+  Padding,
   Border,
   Margin,  // XXX Bug 1260094 comment 9.
            // Although margin-box is required by mask-origin and mask-clip, we
            // do not implement that due to lack of support in other browsers.
            // clip-path reference-box only.
-  Fill,    // Used by everything, except shape-box.
+  Fill,    // mask-clip, mask-origin and clip-path reference-box only.
   Stroke,  // mask-clip, mask-origin and clip-path reference-box only.
-  View,    // Used by everything, except shape-box.
+  View,    // mask-clip, mask-origin and clip-path reference-box only.
   NoClip,  // mask-clip only.
   Text,    // background-clip only.
   NoBox,   // Depending on which kind of element this style value applied on,
