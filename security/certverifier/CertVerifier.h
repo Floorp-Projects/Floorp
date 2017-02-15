@@ -62,6 +62,8 @@ enum class NetscapeStepUpPolicy : uint32_t;
 class PinningTelemetryInfo
 {
 public:
+  PinningTelemetryInfo() { Reset(); }
+
   // Should we accumulate pinning telemetry for the result?
   bool accumulateResult;
   Telemetry::ID certPinningResultHistogram;
@@ -76,6 +78,8 @@ public:
 class CertificateTransparencyInfo
 {
 public:
+  CertificateTransparencyInfo() { Reset(); }
+
   // Was CT enabled?
   bool enabled;
   // Did we receive and process any binary SCT data from the supported sources?
