@@ -6,11 +6,6 @@
 #ifndef GMPCrashHelperHolder_h_
 #define GMPCrashHelperHolder_h_
 
-#include "GMPService.h"
-#include "mozilla/RefPtr.h"
-#include "nsPIDOMWindow.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-
 namespace mozilla {
 
 class GMPCrashHelper;
@@ -54,23 +49,11 @@ class GMPCrashHelperHolder
 {
 public:
 
-  void SetCrashHelper(GMPCrashHelper* aHelper)
-  {
-    mCrashHelper = aHelper;
-  }
+  void SetCrashHelper(GMPCrashHelper* aHelper);
 
-  GMPCrashHelper* GetCrashHelper()
-  {
-    return mCrashHelper;
-  }
+  GMPCrashHelper* GetCrashHelper();
 
-  void MaybeDisconnect(bool aAbnormalShutdown)
-  {
-    if (!aAbnormalShutdown) {
-      RefPtr<gmp::GeckoMediaPluginService> service(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
-      service->DisconnectCrashHelper(GetCrashHelper());
-    }
-  }
+  void MaybeDisconnect(bool aAbnormalShutdown);
 
 private:
   RefPtr<GMPCrashHelper> mCrashHelper;

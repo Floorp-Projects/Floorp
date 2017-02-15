@@ -25,42 +25,49 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(0));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[0]);
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#params-tab"));
   yield wait;
   testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(1));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]);
   yield wait;
   testParamsTab1("a", '"b"', '{ "foo": "bar" }', '""');
 
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(2));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[2]);
   yield wait;
   testParamsTab1("a", '"b"', "foo", '"bar"');
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(3));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[3]);
   yield wait;
   testParamsTab2("a", '""', '{ "foo": "bar" }', "js");
 
   wait = waitForDOM(document, "#params-panel tr:not(.tree-section).treeRow", 2);
-  gStore.dispatch(Actions.selectRequestByIndex(4));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[4]);
   yield wait;
   testParamsTab2("a", '"b"', '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
   let waitSections = waitForDOM(document, "#params-panel .tree-section", 2);
   let waitEditor = waitForDOM(document, "#params-panel .editor-mount iframe");
-  gStore.dispatch(Actions.selectRequestByIndex(5));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[5]);
   let [, editorFrames] = yield Promise.all([waitSections, waitEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
   testParamsTab2("a", '"b"', "?foo=bar", "text");
 
-  gStore.dispatch(Actions.selectRequestByIndex(6));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[6]);
   testParamsTab3();
 
   yield teardown(monitor);

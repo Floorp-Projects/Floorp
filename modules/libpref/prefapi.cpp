@@ -481,13 +481,11 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
     {
         if (!s2)
             return 0;
-        else
-            return -1;
+        return -1;
     }
-    else if (!s2)
+    if (!s2)
         return 1;
-    else
-        return strcmp(s1, s2);
+    return strcmp(s1, s2);
 }
 
 bool PREF_HasUserPref(const char *pref_name)

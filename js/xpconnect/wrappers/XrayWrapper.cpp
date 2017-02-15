@@ -552,7 +552,8 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
         // that it makes sense to just treat them like Objects for Xray purposes.
         if (key == JSProto_Object || key == JSProto_Array) {
             return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
-        } else if (IsTypedArrayKey(key)) {
+        }
+        if (IsTypedArrayKey(key)) {
             if (IsArrayIndex(GetArrayIndexFromId(cx, id))) {
                 // WebExtensions can't use cloneInto(), so we just let them do
                 // the slow thing to maximize compatibility.
@@ -569,19 +570,19 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
                         desc.object().set(wrapper);
                     }
                     return true;
-                } else {
-                    JS_ReportErrorASCII(cx, "Accessing TypedArray data over Xrays is slow, and forbidden "
-                                        "in order to encourage performant code. To copy TypedArrays "
-                                        "across origin boundaries, consider using Components.utils.cloneInto().");
-                    return false;
                 }
+                JS_ReportErrorASCII(cx, "Accessing TypedArray data over Xrays is slow, and forbidden "
+                                    "in order to encourage performant code. To copy TypedArrays "
+                                    "across origin boundaries, consider using Components.utils.cloneInto().");
+                return false;
             }
         } else if (key == JSProto_Function) {
             if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_LENGTH)) {
                 FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
                                        NumberValue(JS_GetFunctionArity(JS_GetObjectFunction(target))));
                 return true;
-            } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
+            }
+            if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
                 RootedString fname(cx, JS_GetFunctionId(JS_GetObjectFunction(target)));
                 if (fname)
                     JS_MarkCrossZoneIdValue(cx, StringValue(fname));
@@ -874,7 +875,8 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
             for (size_t i = 0; i < props.length(); ++i)
                 JS_MarkCrossZoneId(cx, props[i]);
             return true;
-        } else if (IsTypedArrayKey(key)) {
+        }
+        if (IsTypedArrayKey(key)) {
             uint32_t length = JS_GetTypedArrayLength(target);
             // TypedArrays enumerate every indexed property in range, but
             // |length| is a getter that lives on the proto, like it should be.

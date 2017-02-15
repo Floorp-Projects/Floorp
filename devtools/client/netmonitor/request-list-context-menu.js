@@ -2,27 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorController, gNetwork, gStore */
-
 "use strict";
 
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
-const { L10N } = require("../l10n");
+const { L10N } = require("./l10n");
 const {
   formDataURI,
   getFormDataSections,
   getUrlQuery,
   parseQueryString,
-} = require("../request-utils");
+} = require("./request-utils");
 const {
   getSelectedRequest,
   getSortedRequests,
-} = require("../selectors/index");
+} = require("./selectors/index");
 
 loader.lazyRequireGetter(this, "HarExporter",
   "devtools/client/netmonitor/har/har-exporter", true);
@@ -40,11 +37,11 @@ function RequestListContextMenu({
 
 RequestListContextMenu.prototype = {
   get selectedRequest() {
-    return getSelectedRequest(gStore.getState());
+    return getSelectedRequest(window.gStore.getState());
   },
 
   get sortedRequests() {
-    return getSortedRequests(gStore.getState());
+    return getSortedRequests(window.gStore.getState());
   },
 
   /**
@@ -160,7 +157,7 @@ RequestListContextMenu.prototype = {
       id: "request-menu-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(NetMonitorController.supportsCustomRequest &&
+      visible: !!(window.NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
       click: this.cloneSelectedRequest,
     }));
@@ -182,11 +179,11 @@ RequestListContextMenu.prototype = {
       id: "request-menu-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!NetMonitorController.supportsPerfStats,
+      visible: !!window.NetMonitorController.supportsPerfStats,
       click: () => this.openStatistics(true)
     }));
 
-    menu.popup(screenX, screenY, NetMonitorController._toolbox);
+    menu.popup(screenX, screenY, window.NetMonitorController._toolbox);
     return menu;
   },
 
@@ -220,15 +217,15 @@ RequestListContextMenu.prototype = {
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
-  copyPostData: Task.async(function* () {
+  async copyPostData() {
     let selected = this.selectedRequest;
 
     // Try to extract any form data parameters.
-    let formDataSections = yield getFormDataSections(
+    let formDataSections = await getFormDataSections(
       selected.requestHeaders,
       selected.requestHeadersFromUploadStream,
       selected.requestPostData,
-      gNetwork.getString.bind(gNetwork));
+      window.gNetwork.getString.bind(window.gNetwork));
 
     let params = [];
     formDataSections.forEach(section => {
@@ -245,19 +242,19 @@ RequestListContextMenu.prototype = {
     // Fall back to raw payload.
     if (!string) {
       let postData = selected.requestPostData.postData.text;
-      string = yield gNetwork.getString(postData);
+      string = await window.gNetwork.getString(postData);
       if (Services.appinfo.OS !== "WINNT") {
         string = string.replace(/\r/g, "");
       }
     }
 
     clipboardHelper.copyString(string);
-  }),
+  },
 
   /**
    * Copy a cURL command from the currently selected item.
    */
-  copyAsCurl: Task.async(function* () {
+  async copyAsCurl() {
     let selected = this.selectedRequest;
 
     // Create a sanitized object for the Curl command generator.
@@ -271,18 +268,18 @@ RequestListContextMenu.prototype = {
 
     // Fetch header values.
     for (let { name, value } of selected.requestHeaders.headers) {
-      let text = yield gNetwork.getString(value);
+      let text = await window.gNetwork.getString(value);
       data.headers.push({ name: name, value: text });
     }
 
     // Fetch the request payload.
     if (selected.requestPostData) {
       let postData = selected.requestPostData.postData.text;
-      data.postDataText = yield gNetwork.getString(postData);
+      data.postDataText = await window.gNetwork.getString(postData);
     }
 
     clipboardHelper.copyString(Curl.generateCommand(data));
-  }),
+  },
 
   /**
    * Copy the raw request headers from the currently selected item.
@@ -312,7 +309,7 @@ RequestListContextMenu.prototype = {
   copyImageAsDataUri() {
     const { mimeType, text, encoding } = this.selectedRequest.responseContent.content;
 
-    gNetwork.getString(text).then(string => {
+    window.gNetwork.getString(text).then(string => {
       let data = formDataURI(mimeType, encoding, string);
       clipboardHelper.copyString(data);
     });
@@ -324,7 +321,7 @@ RequestListContextMenu.prototype = {
   copyResponse() {
     const { text } = this.selectedRequest.responseContent.content;
 
-    gNetwork.getString(text).then(string => {
+    window.gNetwork.getString(text).then(string => {
       clipboardHelper.copyString(string);
     });
   },
@@ -346,11 +343,11 @@ RequestListContextMenu.prototype = {
   },
 
   getDefaultHarOptions() {
-    let form = NetMonitorController._target.form;
+    let form = window.NetMonitorController._target.form;
     let title = form.title || form.url;
 
     return {
-      getString: gNetwork.getString.bind(gNetwork),
+      getString: window.gNetwork.getString.bind(window.gNetwork),
       items: this.sortedRequests,
       title: title
     };

@@ -286,19 +286,18 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
         // wildcard rules imply an eTLD one level inferior to the match.
         eTLD = prevDomain;
         break;
-
-      } else if (entry->IsNormal() || !nextDot) {
+      }
+      if (entry->IsNormal() || !nextDot) {
         // specific match, or we've hit the top domain level
         eTLD = currDomain;
         break;
-
-      } else if (entry->IsException()) {
+      }
+      if (entry->IsException()) {
         // exception rules imply an eTLD one level superior to the match.
         eTLD = nextDot + 1;
         break;
       }
     }
-
     if (!nextDot) {
       // we've hit the top domain level; use it by default.
       eTLD = currDomain;

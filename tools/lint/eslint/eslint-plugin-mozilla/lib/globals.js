@@ -72,26 +72,9 @@ function GlobalsForNode(filePath) {
   this.path = filePath;
   this.dirname = path.dirname(this.path)
   this.root = helpers.getRootDir(this.path);
-  this.isWorker = helpers.getIsWorker(this.path);
 }
 
 GlobalsForNode.prototype = {
-  Program(node) {
-    if (!this.isWorker) {
-      return [];
-    }
-
-    return [
-      {name: "importScripts", writable: false},
-      // Only available to workers.
-      {name: "FileReaderSync", writable: false},
-      {name: "onmessage", writable: true},
-      // Only available to chrome workers, but since we don't know which is which,
-      // we make it available anyway.
-      {name: "ctypes", writable: false}
-    ];
-  },
-
   BlockComment(node, parents) {
     let value = node.value.trim();
     let match = /^import-globals-from\s+(.+)$/.exec(value);
@@ -108,18 +91,19 @@ GlobalsForNode.prototype = {
     return module.exports.getGlobalsForFile(filePath);
   },
 
-  ExpressionStatement(node, parents) {
+  ExpressionStatement(node, parents, globalScope) {
     let isGlobal = helpers.getIsGlobalScope(parents);
     let globals = helpers.convertExpressionToGlobals(node, isGlobal, this.root);
     // Map these globals now, as getGlobalsForFile is pre-mapped.
     globals = globals.map(name => { return { name, writable: true }});
 
-    if (this.isWorker) {
+    // Here we assume that if importScripts is set in the global scope, then
+    // this is a worker. It would be nice if eslint gave us a way of getting
+    // the environment directly.
+    if (globalScope && globalScope.set.get("importScripts")) {
       let workerDetails = helpers.convertWorkerExpressionToGlobals(node,
         isGlobal, this.root, this.dirname);
-      globals = globals.concat(workerDetails.map(name => {
-        return { name, writable: true };
-      }));
+      globals = globals.concat(workerDetails);
     }
 
     return globals;
@@ -182,7 +166,7 @@ module.exports = {
       }
 
       if (type in handler) {
-        let newGlobals = handler[type](node, parents);
+        let newGlobals = handler[type](node, parents, globalScope);
         globals.push.apply(globals, newGlobals);
       }
     });
@@ -216,7 +200,7 @@ module.exports = {
         if (type === "Program") {
           globalScope = context.getScope();
         }
-        let globals = handler[type](node, context.getAncestors());
+        let globals = handler[type](node, context.getAncestors(), globalScope);
         helpers.addGlobals(globals, globalScope);
       }
     }

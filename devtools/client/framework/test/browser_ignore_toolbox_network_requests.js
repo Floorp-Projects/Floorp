@@ -24,7 +24,6 @@ add_task(function* () {
 
   let monitor = yield toolbox.selectTool("netmonitor");
   let { gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
   is(gStore.getState().requests.requests.size, 0, "No network requests appear in the network panel");
 

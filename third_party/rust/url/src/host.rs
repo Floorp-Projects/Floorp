@@ -27,6 +27,38 @@ pub enum HostInternal {
 #[cfg(feature = "heapsize")]
 known_heap_size!(0, HostInternal);
 
+#[cfg(feature="serde")]
+impl ::serde::Serialize for HostInternal {
+    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where S: ::serde::Serializer {
+        // This doesn’t use `derive` because that involves
+        // large dependencies (that take a long time to build), and
+        // either Macros 1.1 which are not stable yet or a cumbersome build script.
+        //
+        // Implementing `Serializer` correctly for an enum is tricky,
+        // so let’s use existing enums that already do.
+        use std::net::IpAddr;
+        match *self {
+            HostInternal::None => None,
+            HostInternal::Domain => Some(None),
+            HostInternal::Ipv4(addr) => Some(Some(IpAddr::V4(addr))),
+            HostInternal::Ipv6(addr) => Some(Some(IpAddr::V6(addr))),
+        }.serialize(serializer)
+    }
+}
+
+#[cfg(feature="serde")]
+impl ::serde::Deserialize for HostInternal {
+    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error> where D: ::serde::Deserializer {
+        use std::net::IpAddr;
+        Ok(match try!(::serde::Deserialize::deserialize(deserializer)) {
+            None => HostInternal::None,
+            Some(None) => HostInternal::Domain,
+            Some(Some(IpAddr::V4(addr))) => HostInternal::Ipv4(addr),
+            Some(Some(IpAddr::V6(addr))) => HostInternal::Ipv6(addr),
+        })
+    }
+}
+
 impl<S> From<Host<S>> for HostInternal {
     fn from(host: Host<S>) -> HostInternal {
         match host {
@@ -55,6 +87,30 @@ pub enum Host<S=String> {
     /// for IPv6 Address Text Representation*](https://tools.ietf.org/html/rfc5952):
     /// lowercase hexadecimal with maximal `::` compression.
     Ipv6(Ipv6Addr),
+}
+
+#[cfg(feature="serde")]
+impl<S: ::serde::Serialize>  ::serde::Serialize for Host<S> {
+    fn serialize<R>(&self, serializer: &mut R) -> Result<(), R::Error> where R: ::serde::Serializer {
+        use std::net::IpAddr;
+        match *self {
+            Host::Domain(ref s) => Ok(s),
+            Host::Ipv4(addr) => Err(IpAddr::V4(addr)),
+            Host::Ipv6(addr) => Err(IpAddr::V6(addr)),
+        }.serialize(serializer)
+    }
+}
+
+#[cfg(feature="serde")]
+impl<S: ::serde::Deserialize> ::serde::Deserialize for Host<S> {
+    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error> where D: ::serde::Deserializer {
+        use std::net::IpAddr;
+        Ok(match try!(::serde::Deserialize::deserialize(deserializer)) {
+            Ok(s) => Host::Domain(s),
+            Err(IpAddr::V4(addr)) => Host::Ipv4(addr),
+            Err(IpAddr::V6(addr)) => Host::Ipv6(addr),
+        })
+    }
 }
 
 #[cfg(feature = "heapsize")]
@@ -206,6 +262,7 @@ fn write_ipv6(addr: &Ipv6Addr, f: &mut Formatter) -> fmt::Result {
     Ok(())
 }
 
+// https://url.spec.whatwg.org/#concept-ipv6-serializer step 2 and 3
 fn longest_zero_sequence(pieces: &[u16; 8]) -> (isize, isize) {
     let mut longest = -1;
     let mut longest_length = -1;
@@ -232,10 +289,16 @@ fn longest_zero_sequence(pieces: &[u16; 8]) -> (isize, isize) {
         }
     }
     finish_sequence!(8);
-    (longest, longest + longest_length)
+    // https://url.spec.whatwg.org/#concept-ipv6-serializer
+    // step 3: ignore lone zeroes
+    if longest_length < 2 {
+        (-1, -2)
+    } else {
+        (longest, longest + longest_length)
+    }
 }
 
-
+/// https://url.spec.whatwg.org/#ipv4-number-parser
 fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
     let mut r = 10;
     if input.starts_with("0x") || input.starts_with("0X") {
@@ -257,6 +320,7 @@ fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
     }
 }
 
+/// https://url.spec.whatwg.org/#concept-ipv4-parser
 fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
     if input.is_empty() {
         return Ok(None)
@@ -293,7 +357,7 @@ fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
     Ok(Some(Ipv4Addr::from(ipv4)))
 }
 
-
+/// https://url.spec.whatwg.org/#concept-ipv6-parser
 fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
     let input = input.as_bytes();
     let len = input.len();
@@ -408,14 +472,14 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
             dots_seen += 1;
         }
     }
-
     match compress_pointer {
         Some(compress_pointer) => {
             let mut swaps = piece_pointer - compress_pointer;
             piece_pointer = 7;
             while swaps > 0 {
+                let tmp = pieces[piece_pointer];
                 pieces[piece_pointer] = pieces[compress_pointer + swaps - 1];
-                pieces[compress_pointer + swaps - 1] = 0;
+                pieces[compress_pointer + swaps - 1] = tmp;
                 swaps -= 1;
                 piece_pointer -= 1;
             }

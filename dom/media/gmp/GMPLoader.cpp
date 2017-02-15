@@ -201,11 +201,9 @@ public:
   {
     if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
       return MakeUnique<LinuxSandboxStarter>();
-    } else {
-      // Sandboxing isn't possible, but the parent has already
-      // checked that this plugin doesn't require it.  (Bug 1074561)
-      return nullptr;
     }
+    // Sandboxing isn't possible, but the parent has already
+    // checked that this plugin doesn't require it.  (Bug 1074561)
     return nullptr;
   }
   bool Start(const char *aLibPath) override
