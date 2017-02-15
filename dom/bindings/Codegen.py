@@ -4879,8 +4879,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             auto& mozMapEntries = ${mozMapRef}.Entries();
 
             JS::Rooted<JSObject*> mozMapObj(cx, &$${val}.toObject());
-            JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
-            if (!JS_Enumerate(cx, mozMapObj, &ids)) {
+            JS::AutoIdVector ids(cx);
+            // Keep skipping symbols until
+            // https://github.com/heycam/webidl/issues/294 is sorted out.
+            if (!js::GetPropertyKeys(cx, mozMapObj,
+                                     JSITER_OWNONLY | JSITER_HIDDEN, &ids)) {
               $*{exceptionCode}
             }
             if (!mozMapEntries.SetCapacity(ids.length(), mozilla::fallible)) {
@@ -4892,14 +4895,29 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             JS::Rooted<jsid> curId(cx);
             for (size_t i = 0; i < ids.length(); ++i) {
               curId = ids[i];
-              binding_detail::FakeString propName;
-              bool isSymbol;
-              if (!ConvertIdToString(cx, curId, propName, isSymbol) ||
-                  (!isSymbol && !JS_GetPropertyById(cx, mozMapObj, curId, &temp))) {
+
+              MOZ_ASSERT(!JSID_IS_SYMBOL(curId), "No symbols, we said!");
+
+              JS::Rooted<JS::PropertyDescriptor> desc(cx);
+              if (!JS_GetOwnPropertyDescriptorById(cx, mozMapObj, curId,
+                                                   &desc)) {
                 $*{exceptionCode}
               }
-              if (isSymbol) {
+
+              if (!desc.object() /* == undefined in spec terms */ ||
+                  !desc.enumerable()) {
                 continue;
+              }
+
+              binding_detail::FakeString propName;
+              bool isSymbol;
+              if (!ConvertIdToString(cx, curId, propName, isSymbol)) {
+                $*{exceptionCode}
+              }
+              MOZ_ASSERT(!isSymbol, "We said, no symbols!");
+
+              if (!JS_GetPropertyById(cx, mozMapObj, curId, &temp)) {
+                $*{exceptionCode}
               }
 
               // Safe to do an infallible append here, because we did a
