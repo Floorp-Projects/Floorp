@@ -24,19 +24,30 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
  : mProcessType(aProcessType),
    mShmem(aShmem),
    mThreadId(aThreadId),
-   mStartTime(::time(nullptr))
+   mStartTime(::time(nullptr)),
+   mFinalized(false)
 {
 }
 
 #ifdef MOZ_CRASHREPORTER
 bool
-CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
-                                       nsString* aOutMinidumpID)
+CrashReporterHost::GenerateCrashReport(base::ProcessId aPid)
 {
-  nsString dumpID;
-  if (!CrashReporter::GetIDFromMinidump(aCrashDump, dumpID)) {
+  RefPtr<nsIFile> crashDump;
+  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
     return false;
   }
+  if (!CrashReporter::GetIDFromMinidump(crashDump, mDumpID)) {
+    return false;
+  }
+  return FinalizeCrashReport();
+}
+
+bool
+CrashReporterHost::FinalizeCrashReport()
+{
+  MOZ_ASSERT(!mFinalized);
+  MOZ_ASSERT(HasMinidump());
 
   CrashReporter::AnnotationTable notes;
 
@@ -63,12 +74,12 @@ CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
   notes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
   CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
-  CrashReporter::AppendExtraData(dumpID, mExtraNotes);
-  CrashReporter::AppendExtraData(dumpID, notes);
+  CrashReporter::AppendExtraData(mDumpID, mExtraNotes);
+  CrashReporter::AppendExtraData(mDumpID, notes);
 
-  NotifyCrashService(mProcessType, dumpID, &notes);
+  NotifyCrashService(mProcessType, mDumpID, &notes);
 
-  *aOutMinidumpID = dumpID;
+  mFinalized = true;
   return true;
 }
 

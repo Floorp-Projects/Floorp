@@ -472,8 +472,12 @@ GMPParent::GetCrashID(nsString& aResult)
   }
 
   WriteExtraDataForMinidump();
+  if (!mCrashReporter->GenerateCrashReport(OtherPid())) {
+    return false;
+  }
 
-  return mCrashReporter->GenerateCrashReport(OtherPid(), &aResult);
+  aResult = mCrashReporter->MinidumpID();
+  return true;
 }
 
 static void
