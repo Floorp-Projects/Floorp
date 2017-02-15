@@ -5,6 +5,7 @@ from __future__ import print_function
 import argparse
 import json
 import os
+import re
 import socket
 import sys
 import threading
@@ -18,7 +19,7 @@ from multiprocessing import Process, Event
 from ..localpaths import repo_root
 
 import sslutils
-from manifest.sourcefile import meta_re
+from manifest.sourcefile import read_script_metadata
 from wptserve import server as wptserve, handlers
 from wptserve import stash
 from wptserve.logger import set_logger
@@ -45,7 +46,7 @@ class WorkersHandler(object):
 
     def handle_request(self, request, response):
         worker_path = replace_end(request.url_parts.path, ".worker.html", ".worker.js")
-        meta = self._get_meta(request)
+        meta = "\n".join(self._get_meta(request))
         return """<!doctype html>
 <meta charset=utf-8>
 %(meta)s
@@ -61,21 +62,17 @@ fetch_tests_from_worker(new Worker("%(worker_path)s"));
         path = filesystem_path(self.base_path, request, self.url_base)
         path = path.replace(".any.worker.html", ".any.js")
         path = path.replace(".worker.html", ".worker.js")
-        meta_values = []
-        with open(path) as f:
-            for line in f:
-                m = meta_re.match(line)
-                if m:
-                    name, content = m.groups()
-                    name = name.replace('"', '\\"').replace(">", "&gt;")
-                    content = content.replace('"', '\\"').replace(">", "&gt;")
-                    meta_values.append((name, content))
-        return "\n".join('<meta name="%s" content="%s">' % item for item in meta_values)
-
+        with open(path, "rb") as f:
+            for key, value in read_script_metadata(f):
+                if key == b"timeout":
+                    if value == b"long":
+                        yield '<meta name="timeout" content="long">'
 
 
 class AnyHtmlHandler(object):
-    def __init__(self):
+    def __init__(self, base_path=None, url_base="/"):
+        self.base_path = base_path
+        self.url_base = url_base
         self.handler = handlers.handler(self.handle_request)
 
     def __call__(self, request, response):
@@ -83,9 +80,11 @@ class AnyHtmlHandler(object):
 
     def handle_request(self, request, response):
         test_path = replace_end(request.url_parts.path, ".any.html", ".any.js")
+        meta = "\n".join(self._get_meta(request))
         return """\
 <!doctype html>
 <meta charset=utf-8>
+%(meta)s
 <script>
 self.GLOBAL = {
   isWindow: function() { return true; },
@@ -95,12 +94,26 @@ self.GLOBAL = {
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
-<script src="%s"></script>
-""" % (test_path,)
+<script src="%(test_path)s"></script>
+""" % {"meta": meta, "test_path": test_path}
+
+    def _get_meta(self, request):
+        path = filesystem_path(self.base_path, request, self.url_base)
+        path = path.replace(".any.html", ".any.js")
+        with open(path, "rb") as f:
+            for key, value in read_script_metadata(f):
+                if key == b"timeout":
+                    if value == b"long":
+                        yield '<meta name="timeout" content="long">'
+                elif key == b"script":
+                    attribute = value.decode('utf-8').replace('"', "&quot;").replace(">", "&gt;")
+                    yield '<script src="%s"></script>' % attribute
 
 
 class AnyWorkerHandler(object):
-    def __init__(self):
+    def __init__(self, base_path=None, url_base="/"):
+        self.base_path = base_path
+        self.url_base = url_base
         self.handler = handlers.handler(self.handle_request)
 
     def __call__(self, request, response):
@@ -108,15 +121,28 @@ class AnyWorkerHandler(object):
 
     def handle_request(self, request, response):
         test_path = replace_end(request.url_parts.path, ".any.worker.js", ".any.js")
+        meta = "\n".join(self._get_meta(request))
         return """\
+%(meta)s
 self.GLOBAL = {
   isWindow: function() { return false; },
   isWorker: function() { return true; },
 };
 importScripts("/resources/testharness.js");
-importScripts("%s");
+importScripts("%(test_path)s");
 done();
-""" % (test_path,)
+""" % {"meta": meta, "test_path": test_path}
+
+    def _get_meta(self, request):
+        path = filesystem_path(self.base_path, request, self.url_base)
+        path = path.replace(".any.worker.js", ".any.js")
+        with open(path, "rb") as f:
+            for key, value in read_script_metadata(f):
+                if key == b"timeout":
+                    pass
+                elif key == b"script":
+                    attribute = value.decode('utf-8').replace("\\", "\\\\").replace('"', '\\"')
+                    yield 'importScripts("%s")' % attribute
 
 
 rewrites = [("GET", "/resources/WebIDLParser.js", "/resources/webidl2/lib/webidl2.js")]
@@ -138,11 +164,7 @@ class RoutesBuilder(object):
                           ("*", "{spec}/tools/*", handlers.ErrorHandler(404)),
                           ("*", "/serve.py", handlers.ErrorHandler(404))]
 
-        self.static = [
-            ("GET", "*.worker.html", WorkersHandler()),
-            ("GET", "*.any.html", AnyHtmlHandler()),
-            ("GET", "*.any.worker.js", AnyWorkerHandler()),
-        ]
+        self.static = []
 
         self.mountpoint_routes = OrderedDict()
 
@@ -166,9 +188,14 @@ class RoutesBuilder(object):
 
         self.mountpoint_routes[url_base] = []
 
-        routes = [("GET", "*.asis", handlers.AsIsHandler),
-                  ("*", "*.py", handlers.PythonScriptHandler),
-                  ("GET", "*", handlers.FileHandler)]
+        routes = [
+            ("GET", "*.worker.html", WorkersHandler),
+            ("GET", "*.any.html", AnyHtmlHandler),
+            ("GET", "*.any.worker.js", AnyWorkerHandler),
+            ("GET", "*.asis", handlers.AsIsHandler),
+            ("*", "*.py", handlers.PythonScriptHandler),
+            ("GET", "*", handlers.FileHandler)
+        ]
 
         for (method, suffix, handler_cls) in routes:
             self.mountpoint_routes[url_base].append(
