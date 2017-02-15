@@ -4112,14 +4112,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
   NS_ASSERTION(flushType >= FlushType::Frames, "Why did we get called?");
 
-  // Record that we are in a flush, so that our optimization in
-  // nsDocument::FlushPendingNotifications doesn't skip any re-entrant
-  // calls to us.  Otherwise, we might miss some needed flushes, since
-  // we clear mNeedStyleFlush / mNeedLayoutFlush here at the top of
-  // the function but we might not have done the work yet.
-  AutoRestore<bool> guard(mInFlush);
-  mInFlush = true;
-
   mNeedStyleFlush = false;
   mNeedThrottledAnimationFlush =
     mNeedThrottledAnimationFlush && !aFlush.mFlushAnimations;
@@ -4143,6 +4135,14 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   bool didLayoutFlush = false;
   nsCOMPtr<nsIPresShell> kungFuDeathGrip;
   if (isSafeToFlush && viewManager) {
+    // Record that we are in a flush, so that our optimization in
+    // nsDocument::FlushPendingNotifications doesn't skip any re-entrant
+    // calls to us.  Otherwise, we might miss some needed flushes, since
+    // we clear mNeedStyleFlush / mNeedLayoutFlush here at the top of
+    // the function but we might not have done the work yet.
+    AutoRestore<bool> guard(mInFlush);
+    mInFlush = true;
+
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     kungFuDeathGrip = this;
