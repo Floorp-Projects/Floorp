@@ -145,7 +145,13 @@ static void* setup_atfork() {
 }
 #endif /* !defined(GP_OS_android) */
 
+// Global variables through which data is sent from SigprofSender() to
+// SigprofHandler(). gSignalHandlingDone provides inter-thread synchronization.
 static ThreadInfo* gCurrentThreadInfo;
+static int64_t gRssMemory;
+static int64_t gUssMemory;
+
+// Semaphore used to coordinate SigprofSender() and SigprofHandler().
 static sem_t gSignalHandlingDone;
 
 static void SetSampleContext(TickSample* sample, void* context)
@@ -185,8 +191,8 @@ SigprofHandler(int signal, siginfo_t* info, void* context)
   SetSampleContext(sample, context);
   sample->threadInfo = gCurrentThreadInfo;
   sample->timestamp = mozilla::TimeStamp::Now();
-  sample->rssMemory = sample->threadInfo->mRssMemory;
-  sample->ussMemory = sample->threadInfo->mUssMemory;
+  sample->rssMemory = gRssMemory;
+  sample->ussMemory = gUssMemory;
 
   Tick(sample);
 
@@ -298,11 +304,11 @@ SigprofSender(void* aArg)
         // safe, and will have low variation between the emission of the signal
         // and the signal handler catch.
         if (isFirstProfiledThread && gProfileMemory) {
-          info->mRssMemory = nsMemoryReporterManager::ResidentFast();
-          info->mUssMemory = nsMemoryReporterManager::ResidentUnique();
+          gRssMemory = nsMemoryReporterManager::ResidentFast();
+          gUssMemory = nsMemoryReporterManager::ResidentUnique();
         } else {
-          info->mRssMemory = 0;
-          info->mUssMemory = 0;
+          gRssMemory = 0;
+          gUssMemory = 0;
         }
 
         // Profile from the signal handler for information which is signal safe
@@ -321,6 +327,9 @@ SigprofSender(void* aArg)
         sem_wait(&gSignalHandlingDone);
 
         gCurrentThreadInfo = nullptr;
+        gRssMemory = 0;
+        gUssMemory = 0;
+
         isFirstProfiledThread = false;
       }
 #if defined(USE_LUL_STACKWALK)
@@ -365,6 +374,8 @@ PlatformStart()
 
   // Initialize signal handler communication
   gCurrentThreadInfo = nullptr;
+  gRssMemory = 0;
+  gUssMemory = 0;
   if (sem_init(&gSignalHandlingDone, /* pshared: */ 0, /* value: */ 0) != 0) {
     LOG("Error initializing semaphore");
     return;
