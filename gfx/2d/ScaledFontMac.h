@@ -50,7 +50,7 @@ public:
 #endif
   virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
   virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
-  virtual bool CanSerialize() override { return true; }
+  virtual bool CanSerialize() { return true; }
 
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* GetCairoFontFace();
