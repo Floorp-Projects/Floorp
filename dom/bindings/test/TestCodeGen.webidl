@@ -1119,6 +1119,11 @@ dictionary Dict : ParentDict {
 
   Promise<void> promise;
   sequence<Promise<void>> promiseSequence;
+
+  MozMap<long> mozMap;
+  MozMap<long>? nullableMozMap;
+  MozMap<DOMString>? nullableMozMapWithDefault = null;
+  required MozMap<TestInterface> requiredMozMap;
 };
 
 dictionary ParentDict : GrandparentDict {
