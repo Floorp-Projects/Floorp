@@ -7,7 +7,7 @@ import yaml
 import itertools
 import datetime
 import string
-from shared_telemetry_utils import add_expiration_postfix
+import shared_telemetry_utils as utils
 
 MAX_CATEGORY_NAME_LENGTH = 30
 MAX_METHOD_NAME_LENGTH = 20
@@ -98,6 +98,7 @@ def type_check_event_fields(identifier, name, definition):
         'objects': TypeChecker(list, basestring),
         'bug_numbers': TypeChecker(list, int),
         'notification_emails': TypeChecker(list, basestring),
+        'record_in_processes': TypeChecker(list, basestring),
         'description': TypeChecker(basestring),
     }
     OPTIONAL_FIELDS = {
@@ -165,6 +166,12 @@ class EventData:
             raise ValueError, "%s: value for %s should be one of: %s" %\
                               (self.identifier, rcc_key, ", ".join(allowed_rcc))
 
+        # Check record_in_processes.
+        record_in_processes = definition.get('record_in_processes')
+        for proc in record_in_processes:
+            if not utils.is_valid_process_name(proc):
+                raise ValueError(self.identifier + ': unknown value in record_in_processes: ' + proc)
+
         # Check extra_keys.
         extra_keys = definition.get('extra_keys', {})
         if len(extra_keys.keys()) > MAX_EXTRA_KEYS_COUNT:
@@ -188,7 +195,7 @@ class EventData:
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
         # Finish setup.
-        definition['expiry_version'] = add_expiration_postfix(definition.get('expiry_version', 'never'))
+        definition['expiry_version'] = utils.add_expiration_postfix(definition.get('expiry_version', 'never'))
 
     @property
     def category(self):
@@ -214,6 +221,15 @@ class EventData:
     @property
     def objects(self):
         return self._definition.get('objects')
+
+    @property
+    def record_in_processes(self):
+        return self._definition.get('record_in_processes')
+
+    @property
+    def record_in_processes_enum(self):
+        """Get the non-empty list of flags representing the processes to record data in"""
+        return [utils.process_name_to_enum(p) for p in self.record_in_processes]
 
     @property
     def expiry_version(self):

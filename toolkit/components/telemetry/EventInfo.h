@@ -6,6 +6,8 @@
 #ifndef TelemetryEventInfo_h__
 #define TelemetryEventInfo_h__
 
+#include "TelemetryCommon.h"
+
 // This module is internal to Telemetry. The structures here hold data that
 // describe events.
 // It should only be used by TelemetryEventData.h and TelemetryEvent.cpp.
@@ -28,6 +30,9 @@ struct CommonEventInfo {
 
   // The dataset this event is recorded in.
   uint32_t dataset;
+
+  // Which processes to record this event in.
+  mozilla::Telemetry::Common::RecordedProcessType record_in_processes;
 
   // Convenience functions for accessing event strings.
   const char* expiration_version() const;
