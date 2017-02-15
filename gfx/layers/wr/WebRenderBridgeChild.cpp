@@ -176,16 +176,13 @@ WebRenderBridgeChild::UpdateTextureRegion(CompositableClient* aCompositable,
 }
 
 bool
-WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp, bool aSynchronously)
+WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp)
 {
   if (!mIsInTransaction) {
     return false;
   }
 
   mDestroyedActors.AppendElement(aOp);
-  if (aSynchronously) {
-    MarkSyncTransaction();
-  }
   return true;
 }
 
@@ -199,15 +196,15 @@ WebRenderBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 }
 
 bool
-WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool aSynchronously)
+WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture)
 {
-  return AddOpDestroy(OpDestroy(aTexture), aSynchronously);
+  return AddOpDestroy(OpDestroy(aTexture));
 }
 
 bool
 WebRenderBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return AddOpDestroy(OpDestroy(aHandle), false);
+  return AddOpDestroy(OpDestroy(aHandle));
 }
 
 void

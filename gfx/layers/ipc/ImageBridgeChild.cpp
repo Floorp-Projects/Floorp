@@ -1065,31 +1065,26 @@ ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
 }
 
 static bool
-IBCAddOpDestroy(CompositableTransaction* aTxn, const OpDestroy& op, bool synchronously)
+IBCAddOpDestroy(CompositableTransaction* aTxn, const OpDestroy& op)
 {
   if (aTxn->Finished()) {
     return false;
   }
 
   aTxn->mDestroyedActors.AppendElement(op);
-
-  if (synchronously) {
-    aTxn->MarkSyncTransaction();
-  }
-
   return true;
 }
 
 bool
-ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
+ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture)
 {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture), synchronously);
+  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture));
 }
 
 bool
 ImageBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aHandle), false);
+  return IBCAddOpDestroy(mTxn, OpDestroy(aHandle));
 }
 
 void
