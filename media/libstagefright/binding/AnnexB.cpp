@@ -69,16 +69,6 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return false;
     }
-
-    // Prepending the SPS/PPS NAL will mess up the encryption subsample
-    // offsets. So we need to account for the extra bytes by increasing
-    // the length of the first clear data subsample. Otherwise decryption
-    // will fail.
-    if (aSample->mCrypto.mValid) {
-      MOZ_ASSERT(samplewriter->mCrypto.mPlainSizes.Length() > 0);
-      samplewriter->mCrypto.mPlainSizes[0] += annexB->Length();
-    }
-
   }
 
   return true;
