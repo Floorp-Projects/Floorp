@@ -378,7 +378,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
       // Block and wait for any posted application message
       mozilla::HangMonitor::Suspend();
       {
-        GeckoProfilerSleepRAII profiler_sleep;
+        GeckoProfilerThreadSleepRAII sleep;
         WinUtils::WaitForMessage();
       }
     }

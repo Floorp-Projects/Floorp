@@ -169,7 +169,7 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable)
 /* static */ VOID CALLBACK
 MainThreadInvoker::MainThreadAPC(ULONG_PTR aParam)
 {
-  GeckoProfilerWakeRAII wakeProfiler;
+  GeckoProfilerThreadWakeRAII wake;
   mozilla::HangMonitor::NotifyActivity(mozilla::HangMonitor::kGeneralActivity);
   MOZ_ASSERT(NS_IsMainThread());
   auto runnable = reinterpret_cast<SyncRunnable*>(aParam);
