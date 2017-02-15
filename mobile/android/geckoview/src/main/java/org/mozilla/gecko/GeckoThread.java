@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -25,6 +26,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -389,6 +391,12 @@ public class GeckoThread extends Thread {
         }
     }
 
+    private static void loadGeckoLibs(final Context context, final String resourcePath) {
+        GeckoLoader.loadSQLiteLibs(context, resourcePath);
+        GeckoLoader.loadNSSLibs(context, resourcePath);
+        GeckoLoader.loadGeckoLibs(context, resourcePath);
+    }
+
     private static String initGeckoEnvironment() {
         final Context context = GeckoAppShell.getApplicationContext();
         GeckoLoader.loadMozGlue(context);
@@ -414,11 +422,21 @@ public class GeckoThread extends Thread {
         final String resourcePath = context.getPackageResourcePath();
         GeckoLoader.setupGeckoEnvironment(context, pluginDirs, context.getFilesDir().getPath());
 
-        GeckoLoader.loadSQLiteLibs(context, resourcePath);
-        GeckoLoader.loadNSSLibs(context, resourcePath);
-        GeckoLoader.loadGeckoLibs(context, resourcePath);
-        setState(State.LIBS_READY);
+        try {
+            loadGeckoLibs(context, resourcePath);
 
+        } catch (final Exception e) {
+            // Cannot load libs; try clearing the cached files.
+            Log.w(LOGTAG, "Clearing cache after load libs exception", e);
+            FileUtils.delTree(GeckoLoader.getCacheDir(context),
+                              new FileUtils.FilenameRegexFilter(".*\\.so(?:\\.crc)?$"),
+                              /* recurse */ true);
+
+            // Then try loading again. If this throws again, we actually crash.
+            loadGeckoLibs(context, resourcePath);
+        }
+
+        setState(State.LIBS_READY);
         return resourcePath;
     }
 
