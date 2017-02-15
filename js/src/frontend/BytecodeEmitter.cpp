@@ -1771,7 +1771,7 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
-    bool emitFinally(Maybe<uint32_t> finallyPos = Nothing()) {
+    bool emitFinally(const Maybe<uint32_t>& finallyPos = Nothing()) {
         MOZ_ASSERT(hasFinally());
 
         if (state_ == Try) {
@@ -5149,7 +5149,7 @@ BytecodeEmitter::emitIteratorNext(ParseNode* pn, bool allowSelfHosted)
 }
 
 bool
-BytecodeEmitter::emitIteratorClose(Maybe<JumpTarget> yieldStarTryStart, bool allowSelfHosted)
+BytecodeEmitter::emitIteratorClose(bool allowSelfHosted)
 {
     MOZ_ASSERT(allowSelfHosted || emitterMode != BytecodeEmitter::SelfHosting,
                ".close() on iterators is prohibited in self-hosted code because it "
@@ -5188,86 +5188,11 @@ BytecodeEmitter::emitIteratorClose(Maybe<JumpTarget> yieldStarTryStart, bool all
     // an Object.
     if (!emit1(JSOP_SWAP))                                // ... RET ITER
         return false;
-
-    // ES 14.4.13, yield * AssignmentExpression, step 5.c
-    //
-    // When emitting iterator.return() for yield* forced return, we need to
-    // pass the argument passed to Generator.prototype.return to the return
-    // method.
-    if (yieldStarTryStart) {
-        IfThenElseEmitter ifGeneratorClosing(this);
-        if (!emitDupAt(2))                                // ... FTYPE FVALUE RET ITER FVALUE
-            return false;
-        if (!emit1(JSOP_ISGENCLOSING))                    // ... FTYPE FVALUE RET ITER FVALUE CLOSING
-            return false;
-        if (!emit1(JSOP_SWAP))                            // ... FTYPE FVALUE RET ITER CLOSING FVALUE
-            return false;
-        if (!emit1(JSOP_POP))                             // ... FTYPE FVALUE RET ITER CLOSING
-            return false;
-        if (!ifGeneratorClosing.emitIfElse())             // ... FTYPE FVALUE RET ITER
-            return false;
-
-        if (!emit1(JSOP_GETRVAL))                         // ... FTYPE FVALUE RET ITER RVAL
-            return false;
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ... FTYPE FVALUE RET ITER VALUE
-            return false;
-        if (!emitCall(JSOP_CALL, 1))                      // ... FTYPE FVALUE RESULT
-            return false;
-        checkTypeSet(JSOP_CALL);
-        if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... FTYPE FVALUE RESULT
-            return false;
-
-        IfThenElseEmitter ifReturnDone(this);
-        if (!emit1(JSOP_DUP))                             // ITER OLDRESULT FTYPE FVALUE RESULT RESULT
-            return false;
-        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER OLDRESULT FTYPE FVALUE RESULT DONE
-            return false;
-        if (!ifReturnDone.emitIfElse())                   // ITER OLDRESULT FTYPE FVALUE RESULT
-            return false;
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ITER OLDRESULT FTYPE FVALUE VALUE
-            return false;
-        if (!emitPrepareIteratorResult())                 // ITER OLDRESULT FTYPE FVALUE VALUE RESULT
-            return false;
-        if (!emit1(JSOP_SWAP))                            // ITER OLDRESULT FTYPE FVALUE RESULT VALUE
-            return false;
-        if (!emitFinishIteratorResult(true))              // ITER OLDRESULT FTYPE FVALUE RESULT
-            return false;
-        if (!emit1(JSOP_DUP))                             // ITER OLDRESULT FTYPE FVALUE RESULT RESULT
-            return false;
-        if (!emit1(JSOP_SETRVAL))                         // ITER OLDRESULT FTYPE FVALUE RESULT
-            return false;
-        if (!ifReturnDone.emitElse())                     // ITER OLDRESULT FTYPE FVALUE RESULT
-            return false;
-        int32_t savedDepth = this->stackDepth;
-        if (!emit2(JSOP_UNPICK, 3))                       // ITER RESULT OLDRESULT FTYPE FVALUE
-            return false;
-        if (!emitUint16Operand(JSOP_POPN, 3))             // ITER RESULT
-            return false;
-        JumpList beq;
-        JumpTarget breakTarget{ -1 };
-        if (!emitBackwardJump(JSOP_GOTO, *yieldStarTryStart, &beq, &breakTarget)) // ITER RESULT
-            return false;
-        this->stackDepth = savedDepth;
-        if (!ifReturnDone.emitEnd())
-            return false;
-
-        if (!ifGeneratorClosing.emitElse())               // ... FTYPE FVALUE RET ITER
-            return false;
-        if (!emitCall(JSOP_CALL, 0))                      // ... FTYPE FVALUE RESULT
-            return false;
-        checkTypeSet(JSOP_CALL);
-        if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... FTYPE FVALUE RESULT
-            return false;
-
-        if (!ifGeneratorClosing.emitEnd())
-            return false;
-    } else {
-        if (!emitCall(JSOP_CALL, 0))                      // ... RESULT
-            return false;
-        checkTypeSet(JSOP_CALL);
-        if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RESULT
-            return false;
-    }
+    if (!emitCall(JSOP_CALL, 0))                          // ... RESULT
+        return false;
+    checkTypeSet(JSOP_CALL);
+    if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RESULT
+        return false;
 
     if (!ifReturnMethodIsDefined.emitElse())
         return false;
@@ -8238,93 +8163,202 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
     MOZ_ASSERT(sc->isFunctionBox());
     MOZ_ASSERT(sc->asFunctionBox()->isStarGenerator());
 
-    if (!emitTree(iter))                                         // ITERABLE
+    if (!emitTree(iter))                                  // ITERABLE
         return false;
-    if (!emitIterator())                                         // ITER
+    if (!emitIterator())                                  // ITER
         return false;
 
     // Initial send value is undefined.
-    if (!emit1(JSOP_UNDEFINED))                                  // ITER RECEIVED
+    if (!emit1(JSOP_UNDEFINED))                           // ITER RECEIVED
         return false;
 
-    int depth = stackDepth;
-    MOZ_ASSERT(depth >= 2);
+    int32_t savedDepthTemp;
+    int32_t startDepth = stackDepth;
+    MOZ_ASSERT(startDepth >= 2);
 
     TryEmitter tryCatch(this, TryEmitter::TryCatchFinally, TryEmitter::DontUseRetVal,
                         TryEmitter::DontUseControl);
-    if (!tryCatch.emitJumpOverCatchAndFinally())                 // ITER RESULT
+    if (!tryCatch.emitJumpOverCatchAndFinally())          // ITER RESULT
         return false;
 
     JumpTarget tryStart{ offset() };
-    if (!tryCatch.emitTry())                                     // ITER RESULT
+    if (!tryCatch.emitTry())                              // ITER RESULT
         return false;
 
-    MOZ_ASSERT(this->stackDepth == depth);
+    MOZ_ASSERT(this->stackDepth == startDepth);
 
     // Load the generator object.
-    if (!emitTree(gen))                                          // ITER RESULT GENOBJ
+    if (!emitTree(gen))                                   // ITER RESULT GENOBJ
         return false;
 
     // Yield RESULT as-is, without re-boxing.
-    if (!emitYieldOp(JSOP_YIELD))                                // ITER RECEIVED
+    if (!emitYieldOp(JSOP_YIELD))                         // ITER RECEIVED
         return false;
 
-    if (!tryCatch.emitCatch())                                   // ITER RESULT
+    if (!tryCatch.emitCatch())                            // ITER RESULT
         return false;
 
-    stackDepth = uint32_t(depth);                                // ITER RESULT
-    if (!emit1(JSOP_EXCEPTION))                                  // ITER RESULT EXCEPTION
+    stackDepth = startDepth;                              // ITER RESULT
+    if (!emit1(JSOP_EXCEPTION))                           // ITER RESULT EXCEPTION
         return false;
-    if (!emitDupAt(2))                                           // ITER RESULT EXCEPTION ITER
+    if (!emitDupAt(2))                                    // ITER RESULT EXCEPTION ITER
         return false;
-    if (!emit1(JSOP_DUP))                                        // ITER RESULT EXCEPTION ITER ITER
+    if (!emit1(JSOP_DUP))                                 // ITER RESULT EXCEPTION ITER ITER
         return false;
-    if (!emitAtomOp(cx->names().throw_, JSOP_CALLPROP))          // ITER RESULT EXCEPTION ITER THROW
+    if (!emitAtomOp(cx->names().throw_, JSOP_CALLPROP))   // ITER RESULT EXCEPTION ITER THROW
         return false;
-    if (!emit1(JSOP_DUP))                                        // ITER RESULT EXCEPTION ITER THROW THROW
+    if (!emit1(JSOP_DUP))                                 // ITER RESULT EXCEPTION ITER THROW THROW
         return false;
-    if (!emit1(JSOP_UNDEFINED))                                  // ITER RESULT EXCEPTION ITER THROW THROW UNDEFINED
+    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT EXCEPTION ITER THROW THROW UNDEFINED
         return false;
-    if (!emit1(JSOP_EQ))                                         // ITER RESULT EXCEPTION ITER THROW ?EQL
+    if (!emit1(JSOP_EQ))                                  // ITER RESULT EXCEPTION ITER THROW ?EQL
         return false;
 
     IfThenElseEmitter ifThrowMethodIsNotDefined(this);
-    if (!ifThrowMethodIsNotDefined.emitIf())                     // ITER RESULT EXCEPTION ITER THROW
+    if (!ifThrowMethodIsNotDefined.emitIf())              // ITER RESULT EXCEPTION ITER THROW
+        return false;
+    savedDepthTemp = stackDepth;
+    if (!emit1(JSOP_POP))                                 // ITER RESULT EXCEPTION ITER
+        return false;
+    // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.2
+    //
+    // If the iterator does not have a "throw" method, it calls IteratorClose
+    // and then throws a TypeError.
+    if (!emitIteratorClose())                             // ITER RESULT EXCEPTION
         return false;
     if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) // throw
         return false;
-    if (!ifThrowMethodIsNotDefined.emitEnd())                    // ITER OLDRESULT EXCEPTION ITER THROW
+    stackDepth = savedDepthTemp;
+    if (!ifThrowMethodIsNotDefined.emitEnd())             // ITER OLDRESULT EXCEPTION ITER THROW
         return false;
     // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.4.
-    // RESULT = ITER.throw(EXCEPTION)                            // ITER OLDRESULT EXCEPTION ITER THROW
-    if (!emit1(JSOP_SWAP))                                       // ITER OLDRESULT EXCEPTION THROW ITER
+    // RESULT = ITER.throw(EXCEPTION)                     // ITER OLDRESULT EXCEPTION ITER THROW
+    if (!emit1(JSOP_SWAP))                                // ITER OLDRESULT EXCEPTION THROW ITER
         return false;
-    if (!emit2(JSOP_PICK, 2))                                    // ITER OLDRESULT THROW ITER EXCEPTION
+    if (!emit2(JSOP_PICK, 2))                             // ITER OLDRESULT THROW ITER EXCEPTION
         return false;
-    if (!emitCall(JSOP_CALL, 1, iter))                           // ITER OLDRESULT RESULT
+    if (!emitCall(JSOP_CALL, 1, iter))                    // ITER OLDRESULT RESULT
         return false;
     checkTypeSet(JSOP_CALL);
-    if (!emitCheckIsObj(CheckIsObjectKind::IteratorThrow))       // ITER OLDRESULT RESULT
+    if (!emitCheckIsObj(CheckIsObjectKind::IteratorThrow)) // ITER OLDRESULT RESULT
         return false;
-    if (!emit1(JSOP_SWAP))                                       // ITER RESULT OLDRESULT
+    if (!emit1(JSOP_SWAP))                                // ITER RESULT OLDRESULT
         return false;
-    if (!emit1(JSOP_POP))                                        // ITER RESULT
+    if (!emit1(JSOP_POP))                                 // ITER RESULT
         return false;
-    MOZ_ASSERT(this->stackDepth == depth);
+    MOZ_ASSERT(this->stackDepth == startDepth);
     JumpList checkResult;
-    // Note that there is no GOSUB to the finally block here. If the iterator has a
-    // "throw" method, it does not perform IteratorClose per
     // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.ii.
-    if (!emitJump(JSOP_GOTO, &checkResult))                      // goto checkResult
+    //
+    // Note that there is no GOSUB to the finally block here. If the iterator has a
+    // "throw" method, it does not perform IteratorClose.
+    if (!emitJump(JSOP_GOTO, &checkResult))               // goto checkResult
         return false;
 
-    // IteratorClose logic.
     if (!tryCatch.emitFinally())
          return false;
 
-    if (!emitDupAt(3))                                           // ITER RESULT FTYPE FVALUE ITER
+    // ES 14.4.13, yield * AssignmentExpression, step 5.c
+    //
+    // Call iterator.return() for receiving a "forced return" completion from
+    // the generator.
+
+    IfThenElseEmitter ifGeneratorClosing(this);
+    if (!emit1(JSOP_ISGENCLOSING))                        // ITER RESULT FTYPE FVALUE CLOSING
         return false;
-    if (!emitIteratorClose(Some(tryStart)))                      // ITER RESULT FTYPE FVALUE
+    if (!ifGeneratorClosing.emitIf())                     // ITER RESULT FTYPE FVALUE
+        return false;
+
+    // Step ii.
+    //
+    // Get the "return" method.
+    if (!emitDupAt(3))                                    // ITER RESULT FTYPE FVALUE ITER
+        return false;
+    if (!emit1(JSOP_DUP))                                 // ITER RESULT FTYPE FVALUE ITER ITER
+        return false;
+    if (!emitAtomOp(cx->names().return_, JSOP_CALLPROP))  // ITER RESULT FTYPE FVALUE ITER RET
+        return false;
+
+    // Step iii.
+    //
+    // Do nothing if "return" is undefined.
+    IfThenElseEmitter ifReturnMethodIsDefined(this);
+    if (!emit1(JSOP_DUP))                                 // ITER RESULT FTYPE FVALUE ITER RET RET
+        return false;
+    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT FTYPE FVALUE ITER RET RET UNDEFINED
+        return false;
+    if (!emit1(JSOP_NE))                                  // ITER RESULT FTYPE FVALUE ITER RET ?NEQL
+        return false;
+
+    // Step iv.
+    //
+    // Call "return" with the argument passed to Generator.prototype.return,
+    // which is currently in rval.value.
+    if (!ifReturnMethodIsDefined.emitIfElse())            // ITER OLDRESULT FTYPE FVALUE ITER RET
+        return false;
+    if (!emit1(JSOP_SWAP))                                // ITER OLDRESULT FTYPE FVALUE RET ITER
+        return false;
+    if (!emit1(JSOP_GETRVAL))                             // ITER OLDRESULT FTYPE FVALUE RET ITER RVAL
+        return false;
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER OLDRESULT FTYPE FVALUE RET ITER VALUE
+        return false;
+    if (!emitCall(JSOP_CALL, 1))                          // ITER OLDRESULT FTYPE FVALUE RESULT
+        return false;
+    checkTypeSet(JSOP_CALL);
+
+    // Step v.
+    if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ITER OLDRESULT FTYPE FVALUE RESULT
+        return false;
+
+    // Steps vi-viii.
+    //
+    // Check if the returned object from iterator.return() is done. If not,
+    // continuing yielding.
+    IfThenElseEmitter ifReturnDone(this);
+    if (!emit1(JSOP_DUP))                                 // ITER OLDRESULT FTYPE FVALUE RESULT RESULT
+        return false;
+    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ITER OLDRESULT FTYPE FVALUE RESULT DONE
+        return false;
+    if (!ifReturnDone.emitIfElse())                       // ITER OLDRESULT FTYPE FVALUE RESULT
+        return false;
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER OLDRESULT FTYPE FVALUE VALUE
+        return false;
+    if (!emitPrepareIteratorResult())                     // ITER OLDRESULT FTYPE FVALUE VALUE RESULT
+        return false;
+    if (!emit1(JSOP_SWAP))                                // ITER OLDRESULT FTYPE FVALUE RESULT VALUE
+        return false;
+    if (!emitFinishIteratorResult(true))                  // ITER OLDRESULT FTYPE FVALUE RESULT
+        return false;
+    if (!emit1(JSOP_SETRVAL))                             // ITER OLDRESULT FTYPE FVALUE
+        return false;
+    savedDepthTemp = this->stackDepth;
+    if (!ifReturnDone.emitElse())                         // ITER OLDRESULT FTYPE FVALUE RESULT
+        return false;
+    if (!emit2(JSOP_UNPICK, 3))                           // ITER RESULT OLDRESULT FTYPE FVALUE
+        return false;
+    if (!emitUint16Operand(JSOP_POPN, 3))                 // ITER RESULT
+        return false;
+    {
+        // goto tryStart;
+        JumpList beq;
+        JumpTarget breakTarget{ -1 };
+        if (!emitBackwardJump(JSOP_GOTO, tryStart, &beq, &breakTarget)) // ITER RESULT
+            return false;
+    }
+    this->stackDepth = savedDepthTemp;
+    if (!ifReturnDone.emitEnd())
+        return false;
+
+    if (!ifReturnMethodIsDefined.emitElse())              // ITER RESULT FTYPE FVALUE ITER RET
+        return false;
+    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE ITER
+        return false;
+    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE
+        return false;
+    if (!ifReturnMethodIsDefined.emitEnd())
+        return false;
+
+    if (!ifGeneratorClosing.emitEnd())
         return false;
 
     if (!tryCatch.emitEnd())
@@ -8349,7 +8383,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
     if (!emitCheckIsObj(CheckIsObjectKind::IteratorNext))        // ITER RESULT
         return false;
     checkTypeSet(JSOP_CALL);
-    MOZ_ASSERT(this->stackDepth == depth);
+    MOZ_ASSERT(this->stackDepth == startDepth);
 
     if (!emitJumpTargetAndPatch(checkResult))                    // checkResult:
         return false;
@@ -8360,10 +8394,12 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
     if (!emitAtomOp(cx->names().done, JSOP_GETPROP))             // ITER RESULT DONE
         return false;
     // if (!DONE) goto tryStart;
-    JumpList beq;
-    JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(JSOP_IFEQ, tryStart, &beq, &breakTarget)) // ITER RESULT
-        return false;
+    {
+        JumpList beq;
+        JumpTarget breakTarget{ -1 };
+        if (!emitBackwardJump(JSOP_IFEQ, tryStart, &beq, &breakTarget)) // ITER RESULT
+            return false;
+    }
 
     // result.value
     if (!emit1(JSOP_SWAP))                                       // RESULT ITER
@@ -8373,7 +8409,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
     if (!emitAtomOp(cx->names().value, JSOP_GETPROP))            // VALUE
         return false;
 
-    MOZ_ASSERT(this->stackDepth == depth - 1);
+    MOZ_ASSERT(this->stackDepth == startDepth - 1);
 
     return true;
 }

@@ -89,7 +89,6 @@ const RequestList = createClass({
   },
 
   componentWillUnmount() {
-    Prefs.filters = this.props.activeFilters;
     this.splitter.removeEventListener("mouseup", this.resize);
     window.removeEventListener("resize", this.resize);
   },

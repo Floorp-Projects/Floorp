@@ -117,7 +117,7 @@ protected:
                                mozIDOMWindowProxy* aParent,
                                bool aIsCallerChrome,
                                const SizeSpec& aSizeSpec,
-                               mozilla::Maybe<float> aOpenerFullZoom =
+                               const mozilla::Maybe<float>& aOpenerFullZoom =
                                  mozilla::Nothing());
   static void GetWindowTreeItem(mozIDOMWindowProxy* aWindow,
                                 nsIDocShellTreeItem** aResult);

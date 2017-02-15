@@ -39,8 +39,6 @@ public:
     MOZ_CRASH("Incompatibe surface type");
   }
 
-  virtual LayerRenderState GetRenderState() override;
-
   virtual bool SetCompositableHost(CompositableHost* aHost) override;
 
   virtual void Disconnect() override

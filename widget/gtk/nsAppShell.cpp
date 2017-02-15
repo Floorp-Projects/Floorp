@@ -38,9 +38,9 @@ static gint
 PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
 {
     mozilla::HangMonitor::Suspend();
-    profiler_sleep_start();
+    profiler_thread_sleep();
     gint result = (*sPollFunc)(ufds, nfsd, timeout_);
-    profiler_sleep_end();
+    profiler_thread_wake();
     mozilla::HangMonitor::NotifyActivity();
     return result;
 }

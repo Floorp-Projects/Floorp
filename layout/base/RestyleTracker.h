@@ -72,7 +72,7 @@ public:
   bool AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
                          nsChangeHint aMinChangeHint,
                          const RestyleHintData* aRestyleHintData = nullptr,
-                         mozilla::Maybe<Element*> aRestyleRoot =
+                         const mozilla::Maybe<Element*>& aRestyleRoot =
                            mozilla::Nothing());
 
   Element* FindClosestRestyleRoot(Element* aElement);
@@ -312,7 +312,7 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
                                   nsRestyleHint aRestyleHint,
                                   nsChangeHint aMinChangeHint,
                                   const RestyleHintData* aRestyleHintData,
-                                  mozilla::Maybe<Element*> aRestyleRoot)
+                                  const mozilla::Maybe<Element*>& aRestyleRoot)
 {
   bool hadRestyleLaterSiblings =
     AddPendingRestyleToTable(aElement, aRestyleHint, aMinChangeHint,

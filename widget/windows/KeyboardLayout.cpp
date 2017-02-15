@@ -48,7 +48,7 @@
 namespace mozilla {
 namespace widget {
 
-static const char* kVirtualKeyName[] = {
+static const char* const kVirtualKeyName[] = {
   "NULL", "VK_LBUTTON", "VK_RBUTTON", "VK_CANCEL",
   "VK_MBUTTON", "VK_XBUTTON1", "VK_XBUTTON2", "0x07",
   "VK_BACK", "VK_TAB", "0x0A", "0x0B",

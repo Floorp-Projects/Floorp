@@ -1373,7 +1373,7 @@ GfxInfoBase::InitFeatureObject(JSContext* aCx,
                                JS::Handle<JSObject*> aContainer,
                                const char* aName,
                                int32_t aFeature,
-                               Maybe<mozilla::gfx::FeatureStatus> aFeatureStatus,
+                               const Maybe<mozilla::gfx::FeatureStatus>& aFeatureStatus,
                                JS::MutableHandle<JSObject*> aOutObj)
 {
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));

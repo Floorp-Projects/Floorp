@@ -27,7 +27,17 @@ OS_LIBS += [
 ]
 
 GENERATED_FILES += [
+    'dlldata.c',
+    'ISimpleDOMDocument.h',
+    'ISimpleDOMDocument_i.c',
+    'ISimpleDOMDocument_p.c',
+    'ISimpleDOMNode.h',
     'ISimpleDOMNode.tlb',
+    'ISimpleDOMNode_i.c',
+    'ISimpleDOMNode_p.c',
+    'ISimpleDOMText.h',
+    'ISimpleDOMText_i.c',
+    'ISimpleDOMText_p.c',
 ]
 
 RCINCLUDE = 'AccessibleMarshal.rc'

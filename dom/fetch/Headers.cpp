@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END
 // static
 already_AddRefed<Headers>
 Headers::Constructor(const GlobalObject& aGlobal,
-                     const Optional<HeadersOrByteStringSequenceSequenceOrByteStringMozMap>& aInit,
+                     const Optional<HeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord>& aInit,
                      ErrorResult& aRv)
 {
   RefPtr<InternalHeaders> ih = new InternalHeaders();
@@ -39,8 +39,8 @@ Headers::Constructor(const GlobalObject& aGlobal,
     ih->Fill(*aInit.Value().GetAsHeaders().mInternalHeaders, aRv);
   } else if (aInit.Value().IsByteStringSequenceSequence()) {
     ih->Fill(aInit.Value().GetAsByteStringSequenceSequence(), aRv);
-  } else if (aInit.Value().IsByteStringMozMap()) {
-    ih->Fill(aInit.Value().GetAsByteStringMozMap(), aRv);
+  } else if (aInit.Value().IsByteStringByteStringRecord()) {
+    ih->Fill(aInit.Value().GetAsByteStringByteStringRecord(), aRv);
   }
 
   if (aRv.Failed()) {
@@ -53,7 +53,7 @@ Headers::Constructor(const GlobalObject& aGlobal,
 // static
 already_AddRefed<Headers>
 Headers::Constructor(const GlobalObject& aGlobal,
-                     const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+                     const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
                      ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -62,7 +62,7 @@ Headers::Constructor(const GlobalObject& aGlobal,
 
 /* static */ already_AddRefed<Headers>
 Headers::Create(nsIGlobalObject* aGlobal,
-                const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
+                const OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord& aInit,
                 ErrorResult& aRv)
 {
   RefPtr<InternalHeaders> ih = new InternalHeaders();
@@ -72,8 +72,8 @@ Headers::Create(nsIGlobalObject* aGlobal,
     ih->Fill(*(aInit.GetAsHeaders().get()->mInternalHeaders), aRv);
   } else if (aInit.IsByteStringSequenceSequence()) {
     ih->Fill(aInit.GetAsByteStringSequenceSequence(), aRv);
-  } else if (aInit.IsByteStringMozMap()) {
-    ih->Fill(aInit.GetAsByteStringMozMap(), aRv);
+  } else if (aInit.IsByteStringByteStringRecord()) {
+    ih->Fill(aInit.GetAsByteStringByteStringRecord(), aRv);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {

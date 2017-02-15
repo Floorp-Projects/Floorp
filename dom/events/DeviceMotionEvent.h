@@ -21,8 +21,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceRotationRate)
 
   DeviceRotationRate(DeviceMotionEvent* aOwner,
-                     Nullable<double> aAlpha, Nullable<double> aBeta,
-                     Nullable<double> aGamma);
+                     const Nullable<double>& aAlpha,
+                     const Nullable<double>& aBeta,
+                     const Nullable<double>& aGamma);
 
   DeviceMotionEvent* GetParentObject() const
   {
@@ -53,8 +54,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceAcceleration)
 
   DeviceAcceleration(DeviceMotionEvent* aOwner,
-                     Nullable<double> aX, Nullable<double> aY,
-                     Nullable<double> aZ);
+                     const Nullable<double>& aX,
+                     const Nullable<double>& aY,
+                     const Nullable<double>& aZ);
 
   DeviceMotionEvent* GetParentObject() const
   {
@@ -128,7 +130,7 @@ public:
          const DeviceAccelerationInit& aAcceleration,
          const DeviceAccelerationInit& aAccelerationIncludingGravity,
          const DeviceRotationRateInit& aRotationRate,
-         Nullable<double> aInterval);
+         const Nullable<double>& aInterval);
 
   void InitDeviceMotionEvent(
          const nsAString& aType,
@@ -137,8 +139,8 @@ public:
          const DeviceAccelerationInit& aAcceleration,
          const DeviceAccelerationInit& aAccelerationIncludingGravity,
          const DeviceRotationRateInit& aRotationRate,
-         Nullable<double> aInterval,
-         Nullable<uint64_t> aTimeStamp);
+         const Nullable<double>& aInterval,
+         const Nullable<uint64_t>& aTimeStamp);
 
   static already_AddRefed<DeviceMotionEvent>
   Constructor(const GlobalObject& aGlobal,

@@ -3302,10 +3302,10 @@ class BaseCompiler
 
     // ptr and dest may be the same iff dest is I32.
     // This may destroy ptr even if ptr and dest are not the same.
-    MOZ_MUST_USE bool load(MemoryAccessDesc& access, RegI32 ptr, bool omitBoundsCheck, AnyReg dest,
+    MOZ_MUST_USE bool load(MemoryAccessDesc* access, RegI32 ptr, bool omitBoundsCheck, AnyReg dest,
                            RegI32 tmp1, RegI32 tmp2, RegI32 tmp3)
     {
-        checkOffset(&access, ptr);
+        checkOffset(access, ptr);
 
         OutOfLineCode* ool = nullptr;
 #ifndef WASM_HUGE_MEMORY
@@ -3314,48 +3314,48 @@ class BaseCompiler
 #endif
 
 #if defined(JS_CODEGEN_X64)
-        Operand srcAddr(HeapReg, ptr, TimesOne, access.offset());
+        Operand srcAddr(HeapReg, ptr, TimesOne, access->offset());
 
         if (dest.tag == AnyReg::I64)
-            masm.wasmLoadI64(access, srcAddr, dest.i64());
+            masm.wasmLoadI64(*access, srcAddr, dest.i64());
         else
-            masm.wasmLoad(access, srcAddr, dest.any());
+            masm.wasmLoad(*access, srcAddr, dest.any());
 #elif defined(JS_CODEGEN_X86)
-        Operand srcAddr(ptr, access.offset());
+        Operand srcAddr(ptr, access->offset());
 
         if (dest.tag == AnyReg::I64) {
             MOZ_ASSERT(dest.i64() == abiReturnRegI64);
-            masm.wasmLoadI64(access, srcAddr, dest.i64());
+            masm.wasmLoadI64(*access, srcAddr, dest.i64());
         } else {
-            bool byteRegConflict = access.byteSize() == 1 && !singleByteRegs_.has(dest.i32());
+            bool byteRegConflict = access->byteSize() == 1 && !singleByteRegs_.has(dest.i32());
             AnyRegister out = byteRegConflict ? AnyRegister(ScratchRegX86) : dest.any();
 
-            masm.wasmLoad(access, srcAddr, out);
+            masm.wasmLoad(*access, srcAddr, out);
 
             if (byteRegConflict)
                 masm.mov(ScratchRegX86, dest.i32());
         }
 #elif defined(JS_CODEGEN_ARM)
-        if (IsUnaligned(access)) {
+        if (IsUnaligned(*access)) {
             switch (dest.tag) {
               case AnyReg::I64:
-                masm.wasmUnalignedLoadI64(access, ptr, ptr, dest.i64(), tmp1);
+                masm.wasmUnalignedLoadI64(*access, ptr, ptr, dest.i64(), tmp1);
                 break;
               case AnyReg::F32:
-                masm.wasmUnalignedLoadFP(access, ptr, ptr, dest.f32(), tmp1, tmp2, Register::Invalid());
+                masm.wasmUnalignedLoadFP(*access, ptr, ptr, dest.f32(), tmp1, tmp2, Register::Invalid());
                 break;
               case AnyReg::F64:
-                masm.wasmUnalignedLoadFP(access, ptr, ptr, dest.f64(), tmp1, tmp2, tmp3);
+                masm.wasmUnalignedLoadFP(*access, ptr, ptr, dest.f64(), tmp1, tmp2, tmp3);
                 break;
               default:
-                masm.wasmUnalignedLoad(access, ptr, ptr, dest.i32(), tmp1);
+                masm.wasmUnalignedLoad(*access, ptr, ptr, dest.i32(), tmp1);
                 break;
             }
         } else {
             if (dest.tag == AnyReg::I64)
-                masm.wasmLoadI64(access, ptr, ptr, dest.i64());
+                masm.wasmLoadI64(*access, ptr, ptr, dest.i64());
             else
-                masm.wasmLoad(access, ptr, ptr, dest.any());
+                masm.wasmLoad(*access, ptr, ptr, dest.any());
         }
 #else
         MOZ_CRASH("BaseCompiler platform hook: load");
@@ -3366,7 +3366,7 @@ class BaseCompiler
         return true;
     }
 
-    MOZ_MUST_USE size_t storeTemps(MemoryAccessDesc& access, ValType srcType) {
+    MOZ_MUST_USE size_t storeTemps(const MemoryAccessDesc& access, ValType srcType) {
 #if defined(JS_CODEGEN_ARM)
         if (IsUnaligned(access) && srcType != ValType::I32)
             return 1;
@@ -3376,10 +3376,10 @@ class BaseCompiler
 
     // ptr and src must not be the same register.
     // This may destroy ptr and src.
-    MOZ_MUST_USE bool store(MemoryAccessDesc access, RegI32 ptr, bool omitBoundsCheck, AnyReg src,
+    MOZ_MUST_USE bool store(MemoryAccessDesc* access, RegI32 ptr, bool omitBoundsCheck, AnyReg src,
                             RegI32 tmp)
     {
-        checkOffset(&access, ptr);
+        checkOffset(access, ptr);
 
         Label rejoin;
 #ifndef WASM_HUGE_MEMORY
@@ -3390,58 +3390,58 @@ class BaseCompiler
         // Emit the store
 #if defined(JS_CODEGEN_X64)
         MOZ_ASSERT(tmp == Register::Invalid());
-        Operand dstAddr(HeapReg, ptr, TimesOne, access.offset());
+        Operand dstAddr(HeapReg, ptr, TimesOne, access->offset());
 
-        masm.wasmStore(access, src.any(), dstAddr);
+        masm.wasmStore(*access, src.any(), dstAddr);
 #elif defined(JS_CODEGEN_X86)
         MOZ_ASSERT(tmp == Register::Invalid());
-        Operand dstAddr(ptr, access.offset());
+        Operand dstAddr(ptr, access->offset());
 
-        if (access.type() == Scalar::Int64) {
-            masm.wasmStoreI64(access, src.i64(), dstAddr);
+        if (access->type() == Scalar::Int64) {
+            masm.wasmStoreI64(*access, src.i64(), dstAddr);
         } else {
             AnyRegister value;
             if (src.tag == AnyReg::I64) {
-                if (access.byteSize() == 1 && !singleByteRegs_.has(src.i64().low)) {
+                if (access->byteSize() == 1 && !singleByteRegs_.has(src.i64().low)) {
                     masm.mov(src.i64().low, ScratchRegX86);
                     value = AnyRegister(ScratchRegX86);
                 } else {
                     value = AnyRegister(src.i64().low);
                 }
-            } else if (access.byteSize() == 1 && !singleByteRegs_.has(src.i32())) {
+            } else if (access->byteSize() == 1 && !singleByteRegs_.has(src.i32())) {
                 masm.mov(src.i32(), ScratchRegX86);
                 value = AnyRegister(ScratchRegX86);
             } else {
                 value = src.any();
             }
 
-            masm.wasmStore(access, value, dstAddr);
+            masm.wasmStore(*access, value, dstAddr);
         }
 #elif defined(JS_CODEGEN_ARM)
-        if (IsUnaligned(access)) {
+        if (IsUnaligned(*access)) {
             switch (src.tag) {
               case AnyReg::I64:
-                masm.wasmUnalignedStoreI64(access, src.i64(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreI64(*access, src.i64(), ptr, ptr, tmp);
                 break;
               case AnyReg::F32:
-                masm.wasmUnalignedStoreFP(access, src.f32(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreFP(*access, src.f32(), ptr, ptr, tmp);
                 break;
               case AnyReg::F64:
-                masm.wasmUnalignedStoreFP(access, src.f64(), ptr, ptr, tmp);
+                masm.wasmUnalignedStoreFP(*access, src.f64(), ptr, ptr, tmp);
                 break;
               default:
                 MOZ_ASSERT(tmp == Register::Invalid());
-                masm.wasmUnalignedStore(access, src.i32(), ptr, ptr);
+                masm.wasmUnalignedStore(*access, src.i32(), ptr, ptr);
                 break;
             }
         } else {
             MOZ_ASSERT(tmp == Register::Invalid());
-            if (access.type() == Scalar::Int64)
-                masm.wasmStoreI64(access, src.i64(), ptr, ptr);
+            if (access->type() == Scalar::Int64)
+                masm.wasmStoreI64(*access, src.i64(), ptr, ptr);
             else if (src.tag == AnyReg::I64)
-                masm.wasmStore(access, AnyRegister(src.i64().low), ptr, ptr);
+                masm.wasmStore(*access, AnyRegister(src.i64().low), ptr, ptr);
             else
-                masm.wasmStore(access, src.any(), ptr, ptr);
+                masm.wasmStore(*access, src.any(), ptr, ptr);
         }
 #else
         MOZ_CRASH("BaseCompiler platform hook: store");
@@ -6299,7 +6299,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
 #else
         RegI32 rv = rp;
 #endif
-        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
+        if (!load(&access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
             return false;
         pushI32(rv);
         if (rp != rv)
@@ -6317,7 +6317,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
         rp = popMemoryAccess(&access, &omitBoundsCheck);
         rv = needI64();
 #endif
-        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
+        if (!load(&access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
             return false;
         pushI64(rv);
         freeI32(rp);
@@ -6326,7 +6326,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
       case ValType::F32: {
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
         RegF32 rv = needF32();
-        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
+        if (!load(&access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
             return false;
         pushF32(rv);
         freeI32(rp);
@@ -6335,7 +6335,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
       case ValType::F64: {
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
         RegF64 rv = needF64();
-        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
+        if (!load(&access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2, tmp3))
             return false;
         pushF64(rv);
         freeI32(rp);
@@ -6379,7 +6379,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
       case ValType::I32: {
         RegI32 rv = popI32();
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
-        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp))
+        if (!store(&access, rp, omitBoundsCheck, AnyReg(rv), tmp))
             return false;
         freeI32(rp);
         freeI32(rv);
@@ -6388,7 +6388,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
       case ValType::I64: {
         RegI64 rv = popI64();
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
-        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp))
+        if (!store(&access, rp, omitBoundsCheck, AnyReg(rv), tmp))
             return false;
         freeI32(rp);
         freeI64(rv);
@@ -6397,7 +6397,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
       case ValType::F32: {
         RegF32 rv = popF32();
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
-        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp))
+        if (!store(&access, rp, omitBoundsCheck, AnyReg(rv), tmp))
             return false;
         freeI32(rp);
         freeF32(rv);
@@ -6406,7 +6406,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
       case ValType::F64: {
         RegF64 rv = popF64();
         RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
-        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp))
+        if (!store(&access, rp, omitBoundsCheck, AnyReg(rv), tmp))
             return false;
         freeI32(rp);
         freeF64(rv);

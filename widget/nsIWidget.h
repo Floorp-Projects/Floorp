@@ -50,7 +50,6 @@ class PluginWidgetChild;
 } // namespace plugins
 namespace layers {
 class AsyncDragMetrics;
-class Composer2D;
 class Compositor;
 class CompositorBridgeChild;
 class LayerManager;
@@ -334,7 +333,6 @@ class nsIWidget : public nsISupports
     typedef mozilla::dom::TabChild TabChild;
 
   public:
-    typedef mozilla::layers::Composer2D Composer2D;
     typedef mozilla::layers::CompositorBridgeChild CompositorBridgeChild;
     typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
     typedef mozilla::layers::FrameMetrics FrameMetrics;

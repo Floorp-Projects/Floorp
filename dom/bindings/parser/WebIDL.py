@@ -1886,7 +1886,7 @@ class IDLDictionary(IDLObjectWithScope):
 
             if (memberType.nullable() or
                 memberType.isSequence() or
-                memberType.isMozMap()):
+                memberType.isRecord()):
                 return typeContainsDictionary(memberType.inner, dictionary)
 
             if memberType.isDictionary():
@@ -2007,7 +2007,7 @@ class IDLType(IDLObject):
         'callback',
         'union',
         'sequence',
-        'mozmap',
+        'record',
         'promise',
         )
 
@@ -2058,7 +2058,7 @@ class IDLType(IDLObject):
     def isSequence(self):
         return False
 
-    def isMozMap(self):
+    def isRecord(self):
         return False
 
     def isArrayBuffer(self):
@@ -2279,8 +2279,8 @@ class IDLNullableType(IDLParametrizedType):
     def isSequence(self):
         return self.inner.isSequence()
 
-    def isMozMap(self):
-        return self.inner.isMozMap()
+    def isRecord(self):
+        return self.inner.isRecord()
 
     def isArrayBuffer(self):
         return self.inner.isArrayBuffer()
@@ -2339,8 +2339,10 @@ class IDLNullableType(IDLParametrizedType):
         return self
 
     def isDistinguishableFrom(self, other):
-        if (other.nullable() or (other.isUnion() and other.hasNullableType) or
-            other.isDictionary()):
+        if (other.nullable() or
+            other.isDictionary() or
+            (other.isUnion() and
+             (other.hasNullableType or other.hasDictionaryType()))):
             # Can't tell which type null should become
             return False
         return self.inner.isDistinguishableFrom(other)
@@ -2415,34 +2417,38 @@ class IDLSequenceType(IDLParametrizedType):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isDate() or other.isInterface() or
                 other.isDictionary() or
-                other.isCallback() or other.isMozMap())
+                other.isCallback() or other.isRecord())
 
 
-class IDLMozMapType(IDLParametrizedType):
-    def __init__(self, location, parameterType):
-        assert not parameterType.isVoid()
+class IDLRecordType(IDLParametrizedType):
+    def __init__(self, location, keyType, valueType):
+        assert keyType.isString()
+        assert keyType.isComplete()
+        assert not valueType.isVoid()
 
-        IDLParametrizedType.__init__(self, location, parameterType.name, parameterType)
+        IDLParametrizedType.__init__(self, location, valueType.name, valueType)
+        self.keyType = keyType
+
         # Need to set self.name up front if our inner type is already complete,
         # since in that case our .complete() won't be called.
         if self.inner.isComplete():
-            self.name = self.inner.name + "MozMap"
+            self.name = self.keyType.name + self.inner.name + "Record"
 
     def __eq__(self, other):
-        return isinstance(other, IDLMozMapType) and self.inner == other.inner
+        return isinstance(other, IDLRecordType) and self.inner == other.inner
 
     def __str__(self):
-        return self.inner.__str__() + "MozMap"
+        return self.keyType.__str__() + self.inner.__str__() + "Record"
 
-    def isMozMap(self):
+    def isRecord(self):
         return True
 
     def tag(self):
-        return IDLType.Tags.mozmap
+        return IDLType.Tags.record
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
-        self.name = self.inner.name + "MozMap"
+        self.name = self.keyType.name + self.inner.name + "Record"
         return self
 
     def unroll(self):
@@ -2632,8 +2638,8 @@ class IDLTypedefType(IDLType):
     def isSequence(self):
         return self.inner.isSequence()
 
-    def isMozMap(self):
-        return self.inner.isMozMap()
+    def isRecord(self):
+        return self.inner.isRecord()
 
     def isDictionary(self):
         return self.inner.isDictionary()
@@ -2804,7 +2810,7 @@ class IDLWrapperType(IDLType):
         if self.isEnum():
             return (other.isPrimitive() or other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isMozMap() or other.isDate())
+                    other.isSequence() or other.isRecord() or other.isDate())
         if self.isDictionary() and other.nullable():
             return False
         if (other.isPrimitive() or other.isString() or other.isEnum() or
@@ -2826,7 +2832,7 @@ class IDLWrapperType(IDLType):
                     (self.isNonCallbackInterface() or
                      other.isNonCallbackInterface()))
         if (other.isDictionary() or other.isCallback() or
-            other.isMozMap()):
+            other.isRecord()):
             return self.isNonCallbackInterface()
 
         # Not much else |other| can be
@@ -3071,17 +3077,17 @@ class IDLBuiltinType(IDLType):
             return (other.isNumeric() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isMozMap() or other.isDate())
+                    other.isSequence() or other.isRecord() or other.isDate())
         if self.isNumeric():
             return (other.isBoolean() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isMozMap() or other.isDate())
+                    other.isSequence() or other.isRecord() or other.isDate())
         if self.isString():
             return (other.isPrimitive() or other.isInterface() or
                     other.isObject() or
                     other.isCallback() or other.isDictionary() or
-                    other.isSequence() or other.isMozMap() or other.isDate())
+                    other.isSequence() or other.isRecord() or other.isDate())
         if self.isAny():
             # Can't tell "any" apart from anything
             return False
@@ -3091,7 +3097,7 @@ class IDLBuiltinType(IDLType):
             return (other.isPrimitive() or other.isString() or other.isEnum() or
                     other.isInterface() or other.isCallback() or
                     other.isDictionary() or other.isSequence() or
-                    other.isMozMap())
+                    other.isRecord())
         if self.isVoid():
             return not other.isVoid()
         # Not much else we could be!
@@ -3099,7 +3105,7 @@ class IDLBuiltinType(IDLType):
         # Like interfaces, but we know we're not a callback
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isCallback() or other.isDictionary() or
-                other.isSequence() or other.isMozMap() or other.isDate() or
+                other.isSequence() or other.isRecord() or other.isDate() or
                 (other.isInterface() and (
                  # ArrayBuffer is distinguishable from everything
                  # that's not an ArrayBuffer or a callback interface
@@ -3884,6 +3890,9 @@ class IDLConst(IDLInterfaceMember):
         if type.isDictionary():
             raise WebIDLError("A constant cannot be of a dictionary type",
                               [self.location])
+        if type.isRecord():
+            raise WebIDLError("A constant cannot be of a record type",
+                              [self.location])
         self.type = type
         self.value = value
 
@@ -3995,8 +4004,8 @@ class IDLAttribute(IDLInterfaceMember):
         if self.type.isSequence() and not self.getExtendedAttribute("Cached"):
             raise WebIDLError("A non-cached attribute cannot be of a sequence "
                               "type", [self.location])
-        if self.type.isMozMap() and not self.getExtendedAttribute("Cached"):
-            raise WebIDLError("A non-cached attribute cannot be of a MozMap "
+        if self.type.isRecord() and not self.getExtendedAttribute("Cached"):
+            raise WebIDLError("A non-cached attribute cannot be of a record "
                               "type", [self.location])
         if self.type.isUnion():
             for f in self.type.unroll().flatMemberTypes:
@@ -4012,11 +4021,11 @@ class IDLAttribute(IDLInterfaceMember):
                                       "one of its member types's member "
                                       "types, and so on) is a sequence "
                                       "type", [self.location, f.location])
-                if f.isMozMap():
+                if f.isRecord():
                     raise WebIDLError("An attribute cannot be of a union "
                                       "type if one of its member types (or "
                                       "one of its member types's member "
-                                      "types, and so on) is a MozMap "
+                                      "types, and so on) is a record "
                                       "type", [self.location, f.location])
         if not self.type.isInterface() and self.getExtendedAttribute("PutForwards"):
             raise WebIDLError("An attribute with [PutForwards] must have an "
@@ -4035,7 +4044,7 @@ class IDLAttribute(IDLInterfaceMember):
         def typeContainsChromeOnlyDictionaryMember(type):
             if (type.nullable() or
                 type.isSequence() or
-                type.isMozMap()):
+                type.isRecord()):
                 return typeContainsChromeOnlyDictionaryMember(type.inner)
 
             if type.isUnion():
@@ -4081,10 +4090,10 @@ class IDLAttribute(IDLInterfaceMember):
                                   [self.location, location])
         if self.getExtendedAttribute("Frozen"):
             if (not self.type.isSequence() and not self.type.isDictionary() and
-                not self.type.isMozMap()):
+                not self.type.isRecord()):
                 raise WebIDLError("[Frozen] is only allowed on "
                                   "sequence-valued, dictionary-valued, and "
-                                  "MozMap-valued attributes",
+                                  "record-valued attributes",
                                   [self.location])
         if not self.type.unroll().isExposedInAllOf(self.exposureSet):
             raise WebIDLError("Attribute returns a type that is not exposed "
@@ -5221,7 +5230,7 @@ class Tokenizer(object):
         "Promise": "PROMISE",
         "required": "REQUIRED",
         "sequence": "SEQUENCE",
-        "MozMap": "MOZMAP",
+        "record": "RECORD",
         "short": "SHORT",
         "unsigned": "UNSIGNED",
         "void": "VOID",
@@ -6350,7 +6359,7 @@ class Parser(Tokenizer):
                   | OCTET
                   | OPTIONAL
                   | SEQUENCE
-                  | MOZMAP
+                  | RECORD
                   | SETTER
                   | SHORT
                   | STATIC
@@ -6429,7 +6438,7 @@ class Parser(Tokenizer):
 
     def p_NonAnyType(self, p):
         """
-            NonAnyType : PrimitiveOrStringType Null
+            NonAnyType : PrimitiveType Null
                        | ARRAYBUFFER Null
                        | SHAREDARRAYBUFFER Null
                        | OBJECT Null
@@ -6444,6 +6453,12 @@ class Parser(Tokenizer):
             type = BuiltinTypes[p[1]]
 
         p[0] = self.handleNullable(type, p[2])
+
+    def p_NonAnyTypeStringType(self, p):
+        """
+            NonAnyType : StringType Null
+        """
+        p[0] = self.handleNullable(p[1], p[2])
 
     def p_NonAnyTypeSequenceType(self, p):
         """
@@ -6461,13 +6476,14 @@ class Parser(Tokenizer):
         """
         p[0] = IDLPromiseType(self.getLocation(p, 1), p[3])
 
-    def p_NonAnyTypeMozMapType(self, p):
+    def p_NonAnyTypeRecordType(self, p):
         """
-            NonAnyType : MOZMAP LT Type GT Null
+            NonAnyType : RECORD LT StringType COMMA Type GT Null
         """
-        innerType = p[3]
-        type = IDLMozMapType(self.getLocation(p, 1), innerType)
-        p[0] = self.handleNullable(type, p[5])
+        keyType = p[3]
+        valueType = p[5]
+        type = IDLRecordType(self.getLocation(p, 1), keyType, valueType)
+        p[0] = self.handleNullable(type, p[7])
 
     def p_NonAnyTypeScopedName(self, p):
         """
@@ -6510,7 +6526,7 @@ class Parser(Tokenizer):
 
     def p_ConstType(self, p):
         """
-            ConstType : PrimitiveOrStringType Null
+            ConstType : PrimitiveType Null
         """
         type = BuiltinTypes[p[1]]
         p[0] = self.handleNullable(type, p[2])
@@ -6524,69 +6540,75 @@ class Parser(Tokenizer):
         type = IDLUnresolvedType(self.getLocation(p, 1), identifier)
         p[0] = self.handleNullable(type, p[2])
 
-    def p_PrimitiveOrStringTypeUint(self, p):
+    def p_PrimitiveTypeUint(self, p):
         """
-            PrimitiveOrStringType : UnsignedIntegerType
+            PrimitiveType : UnsignedIntegerType
         """
         p[0] = p[1]
 
-    def p_PrimitiveOrStringTypeBoolean(self, p):
+    def p_PrimitiveTypeBoolean(self, p):
         """
-            PrimitiveOrStringType : BOOLEAN
+            PrimitiveType : BOOLEAN
         """
         p[0] = IDLBuiltinType.Types.boolean
 
-    def p_PrimitiveOrStringTypeByte(self, p):
+    def p_PrimitiveTypeByte(self, p):
         """
-            PrimitiveOrStringType : BYTE
+            PrimitiveType : BYTE
         """
         p[0] = IDLBuiltinType.Types.byte
 
-    def p_PrimitiveOrStringTypeOctet(self, p):
+    def p_PrimitiveTypeOctet(self, p):
         """
-            PrimitiveOrStringType : OCTET
+            PrimitiveType : OCTET
         """
         p[0] = IDLBuiltinType.Types.octet
 
-    def p_PrimitiveOrStringTypeFloat(self, p):
+    def p_PrimitiveTypeFloat(self, p):
         """
-            PrimitiveOrStringType : FLOAT
+            PrimitiveType : FLOAT
         """
         p[0] = IDLBuiltinType.Types.float
 
-    def p_PrimitiveOrStringTypeUnrestictedFloat(self, p):
+    def p_PrimitiveTypeUnrestictedFloat(self, p):
         """
-            PrimitiveOrStringType : UNRESTRICTED FLOAT
+            PrimitiveType : UNRESTRICTED FLOAT
         """
         p[0] = IDLBuiltinType.Types.unrestricted_float
 
-    def p_PrimitiveOrStringTypeDouble(self, p):
+    def p_PrimitiveTypeDouble(self, p):
         """
-            PrimitiveOrStringType : DOUBLE
+            PrimitiveType : DOUBLE
         """
         p[0] = IDLBuiltinType.Types.double
 
-    def p_PrimitiveOrStringTypeUnrestictedDouble(self, p):
+    def p_PrimitiveTypeUnrestictedDouble(self, p):
         """
-            PrimitiveOrStringType : UNRESTRICTED DOUBLE
+            PrimitiveType : UNRESTRICTED DOUBLE
         """
         p[0] = IDLBuiltinType.Types.unrestricted_double
 
-    def p_PrimitiveOrStringTypeDOMString(self, p):
+    def p_StringType(self, p):
         """
-            PrimitiveOrStringType : DOMSTRING
+            StringType : BuiltinStringType
+        """
+        p[0] = BuiltinTypes[p[1]]
+
+    def p_BuiltinStringTypeDOMString(self, p):
+        """
+            BuiltinStringType : DOMSTRING
         """
         p[0] = IDLBuiltinType.Types.domstring
 
-    def p_PrimitiveOrStringTypeBytestring(self, p):
+    def p_BuiltinStringTypeBytestring(self, p):
         """
-            PrimitiveOrStringType : BYTESTRING
+            BuiltinStringType : BYTESTRING
         """
         p[0] = IDLBuiltinType.Types.bytestring
 
-    def p_PrimitiveOrStringTypeUSVString(self, p):
+    def p_BuiltinStringTypeUSVString(self, p):
         """
-            PrimitiveOrStringType : USVSTRING
+            BuiltinStringType : USVSTRING
         """
         p[0] = IDLBuiltinType.Types.usvstring
 

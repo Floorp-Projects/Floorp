@@ -124,8 +124,6 @@ public:
     return nullptr;
   }
 
-  virtual LayerRenderState GetRenderState() = 0;
-
   virtual gfx::IntSize GetImageSize() const
   {
     MOZ_ASSERT(false, "Should have been overridden");

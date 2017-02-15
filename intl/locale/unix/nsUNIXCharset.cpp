@@ -29,7 +29,7 @@
 using mozilla::dom::EncodingUtils;
 using namespace mozilla;
 
-static const nsUConvProp kUnixCharsets[] = {
+static constexpr nsUConvProp kUnixCharsets[] = {
 #include "unixcharset.properties.h"
 };
 
