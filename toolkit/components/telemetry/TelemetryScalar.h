@@ -7,8 +7,6 @@
 #define TelemetryScalar_h__
 
 #include "mozilla/TelemetryScalarEnums.h"
-#include "nsXULAppAPI.h" // for GeckoProcessType
-#include "ipc/TelemetryComms.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
 // scalar accumulation and storage logic. It should only be used by
