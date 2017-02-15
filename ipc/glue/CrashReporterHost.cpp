@@ -33,14 +33,31 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
 bool
 CrashReporterHost::GenerateCrashReport(base::ProcessId aPid)
 {
-  RefPtr<nsIFile> crashDump;
-  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
-    return false;
-  }
-  if (!CrashReporter::GetIDFromMinidump(crashDump, mDumpID)) {
+  if (!TakeCrashedChildMinidump(aPid, nullptr)) {
     return false;
   }
   return FinalizeCrashReport();
+}
+
+RefPtr<nsIFile>
+CrashReporterHost::TakeCrashedChildMinidump(base::ProcessId aPid, uint32_t* aOutSequence)
+{
+  MOZ_ASSERT(!HasMinidump());
+
+  RefPtr<nsIFile> crashDump;
+  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), aOutSequence)) {
+    return nullptr;
+  }
+  if (!AdoptMinidump(crashDump)) {
+    return nullptr;
+  }
+  return crashDump.get();
+}
+
+bool
+CrashReporterHost::AdoptMinidump(nsIFile* aFile)
+{
+  return CrashReporter::GetIDFromMinidump(aFile, mDumpID);
 }
 
 bool
@@ -73,11 +90,16 @@ CrashReporterHost::FinalizeCrashReport()
   SprintfLiteral(startTime, "%lld", static_cast<long long>(mStartTime));
   notes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
-  CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
+  // We might not have shmem (for example, when running crashreporter tests).
+  if (mShmem.IsReadable()) {
+    CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
+  }
   CrashReporter::AppendExtraData(mDumpID, mExtraNotes);
   CrashReporter::AppendExtraData(mDumpID, notes);
 
-  NotifyCrashService(mProcessType, mDumpID, &notes);
+  // Use mExtraNotes, since NotifyCrashService looks for "PluginHang" which is
+  // set in the parent process.
+  NotifyCrashService(mProcessType, mDumpID, &mExtraNotes);
 
   mFinalized = true;
   return true;
