@@ -76,7 +76,7 @@ RootCABinNumber(const SECItem* cert)
 // Attempt to increment the appropriate bin in the provided Telemetry probe ID. If
 // there was a hash failure, we do nothing.
 void
-AccumulateTelemetryForRootCA(mozilla::Telemetry::ID probe, 
+AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe,
   const CERTCertificate* cert)
 {
   int32_t binId = RootCABinNumber(&cert->derCert);

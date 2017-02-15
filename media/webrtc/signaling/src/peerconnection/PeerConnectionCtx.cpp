@@ -254,7 +254,7 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
         bool isAudio = (s.mId.Value().Find("audio") != -1);
         if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed() &&
             (s.mPacketsLost.Value() + s.mPacketsReceived.Value()) != 0) {
-          ID id;
+          HistogramID id;
           if (s.mIsRemote) {
             id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE :
                            WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE;
@@ -268,7 +268,7 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
                      (s.mPacketsLost.Value() + s.mPacketsReceived.Value()));
         }
         if (s.mJitter.WasPassed()) {
-          ID id;
+          HistogramID id;
           if (s.mIsRemote) {
             id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
                            WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER;
@@ -280,8 +280,8 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
         }
         if (s.mMozRtt.WasPassed()) {
           MOZ_ASSERT(s.mIsRemote);
-          ID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
-                            WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
+          HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
+                                     WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
           Accumulate(id, s.mMozRtt.Value());
         }
         if (lastInboundStats && s.mBytesReceived.WasPassed()) {
@@ -295,7 +295,7 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
               // In theory we're called every second, so delta *should* be in that range.
               // Small deltas could cause errors due to division
               if (delta_ms > 500 && delta_ms < 60000) {
-                ID id;
+                HistogramID id;
                 if (s.mIsRemote) {
                   id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
                                  WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
