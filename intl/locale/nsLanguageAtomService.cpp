@@ -15,7 +15,7 @@
 
 using namespace mozilla;
 
-static const nsUConvProp kLangGroups[] = {
+static constexpr nsUConvProp kLangGroups[] = {
 #include "langGroups.properties.h"
 };
 
