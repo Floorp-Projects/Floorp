@@ -18,6 +18,9 @@
 namespace js {
 class ErrorObject;
 
+JSErrorNotes::Note*
+CopyErrorNote(JSContext* cx, JSErrorNotes::Note* note);
+
 JSErrorReport*
 CopyErrorReport(JSContext* cx, JSErrorReport* report);
 
