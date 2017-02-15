@@ -83,9 +83,8 @@ X11DataTextureSourceBasic::GetSize() const
   if (!mBufferDrawTarget) {
     NS_WARNING("Trying to query the size of an uninitialized TextureSource");
     return IntSize(0, 0);
-  } else {
-    return mBufferDrawTarget->GetSize();
   }
+  return mBufferDrawTarget->GetSize();
 }
 
 gfx::SurfaceFormat
@@ -94,9 +93,8 @@ X11DataTextureSourceBasic::GetFormat() const
   if (!mBufferDrawTarget) {
     NS_WARNING("Trying to query the format of an uninitialized TextureSource");
     return gfx::SurfaceFormat::UNKNOWN;
-  } else {
-    return mBufferDrawTarget->GetFormat();
   }
+  return mBufferDrawTarget->GetFormat();
 }
 
 SourceSurface*
@@ -106,9 +104,8 @@ X11DataTextureSourceBasic::GetSurface(DrawTarget* aTarget)
   if (mBufferDrawTarget) {
     surface = mBufferDrawTarget->Snapshot();
     return surface.get();
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 
 void

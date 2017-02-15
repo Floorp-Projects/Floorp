@@ -1161,14 +1161,13 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
 
     return CrashReporter::SetExceptionHandler(xreBinDirectory, true);
   }
-  else {
-    if (!CrashReporter::GetEnabled()) {
-      // no point in erroring for double-disabling
-      return NS_OK;
-    }
 
-    return CrashReporter::UnsetExceptionHandler();
+  if (!CrashReporter::GetEnabled()) {
+    // no point in erroring for double-disabling
+    return NS_OK;
   }
+
+  return CrashReporter::UnsetExceptionHandler();
 }
 
 NS_IMETHODIMP
@@ -1705,7 +1704,8 @@ ParseRemoteCommandLine(nsCString& program,
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
     return REMOTE_ARG_BAD;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     program.Assign(temp);
   }
 
@@ -2224,7 +2224,8 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --reset-profile is invalid when argument --osint is specified\n");
     return NS_ERROR_FAILURE;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     gDoProfileReset = true;
   }
 
@@ -2232,7 +2233,8 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --migration is invalid when argument --osint is specified\n");
     return NS_ERROR_FAILURE;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     gDoMigration = true;
   }
 
@@ -2444,7 +2446,8 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --profilemanager is invalid when argument --osint is specified\n");
     return NS_ERROR_FAILURE;
-  } else if (ar == ARG_FOUND && CanShowProfileManager()) {
+  }
+  if (ar == ARG_FOUND && CanShowProfileManager()) {
     return ShowProfileManager(aProfileSvc, aNative);
   }
 
@@ -2919,9 +2922,11 @@ const char* DetectDisplay(void)
   const char *display_name;
   if (tryX11 && (display_name = PR_GetEnv("DISPLAY"))) {
     return display_name;
-  } else if (tryWayland && (display_name = PR_GetEnv("WAYLAND_DISPLAY"))) {
+  }
+  if (tryWayland && (display_name = PR_GetEnv("WAYLAND_DISPLAY"))) {
     return display_name;
-  } else if (tryBroadway && (display_name = PR_GetEnv("BROADWAY_DISPLAY"))) {
+  }
+  if (tryBroadway && (display_name = PR_GetEnv("BROADWAY_DISPLAY"))) {
     return display_name;
   }
 
@@ -3155,7 +3160,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     Output(true, "Incorrect number of arguments passed to --override");
     return 1;
   }
-  else if (ar == ARG_FOUND) {
+  if (ar == ARG_FOUND) {
     nsCOMPtr<nsIFile> overrideLF;
     rv = XRE_GetFileFromPath(override, getter_AddRefs(overrideLF));
     if (NS_FAILED(rv)) {
@@ -3381,7 +3386,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --safe-mode is invalid when argument --osint is specified\n");
     return 1;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     gSafeMode = true;
   }
 
@@ -3464,7 +3470,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --no-remote is invalid when argument --osint is specified\n");
     return 1;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NO_REMOTE=1");
   }
 
@@ -3472,7 +3479,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --new-instance is invalid when argument --osint is specified\n");
     return 1;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NEW_INSTANCE=1");
   }
 
@@ -3498,7 +3506,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument --register is invalid when argument --osint is specified\n");
     return 1;
-  } else if (ar == ARG_FOUND) {
+  }
+  if (ar == ARG_FOUND) {
     ScopedXPCOMStartup xpcom;
     rv = xpcom.Initialize();
     NS_ENSURE_SUCCESS(rv, 1);
@@ -3843,7 +3852,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     if (rr == REMOTE_FOUND) {
       *aExitFlag = true;
       return 0;
-    } else if (rr == REMOTE_ARG_BAD) {
+    }
+    if (rr == REMOTE_ARG_BAD) {
       return 1;
     }
   }

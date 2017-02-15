@@ -92,8 +92,8 @@ const getDisplayedRequestsSummary = createSelector(
     return {
       count: requests.size,
       contentSize: totalBytes.contentSize,
-      transferredSize: totalBytes.transferredSize,
       millis: totalMillis,
+      transferredSize: totalBytes.transferredSize,
     };
   }
 );

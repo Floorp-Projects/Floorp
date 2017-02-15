@@ -178,16 +178,16 @@ imgRequest::GetProgressTracker() const
     MOZ_ASSERT(!mProgressTracker,
                "Should have given mProgressTracker to mImage");
     return mImage->GetProgressTracker();
-  } else {
-    MOZ_ASSERT(mProgressTracker,
-               "Should have mProgressTracker until we create mImage");
-    RefPtr<ProgressTracker> progressTracker = mProgressTracker;
-    MOZ_ASSERT(progressTracker);
-    return progressTracker.forget();
   }
+  MOZ_ASSERT(mProgressTracker,
+             "Should have mProgressTracker until we create mImage");
+  RefPtr<ProgressTracker> progressTracker = mProgressTracker;
+  MOZ_ASSERT(progressTracker);
+  return progressTracker.forget();
 }
 
-void imgRequest::SetCacheEntry(imgCacheEntry* entry)
+void
+imgRequest::SetCacheEntry(imgCacheEntry* entry)
 {
   mCacheEntry = entry;
 }

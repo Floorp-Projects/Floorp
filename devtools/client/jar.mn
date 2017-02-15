@@ -10,7 +10,7 @@ devtools.jar:
     content/shared/widgets/VariablesView.xul (shared/widgets/VariablesView.xul)
     content/projecteditor/chrome/content/projecteditor.xul (projecteditor/chrome/content/projecteditor.xul)
     content/projecteditor/lib/helpers/readdir.js (projecteditor/lib/helpers/readdir.js)
-    content/netmonitor/netmonitor.xul (netmonitor/netmonitor.xul)
+    content/netmonitor/netmonitor.xhtml (netmonitor/netmonitor.xhtml)
     content/netmonitor/netmonitor.js (netmonitor/netmonitor.js)
     content/webconsole/webconsole.xul (webconsole/webconsole.xul)
 *   content/scratchpad/scratchpad.xul (scratchpad/scratchpad.xul)

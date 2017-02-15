@@ -520,7 +520,8 @@ main()
     if (func == Buffer("jemalloc_stats")) {
       replay.jemalloc_stats(args);
       continue;
-    } else if (func == Buffer("free")) {
+    }
+    if (func == Buffer("free")) {
       replay.free(args);
       continue;
     }
