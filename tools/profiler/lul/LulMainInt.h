@@ -7,7 +7,7 @@
 #ifndef LulMainInt_h
 #define LulMainInt_h
 
-#include "LulPlatformMacros.h"
+#include "PlatformMacros.h"
 #include "LulMain.h" // for TaggedUWord
 
 #include <vector>
@@ -35,7 +35,7 @@ enum DW_REG_NUMBER {
   // treat the CFA (Canonical Frame Address) as "just another
   // register", though.
   DW_REG_CFA = -1,
-#if defined(LUL_ARCH_arm)
+#if defined(SPS_ARCH_arm)
   // ARM registers
   DW_REG_ARM_R7  = 7,
   DW_REG_ARM_R11 = 11,
@@ -43,13 +43,13 @@ enum DW_REG_NUMBER {
   DW_REG_ARM_R13 = 13,
   DW_REG_ARM_R14 = 14,
   DW_REG_ARM_R15 = 15,
-#elif defined(LUL_ARCH_x64)
+#elif defined(SPS_ARCH_amd64)
   // Because the X86 (32 bit) and AMD64 (64 bit) summarisers are
   // combined, a merged set of register constants is needed.
   DW_REG_INTEL_XBP = 6,
   DW_REG_INTEL_XSP = 7,
   DW_REG_INTEL_XIP = 16,
-#elif defined(LUL_ARCH_x86)
+#elif defined(SPS_ARCH_x86)
   DW_REG_INTEL_XBP = 5,
   DW_REG_INTEL_XSP = 4,
   DW_REG_INTEL_XIP = 8,
@@ -264,11 +264,11 @@ public:
   LExpr  mCfaExpr;
   // How to compute caller register values.  These may reference the
   // value defined by |mCfaExpr|.
-#if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
+#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
   LExpr  mXipExpr; // return address
   LExpr  mXspExpr;
   LExpr  mXbpExpr;
-#elif defined(LUL_ARCH_arm)
+#elif defined(SPS_ARCH_arm)
   LExpr  mR15expr; // return address
   LExpr  mR14expr;
   LExpr  mR13expr;
@@ -284,10 +284,10 @@ public:
 // of the set of registers that LUL unwinds on this target.
 static inline bool registerIsTracked(DW_REG_NUMBER reg) {
   switch (reg) {
-#   if defined(LUL_ARCH_x64) || defined(LUL_ARCH_x86)
+#   if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
     case DW_REG_INTEL_XBP: case DW_REG_INTEL_XSP: case DW_REG_INTEL_XIP:
       return true;
-#   elif defined(LUL_ARCH_arm)
+#   elif defined(SPS_ARCH_arm)
     case DW_REG_ARM_R7:  case DW_REG_ARM_R11: case DW_REG_ARM_R12:
     case DW_REG_ARM_R13: case DW_REG_ARM_R14: case DW_REG_ARM_R15:
       return true;
