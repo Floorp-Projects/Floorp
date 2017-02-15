@@ -32,6 +32,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 this.ExtensionsUI = {
   sideloaded: new Set(),
   updates: new Set(),
+  sideloadListener: null,
 
   init() {
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
@@ -53,6 +54,25 @@ this.ExtensionsUI = {
       }
 
       if (WEBEXT_PERMISSION_PROMPTS) {
+        if (!this.sideloadListener) {
+          this.sideloadListener = {
+            onEnabled: addon => {
+              if (!this.sideloaded.has(addon)) {
+                return;
+              }
+
+              this.sideloaded.delete(addon);
+              this.emit("change");
+
+              if (this.sideloaded.size == 0) {
+                AddonManager.removeAddonListener(this.sideloadListener);
+                this.sideloadListener = null;
+              }
+            },
+          };
+          AddonManager.addAddonListener(this.sideloadListener);
+        }
+
         for (let addon of sideloaded) {
           this.sideloaded.add(addon);
         }
