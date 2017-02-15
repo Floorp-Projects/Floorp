@@ -172,6 +172,7 @@ public:
     { return LiveDocs().Get(mChildDocs[aIdx]); }
 
 #if defined(XP_WIN)
+  void MaybeInitWindowEmulation();
   void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(

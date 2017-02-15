@@ -529,6 +529,57 @@ DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
 }
 
 #if defined(XP_WIN)
+void
+DocAccessibleParent::MaybeInitWindowEmulation()
+{
+  if (!nsWinUtils::IsWindowEmulationStarted()) {
+    return;
+  }
+
+  // XXX get the bounds from the tabParent instead of poking at accessibles
+  // which might not exist yet.
+  Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  if (!outerDoc) {
+    return;
+  }
+
+  RootAccessible* rootDocument = outerDoc->RootAccessible();
+  MOZ_ASSERT(rootDocument);
+
+  bool isActive = true;
+  nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
+  if (Compatibility::IsDolphin()) {
+    rect = Bounds();
+    nsIntRect rootRect = rootDocument->Bounds();
+    rect.x = rootRect.x - rect.x;
+    rect.y -= rootRect.y;
+
+    auto tab = static_cast<dom::TabParent*>(Manager());
+    tab->GetDocShellIsActive(&isActive);
+  }
+
+  IAccessibleHolder hWndAccHolder;
+  HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
+  HWND hWnd = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
+                                             parentWnd, rect.x, rect.y,
+                                             rect.width, rect.height,
+                                             isActive);
+  if (hWnd) {
+    // Attach accessible document to the emulated native window
+    ::SetPropW(hWnd, kPropNameDocAccParent, (HANDLE)this);
+    SetEmulatedWindowHandle(hWnd);
+    IAccessible* rawHWNDAcc = nullptr;
+    if (SUCCEEDED(::AccessibleObjectFromWindow(hWnd, OBJID_WINDOW,
+                                               IID_IAccessible,
+                                               (void**)&rawHWNDAcc))) {
+      hWndAccHolder.Set(IAccessibleHolder::COMPtrType(rawHWNDAcc));
+    }
+  }
+
+  Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
+                               hWndAccHolder);
+}
+
 /**
  * @param aCOMProxy COM Proxy to the document in the content process.
  */
@@ -536,6 +587,7 @@ void
 DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
 {
   SetCOMInterface(aCOMProxy);
+  MaybeInitWindowEmulation();
 
   // Make sure that we're not racing with a tab shutdown
   auto tab = static_cast<dom::TabParent*>(Manager());
@@ -545,51 +597,16 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
   }
 
   Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  if (!outerDoc) {
+    return;
+  }
 
   IAccessible* rawNative = nullptr;
-  if (outerDoc) {
-    outerDoc->GetNativeInterface((void**) &rawNative);
-    MOZ_ASSERT(rawNative);
-  }
+  outerDoc->GetNativeInterface((void**) &rawNative);
+  MOZ_ASSERT(rawNative);
 
   IAccessibleHolder::COMPtrType ptr(rawNative);
   IAccessibleHolder holder(Move(ptr));
-
-  IAccessibleHolder hWndAccHolder;
-  if (nsWinUtils::IsWindowEmulationStarted()) {
-    RootAccessible* rootDocument = outerDoc->RootAccessible();
-    MOZ_ASSERT(rootDocument);
-
-    bool isActive = true;
-    nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
-    if (Compatibility::IsDolphin()) {
-      rect = Bounds();
-      nsIntRect rootRect = rootDocument->Bounds();
-      rect.x = rootRect.x - rect.x;
-      rect.y -= rootRect.y;
-      tab->GetDocShellIsActive(&isActive);
-    }
-
-    HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
-    HWND hWnd = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
-                                               parentWnd, rect.x, rect.y,
-                                               rect.width, rect.height,
-                                               isActive);
-    if (hWnd) {
-      // Attach accessible document to the emulated native window
-      ::SetPropW(hWnd, kPropNameDocAccParent, (HANDLE)this);
-      SetEmulatedWindowHandle(hWnd);
-      IAccessible* rawHWNDAcc = nullptr;
-      if (SUCCEEDED(::AccessibleObjectFromWindow(hWnd, OBJID_WINDOW,
-                                                 IID_IAccessible,
-                                                 (void**)&rawHWNDAcc))) {
-        hWndAccHolder.Set(IAccessibleHolder::COMPtrType(rawHWNDAcc));
-      }
-    }
-  }
-
-  Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
-                               hWndAccHolder);
   Unused << SendParentCOMProxy(holder);
 }
 
