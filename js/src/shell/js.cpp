@@ -6590,6 +6590,14 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     if (!DefineProperty(cx, warningObj, cx->names().columnNumber, columnVal))
         return false;
 
+    RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
+    if (!notesArray)
+        return false;
+
+    RootedValue notesArrayVal(cx, ObjectValue(*notesArray));
+    if (!DefineProperty(cx, warningObj, cx->names().notes, notesArrayVal))
+        return false;
+
     GetShellContext(cx)->lastWarning.setObject(*warningObj);
     return true;
 }
