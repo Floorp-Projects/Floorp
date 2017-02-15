@@ -128,6 +128,12 @@ HitTestingTreeNode::IsScrollbarNode() const
   return mIsScrollbarContainer || (mScrollDir != ScrollDirection::NONE);
 }
 
+FrameMetrics::ViewID
+HitTestingTreeNode::GetScrollTargetId() const
+{
+  return mScrollViewId;
+}
+
 void
 HitTestingTreeNode::SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget)
 {
