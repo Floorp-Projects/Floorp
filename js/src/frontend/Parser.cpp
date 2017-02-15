@@ -8567,8 +8567,8 @@ Parser<ParseHandler>::newName(PropertyName* name, TokenPos pos)
 }
 
 template <typename ParseHandler>
-PropertyName*
-Parser<ParseHandler>::checkLabelOrIdentifierReference(PropertyName* ident,
+bool
+Parser<ParseHandler>::checkLabelOrIdentifierReference(HandlePropertyName ident,
                                                       uint32_t offset,
                                                       YieldHandling yieldHandling)
 {
@@ -8577,81 +8577,81 @@ Parser<ParseHandler>::checkLabelOrIdentifierReference(PropertyName* ident,
             versionNumber() >= JSVERSION_1_7)
         {
             errorAt(offset, JSMSG_RESERVED_ID, "yield");
-            return nullptr;
+            return false;
         }
         if (pc->sc()->needStrictChecks()) {
             if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "yield"))
-                return nullptr;
+                return false;
         }
 
-        return ident;
+        return true;
     }
 
     if (ident == context->names().await) {
         if (awaitIsKeyword()) {
             errorAt(offset, JSMSG_RESERVED_ID, "await");
-            return nullptr;
+            return false;
         }
-        return ident;
+        return true;
     }
 
     if (IsKeyword(ident) || IsReservedWordLiteral(ident)) {
         errorAt(offset, JSMSG_INVALID_ID, ReservedWordToCharZ(ident));
-        return nullptr;
+        return false;
     }
 
     if (IsFutureReservedWord(ident)) {
         errorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident));
-        return nullptr;
+        return false;
     }
 
     if (pc->sc()->needStrictChecks()) {
         if (IsStrictReservedWord(ident)) {
             if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident)))
-                return nullptr;
-            return ident;
+                return false;
+            return true;
         }
 
         if (ident == context->names().let) {
             if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let"))
-                return nullptr;
-            return ident;
+                return false;
+            return true;
         }
 
         if (ident == context->names().static_) {
             if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "static"))
-                return nullptr;
-            return ident;
+                return false;
+            return true;
         }
     }
 
-    return ident;
+    return true;
 }
 
 template <typename ParseHandler>
-PropertyName*
-Parser<ParseHandler>::checkBindingIdentifier(PropertyName* ident,
+bool
+Parser<ParseHandler>::checkBindingIdentifier(HandlePropertyName ident,
                                              uint32_t offset,
                                              YieldHandling yieldHandling)
 {
     if (!checkLabelOrIdentifierReference(ident, offset, yieldHandling))
-        return nullptr;
+        return false;
 
     if (pc->sc()->needStrictChecks()) {
         if (ident == context->names().arguments) {
             if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "arguments"))
-                return nullptr;
-            return ident;
+                return false;
+            return true;
         }
 
         if (ident == context->names().eval) {
             if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "eval"))
-                return nullptr;
-            return ident;
+                return false;
+            return true;
         }
     }
 
-    return ident;
+    return true;
 }
 
 template <typename ParseHandler>
@@ -8665,14 +8665,20 @@ Parser<ParseHandler>::labelOrIdentifierReference(YieldHandling yieldHandling)
     //
     // Use PropertyName* instead of TokenKind to reflect the normalization.
 
-    return checkLabelOrIdentifierReference(tokenStream.currentName(), pos().begin, yieldHandling);
+    RootedPropertyName ident(context, tokenStream.currentName());
+    if (!checkLabelOrIdentifierReference(ident, pos().begin, yieldHandling))
+        return nullptr;
+    return ident;
 }
 
 template <typename ParseHandler>
 PropertyName*
 Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
 {
-    return checkBindingIdentifier(tokenStream.currentName(), pos().begin, yieldHandling);
+    RootedPropertyName ident(context, tokenStream.currentName());
+    if (!checkBindingIdentifier(ident, pos().begin, yieldHandling))
+        return nullptr;
+    return ident;
 }
 
 template <typename ParseHandler>

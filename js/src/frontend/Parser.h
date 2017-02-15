@@ -1329,13 +1329,13 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
                          DefaultHandling defaultHandling);
 
-    PropertyName* checkLabelOrIdentifierReference(PropertyName* ident,
-                                                  uint32_t offset,
-                                                  YieldHandling yieldHandling);
-
-    PropertyName* checkBindingIdentifier(PropertyName* ident,
+    bool checkLabelOrIdentifierReference(HandlePropertyName ident,
                                          uint32_t offset,
                                          YieldHandling yieldHandling);
+
+    bool checkBindingIdentifier(HandlePropertyName ident,
+                                uint32_t offset,
+                                YieldHandling yieldHandling);
 
     PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
 
