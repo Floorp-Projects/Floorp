@@ -80,8 +80,8 @@ PlatformDataDestructor::operator()(PlatformData* aData)
 class SamplerThread
 {
 public:
-  explicit SamplerThread(double interval)
-    : mIntervalMicro(floor(interval * 1000 + 0.5))
+  explicit SamplerThread(double aInterval)
+    : mIntervalMicro(floor(aInterval * 1000 + 0.5))
   {
     if (mIntervalMicro <= 0) {
       mIntervalMicro = 1;
@@ -120,12 +120,12 @@ public:
     pthread_join(mThread, NULL);
   }
 
-  static void StartSampler() {
+  static void StartSampler(double aInterval) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!mInstance);
 
     if (mInstance == NULL) {
-      mInstance = new SamplerThread(gInterval);
+      mInstance = new SamplerThread(aInterval);
       mInstance->Start();
     }
   }
@@ -261,13 +261,13 @@ PlatformInit()
 }
 
 static void
-PlatformStart()
+PlatformStart(double aInterval)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
-  SamplerThread::StartSampler();
+  SamplerThread::StartSampler(aInterval);
 }
 
 static void
