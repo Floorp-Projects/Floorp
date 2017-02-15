@@ -1235,13 +1235,6 @@ ToJSObject(JSContext* aCx, double aSinceTime)
   return &val.toObject();
 }
 
-static void
-ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0)
-{
-  SpliceableJSONWriter b(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
-  StreamJSON(b, aSinceTime);
-}
-
 // END saving/streaming code
 ////////////////////////////////////////////////////////////////////////
 
@@ -1723,14 +1716,9 @@ profiler_shutdown()
 
   // Save the profile on shutdown if requested.
   if (gSampler) {
-    const char *val = getenv("MOZ_PROFILER_SHUTDOWN");
-    if (val) {
-      std::ofstream stream;
-      stream.open(val);
-      if (stream.is_open()) {
-        ToStreamAsJSON(stream);
-        stream.close();
-      }
+    const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
+    if (filename) {
+      profiler_save_profile_to_file(filename);
     }
   }
 
@@ -1887,7 +1875,8 @@ profiler_save_profile_to_file(const char* aFilename)
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    ToStreamAsJSON(stream);
+    SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
+    StreamJSON(w, /* sinceTime */ 0);
     stream.close();
     LOGF("Saved to %s", aFilename);
   } else {
