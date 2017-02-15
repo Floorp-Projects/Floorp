@@ -240,8 +240,8 @@ int ClientAuthValueComparator(const void *v1, const void *v2)
     return 0;
   if (a > 0)
     return 1;
-  else // (a < 0)
-    return -1;
+  // (a < 0)
+  return -1;
 }
 
 static int match_hostname(PLHashEntry *he, int index, void* arg)
@@ -834,30 +834,27 @@ void HandleConnection(void* data)
 
             if (ssl_updated)
             {
-              if (s == 0 && expect_request_start) 
+              if (s == 0 && expect_request_start)
               {
                 if (!strstr(buffers[s].bufferhead, "\r\n\r\n"))
                 {
                   // We haven't received the complete header yet, so wait.
                   continue;
                 }
-                else
+                ci->iswebsocket = AdjustWebSocketHost(buffers[s], ci);
+                expect_request_start = !(ci->iswebsocket ||
+                                         AdjustRequestURI(buffers[s], &fullHost));
+                PRNetAddr* addr = &remote_addr;
+                if (ci->iswebsocket && websocket_server.inet.port)
+                  addr = &websocket_server;
+                if (!ConnectSocket(other_sock, addr, connect_timeout))
                 {
-                  ci->iswebsocket = AdjustWebSocketHost(buffers[s], ci);
-                  expect_request_start = !(ci->iswebsocket || 
-                                           AdjustRequestURI(buffers[s], &fullHost));
-                  PRNetAddr* addr = &remote_addr;
-                  if (ci->iswebsocket && websocket_server.inet.port)
-                    addr = &websocket_server;
-                  if (!ConnectSocket(other_sock, addr, connect_timeout))
-                  {
-                    LOG_ERRORD((" could not open connection to the real server\n"));
-                    client_error = true;
-                    break;
-                  }
-                  LOG_DEBUG(("\n connected to remote server\n"));
-                  numberOfSockets = 2;
+                  LOG_ERRORD((" could not open connection to the real server\n"));
+                  client_error = true;
+                  break;
                 }
+                LOG_DEBUG(("\n connected to remote server\n"));
+                numberOfSockets = 2;
               }
               else if (s == 1 && ci->iswebsocket)
               {

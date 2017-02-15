@@ -2824,15 +2824,12 @@ GetContentParent(Element* aBrowser)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMElement> related;
-  browser->GetRelatedBrowser(getter_AddRefs(related));
-
-  nsCOMPtr<nsIFrameLoaderOwner> otherOwner = do_QueryInterface(related);
-  if (!otherOwner) {
+  nsCOMPtr<nsIFrameLoader> otherLoader;
+  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
+  if (!otherLoader) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIFrameLoader> otherLoader = otherOwner->GetFrameLoader();
   TabParent* tabParent = TabParent::GetFrom(otherLoader);
   if (tabParent &&
       tabParent->Manager() &&

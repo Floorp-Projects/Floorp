@@ -77,6 +77,10 @@ var gTestDir = do_get_cwd();
 // Initialize profile.
 var gProfD = do_get_profile();
 
+Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
+do_register_cleanup(() =>
+  Services.prefs.clearUserPref("browser.urlbar.usepreloadedtopurls.enabled"));
+
 // Remove any old database.
 clearDB();
 

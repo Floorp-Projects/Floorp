@@ -19,7 +19,7 @@ namespace mozilla {
 /**
  * A class for holding strong references to handle-managed objects.
  *
- * This is intended for use with objects like RestyleManagerHandle,
+ * This is intended for use with objects like StyleSheetHandle,
  * where the handle type is not a pointer but which can still have
  * ->AddRef() and ->Release() called on it.
  */

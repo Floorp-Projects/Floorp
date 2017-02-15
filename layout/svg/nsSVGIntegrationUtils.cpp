@@ -27,7 +27,7 @@
 #include "mozilla/gfx/Point.h"
 #include "nsCSSRendering.h"
 #include "mozilla/Unused.h"
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -127,7 +127,7 @@ private:
     bool mightHaveNoneSVGMask =
       nsSVGEffects::GetEffectProperties(firstFrame).MightHaveNoneSVGMask();
     bool inRestyle =
-      aFrame->PresContext()->RestyleManager()->AsGecko()->IsInStyleRefresh();
+      aFrame->PresContext()->RestyleManager()->IsInStyleRefresh();
 
     NS_ASSERTION(mightHaveNoneSVGMask || inRestyle ||
                  aFrame->GetParent()->StyleContext()->GetPseudo() ==

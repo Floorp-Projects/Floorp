@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorController */
-
 "use strict";
 
 const {
@@ -69,6 +67,7 @@ module.exports = connect(
   dispatch => ({
     onPerfClick: () => dispatch(Actions.openStatistics(true)),
     onReloadClick: () =>
-      NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
+      window.NetMonitorController
+        .triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT),
   })
 )(RequestListEmptyNotice);

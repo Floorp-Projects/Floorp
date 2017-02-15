@@ -24,8 +24,8 @@
 
 namespace mozilla {
 
-class RestyleManager;
 class ElementRestyler;
+class GeckoRestyleManager;
 
 class RestyleTracker {
 public:
@@ -52,7 +52,7 @@ public:
                     "Shouldn't have both root flags");
   }
 
-  void Init(RestyleManager* aRestyleManager) {
+  void Init(GeckoRestyleManager* aRestyleManager) {
     mRestyleManager = aRestyleManager;
   }
 
@@ -203,7 +203,7 @@ private:
   // from ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS, and might also include
   // ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR.
   Element::FlagsType mRestyleBits;
-  RestyleManager* mRestyleManager; // Owns us
+  GeckoRestyleManager* mRestyleManager; // Owns us
   // A hashtable that maps elements to pointers to RestyleData structs.  The
   // values only make sense if the element's current document is our
   // document and it has our RestyleBit() flag set.  In particular,
