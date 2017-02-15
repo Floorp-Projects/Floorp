@@ -17,15 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     // designMode document is in a frame inside the window, as this means
     // the editable region is not in the root docshell (a less complicated case).  
 
-    var pageShowChecker = '<scr' + 'ipt>' +
-      'window.addEventListener("pageshow", function(event) {' +
-        'window.opener.postMessage({persisted:event.persisted}, "*");' +
-      '});</scr' + 'ipt>';
-  
     var gTests = [
       {
         // <html><body><p>designModeDocument</p></body></html>
-        url: "data:text/html;charset=utf-8,<html><head>" + pageShowChecker + "</head><body><p>designModeDocument</p></body></html>",
+        url: "file_bug386782_designmode.html",
         name: 'designModeNavigate',
         onload(doc) { doc.designMode = "on"; },
         expectedBodyBeforeEdit: '<p>designModeDocument</p>',
@@ -34,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       },
       {
         // <html><body contentEditable="true"><p>contentEditable</p></body></html>
-        url: "data:text/html;charset=utf-8,<html><head>" + pageShowChecker + "</head><body contentEditable=\"true\"><p>contentEditable</p></body></html>",
+        url: "file_bug386782_contenteditable.html",
         name: 'contentEditableNavigate',
         expectedBodyBeforeEdit: '<p>contentEditable</p>',
         expectedBodyAfterEdit:  'EDITED <br><p>contentEditable</p>',
@@ -74,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       sendString('EDITED ', gTest.window);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
-      gTest.window.location = 'data:text/html;charset=utf-8,SomeOtherDocument';
+      gTest.window.location = 'about:blank';
       SimpleTest.waitForFocus(goBack, gTest.window);
     }
     
@@ -96,19 +91,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
 
       // Check that the contents are correct.
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Edited contents still correct?");
-      
+
       // Check that we can undo/redo and the contents are correct.
       gTest.window.document.execCommand("undo", false, null);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Can we undo?");
 
       gTest.window.document.execCommand("redo", false, null);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Can we redo?");
-            
+
       // Check that we can still edit the page.
       gTest.window.document.body.focus();
       sendString('TWICE ', gTest.window);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
-      
+
       gTest.window.close();
       goNext();
       
