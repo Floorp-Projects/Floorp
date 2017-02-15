@@ -22,7 +22,6 @@
 #include "GMPService.h"
 #include "MainThreadUtils.h"
 #include "MediaData.h"
-#include "DecryptJob.h"
 
 namespace mozilla {
 
@@ -37,6 +36,7 @@ GMPCDMProxy::GMPCDMProxy(dom::MediaKeys* aKeys,
              aPersistentStateRequired)
   , mCrashHelper(aCrashHelper)
   , mCDM(nullptr)
+  , mDecryptionJobCount(0)
   , mShutdownCalled(false)
   , mDecryptorId(0)
   , mCreatePromiseId(0)
@@ -687,7 +687,7 @@ GMPCDMProxy::Capabilites() {
   return mCapabilites;
 }
 
-RefPtr<DecryptPromise>
+RefPtr<GMPCDMProxy::DecryptPromise>
 GMPCDMProxy::Decrypt(MediaRawData* aSample)
 {
   RefPtr<DecryptJob> job(new DecryptJob(aSample));
@@ -709,6 +709,7 @@ GMPCDMProxy::gmp_Decrypt(RefPtr<DecryptJob> aJob)
     return;
   }
 
+  aJob->mId = ++mDecryptionJobCount;
   nsTArray<uint8_t> data;
   data.AppendElements(aJob->mSample->Data(), aJob->mSample->Size());
   mCDM->Decrypt(aJob->mId, aJob->mSample->mCrypto, data, aJob->mSample->mDuration);
@@ -739,6 +740,37 @@ GMPCDMProxy::gmp_Decrypted(uint32_t aId,
     NS_WARNING("GMPDecryptorChild returned incorrect job ID");
   }
 #endif
+}
+
+void
+GMPCDMProxy::DecryptJob::PostResult(DecryptStatus aResult)
+{
+  nsTArray<uint8_t> empty;
+  PostResult(aResult, empty);
+}
+
+void
+GMPCDMProxy::DecryptJob::PostResult(DecryptStatus aResult,
+                                    const nsTArray<uint8_t>& aDecryptedData)
+{
+  if (aDecryptedData.Length() != mSample->Size()) {
+    NS_WARNING("CDM returned incorrect number of decrypted bytes");
+  }
+  if (aResult == Ok) {
+    UniquePtr<MediaRawDataWriter> writer(mSample->CreateWriter());
+    PodCopy(writer->Data(),
+            aDecryptedData.Elements(),
+            std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
+  } else if (aResult == NoKeyErr) {
+    EME_LOG("CDM returned NoKeyErr");
+    // We still have the encrypted sample, so we can re-enqueue it to be
+    // decrypted again once the key is usable again.
+  } else {
+    nsAutoCString str("CDM returned decode failure DecryptStatus=");
+    str.AppendInt(aResult);
+    NS_WARNING(str.get());
+  }
+  mPromise.Resolve(DecryptResult(aResult, mSample), __func__);
 }
 
 void

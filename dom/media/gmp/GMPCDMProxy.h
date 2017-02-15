@@ -12,15 +12,15 @@
 #include "GMPDecryptorProxy.h"
 
 namespace mozilla {
-
 class MediaRawData;
-class DecryptJob;
 
 // Implementation of CDMProxy which is based on GMP architecture.
 class GMPCDMProxy : public CDMProxy {
 public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPCDMProxy, override)
+
+  typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
 
   GMPCDMProxy(dom::MediaKeys* aKeys,
               const nsAString& aKeySystem,
@@ -175,6 +175,30 @@ private:
   // GMP thread only.
   void gmp_RemoveSession(UniquePtr<SessionOpData>&& aData);
 
+  class DecryptJob {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecryptJob)
+
+    explicit DecryptJob(MediaRawData* aSample)
+      : mId(0)
+      , mSample(aSample)
+    {
+    }
+
+    void PostResult(DecryptStatus aResult,
+                    const nsTArray<uint8_t>& aDecryptedData);
+    void PostResult(DecryptStatus aResult);
+
+    RefPtr<DecryptPromise> Ensure() {
+      return mPromise.Ensure(__func__);
+    }
+
+    uint32_t mId;
+    RefPtr<MediaRawData> mSample;
+  private:
+    ~DecryptJob() {}
+    MozPromiseHolder<DecryptPromise> mPromise;
+  };
   // GMP thread only.
   void gmp_Decrypt(RefPtr<DecryptJob> aJob);
 
@@ -217,6 +241,13 @@ private:
   // Decryption jobs sent to CDM, awaiting result.
   // GMP thread only.
   nsTArray<RefPtr<DecryptJob>> mDecryptionJobs;
+
+  // Number of buffers we've decrypted. Used to uniquely identify
+  // decryption jobs sent to CDM. Note we can't just use the length of
+  // mDecryptionJobs as that shrinks as jobs are completed and removed
+  // from it.
+  // GMP thread only.
+  uint32_t mDecryptionJobCount;
 
   // True if GMPCDMProxy::gmp_Shutdown was called.
   // GMP thread only.
