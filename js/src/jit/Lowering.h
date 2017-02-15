@@ -187,6 +187,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLambdaArrow(MLambdaArrow* ins);
     void visitSetFunName(MSetFunName* ins);
     void visitNewLexicalEnvironmentObject(MNewLexicalEnvironmentObject* ins);
+    void visitCopyLexicalEnvironmentObject(MCopyLexicalEnvironmentObject* ins);
     void visitKeepAliveObject(MKeepAliveObject* ins);
     void visitSlots(MSlots* ins);
     void visitElements(MElements* ins);
