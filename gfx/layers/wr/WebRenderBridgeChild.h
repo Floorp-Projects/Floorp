@@ -53,11 +53,6 @@ public:
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
 
-  void MarkSyncTransaction()
-  {
-    mSyncTransaction = true;
-  }
-
 private:
   friend class CompositorBridgeChild;
 
@@ -106,7 +101,6 @@ private:
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
   bool mIsInTransaction;
-  bool mSyncTransaction;
 
   bool mIPCOpen;
   bool mDestroyed;

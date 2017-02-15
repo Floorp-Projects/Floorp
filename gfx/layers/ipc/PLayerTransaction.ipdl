@@ -52,13 +52,9 @@ sync protocol PLayerTransaction {
 parent:
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
-  sync Update(TransactionInfo txn);
+  async Update(TransactionInfo txn);
 
   async PaintTime(uint64_t id, TimeDuration paintTime);
-
-  // We don't need to send a sync transaction if
-  // no transaction operate require a swap.
-  async UpdateNoSwap(TransactionInfo txn);
 
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
 
