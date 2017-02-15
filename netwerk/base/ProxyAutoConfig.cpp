@@ -405,12 +405,14 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
     return false;
 
   RefPtr<PACResolver> helper = new PACResolver();
+  OriginAttributes attrs;
 
-  if (NS_FAILED(dns->AsyncResolve(aHostName,
-                                  nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
-                                  helper,
-                                  NS_GetCurrentThread(),
-                                  getter_AddRefs(helper->mRequest))))
+  if (NS_FAILED(dns->AsyncResolveNative(aHostName,
+                                        nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
+                                        helper,
+                                        NS_GetCurrentThread(),
+                                        attrs,
+                                        getter_AddRefs(helper->mRequest))))
     return false;
 
   if (aTimeout && helper->mRequest) {

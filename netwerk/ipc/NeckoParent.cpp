@@ -687,6 +687,7 @@ NeckoParent::RecvSpeculativeConnect(const URIParams& aURI,
 
 mozilla::ipc::IPCResult
 NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
+                                 const OriginAttributes& aOriginAttributes,
                                  const uint16_t& flags)
 {
   nsHTMLDNSPrefetch::Prefetch(hostname, flags);
@@ -695,8 +696,9 @@ NeckoParent::RecvHTMLDNSPrefetch(const nsString& hostname,
 
 mozilla::ipc::IPCResult
 NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
-                                 const uint16_t& flags,
-                                 const nsresult& reason)
+                                       const OriginAttributes& aOriginAttributes,
+                                       const uint16_t& flags,
+                                       const nsresult& reason)
 {
   nsHTMLDNSPrefetch::CancelPrefetch(hostname, flags, reason);
   return IPC_OK();

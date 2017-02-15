@@ -47,6 +47,8 @@ var listener = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   var threadManager = Cc["@mozilla.org/thread-manager;1"]
                         .getService(Ci.nsIThreadManager);
@@ -55,22 +57,27 @@ function run_test() {
   var flags = Ci.nsIDNSService.RESOLVE_BYPASS_CACHE;
 
   // This one will be canceled.
-  requestWithInterfaceCanceled = dns.asyncResolveExtended(hostname, flags,
+  requestWithInterfaceCanceled = dns.asyncResolveExtended(hostname,
+                                                          flags,
                                                           netInterface1,
                                                           listener,
-                                                          mainThread);
+                                                          mainThread,
+                                                          defaultOriginAttributes);
   requestWithInterfaceCanceled.cancel(Cr.NS_ERROR_ABORT);
 
   // This one will not be canceled. This is the request without a network
   // interface.
-  requestWithoutInterfaceNotCanceled = dns.asyncResolve(hostname, flags,
-                                                        listener, mainThread);
+  requestWithoutInterfaceNotCanceled = dns.asyncResolve(hostname, flags, listener,
+                                                        mainThread,
+                                                        defaultOriginAttributes);
 
   // This one will not be canceled.
-  requestWithInterfaceNotCanceled = dns.asyncResolveExtended(hostname, flags,
+  requestWithInterfaceNotCanceled = dns.asyncResolveExtended(hostname,
+                                                             flags,
                                                              netInterface2,
                                                              listener,
-                                                             mainThread);
+                                                             mainThread,
+                                                             defaultOriginAttributes);
   // We wait for notifications for the requests.
   // For each request onLookupComplete will be called.
   do_test_pending();
