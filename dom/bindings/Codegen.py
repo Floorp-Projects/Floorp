@@ -4391,6 +4391,9 @@ class JSToNativeConversionInfo():
                        for whether we have a JS::Value.  Only used when
                        defaultValue is not None or when True is passed for
                        checkForValue to instantiateJSToNativeConversion.
+                       This expression may not be already-parenthesized, so if
+                       you use it with && or || make sure to put parens
+                       around it.
           ${passedToJSImpl} replaced by an expression that evaluates to a boolean
                             for whether this value is being passed to a JS-
                             implemented interface.
@@ -5245,7 +5248,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 if isinstance(defaultValue, IDLNullValue):
                     extraConditionForNull = "!(${haveValue}) || "
                 else:
-                    extraConditionForNull = "${haveValue} && "
+                    extraConditionForNull = "(${haveValue}) && "
             else:
                 extraConditionForNull = ""
             templateBody = handleNull(templateBody, declLoc,
@@ -5769,7 +5772,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 haveCallable = "${val}.isObject() && " + haveCallable
             if defaultValue is not None:
                 assert(isinstance(defaultValue, IDLNullValue))
-                haveCallable = "${haveValue} && " + haveCallable
+                haveCallable = "(${haveValue}) && " + haveCallable
             template = (
                 ("if (%s) {\n" % haveCallable) +
                 conversion +
@@ -5781,7 +5784,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 haveObject = "${val}.isObject()"
                 if defaultValue is not None:
                     assert(isinstance(defaultValue, IDLNullValue))
-                    haveObject = "${haveValue} && " + haveObject
+                    haveObject = "(${haveValue}) && " + haveObject
                 template = CGIfElseWrapper(haveObject,
                                            CGGeneric(conversion),
                                            CGGeneric("${declName} = nullptr;\n")).define()
@@ -5849,8 +5852,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         return handleJSObjectType(type, isMember, failureCode, exceptionCode, sourceDescription)
 
     if type.isDictionary():
-        # There are no nullable dictionaries
-        assert not type.nullable() or isCallbackReturnValue
+        # There are no nullable dictionary arguments or dictionary members
+        assert(not type.nullable() or isCallbackReturnValue or
+               (isMember and isMember != "Dictionary"))
         # All optional dictionaries always have default values, so we
         # should be able to assume not isOptional here.
         assert not isOptional
