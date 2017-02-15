@@ -1108,8 +1108,8 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     return false;
   }
 
-  Telemetry::ID pre;
-  Telemetry::ID post;
+  Telemetry::HistogramID pre;
+  Telemetry::HistogramID post;
   switch (range.max) {
     case SSL_LIBRARY_VERSION_TLS_1_3:
       pre = Telemetry::SSL_TLS13_INTOLERANCE_REASON_PRE;

@@ -73,7 +73,7 @@ VP9Benchmark::IsVP9DecodeFast()
           Preferences::SetUint(sBenchmarkFpsPref, aDecodeFps);
           Preferences::SetUint(sBenchmarkFpsVersionCheck, sBenchmarkVersionID);
         }
-        Telemetry::Accumulate(Telemetry::ID::VIDEO_VP9_BENCHMARK_FPS, aDecodeFps);
+        Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_VP9_BENCHMARK_FPS, aDecodeFps);
       },
       []() { });
   }

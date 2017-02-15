@@ -39,7 +39,7 @@ using namespace mozilla::psm;
 
 extern LazyLogModule gPIPNSSLog;
 
-static void AccumulateCipherSuite(Telemetry::ID probe,
+static void AccumulateCipherSuite(Telemetry::HistogramID probe,
                                   const SSLChannelInfo& channelInfo);
 
 namespace {
@@ -981,7 +981,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 }
 
 static void
-AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
+AccumulateNonECCKeySize(Telemetry::HistogramID probe, uint32_t bits)
 {
   unsigned int value = bits <   512 ?  1 : bits ==   512 ?  2
                      : bits <   768 ?  3 : bits ==   768 ?  4
@@ -1004,7 +1004,7 @@ AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
 // named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
 // that for now. See also NSS bug 323674.
 static void
-AccumulateECCCurve(Telemetry::ID probe, uint32_t bits)
+AccumulateECCCurve(Telemetry::HistogramID probe, uint32_t bits)
 {
   unsigned int value = bits == 256 ? 23 // P-256
                      : bits == 384 ? 24 // P-384
@@ -1014,7 +1014,7 @@ AccumulateECCCurve(Telemetry::ID probe, uint32_t bits)
 }
 
 static void
-AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
+AccumulateCipherSuite(Telemetry::HistogramID probe, const SSLChannelInfo& channelInfo)
 {
   uint32_t value;
   switch (channelInfo.cipherSuite) {

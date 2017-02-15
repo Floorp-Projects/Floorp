@@ -50,7 +50,7 @@ def main(output, *filenames):
     # Note that histogram_tools.py guarantees that all of the USE_COUNTER2_*
     # histograms are defined in a contiguous block.  We therefore assume
     # that there's at most one group for which use_counter_group is true.
-    print("enum ID : uint32_t {", file=output)
+    print("enum HistogramID : uint32_t {", file=output)
     seen_use_counters = False
     for (use_counter_group, histograms) in groups:
         if use_counter_group:

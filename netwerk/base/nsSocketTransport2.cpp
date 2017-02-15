@@ -3222,11 +3222,11 @@ nsSocketTransport::CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled)
 
 void
 nsSocketTransport::SendPRBlockingTelemetry(PRIntervalTime aStart,
-                                           Telemetry::ID aIDNormal,
-                                           Telemetry::ID aIDShutdown,
-                                           Telemetry::ID aIDConnectivityChange,
-                                           Telemetry::ID aIDLinkChange,
-                                           Telemetry::ID aIDOffline)
+                                           Telemetry::HistogramID aIDNormal,
+                                           Telemetry::HistogramID aIDShutdown,
+                                           Telemetry::HistogramID aIDConnectivityChange,
+                                           Telemetry::HistogramID aIDLinkChange,
+                                           Telemetry::HistogramID aIDOffline)
 {
     PRIntervalTime now = PR_IntervalNow();
     if (gIOService->IsNetTearingDown()) {
