@@ -416,13 +416,6 @@ skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.j
 skip script test262/built-ins/DataView/prototype/byteOffset/detached-buffer.js
 skip script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317382
-skip script test262/built-ins/DataView/byteoffset-is-negative-throws.js
-skip script test262/built-ins/DataView/excessive-byteoffset-throws.js
-skip script test262/built-ins/DataView/excessive-bytelength-throws.js
-skip script test262/built-ins/DataView/negative-byteoffset-throws.js
-skip script test262/built-ins/DataView/negative-bytelength-throws.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317391
 skip script test262/language/statements/class/subclass/class-definition-null-proto-missing-return-override.js
 skip script test262/language/statements/class/subclass/class-definition-null-proto-this.js
