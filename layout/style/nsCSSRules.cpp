@@ -5,9 +5,10 @@
 
 /* rules in a CSS stylesheet other than style rules (e.g., @import rules) */
 
+#include "nsCSSRules.h"
+
 #include "mozilla/Attributes.h"
 
-#include "nsCSSRules.h"
 #include "nsCSSValue.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/MemoryReporting.h"

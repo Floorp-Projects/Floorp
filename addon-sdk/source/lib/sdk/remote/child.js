@@ -132,23 +132,25 @@ const Frame = Class({
   extends: EventTarget,
   setup: function(contentFrame) {
     // This ID should be unique for this loader across all processes
-    ns(this).id = runtime.processID + ":" + FRAME_ID++;
+    let priv = ns(this);
 
-    ns(this).contentFrame = contentFrame;
-    ns(this).messageManager = contentFrame;
-    ns(this).domListeners = [];
+    priv.id = runtime.processID + ":" + FRAME_ID++;
+
+    priv.contentFrame = contentFrame;
+    priv.messageManager = contentFrame;
+    priv.domListeners = [];
 
     tabMap.set(contentFrame.docShell, this);
 
-    ns(this).messageReceived = messageReceived.bind(this);
-    ns(this).messageManager.addMessageListener('sdk/remote/frame/message', ns(this).messageReceived);
+    priv.messageReceived = messageReceived.bind(this);
+    priv.messageManager.addMessageListener('sdk/remote/frame/message', priv.messageReceived);
 
     this.port = new EventTarget();
     definePort(this, 'sdk/remote/frame/message');
 
-    ns(this).messageManager.sendAsyncMessage('sdk/remote/frame/attach', {
+    priv.messageManager.sendAsyncMessage('sdk/remote/frame/attach', {
       loaderID,
-      frameID: ns(this).id,
+      frameID: priv.id,
       processID: runtime.processID
     });
 
@@ -156,14 +158,16 @@ const Frame = Class({
   },
 
   dispose: function() {
+    let priv = ns(this);
+
     emit(this, 'detach', this);
 
-    for (let listener of ns(this).domListeners)
-      ns(this).contentFrame.removeEventListener(...listener.args);
+    for (let listener of priv.domListeners)
+      priv.contentFrame.removeEventListener(...listener.args);
 
-    ns(this).messageManager.removeMessageListener('sdk/remote/frame/message', ns(this).messageReceived);
-    tabMap.delete(ns(this).contentFrame.docShell);
-    ns(this).contentFrame = null;
+    priv.messageManager.removeMessageListener('sdk/remote/frame/message', priv.messageReceived);
+    tabMap.delete(priv.contentFrame.docShell);
+    priv.contentFrame = null;
   },
 
   get content() {
@@ -191,23 +195,27 @@ const Frame = Class({
   },
 
   addEventListener: function(...args) {
+    let priv = ns(this);
+
     let listener = listenerFor(...args);
-    if (arrayContainsListener(ns(this).domListeners, listener))
+    if (arrayContainsListener(priv.domListeners, listener))
       return;
 
     listener.registeredCallback = makeFrameEventListener(this, listener.callback);
 
-    ns(this).domListeners.push(listener);
-    ns(this).contentFrame.addEventListener(...listener.args);
+    priv.domListeners.push(listener);
+    priv.contentFrame.addEventListener(...listener.args);
   },
 
   removeEventListener: function(...args) {
-    let listener = getListenerFromArray(ns(this).domListeners, listenerFor(...args));
+    let priv = ns(this);
+
+    let listener = getListenerFromArray(priv.domListeners, listenerFor(...args));
     if (!listener)
       return;
 
-    removeListenerFromArray(ns(this).domListeners, listener);
-    ns(this).contentFrame.removeEventListener(...listener.args);
+    removeListenerFromArray(priv.domListeners, listener);
+    priv.contentFrame.removeEventListener(...listener.args);
   }
 });
 
@@ -233,12 +241,10 @@ const FrameList = Class({
   },
 
   getFrameForWindow: function(window) {
-    for (let frame of this) {
-      if (frame.content == window)
-        return frame;
-    }
+    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDocShell);
 
-    return null;
+    return tabMap.get(docShell) || null;
   },
 
   addEventListener: function(...args) {

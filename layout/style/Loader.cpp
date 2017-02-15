@@ -16,11 +16,12 @@
 
 /* loading of CSS style sheets using the network APIs */
 
+#include "mozilla/css/Loader.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "mozilla/css/Loader.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"

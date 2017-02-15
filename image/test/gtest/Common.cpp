@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 
+#include "gfxPrefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIDirectoryService.h"
 #include "nsIFile.h"

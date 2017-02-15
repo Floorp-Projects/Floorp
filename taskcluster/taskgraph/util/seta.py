@@ -6,16 +6,14 @@ from redo import retry
 from requests import exceptions
 
 logger = logging.getLogger(__name__)
-headers = {
-    'User-Agent': 'TaskCluster'
-}
 
 # It's a list of project name which SETA is useful on
 SETA_PROJECTS = ['mozilla-inbound', 'autoland']
 PROJECT_SCHEDULE_ALL_EVERY_PUSHES = {'mozilla-inbound': 5, 'autoland': 5}
 PROJECT_SCHEDULE_ALL_EVERY_MINUTES = {'mozilla-inbound': 60, 'autoland': 60}
 
-SETA_ENDPOINT = "https://seta.herokuapp.com/data/setadetails/?branch=%s"
+SETA_ENDPOINT = "https://treeherder.mozilla.org/api/project/%s/seta/" \
+                "job-priorities/?build_system_type=taskcluster"
 PUSH_ENDPOINT = "https://hg.mozilla.org/integration/%s/json-pushes/?startID=%d&endID=%d"
 
 
@@ -56,7 +54,7 @@ class SETA(object):
             logger.debug("Retrieving low-value jobs list from SETA")
             response = retry(requests.get, attempts=2, sleeptime=10,
                              args=(url, ),
-                             kwargs={'timeout': 5, 'headers': headers})
+                             kwargs={'timeout': 5, 'headers': ''})
             task_list = json.loads(response.content).get('jobtypes', '')
 
             if type(task_list) == dict and len(task_list) > 0:
@@ -122,7 +120,7 @@ class SETA(object):
         try:
             response = retry(requests.get, attempts=2, sleeptime=10,
                              args=(url, ),
-                             kwargs={'timeout': 5, 'headers': headers})
+                             kwargs={'timeout': 5, 'headers': {'User-Agent': 'TaskCluster'}})
             prev_push_date = json.loads(response.content).get(str(prev_push_id), {}).get('date', 0)
 
             # cache it for next time

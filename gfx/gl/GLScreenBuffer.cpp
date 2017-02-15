@@ -7,6 +7,7 @@
 
 #include <cstring>
 #include "CompositorTypes.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
