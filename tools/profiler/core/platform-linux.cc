@@ -82,13 +82,13 @@ using namespace mozilla;
 
 // All accesses to these two variables are on the main thread, so no locking is
 // needed.
-static bool gIsSigprofSignalHandlerInstalled;
-static struct sigaction gOldSigprofSignalHandler;
+static bool gIsSigprofHandlerInstalled;
+static struct sigaction gOldSigprofHandler;
 
 // All accesses to these two variables are on the main thread, so no locking is
 // needed.
-static bool gHasSignalSenderLaunched;
-static pthread_t gSignalSenderThread;
+static bool gHasSigprofSenderLaunched;
+static pthread_t gSigprofSenderThread;
 
 #if defined(USE_LUL_STACKWALK)
 // A singleton instance of the library.  It is initialised at first
@@ -194,9 +194,9 @@ static void SetSampleContext(TickSample* sample, void* context)
 #define V8_HOST_ARCH_X64 1
 #endif
 
-namespace {
-
-void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
+static void
+SigprofHandler(int signal, siginfo_t* info, void* context)
+{
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
@@ -223,20 +223,6 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   gCurrentThreadInfo = NULL;
   sem_post(&gSignalHandlingDone);
   errno = savedErrno;
-}
-
-} // namespace
-
-static void
-ProfilerSignalThread(ThreadInfo* aInfo, bool aIsFirstProfiledThread)
-{
-  if (aIsFirstProfiledThread && gProfileMemory) {
-    aInfo->mRssMemory = nsMemoryReporterManager::ResidentFast();
-    aInfo->mUssMemory = nsMemoryReporterManager::ResidentUnique();
-  } else {
-    aInfo->mRssMemory = 0;
-    aInfo->mUssMemory = 0;
-  }
 }
 
 int tgkill(pid_t tgid, pid_t tid, int signalno) {
@@ -268,7 +254,9 @@ PlatformDataDestructor::operator()(PlatformData* aData)
   delete aData;
 }
 
-static void* SignalSender(void* arg) {
+static void*
+SigprofSender(void* aArg)
+{
   // This function runs on its own thread.
 
   // Taken from platform_thread_posix.cc
@@ -313,7 +301,13 @@ static void* SignalSender(void* arg) {
         // Profile from the signal sender for information which is not signal
         // safe, and will have low variation between the emission of the signal
         // and the signal handler catch.
-        ProfilerSignalThread(gCurrentThreadInfo, isFirstProfiledThread);
+        if (isFirstProfiledThread && gProfileMemory) {
+          info->mRssMemory = nsMemoryReporterManager::ResidentFast();
+          info->mUssMemory = nsMemoryReporterManager::ResidentUnique();
+        } else {
+          info->mRssMemory = 0;
+          info->mUssMemory = 0;
+        }
 
         // Profile from the signal handler for information which is signal safe
         // and needs to be precise too, such as the stack of the interrupted
@@ -384,15 +378,15 @@ PlatformStart()
   // Request profiling signals.
   LOG("Request signal");
   struct sigaction sa;
-  sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(ProfilerSignalHandler);
+  sa.sa_sigaction = MOZ_SIGNAL_TRAMPOLINE(SigprofHandler);
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGPROF, &sa, &gOldSigprofSignalHandler) != 0) {
+  if (sigaction(SIGPROF, &sa, &gOldSigprofHandler) != 0) {
     LOG("Error installing signal");
     return;
   }
   LOG("Signal installed");
-  gIsSigprofSignalHandlerInstalled = true;
+  gIsSigprofHandlerInstalled = true;
 
 #if defined(USE_LUL_STACKWALK)
   // Switch into unwind mode.  After this point, we can't add or
@@ -412,8 +406,8 @@ PlatformStart()
   // much better accuracy.
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
-  if (pthread_create(&gSignalSenderThread, NULL, SignalSender, NULL) == 0) {
-    gHasSignalSenderLaunched = true;
+  if (pthread_create(&gSigprofSenderThread, NULL, SigprofSender, NULL) == 0) {
+    gHasSigprofSenderLaunched = true;
   }
   LOG("Profiler thread started");
 }
@@ -428,20 +422,20 @@ PlatformStop()
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).
-  if (gHasSignalSenderLaunched) {
-    pthread_join(gSignalSenderThread, NULL);
-    gHasSignalSenderLaunched = false;
+  if (gHasSigprofSenderLaunched) {
+    pthread_join(gSigprofSenderThread, NULL);
+    gHasSigprofSenderLaunched = false;
   }
 
   // Restore old signal handler
-  if (gIsSigprofSignalHandlerInstalled) {
-    sigaction(SIGPROF, &gOldSigprofSignalHandler, 0);
-    gIsSigprofSignalHandlerInstalled = false;
+  if (gIsSigprofHandlerInstalled) {
+    sigaction(SIGPROF, &gOldSigprofHandler, 0);
+    gIsSigprofHandlerInstalled = false;
   }
 }
 
 #ifdef ANDROID
-static struct sigaction old_sigstart_signal_handler;
+static struct sigaction gOldSigstartHandler;
 const int SIGSTART = SIGUSR2;
 
 static void freeArray(const char** array, int size) {
@@ -548,7 +542,7 @@ void OS::Startup()
   sa.sa_sigaction = StartSignalHandler;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGSTART, &sa, &old_sigstart_signal_handler) != 0) {
+  if (sigaction(SIGSTART, &sa, &gOldSigstartHandler) != 0) {
     LOG("Error installing signal");
   }
 }
@@ -561,8 +555,6 @@ void OS::Startup() {
 }
 
 #endif
-
-
 
 void TickSample::PopulateContext(void* aContext)
 {
