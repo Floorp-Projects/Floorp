@@ -1007,6 +1007,10 @@
   ERROR(NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION,           FAILURE(2)),
   /* Used to indicate that an exception is already pending on the JSContext. */
   ERROR(NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT, FAILURE(3)),
+  /* Used to indicate that we want to throw a TypeError. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,              FAILURE(4)),
+  /* Used to indicate that we want to throw a RangeError. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,             FAILURE(5)),
 #undef MODULE
 
   /* ======================================================================= */
