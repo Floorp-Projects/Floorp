@@ -158,7 +158,7 @@ public:
                                       void* aClosure,
                                       uint32_t aDelay,
                                       uint32_t aType,
-                                      Callback::Name aName);
+                                      const Callback::Name& aName);
 
   // These members are set by the initiating thread, when the timer's type is
   // changed and during the period where it fires on that thread.

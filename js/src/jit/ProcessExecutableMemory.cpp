@@ -33,6 +33,10 @@
 # include <unistd.h>
 #endif
 
+#ifdef MOZ_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 using namespace js;
 using namespace js::jit;
 
@@ -305,6 +309,22 @@ DeallocateProcessExecutableMemory(void* addr, size_t bytes)
 static unsigned
 ProtectionSettingToFlags(ProtectionSetting protection)
 {
+#ifdef MOZ_VALGRIND
+    // If we're configured for Valgrind and running on it, use a slacker
+    // scheme that doesn't change execute permissions, since doing so causes
+    // Valgrind a lot of extra overhead re-JITting code that loses and later
+    // regains execute permission.  See bug 1338179.
+    if (RUNNING_ON_VALGRIND) {
+      switch (protection) {
+        case ProtectionSetting::Protected:  return PROT_NONE;
+        case ProtectionSetting::Writable:   return PROT_READ | PROT_WRITE | PROT_EXEC;
+        case ProtectionSetting::Executable: return PROT_READ | PROT_EXEC;
+      }
+      MOZ_CRASH();
+    }
+    // If we get here, we're configured for Valgrind but not running on
+    // it, so use the standard scheme.
+#endif
     switch (protection) {
       case ProtectionSetting::Protected:  return PROT_NONE;
       case ProtectionSetting::Writable:   return PROT_READ | PROT_WRITE;

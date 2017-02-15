@@ -58,7 +58,7 @@ void MessagePumpDefault::Run(Delegate* delegate) {
       PROFILER_LABEL("MessagePump", "Wait",
         js::ProfileEntry::Category::OTHER);
       {
-        mozilla::GeckoProfilerSleepRAII profiler_sleep;
+        mozilla::GeckoProfilerThreadSleepRAII sleep;
         event_.Wait();
       }
     } else {
@@ -68,7 +68,7 @@ void MessagePumpDefault::Run(Delegate* delegate) {
         PROFILER_LABEL("MessagePump", "Wait",
           js::ProfileEntry::Category::OTHER);
         {
-          mozilla::GeckoProfilerSleepRAII profiler_sleep;
+          mozilla::GeckoProfilerThreadSleepRAII sleep;
           event_.TimedWait(delay);
         }
       } else {

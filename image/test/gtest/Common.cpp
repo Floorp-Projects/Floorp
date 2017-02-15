@@ -377,10 +377,10 @@ CheckGeneratedPalettedImage(Decoder* aDecoder, const IntRect& aRect)
 void
 CheckWritePixels(Decoder* aDecoder,
                  SurfaceFilter* aFilter,
-                 Maybe<IntRect> aOutputRect /* = Nothing() */,
-                 Maybe<IntRect> aInputRect /* = Nothing() */,
-                 Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-                 Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
+                 const Maybe<IntRect>& aOutputRect /* = Nothing() */,
+                 const Maybe<IntRect>& aInputRect /* = Nothing() */,
+                 const Maybe<IntRect>& aInputWriteRect /* = Nothing() */,
+                 const Maybe<IntRect>& aOutputWriteRect /* = Nothing() */,
                  uint8_t aFuzz /* = 0 */)
 {
   IntRect outputRect = aOutputRect.valueOr(IntRect(0, 0, 100, 100));
@@ -424,10 +424,10 @@ CheckWritePixels(Decoder* aDecoder,
 void
 CheckPalettedWritePixels(Decoder* aDecoder,
                          SurfaceFilter* aFilter,
-                         Maybe<IntRect> aOutputRect /* = Nothing() */,
-                         Maybe<IntRect> aInputRect /* = Nothing() */,
-                         Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-                         Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
+                         const Maybe<IntRect>& aOutputRect /* = Nothing() */,
+                         const Maybe<IntRect>& aInputRect /* = Nothing() */,
+                         const Maybe<IntRect>& aInputWriteRect /* = Nothing() */,
+                         const Maybe<IntRect>& aOutputWriteRect /* = Nothing() */,
                          uint8_t aFuzz /* = 0 */)
 {
   IntRect outputRect = aOutputRect.valueOr(IntRect(0, 0, 100, 100));

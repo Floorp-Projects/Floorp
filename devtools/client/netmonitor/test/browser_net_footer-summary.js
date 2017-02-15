@@ -61,10 +61,11 @@ add_task(function* () {
     info(`Computed total bytes: ${requestsSummary.bytes}`);
     info(`Computed total millis: ${requestsSummary.millis}`);
 
-    is(value, PluralForm.get(requestsSummary.count, L10N.getStr("networkMenu.summary"))
+    is(value, PluralForm.get(requestsSummary.count, L10N.getStr("networkMenu.summary2"))
       .replace("#1", requestsSummary.count)
-      .replace("#2", L10N.numberWithDecimals(requestsSummary.bytes / 1024, 2))
-      .replace("#3", L10N.numberWithDecimals(requestsSummary.millis / 1000, 2))
+      .replace("#2", L10N.numberWithDecimals(requestsSummary.contentSize / 1024, 2))
+      .replace("#3", L10N.numberWithDecimals(requestsSummary.transferredSize / 1024, 2))
+      .replace("#4", L10N.numberWithDecimals(requestsSummary.millis / 1000, 2))
     , "The current summary text is correct.");
   }
 });

@@ -458,7 +458,7 @@ using CompilationSelector = mozilla::Variant<JSScript*,
  * Cancel scheduled or in progress Ion compilations.
  */
 void
-CancelOffThreadIonCompile(CompilationSelector selector, bool discardLazyLinkList);
+CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardLazyLinkList);
 
 inline void
 CancelOffThreadIonCompile(JSScript* script)

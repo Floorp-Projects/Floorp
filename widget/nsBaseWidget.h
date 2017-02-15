@@ -443,9 +443,6 @@ protected:
     return true;
   }
   virtual uint32_t GetGLFrameBufferFormat();
-  virtual mozilla::layers::Composer2D* GetComposer2D() {
-    return nullptr;
-  }
 
 protected:
   void            ResolveIconName(const nsAString &aIconName,

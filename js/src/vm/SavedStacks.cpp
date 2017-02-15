@@ -143,7 +143,8 @@ LiveSavedFrameCache::find(JSContext* cx, FrameIter& frameIter, MutableHandleSave
 struct SavedFrame::Lookup {
     Lookup(JSAtom* source, uint32_t line, uint32_t column,
            JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
-           JSPrincipals* principals, Maybe<LiveSavedFrameCache::FramePtr> framePtr = Nothing(),
+           JSPrincipals* principals,
+           const Maybe<LiveSavedFrameCache::FramePtr>& framePtr = Nothing(),
            jsbytecode* pc = nullptr, Activation* activation = nullptr)
       : source(source),
         line(line),

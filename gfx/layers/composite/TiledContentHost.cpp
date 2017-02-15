@@ -100,9 +100,6 @@ TiledContentHost::~TiledContentHost()
 already_AddRefed<TexturedEffect>
 TiledContentHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
 {
-  // If we can use hwc for this TiledContentHost, it implies that we have exactly
-  // one high precision tile. Please check TiledContentHost::GetRenderState() for
-  // all condition.
   MOZ_ASSERT(mTiledBuffer.GetTileCount() == 1 && mLowPrecisionTiledBuffer.GetTileCount() == 0);
   MOZ_ASSERT(mTiledBuffer.GetTile(0).mTextureHost);
 
@@ -114,8 +111,7 @@ TiledContentHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
   return CreateTexturedEffect(tile.mTextureSource,
                               nullptr,
                               aSamplingFilter,
-                              true,
-                              tile.mTextureHost->GetRenderState());
+                              true);
 }
 
 void
@@ -482,8 +478,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
     CreateTexturedEffect(aTile.mTextureSource,
                          aTile.mTextureSourceOnWhite,
                          aSamplingFilter,
-                         true,
-                         aTile.mTextureHost->GetRenderState());
+                         true);
   if (!effect) {
     return;
   }

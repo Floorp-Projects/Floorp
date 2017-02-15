@@ -41,11 +41,7 @@ html|*.pointerlockfswarning-domain {
   margin: 0;
 }
 
-html|*.pointerlockfswarning-exit-button {
-  padding: 5px 30px;
-  font: message-box;
-  font-size: 14px;
-  font-weight: lighter;
+html|*#fullscreen-exit-button {
   margin: 0;
-  box-sizing: content-box;
 }
+

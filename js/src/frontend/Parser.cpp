@@ -1204,6 +1204,25 @@ Parser<ParseHandler>::tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName n
     if (!tryDeclareVar(name, DeclarationKind::VarForAnnexBLexicalFunction, &redeclaredKind))
         return false;
 
+    if (!redeclaredKind && pc->isFunctionBox()) {
+        ParseContext::Scope& funScope = pc->functionScope();
+        ParseContext::Scope& varScope = pc->varScope();
+        if (&funScope != &varScope) {
+            // Annex B.3.3.1 disallows redeclaring parameter names. In the
+            // presence of parameter expressions, parameter names are on the
+            // function scope, which encloses the var scope. This means
+            // tryDeclareVar call above would not catch this case, so test it
+            // manually.
+            if (AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(name)) {
+                DeclarationKind declaredKind = p->value()->kind();
+                if (DeclarationKindIsParameter(declaredKind))
+                    redeclaredKind = Some(declaredKind);
+                else
+                    MOZ_ASSERT(FunctionScope::isSpecialName(context, name));
+            }
+        }
+    }
+
     if (redeclaredKind) {
         // If an early error would have occurred, undo all the
         // VarForAnnexBLexicalFunction declarations.
@@ -1738,11 +1757,8 @@ Parser<FullParseHandler>::newFunctionScopeData(ParseContext::Scope& scope, bool 
           case BindingKind::Var:
             // The only vars in the function scope when there are parameter
             // exprs, which induces a separate var environment, should be the
-            // special internal bindings.
-            MOZ_ASSERT_IF(hasParameterExprs,
-                          bi.name() == context->names().arguments ||
-                          bi.name() == context->names().dotThis ||
-                          bi.name() == context->names().dotGenerator);
+            // special bindings.
+            MOZ_ASSERT_IF(hasParameterExprs, FunctionScope::isSpecialName(context, bi.name()));
             if (!vars.append(binding))
                 return Nothing();
             break;
@@ -2294,7 +2310,7 @@ template <>
 ParseNode*
 Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
                                              HandleScope enclosingScope,
-                                             Maybe<uint32_t> parameterListEnd,
+                                             const Maybe<uint32_t>& parameterListEnd,
                                              GeneratorKind generatorKind,
                                              FunctionAsyncKind asyncKind,
                                              Directives inheritedDirectives,
@@ -3398,7 +3414,7 @@ bool
 Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
                                                       YieldHandling yieldHandling,
                                                       Node pn, FunctionSyntaxKind kind,
-                                                      Maybe<uint32_t> parameterListEnd /* = Nothing() */,
+                                                      const Maybe<uint32_t>& parameterListEnd /* = Nothing() */,
                                                       bool isStandaloneFunction /* = false */)
 {
     // Given a properly initialized parse context, try to parse an actual
@@ -4037,7 +4053,8 @@ Parser<ParseHandler>::PossibleError::transferErrorsTo(PossibleError* other)
 
 template <>
 bool
-Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<DeclarationKind> maybeDecl)
+Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr,
+                                                 const Maybe<DeclarationKind>& maybeDecl)
 {
     MOZ_ASSERT(!handler.isUnparenthesizedDestructuringPattern(expr));
 
