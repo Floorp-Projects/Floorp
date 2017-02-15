@@ -187,8 +187,8 @@ public:
     nsresult rv = ErrorCode();
     SuppressException();
     // Don't propagate out our internal error codes that have special meaning.
-    if (rv == NS_ERROR_TYPE_ERR ||
-        rv == NS_ERROR_RANGE_ERR ||
+    if (rv == NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR ||
+        rv == NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR ||
         rv == NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION ||
         rv == NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION) {
       // What to pick here?
@@ -251,18 +251,22 @@ public:
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowTypeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR,
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
                                        Forward<Ts>(messageArgs)...);
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowRangeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR,
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
                                        Forward<Ts>(messageArgs)...);
   }
 
-  bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
+  bool IsErrorWithMessage() const
+  {
+    return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR ||
+           ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR;
+  }
 
   // Facilities for throwing a preexisting JS exception value via this
   // TErrorResult.  The contract is that any code which might end up calling
@@ -400,8 +404,10 @@ private:
   }
 
   void AssignErrorCode(nsresult aRv) {
-    MOZ_ASSERT(aRv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
-    MOZ_ASSERT(aRv != NS_ERROR_RANGE_ERR, "Use ThrowRangeError()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
+               "Use ThrowTypeError()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
+               "Use ThrowRangeError()");
     MOZ_ASSERT(!IsErrorWithMessage(), "Don't overwrite errors with message");
     MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION,
                "Use ThrowJSException()");
@@ -412,13 +418,7 @@ private:
     MOZ_ASSERT(aRv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "May need to bring back ThrowNotEnoughArgsError");
     MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT,
                "Use NoteJSContextException");
-    // Don't trust people anyway, though.
-    if (aRv == NS_ERROR_TYPE_ERR ||
-        aRv == NS_ERROR_RANGE_ERR) {
-      mResult = NS_ERROR_UNEXPECTED;
-    } else {
-      mResult = aRv;
-    }
+    mResult = aRv;
   }
 
   void ClearMessage();
@@ -450,8 +450,8 @@ private:
   }
 
   // Special values of mResult:
-  // NS_ERROR_TYPE_ERR -- ThrowTypeError() called on us.
-  // NS_ERROR_RANGE_ERR -- ThrowRangeError() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR -- ThrowTypeError() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR -- ThrowRangeError() called on us.
   // NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION -- ThrowJSException() called
   //                                               on us.
   // NS_ERROR_UNCATCHABLE_EXCEPTION -- ThrowUncatchableException called on us.
