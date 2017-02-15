@@ -271,9 +271,10 @@ var FormAutofillContent = {
         ProfileAutocomplete.ensureUnregistered();
       }
     });
-    Services.cpmm.sendAsyncMessage("FormAutofill:getEnabledStatus");
-    // TODO: use initialProcessData:
-    // Services.cpmm.initialProcessData.autofillEnabled
+
+    if (Services.cpmm.initialProcessData.autofillEnabled) {
+      ProfileAutocomplete.ensureRegistered();
+    }
   },
 
   /**
