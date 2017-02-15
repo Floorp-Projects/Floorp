@@ -24,10 +24,10 @@
 #include "jsnum.h"
 
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"
 #include "js/UniquePtr.h"
 #include "vm/HelperThreads.h"
-#include "vm/Keywords.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
@@ -40,65 +40,65 @@ using mozilla::PodAssign;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-struct KeywordInfo {
-    const char* chars;         // C string with keyword text
+struct ReservedWordInfo {
+    const char* chars;         // C string with reserved word text
     TokenKind   tokentype;
 };
 
-static const KeywordInfo keywords[] = {
-#define KEYWORD_INFO(keyword, name, type) \
-    {js_##keyword##_str, type},
-    FOR_EACH_JAVASCRIPT_KEYWORD(KEYWORD_INFO)
-#undef KEYWORD_INFO
+static const ReservedWordInfo reservedWords[] = {
+#define RESERVED_WORD_INFO(word, name, type) \
+    {js_##word##_str, type},
+    FOR_EACH_JAVASCRIPT_RESERVED_WORD(RESERVED_WORD_INFO)
+#undef RESERVED_WORD_INFO
 };
 
-// Returns a KeywordInfo for the specified characters, or nullptr if the string
-// is not a keyword.
+// Returns a ReservedWordInfo for the specified characters, or nullptr if the
+// string is not a reserved word.
 template <typename CharT>
-static const KeywordInfo*
-FindKeyword(const CharT* s, size_t length)
+static const ReservedWordInfo*
+FindReservedWord(const CharT* s, size_t length)
 {
     MOZ_ASSERT(length != 0);
 
     size_t i;
-    const KeywordInfo* kw;
+    const ReservedWordInfo* rw;
     const char* chars;
 
-#define JSKW_LENGTH()           length
-#define JSKW_AT(column)         s[column]
-#define JSKW_GOT_MATCH(index)   i = (index); goto got_match;
-#define JSKW_TEST_GUESS(index)  i = (index); goto test_guess;
-#define JSKW_NO_MATCH()         goto no_match;
-#include "jsautokw.h"
-#undef JSKW_NO_MATCH
-#undef JSKW_TEST_GUESS
-#undef JSKW_GOT_MATCH
-#undef JSKW_AT
-#undef JSKW_LENGTH
+#define JSRW_LENGTH()           length
+#define JSRW_AT(column)         s[column]
+#define JSRW_GOT_MATCH(index)   i = (index); goto got_match;
+#define JSRW_TEST_GUESS(index)  i = (index); goto test_guess;
+#define JSRW_NO_MATCH()         goto no_match;
+#include "frontend/ReservedWordsGenerated.h"
+#undef JSRW_NO_MATCH
+#undef JSRW_TEST_GUESS
+#undef JSRW_GOT_MATCH
+#undef JSRW_AT
+#undef JSRW_LENGTH
 
   got_match:
-    return &keywords[i];
+    return &reservedWords[i];
 
   test_guess:
-    kw = &keywords[i];
-    chars = kw->chars;
+    rw = &reservedWords[i];
+    chars = rw->chars;
     do {
         if (*s++ != (unsigned char)(*chars++))
             goto no_match;
     } while (--length != 0);
-    return kw;
+    return rw;
 
   no_match:
     return nullptr;
 }
 
-static const KeywordInfo*
-FindKeyword(JSLinearString* str)
+static const ReservedWordInfo*
+FindReservedWord(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? FindKeyword(str->latin1Chars(nogc), str->length())
-           : FindKeyword(str->twoByteChars(nogc), str->length());
+           ? FindReservedWord(str->latin1Chars(nogc), str->length())
+           : FindReservedWord(str->twoByteChars(nogc), str->length());
 }
 
 template <typename CharT>
@@ -182,7 +182,68 @@ frontend::IsIdentifier(const char16_t* chars, size_t length)
 bool
 frontend::IsKeyword(JSLinearString* str)
 {
-    return FindKeyword(str) != nullptr;
+    if (const ReservedWordInfo* rw = FindReservedWord(str))
+        return TokenKindIsKeyword(rw->tokentype);
+
+    return false;
+}
+
+bool
+frontend::IsFutureReservedWord(JSLinearString* str)
+{
+    if (const ReservedWordInfo* rw = FindReservedWord(str))
+        return TokenKindIsFutureReservedWord(rw->tokentype);
+
+    return false;
+}
+
+bool
+frontend::IsStrictReservedWord(JSLinearString* str)
+{
+    if (const ReservedWordInfo* rw = FindReservedWord(str))
+        return TokenKindIsStrictReservedWord(rw->tokentype);
+
+    return false;
+}
+
+bool
+frontend::IsReservedWordLiteral(JSLinearString* str)
+{
+    if (const ReservedWordInfo* rw = FindReservedWord(str))
+        return TokenKindIsReservedWordLiteral(rw->tokentype);
+
+    return false;
+}
+
+const char*
+frontend::ReservedWordToCharZ(PropertyName* str)
+{
+    const ReservedWordInfo* rw = FindReservedWord(str);
+    if (rw == nullptr)
+        return nullptr;
+
+    switch (rw->tokentype) {
+#define EMIT_CASE(word, name, type) case type: return js_##word##_str;
+      FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
+#undef EMIT_CASE
+      default:
+        MOZ_ASSERT_UNREACHABLE("Not a reserved word PropertyName.");
+    }
+    return nullptr;
+}
+
+PropertyName*
+TokenStream::reservedWordToPropertyName(TokenKind tt) const
+{
+    MOZ_ASSERT(tt != TOK_NAME);
+    switch (tt) {
+#define EMIT_CASE(word, name, type) case type: return cx->names().name;
+      FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
+#undef EMIT_CASE
+      default:
+        MOZ_ASSERT_UNREACHABLE("Not a reserved word TokenKind.");
+    }
+    return nullptr;
 }
 
 TokenStream::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln)
@@ -1159,38 +1220,6 @@ TokenStream::putIdentInTokenbuf(const char16_t* identStart)
     return true;
 }
 
-bool
-TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
-{
-    if (!awaitIsKeyword && kw->tokentype == TOK_AWAIT) {
-        if (ttp)
-            *ttp = TOK_NAME;
-        return true;
-    }
-
-    if (kw->tokentype == TOK_RESERVED) {
-        error(JSMSG_RESERVED_ID, kw->chars);
-        return false;
-    }
-
-    if (kw->tokentype == TOK_STRICT_RESERVED)
-        return reportStrictModeError(JSMSG_RESERVED_ID, kw->chars);
-
-    // Working keyword.
-    *ttp = kw->tokentype;
-    return true;
-}
-
-bool
-TokenStream::checkForKeyword(JSAtom* atom, TokenKind* ttp)
-{
-    const KeywordInfo* kw = FindKeyword(atom);
-    if (!kw)
-        return true;
-
-    return checkForKeyword(kw, ttp);
-}
-
 enum FirstCharKind {
     // A char16_t has the 'OneChar' kind if it, by itself, constitutes a valid
     // token that cannot also be a prefix of a longer token.  E.g. ';' has the
@@ -1414,30 +1443,11 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
             length = userbuf.addressOfNextRawChar() - identStart;
         }
 
-        // Represent keywords as keyword tokens unless told otherwise.
-        if (modifier != KeywordIsName) {
-            if (const KeywordInfo* kw = FindKeyword(chars, length)) {
-                // That said, keywords can't contain escapes.  (Contexts where
-                // keywords are treated as names, that also sometimes treat
-                // keywords as keywords, must manually check this requirement.)
-                // There are two exceptions
-                // 1) StrictReservedWords: These keywords need to be treated as
-                //    names in non-strict mode.
-                // 2) yield is also treated as a name if it contains an escape
-                //    sequence. The parser must handle this case separately.
-                if (hadUnicodeEscape && !(
-                        (kw->tokentype == TOK_STRICT_RESERVED && !strictMode()) ||
-                         kw->tokentype == TOK_YIELD))
-                {
-                    reportError(JSMSG_ESCAPED_KEYWORD);
-                    goto error;
-                }
-
-                tp->type = TOK_NAME;
-                if (!checkForKeyword(kw, &tp->type))
-                    goto error;
-                if (tp->type != TOK_NAME && !hadUnicodeEscape)
-                    goto out;
+        // Represent reserved words as reserved word tokens.
+        if (!hadUnicodeEscape) {
+            if (const ReservedWordInfo* rw = FindReservedWord(chars, length)) {
+                tp->type = rw->tokentype;
+                goto out;
             }
         }
 
