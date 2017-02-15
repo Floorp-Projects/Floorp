@@ -141,6 +141,45 @@ public:
   }
 };
 
+class WorkerErrorBase {
+public:
+  nsString mMessage;
+  nsString mFilename;
+  uint32_t mLineNumber;
+  uint32_t mColumnNumber;
+  uint32_t mErrorNumber;
+
+  WorkerErrorBase()
+  : mLineNumber(0),
+    mColumnNumber(0),
+    mErrorNumber(0)
+  { }
+
+  void AssignErrorBase(JSErrorBase* aReport);
+};
+
+class WorkerErrorNote : public WorkerErrorBase {
+public:
+  void AssignErrorNote(JSErrorNotes::Note* aNote);
+};
+
+class WorkerErrorReport : public WorkerErrorBase {
+public:
+  nsString mLine;
+  uint32_t mFlags;
+  JSExnType mExnType;
+  bool mMutedError;
+  nsTArray<WorkerErrorNote> mNotes;
+
+  WorkerErrorReport()
+  : mFlags(0),
+    mExnType(JSEXN_ERR),
+    mMutedError(false)
+  { }
+
+  void AssignErrorReport(JSErrorReport* aReport);
+};
+
 template <class Derived>
 class WorkerPrivateParent : public DOMEventTargetHelper
 {
@@ -395,12 +434,7 @@ public:
 
   void
   BroadcastErrorToSharedWorkers(JSContext* aCx,
-                                const nsAString& aMessage,
-                                const nsAString& aFilename,
-                                const nsAString& aLine,
-                                uint32_t aLineNumber,
-                                uint32_t aColumnNumber,
-                                uint32_t aFlags,
+                                const WorkerErrorReport* aReport,
                                 bool aIsErrorEvent);
 
   void
