@@ -31,15 +31,15 @@ public:
                     CrashReporter::ThreadId aThreadId);
 
 #ifdef MOZ_CRASHREPORTER
-  bool GenerateCrashReport(base::ProcessId aPid,
-                           nsString* aOutMinidumpID = nullptr)
-  {
-    RefPtr<nsIFile> crashDump;
-    if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
-      return false;
-    }
-    return GenerateCrashReport(crashDump, aOutMinidumpID);
-  }
+  // Helper function for generating a crash report for a process that probably
+  // crashed (i.e., had an AbnormalShutdown in ActorDestroy). Returns true if
+  // the process has a minidump attached and we were able to generate a report.
+  bool GenerateCrashReport(base::ProcessId aPid);
+
+  // If a minidump was already captured (e.g. via the hang reporter), this
+  // finalizes the existing report by attaching metadata and notifying the
+  // crash service.
+  bool FinalizeCrashReport();
 
   // This is a static helper function to notify the crash service that a
   // crash has occurred. When PCrashReporter is removed, we can make this
@@ -52,10 +52,17 @@ public:
     const AnnotationTable* aNotes);
 
   void AddNote(const nsCString& aKey, const nsCString& aValue);
+
+  bool HasMinidump() const {
+    return !mDumpID.IsEmpty();
+  }
+  const nsString& MinidumpID() const {
+    MOZ_ASSERT(HasMinidump());
+    return mDumpID;
+  }
 #endif
 
 private:
-  bool GenerateCrashReport(RefPtr<nsIFile> aCrashDump, nsString* aOutMinidumpID);
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
 
@@ -65,6 +72,8 @@ private:
   CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
   AnnotationTable mExtraNotes;
+  nsString mDumpID;
+  bool mFinalized;
 };
 
 } // namespace ipc
