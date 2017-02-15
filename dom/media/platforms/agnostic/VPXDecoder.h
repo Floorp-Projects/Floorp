@@ -16,13 +16,10 @@
 
 namespace mozilla {
 
-using namespace layers;
-
 class VPXDecoder : public MediaDataDecoder
 {
 public:
   explicit VPXDecoder(const CreateDecoderParams& aParams);
-  ~VPXDecoder();
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -48,10 +45,11 @@ public:
   static bool IsVP9(const nsACString& aMimeType);
 
 private:
+  ~VPXDecoder();
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   MediaResult DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample);
 
-  const RefPtr<ImageContainer> mImageContainer;
+  const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
 
   // VPx decoder state

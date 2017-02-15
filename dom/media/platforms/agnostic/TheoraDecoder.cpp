@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TheoraDecoder.h"
+#include "TimeUnits.h"
 #include "XiphExtradata.h"
 #include "gfx2DGlue.h"
-#include "nsError.h"
-#include "TimeUnits.h"
 #include "mozilla/PodOperations.h"
+#include "nsError.h"
 
 #include <algorithm>
 
@@ -80,11 +80,12 @@ TheoraDecoder::Init()
   if (!XiphExtradataToHeaders(headers, headerLens,
       mInfo.mCodecSpecificConfig->Elements(),
       mInfo.mCodecSpecificConfig->Length())) {
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   for (size_t i = 0; i < headers.Length(); i++) {
     if (NS_FAILED(DoDecodeHeader(headers[i], headerLens[i]))) {
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
     }
   }
   if (mPacketCount != 3) {
@@ -112,7 +113,8 @@ nsresult
 TheoraDecoder::DoDecodeHeader(const unsigned char* aData, size_t aLength)
 {
   bool bos = mPacketCount == 0;
-  ogg_packet pkt = InitTheoraPacket(aData, aLength, bos, false, 0, mPacketCount++);
+  ogg_packet pkt =
+    InitTheoraPacket(aData, aLength, bos, false, 0, mPacketCount++);
 
   int r = th_decode_headerin(&mTheoraInfo,
                              &mTheoraComment,
@@ -130,7 +132,8 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
   size_t aLength = aSample->Size();
 
   bool bos = mPacketCount == 0;
-  ogg_packet pkt = InitTheoraPacket(aData, aLength, bos, false, aSample->mTimecode, mPacketCount++);
+  ogg_packet pkt = InitTheoraPacket(
+    aData, aLength, bos, false, aSample->mTimecode, mPacketCount++);
 
   int ret = th_decode_packetin(mTheoraDecoderContext, &pkt, nullptr);
   if (ret == 0 || ret == TH_DUPFRAME) {
@@ -176,9 +179,14 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
                                    mInfo.ScaledImageRect(mTheoraInfo.frame_width,
                                                          mTheoraInfo.frame_height));
     if (!v) {
-      LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
-          mTheoraInfo.frame_width, mTheoraInfo.frame_height, mInfo.mDisplay.width, mInfo.mDisplay.height,
-          mInfo.mImage.width, mInfo.mImage.height);
+      LOG(
+        "Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
+        mTheoraInfo.frame_width,
+        mTheoraInfo.frame_height,
+        mInfo.mDisplay.width,
+        mInfo.mDisplay.height,
+        mInfo.mImage.width,
+        mInfo.mImage.height);
       return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,
                     RESULT_DETAIL("Insufficient memory")),
