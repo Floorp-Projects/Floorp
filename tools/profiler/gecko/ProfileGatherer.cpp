@@ -27,8 +27,8 @@ static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 
 NS_IMPL_ISUPPORTS(ProfileGatherer, nsIObserver)
 
-ProfileGatherer::ProfileGatherer(Sampler* aSampler)
-  : mSampler(aSampler)
+ProfileGatherer::ProfileGatherer()
+  : mIsCancelled(false)
   , mSinceTime(0)
   , mPendingProfiles(0)
   , mGathering(false)
@@ -145,7 +145,7 @@ ProfileGatherer::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mSampler) {
+  if (mIsCancelled) {
     // We somehow got called after we were cancelled! This shouldn't
     // be possible, but doing a belt-and-suspenders check to be sure.
     return;
@@ -216,7 +216,7 @@ ProfileGatherer::Reset()
 void
 ProfileGatherer::Cancel()
 {
-  // The Sampler is going away. If we have a Promise in flight, we should
+  // We're about to stop profiling. If we have a Promise in flight, we should
   // reject it.
   if (mPromise) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -224,8 +224,7 @@ ProfileGatherer::Cancel()
   mPromise = nullptr;
   mFile = nullptr;
 
-  // Clear out the Sampler reference, since it's being destroyed.
-  mSampler = nullptr;
+  mIsCancelled = true;
 }
 
 void
