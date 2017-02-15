@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/Shmem.h"
 
+#ifdef MOZ_CRASHREPORTER
 namespace mozilla {
 namespace ipc {
 
@@ -45,7 +46,9 @@ public:
     }
 
     InitSingletonWithShmem(shmem);
-    Unused << aToplevelProtocol->SendInitCrashReporter(shmem);
+    Unused << aToplevelProtocol->SendInitCrashReporter(
+      shmem,
+      CrashReporter::CurrentThreadId());
     return true;
   }
 
@@ -71,6 +74,7 @@ private:
 
 } // namespace ipc
 } // namespace mozilla
+#endif // MOZ_CRASHREPORTER
 
 #endif // mozilla_ipc_CrashReporterClient_h
 
