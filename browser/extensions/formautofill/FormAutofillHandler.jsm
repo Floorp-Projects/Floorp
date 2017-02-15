@@ -14,8 +14,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHeuristics",
                                   "resource://formautofill/FormAutofillHeuristics.jsm");
+
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 /**
  * Handles profile autofill for a DOM Form element.
@@ -71,6 +76,7 @@ FormAutofillHandler.prototype = {
                                       f.contactType == info.contactType &&
                                       f.fieldName == info.fieldName)) {
         // A field with the same identifier already exists.
+        log.debug("Not collecting a field matching another with the same info:", info);
         return null;
       }
 
@@ -89,6 +95,8 @@ FormAutofillHandler.prototype = {
       formatWithElement.element = element;
       this.fieldDetails.push(formatWithElement);
     }
+
+    log.debug("Collected details on", autofillData.length, "fields");
 
     return autofillData;
   },
@@ -110,6 +118,7 @@ FormAutofillHandler.prototype = {
    *        }
    */
   autofillFormFields(autofillResult) {
+    log.debug("autofillFormFields:", autofillResult);
     for (let field of autofillResult) {
       // TODO: Skip filling the value of focused input which is filled in
       // FormFillController.
