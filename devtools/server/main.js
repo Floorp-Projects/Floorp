@@ -1383,25 +1383,22 @@ var DebuggerServer = {
   },
 
   /**
-   * Called when DevTools are unloaded to remove the contend process server script for the
-   * list of scripts loaded for each new content process. Will also remove message
-   * listeners from already loaded scripts.
-   */
-  removeContentServerScript() {
-    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT);
-    try {
-      Services.ppmm.broadcastAsyncMessage("debug:close-content-server");
-    } catch (e) {
-      // Nothing to do
-    }
-  },
-
-  /**
-   * ⚠ TESTING ONLY! ⚠ Searches all active connections for an actor matching an ID.
+   * Searches all active connections for an actor matching an ID.
+   *
+   * ⚠ TO BE USED ONLY FROM SERVER CODE OR TESTING ONLY! ⚠`
+   *
    * This is helpful for some tests which depend on reaching into the server to check some
-   * properties of an actor.
+   * properties of an actor, and it is also used by the actors related to the
+   * DevTools WebExtensions API to be able to interact with the actors created for the
+   * panels natively provided by the DevTools Toolbox.
    */
-  _searchAllConnectionsForActor(actorID) {
+  searchAllConnectionsForActor(actorID) {
+    // NOTE: the actor IDs are generated with the following format:
+    //
+    //   `server${loaderID}.conn${ConnectionID}${ActorPrefix}${ActorID}`
+    //
+    // as an optimization we can come up with a regexp to query only
+    // the right connection via its id.
     for (let connID of Object.getOwnPropertyNames(this._connections)) {
       let actor = this._connections[connID].getActor(actorID);
       if (actor) {

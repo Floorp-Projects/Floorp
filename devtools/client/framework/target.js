@@ -456,6 +456,10 @@ TabTarget.prototype = {
         return;
       }
       this.activeConsole = consoleClient;
+
+      this._onInspectObject = (event, packet) => this.emit("inspect-object", packet);
+      this.activeConsole.on("inspectObject", this._onInspectObject);
+
       this._remote.resolve(null);
     };
 
@@ -576,6 +580,9 @@ TabTarget.prototype = {
     this.client.removeListener("frameUpdate", this._onFrameUpdate);
     this.client.removeListener("newSource", this._onSourceUpdated);
     this.client.removeListener("updatedSource", this._onSourceUpdated);
+    if (this.activeConsole && this._onInspectObject) {
+      this.activeConsole.off("inspectObject", this._onInspectObject);
+    }
   },
 
   /**
