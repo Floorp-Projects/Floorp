@@ -1,5 +1,6 @@
 use std::ffi::CString;
 use std::{mem, slice};
+use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
@@ -12,9 +13,12 @@ use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender_traits::ServoScrollRootId;
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
+use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
 
 extern crate webrender_traits;
+
+static ENABLE_RECORDING: bool = false;
 
 // This macro adds some checks to make sure we notice when the memory representation of
 // types change.
@@ -35,7 +39,7 @@ macro_rules! check_ffi_type {
         fn $check_sizes_match() { let _ = mem::transmute::<$TypeName, $T>; }
     );
 }
- 
+
 check_ffi_type!(_pipeline_id_repr struct PipelineId as (u32, u32));
 check_ffi_type!(_image_key_repr struct ImageKey as (u32, u32));
 check_ffi_type!(_font_key_repr struct FontKey as (u32, u32));
@@ -56,7 +60,7 @@ pub struct WrImageDescriptor {
     pub height: u32,
     pub stride: u32,
     pub is_opaque: bool,
-} 
+}
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
@@ -165,6 +169,12 @@ pub extern fn wr_window_new(window_id: WrWindowId,
                             out_renderer: &mut *mut Renderer) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
+    let recorder: Option<Box<ApiRecordingReceiver>> = if ENABLE_RECORDING {
+        Some(Box::new(BinaryRecorder::new(&PathBuf::from("wr-record.bin"))))
+    } else {
+        None
+    };
+
     let opts = RendererOptions {
         device_pixel_ratio: 1.0,
         resource_override_path: None,
@@ -178,7 +188,7 @@ pub extern fn wr_window_new(window_id: WrWindowId,
         clear_framebuffer: true,
         render_target_debug: false,
         clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
-        recorder: None,
+        recorder: recorder,
         workers: None,
     };
 
