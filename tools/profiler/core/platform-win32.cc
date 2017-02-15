@@ -287,7 +287,8 @@ private:
   // Protects the process wide state below.
   static SamplerThread* mInstance;
 
-  DISALLOW_COPY_AND_ASSIGN(SamplerThread);
+  SamplerThread(const SamplerThread&) = delete;
+  void operator=(const SamplerThread&) = delete;
 };
 
 SamplerThread* SamplerThread::mInstance = NULL;
