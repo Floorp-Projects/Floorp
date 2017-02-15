@@ -22,6 +22,35 @@ taskgraph-tests/opt:
             - 'config/mozunit.py'
             - 'python/mach/**/*.py'
 
+marionette-harness/opt:
+    description: testing/marionette/harness unit tests
+    platforms:
+        - linux64/opt
+    treeherder:
+        symbol: py(mnh)
+        kind: test
+        tier: 2
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/b2gtest
+    worker:
+        by-platform:
+            linux64.*:
+                implementation: docker-worker
+                docker-image: {in-tree: "lint"}
+                max-run-time: 3600
+    run:
+        using: mach
+        mach: python-test --subsuite marionette-harness
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+          - 'testing/marionette/harness/**'
+          - 'testing/mozbase/mozlog/mozlog/pytest_mozlog/**'
+          - 'python/mach_commands.py'
+
 mozbase/opt:
     description: testing/mozbase unit tests
     platforms:
