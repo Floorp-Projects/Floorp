@@ -366,7 +366,10 @@ GROUP_NAMES = {
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
-    'Cc': 'Toolchain builds',
+    'TL': 'Toolchain builds for Linux 64-bits',
+    'TM': 'Toolchain builds for OSX',
+    'TW32': 'Toolchain builds for Windows 32-bits',
+    'TW64': 'Toolchain builds for Windows 64-bits',
     'SM-tc': 'Spidermonkey builds',
 }
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__

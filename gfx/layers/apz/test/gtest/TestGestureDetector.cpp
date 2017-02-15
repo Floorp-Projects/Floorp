@@ -6,6 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
+#include "gfxPrefs.h"
 
 class APZCGestureDetectorTester : public APZCBasicTester {
 public:
@@ -235,7 +236,7 @@ protected:
     uint64_t blockId = 0;
 
     // Start the fling down.
-    Pan(apzc, touchStart, touchEnd, false, nullptr, nullptr, &blockId);
+    Pan(apzc, touchStart, touchEnd, PanOptions::None, nullptr, nullptr, &blockId);
     apzc->ConfirmTarget(blockId);
     apzc->ContentReceivedInputBlock(blockId, false);
 

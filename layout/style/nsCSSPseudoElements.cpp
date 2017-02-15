@@ -5,9 +5,10 @@
 
 /* atom list for CSS pseudo-elements */
 
+#include "nsCSSPseudoElements.h"
+
 #include "mozilla/ArrayUtils.h"
 
-#include "nsCSSPseudoElements.h"
 #include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 #include "nsCSSAnonBoxes.h"

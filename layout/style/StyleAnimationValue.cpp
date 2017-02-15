@@ -6,10 +6,11 @@
 
 /* Utilities for animation of computed style values */
 
+#include "mozilla/StyleAnimationValue.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RuleNodeCacheConditions.h"
-#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Tuple.h"
