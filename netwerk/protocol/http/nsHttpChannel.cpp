@@ -3663,7 +3663,18 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
         mCacheQueueSizeWhenOpen = CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
-        rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
+        if (!mCacheOpenDelay) {
+            rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
+        } else {
+            mCacheOpenRunnable = NS_NewRunnableFunction([openURI, extension, cacheEntryOpenFlags, cacheStorage, this] () -> void {
+                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
+            });
+
+            mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+            // calls nsHttpChannel::Notify after `mCacheOpenDelay` milliseconds
+            mCacheOpenTimer->InitWithCallback(this, mCacheOpenDelay, nsITimer::TYPE_ONE_SHOT);
+
+        }
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -5674,6 +5685,8 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsICorsPreflightCallback)
+    NS_INTERFACE_MAP_ENTRY(nsIRaceCacheWithNetwork)
+    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
     NS_INTERFACE_MAP_ENTRY(nsIHstsPrimingCallback)
     NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
     // we have no macro that covers this case.
@@ -8485,6 +8498,57 @@ nsHttpChannel::ReportNetVSCacheTelemetry()
     } else {
         Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE_V2, onStopDiff);
     }
+}
+
+NS_IMETHODIMP
+nsHttpChannel::Test_delayCacheEntryOpeningBy(int32_t aTimeout)
+{
+    mCacheOpenDelay = aTimeout;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::Test_triggerDelayedOpenCacheEntry()
+{
+    nsresult rv;
+    if (!mCacheOpenDelay) {
+        // No delay was set.
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    if (!mCacheOpenRunnable) {
+        // There should be a runnable.
+        return NS_ERROR_FAILURE;
+    }
+    if (mCacheOpenTimer) {
+        rv = mCacheOpenTimer->Cancel();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        mCacheOpenTimer = nullptr;
+    }
+    mCacheOpenDelay = 0;
+    mCacheOpenRunnable->Run();
+    mCacheOpenRunnable = nullptr;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::Test_triggerNetwork(int32_t aTimeout)
+{
+    return TryHSTSPriming();
+}
+
+NS_IMETHODIMP
+nsHttpChannel::Notify(nsITimer *aTimer)
+{
+    RefPtr<nsHttpChannel> self(this);
+    if (aTimer == mCacheOpenTimer) {
+        return Test_triggerDelayedOpenCacheEntry();
+    } else {
+        MOZ_CRASH("Unknown timer");
+    }
+
+    return NS_OK;
 }
 
 } // namespace net
