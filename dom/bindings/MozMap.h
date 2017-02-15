@@ -5,9 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Class for representing MozMap arguments.  This is an nsTHashtable
- * under the hood, but we don't want to leak that implementation
- * detail.
+ * Class for representing MozMap arguments.  Basically an array under the hood.
  */
 
 #ifndef mozilla_dom_MozMap_h
@@ -24,34 +22,34 @@ namespace mozilla {
 namespace dom {
 
 namespace binding_detail {
-template<typename DataType>
-class MozMapEntry : public nsStringHashKey
+template<typename KeyType, typename ValueType>
+class MozMapEntry
 {
 public:
-  explicit MozMapEntry(const nsAString* aKeyTypePointer)
-    : nsStringHashKey(aKeyTypePointer)
+  MozMapEntry()
   {
   }
 
   // Move constructor so we can do MozMaps of MozMaps.
-  MozMapEntry(MozMapEntry<DataType>&& aOther)
-    : nsStringHashKey(aOther),
-      mData(Move(aOther.mData))
+  MozMapEntry(MozMapEntry<KeyType, ValueType>&& aOther)
+    : mKey(Move(aOther.mKey)),
+      mValue(Move(aOther.mValue))
   {
   }
 
-  DataType mData;
+  KeyType mKey;
+  ValueType mValue;
 };
 
 } // namespace binding_detail
 
-template<typename DataType>
-class MozMap : protected nsTHashtable<binding_detail::MozMapEntry<DataType>>
+template<typename ValueType>
+class MozMap
 {
 public:
-  typedef typename binding_detail::MozMapEntry<DataType> EntryType;
-  typedef nsTHashtable<EntryType> Base;
-  typedef MozMap<DataType> SelfType;
+  typedef nsString KeyType;
+  typedef typename binding_detail::MozMapEntry<KeyType, ValueType> EntryType;
+  typedef MozMap<ValueType> SelfType;
 
   MozMap()
   {
@@ -59,60 +57,22 @@ public:
 
   // Move constructor so we can do MozMap of MozMap.
   MozMap(SelfType&& aOther) :
-    Base(Move(aOther))
+    mEntries(Move(aOther.mEntries))
   {
   }
 
-  // The return value is only safe to use until an AddEntry call.
-  const DataType& Get(const nsAString& aKey) const
+  const nsTArray<EntryType>& Entries() const
   {
-    const EntryType* ent = this->GetEntry(aKey);
-    MOZ_ASSERT(ent, "Why are you using a key we didn't claim to have?");
-    return ent->mData;
+    return mEntries;
   }
 
-  DataType& Get(const nsAString& aKey)
+  nsTArray<EntryType>& Entries()
   {
-    EntryType* ent = this->GetEntry(aKey);
-    MOZ_ASSERT(ent, "Why are you using a key we didn't claim to have?");
-    return ent->mData;
+    return mEntries;
   }
 
-  // The return value is only safe to use until an AddEntry call.
-  const DataType* GetIfExists(const nsAString& aKey) const
-  {
-    const EntryType* ent = this->GetEntry(aKey);
-    if (!ent) {
-      return nullptr;
-    }
-    return &ent->mData;
-  }
-
-  void GetKeys(nsTArray<nsString>& aKeys) const {
-    for (auto iter = this->ConstIter(); !iter.Done(); iter.Next()) {
-      aKeys.AppendElement(iter.Get()->GetKey());
-    }
-  }
-
-  // XXXbz we expose this generic enumerator for tracing.  Otherwise we'd end up
-  // with a dependency on BindingUtils.h here for the SequenceTracer bits.
-  typedef void (* Enumerator)(DataType* aValue, void* aClosure);
-  void EnumerateValues(Enumerator aEnumerator, void *aClosure)
-  {
-    for (auto iter = this->Iter(); !iter.Done(); iter.Next()) {
-      aEnumerator(&iter.Get()->mData, aClosure);
-    }
-  }
-
-  MOZ_MUST_USE
-  DataType* AddEntry(const nsAString& aKey)
-  {
-    EntryType* ent = this->PutEntry(aKey, fallible);
-    if (!ent) {
-      return nullptr;
-    }
-    return &ent->mData;
-  }
+private:
+  nsTArray<EntryType> mEntries;
 };
 
 } // namespace dom
