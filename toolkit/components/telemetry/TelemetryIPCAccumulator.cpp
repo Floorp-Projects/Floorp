@@ -28,8 +28,6 @@ using mozilla::Telemetry::ScalarAction;
 using mozilla::Telemetry::KeyedScalarAction;
 using mozilla::Telemetry::ScalarVariant;
 
-namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
-
 // Sending each remote accumulation immediately places undue strain on the
 // IPC subsystem. Batch the remote accumulations for a period of time before
 // sending them all at once. This value was chosen as a balance between data
@@ -170,11 +168,17 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::Scalar
 // This method takes the lock only to double-buffer the batched telemetry.
 // It releases the lock before calling out to IPC code which can (and does)
 // Accumulate (which would deadlock)
-template<class TActor>
-static void
-SendAccumulatedData(TActor* ipcActor)
+//
+// To ensure we don't loop IPCTimerFired->AccumulateChild->arm timer, we don't
+// unset gIPCTimerArmed until the IPC completes
+//
+// This function must be called on the main thread, otherwise IPC will fail.
+void
+TelemetryIPCAccumulator::IPCTimerFired(nsITimer* aTimer, void* aClosure)
 {
-  // Get the accumulated data and free the storage buffers.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Get the accumulated data and free the storage buffer.
   nsTArray<Accumulation> accumulationsToSend;
   nsTArray<KeyedAccumulation> keyedAccumulationsToSend;
   nsTArray<ScalarAction> scalarsToSend;
@@ -197,43 +201,47 @@ SendAccumulatedData(TActor* ipcActor)
   }
 
   // Send the accumulated data to the parent process.
-  mozilla::Unused << NS_WARN_IF(!ipcActor);
-  if (accumulationsToSend.Length()) {
-    mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendAccumulateChildHistograms(accumulationsToSend));
-  }
-  if (keyedAccumulationsToSend.Length()) {
-    mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendAccumulateChildKeyedHistograms(keyedAccumulationsToSend));
-  }
-  if (scalarsToSend.Length()) {
-    mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendUpdateChildScalars(scalarsToSend));
-  }
-  if (keyedScalarsToSend.Length()) {
-    mozilla::Unused <<
-      NS_WARN_IF(!ipcActor->SendUpdateChildKeyedScalars(keyedScalarsToSend));
-  }
-}
-
-
-// To ensure we don't loop IPCTimerFired->AccumulateChild->arm timer, we don't
-// unset gIPCTimerArmed until the IPC completes
-//
-// This function must be called on the main thread, otherwise IPC will fail.
-void
-TelemetryIPCAccumulator::IPCTimerFired(nsITimer* aTimer, void* aClosure)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Send accumulated data to the correct parent process.
   switch (XRE_GetProcessType()) {
-    case GeckoProcessType_Content:
-      SendAccumulatedData(mozilla::dom::ContentChild::GetSingleton());
+    case GeckoProcessType_Content: {
+      mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
+      mozilla::Unused << NS_WARN_IF(!contentChild);
+      if (contentChild) {
+        if (accumulationsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendAccumulateChildHistogram(accumulationsToSend));
+        }
+        if (keyedAccumulationsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend));
+        }
+        if (scalarsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendUpdateChildScalars(scalarsToSend));
+        }
+        if (keyedScalarsToSend.Length()) {
+          mozilla::Unused <<
+            NS_WARN_IF(!contentChild->SendUpdateChildKeyedScalars(keyedScalarsToSend));
+        }
+      }
       break;
-    case GeckoProcessType_GPU:
-      SendAccumulatedData(mozilla::gfx::GPUParent::GetSingleton());
+    }
+    case GeckoProcessType_GPU: {
+      if (mozilla::gfx::GPUParent* gpu = mozilla::gfx::GPUParent::GetSingleton()) {
+        if (accumulationsToSend.Length()) {
+          mozilla::Unused << gpu->SendAccumulateChildHistogram(accumulationsToSend);
+        }
+        if (keyedAccumulationsToSend.Length()) {
+          mozilla::Unused << gpu->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend);
+        }
+        if (scalarsToSend.Length()) {
+          mozilla::Unused << gpu->SendUpdateChildScalars(scalarsToSend);
+        }
+        if (keyedScalarsToSend.Length()) {
+          mozilla::Unused << gpu->SendUpdateChildKeyedScalars(keyedScalarsToSend);
+        }
+      }
       break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported process type");
       break;
@@ -245,8 +253,6 @@ TelemetryIPCAccumulator::IPCTimerFired(nsITimer* aTimer, void* aClosure)
 void
 TelemetryIPCAccumulator::DeInitializeGlobalState()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
   if (gIPCTimer) {
     NS_RELEASE(gIPCTimer);

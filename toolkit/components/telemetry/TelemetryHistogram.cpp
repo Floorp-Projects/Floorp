@@ -23,7 +23,7 @@
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
-#include "ipc/TelemetryIPCAccumulator.h"
+#include "TelemetryIPCAccumulator.h"
 
 #include "base/histogram.h"
 
@@ -39,7 +39,6 @@ using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 
-namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////

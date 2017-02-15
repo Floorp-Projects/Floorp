@@ -14,7 +14,6 @@ class nsITimer;
 class nsAString;
 class nsCString;
 
-namespace mozilla {
 namespace TelemetryIPCAccumulator {
 
 // Histogram accumulation functions.
@@ -36,7 +35,6 @@ void DeInitializeGlobalState();
 
 void DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent);
 
-}
 }
 
 #endif // TelemetryIPCAccumulator_h__
