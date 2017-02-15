@@ -252,6 +252,19 @@ class SidebarAction {
     }
     windowTracker.removeOpenListener(this.windowOpenListener);
   }
+
+  /**
+   * Triggers this sidebar action for the given window, with the same effects as
+   * if it were toggled via menu or toolbarbutton by a user.
+   *
+   * @param {ChromeWindow} window
+   */
+  triggerAction(window) {
+    let {SidebarUI} = window;
+    if (SidebarUI) {
+      SidebarUI.toggle(this.id);
+    }
+  }
 }
 
 SidebarAction.for = (extension) => {
