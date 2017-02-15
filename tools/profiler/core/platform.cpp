@@ -2348,15 +2348,6 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
     return;
   }
 
-#if defined(MOZ_WIDGET_GONK) && !defined(MOZ_PROFILING)
-  // The only way to profile secondary threads on b2g
-  // is to build with profiling OR have the profiler
-  // running on startup.
-  if (!profiler_is_active()) {
-    return;
-  }
-#endif
-
   MOZ_ASSERT(tlsPseudoStack.get() == nullptr);
   PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
