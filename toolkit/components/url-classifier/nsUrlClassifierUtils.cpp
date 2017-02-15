@@ -147,20 +147,13 @@ CreateClientInfo()
 } // end of namespace mozilla.
 
 nsUrlClassifierUtils::nsUrlClassifierUtils()
-  : mEscapeCharmap(nullptr)
-  , mProviderDictLock("nsUrlClassifierUtils.mProviderDictLock")
+  : mProviderDictLock("nsUrlClassifierUtils.mProviderDictLock")
 {
 }
 
 nsresult
 nsUrlClassifierUtils::Init()
 {
-  // Everything but alpha numerics, - and .
-  mEscapeCharmap = new Charmap(0xffffffff, 0xfc009fff, 0xf8000001, 0xf8000001,
-                               0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
-  if (!mEscapeCharmap)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // nsIUrlClassifierUtils is a thread-safe service so it's
   // allowed to use on non-main threads. However, building
   // the provider dictionary must be on the main thread.
