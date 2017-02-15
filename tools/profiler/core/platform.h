@@ -106,7 +106,7 @@ bool profiler_verbose();
 #define ENABLE_LEAF_DATA
 #endif
 
-extern mozilla::TimeStamp sStartTime;
+extern mozilla::TimeStamp gStartTime;
 
 typedef uint8_t* Address;
 
