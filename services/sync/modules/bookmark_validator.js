@@ -766,6 +766,11 @@ class BookmarkValidator {
               differences.push("bmkUri");
             }
             break;
+          case "separator":
+            if (server.pos != client.pos) {
+              differences.push("pos");
+            }
+            break;
           case "livemark":
             if (server.feedUri != client.feedUri) {
               differences.push("feedUri");
