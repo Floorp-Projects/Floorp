@@ -289,12 +289,12 @@ TErrorResult<CleanupPolicy>::ThrowJSException(JSContext* cx, JS::Handle<JS::Valu
   // root.
   mJSException.setUndefined();
   if (!js::AddRawValueRoot(cx, &mJSException, "TErrorResult::mJSException")) {
-    // Don't use NS_ERROR_DOM_JS_EXCEPTION, because that indicates we have
-    // in fact rooted mJSException.
+    // Don't use NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION, because that
+    // indicates we have in fact rooted mJSException.
     mResult = NS_ERROR_OUT_OF_MEMORY;
   } else {
     mJSException = exn;
-    mResult = NS_ERROR_DOM_JS_EXCEPTION;
+    mResult = NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION;
 #ifdef DEBUG
     mUnionState = HasJSException;
 #endif // DEBUG
@@ -379,7 +379,7 @@ TErrorResult<CleanupPolicy>::ThrowDOMException(nsresult rv,
   AssertInOwningThread();
   ClearUnionData();
 
-  mResult = NS_ERROR_DOM_DOMEXCEPTION;
+  mResult = NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION;
   mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
 #ifdef DEBUG
   mUnionState = HasDOMExceptionInfo;
@@ -600,7 +600,7 @@ TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx)
 {
   AssertInOwningThread();
   if (JS_IsExceptionPending(aCx)) {
-    mResult = NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
+    mResult = NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT;
   } else {
     mResult = NS_ERROR_UNCATCHABLE_EXCEPTION;
   }
