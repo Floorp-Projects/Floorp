@@ -925,6 +925,17 @@ NewArgumentsObject(JSContext* cx, BaselineFrame* frame, MutableHandleValue res)
 }
 
 JSObject*
+CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env, bool copySlots)
+{
+    Handle<LexicalEnvironmentObject*> lexicalEnv = env.as<LexicalEnvironmentObject>();
+
+    if (copySlots)
+        return LexicalEnvironmentObject::clone(cx, lexicalEnv);
+
+    return LexicalEnvironmentObject::recreate(cx, lexicalEnv);
+}
+
+JSObject*
 InitRestParameter(JSContext* cx, uint32_t length, Value* rest, HandleObject templateObj,
                   HandleObject objRes)
 {
