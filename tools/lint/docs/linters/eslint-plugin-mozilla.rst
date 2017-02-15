@@ -2,18 +2,6 @@
 Mozilla ESLint Plugin
 =====================
 
-Environments
-============
-
-chrome-worker
--------------
-
-Defines the environment for chrome workers. This differs from normal workers by
-the fact that `ctypes` can be accessed as well.
-
-Rules
-=====
-
 avoid-removeChild
 -----------------
 

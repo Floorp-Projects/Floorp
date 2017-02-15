@@ -18,7 +18,6 @@ if (typeof Components != "undefined") {
   ];
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
-  /* eslint-env commonjs */
   SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
   Primitives = require("resource://gre/modules/lz4_internal.js");
 } else {
@@ -30,6 +29,9 @@ const MAGIC_NUMBER = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]); // "mo
 const BYTES_IN_SIZE_HEADER = ctypes.uint32_t.size;
 
 const HEADER_SIZE = MAGIC_NUMBER.byteLength + BYTES_IN_SIZE_HEADER;
+
+const EXPECTED_HEADER_TYPE = new ctypes.ArrayType(ctypes.uint8_t, HEADER_SIZE);
+const EXPECTED_SIZE_BUFFER_TYPE = new ctypes.ArrayType(ctypes.uint8_t, BYTES_IN_SIZE_HEADER);
 
 /**
  * An error during (de)compression
