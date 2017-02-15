@@ -35,7 +35,7 @@ namespace db {
 const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 24;
+const int32_t kLatestSchemaVersion = 25;
 // ---------
 // The following constants define the SQL schema.  These are defined in the
 // same order the SQL should be executed in CreateOrMigrateSchema().  They are
@@ -2482,6 +2482,7 @@ nsresult MigrateFrom20To21(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom21To22(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom22To23(mozIStorageConnection* aConn, bool& aRewriteSchema);
 nsresult MigrateFrom23To24(mozIStorageConnection* aConn, bool& aRewriteSchema);
+nsresult MigrateFrom24To25(mozIStorageConnection* aConn, bool& aRewriteSchema);
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
   Migration(15, MigrateFrom15To16),
@@ -2493,6 +2494,7 @@ Migration sMigrationList[] = {
   Migration(21, MigrateFrom21To22),
   Migration(22, MigrateFrom22To23),
   Migration(23, MigrateFrom23To24),
+  Migration(24, MigrateFrom24To25),
 };
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
 nsresult
@@ -2995,6 +2997,7 @@ nsresult MigrateFrom22To23(mozIStorageConnection* aConn, bool& aRewriteSchema)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   return rv;
 }
+
 nsresult MigrateFrom23To24(mozIStorageConnection* aConn, bool& aRewriteSchema)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -3012,6 +3015,17 @@ nsresult MigrateFrom23To24(mozIStorageConnection* aConn, bool& aRewriteSchema)
 
   aRewriteSchema = true;
 
+  return rv;
+}
+
+nsresult MigrateFrom24To25(mozIStorageConnection* aConn, bool& aRewriteSchema)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  // The only change between 24 and 25 was a new nsIContentPolicy type.
+  nsresult rv = aConn->SetSchemaVersion(25);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   return rv;
 }
 
