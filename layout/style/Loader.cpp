@@ -1217,8 +1217,8 @@ Loader::CreateSheet(nsIURI* aURI,
                    aSheetState != eSheetComplete,
                    "Sheet thinks it's not complete while we think it is");
 
-      RefPtr<CSSStyleSheet> clonedSheet =
-        sheet->AsGecko()->Clone(nullptr, nullptr, nullptr, nullptr);
+      RefPtr<StyleSheet> clonedSheet =
+        sheet->Clone(nullptr, nullptr, nullptr, nullptr);
       *aSheet = Move(clonedSheet);
       if (*aSheet && fromCompleteSheets &&
           !sheet->AsGecko()->GetOwnerNode() &&

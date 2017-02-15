@@ -40,9 +40,7 @@ namespace mozilla {
 class CSSStyleSheet;
 
 namespace css {
-class Rule;
 class GroupRule;
-class ImportRule;
 } // namespace css
 namespace dom {
 class CSSRuleList;
@@ -129,10 +127,10 @@ public:
     return Inner()->mNameSpaceMap;
   }
 
-  already_AddRefed<CSSStyleSheet> Clone(CSSStyleSheet* aCloneParent,
-                                        css::ImportRule* aCloneOwnerRule,
-                                        nsIDocument* aCloneDocument,
-                                        nsINode* aCloneOwningNode) const;
+  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+    css::ImportRule* aCloneOwnerRule,
+    nsIDocument* aCloneDocument,
+    nsINode* aCloneOwningNode) const final;
 
   bool IsModified() const final { return mDirty; }
 
