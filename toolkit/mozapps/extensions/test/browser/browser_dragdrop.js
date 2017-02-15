@@ -67,11 +67,9 @@ function checkInstallConfirmation(...urls) {
       }
       windows.delete(window);
 
-      if (windows.size > 0) {
+      if (windows.size > 0 || urls.length > 0) {
         return;
       }
-
-      is(urls.length, 0, "Saw install dialogs for all expected urls");
 
       let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                            .getService(Ci.nsIWindowMediator);
