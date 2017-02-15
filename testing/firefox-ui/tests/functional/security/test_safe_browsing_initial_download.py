@@ -79,4 +79,6 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
             Wait(self.marionette, timeout=60).until(
                 check_downloaded, message='Not all safebrowsing files have been downloaded')
         finally:
-            self.assertSetEqual(self.safebrowsing_files, set(os.listdir(self.safebrowsing_path)))
+            files_on_disk_toplevel = os.listdir(self.safebrowsing_path)
+            for f in self.safebrowsing_files:
+                self.assertIn(f, files_on_disk_toplevel)
