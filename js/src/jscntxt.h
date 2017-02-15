@@ -1057,6 +1057,9 @@ ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNumber,
     ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
                                     spindex, v, fallback, arg1, arg2))
 
+JSObject*
+CreateErrorNotesArray(JSContext* cx, JSErrorReport* report);
+
 } /* namespace js */
 
 extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];

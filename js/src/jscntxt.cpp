@@ -986,6 +986,52 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
     return ok;
 }
 
+JSObject*
+js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report)
+{
+    RootedArrayObject notesArray(cx, NewDenseEmptyArray(cx));
+    if (!notesArray)
+        return nullptr;
+
+    if (!report->notes)
+        return notesArray;
+
+    for (auto&& note : *report->notes) {
+        RootedPlainObject noteObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        if (!noteObj)
+            return nullptr;
+
+        RootedString messageStr(cx, note->newMessageString(cx));
+        if (!messageStr)
+            return nullptr;
+        RootedValue messageVal(cx, StringValue(messageStr));
+        if (!DefineProperty(cx, noteObj, cx->names().message, messageVal))
+            return nullptr;
+
+        RootedValue filenameVal(cx);
+        if (note->filename) {
+            RootedString filenameStr(cx, NewStringCopyZ<CanGC>(cx, note->filename));
+            if (!filenameStr)
+                return nullptr;
+            filenameVal = StringValue(filenameStr);
+        }
+        if (!DefineProperty(cx, noteObj, cx->names().fileName, filenameVal))
+            return nullptr;
+
+        RootedValue linenoVal(cx, Int32Value(note->lineno));
+        if (!DefineProperty(cx, noteObj, cx->names().lineNumber, linenoVal))
+            return nullptr;
+        RootedValue columnVal(cx, Int32Value(note->column));
+        if (!DefineProperty(cx, noteObj, cx->names().columnNumber, columnVal))
+            return nullptr;
+
+        if (!NewbornArrayPush(cx, notesArray, ObjectValue(*noteObj)))
+            return nullptr;
+    }
+
+    return notesArray;
+}
+
 const JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 #define MSG_DEF(name, count, exception, format) \
     { #name, format, count, exception } ,
