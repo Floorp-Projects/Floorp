@@ -10,7 +10,6 @@
 #include "content_decryption_module.h"
 #include "gmp-api/gmp-video-decode.h"
 #include "gmp-api/gmp-video-host.h"
-#include "MediaData.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 #include "WidevineDecryptor.h"
@@ -59,8 +58,6 @@ private:
 
   GMPVideoHost* mVideoHost;
   RefPtr<CDMWrapper> mCDMWrapper;
-  RefPtr<MediaByteBuffer> mExtraData;
-  RefPtr<MediaByteBuffer> mAnnexB;
   GMPVideoDecoderCallback* mCallback = nullptr;
   std::map<uint64_t, uint64_t> mFrameDurations;
   bool mSentInput;
