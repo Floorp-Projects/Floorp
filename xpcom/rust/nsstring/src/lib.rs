@@ -844,7 +844,7 @@ pub mod test_helpers {
                                   offset: *mut usize) {
                 unsafe {
                     // Create a temporary value of type T to get offsets, sizes
-                    // and aligns off of
+                    // and alignments from.
                     let tmp: $T = mem::zeroed();
                     *size = mem::size_of_val(&tmp.$member);
                     *align = mem::align_of_val(&tmp.$member);
