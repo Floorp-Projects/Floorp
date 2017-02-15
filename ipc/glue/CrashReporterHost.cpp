@@ -28,7 +28,6 @@ CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType, const Shmem&
 #ifdef MOZ_CRASHREPORTER
 bool
 CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
-                                       const AnnotationTable* aExtraNotes,
                                        nsString* aOutMinidumpID)
 {
   nsString dumpID;
@@ -61,9 +60,7 @@ CrashReporterHost::GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
   notes.Put(NS_LITERAL_CSTRING("StartupTime"), nsDependentCString(startTime));
 
   CrashReporterMetadataShmem::ReadAppNotes(mShmem, &notes);
-  if (aExtraNotes) {
-    CrashReporter::AppendExtraData(dumpID, *aExtraNotes);
-  }
+  CrashReporter::AppendExtraData(dumpID, mExtraNotes);
   CrashReporter::AppendExtraData(dumpID, notes);
 
   NotifyCrashService(mProcessType, dumpID, &notes);
@@ -268,6 +265,12 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
 
   AsyncAddCrash(processType, crashType, aChildDumpID);
   Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
+}
+
+void
+CrashReporterHost::AddNote(const nsCString& aKey, const nsCString& aValue)
+{
+  mExtraNotes.Put(aKey, aValue);
 }
 #endif
 
