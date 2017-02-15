@@ -36,7 +36,7 @@ window.addEventListener("load", function() {
     cases.forEach(function(aCase, aIndex) {
       is(window.getComputedStyle(aCase)
            .getPropertyValue("background-color"),
-         "transparent",
+         "rgba(0, 0, 0, 0)",
          aCase.textContent);
     });
     SimpleTest.finish();

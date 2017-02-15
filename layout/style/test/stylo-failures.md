@@ -558,7 +558,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * unitless zero as angle bug 1234357
     * test_property_syntax_errors.html `linear-gradient(0,` [10]
     * ... `hue-rotate(0)` [6]
-  * test_bug372770.html: rgba(0,0,0,0) and transparent bug 1328224 [4]
 * test_moz_device_pixel_ratio.html: probably unship -moz-device-pixel-ratio bug 1338425 [4]
 
 ## Spec Unclear
