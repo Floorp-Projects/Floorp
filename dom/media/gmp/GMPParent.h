@@ -166,7 +166,7 @@ private:
 #endif
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem) override;
+  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem, const NativeThreadId& aThreadId) override;
 
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent() override;

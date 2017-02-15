@@ -18,9 +18,12 @@
 namespace mozilla {
 namespace ipc {
 
-CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem)
+CrashReporterHost::CrashReporterHost(GeckoProcessType aProcessType,
+                                     const Shmem& aShmem,
+                                     CrashReporter::ThreadId aThreadId)
  : mProcessType(aProcessType),
    mShmem(aShmem),
+   mThreadId(aThreadId),
    mStartTime(::time(nullptr))
 {
 }
