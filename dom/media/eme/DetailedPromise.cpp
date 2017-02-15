@@ -22,8 +22,8 @@ DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
 
 DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
                                  const nsACString& aName,
-                                 Telemetry::ID aSuccessLatencyProbe,
-                                 Telemetry::ID aFailureLatencyProbe)
+                                 Telemetry::HistogramID aSuccessLatencyProbe,
+                                 Telemetry::HistogramID aFailureLatencyProbe)
   : DetailedPromise(aGlobal, aName)
 {
   mSuccessLatencyProbe.Construct(aSuccessLatencyProbe);
@@ -75,8 +75,8 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
 DetailedPromise::Create(nsIGlobalObject* aGlobal,
                         ErrorResult& aRv,
                         const nsACString& aName,
-                        Telemetry::ID aSuccessLatencyProbe,
-                        Telemetry::ID aFailureLatencyProbe)
+                        Telemetry::HistogramID aSuccessLatencyProbe,
+                        Telemetry::HistogramID aFailureLatencyProbe)
 {
   RefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
   promise->CreateWrapper(nullptr, aRv);
@@ -96,8 +96,8 @@ DetailedPromise::MaybeReportTelemetry(Status aStatus)
   uint32_t latency = (TimeStamp::Now() - mStartTime).ToMilliseconds();
   EME_LOG("%s %s latency %ums reported via telemetry", mName.get(),
           ((aStatus == Succeeded) ? "succcess" : "failure"), latency);
-  Telemetry::ID tid = (aStatus == Succeeded) ? mSuccessLatencyProbe.Value()
-                                             : mFailureLatencyProbe.Value();
+  Telemetry::HistogramID tid = (aStatus == Succeeded) ? mSuccessLatencyProbe.Value()
+                                                      : mFailureLatencyProbe.Value();
   Telemetry::Accumulate(tid, latency);
 }
 

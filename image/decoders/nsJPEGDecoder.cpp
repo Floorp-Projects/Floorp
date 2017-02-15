@@ -122,7 +122,7 @@ nsJPEGDecoder::~nsJPEGDecoder()
           this));
 }
 
-Maybe<Telemetry::ID>
+Maybe<Telemetry::HistogramID>
 nsJPEGDecoder::SpeedHistogram() const
 {
   return Some(Telemetry::IMAGE_DECODE_SPEED_JPEG);

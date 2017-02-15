@@ -251,7 +251,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     LOG("Audio MFTDecoder returned success but null output.");
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([]() -> void {
       LOG("Reporting telemetry AUDIO_MFT_OUTPUT_NULL_SAMPLES");
-      Telemetry::Accumulate(Telemetry::ID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
+      Telemetry::Accumulate(Telemetry::HistogramID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
     });
     // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
     AbstractThread::MainThread()->Dispatch(task.forget());
