@@ -309,7 +309,7 @@ void
 InternalHeaders::Fill(const Record<nsCString, nsCString>& aInit, ErrorResult& aRv)
 {
   for (auto& entry : aInit.Entries()) {
-    Append(NS_ConvertUTF16toUTF8(entry.mKey), entry.mValue, aRv);
+    Append(entry.mKey, entry.mValue, aRv);
     if (aRv.Failed()) {
       return;
     }
