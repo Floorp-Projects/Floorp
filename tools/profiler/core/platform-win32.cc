@@ -84,18 +84,14 @@ GetThreadHandle(PlatformData* aData)
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 
-// SamplerThread objects are used for creating and running threads. When the
-// Start() method is called the new thread starts running the Run() method in
-// the new thread. The SamplerThread object should not be deallocated before
-// the thread has terminated.
+// The sampler thread controls sampling and runs whenever the profiler is
+// active. It periodically runs through all registered threads, finds those
+// that should be sampled, then pauses and samples them.
 class SamplerThread
 {
  public:
-  // Initialize a Win32 thread object. The thread has an invalid thread
-  // handle until it is started.
   explicit SamplerThread(double interval)
-    : mStackSize(0)
-    , mThread(kNoThread)
+    : mThread(kNoThread)
     , mInterval(interval)
   {
     mInterval = floor(interval + 0.5);
@@ -123,10 +119,10 @@ class SamplerThread
   void Start() {
     mThread = reinterpret_cast<HANDLE>(
         _beginthreadex(NULL,
-                       static_cast<unsigned>(mStackSize),
+                       /* stack_size */ 0,
                        ThreadEntry,
                        this,
-                       0,
+                       /* initflag */ 0,
                        (unsigned int*) &mThreadId));
   }
 
@@ -138,13 +134,10 @@ class SamplerThread
 
   static void StartSampler() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(!mInstance);
 
-    if (mInstance == NULL) {
-      mInstance = new SamplerThread(gInterval);
-      mInstance->Start();
-    } else {
-      MOZ_ASSERT(mInstance->mInterval == gInterval);
-    }
+    mInstance = new SamplerThread(gInterval);
+    mInstance->Start();
   }
 
   static void StopSampler() {
@@ -286,7 +279,6 @@ class SamplerThread
   }
 
 private:
-  int mStackSize;
   HANDLE mThread;
   Thread::tid_t mThreadId;
 
@@ -303,6 +295,8 @@ SamplerThread* SamplerThread::mInstance = NULL;
 static void
 PlatformStart()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
   SamplerThread::StartSampler();
@@ -311,6 +305,8 @@ PlatformStart()
 static void
 PlatformStop()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(gIsActive);
   gIsActive = false;
   SamplerThread::StopSampler();
