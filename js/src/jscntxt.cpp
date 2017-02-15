@@ -446,49 +446,16 @@ js::ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg)
     }
 }
 
-bool
-js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
-               JSErrorReport* report, bool reportWarnings)
+enum class PrintErrorKind {
+    Error,
+    Warning,
+    StrictWarning,
+    Note
+};
+
+static void
+PrintErrorLine(JSContext* cx, FILE* file, const char* prefix, JSErrorReport* report)
 {
-    MOZ_ASSERT(report);
-
-    /* Conditionally ignore reported warnings. */
-    if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
-        return false;
-
-    char* prefix = nullptr;
-    if (report->filename)
-        prefix = JS_smprintf("%s:", report->filename);
-    if (report->lineno) {
-        char* tmp = prefix;
-        prefix = JS_smprintf("%s%u:%u ", tmp ? tmp : "", report->lineno, report->column);
-        JS_free(cx, tmp);
-    }
-    if (JSREPORT_IS_WARNING(report->flags)) {
-        char* tmp = prefix;
-        prefix = JS_smprintf("%s%swarning: ",
-                             tmp ? tmp : "",
-                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
-        JS_free(cx, tmp);
-    }
-
-    const char* message = toStringResult ? toStringResult.c_str() : report->message().c_str();
-
-    /* embedded newlines -- argh! */
-    const char* ctmp;
-    while ((ctmp = strchr(message, '\n')) != 0) {
-        ctmp++;
-        if (prefix)
-            fputs(prefix, file);
-        fwrite(message, 1, ctmp - message, file);
-        message = ctmp;
-    }
-
-    /* If there were no filename or lineno, the prefix might be empty */
-    if (prefix)
-        fputs(prefix, file);
-    fputs(message, file);
-
     if (const char16_t* linebuf = report->linebuf()) {
         size_t n = report->linebufLength();
 
@@ -518,9 +485,96 @@ js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
         }
         fputc('^', file);
     }
+}
+
+static void
+PrintErrorLine(JSContext* cx, FILE* file, const char* prefix, JSErrorNotes::Note* note)
+{
+}
+
+template <typename T>
+static bool
+PrintSingleError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
+                 T* report, PrintErrorKind kind)
+{
+    UniquePtr<char> prefix;
+    if (report->filename)
+        prefix.reset(JS_smprintf("%s:", report->filename));
+
+    if (report->lineno) {
+        UniquePtr<char> tmp(JS_smprintf("%s%u:%u ", prefix ? prefix.get() : "", report->lineno,
+                                        report->column));
+        prefix = Move(tmp);
+    }
+
+    if (kind != PrintErrorKind::Error) {
+        const char* kindPrefix = nullptr;
+        switch (kind) {
+          case PrintErrorKind::Error:
+            break;
+          case PrintErrorKind::Warning:
+            kindPrefix = "warning";
+            break;
+          case PrintErrorKind::StrictWarning:
+            kindPrefix = "strict warning";
+            break;
+          case PrintErrorKind::Note:
+            kindPrefix = "note";
+            break;
+        }
+
+        UniquePtr<char> tmp(JS_smprintf("%s%s: ", prefix ? prefix.get() : "", kindPrefix));
+        prefix = Move(tmp);
+    }
+
+    const char* message = toStringResult ? toStringResult.c_str() : report->message().c_str();
+
+    /* embedded newlines -- argh! */
+    const char* ctmp;
+    while ((ctmp = strchr(message, '\n')) != 0) {
+        ctmp++;
+        if (prefix)
+            fputs(prefix.get(), file);
+        fwrite(message, 1, ctmp - message, file);
+        message = ctmp;
+    }
+
+    /* If there were no filename or lineno, the prefix might be empty */
+    if (prefix)
+        fputs(prefix.get(), file);
+    fputs(message, file);
+
+    PrintErrorLine(cx, file, prefix.get(), report);
     fputc('\n', file);
+
     fflush(file);
-    JS_free(cx, prefix);
+    return true;
+}
+
+bool
+js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
+               JSErrorReport* report, bool reportWarnings)
+{
+    MOZ_ASSERT(report);
+
+    /* Conditionally ignore reported warnings. */
+    if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
+        return false;
+
+    PrintErrorKind kind = PrintErrorKind::Error;
+    if (JSREPORT_IS_WARNING(report->flags)) {
+        if (JSREPORT_IS_STRICT(report->flags))
+            kind = PrintErrorKind::StrictWarning;
+        else
+            kind = PrintErrorKind::Warning;
+    }
+    PrintSingleError(cx, file, toStringResult, report, kind);
+
+    if (report->notes) {
+        for (auto&& note : *report->notes)
+            PrintSingleError(cx, file, JS::ConstUTF8CharsZ(), note.get(), PrintErrorKind::Note);
+    }
+
     return true;
 }
 
