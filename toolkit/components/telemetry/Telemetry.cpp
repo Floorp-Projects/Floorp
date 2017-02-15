@@ -45,7 +45,7 @@
 #include "Telemetry.h"
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
-#include "TelemetryIPCAccumulator.h"
+#include "ipc/TelemetryIPCAccumulator.h"
 #include "TelemetryScalar.h"
 #include "TelemetryEvent.h"
 #include "WebrtcTelemetry.h"
@@ -3187,34 +3187,6 @@ AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
              static_cast<uint32_t>((end - start).ToMilliseconds()));
-}
-
-void
-AccumulateChild(GeckoProcessType aProcessType,
-                const nsTArray<Accumulation>& aAccumulations)
-{
-  TelemetryHistogram::AccumulateChild(aProcessType, aAccumulations);
-}
-
-void
-AccumulateChildKeyed(GeckoProcessType aProcessType,
-                     const nsTArray<KeyedAccumulation>& aAccumulations)
-{
-  TelemetryHistogram::AccumulateChildKeyed(aProcessType, aAccumulations);
-}
-
-void
-UpdateChildScalars(GeckoProcessType aProcessType,
-                   const nsTArray<ScalarAction>& aScalarActions)
-{
-  TelemetryScalar::UpdateChildData(aProcessType, aScalarActions);
-}
-
-void
-UpdateChildKeyedScalars(GeckoProcessType aProcessType,
-                        const nsTArray<KeyedScalarAction>& aScalarActions)
-{
-  TelemetryScalar::UpdateChildKeyedData(aProcessType, aScalarActions);
 }
 
 const char*

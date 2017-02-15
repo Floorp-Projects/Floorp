@@ -110,8 +110,8 @@ child:
   async NotifyUiObservers(nsCString aTopic);
 
   // Messages for reporting telemetry to the UI process.
-  async AccumulateChildHistogram(Accumulation[] accumulations);
-  async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
+  async AccumulateChildHistograms(Accumulation[] accumulations);
+  async AccumulateChildKeyedHistograms(KeyedAccumulation[] accumulations);
   async UpdateChildScalars(ScalarAction[] actions);
   async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
 
