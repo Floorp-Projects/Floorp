@@ -26,6 +26,8 @@
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
+// This file is used for both Linux and Android.
+
 /*
 # vim: sw=2
 */
@@ -361,8 +363,6 @@ static void
 PlatformStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  LOG("Sampler started");
 
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
