@@ -4205,7 +4205,7 @@ function updateUserContextUIIndicator() {
     return;
   }
 
-  let identity = ContextualIdentityService.getIdentityFromId(userContextId);
+  let identity = ContextualIdentityService.getPublicIdentityFromId(userContextId);
   if (!identity) {
     hbox.setAttribute("data-identity-color", "");
     hbox.hidden = true;
