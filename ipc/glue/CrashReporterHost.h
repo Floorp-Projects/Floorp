@@ -30,14 +30,13 @@ public:
 
 #ifdef MOZ_CRASHREPORTER
   bool GenerateCrashReport(base::ProcessId aPid,
-                           const AnnotationTable* aExtraNotes = nullptr,
                            nsString* aOutMinidumpID = nullptr)
   {
     RefPtr<nsIFile> crashDump;
     if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
       return false;
     }
-    return GenerateCrashReport(crashDump, aExtraNotes, aOutMinidumpID);
+    return GenerateCrashReport(crashDump, aOutMinidumpID);
   }
 
   // This is a static helper function to notify the crash service that a
@@ -49,12 +48,12 @@ public:
     GeckoProcessType aProcessType,
     const nsString& aChildDumpID,
     const AnnotationTable* aNotes);
+
+  void AddNote(const nsCString& aKey, const nsCString& aValue);
 #endif
 
 private:
-  bool GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
-                           const AnnotationTable* aExtraNotes,
-                           nsString* aOutMinidumpID);
+  bool GenerateCrashReport(RefPtr<nsIFile> aCrashDump, nsString* aOutMinidumpID);
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
 
@@ -62,6 +61,7 @@ private:
   GeckoProcessType mProcessType;
   Shmem mShmem;
   time_t mStartTime;
+  AnnotationTable mExtraNotes;
 };
 
 } // namespace ipc
