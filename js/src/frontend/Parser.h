@@ -833,9 +833,12 @@ class ParserBase : public StrictModeGetter
 
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
+    void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
 
     /* Report the given error at the given offset. */
     void errorAt(uint32_t offset, unsigned errorNumber, ...);
+    void errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                          unsigned errorNumber, ...);
 
     /*
      * Handle a strict mode error at the current offset.  Report an error if in
