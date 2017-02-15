@@ -2029,7 +2029,7 @@ profiler_start(int aProfileEntries, double aInterval,
   }
 #endif
 
-  gGatherer = new mozilla::ProfileGatherer(gSampler);
+  gGatherer = new mozilla::ProfileGatherer();
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
   PlatformStart();
