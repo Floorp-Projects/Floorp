@@ -61,23 +61,26 @@ using BindingIter = ParseContext::Scope::BindingIter;
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 // Read a token. Report an error and return null() if that token doesn't match
-// to the given func's condition.
-#define MUST_MATCH_TOKEN_FUNC_MOD(func, modifier, errorNumber)                              \
+// to the condition.  Do not use MUST_MATCH_TOKEN_INTERNAL directly.
+#define MUST_MATCH_TOKEN_INTERNAL(cond, modifier, errorNumber)                              \
     JS_BEGIN_MACRO                                                                          \
         TokenKind token;                                                                    \
         if (!tokenStream.getToken(&token, modifier))                                        \
             return null();                                                                  \
-        if (!(func)(token)) {                                                               \
+        if (!(cond)) {                                                                      \
             error(errorNumber);                                                             \
             return null();                                                                  \
         }                                                                                   \
     JS_END_MACRO
 
 #define MUST_MATCH_TOKEN_MOD(tt, modifier, errorNumber) \
-    MUST_MATCH_TOKEN_FUNC_MOD([](TokenKind tok) { return tok == tt; }, modifier, errorNumber)
+    MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, errorNumber)
 
 #define MUST_MATCH_TOKEN(tt, errorNumber) \
     MUST_MATCH_TOKEN_MOD(tt, TokenStream::None, errorNumber)
+
+#define MUST_MATCH_TOKEN_FUNC_MOD(func, modifier, errorNumber) \
+    MUST_MATCH_TOKEN_INTERNAL((func)(token), modifier, errorNumber)
 
 #define MUST_MATCH_TOKEN_FUNC(func, errorNumber) \
     MUST_MATCH_TOKEN_FUNC_MOD(func, TokenStream::None, errorNumber)
