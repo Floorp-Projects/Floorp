@@ -107,6 +107,15 @@ const PAGECONTENT_COLORS_ON_SELECT =
   '  <option value="Four" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const TRANSPARENT_SELECT =
+  "<html><head><style>" +
+  "  #one { background-color: transparent; }" +
+  "</style>" +
+  "<body><select id='one'>" +
+  '  <option value="One">{"unstyled": "true"}</option>' +
+  '  <option value="Two" selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -161,16 +170,22 @@ function getClickEvents() {
   });
 }
 
+function getSystemColor(color) {
+  // Need to convert system color to RGB color.
+  let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
+  textarea.style.color = color;
+  return getComputedStyle(textarea).color;
+}
+
 function testOptionColors(index, item, menulist) {
+  // The label contains a JSON string of the expected colors for
+  // `color` and `background-color`.
   let expected = JSON.parse(item.label);
 
   for (let color of Object.keys(expected)) {
     if (color.toLowerCase().includes("color") &&
         !expected[color].startsWith("rgb")) {
-      // Need to convert system color to RGB color.
-      let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
-      textarea.style.color = expected[color];
-      expected[color] = getComputedStyle(textarea).color;
+      expected[color] = getSystemColor(expected[color]);
     }
   }
 
@@ -829,8 +844,6 @@ add_task(function* test_colors_applied_to_popup() {
   yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
   yield popupShownPromise;
 
-  // The label contains a JSON string of the expected colors for
-  // `color` and `background-color`.
   is(selectPopup.parentNode.itemCount, 4, "Correct number of items");
   let child = selectPopup.firstChild;
   let idx = 1;
@@ -848,6 +861,40 @@ add_task(function* test_colors_applied_to_popup() {
   }
 
   yield hideSelectPopup(selectPopup, "escape");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks when a <select> element has a transparent background applied to itself.
+add_task(function* test_transparent_applied_to_popup() {
+  const pageUrl = "data:text/html," + escape(TRANSPARENT_SELECT);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  is(selectPopup.parentNode.itemCount, 2, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+
+  is(getComputedStyle(selectPopup).color, getSystemColor("-moz-ComboboxText"),
+    "popup has expected foreground color");
+  is(getComputedStyle(selectPopup).backgroundColor, getSystemColor("-moz-Combobox"),
+    "popup has expected background color");
+
+  ok(!child.selected, "The first child should not be selected");
+  while (child) {
+    testOptionColors(idx, child, menulist);
+    idx++;
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 

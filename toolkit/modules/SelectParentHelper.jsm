@@ -42,11 +42,26 @@ this.SelectParentHelper = {
     stylesheet = menulist.appendChild(stylesheet);
 
     let sheet = stylesheet.sheet;
-    if (selectBackgroundColor != uaSelectBackgroundColor ||
-        selectColor != uaSelectColor) {
+    let ruleBody = "";
+
+    // Some webpages set the <select> backgroundColor to transparent,
+    // but they don't intend to change the popup to transparent.
+    if (selectBackgroundColor != uaSelectBackgroundColor &&
+        selectBackgroundColor != "transparent" &&
+        selectBackgroundColor != selectColor) {
+      ruleBody = `background-color: ${selectBackgroundColor};`;
+    }
+
+    if (selectColor != uaSelectColor &&
+        selectColor != selectBackgroundColor &&
+        (selectBackgroundColor != "transparent" ||
+         selectColor != uaSelectBackgroundColor)) {
+      ruleBody += `color: ${selectColor};`;
+    }
+
+    if (ruleBody) {
       sheet.insertRule(`menupopup {
-        background-color: ${selectBackgroundColor};
-        color: ${selectColor};
+        ${ruleBody}
       }`, 0);
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
