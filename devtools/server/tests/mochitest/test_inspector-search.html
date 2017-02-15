@@ -48,7 +48,7 @@ window.onload = function () {
     let walkerFront = yield inspector.getWalker();
     ok(walkerFront, "getWalker() should return an actor.");
 
-    walkerActor = DebuggerServer._searchAllConnectionsForActor(walkerFront.actorID);
+    walkerActor = DebuggerServer.searchAllConnectionsForActor(walkerFront.actorID);
     ok(walkerActor,
       "Got a reference to the walker actor (" + walkerFront.actorID + ")");
 
