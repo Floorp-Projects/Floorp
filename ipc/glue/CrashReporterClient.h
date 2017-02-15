@@ -33,15 +33,8 @@ public:
   // crash reporter needs metadata), the shmem should be parsed.
   template <typename T>
   static bool InitSingleton(T* aToplevelProtocol) {
-    // 16KB should be enough for most metadata - see bug 1278717 comment #11.
-    static const size_t kShmemSize = 16 * 1024;
-
     Shmem shmem;
-    bool rv = aToplevelProtocol->AllocUnsafeShmem(
-      kShmemSize,
-      SharedMemory::TYPE_BASIC,
-      &shmem);
-    if (!rv) {
+    if (!AllocShmem(aToplevelProtocol, &shmem)) {
       return false;
     }
 
@@ -52,6 +45,19 @@ public:
     return true;
   }
 
+  template <typename T>
+  static bool AllocShmem(T* aToplevelProtocol, Shmem* aOutShmem) {
+    // 16KB should be enough for most metadata - see bug 1278717 comment #11.
+    static const size_t kShmemSize = 16 * 1024;
+
+    return aToplevelProtocol->AllocUnsafeShmem(
+      kShmemSize,
+      SharedMemory::TYPE_BASIC,
+      aOutShmem);
+  }
+
+  static void InitSingletonWithShmem(const Shmem& aShmem);
+
   static void DestroySingleton();
   static RefPtr<CrashReporterClient> GetSingleton();
 
@@ -61,8 +67,6 @@ public:
 private:
   explicit CrashReporterClient(const Shmem& aShmem);
   ~CrashReporterClient();
-
-  static void InitSingletonWithShmem(const Shmem& aShmem);
 
 private:
   static StaticMutex sLock;
