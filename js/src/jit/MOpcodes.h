@@ -173,6 +173,7 @@ namespace jit {
     _(StoreSlot)                                                            \
     _(FunctionEnvironment)                                                  \
     _(NewLexicalEnvironmentObject)                                          \
+    _(CopyLexicalEnvironmentObject)                                         \
     _(FilterTypeSet)                                                        \
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \

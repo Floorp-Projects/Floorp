@@ -3449,6 +3449,19 @@ CodeGenerator::visitNewLexicalEnvironmentObject(LNewLexicalEnvironmentObject* li
     callVM(NewLexicalEnvironmentObjectInfo, lir);
 }
 
+typedef JSObject* (*CopyLexicalEnvironmentObjectFn)(JSContext*, HandleObject, bool);
+static const VMFunction CopyLexicalEnvironmentObjectInfo =
+    FunctionInfo<CopyLexicalEnvironmentObjectFn>(js::jit::CopyLexicalEnvironmentObject,
+                                                "js::jit::CopyLexicalEnvironmentObject");
+
+void
+CodeGenerator::visitCopyLexicalEnvironmentObject(LCopyLexicalEnvironmentObject* lir)
+{
+    pushArg(Imm32(lir->mir()->copySlots()));
+    pushArg(ToRegister(lir->env()));
+    callVM(CopyLexicalEnvironmentObjectInfo, lir);
+}
+
 void
 CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity* guard)
 {

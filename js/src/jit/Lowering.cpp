@@ -2531,6 +2531,19 @@ LIRGenerator::visitNewLexicalEnvironmentObject(MNewLexicalEnvironmentObject* ins
 }
 
 void
+LIRGenerator::visitCopyLexicalEnvironmentObject(MCopyLexicalEnvironmentObject* ins)
+{
+    MDefinition* env = ins->env();
+    MOZ_ASSERT(env->type() == MIRType::Object);
+
+    LCopyLexicalEnvironmentObject* lir =
+        new(alloc()) LCopyLexicalEnvironmentObject(useRegisterAtStart(env));
+
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitKeepAliveObject(MKeepAliveObject* ins)
 {
     MDefinition* obj = ins->object();
