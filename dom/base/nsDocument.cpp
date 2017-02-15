@@ -3605,7 +3605,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 void
 nsDocument::MaybeRescheduleAnimationFrameNotifications()
 {
-  if (!mPresShell || !IsEventHandlingEnabled()) {
+  if (!mPresShell || !IsEventHandlingEnabled() || AnimationsPaused()) {
     // bail out for now, until one of those conditions changes
     return;
   }
@@ -9863,7 +9863,7 @@ nsIDocument::CancelFrameRequestCallback(int32_t aHandle)
   // mFrameRequestCallbacks is stored sorted by handle
   if (mFrameRequestCallbacks.RemoveElementSorted(aHandle) &&
       mFrameRequestCallbacks.IsEmpty() &&
-      mPresShell && IsEventHandlingEnabled()) {
+      mPresShell && IsEventHandlingEnabled() && !AnimationsPaused()) {
     mPresShell->GetPresContext()->RefreshDriver()->
       RevokeFrameRequestCallbacks(this);
   }
