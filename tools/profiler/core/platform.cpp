@@ -126,7 +126,7 @@ static int gEntrySize = 0;
 
 // This variable is set on the main thread in profiler_{start,stop}(), and
 // mostly read on the main thread. There is one read off the main thread in
-// SignalSender() in platform-linux.cc which is safe because there is implicit
+// SigprofSender() in platform-linux.cc which is safe because there is implicit
 // synchronization between that function and the set points in
 // profiler_{start,stop}().
 static double gInterval = 0;
