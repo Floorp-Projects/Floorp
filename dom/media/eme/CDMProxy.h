@@ -34,8 +34,6 @@ struct DecryptResult {
   RefPtr<MediaRawData> mSample;
 };
 
-typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
-
 class CDMKeyInfo {
 public:
   explicit CDMKeyInfo(const nsTArray<uint8_t>& aKeyId)
@@ -76,6 +74,8 @@ protected:
 public:
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  typedef MozPromise<DecryptResult, DecryptResult, /* IsExclusive = */ true> DecryptPromise;
 
   // Main thread only.
   CDMProxy(dom::MediaKeys* aKeys,
