@@ -555,12 +555,13 @@ pref("ui.dragThresholdY", 25);
 pref("layers.acceleration.disabled", false);
 pref("layers.async-video.enabled", true);
 
-pref("apz.content_response_timeout", 600);
+// APZ physics settings (fling acceleration, fling curving and axis lock) have
+// been reviewed by UX
 pref("apz.allow_immediate_handoff", false);
-pref("apz.touch_start_tolerance", "0.06");
 pref("apz.axis_lock.breakout_angle", "0.7853982");    // PI / 4 (45 degrees)
-// APZ physics settings reviewed by UX
 pref("apz.axis_lock.mode", 1); // Use "strict" axis locking
+pref("apz.content_response_timeout", 600);
+pref("apz.fling_accel_interval_ms", 750);
 pref("apz.fling_curve_function_x1", "0.59");
 pref("apz.fling_curve_function_y1", "0.46");
 pref("apz.fling_curve_function_x2", "0.05");
@@ -570,8 +571,8 @@ pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.0");
 pref("apz.max_velocity_inches_per_ms", "0.07");
-pref("apz.fling_accel_interval_ms", 750);
 pref("apz.overscroll.enabled", true);
+pref("apz.touch_start_tolerance", "0.06");
 
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);
