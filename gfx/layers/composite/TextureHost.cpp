@@ -81,11 +81,6 @@ public:
 
   uint64_t GetSerial() const { return mSerial; }
 
-  virtual mozilla::ipc::IPCResult RecvDestroySync() override {
-    DestroyIfNeeded();
-    return IPC_OK();
-  }
-
   HostIPCAllocator* mSurfaceAllocator;
   RefPtr<TextureHost> mTextureHost;
   // mSerial is unique in TextureClient's process.

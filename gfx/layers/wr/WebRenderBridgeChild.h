@@ -74,7 +74,7 @@ private:
                            const ThebesBufferData& aThebesBufferData,
                            const nsIntRegion& aUpdatedRegion) override;
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
-  bool DestroyInTransaction(PTextureChild* aTexture, bool aSynchronously) override;
+  bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                      TextureClient* aTexture) override;
@@ -100,7 +100,7 @@ private:
     Release();
   }
 
-  bool AddOpDestroy(const OpDestroy& aOp, bool aSynchronously);
+  bool AddOpDestroy(const OpDestroy& aOp);
 
   nsTArray<WebRenderCommand> mCommands;
   nsTArray<OpDestroy> mDestroyedActors;

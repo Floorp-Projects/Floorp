@@ -483,30 +483,26 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
 }
 
 static bool
-AddOpDestroy(Transaction* aTxn, const OpDestroy& op, bool synchronously)
+AddOpDestroy(Transaction* aTxn, const OpDestroy& op)
 {
   if (!aTxn->Opened()) {
     return false;
   }
 
   aTxn->mDestroyedActors.AppendElement(op);
-  if (synchronously) {
-    aTxn->MarkSyncTransaction();
-  }
-
   return true;
 }
 
 bool
-ShadowLayerForwarder::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
+ShadowLayerForwarder::DestroyInTransaction(PTextureChild* aTexture)
 {
-  return AddOpDestroy(mTxn, OpDestroy(aTexture), synchronously);
+  return AddOpDestroy(mTxn, OpDestroy(aTexture));
 }
 
 bool
 ShadowLayerForwarder::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return AddOpDestroy(mTxn, OpDestroy(aHandle), false);
+  return AddOpDestroy(mTxn, OpDestroy(aHandle));
 }
 
 void
