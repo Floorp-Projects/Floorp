@@ -2228,7 +2228,12 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     var dataLocale = r.dataLocale;
 
     // Steps 15-17.
-    internalProps.timeZone = lazyDateTimeFormatData.timeZone;
+    var tz = lazyDateTimeFormatData.timeZone;
+    if (tz === undefined) {
+        // Step 16.
+        tz = DefaultTimeZone();
+    }
+    internalProps.timeZone = tz;
 
     // Step 18.
     var formatOpt = lazyDateTimeFormatData.formatOpt;
@@ -2348,9 +2353,6 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
 
         // Step 15.c.
         tz = CanonicalizeTimeZoneName(timeZone);
-    } else {
-        // Step 16.
-        tz = DefaultTimeZone();
     }
     lazyDateTimeFormatData.timeZone = tz;
 
