@@ -1153,6 +1153,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this.maybeCanonizeURL(event, this.value);
             let rv = this.mController.handleEnter(false, event);
             this.handleEnterInstance = null;
+            this.popup.overrideValue = null;
             return rv;
           }
 
@@ -1832,6 +1833,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 if (this.input.mController.searchString == searchString) {
                   this.input.maybeCanonizeURL(event, searchString);
                   this.input.mController.handleEnter(false, event);
+                  this.overrideValue = null;
                 }
               }, 0);
             }
@@ -1853,7 +1855,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           //    the default -1 value. Then handleEnter will know it should not
           //    delay the action, cause a result wont't ever arrive.
           this.input.controller.setInitiallySelectedIndex(0);
-          this.overrideValue = null;
         ]]></body>
       </method>
 
