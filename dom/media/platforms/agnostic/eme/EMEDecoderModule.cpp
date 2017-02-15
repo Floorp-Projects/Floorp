@@ -6,18 +6,19 @@
 
 #include "EMEDecoderModule.h"
 #include "EMEVideoDecoder.h"
+#include "GMPDecoderModule.h"
+#include "GMPService.h"
+#include "MP4Decoder.h"
 #include "MediaDataDecoderProxy.h"
+#include "MediaInfo.h"
+#include "MediaPrefs.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
+#include "mozilla/EMEUtils.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
-#include "nsServiceManagerUtils.h"
-#include "MediaInfo.h"
 #include "nsClassHashtable.h"
-#include "GMPDecoderModule.h"
-#include "MP4Decoder.h"
-#include "MediaPrefs.h"
-#include "mozilla/EMEUtils.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 
@@ -191,7 +192,8 @@ private:
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<TaskQueue> mTaskQueue;
   RefPtr<CDMProxy> mProxy;
-  nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder> mDecrypts;
+  nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder>
+    mDecrypts;
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
@@ -295,7 +297,8 @@ EMEDecoderModule::~EMEDecoderModule()
 static already_AddRefed<MediaDataDecoderProxy>
 CreateDecoderWrapper(CDMProxy* aProxy, const CreateDecoderParams& aParams)
 {
-  RefPtr<gmp::GeckoMediaPluginService> s(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
+  RefPtr<gmp::GeckoMediaPluginService> s(
+    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
   if (!s) {
     return nullptr;
   }

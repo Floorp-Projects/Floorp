@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDataDecoderProxy.h"
-#include "MediaData.h"
-#include "mozilla/SyncRunnable.h"
 
 namespace mozilla {
 
