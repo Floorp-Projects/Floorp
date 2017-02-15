@@ -661,8 +661,8 @@ TokenStream::seek(const Position& pos, const TokenStream& other)
 }
 
 bool
-TokenStream::reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, unsigned errorNumber,
-                                           va_list args)
+TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                           bool strictMode, unsigned errorNumber, va_list args)
 {
     // In strict mode code, this is an error, not merely a warning.
     unsigned flags;
@@ -673,7 +673,7 @@ TokenStream::reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, uns
     else
         return true;
 
-    return reportCompileErrorNumberVA(offset, flags, errorNumber, args);
+    return reportCompileErrorNumberVA(Move(notes), offset, flags, errorNumber, args);
 }
 
 void
@@ -699,8 +699,8 @@ CompileError::throwError(JSContext* cx)
 }
 
 bool
-TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigned errorNumber,
-                                        va_list args)
+TokenStream::reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                        unsigned flags, unsigned errorNumber, va_list args)
 {
     bool warning = JSREPORT_IS_WARNING(flags);
 
@@ -718,6 +718,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
         return false;
     CompileError& err = *tempErrPtr;
 
+    err.notes = Move(notes);
     err.flags = flags;
     err.errorNumber = errorNumber;
     err.filename = filename;
@@ -809,7 +810,7 @@ TokenStream::reportStrictModeError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportStrictModeErrorNumberVA(currentToken().pos.begin, strictMode(),
+    bool result = reportStrictModeErrorNumberVA(nullptr, currentToken().pos.begin, strictMode(),
                                                 errorNumber, args);
     va_end(args);
     return result;
@@ -820,8 +821,8 @@ TokenStream::reportError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(currentToken().pos.begin, JSREPORT_ERROR, errorNumber,
-                                             args);
+    bool result = reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_ERROR,
+                                             errorNumber, args);
     va_end(args);
     return result;
 }
@@ -831,8 +832,8 @@ TokenStream::reportErrorNoOffset(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(NoOffset, JSREPORT_ERROR, errorNumber,
-                                             args);
+    bool result = reportCompileErrorNumberVA(nullptr, NoOffset, JSREPORT_ERROR,
+                                             errorNumber, args);
     va_end(args);
     return result;
 }
@@ -842,19 +843,21 @@ TokenStream::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportCompileErrorNumberVA(currentToken().pos.begin, JSREPORT_WARNING,
+    bool result = reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_WARNING,
                                              errorNumber, args);
     va_end(args);
     return result;
 }
 
 bool
-TokenStream::reportExtraWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args)
+TokenStream::reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                             unsigned errorNumber, va_list args)
 {
     if (!options().extraWarningsOption)
         return true;
 
-    return reportCompileErrorNumberVA(offset, JSREPORT_STRICT|JSREPORT_WARNING, errorNumber, args);
+    return reportCompileErrorNumberVA(Move(notes), offset, JSREPORT_STRICT|JSREPORT_WARNING,
+                                      errorNumber, args);
 }
 
 void
@@ -865,7 +868,7 @@ TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
     unsigned flags = options().throwOnAsmJSValidationFailureOption
                      ? JSREPORT_ERROR
                      : JSREPORT_WARNING;
-    reportCompileErrorNumberVA(offset, flags, errorNumber, args);
+    reportCompileErrorNumberVA(nullptr, offset, flags, errorNumber, args);
     va_end(args);
 }
 
@@ -877,7 +880,8 @@ TokenStream::error(unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        reportCompileErrorNumberVA(currentToken().pos.begin, JSREPORT_ERROR, errorNumber, args);
+        reportCompileErrorNumberVA(nullptr, currentToken().pos.begin, JSREPORT_ERROR,
+                                   errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
@@ -890,7 +894,7 @@ TokenStream::errorAt(uint32_t offset, unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+        reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR, errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
