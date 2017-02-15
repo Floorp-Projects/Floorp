@@ -65,7 +65,7 @@ function step1() {
     synthesizeMouse(divone, 5, 7, moveEvent, window);
     is(getComputedStyle(divone, "").backgroundColor, "rgb(0, 0, 255)",
        ":hover applies");
-    is(getComputedStyle(divone.firstChild, "").backgroundColor, "transparent",
+    is(getComputedStyle(divone.firstChild, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     synthesizeMouse(divone, 5, 2, moveEvent, window);
     is(getComputedStyle(divone, "").backgroundColor, "rgb(0, 0, 255)",
@@ -73,9 +73,9 @@ function step1() {
     is(getComputedStyle(divone.firstChild, "").backgroundColor, "rgb(255, 0, 0)",
        ":hover applies");
     synthesizeMouse(divone, 15, 7, moveEvent, window);
-    is(getComputedStyle(divone, "").backgroundColor, "transparent",
+    is(getComputedStyle(divone, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
-    is(getComputedStyle(divone.firstChild, "").backgroundColor, "transparent",
+    is(getComputedStyle(divone.firstChild, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     synthesizeMouse(divone, 15, 2, moveEvent, window);
     is(getComputedStyle(divone, "").backgroundColor, "rgb(0, 0, 255)",
@@ -115,7 +115,7 @@ function step3() {
         step4();
         return;
     }
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     setResize("step4()");
     /* expect to get a second resize from the oscillation */
@@ -144,7 +144,7 @@ var step6called = false;
 function step6() {
     is(step6called, false, "step6 called only once");
     step6called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
     setTimeout(step7, 500); // time to detect oscillations if they exist
@@ -156,7 +156,7 @@ function step7() {
     if (step7called)
         return;
     step7called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     setTimeout(step8, 500); // time to detect oscillations if they exist
 }
@@ -195,7 +195,7 @@ function step10() {
         step11();
         return;
     }
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     setResize("step11()");
     /* expect to get a second resize from the oscillation */
@@ -224,7 +224,7 @@ var step13called = false;
 function step13() {
     is(step13called, false, "step13 called only once");
     step13called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     setResize("step14()");
     divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
@@ -251,7 +251,7 @@ function step15() {
     if (step15called)
         return;
     step15called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgba(0, 0, 0, 0)",
        ":hover does not apply");
     setTimeout(finish, 500); // time to detect oscillations if they exist
 }
