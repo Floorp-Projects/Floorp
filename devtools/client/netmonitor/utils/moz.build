@@ -4,5 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'format-utils.js'
+    'format-utils.js',
+    'mdn-utils.js',
 )

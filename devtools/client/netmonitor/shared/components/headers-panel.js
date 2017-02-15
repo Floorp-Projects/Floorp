@@ -12,17 +12,17 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../../l10n");
 const { writeHeaderText } = require("../../request-utils");
+const { getHeadersURL } = require("../../utils/mdn-utils");
 const { getFormattedSize } = require("../../utils/format-utils");
-const Services = require("Services");
-const { gDevTools } = require("devtools/client/framework/devtools");
-const HeadersMDN = require("devtools/client/netmonitor/shared/components/headers-mdn");
 const { REPS, MODE } = require("devtools/client/shared/components/reps/load-reps");
 const Rep = createFactory(REPS.Rep);
 
 // Components
+const MDNLink = createFactory(require("./mdn-link"));
 const PropertiesView = createFactory(require("./properties-view"));
 
-const { a, button, div, input, textarea } = DOM;
+const { button, div, input, textarea } = DOM;
+
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
 const RAW_HEADERS = L10N.getStr("netmonitor.summary.rawHeaders");
 const RAW_HEADERS_REQUEST = L10N.getStr("netmonitor.summary.rawHeaders.requestHeaders");
@@ -87,6 +87,32 @@ const HeadersPanel = createClass({
           readOnly: true,
           value,
         }),
+      )
+    );
+  },
+
+  renderValue(props) {
+    const member = props.member;
+    const value = props.value;
+
+    if (typeof value !== "string") {
+      return null;
+    }
+
+    let headerDocURL = getHeadersURL(member.name);
+
+    return (
+      div({ className: "treeValueCellDivider" },
+        Rep(Object.assign(props, {
+          // FIXME: A workaround for the issue in StringRep
+          // Force StringRep to crop the text everytime
+          member: Object.assign({}, member, { open: false }),
+          mode: MODE.TINY,
+          cropLimit: 60,
+        })),
+        headerDocURL ? MDNLink({
+          url: headerDocURL,
+        }) : null
       )
     );
   },
@@ -213,49 +239,11 @@ const HeadersPanel = createClass({
           object,
           filterPlaceHolder: HEADERS_FILTER_TEXT,
           sectionNames: Object.keys(object),
-          renderValue
+          renderValue: this.renderValue,
         }),
       )
     );
   }
 });
-
-function onLearnMoreClick(e, headerDocURL) {
-  e.stopPropagation();
-  e.preventDefault();
-
-  let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  win.openUILinkIn(headerDocURL, "tab");
-}
-
-function renderValue(props) {
-  const { member, value } = props;
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  let headerDocURL = HeadersMDN.getURL(member.name);
-
-  return (
-    div({ className: "treeValueCellDivider" },
-      Rep(Object.assign(props, {
-        // FIXME: A workaround for the issue in StringRep
-        // Force StringRep to crop the text everytime
-        member: Object.assign({}, member, { open: false }),
-        mode: MODE.TINY,
-        cropLimit: 60,
-      })),
-      headerDocURL ?
-        a({
-          className: "learn-more-link",
-          title: headerDocURL,
-          onClick: (e) => onLearnMoreClick(e, headerDocURL),
-        }, `[${L10N.getStr("netmonitor.headers.learnMore")}]`)
-        :
-        null
-    )
-  );
-}
 
 module.exports = HeadersPanel;

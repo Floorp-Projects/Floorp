@@ -1,20 +1,14 @@
-/* this source code form is subject to the terms of the mozilla public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * A mapping of header names to external documentation. Any header included
- * here will show a "Learn More" link alongside it.
- */
-
 "use strict";
 
-var URL_DOMAIN = "https://developer.mozilla.org";
-const URL_PATH = "/en-US/docs/Web/HTTP/Headers/";
-const URL_PARAMS =
-  "?utm_source=mozilla&utm_medium=devtools-netmonitor&utm_campaign=default";
-
-var SUPPORTED_HEADERS = [
+/**
+ * A mapping of header names to external documentation. Any header included
+ * here will show a MDN link alongside it.
+ */
+const SUPPORTED_HEADERS = [
   "Accept",
   "Accept-Charset",
   "Accept-Encoding",
@@ -82,44 +76,20 @@ var SUPPORTED_HEADERS = [
 ];
 
 /**
- * Get the MDN URL for the specified header
+ * Get the MDN URL for the specified header.
  *
- * @param {string} Name of the header
- * The baseURL to use.
+ * @param {string} header Name of the header for the baseURL to use.
  *
- * @return {string}
- * The MDN URL for the header, or null if not available.
+ * @return {string} The MDN URL for the header, or null if not available.
  */
-exports.getURL = (header) => {
+function getHeadersURL(header) {
   const lowerCaseHeader = header.toLowerCase();
+  let idx = SUPPORTED_HEADERS.findIndex(item =>
+    item.toLowerCase() === lowerCaseHeader);
+  return idx > -1 ?
+    `https://developer.mozilla.org/docs/Web/HTTP/Headers/${SUPPORTED_HEADERS[idx]}?utm_source=mozilla&utm_medium=devtools-netmonitor&utm_campaign=default` : null;
+}
 
-  let matchingHeader = SUPPORTED_HEADERS.find(supportedHeader => {
-    return lowerCaseHeader === supportedHeader.toLowerCase();
-  });
-
-  if (!matchingHeader) {
-    return null;
-  }
-
-  return URL_DOMAIN + URL_PATH + matchingHeader + URL_PARAMS;
-};
-
-/**
- * Use a different domain for the URLs. Used only for testing.
- *
- * @param {string} domain
- * The domain to use.
- */
-exports.setDomain = (domain) => {
-  URL_DOMAIN = domain;
-};
-
-/**
- * Use a different list of supported headers. Used only for testing.
- *
- * @param {array} headers
- * The supported headers to use.
- */
-exports.setSupportedHeaders = (headers) => {
-  SUPPORTED_HEADERS = headers;
+module.exports = {
+  getHeadersURL,
 };
