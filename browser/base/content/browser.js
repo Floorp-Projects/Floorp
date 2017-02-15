@@ -829,6 +829,8 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
     return;
   }
 
+  let contentPrincipal = browser.contentPrincipal;
+
   // At this point we're still only just about to load this URI.
   // When the async DNS lookup comes back, we may be in any of these states:
   // 1) still on the previous URI, waiting for the preferredURI (keyword
@@ -931,7 +933,8 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   };
 
   try {
-    gDNSService.asyncResolve(hostName, 0, onLookupComplete, Services.tm.mainThread);
+    gDNSService.asyncResolve(hostName, 0, onLookupComplete, Services.tm.mainThread,
+                             contentPrincipal.originAttributes);
   } catch (ex) {
     // Do nothing if the URL is invalid (we don't want to show a notification in that case).
     if (ex.result != Cr.NS_ERROR_UNKNOWN_HOST) {
