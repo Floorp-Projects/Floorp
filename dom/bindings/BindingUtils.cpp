@@ -1212,14 +1212,6 @@ GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
 }
 
 bool
-UnforgeableValueOf(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  args.rval().set(args.thisv());
-  return true;
-}
-
-bool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   return ThrowErrorMessage(cx, MSG_ILLEGAL_CONSTRUCTOR);
