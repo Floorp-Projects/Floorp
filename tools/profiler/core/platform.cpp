@@ -1913,15 +1913,8 @@ profiler_get_features()
     // profiler doesn't want the native addresses.
     "leaf",
 #endif
-#if !defined(SPS_OS_windows)
-    // Use a seperate thread of walking the stack.
-    "unwinder",
-#endif
     "java",
-    // Only record samples during periods of bad responsiveness
-    "jank",
-    // Tell the JS engine to emmit pseudostack entries in the
-    // pro/epilogue.
+    // Tell the JS engine to emit pseudostack entries in the prologue/epilogue.
     "js",
     // GPU Profiling (may not be supported by the GL)
     "gpu",
@@ -1937,6 +1930,8 @@ profiler_get_features()
     "mainthreadio",
     // Add RSS collection
     "memory",
+    // Restyle profiling.
+    "restyle",
 #ifdef MOZ_TASK_TRACER
     // Start profiling with feature TaskTracer.
     "tasktracer",
