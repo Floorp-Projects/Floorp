@@ -17,7 +17,6 @@ namespace layers {
 
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mIsInTransaction(false)
-  , mSyncTransaction(false)
   , mIPCOpen(false)
   , mDestroyed(false)
 {
@@ -79,7 +78,6 @@ WebRenderBridgeChild::DPEnd(bool aIsSync, uint64_t aTransactionId)
   mCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;
-  mSyncTransaction = false;
 }
 
 uint64_t

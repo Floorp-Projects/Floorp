@@ -94,12 +94,6 @@ LayerTransactionParent::Destroy()
   mCompositables.clear();
 }
 
-mozilla::ipc::IPCResult
-LayerTransactionParent::RecvUpdateNoSwap(const TransactionInfo& txn)
-{
-  return RecvUpdate(txn);
-}
-
 class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
 {
 public:
