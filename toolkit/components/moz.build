@@ -30,7 +30,6 @@ DIRS += [
     'finalizationwitness',
     'formautofill',
     'find',
-    'gfx',
     'jsdownloads',
     'lz4',
     'mediasniffer',
@@ -101,6 +100,9 @@ if CONFIG['OS_TARGET'] != 'Android':
     DIRS += ['terminator']
 
 DIRS += ['build']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DIRS += ['gfx']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_COMPONENTS += [
