@@ -13,9 +13,6 @@
 //------------------------------------------------------------------------------
 
 module.exports = {
-  environments: {
-    "chrome-worker": require("../lib/environments/chrome-worker.js"),
-  },
   processors: {
     ".xml": require("../lib/processors/xbl-bindings"),
     ".js": require("../lib/processors/self-hosted"),
