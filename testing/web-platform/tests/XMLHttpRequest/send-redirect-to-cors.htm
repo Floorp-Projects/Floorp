@@ -27,8 +27,8 @@
                  type: "EXTRACT NOT IMPLEMENTED" }
       }
 
-      function redirect(code, method = "GET", body = null, setExplicitType = true) {
-        var test = async_test(document.title + " (" + code + ")")
+      function redirect(code, name = code, method = "GET", body = null, setExplicitType = true) {
+        var test = async_test(document.title + " (" + name + ")")
         test.step(function() {
           var client = new XMLHttpRequest()
           client.onreadystatechange = function() {
@@ -60,9 +60,9 @@
       redirect("302")
       redirect("303")
       redirect("307")
-      redirect("307", "POST", null, false);
-      redirect("307", "POST", "hello", false);
-      redirect("307", "POST", new Uint8Array([65, 66, 67]), false);
+      redirect("307", "307 post with null", "POST", null, false);
+      redirect("307", "307 post with string", "POST", "hello", false);
+      redirect("307", "307 post with typed array", "POST", new Uint8Array([65, 66, 67]), false);
     </script>
   </body>
 </html>

@@ -2,7 +2,8 @@ import os
 
 import pytest
 
-from ..sourcefile import SourceFile
+from six import BytesIO
+from ..sourcefile import SourceFile, read_script_metadata
 
 def create(filename, contents=b""):
     assert isinstance(contents, bytes)
@@ -124,17 +125,35 @@ def test_worker():
 
     assert not s.content_is_testharness
 
-    assert items(s) == [("testharness", "/html/test.worker.html")]
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    expected_urls = [
+        "/html/test.worker.html",
+    ]
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
+
 
 def test_worker_long_timeout():
-    s = create("html/test.worker.js",
-               contents="""// <meta> timeout=long
-importScripts('/resources/testharnes.js')
-test()""")
+    contents = b"""// META: timeout=long
+importScripts('/resources/testharness.js')
+test()"""
 
-    manifest_items = s.manifest_items()
-    assert len(manifest_items) == 1
-    assert manifest_items[0].timeout == "long"
+    metadata = list(read_script_metadata(BytesIO(contents)))
+    assert metadata == [(b"timeout", b"long")]
+
+    s = create("html/test.worker.js", contents=contents)
+    assert s.name_is_worker
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    for item in items:
+        assert item.timeout == "long"
 
 
 def test_multi_global():
@@ -148,10 +167,53 @@ def test_multi_global():
 
     assert not s.content_is_testharness
 
-    assert items(s) == [
-        ("testharness", "/html/test.any.html"),
-        ("testharness", "/html/test.any.worker.html"),
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    expected_urls = [
+        "/html/test.any.html",
+        "/html/test.any.worker.html",
     ]
+    assert len(items) == len(expected_urls)
+
+    for item, url in zip(items, expected_urls):
+        assert item.url == url
+        assert item.timeout is None
+
+
+def test_multi_global_long_timeout():
+    contents = b"""// META: timeout=long
+importScripts('/resources/testharness.js')
+test()"""
+
+    metadata = list(read_script_metadata(BytesIO(contents)))
+    assert metadata == [(b"timeout", b"long")]
+
+    s = create("html/test.any.js", contents=contents)
+    assert s.name_is_multi_global
+
+    item_type, items = s.manifest_items()
+    assert item_type == "testharness"
+
+    for item in items:
+        assert item.timeout == "long"
+
+
+@pytest.mark.parametrize("input,expected", [
+    (b"""//META: foo=bar\n""", [(b"foo", b"bar")]),
+    (b"""// META: foo=bar\n""", [(b"foo", b"bar")]),
+    (b"""//  META: foo=bar\n""", [(b"foo", b"bar")]),
+    (b"""\n// META: foo=bar\n""", []),
+    (b""" // META: foo=bar\n""", []),
+    (b"""// META: foo=bar\n// META: baz=quux\n""", [(b"foo", b"bar"), (b"baz", b"quux")]),
+    (b"""// META: foo=bar\n\n// META: baz=quux\n""", [(b"foo", b"bar")]),
+    (b"""// META: foo=bar\n// Start of the test\n// META: baz=quux\n""", [(b"foo", b"bar")]),
+    (b"""// META:\n""", []),
+    (b"""// META: foobar\n""", []),
+])
+def test_script_metadata(input, expected):
+    metadata = read_script_metadata(BytesIO(input))
+    assert list(metadata) == expected
 
 
 @pytest.mark.parametrize("ext", ["htm", "html"])
@@ -385,6 +447,22 @@ def test_xhtml_with_entity(ext):
     s = create(filename, content)
 
     assert s.root is not None
+
+    assert items(s) == []
+
+
+def test_no_parse():
+    s = create("foo/bar.xml", u"\uFFFF".encode("utf-8"))
+
+    assert not s.name_is_non_test
+    assert not s.name_is_manual
+    assert not s.name_is_visual
+    assert not s.name_is_multi_global
+    assert not s.name_is_worker
+    assert not s.name_is_reference
+    assert not s.content_is_testharness
+    assert not s.content_is_ref_node
+    assert not s.content_is_css_visual
 
     assert items(s) == []
 
