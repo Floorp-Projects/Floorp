@@ -47,7 +47,7 @@ template<typename KeyType, typename ValueType>
 class Record
 {
 public:
-  typedef typename binding_detail::RecordEntry<nsString, ValueType> EntryType;
+  typedef typename binding_detail::RecordEntry<KeyType, ValueType> EntryType;
   typedef Record<KeyType, ValueType> SelfType;
 
   Record()
