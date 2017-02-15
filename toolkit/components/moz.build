@@ -51,7 +51,6 @@ DIRS += [
     'remotebrowserutils',
     'reflect',
     'securityreporter',
-    'sqlite',
     'startup',
     'statusfilter',
     'telemetry',
