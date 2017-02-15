@@ -5570,7 +5570,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer->SetScrollbarData(mScrollTarget, ScrollDirection::HORIZONTAL, mScrollbarThumbRatio);
   }
   if (mFlags & SCROLLBAR_CONTAINER) {
-    layer->SetIsScrollbarContainer();
+    layer->SetIsScrollbarContainer(mScrollTarget);
   }
 
   if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
