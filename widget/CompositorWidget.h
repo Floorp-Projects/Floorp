@@ -25,7 +25,6 @@ class Compositor;
 class LayerManager;
 class LayerManagerComposite;
 class Compositor;
-class Composer2D;
 } // namespace layers
 namespace gfx {
 class DrawTarget;
@@ -201,17 +200,6 @@ public:
    * widget.
    */
   virtual uint32_t GetGLFrameBufferFormat();
-
-  /**
-   * If this widget has a more efficient composer available for its
-   * native framebuffer, return it.
-   *
-   * This can be called from a non-main thread, but that thread must
-   * hold a strong reference to this.
-   */
-  virtual layers::Composer2D* GetComposer2D() {
-    return nullptr;
-  }
 
   /*
    * Access the underlying nsIWidget. This method will be removed when the compositor no longer

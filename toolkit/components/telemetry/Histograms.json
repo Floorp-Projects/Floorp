@@ -1929,6 +1929,14 @@
     "n_values": 16,
     "description": "SSL Version (1=tls1, 2=tls1.1, 3=tls1.2, 4=tls1.3)"
   },
+  "SSL_HANDSHAKE_RESULT": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1331280],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 672,
+    "description": "SSL handshake result, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
+  },
   "SSL_TIME_UNTIL_READY": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",

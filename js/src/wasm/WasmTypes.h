@@ -1106,7 +1106,7 @@ struct TableDesc
     Limits limits;
 
     TableDesc() = default;
-    TableDesc(TableKind kind, Limits limits)
+    TableDesc(TableKind kind, const Limits& limits)
      : kind(kind),
        external(false),
        globalDataOffset(UINT32_MAX),

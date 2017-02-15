@@ -146,9 +146,6 @@ DOM4_MSG_DEF(NetworkError, "Push service unreachable.", NS_ERROR_DOM_PUSH_SERVIC
 DOM4_MSG_DEF(InvalidAccessError, "Invalid raw ECDSA P-256 public key.", NS_ERROR_DOM_PUSH_INVALID_KEY_ERR)
 DOM4_MSG_DEF(InvalidStateError, "A subscription with a different application server key already exists.", NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR)
 
-DOM_MSG_DEF(NS_ERROR_DOM_JS_EXCEPTION, "A callback threw an exception")
-DOM_MSG_DEF(NS_ERROR_DOM_DOMEXCEPTION, "A DOMException was thrown")
-
 /* Media errors */
 DOM4_MSG_DEF(AbortError,        "The fetching process for the media resource was aborted by the user agent at the user's request.", NS_ERROR_DOM_MEDIA_ABORT_ERR)
 DOM4_MSG_DEF(NotAllowedError,   "The play method is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.", NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR)

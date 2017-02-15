@@ -746,7 +746,7 @@ nsVideoFrame::AttributeChanged(int32_t aNameSpaceID,
 
 void
 nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
-                                 Maybe<OnNonvisible> aNonvisibleAction)
+                                 const Maybe<OnNonvisible>& aNonvisibleAction)
 {
   if (HasVideoElement()) {
     nsCOMPtr<nsIDOMHTMLMediaElement> mediaDomElement = do_QueryInterface(mContent);

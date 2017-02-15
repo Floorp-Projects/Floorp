@@ -49,7 +49,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "PlatformMacros.h"
-#include "v8-support.h"
 #include <vector>
 #include "StackTop.h"
 
@@ -106,7 +105,7 @@ bool profiler_verbose();
 #define ENABLE_LEAF_DATA
 #endif
 
-extern mozilla::TimeStamp sStartTime;
+extern mozilla::TimeStamp gStartTime;
 
 typedef uint8_t* Address;
 
