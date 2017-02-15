@@ -2871,7 +2871,7 @@ public:
     mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
   virtual void RemoveIntersectionObserver(
     mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
-  
+
   virtual void UpdateIntersectionObservations() = 0;
   virtual void ScheduleIntersectionObserverNotification() = 0;
   virtual void NotifyIntersectionObservers() = 0;
