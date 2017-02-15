@@ -83,7 +83,6 @@ public final class GeckoProfile {
 
     private final String mName;
     private final File mMozillaDir;
-    private final Context mApplicationContext;
 
     private Object mData;
 
@@ -320,7 +319,6 @@ public final class GeckoProfile {
             throw new IllegalArgumentException("Custom profile must have a directory");
         }
 
-        mApplicationContext = context.getApplicationContext();
         mName = profileName;
         mMozillaDir = GeckoProfileDirectories.getMozillaDirectory(context);
 
