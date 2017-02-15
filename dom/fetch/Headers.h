@@ -20,7 +20,7 @@ class ErrorResult;
 
 namespace dom {
 
-template<typename T> class MozMap;
+template<typename K, typename V> class Record;
 class HeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord;
 class OwningHeadersOrByteStringSequenceSequenceOrByteStringByteStringRecord;
 
