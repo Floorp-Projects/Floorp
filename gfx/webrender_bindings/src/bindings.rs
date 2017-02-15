@@ -170,7 +170,8 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     assert!(unsafe { is_in_render_thread() });
 
     let recorder: Option<Box<ApiRecordingReceiver>> = if ENABLE_RECORDING {
-        Some(Box::new(BinaryRecorder::new(&PathBuf::from("wr-record.bin"))))
+        let name = format!("wr-record-{}.bin", window_id.0);
+        Some(Box::new(BinaryRecorder::new(&PathBuf::from(name))))
     } else {
         None
     };
