@@ -6,6 +6,7 @@
 #include "WebRenderImageLayer.h"
 
 #include "WebRenderLayersLogging.h"
+#include "gfxPrefs.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"

@@ -41,7 +41,7 @@ const RequestListEmptyNotice = createClass({
         button(
           {
             id: "requests-menu-reload-notice-button",
-            className: "devtools-toolbarbutton",
+            className: "devtools-button",
             "data-standalone": true,
             onClick: this.props.onReloadClick,
           },

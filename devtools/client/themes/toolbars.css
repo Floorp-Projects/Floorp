@@ -16,12 +16,11 @@
   --tool-options-image: url(chrome://devtools/skin/images/tool-options.svg);
   --icon-filter: none;
   --checked-icon-filter: url(chrome://devtools/skin/images/filters.svg#checked-icon-state);
-  --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
 .theme-dark {
-  --toolbar-tab-hover: hsla(206, 37%, 4%, .2);
-  --toolbar-tab-hover-active: hsla(206, 37%, 4%, .4);
+  --toolbar-tab-hover: rgba(110,120,130,0.1);
+  --toolbar-tab-hover-active: rgba(110,120,130,0.2);
   --searchbox-background-color: #4d4222;
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;
@@ -31,7 +30,6 @@
   --tool-options-image: url(chrome://devtools/skin/images/tool-options.svg);
   --icon-filter: invert(1);
   --checked-icon-filter: url(chrome://devtools/skin/images/filters.svg#dark-theme-checked-icon-state);
-  --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
 
 .theme-firebug {
@@ -39,7 +37,6 @@
   --tool-options-image: url(chrome://devtools/skin/images/firebug/tool-options.svg);
   --icon-filter: none;
   --checked-icon-filter: none;
-  --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
 

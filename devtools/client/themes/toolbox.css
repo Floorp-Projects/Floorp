@@ -167,7 +167,7 @@
   border: none;
   margin: 0;
   margin-inline-start: 10px;
-  opacity: 0.6;
+  opacity: 0.8;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
   vertical-align: text-top;
@@ -194,10 +194,7 @@
   margin: 0 4px;
 }
 
-.devtools-tab:hover > img {
-  opacity: 0.8;
-}
-
+.devtools-tab:hover > img,
 .devtools-tab:active > img,
 .devtools-tab.selected > img {
   opacity: 1;
@@ -237,9 +234,6 @@
 
 /* The options tab is special - it doesn't have the same parent
    as the other tabs (toolbox-option-container vs toolbox-tabs) */
-#toolbox-option-container .devtools-tab:not(.selected) {
-  background-color: transparent;
-}
 #toolbox-option-container .devtools-tab {
   border-color: transparent;
   border-width: 0;
@@ -254,14 +248,6 @@
 
 #toolbox-controls, #toolbox-dock-buttons {
   display: flex;
-}
-#toolbox-controls > button,
-#toolbox-dock-buttons > button {
-  -moz-appearance: none;
-  border: none;
-  margin: 0 4px;
-  min-width: 16px;
-  width: 16px;
 }
 
 /* Save space in Firebug theme */
@@ -315,43 +301,20 @@
 
 /* Command buttons */
 
-.command-button {
+.command-button,
+#toolbox-controls > button,
+#toolbox-dock-buttons > button {
   /* !important is needed to override .devtools-button rules in common.css */
   padding: 0 !important;
   margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
   position: relative;
+  min-width: 28px;
 }
 
-.command-button::before {
-  opacity: 0.7;
-}
-
-.command-button:hover {
-  background-color: var(--toolbar-tab-hover);
-}
-
-.theme-light .command-button:hover {
-  background-color: inherit;
-}
-
-.command-button:hover:active,
-.command-button.checked:not(:hover) {
-  background-color: var(--toolbar-tab-hover-active)
-}
-
-.theme-light .command-button:hover:active,
-.theme-light .command-button.checked:not(:hover) {
-  background-color: inherit;
-}
-
-.command-button:hover::before {
-  opacity: 0.85;
-}
-
-.command-button:hover:active::before,
-.command-button.checked::before,
-.command-button.open::before {
-  opacity: 1;
+#command-button-pick {
+  min-width: 32px;
 }
 
 /* Command button images */

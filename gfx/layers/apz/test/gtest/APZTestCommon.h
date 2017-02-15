@@ -22,6 +22,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 #include "apz/src/AsyncPanZoomController.h"
 #include "apz/src/HitTestingTreeNode.h"
@@ -255,6 +256,21 @@ public:
     EXPECT_EQ(FLING, mState);
   }
 
+  void AssertAxisLocked(ScrollDirection aDirection) const {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    switch (aDirection) {
+    case ScrollDirection::NONE:
+      EXPECT_EQ(PANNING, mState);
+      break;
+    case ScrollDirection::HORIZONTAL:
+      EXPECT_EQ(PANNING_LOCKED_X, mState);
+      break;
+    case ScrollDirection::VERTICAL:
+      EXPECT_EQ(PANNING_LOCKED_Y, mState);
+      break;
+    }
+  }
+
   void AdvanceAnimationsUntilEnd(const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(10)) {
     while (AdvanceAnimations(mcc->Time())) {
       mcc->AdvanceBy(aIncrement);
@@ -288,6 +304,18 @@ public:
     mcc = new NiceMock<MockContentControllerDelayed>();
   }
 
+  enum class PanOptions {
+    None = 0,
+    KeepFingerDown = 0x1,
+    /*
+     * Do not adjust the touch-start coordinates to overcome the touch-start
+     * tolerance threshold. If this option is passed, it's up to the caller
+     * to pass in coordinates that are sufficient to overcome the touch-start
+     * tolerance *and* cause the desired amount of scrolling.
+     */
+    ExactCoordinates = 0x2
+  };
+
   template<class InputReceiver>
   void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
            TimeDuration aTapLength,
@@ -302,7 +330,7 @@ public:
   void Pan(const RefPtr<InputReceiver>& aTarget,
            const ScreenIntPoint& aTouchStart,
            const ScreenIntPoint& aTouchEnd,
-           bool aKeepFingerDown = false,
+           PanOptions aOptions = PanOptions::None,
            nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
            nsEventStatus (*aOutEventStatuses)[4] = nullptr,
            uint64_t* aOutInputBlockId = nullptr);
@@ -314,7 +342,7 @@ public:
   */
   template<class InputReceiver>
   void Pan(const RefPtr<InputReceiver>& aTarget, int aTouchStartY,
-           int aTouchEndY, bool aKeepFingerDown = false,
+           int aTouchEndY, PanOptions aOptions = PanOptions::None,
            nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
            nsEventStatus (*aOutEventStatuses)[4] = nullptr,
            uint64_t* aOutInputBlockId = nullptr);
@@ -349,6 +377,8 @@ public:
 protected:
   RefPtr<MockContentControllerDelayed> mcc;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(APZCTesterBase::PanOptions)
 
 template<class InputReceiver>
 void
@@ -399,7 +429,7 @@ void
 APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
                     const ScreenIntPoint& aTouchStart,
                     const ScreenIntPoint& aTouchEnd,
-                    bool aKeepFingerDown,
+                    PanOptions aOptions,
                     nsTArray<uint32_t>* aAllowedTouchBehaviors,
                     nsEventStatus (*aOutEventStatuses)[4],
                     uint64_t* aOutInputBlockId)
@@ -410,7 +440,19 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
   // them.
   gfxPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
   gfxPrefs::SetAPZTouchMoveTolerance(0.0f);
-  const int OVERCOME_TOUCH_TOLERANCE = 1;
+  int overcomeTouchToleranceX = 0;
+  int overcomeTouchToleranceY = 0;
+  if (!(aOptions & PanOptions::ExactCoordinates)) {
+    // Have the direction of the adjustment to overcome the touch tolerance
+    // match the direction of the entire gesture, otherwise we run into
+    // trouble such as accidentally activating the axis lock.
+    if (aTouchStart.x != aTouchEnd.x) {
+      overcomeTouchToleranceX = 1;
+    }
+    if (aTouchStart.y != aTouchEnd.y) {
+      overcomeTouchToleranceY = 1;
+    }
+  }
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(50);
 
@@ -423,7 +465,8 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 
   // Make sure the move is large enough to not be handled as a tap
   nsEventStatus status = TouchDown(aTarget,
-      ScreenIntPoint(aTouchStart.x, aTouchStart.y + OVERCOME_TOUCH_TOLERANCE),
+      ScreenIntPoint(aTouchStart.x + overcomeTouchToleranceX,
+                     aTouchStart.y + overcomeTouchToleranceY),
       mcc->Time(), aOutInputBlockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
@@ -455,7 +498,7 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
-  if (!aKeepFingerDown) {
+  if (!(aOptions & PanOptions::KeepFingerDown)) {
     status = TouchUp(aTarget, aTouchEnd, mcc->Time());
   } else {
     status = nsEventStatus_eIgnore;
@@ -472,13 +515,13 @@ APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
 template<class InputReceiver>
 void
 APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
-                    int aTouchStartY, int aTouchEndY, bool aKeepFingerDown,
+                    int aTouchStartY, int aTouchEndY, PanOptions aOptions,
                     nsTArray<uint32_t>* aAllowedTouchBehaviors,
                     nsEventStatus (*aOutEventStatuses)[4],
                     uint64_t* aOutInputBlockId)
 {
   Pan(aTarget, ScreenIntPoint(10, aTouchStartY), ScreenIntPoint(10, aTouchEndY),
-      aKeepFingerDown, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
+      aOptions, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
 }
 
 template<class InputReceiver>
@@ -491,7 +534,7 @@ APZCTesterBase::PanAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
                                   uint64_t* aOutInputBlockId)
 {
   nsEventStatus statuses[4]; // down, move, move, up
-  Pan(aTarget, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses, aOutInputBlockId);
+  Pan(aTarget, aTouchStartY, aTouchEndY, PanOptions::None, aAllowedTouchBehaviors, &statuses, aOutInputBlockId);
 
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
 
@@ -510,7 +553,7 @@ APZCTesterBase::ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
                                int aTouchStartY, int aTouchEndY,
                                uint64_t* aOutInputBlockId)
 {
-  Pan(aApzc, aTouchStartY, aTouchEndY, false, nullptr, nullptr, aOutInputBlockId);
+  Pan(aApzc, aTouchStartY, aTouchEndY, PanOptions::None, nullptr, nullptr, aOutInputBlockId);
   aApzc->CancelAnimation();
 }
 
