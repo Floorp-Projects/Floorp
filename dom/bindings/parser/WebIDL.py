@@ -6434,7 +6434,7 @@ class Parser(Tokenizer):
 
     def p_NonAnyType(self, p):
         """
-            NonAnyType : PrimitiveOrStringType Null
+            NonAnyType : PrimitiveType Null
                        | ARRAYBUFFER Null
                        | SHAREDARRAYBUFFER Null
                        | OBJECT Null
@@ -6449,6 +6449,12 @@ class Parser(Tokenizer):
             type = BuiltinTypes[p[1]]
 
         p[0] = self.handleNullable(type, p[2])
+
+    def p_NonAnyTypeStringType(self, p):
+        """
+            NonAnyType : StringType Null
+        """
+        p[0] = self.handleNullable(p[1], p[2])
 
     def p_NonAnyTypeSequenceType(self, p):
         """
@@ -6515,7 +6521,7 @@ class Parser(Tokenizer):
 
     def p_ConstType(self, p):
         """
-            ConstType : PrimitiveOrStringType Null
+            ConstType : PrimitiveType Null
         """
         type = BuiltinTypes[p[1]]
         p[0] = self.handleNullable(type, p[2])
@@ -6529,69 +6535,75 @@ class Parser(Tokenizer):
         type = IDLUnresolvedType(self.getLocation(p, 1), identifier)
         p[0] = self.handleNullable(type, p[2])
 
-    def p_PrimitiveOrStringTypeUint(self, p):
+    def p_PrimitiveTypeUint(self, p):
         """
-            PrimitiveOrStringType : UnsignedIntegerType
+            PrimitiveType : UnsignedIntegerType
         """
         p[0] = p[1]
 
-    def p_PrimitiveOrStringTypeBoolean(self, p):
+    def p_PrimitiveTypeBoolean(self, p):
         """
-            PrimitiveOrStringType : BOOLEAN
+            PrimitiveType : BOOLEAN
         """
         p[0] = IDLBuiltinType.Types.boolean
 
-    def p_PrimitiveOrStringTypeByte(self, p):
+    def p_PrimitiveTypeByte(self, p):
         """
-            PrimitiveOrStringType : BYTE
+            PrimitiveType : BYTE
         """
         p[0] = IDLBuiltinType.Types.byte
 
-    def p_PrimitiveOrStringTypeOctet(self, p):
+    def p_PrimitiveTypeOctet(self, p):
         """
-            PrimitiveOrStringType : OCTET
+            PrimitiveType : OCTET
         """
         p[0] = IDLBuiltinType.Types.octet
 
-    def p_PrimitiveOrStringTypeFloat(self, p):
+    def p_PrimitiveTypeFloat(self, p):
         """
-            PrimitiveOrStringType : FLOAT
+            PrimitiveType : FLOAT
         """
         p[0] = IDLBuiltinType.Types.float
 
-    def p_PrimitiveOrStringTypeUnrestictedFloat(self, p):
+    def p_PrimitiveTypeUnrestictedFloat(self, p):
         """
-            PrimitiveOrStringType : UNRESTRICTED FLOAT
+            PrimitiveType : UNRESTRICTED FLOAT
         """
         p[0] = IDLBuiltinType.Types.unrestricted_float
 
-    def p_PrimitiveOrStringTypeDouble(self, p):
+    def p_PrimitiveTypeDouble(self, p):
         """
-            PrimitiveOrStringType : DOUBLE
+            PrimitiveType : DOUBLE
         """
         p[0] = IDLBuiltinType.Types.double
 
-    def p_PrimitiveOrStringTypeUnrestictedDouble(self, p):
+    def p_PrimitiveTypeUnrestictedDouble(self, p):
         """
-            PrimitiveOrStringType : UNRESTRICTED DOUBLE
+            PrimitiveType : UNRESTRICTED DOUBLE
         """
         p[0] = IDLBuiltinType.Types.unrestricted_double
 
-    def p_PrimitiveOrStringTypeDOMString(self, p):
+    def p_StringType(self, p):
         """
-            PrimitiveOrStringType : DOMSTRING
+            StringType : BuiltinStringType
+        """
+        p[0] = BuiltinTypes[p[1]]
+
+    def p_BuiltinStringTypeDOMString(self, p):
+        """
+            BuiltinStringType : DOMSTRING
         """
         p[0] = IDLBuiltinType.Types.domstring
 
-    def p_PrimitiveOrStringTypeBytestring(self, p):
+    def p_BuiltinStringTypeBytestring(self, p):
         """
-            PrimitiveOrStringType : BYTESTRING
+            BuiltinStringType : BYTESTRING
         """
         p[0] = IDLBuiltinType.Types.bytestring
 
-    def p_PrimitiveOrStringTypeUSVString(self, p):
+    def p_BuiltinStringTypeUSVString(self, p):
         """
-            PrimitiveOrStringType : USVSTRING
+            BuiltinStringType : USVSTRING
         """
         p[0] = IDLBuiltinType.Types.usvstring
 
