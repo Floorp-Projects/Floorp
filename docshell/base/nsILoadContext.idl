@@ -88,20 +88,23 @@ interface nsILoadContext : nsISupports
   /**
    * De-XPCOMed getter to make call-sites cleaner.
    */
-  bool UsePrivateBrowsing() {
-    bool usingPB;
+  bool UsePrivateBrowsing()
+  {
+    bool usingPB = false;
     GetUsePrivateBrowsing(&usingPB);
     return usingPB;
   }
 
-  bool UseRemoteTabs() {
-    bool usingRT;
+  bool UseRemoteTabs()
+  {
+    bool usingRT = false;
     GetUseRemoteTabs(&usingRT);
     return usingRT;
   }
 
-  bool UseTrackingProtection() {
-    bool usingTP;
+  bool UseTrackingProtection()
+  {
+    bool usingTP = false;
     GetUseTrackingProtection(&usingTP);
     return usingTP;
   }
