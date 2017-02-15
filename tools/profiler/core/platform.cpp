@@ -2413,7 +2413,7 @@ profiler_unregister_thread()
 }
 
 void
-profiler_sleep_start()
+profiler_thread_sleep()
 {
   // This function runs both on and off the main thread.
 
@@ -2429,7 +2429,7 @@ profiler_sleep_start()
 }
 
 void
-profiler_sleep_end()
+profiler_thread_wake()
 {
   // This function runs both on and off the main thread.
 
@@ -2445,7 +2445,7 @@ profiler_sleep_end()
 }
 
 bool
-profiler_is_sleeping()
+profiler_thread_is_sleeping()
 {
   // This function currently only used on the main thread, but that restriction
   // (and this assertion) could be removed without too much difficulty.
