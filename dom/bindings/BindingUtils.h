@@ -1901,11 +1901,30 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
   return AssignJSString(cx, result, s);
 }
 
-void
-NormalizeUSVString(JSContext* aCx, nsAString& aString);
+template<typename T>
+static inline bool
+ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v, T& result)
+{
+  return ConvertJSValueToString(cx, v, eStringify, eStringify, result);
+}
 
 void
-NormalizeUSVString(JSContext* aCx, binding_detail::FakeString& aString);
+NormalizeUSVString(nsAString& aString);
+
+void
+NormalizeUSVString(binding_detail::FakeString& aString);
+
+template<typename T>
+static inline bool
+ConvertJSValueToUSVString(JSContext* cx, JS::Handle<JS::Value> v, T& result)
+{
+  if (!ConvertJSValueToString(cx, v, eStringify, eStringify, result)) {
+    return false;
+  }
+
+  NormalizeUSVString(result);
+  return true;
+}
 
 template<typename T>
 inline bool
@@ -1931,6 +1950,13 @@ ConvertIdToString(JSContext* cx, JS::HandleId id, T& result, bool& isSymbol)
 bool
 ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
                            bool nullable, nsACString& result);
+
+inline bool
+ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
+                           nsACString& result)
+{
+  return ConvertJSValueToByteString(cx, v, false, result);
+}
 
 template<typename T>
 void DoTraceSequence(JSTracer* trc, FallibleTArray<T>& seq);
