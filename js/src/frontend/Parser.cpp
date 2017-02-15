@@ -583,7 +583,22 @@ ParserBase::error(unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_ERROR, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(nullptr, pos().begin, JSREPORT_ERROR,
+                                               errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
+void
+ParserBase::errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        tokenStream.reportCompileErrorNumberVA(Move(notes), pos().begin, JSREPORT_ERROR,
+                                               errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
@@ -596,7 +611,22 @@ ParserBase::errorAt(uint32_t offset, unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR, errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
+void
+ParserBase::errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                             unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        tokenStream.reportCompileErrorNumberVA(Move(notes), offset, JSREPORT_ERROR,
+                                               errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
@@ -607,7 +637,8 @@ ParserBase::warning(unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool result =
-        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_WARNING, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(nullptr, pos().begin, JSREPORT_WARNING,
+                                               errorNumber, args);
     va_end(args);
     return result;
 }
@@ -618,7 +649,8 @@ ParserBase::warningAt(uint32_t offset, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool result =
-        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_WARNING,
+                                               errorNumber, args);
     va_end(args);
     return result;
 }
@@ -628,7 +660,8 @@ ParserBase::extraWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream.reportExtraWarningErrorNumberVA(pos().begin, errorNumber, args);
+    bool result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, pos().begin,
+                                                              errorNumber, args);
     va_end(args);
     return result;
 }
@@ -639,7 +672,7 @@ ParserBase::strictModeError(unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool res =
-        tokenStream.reportStrictModeErrorNumberVA(pos().begin, pc->sc()->strict(),
+        tokenStream.reportStrictModeErrorNumberVA(nullptr, pos().begin, pc->sc()->strict(),
                                                   errorNumber, args);
     va_end(args);
     return res;
@@ -651,7 +684,8 @@ ParserBase::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool res =
-        tokenStream.reportStrictModeErrorNumberVA(offset, pc->sc()->strict(), errorNumber, args);
+        tokenStream.reportStrictModeErrorNumberVA(nullptr, offset, pc->sc()->strict(),
+                                                  errorNumber, args);
     va_end(args);
     return res;
 }
@@ -665,17 +699,21 @@ ParserBase::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumb
     uint32_t offset = TokenStream::NoOffset;
     switch (kind) {
       case ParseError:
-        result = tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+        result = tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR,
+                                                        errorNumber, args);
         break;
       case ParseWarning:
         result =
-            tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
+            tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_WARNING,
+                                                   errorNumber, args);
         break;
       case ParseExtraWarning:
-        result = tokenStream.reportExtraWarningErrorNumberVA(offset, errorNumber, args);
+        result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, offset,
+                                                             errorNumber, args);
         break;
       case ParseStrictError:
-        result = tokenStream.reportStrictModeErrorNumberVA(offset, strict, errorNumber, args);
+        result = tokenStream.reportStrictModeErrorNumberVA(nullptr, offset, strict,
+                                                           errorNumber, args);
         break;
     }
     va_end(args);

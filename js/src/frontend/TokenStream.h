@@ -408,11 +408,12 @@ class MOZ_STACK_CLASS TokenStream
     // General-purpose error reporters.  You should avoid calling these
     // directly, and instead use the more succinct alternatives (error(),
     // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
-    bool reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigned errorNumber,
-                                    va_list args);
-    bool reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, unsigned errorNumber,
-                                       va_list args);
-    bool reportExtraWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args);
+    bool reportCompileErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned flags,
+                                    unsigned errorNumber, va_list args);
+    bool reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                       bool strictMode, unsigned errorNumber, va_list args);
+    bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                                         unsigned errorNumber, va_list args);
 
     // asm.js reporter
     void reportAsmJSError(uint32_t offset, unsigned errorNumber, ...);
