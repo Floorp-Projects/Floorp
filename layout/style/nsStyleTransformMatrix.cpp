@@ -58,12 +58,14 @@ TransformReferenceBox::EnsureDimensionsAreCached()
       mWidth = nsPresContext::CSSPixelsToAppUnits(contextSize.width);
       mHeight = nsPresContext::CSSPixelsToAppUnits(contextSize.height);
     } else
-    if (mFrame->StyleDisplay()->mTransformBox == StyleGeometryBox::Fill) {
+    if (mFrame->StyleDisplay()->mTransformBox ==
+          NS_STYLE_TRANSFORM_BOX_FILL_BOX) {
       // Percentages in transforms resolve against the SVG bbox, and the
       // transform is relative to the top-left of the SVG bbox.
+      gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(mFrame));
       nsRect bboxInAppUnits =
-        nsLayoutUtils::ComputeGeometryBox(const_cast<nsIFrame*>(mFrame),
-                                          StyleGeometryBox::Fill);
+        nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                             mFrame->PresContext()->AppUnitsPerCSSPixel());
       // The mRect of an SVG nsIFrame is its user space bounds *including*
       // stroke and markers, whereas bboxInAppUnits is its user space bounds
       // including fill only.  We need to note the offset of the reference box
@@ -75,9 +77,9 @@ TransformReferenceBox::EnsureDimensionsAreCached()
     } else {
       // The value 'border-box' is treated as 'view-box' for SVG content.
       MOZ_ASSERT(mFrame->StyleDisplay()->mTransformBox ==
-                   StyleGeometryBox::View ||
+                   NS_STYLE_TRANSFORM_BOX_VIEW_BOX ||
                  mFrame->StyleDisplay()->mTransformBox ==
-                   StyleGeometryBox::Border,
+                   NS_STYLE_TRANSFORM_BOX_BORDER_BOX,
                  "Unexpected value for 'transform-box'");
       // Percentages in transforms resolve against the width/height of the
       // nearest viewport (or its viewBox if one is applied), and the
