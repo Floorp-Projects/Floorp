@@ -3919,7 +3919,13 @@ nsPIDOMWindowInner::IsPlayingAudio()
   if (!acs) {
     return false;
   }
-  return acs->IsWindowActive(GetOuterWindow());
+  auto outer = GetOuterWindow();
+  if (!outer) {
+    // We've been unlinked and are about to die.  Not a good time to pretend to
+    // be playing audio.
+    return false;
+  }
+  return acs->IsWindowActive(outer);
 }
 
 mozilla::dom::TimeoutManager&
