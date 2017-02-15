@@ -28,7 +28,7 @@ class DocAccessibleParent : public ProxyAccessible,
 {
 public:
   DocAccessibleParent() :
-    ProxyAccessible(this), mParentDoc(nullptr),
+    ProxyAccessible(this), mParentDoc(kNoParentDoc),
     mTopLevel(false), mShutdown(false)
 #if defined(XP_WIN)
                                       , mEmulatedWindowHandle(nullptr)
@@ -36,6 +36,7 @@ public:
   { MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible); }
   ~DocAccessibleParent()
   {
+    LiveDocs().Remove(IProtocol::Id());
     MOZ_COUNT_DTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
     MOZ_ASSERT(mChildDocs.Length() == 0);
     MOZ_ASSERT(!ParentDoc());
@@ -57,6 +58,11 @@ public:
     MOZ_ASSERT(mAccessibles.Count() == 0);
     mShutdown = true;
   }
+
+  /**
+   * Add this document to the set of tracked documents.
+   */
+  void AddToMap() { LiveDocs().Put(IProtocol::Id(), this); }
 
   /*
    * Called when a message from a document in a child process notifies the main
@@ -111,7 +117,8 @@ public:
    * Return the main processes representation of the parent document (if any)
    * of the document this object represents.
    */
-  DocAccessibleParent* ParentDoc() const { return mParentDoc; }
+  DocAccessibleParent* ParentDoc() const;
+  static const int32_t kNoParentDoc = INT32_MIN;
 
   /*
    * Called when a document in a content process notifies the main process of a
@@ -131,8 +138,8 @@ public:
     if (parent) {
       aChildDoc->Parent()->ClearChildDoc(aChildDoc);
     }
-    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc);
-    aChildDoc->mParentDoc = nullptr;
+    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->IProtocol::Id());
+    aChildDoc->mParentDoc = kNoParentDoc;
     MOZ_ASSERT(result);
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
   }
@@ -160,7 +167,9 @@ public:
 
   size_t ChildDocCount() const { return mChildDocs.Length(); }
   const DocAccessibleParent* ChildDocAt(size_t aIdx) const
-    { return mChildDocs[aIdx]; }
+  { return const_cast<DocAccessibleParent*>(this)->ChildDocAt(aIdx); }
+  DocAccessibleParent* ChildDocAt(size_t aIdx)
+    { return LiveDocs().Get(mChildDocs[aIdx]); }
 
 #if defined(XP_WIN)
   void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
@@ -207,8 +216,8 @@ private:
   MOZ_MUST_USE bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
-  nsTArray<DocAccessibleParent*> mChildDocs;
-  DocAccessibleParent* mParentDoc;
+  nsTArray<int32_t> mChildDocs;
+  int32_t mParentDoc;
 
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
@@ -222,6 +231,13 @@ private:
   nsTHashtable<ProxyEntry> mAccessibles;
   bool mTopLevel;
   bool mShutdown;
+
+  static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*>&
+    LiveDocs()
+    {
+      static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*> sLiveDocs;
+      return sLiveDocs;
+    }
 };
 
 }

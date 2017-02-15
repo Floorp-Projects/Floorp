@@ -29,7 +29,7 @@ struct RedirEntry
   URI_SAFE_FOR_UNTRUSTED_CONTENT will allow random web sites to link to that
   URI.  Perhaps we should separate the two concepts out...
  */
-static RedirEntry kRedirMap[] = {
+static const RedirEntry kRedirMap[] = {
   {
     "", "chrome://global/content/about.xhtml",
     nsIAboutModule::ALLOW_SCRIPT

@@ -546,32 +546,21 @@
   ERROR(NS_ERROR_DOM_BAD_URI,                      FAILURE(1012)),
   ERROR(NS_ERROR_DOM_RETVAL_UNDEFINED,             FAILURE(1013)),
   ERROR(NS_ERROR_DOM_QUOTA_REACHED,                FAILURE(1014)),
-  ERROR(NS_ERROR_DOM_JS_EXCEPTION,                 FAILURE(1015)),
 
   /* A way to represent uncatchable exceptions */
-  ERROR(NS_ERROR_UNCATCHABLE_EXCEPTION,            FAILURE(1016)),
+  ERROR(NS_ERROR_UNCATCHABLE_EXCEPTION,            FAILURE(1015)),
 
-  /* An nsresult value to use in ErrorResult to indicate that we want to throw
-     a DOMException */
-  ERROR(NS_ERROR_DOM_DOMEXCEPTION,                 FAILURE(1017)),
+  ERROR(NS_ERROR_DOM_MALFORMED_URI,                FAILURE(1016)),
+  ERROR(NS_ERROR_DOM_INVALID_HEADER_NAME,          FAILURE(1017)),
 
-  /* An nsresult value to use in ErrorResult to indicate that we
-   * should just rethrow whatever is on the JSContext (which might be
-   * nothing if an uncatchable exception was thrown).
-   */
-  ERROR(NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT,       FAILURE(1018)),
-
-  ERROR(NS_ERROR_DOM_MALFORMED_URI,                FAILURE(1019)),
-  ERROR(NS_ERROR_DOM_INVALID_HEADER_NAME,          FAILURE(1020)),
-
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT,                            FAILURE(1021)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED,                                 FAILURE(1022)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_SENDING,                            FAILURE(1023)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE,                    FAILURE(1024)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML,         FAILURE(1025)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT,        FAILURE(1026)),
-  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC,     FAILURE(1027)),
-  ERROR(NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC, FAILURE(1028)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT,                            FAILURE(1018)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_BE_OPENED,                                 FAILURE(1019)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_SENDING,                            FAILURE(1020)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE,                    FAILURE(1021)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML,         FAILURE(1022)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT,        FAILURE(1023)),
+  ERROR(NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC,     FAILURE(1024)),
+  ERROR(NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC, FAILURE(1025)),
 
   /* May be used to indicate when e.g. setting a property value didn't
    * actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
@@ -1006,6 +995,22 @@
   ERROR(NS_ERROR_UC_UPDATE_WRONG_REMOVAL_INDICES,   FAILURE(4)),
   ERROR(NS_ERROR_UC_UPDATE_CHECKSUM_MISMATCH,       FAILURE(5)),
   ERROR(NS_ERROR_UC_UPDATE_MISSING_CHECKSUM,        FAILURE(6)),
+#undef MODULE
+
+  /* ======================================================================= */
+  /* 43: NS_ERROR_MODULE_ERRORRESULT */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_ERRORRESULT
+  /* Represents a JS Value being thrown as an exception. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION,           FAILURE(1)),
+  /* Used to indicate that we want to throw a DOMException. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION,           FAILURE(2)),
+  /* Used to indicate that an exception is already pending on the JSContext. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT, FAILURE(3)),
+  /* Used to indicate that we want to throw a TypeError. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,              FAILURE(4)),
+  /* Used to indicate that we want to throw a RangeError. */
+  ERROR(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,             FAILURE(5)),
 #undef MODULE
 
   /* ======================================================================= */

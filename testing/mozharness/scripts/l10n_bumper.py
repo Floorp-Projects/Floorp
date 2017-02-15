@@ -71,14 +71,6 @@ class L10nBumper(VCSScript):
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    def hg_add(self, repo_path, path):
-        """
-        Runs 'hg add' on path
-        """
-        hg = self.query_exe('hg', return_type='list')
-        cmd = hg + ['add', path]
-        self.run_command(cmd, cwd=repo_path)
-
     def hg_commit(self, repo_path, message):
         """
         Commits changes in repo_path, with specified user and commit message
@@ -114,9 +106,6 @@ class L10nBumper(VCSScript):
         return True
 
     def _read_json(self, path):
-        if not os.path.exists(path):
-            self.error("%s doesn't exist!" % path)
-            return
         contents = self.read_from_file(path)
         try:
             json_contents = json.loads(contents)
@@ -159,11 +148,9 @@ class L10nBumper(VCSScript):
         treestatus_json = os.path.join(dirs['abs_work_dir'], 'treestatus.json')
         if not os.path.exists(dirs['abs_work_dir']):
             self.mkdir_p(dirs['abs_work_dir'])
+        self.rmtree(treestatus_json)
 
-        if self.download_file(treestatus_url, file_name=treestatus_json) != treestatus_json:
-            # Failed to check tree status...assume we can land
-            self.info("failed to check tree status - assuming we can land")
-            return True
+        self.run_command(["curl", "--retry", "4", "-o", treestatus_json, treestatus_url], throw_exception=True)
 
         treestatus = self._read_json(treestatus_json)
         if treestatus['result']['status'] != 'closed':

@@ -695,7 +695,7 @@ class MemoryAccessDesc
 
   public:
     explicit MemoryAccessDesc(Scalar::Type type, uint32_t align, uint32_t offset,
-                              mozilla::Maybe<TrapOffset> trapOffset,
+                              const mozilla::Maybe<TrapOffset>& trapOffset,
                               unsigned numSimdElems = 0,
                               jit::MemoryBarrierBits barrierBefore = jit::MembarNobits,
                               jit::MemoryBarrierBits barrierAfter = jit::MembarNobits)

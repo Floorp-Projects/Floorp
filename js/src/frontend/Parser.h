@@ -1092,7 +1092,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // Parse a function, used for the Function, GeneratorFunction, and
     // AsyncFunction constructors.
     Node standaloneFunction(HandleFunction fun, HandleScope enclosingScope,
-                            mozilla::Maybe<uint32_t> parameterListEnd,
+                            const mozilla::Maybe<uint32_t>& parameterListEnd,
                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             Directives inheritedDirectives, Directives* newDirectives);
 
@@ -1111,7 +1111,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // ParseContext is already on the stack.
     bool functionFormalParametersAndBody(InHandling inHandling, YieldHandling yieldHandling,
                                          Node pn, FunctionSyntaxKind kind,
-                                         mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing(),
+                                         const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing(),
                                          bool isStandaloneFunction = false);
 
     // Match the current token against the BindingIdentifier production with
@@ -1435,7 +1435,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // error if not passed a name.
     bool checkDestructuringArray(Node arrayPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
     bool checkDestructuringObject(Node objectPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
-    bool checkDestructuringName(Node expr, mozilla::Maybe<DeclarationKind> maybeDecl);
+    bool checkDestructuringName(Node expr, const mozilla::Maybe<DeclarationKind>& maybeDecl);
 
     Node newNumber(const Token& tok) {
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);

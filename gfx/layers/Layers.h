@@ -1792,8 +1792,6 @@ public:
   uint32_t GetDebugColorIndex() { return mDebugColorIndex; }
 #endif
 
-  virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
-
   void Mutated() {
     mManager->Mutated(this);
   }

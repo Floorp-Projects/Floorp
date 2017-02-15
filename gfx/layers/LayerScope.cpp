@@ -8,7 +8,6 @@
 #include "LayerScope.h"
 
 #include "nsAppRunner.h"
-#include "Composer2D.h"
 #include "Effects.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"

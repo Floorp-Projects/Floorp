@@ -5124,7 +5124,7 @@ void
 nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                         const GridItemInfo*    aGridItemInfo,
                                         nsSize                 aContainerSize,
-                                        Maybe<nscoord>         aStretchBSize,
+                                        const Maybe<nscoord>&  aStretchBSize,
                                         const Fragmentainer*   aFragmentainer,
                                         const GridReflowInput& aState,
                                         const LogicalRect&     aContentArea,

@@ -52,7 +52,7 @@ already_AddRefed<IDBVersionChangeEvent>
 IDBVersionChangeEvent::CreateInternal(EventTarget* aOwner,
                                       const nsAString& aType,
                                       uint64_t aOldVersion,
-                                      Nullable<uint64_t> aNewVersion)
+                                      const Nullable<uint64_t>& aNewVersion)
 {
   RefPtr<IDBVersionChangeEvent> event =
     new IDBVersionChangeEvent(aOwner, aOldVersion);

@@ -276,7 +276,7 @@ class WasmTableObject : public NativeObject
     // Note that, after creation, a WasmTableObject's table() is not initialized
     // and must be initialized before use.
 
-    static WasmTableObject* create(JSContext* cx, wasm::Limits limits);
+    static WasmTableObject* create(JSContext* cx, const wasm::Limits& limits);
     wasm::Table& table() const;
 };
 

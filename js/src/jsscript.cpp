@@ -2163,7 +2163,7 @@ FormatIntroducedFilename(JSContext* cx, const char* filename, unsigned lineno,
 
 bool
 ScriptSource::initFromOptions(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              Maybe<uint32_t> parameterListEnd)
+                              const Maybe<uint32_t>& parameterListEnd)
 {
     MOZ_ASSERT(!filename_);
     MOZ_ASSERT(!introducerFilename_);

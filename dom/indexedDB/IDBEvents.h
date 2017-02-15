@@ -123,7 +123,7 @@ private:
   CreateInternal(EventTarget* aOwner,
                  const nsAString& aName,
                  uint64_t aOldVersion,
-                 Nullable<uint64_t> aNewVersion);
+                 const Nullable<uint64_t>& aNewVersion);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IDBVersionChangeEvent, IDBVERSIONCHANGEEVENT_IID)

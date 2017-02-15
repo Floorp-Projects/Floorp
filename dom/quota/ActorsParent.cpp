@@ -259,11 +259,11 @@ class DirectoryLockImpl final
 
 public:
   DirectoryLockImpl(QuotaManager* aQuotaManager,
-                    Nullable<PersistenceType> aPersistenceType,
+                    const Nullable<PersistenceType>& aPersistenceType,
                     const nsACString& aGroup,
                     const OriginScope& aOriginScope,
-                    Nullable<bool> aIsApp,
-                    Nullable<Client::Type> aClientType,
+                    const Nullable<bool>& aIsApp,
+                    const Nullable<Client::Type>& aClientType,
                     bool aExclusive,
                     bool aInternal,
                     OpenDirectoryListener* aOpenListener);
@@ -920,7 +920,7 @@ public:
   }
 
 protected:
-  NormalOriginOperationBase(Nullable<PersistenceType> aPersistenceType,
+  NormalOriginOperationBase(const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope,
                             bool aExclusive)
     : mPersistenceType(aPersistenceType)
@@ -2116,11 +2116,11 @@ DeallocPQuotaParent(PQuotaParent* aActor)
  ******************************************************************************/
 
 DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
-                                     Nullable<PersistenceType> aPersistenceType,
+                                     const Nullable<PersistenceType>& aPersistenceType,
                                      const nsACString& aGroup,
                                      const OriginScope& aOriginScope,
-                                     Nullable<bool> aIsApp,
-                                     Nullable<Client::Type> aClientType,
+                                     const Nullable<bool>& aIsApp,
+                                     const Nullable<Client::Type>& aClientType,
                                      bool aExclusive,
                                      bool aInternal,
                                      OpenDirectoryListener* aOpenListener)
@@ -2808,11 +2808,11 @@ QuotaManager::IsShuttingDown()
 }
 
 auto
-QuotaManager::CreateDirectoryLock(Nullable<PersistenceType> aPersistenceType,
+QuotaManager::CreateDirectoryLock(const Nullable<PersistenceType>& aPersistenceType,
                                   const nsACString& aGroup,
                                   const OriginScope& aOriginScope,
-                                  Nullable<bool> aIsApp,
-                                  Nullable<Client::Type> aClientType,
+                                  const Nullable<bool>& aIsApp,
+                                  const Nullable<Client::Type>& aClientType,
                                   bool aExclusive,
                                   bool aInternal,
                                   OpenDirectoryListener* aOpenListener)
@@ -4422,9 +4422,9 @@ QuotaManager::OpenDirectory(PersistenceType aPersistenceType,
 }
 
 void
-QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
+QuotaManager::OpenDirectoryInternal(const Nullable<PersistenceType>& aPersistenceType,
                                     const OriginScope& aOriginScope,
-                                    Nullable<Client::Type> aClientType,
+                                    const Nullable<Client::Type>& aClientType,
                                     bool aExclusive,
                                     OpenDirectoryListener* aOpenListener)
 {

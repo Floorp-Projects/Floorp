@@ -89,15 +89,6 @@ PaintedLayerComposite::SetLayerManager(HostLayerManager* aManager)
   }
 }
 
-LayerRenderState
-PaintedLayerComposite::GetRenderState()
-{
-  if (!mBuffer || !mBuffer->IsAttached() || mDestroyed) {
-    return LayerRenderState();
-  }
-  return mBuffer->GetRenderState();
-}
-
 void
 PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect,
                                    const Maybe<gfx::Polygon>& aGeometry)

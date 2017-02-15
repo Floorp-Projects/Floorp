@@ -48,21 +48,6 @@ function returns(value) {
 }
 
 /*
- * returnsCopyOf(VALUE)(CODE) returns true if evaluating CODE (as eval code)
- * completes normally (rather than throwing an exception), yielding a value
- * that is deepEqual to VALUE.
- */
-function returnsCopyOf(value) {
-  return function(code) {
-    try {
-      return deepEqual(eval(code), value);
-    } catch (exception) {
-      return false;
-    }
-  }
-}
-
-/*
  * raisesException(EXCEPTION)(CODE) returns true if evaluating CODE (as
  * eval code) throws an exception object that is an instance of EXCEPTION,
  * and returns false if it throws any other error or evaluates
@@ -106,15 +91,6 @@ function parseRaisesException(exception) {
     }
   };
 };
-
-/*
- * Return the result of applying uneval to VAL, and replacing all runs
- * of whitespace with a single horizontal space (poor man's
- * tokenization).
- */
-function clean_uneval(val) {
-  return uneval(val).replace(/\s+/g, ' ');
-}
 
 /*
  * Return true if A is equal to B, where equality on arrays and objects

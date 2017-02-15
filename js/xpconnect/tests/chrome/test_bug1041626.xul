@@ -28,9 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041626
 
     ok(Cu.isXrayWrapper(window[0].location), "Location is Xrayed");
     let xrayOwnProperties = Object.getOwnPropertyNames(window[0].location);
-    todo(xrayOwnProperties.indexOf('toJSON') != -1,
-         "dummy toJSON on Location should show up in Xrayable properties");
-    xrayOwnProperties.push('toJSON');
 
     let realOwnProperties = Object.getOwnPropertyNames(window[0].wrappedJSObject.location);
     ok(realOwnProperties.length > 2);
