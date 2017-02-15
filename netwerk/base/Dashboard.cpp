@@ -748,9 +748,10 @@ Dashboard::RequestDNSLookup(const nsACString &aHost,
     helper->mCallback =
         new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
     helper->mThread = NS_GetCurrentThread();
-    rv = mDnsService->AsyncResolve(aHost, 0, helper.get(),
-                                   NS_GetCurrentThread(),
-                                   getter_AddRefs(helper->mCancel));
+    OriginAttributes attrs;
+    rv = mDnsService->AsyncResolveNative(aHost, 0, helper.get(),
+                                         NS_GetCurrentThread(), attrs,
+                                         getter_AddRefs(helper->mCancel));
     return rv;
 }
 

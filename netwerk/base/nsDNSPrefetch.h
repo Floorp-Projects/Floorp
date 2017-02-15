@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasePrincipal.h"
 
 #include "nsIDNSListener.h"
 
@@ -24,7 +25,8 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
   
-    nsDNSPrefetch(nsIURI *aURI, nsIDNSListener *aListener, bool storeTiming);
+    nsDNSPrefetch(nsIURI *aURI, mozilla::OriginAttributes& aOriginAttributes,
+                  nsIDNSListener *aListener, bool storeTiming);
     bool TimingsValid() const {
         return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
     }
@@ -42,6 +44,7 @@ public:
   
 private:
     nsCString mHostname;
+    mozilla::OriginAttributes mOriginAttributes;
     bool mStoreTiming;
     mozilla::TimeStamp mStartTimestamp;
     mozilla::TimeStamp mEndTimestamp;

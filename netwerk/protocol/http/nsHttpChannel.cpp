@@ -6007,7 +6007,8 @@ nsHttpChannel::BeginConnect()
         // timing we used.
         LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
              this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
-        mDNSPrefetch = new nsDNSPrefetch(mURI, this, mTimingEnabled);
+        mDNSPrefetch = new nsDNSPrefetch(mURI, originAttributes,
+                                         this, mTimingEnabled);
         mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 

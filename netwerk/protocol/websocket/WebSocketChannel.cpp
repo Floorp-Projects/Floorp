@@ -2874,7 +2874,9 @@ WebSocketChannel::DoAdmissionDNS()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_ASSERT(!mCancelable);
-  return dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mCancelable));
+  return dns->AsyncResolveNative(hostName, 0, this,
+                                 mainThread, mLoadInfo->GetOriginAttributes(),
+                                 getter_AddRefs(mCancelable));
 }
 
 nsresult
