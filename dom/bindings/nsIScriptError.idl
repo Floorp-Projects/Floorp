@@ -9,13 +9,25 @@
 
 
 #include "nsISupports.idl"
+#include "nsIArray.idl"
 #include "nsIConsoleMessage.idl"
 
 %{C++
 #include "nsStringGlue.h" // for nsDependentCString
 %}
 
-[scriptable, uuid(361be358-76f0-47aa-b37b-6ad833599e8d)]
+[scriptable, uuid(e8933fc9-c302-4e12-a55b-4f88611d9c6c)]
+interface nsIScriptErrorNote : nsISupports
+{
+    readonly attribute AString errorMessage;
+    readonly attribute AString sourceName;
+    readonly attribute uint32_t lineNumber;
+    readonly attribute uint32_t columnNumber;
+
+    AUTF8String toString();
+};
+
+[scriptable, uuid(63eb4d3e-7d99-4150-b4f3-11314f9d82a9)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -74,6 +86,7 @@ interface nsIScriptError : nsIConsoleMessage
      */
     attribute AString errorMessageName;
 
+    readonly attribute nsIArray notes;
 
     void init(in AString message,
               in AString sourceName,

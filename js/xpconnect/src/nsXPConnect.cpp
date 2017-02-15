@@ -320,8 +320,9 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
     // mechanisms.
     nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    NS_ENSURE_TRUE_VOID(consoleService);
 
-    nsCOMPtr<nsIScriptError> errorObject;
+    RefPtr<nsScriptErrorBase> errorObject;
     if (mWindowID && aStack) {
       // Only set stack on messages related to a document
       // As we cache messages in the console service,
@@ -332,12 +333,21 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
       errorObject = new nsScriptError();
     }
     errorObject->SetErrorMessageName(mErrorMsgName);
-    NS_ENSURE_TRUE_VOID(consoleService);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
                                                 mLineNumber, mColumn, mFlags,
                                                 mCategory, mWindowID);
     NS_ENSURE_SUCCESS_VOID(rv);
+
+    for (size_t i = 0, len = mNotes.Length(); i < len; i++) {
+        ErrorNote& note = mNotes[i];
+
+        nsScriptErrorNote* noteObject = new nsScriptErrorNote();
+        noteObject->Init(note.mErrorMsg, note.mFileName,
+                         note.mLineNumber, note.mColumn);
+        errorObject->AddNote(noteObject);
+    }
+
     consoleService->LogMessage(errorObject);
 
 }
