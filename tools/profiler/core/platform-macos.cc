@@ -85,10 +85,9 @@ PlatformDataDestructor::operator()(PlatformData* aData)
   delete aData;
 }
 
-// SamplerThread objects are used for creating and running threads. When the
-// Start() method is called the new thread starts running the Run() method in
-// the new thread. The SamplerThread object should not be deallocated before
-// the thread has terminated.
+// The sampler thread controls sampling and runs whenever the profiler is
+// active. It periodically runs through all registered threads, finds those
+// that should be sampled, then pauses and samples them.
 class SamplerThread
 {
 public:
@@ -132,8 +131,9 @@ public:
     pthread_join(mThread, NULL);
   }
 
-  static void AddActiveSampler() {
+  static void StartSampler() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(!mInstance);
 
     if (mInstance == NULL) {
       mInstance = new SamplerThread(gInterval);
@@ -141,7 +141,7 @@ public:
     }
   }
 
-  static void RemoveActiveSampler() {
+  static void StopSampler() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
     mInstance->Join();
@@ -246,6 +246,8 @@ public:
       sample->timestamp = mozilla::TimeStamp::Now();
       sample->threadInfo = aThreadInfo;
 
+#undef REGISTER_FIELD
+
       Tick(sample);
     }
     thread_resume(profiled_thread);
@@ -261,24 +263,26 @@ private:
   DISALLOW_COPY_AND_ASSIGN(SamplerThread);
 };
 
-#undef REGISTER_FIELD
-
 SamplerThread* SamplerThread::mInstance = NULL;
 
 static void
 PlatformStart()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
-  SamplerThread::AddActiveSampler();
+  SamplerThread::StartSampler();
 }
 
 static void
 PlatformStop()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(gIsActive);
   gIsActive = false;
-  SamplerThread::RemoveActiveSampler();
+  SamplerThread::StopSampler();
 }
 
 /* static */ Thread::tid_t
