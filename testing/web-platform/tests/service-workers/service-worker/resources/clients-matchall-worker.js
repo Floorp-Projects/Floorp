@@ -15,6 +15,7 @@ self.onmessage = function(e) {
           message.push([client.visibilityState,
                         client.focused,
                         client.url,
+                        client.type,
                         frame_type]);
         });
       // Sort by url

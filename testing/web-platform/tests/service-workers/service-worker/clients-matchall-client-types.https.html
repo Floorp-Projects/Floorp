@@ -10,17 +10,17 @@ var shared_worker_url = scope + '-shared-worker.js';
 
 /* visibilityState, focused, url, frameType */
 var expected_without_type = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested']
+    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested']
 ];
 var expected_with_window = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested']
+    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested']
 ];
 var expected_with_shared_worker = [
-    [,,new URL(shared_worker_url, location).href, 'none']
+    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
 ];
 var expected_with_all = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested'],
-    [,,new URL(shared_worker_url, location).href, 'none']
+    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested'],
+    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
 ];
 
 function test_matchall(frame, expected, query_options) {
