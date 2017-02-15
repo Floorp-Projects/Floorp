@@ -83,7 +83,13 @@ class TestMozinfo(unittest.TestCase):
         m = mock.MagicMock()
         # Mock the value of MozbuildObject.from_environment().topobjdir.
         m.MozbuildObject.from_environment.return_value.topobjdir = self.tempdir
-        with mock.patch.dict(sys.modules, {"mozbuild": m, "mozbuild.base": m}):
+
+        mocked_modules = {
+            "mozbuild": m,
+            "mozbuild.base": m,
+            "mozbuild.mozconfig": m,
+        }
+        with mock.patch.dict(sys.modules, mocked_modules):
             self.assertEqual(mozinfo.find_and_update_from_json(), j)
         self.assertEqual(mozinfo.info["foo"], "123456")
 
