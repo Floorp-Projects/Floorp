@@ -20,7 +20,6 @@ class ServoCSSRuleList;
 
 namespace css {
 class Loader;
-class Rule;
 }
 
 // -------------------------------
@@ -86,6 +85,11 @@ public:
 
   bool IsModified() const final { return false; }
 
+  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+    css::ImportRule* aCloneOwnerRule,
+    nsIDocument* aCloneDocument,
+    nsINode* aCloneOwningNode) const final;
+
 protected:
   virtual ~ServoStyleSheet();
 
@@ -103,6 +107,12 @@ protected:
   void EnabledStateChangedInternal() {}
 
 private:
+  ServoStyleSheet(const ServoStyleSheet& aCopy,
+                  ServoStyleSheet* aParentToUse,
+                  css::ImportRule* aOwnerRuleToUse,
+                  nsIDocument* aDocumentToUse,
+                  nsINode* aOwningNodeToUse);
+
   void DropRuleList();
 
   RefPtr<ServoCSSRuleList> mRuleList;

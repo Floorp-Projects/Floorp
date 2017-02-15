@@ -653,17 +653,17 @@ CSSStyleSheet::AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray)
   }
 }
 
-already_AddRefed<CSSStyleSheet>
-CSSStyleSheet::Clone(CSSStyleSheet* aCloneParent,
+already_AddRefed<StyleSheet>
+CSSStyleSheet::Clone(StyleSheet* aCloneParent,
                      css::ImportRule* aCloneOwnerRule,
                      nsIDocument* aCloneDocument,
                      nsINode* aCloneOwningNode) const
 {
-  RefPtr<CSSStyleSheet> clone = new CSSStyleSheet(*this,
-                                                    aCloneParent,
-                                                    aCloneOwnerRule,
-                                                    aCloneDocument,
-                                                    aCloneOwningNode);
+  RefPtr<StyleSheet> clone = new CSSStyleSheet(*this,
+    static_cast<CSSStyleSheet*>(aCloneParent),
+    aCloneOwnerRule,
+    aCloneDocument,
+    aCloneOwningNode);
   return clone.forget();
 }
 

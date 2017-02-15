@@ -9934,8 +9934,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           if (sheet->IsApplicable()) {
             // XXXheycam Need to make ServoStyleSheet cloning work.
             if (sheet->IsGecko()) {
-              RefPtr<CSSStyleSheet> clonedSheet =
-                sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
+              RefPtr<StyleSheet> clonedSheet =
+                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
               NS_WARNING_ASSERTION(clonedSheet,
                                    "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
@@ -9954,8 +9954,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           if (sheet->IsApplicable()) {
             // XXXheycam Need to make ServoStyleSheet cloning work.
             if (sheet->IsGecko()) {
-              RefPtr<CSSStyleSheet> clonedSheet =
-                sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
+              RefPtr<StyleSheet> clonedSheet =
+                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
               NS_WARNING_ASSERTION(clonedSheet,
                                    "Cloning a stylesheet didn't work!");
               if (clonedSheet) {

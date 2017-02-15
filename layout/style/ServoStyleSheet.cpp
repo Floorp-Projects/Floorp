@@ -39,6 +39,16 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
   mInner->AddSheet(this);
 }
 
+ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
+                                 ServoStyleSheet* aParentToUse,
+                                 css::ImportRule* aOwnerRuleToUse,
+                                 nsIDocument* aDocumentToUse,
+                                 nsINode* aOwningNodeToUse)
+  : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse)
+{
+  mParent = aParentToUse;
+}
+
 ServoStyleSheet::~ServoStyleSheet()
 {
   UnparentChildren();
@@ -119,6 +129,20 @@ ServoStyleSheet::GetDOMOwnerRule() const
 {
   NS_ERROR("stylo: Don't know how to get DOM owner rule for ServoStyleSheet");
   return nullptr;
+}
+
+already_AddRefed<StyleSheet>
+ServoStyleSheet::Clone(StyleSheet* aCloneParent,
+                       css::ImportRule* aCloneOwnerRule,
+                       nsIDocument* aCloneDocument,
+                       nsINode* aCloneOwningNode) const
+{
+  RefPtr<StyleSheet> clone = new ServoStyleSheet(*this,
+    static_cast<ServoStyleSheet*>(aCloneParent),
+    aCloneOwnerRule,
+    aCloneDocument,
+    aCloneOwningNode);
+  return clone.forget();
 }
 
 CSSRuleList*
