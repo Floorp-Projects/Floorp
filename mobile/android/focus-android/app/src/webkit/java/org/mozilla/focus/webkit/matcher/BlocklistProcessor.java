@@ -4,20 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.webkit.matcher;
 
+import android.util.ArrayMap;
 import android.util.JsonReader;
 import android.util.JsonToken;
 
+import org.mozilla.focus.webkit.matcher.util.FocusString;
+
 import java.io.IOException;
+import java.util.Map;
 
 public class BlocklistProcessor {
 
-    final UrlMatcher matcher;
-
     public BlocklistProcessor(final JsonReader reader, final UrlMatcher matcher) throws IOException {
-        this.matcher = matcher;
-
-        // TODO: refactor this class to match the EntityListProcessor example of a static method
-        // returning a Trie of blacklisted URLs.
         reader.beginObject();
 
         while (reader.hasNext()) {
@@ -26,7 +24,7 @@ public class BlocklistProcessor {
             final String name = reader.nextName();
 
             if (name.equals("categories")) {
-                extractCategories(reader);
+                extractCategories(reader, matcher);
             } else {
                 reader.skipValue();
             }
@@ -36,29 +34,37 @@ public class BlocklistProcessor {
         reader.endObject();
     }
 
-    private void extractCategories(final JsonReader reader) throws IOException {
+    private static void extractCategories(final JsonReader reader, final UrlMatcher matcher) throws IOException {
         reader.beginObject();
+
+        // We ship 5 categories by default - so 5 is a good initial size
+        final Map<String, Trie> categoryMap = new ArrayMap<>(5);
 
         while (reader.hasNext()) {
             final String categoryName = reader.nextName();
 
-            extractCategory(reader);
+            final Trie categoryTrie = Trie.createRootNode();
+            extractCategory(reader, categoryTrie);
+
+            categoryMap.put(categoryName, categoryTrie);
         }
+
+        matcher.putCategories(categoryMap);
 
         reader.endObject();
     }
 
-    private void extractCategory(final JsonReader reader) throws IOException {
+    private static void extractCategory(final JsonReader reader, final Trie trie) throws IOException {
         reader.beginArray();
 
         while (reader.hasNext()) {
-            extractSite(reader);
+            extractSite(reader, trie);
         }
 
         reader.endArray();
     }
 
-    private void extractSite(final JsonReader reader) throws IOException {
+    private static void extractSite(final JsonReader reader, final Trie trie) throws IOException {
         reader.beginObject();
 
         final String siteName = reader.nextName();
@@ -77,7 +83,7 @@ public class BlocklistProcessor {
 
                     while (reader.hasNext()) {
                         final String blockURL = reader.nextString();
-                        matcher.putURL(blockURL);
+                        trie.put(FocusString.create(blockURL).reverse());
                     }
 
                     reader.endArray();
