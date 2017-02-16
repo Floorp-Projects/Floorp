@@ -189,6 +189,10 @@ WebRenderAPI::Readback(gfx::IntSize size,
 
     layers::SynchronousTask task("Readback");
     auto event = MakeUnique<Readback>(&task, size, buffer, buffer_size);
+    // This event will be passed from wr_backend thread to renderer thread. That
+    // implies that all frame data have been processed when the renderer runs this
+    // read-back event. Then, we could make sure this read-back event gets the
+    // latest result.
     RunOnRenderThread(Move(event));
 
     task.Wait();
