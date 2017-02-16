@@ -41,6 +41,9 @@ js::Allocate(JSContext* cx, AllocKind kind, size_t nDynamicSlots, InitialHeap he
 
     // Off-thread alloc cannot trigger GC or make runtime assertions.
     if (cx->helperThread()) {
+        // The zone group used by the helper thread should have been created
+        // with a disabled nursery.
+        MOZ_ASSERT(!cx->nursery().isEnabled());
         JSObject* obj = GCRuntime::tryNewTenuredObject<NoGC>(cx, kind, thingSize, nDynamicSlots);
         if (MOZ_UNLIKELY(allowGC && !obj))
             ReportOutOfMemory(cx);

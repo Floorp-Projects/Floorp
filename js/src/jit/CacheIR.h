@@ -912,7 +912,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 {
     HandleValue val_;
     HandleValue idVal_;
-    ICStubEngine engine_;
     bool* isTemporarilyUnoptimizable_;
     CanAttachGetter canAttachGetter_;
 
@@ -972,8 +971,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
 
   public:
     GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
-                       ICStubEngine engine, bool* isTemporarilyUnoptimizable,
-                       HandleValue val,HandleValue idVal, CanAttachGetter canAttachGetter);
+                       bool* isTemporarilyUnoptimizable, HandleValue val,HandleValue idVal,
+                       CanAttachGetter canAttachGetter);
 
     bool tryAttachStub();
     bool tryAttachIdempotentStub();
