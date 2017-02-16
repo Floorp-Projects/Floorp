@@ -17,7 +17,7 @@ const {
   getUrlBaseName,
   getUrlQuery,
   getUrlHost,
-} = require("devtools/client/netmonitor/request-utils");
+} = require("devtools/client/netmonitor/utils/request-utils");
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";
 const HTTPS_EXAMPLE_URL = "https://example.com/browser/devtools/client/netmonitor/test/";
