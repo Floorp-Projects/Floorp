@@ -1,6 +1,7 @@
 /* Test that clicking on the Report Site Issue button opens a new tab
    and sends a postMessaged blob to it. */
 add_task(function* test_screenshot() {
+  requestLongerTimeout(2);
 
   // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
   yield SpecialPowers.pushPrefEnv({set: [[PREF_WC_REPORTER_ENDPOINT, NEW_ISSUE_PAGE]]});
