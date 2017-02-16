@@ -145,6 +145,7 @@ var loadWithoutClearingMappings = false;
 var nextTest;
 var expectPass = true;
 var waitFor = 0;
+var originAttributes = {};
 
 var Listener = function() {};
 Listener.prototype = {
@@ -222,6 +223,7 @@ function doTest()
                      Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   }
   loadWithoutClearingMappings = false;
+  chan.loadInfo.originAttributes = originAttributes;
   chan.asyncOpen2(listener);
 }
 
@@ -367,8 +369,75 @@ function doTest11()
   xaltsvc = h2FooRoute;
   expectPass = true;
   waitFor = 500;
+  nextTest = doTest12;
+  do_test_pending();
+  doTest();
+}
+
+// Test 12-15:
+// Insert a cache of http://foo served from h2=:port with origin attributes.
+function doTest12()
+{
+  dump("doTest12()\n");
+  origin = httpFooOrigin;
+  xaltsvc = h2Route;
+  originAttributes = {
+    userContextId: 1,
+    firstPartyDomain: "a.com",
+  };
+  nextTest = doTest13;
+  do_test_pending();
+  doTest();
+  xaltsvc = h2FooRoute;
+}
+
+// Make sure we get a cache miss with a different userContextId.
+function doTest13()
+{
+  dump("doTest13()\n");
+  origin = httpFooOrigin;
+  xaltsvc = 'NA';
+  originAttributes = {
+    userContextId: 2,
+    firstPartyDomain: "a.com",
+  };
+  loadWithoutClearingMappings = true;
+  nextTest = doTest14;
+  do_test_pending();
+  doTest();
+}
+
+// Make sure we get a cache miss with a different firstPartyDomain.
+function doTest14()
+{
+  dump("doTest14()\n");
+  origin = httpFooOrigin;
+  xaltsvc = 'NA';
+  originAttributes = {
+    userContextId: 1,
+    firstPartyDomain: "b.com",
+  };
+  loadWithoutClearingMappings = true;
+  nextTest = doTest15;
+  do_test_pending();
+  doTest();
+}
+//
+// Make sure we get a cache hit with the same origin attributes.
+function doTest15()
+{
+  dump("doTest15()\n");
+  origin = httpFooOrigin;
+  xaltsvc = 'NA';
+  originAttributes = {
+    userContextId: 1,
+    firstPartyDomain: "a.com",
+  };
+  loadWithoutClearingMappings = true;
   nextTest = testsDone;
   do_test_pending();
   doTest();
+  // This ensures a cache hit.
+  xaltsvc = h2FooRoute;
 }
 
