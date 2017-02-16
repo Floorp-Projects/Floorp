@@ -46,6 +46,10 @@ bool
 nsNCRFallbackEncoderWrapper::Encode(const nsAString& aUtf16,
                                     nsACString& aBytes)
 {
+  // mozilla::dom::EncodingUtils::EncoderForEncoding fails during shutdown
+  if (!mEncoder) {
+    return false;
+  }
   // nsIUnicodeEncoder uses int32_t for sizes :-(
   if (aUtf16.Length() > INT32_MAX) {
     return false;
