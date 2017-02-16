@@ -12,7 +12,8 @@
         android:theme="@style/AppTheme" >
         <activity android:name=".activity.MainActivity"
             android:launchMode="singleInstance"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout">
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:label="@string/launcher_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -4,35 +4,64 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "org.mozilla.focus"
+        applicationId "org.mozilla"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    // We have a three dimensional build configuration:
+    // BUILD TYPES (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webkit, gecko(
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
         beta {
             initWith debug
 
             applicationIdSuffix ".beta"
         }
-
         debug {
             applicationIdSuffix ".debug"
         }
     }
+
+    flavorDimensions "product", "engine"
+
     productFlavors {
-        webkit {
+        // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
+        focus {
+            dimension "product"
 
+            applicationIdSuffix ".focus"
         }
-        gecko {
+        klar {
+            dimension "product"
 
+            applicationIdSuffix ".klar"
+        }
+
+        // We can build with two engines: webkit or gecko
+        webkit {
+            dimension "engine"
+        }
+
+        gecko {
+            dimension "engine"
+
+            applicationIdSuffix ".gecko"
+        }
+    }
+
+    variantFilter { variant ->
+        def flavors = variant.flavors*.name
+        // We only need a gecko debug build for now.
+        if (flavors.contains("gecko") && (variant.buildType.name != "debug" || flavors.contains("klar"))) {
+            setIgnore(true)
         }
     }
 }
@@ -60,8 +89,13 @@ task buildBlocklists(type:Exec) {
     commandLine 'python', 'build-disconnect.py'
 }
 
-project.afterEvaluate{
-    prepareWebkitDebugDependencies.dependsOn("buildBlocklists")
-    prepareWebkitBetaDependencies.dependsOn("buildBlocklists")
-    prepareWebkitReleaseDependencies.dependsOn("buildBlocklists")
+project.afterEvaluate {
+    // Meh. This should be easier..
+
+    prepareFocusWebkitDebugDependencies.dependsOn("buildBlocklists")
+    prepareFocusWebkitBetaDependencies.dependsOn("buildBlocklists")
+    prepareFocusWebkitReleaseDependencies.dependsOn("buildBlocklists")
+    prepareKlarWebkitDebugDependencies.dependsOn("buildBlocklists")
+    prepareKlarWebkitBetaDependencies.dependsOn("buildBlocklists")
+    prepareKlarWebkitReleaseDependencies.dependsOn("buildBlocklists")
 }

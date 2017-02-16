@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <string name="app_name">Focus</string>
+    <string name="app_name" translatable="false">Firefox Focus</string>
+    <string name="launcher_name" translatable="false">Focus</string>
 
     <string name="urlbar_hint">Search or enter address</string>
     <string name="teaser_title">Firefox Focus</string>
