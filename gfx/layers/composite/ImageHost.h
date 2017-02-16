@@ -31,6 +31,7 @@ namespace layers {
 
 class Compositor;
 struct EffectChain;
+class HostLayerManager;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
