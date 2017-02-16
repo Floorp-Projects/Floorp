@@ -176,6 +176,7 @@ LINTER = {
     'name': "flake8",
     'description': "Python linter",
     'include': [
+        'layout/tools/reftest',
         'python/mozlint',
         'security/manager',
         'taskcluster',

@@ -61,14 +61,14 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Sprintf.h"
 
-#include "LulPlatformMacros.h"
+#include "PlatformMacros.h"
 #include "LulCommonExt.h"
 #include "LulDwarfExt.h"
 #include "LulElfInt.h"
 #include "LulMainInt.h"
 
 
-#if defined(LUL_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
+#if defined(SPS_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
 // bionic and older glibsc don't define it
 # define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif

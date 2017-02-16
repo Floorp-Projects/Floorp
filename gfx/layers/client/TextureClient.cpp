@@ -147,13 +147,6 @@ private:
   /// will send the delete message.
   void Destroy(const TextureDeallocParams& aParams);
 
-  /// The ugly and slow way to destroy the actor.
-  ///
-  /// This will block until the Parent actor has handled the Destroy message,
-  /// and then start the asynchronous handshake (and destruction will already
-  /// be done on the parent side, when the async part happens).
-  void DestroySynchronously(const TextureDeallocParams& aParams);
-
   // This lock is used order to prevent several threads to access the
   // TextureClient's data concurrently. In particular, it prevents shutdown
   // code to destroy a texture while another thread is reading or writing into
@@ -279,43 +272,22 @@ TextureChild::Destroy(const TextureDeallocParams& aParams)
 
   mOwnerCalledDestroy = true;
 
+  if (!IPCOpen()) {
+    DestroyTextureData(
+      aParams.data,
+      aParams.allocator,
+      aParams.clientDeallocation,
+      mMainThreadOnly);
+    return;
+  }
+
   // DestroyTextureData will be called by TextureChild::ActorDestroy
   mTextureData = aParams.data;
   mOwnsTextureData = aParams.clientDeallocation;
 
   if (!mCompositableForwarder ||
-      !mCompositableForwarder->DestroyInTransaction(this, false))
+      !mCompositableForwarder->DestroyInTransaction(this))
   {
-    this->SendDestroy();
-  }
-}
-
-void
-TextureChild::DestroySynchronously(const TextureDeallocParams& aParams)
-{
-  MOZ_PERFORMANCE_WARNING("gfx", "TextureClient/Host pair requires synchronous deallocation");
-
-  MOZ_ASSERT(!mOwnerCalledDestroy);
-  if (mOwnerCalledDestroy) {
-    return;
-  }
-
-  mOwnerCalledDestroy = true;
-
-  DestroyTextureData(
-    aParams.data,
-    aParams.allocator,
-    aParams.clientDeallocation,
-    mMainThreadOnly);
-
-  if (!IPCOpen()) {
-    return;
-  }
-
-  if (!mCompositableForwarder ||
-      !mCompositableForwarder->DestroyInTransaction(this, true))
-  {
-    this->SendDestroySync();
     this->SendDestroy();
   }
 }
@@ -401,14 +373,10 @@ DeallocateTextureClient(TextureDeallocParams params)
     return;
   }
 
-  if (params.syncDeallocation || !actor->IPCOpen()) {
-    actor->DestroySynchronously(params);
-  } else {
-    actor->Destroy(params);
-  }
+  actor->Destroy(params);
 }
 
-void TextureClient::Destroy(bool aForceSync)
+void TextureClient::Destroy()
 {
   if (mActor && !mIsLocked) {
     mActor->Lock();
@@ -444,7 +412,7 @@ void TextureClient::Destroy(bool aForceSync)
     // At the moment we always deallocate synchronously when deallocating on the
     // client side, but having asynchronous deallocate in some of the cases will
     // be a worthwhile optimization.
-    params.syncDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT) || aForceSync;
+    params.syncDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT);
 
     // Release the lock before calling DeallocateTextureClient because the latter
     // may wait for the main thread which could create a dead-lock.
@@ -631,7 +599,7 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 TextureClient::~TextureClient()
 {
   mReadLock = nullptr;
-  Destroy(false);
+  Destroy();
 }
 
 void
@@ -1663,10 +1631,10 @@ ShmemTextureReadLock::ReadUnlock() {
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   MOZ_ASSERT(readCount >= 0);
   if (readCount <= 0) {
-    if (mClientAllocator) {
+    if (mClientAllocator && mClientAllocator->GetTileLockAllocator()) {
       mClientAllocator->GetTileLockAllocator()->DeallocShmemSection(mShmemSection);
     } else {
-      // we are on the compositor process
+      // we are on the compositor process, or IPC is down.
       FixedSizeSmallShmemSectionAllocator::FreeShmemSection(mShmemSection);
     }
   }

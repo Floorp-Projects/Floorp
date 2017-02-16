@@ -248,7 +248,7 @@ namespace {
 
 // This class is passed to timer as a tick observer.  It refers the cache
 // and keeps it alive for a time.
-class StorageCacheHolder : public nsITimerCallback
+class StorageCacheHolder : public nsITimerCallback, public nsINamed
 {
   virtual ~StorageCacheHolder() {}
 
@@ -261,13 +261,26 @@ class StorageCacheHolder : public nsITimerCallback
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignASCII("StorageCacheHolder_timer");
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  SetName(const char* aName) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   RefPtr<StorageCache> mCache;
 
 public:
   explicit StorageCacheHolder(StorageCache* aCache) : mCache(aCache) {}
 };
 
-NS_IMPL_ISUPPORTS(StorageCacheHolder, nsITimerCallback)
+NS_IMPL_ISUPPORTS(StorageCacheHolder, nsITimerCallback, nsINamed)
 
 } // namespace
 

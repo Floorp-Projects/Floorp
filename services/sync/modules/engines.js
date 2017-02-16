@@ -604,7 +604,6 @@ EngineManager.prototype = {
       name = name.name || "";
 
       this._log.error(`Could not initialize engine ${name}`, ex);
-      return engineObject;
     }
   },
 

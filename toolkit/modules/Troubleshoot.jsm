@@ -336,7 +336,7 @@ var dataProviders = {
                      getInterface(Ci.nsIDOMWindowUtils);
       try {
         // NOTE: windowless browser's windows should not be reported in the graphics troubleshoot report
-        if (winUtils.layerManagerType == "None") {
+        if (winUtils.layerManagerType == "None" || !winUtils.layerManagerRemote) {
           continue;
         }
         data.numTotalWindows++;
@@ -347,6 +347,12 @@ var dataProviders = {
       }
       if (data.windowLayerManagerType != "Basic")
         data.numAcceleratedWindows++;
+    }
+
+    // If we had no OMTC windows, report back Basic Layers.
+    if (!data.windowLayerManagerType) {
+      data.windowLayerManagerType = "Basic";
+      data.windowLayerManagerRemote = false;
     }
 
     let winUtils = Services.wm.getMostRecentWindow("").

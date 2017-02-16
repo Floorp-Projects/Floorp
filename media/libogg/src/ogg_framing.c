@@ -12,7 +12,7 @@
 
  function: code raw packets into framed OggSquish stream and
            decode Ogg streams back into raw packets
- last mod: $Id: framing.c 18052 2011-08-04 17:57:02Z giles $
+ last mod: $Id: framing.c 18758 2013-01-08 16:29:56Z tterribe $
 
  note: The CRC code is directly derived from public domain code by
  Ross Williams (ross@guest.adelaide.edu.au).  See docs/framing.html
@@ -21,6 +21,7 @@
  ********************************************************************/
 
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 #include <ogg/ogg.h>
 
@@ -236,39 +237,51 @@ int ogg_stream_destroy(ogg_stream_state *os){
 /* Helpers for ogg_stream_encode; this keeps the structure and
    what's happening fairly clear */
 
-static int _os_body_expand(ogg_stream_state *os,int needed){
-  if(os->body_storage<=os->body_fill+needed){
+static int _os_body_expand(ogg_stream_state *os,long needed){
+  if(os->body_storage-needed<=os->body_fill){
+    long body_storage;
     void *ret;
-    ret=_ogg_realloc(os->body_data,(os->body_storage+needed+1024)*
-                     sizeof(*os->body_data));
+    if(os->body_storage>LONG_MAX-needed){
+      ogg_stream_clear(os);
+      return -1;
+    }
+    body_storage=os->body_storage+needed;
+    if(body_storage<LONG_MAX-1024)body_storage+=1024;
+    ret=_ogg_realloc(os->body_data,body_storage*sizeof(*os->body_data));
     if(!ret){
       ogg_stream_clear(os);
       return -1;
     }
-    os->body_storage+=(needed+1024);
+    os->body_storage=body_storage;
     os->body_data=ret;
   }
   return 0;
 }
 
-static int _os_lacing_expand(ogg_stream_state *os,int needed){
-  if(os->lacing_storage<=os->lacing_fill+needed){
+static int _os_lacing_expand(ogg_stream_state *os,long needed){
+  if(os->lacing_storage-needed<=os->lacing_fill){
+    long lacing_storage;
     void *ret;
-    ret=_ogg_realloc(os->lacing_vals,(os->lacing_storage+needed+32)*
-                     sizeof(*os->lacing_vals));
+    if(os->lacing_storage>LONG_MAX-needed){
+      ogg_stream_clear(os);
+      return -1;
+    }
+    lacing_storage=os->lacing_storage+needed;
+    if(lacing_storage<LONG_MAX-32)lacing_storage+=32;
+    ret=_ogg_realloc(os->lacing_vals,lacing_storage*sizeof(*os->lacing_vals));
     if(!ret){
       ogg_stream_clear(os);
       return -1;
     }
     os->lacing_vals=ret;
-    ret=_ogg_realloc(os->granule_vals,(os->lacing_storage+needed+32)*
+    ret=_ogg_realloc(os->granule_vals,lacing_storage*
                      sizeof(*os->granule_vals));
     if(!ret){
       ogg_stream_clear(os);
       return -1;
     }
     os->granule_vals=ret;
-    os->lacing_storage+=(needed+32);
+    os->lacing_storage=lacing_storage;
   }
   return 0;
 }
@@ -304,12 +317,17 @@ void ogg_page_checksum_set(ogg_page *og){
 int ogg_stream_iovecin(ogg_stream_state *os, ogg_iovec_t *iov, int count,
                        long e_o_s, ogg_int64_t granulepos){
 
-  int bytes = 0, lacing_vals, i;
+  long bytes = 0, lacing_vals;
+  int i;
 
   if(ogg_stream_check(os)) return -1;
   if(!iov) return 0;
 
-  for (i = 0; i < count; ++i) bytes += (int)iov[i].iov_len;
+  for (i = 0; i < count; ++i){
+    if(iov[i].iov_len>LONG_MAX) return -1;
+    if(bytes>LONG_MAX-(long)iov[i].iov_len) return -1;
+    bytes += (long)iov[i].iov_len;
+  }
   lacing_vals=bytes/255+1;
 
   if(os->body_returned){
