@@ -22,7 +22,7 @@ add_task(function* testPageActionPopup() {
       "popup-a.js": function() {
         window.onload = () => {
           let background = window.getComputedStyle(document.body).backgroundColor;
-          browser.test.assertEq("rgba(0, 0, 0, 0)", background);
+          browser.test.assertEq("transparent", background);
           browser.runtime.sendMessage("from-popup-a");
         };
         browser.runtime.onMessage.addListener(msg => {

@@ -20,4 +20,4 @@ class TestChromeElementCSS(MarionetteTestCase):
             element = self.marionette.find_element(By.ID, "identity-box")
             background_colour = element.value_of_css_property("background-color")
 
-            self.assertEqual("rgba(0, 0, 0, 0)", background_colour)
+            self.assertEqual("transparent", background_colour)
