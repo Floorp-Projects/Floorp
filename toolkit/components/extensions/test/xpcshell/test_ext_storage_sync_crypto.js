@@ -3,8 +3,10 @@
 
 "use strict";
 
+const {
+  EncryptionRemoteTransformer,
+} = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
 Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-sync/engines/extension-storage.js");
 Cu.import("resource://services-sync/util.js");
 
 /**
@@ -38,7 +40,6 @@ function* throwsGen(constraint, f) {
   } else {
     ok(constraint === message, debuggingMessage);
   }
-
 }
 
 /**
@@ -81,12 +82,12 @@ add_task(function* test_encryption_transformer_roundtrip() {
 add_task(function* test_refuses_to_decrypt_tampered() {
   const encryptedRecord = yield transformer.encode({data: [1, 2, 3], id: "key-some_2D_key", key: "some-key"});
   const tamperedHMAC = Object.assign({}, encryptedRecord, {hmac: "0000000000000000000000000000000000000000000000000000000000000001"});
-  yield* throwsGen(Utils.isHMACMismatch, function*() {
+  yield* throwsGen(Utils.isHMACMismatch, function* () {
     yield transformer.decode(tamperedHMAC);
   });
 
   const tamperedIV = Object.assign({}, encryptedRecord, {IV: "aaaaaaaaaaaaaaaaaaaaaa=="});
-  yield* throwsGen(Utils.isHMACMismatch, function*() {
+  yield* throwsGen(Utils.isHMACMismatch, function* () {
     yield transformer.decode(tamperedIV);
   });
 });

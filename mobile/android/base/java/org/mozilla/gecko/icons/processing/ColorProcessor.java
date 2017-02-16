@@ -42,7 +42,7 @@ public class ColorProcessor implements Processor {
     private void extractColorUsingPaletteSupportLibrary(final IconResponse response) {
         try {
             final Palette palette = Palette.from(response.getBitmap()).generate();
-            response.updateColor(palette.getVibrantColor(DEFAULT_COLOR));
+            response.updateColor(palette.getVibrantColor(DEFAULT_COLOR) & 0x7FFFFFFF);
         } catch (ArrayIndexOutOfBoundsException e) {
             // We saw the palette library fail with an ArrayIndexOutOfBoundsException intermittently
             // in automation. In this case lets just swallow the exception and move on without a
