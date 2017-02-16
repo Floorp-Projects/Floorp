@@ -309,11 +309,7 @@ private:
 
   uint32_t mFrameCount;
   SpliceableChunkedJSONWriter mFrameTableWriter;
-#ifdef SPS_STANDALNOE
-  std::map<FrameKey, uint32_t> mFrameToIndexMap;
-#else
   nsDataHashtable<nsGenericHashKey<FrameKey>, uint32_t> mFrameToIndexMap;
-#endif
 
   SpliceableChunkedJSONWriter mStackTableWriter;
 

@@ -210,8 +210,6 @@ static void CheckClassInitialized()
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
 
-NS_IMPL_ISUPPORTS0(nsNPAPIPlugin)
-
 nsNPAPIPlugin::nsNPAPIPlugin()
 {
   memset((void*)&mPluginFuncs, 0, sizeof(mPluginFuncs));

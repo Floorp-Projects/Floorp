@@ -71,9 +71,10 @@ void DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock)
     CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
   }
   if (gIPCTimer) {
-    gIPCTimer->InitWithFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,
-                                    nullptr, kBatchTimeoutMs,
-                                    nsITimer::TYPE_ONE_SHOT);
+    gIPCTimer->InitWithNamedFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,
+                                         nullptr, kBatchTimeoutMs,
+                                         nsITimer::TYPE_ONE_SHOT,
+                                         "TelemetryIPCAccumulator::IPCTimerFired");
     gIPCTimerArmed = true;
   }
 }
@@ -87,7 +88,9 @@ void ArmIPCTimer(const StaticMutexAutoLock& lock)
   if (NS_IsMainThread()) {
     DoArmIPCTimerMainThread(lock);
   } else {
-    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction(
+                                                    "TelemetryIPCAccumulator::ArmIPCTimer",
+                                                    []() -> void {
       StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
       DoArmIPCTimerMainThread(locker);
     }));

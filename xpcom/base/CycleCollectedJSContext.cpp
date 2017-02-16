@@ -1479,7 +1479,8 @@ CycleCollectedJSContext::RunInMetastableState(already_AddRefed<nsIRunnable>&& aR
 
 IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSContext* aCx,
                                                          DeferredFinalizerTable& aFinalizers)
-  : mContext(aCx)
+  : Runnable("IncrementalFinalizeRunnable")
+  , mContext(aCx)
   , mFinalizeFunctionToRun(0)
   , mReleasing(false)
 {

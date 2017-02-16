@@ -161,5 +161,14 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
 }
 
+HostLayerManager*
+CompositableHost::GetLayerManager() const
+{
+  if (!mLayer || !mLayer->Manager()) {
+    return nullptr;
+  }
+  return mLayer->Manager()->AsHostLayerManager();
+}
+
 } // namespace layers
 } // namespace mozilla

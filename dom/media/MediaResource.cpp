@@ -864,7 +864,8 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
     return;
 
   mDataReceivedEvent =
-    NewNonOwningRunnableMethod(this, &ChannelMediaResource::DoNotifyDataReceived);
+    NewNonOwningRunnableMethod("ChannelMediaResource::DoNotifyDataReceived",
+                               this, &ChannelMediaResource::DoNotifyDataReceived);
   NS_DispatchToMainThread(mDataReceivedEvent.get());
 }
 

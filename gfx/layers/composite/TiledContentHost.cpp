@@ -139,12 +139,17 @@ bool
 TiledContentHost::UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                       const SurfaceDescriptorTiles& aTiledDescriptor)
 {
+  HostLayerManager* lm = GetLayerManager();
+  if (!lm) {
+    return false;
+  }
+
   if (aTiledDescriptor.resolution() < 1) {
-    if (!mLowPrecisionTiledBuffer.UseTiles(aTiledDescriptor, mCompositor, aAllocator)) {
+    if (!mLowPrecisionTiledBuffer.UseTiles(aTiledDescriptor, lm, aAllocator)) {
       return false;
     }
   } else {
-    if (!mTiledBuffer.UseTiles(aTiledDescriptor, mCompositor, aAllocator)) {
+    if (!mTiledBuffer.UseTiles(aTiledDescriptor, lm, aAllocator)) {
       return false;
     }
   }
@@ -245,7 +250,7 @@ protected:
 
 bool
 TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
-                                    Compositor* aCompositor,
+                                    HostLayerManager* aLayerManager,
                                     ISurfaceAllocator* aAllocator)
 {
   if (mResolution != aTiles.resolution() ||
@@ -253,8 +258,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     Clear();
   }
   MOZ_ASSERT(aAllocator);
-  MOZ_ASSERT(aCompositor);
-  if (!aAllocator || !aCompositor) {
+  MOZ_ASSERT(aLayerManager);
+  if (!aAllocator || !aLayerManager) {
     return false;
   }
 
@@ -294,7 +299,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
 
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
-    tile.mTextureHost->SetCompositor(aCompositor);
+    tile.mTextureHost->SetCompositor(aLayerManager->GetCompositor());
     tile.mTextureHost->DeserializeReadLock(texturedDesc.sharedLock(), aAllocator);
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
@@ -322,8 +327,8 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       // We need to begin fading it in (if enabled via layers.tiles.fade-in.enabled)
       tile.mFadeStart = TimeStamp::Now();
 
-      aCompositor->CompositeUntil(tile.mFadeStart +
-        TimeDuration::FromMilliseconds(gfxPrefs::LayerTileFadeInDuration()));
+      aLayerManager->CompositeUntil(
+        tile.mFadeStart + TimeDuration::FromMilliseconds(gfxPrefs::LayerTileFadeInDuration()));
     }
   }
 
@@ -352,13 +357,13 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     UseTileTexture(tile.mTextureHost,
                    tile.mTextureSource,
                    texturedDesc.updateRect(),
-                   aCompositor);
+                   aLayerManager->GetCompositor());
 
     if (tile.mTextureHostOnWhite) {
       UseTileTexture(tile.mTextureHostOnWhite,
                      tile.mTextureSourceOnWhite,
                      texturedDesc.updateRect(),
-                     aCompositor);
+                     aLayerManager->GetCompositor());
     }
   }
 

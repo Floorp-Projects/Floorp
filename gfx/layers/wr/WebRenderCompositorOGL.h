@@ -112,8 +112,6 @@ public:
 
   virtual bool IsValid() const override { return true; }
 
-  virtual void CompositeUntil(TimeStamp aTimeStamp) override;
-
   GLContext* gl() const { return mGLContext; }
 
   void AddExternalImageId(uint64_t aExternalImageId, CompositableHost* aHost);

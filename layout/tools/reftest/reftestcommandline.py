@@ -1,9 +1,8 @@
 import argparse
 import os
-import sys
 from collections import OrderedDict
 from urlparse import urlparse
-
+import mozinfo
 import mozlog
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -35,7 +34,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           type=str,
                           dest="symbolsPath",
                           default=None,
-                          help="absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+                          help="absolute path to directory containing breakpad symbols, "
+                               "or the URL of a zip file containing symbols")
 
         self.add_argument("--debugger",
                           action="store",
@@ -72,7 +72,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="timeout",
                           type=int,
                           default=5 * 60,  # 5 minutes per bug 479518
-                          help="reftest will timeout in specified number of seconds. [default %(default)s].")
+                          help="reftest will timeout in specified number of seconds. "
+                               "[default %(default)s].")
 
         self.add_argument("--leak-threshold",
                           action="store",
@@ -119,7 +120,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="ignoreWindowSize",
                           action="store_true",
                           default=False,
-                          help="ignore the window size, which may cause spurious failures and passes")
+                          help="ignore the window size, which may cause spurious "
+                               "failures and passes")
 
         self.add_argument("--install-extension",
                           action="append",
@@ -218,10 +220,10 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           help=argparse.SUPPRESS)
 
         self.add_argument("--cleanup-crashes",
-                          action = "store_true",
-                          dest = "cleanupCrashes",
-                          default = False,
-                          help = "Delete pending crash reports before running tests.")
+                          action="store_true",
+                          dest="cleanupCrashes",
+                          default=False,
+                          help="Delete pending crash reports before running tests.")
 
         self.add_argument("tests",
                           metavar="TEST_PATH",
@@ -260,7 +262,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
     def validate(self, options, reftest):
         if not options.tests:
             # Can't just set this in the argument parser because mach will set a default
-            self.error("Must supply at least one path to a manifest file, test directory, or test file to run.")
+            self.error("Must supply at least one path to a manifest file, "
+                       "test directory, or test file to run.")
 
         if options.suite is None:
             self.set_default_suite(options)
@@ -375,7 +378,9 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           action="store",
                           type=str,
                           dest="remoteAppPath",
-                          help="Path to remote executable relative to device root using only forward slashes.  Either this or app must be specified, but not both.")
+                          help="Path to remote executable relative to device root using only "
+                               "forward slashes.  Either this or app must be specified, "
+                               "but not both.")
 
         self.add_argument("--adbpath",
                           action="store",
@@ -408,7 +413,8 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           type=str,
                           dest="remoteProductName",
                           default="fennec",
-                          help="Name of product to test - either fennec or firefox, defaults to fennec")
+                          help="Name of product to test - either fennec or firefox, "
+                               "defaults to fennec")
 
         self.add_argument("--remote-webserver",
                           action="store",
@@ -433,7 +439,8 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           type=str,
                           dest="remoteLogFile",
                           default="reftest.log",
-                          help="Name of log file on the device relative to device root.  PLEASE USE ONLY A FILENAME.")
+                          help="Name of log file on the device relative to device root.  "
+                               "PLEASE USE ONLY A FILENAME.")
 
         self.add_argument("--pidfile",
                           action="store",
@@ -447,13 +454,15 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           type=str,
                           dest="dm_trans",
                           default="sut",
-                          help="the transport to use to communicate with device: [adb|sut]; default=sut")
+                          help="the transport to use to communicate with device: "
+                               "[adb|sut]; default=sut")
 
         self.add_argument("--remoteTestRoot",
                           action="store",
                           type=str,
                           dest="remoteTestRoot",
-                          help="remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
+                          help="remote directory to use as test root "
+                               "(eg. /mnt/sdcard/tests or /data/local/tests)")
 
         self.add_argument("--httpd-path",
                           action="store",
@@ -480,7 +489,8 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
         # Verify that our remotewebserver is set properly
         if options.remoteWebServer == '127.0.0.1':
             self.error("ERROR: Either you specified the loopback for the remote webserver or ",
-                       "your local IP cannot be detected.  Please provide the local ip in --remote-webserver")
+                       "your local IP cannot be detected.  "
+                       "Please provide the local ip in --remote-webserver")
 
         if not options.httpPort:
             options.httpPort = automation.DEFAULT_HTTP_PORT
@@ -539,8 +549,9 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
             width = int(parts[0].split(':')[1])
             height = int(parts[1].split(':')[1])
             if (width < 1366 or height < 1050):
-                self.error("ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (
-                    width, height))
+                self.error("ERROR: Invalid screen resolution %sx%s, "
+                           "please adjust to 1366x1050 or higher" % (
+                            width, height))
 
         # Disable e10s by default on Android because we don't run Android
         # e10s jobs anywhere yet.
