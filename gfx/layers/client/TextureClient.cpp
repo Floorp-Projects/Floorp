@@ -1585,10 +1585,10 @@ ShmemTextureReadLock::ReadUnlock() {
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   MOZ_ASSERT(readCount >= 0);
   if (readCount <= 0) {
-    if (mClientAllocator) {
+    if (mClientAllocator && mClientAllocator->GetTileLockAllocator()) {
       mClientAllocator->GetTileLockAllocator()->DeallocShmemSection(mShmemSection);
     } else {
-      // we are on the compositor process
+      // we are on the compositor process, or IPC is down.
       FixedSizeSmallShmemSectionAllocator::FreeShmemSection(mShmemSection);
     }
   }
