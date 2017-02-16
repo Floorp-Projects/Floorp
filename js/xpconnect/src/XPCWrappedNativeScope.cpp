@@ -97,6 +97,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
         mHasCallInterpositions(false),
+        mDocGroupValidation(false),
         mIsContentXBLScope(false),
         mIsAddonScope(false)
 {
@@ -167,6 +168,9 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     if (addonId) {
         // We forbid CPOWs unless they're specifically allowed.
         priv->allowCPOWs = gAllowCPOWAddonSet ? gAllowCPOWAddonSet->has(addonId) : false;
+
+        // Automatically opt into DocGroup validation for add-on compartments.
+        mDocGroupValidation = true;
     }
 }
 

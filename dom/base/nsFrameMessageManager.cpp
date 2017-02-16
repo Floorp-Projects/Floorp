@@ -1717,6 +1717,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   // Set the location information for the new global, so that tools like
   // about:memory may use that information.
   xpc::SetLocationForGlobal(global, aID);
+  xpc::SetDocGroupValidation(global);
 
   DidCreateGlobal();
   return true;

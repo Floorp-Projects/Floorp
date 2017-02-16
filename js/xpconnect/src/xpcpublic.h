@@ -415,6 +415,8 @@ void NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
 void SetLocationForGlobal(JSObject* global, const nsACString& location);
 void SetLocationForGlobal(JSObject* global, nsIURI* locationURI);
 
+void SetDocGroupValidation(JSObject* global);
+
 // ReportJSRuntimeExplicitTreeStats will expect this in the |extra| member
 // of JS::ZoneStats.
 class ZoneStatsExtras {
