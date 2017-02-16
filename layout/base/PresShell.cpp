@@ -6414,7 +6414,7 @@ PresShell::Paint(nsView*        aViewToPaint,
             if (shouldInvalidate) {
               aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
             }
-            presContext->NotifyInvalidation(bounds, 0);
+            presContext->NotifyInvalidation(bounds);
           }
         } else if (shouldInvalidate) {
           aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);

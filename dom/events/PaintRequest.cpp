@@ -38,7 +38,7 @@ already_AddRefed<DOMRect>
 PaintRequest::ClientRect()
 {
   RefPtr<DOMRect> clientRect = new DOMRect(this);
-  clientRect->SetLayoutRect(mRequest.mRect);
+  clientRect->SetLayoutRect(mRequest);
   return clientRect.forget();
 }
 
