@@ -285,14 +285,9 @@ CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
   LOG((__PRETTY_FUNCTION__));
   LOG(("NumberOfCapabilities for %s", deviceUniqueIdUTF8));
   nsCString unique_id(deviceUniqueIdUTF8);
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, unique_id]() -> nsresult {
-      if (self->SendNumberOfCapabilities(aCapEngine, unique_id)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, nsCString>
+    (this, &CamerasChild::SendNumberOfCapabilities, aCapEngine, unique_id);
   LockAndDispatch<> dispatcher(this, __func__, runnable, 0, mReplyInteger);
   LOG(("Capture capability count: %d", dispatcher.ReturnValue()));
   return dispatcher.ReturnValue();
@@ -302,14 +297,9 @@ int
 CamerasChild::NumberOfCaptureDevices(CaptureEngine aCapEngine)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine]() -> nsresult {
-      if (self->SendNumberOfCaptureDevices(aCapEngine)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine>
+    (this, &CamerasChild::SendNumberOfCaptureDevices, aCapEngine);
   LockAndDispatch<> dispatcher(this, __func__, runnable, 0, mReplyInteger);
   LOG(("Capture Devices: %d", dispatcher.ReturnValue()));
   return dispatcher.ReturnValue();
@@ -331,14 +321,9 @@ int
 CamerasChild::EnsureInitialized(CaptureEngine aCapEngine)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine]() -> nsresult {
-      if (self->SendEnsureInitialized(aCapEngine)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine>
+    (this, &CamerasChild::SendEnsureInitialized, aCapEngine);
   LockAndDispatch<> dispatcher(this, __func__, runnable, 0, mReplyInteger);
   LOG(("Capture Devices: %d", dispatcher.ReturnValue()));
   return dispatcher.ReturnValue();
@@ -352,14 +337,9 @@ CamerasChild::GetCaptureCapability(CaptureEngine aCapEngine,
 {
   LOG(("GetCaptureCapability: %s %d", unique_idUTF8, capability_number));
   nsCString unique_id(unique_idUTF8);
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, unique_id, capability_number]() -> nsresult {
-      if (self->SendGetCaptureCapability(aCapEngine, unique_id, capability_number)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, nsCString, unsigned int>
+    (this, &CamerasChild::SendGetCaptureCapability, aCapEngine, unique_id, capability_number);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   if (dispatcher.Success()) {
     capability = mReplyCapability;
@@ -394,14 +374,9 @@ CamerasChild::GetCaptureDevice(CaptureEngine aCapEngine,
                                bool* scary)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, list_number]() -> nsresult {
-      if (self->SendGetCaptureDevice(aCapEngine, list_number)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, unsigned int>
+    (this, &CamerasChild::SendGetCaptureDevice, aCapEngine, list_number);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   if (dispatcher.Success()) {
     base::strlcpy(device_nameUTF8, mReplyDeviceName.get(), device_nameUTF8Length);
@@ -440,14 +415,9 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
   LOG((__PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCString origin(aOrigin);
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, unique_id, origin]() -> nsresult {
-      if (self->SendAllocateCaptureDevice(aCapEngine, unique_id, origin)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, nsCString, nsCString>
+    (this, &CamerasChild::SendAllocateCaptureDevice, aCapEngine, unique_id, origin);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   if (dispatcher.Success()) {
     LOG(("Capture Device allocated: %d", mReplyInteger));
@@ -474,14 +444,9 @@ CamerasChild::ReleaseCaptureDevice(CaptureEngine aCapEngine,
                                    const int capture_id)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, capture_id]() -> nsresult {
-      if (self->SendReleaseCaptureDevice(aCapEngine, capture_id)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, int>
+    (this, &CamerasChild::SendReleaseCaptureDevice, aCapEngine, capture_id);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   return dispatcher.ReturnValue();
 }
@@ -526,14 +491,9 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
                            webrtcCaps.rawType,
                            webrtcCaps.codecType,
                            webrtcCaps.interlaced);
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, capture_id, capCap]() -> nsresult {
-      if (self->SendStartCapture(aCapEngine, capture_id, capCap)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, int, CaptureCapability>
+    (this, &CamerasChild::SendStartCapture, aCapEngine, capture_id, capCap);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   return dispatcher.ReturnValue();
 }
@@ -542,14 +502,9 @@ int
 CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<CamerasChild> self = this;
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([self, aCapEngine, capture_id]() -> nsresult {
-      if (self->SendStopCapture(aCapEngine, capture_id)) {
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    });
+    mozilla::NewNonOwningRunnableMethod<CaptureEngine, int>
+    (this, &CamerasChild::SendStopCapture, aCapEngine, capture_id);
   LockAndDispatch<> dispatcher(this, __func__, runnable);
   if (dispatcher.Success()) {
     RemoveCallback(aCapEngine, capture_id);
@@ -610,14 +565,10 @@ CamerasChild::ShutdownParent()
   if (CamerasSingleton::Thread()) {
     LOG(("Dispatching actor deletion"));
     // Delete the parent actor.
-    RefPtr<CamerasChild> self = this;
-    RefPtr<Runnable> deleteRunnable =
-      // CamerasChild (this) will remain alive and is only deleted by the
-      // IPC layer when SendAllDone returns.
-      media::NewRunnableFrom([self]() -> nsresult {
-        Unused << self->SendAllDone();
-        return NS_OK;
-      });
+    // CamerasChild (this) will remain alive and is only deleted by the
+    // IPC layer when SendAllDone returns.
+    nsCOMPtr<nsIRunnable> deleteRunnable =
+      mozilla::NewNonOwningRunnableMethod(this, &CamerasChild::SendAllDone);
     CamerasSingleton::Thread()->Dispatch(deleteRunnable, NS_DISPATCH_NORMAL);
   } else {
     LOG(("ShutdownParent called without PBackground thread"));
