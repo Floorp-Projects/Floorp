@@ -116,8 +116,11 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
     }
 
     if (clearEntry) {
-      LOG(("Alt Svc clearing mapping for %s:%d", originHost.get(), originPort));
-      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort);
+      nsCString suffix;
+      originAttributes.CreateSuffix(suffix);
+      LOG(("Alt Svc clearing mapping for %s:%d:%s", originHost.get(),
+           originPort, suffix.get()));
+      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort, originAttributes);
       continue;
     }
 
@@ -140,13 +143,14 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
                                                       originHost, originPort,
                                                       username, privateBrowsing,
                                                       NowInSeconds() + maxage,
-                                                      hostname, portno, npnToken);
+                                                      hostname, portno, npnToken,
+                                                      originAttributes);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
       // since this isn't a parse error, let's clear any existing mapping
       // as that would have happened if we had accepted the parameters.
-      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort);
+      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort, originAttributes);
     } else {
       gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
                                             originAttributes);
@@ -163,7 +167,8 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
                              uint32_t expiresAt,
                              const nsACString &alternateHost,
                              int32_t alternatePort,
-                             const nsACString &npnToken)
+                             const nsACString &npnToken,
+                             const OriginAttributes &originAttributes)
   : mStorage(storage)
   , mStorageEpoch(epoch)
   , mAlternateHost(alternateHost)
@@ -176,6 +181,7 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
   , mValidated(false)
   , mMixedScheme(false)
   , mNPNToken(npnToken)
+  , mOriginAttributes(originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -206,7 +212,8 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
   }
 
   if (mExpiresAt) {
-    MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate);
+    MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate,
+                mOriginAttributes);
   }
 }
 
@@ -215,7 +222,8 @@ AltSvcMapping::MakeHashKey(nsCString &outKey,
                            const nsACString &originScheme,
                            const nsACString &originHost,
                            int32_t originPort,
-                           bool privateBrowsing)
+                           bool privateBrowsing,
+                           const OriginAttributes &originAttributes)
 {
   outKey.Truncate();
 
@@ -231,6 +239,10 @@ AltSvcMapping::MakeHashKey(nsCString &outKey,
   outKey.AppendInt(originPort);
   outKey.Append(':');
   outKey.Append(privateBrowsing ? 'P' : '.');
+  outKey.Append(':');
+  nsAutoCString suffix;
+  originAttributes.CreateSuffix(suffix);
+  outKey.Append(suffix);
 }
 
 int32_t
@@ -353,6 +365,10 @@ AltSvcMapping::Serialize(nsCString &out)
   out.Append(':');
   out.Append(mMixedScheme ? 'y' : 'n');
   out.Append(':');
+  nsAutoCString suffix;
+  mOriginAttributes.CreateSuffix(suffix);
+  out.Append(suffix);
+  out.Append(':');
 }
 
 AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch, const nsCString &str)
@@ -394,10 +410,12 @@ COMPILER ERROR
     mStorageEpoch = nsCString(Substring(str, start, idx - start)).ToInteger(&code);
     _NS_NEXT_TOKEN;
     mMixedScheme = Substring(str, start, idx - start).Equals(NS_LITERAL_CSTRING("y"));
+    _NS_NEXT_TOKEN;
+    Unused << mOriginAttributes.PopulateFromSuffix(Substring(str, start, idx - start));
     #undef _NS_NEXT_TOKEN
 
     MakeHashKey(mHashKey, mHttps ? NS_LITERAL_CSTRING("https") : NS_LITERAL_CSTRING("http"),
-                mOriginHost, mOriginPort, mPrivate);
+                mOriginHost, mOriginPort, mPrivate, mOriginAttributes);
   } while (false);
 }
 
@@ -913,7 +931,8 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
 
 already_AddRefed<AltSvcMapping>
 AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &host,
-                                  int32_t port, bool privateBrowsing)
+                                  int32_t port, bool privateBrowsing,
+                                  const OriginAttributes &originAttributes)
 {
   bool isHTTPS;
   MOZ_ASSERT(NS_IsMainThread());
@@ -945,7 +964,7 @@ AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &ho
   }
 
   nsAutoCString key;
-  AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing);
+  AltSvcMapping::MakeHashKey(key, scheme, host, port, privateBrowsing, originAttributes);
   RefPtr<AltSvcMapping> existing = LookupMapping(key, privateBrowsing);
   LOG(("AltSvcCache::GetAltServiceMapping %p key=%s "
        "existing=%p validated=%d ttl=%d",
@@ -959,52 +978,60 @@ AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &ho
 
 class ProxyClearHostMapping : public Runnable {
 public:
-  explicit ProxyClearHostMapping(const nsACString &host, int32_t port)
+  explicit ProxyClearHostMapping(const nsACString &host, int32_t port,
+                                 const OriginAttributes &originAttributes)
     : mHost(host)
     , mPort(port)
+    , mOriginAttributes(originAttributes)
     {}
 
     NS_IMETHOD Run() override
     {
       MOZ_ASSERT(NS_IsMainThread());
-      gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort);
+      gHttpHandler->ConnMgr()->ClearHostMapping(mHost, mPort, mOriginAttributes);
       return NS_OK;
     }
 private:
     nsCString mHost;
     int32_t mPort;
+    OriginAttributes mOriginAttributes;
 };
 
 void
-AltSvcCache::ClearHostMapping(const nsACString &host, int32_t port)
+AltSvcCache::ClearHostMapping(const nsACString &host, int32_t port,
+                              const OriginAttributes &originAttributes)
 {
   if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIRunnable> event = new ProxyClearHostMapping(host, port);
+    nsCOMPtr<nsIRunnable> event = new ProxyClearHostMapping(host, port, originAttributes);
     if (event) {
       NS_DispatchToMainThread(event);
     }
     return;
   }
   nsAutoCString key;
-  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, true);
+  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, true,
+                             originAttributes);
   RefPtr<AltSvcMapping> existing = LookupMapping(key, true);
   if (existing) {
     existing->SetExpired();
   }
 
-  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, true);
+  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, true,
+                             originAttributes);
   existing = LookupMapping(key, true);
   if (existing) {
     existing->SetExpired();
   }
 
-  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, false);
+  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("http"), host, port, false,
+                             originAttributes);
   existing = LookupMapping(key, false);
   if (existing) {
     existing->SetExpired();
   }
 
-  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, false);
+  AltSvcMapping::MakeHashKey(key, NS_LITERAL_CSTRING("https"), host, port, false,
+                             originAttributes);
   existing = LookupMapping(key, false);
   if (existing) {
     existing->SetExpired();
@@ -1015,7 +1042,7 @@ void
 AltSvcCache::ClearHostMapping(nsHttpConnectionInfo *ci)
 {
   if (!ci->GetOrigin().IsEmpty()) {
-    ClearHostMapping(ci->GetOrigin(), ci->OriginPort());
+    ClearHostMapping(ci->GetOrigin(), ci->OriginPort(), ci->GetOriginAttributes());
   }
 }
 
