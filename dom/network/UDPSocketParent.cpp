@@ -351,7 +351,7 @@ UDPSocketParent::RecvOutgoingData(const UDPData& aData,
   if (!mSocket) {
     NS_WARNING("sending socket is closed");
     FireInternalError(__LINE__);
-    return IPC_OK();
+    return true;
   }
 
   nsresult rv;
