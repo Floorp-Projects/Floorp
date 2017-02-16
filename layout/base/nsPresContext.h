@@ -110,22 +110,6 @@ enum nsLayoutPhase {
 };
 #endif
 
-class nsInvalidateRequestList {
-public:
-  struct Request {
-    nsRect   mRect;
-    uint32_t mFlags;
-  };
-
-  void TakeFrom(nsInvalidateRequestList* aList)
-  {
-    mRequests.AppendElements(mozilla::Move(aList->mRequests));
-  }
-  bool IsEmpty() { return mRequests.IsEmpty(); }
-
-  nsTArray<Request> mRequests;
-};
-
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
@@ -971,13 +955,13 @@ public:
   // and, if necessary, synchronously rebuilding all style data.
   void EnsureSafeToHandOutCSSRules();
 
-  void NotifyInvalidation(const nsRect& aRect, uint32_t aFlags);
+  void NotifyInvalidation(const nsRect& aRect);
   // aRect is in device pixels
-  void NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags);
+  void NotifyInvalidation(const nsIntRect& aRect);
   // aFlags are nsIPresShell::PAINT_ flags
   void NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId = 0,
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
-  void FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId,
+  void FireDOMPaintEvent(nsTArray<nsRect>* aList, uint64_t aTransactionId,
                          mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   // Callback for catching invalidations in ContainerLayers
@@ -1303,8 +1287,8 @@ protected:
 
   FramePropertyTable    mPropertyTable;
 
-  nsInvalidateRequestList mInvalidateRequestsSinceLastPaint;
-  nsInvalidateRequestList mUndeliveredInvalidateRequestsBeforeLastPaint;
+  nsTArray<nsRect> mInvalidateRequestsSinceLastPaint;
+  nsTArray<nsRect> mUndeliveredInvalidateRequestsBeforeLastPaint;
 
   // text performance metrics
   nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
