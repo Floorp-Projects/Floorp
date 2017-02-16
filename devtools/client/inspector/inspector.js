@@ -1284,14 +1284,6 @@ Inspector.prototype = {
       click: () => this.onAddAttribute(),
     }));
     attributesSubmenu.append(new MenuItem({
-      id: "node-menu-copy-attribute",
-      label: INSPECTOR_L10N.getFormatStr("inspectorCopyAttributeValue.label",
-                                        isAttributeClicked ? `"${nodeInfo.value}"` : ""),
-      accesskey: INSPECTOR_L10N.getStr("inspectorCopyAttributeValue.accesskey"),
-      disabled: !isAttributeClicked,
-      click: () => this.onCopyAttributeValue(),
-    }));
-    attributesSubmenu.append(new MenuItem({
       id: "node-menu-edit-attribute",
       label: INSPECTOR_L10N.getFormatStr("inspectorEditAttribute.label",
                                         isAttributeClicked ? `"${nodeInfo.name}"` : ""),
@@ -1299,6 +1291,7 @@ Inspector.prototype = {
       disabled: !isAttributeClicked,
       click: () => this.onEditAttribute(),
     }));
+
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-remove-attribute",
       label: INSPECTOR_L10N.getFormatStr("inspectorRemoveAttribute.label",
@@ -1822,14 +1815,6 @@ Inspector.prototype = {
   onAddAttribute: function () {
     let container = this.markup.getContainer(this.selection.nodeFront);
     container.addAttribute();
-  },
-
-  /**
-   * Copy attribute value for node.
-   * Used for node context menu and shouldn't be called directly.
-   */
-  onCopyAttributeValue: function () {
-    clipboardHelper.copyString(this.nodeMenuTriggerInfo.value);
   },
 
   /**

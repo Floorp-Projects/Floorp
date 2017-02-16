@@ -35,7 +35,6 @@ const ALL_MENU_ITEMS = [
   "node-menu-scrollnodeintoview",
   "node-menu-screenshotnode",
   "node-menu-add-attribute",
-  "node-menu-copy-attribute",
   "node-menu-edit-attribute",
   "node-menu-remove-attribute"
 ].concat(PASTE_MENU_ITEMS, ACTIVE_ON_DOCTYPE_ITEMS);
