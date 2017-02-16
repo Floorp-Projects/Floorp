@@ -235,6 +235,11 @@ protected:
   // Called from SetEnabled when the enabled state changed.
   void EnabledStateChanged();
 
+  // Unlink our inner, if needed, for cycle collection
+  virtual void UnlinkInner();
+  // Traverse our inner, if needed, for cycle collection
+  virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
+
   StyleSheet*           mParent;    // weak ref
 
   nsString              mTitle;
