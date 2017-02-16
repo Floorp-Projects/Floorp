@@ -592,6 +592,10 @@ struct BaselineBailoutInfo
     // The bytecode pc where we will resume.
     jsbytecode* resumePC;
 
+    // The bytecode pc of try block and fault block.
+    jsbytecode* tryPC;
+    jsbytecode* faultPC;
+
     // If resuming into a TypeMonitor IC chain, this field holds the
     // address of the first stub in that chain.  If this field is
     // set, then the actual jitcode resumed into is the jitcode for
