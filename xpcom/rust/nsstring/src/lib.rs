@@ -101,6 +101,16 @@
 //! Usage of this macro is similar to the C++ type `nsAuto[C]String`, but could
 //! not be implemented as a basic type due to the differences between rust and
 //! C++'s move semantics.
+//!
+//! ## `ns[C]StringRepr`
+//!
+//! This crate also provides the type `ns[C]StringRepr` which acts conceptually
+//! similar to an `ns[C]String<'static>`, however, it does not have a `Drop`
+//! implementation.
+//!
+//! If this type is dropped in rust, it will not free its backing storage. This
+//! can be useful when implementing FFI types which contain `ns[C]String` members
+//! which invoke their member's destructors through C++ code.
 
 #![allow(non_camel_case_types)]
 #![deny(warnings)]
@@ -143,7 +153,43 @@ macro_rules! define_string_types {
         AString = $AString: ident;
         String = $String: ident;
         FixedString = $FixedString: ident;
+
+        StringRepr = $StringRepr: ident;
     } => {
+        /// The representation of a ns[C]String type in C++. This type is
+        /// used internally by our definition of ns[C]String to ensure layout
+        /// compatibility with the C++ ns[C]String type.
+        ///
+        /// This type may also be used in place of a C++ ns[C]String inside of
+        /// struct definitions which are shared with C++, as it has identical
+        /// layout to our ns[C]String type.
+        ///
+        /// This struct will leak its data if dropped from rust. See the module
+        /// documentation for more information on this type.
+        #[repr(C)]
+        pub struct $StringRepr {
+            data: *const $char_t,
+            length: u32,
+            flags: u32,
+        }
+
+        impl Deref for $StringRepr {
+            type Target = $AString;
+            fn deref(&self) -> &$AString {
+                unsafe {
+                    mem::transmute(self)
+                }
+            }
+        }
+
+        impl DerefMut for $StringRepr {
+            fn deref_mut(&mut self) -> &mut $AString {
+                unsafe {
+                    mem::transmute(self)
+                }
+            }
+        }
+
         /// This type is the abstract type which is used for interacting with
         /// strings in rust. Each string type can derefence to an instance of
         /// this type, which provides the useful operations on strings.
@@ -166,10 +212,11 @@ macro_rules! define_string_types {
             type Target = [$char_t];
             fn deref(&self) -> &[$char_t] {
                 unsafe {
-                    // All $AString values point to a struct prefix which is identical
-                    // to $String, thus we can transmute `self` into $String to get
-                    // the reference to the underlying data.
-                    let this: &$String = mem::transmute(self);
+                    // All $AString values point to a struct prefix which is
+                    // identical to $StringRepr, this we can transmute `self`
+                    // into $StringRepr to get the reference to the underlying
+                    // data.
+                    let this: &$StringRepr = mem::transmute(self);
                     if this.data.is_null() {
                         debug_assert!(this.length == 0);
                         // Use an arbitrary non-null value as the pointer
@@ -213,18 +260,18 @@ macro_rules! define_string_types {
 
         #[repr(C)]
         pub struct $String<'a> {
-            data: *const $char_t,
-            length: u32,
-            flags: u32,
+            hdr: $StringRepr,
             _marker: PhantomData<&'a [$char_t]>,
         }
 
         impl $String<'static> {
             pub fn new() -> $String<'static> {
                 $String {
-                    data: ptr::null(),
-                    length: 0,
-                    flags: F_NONE,
+                    hdr: $StringRepr {
+                        data: ptr::null(),
+                        length: 0,
+                        flags: F_NONE,
+                    },
                     _marker: PhantomData,
                 }
             }
@@ -233,17 +280,13 @@ macro_rules! define_string_types {
         impl<'a> Deref for $String<'a> {
             type Target = $AString;
             fn deref(&self) -> &$AString {
-                unsafe {
-                    mem::transmute(self)
-                }
+                &self.hdr
             }
         }
 
         impl<'a> DerefMut for $String<'a> {
             fn deref_mut(&mut self) -> &mut $AString {
-                unsafe {
-                    mem::transmute(self)
-                }
+                &mut self.hdr
             }
         }
 
@@ -269,9 +312,11 @@ macro_rules! define_string_types {
             fn from(s: &'a [$char_t]) -> $String<'a> {
                 assert!(s.len() < (u32::MAX as usize));
                 $String {
-                    data: s.as_ptr(),
-                    length: s.len() as u32,
-                    flags: F_NONE,
+                    hdr: $StringRepr {
+                        data: s.as_ptr(),
+                        length: s.len() as u32,
+                        flags: F_NONE,
+                    },
                     _marker: PhantomData,
                 }
             }
@@ -292,9 +337,11 @@ macro_rules! define_string_types {
                     Gecko_IncrementStringAdoptCount(ptr as *mut _);
                 }
                 $String {
-                    data: ptr,
-                    length: length,
-                    flags: F_OWNED,
+                    hdr: $StringRepr {
+                        data: ptr,
+                        length: length,
+                        flags: F_OWNED,
+                    },
                     _marker: PhantomData,
                 }
             }
@@ -380,9 +427,11 @@ macro_rules! define_string_types {
                 let buf_ptr = buf.as_mut_ptr();
                 $FixedString {
                     base: $String {
-                        data: ptr::null(),
-                        length: 0,
-                        flags: F_CLASS_FIXED,
+                        hdr: $StringRepr {
+                            data: ptr::null(),
+                            length: 0,
+                            flags: F_CLASS_FIXED,
+                        },
                         _marker: PhantomData,
                     },
                     capacity: len as u32,
@@ -471,6 +520,8 @@ define_string_types! {
     AString = nsACString;
     String = nsCString;
     FixedString = nsFixedCString;
+
+    StringRepr = nsCStringRepr;
 }
 
 impl nsACString {
@@ -581,6 +632,8 @@ define_string_types! {
     AString = nsAString;
     String = nsString;
     FixedString = nsFixedString;
+
+    StringRepr = nsStringRepr;
 }
 
 impl nsAString {
@@ -711,6 +764,8 @@ pub mod test_helpers {
         nsFixedString,
         nsCString,
         nsString,
+        nsCStringRepr,
+        nsStringRepr,
         F_NONE,
         F_TERMINATED,
         F_VOIDED,
@@ -734,11 +789,24 @@ pub mod test_helpers {
                     *align = mem::align_of::<$T>();
                 }
             }
+        };
+        ($T:ty, $U:ty, $fname:ident) => {
+            #[no_mangle]
+            #[allow(non_snake_case)]
+            pub extern fn $fname(size: *mut usize, align: *mut usize) {
+                unsafe {
+                    *size = mem::size_of::<$T>();
+                    *align = mem::align_of::<$T>();
+
+                    assert_eq!(*size, mem::size_of::<$U>());
+                    assert_eq!(*align, mem::align_of::<$U>());
+                }
+            }
         }
     }
 
-    size_align_check!(nsString<'static>, Rust_Test_ReprSizeAlign_nsString);
-    size_align_check!(nsCString<'static>, Rust_Test_ReprSizeAlign_nsCString);
+    size_align_check!(nsStringRepr, nsString<'static>, Rust_Test_ReprSizeAlign_nsString);
+    size_align_check!(nsCStringRepr, nsCString<'static>, Rust_Test_ReprSizeAlign_nsCString);
     size_align_check!(nsFixedString<'static>, Rust_Test_ReprSizeAlign_nsFixedString);
     size_align_check!(nsFixedCString<'static>, Rust_Test_ReprSizeAlign_nsFixedCString);
 
@@ -767,15 +835,42 @@ pub mod test_helpers {
                     mem::forget(tmp);
                 }
             }
+        };
+        ($T:ty, $U:ty, $member:ident, $method:ident) => {
+            #[no_mangle]
+            #[allow(non_snake_case)]
+            pub extern fn $method(size: *mut usize,
+                                  align: *mut usize,
+                                  offset: *mut usize) {
+                unsafe {
+                    // Create a temporary value of type T to get offsets, sizes
+                    // and alignments from.
+                    let tmp: $T = mem::zeroed();
+                    *size = mem::size_of_val(&tmp.$member);
+                    *align = mem::align_of_val(&tmp.$member);
+                    *offset =
+                        (&tmp.$member as *const _ as usize) -
+                        (&tmp as *const _ as usize);
+                    mem::forget(tmp);
+
+                    let tmp: $U = mem::zeroed();
+                    assert_eq!(*size, mem::size_of_val(&tmp.hdr.$member));
+                    assert_eq!(*align, mem::align_of_val(&tmp.hdr.$member));
+                    assert_eq!(*offset,
+                               (&tmp.hdr.$member as *const _ as usize) -
+                               (&tmp as *const _ as usize));
+                    mem::forget(tmp);
+                }
+            }
         }
     }
 
-    member_check!(nsString<'static>, data, Rust_Test_Member_nsString_mData);
-    member_check!(nsString<'static>, length, Rust_Test_Member_nsString_mLength);
-    member_check!(nsString<'static>, flags, Rust_Test_Member_nsString_mFlags);
-    member_check!(nsCString<'static>, data, Rust_Test_Member_nsCString_mData);
-    member_check!(nsCString<'static>, length, Rust_Test_Member_nsCString_mLength);
-    member_check!(nsCString<'static>, flags, Rust_Test_Member_nsCString_mFlags);
+    member_check!(nsStringRepr, nsString<'static>, data, Rust_Test_Member_nsString_mData);
+    member_check!(nsStringRepr, nsString<'static>, length, Rust_Test_Member_nsString_mLength);
+    member_check!(nsStringRepr, nsString<'static>, flags, Rust_Test_Member_nsString_mFlags);
+    member_check!(nsCStringRepr, nsCString<'static>, data, Rust_Test_Member_nsCString_mData);
+    member_check!(nsCStringRepr, nsCString<'static>, length, Rust_Test_Member_nsCString_mLength);
+    member_check!(nsCStringRepr, nsCString<'static>, flags, Rust_Test_Member_nsCString_mFlags);
     member_check!(nsFixedString<'static>, capacity, Rust_Test_Member_nsFixedString_mFixedCapacity);
     member_check!(nsFixedString<'static>, buffer, Rust_Test_Member_nsFixedString_mFixedBuf);
     member_check!(nsFixedCString<'static>, capacity, Rust_Test_Member_nsFixedCString_mFixedCapacity);

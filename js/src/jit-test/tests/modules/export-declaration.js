@@ -403,9 +403,7 @@ assertThrowsInstanceOf(function() {
     parseAsModule("export {,} from 'a'");
 }, SyntaxError);
 
-assertThrowsInstanceOf(function() {
-    parseAsModule("export { true as a } from 'b'");
-}, SyntaxError);
+parseAsModule("export { true as a } from 'b'");
 
 assertThrowsInstanceOf(function () {
     parseAsModule("export { a } from 'b' f();");

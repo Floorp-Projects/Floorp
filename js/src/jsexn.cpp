@@ -205,28 +205,77 @@ ErrorObject::classes[JSEXN_ERROR_LIMIT] = {
     IMPLEMENT_ERROR_CLASS(RuntimeError)
 };
 
-JSErrorReport*
-js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
+size_t
+ExtraMallocSize(JSErrorReport* report)
+{
+    if (report->linebuf())
+        return (report->linebufLength() + 1) * sizeof(char16_t);
+
+    return 0;
+}
+
+size_t
+ExtraMallocSize(JSErrorNotes::Note* note)
+{
+    return 0;
+}
+
+bool
+CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorReport* copy, JSErrorReport* report)
+{
+    if (report->linebuf()) {
+        size_t linebufSize = (report->linebufLength() + 1) * sizeof(char16_t);
+        const char16_t* linebufCopy = (const char16_t*)(*cursor);
+        js_memcpy(*cursor, report->linebuf(), linebufSize);
+        *cursor += linebufSize;
+        copy->initBorrowedLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
+    }
+
+    /* Copy non-pointer members. */
+    copy->isMuted = report->isMuted;
+    copy->exnType = report->exnType;
+
+    /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
+    copy->flags = report->flags;
+
+    /* Deep copy notes. */
+    if (report->notes) {
+        auto copiedNotes = report->notes->copy(cx);
+        if (!copiedNotes)
+            return false;
+        copy->notes = Move(copiedNotes);
+    } else {
+        copy->notes.reset(nullptr);
+    }
+
+    return true;
+}
+
+bool
+CopyExtraData(JSContext* cx, uint8_t** cursor, JSErrorNotes::Note* copy, JSErrorNotes::Note* report)
+{
+    return true;
+}
+
+template <typename T>
+static T*
+CopyErrorHelper(JSContext* cx, T* report)
 {
     /*
-     * We use a single malloc block to make a deep copy of JSErrorReport with
+     * We use a single malloc block to make a deep copy of JSErrorReport or
+     * JSErrorNotes::Note, except JSErrorNotes linked from JSErrorReport with
      * the following layout:
-     *   JSErrorReport
+     *   JSErrorReport or JSErrorNotes::Note
      *   char array with characters for message_
-     *   char16_t array with characters for linebuf
      *   char array with characters for filename
+     *   char16_t array with characters for linebuf (only for JSErrorReport)
      * Such layout together with the properties enforced by the following
      * asserts does not need any extra alignment padding.
      */
-    JS_STATIC_ASSERT(sizeof(JSErrorReport) % sizeof(const char*) == 0);
+    JS_STATIC_ASSERT(sizeof(T) % sizeof(const char*) == 0);
     JS_STATIC_ASSERT(sizeof(const char*) % sizeof(char16_t) == 0);
 
-#define JS_CHARS_SIZE(chars) ((js_strlen(chars) + 1) * sizeof(char16_t))
-
     size_t filenameSize = report->filename ? strlen(report->filename) + 1 : 0;
-    size_t linebufSize = 0;
-    if (report->linebuf())
-        linebufSize = (report->linebufLength() + 1) * sizeof(char16_t);
     size_t messageSize = 0;
     if (report->message())
         messageSize = strlen(report->message().c_str()) + 1;
@@ -235,13 +284,13 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
      * The mallocSize can not overflow since it represents the sum of the
      * sizes of already allocated objects.
      */
-    size_t mallocSize = sizeof(JSErrorReport) + messageSize + linebufSize + filenameSize;
+    size_t mallocSize = sizeof(T) + messageSize + filenameSize + ExtraMallocSize(report);
     uint8_t* cursor = cx->pod_calloc<uint8_t>(mallocSize);
     if (!cursor)
         return nullptr;
 
-    JSErrorReport* copy = (JSErrorReport*)cursor;
-    cursor += sizeof(JSErrorReport);
+    T* copy = new (cursor) T();
+    cursor += sizeof(T);
 
     if (report->message()) {
         copy->initBorrowedMessage((const char*)cursor);
@@ -249,31 +298,38 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
         cursor += messageSize;
     }
 
-    if (report->linebuf()) {
-        const char16_t* linebufCopy = (const char16_t*)cursor;
-        js_memcpy(cursor, report->linebuf(), linebufSize);
-        cursor += linebufSize;
-        copy->initBorrowedLinebuf(linebufCopy, report->linebufLength(), report->tokenOffset());
-    }
-
     if (report->filename) {
         copy->filename = (const char*)cursor;
         js_memcpy(cursor, report->filename, filenameSize);
+        cursor += filenameSize;
     }
-    MOZ_ASSERT(cursor + filenameSize == (uint8_t*)copy + mallocSize);
+
+    if (!CopyExtraData(cx, &cursor, copy, report)) {
+        /* js_delete calls destructor for T and js_free for pod_calloc. */
+        js_delete(copy);
+        return nullptr;
+    }
+
+    MOZ_ASSERT(cursor == (uint8_t*)copy + mallocSize);
 
     /* Copy non-pointer members. */
-    copy->isMuted = report->isMuted;
     copy->lineno = report->lineno;
     copy->column = report->column;
     copy->errorNumber = report->errorNumber;
-    copy->exnType = report->exnType;
 
-    /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
-    copy->flags = report->flags;
-
-#undef JS_CHARS_SIZE
     return copy;
+}
+
+JSErrorNotes::Note*
+js::CopyErrorNote(JSContext* cx, JSErrorNotes::Note* note)
+{
+    return CopyErrorHelper(cx, note);
+}
+
+JSErrorReport*
+js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
+{
+    return CopyErrorHelper(cx, report);
 }
 
 struct SuppressErrorsGuard
@@ -326,7 +382,7 @@ exn_finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->maybeOnHelperThread());
     if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport())
-        fop->free_(report);
+        fop->delete_(report);
 }
 
 JSErrorReport*
@@ -563,7 +619,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
      * is prepended before "uncaught exception: "
      */
     if (exnType < 0 || exnType >= JSEXN_LIMIT ||
-        exnType == JSEXN_INTERNALERR || exnType == JSEXN_WARN)
+        exnType == JSEXN_INTERNALERR || exnType == JSEXN_WARN || exnType == JSEXN_NOTE)
     {
         return nullptr;
     }
@@ -593,6 +649,7 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     const JSErrorFormatString* errorString = callback(userRef, errorNumber);
     JSExnType exnType = errorString ? static_cast<JSExnType>(errorString->exnType) : JSEXN_ERR;
     MOZ_ASSERT(exnType < JSEXN_LIMIT);
+    MOZ_ASSERT(exnType != JSEXN_NOTE);
 
     if (exnType == JSEXN_WARN) {
         // werror must be enabled, so we use JSEXN_ERR.
@@ -676,7 +733,7 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
      */
     JSExnType type = static_cast<JSExnType>(reportp->exnType);
     RootedString str(cx);
-    if (type != JSEXN_WARN)
+    if (type != JSEXN_WARN && type != JSEXN_NOTE)
         str = ClassName(GetExceptionProtoKey(type), cx);
 
     /*

@@ -4227,6 +4227,32 @@ TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+GetErrorNotes(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "getErrorNotes", 1))
+        return false;
+
+    if (!args[0].isObject() || !args[0].toObject().is<ErrorObject>()) {
+        args.rval().setNull();
+        return true;
+    }
+
+    JSErrorReport* report = args[0].toObject().as<ErrorObject>().getErrorReport();
+    if (!report) {
+        args.rval().setNull();
+        return true;
+    }
+
+    RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
+    if (!notesArray)
+        return false;
+
+    args.rval().setObject(*notesArray);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'zone' [, 'shrinking'])",
@@ -4788,6 +4814,10 @@ static const JSFunctionSpecWithHelp FuzzingUnsafeTestingFunctions[] = {
 "disRegExp(regexp[, match_only[, input]])",
 "  Dumps RegExp bytecode."),
 #endif
+
+    JS_FN_HELP("getErrorNotes", GetErrorNotes, 1, 0,
+"getErrorNotes(error)",
+"  Returns an array of error notes."),
 
     JS_FS_HELP_END
 };

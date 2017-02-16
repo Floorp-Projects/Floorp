@@ -88,6 +88,7 @@
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
+#include "nsScriptError.h"
 #include "nsUTF8Utils.h"
 #include "prthread.h"
 #include "xpcpublic.h"
@@ -281,27 +282,34 @@ struct WindowAction
 };
 
 void
-LogErrorToConsole(const nsAString& aMessage,
-                  const nsAString& aFilename,
-                  const nsAString& aLine,
-                  uint32_t aLineNumber,
-                  uint32_t aColumnNumber,
-                  uint32_t aFlags,
-                  uint64_t aInnerWindowId)
+LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId)
 {
   AssertIsOnMainThread();
 
-  nsCOMPtr<nsIScriptError> scriptError =
-    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  RefPtr<nsScriptErrorBase> scriptError = new nsScriptError();
   NS_WARNING_ASSERTION(scriptError, "Failed to create script error!");
 
   if (scriptError) {
-    if (NS_FAILED(scriptError->InitWithWindowID(aMessage, aFilename, aLine,
-                                                aLineNumber, aColumnNumber,
-                                                aFlags, "Web Worker",
+    nsAutoCString category("Web Worker");
+    if (NS_FAILED(scriptError->InitWithWindowID(aReport.mMessage,
+                                                aReport.mFilename,
+                                                aReport.mLine,
+                                                aReport.mLineNumber,
+                                                aReport.mColumnNumber,
+                                                aReport.mFlags,
+                                                category,
                                                 aInnerWindowId))) {
       NS_WARNING("Failed to init script error!");
       scriptError = nullptr;
+    }
+
+    for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
+      const WorkerErrorNote& note = aReport.mNotes.ElementAt(i);
+
+      nsScriptErrorNote* noteObject = new nsScriptErrorNote();
+      noteObject->Init(note.mMessage, note.mFilename,
+                       note.mLineNumber, note.mColumnNumber);
+      scriptError->AddNote(noteObject);
     }
   }
 
@@ -316,23 +324,23 @@ LogErrorToConsole(const nsAString& aMessage,
       }
       NS_WARNING("LogMessage failed!");
     } else if (NS_SUCCEEDED(consoleService->LogStringMessage(
-                                                    aMessage.BeginReading()))) {
+                              aReport.mMessage.BeginReading()))) {
       return;
     }
     NS_WARNING("LogStringMessage failed!");
   }
 
-  NS_ConvertUTF16toUTF8 msg(aMessage);
-  NS_ConvertUTF16toUTF8 filename(aFilename);
+  NS_ConvertUTF16toUTF8 msg(aReport.mMessage);
+  NS_ConvertUTF16toUTF8 filename(aReport.mFilename);
 
   static const char kErrorString[] = "JS error in Web Worker: %s [%s:%u]";
 
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "Gecko", kErrorString, msg.get(),
-                      filename.get(), aLineNumber);
+                      filename.get(), aReport.mLineNumber);
 #endif
 
-  fprintf(stderr, kErrorString, msg.get(), filename.get(), aLineNumber);
+  fprintf(stderr, kErrorString, msg.get(), filename.get(), aReport.mLineNumber);
   fflush(stderr);
 }
 
@@ -520,10 +528,7 @@ private:
     }
 
     if (aWorkerPrivate->IsSharedWorker()) {
-      aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, EmptyString(),
-                                                    EmptyString(),
-                                                    EmptyString(), 0, 0,
-                                                    JSREPORT_ERROR,
+      aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, nullptr,
                                                     /* isErrorEvent */ false);
       return true;
     }
@@ -991,15 +996,7 @@ private:
 
 class ReportErrorRunnable final : public WorkerRunnable
 {
-  nsString mMessage;
-  nsString mFilename;
-  nsString mLine;
-  uint32_t mLineNumber;
-  uint32_t mColumnNumber;
-  uint32_t mFlags;
-  uint32_t mErrorNumber;
-  JSExnType mExnType;
-  bool mMutedError;
+  WorkerErrorReport mReport;
 
 public:
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
@@ -1008,11 +1005,7 @@ public:
   static void
   ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
               bool aFireAtScope, WorkerPrivate* aTarget,
-              const nsString& aMessage, const nsString& aFilename,
-              const nsString& aLine, uint32_t aLineNumber,
-              uint32_t aColumnNumber, uint32_t aFlags,
-              uint32_t aErrorNumber, JSExnType aExnType,
-              bool aMutedError, uint64_t aInnerWindowId,
+              const WorkerErrorReport& aReport, uint64_t aInnerWindowId,
               JS::Handle<JS::Value> aException = JS::NullHandleValue)
   {
     if (aWorkerPrivate) {
@@ -1023,16 +1016,16 @@ public:
 
     // We should not fire error events for warnings but instead make sure that
     // they show up in the error console.
-    if (!JSREPORT_IS_WARNING(aFlags)) {
+    if (!JSREPORT_IS_WARNING(aReport.mFlags)) {
       // First fire an ErrorEvent at the worker.
       RootedDictionary<ErrorEventInit> init(aCx);
 
-      if (aMutedError) {
+      if (aReport.mMutedError) {
         init.mMessage.AssignLiteral("Script error.");
       } else {
-        init.mMessage = aMessage;
-        init.mFilename = aFilename;
-        init.mLineno = aLineNumber;
+        init.mMessage = aReport.mMessage;
+        init.mFilename = aReport.mFilename;
+        init.mLineno = aReport.mLineNumber;
         init.mError = aException;
       }
 
@@ -1059,7 +1052,8 @@ public:
       // into an error event on our parent worker!
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1271441 tracks making this
       // better.
-      if (aFireAtScope && (aTarget || aErrorNumber != JSMSG_OVER_RECURSED)) {
+      if (aFireAtScope &&
+          (aTarget || aReport.mErrorNumber != JSMSG_OVER_RECURSED)) {
         JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
         NS_ASSERTION(global, "This should never be null!");
 
@@ -1076,8 +1070,8 @@ public:
 
             MOZ_ASSERT_IF(globalScope, globalScope->GetWrapperPreserveColor() == global);
             if (globalScope || IsDebuggerSandbox(global)) {
-              aWorkerPrivate->ReportErrorToDebugger(aFilename, aLineNumber,
-                                                    aMessage);
+              aWorkerPrivate->ReportErrorToDebugger(aReport.mFilename, aReport.mLineNumber,
+                                                    aReport.mMessage);
               return;
             }
 
@@ -1124,28 +1118,20 @@ public:
     // Now fire a runnable to do the same on the parent's thread if we can.
     if (aWorkerPrivate) {
       RefPtr<ReportErrorRunnable> runnable =
-        new ReportErrorRunnable(aWorkerPrivate, aMessage, aFilename, aLine,
-                                aLineNumber, aColumnNumber, aFlags,
-                                aErrorNumber, aExnType, aMutedError);
+        new ReportErrorRunnable(aWorkerPrivate, aReport);
       runnable->Dispatch();
       return;
     }
 
     // Otherwise log an error to the error console.
-    LogErrorToConsole(aMessage, aFilename, aLine, aLineNumber, aColumnNumber,
-                      aFlags, aInnerWindowId);
+    LogErrorToConsole(aReport, aInnerWindowId);
   }
 
 private:
-  ReportErrorRunnable(WorkerPrivate* aWorkerPrivate, const nsString& aMessage,
-                      const nsString& aFilename, const nsString& aLine,
-                      uint32_t aLineNumber, uint32_t aColumnNumber,
-                      uint32_t aFlags, uint32_t aErrorNumber,
-                      JSExnType aExnType, bool aMutedError)
+  ReportErrorRunnable(WorkerPrivate* aWorkerPrivate,
+                      const WorkerErrorReport& aReport)
   : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
-    mMessage(aMessage), mFilename(aFilename), mLine(aLine),
-    mLineNumber(aLineNumber), mColumnNumber(aColumnNumber), mFlags(aFlags),
-    mErrorNumber(aErrorNumber), mExnType(aExnType), mMutedError(aMutedError)
+    mReport(aReport)
   { }
 
   virtual void
@@ -1182,9 +1168,7 @@ private:
       }
 
       if (aWorkerPrivate->IsSharedWorker()) {
-        aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, mMessage, mFilename,
-                                                      mLine, mLineNumber,
-                                                      mColumnNumber, mFlags,
+        aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, &mReport,
                                                       /* isErrorEvent */ true);
         return true;
       }
@@ -1198,9 +1182,10 @@ private:
           swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                            aWorkerPrivate->WorkerName(),
                            aWorkerPrivate->ScriptURL(),
-                           mMessage,
-                           mFilename, mLine, mLineNumber,
-                           mColumnNumber, mFlags, mExnType);
+                           mReport.mMessage,
+                           mReport.mFilename, mReport.mLine, mReport.mLineNumber,
+                           mReport.mColumnNumber, mReport.mFlags,
+                           mReport.mExnType);
         }
         return true;
       }
@@ -1220,9 +1205,8 @@ private:
       return true;
     }
 
-    ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mMessage,
-                mFilename, mLine, mLineNumber, mColumnNumber, mFlags,
-                mErrorNumber, mExnType, mMutedError, innerWindowId);
+    ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mReport,
+                innerWindowId);
     return true;
   }
 };
@@ -3570,21 +3554,16 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
                                                     JSContext* aCx,
-                                                    const nsAString& aMessage,
-                                                    const nsAString& aFilename,
-                                                    const nsAString& aLine,
-                                                    uint32_t aLineNumber,
-                                                    uint32_t aColumnNumber,
-                                                    uint32_t aFlags,
+                                                    const WorkerErrorReport* aReport,
                                                     bool aIsErrorEvent)
 {
   AssertIsOnMainThread();
 
-  if (JSREPORT_IS_WARNING(aFlags)) {
+  if (aIsErrorEvent && JSREPORT_IS_WARNING(aReport->mFlags)) {
     // Don't fire any events anywhere.  Just log to console.
     // XXXbz should we log to all the consoles of all the relevant windows?
-    LogErrorToConsole(aMessage, aFilename, aLine, aLineNumber, aColumnNumber,
-                      aFlags, 0);
+    MOZ_ASSERT(aReport);
+    LogErrorToConsole(*aReport, 0);
     return;
   }
 
@@ -3613,10 +3592,10 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
       RootedDictionary<ErrorEventInit> errorInit(aCx);
       errorInit.mBubbles = false;
       errorInit.mCancelable = true;
-      errorInit.mMessage = aMessage;
-      errorInit.mFilename = aFilename;
-      errorInit.mLineno = aLineNumber;
-      errorInit.mColno = aColumnNumber;
+      errorInit.mMessage = aReport->mMessage;
+      errorInit.mFilename = aReport->mFilename;
+      errorInit.mLineno = aReport->mLineNumber;
+      errorInit.mColno = aReport->mColumnNumber;
 
       event = ErrorEvent::Constructor(sharedWorker, NS_LITERAL_STRING("error"),
                                       errorInit);
@@ -3682,9 +3661,9 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
 
     MOZ_ASSERT(NS_IsMainThread());
     RootedDictionary<ErrorEventInit> init(aCx);
-    init.mLineno = aLineNumber;
-    init.mFilename = aFilename;
-    init.mMessage = aMessage;
+    init.mLineno = aReport->mLineNumber;
+    init.mFilename = aReport->mFilename;
+    init.mMessage = aReport->mMessage;
     init.mCancelable = true;
     init.mBubbles = true;
 
@@ -3702,8 +3681,8 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
 
   // Finally log a warning in the console if no window tried to prevent it.
   if (shouldLogErrorToConsole) {
-    LogErrorToConsole(aMessage, aFilename, aLine, aLineNumber, aColumnNumber,
-                      aFlags, 0);
+    MOZ_ASSERT(aReport);
+    LogErrorToConsole(*aReport, 0);
   }
 }
 
@@ -4369,7 +4348,10 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
     listeners[index]->OnError(aFilename, aLineno, aMessage);
   }
 
-  LogErrorToConsole(aMessage, aFilename, nsString(), aLineno, 0, 0, 0);
+  WorkerErrorReport report;
+  report.mMessage = aMessage;
+  report.mFilename = aFilename;
+  LogErrorToConsole(report, 0);
 }
 
 WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
@@ -6168,6 +6150,47 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 }
 
 void
+WorkerErrorBase::AssignErrorBase(JSErrorBase* aReport)
+{
+  mFilename = NS_ConvertUTF8toUTF16(aReport->filename);
+  mLineNumber = aReport->lineno;
+  mColumnNumber = aReport->column;
+  mErrorNumber = aReport->errorNumber;
+}
+
+void
+WorkerErrorNote::AssignErrorNote(JSErrorNotes::Note* aNote)
+{
+  WorkerErrorBase::AssignErrorBase(aNote);
+  xpc::ErrorNote::ErrorNoteToMessageString(aNote, mMessage);
+}
+
+void
+WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport)
+{
+  WorkerErrorBase::AssignErrorBase(aReport);
+  xpc::ErrorReport::ErrorReportToMessageString(aReport, mMessage);
+
+  mLine.Assign(aReport->linebuf(), aReport->linebufLength());
+  mFlags = aReport->flags;
+  MOZ_ASSERT(aReport->exnType >= JSEXN_FIRST && aReport->exnType < JSEXN_LIMIT);
+  mExnType = JSExnType(aReport->exnType);
+  mMutedError = aReport->isMuted;
+
+  if (aReport->notes) {
+    if (!mNotes.SetLength(aReport->notes->length(), fallible)) {
+      return;
+    }
+
+    size_t i = 0;
+    for (auto&& note : *aReport->notes) {
+      mNotes.ElementAt(i).AssignErrorNote(note.get());
+      i++;
+    }
+  }
+}
+
+void
 WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
                            JSErrorReport* aReport)
 {
@@ -6189,32 +6212,17 @@ WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
   }
   JS_ClearPendingException(aCx);
 
-  nsString message, filename, line;
-  uint32_t lineNumber, columnNumber, flags, errorNumber;
-  JSExnType exnType = JSEXN_ERR;
-  bool mutedError = aReport && aReport->isMuted;
-
+  WorkerErrorReport report;
   if (aReport) {
-    // We want the same behavior here as xpc::ErrorReport::init here.
-    xpc::ErrorReport::ErrorReportToMessageString(aReport, message);
-
-    filename = NS_ConvertUTF8toUTF16(aReport->filename);
-    line.Assign(aReport->linebuf(), aReport->linebufLength());
-    lineNumber = aReport->lineno;
-    columnNumber = aReport->tokenOffset();
-    flags = aReport->flags;
-    errorNumber = aReport->errorNumber;
-    MOZ_ASSERT(aReport->exnType >= JSEXN_FIRST && aReport->exnType < JSEXN_LIMIT);
-    exnType = JSExnType(aReport->exnType);
+    report.AssignErrorReport(aReport);
   }
   else {
-    lineNumber = columnNumber = errorNumber = 0;
-    flags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
+    report.mFlags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
   }
 
-  if (message.IsEmpty() && aToStringResult) {
+  if (report.mMessage.IsEmpty() && aToStringResult) {
     nsDependentCString toStringResult(aToStringResult.c_str());
-    if (!AppendUTF8toUTF16(toStringResult, message, mozilla::fallible)) {
+    if (!AppendUTF8toUTF16(toStringResult, report.mMessage, mozilla::fallible)) {
       // Try again, with only a 1 KB string. Do this infallibly this time.
       // If the user doesn't have 1 KB to spare we're done anyways.
       uint32_t index = std::min(uint32_t(1024), toStringResult.Length());
@@ -6224,7 +6232,7 @@ WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
 
       nsDependentCString truncatedToStringResult(aToStringResult.c_str(),
                                                  index);
-      AppendUTF8toUTF16(truncatedToStringResult, message);
+      AppendUTF8toUTF16(truncatedToStringResult, report.mMessage);
     }
   }
 
@@ -6233,13 +6241,11 @@ WorkerPrivate::ReportError(JSContext* aCx, JS::ConstUTF8CharsZ aToStringResult,
   // Don't want to run the scope's error handler if this is a recursive error or
   // if we ran out of memory.
   bool fireAtScope = mErrorHandlerRecursionCount == 1 &&
-                     errorNumber != JSMSG_OUT_OF_MEMORY &&
+                     report.mErrorNumber != JSMSG_OUT_OF_MEMORY &&
                      JS::CurrentGlobalOrNull(aCx);
 
-  ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
-                                   filename, line, lineNumber,
-                                   columnNumber, flags, errorNumber, exnType,
-                                   mutedError, 0, exn);
+  ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, report, 0,
+                                   exn);
 
   mErrorHandlerRecursionCount--;
 }

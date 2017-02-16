@@ -20,6 +20,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/SourceSurfaceVolatileData.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
@@ -51,6 +52,12 @@ CreateLockedSurface(DataSourceSurface *aSurface,
                     const IntSize& size,
                     SurfaceFormat format)
 {
+  // Shared memory is never released until the surface itself is released
+  if (aSurface->GetType() == SurfaceType::DATA_SHARED) {
+    RefPtr<DataSourceSurface> surf(aSurface);
+    return surf.forget();
+  }
+
   DataSourceSurface::ScopedMap* smap =
     new DataSourceSurface::ScopedMap(aSurface, DataSourceSurface::READ_WRITE);
   if (smap->IsMapped()) {
@@ -77,11 +84,17 @@ AllocateBufferForImage(const IntSize& size,
                        bool aIsAnimated = false)
 {
   int32_t stride = VolatileSurfaceStride(size, format);
-  RefPtr<SourceSurfaceVolatileData> newSurf = new SourceSurfaceVolatileData();
-  if (newSurf->Init(size, stride, format)) {
-    return newSurf.forget();
+  if (!aIsAnimated && gfxPrefs::ImageMemShared()) {
+    RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
+    if (newSurf->Init(size, stride, format)) {
+      return newSurf.forget();
+    }
+  } else {
+    RefPtr<SourceSurfaceVolatileData> newSurf= new SourceSurfaceVolatileData();
+    if (newSurf->Init(size, stride, format)) {
+      return newSurf.forget();
+    }
   }
-
   return nullptr;
 }
 
@@ -106,6 +119,19 @@ ClearSurface(DataSourceSurface* aSurface, const IntSize& aSize, SurfaceFormat aF
   }
 
   return true;
+}
+
+void
+MarkSurfaceShared(SourceSurface* aSurface)
+{
+  // Depending on what requested the image decoding, the buffer may or may not
+  // end up being shared with another process (e.g. put in a painted layer,
+  // used inside a canvas). If not shared, we should ensure are not keeping the
+  // handle only because we have yet to share it.
+  if (aSurface && aSurface->GetType() == SurfaceType::DATA_SHARED) {
+    auto sharedSurface = static_cast<SourceSurfaceSharedData*>(aSurface);
+    sharedSurface->FinishedSharing();
+  }
 }
 
 // Returns true if an image of aWidth x aHeight is allowed and legal.
@@ -359,6 +385,8 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     // We used an offscreen surface, which is an "optimized" surface from
     // imgFrame's perspective.
     mOptSurface = target->Snapshot();
+  } else {
+    FinalizeSurface();
   }
 
   // If we reach this point, we should regard ourselves as complete.
@@ -551,6 +579,10 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
                                imageRect.Size(), region, surfaceResult.mFormat,
                                aSamplingFilter, aImageFlags, aOpacity);
   }
+
+  // Image got put into a painted layer, it will not be shared with another
+  // process.
+  MarkSurfaceShared(surf);
   return true;
 }
 
@@ -581,7 +613,8 @@ imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
                  FrameTimeout aTimeout
                    /* = FrameTimeout::FromRawMilliseconds(0) */,
                  BlendMethod aBlendMethod /* = BlendMethod::OVER */,
-                 const Maybe<IntRect>& aBlendRect /* = Nothing() */)
+                 const Maybe<IntRect>& aBlendRect /* = Nothing() */,
+                 bool aFinalize /* = true */)
 {
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
@@ -591,6 +624,11 @@ imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
   mBlendMethod = aBlendMethod;
   mBlendRect = aBlendRect;
   ImageUpdatedInternal(GetRect());
+
+  if (aFinalize) {
+    FinalizeSurfaceInternal();
+  }
+
   mFinished = true;
 
   // The image is now complete, wake up anyone who's waiting.
@@ -633,6 +671,9 @@ imgFrame::GetImageDataInternal(uint8_t** aData, uint32_t* aLength) const
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
 
   if (mLockedSurface) {
+    // TODO: This is okay for now because we only realloc shared surfaces on
+    // the main thread after decoding has finished, but if animations want to
+    // read frame data off the main thread, we will need to reconsider this.
     *aData = mLockedSurface->GetData();
     MOZ_ASSERT(*aData,
       "mLockedSurface is non-null, but GetData is null in GetImageData");
@@ -751,6 +792,27 @@ imgFrame::SetOptimizable()
   AssertImageDataLocked();
   MonitorAutoLock lock(mMonitor);
   mOptimizable = true;
+}
+
+void
+imgFrame::FinalizeSurface()
+{
+  MonitorAutoLock lock(mMonitor);
+  FinalizeSurfaceInternal();
+}
+
+void
+imgFrame::FinalizeSurfaceInternal()
+{
+  mMonitor.AssertCurrentThreadOwns();
+
+  // Not all images will have mRawSurface to finalize (i.e. paletted images).
+  if (!mRawSurface || mRawSurface->GetType() != SurfaceType::DATA_SHARED) {
+    return;
+  }
+
+  auto sharedSurf = static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
+  sharedSurf->Finalize();
 }
 
 already_AddRefed<SourceSurface>
