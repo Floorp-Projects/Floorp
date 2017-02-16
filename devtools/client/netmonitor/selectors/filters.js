@@ -4,11 +4,10 @@
 
 "use strict";
 
-function getActiveFilters(state) {
-  return state.filters.requestFilterTypes.toSeq()
-    .filter(checked => checked).keySeq().toArray();
+function getRequestFilterTypes(state) {
+  return state.filters.requestFilterTypes.entrySeq().toArray();
 }
 
 module.exports = {
-  getActiveFilters
+  getRequestFilterTypes,
 };

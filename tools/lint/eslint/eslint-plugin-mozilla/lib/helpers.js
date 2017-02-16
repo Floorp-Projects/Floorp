@@ -170,7 +170,11 @@ module.exports = {
    *         The root of the repository.
    *
    * @return {Array}
-   *         An array of global variable names defined.
+   *         An array of objects that contain details about the globals:
+   *         - {String} name
+   *                    The name of the global.
+   *         - {Boolean} writable
+   *                     If the global is writeable or not.
    */
   convertWorkerExpressionToGlobals: function(node, isGlobal, repository, dirname) {
     var getGlobalsForFile = require("./globals").getGlobalsForFile;
@@ -196,11 +200,14 @@ module.exports = {
               results = results.concat(additionalGlobals);
             }
           } else if (match[2] in modules) {
-            results.push(modules[match[2]]);
+            results = results.concat(modules[match[2]].map(name => {
+              return { name, writable: true };
+            }));
           }
         }
       }
     }
+
     return results;
   },
 

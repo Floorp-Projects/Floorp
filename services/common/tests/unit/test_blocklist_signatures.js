@@ -294,7 +294,8 @@ add_task(function* test_check_signatures() {
 
   // With all of this set up, we attempt a sync. This will resolve if all is
   // well and throw if something goes wrong.
-  yield OneCRLBlocklistClient.maybeSync(1000, startTime);
+  // We don't want to load initial json dumps in this test suite.
+  yield OneCRLBlocklistClient.maybeSync(1000, startTime, {loadDump: false});
 
   // Check that some additions (2 records) to the collection have a valid
   // signature.

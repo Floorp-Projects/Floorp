@@ -1141,7 +1141,8 @@ class IceTestPeer : public sigslot::has_slots<> {
         DumpCandidatePair(pairs[p-1]);
         DumpCandidatePair(pairs[p]);
         return false;
-      } else if (priority == pairs[p].priority) {
+      }
+      if (priority == pairs[p].priority) {
         if (!IceCandidatePairCompare()(pairs[p], pairs[p-1]) &&
             !IceCandidatePairCompare()(pairs[p-1], pairs[p])) {
           std::cerr << "Ignoring identical pair from trigger check" << std::endl;

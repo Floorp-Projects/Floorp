@@ -411,7 +411,8 @@ DoLink(const char* aPath, const char* aPath2,
 {
   if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_LINK) {
     return link(aPath, aPath2);
-  } else if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_SYMLINK) {
+  }
+  if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_SYMLINK) {
     return symlink(aPath, aPath2);
   }
   MOZ_CRASH("SandboxBroker: Unknown link operation");

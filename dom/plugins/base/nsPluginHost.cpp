@@ -186,13 +186,10 @@ busy_beaver_PR_Read(PRFileDesc *fd, void * start, int32_t len)
                 return -1;
             break;
         }
-        else
-        {
-            remaining -= n;
-            char *cp = (char *) start;
-            cp += n;
-            start = cp;
-        }
+        remaining -= n;
+        char *cp = (char *) start;
+        cp += n;
+        start = cp;
     }
     return len - remaining;
 }
@@ -2848,8 +2845,8 @@ nsPluginHost::ReadPluginInfo()
                           getter_AddRefs(mPluginRegFile));
     if (!mPluginRegFile)
       return NS_ERROR_FAILURE;
-    else
-      return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   PRFileDesc* fd = nullptr;
@@ -3046,9 +3043,7 @@ nsPluginHost::ReadPluginInfo()
     }
 
     if (mtr != mimetypecount) {
-      if (heapalloced) {
-        delete [] heapalloced;
-      }
+      delete [] heapalloced;
       return rv;
     }
 
@@ -3061,8 +3056,8 @@ nsPluginHost::ReadPluginInfo()
       (const char* const*)mimedescriptions,
       (const char* const*)extensions,
       mimetypecount, lastmod, fromExtension, true);
-    if (heapalloced)
-      delete [] heapalloced;
+
+    delete [] heapalloced;
 
     // Import flags from registry into prefs for old registry versions
     MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,

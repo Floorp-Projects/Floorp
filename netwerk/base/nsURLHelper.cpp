@@ -1096,7 +1096,8 @@ net_IsValidIPv4Addr(const char *addr, int32_t addrLen)
             if (octet == 0) {
                 // leading 0 is not allowed
                 return false;
-            } else if (octet == -1) {
+            }
+            if (octet == -1) {
                 octet = *p - '0';
             } else {
                 octet *= 10;

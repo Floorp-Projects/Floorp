@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals NetMonitorController */
-
 "use strict";
 
 const {
@@ -48,7 +46,7 @@ function cloneSelectedRequest() {
  * Send a new HTTP request using the data in the custom request form.
  */
 function sendCustomRequest() {
-  if (!NetMonitorController.supportsCustomRequest) {
+  if (!window.NetMonitorController.supportsCustomRequest) {
     return cloneSelectedRequest();
   }
 
@@ -72,7 +70,7 @@ function sendCustomRequest() {
       data.body = selected.requestPostData.postData.text;
     }
 
-    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
+    window.NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
       return dispatch({
         type: SEND_CUSTOM_REQUEST,
         id: response.eventActor.actor,

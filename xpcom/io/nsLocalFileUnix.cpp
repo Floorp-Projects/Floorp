@@ -961,13 +961,12 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName)
     if (bytesRead < 0) {
       if (saved_write_error != NS_OK) {
         return saved_write_error;
-      } else if (saved_read_error != NS_OK) {
+      }
+      if (saved_read_error != NS_OK) {
         return saved_read_error;
       }
 #if DEBUG
-      else {              // sanity check. Die and debug.
-        MOZ_ASSERT(0);
-      }
+      MOZ_ASSERT(0);
 #endif
     }
 
@@ -1965,20 +1964,20 @@ nsLocalFile::Reveal()
 
   if (isDirectory) {
     return giovfs->ShowURIForInput(mPath);
-  } else if (NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
-    return NS_OK;
-  } else {
-    nsCOMPtr<nsIFile> parentDir;
-    nsAutoCString dirPath;
-    if (NS_FAILED(GetParent(getter_AddRefs(parentDir)))) {
-      return NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(parentDir->GetNativePath(dirPath))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return giovfs->ShowURIForInput(dirPath);
   }
+  if (NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIFile> parentDir;
+  nsAutoCString dirPath;
+  if (NS_FAILED(GetParent(getter_AddRefs(parentDir)))) {
+    return NS_ERROR_FAILURE;
+  }
+  if (NS_FAILED(parentDir->GetNativePath(dirPath))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return giovfs->ShowURIForInput(dirPath);
 #elif defined(MOZ_WIDGET_COCOA)
   CFURLRef url;
   if (NS_SUCCEEDED(GetCFURL(&url))) {

@@ -1029,17 +1029,7 @@ class CheckTypes(TcheckVisitor):
                     "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
                     pname, mgrtype.name())
 
-        # XXX currently we don't require a delete() message of top-level
-        # actors.  need to let experience guide this decision
-        if not ptype.isToplevel():
-            for md in p.messageDecls:
-                if _DELETE_MSG == md.name: break
-            else:
-                self.error(
-                    p.decl.loc,
-                   "managed protocol `%s' requires a `delete()' message to be declared",
-                    p.name)
-        else:
+        if ptype.isToplevel():
             cycles = checkcycles(p.decl.type)
             if cycles:
                 self.error(
@@ -1137,10 +1127,16 @@ class CheckTypes(TcheckVisitor):
 
         if (mtype.compress and
             (not mtype.isAsync() or mtype.isCtor() or mtype.isDtor())):
-            self.error(
-                loc,
-                "message `%s' in protocol `%s' requests compression but is not async or is special (ctor or dtor)",
-                mname[:-len('constructor')], pname)
+
+            if mtype.isCtor() or mtype.isDtor():
+                message_type = "constructor" if mtype.isCtor() else "destructor"
+                error_message = ("%s messages can't use compression (here, in protocol `%s'" %
+                                 (message_type, pname))
+            else:
+                error_message = ("message `%s' in protocol `%s' requests compression but is not async" %
+                                 (mname, pname))
+
+            self.error(loc, error_message)
 
         if mtype.isCtor() and not ptype.isManagerOf(mtype.constructedType()):
             self.error(

@@ -16,6 +16,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Compo
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
                                   "resource://formautofill/ProfileAutoCompleteResult.jsm");
@@ -67,7 +68,7 @@ AutocompleteFactory.prototype = {
  * @implements {nsIAutoCompleteSearch}
  */
 function AutofillProfileAutoCompleteSearch() {
-
+  FormAutofillUtils.defineLazyLogGetter(this, "AutofillProfileAutoCompleteSearch");
 }
 AutofillProfileAutoCompleteSearch.prototype = {
   classID: Components.ID("4f9f1e4c-7f2c-439e-9c9e-566b68bc187d"),
@@ -87,6 +88,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @param {Object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
+    this.log.debug("startSearch: for", searchString, "with input", formFillController.focusedInput);
     let focusedInput = formFillController.focusedInput;
     this.forceStop = false;
     let info = this._serializeInfo(FormAutofillContent.getInputDetails(focusedInput));
@@ -130,6 +132,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    *          Promise that resolves when profiles returned from parent process.
    */
   _getProfiles(data) {
+    this.log.debug("_getProfiles with data:", data);
     return new Promise((resolve) => {
       Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
         Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
@@ -161,6 +164,8 @@ let ProfileAutocomplete = {
       return;
     }
 
+    FormAutofillUtils.defineLazyLogGetter(this, "ProfileAutocomplete");
+    this.log.debug("ensureRegistered");
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
     this._registered = true;
@@ -173,6 +178,7 @@ let ProfileAutocomplete = {
       return;
     }
 
+    this.log.debug("ensureUnregistered");
     this._factory.unregister();
     this._factory = null;
     this._registered = false;
@@ -206,6 +212,7 @@ let ProfileAutocomplete = {
   },
 
   _fillFromAutocompleteRow(focusedInput) {
+    this.log.debug("_fillFromAutocompleteRow:", focusedInput);
     let formDetails = FormAutofillContent.getFormDetails(focusedInput);
     if (!formDetails) {
       // The observer notification is for a different frame.
@@ -250,11 +257,13 @@ let ProfileAutocomplete = {
  */
 var FormAutofillContent = {
   /**
-   * @type {WeakMap} mapping FormLike root HTML elements to form details.
+   * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
    */
   _formsDetails: new WeakMap(),
 
   init() {
+    FormAutofillUtils.defineLazyLogGetter(this, "FormAutofillContent");
+
     Services.cpmm.addMessageListener("FormAutofill:enabledStatus", (result) => {
       if (result.data) {
         ProfileAutocomplete.ensureRegistered();
@@ -306,6 +315,7 @@ var FormAutofillContent = {
   },
 
   _identifyAutofillFields(doc) {
+    this.log.debug("_identifyAutofillFields:", "" + doc.location);
     let forms = [];
 
     // Collects root forms from inputs.
@@ -322,18 +332,22 @@ var FormAutofillContent = {
       }
     }
 
+    this.log.debug("Found", forms.length, "forms");
+
     // Collects the fields that can be autofilled from each form and marks them
     // as autofill fields if the amount is above the threshold.
     forms.forEach(form => {
       let formHandler = new FormAutofillHandler(form);
       formHandler.collectFormFields();
       if (formHandler.fieldDetails.length < AUTOFILL_FIELDS_THRESHOLD) {
+        this.log.debug("Ignoring form since it has only", formHandler.fieldDetails.length,
+                       "field(s)");
         return;
       }
 
       this._formsDetails.set(form.rootElement, formHandler);
-      formHandler.fieldDetails.forEach(
-        detail => this._markAsAutofillField(detail.element));
+      this.log.debug("Adding form handler to _formsDetails:", formHandler);
+      formHandler.fieldDetails.forEach(detail => this._markAsAutofillField(detail.element));
     });
   },
 
