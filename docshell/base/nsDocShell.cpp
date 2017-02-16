@@ -14347,10 +14347,19 @@ nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
 #if NS_PRINT_PREVIEW
   nsCOMPtr<nsIDocumentViewerPrint> print = do_QueryInterface(mContentViewer);
   if (!print || !print->IsInitializedForPrintPreview()) {
+    // XXX: Creating a brand new content viewer to host preview every
+    // time we enter here seems overwork. We could skip ahead to where
+    // we QI the mContentViewer if the current URI is either about:blank
+    // or about:printpreview.
     Stop(nsIWebNavigation::STOP_ALL);
     nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
-    nsresult rv = CreateAboutBlankContentViewer(principal, nullptr);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:printpreview"));
+    nsresult rv = CreateAboutBlankContentViewer(principal, uri);
     NS_ENSURE_SUCCESS(rv, rv);
+    // Here we manually set current URI since we have just created a
+    // brand new content viewer (about:blank) to host preview.
+    SetCurrentURI(uri, nullptr, true, 0);
     print = do_QueryInterface(mContentViewer);
     NS_ENSURE_STATE(print);
     print->InitializeForPrintPreview();
