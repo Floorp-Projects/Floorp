@@ -1034,8 +1034,9 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
 #endif
 
   // 0 -> Full-tilt composite
-  if (gfxPrefs::LayersCompositionFrameRate() == 0
-    || mLayerManager->GetCompositor()->GetDiagnosticTypes() & DiagnosticTypes::FLASH_BORDERS) {
+  if (gfxPrefs::LayersCompositionFrameRate() == 0 ||
+      mLayerManager->AlwaysScheduleComposite())
+  {
     // Special full-tilt composite mode for performance testing
     ScheduleComposition();
   }
