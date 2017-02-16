@@ -1,8 +1,8 @@
 /* Test that clicking on the Report Site Issue button opens a new tab
-   and sends a postMessaged blob at it.
-   testing/profiles/prefs_general.js sets the value for
-   "extensions.webcompat-reporter.newIssueEndpoint" */
+   and sends a postMessaged blob to it. */
 add_task(function* test_screenshot() {
+
+  // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
   yield SpecialPowers.pushPrefEnv({set: [[PREF_WC_REPORTER_ENDPOINT, NEW_ISSUE_PAGE]]});
 
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
