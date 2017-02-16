@@ -26,6 +26,7 @@ const {
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const BoxModelView = require("devtools/client/inspector/components/deprecated-box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
@@ -1415,6 +1416,7 @@ function ComputedViewTool(inspector, window) {
 
   this.computedView = new CssComputedView(this.inspector, this.document,
     this.inspector.pageStyle);
+  this.boxModelView = new BoxModelView(this.inspector, this.document);
 
   this.onSelected = this.onSelected.bind(this);
   this.refresh = this.refresh.bind(this);
@@ -1523,8 +1525,9 @@ ComputedViewTool.prototype = {
     }
 
     this.computedView.destroy();
+    this.boxModelView.destroy();
 
-    this.computedView = this.document = this.inspector = null;
+    this.computedView = this.boxModelView = this.document = this.inspector = null;
   }
 };
 
