@@ -109,6 +109,8 @@ public:
    */
   void GetNativeStack(Stack& aStack);
 
+private:
+  void GetStackInternal(Stack& aStack, bool aAppendNativeStack);
 #if defined(XP_LINUX)
 private:
   static int sInitialized;
