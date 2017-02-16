@@ -593,6 +593,12 @@ class MochitestArguments(ArgumentContainer):
           "dest": "websocket_process_bridge_port",
           "help": "Port for websocket/process bridge. Default 8191.",
           }],
+        [["--failure-pattern-file"],
+         {"default": None,
+          "dest": "failure_pattern_file",
+          "help": "File describes all failure patterns of the tests.",
+          "suppress": True,
+          }],
     ]
 
     defaults = {
