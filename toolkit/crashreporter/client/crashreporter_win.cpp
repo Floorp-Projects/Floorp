@@ -1463,16 +1463,21 @@ bool UIDeleteFile(const string& oldfile)
   return DeleteFile(UTF8ToWide(oldfile).c_str()) == TRUE;
 }
 
-ifstream* UIOpenRead(const string& filename)
+ifstream* UIOpenRead(const string& filename, bool binary)
 {
   // adapted from breakpad's src/common/windows/http_upload.cc
+  std::ios_base::openmode mode = ios::in;
+
+  if (binary) {
+    mode = mode | ios::binary;
+  }
 
 #if defined(_MSC_VER)
   ifstream* file = new ifstream();
-  file->open(UTF8ToWide(filename).c_str(), ios::in);
+  file->open(UTF8ToWide(filename).c_str(), mode);
 #else   // GCC
   ifstream* file = new ifstream(WideToMBCP(UTF8ToWide(filename), CP_ACP).c_str(),
-                                ios::in);
+                                mode);
 #endif  // _MSC_VER
 
   return file;

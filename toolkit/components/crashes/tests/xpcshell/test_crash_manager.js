@@ -210,8 +210,11 @@ add_task(function* test_schedule_maintenance() {
 });
 
 const crashId = "3cb67eba-0dc7-6f78-6a569a0e-172287ec";
+const crashPingUuid = "103dbdf2-339b-4b9c-a7cc-5f9506ea9d08";
 const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const sha256Hash =
+  "f8410c3ac4496cfa9191a1240f0e365101aef40c7bf34fc5bcb8ec511832ed79";
 const stackTraces = "{\"status\":\"OK\"}";
 
 add_task(function* test_main_crash_event_file() {
@@ -230,6 +233,7 @@ add_task(function* test_main_crash_event_file() {
     "ProductID=" + productId + "\n" +
     "TelemetryEnvironment=" + JSON.stringify(theEnvironment) + "\n" +
     "TelemetrySessionId=" + sessionId + "\n" +
+    "MinidumpSha256Hash=" + sha256Hash + "\n" +
     "StackTraces=" + stackTraces + "\n" +
     "ThisShouldNot=end-up-in-the-ping\n";
 
@@ -244,7 +248,7 @@ add_task(function* test_main_crash_event_file() {
   Assert.equal(crashes[0].metadata.ProductName, productName);
   Assert.equal(crashes[0].metadata.ProductID, productId);
   Assert.ok(crashes[0].metadata.TelemetryEnvironment);
-  Assert.equal(Object.getOwnPropertyNames(crashes[0].metadata).length, 6);
+  Assert.equal(Object.getOwnPropertyNames(crashes[0].metadata).length, 7);
   Assert.equal(crashes[0].metadata.TelemetrySessionId, sessionId);
   Assert.ok(crashes[0].metadata.StackTraces);
   Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
@@ -253,6 +257,7 @@ add_task(function* test_main_crash_event_file() {
     [["payload", "hasCrashEnvironment"], true],
     [["payload", "metadata", "ProductName"], productName],
     [["payload", "metadata", "ProductID"], productId],
+    [["payload", "minidumpSha256Hash"], sha256Hash],
     [["payload", "crashId"], crashId],
     [["payload", "stackTraces", "status"], "OK"],
     [["payload", "sessionId"], sessionId],
@@ -296,6 +301,45 @@ add_task(function* test_main_crash_event_file_noenv() {
   ]);
   Assert.ok(found, "Telemetry ping submitted for found crash");
   Assert.ok(found.environment, "There is an environment");
+
+  count = yield m.aggregateEventsFiles();
+  Assert.equal(count, 0);
+});
+
+add_task(function* test_main_crash_event_file_override_ping_uuid() {
+  let ac = new TelemetryArchiveTesting.Checker();
+  yield ac.promiseInit();
+
+  let m = yield getManager();
+  const fileContent = crashId + "\n" +
+    "ProductName=" + productName + "\n" +
+    "ProductID=" + productId + "\n" +
+    "CrashPingUUID=" + crashPingUuid + "\n";
+
+  yield m.createEventsFile(crashId, "crash.main.2", DUMMY_DATE, fileContent);
+  let count = yield m.aggregateEventsFiles();
+  Assert.equal(count, 1);
+
+  let crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 1);
+  Assert.equal(crashes[0].id, crashId);
+  Assert.equal(crashes[0].type, "main-crash");
+  Assert.deepEqual(crashes[0].metadata, {
+    CrashPingUUID: crashPingUuid,
+    ProductName: productName,
+    ProductID: productId
+  });
+  Assert.deepEqual(crashes[0].crashDate, DUMMY_DATE);
+
+  let found = yield ac.promiseFindPing("crash", [
+    [["id"], crashPingUuid],
+    [["payload", "hasCrashEnvironment"], false],
+    [["payload", "metadata", "ProductName"], productName],
+    [["payload", "metadata", "ProductID"], productId],
+  ]);
+  Assert.ok(found, "Telemetry ping submitted for found crash");
+  Assert.equal(found.payload.metadata.CrashPingUUID, undefined,
+               "Crash ping UUID should be filtered out");
 
   count = yield m.aggregateEventsFiles();
   Assert.equal(count, 0);
@@ -466,12 +510,14 @@ add_task(function* test_content_crash_ping() {
   let id = yield m.createDummyDump();
   yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
     StackTraces: stackTraces,
+    MinidumpSha256Hash: sha256Hash,
     ThisShouldNot: "end-up-in-the-ping"
   });
   yield m._pingPromise;
 
   let found = yield ac.promiseFindPing("crash", [
     [["payload", "crashId"], id],
+    [["payload", "minidumpSha256Hash"], sha256Hash],
     [["payload", "processType"], m.PROCESS_TYPE_CONTENT],
     [["payload", "stackTraces", "status"], "OK"],
   ]);
