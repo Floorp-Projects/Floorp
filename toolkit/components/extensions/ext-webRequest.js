@@ -28,6 +28,18 @@ function WebRequestEventManager(context, eventName) {
         return;
       }
 
+      // Check hosts permissions for both the resource being requested,
+      const hosts = context.extension.whiteListedHosts;
+      if (!hosts.matchesIgnoringPath(NetUtil.newURI(data.url))) {
+        return;
+      }
+      // and the origin that is loading the resource.
+      const origin = data.documentUrl;
+      const own = origin && origin.startsWith(context.extension.getURL());
+      if (origin && !own && !hosts.matchesIgnoringPath(NetUtil.newURI(origin))) {
+        return;
+      }
+
       let browserData = {tabId: -1, windowId: -1};
       if (data.browser) {
         browserData = tabTracker.getBrowserData(data.browser);
@@ -43,6 +55,7 @@ function WebRequestEventManager(context, eventName) {
         requestId: data.requestId,
         url: data.url,
         originUrl: data.originUrl,
+        documentUrl: data.documentUrl,
         method: data.method,
         tabId: browserData.tabId,
         type: data.type,
