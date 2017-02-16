@@ -8,7 +8,7 @@ var gFxAccounts = {
 
   _initialized: false,
   _inCustomizationMode: false,
-  _profileFetched: false,
+  _cachedProfile: null,
 
   get weave() {
     delete this.weave;
@@ -148,7 +148,7 @@ var gFxAccounts = {
         this.onMigrationStateChanged(data, subject);
         break;
       case this.FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION:
-        this._profileFetched = false;
+        this._cachedProfile = null;
         // Fallthrough intended
       default:
         this.updateUI();
@@ -321,8 +321,11 @@ var gFxAccounts = {
       updateWithUserData(userData);
       // unverified users cause us to spew log errors fetching an OAuth token
       // to fetch the profile, so don't even try in that case.
-      if (!userData || !userData.verified || !profileInfoEnabled || this._profileFetched) {
+      if (!userData || !userData.verified || !profileInfoEnabled) {
         return null; // don't even try to grab the profile.
+      }
+      if (this._cachedProfile) {
+        return this._cachedProfile;
       }
       return fxAccounts.getSignedInUserProfile().catch(err => {
         // Not fetching the profile is sad but the FxA logs will already have noise.
@@ -333,7 +336,7 @@ var gFxAccounts = {
         return;
       }
       updateWithProfile(profile);
-      this._profileFetched = true; // Try to avoid fetching the profile on every UI update
+      this._cachedProfile = profile; // Try to avoid fetching the profile on every UI update
     }).catch(error => {
       // This is most likely in tests, were we quickly log users in and out.
       // The most likely scenario is a user logged out, so reflect that.
