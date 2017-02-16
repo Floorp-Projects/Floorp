@@ -15,10 +15,14 @@ self.onmessage = function(e) {
           message.push([client.visibilityState,
                         client.focused,
                         client.url,
+                        client.type,
                         frame_type]);
         });
       // Sort by url
       message.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
       port.postMessage(message);
-    });
+    })
+  .catch(e => {
+      port.postMessage('clients.matchAll() rejected: ' + e);
+    })
 };

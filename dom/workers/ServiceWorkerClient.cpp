@@ -34,7 +34,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerClient)
 NS_INTERFACE_MAP_END
 
 ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
-  : mWindowId(0)
+  : mType(ClientType::Window)
+  , mWindowId(0)
   , mFrameType(FrameType::None)
 {
   MOZ_ASSERT(aDoc);
@@ -80,6 +81,12 @@ JSObject*
 ServiceWorkerClient::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return ClientBinding::Wrap(aCx, this, aGivenProto);
+}
+
+ClientType
+ServiceWorkerClient::Type() const
+{
+  return mType;
 }
 
 namespace {

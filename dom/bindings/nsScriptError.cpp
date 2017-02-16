@@ -17,6 +17,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsILoadContext.h"
 #include "nsIDocShell.h"
+#include "nsIMutableArray.h"
 #include "nsIScriptError.h"
 #include "nsISensitiveInfoHiddenURI.h"
 
@@ -45,6 +46,12 @@ nsScriptErrorBase::nsScriptErrorBase()
 }
 
 nsScriptErrorBase::~nsScriptErrorBase() {}
+
+void
+nsScriptErrorBase::AddNote(nsIScriptErrorNote* note)
+{
+    mNotes.AppendObject(note);
+}
 
 void
 nsScriptErrorBase::InitializeOnMainThread()
@@ -189,6 +196,28 @@ nsScriptErrorBase::Init(const nsAString& message,
                             0);
 }
 
+static void
+AssignSourceNameHelper(nsString& aSourceNameDest, const nsAString& aSourceNameSrc)
+{
+    if (aSourceNameSrc.IsEmpty())
+        return;
+
+    aSourceNameDest.Assign(aSourceNameSrc);
+
+    nsCOMPtr<nsIURI> uri;
+    nsAutoCString pass;
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), aSourceNameSrc)) &&
+        NS_SUCCEEDED(uri->GetPassword(pass)) &&
+        !pass.IsEmpty())
+    {
+        nsCOMPtr<nsISensitiveInfoHiddenURI> safeUri = do_QueryInterface(uri);
+
+        nsAutoCString loc;
+        if (safeUri && NS_SUCCEEDED(safeUri->GetSensitiveInfoHiddenSpec(loc)))
+            aSourceNameDest.Assign(NS_ConvertUTF8toUTF16(loc));
+    }
+}
+
 NS_IMETHODIMP
 nsScriptErrorBase::InitWithWindowID(const nsAString& message,
                                     const nsAString& sourceName,
@@ -200,26 +229,7 @@ nsScriptErrorBase::InitWithWindowID(const nsAString& message,
                                     uint64_t aInnerWindowID)
 {
     mMessage.Assign(message);
-
-    if (!sourceName.IsEmpty()) {
-        mSourceName.Assign(sourceName);
-
-        nsCOMPtr<nsIURI> uri;
-        nsAutoCString pass;
-        if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), sourceName)) &&
-            NS_SUCCEEDED(uri->GetPassword(pass)) &&
-            !pass.IsEmpty()) {
-            nsCOMPtr<nsISensitiveInfoHiddenURI> safeUri =
-                do_QueryInterface(uri);
-
-            nsAutoCString loc;
-            if (safeUri &&
-                NS_SUCCEEDED(safeUri->GetSensitiveInfoHiddenSpec(loc))) {
-                mSourceName.Assign(NS_ConvertUTF8toUTF16(loc));
-            }
-        }
-    }
-
+    AssignSourceNameHelper(mSourceName, sourceName);
     mLineNumber = lineNumber;
     mSourceLine.Assign(sourceLine);
     mColumnNumber = columnNumber;
@@ -228,15 +238,17 @@ nsScriptErrorBase::InitWithWindowID(const nsAString& message,
     mTimeStamp = JS_Now() / 1000;
     mInnerWindowID = aInnerWindowID;
 
-    if (aInnerWindowID && NS_IsMainThread()) {
+    if (aInnerWindowID && NS_IsMainThread())
         InitializeOnMainThread();
-    }
 
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
+static nsresult
+ToStringHelper(const char* aSeverity, const nsString& aMessage,
+               const nsString& aSourceName, const nsString* aSourceLine,
+               uint32_t aLineNumber, uint32_t aColumnNumber,
+               nsACString& /*UTF8*/ aResult)
 {
     static const char format0[] =
         "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";
@@ -245,43 +257,39 @@ nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
     static const char format2[] =
         "[%s: \"%s\"]";
 
-    static const char error[]   = "JavaScript Error";
-    static const char warning[] = "JavaScript Warning";
-
-    const char* severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
-
     char* temp;
     char* tempMessage = nullptr;
     char* tempSourceName = nullptr;
     char* tempSourceLine = nullptr;
 
-    if (!mMessage.IsEmpty())
-        tempMessage = ToNewUTF8String(mMessage);
-    if (!mSourceName.IsEmpty())
+    if (!aMessage.IsEmpty())
+        tempMessage = ToNewUTF8String(aMessage);
+    if (!aSourceName.IsEmpty())
         // Use at most 512 characters from mSourceName.
-        tempSourceName = ToNewUTF8String(StringHead(mSourceName, 512));
-    if (!mSourceLine.IsEmpty())
+        tempSourceName = ToNewUTF8String(StringHead(aSourceName, 512));
+    if (aSourceLine && !aSourceLine->IsEmpty())
         // Use at most 512 characters from mSourceLine.
-        tempSourceLine = ToNewUTF8String(StringHead(mSourceLine, 512));
+        tempSourceLine = ToNewUTF8String(StringHead(*aSourceLine, 512));
 
-    if (nullptr != tempSourceName && nullptr != tempSourceLine)
+    if (nullptr != tempSourceName && nullptr != tempSourceLine) {
         temp = JS_smprintf(format0,
-                           severity,
+                           aSeverity,
                            tempMessage,
                            tempSourceName,
-                           mLineNumber,
-                           mColumnNumber,
+                           aLineNumber,
+                           aColumnNumber,
                            tempSourceLine);
-    else if (!mSourceName.IsEmpty())
+    } else if (!aSourceName.IsEmpty()) {
         temp = JS_smprintf(format1,
-                           severity,
+                           aSeverity,
                            tempMessage,
                            tempSourceName,
-                           mLineNumber);
-    else
+                           aLineNumber);
+    } else {
         temp = JS_smprintf(format2,
-                           severity,
+                           aSeverity,
                            tempMessage);
+    }
 
     if (nullptr != tempMessage)
         free(tempMessage);
@@ -296,6 +304,18 @@ nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
     aResult.Assign(temp);
     JS_smprintf_free(temp);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
+{
+    static const char error[] = "JavaScript Error";
+    static const char warning[] = "JavaScript Warning";
+
+    const char* severity = !(mFlags & JSREPORT_WARNING) ? error : warning;
+
+    return ToStringHelper(severity, mMessage, mSourceName, &mSourceLine,
+                          mLineNumber, mColumnNumber, aResult);
 }
 
 NS_IMETHODIMP
@@ -342,4 +362,76 @@ nsScriptErrorBase::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScriptErrorBase::GetNotes(nsIArray** aNotes)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMutableArray> array =
+        do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t len = mNotes.Length();
+    for (uint32_t i = 0; i < len; i++)
+        array->AppendElement(mNotes[i], false);
+    array.forget(aNotes);
+
+    return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
+
+nsScriptErrorNote::nsScriptErrorNote()
+    :  mMessage(),
+       mSourceName(),
+       mLineNumber(0),
+       mColumnNumber(0)
+{
+}
+
+nsScriptErrorNote::~nsScriptErrorNote() {}
+
+void
+nsScriptErrorNote::Init(const nsAString& message,
+                        const nsAString& sourceName,
+                        uint32_t lineNumber,
+                        uint32_t columnNumber)
+{
+    mMessage.Assign(message);
+    AssignSourceNameHelper(mSourceName, sourceName);
+    mLineNumber = lineNumber;
+    mColumnNumber = columnNumber;
+}
+
+// nsIScriptErrorNote methods
+NS_IMETHODIMP
+nsScriptErrorNote::GetErrorMessage(nsAString& aResult) {
+    aResult.Assign(mMessage);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorNote::GetSourceName(nsAString& aResult) {
+    aResult.Assign(mSourceName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorNote::GetLineNumber(uint32_t* result) {
+    *result = mLineNumber;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorNote::GetColumnNumber(uint32_t* result) {
+    *result = mColumnNumber;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorNote::ToString(nsACString& /*UTF8*/ aResult)
+{
+    return ToStringHelper("JavaScript Note", mMessage, mSourceName, nullptr,
+                          mLineNumber, mColumnNumber, aResult);
+}
+
+NS_IMPL_ISUPPORTS(nsScriptErrorNote, nsIScriptErrorNote)

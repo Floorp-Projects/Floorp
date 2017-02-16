@@ -23,7 +23,7 @@ let gContainersPane = {
   },
 
   _rebuildView() {
-    const containers = ContextualIdentityService.getIdentities();
+    const containers = ContextualIdentityService.getPublicIdentities();
     while (this._list.firstChild) {
       this._list.firstChild.remove();
     }
@@ -83,7 +83,7 @@ let gContainersPane = {
     };
     let title;
     if (userContextId) {
-      identity = ContextualIdentityService.getIdentityFromId(userContextId);
+      identity = ContextualIdentityService.getPublicIdentityFromId(userContextId);
       // This is required to get the translation string from defaults
       identity.name = ContextualIdentityService.getUserContextLabel(identity.userContextId);
       title = containersBundle.formatStringFromName("containers.updateContainerTitle", [identity.name], 1);

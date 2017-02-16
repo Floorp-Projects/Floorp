@@ -4463,6 +4463,10 @@ pref("image.infer-src-animation.threshold-ms", 2000);
 // compressed data.
 pref("image.mem.discardable", true);
 
+// Decodes images into shared memory to allow direct use in separate
+// rendering processes.
+pref("image.mem.shared", false);
+
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
 

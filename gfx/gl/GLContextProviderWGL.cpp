@@ -431,12 +431,6 @@ IsValidSizeForFormat(HDC hDC, int format,
     return true;
 }
 
-static GLContextWGL*
-GetGlobalContextWGL()
-{
-    return static_cast<GLContextWGL*>(GLContextProviderWGL::GetGlobalContext());
-}
-
 already_AddRefed<GLContext>
 GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 {

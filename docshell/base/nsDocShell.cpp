@@ -8027,11 +8027,11 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  AutoRestore<bool> creatingDocument(mCreatingDocument);
-  mCreatingDocument = true;
-
   // mContentViewer->PermitUnload may release |this| docshell.
   nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
+
+  AutoRestore<bool> creatingDocument(mCreatingDocument);
+  mCreatingDocument = true;
 
   if (aPrincipal && !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
       mItemType != typeChrome) {
