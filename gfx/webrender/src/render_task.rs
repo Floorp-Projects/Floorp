@@ -11,7 +11,7 @@ use tiling::StackingContextIndex;
 use webrender_traits::{DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use webrender_traits::MixBlendMode;
 
-const FLOATS_PER_RENDER_TASK_INFO: usize = 16;
+const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct RenderTaskIndex(pub usize);
@@ -319,7 +319,6 @@ impl RenderTask {
                         0.0,
                         0.0,
                         0.0,
-                        0.0, 0.0, 0.0, 0.0,
                     ],
                 }
             }
@@ -334,8 +333,10 @@ impl RenderTask {
                         0.0,
                         0.0,
                         0.0,
-                        0.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0, 0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                     ],
                 }
             }
@@ -354,7 +355,6 @@ impl RenderTask {
                         task.inner_rect.origin.y as f32,
                         (task.inner_rect.origin.x + task.inner_rect.size.width) as f32,
                         (task.inner_rect.origin.y + task.inner_rect.size.height) as f32,
-                        0.0, 0.0, 0.0, 0.0,
                     ],
                 }
             }
@@ -370,8 +370,10 @@ impl RenderTask {
                         blur_radius.0 as f32,
                         0.0,
                         0.0,
-                        0.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0, 0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                     ]
                 }
             }
@@ -386,8 +388,10 @@ impl RenderTask {
                         0.0,
                         0.0,
                         0.0,
-                        0.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0, 0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
                     ]
                 }
             }

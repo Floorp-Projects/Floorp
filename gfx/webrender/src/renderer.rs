@@ -122,7 +122,7 @@ impl<L: GpuStoreLayout> GpuDataTexture<L> {
         let height = data.len() / items_per_row;
 
         device.init_texture(self.id,
-                            L::texture_width() as u32,
+                            L::texture_width::<T>() as u32,
                             height as u32,
                             L::image_format(),
                             L::texture_filter(),
@@ -138,8 +138,8 @@ impl GpuStoreLayout for VertexDataTextureLayout {
         ImageFormat::RGBAF32
     }
 
-    fn texture_width() -> usize {
-        MAX_VERTEX_TEXTURE_WIDTH
+    fn texture_width<T>() -> usize {
+        MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % Self::texels_per_item::<T>())
     }
 
     fn texture_filter() -> TextureFilter {
@@ -157,7 +157,7 @@ impl GpuStoreLayout for GradientDataTextureLayout {
         ImageFormat::RGBA8
     }
 
-    fn texture_width() -> usize {
+    fn texture_width<T>() -> usize {
         mem::size_of::<GradientData>() / Self::texel_size()
     }
 
