@@ -256,16 +256,6 @@ public:
                             nsLayoutUtils::IdlePeriodDeadlineLimit()));
   }
 
-  void SetLastGCCCDuration(TimeDuration aDuration)
-  {
-    mLastGCCCDuration = aDuration;
-  }
-
-  TimeDuration LastGCCCDuration()
-  {
-    return mLastGCCCDuration;
-  }
-
 protected:
   virtual void StartTimer() = 0;
   virtual void StopTimer() = 0;
@@ -343,8 +333,6 @@ protected:
   bool mLastFireSkipped;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
-
-  TimeDuration mLastGCCCDuration;
 
   nsTArray<RefPtr<nsRefreshDriver> > mContentRefreshDrivers;
   nsTArray<RefPtr<nsRefreshDriver> > mRootRefreshDrivers;
@@ -545,6 +533,21 @@ private:
           new ParentProcessVsyncNotifier(this, aVsyncTimestamp);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
+        mRecentVsync = aVsyncTimestamp;
+        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
+          if (mProcessedVsync) {
+            // Re-post vsync update as a normal priority runnable. This way
+            // runnables already in normal priority queue get processed.
+            mProcessedVsync = false;
+            nsCOMPtr<nsIRunnable> vsyncEvent =
+              NewRunnableMethod<>(
+                this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
+            NS_DispatchToMainThread(vsyncEvent);
+          }
+
+          return true;
+        }
+
         TickRefreshDriver(aVsyncTimestamp);
       }
 
@@ -563,6 +566,19 @@ private:
         mLastChildTick = TimeStamp::Now();
       }
     }
+
+    void NormalPriorityNotify()
+    {
+      if (mLastProcessedTickInChildProcess.IsNull() ||
+          mRecentVsync > mLastProcessedTickInChildProcess) {
+        // mBlockUntil is for high priority vsync notifications only.
+        mBlockUntil = TimeStamp();
+        TickRefreshDriver(mRecentVsync);
+      }
+
+      mProcessedVsync = true;
+    }
+
   private:
     ~RefreshDriverVsyncObserver() = default;
 
@@ -619,10 +635,9 @@ private:
         aVsyncTimestamp = mRecentVsync;
         mProcessedVsync = true;
       } else {
+
         mLastChildTick = TimeStamp::Now();
-        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
-          return;
-        }
+        mLastProcessedTickInChildProcess = aVsyncTimestamp;
       }
       MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
 
@@ -630,19 +645,12 @@ private:
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
       if (mVsyncRefreshDriverTimer) {
-        // Clear the old GC/CC duration.
-        mVsyncRefreshDriverTimer->SetLastGCCCDuration(TimeDuration());
         mVsyncRefreshDriverTimer->RunRefreshDrivers(aVsyncTimestamp);
       }
 
       if (!XRE_IsParentProcess()) {
         TimeDuration tickDuration = TimeStamp::Now() - mLastChildTick;
         mBlockUntil = aVsyncTimestamp + tickDuration;
-        if (mVsyncRefreshDriverTimer) {
-          // Since GC/CC slices may run during the tick, but after the actual
-          // layout processing, they are not considered as part of the tick time.
-          mBlockUntil -= mVsyncRefreshDriverTimer->LastGCCCDuration();
-        }
       }
     }
 
@@ -653,6 +661,7 @@ private:
     Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
     TimeStamp mLastChildTick;
+    TimeStamp mLastProcessedTickInChildProcess;
     TimeStamp mBlockUntil;
     TimeDuration mVsyncRate;
     bool mProcessedVsync;
@@ -2084,12 +2093,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
 
   if (notifyGC && nsContentUtils::XPConnect()) {
-    TimeStamp startGCCC = TimeStamp::Now();
     nsContentUtils::XPConnect()->NotifyDidPaint();
     nsJSContext::NotifyDidPaint();
-    if (mActiveTimer) {
-      mActiveTimer->SetLastGCCCDuration(TimeStamp::Now() - startGCCC);
-    }
   }
 }
 
