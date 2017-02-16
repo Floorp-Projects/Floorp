@@ -1240,6 +1240,26 @@ nsXULAppInfo::SetMinidumpPath(nsIFile* aMinidumpPath)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetMinidumpForID(const nsAString& aId, nsIFile** aMinidump)
+{
+  if (!CrashReporter::GetMinidumpForID(aId, aMinidump)) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetExtraFileForID(const nsAString& aId, nsIFile** aExtraFile)
+{
+  if (!CrashReporter::GetExtraFileForID(aId, aExtraFile)) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
 {

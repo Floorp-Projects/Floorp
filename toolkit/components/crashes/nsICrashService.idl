@@ -16,6 +16,8 @@ interface nsICrashService : nsISupports
    *        One of the CRASH_TYPE constants defined below.
    * @param id
    *        Crash ID. Likely a UUID.
+   *
+   * @return {Promise} A promise that resolves after the crash has been stored
    */
   void addCrash(in long processType, in long crashType, in AString id);
 
