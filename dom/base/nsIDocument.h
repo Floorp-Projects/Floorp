@@ -3036,13 +3036,6 @@ protected:
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
 
-  // XXXheycam rust-bindgen currently doesn't generate correctly aligned fields
-  // to represent the following bitfields if they are preceded by something
-  // non-pointer aligned, so if adding non-pointer sized fields, please do so
-  // somewhere other than right here.
-  //
-  // https://github.com/servo/rust-bindgen/issues/111
-
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
   // True if a MathML element has ever been owned by this document.
