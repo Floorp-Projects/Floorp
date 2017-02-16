@@ -5,7 +5,6 @@
 #include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
 
-#include "MediaCodecDataDecoder.h"
 #include "RemoteDataDecoder.h"
 
 #include "MediaInfo.h"
@@ -194,12 +193,12 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    MediaPrefs::PDMAndroidRemoteCodecEnabled()
-    ? RemoteDataDecoder::CreateVideoDecoder(
-        config, format, aParams.mImageContainer, drmStubId, mProxy,
-        aParams.mTaskQueue)
-    : MediaCodecDataDecoder::CreateVideoDecoder(
-        config, format, aParams.mImageContainer, drmStubId, mProxy);
+    RemoteDataDecoder::CreateVideoDecoder(config,
+                                          format,
+                                          aParams.mImageContainer,
+                                          drmStubId,
+                                          mProxy,
+                                          aParams.mTaskQueue);
   return decoder.forget();
 }
 
@@ -227,12 +226,8 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   if (mProxy) {
     drmStubId = mProxy->GetMediaDrmStubId();
   }
-  RefPtr<MediaDataDecoder> decoder =
-    MediaPrefs::PDMAndroidRemoteCodecEnabled()
-    ? RemoteDataDecoder::CreateAudioDecoder(config, format, drmStubId, mProxy,
-                                            aParams.mTaskQueue)
-    : MediaCodecDataDecoder::CreateAudioDecoder(config, format, drmStubId,
-                                                mProxy);
+  RefPtr<MediaDataDecoder> decoder = RemoteDataDecoder::CreateAudioDecoder(
+    config, format, drmStubId, mProxy, aParams.mTaskQueue);
   return decoder.forget();
 }
 
