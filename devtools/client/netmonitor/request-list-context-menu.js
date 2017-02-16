@@ -9,6 +9,8 @@ const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
+const clipboardHelper = require("devtools/shared/platform/clipboard");
+const { HarExporter } = require("./har/har-exporter");
 const { L10N } = require("./l10n");
 const {
   formDataURI,
@@ -20,12 +22,6 @@ const {
   getSelectedRequest,
   getSortedRequests,
 } = require("./selectors/index");
-
-loader.lazyRequireGetter(this, "HarExporter",
-  "devtools/client/netmonitor/har/har-exporter", true);
-
-loader.lazyServiceGetter(this, "clipboardHelper",
-  "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
 function RequestListContextMenu({
   cloneSelectedRequest,
