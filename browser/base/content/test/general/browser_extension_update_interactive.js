@@ -2,12 +2,15 @@ const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm
 
 const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
 const ID = "update@tests.mozilla.org";
+const ID_LEGACY = "legacy_update@tests.mozilla.org";
 
 registerCleanupFunction(async function() {
-  let addon = await AddonManager.getAddonByID(ID);
-  if (addon) {
-    ok(false, `Addon ${ID} was still installed at the end of the test`);
-    addon.uninstall();
+  for (let id of [ID, ID_LEGACY]) {
+    let addon = await AddonManager.getAddonByID(id);
+    if (addon) {
+      ok(false, `Addon ${id} was still installed at the end of the test`);
+      addon.uninstall();
+    }
   }
 });
 
@@ -202,3 +205,43 @@ function checkOne(win, addon) {
 // Test "Find Updates" with both auto-update settings
 add_task(() => interactiveUpdateTest(true, checkOne));
 add_task(() => interactiveUpdateTest(false, checkOne));
+
+// Check that an update from a legacy extension to a webextensino
+// does not display a prompt
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [
+    // Point updates to the local mochitest server
+    ["extensions.update.url", `${URL_BASE}/browser_webext_update.json`],
+  ]});
+
+  // Navigate away to ensure that BrowserOpenAddonMgr() opens a new tab
+  gBrowser.selectedBrowser.loadURI("about:robots");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  // Install initial version of the test extension
+  let addon = await promiseInstallAddon(`${URL_BASE}/browser_legacy.xpi`);
+  ok(addon, "Addon was installed");
+  is(addon.version, "1.1", "Version 1 of the addon is installed");
+
+  // Go to Extensions in about:addons
+  let win = await BrowserOpenAddonsMgr("addons://list/extension");
+
+  let sawPopup = false;
+  PopupNotifications.panel.addEventListener("popupshown",
+                                            () => sawPopup = true,
+                                            {once: true});
+
+  // Trigger an update check, we should see the update get applied
+  let updatePromise = promiseInstallEvent(addon, "onInstallEnded");
+  win.gViewController.doCommand("cmd_findAllUpdates");
+  await updatePromise;
+
+  addon = await AddonManager.getAddonByID(ID_LEGACY);
+  is(addon.version, "2.0", "Should have upgraded");
+
+  ok(!sawPopup, "Should not have seen a permission notification");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  addon.uninstall();
+  await SpecialPowers.popPrefEnv();
+});
