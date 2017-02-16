@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2011 The Chromium Authors. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,9 +30,6 @@
 
 // This file is used for both Linux and Android.
 
-/*
-# vim: sw=2
-*/
 #include <stdio.h>
 #include <math.h>
 
@@ -74,14 +73,12 @@
 
 using namespace mozilla;
 
-// All accesses to these two variables are on the main thread, so no locking is
+// All accesses to this variable are on the main thread, so no locking is
 // needed.
-static bool gIsSigprofHandlerInstalled;
 static struct sigaction gOldSigprofHandler;
 
-// All accesses to these two variables are on the main thread, so no locking is
+// All accesses to this variable are on the main thread, so no locking is
 // needed.
-static bool gHasSigprofSenderLaunched;
 static pthread_t gSigprofSenderThread;
 
 #if defined(USE_LUL_STACKWALK)
@@ -381,8 +378,7 @@ PlatformStart(double aInterval)
   gRssMemory = 0;
   gUssMemory = 0;
   if (sem_init(&gSignalHandlingDone, /* pshared: */ 0, /* value: */ 0) != 0) {
-    LOG("Error initializing semaphore");
-    return;
+    MOZ_CRASH("Error initializing semaphore");
   }
 
   // Request profiling signals.
@@ -392,11 +388,9 @@ PlatformStart(double aInterval)
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
   if (sigaction(SIGPROF, &sa, &gOldSigprofHandler) != 0) {
-    LOG("Error installing signal");
-    return;
+    MOZ_CRASH("Error installing signal");
   }
   LOG("Signal installed");
-  gIsSigprofHandlerInstalled = true;
 
 #if defined(USE_LUL_STACKWALK)
   // Switch into unwind mode.  After this point, we can't add or
@@ -411,13 +405,10 @@ PlatformStart(double aInterval)
   }
 #endif
 
-  // Start a thread that sends SIGPROF signal to VM thread.
-  // Sending the signal ourselves instead of relying on itimer provides
-  // much better accuracy.
-  MOZ_ASSERT(!gIsActive);
-  gIsActive = true;
-  if (pthread_create(&gSigprofSenderThread, NULL, SigprofSender, NULL) == 0) {
-    gHasSigprofSenderLaunched = true;
+  // Start a thread that sends SIGPROF signal to VM thread. Sending the signal
+  // ourselves instead of relying on itimer provides much better accuracy.
+  if (pthread_create(&gSigprofSenderThread, NULL, SigprofSender, NULL) != 0) {
+    MOZ_CRASH("pthread_create failed");
   }
   LOG("Profiler thread started");
 }
@@ -427,23 +418,14 @@ PlatformStop()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(gIsActive);
-  gIsActive = false;
-
   gIntervalMicro = 0;
 
-  // Wait for signal sender termination (it will exit after setting
-  // active_ to false).
-  if (gHasSigprofSenderLaunched) {
-    pthread_join(gSigprofSenderThread, NULL);
-    gHasSigprofSenderLaunched = false;
-  }
+  // Wait for SigprofSender() termination (SigprofSender() will exit because
+  // gIsActive has been set to false).
+  pthread_join(gSigprofSenderThread, NULL);
 
   // Restore old signal handler
-  if (gIsSigprofHandlerInstalled) {
-    sigaction(SIGPROF, &gOldSigprofHandler, 0);
-    gIsSigprofHandlerInstalled = false;
-  }
+  sigaction(SIGPROF, &gOldSigprofHandler, 0);
 }
 
 #if defined(GP_OS_android)
