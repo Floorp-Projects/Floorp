@@ -6182,7 +6182,7 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
   }
 
   /* Allows us to access dimension getters by index. */
-  float coords[2];
+  float transformOrigin[2];
   TransformReferenceBox::DimensionGetter dimensionGetter[] =
     { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
   TransformReferenceBox::DimensionGetter offsetGetter[] =
@@ -6192,33 +6192,35 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
     /* If the transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
-    const nsStyleCoord &coord = display->mTransformOrigin[index];
-    if (coord.GetUnit() == eStyleUnit_Calc) {
-      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
-      coords[index] =
+    const nsStyleCoord& originValue  = display->mTransformOrigin[index];
+    if (originValue.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = originValue.GetCalcValue();
+      transformOrigin[index] =
         NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
           calc->mPercent +
         NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
-    } else if (coord.GetUnit() == eStyleUnit_Percent) {
-      coords[index] =
+    } else if (originValue.GetUnit() == eStyleUnit_Percent) {
+      transformOrigin[index] =
         NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
-        coord.GetPercentValue();
+        originValue.GetPercentValue();
     } else {
-      MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-      coords[index] =
-        NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
+      MOZ_ASSERT(originValue.GetUnit() == eStyleUnit_Coord,
+                 "unexpected unit");
+      transformOrigin[index] =
+        NSAppUnitsToFloatPixels(originValue.GetCoordValue(),
+                                aAppUnitsPerPixel);
     }
 
     if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
       // SVG frames (unlike other frames) have a reference box that can be (and
       // typically is) offset from the TopLeft() of the frame. We need to
       // account for that here.
-      coords[index] +=
+      transformOrigin[index] +=
         NSAppUnitsToFloatPixels((refBox.*offsetGetter[index])(), aAppUnitsPerPixel);
     }
   }
 
-  return Point3D(coords[0], coords[1],
+  return Point3D(transformOrigin[0], transformOrigin[1],
                  NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
                                          aAppUnitsPerPixel));
 }
@@ -6385,12 +6387,12 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   bool dummyBool;
   Matrix4x4 result;
   // Call IsSVGTransformed() regardless of the value of
-  // disp->mSpecifiedTransform, since we still need any transformFromSVGParent.
-  Matrix svgTransform, transformFromSVGParent;
+  // disp->mSpecifiedTransform, since we still need any
+  // parentsChildrenOnlyTransform.
+  Matrix svgTransform, parentsChildrenOnlyTransform;
   bool hasSVGTransforms =
-    frame && frame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
-  bool hasTransformFromSVGParent =
-    hasSVGTransforms && !transformFromSVGParent.IsIdentity();
+    frame && frame->IsSVGTransformed(&svgTransform,
+                                     &parentsChildrenOnlyTransform);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
   if (aProperties.mTransformList) {
     result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
@@ -6407,47 +6409,36 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = Matrix4x4::From2D(svgTransform);
   }
 
+  // Apply any translation due to 'transform-origin' and/or 'transform-box':
+  result.ChangeBasis(aProperties.mToTransformOrigin);
+
+  // See the comment for nsSVGContainerFrame::HasChildrenOnlyTransform for
+  // an explanation of what children-only transforms are.
+  bool parentHasChildrenOnlyTransform =
+    hasSVGTransforms && !parentsChildrenOnlyTransform.IsIdentity();
+
+  if (parentHasChildrenOnlyTransform) {
+    float pixelsPerCSSPx =
+      frame->PresContext()->AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
+    parentsChildrenOnlyTransform._31 *= pixelsPerCSSPx;
+    parentsChildrenOnlyTransform._32 *= pixelsPerCSSPx;
+
+    Point3D frameOffset(
+      NSAppUnitsToFloatPixels(-frame->GetPosition().x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(-frame->GetPosition().y, aAppUnitsPerPixel),
+      0);
+    Matrix4x4 parentsChildrenOnlyTransform3D =
+      Matrix4x4::From2D(parentsChildrenOnlyTransform).ChangeBasis(frameOffset);
+
+    result *= parentsChildrenOnlyTransform3D;
+  }
 
   Matrix4x4 perspectiveMatrix;
   bool hasPerspective = aFlags & INCLUDE_PERSPECTIVE;
   if (hasPerspective) {
-    hasPerspective = ComputePerspectiveMatrix(frame, aAppUnitsPerPixel,
-                                              perspectiveMatrix);
-  }
-
-  if (!hasSVGTransforms || !hasTransformFromSVGParent) {
-    // This is a simplification of the following |else| block, the
-    // simplification being possible because we don't need to apply
-    // mToTransformOrigin between two transforms.
-    result.ChangeBasis(aProperties.mToTransformOrigin);
-  } else {
-    Point3D refBoxOffset(NSAppUnitsToFloatPixels(refBox.X(), aAppUnitsPerPixel),
-                         NSAppUnitsToFloatPixels(refBox.Y(), aAppUnitsPerPixel),
-                         0);
-    // We have both a transform and children-only transform. The
-    // 'transform-origin' must apply between the two, so we need to apply it
-    // now before we apply transformFromSVGParent. Since mToTransformOrigin is
-    // relative to the frame's TopLeft(), we need to convert it to SVG user
-    // space by subtracting refBoxOffset. (Then after applying
-    // transformFromSVGParent we have to reapply refBoxOffset below.)
-    result.ChangeBasis(aProperties.mToTransformOrigin - refBoxOffset);
-
-    // Now apply the children-only transforms, converting the translation
-    // components to device pixels:
-    float pixelsPerCSSPx =
-      frame->PresContext()->AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
-    transformFromSVGParent._31 *= pixelsPerCSSPx;
-    transformFromSVGParent._32 *= pixelsPerCSSPx;
-    result = result * Matrix4x4::From2D(transformFromSVGParent);
-
-    // Similar to the code in the |if| block above, but since we've accounted
-    // for mToTransformOrigin so we don't include that. We also need to reapply
-    // refBoxOffset.
-    result.ChangeBasis(refBoxOffset);
-  }
-
-  if (hasPerspective) {
-    result = result * perspectiveMatrix;
+    if (ComputePerspectiveMatrix(frame, aAppUnitsPerPixel, perspectiveMatrix)) {
+      result *= perspectiveMatrix;
+    }
   }
 
   if ((aFlags & INCLUDE_PRESERVE3D_ANCESTORS) &&
