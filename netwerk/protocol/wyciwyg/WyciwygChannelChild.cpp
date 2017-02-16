@@ -703,7 +703,7 @@ WyciwygChannelChild::WriteToCacheEntry(const nsAString & aData)
   size_t charsRemaining = aData.Length();
   do {
     size_t chunkSize = std::min(charsRemaining, kMaxMessageSize);
-    SendWriteToCacheEntry(PromiseFlatString(Substring(aData, curIndex, chunkSize)));
+    SendWriteToCacheEntry(Substring(aData, curIndex, chunkSize));
 
     charsRemaining -= chunkSize;
     curIndex += chunkSize;
