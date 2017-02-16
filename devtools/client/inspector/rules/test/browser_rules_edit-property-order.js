@@ -56,7 +56,7 @@ add_task(function* () {
   info("Disabling the first property too and checking the applied style");
   yield togglePropStatus(view, firstProp);
 
-  is((yield getValue("#testid", "background-color")), "transparent",
+  is((yield getValue("#testid", "background-color")), "rgba(0, 0, 0, 0)",
      "After disabling both properties, value should be empty.");
 
   info("Re-enabling the second propertyt and checking the applied style");
