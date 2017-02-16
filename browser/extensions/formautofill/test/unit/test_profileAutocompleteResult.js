@@ -12,11 +12,17 @@ let matchingProfiles = [{
   organization: "Mozilla",
   "street-address": "331 E. Evelyn Avenue",
   tel: "1-650-903-0800",
+}, {
+  guid: "test-guid-3",
+  organization: "",
+  "street-address": "321, No Name St.",
+  tel: "1-000-000-0000",
 }];
 
 let allFieldNames = ["street-address", "organization", "tel"];
 
 let testCases = [{
+  description: "Focus on an `organization` field",
   options: {},
   matchingProfiles,
   allFieldNames,
@@ -46,6 +52,7 @@ let testCases = [{
     }],
   },
 }, {
+  description: "Focus on an `tel` field",
   options: {},
   matchingProfiles,
   allFieldNames,
@@ -72,9 +79,19 @@ let testCases = [{
         secondary: "331 E. Evelyn Avenue",
       }),
       image: "",
+    }, {
+      value: "1-000-000-0000",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[2]),
+      label: JSON.stringify({
+        primary: "1-000-000-0000",
+        secondary: "321, No Name St.",
+      }),
+      image: "",
     }],
   },
 }, {
+  description: "Focus on an `street-address` field",
   options: {},
   matchingProfiles,
   allFieldNames,
@@ -101,9 +118,19 @@ let testCases = [{
         secondary: "Mozilla",
       }),
       image: "",
+    }, {
+      value: "321, No Name St.",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[2]),
+      label: JSON.stringify({
+        primary: "321, No Name St.",
+        secondary: "1-000-000-0000",
+      }),
+      image: "",
     }],
   },
 }, {
+  description: "No matching profiles",
   options: {},
   matchingProfiles: [],
   allFieldNames,
@@ -115,6 +142,7 @@ let testCases = [{
     items: [],
   },
 }, {
+  description: "Search with failure",
   options: {resultCode: Ci.nsIAutoCompleteResult.RESULT_FAILURE},
   matchingProfiles: [],
   allFieldNames,
@@ -128,13 +156,14 @@ let testCases = [{
 }];
 
 add_task(function* test_all_patterns() {
-  testCases.forEach(pattern => {
-    let actual = new ProfileAutoCompleteResult(pattern.searchString,
-                                               pattern.fieldName,
-                                               pattern.allFieldNames,
-                                               pattern.matchingProfiles,
-                                               pattern.options);
-    let expectedValue = pattern.expected;
+  testCases.forEach(testCase => {
+    do_print("Starting testcase: " + testCase.description);
+    let actual = new ProfileAutoCompleteResult(testCase.searchString,
+                                               testCase.fieldName,
+                                               testCase.allFieldNames,
+                                               testCase.matchingProfiles,
+                                               testCase.options);
+    let expectedValue = testCase.expected;
     equal(actual.searchResult, expectedValue.searchResult);
     equal(actual.defaultIndex, expectedValue.defaultIndex);
     equal(actual.matchCount, expectedValue.items.length);
