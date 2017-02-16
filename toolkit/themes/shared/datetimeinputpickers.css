@@ -171,6 +171,16 @@ button.month-year.active::after {
   transition: none;
 }
 
+.order-month-year > #spinner-month,
+.order-year-month > #spinner-year {
+  order: 1;
+}
+
+.order-month-year > #spinner-year,
+.order-year-month > #spinner-month {
+  order: 2;
+}
+
 .calendar-container {
   cursor: default;
   display: flex;
