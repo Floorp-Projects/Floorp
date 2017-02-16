@@ -28,7 +28,7 @@ BEGIN_TEST(testGCGrayMarking)
 
     InitGrayRootTracer();
 
-    bool ok = TestMarking() && TestWeakMaps();
+    bool ok = TestMarking() && TestWeakMaps() && TestCCWs();
 
     global1 = nullptr;
     global2 = nullptr;
@@ -49,7 +49,7 @@ TestMarking()
     JSObject* crossTarget = AllocTargetObject();
     CHECK(crossTarget);
 
-    JSObject* crossSource = AllocCrossCompartmentSourceObject(crossTarget);
+    JSObject* crossSource = GetCrossCompartmentWrapper(crossTarget);
     CHECK(crossSource);
 
     // Test GC with black roots marks objects black.
@@ -279,6 +279,56 @@ TestWeakMaps()
     return true;
 }
 
+bool
+TestCCWs()
+{
+    RootedObject target(cx, AllocTargetObject());
+    CHECK(target);
+
+    // Test getting a new wrapper doesn't return a gray wrapper.
+
+    JSObject* wrapper = GetCrossCompartmentWrapper(target);
+    CHECK(wrapper);
+    CHECK(!IsMarkedGray(wrapper));
+
+    // Test getting an existing wrapper doesn't return a gray wrapper.
+
+    grayRoots.grayRoot1 = wrapper;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(wrapper));
+    CHECK(IsMarkedBlack(target));
+
+    CHECK(GetCrossCompartmentWrapper(target) == wrapper);
+    CHECK(!IsMarkedGray(wrapper));
+
+    // Test getting an existing wrapper doesn't return a gray wrapper
+    // during incremental GC.
+
+    JS_GC(cx);
+    CHECK(IsMarkedGray(wrapper));
+    CHECK(IsMarkedBlack(target));
+
+    JS_SetGCParameter(cx, JSGC_MODE, JSGC_MODE_INCREMENTAL);
+    JS::PrepareForFullGC(cx);
+    js::SliceBudget budget(js::WorkBudget(1));
+    cx->runtime()->gc.startDebugGC(GC_NORMAL, budget);
+    CHECK(JS::IsIncrementalGCInProgress(cx));
+
+    CHECK(!IsMarkedBlack(wrapper));
+    CHECK(wrapper->zone()->isGCMarkingBlack());
+
+    CHECK(GetCrossCompartmentWrapper(target) == wrapper);
+    CHECK(IsMarkedBlack(wrapper));
+
+    JS::FinishIncrementalGC(cx, JS::gcreason::API);
+
+    grayRoots.grayRoot1 = nullptr;
+    grayRoots.grayRoot2 = nullptr;
+
+    return true;
+}
+
 JS::PersistentRootedObject global1;
 JS::PersistentRootedObject global2;
 
@@ -354,7 +404,7 @@ AllocSameCompartmentSourceObject(JSObject* target)
 }
 
 JSObject*
-AllocCrossCompartmentSourceObject(JSObject* target)
+GetCrossCompartmentWrapper(JSObject* target)
 {
     MOZ_ASSERT(target->compartment() == global1->compartment());
     JS::RootedObject obj(cx, target);
