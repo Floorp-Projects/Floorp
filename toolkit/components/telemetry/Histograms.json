@@ -257,6 +257,24 @@
     "high": 1000,
     "n_buckets": 50
   },
+  "COMPOSITOR_ANIMATION_DURATION" : {
+    "expires_in_version": "58",
+    "description": "Duration of animations running on the compositor in milliseconds",
+    "kind": "exponential",
+    "high": 20000,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1339220]
+  },
+  "COMPOSITOR_ANIMATION_MAX_LAYER_AREA" : {
+    "expires_in_version": "58",
+    "description": "High-watermark of layer area affected during a compositor animation. Units are layer pixels squared.",
+    "kind": "exponential",
+    "high": 8294400,
+    "n_buckets": 50,
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1339220]
+  },
   "CONTENT_PROCESS_LAUNCH_TIME_MS" : {
     "alert_emails": ["bsmedberg@mozilla.com", "mconley@mozilla.com"],
     "expires_in_version": "57",
