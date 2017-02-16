@@ -40,6 +40,10 @@ nsPoint
 ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
                                          const nsRect& aRefBox)
 {
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle ||
+             aBasicShape->GetShapeType() == StyleBasicShapeType::Ellipse,
+             "The basic shape must be circle() or ellipse!");
+
   nsPoint topLeft, anchor;
   nsSize size(aRefBox.Size());
   nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape->GetPosition(),
@@ -53,6 +57,9 @@ ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle,
+             "The basic shape must be circle()!");
+
   const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
   nscoord r = 0;
@@ -82,6 +89,9 @@ ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Ellipse,
+             "The basic shape must be ellipse()!");
+
   const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
   nsSize radii;
