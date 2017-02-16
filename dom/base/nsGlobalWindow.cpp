@@ -14326,6 +14326,18 @@ nsPIDOMWindowOuter::SetLargeAllocStatus(LargeAllocStatus aStatus)
   mLargeAllocStatus = aStatus;
 }
 
+bool
+nsPIDOMWindowOuter::IsTopLevelWindow()
+{
+  return nsGlobalWindow::Cast(this)->IsTopLevelWindow();
+}
+
+bool
+nsPIDOMWindowOuter::HadOriginalOpener() const
+{
+  return nsGlobalWindow::Cast(this)->HadOriginalOpener();
+}
+
 void
 nsGlobalWindow::ReportLargeAllocStatus()
 {
