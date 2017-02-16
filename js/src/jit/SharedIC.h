@@ -2392,8 +2392,8 @@ class ICGetProp_Generic : public ICMonitoredStub
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
         ICStub* firstMonitorStub_;
       public:
-        explicit Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub)
-          : ICStubCompiler(cx, ICStub::GetProp_Generic, engine),
+        explicit Compiler(JSContext* cx, ICStub* firstMonitorStub)
+          : ICStubCompiler(cx, ICStub::GetProp_Generic, ICStubEngine::Baseline),
             firstMonitorStub_(firstMonitorStub)
         {}
 
