@@ -22,13 +22,12 @@ function* testResizingInIframe(inspector, view, testActor) {
   yield selectNodeInIframe2("div", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = view.doc.querySelector(".old-boxmodel-size > span");
+  let sizeElt = view.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "400\u00D7200");
 
   info("Listening for box model view changes and modifying its size");
-  let onUpdated = waitForUpdate(inspector);
   yield setStyleInIframe2(testActor, "div", "width", "200px");
-  yield onUpdated;
+  yield waitForUpdate(inspector);
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
@@ -47,13 +46,12 @@ function* testReflowsAfterIframeDeletion(inspector, view, testActor) {
   yield selectNodeInIframe1("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = view.doc.querySelector(".old-boxmodel-size > span");
+  let sizeElt = view.document.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100\u00D7100");
 
   info("Listening for box model view changes and modifying its size");
-  let onUpdated = waitForUpdate(inspector);
   yield setStyleInIframe1(testActor, "p", "width", "200px");
-  yield onUpdated;
+  yield waitForUpdate(inspector);
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
