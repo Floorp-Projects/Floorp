@@ -19,7 +19,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
                                    EventMessage aEventMessage,
-                                   nsInvalidateRequestList* aInvalidateRequests,
+                                   nsTArray<nsRect>* aInvalidateRequests,
                                    uint64_t aTransactionId,
                                    DOMHighResTimeStamp aTimeStamp)
   : Event(aOwner, aPresContext, aEvent)
@@ -28,7 +28,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
     mEvent->mMessage = aEventMessage;
   }
   if (aInvalidateRequests) {
-    mInvalidateRequests.AppendElements(Move(aInvalidateRequests->mRequests));
+    mInvalidateRequests.SwapElements(*aInvalidateRequests);
   }
 
   mTransactionId = aTransactionId;
@@ -47,7 +47,7 @@ NotifyPaintEvent::GetRegion(SystemCallerGuarantee)
 {
   nsRegion r;
   for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
-    r.Or(r, mInvalidateRequests[i].mRect);
+    r.Or(r, mInvalidateRequests[i]);
     r.SimplifyOutward(10);
   }
   return r;
@@ -109,8 +109,7 @@ NotifyPaintEvent::Serialize(IPC::Message* aMsg,
   uint32_t length = mInvalidateRequests.Length();
   IPC::WriteParam(aMsg, length);
   for (uint32_t i = 0; i < length; ++i) {
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mRect);
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mFlags);
+    IPC::WriteParam(aMsg, mInvalidateRequests[i]);
   }
 }
 
@@ -123,9 +122,8 @@ NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &length), false);
   mInvalidateRequests.SetCapacity(length);
   for (uint32_t i = 0; i < length; ++i) {
-    nsInvalidateRequestList::Request req;
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mRect), false);
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mFlags), false);
+    nsRect req;
+    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req), false);
     mInvalidateRequests.AppendElement(req);
   }
 
@@ -155,7 +153,7 @@ NS_NewDOMNotifyPaintEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
                           EventMessage aEventMessage,
-                          nsInvalidateRequestList* aInvalidateRequests,
+                          nsTArray<nsRect>* aInvalidateRequests,
                           uint64_t aTransactionId,
                           DOMHighResTimeStamp aTimeStamp)
 {
