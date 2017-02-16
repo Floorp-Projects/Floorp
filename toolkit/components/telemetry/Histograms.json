@@ -1794,14 +1794,20 @@
     "description": "HTTP Proxy Type (none, http, socks)"
   },
   "HTTP_TRANSACTION_IS_SSL": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Whether a HTTP transaction was over SSL or not."
+    "description": "Whether an HTTP request occurred over TLS/SSL or not. Recorded during response processing for all requests."
   },
   "HTTP_PAGELOAD_IS_SSL": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Whether a HTTP base page load was over SSL or not."
+    "description": "Whether a HTTP page load was over SSL or not. Recorded during response processing for all first-party page loads."
   },
   "HTTP_TRANSACTION_USE_ALTSVC": {
     "expires_in_version": "never",
@@ -1814,6 +1820,9 @@
     "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
   },
   "HTTP_SCHEME_UPGRADE": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
@@ -2012,15 +2021,17 @@
   },
   "SSL_HANDSHAKE_VERSION": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1250568],
+    "bug_numbers": [1250568,1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Version (1=tls1, 2=tls1.1, 3=tls1.2, 4=tls1.3)"
+    "description": "Negotiated SSL Version (1=tls1, 2=tls1.1, 3=tls1.2, 4=tls1.3)"
   },
   "SSL_HANDSHAKE_RESULT": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1331280],
+    "bug_numbers": [1331280,1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 672,
@@ -2029,6 +2040,8 @@
   },
   "SSL_TIME_UNTIL_READY": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -2037,6 +2050,8 @@
   },
   "SSL_TIME_UNTIL_HANDSHAKE_FINISHED": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -2060,9 +2075,11 @@
   },
   "SSL_RESUMED_SESSION": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "complete TLS connect that used TLS Sesison Resumption"
+    "description": "complete TLS connect that used TLS Session Resumption (collected at same time as SSL_TIME_UNTIL_HANDSHAKE_FINISHED)"
   },
   "CERT_VALIDATION_HTTP_REQUEST_RESULT": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
@@ -9615,6 +9632,9 @@
     "description": "The number of sites for which the user has explicitly rejected saving logins"
   },
   "PWMGR_FORM_AUTOFILL_RESULT": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values" : 20,
@@ -9628,7 +9648,10 @@
     "description": "Time in days each saved login was last used"
   },
   "PWMGR_LOGIN_PAGE_SAFETY": {
-    "expires_in_version": "55",
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1340021],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
     "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)"
