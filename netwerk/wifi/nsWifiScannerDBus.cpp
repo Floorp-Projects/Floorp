@@ -15,8 +15,10 @@ nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoint
 
   mConnection =
     already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
-  MOZ_ASSERT(mConnection);
-  dbus_connection_set_exit_on_disconnect(mConnection, false);
+
+  if (mConnection) {
+    dbus_connection_set_exit_on_disconnect(mConnection, false);
+  }
 
   MOZ_COUNT_CTOR(nsWifiScannerDBus);
 }
@@ -29,6 +31,9 @@ nsWifiScannerDBus::~nsWifiScannerDBus()
 nsresult
 nsWifiScannerDBus::Scan()
 {
+  if (!mConnection) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   return SendMessage("org.freedesktop.NetworkManager",
                      "/org/freedesktop/NetworkManager",
                      "GetDevices");
