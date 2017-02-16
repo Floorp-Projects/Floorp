@@ -125,7 +125,7 @@ public:
   ~TiledLayerBufferComposite();
 
   bool UseTiles(const SurfaceDescriptorTiles& aTileDescriptors,
-                Compositor* aCompositor,
+                HostLayerManager* aLayerManager,
                 ISurfaceAllocator* aAllocator);
 
   void Clear();
