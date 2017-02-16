@@ -2,32 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
+#include "AndroidDecoderModule.h"
 #include "AndroidSurfaceTexture.h"
+#include "DurationMap.h"
 #include "FennecJNINatives.h"
 #include "GLImages.h"
-
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "VideoUtils.h"
 #include "VPXDecoder.h"
-
+#include "VideoUtils.h"
 #include "mozilla/Mutex.h"
-#include "nsThreadUtils.h"
-#include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
-
+#include "nsPromiseFlatString.h"
+#include "nsThreadUtils.h"
 #include "prlog.h"
-
-#include "DurationMap.h"
 #include <jni.h>
 
-
 #undef LOG
-#define LOG(arg, ...) MOZ_LOG(sAndroidDecoderModuleLog, \
-    mozilla::LogLevel::Debug, ("RemoteDataDecoder(%p)::%s: " arg, \
-      this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...)                                                          \
+  MOZ_LOG(sAndroidDecoderModuleLog,                                            \
+          mozilla::LogLevel::Debug,                                            \
+          ("RemoteDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -152,8 +148,8 @@ public:
 
     void HandleOutput(Sample::Param aSample) override
     {
-      UniquePtr<VideoData::Listener>
-        releaseSample(new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
+      UniquePtr<VideoData::Listener> releaseSample(
+        new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
 
       BufferInfo::LocalRef info = aSample->Info();
 
@@ -177,7 +173,8 @@ public:
 
       bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
       int64_t durationUs = 0;
-      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs) && !isEOS) {
+      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs)
+          && !isEOS) {
         return;
       }
 
