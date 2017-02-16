@@ -48,7 +48,7 @@ public:
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, mMaxTextureSize);
 
     WrRenderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, mWrApi, &wrRenderer)) {
+    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, nullptr, mWrApi, &wrRenderer)) {
       return;
     }
     MOZ_ASSERT(wrRenderer);
