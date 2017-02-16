@@ -12,6 +12,7 @@ add_task(function* () {
   yield selectNode("#attributes", inspector);
 
   yield testAddAttribute();
+  yield testCopyAttributeValue();
   yield testEditAttribute();
   yield testRemoveAttribute();
 
@@ -27,6 +28,20 @@ add_task(function* () {
 
     let hasAttribute = testActor.hasNode("#attributes.u-hidden");
     ok(hasAttribute, "attribute was successfully added");
+  }
+
+  function* testCopyAttributeValue() {
+    info("Testing 'Copy Attribute Value' and waiting for clipboard promise to resolve");
+    let copyAttributeValue = getMenuItem("node-menu-copy-attribute");
+
+    info("Triggering 'Copy Attribute Value' and waiting for clipboard to copy the value");
+    inspector.nodeMenuTriggerInfo = {
+      type: "attribute",
+      name: "data-edit",
+      value: "the"
+    };
+
+    yield waitForClipboardPromise(() => copyAttributeValue.click(), "the");
   }
 
   function* testEditAttribute() {
