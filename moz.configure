@@ -157,12 +157,18 @@ def build_backends(backends):
 
 set_config('BUILD_BACKENDS', build_backends)
 
+option('--disable-gtest-in-build',
+       help='Force disable building the gtest libxul during the build.',
+       when='--enable-compile-environment')
+
 # Determine whether to build the gtest xul. This happens in automation
 # on Desktop platforms with the exception of Windows PGO, where linking
 # xul-gtest.dll takes too long.
-@depends('MOZ_PGO', build_project, target, 'MOZ_AUTOMATION',
+@depends('MOZ_PGO', build_project, target, 'MOZ_AUTOMATION', '--disable-gtest-in-build',
          when='--enable-compile-environment')
-def build_gtest(pgo, build_project, target, automation):
+def build_gtest(pgo, build_project, target, automation, enabled):
+    if not enabled:
+        return None
     if (automation and build_project == 'browser' and
         not (pgo and target.os == 'WINNT')):
         return True
