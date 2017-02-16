@@ -12,8 +12,7 @@ import hashlib
 @memoize
 def _hash_path(path):
     with open(path) as fh:
-        return (hashlib.sha256(fh.read()).hexdigest(),
-                mozpath.normsep(path))
+        return hashlib.sha256(fh.read()).hexdigest()
 
 
 def hash_paths(base_path, patterns):
