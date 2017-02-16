@@ -138,6 +138,7 @@ this.ExtensionsUI = {
       }
     } else if (topic == "webextension-update-permissions") {
       let info = subject.wrappedJSObject;
+      info.type = "update";
       let strings = this._buildStrings(info);
 
       // If we don't prompt for any new permissions, just apply it
