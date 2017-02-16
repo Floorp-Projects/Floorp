@@ -110,6 +110,20 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
+void
+nsMenuChainItem::UpdateFollowAnchor()
+{
+  mFollowAnchor = mFrame->ShouldFollowAnchor(mCurrentRect);
+}
+
+void
+nsMenuChainItem::CheckForAnchorChange()
+{
+  if (mFollowAnchor) {
+    mFrame->CheckForAnchorChange(mCurrentRect);
+  }
+}
+
 bool nsXULPopupManager::sDevtoolsDisableAutoHide = false;
 
 const char* kPrefDevtoolsDisableAutoHide =
@@ -943,6 +957,8 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
     SetCaptureState(oldmenu);
   }
 
+  item->UpdateFollowAnchor();
+
   if (aSelectFirstItem) {
     nsMenuFrame* next = GetNextMenuItem(aPopupFrame, nullptr, true, false);
     aPopupFrame->SetCurrentMenuItem(next);
@@ -1225,14 +1241,6 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 }
 
 void
-nsXULPopupManager::HidePopup(nsIFrame* aFrame)
-{
-  nsMenuPopupFrame* popup = do_QueryFrame(aFrame);
-  if (popup)
-    HidePopup(aFrame->GetContent(), false, true, false, false);
-}
-
-void
 nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
 {
   // Don't close up immediately.
@@ -1362,6 +1370,41 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
   }
 
   HidePopupsInList(popupsToHide);
+}
+
+void
+nsXULPopupManager::UpdatePopupPositions(nsRefreshDriver* aRefreshDriver)
+{
+  if (!mPopups && !mNoHidePanels) {
+    return;
+  }
+
+  for (int32_t i = 0; i < 2; i++) {
+    nsMenuChainItem* item = i == 0 ? mPopups : mNoHidePanels;
+    while (item) {
+      if (item->Frame()->PresContext()->RefreshDriver() == aRefreshDriver) {
+        item->CheckForAnchorChange();
+      }
+
+      item = item->GetParent();
+    }
+  }
+}
+
+void
+nsXULPopupManager::UpdateFollowAnchor(nsMenuPopupFrame* aPopup)
+{
+  for (int32_t i = 0; i < 2; i++) {
+    nsMenuChainItem* item = i == 0 ? mPopups : mNoHidePanels;
+    while (item) {
+      if (item->Frame() == aPopup) {
+        item->UpdateFollowAnchor();
+        break;
+      }
+
+      item = item->GetParent();
+    }
+  }
 }
 
 void
