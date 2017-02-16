@@ -231,7 +231,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
             element->SetHasID();
         }
         if (aPrototype->mHasClassAttribute) {
-            element->SetMayHaveClass();
+            element->SetFlags(NODE_MAY_HAVE_CLASS);
         }
         if (aPrototype->mHasStyleAttribute) {
             element->SetMayHaveStyle();
@@ -405,7 +405,7 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
             element->SetHasID();
         }
         if (originalName->Equals(nsGkAtoms::_class)) {
-            element->SetMayHaveClass();
+            element->SetFlags(NODE_MAY_HAVE_CLASS);
         }
         if (originalName->Equals(nsGkAtoms::style)) {
             element->SetMayHaveStyle();
