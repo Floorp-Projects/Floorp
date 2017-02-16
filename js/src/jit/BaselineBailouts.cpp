@@ -137,6 +137,8 @@ struct BaselineStackBuilder
         header_->resumeFramePtr = nullptr;
         header_->resumeAddr = nullptr;
         header_->resumePC = nullptr;
+        header_->tryPC = nullptr;
+        header_->faultPC = nullptr;
         header_->monitorStub = nullptr;
         header_->numFrames = 0;
         header_->checkGlobalDeclarationConflicts = false;
@@ -729,14 +731,12 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         Value v = iter.read();
         if (v.isObject()) {
             envChain = &v.toObject();
-            if (fun &&
-                ((fun->needsCallObject() && envChain->is<CallObject>()) ||
-                 (fun->needsNamedLambdaEnvironment() &&
-                  !fun->needsCallObject() &&
-                  envChain->is<LexicalEnvironmentObject>() &&
-                  &envChain->as<LexicalEnvironmentObject>().scope() ==
-                  script->maybeNamedLambdaScope())))
-            {
+
+            // If Ion has updated env slot from UndefinedValue, it will be the
+            // complete initial environment, so we can set the HAS_INITIAL_ENV
+            // flag if needed.
+            if (fun && fun->needsFunctionEnvironmentObjects()) {
+                MOZ_ASSERT(fun->nonLazyScript()->initialEnvironmentShape());
                 MOZ_ASSERT(!fun->needsExtraBodyVarEnvironment());
                 flags |= BaselineFrame::HAS_INITIAL_ENV;
             }
@@ -1822,6 +1822,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     BaselineFrame* topFrame = GetTopBaselineFrame(cx);
     topFrame->setOverridePc(bailoutInfo->resumePC);
 
+    jsbytecode* faultPC = bailoutInfo->faultPC;
+    jsbytecode* tryPC = bailoutInfo->tryPC;
     uint32_t numFrames = bailoutInfo->numFrames;
     MOZ_ASSERT(numFrames > 0);
     BailoutKind bailoutKind = bailoutInfo->bailoutKind;
@@ -1937,6 +1939,13 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
 
         if (!ok)
             return false;
+    }
+
+    // If we are catching an exception, we need to unwind scopes.
+    // See |SettleOnTryNote|
+    if (cx->isExceptionPending() && faultPC) {
+        EnvironmentIter ei(cx, topFrame, faultPC);
+        UnwindEnvironment(cx, ei, tryPC);
     }
 
     JitSpew(JitSpew_BaselineBailouts,
