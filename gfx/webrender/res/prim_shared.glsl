@@ -40,9 +40,8 @@ varying vec3 vClipMaskUv;
 
 #ifdef WR_VERTEX_SHADER
 
-// These have to be multiples of WR_MAX_VERTEX_TEXTURE_WIDTH
-#define VECS_PER_LAYER             16
-#define VECS_PER_RENDER_TASK        4
+#define VECS_PER_LAYER             13
+#define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_GEOM          2
 
 uniform sampler2D sLayers;

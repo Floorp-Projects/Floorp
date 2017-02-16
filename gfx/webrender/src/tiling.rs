@@ -1328,7 +1328,6 @@ pub struct PackedLayer {
     pub inv_transform: WorldToLayerTransform,
     pub local_clip_rect: LayerRect,
     pub screen_vertices: [WorldPoint4D; 4],
-    _pad: [f32; 12], // round up to 16 vectors
 }
 
 impl Default for PackedLayer {
@@ -1338,7 +1337,6 @@ impl Default for PackedLayer {
             inv_transform: WorldToLayerTransform::identity(),
             local_clip_rect: LayerRect::zero(),
             screen_vertices: [WorldPoint4D::zero(); 4],
-            _pad: [0.0; 12],
         }
     }
 }

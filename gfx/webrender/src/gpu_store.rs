@@ -13,7 +13,7 @@ pub struct GpuStoreAddress(pub i32);
 pub trait GpuStoreLayout {
     fn image_format() -> ImageFormat;
 
-    fn texture_width() -> usize;
+    fn texture_width<T>() -> usize;
 
     fn texture_filter() -> TextureFilter;
 
@@ -33,7 +33,7 @@ pub trait GpuStoreLayout {
     }
 
     fn items_per_row<T>() -> usize {
-        Self::texture_width() / Self::texels_per_item::<T>()
+        Self::texture_width::<T>() / Self::texels_per_item::<T>()
     }
 }
 
