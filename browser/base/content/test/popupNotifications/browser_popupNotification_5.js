@@ -339,6 +339,8 @@ var tests = [
   // the currently displayed notification is a persistent one.
   { id: "Test#11",
     *run() {
+      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+
       function clickAnchor(notifyObj) {
         let anchor = document.getElementById(notifyObj.anchorID);
         EventUtils.synthesizeMouseAtCenter(anchor, {});
@@ -359,10 +361,11 @@ var tests = [
       notifyObj1.shownCallbackTriggered = false;
       notifyObj1.showingCallbackTriggered = false;
 
-      // Click the anchor. This should focus the primary button, but
-      // not call event callbacks on the notification object.
+      // Click the anchor. This should focus the closebutton
+      // (because it's the first focusable element), but not
+      // call event callbacks on the notification object.
       clickAnchor(notifyObj1);
-      is(document.activeElement, popup.childNodes[0].button);
+      is(document.activeElement, popup.childNodes[0].closebutton);
       ok(!notifyObj1.dismissalCallbackTriggered,
          "Should not have dismissed the notification");
       ok(!notifyObj1.shownCallbackTriggered,
