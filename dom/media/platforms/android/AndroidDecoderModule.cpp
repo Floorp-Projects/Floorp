@@ -178,15 +178,6 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   if (aParams.VideoConfig().HasAlpha()) {
     return nullptr;
   }
-  MediaFormat::LocalRef format;
-
-  const VideoInfo& config = aParams.VideoConfig();
-  NS_ENSURE_SUCCESS(
-    MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
-                                   config.mDisplay.width,
-                                   config.mDisplay.height,
-                                   &format),
-    nullptr);
 
   nsString drmStubId;
   if (mProxy) {
@@ -194,12 +185,7 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    RemoteDataDecoder::CreateVideoDecoder(config,
-                                          format,
-                                          aParams.mImageContainer,
-                                          drmStubId,
-                                          mProxy,
-                                          aParams.mTaskQueue);
+    RemoteDataDecoder::CreateVideoDecoder(aParams, drmStubId, mProxy);
   return decoder.forget();
 }
 
@@ -212,23 +198,15 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
     return nullptr;
   }
 
-  MediaFormat::LocalRef format;
-
   LOG("CreateAudioFormat with mimeType=%s, mRate=%d, channels=%d",
       config.mMimeType.Data(), config.mRate, config.mChannels);
-
-  NS_ENSURE_SUCCESS(MediaFormat::CreateAudioFormat(
-      config.mMimeType,
-      config.mRate,
-      config.mChannels,
-      &format), nullptr);
 
   nsString drmStubId;
   if (mProxy) {
     drmStubId = mProxy->GetMediaDrmStubId();
   }
-  RefPtr<MediaDataDecoder> decoder = RemoteDataDecoder::CreateAudioDecoder(
-    config, format, drmStubId, mProxy, aParams.mTaskQueue);
+  RefPtr<MediaDataDecoder> decoder =
+   RemoteDataDecoder::CreateAudioDecoder(aParams, drmStubId, mProxy);
   return decoder.forget();
 }
 

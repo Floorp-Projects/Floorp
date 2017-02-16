@@ -26,6 +26,15 @@ public:
   {
   }
 
+  explicit MediaDataDecoderProxy(
+    already_AddRefed<MediaDataDecoder> aProxyDecoder)
+    : mProxyDecoder(aProxyDecoder)
+#if defined(DEBUG)
+    , mIsShutdown(false)
+#endif
+  {
+  }
+
   void SetProxyTarget(MediaDataDecoder* aProxyDecoder)
   {
     MOZ_ASSERT(aProxyDecoder);
@@ -44,7 +53,6 @@ public:
   }
 
 private:
-
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;
 
