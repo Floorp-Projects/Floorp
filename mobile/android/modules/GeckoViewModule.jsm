@@ -37,7 +37,7 @@ class GeckoViewModule {
 
   get settings() {
     let view = this.window.arguments[0].QueryInterface(Ci.nsIAndroidView);
-    return view.settings;
+    return Object.freeze(view.settings);
   }
 
   get messageManager() {
