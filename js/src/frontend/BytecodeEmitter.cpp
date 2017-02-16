@@ -3512,7 +3512,7 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportCompileErrorNumberVA(pos.begin, JSREPORT_ERROR,
+    bool result = tokenStream()->reportCompileErrorNumberVA(nullptr, pos.begin, JSREPORT_ERROR,
                                                             errorNumber, args);
     va_end(args);
     return result;
@@ -3525,7 +3525,8 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportExtraWarningErrorNumberVA(pos.begin, errorNumber, args);
+    bool result = tokenStream()->reportExtraWarningErrorNumberVA(nullptr, pos.begin,
+                                                                 errorNumber, args);
     va_end(args);
     return result;
 }
@@ -3537,7 +3538,7 @@ BytecodeEmitter::reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...)
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictModeErrorNumberVA(pos.begin, sc->strict(),
+    bool result = tokenStream()->reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
                                                                errorNumber, args);
     va_end(args);
     return result;

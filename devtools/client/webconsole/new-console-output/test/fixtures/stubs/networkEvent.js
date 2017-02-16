@@ -26,7 +26,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777989897
+  "timeStamp": 1487022056850
 }));
 
 stubPreparedMessages.set("GET request eventTimings", new NetworkEventMessage({
@@ -50,7 +50,7 @@ stubPreparedMessages.set("GET request eventTimings", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777989897,
+  "timeStamp": 1487022056850,
   "totalTime": 7
 }));
 
@@ -67,7 +67,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777990639
+  "timeStamp": 1487022057746
 }));
 
 stubPreparedMessages.set("XHR GET request eventTimings", new NetworkEventMessage({
@@ -91,8 +91,8 @@ stubPreparedMessages.set("XHR GET request eventTimings", new NetworkEventMessage
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777990639,
-  "totalTime": 10
+  "timeStamp": 1487022057746,
+  "totalTime": 7
 }));
 
 stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
@@ -108,7 +108,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777991739
+  "timeStamp": 1487022058414
 }));
 
 stubPreparedMessages.set("XHR POST request eventTimings", new NetworkEventMessage({
@@ -132,18 +132,18 @@ stubPreparedMessages.set("XHR POST request eventTimings", new NetworkEventMessag
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1485777991739,
-  "totalTime": 9
+  "timeStamp": 1487022058414,
+  "totalTime": 11
 }));
 
 stubPackets.set("GET request", {
   "_type": "NetworkEvent",
-  "timeStamp": 1485777989897,
+  "timeStamp": 1487022056850,
   "node": null,
   "actor": "server1.conn0.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-01-30T12:06:29.897Z",
+  "startedDateTime": "2017-02-13T21:40:56.850Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
     "method": "GET"
@@ -185,12 +185,12 @@ stubPackets.set("GET request", {
 
 stubPackets.set("XHR GET request", {
   "_type": "NetworkEvent",
-  "timeStamp": 1485777990639,
+  "timeStamp": 1487022057746,
   "node": null,
   "actor": "server1.conn1.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-01-30T12:06:30.639Z",
+  "startedDateTime": "2017-02-13T21:40:57.746Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
     "method": "GET"
@@ -232,12 +232,12 @@ stubPackets.set("XHR GET request", {
 
 stubPackets.set("XHR POST request", {
   "_type": "NetworkEvent",
-  "timeStamp": 1485777991739,
+  "timeStamp": 1487022058414,
   "node": null,
   "actor": "server1.conn2.child1/netEvent30",
   "discardRequestBody": true,
   "discardResponseBody": true,
-  "startedDateTime": "2017-01-30T12:06:31.739Z",
+  "startedDateTime": "2017-02-13T21:40:58.414Z",
   "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
     "method": "POST"

@@ -134,13 +134,22 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
 {
     MOZ_ASSERT(clasp->isProxy());
 
-    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr));
-    if (!group)
-        return cx->alreadyReportedOOM();
+    JSCompartment* comp = cx->compartment();
+    RootedObjectGroup group(cx);
+    RootedShape shape(cx);
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0));
-    if (!shape)
-        return cx->alreadyReportedOOM();
+    // Try to look up the group and shape in the NewProxyCache.
+    if (!comp->newProxyCache.lookup(clasp, proto, group.address(), shape.address())) {
+        group = ObjectGroup::defaultNewGroup(cx, clasp, proto, nullptr);
+        if (!group)
+            return cx->alreadyReportedOOM();
+
+        shape = EmptyShape::getInitialShape(cx, clasp, proto, /* nfixed = */ 0);
+        if (!shape)
+            return cx->alreadyReportedOOM();
+
+        comp->newProxyCache.add(group, shape);
+    }
 
     gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
     debugCheckNewObject(group, shape, allocKind, heap);

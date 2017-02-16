@@ -50,7 +50,7 @@ global.getContainerForCookieStoreId = function(storeId) {
   }
 
   let containerId = storeId.substring(CONTAINER_STORE.length);
-  if (ContextualIdentityService.getIdentityFromId(containerId)) {
+  if (ContextualIdentityService.getPublicIdentityFromId(containerId)) {
     return parseInt(containerId, 10);
   }
 

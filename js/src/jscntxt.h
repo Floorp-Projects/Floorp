@@ -993,6 +993,13 @@ ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                        ErrorArgumentsType argumentsType,
                        JSErrorReport* reportp, va_list ap);
 
+extern bool
+ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
+                       void* userRef, const unsigned errorNumber,
+                       const char16_t** messageArgs,
+                       ErrorArgumentsType argumentsType,
+                       JSErrorNotes::Note* notep, va_list ap);
+
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void
 ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
@@ -1049,6 +1056,9 @@ ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNumber,
 #define ReportValueError3(cx,errorNumber,spindex,v,fallback,arg1,arg2)        \
     ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
                                     spindex, v, fallback, arg1, arg2))
+
+JSObject*
+CreateErrorNotesArray(JSContext* cx, JSErrorReport* report);
 
 } /* namespace js */
 

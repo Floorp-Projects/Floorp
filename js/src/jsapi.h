@@ -17,6 +17,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Variant.h"
 
+#include <iterator>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -36,6 +37,7 @@
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "js/Vector.h"
@@ -635,6 +637,7 @@ typedef enum JSExnType {
         JSEXN_WASMRUNTIMEERROR,
     JSEXN_ERROR_LIMIT,
     JSEXN_WARN = JSEXN_ERROR_LIMIT,
+    JSEXN_NOTE,
     JSEXN_LIMIT
 } JSExnType;
 
@@ -5389,65 +5392,43 @@ JS_ReportOutOfMemory(JSContext* cx);
 extern JS_PUBLIC_API(void)
 JS_ReportAllocationOverflow(JSContext* cx);
 
-class JSErrorReport
+/**
+ * Base class that implements parts shared by JSErrorReport and
+ * JSErrorNotes::Note.
+ */
+class JSErrorBase
 {
     // The (default) error message.
     // If ownsMessage_ is true, the it is freed in destructor.
     JS::ConstUTF8CharsZ message_;
 
-    // Offending source line without final '\n'.
-    // If ownsLinebuf__ is true, the buffer is freed in destructor.
-    const char16_t* linebuf_;
-
-    // Number of chars in linebuf_. Does not include trailing '\0'.
-    size_t linebufLength_;
-
-    // The 0-based offset of error token in linebuf_.
-    size_t tokenOffset_;
-
   public:
-    JSErrorReport()
-      : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
-        filename(nullptr), lineno(0), column(0),
-        flags(0), errorNumber(0),
-        exnType(0), isMuted(false),
-        ownsLinebuf_(false), ownsMessage_(false)
+    JSErrorBase()
+      : filename(nullptr), lineno(0), column(0),
+        errorNumber(0),
+        ownsMessage_(false)
     {}
 
-    ~JSErrorReport() {
-        freeLinebuf();
+    ~JSErrorBase() {
         freeMessage();
     }
 
-    const char*     filename;      /* source file name, URL, etc., or null */
-    unsigned        lineno;         /* source line number */
-    unsigned        column;         /* zero-based column index in line */
-    unsigned        flags;          /* error/warning, etc. */
-    unsigned        errorNumber;    /* the error number, e.g. see js.msg */
-    int16_t         exnType;        /* One of the JSExnType constants */
-    bool            isMuted : 1;    /* See the comment in ReadOnlyCompileOptions. */
+    // Source file name, URL, etc., or null.
+    const char* filename;
+
+    // Source line number.
+    unsigned lineno;
+
+    // Zero-based column index in line.
+    unsigned column;
+
+    // the error number, e.g. see js.msg.
+    unsigned errorNumber;
 
   private:
-    bool ownsLinebuf_ : 1;
     bool ownsMessage_ : 1;
 
   public:
-    const char16_t* linebuf() const {
-        return linebuf_;
-    }
-    size_t linebufLength() const {
-        return linebufLength_;
-    }
-    size_t tokenOffset() const {
-        return tokenOffset_;
-    }
-    void initOwnedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg) {
-        initBorrowedLinebuf(linebufArg, linebufLengthArg, tokenOffsetArg);
-        ownsLinebuf_ = true;
-    }
-    void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg, size_t tokenOffsetArg);
-    void freeLinebuf();
-
     const JS::ConstUTF8CharsZ message() const {
         return message_;
     }
@@ -5463,7 +5444,133 @@ class JSErrorReport
 
     JSString* newMessageString(JSContext* cx);
 
+  private:
     void freeMessage();
+};
+
+/**
+ * Notes associated with JSErrorReport.
+ */
+class JSErrorNotes
+{
+  public:
+    class Note : public JSErrorBase
+    {};
+
+  private:
+    // Stores pointers to each note.
+    js::Vector<js::UniquePtr<Note>, 1, js::SystemAllocPolicy> notes_;
+
+  public:
+    JSErrorNotes();
+    ~JSErrorNotes();
+
+    // Add an note to the given position.
+    bool addNoteASCII(JSContext* cx,
+                      const char* filename, unsigned lineno, unsigned column,
+                      JSErrorCallback errorCallback, void* userRef,
+                      const unsigned errorNumber, ...);
+    bool addNoteLatin1(JSContext* cx,
+                       const char* filename, unsigned lineno, unsigned column,
+                       JSErrorCallback errorCallback, void* userRef,
+                       const unsigned errorNumber, ...);
+    bool addNoteUTF8(JSContext* cx,
+                     const char* filename, unsigned lineno, unsigned column,
+                     JSErrorCallback errorCallback, void* userRef,
+                     const unsigned errorNumber, ...);
+
+    size_t length();
+
+    // Create a deep copy of notes.
+    js::UniquePtr<JSErrorNotes> copy(JSContext* cx);
+
+    class iterator : public std::iterator<std::input_iterator_tag, js::UniquePtr<Note>>
+    {
+        js::UniquePtr<Note>* note_;
+      public:
+        explicit iterator(js::UniquePtr<Note>* note = nullptr) : note_(note)
+        {}
+
+        bool operator==(iterator other) const {
+            return note_ == other.note_;
+        }
+        bool operator!=(iterator other) const {
+            return !(*this == other);
+        }
+        iterator& operator++() {
+            note_++;
+            return *this;
+        }
+        reference operator*() {
+            return *note_;
+        }
+    };
+    iterator begin();
+    iterator end();
+};
+
+/**
+ * Describes a single error or warning that occurs in the execution of script.
+ */
+class JSErrorReport : public JSErrorBase
+{
+    // Offending source line without final '\n'.
+    // If ownsLinebuf_ is true, the buffer is freed in destructor.
+    const char16_t* linebuf_;
+
+    // Number of chars in linebuf_. Does not include trailing '\0'.
+    size_t linebufLength_;
+
+    // The 0-based offset of error token in linebuf_.
+    size_t tokenOffset_;
+
+  public:
+    JSErrorReport()
+      : linebuf_(nullptr), linebufLength_(0), tokenOffset_(0),
+        notes(nullptr),
+        flags(0), exnType(0), isMuted(false),
+        ownsLinebuf_(false)
+    {}
+
+    ~JSErrorReport() {
+        freeLinebuf();
+    }
+
+    // Associated notes, or nullptr if there's no note.
+    js::UniquePtr<JSErrorNotes> notes;
+
+    // error/warning, etc.
+    unsigned flags;
+
+    // One of the JSExnType constants.
+    int16_t exnType;
+
+    // See the comment in ReadOnlyCompileOptions.
+    bool isMuted : 1;
+
+  private:
+    bool ownsLinebuf_ : 1;
+
+  public:
+    const char16_t* linebuf() const {
+        return linebuf_;
+    }
+    size_t linebufLength() const {
+        return linebufLength_;
+    }
+    size_t tokenOffset() const {
+        return tokenOffset_;
+    }
+    void initOwnedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
+                          size_t tokenOffsetArg) {
+        initBorrowedLinebuf(linebufArg, linebufLengthArg, tokenOffsetArg);
+        ownsLinebuf_ = true;
+    }
+    void initBorrowedLinebuf(const char16_t* linebufArg, size_t linebufLengthArg,
+                             size_t tokenOffsetArg);
+
+  private:
+    void freeLinebuf();
 };
 
 /*
