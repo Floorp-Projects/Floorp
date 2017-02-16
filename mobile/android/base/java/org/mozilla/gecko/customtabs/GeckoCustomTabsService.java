@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsService;
@@ -38,8 +39,15 @@ public class GeckoCustomTabsService extends CustomTabsService {
             Log.v(LOGTAG, "warming up...");
         }
 
-        GeckoService.startGecko(GeckoProfile.initFromArgs(this, null), null, getApplicationContext());
+        if (GeckoThread.isRunning()) {
+            return true;
+        }
 
+        final Intent intent = GeckoService.getIntentToStartGecko(this);
+        // Use a default profile for warming up Gecko.
+        final GeckoProfile profile = GeckoProfile.get(this);
+        GeckoService.setIntentProfile(intent, profile.getName(), profile.getDir().getAbsolutePath());
+        startService(intent);
         return true;
     }
 

@@ -24,11 +24,6 @@ CrashReporterChild::GetCrashReporter()
       reporters = &child->ManagedPCrashReporterChild();
       break;
     }
-    case GeckoProcessType_Plugin: {
-      PluginModuleChild* child = PluginModuleChild::GetChrome();
-      reporters = &child->ManagedPCrashReporterChild();
-      break;
-    }
     default:
       break;
   }

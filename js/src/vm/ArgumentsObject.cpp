@@ -430,6 +430,21 @@ ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj, HandleId id,
     return result.succeed();
 }
 
+/* static */ bool
+ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id, JSObject*)
+{
+    // Arguments might resolve indexes or Symbol.iterator.
+    if (!JSID_IS_ATOM(id))
+        return true;
+
+    JSAtom* atom = JSID_TO_ATOM(id);
+    uint32_t index;
+    if (atom->isIndex(&index))
+        return true;
+
+    return atom == names.length || atom == names.callee;
+}
+
 static bool
 MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
@@ -854,7 +869,7 @@ const ClassOps MappedArgumentsObject::classOps_ = {
     nullptr,                 /* setProperty */
     MappedArgumentsObject::obj_enumerate,
     MappedArgumentsObject::obj_resolve,
-    nullptr,                 /* mayResolve  */
+    ArgumentsObject::obj_mayResolve,
     ArgumentsObject::finalize,
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
@@ -891,7 +906,7 @@ const ClassOps UnmappedArgumentsObject::classOps_ = {
     nullptr,                 /* setProperty */
     UnmappedArgumentsObject::obj_enumerate,
     UnmappedArgumentsObject::obj_resolve,
-    nullptr,                 /* mayResolve  */
+    ArgumentsObject::obj_mayResolve,
     ArgumentsObject::finalize,
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */

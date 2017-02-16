@@ -196,18 +196,21 @@ PrintDocTreeAll(nsIDocShellTreeItem* aItem)
 /* mozilla::UITimerCallback                                       */
 /******************************************************************/
 
-class UITimerCallback final : public nsITimerCallback
+class UITimerCallback final :
+    public nsITimerCallback,
+    public nsINamed
 {
 public:
   UITimerCallback() : mPreviousCount(0) {}
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 private:
   ~UITimerCallback() = default;
   uint32_t mPreviousCount;
 };
 
-NS_IMPL_ISUPPORTS(UITimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(UITimerCallback, nsITimerCallback, nsINamed)
 
 // If aTimer is nullptr, this method always sends "user-interaction-inactive"
 // notification.
@@ -231,6 +234,19 @@ UITimerCallback::Notify(nsITimer* aTimer)
   }
   mPreviousCount = gMouseOrKeyboardEventCounter;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+UITimerCallback::GetName(nsACString& aName)
+{
+  aName.AssignASCII("UITimerCallback_timer");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UITimerCallback::SetName(const char* aName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /******************************************************************/

@@ -1220,8 +1220,8 @@ public abstract class GeckoApp
             final String args = intent.getStringExtra("args");
 
             sAlreadyLoaded = true;
-            GeckoThread.init(/* profile */ null, args, action,
-                             /* debugging */ ACTION_DEBUG.equals(action));
+            GeckoThread.initMainProcess(/* profile */ null, args,
+                                        /* debugging */ ACTION_DEBUG.equals(action));
 
             // Speculatively pre-fetch the profile in the background.
             ThreadUtils.postToBackgroundThread(new Runnable() {
@@ -2393,7 +2393,8 @@ public abstract class GeckoApp
     }
 
     public void showSDKVersionError() {
-        final String message = getString(R.string.unsupported_sdk_version, Build.CPU_ABI, Integer.toString(Build.VERSION.SDK_INT));
+        final String message = getString(R.string.unsupported_sdk_version,
+                HardwareUtils.getRealAbi(), Integer.toString(Build.VERSION.SDK_INT));
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 

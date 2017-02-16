@@ -60,7 +60,6 @@ class Transaction
 public:
   Transaction()
     : mTargetRotation(ROTATION_0)
-    , mSwapRequired(false)
     , mOpen(false)
     , mRotationChanged(false)
   {}
@@ -80,10 +79,6 @@ public:
     mTargetRotation = aRotation;
     mTargetOrientation = aOrientation;
   }
-  void MarkSyncTransaction()
-  {
-    mSwapRequired = true;
-  }
   void AddEdit(const Edit& aEdit)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
@@ -92,11 +87,6 @@ public:
   void AddEdit(const CompositableOperation& aEdit)
   {
     AddEdit(Edit(aEdit));
-  }
-  void AddPaint(const CompositableOperation& aPaint)
-  {
-    AddNoSwapPaint(Edit(aPaint));
-    mSwapRequired = true;
   }
 
   void AddNoSwapPaint(const CompositableOperation& aPaint)
@@ -122,7 +112,6 @@ public:
     mSimpleMutants.Clear();
     mDestroyedActors.Clear();
     mOpen = false;
-    mSwapRequired = false;
     mRotationChanged = false;
   }
 
@@ -148,7 +137,6 @@ public:
   gfx::IntRect mTargetBounds;
   ScreenRotation mTargetRotation;
   dom::ScreenOrientationInternal mTargetOrientation;
-  bool mSwapRequired;
 
 private:
   bool mOpen;
@@ -483,30 +471,26 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
 }
 
 static bool
-AddOpDestroy(Transaction* aTxn, const OpDestroy& op, bool synchronously)
+AddOpDestroy(Transaction* aTxn, const OpDestroy& op)
 {
   if (!aTxn->Opened()) {
     return false;
   }
 
   aTxn->mDestroyedActors.AppendElement(op);
-  if (synchronously) {
-    aTxn->MarkSyncTransaction();
-  }
-
   return true;
 }
 
 bool
-ShadowLayerForwarder::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
+ShadowLayerForwarder::DestroyInTransaction(PTextureChild* aTexture)
 {
-  return AddOpDestroy(mTxn, OpDestroy(aTexture), synchronously);
+  return AddOpDestroy(mTxn, OpDestroy(aTexture));
 }
 
 bool
 ShadowLayerForwarder::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return AddOpDestroy(mTxn, OpDestroy(aHandle), false);
+  return AddOpDestroy(mTxn, OpDestroy(aHandle));
 }
 
 void
@@ -526,9 +510,6 @@ ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aComposi
     CompositableOperation(
       aCompositable->GetIPCHandle(),
       OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
-  if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
-    mTxn->MarkSyncTransaction();
-  }
 }
 
 bool
@@ -719,22 +700,11 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_END);
 
-  if (mTxn->mSwapRequired) {
-    MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
-    RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(info)) {
-      MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
-      return false;
-    }
-  } else {
-    // If we don't require a swap we can call SendUpdateNoSwap which
-    // assumes that aReplies is empty (DEBUG assertion)
-    MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
-    RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
-    if (!mShadowManager->SendUpdateNoSwap(info)) {
-      MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
-      return false;
-    }
+  MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
+  RenderTraceScope rendertrace3("Forward Transaction", "000093");
+  if (!mShadowManager->SendUpdate(info)) {
+    MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
+    return false;
   }
 
   *aSent = true;

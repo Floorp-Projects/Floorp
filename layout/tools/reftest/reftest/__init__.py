@@ -34,6 +34,7 @@ PREF_ITEMS = (
     'ref-pref',
 )
 
+
 class ReftestManifest(object):
     """Represents a parsed reftest manifest.
 

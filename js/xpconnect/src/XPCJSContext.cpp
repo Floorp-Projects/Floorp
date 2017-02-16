@@ -179,7 +179,11 @@ public:
       }
   }
 
-  AsyncFreeSnowWhite() : mContinuation(false), mActive(false), mPurge(false) {}
+  AsyncFreeSnowWhite()
+    : Runnable("AsyncFreeSnowWhite")
+    , mContinuation(false)
+    , mActive(false)
+    , mPurge(false) {}
 
 public:
   bool mContinuation;
@@ -3609,7 +3613,7 @@ XPCJSContext::BeforeProcessTask(bool aMightBlock)
             // "while (condition) thread.processNextEvent(true)", in case the
             // condition is triggered here by a Promise "then" callback.
 
-            NS_DispatchToMainThread(new Runnable());
+            NS_DispatchToMainThread(new Runnable("Empty_microtask_runnable"));
         }
     }
 

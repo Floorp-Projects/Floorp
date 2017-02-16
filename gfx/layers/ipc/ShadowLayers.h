@@ -252,7 +252,7 @@ public:
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
-  bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
+  bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
