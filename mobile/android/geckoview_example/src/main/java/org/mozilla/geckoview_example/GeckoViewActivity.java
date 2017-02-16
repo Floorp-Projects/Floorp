@@ -44,7 +44,7 @@ public class GeckoViewActivity extends Activity {
 
         final GeckoProfile profile = GeckoProfile.get(getApplicationContext());
 
-        GeckoThread.init(profile, /* args */ null, /* action */ null, /* debugging */ false);
+        GeckoThread.initMainProcess(profile, /* args */ null, /* debugging */ false);
         GeckoThread.launch();
     }
 
