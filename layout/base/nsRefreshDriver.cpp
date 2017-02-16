@@ -70,6 +70,10 @@
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
@@ -1894,6 +1898,15 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
     presShell->ScheduleApproximateFrameVisibilityUpdateNow();
   }
+
+#ifdef MOZ_XUL
+  // Update any popups that may need to be moved or hidden due to their
+  // anchor changing.
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    pm->UpdatePopupPositions(this);
+  }
+#endif
 
   bool notifyIntersectionObservers = false;
   if (aNowTime >= mNextNotifyIntersectionObserversTick) {
