@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: #ifdef jail to whip a few platforms into the UNIX ideal.
- last mod: $Id: os_types.h 17712 2010-12-03 17:10:02Z xiphmont $
+ last mod: $Id: os_types.h 19098 2014-02-26 19:06:45Z giles $
 
  ********************************************************************/
 #ifndef _OS_TYPES_H
@@ -45,7 +45,7 @@ extern ogg_free_function_type *ogg_free_func;
 #define _ogg_realloc ogg_realloc_func
 #define _ogg_free ogg_free_func
 
-#if defined(_WIN32) 
+#if defined(_WIN32)
 
 #  if defined(__CYGWIN__)
 #    include <stdint.h>
