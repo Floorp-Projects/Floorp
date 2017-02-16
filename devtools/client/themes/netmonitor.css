@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "resource://devtools/client/shared/components/splitter/split-box.css";
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
 @import "resource://devtools/client/shared/components/tabs/tabbar.css";
@@ -85,6 +86,8 @@
 .request-list-container {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
 .request-list-empty-notice {
@@ -135,12 +138,8 @@
   flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
-
   --timings-scale: 1;
   --timings-rev-scale: 1;
-
-  /* Devtools panel view height - tabbar height - toolbar height */
-  height: calc(100vh - 48px);
 }
 
 .requests-menu-subitem {
@@ -149,6 +148,7 @@
   box-sizing: border-box;
   align-items: center;
   padding: 3px;
+  cursor: default;
 }
 
 .subitem-label {
@@ -757,10 +757,9 @@
 /* Custom request view */
 
 .custom-request-panel {
+  height: 100%;
   overflow: auto;
-  /* Full view hight - toolbar height */
-  height: calc(100vh - 24px);
-  padding: 6px 4px;
+  padding: 0 4px;
   background-color: var(--theme-sidebar-background);
 }
 
@@ -858,7 +857,7 @@
   border-color: rgba(0,0,0,0.2);
   cursor: default;
   pointer-events: none;
-  height: 100vh;
+  height: 100%;
 }
 
 .statistics-panel .charts-container {
@@ -872,12 +871,22 @@
   height: 100%;
 }
 
+.pie-table-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .statistics-panel .pie-chart-container {
   margin-inline-start: 3vw;
   margin-inline-end: 1vw;
 }
 
 .statistics-panel .table-chart-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 240px;
   margin-inline-start: 1vw;
   margin-inline-end: 3vw;
 }
@@ -922,6 +931,10 @@
   background: var(--theme-highlight-red);
 }
 
+.table-chart-row {
+  display: flex;
+}
+
 .table-chart-row-label[name=cached] {
   display: none;
 }
@@ -933,14 +946,22 @@
 
 .table-chart-row-label[name=label] {
   width: 7em;
+  text-align: start;
 }
 
 .table-chart-row-label[name=size] {
   width: 7em;
+  text-align: start;
 }
 
 .table-chart-row-label[name=time] {
   width: 7em;
+  text-align: start;
+}
+
+.table-chart-totals {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Firebug theme support for network charts */
@@ -1002,15 +1023,6 @@
     padding-left: 8px;
   }
 
-  .custom-request-panel {
-    height: auto;
-  }
-
-  #details-pane {
-    margin: 0 !important;
-    /* To prevent all the margin hacks to hide the sidebar. */
-  }
-
   .requests-menu-status {
     max-width: none;
     width: 10vw;
@@ -1048,11 +1060,13 @@
 
   .statistics-panel .charts-container {
     flex-direction: column;
+    /* Minus 4em for statistics back button width */
+    width: calc(100% - 4em);
   }
 
   .statistics-panel .splitter {
-    width: 100vw;
-    height: 0;
+    width: 100%;
+    height: 1px;
   }
 }
 
@@ -1263,40 +1277,22 @@
 }
 
 .network-details-panel {
+  width: 100%;
   height: 100%;
-}
-
-/*
- * FIXME: normal html block element cannot fill outer XUL element
- * This workaround should be removed after netmonitor is migrated to react
- */
-#network-table {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-flex: 1;
   overflow: hidden;
 }
 
-#react-network-details-panel-hook,
-#react-statistics-panel-hook,
-#splitter-adjustable-box {
+.split-box {
+  overflow: hidden;
+}
+
+html,
+body,
+.root,
+.network-monitor,
+.monitor-panel {
   display: flex;
   flex-direction: column;
-  min-width: 50px;
   height: 100%;
   overflow: hidden;
-}
-
-#splitter-adjustable-box[hidden=true] {
-  display: none;
-}
-
-#react-request-list-hook {
-  -moz-box-flex: 1;
-}
-
-#primed-cache-chart,
-#empty-cache-chart {
-  display: -moz-box;
-  -moz-box-flex: 1;
 }

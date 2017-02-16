@@ -29,11 +29,15 @@
 
 "use strict";
 
+this.EXPORTED_SYMBOLS = ["FormAutofillParent"];
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
@@ -41,6 +45,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileStorage",
                                   "resource://formautofill/ProfileStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
+
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 const ENABLED_PREF = "browser.formautofill.enabled";
@@ -63,6 +70,7 @@ FormAutofillParent.prototype = {
    * Initializes ProfileStorage and registers the message handler.
    */
   init() {
+    log.debug("init");
     let storePath = OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME);
     this._profileStore = new ProfileStorage(storePath);
     this._profileStore.initialize();
@@ -79,6 +87,7 @@ FormAutofillParent.prototype = {
   },
 
   observe(subject, topic, data) {
+    log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "advanced-pane-loaded": {
         let formAutofillPreferences = new FormAutofillPreferences();
@@ -111,6 +120,7 @@ FormAutofillParent.prototype = {
    * form autofill status changed.
    */
   _onStatusChanged() {
+    log.debug("_onStatusChanged: Status changed to", this._enabled);
     if (this._enabled) {
       Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
     } else {
@@ -199,5 +209,3 @@ FormAutofillParent.prototype = {
     target.sendAsyncMessage("FormAutofill:Profiles", profiles);
   },
 };
-
-this.EXPORTED_SYMBOLS = ["FormAutofillParent"];

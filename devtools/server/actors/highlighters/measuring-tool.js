@@ -5,7 +5,7 @@
 "use strict";
 
 const events = require("sdk/event/core");
-const { getCurrentZoom,
+const { getCurrentZoom, getWindowDimensions,
   setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const {
   CanvasFrameAnonymousContentHelper,
@@ -65,6 +65,7 @@ MeasuringToolHighlighter.prototype = {
       attributes: {
         "id": "root",
         "class": "root",
+        "hidden": "true",
       },
       prefix
     });
@@ -77,7 +78,6 @@ MeasuringToolHighlighter.prototype = {
         "class": "elements",
         width: "100%",
         height: "100%",
-        hidden: "true"
       },
       prefix
     });
@@ -157,23 +157,7 @@ MeasuringToolHighlighter.prototype = {
 
     let zoom = getCurrentZoom(window);
 
-    let { documentElement } = window.document;
-
-    let width = Math.max(documentElement.clientWidth,
-                         documentElement.scrollWidth,
-                         documentElement.offsetWidth);
-
-    let height = Math.max(documentElement.clientHeight,
-                          documentElement.scrollHeight,
-                          documentElement.offsetHeight);
-
-    let { body } = window.document;
-
-    // get the size of the content document despite the compatMode
-    if (body) {
-      width = Math.max(width, body.scrollWidth, body.offsetWidth);
-      height = Math.max(height, body.scrollHeight, body.offsetHeight);
-    }
+    let { width, height } = getWindowDimensions(window);
 
     let { coords } = this;
 
@@ -198,7 +182,7 @@ MeasuringToolHighlighter.prototype = {
       this.updateViewport();
     }
 
-    setIgnoreLayoutChanges(false, documentElement);
+    setIgnoreLayoutChanges(false, window.document.documentElement);
 
     this._rafID = window.requestAnimationFrame(() => this._update());
   },
@@ -232,7 +216,7 @@ MeasuringToolHighlighter.prototype = {
   show() {
     setIgnoreLayoutChanges(true);
 
-    this.getElement("elements").removeAttribute("hidden");
+    this.getElement("root").removeAttribute("hidden");
 
     this._update();
 
@@ -245,7 +229,7 @@ MeasuringToolHighlighter.prototype = {
     this.hideLabel("size");
     this.hideLabel("position");
 
-    this.getElement("elements").setAttribute("hidden", "true");
+    this.getElement("root").setAttribute("hidden", "true");
 
     this._cancelUpdate();
 
@@ -390,7 +374,7 @@ MeasuringToolHighlighter.prototype = {
   },
 
   updateViewport() {
-    let { scrollX, scrollY, devicePixelRatio } = this.env.window;
+    let { devicePixelRatio } = this.env.window;
     let { documentWidth, documentHeight, zoom } = this.coords;
 
     // Because `devicePixelRatio` is affected by zoom (see bug 809788),
@@ -401,13 +385,12 @@ MeasuringToolHighlighter.prototype = {
     // width we can actually assign: on retina, for instance, it would be 0.5,
     // where on non high dpi monitor would be 1.
     let minWidth = 1 / pixelRatio;
-    let strokeWidth = Math.min(minWidth, minWidth / zoom);
+    let strokeWidth = minWidth / zoom;
 
     this.getElement("root").setAttribute("style",
       `stroke-width:${strokeWidth};
        width:${documentWidth}px;
-       height:${documentHeight}px;
-       transform: translate(${-scrollX}px,${-scrollY}px)`);
+       height:${documentHeight}px;`);
   },
 
   updateGuides() {
@@ -549,10 +532,7 @@ MeasuringToolHighlighter.prototype = {
         }
         break;
       case "scroll":
-        setIgnoreLayoutChanges(true);
-        this.updateViewport();
-        setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
-
+        this.hideLabel("position");
         break;
       case "pagehide":
         this.destroy();

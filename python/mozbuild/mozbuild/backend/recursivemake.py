@@ -443,14 +443,11 @@ class RecursiveMakeBackend(CommonBackend):
 
         consumed = CommonBackend.consume_object(self, obj)
 
-        # CommonBackend handles XPIDLFile and TestManifest, but we want to do
+        # CommonBackend handles XPIDLFile, but we want to do
         # some extra things for them.
         if isinstance(obj, XPIDLFile):
             backend_file.xpt_name = '%s.xpt' % obj.module
             self._idl_dirs.add(obj.relobjdir)
-
-        elif isinstance(obj, TestManifest):
-            self._process_test_manifest(obj, backend_file)
 
         # If CommonBackend acknowledged the object, we're done with it.
         if consumed:
@@ -656,6 +653,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, ChromeManifestEntry):
             self._process_chrome_manifest_entry(obj, backend_file)
+
+        elif isinstance(obj, TestManifest):
+            self._process_test_manifest(obj, backend_file)
 
         else:
             return False

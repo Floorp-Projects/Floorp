@@ -6,8 +6,8 @@
 
 #include "mozilla/AnimationCollection.h"
 
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "nsAnimationManager.h" // For dom::CSSAnimation
 #include "nsPresContext.h"
 #include "nsTransitionManager.h" // For dom::CSSTransition

@@ -114,7 +114,7 @@ MozExternalRefCountType nsJAR::Release(void)
     delete this;
     return 0;
   }
-  else if (1 == count && mCache) {
+  if (1 == count && mCache) {
 #ifdef DEBUG
     nsresult rv =
 #endif

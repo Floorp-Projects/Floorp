@@ -9,7 +9,7 @@
 
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/RestyleManagerBase.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "nsChangeHint.h"
@@ -34,13 +34,11 @@ namespace mozilla {
 /**
  * Restyle manager for a Servo-backed style system.
  */
-class ServoRestyleManager : public RestyleManagerBase
+class ServoRestyleManager : public RestyleManager
 {
   friend class ServoStyleSet;
 public:
-  typedef RestyleManagerBase base_type;
-
-  NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
+  typedef RestyleManager base_type;
 
   explicit ServoRestyleManager(nsPresContext* aPresContext);
 
@@ -101,7 +99,10 @@ public:
   static void ClearDirtyDescendantsFromSubtree(Element* aElement);
 
 protected:
-  ~ServoRestyleManager() { MOZ_ASSERT(!mReentrantChanges); }
+  ~ServoRestyleManager() override
+  {
+    MOZ_ASSERT(!mReentrantChanges);
+  }
 
 private:
   /**

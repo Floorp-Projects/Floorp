@@ -9,15 +9,18 @@ this.EXPORTED_SYMBOLS = ["ProfileAutoCompleteResult"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillUtils",
-                                  "resource://formautofill/FormAutofillUtils.jsm");
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
+
 
 this.ProfileAutoCompleteResult = function(searchString,
                                           focusedFieldName,
                                           allFieldNames,
                                           matchingProfiles,
                                           {resultCode = null}) {
+  log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
   this.searchString = searchString;
   this._focusedFieldName = focusedFieldName;
   this._allFieldNames = allFieldNames;
