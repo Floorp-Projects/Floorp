@@ -9,9 +9,10 @@
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
 #include "MP4Decoder.h"
-#include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
+#include "PDMFactory.h"
+#include "gmp-decryption.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/EMEUtils.h"
@@ -204,33 +205,19 @@ private:
   bool mIsShutdown;
 };
 
-class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy
+EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
+  already_AddRefed<AbstractThread> aProxyThread,
+  CDMProxy* aProxy,
+  const CreateDecoderParams& aParams)
+  : MediaDataDecoderProxy(Move(aProxyThread))
+  , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+  , mSamplesWaitingForKey(
+      new SamplesWaitingForKey(aProxy,
+                               aParams.mType,
+                               aParams.mOnWaitingForKeyEvent))
+  , mProxy(aProxy)
 {
-public:
-  EMEMediaDataDecoderProxy(
-    already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
-    TrackInfo::TrackType aType,
-    MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
-    : MediaDataDecoderProxy(Move(aProxyThread))
-    , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
-    , mSamplesWaitingForKey(
-        new SamplesWaitingForKey(aProxy, aType, aOnWaitingForKey))
-    , mProxy(aProxy)
-  {
-  }
-
-  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
-  RefPtr<FlushPromise> Flush() override;
-  RefPtr<ShutdownPromise> Shutdown() override;
-
-private:
-  RefPtr<TaskQueue> mTaskQueue;
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
-  MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
-  MozPromiseHolder<DecodePromise> mDecodePromise;
-  MozPromiseRequestHolder<DecodePromise> mDecodeRequest;
-  RefPtr<CDMProxy> mProxy;
-};
+}
 
 RefPtr<MediaDataDecoder::DecodePromise>
 EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
@@ -307,7 +294,7 @@ CreateDecoderWrapper(CDMProxy* aProxy, const CreateDecoderParams& aParams)
     return nullptr;
   }
   RefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(
-    thread.forget(), aProxy, aParams.mType, aParams.mOnWaitingForKeyEvent));
+    thread.forget(), aProxy, aParams));
   return decoder.forget();
 }
 
