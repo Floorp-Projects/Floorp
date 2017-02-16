@@ -19,6 +19,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Span.h"
 
 #include <string.h>
 
@@ -1116,6 +1117,18 @@ public:
   const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
   const_reverse_iterator crend() const { return rend(); }
 
+  // Span integration
+
+  operator mozilla::Span<elem_type>()
+  {
+    return mozilla::Span<elem_type>(Elements(), Length());
+  }
+
+  operator mozilla::Span<const elem_type>() const
+  {
+    return mozilla::Span<const elem_type>(Elements(), Length());
+  }
+
   //
   // Search methods
   //
@@ -1340,6 +1353,16 @@ protected:
     return ReplaceElementsAt<Item, ActualAlloc>(
       aStart, aCount, aArray.Elements(), aArray.Length());
   }
+
+  template<class Item, typename ActualAlloc = Alloc>
+  elem_type* ReplaceElementsAt(index_type aStart,
+                               size_type aCount,
+                               mozilla::Span<const Item> aSpan)
+  {
+    return ReplaceElementsAt<Item, ActualAlloc>(
+      aStart, aCount, aSpan.Elements(), aSpan.Length());
+  }
+
 public:
 
   template<class Item>
@@ -1349,6 +1372,15 @@ public:
                                const mozilla::fallible_t&)
   {
     return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray);
+  }
+
+  template<class Item>
+  MOZ_MUST_USE elem_type* ReplaceElementsAt(index_type aStart,
+                                            size_type aCount,
+                                            mozilla::Span<const Item> aSpan,
+                                            const mozilla::fallible_t&)
+  {
+    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aSpan);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
@@ -1403,6 +1435,15 @@ protected:
     return ReplaceElementsAt<Item, ActualAlloc>(
       aIndex, 0, aArray.Elements(), aArray.Length());
   }
+
+  template<class Item, typename ActualAlloc = Alloc>
+  elem_type* InsertElementsAt(index_type aIndex,
+                              mozilla::Span<const Item> aSpan)
+  {
+    return ReplaceElementsAt<Item, ActualAlloc>(
+      aIndex, 0, aSpan.Elements(), aSpan.Length());
+  }
+
 public:
 
   template<class Item, class Allocator>
@@ -1412,6 +1453,14 @@ public:
                               const mozilla::fallible_t&)
   {
     return InsertElementsAt<Item, Allocator, FallibleAlloc>(aIndex, aArray);
+  }
+
+  template<class Item>
+  MOZ_MUST_USE elem_type* InsertElementsAt(index_type aIndex,
+                                           mozilla::Span<const Item> aSpan,
+                                           const mozilla::fallible_t&)
+  {
+    return InsertElementsAt<Item, FallibleAlloc>(aIndex, aSpan);
   }
 
   // Insert a new element without copy-constructing. This is useful to avoid
@@ -1548,6 +1597,13 @@ protected:
   template<class Item, typename ActualAlloc = Alloc>
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen);
 
+  template<class Item, typename ActualAlloc = Alloc>
+  elem_type* AppendElements(mozilla::Span<const Item> aSpan)
+  {
+    return AppendElements<Item, FallibleAlloc>(aSpan.Elements(),
+                                               aSpan.Length());
+  }
+
   template<class Item, size_t Length, typename ActualAlloc = Alloc>
   elem_type* AppendElements(const mozilla::Array<Item, Length>& aArray)
   {
@@ -1562,6 +1618,15 @@ public:
                             const mozilla::fallible_t&)
   {
     return AppendElements<Item, FallibleAlloc>(aArray, aArrayLen);
+  }
+
+  template<class Item>
+  /* MOZ_MUST_USE */
+  elem_type* AppendElements(mozilla::Span<const Item> aSpan,
+                            const mozilla::fallible_t&)
+  {
+    return AppendElements<Item, FallibleAlloc>(aSpan.Elements(),
+                                               aSpan.Length());
   }
 
   // A variation on the AppendElements method defined above.
@@ -2396,6 +2461,25 @@ struct nsTArray_CopyChooser<AutoTArray<E, N>>
 {
   typedef nsTArray_CopyWithConstructors<AutoTArray<E, N>> Type;
 };
+
+// Span integration
+namespace mozilla {
+
+template<class ElementType, class TArrayAlloc>
+Span<ElementType>
+MakeSpan(nsTArray_Impl<ElementType, TArrayAlloc>& aTArray)
+{
+  return aTArray;
+}
+
+template<class ElementType, class TArrayAlloc>
+Span<const ElementType>
+MakeSpan(const nsTArray_Impl<ElementType, TArrayAlloc>& aTArray)
+{
+  return aTArray;
+}
+
+} // namespace mozilla
 
 // Assert that AutoTArray doesn't have any extra padding inside.
 //
