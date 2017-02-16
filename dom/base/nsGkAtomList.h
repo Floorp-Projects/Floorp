@@ -2148,7 +2148,6 @@ GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTran
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*
 GK_ATOM(genConInitializerProperty, "QuoteNodeProperty")
 GK_ATOM(labelMouseDownPtProperty, "LabelMouseDownPtProperty")
-GK_ATOM(baseURIProperty, "baseURIProperty")
 GK_ATOM(lockedStyleStates, "lockedStyleStates")
 GK_ATOM(apzCallbackTransform, "apzCallbackTransform")
 GK_ATOM(restylableAnonymousNode, "restylableAnonymousNode")
