@@ -73,9 +73,7 @@ function defineCohort() {
 
     Preferences.set(PREF_E10S_ADDON_BLOCKLIST,
                     // bug 1185672 - Tab Mix Plus
-                    "{dc572301-7619-498c-a57d-39143191b318};" +
-                    // bug 1332692 - LastPass
-                    "support@lastpass.com;");
+                    "{dc572301-7619-498c-a57d-39143191b318};");
   } else {
     Preferences.reset(PREF_E10S_ADDON_POLICY);
   }
