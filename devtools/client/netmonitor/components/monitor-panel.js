@@ -13,8 +13,8 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
-const { Prefs } = require("../prefs");
-const { getFormDataSections } = require("../request-utils");
+const { Prefs } = require("../utils/prefs");
+const { getFormDataSections } = require("../utils/request-utils");
 const { getSelectedRequest } = require("../selectors/index");
 
 // Components

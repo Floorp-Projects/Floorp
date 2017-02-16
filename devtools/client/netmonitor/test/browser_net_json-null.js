@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { L10N } = require("devtools/client/netmonitor/l10n");
+const { L10N } = require("devtools/client/netmonitor/utils/l10n");
 
 /**
  * Tests if JSON responses containing null values are properly displayed.

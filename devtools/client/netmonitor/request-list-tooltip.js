@@ -8,8 +8,8 @@ const {
   setImageTooltip,
   getImageDimensions,
 } = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const { WEBCONSOLE_L10N } = require("./l10n");
-const { formDataURI } = require("./request-utils");
+const { WEBCONSOLE_L10N } = require("./utils/l10n");
+const { formDataURI } = require("./utils/request-utils");
 
 // px
 const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400;

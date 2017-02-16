@@ -8,7 +8,7 @@
  */
 
 function test() {
-  let { L10N } = require("devtools/client/netmonitor/l10n");
+  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
   const { RESPONSE_BODY_LIMIT } = require("devtools/shared/webconsole/network-monitor");
 
   const URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + RESPONSE_BODY_LIMIT;
