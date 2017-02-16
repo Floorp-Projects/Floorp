@@ -29,7 +29,7 @@
 #include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
 #include "nsIHstsPrimingCallback.h"
-#include <nsIRaceCacheWithNetwork.h>
+#include "nsIRaceCacheWithNetwork.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -621,6 +621,29 @@ private:
     nsCOMPtr<nsITimer> mCacheOpenTimer;
     nsCOMPtr<nsIRunnable> mCacheOpenRunnable;
     uint32_t mCacheOpenDelay = 0;
+
+    // We need to remember which is the source of the response we are using.
+    enum {
+        RESPONSE_PENDING,           // response is pending
+        RESPONSE_FROM_CACHE,        // response coming from cache. no network.
+        RESPONSE_FROM_NETWORK,      // response coming from the network
+    } mFirstResponseSource = RESPONSE_PENDING;
+
+    nsresult TriggerNetwork(int32_t aTimeout);
+    void CancelNetworkRequest(nsresult aStatus);
+    // Timer used to delay the network request, or to trigger the network
+    // request if retrieving the cache entry takes too long.
+    nsCOMPtr<nsITimer> mNetworkTriggerTimer;
+    // Is true if the network request has been triggered.
+    bool mNetworkTriggered = false;
+    bool mWaitingForProxy = false;
+    // Is true if the onCacheEntryAvailable callback has been called.
+    Atomic<bool> mOnCacheAvailableCalled;
+    // Will be true if the onCacheEntryAvailable callback is not called by the
+    // time we send the network request. This could also be true when we are
+    // bypassing the cache.
+    Atomic<bool> mRacingNetAndCache;
+
 protected:
     virtual void DoNotifyListenerCleanup() override;
 
