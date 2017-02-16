@@ -135,6 +135,56 @@ add_task(function* test_devtools_page_panels_create() {
   is(secondCycleResults.panelShown, 2, "panel.onShown listener has been called twice");
   is(secondCycleResults.panelHidden, 2, "panel.onHidden listener has been called twice");
 
+  // Turn off the addon devtools panel using the visibilityswitch.
+  const waitToolVisibilityOff = new Promise(resolve => {
+    toolbox.once("tool-unregistered", resolve);
+  });
+
+  Services.prefs.setBoolPref(`devtools.webext-${panelId}.enabled`, false);
+  gDevTools.emit("tool-unregistered", panelId);
+
+  yield waitToolVisibilityOff;
+
+  ok(toolbox.hasAdditionalTool(panelId),
+     "The tool has not been removed on visibilityswitch set to false");
+
+  is(toolbox.visibleAdditionalTools.filter(tool => tool.id == panelId).length, 0,
+     "The tool is not visible on visibilityswitch set to false");
+
+  // Turn on the addon devtools panel using the visibilityswitch.
+  const waitToolVisibilityOn = new Promise(resolve => {
+    toolbox.once("tool-registered", resolve);
+  });
+
+  Services.prefs.setBoolPref(`devtools.webext-${panelId}.enabled`, true);
+  gDevTools.emit("tool-registered", panelId);
+
+  yield waitToolVisibilityOn;
+
+  ok(toolbox.hasAdditionalTool(panelId),
+     "The tool has been added on visibilityswitch set to true");
+  is(toolbox.visibleAdditionalTools.filter(toolId => toolId == panelId).length, 1,
+     "The tool is visible on visibilityswitch set to true");
+
+  // Test devtools panel is loaded correctly after being toggled and
+  // devtools panel events has been fired as expected.
+  yield gDevTools.showToolbox(target, panelId);
+  yield extension.awaitMessage("devtools_panel_shown");
+  info("Addon Devtools Panel shown - after visibilityswitch toggled");
+
+  info("Wait until the Addon Devtools Panel has been loaded - after visibilityswitch toggled");
+  const panelTabIdAfterToggle = yield extension.awaitMessage("devtools_panel_inspectedWindow_tabId");
+  is(panelTabIdAfterToggle, devtoolsPageTabId,
+     "Got the same devtools.inspectedWindow.tabId from devtools panel after visibility toggled");
+
+  yield gDevTools.showToolbox(target, "webconsole");
+  const toolToggledResults = yield extension.awaitMessage("devtools_panel_hidden");
+  info("Addon Devtools Panel hidden - after visibilityswitch toggled");
+
+  is(toolToggledResults.panelCreated, 1, "devtools.panel.create callback has been called once");
+  is(toolToggledResults.panelShown, 3, "panel.onShown listener has been called three times");
+  is(toolToggledResults.panelHidden, 3, "panel.onHidden listener has been called three times");
+
   yield gDevTools.closeToolbox(target);
 
   yield target.destroy();
