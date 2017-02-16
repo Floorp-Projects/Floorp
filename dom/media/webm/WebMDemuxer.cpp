@@ -702,13 +702,13 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     RefPtr<MediaRawData> sample;
     if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {
       sample = new MediaRawData(data, length, alphaData, alphaLength);
-      if (!sample->Data() || !sample->AlphaData()) {
+      if ((length && !sample->Data()) || (alphaLength && !sample->AlphaData())) {
         // OOM.
         return false;
       }
     } else {
       sample = new MediaRawData(data, length);
-      if (!sample->Data()) {
+      if (length && !sample->Data()) {
         // OOM.
         return false;
       }
