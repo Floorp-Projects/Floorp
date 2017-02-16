@@ -401,11 +401,11 @@ private:
     static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
                                  const nscoord aRadiusY);
 
-    // Convert the coordinate space from physical to the logical space used
-    // in nsFloatManager, which is the same as FloatInfo::mRect.
-    static nsPoint ConvertPhysicalToLogical(mozilla::WritingMode aWM,
-                                            const nsPoint& aPoint,
-                                            const nsSize& aContainerSize);
+    // Convert the physical point to the special logical coordinate space
+    // used in float manager.
+    static nsPoint ConvertToFloatLogical(const nsPoint& aPoint,
+                                         mozilla::WritingMode aWM,
+                                         const nsSize& aContainerSize);
   };
 
   // Implements shape-outside: <shape-box>.
