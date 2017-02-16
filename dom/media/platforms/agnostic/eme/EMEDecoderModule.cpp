@@ -219,6 +219,20 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
 {
 }
 
+EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
+  const CreateDecoderParams& aParams,
+  already_AddRefed<MediaDataDecoder> aProxyDecoder,
+  CDMProxy* aProxy)
+  : MediaDataDecoderProxy(Move(aProxyDecoder))
+  , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+  , mSamplesWaitingForKey(
+      new SamplesWaitingForKey(aProxy,
+                               aParams.mType,
+                               aParams.mOnWaitingForKeyEvent))
+  , mProxy(aProxy)
+{
+}
+
 RefPtr<MediaDataDecoder::DecodePromise>
 EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
 {
