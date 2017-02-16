@@ -205,7 +205,7 @@ function loadAndCheck(win, firstType, secondType, swap, result1, result2)
   secondType.removeRules(win, secondStyle);
 
   is(cs.getPropertyValue('color'), 'rgb(0, 0, 0)', firstType.type + " vs " + secondType.type + " 3");
-  is(cs.getPropertyValue('background-color'), 'transparent', firstType.type + " vs " + secondType.type + " 4");
+  is(cs.getPropertyValue('background-color'), 'rgba(0, 0, 0, 0)', firstType.type + " vs " + secondType.type + " 4");
 }
 
 // There are 8 cases. Regular against regular, regular against important, important

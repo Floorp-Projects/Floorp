@@ -231,7 +231,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
 
     let ruleBody = "";
     if (option.backgroundColor &&
-        option.backgroundColor != "transparent" &&
+        option.backgroundColor != "rgba(0, 0, 0, 0)" &&
         option.backgroundColor != uaBackgroundColor) {
       ruleBody = `background-color: ${option.backgroundColor};`;
     }
