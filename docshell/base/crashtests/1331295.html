@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom() {
+  setTimeout(function(){
+    var o=document.getElementById('b');
+    document.getElementById('a').appendChild(o.parentNode.removeChild(o));
+  },0);
+  var o=document.getElementById('c');
+  var p=document.getElementById('b');
+  p.id=[o.id, o.id=p.id][0];
+  o=document.getElementById('b');
+  o.setAttribute('sandbox', 'disc');
+  window.location.reload(true);
+}
+</script>
+</head>
+<body onload="boom();">
+<header id='a'></header>
+<output id='b'></output>
+<iframe id='c' sandbox='allow-same-origin' src='http://a'></iframe>
+</body>
+</html>
