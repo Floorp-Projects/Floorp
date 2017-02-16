@@ -98,7 +98,6 @@ devtools/client/webconsole/net/**
 devtools/client/webconsole/test/**
 devtools/client/webconsole/console-output.js
 devtools/client/webconsole/hudservice.js
-devtools/client/webconsole/utils.js
 devtools/client/webconsole/webconsole-connection-proxy.js
 devtools/client/webconsole/webconsole.js
 devtools/client/webide/**

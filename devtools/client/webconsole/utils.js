@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, components} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 
@@ -21,7 +21,7 @@ const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
 // Number of terminal entries for the self-xss prevention to go away
 const CONSOLE_ENTRY_THRESHOLD = 5;
 
-const CONSOLE_WORKER_IDS = exports.CONSOLE_WORKER_IDS = [
+exports.CONSOLE_WORKER_IDS = [
   "SharedWorker",
   "ServiceWorker",
   "Worker"
@@ -101,52 +101,6 @@ var WebConsoleUtils = {
     to.style.fontSize = style.getPropertyCSSValue("font-size").cssText;
     to.style.fontWeight = style.getPropertyCSSValue("font-weight").cssText;
     to.style.fontStyle = style.getPropertyCSSValue("font-style").cssText;
-  },
-
-  /**
-   * Create a grip for the given value. If the value is an object,
-   * an object wrapper will be created.
-   *
-   * @param mixed value
-   *        The value you want to create a grip for, before sending it to the
-   *        client.
-   * @param function objectWrapper
-   *        If the value is an object then the objectWrapper function is
-   *        invoked to give us an object grip. See this.getObjectGrip().
-   * @return mixed
-   *         The value grip.
-   */
-  createValueGrip: function (value, objectWrapper) {
-    switch (typeof value) {
-      case "boolean":
-        return value;
-      case "string":
-        return objectWrapper(value);
-      case "number":
-        if (value === Infinity) {
-          return { type: "Infinity" };
-        } else if (value === -Infinity) {
-          return { type: "-Infinity" };
-        } else if (Number.isNaN(value)) {
-          return { type: "NaN" };
-        } else if (!value && 1 / value === -Infinity) {
-          return { type: "-0" };
-        }
-        return value;
-      case "undefined":
-        return { type: "undefined" };
-      case "object":
-        if (value === null) {
-          return { type: "null" };
-        }
-        // Fall through.
-      case "function":
-        return objectWrapper(value);
-      default:
-        console.error("Failed to provide a grip for value of " + typeof value
-                      + ": " + value);
-        return null;
-    }
   },
 
   /**
