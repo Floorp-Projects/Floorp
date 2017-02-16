@@ -7,6 +7,7 @@
 
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "nsContentPolicyUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
@@ -176,17 +177,19 @@ gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeeds
 class gfxOTSContext : public ots::OTSContext {
 public:
     explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
-        : mUserFontEntry(aUserFontEntry) {}
+        : mUserFontEntry(aUserFontEntry)
+    {
+        // Whether to apply OTS validation to OpenType Layout tables
+        mCheckOTLTables = gfxPrefs::ValidateOTLTables();
+    }
 
     virtual ots::TableAction GetTableAction(uint32_t aTag) override {
-        // Preserve Graphite, color glyph and SVG tables
-        if (
-#ifdef RELEASE_OR_BETA // For Beta/Release, also allow OT Layout tables through
-                     // unchecked, and rely on harfbuzz to handle them safely.
-            aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
-            aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
-            aTag == TRUETYPE_TAG('G', 'S', 'U', 'B') ||
-#endif
+        // Preserve Graphite, color glyph and SVG tables,
+        // and possibly OTL tables (depending on pref)
+        if ((!mCheckOTLTables &&
+             (aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
+              aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
+              aTag == TRUETYPE_TAG('G', 'S', 'U', 'B'))) ||
             aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
             aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
             aTag == TRUETYPE_TAG('G', 'l', 'o', 'c') ||
@@ -225,6 +228,7 @@ public:
 private:
     gfxUserFontEntry* mUserFontEntry;
     nsTHashtable<nsCStringHashKey> mWarningsIssued;
+    bool mCheckOTLTables;
 };
 
 // Call the OTS library to sanitize an sfnt before attempting to use it.
