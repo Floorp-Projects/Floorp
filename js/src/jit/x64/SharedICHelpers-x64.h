@@ -133,28 +133,6 @@ EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
     masm.call(target);
 }
 
-inline void
-EmitIonCallVM(JitCode* target, size_t stackSlots, MacroAssembler& masm)
-{
-    // Stubs often use the return address. Which is actually accounted by the
-    // caller of the stub. Though in the stubcode we fake that is part of the
-    // stub. In order to make it possible to pop it. As a result we have to
-    // fix it here, by subtracting it. Else it would be counted twice.
-    uint32_t framePushed = masm.framePushed() - sizeof(void*);
-
-    uint32_t descriptor = MakeFrameDescriptor(framePushed, JitFrame_IonStub,
-                                              ExitFrameLayout::Size());
-    masm.Push(Imm32(descriptor));
-    masm.call(target);
-
-    // Remove rest of the frame left on the stack. We remove the return address
-    // which is implicitly poped when returning.
-    size_t framePop = sizeof(ExitFrameLayout) - sizeof(void*);
-
-    // Pop arguments from framePushed.
-    masm.implicitPop(stackSlots * sizeof(void*) + framePop);
-}
-
 // Size of vales pushed by EmitEnterStubFrame.
 static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void*);
 static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void*);

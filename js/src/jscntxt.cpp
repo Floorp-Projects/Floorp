@@ -1174,8 +1174,8 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     for (size_t i = 0; i < mozilla::ArrayLength(nativeStackQuota); i++)
         nativeStackQuota[i] = 0;
 
-    if (!TlsContext.get())
-        TlsContext.set(this);
+    MOZ_ASSERT(!TlsContext.get());
+    TlsContext.set(this);
 }
 
 JSContext::~JSContext()
@@ -1205,8 +1205,8 @@ JSContext::~JSContext()
         DestroyTraceLogger(traceLogger);
 #endif
 
-    if (TlsContext.get() == this)
-        TlsContext.set(nullptr);
+    MOZ_ASSERT(TlsContext.get() == this);
+    TlsContext.set(nullptr);
 }
 
 void
