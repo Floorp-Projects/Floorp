@@ -1353,6 +1353,11 @@
         try {
           switch (keystroke) {
             case "space": /* Play */
+              let target = event.originalTarget;
+              if (target.localName === "button" && !target.disabled) {
+                break;
+              }
+
               this.togglePause();
               break;
             case "downArrow": /* Volume decrease */
