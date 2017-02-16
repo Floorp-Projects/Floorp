@@ -63,11 +63,13 @@ namespace mozilla {
  */
 class MOZ_RAII AutoReferenceLimiter
 {
+  static const int16_t sDefaultMaxChainLength = 10; // arbitrary number
+
 public:
   static const int16_t notReferencing = -2;
 
   AutoReferenceLimiter(nsIFrame* aFrame, int16_t* aRefCounter,
-                       int16_t aMaxReferenceCount
+                       int16_t aMaxReferenceCount = sDefaultMaxChainLength
                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
