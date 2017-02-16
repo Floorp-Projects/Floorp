@@ -10,7 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Exceptions.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/MediaSource.h"
