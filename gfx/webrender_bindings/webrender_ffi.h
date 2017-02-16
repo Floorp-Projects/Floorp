@@ -362,12 +362,8 @@ wr_rendered_epochs_next(WrRenderedEpochs* pipeline_epochs,
 WR_INLINE void
 wr_rendered_epochs_delete(WrRenderedEpochs* pipeline_epochs) WR_DESTRUCTOR_SAFE_FUNC;
 
-WR_INLINE void
-wr_gl_init(void* aGLContext)
-WR_FUNC;
-
 WR_INLINE bool
-wr_window_new(WrWindowId window_id, bool enable_profiler, WrAPI** out_api,
+wr_window_new(WrWindowId window_id, void* aGLContext, bool enable_profiler, WrAPI** out_api,
               WrRenderer** out_renderer)
 WR_FUNC;
 

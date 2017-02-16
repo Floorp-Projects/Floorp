@@ -162,8 +162,11 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
                               preserve_frame_state);
     api.generate_frame(None);
 }
+
+// Call MakeCurrent before this.
 #[no_mangle]
 pub extern fn wr_window_new(window_id: WrWindowId,
+                            gl_context: *mut c_void,
                             enable_profiler: bool,
                             out_api: &mut *mut RenderApi,
                             out_renderer: &mut *mut Renderer) -> bool {
@@ -175,6 +178,13 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     } else {
         None
     };
+
+    gl::load_with(|symbol| get_proc_address(gl_context, symbol));
+    gl::clear_color(0.3, 0.0, 0.0, 1.0);
+
+    let version = gl::get_string(gl::VERSION);
+
+    println!("WebRender - OpenGL version new {}", version);
 
     let opts = RendererOptions {
         device_pixel_ratio: 1.0,
@@ -207,19 +217,6 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
-}
-
-// Call MakeCurrent before this.
-#[no_mangle]
-pub extern fn wr_gl_init(gl_context: *mut c_void) {
-    assert!(unsafe { is_in_render_thread() });
-
-    gl::load_with(|symbol| get_proc_address(gl_context, symbol));
-    gl::clear_color(0.3, 0.0, 0.0, 1.0);
-
-    let version = gl::get_string(gl::VERSION);
-
-    println!("WebRender - OpenGL version new {}", version);
 }
 
 #[no_mangle]
