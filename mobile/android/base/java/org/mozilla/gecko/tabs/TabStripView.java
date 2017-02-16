@@ -90,6 +90,10 @@ public class TabStripView extends RecyclerView {
     }
 
     /* package */ void addTab(Tab tab, int position) {
+        if (tab.isPrivate() != isPrivate) {
+            return;
+        }
+
         adapter.addTab(tab, position);
         position = position == -1 ? adapter.getItemCount() - 1 : position;
         if (position == 0 || position == adapter.getItemCount() - 1) {
