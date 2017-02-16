@@ -28,12 +28,6 @@ const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overl
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-const { Provider } = require("devtools/client/shared/vendor/react-redux");
-
-const BoxModelApp = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModelApp"));
-
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
@@ -159,7 +153,6 @@ UpdateProcess.prototype = {
 function CssComputedView(inspector, document, pageStyle) {
   this.inspector = inspector;
   this.highlighters = inspector.highlighters;
-  this.store = inspector.store;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.pageStyle = pageStyle;
@@ -215,7 +208,6 @@ function CssComputedView(inspector, document, pageStyle) {
   // The element that we're inspecting, and the document that it comes from.
   this._viewedElement = null;
 
-  this.createBoxModelView();
   this.createStyleViews();
 
   this._contextmenu = new StyleInspectorMenu(this, { isRuleView: false });
@@ -613,29 +605,6 @@ CssComputedView.prototype = {
   },
 
   /**
-   * Render the box model view.
-   */
-  createBoxModelView: function () {
-    let {
-      onHideBoxModelHighlighter,
-      onShowBoxModelEditor,
-      onShowBoxModelHighlighter,
-    } = this.inspector.boxmodel.getComponentProps();
-
-    let provider = createElement(
-      Provider,
-      { store: this.store },
-      BoxModelApp({
-        showBoxModelProperties: false,
-        onHideBoxModelHighlighter,
-        onShowBoxModelEditor,
-        onShowBoxModelHighlighter,
-      })
-    );
-    ReactDOM.render(provider, this.styleDocument.getElementById("boxmodel-wrapper"));
-  },
-
-  /**
    * The CSS as displayed by the UI.
    */
   createStyleViews: function () {
@@ -826,7 +795,6 @@ CssComputedView.prototype = {
 
     this.inspector = null;
     this.highlighters = null;
-    this.store = null;
     this.styleDocument = null;
     this.styleWindow = null;
 
