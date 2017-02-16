@@ -7,7 +7,7 @@
         "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer",
         "JITTEST_EXTRA_ARGS": "--jitflags=debug --ignore-timeouts={DIR}/cgc-jittest-timeouts.txt",
         "JSTESTS_EXTRA_ARGS": "--exclude-file={DIR}/cgc-jstests-slow.txt",
-        "TSAN_OPTIONS": "log_path={OUTDIR}/sanitize_log"
+        "TSAN_OPTIONS": "exitcode=0 log_path={OUTDIR}/sanitize_log"
     },
-    "max-errors": 14
+    "max-errors": 20
 }
