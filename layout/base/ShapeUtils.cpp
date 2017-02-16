@@ -9,6 +9,7 @@
 #include <cstdlib>
 
 #include "nsCSSRendering.h"
+#include "nsMargin.h"
 #include "nsRuleNode.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
@@ -113,6 +114,27 @@ ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
   }
 
   return radii;
+}
+
+/* static */ nsRect
+ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
+                             const nsRect& aRefBox)
+{
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Inset,
+             "The basic shape must be inset()!");
+
+  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
+
+  nsMargin inset(nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.height),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.width),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[2], aRefBox.height),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[3], aRefBox.width));
+
+  nsRect insetRect(aRefBox);
+  insetRect.Deflate(inset);
+
+  return insetRect;
 }
 
 } // namespace mozilla
