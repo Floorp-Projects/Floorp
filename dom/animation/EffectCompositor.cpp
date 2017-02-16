@@ -15,8 +15,8 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertyIDSet.h"
@@ -314,7 +314,7 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
   // FIXME: stylo only supports Self and Subtree hints now, so we override it
   // for stylo if we are not in process of restyling.
   if (mPresContext->StyleSet()->IsServo() &&
-      !mPresContext->RestyleManager()->AsBase()->IsInStyleRefresh()) {
+      !mPresContext->RestyleManager()->IsInStyleRefresh()) {
     hint = eRestyle_Self | eRestyle_Subtree;
   }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);

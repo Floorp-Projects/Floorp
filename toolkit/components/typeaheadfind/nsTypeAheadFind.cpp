@@ -225,7 +225,7 @@ nsTypeAheadFind::ReleaseStrongMemberVariables()
 NS_IMETHODIMP
 nsTypeAheadFind::SetSelectionModeAndRepaint(int16_t aToggle)
 {
-  nsCOMPtr<nsISelectionController> selectionController = 
+  nsCOMPtr<nsISelectionController> selectionController =
     do_QueryReferent(mSelectionController);
   if (!selectionController) {
     return NS_OK;
@@ -240,7 +240,7 @@ nsTypeAheadFind::SetSelectionModeAndRepaint(int16_t aToggle)
 NS_IMETHODIMP
 nsTypeAheadFind::CollapseSelection()
 {
-  nsCOMPtr<nsISelectionController> selectionController = 
+  nsCOMPtr<nsISelectionController> selectionController =
     do_QueryReferent(mSelectionController);
   if (!selectionController) {
     return NS_OK;
@@ -261,7 +261,8 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 {
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     return PrefsReset();
-  } else if (!nsCRT::strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) &&
+  }
+  if (!nsCRT::strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) &&
              SameCOMIdentity(aSubject, mCurrentWindow)) {
     ReleaseStrongMemberVariables();
   }
@@ -274,7 +275,7 @@ nsTypeAheadFind::SaveFind()
 {
   if (mWebBrowserFind)
     mWebBrowserFind->SetSearchString(mTypeAheadBuffer.get());
-  
+
   // save the length of this find for "not found" sound
   mLastFindLength = mTypeAheadBuffer.Length();
 }

@@ -3585,16 +3585,15 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
                                 BLOCKED_DOWNGRADE_SECURE_INEXACT);
         }
         return;
+      }
+      // A secure site is allowed to downgrade a secure cookie
+      // but we want to measure anyway.
+      if (foundSecureExact) {
+        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                              DOWNGRADE_SECURE_FROM_SECURE_EXACT);
       } else {
-        // A secure site is allowed to downgrade a secure cookie
-        // but we want to measure anyway.
-        if (foundSecureExact) {
-          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                                DOWNGRADE_SECURE_FROM_SECURE_EXACT);
-        } else {
-          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                                DOWNGRADE_SECURE_FROM_SECURE_INEXACT);
-        }
+        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                              DOWNGRADE_SECURE_FROM_SECURE_INEXACT);
       }
     }
   }

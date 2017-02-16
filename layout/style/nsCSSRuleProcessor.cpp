@@ -2134,75 +2134,74 @@ static bool SelectorMatches(Element* aElement,
     if (!aElement->HasAttrs()) {
       // if no attributes on the content, no match
       return false;
-    } else {
-      result = true;
-      nsAttrSelector* attr = aSelector->mAttrList;
-      nsIAtom* matchAttribute;
+    }
+    result = true;
+    nsAttrSelector* attr = aSelector->mAttrList;
+    nsIAtom* matchAttribute;
 
-      do {
-        bool isHTML =
-          (aTreeMatchContext.mIsHTMLDocument && aElement->IsHTMLElement());
-        matchAttribute = isHTML ? attr->mLowercaseAttr : attr->mCasedAttr;
-        if (attr->mNameSpace == kNameSpaceID_Unknown) {
-          // Attr selector with a wildcard namespace.  We have to examine all
-          // the attributes on our content node....  This sort of selector is
-          // essentially a boolean OR, over all namespaces, of equivalent attr
-          // selectors with those namespaces.  So to evaluate whether it
-          // matches, evaluate for each namespace (the only namespaces that
-          // have a chance at matching, of course, are ones that the element
-          // actually has attributes in), short-circuiting if we ever match.
-          result = false;
-          const nsAttrName* attrName;
-          for (uint32_t i = 0; (attrName = aElement->GetAttrNameAt(i)); ++i) {
-            if (attrName->LocalName() != matchAttribute) {
-              continue;
-            }
-            if (attr->mFunction == NS_ATTR_FUNC_SET) {
-              result = true;
-            } else {
-              nsAutoString value;
+    do {
+      bool isHTML =
+        (aTreeMatchContext.mIsHTMLDocument && aElement->IsHTMLElement());
+      matchAttribute = isHTML ? attr->mLowercaseAttr : attr->mCasedAttr;
+      if (attr->mNameSpace == kNameSpaceID_Unknown) {
+        // Attr selector with a wildcard namespace.  We have to examine all
+        // the attributes on our content node....  This sort of selector is
+        // essentially a boolean OR, over all namespaces, of equivalent attr
+        // selectors with those namespaces.  So to evaluate whether it
+        // matches, evaluate for each namespace (the only namespaces that
+        // have a chance at matching, of course, are ones that the element
+        // actually has attributes in), short-circuiting if we ever match.
+        result = false;
+        const nsAttrName* attrName;
+        for (uint32_t i = 0; (attrName = aElement->GetAttrNameAt(i)); ++i) {
+          if (attrName->LocalName() != matchAttribute) {
+            continue;
+          }
+          if (attr->mFunction == NS_ATTR_FUNC_SET) {
+            result = true;
+          } else {
+            nsAutoString value;
 #ifdef DEBUG
-              bool hasAttr =
+            bool hasAttr =
 #endif
-                aElement->GetAttr(attrName->NamespaceID(),
-                                  attrName->LocalName(), value);
-              NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
-              result = AttrMatchesValue(attr, value, isHTML);
-            }
+              aElement->GetAttr(attrName->NamespaceID(),
+                                attrName->LocalName(), value);
+            NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
+            result = AttrMatchesValue(attr, value, isHTML);
+          }
 
-            // At this point |result| has been set by us
-            // explicitly in this loop.  If it's false, we may still match
-            // -- the content may have another attribute with the same name but
-            // in a different namespace.  But if it's true, we are done (we
-            // can short-circuit the boolean OR described above).
-            if (result) {
-              break;
-            }
+          // At this point |result| has been set by us
+          // explicitly in this loop.  If it's false, we may still match
+          // -- the content may have another attribute with the same name but
+          // in a different namespace.  But if it's true, we are done (we
+          // can short-circuit the boolean OR described above).
+          if (result) {
+            break;
           }
         }
-        else if (attr->mFunction == NS_ATTR_FUNC_EQUALS) {
-          result =
-            aElement->
-              AttrValueIs(attr->mNameSpace, matchAttribute, attr->mValue,
-                          attr->IsValueCaseSensitive(isHTML) ? eCaseMatters
-                                                             : eIgnoreCase);
-        }
-        else if (!aElement->HasAttr(attr->mNameSpace, matchAttribute)) {
-          result = false;
-        }
-        else if (attr->mFunction != NS_ATTR_FUNC_SET) {
-          nsAutoString value;
+      }
+      else if (attr->mFunction == NS_ATTR_FUNC_EQUALS) {
+        result =
+          aElement->
+          AttrValueIs(attr->mNameSpace, matchAttribute, attr->mValue,
+                      attr->IsValueCaseSensitive(isHTML) ? eCaseMatters
+                                                         : eIgnoreCase);
+      }
+      else if (!aElement->HasAttr(attr->mNameSpace, matchAttribute)) {
+        result = false;
+      }
+      else if (attr->mFunction != NS_ATTR_FUNC_SET) {
+        nsAutoString value;
 #ifdef DEBUG
-          bool hasAttr =
+        bool hasAttr =
 #endif
-              aElement->GetAttr(attr->mNameSpace, matchAttribute, value);
-          NS_ASSERTION(hasAttr, "HasAttr lied");
-          result = AttrMatchesValue(attr, value, isHTML);
-        }
-        
-        attr = attr->mNext;
-      } while (attr && result);
-    }
+          aElement->GetAttr(attr->mNameSpace, matchAttribute, value);
+        NS_ASSERTION(hasAttr, "HasAttr lied");
+        result = AttrMatchesValue(attr, value, isHTML);
+      }
+
+      attr = attr->mNext;
+    } while (attr && result);
   }
 
   // apply SelectorMatches to the negated selectors in the chain

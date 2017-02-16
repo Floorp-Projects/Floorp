@@ -42,9 +42,9 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
+#include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManagerInlines.h"
 
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -687,7 +687,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       // stylo: ServoRestyleManager does not handle transitions yet, and when
       // it does it probably won't need to track reframed style contexts to
       // initiate transitions correctly.
-      RestyleManager::ReframingStyleContexts* rsc =
+      GeckoRestyleManager::ReframingStyleContexts* rsc =
         presContext->RestyleManager()->AsGecko()->GetReframingStyleContexts();
       if (rsc) {
         rsc->Put(mContent, mStyleContext);
@@ -699,9 +699,8 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       EffectSet::GetEffectSet(this)) {
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
-    RestyleManagerBase::AnimationsWithDestroyedFrame* adf =
-      presContext->RestyleManager()->AsBase()
-                 ->GetAnimationsWithDestroyedFrame();
+    RestyleManager::AnimationsWithDestroyedFrame* adf =
+      presContext->RestyleManager()->GetAnimationsWithDestroyedFrame();
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mStyleContext);

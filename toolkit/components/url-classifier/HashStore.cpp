@@ -303,9 +303,8 @@ HashStore::Open()
   if (rv == NS_ERROR_FILE_NOT_FOUND) {
     UpdateHeader();
     return NS_OK;
-  } else {
-    SUCCESS_OR_RESET(rv);
   }
+  SUCCESS_OR_RESET(rv);
 
   int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);

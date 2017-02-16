@@ -83,7 +83,7 @@ add_task(function* test_streamConverter() {
 
   let tab = gBrowser.addTab("http://example.com/browser/toolkit/components/" +
                             "passwordmgr/test/browser/streamConverter_content.sjs",
-                            { relatedBrowser: originalBrowser });
+                            { sameProcessAsFrameLoader: originalBrowser.frameLoader });
   let browser = tab.linkedBrowser;
   yield Promise.all([
     BrowserTestUtils.switchTab(gBrowser, tab),

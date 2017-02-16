@@ -17,7 +17,7 @@
   "AsyncSpellCheckTestHelper.jsm": ["onSpellCheck"],
   "AutoMigrate.jsm": ["AutoMigrate"],
   "Battery.jsm": ["GetBattery", "Battery"],
-  "blocklist-clients.js": ["AddonBlocklistClient", "GfxBlocklistClient", "OneCRLBlocklistClient", "PluginBlocklistClient", "FILENAME_ADDONS_JSON", "FILENAME_GFX_JSON", "FILENAME_PLUGINS_JSON"],
+  "blocklist-clients.js": ["AddonBlocklistClient", "GfxBlocklistClient", "OneCRLBlocklistClient", "PluginBlocklistClient"],
   "blocklist-updater.js": ["checkVersions", "addTestBlocklistClient"],
   "bogus_element_type.jsm": [],
   "bookmark_validator.js": ["BookmarkValidator", "BookmarkProblemData"],

@@ -1059,6 +1059,12 @@ pref("browser.fixup.hide_user_pass", true);
 
 // Location Bar AutoComplete
 pref("browser.urlbar.autocomplete.enabled", true);
+#ifdef NIGHTLY_BUILD
+pref("browser.urlbar.usepreloadedtopurls.enabled", true);
+#else
+pref("browser.urlbar.usepreloadedtopurls.enabled", false);
+#endif
+pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
 // Print header customization
 // Use the following codes:

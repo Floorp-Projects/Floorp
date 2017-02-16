@@ -406,23 +406,22 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   if (samples->mSamples.IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
-  } else {
-    for (const auto& sample : samples->mSamples) {
-      // Collect telemetry from h264 Annex B SPS.
-      if (mNeedSPSForTelemetry && mp4_demuxer::AnnexB::HasSPS(sample)) {
-        RefPtr<MediaByteBuffer> extradata =
-        mp4_demuxer::AnnexB::ExtractExtraData(sample);
-        mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
-      }
-    }
-
-    if (mNextKeyframeTime.isNothing()
-        || samples->mSamples.LastElement()->mTime
-           >= mNextKeyframeTime.value().ToMicroseconds()) {
-      SetNextKeyFrameTime();
-    }
-    return SamplesPromise::CreateAndResolve(samples, __func__);
   }
+  for (const auto& sample : samples->mSamples) {
+    // Collect telemetry from h264 Annex B SPS.
+    if (mNeedSPSForTelemetry && mp4_demuxer::AnnexB::HasSPS(sample)) {
+      RefPtr<MediaByteBuffer> extradata =
+        mp4_demuxer::AnnexB::ExtractExtraData(sample);
+      mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
+    }
+  }
+
+  if (mNextKeyframeTime.isNothing()
+      || samples->mSamples.LastElement()->mTime
+      >= mNextKeyframeTime.value().ToMicroseconds()) {
+    SetNextKeyFrameTime();
+  }
+  return SamplesPromise::CreateAndResolve(samples, __func__);
 }
 
 void
@@ -477,10 +476,9 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
   SetNextKeyFrameTime();
   if (found) {
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
-  } else {
-    SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
-    return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
   }
+  SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
+  return SkipAccessPointPromise::CreateAndReject(Move(failure), __func__);
 }
 
 media::TimeIntervals
