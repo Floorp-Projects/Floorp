@@ -75,9 +75,14 @@ nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-meter-bar pseudo-element to the anonymous child.
-  mBarDiv->SetPseudoElementType(CSSPseudoElementType::mozMeterBar);
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::mozMeterBar;
+  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
+    ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
+                              StyleContext(), mBarDiv->AsElement());
 
-  aElements.AppendElement(mBarDiv);
+  if (!aElements.AppendElement(ContentInfo(mBarDiv, newStyleContext))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
