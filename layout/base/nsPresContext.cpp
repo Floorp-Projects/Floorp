@@ -119,7 +119,8 @@ class CharSetChangingRunnable : public Runnable
 public:
   CharSetChangingRunnable(nsPresContext* aPresContext,
                           const nsCString& aCharSet)
-    : mPresContext(aPresContext),
+    : Runnable("CharSetChangingRunnable"),
+      mPresContext(aPresContext),
       mCharSet(aCharSet)
   {
   }
@@ -761,7 +762,8 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     // The first pres context that has its mPrefChangedTimer called will
     // be the one to cause the reconstruction of the pref style sheet.
     nsLayoutStylesheetCache::InvalidatePreferenceSheets();
-    mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback, 0);
+    mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback,
+                                    "PrefChangedUpdateTimerCallback", 0);
     if (!mPrefChangedTimer) {
       return;
     }
@@ -1517,7 +1519,8 @@ nsPresContext::SetContainer(nsIDocShell* aDocShell)
     mContainer = static_cast<nsDocShell*>(aDocShell);
     if (mNeedsPrefUpdate) {
       if (!mPrefChangedTimer) {
-        mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback, 0);
+        mPrefChangedTimer = CreateTimer(PrefChangedUpdateTimerCallback,
+                                        "PrefChangedUpdateTimerCallback", 0);
       }
       mNeedsPrefUpdate = false;
     }
@@ -2086,7 +2089,8 @@ nsPresContext::PostMediaFeatureValuesChangedEvent()
   // need to track whether it's been added).
   if (!mPendingMediaFeatureValuesChanged && mShell) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
+      NewRunnableMethod("nsPresContext::HandleMediaFeatureValuesChangedEvent",
+                        this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPendingMediaFeatureValuesChanged = true;
       mShell->SetNeedStyleFlush();
@@ -2278,7 +2282,8 @@ nsPresContext::RebuildCounterStyles()
   }
   if (!mPostedFlushCounterStyles) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsPresContext::HandleRebuildCounterStyles);
+      NewRunnableMethod("nsPresContext::HandleRebuildCounterStyles",
+                        this, &nsPresContext::HandleRebuildCounterStyles);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPostedFlushCounterStyles = true;
     }
@@ -2670,12 +2675,14 @@ nsPresContext::HasCachedStyleData()
 
 already_AddRefed<nsITimer>
 nsPresContext::CreateTimer(nsTimerCallbackFunc aCallback,
+                           const char* aName,
                            uint32_t aDelay)
 {
   nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
   if (timer) {
-    nsresult rv = timer->InitWithFuncCallback(aCallback, this, aDelay,
-                                              nsITimer::TYPE_ONE_SHOT);
+    nsresult rv = timer->InitWithNamedFuncCallback(aCallback, this, aDelay,
+                                                   nsITimer::TYPE_ONE_SHOT,
+                                                   aName);
     if (NS_SUCCEEDED(rv)) {
       return timer.forget();
     }
@@ -3091,6 +3098,7 @@ nsRootPresContext::InitApplyPluginGeometryTimer()
   // won't fire before our normal paint notifications, if those would
   // update the geometry, so set it for double the refresh driver interval.
   mApplyPluginGeometryTimer = CreateTimer(ApplyPluginGeometryUpdatesCallback,
+                                          "ApplyPluginGeometryUpdatesCallback",
                                           nsRefreshDriver::DefaultInterval() * 2);
 }
 
@@ -3270,7 +3278,9 @@ nsRootPresContext::EnsureEventualDidPaintEvent()
   if (mNotifyDidPaintTimer)
     return;
 
-  mNotifyDidPaintTimer = CreateTimer(NotifyDidPaintForSubtreeCallback, 100);
+  mNotifyDidPaintTimer = CreateTimer(NotifyDidPaintForSubtreeCallback,
+                                     "NotifyDidPaintForSubtreeCallback",
+                                     100);
 }
 
 void

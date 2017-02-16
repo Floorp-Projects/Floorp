@@ -177,17 +177,6 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ImageBridgeParent::RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-                                    const uint64_t& aFwdTransactionId)
-{
-  bool success = RecvUpdate(Move(aEdits), Move(aToDestroy), aFwdTransactionId);
-  if (!success) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 /* static */ bool
 ImageBridgeParent::CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint)
 {

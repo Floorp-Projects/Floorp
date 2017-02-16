@@ -34,11 +34,6 @@ parent:
      */
     async Destroy();
 
-    /**
-     * Synchronously tell the compositor side to remove the texture.
-     */
-    sync DestroySync();
-
     async RecycleTexture(TextureFlags aTextureFlags);
 };
 
