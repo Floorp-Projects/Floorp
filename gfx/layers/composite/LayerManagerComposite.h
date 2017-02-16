@@ -164,6 +164,10 @@ public:
 
   void SetPaintTime(const TimeDuration& aPaintTime) { mLastPaintTime = aPaintTime; }
 
+  virtual bool AlwaysScheduleComposite() const {
+    return false;
+  }
+
   TimeStamp GetCompositionTime() const {
     return mCompositionTime;
   }
@@ -278,6 +282,8 @@ public:
     CreateOptimalMaskDrawTarget(const IntSize &aSize) override;
 
   virtual const char* Name() const override { return ""; }
+
+  bool AlwaysScheduleComposite() const override;
 
   /**
    * Post-processes layers before composition. This performs the following:
