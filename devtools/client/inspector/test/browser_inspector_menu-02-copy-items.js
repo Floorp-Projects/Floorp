@@ -38,12 +38,6 @@ const COPY_ITEMS_TEST_DATA = [
     text: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC" +
       "AAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==",
   },
-  {
-    desc: "copy attribute value",
-    id: "node-menu-copy-attribute",
-    selector: "[data-id=\"copy\"]",
-    text: "<p data-id=\"copy\">Paragraph for testing copy</p>",
-  },
 ];
 
 add_task(function* () {
