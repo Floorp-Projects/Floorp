@@ -101,10 +101,14 @@ function CssGridHighlighter(highlighterEnv) {
     this._buildMarkup.bind(this));
 
   this.onNavigate = this.onNavigate.bind(this);
+  this.onPageHide = this.hide.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
 
   this.highlighterEnv.on("navigate", this.onNavigate);
   this.highlighterEnv.on("will-navigate", this.onWillNavigate);
+
+  let { pageListenerTarget } = highlighterEnv;
+  pageListenerTarget.addEventListener("pagehide", this.onPageHide);
 }
 
 CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -224,8 +228,13 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   destroy() {
-    this.highlighterEnv.off("navigate", this.onNavigate);
-    this.highlighterEnv.off("will-navigate", this.onWillNavigate);
+    let { highlighterEnv } = this;
+    highlighterEnv.off("navigate", this.onNavigate);
+    highlighterEnv.off("will-navigate", this.onWillNavigate);
+
+    let { pageListenerTarget } = highlighterEnv;
+    pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
+
     this.markup.destroy();
     AutoRefreshHighlighter.prototype.destroy.call(this);
   },
