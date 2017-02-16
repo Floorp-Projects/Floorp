@@ -15,7 +15,7 @@ const Actions = require("./actions/index");
 const {
   fetchHeaders,
   formDataURI,
-} = require("./request-utils");
+} = require("./utils/request-utils");
 const {
   getRequestById,
   getDisplayedRequestById,
