@@ -26,7 +26,10 @@
 
   runNetworkTest(() =>
     pushPrefs(['media.peerconnection.simulcast', true],
-              ['media.peerconnection.video.min_bitrate_estimate', 100*1000]).then(() => {
+              // 180Kbps was determined empirically, set well-higher than
+              // the 80Kbps+overhead needed for the two simulcast streams.
+              // 100Kbps was apparently too low.
+              ['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
       SimpleTest.requestCompleteLog();
       var helper;
 
