@@ -5,9 +5,6 @@
 
 const BAD_CERT_PAGE = "https://expired.example.com/";
 
-const CANONICAL_CONTENT = "success";
-const CANONICAL_URL = "data:text/plain;charset=utf-8," + CANONICAL_CONTENT;
-
 // This tests the alternate cert error UI when we are behind a captive portal.
 
 add_task(function* checkCaptivePortalCertErrorUI() {
