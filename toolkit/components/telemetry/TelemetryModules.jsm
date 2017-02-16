@@ -67,7 +67,7 @@ this.TelemetryModules = Object.freeze({
             modules = modules.slice(0, MAX_MODULES_NUM);
           }
 
-          // Cut the file names of the modules to MAX_MODULE_FILENAME_LENGTH characters.
+          // Cut the file names of the modules to MAX_NAME_LENGTH characters.
           for (let module of modules) {
             if (module.name.length > MAX_NAME_LENGTH) {
               module.name = module.name.substr(0, MAX_NAME_LENGTH - 1) + TRUNCATION_DELIMITER;
