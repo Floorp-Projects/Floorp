@@ -1,0 +1,16 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="author" title="Markus Stange" href="mailto:mstange@themasta.com">
+<link rel="help" href="https://drafts.csswg.org/css-display/#box-generation">
+<title>Bug 1338678 - display:contents makes textContent disappear</title>
+<div style="display: contents">
+  <div id="element"></div>
+</div>
+<script>
+window.onload = function() {
+  document.body.offsetTop;
+  var element = document.getElementById('element');
+  element.textContent = "FAIL";
+  element.textContent = "PASS";
+}
+</script>

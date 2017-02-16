@@ -9,18 +9,15 @@ var iframe_url = scope + '-iframe.html';
 var shared_worker_url = scope + '-shared-worker.js';
 
 /* visibilityState, focused, url, frameType */
-var expected_without_type = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested']
+var expected_only_window = [
+    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested']
 ];
-var expected_with_window = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested']
+var expected_only_shared_worker = [
+    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
 ];
-var expected_with_shared_worker = [
-    [,,new URL(shared_worker_url, location).href, 'none']
-];
-var expected_with_all = [
-    ['visible', true, new URL(iframe_url, location).href, 'nested'],
-    [,,new URL(shared_worker_url, location).href, 'none']
+var expected_window_and_shared_worker = [
+    ['visible', true, new URL(iframe_url, location).href, 'window', 'nested'],
+    [,,new URL(shared_worker_url, location).href, 'sharedworker', 'none']
 ];
 
 function test_matchall(frame, expected, query_options) {
@@ -30,6 +27,9 @@ function test_matchall(frame, expected, query_options) {
   return new Promise(function(resolve, reject) {
     var channel = new MessageChannel();
     channel.port1.onmessage = function(e) {
+      if (typeof e.data === 'string') {
+        return reject(e.data);
+      }
       assert_equals(e.data.length, expected.length);
       for (var i = 0; i < e.data.length; i++)
         assert_array_equals(e.data[i], expected[i]);
@@ -51,28 +51,50 @@ promise_test(function(t) {
       .then(function() { return with_iframe(iframe_url); })
       .then(function(f) {
           frame = f;
+          return test_matchall(frame, expected_only_window, {});
+        })
+      .then(function() {
+          return test_matchall(frame, expected_only_window, {type:'window'});
+        })
+      .then(function() {
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Verify matchAll() with window client type');
+
+promise_test(function(t) {
+    var frame;
+    return service_worker_unregister_and_register(
+        t, 'resources/clients-matchall-worker.js', scope)
+      .then(function(registration) {
+          return wait_for_state(t, registration.installing, 'activated');
+        })
+      .then(function() { return with_iframe(iframe_url); })
+      .then(function(f) {
+          frame = f;
           return new Promise(function(resolve, reject) {
               var w = new SharedWorker(shared_worker_url);
               w.port.onmessage = resolve;
             });
         })
       .then(function() {
-          return test_matchall(frame, expected_without_type, {});
+          return test_matchall(frame, expected_only_window, {});
         })
       .then(function() {
-          return test_matchall(frame, expected_with_window, {type:'window'});
+          return test_matchall(frame, expected_only_window, {type:'window'});
         })
-      //.then(function() {
-      //    return test_matchall(frame, expected_with_shared_worker,
-      //                         {type:'sharedworker'});
-      //  })
-      //.then(function() {
-      //    return test_matchall(frame, expected_with_all, {type:'all'});
-      //  })
+      .then(function() {
+          return test_matchall(frame, expected_only_shared_worker,
+                               {type:'sharedworker'});
+        })
+      .then(function() {
+          return test_matchall(frame, expected_window_and_shared_worker, {type:'all'});
+        })
       .then(function() {
           frame.remove();
           return service_worker_unregister_and_done(t, scope);
         });
-  }, 'Verify matchAll() with various client types');
+  }, 'Verify matchAll() with window and sharedworker client types');
 
 </script>

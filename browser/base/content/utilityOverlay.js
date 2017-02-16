@@ -475,7 +475,7 @@ function createUserContextMenu(event, {
     docfrag.appendChild(menuseparator);
   }
 
-  ContextualIdentityService.getIdentities().forEach(identity => {
+  ContextualIdentityService.getPublicIdentities().forEach(identity => {
     if (identity.userContextId == excludeUserContextId) {
       return;
     }
