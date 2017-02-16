@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+window.onload = function(){
+  let x = document.getElementsByTagName("iframe")[0];
+  let w = window.open();
+  let o = window.frames[0];
+  x.remove();
+  o.requestIdleCallback(function(){});
+  w.close();
+};
+</script>
+</head>
+<body>
+<iframe></iframe>
+</body>
+</html>
