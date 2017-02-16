@@ -8,7 +8,7 @@
 
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "js/Value.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
@@ -239,7 +239,7 @@ GetDirectoryListingTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
       }
 
       FileSystemDirectoryListingResponseFile fileData;
-      RefPtr<BlobImpl> blobImpl = new BlobImplFile(path);
+      RefPtr<BlobImpl> blobImpl = new FileBlobImpl(path);
 
       nsAutoString filePath;
       filePath.Assign(mDOMPath);
