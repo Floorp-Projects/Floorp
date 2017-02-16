@@ -61,18 +61,6 @@ class nsScanner {
       nsresult GetChar(char16_t& ch);
 
       /**
-       *  peek ahead to consume next char from scanner's internal
-       *  input buffer
-       *  
-       *  @update  gess 3/25/98
-       *  @param   ch is the char to accept new value
-       *  @return  error code reflecting read status
-       */
-      nsresult Peek(char16_t& ch, uint32_t aOffset=0);
-
-      nsresult Peek(nsAString& aStr, int32_t aNumChars, int32_t aOffset = 0);
-
-      /**
        *  Records current offset position in input stream. This allows us
        *  to back up to this point if the need should arise, such as when
        *  tokenization gets interrupted.
