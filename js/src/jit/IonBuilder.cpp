@@ -1172,6 +1172,9 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
         env = constant(ObjectValue(script()->global().lexicalEnvironment()));
     }
 
+    // Update the environment slot from UndefinedValue only after initial
+    // environment is created so that bailout doesn't see a partial env.
+    // See: |InitFromBailout|
     current->setEnvironmentChain(env);
     return Ok();
 }
