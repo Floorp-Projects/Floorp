@@ -61,7 +61,7 @@ bool nsMixedContentBlocker::sUseHSTS = false;
 // Do we send an HSTS priming request
 bool nsMixedContentBlocker::sSendHSTSPriming = false;
 // Default HSTS Priming failure timeout to 7 days, in seconds
-uint32_t nsMixedContentBlocker::sHSTSPrimingCacheTimeout = (60 * 24 * 7);
+uint32_t nsMixedContentBlocker::sHSTSPrimingCacheTimeout = (60 * 60 * 24 * 7);
 
 bool
 IsEligibleForHSTSPriming(nsIURI* aContentLocation) {
