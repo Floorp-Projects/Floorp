@@ -904,38 +904,6 @@ LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj
 }
 
 static bool
-TypedArraySetElemStubExists(ICSetElem_Fallback* stub, HandleObject obj, bool expectOOB)
-{
-    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
-        if (!iter->isSetElem_TypedArray())
-            continue;
-        ICSetElem_TypedArray* taStub = iter->toSetElem_TypedArray();
-        if (obj->maybeShape() == taStub->shape() && taStub->expectOutOfBounds() == expectOOB)
-            return true;
-    }
-    return false;
-}
-
-static bool
-RemoveExistingTypedArraySetElemStub(JSContext* cx, ICSetElem_Fallback* stub, HandleObject obj)
-{
-    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
-        if (!iter->isSetElem_TypedArray())
-            continue;
-
-        if (obj->maybeShape() != iter->toSetElem_TypedArray()->shape())
-            continue;
-
-        // TypedArraySetElem stubs are only removed using this procedure if
-        // being replaced with one that expects out of bounds index.
-        MOZ_ASSERT(!iter->toSetElem_TypedArray()->expectOutOfBounds());
-        iter.unlink(cx);
-        return true;
-    }
-    return false;
-}
-
-static bool
 DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_, Value* stack,
                   HandleValue objv, HandleValue index, HandleValue rhs)
 {
@@ -994,6 +962,9 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                     newStub->toCacheIR_Updated()->notePreliminaryObject();
                 else if (gen.shouldUnlinkPreliminaryObjectStubs())
                     StripPreliminaryObjectStubs(cx, stub);
+
+                if (gen.attachedTypedArrayOOBStub())
+                    stub->noteHasTypedArrayOOB();
             }
         }
     }
@@ -1057,55 +1028,6 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
         }
     }
 
-    if ((obj->is<TypedArrayObject>() || IsPrimitiveArrayTypedObject(obj)) &&
-        index.isNumber() &&
-        rhs.isNumber())
-    {
-        if (!cx->runtime()->jitSupportsFloatingPoint &&
-            (TypedThingRequiresFloatingPoint(obj) || index.isDouble()))
-        {
-            return true;
-        }
-
-        bool expectOutOfBounds;
-        double idx = index.toNumber();
-        if (obj->is<TypedArrayObject>()) {
-            expectOutOfBounds = (idx < 0 || idx >= double(obj->as<TypedArrayObject>().length()));
-        } else {
-            // Typed objects throw on out of bounds accesses. Don't attach
-            // a stub in this case.
-            if (idx < 0 || idx >= double(obj->as<TypedObject>().length()))
-                return true;
-            expectOutOfBounds = false;
-
-            // Don't attach stubs if the underlying storage for typed objects
-            // in the compartment could be detached, as the stub will always
-            // bail out.
-            if (cx->compartment()->detachedTypedObjects)
-                return true;
-        }
-
-        if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
-            // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
-            if (expectOutOfBounds)
-                RemoveExistingTypedArraySetElemStub(cx, stub, obj);
-
-            Shape* shape = obj->maybeShape();
-            Scalar::Type type = TypedThingElementType(obj);
-
-            JitSpew(JitSpew_BaselineIC,
-                    "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    shape, type, expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, shape, type, expectOutOfBounds);
-            ICStub* typedArrayStub = compiler.getStub(compiler.getStubSpace(outerScript));
-            if (!typedArrayStub)
-                return false;
-
-            stub->addNewStub(typedArrayStub);
-            return true;
-        }
-    }
-
     return true;
 }
 
@@ -1153,13 +1075,13 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 }
 
 void
-BaselineScript::noteArrayWriteHole(uint32_t pcOffset)
+BaselineScript::noteHasDenseAdd(uint32_t pcOffset)
 {
     ICEntry& entry = icEntryFromPCOffset(pcOffset);
     ICFallbackStub* stub = entry.fallbackStub();
 
     if (stub->isSetElem_Fallback())
-        stub->toSetElem_Fallback()->noteArrayWriteHole();
+        stub->toSetElem_Fallback()->noteHasDenseAdd();
 }
 
 void
@@ -1173,15 +1095,11 @@ EmitUnboxedPreBarrierForBaseline(MacroAssembler &masm, const BaseIndex& address,
         MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(type));
 }
 
-//
-// SetElem_TypedArray
-//
-
-template <typename S, typename T>
+template <typename T>
 void
-BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type, const S& value,
-                          const T& dest, Register scratch, Label* failure,
-                          Label* failureModifiedScratch)
+BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                          const ValueOperand& value, const T& dest, Register scratch,
+                          Label* failure)
 {
     Label done;
 
@@ -1231,7 +1149,7 @@ BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type
         if (cx->runtime()->jitSupportsFloatingPoint) {
             masm.branchTestDouble(Assembler::NotEqual, value, failure);
             masm.unboxDouble(value, FloatReg0);
-            masm.branchTruncateDoubleMaybeModUint32(FloatReg0, scratch, failureModifiedScratch);
+            masm.branchTruncateDoubleMaybeModUint32(FloatReg0, scratch, failure);
             masm.jump(&isInt32);
         } else {
             masm.jump(failure);
@@ -1244,98 +1162,12 @@ BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type
 template void
 BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
                           const ValueOperand& value, const Address& dest, Register scratch,
-                          Label* failure, Label* failureModifiedScratch);
+                          Label* failure);
 
 template void
 BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                          const Address& value, const BaseIndex& dest, Register scratch,
-                          Label* failure, Label* failureModifiedScratch);
-
-bool
-ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-
-    if (layout_ != Layout_TypedArray)
-        CheckForTypedObjectWithDetachedStorage(cx, masm, &failure);
-
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratchReg = regs.takeAny();
-
-    // Unbox R0 and shape guard.
-    Register obj = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICSetElem_TypedArray::offsetOfShape()), scratchReg);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
-
-    // Ensure the index is an integer.
-    if (cx->runtime()->jitSupportsFloatingPoint) {
-        Label isInt32;
-        masm.branchTestInt32(Assembler::Equal, R1, &isInt32);
-        {
-            // If the index is a double, try to convert it to int32. It's okay
-            // to convert -0 to 0: the shape check ensures the object is a typed
-            // array so the difference is not observable.
-            masm.branchTestDouble(Assembler::NotEqual, R1, &failure);
-            masm.unboxDouble(R1, FloatReg0);
-            masm.convertDoubleToInt32(FloatReg0, scratchReg, &failure, /* negZeroCheck = */false);
-            masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R1);
-        }
-        masm.bind(&isInt32);
-    } else {
-        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
-    }
-
-    // Unbox key.
-    Register key = masm.extractInt32(R1, ExtractTemp1);
-
-    // Bounds check.
-    Label oobWrite;
-    LoadTypedThingLength(masm, layout_, obj, scratchReg);
-    masm.branch32(Assembler::BelowOrEqual, scratchReg, key,
-                  expectOutOfBounds_ ? &oobWrite : &failure);
-
-    // Load the elements vector.
-    LoadTypedThingData(masm, layout_, obj, scratchReg);
-
-    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
-    Address value(masm.getStackPointer(), ICStackValueOffset);
-
-    // We need a second scratch register. It's okay to clobber the type tag of
-    // R0 or R1, as long as it's restored before jumping to the next stub.
-    regs = availableGeneralRegs(0);
-    regs.takeUnchecked(obj);
-    regs.takeUnchecked(key);
-    regs.take(scratchReg);
-    Register secondScratch = regs.takeAny();
-
-    Label failureModifiedSecondScratch;
-    BaselineStoreToTypedArray(cx, masm, type_, value, dest,
-                              secondScratch, &failure, &failureModifiedSecondScratch);
-    EmitReturnFromIC(masm);
-
-    if (failureModifiedSecondScratch.used()) {
-        // Writing to secondScratch may have clobbered R0 or R1, restore them
-        // first.
-        masm.bind(&failureModifiedSecondScratch);
-        masm.tagValue(JSVAL_TYPE_OBJECT, obj, R0);
-        masm.tagValue(JSVAL_TYPE_INT32, key, R1);
-    }
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-
-    if (expectOutOfBounds_) {
-        MOZ_ASSERT(layout_ == Layout_TypedArray);
-        masm.bind(&oobWrite);
-        EmitReturnFromIC(masm);
-    }
-    return true;
-}
+                          const ValueOperand& value, const BaseIndex& dest, Register scratch,
+                          Label* failure);
 
 //
 // In_Fallback
@@ -4673,17 +4505,6 @@ ICTypeUpdate_ObjectGroup::ICTypeUpdate_ObjectGroup(JitCode* stubCode, ObjectGrou
   : ICStub(TypeUpdate_ObjectGroup, stubCode),
     group_(group)
 { }
-
-ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode* stubCode, Shape* shape, Scalar::Type type,
-                                           bool expectOutOfBounds)
-  : ICStub(SetElem_TypedArray, stubCode),
-    shape_(shape)
-{
-    extra_ = uint8_t(type);
-    MOZ_ASSERT(extra_ == type);
-    extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
-}
-
 
 ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(JitCode* stubCode, const Value& value)
   : ICStub(GetIntrinsic_Constant, stubCode),
