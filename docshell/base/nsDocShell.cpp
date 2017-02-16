@@ -8100,7 +8100,11 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
   if (docFactory) {
     nsCOMPtr<nsIPrincipal> principal;
     if (mSandboxFlags & SANDBOXED_ORIGIN) {
-      principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
+      if (aPrincipal) {
+        principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
+      } else {
+        principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      }
     } else {
       principal = aPrincipal;
     }
