@@ -138,6 +138,12 @@ const SNAPSHOT_SCHEMA = {
         numRemoteWindows: {
           type: "number",
         },
+        keyGoogleFound: {
+          type: "boolean",
+        },
+        keyMozillaFound: {
+          type: "boolean",
+        },
         safeMode: {
           type: "boolean",
         },

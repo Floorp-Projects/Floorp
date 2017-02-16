@@ -37,6 +37,7 @@ window.addEventListener("load", function onload(event) {
 var snapshotFormatters = {
 
   application: function application(data) {
+    let strings = stringBundle();
     $("application-box").textContent = data.name;
     $("useragent-box").textContent = data.userAgent;
     $("os-box").textContent = data.osVersion;
@@ -49,7 +50,7 @@ var snapshotFormatters = {
     if (data.updateChannel)
       $("updatechannel-box").textContent = data.updateChannel;
 
-    let statusText = stringBundle().GetStringFromName("multiProcessStatus.unknown");
+    let statusText = strings.GetStringFromName("multiProcessStatus.unknown");
 
     // Whitelist of known values with string descriptions:
     switch (data.autoStartStatus) {
@@ -60,7 +61,7 @@ var snapshotFormatters = {
       case 6:
       case 7:
       case 8:
-        statusText = stringBundle().GetStringFromName("multiProcessStatus." + data.autoStartStatus);
+        statusText = strings.GetStringFromName("multiProcessStatus." + data.autoStartStatus);
         break;
 
       case 10:
@@ -68,8 +69,14 @@ var snapshotFormatters = {
         break;
     }
 
-    $("multiprocess-box").textContent = stringBundle().formatStringFromName("multiProcessWindows",
+    $("multiprocess-box").textContent = strings.formatStringFromName("multiProcessWindows",
       [data.numRemoteWindows, data.numTotalWindows, statusText], 3);
+
+    let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
+    $("key-google-box").textContent = strings.GetStringFromName(keyGoogleFound);
+
+    let keyMozillaFound = data.keyMozillaFound ? "found" : "missing";
+    $("key-mozilla-box").textContent = strings.GetStringFromName(keyMozillaFound);
 
     $("safemode-box").textContent = data.safeMode;
   },
