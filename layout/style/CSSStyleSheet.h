@@ -212,9 +212,9 @@ protected:
   }
 
   // Unlink our inner, if needed, for cycle collection
-  void UnlinkInner();
+  virtual void UnlinkInner() override;
   // Traverse our inner, if needed, for cycle collection
-  void TraverseInner(nsCycleCollectionTraversalCallback &);
+  virtual void TraverseInner(nsCycleCollectionTraversalCallback &) override;
 
 protected:
   // Internal methods which do not have security check and completeness check.
