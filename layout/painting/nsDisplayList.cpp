@@ -82,6 +82,7 @@
 #include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
@@ -4346,7 +4347,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCaret::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
-                                        WebRenderLayer* aLayer) {
+                                        WebRenderDisplayItemLayer* aLayer) {
   using namespace mozilla::layers;
   int32_t contentOffset;
   nsIFrame* frame = mCaret->GetFrame(&contentOffset);
@@ -4729,6 +4730,87 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // Store the actual visible region
   mVisibleRegion.And(*aVisibleRegion, mVisibleRect);
   return true;
+}
+
+
+LayerState
+nsDisplayBoxShadowOuter::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                                  LayerManager* aManager,
+                                                  const ContainerLayerParameters& aParameters)
+{
+  if (gfxPrefs::LayersAllowOuterBoxShadow()) {
+    return LAYER_ACTIVE;
+  }
+
+  return LAYER_NONE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                    LayerManager* aManager,
+                                    const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                                 WebRenderDisplayItemLayer* aLayer)
+{
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
+  //nsPresContext* presContext = mFrame->PresContext();
+  AutoTArray<nsRect,10> rects;
+  nsRegion visible = aLayer->GetVisibleRegion().ToAppUnits(appUnitsPerDevPixel);
+
+  ComputeDisjointRectangles(visible, &rects);
+
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  if (!shadows)
+    return;
+
+  // Everything here is in app units, change to device units.
+  for (uint32_t i = 0; i < rects.Length(); ++i) {
+    Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
+    Rect gfxBorderRect = NSRectToRect(borderRect, appUnitsPerDevPixel);
+
+    Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
+    Rect deviceBoxRect = aLayer->RelativeToParent(gfxBorderRect);
+
+    for (uint32_t j = shadows->Length(); j > 0; --j) {
+      nsCSSShadowItem* shadowItem = shadows->ShadowAt(j - 1);
+      nscoord blurRadius = shadowItem->mRadius;
+      float gfxBlurRadius = blurRadius / appUnitsPerDevPixel;
+
+      // TODO: Have to refactor our nsCSSRendering
+      // to get the acual rects correct.
+      nscolor shadowColor;
+      if (shadowItem->mHasColor)
+        shadowColor = shadowItem->mColor;
+      else
+        shadowColor = mFrame->StyleColor()->mColor;
+
+      Color gfxShadowColor(Color::FromABGR(shadowColor));
+      gfxShadowColor.a *= mOpacity;
+
+      WrPoint offset;
+      offset.x = shadowItem->mXOffset;
+      offset.y = shadowItem->mYOffset;
+
+      aCommands.AppendElement(OpDPPushBoxShadow(
+                              wr::ToWrRect(deviceBoxRect),
+                              wr::ToWrRect(deviceClipRect),
+                              wr::ToWrRect(deviceBoxRect),
+                              offset,
+                              wr::ToWrColor(gfxShadowColor),
+                              gfxBlurRadius,
+                              0,
+                              0,
+                              WrBoxShadowClipMode::Outset
+      ));
+    }
+  }
 }
 
 void

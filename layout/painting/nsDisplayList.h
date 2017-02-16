@@ -58,7 +58,7 @@ class Layer;
 class ImageLayer;
 class ImageContainer;
 class WebRenderCommand;
-class WebRenderLayer;
+class WebRenderDisplayItemLayer;
 } // namespace layers
 } // namespace mozilla
 
@@ -1587,7 +1587,7 @@ public:
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::WebRenderCommand WebRenderCommand;
-  typedef mozilla::layers::WebRenderLayer WebRenderLayer;
+  typedef mozilla::layers::WebRenderDisplayItemLayer WebRenderDisplayItemLayer;
   typedef mozilla::LayerState LayerState;
   typedef class mozilla::gfx::DrawTarget DrawTarget;
 
@@ -1928,7 +1928,7 @@ public:
     * to their parent.
     */
    virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
-                                        WebRenderLayer* aLayer) {}
+                                        WebRenderDisplayItemLayer* aLayer) {}
   /**
    * Builds a DisplayItemLayer and sets the display item to this.
    */
@@ -2824,7 +2824,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
-                                        WebRenderLayer* aLayer) override;
+                                        WebRenderDisplayItemLayer* aLayer) override;
 
 protected:
   RefPtr<nsCaret> mCaret;
@@ -3378,6 +3378,15 @@ public:
   {
     return new nsDisplayBoxShadowOuterGeometry(this, aBuilder, mOpacity);
   }
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+  virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                       WebRenderDisplayItemLayer* aLayer) override;
 
   nsRect GetBoundsInternal();
 

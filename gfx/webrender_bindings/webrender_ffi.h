@@ -69,6 +69,13 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 // -----
 // Enums used in C++ code with corresponding enums in Rust code
 // -----
+enum class WrBoxShadowClipMode {
+  None,
+  Outset,
+  Inset,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
 
 enum class WrImageFormat: uint32_t
 {
@@ -247,6 +254,17 @@ struct WrRect
     return x == aRhs.x && y == aRhs.y &&
            width == aRhs.width && height == aRhs.height;
   }
+};
+
+struct WrPoint
+{
+  float x;
+  float y;
+
+  bool operator==(const WrPoint& aRhs) const {
+    return x == aRhs.x && y == aRhs.y;
+  }
+
 };
 
 struct WrImageMask
@@ -485,6 +503,13 @@ WR_FUNC;
 WR_INLINE const uint8_t*
 wr_renderer_readback(uint32_t width, uint32_t height,
                      uint8_t* dst_buffer, size_t buffer_length)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrRect clip,
+                      WrRect box_bounds, WrPoint offset, WrColor color,
+                      float blur_radius, float spread_radius, float border_radius,
+                      WrBoxShadowClipMode clip_mode)
 WR_FUNC;
 
 #undef WR_FUNC

@@ -272,6 +272,24 @@ struct ParamTraits<WrRect>
 };
 
 template<>
+struct ParamTraits<WrPoint>
+{
+  static void
+  Write(Message* aMsg, const WrPoint& aParam)
+  {
+    WriteParam(aMsg, aParam.x);
+    WriteParam(aMsg, aParam.y);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WrPoint* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->x) &&
+           ReadParam(aMsg, aIter, &aResult->y);
+  }
+};
+
+template<>
 struct ParamTraits<WrImageMask>
 {
   static void
@@ -306,6 +324,15 @@ struct ParamTraits<WrMixBlendMode>
         WrMixBlendMode,
         WrMixBlendMode::Normal,
         WrMixBlendMode::Sentinel>
+{
+};
+
+template<>
+struct ParamTraits<WrBoxShadowClipMode>
+  : public ContiguousEnumSerializer<
+        WrBoxShadowClipMode,
+        WrBoxShadowClipMode::None,
+        WrBoxShadowClipMode::Sentinel>
 {
 };
 
