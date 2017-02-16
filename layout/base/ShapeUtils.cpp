@@ -137,4 +137,16 @@ ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
   return insetRect;
 }
 
+/* static */ bool
+ShapeUtils::ComputeInsetRadii(StyleBasicShape* const aBasicShape,
+                              const nsRect& aInsetRect,
+                              const nsRect& aRefBox,
+                              nscoord aRadii[8])
+{
+  const nsStyleCorners& radius = aBasicShape->GetRadius();
+  return nsIFrame::ComputeBorderRadii(radius, aInsetRect.Size(), aRefBox.Size(),
+                                      Sides(), aRadii);
+
+}
+
 } // namespace mozilla

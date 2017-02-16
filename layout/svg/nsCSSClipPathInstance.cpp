@@ -185,12 +185,10 @@ nsCSSClipPathInstance::CreateClipPathInset(DrawTarget* aDrawTarget,
 
   nsRect insetRect = ShapeUtils::ComputeInsetRect(basicShape, aRefBox);
   const Rect insetRectPixels = NSRectToRect(insetRect, appUnitsPerDevPixel);
-  const nsStyleCorners& radius = basicShape->GetRadius();
-
   nscoord appUnitsRadii[8];
 
-  if (nsIFrame::ComputeBorderRadii(radius, insetRect.Size(), aRefBox.Size(),
-                                   Sides(), appUnitsRadii)) {
+  if (ShapeUtils::ComputeInsetRadii(basicShape, insetRect, aRefBox,
+                                    appUnitsRadii)) {
     RectCornerRadii corners;
     nsCSSRendering::ComputePixelRadii(appUnitsRadii,
                                       appUnitsPerDevPixel, &corners);

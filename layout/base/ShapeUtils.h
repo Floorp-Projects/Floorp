@@ -62,6 +62,17 @@ struct ShapeUtils final
   static nsRect ComputeInsetRect(
     mozilla::StyleBasicShape* const aBasicShape,
     const nsRect& aRefBox);
+
+  // Compute the radii for an inset.
+  // @param aRefBox the reference box of the inset.
+  // @param aInsetRect the inset rect computed by ComputeInsetRect().
+  // @param aRadii the returned radii in app units.
+  // @return true if any of the radii is nonzero; false otherwise.
+  static bool ComputeInsetRadii(
+    mozilla::StyleBasicShape* const aBasicShape,
+    const nsRect& aInsetRect,
+    const nsRect& aRefBox,
+    nscoord aRadii[8]);
 };
 
 } // namespace mozilla
