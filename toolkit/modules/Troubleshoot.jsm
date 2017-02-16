@@ -230,6 +230,12 @@ var dataProviders = {
       data.autoStartStatus = -1;
     }
 
+    const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
+    data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
+
+    const keyMozilla = Services.urlFormatter.formatURL("%MOZILLA_API_KEY%").trim();
+    data.keyMozillaFound = keyMozilla != "no-mozilla-api-key" && keyMozilla.length > 0;
+
     done(data);
   },
 
