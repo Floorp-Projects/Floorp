@@ -377,6 +377,12 @@ private:
                     aRect.ISize(aWM), aRect.BSize(aWM));
     }
 
+    static mozilla::UniquePtr<ShapeInfo> CreateShapeBox(
+      nsIFrame* const aFrame,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
       mozilla::StyleBasicShape* const aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
@@ -406,17 +412,23 @@ private:
     static nsPoint ConvertToFloatLogical(const nsPoint& aPoint,
                                          mozilla::WritingMode aWM,
                                          const nsSize& aContainerSize);
+
+    // Convert the half corner radii (nscoord[8]) to the special logical
+    // coordinate space used in float manager.
+    static mozilla::UniquePtr<nscoord[]> ConvertToFloatLogical(
+      const nscoord aRadii[8],
+      mozilla::WritingMode aWM);
   };
 
   // Implements shape-outside: <shape-box>.
   class BoxShapeInfo final : public ShapeInfo
   {
   public:
-    BoxShapeInfo(const nsRect& aShapeBoxRect, nsIFrame* const aFrame)
+    BoxShapeInfo(const nsRect& aShapeBoxRect,
+                 mozilla::UniquePtr<nscoord[]> aRadii)
       : mShapeBoxRect(aShapeBoxRect)
-      , mFrame(aFrame)
-    {
-    }
+      , mRadii(Move(aRadii))
+    {}
 
     nscoord LineLeft(mozilla::WritingMode aWM,
                      const nscoord aBStart,
@@ -438,8 +450,10 @@ private:
     // implements the <shape-box> value in the CSS Shapes Module Level 1.
     // The coordinate space is the same as FloatInfo::mRect.
     nsRect mShapeBoxRect;
-    // The frame of the float.
-    nsIFrame* const mFrame;
+    // The half corner radii of the reference box. It's an nscoord[8] array
+    // in the float manager's coordinate space. If there are no radii, it's
+    // nullptr.
+    mozilla::UniquePtr<nscoord[]> mRadii;
   };
 
   // Implements shape-outside: circle() and shape-outside: ellipse().

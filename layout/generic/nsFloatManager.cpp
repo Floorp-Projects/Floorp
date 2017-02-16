@@ -536,38 +536,15 @@ nsFloatManager::BoxShapeInfo::LineLeft(WritingMode aWM,
                                        const nscoord aBStart,
                                        const nscoord aBEnd) const
 {
-  nscoord radii[8];
-  bool hasRadii = mFrame->GetShapeBoxBorderRadii(radii);
-
-  if (!hasRadii) {
+  if (!mRadii) {
     return mShapeBoxRect.x;
-  }
-
-  // Get the physical side for line-left since border-radii are in
-  // the physical axis.
-  mozilla::Side lineLeftSide =
-    aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirLeft));
-  nscoord blockStartCornerRadiusL =
-    radii[SideToHalfCorner(lineLeftSide, true, false)];
-  nscoord blockStartCornerRadiusB =
-    radii[SideToHalfCorner(lineLeftSide, true, true)];
-  nscoord blockEndCornerRadiusL =
-    radii[SideToHalfCorner(lineLeftSide, false, false)];
-  nscoord blockEndCornerRadiusB =
-    radii[SideToHalfCorner(lineLeftSide, false, true)];
-
-  if (aWM.IsLineInverted()) {
-    // This happens only when aWM is vertical-lr. Need to swap blockStart
-    // and blockEnd corners.
-    std::swap(blockStartCornerRadiusL, blockEndCornerRadiusL);
-    std::swap(blockStartCornerRadiusB, blockEndCornerRadiusB);
   }
 
   nscoord lineLeftDiff =
     ComputeEllipseLineInterceptDiff(
       mShapeBoxRect.y, mShapeBoxRect.YMost(),
-      blockStartCornerRadiusL, blockStartCornerRadiusB,
-      blockEndCornerRadiusL, blockEndCornerRadiusB,
+      mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
+      mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
       aBStart, aBEnd);
   return mShapeBoxRect.x + lineLeftDiff;
 }
@@ -577,38 +554,15 @@ nsFloatManager::BoxShapeInfo::LineRight(WritingMode aWM,
                                         const nscoord aBStart,
                                         const nscoord aBEnd) const
 {
-  nscoord radii[8];
-  bool hasRadii = mFrame->GetShapeBoxBorderRadii(radii);
-
-  if (!hasRadii) {
+  if (!mRadii) {
     return mShapeBoxRect.XMost();
-  }
-
-  // Get the physical side for line-right since border-radii are in
-  // the physical axis.
-  mozilla::Side lineRightSide =
-    aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirRight));
-  nscoord blockStartCornerRadiusL =
-    radii[SideToHalfCorner(lineRightSide, false, false)];
-  nscoord blockStartCornerRadiusB =
-    radii[SideToHalfCorner(lineRightSide, false, true)];
-  nscoord blockEndCornerRadiusL =
-    radii[SideToHalfCorner(lineRightSide, true, false)];
-  nscoord blockEndCornerRadiusB =
-    radii[SideToHalfCorner(lineRightSide, true, true)];
-
-  if (aWM.IsLineInverted()) {
-    // This happens only when aWM is vertical-lr. Need to swap blockStart
-    // and blockEnd corners.
-    std::swap(blockStartCornerRadiusL, blockEndCornerRadiusL);
-    std::swap(blockStartCornerRadiusB, blockEndCornerRadiusB);
   }
 
   nscoord lineRightDiff =
     ComputeEllipseLineInterceptDiff(
       mShapeBoxRect.y, mShapeBoxRect.YMost(),
-      blockStartCornerRadiusL, blockStartCornerRadiusB,
-      blockEndCornerRadiusL, blockEndCornerRadiusB,
+      mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
+      mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
       aBStart, aBEnd);
   return mShapeBoxRect.XMost() - lineRightDiff;
 }
@@ -673,9 +627,8 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
     ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    nsRect rect = ShapeInfo::ConvertToFloatLogical(shapeBoxRect, aWM,
-                                                   aContainerSize);
-    mShapeInfo = MakeUnique<BoxShapeInfo>(rect, mFrame);
+    mShapeInfo = ShapeInfo::CreateShapeBox(mFrame, shapeBoxRect, aWM,
+                                           aContainerSize);
   } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
     StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();
 
@@ -841,6 +794,27 @@ nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
+nsFloatManager::ShapeInfo::CreateShapeBox(
+  nsIFrame* const aFrame,
+  const LogicalRect& aShapeBoxRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  nsRect logicalShapeBoxRect
+    = ConvertToFloatLogical(aShapeBoxRect, aWM, aContainerSize);
+
+  nscoord physicalRadii[8];
+  bool hasRadii = aFrame->GetShapeBoxBorderRadii(physicalRadii);
+  if (!hasRadii) {
+    return MakeUnique<BoxShapeInfo>(logicalShapeBoxRect,
+                                    UniquePtr<nscoord[]>());
+  }
+
+  return MakeUnique<BoxShapeInfo>(logicalShapeBoxRect,
+                                  ConvertToFloatLogical(physicalRadii, aWM));
+}
+
+/* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
   StyleBasicShape* const aBasicShape,
   const LogicalRect& aShapeBoxRect,
@@ -966,6 +940,51 @@ nsFloatManager::ShapeInfo::ConvertToFloatLogical(
   LogicalPoint logicalPoint(aWM, aPoint, aContainerSize);
   return nsPoint(logicalPoint.LineRelative(aWM, aContainerSize),
                  logicalPoint.B(aWM));
+}
+
+/* static */ UniquePtr<nscoord[]>
+nsFloatManager::ShapeInfo::ConvertToFloatLogical(const nscoord aRadii[8],
+                                                 WritingMode aWM)
+{
+  UniquePtr<nscoord[]> logicalRadii(new nscoord[8]);
+
+  // Get the physical side for line-left and line-right since border radii
+  // are on the physical axis.
+  Side lineLeftSide =
+    aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirLeft));
+  logicalRadii[eCornerTopLeftX] =
+    aRadii[SideToHalfCorner(lineLeftSide, true, false)];
+  logicalRadii[eCornerTopLeftY] =
+    aRadii[SideToHalfCorner(lineLeftSide, true, true)];
+  logicalRadii[eCornerBottomLeftX] =
+    aRadii[SideToHalfCorner(lineLeftSide, false, false)];
+  logicalRadii[eCornerBottomLeftY] =
+    aRadii[SideToHalfCorner(lineLeftSide, false, true)];
+
+  Side lineRightSide =
+    aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirRight));
+  logicalRadii[eCornerTopRightX] =
+    aRadii[SideToHalfCorner(lineRightSide, false, false)];
+  logicalRadii[eCornerTopRightY] =
+    aRadii[SideToHalfCorner(lineRightSide, false, true)];
+  logicalRadii[eCornerBottomRightX] =
+    aRadii[SideToHalfCorner(lineRightSide, true, false)];
+  logicalRadii[eCornerBottomRightY] =
+    aRadii[SideToHalfCorner(lineRightSide, true, true)];
+
+  if (aWM.IsLineInverted()) {
+    // When IsLineInverted() is true, i.e. aWM is vertical-lr,
+    // line-over/line-under are inverted from block-start/block-end. So the
+    // relationship reverses between which corner comes first going
+    // clockwise, and which corner is block-start versus block-end. We need
+    // to swap the values stored in top and bottom corners.
+    std::swap(logicalRadii[eCornerTopLeftX], logicalRadii[eCornerBottomLeftX]);
+    std::swap(logicalRadii[eCornerTopLeftY], logicalRadii[eCornerBottomLeftY]);
+    std::swap(logicalRadii[eCornerTopRightX], logicalRadii[eCornerBottomRightX]);
+    std::swap(logicalRadii[eCornerTopRightY], logicalRadii[eCornerBottomRightY]);
+  }
+
+  return logicalRadii;
 }
 
 //----------------------------------------------------------------------
