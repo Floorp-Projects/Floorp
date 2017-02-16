@@ -4,27 +4,26 @@
 
 #include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
-
-#include "RemoteDataDecoder.h"
-
 #include "MediaInfo.h"
-#include "VPXDecoder.h"
-
 #include "MediaPrefs.h"
 #include "OpusDecoder.h"
+#include "RemoteDataDecoder.h"
+#include "VPXDecoder.h"
 #include "VorbisDecoder.h"
 
-#include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
+#include "nsPromiseFlatString.h"
 
 #include "prlog.h"
 
 #include <jni.h>
 
 #undef LOG
-#define LOG(arg, ...) MOZ_LOG(sAndroidDecoderModuleLog, \
-    mozilla::LogLevel::Debug, ("AndroidDecoderModule(%p)::%s: " arg, \
-      this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...)                                                          \
+  MOZ_LOG(                                                                     \
+    sAndroidDecoderModuleLog,                                                  \
+    mozilla::LogLevel::Debug,                                                  \
+    ("AndroidDecoderModule(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -125,8 +124,9 @@ AndroidDecoderModule::AndroidDecoderModule(CDMProxy* aProxy)
 }
 
 bool
-AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                       DecoderDoctorDiagnostics* aDiagnostics) const
+AndroidDecoderModule::SupportsMimeType(
+  const nsACString& aMimeType,
+  DecoderDoctorDiagnostics* aDiagnostics) const
 {
   if (!AndroidBridge::Bridge() ||
       AndroidBridge::Bridge()->GetAPIVersion() < 16) {
@@ -141,25 +141,25 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
   // When checking "audio/x-wav", CreateDecoder can cause a JNI ERROR by
   // Accessing a stale local reference leading to a SIGSEGV crash.
   // To avoid this we check for wav types here.
-  if (aMimeType.EqualsLiteral("audio/x-wav") ||
-      aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
-      aMimeType.EqualsLiteral("audio/wave; codecs=6") ||
-      aMimeType.EqualsLiteral("audio/wave; codecs=7") ||
-      aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
+  if (aMimeType.EqualsLiteral("audio/x-wav")
+      || aMimeType.EqualsLiteral("audio/wave; codecs=1")
+      || aMimeType.EqualsLiteral("audio/wave; codecs=6")
+      || aMimeType.EqualsLiteral("audio/wave; codecs=7")
+      || aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
     return false;
   }
 
-  if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8) &&
-       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE)) ||
-      (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9) &&
-       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
+  if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)
+       && !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE))
+      || (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)
+          && !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
     return false;
   }
 
   // Prefer the gecko decoder for opus and vorbis; stagefright crashes
   // on content demuxed from mp4.
-  if (OpusDataDecoder::IsOpus(aMimeType) ||
-      VorbisDataDecoder::IsVorbis(aMimeType)) {
+  if (OpusDataDecoder::IsOpus(aMimeType)
+      || VorbisDataDecoder::IsVorbis(aMimeType)) {
     LOG("Rejecting audio of type %s", aMimeType.Data());
     return false;
   }
@@ -181,11 +181,12 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   MediaFormat::LocalRef format;
 
   const VideoInfo& config = aParams.VideoConfig();
-  NS_ENSURE_SUCCESS(MediaFormat::CreateVideoFormat(
-      TranslateMimeType(config.mMimeType),
-      config.mDisplay.width,
-      config.mDisplay.height,
-      &format), nullptr);
+  NS_ENSURE_SUCCESS(
+    MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
+                                   config.mDisplay.width,
+                                   config.mDisplay.height,
+                                   &format),
+    nullptr);
 
   nsString drmStubId;
   if (mProxy) {

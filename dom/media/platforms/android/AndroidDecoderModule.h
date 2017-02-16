@@ -20,7 +20,6 @@ public:
   CreateAudioDecoder(const CreateDecoderParams& aParams) override;
 
   AndroidDecoderModule(CDMProxy* aProxy = nullptr);
-  virtual ~AndroidDecoderModule() {}
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
@@ -29,6 +28,7 @@ public:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
 private:
+  virtual ~AndroidDecoderModule() { }
   RefPtr<MediaDrmCDMProxy> mProxy;
 };
 
