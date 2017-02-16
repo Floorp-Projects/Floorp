@@ -167,13 +167,6 @@ static Atomic<bool> gProfileRestyle(false);
 static Atomic<bool> gProfileThreads(false);
 static Atomic<bool> gUseStackWalk(false);
 
-// Environment variables to control the profiler
-const char* PROFILER_HELP = "MOZ_PROFILER_HELP";
-const char* PROFILER_INTERVAL = "MOZ_PROFILER_INTERVAL";
-const char* PROFILER_ENTRIES = "MOZ_PROFILER_ENTRIES";
-const char* PROFILER_STACK = "MOZ_PROFILER_STACK_SCAN";
-const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
-
 /* we don't need to worry about overflow because we only treat the
  * case of them being the same as special. i.e. we only run into
  * a problem if 2^32 events happen between samples that we need
@@ -1253,43 +1246,43 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
   aWriter.EndArray();
 }
 
-/* Has MOZ_PROFILER_VERBOSE been set? */
-
 // Verbosity control for the profiler.  The aim is to check env var
 // MOZ_PROFILER_VERBOSE only once.  However, we may need to temporarily
 // override that so as to print the profiler's help message.  That's
 // what profiler_set_verbosity is for.
 
-enum class ProfilerVerbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
+enum class Verbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
 
 // Raced on, potentially
-static ProfilerVerbosity profiler_verbosity = ProfilerVerbosity::UNCHECKED;
+static Verbosity gVerbosity = Verbosity::UNCHECKED;
 
-bool profiler_verbose()
+bool
+profiler_verbose()
 {
-  if (profiler_verbosity == ProfilerVerbosity::UNCHECKED) {
-    if (getenv("MOZ_PROFILER_VERBOSE") != nullptr)
-      profiler_verbosity = ProfilerVerbosity::VERBOSE;
-    else
-      profiler_verbosity = ProfilerVerbosity::NOTVERBOSE;
+  if (gVerbosity == Verbosity::UNCHECKED) {
+    gVerbosity = getenv("MOZ_PROFILER_VERBOSE")
+                       ? Verbosity::VERBOSE
+                       : Verbosity::NOTVERBOSE;
   }
 
-  return profiler_verbosity == ProfilerVerbosity::VERBOSE;
+  return gVerbosity == Verbosity::VERBOSE;
 }
 
-void profiler_set_verbosity(ProfilerVerbosity pv)
+static void
+profiler_set_verbosity(Verbosity aPv)
 {
-   MOZ_ASSERT(pv == ProfilerVerbosity::UNCHECKED ||
-              pv == ProfilerVerbosity::VERBOSE);
-   profiler_verbosity = pv;
+  MOZ_ASSERT(aPv == Verbosity::UNCHECKED ||
+             aPv == Verbosity::VERBOSE);
+  gVerbosity = aPv;
 }
 
-
-bool set_profiler_interval(const char* interval) {
-  if (interval) {
+static bool
+set_profiler_interval(const char* aInterval)
+{
+  if (aInterval) {
     errno = 0;
-    long int n = strtol(interval, (char**)nullptr, 10);
-    if (errno == 0 && n >= 1 && n <= 1000) {
+    long int n = strtol(aInterval, nullptr, 10);
+    if (errno == 0 && 1 <= n && n <= 1000) {
       gUnwindInterval = n;
       return true;
     }
@@ -1299,10 +1292,12 @@ bool set_profiler_interval(const char* interval) {
   return true;
 }
 
-bool set_profiler_entries(const char* entries) {
-  if (entries) {
+static bool
+set_profiler_entries(const char* aEntries)
+{
+  if (aEntries) {
     errno = 0;
-    long int n = strtol(entries, (char**)nullptr, 10);
+    long int n = strtol(aEntries, nullptr, 10);
     if (errno == 0 && n > 0) {
       gProfileEntries = n;
       return true;
@@ -1313,11 +1308,13 @@ bool set_profiler_entries(const char* entries) {
   return true;
 }
 
-bool set_profiler_scan(const char* scanCount) {
-  if (scanCount) {
+static bool
+set_profiler_scan(const char* aScanCount)
+{
+  if (aScanCount) {
     errno = 0;
-    long int n = strtol(scanCount, (char**)nullptr, 10);
-    if (errno == 0 && n >= 0 && n <= 100) {
+    long int n = strtol(aScanCount, nullptr, 10);
+    if (errno == 0 && 0 <= n && n <= 100) {
       gUnwindStackScan = n;
       return true;
     }
@@ -1327,7 +1324,9 @@ bool set_profiler_scan(const char* scanCount) {
   return true;
 }
 
-bool is_native_unwinding_avail() {
+static bool
+is_native_unwinding_avail()
+{
 # if defined(HAVE_NATIVE_UNWIND)
   return true;
 #else
@@ -1335,44 +1334,18 @@ bool is_native_unwinding_avail() {
 #endif
 }
 
-// Read env vars at startup, so as to set:
-//   gUnwindInterval, gProfileEntries, gUnwindStackScan.
-void read_profiler_env_vars()
+// Environment variables to control the profiler
+static const char* PROFILER_HELP     = "MOZ_PROFILER_HELP";
+static const char* PROFILER_INTERVAL = "MOZ_PROFILER_INTERVAL";
+static const char* PROFILER_ENTRIES  = "MOZ_PROFILER_ENTRIES";
+static const char* PROFILER_STACK    = "MOZ_PROFILER_STACK_SCAN";
+#if defined(GP_OS_android)
+static const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
+#endif
+
+static void
+profiler_usage()
 {
-  /* Set defaults */
-  gUnwindInterval = 0;  /* We'll have to look elsewhere */
-  gProfileEntries = 0;
-
-  const char* interval = getenv(PROFILER_INTERVAL);
-  const char* entries = getenv(PROFILER_ENTRIES);
-  const char* scanCount = getenv(PROFILER_STACK);
-
-  if (getenv(PROFILER_HELP)) {
-     // Enable verbose output
-     profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
-     profiler_usage();
-     // Now force the next enquiry of profiler_verbose to re-query
-     // env var MOZ_PROFILER_VERBOSE.
-     profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
-  }
-
-  if (!set_profiler_interval(interval) ||
-      !set_profiler_entries(entries) ||
-      !set_profiler_scan(scanCount)) {
-      profiler_usage();
-  } else {
-    LOG( "Profiler:");
-    LOGF("Profiler: Sampling interval = %d ms (zero means \"platform default\")",
-        (int)gUnwindInterval);
-    LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
-        (int)gProfileEntries);
-    LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
-        (int)gUnwindStackScan);
-    LOG( "Profiler:");
-  }
-}
-
-void profiler_usage() {
   LOG( "Profiler: ");
   LOG( "Profiler: Environment variable usage:");
   LOG( "Profiler: ");
@@ -1412,19 +1385,54 @@ void profiler_usage() {
   LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
        (int)gUnwindStackScan);
   LOG( "Profiler:");
-
-  return;
 }
 
-bool is_main_thread_name(const char* aName) {
-  if (!aName) {
-    return false;
+// Read env vars at startup, so as to set:
+//   gUnwindInterval, gProfileEntries, gUnwindStackScan.
+static void
+read_profiler_env_vars()
+{
+  /* Set defaults */
+  gUnwindInterval = 0;  /* We'll have to look elsewhere */
+  gProfileEntries = 0;
+
+  const char* interval = getenv(PROFILER_INTERVAL);
+  const char* entries = getenv(PROFILER_ENTRIES);
+  const char* scanCount = getenv(PROFILER_STACK);
+
+  if (getenv(PROFILER_HELP)) {
+    // Enable verbose output
+    profiler_set_verbosity(Verbosity::VERBOSE);
+    profiler_usage();
+    // Now force the next enquiry of profiler_verbose to re-query
+    // env var MOZ_PROFILER_VERBOSE.
+    profiler_set_verbosity(Verbosity::UNCHECKED);
   }
-  return strcmp(aName, gGeckoThreadName) == 0;
+
+  if (!set_profiler_interval(interval) ||
+      !set_profiler_entries(entries) ||
+      !set_profiler_scan(scanCount)) {
+      profiler_usage();
+  } else {
+    LOG( "Profiler:");
+    LOGF("Profiler: Sampling interval = %d ms (zero means \"platform default\")",
+        (int)gUnwindInterval);
+    LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
+        (int)gProfileEntries);
+    LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
+        (int)gUnwindStackScan);
+    LOG( "Profiler:");
+  }
+}
+
+static bool
+is_main_thread_name(const char* aName)
+{
+  return aName && (strcmp(aName, gGeckoThreadName) == 0);
 }
 
 #ifdef HAVE_VA_COPY
-#define VARARGS_ASSIGN(foo, bar)        VA_COPY(foo,bar)
+#define VARARGS_ASSIGN(foo, bar)     VA_COPY(foo,bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
 #define VARARGS_ASSIGN(foo, bar)     foo[0] = bar[0]
 #else
@@ -1432,15 +1440,15 @@ bool is_main_thread_name(const char* aName) {
 #endif
 
 void
-profiler_log(const char* str)
+profiler_log(const char* aStr)
 {
   // This function runs both on and off the main thread.
 
-  profiler_tracing("log", str, TRACING_EVENT);
+  profiler_tracing("log", aStr, TRACING_EVENT);
 }
 
 void
-profiler_log(const char* fmt, va_list args)
+profiler_log(const char* aFmt, va_list aArgs)
 {
   // This function runs both on and off the main thread.
 
@@ -1449,8 +1457,8 @@ profiler_log(const char* fmt, va_list args)
     // this is mozilla external code
     char buf[2048];
     va_list argsCpy;
-    VARARGS_ASSIGN(argsCpy, args);
-    int required = VsprintfLiteral(buf, fmt, argsCpy);
+    VARARGS_ASSIGN(argsCpy, aArgs);
+    int required = VsprintfLiteral(buf, aFmt, argsCpy);
     va_end(argsCpy);
 
     if (required < 0) {
@@ -1460,8 +1468,8 @@ profiler_log(const char* fmt, va_list args)
     } else {
       char* heapBuf = new char[required+1];
       va_list argsCpy;
-      VARARGS_ASSIGN(argsCpy, args);
-      vsnprintf(heapBuf, required+1, fmt, argsCpy);
+      VARARGS_ASSIGN(argsCpy, aArgs);
+      vsnprintf(heapBuf, required+1, aFmt, argsCpy);
       va_end(argsCpy);
       // EVENT_BACKTRACE could be used to get a source
       // for all log events. This could be a runtime
