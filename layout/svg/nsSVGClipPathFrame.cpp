@@ -21,9 +21,6 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-// Arbitrary number
-#define MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH int16_t(512)
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -129,12 +126,13 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
                                   SourceSurface* aExtraMask,
                                   const Matrix& aExtraMasksTransform)
 {
-  // A clipPath can reference another clipPath.  We re-enter this method for
-  // each clipPath in a reference chain, so here we limit chain length:
   static int16_t sRefChainLengthCounter = AutoReferenceLimiter::notReferencing;
-  AutoReferenceLimiter
-    refChainLengthLimiter(this, &sRefChainLengthCounter,
-                          MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH);
+
+  // A clipPath can reference another clipPath, creating a chain of clipPaths
+  // that must all be applied.  We re-enter this method for each clipPath in a
+  // chain, so here we limit the chain length by limiting the number of
+  // re-entries:
+  AutoReferenceLimiter refChainLengthLimiter(this, &sRefChainLengthCounter);
   if (!refChainLengthLimiter.Reference()) {
     return DrawResult::SUCCESS; // Reference chain is too long!
   }
@@ -298,12 +296,14 @@ bool
 nsSVGClipPathFrame::PointIsInsideClipPath(nsIFrame* aClippedFrame,
                                           const gfxPoint &aPoint)
 {
-  // A clipPath can reference another clipPath.  We re-enter this method for
-  // each clipPath in a reference chain, so here we limit chain length:
   static int16_t sRefChainLengthCounter = AutoReferenceLimiter::notReferencing;
+
+  // A clipPath can reference another clipPath, creating a chain of clipPaths
+  // that must all be applied.  We re-enter this method for each clipPath in a
+  // chain, so here we limit the chain length by limiting the number of
+  // re-entries:
   AutoReferenceLimiter
-    refChainLengthLimiter(this, &sRefChainLengthCounter,
-                          MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH);
+    refChainLengthLimiter(this, &sRefChainLengthCounter);
   if (!refChainLengthLimiter.Reference()) {
     return false; // Reference chain is too long!
   }
@@ -393,12 +393,14 @@ nsSVGClipPathFrame::IsTrivial(nsSVGDisplayableFrame **aSingleChild)
 bool
 nsSVGClipPathFrame::IsValid()
 {
-  // A clipPath can reference another clipPath.  We re-enter this method for
-  // each clipPath in a reference chain, so here we limit chain length:
   static int16_t sRefChainLengthCounter = AutoReferenceLimiter::notReferencing;
+
+  // A clipPath can reference another clipPath, creating a chain of clipPaths
+  // that must all be applied.  We re-enter this method for each clipPath in a
+  // chain, so here we limit the chain length by limiting the number of
+  // re-entries:
   AutoReferenceLimiter
-    refChainLengthLimiter(this, &sRefChainLengthCounter,
-                          MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH);
+    refChainLengthLimiter(this, &sRefChainLengthCounter);
   if (!refChainLengthLimiter.Reference()) {
     return false; // Reference chain is too long!
   }
