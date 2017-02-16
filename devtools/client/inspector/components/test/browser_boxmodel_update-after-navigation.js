@@ -32,11 +32,12 @@ add_task(function* () {
 function* testFirstPage(inspector, view, testActor) {
   info("Test that the box model view works on the first page");
 
+  info("Selecting the test node");
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = view.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(
+    ".old-boxmodel-padding.old-boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
@@ -52,10 +53,11 @@ function* testFirstPage(inspector, view, testActor) {
 function* testSecondPage(inspector, view, testActor) {
   info("Test that the box model view works on the second page");
 
+  info("Selecting the test node");
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = view.document.querySelector(".boxmodel-size > span");
+  let sizeElt = view.doc.querySelector(".old-boxmodel-size > span");
   is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for box model view changes and modifying the size");
@@ -71,12 +73,13 @@ function* testSecondPage(inspector, view, testActor) {
 function* testBackToFirstPage(inspector, view, testActor) {
   info("Test that the box model view works on the first page after going back");
 
+  info("Selecting the test node");
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
-  let paddingElt = view.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(
+    ".old-boxmodel-padding.old-boxmodel-top > span");
   is(paddingElt.textContent, "20");
 
   info("Listening for box model view changes and modifying the padding");

@@ -50,7 +50,7 @@ function* testClearSearchFilter(inspector, computedView) {
 
   let win = computedView.styleWindow;
   let doc = computedView.styleDocument;
-  let boxModelWrapper = doc.getElementById("boxmodel-wrapper");
+  let boxModelWrapper = doc.querySelector("#old-boxmodel-wrapper");
   let propertyViews = computedView.propertyViews;
   let searchField = computedView.searchField;
   let searchClearButton = computedView.searchClearButton;
