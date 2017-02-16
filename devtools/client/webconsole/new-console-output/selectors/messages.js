@@ -134,6 +134,15 @@ function matchSearchFilters(message, filters) {
     || (message.parameters !== null
         && message.parameters.join("").toLocaleLowerCase()
             .includes(text.toLocaleLowerCase()))
+    // Look for a match in notes.
+    || (Array.isArray(message.notes) && message.notes.some(note =>
+          // Look for a match in location.
+          isTextInFrame(text, note.frame)
+          // Look for a match in messageBody.
+          || (note.messageBody !== null
+                && note.messageBody.toLocaleLowerCase()
+                     .includes(text.toLocaleLowerCase()))
+        ))
   );
 }
 

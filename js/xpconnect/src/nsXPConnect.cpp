@@ -172,9 +172,30 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
+xpc::ErrorBase::Init(JSErrorBase* aReport)
+{
+    if (!aReport->filename)
+        mFileName.SetIsVoid(true);
+    else
+        mFileName.AssignWithConversion(aReport->filename);
+
+    mLineNumber = aReport->lineno;
+    mColumn = aReport->column;
+}
+
+void
+xpc::ErrorNote::Init(JSErrorNotes::Note* aNote)
+{
+    xpc::ErrorBase::Init(aNote);
+
+    ErrorNoteToMessageString(aNote, mErrorMsg);
+}
+
+void
 xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
                        bool aIsChrome, uint64_t aWindowID)
 {
+    xpc::ErrorBase::Init(aReport);
     mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
                           : NS_LITERAL_CSTRING("content javascript");
     mWindowID = aWindowID;
@@ -182,12 +203,6 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
     ErrorReportToMessageString(aReport, mErrorMsg);
     if (mErrorMsg.IsEmpty() && aToStringResult) {
         AppendUTF8toUTF16(aToStringResult, mErrorMsg);
-    }
-
-    if (!aReport->filename) {
-        mFileName.SetIsVoid(true);
-    } else {
-        mFileName.AssignWithConversion(aReport->filename);
     }
 
     mSourceLine.Assign(aReport->linebuf(), aReport->linebufLength());
@@ -199,10 +214,19 @@ xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aToStringResult,
         mErrorMsgName.AssignASCII(efs->name);
     }
 
-    mLineNumber = aReport->lineno;
-    mColumn = aReport->column;
     mFlags = aReport->flags;
     mIsMuted = aReport->isMuted;
+
+    if (aReport->notes) {
+        if (!mNotes.SetLength(aReport->notes->length(), fallible))
+            return;
+
+        size_t i = 0;
+        for (auto&& note : *aReport->notes) {
+            mNotes.ElementAt(i).Init(note.get());
+            i++;
+        }
+    }
 }
 
 void
@@ -228,6 +252,55 @@ xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
 static LazyLogModule gJSDiagnostics("JSDiagnostics");
 
 void
+xpc::ErrorBase::AppendErrorDetailsTo(nsCString& error)
+{
+    error.Append(NS_LossyConvertUTF16toASCII(mFileName));
+    error.AppendLiteral(", line ");
+    error.AppendInt(mLineNumber, 10);
+    error.AppendLiteral(": ");
+    error.Append(NS_LossyConvertUTF16toASCII(mErrorMsg));
+}
+
+void
+xpc::ErrorNote::LogToStderr()
+{
+    if (!nsContentUtils::DOMWindowDumpEnabled())
+        return;
+
+    nsAutoCString error;
+    error.AssignLiteral("JavaScript note: ");
+    AppendErrorDetailsTo(error);
+
+    fprintf(stderr, "%s\n", error.get());
+    fflush(stderr);
+}
+
+void
+xpc::ErrorReport::LogToStderr()
+{
+    if (!nsContentUtils::DOMWindowDumpEnabled())
+        return;
+
+    nsAutoCString error;
+    error.AssignLiteral("JavaScript ");
+    if (JSREPORT_IS_STRICT(mFlags))
+        error.AppendLiteral("strict ");
+    if (JSREPORT_IS_WARNING(mFlags))
+        error.AppendLiteral("warning: ");
+    else
+        error.AppendLiteral("error: ");
+    AppendErrorDetailsTo(error);
+
+    fprintf(stderr, "%s\n", error.get());
+    fflush(stderr);
+
+    for (size_t i = 0, len = mNotes.Length(); i < len; i++) {
+        ErrorNote& note = mNotes[i];
+        note.LogToStderr();
+    }
+}
+
+void
 xpc::ErrorReport::LogToConsole()
 {
   LogToConsoleWithStack(nullptr);
@@ -235,25 +308,7 @@ xpc::ErrorReport::LogToConsole()
 void
 xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
 {
-    // Log to stdout.
-    if (nsContentUtils::DOMWindowDumpEnabled()) {
-        nsAutoCString error;
-        error.AssignLiteral("JavaScript ");
-        if (JSREPORT_IS_STRICT(mFlags))
-            error.AppendLiteral("strict ");
-        if (JSREPORT_IS_WARNING(mFlags))
-            error.AppendLiteral("warning: ");
-        else
-            error.AppendLiteral("error: ");
-        error.Append(NS_LossyConvertUTF16toASCII(mFileName));
-        error.AppendLiteral(", line ");
-        error.AppendInt(mLineNumber, 10);
-        error.AppendLiteral(": ");
-        error.Append(NS_LossyConvertUTF16toASCII(mErrorMsg));
-
-        fprintf(stderr, "%s\n", error.get());
-        fflush(stderr);
-    }
+    LogToStderr();
 
     MOZ_LOG(gJSDiagnostics,
             JSREPORT_IS_WARNING(mFlags) ? LogLevel::Warning : LogLevel::Error,
@@ -265,8 +320,9 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
     // mechanisms.
     nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    NS_ENSURE_TRUE_VOID(consoleService);
 
-    nsCOMPtr<nsIScriptError> errorObject;
+    RefPtr<nsScriptErrorBase> errorObject;
     if (mWindowID && aStack) {
       // Only set stack on messages related to a document
       // As we cache messages in the console service,
@@ -277,14 +333,33 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
       errorObject = new nsScriptError();
     }
     errorObject->SetErrorMessageName(mErrorMsgName);
-    NS_ENSURE_TRUE_VOID(consoleService);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
                                                 mLineNumber, mColumn, mFlags,
                                                 mCategory, mWindowID);
     NS_ENSURE_SUCCESS_VOID(rv);
+
+    for (size_t i = 0, len = mNotes.Length(); i < len; i++) {
+        ErrorNote& note = mNotes[i];
+
+        nsScriptErrorNote* noteObject = new nsScriptErrorNote();
+        noteObject->Init(note.mErrorMsg, note.mFileName,
+                         note.mLineNumber, note.mColumn);
+        errorObject->AddNote(noteObject);
+    }
+
     consoleService->LogMessage(errorObject);
 
+}
+
+/* static */
+void
+xpc::ErrorNote::ErrorNoteToMessageString(JSErrorNotes::Note* aNote,
+                                         nsAString& aString)
+{
+    aString.Truncate();
+    if (aNote->message())
+        aString.Append(NS_ConvertUTF8toUTF16(aNote->message().c_str()));
 }
 
 /* static */

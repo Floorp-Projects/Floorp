@@ -62,8 +62,8 @@ class OriginKeyStore : public nsISupports
     OriginKeysTable() : mPersistCount(0) {}
 
     nsresult
-    GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo, nsCString& aResult,
-                    bool aPersist = false)
+    GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo,
+                    nsCString& aResult, bool aPersist = false)
     {
       nsAutoCString principalString;
       PrincipalInfoToString(aPrincipalInfo, principalString);
@@ -173,7 +173,12 @@ class OriginKeyStore : public nsISupports
                     nsCString& aResult, bool aPersist = false)
     {
       auto before = mPersistCount;
-      OriginKeysTable::GetPrincipalKey(aPrincipalInfo, aResult, aPersist);
+      nsresult rv = OriginKeysTable::GetPrincipalKey(aPrincipalInfo, aResult,
+                                                     aPersist);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (mPersistCount != before) {
         Save();
       }
@@ -457,15 +462,19 @@ Parent<Super>::RecvGetPrincipalKey(const uint32_t& aRequestId,
     MOZ_ASSERT(!NS_IsMainThread());
     mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
 
+    nsresult rv;
     nsAutoCString result;
     if (IsPincipalInfoPrivate(aPrincipalInfo)) {
-      mOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(aPrincipalInfo, result);
+      rv = mOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(aPrincipalInfo, result);
     } else {
-      mOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo, result, aPersist);
+      rv = mOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo, result, aPersist);
+    }
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
 
     // Pass result back to main thread.
-    nsresult rv;
     rv = NS_DispatchToMainThread(NewRunnableFrom([this, that, id,
                                                   result]() -> nsresult {
       if (mDestroyed) {

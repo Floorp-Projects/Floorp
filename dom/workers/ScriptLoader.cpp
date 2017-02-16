@@ -113,7 +113,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      const nsAString& aScriptURL,
                      bool aIsMainScript,
                      WorkerScriptType aWorkerScriptType,
-                     nsContentPolicyType aContentPolicyType,
+                     nsContentPolicyType aMainScriptContentPolicyType,
                      nsLoadFlags aLoadFlags,
                      bool aDefaultURIEncoding,
                      nsIChannel** aChannel)
@@ -170,6 +170,10 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
   }
 
+  nsContentPolicyType contentPolicyType =
+    aIsMainScript ? aMainScriptContentPolicyType
+                  : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it. Unfortunately, for dedicated workers
   // 'parentDoc' ends up being the parent document, which is not the document
@@ -180,7 +184,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        parentDoc,
                        secFlags,
-                       aContentPolicyType,
+                       contentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
                        aLoadFlags,
@@ -195,7 +199,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        principal,
                        secFlags,
-                       aContentPolicyType,
+                       contentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
                        aLoadFlags,
@@ -2099,7 +2103,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
-                               nsContentPolicyType aContentPolicyType,
+                               nsContentPolicyType aMainScriptContentPolicyType,
                                bool aDefaultURIEncoding,
                                nsIChannel** aChannel)
 {
@@ -2112,8 +2116,9 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
 
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
                               ios, secMan, aScriptURL, true, WorkerScript,
-                              aContentPolicyType, nsIRequest::LOAD_NORMAL,
-                              aDefaultURIEncoding, aChannel);
+                              aMainScriptContentPolicyType,
+                              nsIRequest::LOAD_NORMAL, aDefaultURIEncoding,
+                              aChannel);
 }
 
 nsresult

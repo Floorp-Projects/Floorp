@@ -4662,9 +4662,6 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 static void
 arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 {
-	/* Large allocation. */
-	malloc_spin_lock(&arena->lock);
-
 #ifdef MALLOC_FILL
 #ifndef MALLOC_STATS
 	if (opt_poison)
@@ -4690,7 +4687,6 @@ arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
 #endif
 
 	arena_run_dalloc(arena, (arena_run_t *)ptr, true);
-	malloc_spin_unlock(&arena->lock);
 }
 
 static inline void
@@ -4710,16 +4706,18 @@ arena_dalloc(void *ptr, size_t offset)
 	assert(arena != NULL);
 	RELEASE_ASSERT(arena->magic == ARENA_MAGIC);
 
+	malloc_spin_lock(&arena->lock);
 	pageind = offset >> pagesize_2pow;
 	mapelm = &chunk->map[pageind];
 	RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
 	if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
 		/* Small allocation. */
-		malloc_spin_lock(&arena->lock);
 		arena_dalloc_small(arena, chunk, ptr, mapelm);
-		malloc_spin_unlock(&arena->lock);
-	} else
+	} else {
+		/* Large allocation. */
 		arena_dalloc_large(arena, chunk, ptr);
+	}
+	malloc_spin_unlock(&arena->lock);
 }
 
 static inline void
@@ -4767,15 +4765,15 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow;
 	size_t npages = oldsize >> pagesize_2pow;
 
-	RELEASE_ASSERT(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
-
-	/* Try to extend the run. */
-	assert(size > oldsize);
 #ifdef MALLOC_BALANCE
 	arena_lock_balance(arena);
 #else
 	malloc_spin_lock(&arena->lock);
 #endif
+	RELEASE_ASSERT(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
+
+	/* Try to extend the run. */
+	assert(size > oldsize);
 	if (pageind + npages < chunk_npages && (chunk->map[pageind+npages].bits
 	    & CHUNK_MAP_ALLOCATED) == 0 && (chunk->map[pageind+npages].bits &
 	    ~pagesize_mask) >= size - oldsize) {

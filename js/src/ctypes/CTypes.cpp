@@ -4571,7 +4571,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     // Identify our objects to the tracer.
     JS::TraceEdge(trc, &fninfo->mABI, "abi");
     JS::TraceEdge(trc, &fninfo->mReturnType, "returnType");
-    for (auto & argType : fninfo->mArgTypes)
+    for (auto& argType : fninfo->mArgTypes)
       JS::TraceEdge(trc, &argType, "argType");
 
     break;

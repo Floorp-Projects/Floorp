@@ -244,7 +244,7 @@ _ContextualIdentityService.prototype = {
     }
   },
 
-  getIdentities() {
+  getPublicIdentities() {
     this.ensureDataReady();
     return Cu.cloneInto(this._identities.filter(info => info.public), {});
   },
@@ -254,15 +254,15 @@ _ContextualIdentityService.prototype = {
     return Cu.cloneInto(this._identities.find(info => !info.public && info.name == name), {});
   },
 
-  getIdentityFromId(userContextId) {
+  getPublicIdentityFromId(userContextId) {
     this.ensureDataReady();
     return Cu.cloneInto(this._identities.find(info => info.userContextId == userContextId &&
                                               info.public), {});
   },
 
   getUserContextLabel(userContextId) {
-    let identity = this.getIdentityFromId(userContextId);
-    if (!identity || !identity.public) {
+    let identity = this.getPublicIdentityFromId(userContextId);
+    if (!identity) {
       return "";
     }
 
@@ -280,7 +280,7 @@ _ContextualIdentityService.prototype = {
     }
 
     let userContextId = tab.getAttribute("usercontextid");
-    let identity = this.getIdentityFromId(userContextId);
+    let identity = this.getPublicIdentityFromId(userContextId);
     tab.setAttribute("data-identity-color", identity ? identity.color : "");
   },
 
@@ -320,10 +320,10 @@ _ContextualIdentityService.prototype = {
   },
 
   telemetry(userContextId) {
-    let identity = this.getIdentityFromId(userContextId);
+    let identity = this.getPublicIdentityFromId(userContextId);
 
     // Let's ignore unknown identities for now.
-    if (!identity || !identity.public) {
+    if (!identity) {
       return;
     }
 

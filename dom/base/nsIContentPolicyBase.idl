@@ -329,6 +329,14 @@ interface nsIContentPolicyBase : nsISupports
    */
   const nsContentPolicyType TYPE_INTERNAL_IMAGE_FAVICON = 41;
 
+  /**
+   * Indicates an importScripts() inside a worker script.
+   *
+   * This will be mapped to TYPE_SCRIPT before being passed to content policy
+   * implementations.
+   */
+  const nsContentPolicyType TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS = 42;
+
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
    * implementations, the static_assert in dom/cache/DBSchema.cpp,

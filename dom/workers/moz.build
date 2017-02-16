@@ -94,6 +94,7 @@ LOCAL_INCLUDES += [
     '../base',
     '../system',
     '/dom/base',
+    '/dom/bindings',
     '/xpcom/build',
     '/xpcom/threads',
 ]
