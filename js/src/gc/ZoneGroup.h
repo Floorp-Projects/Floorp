@@ -22,19 +22,12 @@ class AutoKeepAtoms;
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
 
 // Zone groups encapsulate data about a group of zones that are logically
-// related in some way. Currently, each runtime has a single zone group, and
-// all zones except the atoms zone (which has no group) are in that group.
-// This will change soon.
+// related in some way.
 //
-// When JSRuntimes become multithreaded (also happening soon; see bug 1323066),
-// zone groups will be the primary means by which threads ensure exclusive
-// access to the data they are using. Most data in a zone group, its zones,
+// Zone groups are the primary means by which threads ensure exclusive access
+// to the data they are using. Most data in a zone group, its zones,
 // compartments, GC things and so forth may only be used by the thread that has
 // entered the zone group.
-//
-// This restriction is not quite in place yet: zones used by an parse thread
-// are accessed by that thread even though it does not have exclusive access
-// to the entire zone group. This will also be changing soon.
 
 class ZoneGroup
 {
@@ -46,7 +39,7 @@ class ZoneGroup
     UnprotectedData<CooperatingContext> ownerContext_;
 
     // The number of times the context has entered this zone group.
-    ZoneGroupData<size_t> enterCount;
+    UnprotectedData<size_t> enterCount;
 
   public:
     CooperatingContext& ownerContext() { return ownerContext_.ref(); }
@@ -58,9 +51,12 @@ class ZoneGroup
 
     // All zones in the group.
   private:
-    ActiveThreadOrGCTaskData<ZoneVector> zones_;
+    ZoneGroupOrGCTaskData<ZoneVector> zones_;
   public:
     ZoneVector& zones() { return zones_.ref(); }
+
+    // Whether a zone in this group is in use by a helper thread.
+    mozilla::Atomic<bool> usedByHelperThread;
 
     explicit ZoneGroup(JSRuntime* runtime);
     ~ZoneGroup();
