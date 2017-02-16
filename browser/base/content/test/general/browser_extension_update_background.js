@@ -1,7 +1,7 @@
 const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
 const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
-const ID = "update@tests.mozilla.org";
+const ID = "update2@tests.mozilla.org";
 const ID_ICON = "update_icon@tests.mozilla.org";
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
@@ -154,9 +154,17 @@ function* backgroundUpdateTest(url, id, checkIconFn) {
   ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
-  // Wait for the permission prompt, check the contents, then cancel the update
+  // Wait for the permission prompt, check the contents
   let panel = yield popupPromise;
   checkIconFn(panel.getAttribute("icon"));
+
+  // The original extension has 1 promptable permission and the new one
+  // has 2 (history and <all_urls>) plus 1 non-promptable permission (cookies).
+  // So we should only see the 1 new promptable permission in the notification.
+  let list = document.getElementById("addon-webext-perm-list");
+  is(list.childElementCount, 1, "Permissions list contains 1 entry");
+
+  // Cancel the update.
   panel.secondaryButton.click();
 
   addon = yield AddonManager.getAddonByID(id);
