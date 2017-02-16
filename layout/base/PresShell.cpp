@@ -7026,6 +7026,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       pointerMessage = ePointerDown;
       break;
     case eTouchCancel:
+    case eTouchPointerCancel:
       pointerMessage = ePointerCancel;
       break;
     default:
@@ -7034,7 +7035,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
 
     for (uint32_t i = 0; i < touchEvent->mTouches.Length(); ++i) {
       mozilla::dom::Touch* touch = touchEvent->mTouches[i];
-      if (!touch || !touch->convertToPointer) {
+      if (!TouchManager::ShouldConvertTouchToPointer(touch, touchEvent)) {
         continue;
       }
 
