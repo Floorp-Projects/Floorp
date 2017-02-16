@@ -650,10 +650,8 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
                                      WritingMode aWM,
                                      const nsSize& aContainerSize)
   : mFrame(aFrame)
-  , mRect(aMarginRect.LineLeft(aWM, aContainerSize) + aLineLeft,
-          aMarginRect.BStart(aWM) + aBlockStart,
-          aMarginRect.ISize(aWM),
-          aMarginRect.BSize(aWM))
+  , mRect(ShapeInfo::ConvertToFloatLogical(aMarginRect, aWM, aContainerSize) +
+          nsPoint(aLineLeft, aBlockStart))
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 
@@ -675,10 +673,8 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
     ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    nsRect rect(shapeBoxRect.LineLeft(aWM, aContainerSize),
-                shapeBoxRect.BStart(aWM),
-                shapeBoxRect.ISize(aWM),
-                shapeBoxRect.BSize(aWM));
+    nsRect rect = ShapeInfo::ConvertToFloatLogical(shapeBoxRect, aWM,
+                                                   aContainerSize);
     mShapeInfo = MakeUnique<BoxShapeInfo>(rect, mFrame);
   } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
     StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();

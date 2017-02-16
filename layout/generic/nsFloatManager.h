@@ -367,6 +367,16 @@ private:
       const mozilla::LogicalRect& aMarginRect,
       mozilla::WritingMode aWM);
 
+    // Convert the LogicalRect to the special logical coordinate space used
+    // in float manager.
+    static nsRect ConvertToFloatLogical(const mozilla::LogicalRect& aRect,
+                                        mozilla::WritingMode aWM,
+                                        const nsSize& aContainerSize)
+    {
+      return nsRect(aRect.LineLeft(aWM, aContainerSize), aRect.BStart(aWM),
+                    aRect.ISize(aWM), aRect.BSize(aWM));
+    }
+
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
       mozilla::StyleBasicShape* const aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
