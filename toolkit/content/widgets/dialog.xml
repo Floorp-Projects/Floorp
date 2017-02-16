@@ -176,12 +176,8 @@
                        focusedElt.getAttribute("noinitialfocus") == "true") {
                   document.commandDispatcher.advanceFocusIntoSubtree(focusedElt);
                   focusedElt = document.commandDispatcher.focusedElement;
-                  if (focusedElt == initialFocusedElt) {
-                    if (focusedElt.getAttribute("noinitialfocus") == "true") {
-                      focusedElt.blur();
-                    }
+                  if (focusedElt == initialFocusedElt)
                     break;
-                  }
                 }
 
                 if (initialFocusedElt.localName == "tab") {
