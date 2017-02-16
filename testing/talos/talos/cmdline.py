@@ -80,11 +80,20 @@ def create_parser(mach_interface=False):
                  " an environment variable")
     add_arg("--mozAfterPaint", action='store_true', dest="tpmozafterpaint",
             help="wait for MozAfterPaint event before recording the time")
-    add_arg('--spsProfile', action="store_true", dest="sps_profile",
-            help="Profile the run and output the results in $MOZ_UPLOAD_DIR")
-    add_arg('--spsProfileInterval', dest='sps_profile_interval', type=int,
+    add_arg('--spsProfile', action="store_true", dest="gecko_profile",
+            help="(Deprecated - Use --geckoProfile instead.) Profile the "
+                 "run and output the results in $MOZ_UPLOAD_DIR.")
+    add_arg('--spsProfileInterval', dest='gecko_profile_interval', type=int,
+            help="(Deprecated - Use --geckoProfileInterval instead.) How "
+                 "frequently to take samples (ms)")
+    add_arg('--spsProfileEntries', dest="gecko_profile_entries", type=int,
+            help="(Deprecated - Use --geckoProfileEntries instead.) How "
+                 "many samples to take with the profiler")
+    add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
+            help="Profile the run and output the results in $MOZ_UPLOAD_DIR.")
+    add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=int,
             help="How frequently to take samples (ms)")
-    add_arg('--spsProfileEntries', dest="sps_profile_entries", type=int,
+    add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
             help="How many samples to take with the profiler")
     add_arg('--extension', dest='extensions', action='append',
             default=['${talos}/talos-powers/talos-powers-signed.xpi',
