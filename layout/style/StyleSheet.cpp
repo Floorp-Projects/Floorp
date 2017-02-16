@@ -65,6 +65,55 @@ StyleSheet::~StyleSheet()
   DropMedia();
 }
 
+void
+StyleSheet::UnlinkInner()
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  // Have to be a bit careful with child sheets, because we want to
+  // drop their mNext pointers and null out their mParent and
+  // mDocument, but don't want to work with deleted objects.  And we
+  // don't want to do any addrefing in the process, just to make sure
+  // we don't confuse the cycle collector (though on the face of it,
+  // addref/release pairs during unlink should probably be ok).
+  RefPtr<StyleSheet> child;
+  child.swap(SheetInfo().mFirstChild);
+  while (child) {
+    MOZ_ASSERT(child->mParent == this, "We have a unique inner!");
+    child->mParent = nullptr;
+    child->mDocument = nullptr;
+
+    RefPtr<StyleSheet> next;
+    // Null out child->mNext, but don't let it die yet
+    next.swap(child->mNext);
+    // Switch to looking at the old value of child->mNext next iteration
+    child.swap(next);
+    // "next" is now our previous value of child; it'll get released
+    // as we loop around.
+  }
+}
+
+void
+StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  StyleSheet* childSheet = GetFirstChild();
+  while (childSheet) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
+    childSheet = childSheet->mNext;
+  }
+}
+
 // QueryInterface implementation for StyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -79,10 +128,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(StyleSheet)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+  tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StyleSheet)
   tmp->DropMedia();
+  tmp->UnlinkInner();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
