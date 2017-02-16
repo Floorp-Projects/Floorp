@@ -116,6 +116,7 @@ JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
      * that we get the same answer.
      */
 #ifdef DEBUG
+    MOZ_ASSERT(!JS::ObjectIsMarkedGray(&vp.toObject()));
     JS::RootedObject cacheResult(cx);
 #endif
     JS::RootedValue v(cx, vp);
