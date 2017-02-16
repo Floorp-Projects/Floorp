@@ -112,7 +112,7 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   RefPtr<MediaRawData> raw(
     new MediaRawData(aInputFrame->Buffer(), aInputFrame->Size()));
-  if (!raw->Data()) {
+  if (aInputFrame->Size() && !raw->Data()) {
     // OOM.
     mCallback->Error(GMPAllocErr);
     return;
