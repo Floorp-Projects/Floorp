@@ -12,6 +12,5 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'box-model.js',
     'types.js',
 )

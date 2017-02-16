@@ -11,9 +11,8 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const Accordion = createFactory(require("./Accordion"));
+const BoxModel = createFactory(require("./BoxModel"));
 const Grid = createFactory(require("./Grid"));
-
-const BoxModel = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModel"));
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
