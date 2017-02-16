@@ -987,10 +987,6 @@ public:
   void SetNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
   static void ClearNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
   bool IsDOMPaintEventPending();
-  void ClearMozAfterPaintEvents() {
-    mInvalidateRequestsSinceLastPaint.mRequests.Clear();
-    mUndeliveredInvalidateRequestsBeforeLastPaint.mRequests.Clear();
-  }
 
   /**
    * Returns the RestyleManager's restyle generation counter.
