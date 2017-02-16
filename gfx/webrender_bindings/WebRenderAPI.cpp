@@ -404,5 +404,22 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
                   aGlyphSize);
 }
 
+void
+DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
+                                  const WrRect& aClip,
+                                  const WrRect& aBoxBounds,
+                                  const WrPoint& aOffset,
+                                  const WrColor& aColor,
+                                  const float& aBlurRadius,
+                                  const float& aSpreadRadius,
+                                  const float& aBorderRadius,
+                                  const WrBoxShadowClipMode& aClipMode)
+{
+  wr_dp_push_box_shadow(mWrState, aRect, aClip,
+                        aBoxBounds, aOffset, aColor,
+                        aBlurRadius, aSpreadRadius, aBorderRadius,
+                        aClipMode);
+}
+
 } // namespace wr
 } // namespace mozilla

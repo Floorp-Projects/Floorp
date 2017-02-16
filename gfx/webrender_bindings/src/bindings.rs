@@ -10,11 +10,12 @@ use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, Im
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
-use webrender_traits::ServoScrollRootId;
+use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
+use euclid::TypedPoint2D;
 
 extern crate webrender_traits;
 
@@ -449,6 +450,27 @@ impl ExternalImageHandler for WrExternalImageHandler {
 }
 
 #[repr(C)]
+pub enum WrBoxShadowClipMode
+{
+    None,
+    Outset,
+    Inset,
+}
+
+impl WrBoxShadowClipMode
+{
+   pub fn to_box_shadow_clip_mode(self) -> BoxShadowClipMode
+   {
+       match self
+       {
+           WrBoxShadowClipMode::None => BoxShadowClipMode::None,
+           WrBoxShadowClipMode::Outset => BoxShadowClipMode::Outset,
+           WrBoxShadowClipMode::Inset => BoxShadowClipMode::Inset,
+       }
+   }
+}
+
+#[repr(C)]
 pub enum WrMixBlendMode
 {
     Normal,
@@ -626,6 +648,24 @@ pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, c
 }
 
 #[no_mangle]
+pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                    box_bounds: WrRect, offset: WrPoint, color: WrColor,
+                                    blur_radius: f32, spread_radius: f32, border_radius: f32,
+                                    clip_mode: WrBoxShadowClipMode) {
+    assert!( unsafe { is_in_compositor_thread() });
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    state.frame_builder.dl_builder.push_box_shadow(rect.to_rect(),
+                                                   clip_region,
+                                                   box_bounds.to_rect(),
+                                                   offset.to_point(),
+                                                   color.to_color(),
+                                                   blur_radius,
+                                                   spread_radius,
+                                                   border_radius,
+                                                   clip_mode.to_box_shadow_clip_mode());
+}
+
+#[no_mangle]
 pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
                                 radius: WrBorderRadius) {
@@ -721,6 +761,7 @@ impl WrLayoutSize
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct WrRect
 {
     x: f32,
@@ -734,6 +775,21 @@ impl WrRect
     pub fn to_rect(&self) -> LayoutRect
     {
         LayoutRect::new(LayoutPoint::new(self.x, self.y), LayoutSize::new(self.width, self.height))
+    }
+}
+
+#[repr(C)]
+pub struct WrPoint
+{
+    x: f32,
+    y: f32
+}
+
+impl WrPoint
+{
+    pub fn to_point(&self) -> TypedPoint2D<f32, LayerPixel>
+    {
+        TypedPoint2D::new(self.x, self.y)
     }
 }
 

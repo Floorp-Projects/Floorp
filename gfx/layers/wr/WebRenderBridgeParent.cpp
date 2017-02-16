@@ -375,6 +375,19 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
 
         break;
       }
+      case WebRenderCommand::TOpDPPushBoxShadow: {
+        const OpDPPushBoxShadow& op = cmd.get_OpDPPushBoxShadow();
+        builder.PushBoxShadow(op.rect(),
+                              op.clip(),
+                              op.box_bounds(),
+                              op.offset(),
+                              op.color(),
+                              op.blur_radius(),
+                              op.spread_radius(),
+                              op.border_radius(),
+                              op.clip_mode());
+        break;
+      }
       default:
         NS_RUNTIMEABORT("not reached");
     }
