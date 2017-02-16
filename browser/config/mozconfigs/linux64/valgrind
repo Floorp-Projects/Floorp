@@ -3,6 +3,7 @@
 ac_add_options --enable-valgrind
 ac_add_options --disable-jemalloc
 ac_add_options --disable-install-strip
+ac_add_options --disable-gtest-in-build
 
 # Include the override mozconfig again (even though the above includes it)
 # since it's supposed to override everything.
