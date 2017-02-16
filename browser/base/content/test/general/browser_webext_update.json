@@ -41,6 +41,20 @@
           }
         }
       ]
+    },
+    "legacy_update@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "https://example.com/browser/browser/base/content/test/general/browser_legacy_webext.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "*"
+            }
+          }
+        }
+      ]
     }
   }
 }
