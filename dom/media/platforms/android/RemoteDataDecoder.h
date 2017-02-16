@@ -18,19 +18,14 @@ class RemoteDataDecoder : public MediaDataDecoder
 {
 public:
   static already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const AudioInfo& aConfig,
-                     java::sdk::MediaFormat::Param aFormat,
+  CreateAudioDecoder(const CreateDecoderParams& aParams,
                      const nsString& aDrmStubId,
-                     CDMProxy* aProxy,
-                     TaskQueue* aTaskQueue);
+                     CDMProxy* aProxy);
 
   static already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const VideoInfo& aConfig,
-                     java::sdk::MediaFormat::Param aFormat,
-                     layers::ImageContainer* aImageContainer,
+  CreateVideoDecoder(const CreateDecoderParams& aParams,
                      const nsString& aDrmStubId,
-                     CDMProxy* aProxy,
-                     TaskQueue* aTaskQueue);
+                     CDMProxy* aProxy);
 
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
   RefPtr<DecodePromise> Drain() override;
