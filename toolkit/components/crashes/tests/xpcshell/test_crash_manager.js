@@ -476,6 +476,12 @@ add_task(function* test_content_crash_ping() {
     [["payload", "stackTraces", "status"], "OK"],
   ]);
   Assert.ok(found, "Telemetry ping submitted for content crash");
+
+  let hoursOnly = new Date(DUMMY_DATE);
+  hoursOnly.setSeconds(0);
+  hoursOnly.setMinutes(0);
+  Assert.equal(new Date(found.payload.crashTime).getTime(), hoursOnly.getTime());
+
   Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
                "Non-whitelisted fields should be filtered out");
 });
