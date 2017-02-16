@@ -168,6 +168,7 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
 pub extern fn wr_window_new(window_id: WrWindowId,
                             gl_context: *mut c_void,
                             enable_profiler: bool,
+                            external_image_handler: *mut WrExternalImageHandler,
                             out_api: &mut *mut RenderApi,
                             out_renderer: &mut *mut Renderer) -> bool {
     assert!(unsafe { is_in_render_thread() });
@@ -203,7 +204,7 @@ pub extern fn wr_window_new(window_id: WrWindowId,
         workers: None,
     };
 
-    let (renderer, sender) = match Renderer::new(opts) {
+    let (mut renderer, sender) = match Renderer::new(opts) {
         Ok((renderer, sender)) => { (renderer, sender) }
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -212,6 +213,18 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     };
 
     renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
+
+    if !external_image_handler.is_null() {
+        renderer.set_external_image_handler(Box::new(
+            unsafe {
+                WrExternalImageHandler {
+                    external_image_obj: (*external_image_handler).external_image_obj,
+                    lock_func: (*external_image_handler).lock_func,
+                    unlock_func: (*external_image_handler).unlock_func,
+                    release_func: (*external_image_handler).release_func,
+                }
+            }));
+    }
 
     *out_api = Box::into_raw(Box::new(sender.create_api()));
     *out_renderer = Box::into_raw(Box::new(renderer));
