@@ -786,6 +786,8 @@ class MochitestDesktop(object):
     DEFAULT_TIMEOUT = 60.0
     mediaDevices = None
 
+    patternFiles = {}
+
     # XXX use automation.py for test name to avoid breaking legacy
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
     test_name = 'automation.py'
@@ -1310,6 +1312,54 @@ toolbar#nav-bar {
                     'SKIP',
                     message=test['disabled'])
 
+    def loadFailurePatternFile(self, pat_file):
+        if pat_file in self.patternFiles:
+            return self.patternFiles[pat_file]
+        if not os.path.isfile(pat_file):
+            self.log.error("TEST-UNEXPECTED-ERROR | runtests.py | "
+                           "Cannot find failure pattern file " + pat_file)
+            return None
+
+        # Using ":error" to ensure it shows up in the failure summary.
+        self.log.warning(
+            "[runtests.py:error] Using {} to filter failures. If there "
+            "is any number mismatch below, you could have fixed "
+            "something documented in that file. Please reduce the "
+            "failure count appropriately.".format(pat_file))
+        patternRE = re.compile(r"""
+            ^\s*\*\s*               # list bullet
+            (test_\S+|\.{3})        # test name
+            (?:\s*(`.+?`|asserts))? # failure pattern
+            (?::.+)?                # optional description
+            \s*\[(\d+|\*)\]         # expected count
+            \s*$
+        """, re.X)
+        patterns = {}
+        with open(pat_file) as f:
+            last_name = None
+            for line in f:
+                match = patternRE.match(line)
+                if not match:
+                    continue
+                name = match.group(1)
+                name = last_name if name == "..." else name
+                last_name = name
+                pat = match.group(2)
+                if pat is not None:
+                    pat = "ASSERTION" if pat == "asserts" else pat[1:-1]
+                count = match.group(3)
+                count = None if count == "*" else int(count)
+                if name not in patterns:
+                    patterns[name] = []
+                patterns[name].append((pat, count))
+        self.patternFiles[pat_file] = patterns
+        return patterns
+
+    def getFailurePatterns(self, pat_file, test_name):
+        patterns = self.loadFailurePatternFile(pat_file)
+        if patterns:
+            return patterns.get(test_name, None)
+
     def getActiveTests(self, options, disabled=True):
         """
           This method is used to parse the manifest and return active filtered tests.
@@ -1412,6 +1462,12 @@ toolbar#nav-bar {
                 testob['expected'] = test['expected']
             if 'scheme' in test:
                 testob['scheme'] = test['scheme']
+            if options.failure_pattern_file:
+                pat_file = os.path.join(os.path.dirname(test['manifest']),
+                                        options.failure_pattern_file)
+                patterns = self.getFailurePatterns(pat_file, test['name'])
+                if patterns:
+                    testob['expected'] = patterns
             paths.append(testob)
 
         def path_sort(ob1, ob2):
