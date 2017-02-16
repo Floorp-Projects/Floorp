@@ -310,6 +310,12 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
   return result;
 }
 
+nsChangeHint
+Gecko_HintsHandledForDescendants(nsChangeHint aHint)
+{
+  return aHint & ~NS_HintsNotHandledForDescendantsIn(aHint);
+}
+
 ServoElementSnapshotOwned
 Gecko_CreateElementSnapshot(RawGeckoElementBorrowed aElement)
 {

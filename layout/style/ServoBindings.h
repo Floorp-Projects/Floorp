@@ -243,6 +243,7 @@ nsStyleContext* Gecko_GetStyleContext(RawGeckoNodeBorrowed node,
                                       nsIAtom* aPseudoTagOrNull);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
+nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 
 // Element snapshot.
 ServoElementSnapshotOwned Gecko_CreateElementSnapshot(RawGeckoElementBorrowed element);
