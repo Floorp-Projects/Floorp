@@ -36,6 +36,7 @@ function EvaluationResult(props) {
     frame,
     timeStamp,
     parameters,
+    notes,
   } = message;
 
   let messageBody;
@@ -61,6 +62,7 @@ function EvaluationResult(props) {
     frame,
     timeStamp,
     parameters,
+    notes,
   };
   return Message(childProps);
 }

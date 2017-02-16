@@ -69,7 +69,6 @@
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
-#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "vm/AsyncFunction.h"
 #include "vm/DateObject.h"
@@ -6262,7 +6261,7 @@ JSErrorReport::freeLinebuf()
 }
 
 JSString*
-JSErrorReport::newMessageString(JSContext* cx)
+JSErrorBase::newMessageString(JSContext* cx)
 {
     if (!message_)
         return cx->runtime()->emptyString;
@@ -6271,13 +6270,139 @@ JSErrorReport::newMessageString(JSContext* cx)
 }
 
 void
-JSErrorReport::freeMessage()
+JSErrorBase::freeMessage()
 {
     if (ownsMessage_) {
         js_free((void*)message_.get());
         ownsMessage_ = false;
     }
     message_ = JS::ConstUTF8CharsZ();
+}
+
+JSErrorNotes::JSErrorNotes()
+  : notes_()
+{}
+
+JSErrorNotes::~JSErrorNotes()
+{
+}
+
+static UniquePtr<JSErrorNotes::Note>
+CreateErrorNoteVA(JSContext* cx,
+                  const char* filename, unsigned lineno, unsigned column,
+                  JSErrorCallback errorCallback, void* userRef,
+                  const unsigned errorNumber,
+                  ErrorArgumentsType argumentsType, va_list ap)
+{
+    auto note = MakeUnique<JSErrorNotes::Note>();
+    if (!note)
+        return nullptr;
+
+    note->errorNumber = errorNumber;
+    note->filename = filename;
+    note->lineno = lineno;
+    note->column = column;
+
+    if (!ExpandErrorArgumentsVA(cx, errorCallback, userRef, errorNumber,
+                                nullptr, argumentsType, note.get(), ap)) {
+        return nullptr;
+    }
+
+    return note;
+}
+
+bool
+JSErrorNotes::addNoteASCII(JSContext* cx,
+                           const char* filename, unsigned lineno, unsigned column,
+                           JSErrorCallback errorCallback, void* userRef,
+                           const unsigned errorNumber, ...)
+{
+    va_list ap;
+    va_start(ap, errorNumber);
+    auto note = CreateErrorNoteVA(cx, filename, lineno, column, errorCallback, userRef,
+                                  errorNumber, ArgumentsAreASCII, ap);
+    va_end(ap);
+
+    if (!note)
+        return false;
+    if (!notes_.append(Move(note)))
+        return false;
+    return true;
+}
+
+bool
+JSErrorNotes::addNoteLatin1(JSContext* cx,
+                            const char* filename, unsigned lineno, unsigned column,
+                            JSErrorCallback errorCallback, void* userRef,
+                            const unsigned errorNumber, ...)
+{
+    va_list ap;
+    va_start(ap, errorNumber);
+    auto note = CreateErrorNoteVA(cx, filename, lineno, column, errorCallback, userRef,
+                                  errorNumber, ArgumentsAreLatin1, ap);
+    va_end(ap);
+
+    if (!note)
+        return false;
+    if (!notes_.append(Move(note)))
+        return false;
+    return true;
+}
+
+bool
+JSErrorNotes::addNoteUTF8(JSContext* cx,
+                          const char* filename, unsigned lineno, unsigned column,
+                          JSErrorCallback errorCallback, void* userRef,
+                          const unsigned errorNumber, ...)
+{
+    va_list ap;
+    va_start(ap, errorNumber);
+    auto note = CreateErrorNoteVA(cx, filename, lineno, column, errorCallback, userRef,
+                                  errorNumber, ArgumentsAreUTF8, ap);
+    va_end(ap);
+
+    if (!note)
+        return false;
+    if (!notes_.append(Move(note)))
+        return false;
+    return true;
+}
+
+size_t
+JSErrorNotes::length()
+{
+    return notes_.length();
+}
+
+UniquePtr<JSErrorNotes>
+JSErrorNotes::copy(JSContext* cx)
+{
+    auto copiedNotes = MakeUnique<JSErrorNotes>();
+    if (!copiedNotes)
+        return nullptr;
+
+    for (auto&& note : *this) {
+        js::UniquePtr<JSErrorNotes::Note> copied(CopyErrorNote(cx, note.get()));
+        if (!copied)
+            return nullptr;
+
+        if (!copiedNotes->notes_.append(Move(copied)))
+            return nullptr;
+    }
+
+    return copiedNotes;
+}
+
+JSErrorNotes::iterator
+JSErrorNotes::begin()
+{
+    return iterator(notes_.begin());
+}
+
+JSErrorNotes::iterator
+JSErrorNotes::end()
+{
+    return iterator(notes_.end());
 }
 
 JS_PUBLIC_API(bool)

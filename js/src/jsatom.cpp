@@ -54,41 +54,9 @@ FOR_EACH_COMMON_PROPERTYNAME(CONST_CHAR_STR)
 #undef CONST_CHAR_STR
 
 /* Constant strings that are not atomized. */
-const char js_break_str[]           = "break";
-const char js_case_str[]            = "case";
-const char js_catch_str[]           = "catch";
-const char js_class_str[]           = "class";
-const char js_const_str[]           = "const";
-const char js_continue_str[]        = "continue";
-const char js_debugger_str[]        = "debugger";
-const char js_default_str[]         = "default";
-const char js_do_str[]              = "do";
-const char js_else_str[]            = "else";
-const char js_enum_str[]            = "enum";
-const char js_export_str[]          = "export";
-const char js_extends_str[]         = "extends";
-const char js_finally_str[]         = "finally";
-const char js_for_str[]             = "for";
 const char js_getter_str[]          = "getter";
-const char js_if_str[]              = "if";
-const char js_implements_str[]      = "implements";
-const char js_import_str[]          = "import";
-const char js_in_str[]              = "in";
-const char js_instanceof_str[]      = "instanceof";
-const char js_interface_str[]       = "interface";
-const char js_package_str[]         = "package";
-const char js_private_str[]         = "private";
-const char js_protected_str[]       = "protected";
-const char js_public_str[]          = "public";
 const char js_send_str[]            = "send";
 const char js_setter_str[]          = "setter";
-const char js_switch_str[]          = "switch";
-const char js_this_str[]            = "this";
-const char js_try_str[]             = "try";
-const char js_typeof_str[]          = "typeof";
-const char js_void_str[]            = "void";
-const char js_while_str[]           = "while";
-const char js_with_str[]            = "with";
 
 // Use a low initial capacity for atom hash tables to avoid penalizing runtimes
 // which create a small number of atoms.

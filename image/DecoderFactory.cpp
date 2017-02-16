@@ -266,6 +266,7 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
   decoder->SetOutputSize(aICODecoder->OutputSize());
   decoder->SetDecoderFlags(aICODecoder->GetDecoderFlags());
   decoder->SetSurfaceFlags(aICODecoder->GetSurfaceFlags());
+  decoder->SetFinalizeFrames(false);
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;

@@ -13,6 +13,10 @@ function IsObject(o) {
     return Object(o) === o;
 }
 
+function IsPrimitive(o) {
+    return Object(o) !== o;
+}
+
 function thisValues() {
     const intlConstructors = Object.getOwnPropertyNames(Intl).map(name => Intl[name]).filter(IsConstructor);
 
@@ -61,7 +65,7 @@ for (let thisValue of thisValues()) {
 
 // Intl.DateTimeFormat uses the legacy Intl constructor compromise semantics.
 // - Test when InstanceofOperator(thisValue, %DateTimeFormat%) returns true.
-for (let thisValue of thisValues()) {
+for (let thisValue of thisValues().filter(IsObject)) {
     let hasInstanceCalled = false;
     Object.defineProperty(Intl.DateTimeFormat, Symbol.hasInstance, {
         value() {
@@ -70,21 +74,15 @@ for (let thisValue of thisValues()) {
             return true;
         }, configurable: true
     });
-    if (!IsObject(thisValue)) {
-        // A TypeError is thrown when Intl.DateTimeFormat tries to install the
-        // [[FallbackSymbol]] property on |thisValue|.
-        assertThrowsInstanceOf(() => Intl.DateTimeFormat.call(thisValue), TypeError);
-        delete Intl.DateTimeFormat[Symbol.hasInstance];
-    } else {
-        let obj = Intl.DateTimeFormat.call(thisValue);
-        delete Intl.DateTimeFormat[Symbol.hasInstance];
-        assertEq(Object.is(obj, thisValue), true);
-        assertEqArray(Object.getOwnPropertySymbols(thisValue), [intlFallbackSymbol]);
-    }
+    let obj = Intl.DateTimeFormat.call(thisValue);
+    delete Intl.DateTimeFormat[Symbol.hasInstance];
+
+    assertEq(Object.is(obj, thisValue), true);
     assertEq(hasInstanceCalled, true);
+    assertEqArray(Object.getOwnPropertySymbols(thisValue), [intlFallbackSymbol]);
 }
 // - Test when InstanceofOperator(thisValue, %DateTimeFormat%) returns false.
-for (let thisValue of thisValues()) {
+for (let thisValue of thisValues().filter(IsObject)) {
     let hasInstanceCalled = false;
     Object.defineProperty(Intl.DateTimeFormat, Symbol.hasInstance, {
         value() {
@@ -95,11 +93,23 @@ for (let thisValue of thisValues()) {
     });
     let obj = Intl.DateTimeFormat.call(thisValue);
     delete Intl.DateTimeFormat[Symbol.hasInstance];
+
     assertEq(Object.is(obj, thisValue), false);
     assertEq(obj instanceof Intl.DateTimeFormat, true);
-    if (IsObject(thisValue))
-        assertEqArray(Object.getOwnPropertySymbols(thisValue), []);
     assertEq(hasInstanceCalled, true);
+    assertEqArray(Object.getOwnPropertySymbols(thisValue), []);
+}
+// - Test with primitive values.
+for (let thisValue of thisValues().filter(IsPrimitive)) {
+    // Ensure @@hasInstance is not called.
+    Object.defineProperty(Intl.DateTimeFormat, Symbol.hasInstance, {
+        value() { assertEq(true, false); }, configurable: true
+    });
+    let obj = Intl.DateTimeFormat.call(thisValue);
+    delete Intl.DateTimeFormat[Symbol.hasInstance];
+
+    assertEq(Object.is(obj, thisValue), false);
+    assertEq(obj instanceof Intl.DateTimeFormat, true);
 }
 
 // Throws an error when attempting to install [[FallbackSymbol]] twice.
