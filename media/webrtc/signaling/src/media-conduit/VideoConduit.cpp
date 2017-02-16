@@ -1859,12 +1859,6 @@ WebrtcVideoConduit::SendRtp(const uint8_t* packet, size_t length,
   // extension for TransportSequenceNumber is being used, which we don't.
   CSFLogDebug(logTag, "%s : len %lu", __FUNCTION__, (unsigned long)length);
 
-  { static int x = 0;
-    if (++x % 150 == 0) {
-      CSFLogDebug(logTag, "%s Faking packet loss, seq %d ", __FUNCTION__,
-                  ntohs(*((uint16_t*)&packet[2])));
-      return true;
-    }
   ReentrantMonitorAutoEnter enter(mTransportMonitor);
   if (!mTransmitterTransport ||
      NS_FAILED(mTransmitterTransport->SendRtpPacket(packet, length)))
