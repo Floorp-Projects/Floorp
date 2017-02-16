@@ -67,8 +67,10 @@ public:
   static const int16_t notReferencing = -2;
 
   AutoReferenceLimiter(nsIFrame* aFrame, int16_t* aRefCounter,
-                       int16_t aMaxReferenceCount)
+                       int16_t aMaxReferenceCount
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(aFrame);
     MOZ_ASSERT(aMaxReferenceCount > 0 &&
                aRefCounter &&
@@ -132,6 +134,7 @@ private:
   nsIFrame* mFrame;
   int16_t* mRefCounter;
   int16_t mMaxReferenceCount;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } // namespace mozilla
