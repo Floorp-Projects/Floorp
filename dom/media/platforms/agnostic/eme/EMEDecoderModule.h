@@ -7,13 +7,15 @@
 #if !defined(EMEDecoderModule_h_)
 #define EMEDecoderModule_h_
 
-#include "PDMFactory.h"
+#include "MediaDataDecoderProxy.h"
 #include "PlatformDecoderModule.h"
-#include "gmp-decryption.h"
+#include "PlatformDecoderModule.h"
+#include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 
 class CDMProxy;
+class PDMFactory;
 
 class EMEDecoderModule : public PlatformDecoderModule
 {
@@ -41,6 +43,26 @@ private:
   RefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
   RefPtr<PDMFactory> mPDM;
+};
+
+class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy
+{
+public:
+  EMEMediaDataDecoderProxy(
+    already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
+    const CreateDecoderParams& aParams);
+
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
+
+private:
+  RefPtr<TaskQueue> mTaskQueue;
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+  MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
+  MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseRequestHolder<DecodePromise> mDecodeRequest;
+  RefPtr<CDMProxy> mProxy;
 };
 
 } // namespace mozilla
