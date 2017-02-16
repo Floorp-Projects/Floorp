@@ -727,6 +727,8 @@ rtc::scoped_ptr<rtcp::RtcpPacket> RTCPSender::BuildNACK(
   packet_type_counter_.nack_requests = nack_stats_.requests();
   packet_type_counter_.unique_nack_requests = nack_stats_.unique_requests();
 
+  LOG(LS_ERROR) << "RTPSender: Sending Nack: " << stringBuilder.GetResult().c_str();
+    
   TRACE_EVENT_INSTANT1(TRACE_DISABLED_BY_DEFAULT("webrtc_rtp"),
                        "RTCPSender::NACK", "nacks",
                        TRACE_STR_COPY(stringBuilder.GetResult().c_str()));
