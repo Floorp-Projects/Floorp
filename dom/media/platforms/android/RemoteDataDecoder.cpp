@@ -431,14 +431,21 @@ private:
 };
 
 already_AddRefed<MediaDataDecoder>
-RemoteDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
-                                      MediaFormat::Param aFormat,
+RemoteDataDecoder::CreateAudioDecoder(const CreateDecoderParams& aParams,
                                       const nsString& aDrmStubId,
-                                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
+                                      CDMProxy* aProxy)
 {
+  const AudioInfo& config = aParams.AudioConfig();
+  MediaFormat::LocalRef format;
+  NS_ENSURE_SUCCESS(
+    MediaFormat::CreateAudioFormat(
+      config.mMimeType, config.mRate, config.mChannels, &format),
+    nullptr);
+
   RefPtr<MediaDataDecoder> decoder;
   if (!aProxy) {
-    decoder = new RemoteAudioDecoder(aConfig, aFormat, aDrmStubId, aTaskQueue);
+    decoder =
+      new RemoteAudioDecoder(config, format, aDrmStubId, aParams.mTaskQueue);
   } else {
     // TODO in bug 1334061.
   }
@@ -446,16 +453,24 @@ RemoteDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
 }
 
 already_AddRefed<MediaDataDecoder>
-RemoteDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
-                                      MediaFormat::Param aFormat,
-                                      layers::ImageContainer* aImageContainer,
+RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
                                       const nsString& aDrmStubId,
-                                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
+                                      CDMProxy* aProxy)
 {
+
+  const VideoInfo& config = aParams.VideoConfig();
+  MediaFormat::LocalRef format;
+  NS_ENSURE_SUCCESS(
+    MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
+                                   config.mDisplay.width,
+                                   config.mDisplay.height,
+                                   &format),
+    nullptr);
+
   RefPtr<MediaDataDecoder> decoder;
   if (!aProxy) {
-    decoder = new RemoteVideoDecoder(aConfig, aFormat, aImageContainer,
-                                     aDrmStubId, aTaskQueue);
+    decoder = new RemoteVideoDecoder(
+      config, format, aParams.mImageContainer, aDrmStubId, aParams.mTaskQueue);
   } else {
     // TODO in bug 1334061.
   }
