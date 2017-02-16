@@ -529,42 +529,42 @@ nsFloatManager::ClearContinues(StyleClear aBreakType) const
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// BoxShapeInfo
+// RoundedBoxShapeInfo
 
 nscoord
-nsFloatManager::BoxShapeInfo::LineLeft(WritingMode aWM,
-                                       const nscoord aBStart,
-                                       const nscoord aBEnd) const
+nsFloatManager::RoundedBoxShapeInfo::LineLeft(WritingMode aWM,
+                                              const nscoord aBStart,
+                                              const nscoord aBEnd) const
 {
   if (!mRadii) {
-    return mShapeBoxRect.x;
+    return mRect.x;
   }
 
   nscoord lineLeftDiff =
     ComputeEllipseLineInterceptDiff(
-      mShapeBoxRect.y, mShapeBoxRect.YMost(),
+      mRect.y, mRect.YMost(),
       mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
       mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
       aBStart, aBEnd);
-  return mShapeBoxRect.x + lineLeftDiff;
+  return mRect.x + lineLeftDiff;
 }
 
 nscoord
-nsFloatManager::BoxShapeInfo::LineRight(WritingMode aWM,
-                                        const nscoord aBStart,
-                                        const nscoord aBEnd) const
+nsFloatManager::RoundedBoxShapeInfo::LineRight(WritingMode aWM,
+                                               const nscoord aBStart,
+                                               const nscoord aBEnd) const
 {
   if (!mRadii) {
-    return mShapeBoxRect.XMost();
+    return mRect.XMost();
   }
 
   nscoord lineRightDiff =
     ComputeEllipseLineInterceptDiff(
-      mShapeBoxRect.y, mShapeBoxRect.YMost(),
+      mRect.y, mRect.YMost(),
       mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
       mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
       aBStart, aBEnd);
-  return mShapeBoxRect.XMost() - lineRightDiff;
+  return mRect.XMost() - lineRightDiff;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -806,12 +806,13 @@ nsFloatManager::ShapeInfo::CreateShapeBox(
   nscoord physicalRadii[8];
   bool hasRadii = aFrame->GetShapeBoxBorderRadii(physicalRadii);
   if (!hasRadii) {
-    return MakeUnique<BoxShapeInfo>(logicalShapeBoxRect,
-                                    UniquePtr<nscoord[]>());
+    return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
+                                           UniquePtr<nscoord[]>());
   }
 
-  return MakeUnique<BoxShapeInfo>(logicalShapeBoxRect,
-                                  ConvertToFloatLogical(physicalRadii, aWM));
+  return MakeUnique<RoundedBoxShapeInfo>(logicalShapeBoxRect,
+                                         ConvertToFloatLogical(physicalRadii,
+                                                               aWM));
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
