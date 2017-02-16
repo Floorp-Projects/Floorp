@@ -22,6 +22,11 @@ public class TabStripComponent extends BaseComponent {
         super(testContext);
     }
 
+    public TabStripComponent assertTabCount(int count) {
+        fAssertEquals("The tab strip tab count is " + count, count, getTabStripView().getAdapter().getItemCount());
+        return this;
+    }
+
     public void switchToTab(int index) {
         // The tab strip is only available on tablets
         DeviceHelper.assertIsTablet();
