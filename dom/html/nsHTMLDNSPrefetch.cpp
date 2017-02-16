@@ -295,7 +295,8 @@ nsHTMLDNSPrefetch::nsDeferrals::Add(uint16_t flags, Link *aElement)
 
   if (!mActiveLoaderCount && !mTimerArmed && mTimer) {
     mTimerArmed = true;
-    mTimer->InitWithFuncCallback(Tick, this, 2000, nsITimer::TYPE_ONE_SHOT);
+    mTimer->InitWithNamedFuncCallback(Tick, this, 2000, nsITimer::TYPE_ONE_SHOT,
+                                      "nsHTMLDNSPrefetch::nsDeferrals::Tick");
   }
   
   return NS_OK;

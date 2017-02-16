@@ -48,7 +48,8 @@ class NotifyChannelActiveRunnable final : public Runnable
 public:
   NotifyChannelActiveRunnable(uint64_t aWindowID, AudioChannel aAudioChannel,
                               bool aActive)
-    : mWindowID(aWindowID)
+    : Runnable("NotifyChannelActiveRunnable")
+    , mWindowID(aWindowID)
     , mAudioChannel(aAudioChannel)
     , mActive(aActive)
   {}

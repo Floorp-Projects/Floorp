@@ -113,8 +113,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(const TransactionInfo& aInfo) override;
-
   virtual mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
   virtual mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
                                                       const TextureInfo& aInfo) override;

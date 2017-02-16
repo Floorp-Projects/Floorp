@@ -297,7 +297,8 @@ class TabChild::DelayedDeleteRunnable final
 
 public:
     explicit DelayedDeleteRunnable(TabChild* aTabChild)
-      : mTabChild(aTabChild)
+      : Runnable("TabChild::DelayedDeleteRunnable")
+      , mTabChild(aTabChild)
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(aTabChild);

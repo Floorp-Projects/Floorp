@@ -12,6 +12,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/Shmem.h"
 
+#ifdef MOZ_CRASHREPORTER
 namespace mozilla {
 namespace ipc {
 
@@ -32,22 +33,30 @@ public:
   // crash reporter needs metadata), the shmem should be parsed.
   template <typename T>
   static bool InitSingleton(T* aToplevelProtocol) {
-    // 16KB should be enough for most metadata - see bug 1278717 comment #11.
-    static const size_t kShmemSize = 16 * 1024;
-
     Shmem shmem;
-    bool rv = aToplevelProtocol->AllocUnsafeShmem(
-      kShmemSize,
-      SharedMemory::TYPE_BASIC,
-      &shmem);
-    if (!rv) {
+    if (!AllocShmem(aToplevelProtocol, &shmem)) {
       return false;
     }
 
     InitSingletonWithShmem(shmem);
-    Unused << aToplevelProtocol->SendInitCrashReporter(shmem);
+    Unused << aToplevelProtocol->SendInitCrashReporter(
+      shmem,
+      CrashReporter::CurrentThreadId());
     return true;
   }
+
+  template <typename T>
+  static bool AllocShmem(T* aToplevelProtocol, Shmem* aOutShmem) {
+    // 16KB should be enough for most metadata - see bug 1278717 comment #11.
+    static const size_t kShmemSize = 16 * 1024;
+
+    return aToplevelProtocol->AllocUnsafeShmem(
+      kShmemSize,
+      SharedMemory::TYPE_BASIC,
+      aOutShmem);
+  }
+
+  static void InitSingletonWithShmem(const Shmem& aShmem);
 
   static void DestroySingleton();
   static RefPtr<CrashReporterClient> GetSingleton();
@@ -59,8 +68,6 @@ private:
   explicit CrashReporterClient(const Shmem& aShmem);
   ~CrashReporterClient();
 
-  static void InitSingletonWithShmem(const Shmem& aShmem);
-
 private:
   static StaticMutex sLock;
   static StaticRefPtr<CrashReporterClient> sClientSingleton;
@@ -71,6 +78,7 @@ private:
 
 } // namespace ipc
 } // namespace mozilla
+#endif // MOZ_CRASHREPORTER
 
 #endif // mozilla_ipc_CrashReporterClient_h
 

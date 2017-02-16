@@ -48,14 +48,14 @@
 
 #include "mozilla/Assertions.h"
 
-#include "LulPlatformMacros.h"
+#include "PlatformMacros.h"
 
 
 // (derived from)
 // elfutils.h: Utilities for dealing with ELF files.
 //
 
-#if defined(LUL_OS_android)
+#if defined(SPS_OS_android)
 
 // From toolkit/crashreporter/google-breakpad/src/common/android/include/elf.h
 // The Android headers don't always define this constant.

@@ -105,6 +105,10 @@ bool profiler_verbose();
 #define ENABLE_LEAF_DATA
 #endif
 
+#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#define PROFILE_JAVA
+#endif
+
 extern mozilla::TimeStamp gStartTime;
 
 typedef uint8_t* Address;

@@ -177,28 +177,18 @@ nsCSSClipPathInstance::CreateClipPathInset(DrawTarget* aDrawTarget,
                                            const nsRect& aRefBox)
 {
   StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
-  const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
-  MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
   nscoord appUnitsPerDevPixel =
     mTargetFrame->PresContext()->AppUnitsPerDevPixel();
 
-  nsMargin inset(nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.height),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.width),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[2], aRefBox.height),
-                 nsRuleNode::ComputeCoordPercentCalc(coords[3], aRefBox.width));
-
-  nsRect insetRect(aRefBox);
-  insetRect.Deflate(inset);
+  nsRect insetRect = ShapeUtils::ComputeInsetRect(basicShape, aRefBox);
   const Rect insetRectPixels = NSRectToRect(insetRect, appUnitsPerDevPixel);
-  const nsStyleCorners& radius = basicShape->GetRadius();
-
   nscoord appUnitsRadii[8];
 
-  if (nsIFrame::ComputeBorderRadii(radius, insetRect.Size(), aRefBox.Size(),
-                                   Sides(), appUnitsRadii)) {
+  if (ShapeUtils::ComputeInsetRadii(basicShape, insetRect, aRefBox,
+                                    appUnitsRadii)) {
     RectCornerRadii corners;
     nsCSSRendering::ComputePixelRadii(appUnitsRadii,
                                       appUnitsPerDevPixel, &corners);
