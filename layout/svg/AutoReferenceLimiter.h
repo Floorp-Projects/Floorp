@@ -9,7 +9,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrancyGuard.h"
+#include "mozilla/Likely.h"
 #include "nsDebug.h"
+#include "nsIDocument.h"
+#include "nsIFrame.h"
 
 namespace mozilla {
 
@@ -63,8 +66,10 @@ class MOZ_RAII AutoReferenceLimiter
 public:
   static const int16_t notReferencing = -2;
 
-  AutoReferenceLimiter(int16_t* aRefCounter, int16_t aMaxReferenceCount)
+  AutoReferenceLimiter(nsIFrame* aFrame, int16_t* aRefCounter,
+                       int16_t aMaxReferenceCount)
   {
+    MOZ_ASSERT(aFrame);
     MOZ_ASSERT(aMaxReferenceCount > 0 &&
                aRefCounter &&
                (*aRefCounter == notReferencing ||
@@ -74,6 +79,7 @@ public:
       // initialize
       *aRefCounter = aMaxReferenceCount;
     }
+    mFrame = aFrame;
     mRefCounter = aRefCounter;
     mMaxReferenceCount = aMaxReferenceCount;
   }
@@ -103,21 +109,27 @@ public:
 
     (*mRefCounter)--;
 
-    if (*mRefCounter < 0) {
-      // TODO: This is an issue with the document, not with Mozilla code. We
-      // should stop using NS_WARNING and send a message to the console
-      // instead (but only once per document, not over and over as we repaint).
-      if (mMaxReferenceCount == 1) {
-        NS_WARNING("Reference loop detected!");
-      } else {
-        NS_WARNING("Reference chain length limit exceeded!");
-      }
+    if (MOZ_UNLIKELY(*mRefCounter < 0)) {
+      ReportErrorToConsole();
       return false;
     }
     return true;
   }
 
 private:
+  void ReportErrorToConsole() {
+    nsAutoString tag;
+    mFrame->GetContent()->AsElement()->GetTagName(tag);
+    const char16_t* params[] = { tag.get() };
+    auto doc = mFrame->GetContent()->OwnerDoc();
+    auto warning = (mMaxReferenceCount == 1) ?
+                     nsIDocument::eSVGReferenceLoop :
+                     nsIDocument::eSVGReferenceChainLengthExceeded;
+    doc->WarnOnceAbout(warning, /* asError */ true,
+                       params, ArrayLength(params));
+  }
+
+  nsIFrame* mFrame;
   int16_t* mRefCounter;
   int16_t mMaxReferenceCount;
 };
