@@ -247,10 +247,10 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
   void trace(JSObject* aMap, JS::GCCellPtr aKey, JS::GCCellPtr aValue) override
   {
     // If nothing that could be held alive by this entry is marked gray, return.
-    bool delegateMightNeedMarking = aKey && JS::GCThingIsMarkedGray(aKey);
+    bool keyMightNeedMarking = aKey && JS::GCThingIsMarkedGray(aKey);
     bool valueMightNeedMarking = aValue && JS::GCThingIsMarkedGray(aValue) &&
                                  aValue.kind() != JS::TraceKind::String;
-    if (!delegateMightNeedMarking && !valueMightNeedMarking) {
+    if (!keyMightNeedMarking && !valueMightNeedMarking) {
       return;
     }
 
@@ -258,9 +258,11 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
       aKey = nullptr;
     }
 
-    if (delegateMightNeedMarking && aKey.is<JSObject>()) {
+    if (keyMightNeedMarking && aKey.is<JSObject>()) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
-      if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate)) {
+      if (kdelegate && !JS::ObjectIsMarkedGray(kdelegate) &&
+          (!aMap || !JS::ObjectIsMarkedGray(aMap)))
+      {
         if (JS::UnmarkGrayGCThingRecursively(aKey)) {
           mAnyMarked = true;
         }
