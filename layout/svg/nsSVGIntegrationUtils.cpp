@@ -134,10 +134,18 @@ private:
                  nsCSSAnonBoxes::mozAnonymousBlock,
                  "How did we getting here, then?");
     }
+
+    bool hasEffect = nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame);
+    nsOverflowAreas* preTransformOverflows =
+      aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
+    // Having PreTransformOverflowAreasProperty means GetVisualOverflowRect()
+    // will return post-effect rect, which is not what we want, this function
+    // intentional reports pre-effect rect. But it does not matter if there is
+    // no SVG effect on this frame, since no effect means post-effect rect
+    // matches pre-effect rect.
+    MOZ_ASSERT(!hasEffect || !preTransformOverflows,
+               "GetVisualOverflowRect() won't return the pre-effects rect!");
 #endif
-    NS_ASSERTION(!aFrame->Properties().Get(
-                   aFrame->PreTransformOverflowAreasProperty()),
-                 "GetVisualOverflowRect() won't return the pre-effects rect!");
     return aFrame->GetVisualOverflowRect();
   }
 
