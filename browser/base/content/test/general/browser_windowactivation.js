@@ -46,10 +46,10 @@ function reallyRunTests() {
 
     switch (colorChangeNotifications) {
       case 1:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window initial");
+        is(message.data.color, "transparent", "first window initial");
         break;
       case 2:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window initial");
+        is(message.data.color, "transparent", "second window initial");
         runOtherWindowTests();
         break;
       case 3:
@@ -61,17 +61,17 @@ function reallyRunTests() {
         otherWindow.close();
         break;
       case 5:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window raised");
+        is(message.data.color, "transparent", "first window raised");
         break;
       case 6:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window raised");
+        is(message.data.color, "transparent", "second window raised");
         gBrowser.selectedTab = tab2;
         break;
       case 7:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "first window after tab switch");
+        is(message.data.color, "transparent", "first window after tab switch");
         break;
       case 8:
-        is(message.data.color, "rgba(0, 0, 0, 0)", "second window after tab switch");
+        is(message.data.color, "transparent", "second window after tab switch");
         finishTest();
         break;
       case 9:
