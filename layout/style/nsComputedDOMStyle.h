@@ -436,8 +436,9 @@ private:
   already_AddRefed<CSSValue> DoGetTextIndent();
   already_AddRefed<CSSValue> DoGetTextOrientation();
   already_AddRefed<CSSValue> DoGetTextOverflow();
-  already_AddRefed<CSSValue> DoGetTextTransform();
   already_AddRefed<CSSValue> DoGetTextShadow();
+  already_AddRefed<CSSValue> DoGetTextSizeAdjust();
+  already_AddRefed<CSSValue> DoGetTextTransform();
   already_AddRefed<CSSValue> DoGetLetterSpacing();
   already_AddRefed<CSSValue> DoGetWordSpacing();
   already_AddRefed<CSSValue> DoGetWhiteSpace();
@@ -445,7 +446,6 @@ private:
   already_AddRefed<CSSValue> DoGetOverflowWrap();
   already_AddRefed<CSSValue> DoGetHyphens();
   already_AddRefed<CSSValue> DoGetTabSize();
-  already_AddRefed<CSSValue> DoGetTextSizeAdjust();
   already_AddRefed<CSSValue> DoGetWebkitTextFillColor();
   already_AddRefed<CSSValue> DoGetWebkitTextStrokeColor();
   already_AddRefed<CSSValue> DoGetWebkitTextStrokeWidth();
