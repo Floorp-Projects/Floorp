@@ -280,13 +280,13 @@ MultipartBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
                                           ErrorResult& aRv) const
 {
   if (!mIsFromNsIFile || mBlobImpls.Length() == 0) {
-    BlobImplBase::GetMozFullPathInternal(aFilename, aRv);
+    BaseBlobImpl::GetMozFullPathInternal(aFilename, aRv);
     return;
   }
 
   BlobImpl* blobImpl = mBlobImpls.ElementAt(0).get();
   if (!blobImpl) {
-    BlobImplBase::GetMozFullPathInternal(aFilename, aRv);
+    BaseBlobImpl::GetMozFullPathInternal(aFilename, aRv);
     return;
   }
 
@@ -313,7 +313,7 @@ MultipartBlobImpl::SetMutable(bool aMutable)
     }
   }
 
-  rv = BlobImplBase::SetMutable(aMutable);
+  rv = BaseBlobImpl::SetMutable(aMutable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
