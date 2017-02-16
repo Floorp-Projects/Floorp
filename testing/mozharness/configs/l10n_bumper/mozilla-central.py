@@ -1,4 +1,4 @@
-MULTI_REPO = "releases/mozilla-beta"
+MULTI_REPO = "mozilla-central"
 config = {
     "log_name": "l10n_bumper",
 
@@ -22,7 +22,6 @@ config = {
         "path": "mobile/locales/l10n-changesets.json",
         "format": "json",
         "name": "Fennec l10n changesets",
-        "revision_url": "https://l10n.mozilla.org/shipping/l10n-changesets?av=fennec%(MAJOR_VERSION)s",
         "platform_configs": [{
             "platforms": ["android-api-15", "android"],
             "path": "mobile/android/locales/all-locales"

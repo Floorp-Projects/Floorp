@@ -1,4 +1,4 @@
-MULTI_REPO = "releases/mozilla-beta"
+MULTI_REPO = "projects/jamun"
 config = {
     "log_name": "l10n_bumper",
 
