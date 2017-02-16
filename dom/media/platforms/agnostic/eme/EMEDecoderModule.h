@@ -51,6 +51,9 @@ public:
   EMEMediaDataDecoderProxy(
     already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
     const CreateDecoderParams& aParams);
+  EMEMediaDataDecoderProxy(const CreateDecoderParams& aParams,
+                           already_AddRefed<MediaDataDecoder> aProxyDecoder,
+                           CDMProxy* aProxy);
 
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
   RefPtr<FlushPromise> Flush() override;

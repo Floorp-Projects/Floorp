@@ -442,12 +442,10 @@ RemoteDataDecoder::CreateAudioDecoder(const CreateDecoderParams& aParams,
       config.mMimeType, config.mRate, config.mChannels, &format),
     nullptr);
 
-  RefPtr<MediaDataDecoder> decoder;
-  if (!aProxy) {
-    decoder =
-      new RemoteAudioDecoder(config, format, aDrmStubId, aParams.mTaskQueue);
-  } else {
-    // TODO in bug 1334061.
+  RefPtr<MediaDataDecoder> decoder =
+    new RemoteAudioDecoder(config, format, aDrmStubId, aParams.mTaskQueue);
+  if (aProxy) {
+    decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }
   return decoder.forget();
 }
@@ -467,12 +465,10 @@ RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
                                    &format),
     nullptr);
 
-  RefPtr<MediaDataDecoder> decoder;
-  if (!aProxy) {
-    decoder = new RemoteVideoDecoder(
-      config, format, aParams.mImageContainer, aDrmStubId, aParams.mTaskQueue);
-  } else {
-    // TODO in bug 1334061.
+  RefPtr<MediaDataDecoder> decoder = new RemoteVideoDecoder(
+    config, format, aParams.mImageContainer, aDrmStubId, aParams.mTaskQueue);
+  if (aProxy) {
+    decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }
   return decoder.forget();
 }
