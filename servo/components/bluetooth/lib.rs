@@ -246,13 +246,16 @@ impl BluetoothManager {
                 },
                 BluetoothRequest::Test(data_set_name, sender) => {
                     let _ = sender.send(self.test(data_set_name));
-                }
+                },
                 BluetoothRequest::SetRepresentedToNull(service_ids, characteristic_ids, descriptor_ids) => {
                     self.remove_ids_from_caches(service_ids, characteristic_ids, descriptor_ids)
-                }
+                },
                 BluetoothRequest::IsRepresentedDeviceNull(id, sender) => {
                     let _ = sender.send(!self.device_is_cached(&id));
-                }
+                },
+                BluetoothRequest::GetAvailability(sender) => {
+                    let _ = sender.send(self.get_availability());
+                },
                 BluetoothRequest::Exit => {
                     break
                 },
@@ -886,7 +889,7 @@ impl BluetoothManager {
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-startnotifications
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-stopnotifications
     fn enable_notification(&mut self, id: String, enable: bool) -> BluetoothResponseResult {
-        // (StartNotifications) Step 2 - 3.
+        // (StartNotifications) Step 3 - 4.
         // (StopNotifications) Step 1 - 2.
         if !self.characteristic_is_cached(&id) {
             return Err(BluetoothError::InvalidState);
@@ -909,11 +912,11 @@ impl BluetoothManager {
                     // (StopNotification)  Step 5.
                     Ok(_) => return Ok(BluetoothResponse::EnableNotification(())),
 
-                    // (StartNotification) Step 4.
+                    // (StartNotification) Step 5.
                     Err(_) => return Err(BluetoothError::NotSupported),
                 }
             },
-            // (StartNotification) Step 3.
+            // (StartNotification) Step 4.
             None => return Err(BluetoothError::InvalidState),
         }
     }
@@ -923,5 +926,10 @@ impl BluetoothManager {
         // Step 2.
         // TODO: Implement this when supported in lower level
         return Err(BluetoothError::NotSupported);
+    }
+
+    // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetooth-getavailability
+    fn get_availability(&mut self) -> BluetoothResponseResult {
+        Ok(BluetoothResponse::GetAvailability(self.get_adapter().is_ok()))
     }
 }

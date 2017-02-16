@@ -15,6 +15,7 @@ module.exports = {  // eslint-disable-line no-undef
     "getDevToolsTargetForContext": true,
     "makeWidgetId": true,
     "pageActionFor": true,
+    "sidebarActionFor": true,
     "tabTracker": true,
     "windowTracker": true,
   },

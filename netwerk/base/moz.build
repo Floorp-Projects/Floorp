@@ -120,6 +120,7 @@ XPIDL_SOURCES += [
     'nsIThreadRetargetableRequest.idl',
     'nsIThreadRetargetableStreamListener.idl',
     'nsIThrottledInputChannel.idl',
+    'nsIThrottlingService.idl',
     'nsITimedChannel.idl',
     'nsITLSServerSocket.idl',
     'nsITraceableChannel.idl',
@@ -254,6 +255,7 @@ UNIFIED_SOURCES += [
     'SimpleBuffer.cpp',
     'StreamingProtocolService.cpp',
     'ThrottleQueue.cpp',
+    'ThrottlingService.cpp',
     'Tickler.cpp',
     'TLSServerSocket.cpp',
 ]

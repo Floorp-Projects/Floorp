@@ -182,6 +182,7 @@ this.PushServiceAndroidGCM = {
       type: "PushServiceAndroidGCM:DumpSubscriptions",
     })
     .then(subscriptions => {
+      subscriptions = JSON.parse(subscriptions);
       console.debug("connect:", subscriptions);
       // subscriptions maps chid => subscription data.
       return Promise.all(records.map(record => {
@@ -225,6 +226,7 @@ this.PushServiceAndroidGCM = {
     // Caller handles errors.
     return EventDispatcher.instance.sendRequestForResult(message)
     .then(data => {
+      data = JSON.parse(data);
       console.debug("Got data:", data);
       return PushCrypto.generateKeys()
         .then(exportedKeys =>

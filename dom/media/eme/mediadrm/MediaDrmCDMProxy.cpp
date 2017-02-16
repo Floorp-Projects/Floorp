@@ -281,7 +281,7 @@ MediaDrmCDMProxy::OnRejectPromise(uint32_t aPromiseId,
   RejectPromise(aPromiseId, aDOMException, aMsg);
 }
 
-RefPtr<MediaDrmCDMProxy::DecryptPromise>
+RefPtr<DecryptPromise>
 MediaDrmCDMProxy::Decrypt(MediaRawData* aSample)
 {
   MOZ_ASSERT_UNREACHABLE("Fennec could not handle decrypting individually");

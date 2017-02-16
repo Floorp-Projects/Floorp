@@ -111,8 +111,6 @@ reserved = set((
         'class',
         'compress',
         'compressall',
-        '__delete__',
-        'delete',                       # reserve 'delete' to prevent its use
         'from',
         'include',
         'intr',
@@ -337,7 +335,7 @@ def p_ProtocolDefn(p):
     protocol = p[5]
     protocol.loc = locFromTok(p, 2)
     protocol.name = p[3]
-    protocol.nestedRange = p[1][0]
+    protocol.nested = p[1][0]
     protocol.sendSemantics = p[1][1]
     p[0] = protocol
 
@@ -440,25 +438,16 @@ def p_MessageDecl(p):
     p[0] = msg
 
 def p_MessageBody(p):
-    """MessageBody : MessageId MessageInParams MessageOutParams OptionalMessageModifiers"""
+    """MessageBody : ID MessageInParams MessageOutParams OptionalMessageModifiers"""
     # FIXME/cjones: need better loc info: use one of the quals
-    loc, name = p[1]
-    msg = MessageDecl(loc)
+    name = p[1]
+    msg = MessageDecl(locFromTok(p, 1))
     msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
     msg.addModifiers(p[4])
 
     p[0] = msg
-
-def p_MessageId(p):
-    """MessageId : ID
-                 | __DELETE__
-                 | DELETE"""
-    loc = locFromTok(p, 1)
-    if 'delete' == p[1]:
-        _error(loc, "`delete' is a reserved identifier")
-    p[0] = [ loc, p[1] ]
 
 def p_MessageInParams(p):
     """MessageInParams : '(' ParamList ')'"""
@@ -556,7 +545,7 @@ def p_OptionalProtocolSendSemanticsQual(p):
     """OptionalProtocolSendSemanticsQual : ProtocolSendSemanticsQual
                                          | """
     if 2 == len(p): p[0] = p[1]
-    else:           p[0] = [ (NOT_NESTED, NOT_NESTED), ASYNC ]
+    else:           p[0] = [ NOT_NESTED, ASYNC ]
 
 def p_ProtocolSendSemanticsQual(p):
     """ProtocolSendSemanticsQual : ASYNC
@@ -566,10 +555,10 @@ def p_ProtocolSendSemanticsQual(p):
                                  | INTR"""
     if p[1] == 'nested':
         mtype = p[6]
-        nested = (NOT_NESTED, p[4])
+        nested = p[4]
     else:
         mtype = p[1]
-        nested = (NOT_NESTED, NOT_NESTED)
+        nested = NOT_NESTED
 
     if mtype == 'async': mtype = ASYNC
     elif mtype == 'sync': mtype = SYNC

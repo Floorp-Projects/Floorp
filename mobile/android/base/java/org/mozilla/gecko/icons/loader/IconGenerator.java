@@ -89,7 +89,7 @@ public class IconGenerator implements IconLoader {
                 (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)),
                 paint);
 
-        return IconResponse.createGenerated(favicon, color);
+        return IconResponse.createGenerated(favicon, color & 0x7FFFFFFF);
     }
 
     /**

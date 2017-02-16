@@ -18,7 +18,7 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleAnimationValue.h"
+#include "mozilla/StyleAnimationValueInlines.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
@@ -878,7 +878,10 @@ KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
                                              mTarget->mElement,
                                              aStyleContext);
 
-  if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+  // FIXME: Bug 1332633: we have to implement ComputeDistance for
+  //        RawServoAnimationValue.
+  if (mEffectOptions.mSpacingMode == SpacingMode::paced &&
+      aStyleContext->PresContext()->StyleSet()->IsGecko()) {
     KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
                                 mEffectOptions.mPacedProperty,
                                 computedValues, aStyleContext);

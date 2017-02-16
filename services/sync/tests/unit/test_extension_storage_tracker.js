@@ -9,6 +9,7 @@ Cu.import("resource://services-sync/engines/extension-storage.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
+/* globals extensionStorageSync */
 
 Service.engineManager.register(ExtensionStorageEngine);
 const engine = Service.engineManager.get("extension-storage");
@@ -20,13 +21,13 @@ add_task(function* test_changing_extension_storage_changes_score() {
   const extension = {id: "my-extension-id"};
   Svc.Obs.notify("weave:engine:start-tracking");
   yield* withSyncContext(function*(context) {
-    yield ExtensionStorageSync.set(extension, {"a": "b"}, context);
+    yield extensionStorageSync.set(extension, {"a": "b"}, context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
 
   tracker.resetScore();
   yield* withSyncContext(function*(context) {
-    yield ExtensionStorageSync.remove(extension, "a", context);
+    yield extensionStorageSync.remove(extension, "a", context);
   });
   do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
 

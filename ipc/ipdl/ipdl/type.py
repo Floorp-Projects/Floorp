@@ -213,9 +213,9 @@ class MessageType(IPDLType):
         return self.isCtor() or self.isDtor()
 
 class ProtocolType(IPDLType):
-    def __init__(self, qname, nestedRange, sendSemantics):
+    def __init__(self, qname, nested, sendSemantics):
         self.qname = qname
-        self.nestedRange = nestedRange
+        self.nestedRange = (NOT_NESTED, nested)
         self.sendSemantics = sendSemantics
         self.managers = []           # ProtocolType
         self.manages = [ ]
@@ -587,7 +587,7 @@ class GatherDecls(TcheckVisitor):
             fullname = str(qname)
             p.decl = self.declare(
                 loc=p.loc,
-                type=ProtocolType(qname, p.nestedRange, p.sendSemantics),
+                type=ProtocolType(qname, p.nested, p.sendSemantics),
                 shortname=p.name,
                 fullname=None if 0 == len(qname.quals) else fullname)
 

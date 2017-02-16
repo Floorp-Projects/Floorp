@@ -310,7 +310,7 @@ public class PushService implements BundleEventListener {
                     for (Map.Entry<String, PushSubscription> entry : result.entrySet()) {
                         json.put(entry.getKey(), entry.getValue().toJSONObject());
                     }
-                    callback.sendSuccess(json);
+                    callback.sendSuccess(json.toString());
                 } catch (JSONException e) {
                     callback.sendError("Got exception handling message [" + event + "]: " + e.toString());
                 }
@@ -370,7 +370,7 @@ public class PushService implements BundleEventListener {
                 }
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.SERVICE, "dom-push-api");
-                callback.sendSuccess(json);
+                callback.sendSuccess(json.toString());
                 return;
             }
             if ("PushServiceAndroidGCM:UnsubscribeChannel".equals(event)) {
