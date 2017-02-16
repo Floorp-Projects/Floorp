@@ -124,6 +124,7 @@
 
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/SVGUseElement.h"
 
 #include "nsStyledElement.h"
 #include "nsIContentInlines.h"
@@ -342,6 +343,14 @@ nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
 already_AddRefed<nsIURI>
 nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 {
+  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
+    nsIContent* bindingParent = GetBindingParent();
+    MOZ_ASSERT(bindingParent);
+    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+    // XXX Ignore xml:base as we are removing it.
+    return do_AddRef(useElement->GetContentBaseURI());
+  }
+
   nsIDocument* doc = OwnerDoc();
   // Start with document base
   nsCOMPtr<nsIURI> base = doc->GetBaseURI(aTryUseXHRDocBaseURI);
