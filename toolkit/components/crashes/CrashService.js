@@ -15,6 +15,44 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 /**
+ * Computes the SHA256 hash of the minidump file associated with a crash
+ *
+ * @param crashID {string} Crash ID. Likely a UUID.
+ *
+ * @returns {Promise} A promise that resolves to the hash value of the
+ *          minidump. If the hash could not be computed then null is returned
+ *          instead.
+ */
+function computeMinidumpHash(id) {
+  let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+             .getService(Components.interfaces.nsICrashReporter);
+
+  return Task.spawn(function* () {
+    try {
+      let minidumpFile = cr.getMinidumpForID(id);
+      let minidumpData = yield OS.File.read(minidumpFile.path);
+      let hasher = Cc["@mozilla.org/security/hash;1"]
+                     .createInstance(Ci.nsICryptoHash);
+      hasher.init(hasher.SHA256);
+      hasher.update(minidumpData, minidumpData.length);
+
+      let hashBin = hasher.finish(false);
+      let hash = "";
+
+      for (let i = 0; i < hashBin.length; i++) {
+        // Every character in the hash string contains a byte of the hash data
+        hash += ("0" + hashBin.charCodeAt(i).toString(16)).slice(-2);
+      }
+
+      return hash;
+    } catch (e) {
+      Cu.reportError(e);
+      return null;
+    }
+  });
+}
+
+/**
  * Process the .extra file associated with the crash id and return the
  * annotations it contains in an object.
  *
@@ -26,20 +64,18 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 function processExtraFile(id) {
   let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
              .getService(Components.interfaces.nsICrashReporter);
-  let extraPath = OS.Path.join(cr.minidumpPath.path, id + ".extra");
 
   return Task.spawn(function* () {
     try {
+      let extraFile = cr.getExtraFileForID(id);
       let decoder = new TextDecoder();
-      let extraFile = yield OS.File.read(extraPath);
-      let extraData = decoder.decode(extraFile);
+      let extraData = yield OS.File.read(extraFile.path);
 
-      return parseKeyValuePairs(extraData);
+      return parseKeyValuePairs(decoder.decode(extraData));
     } catch (e) {
       Cu.reportError(e);
+      return {};
     }
-
-    return {};
   });
 }
 
@@ -89,13 +125,23 @@ CrashService.prototype = Object.freeze({
       throw new Error("Unrecognized CRASH_TYPE: " + crashType);
     }
 
+    let blocker = Task.spawn(function* () {
+      let metadata = yield processExtraFile(id);
+      let hash = yield computeMinidumpHash(id);
+
+      if (hash) {
+        metadata.MinidumpSha256Hash = hash;
+      }
+
+      yield Services.crashmanager.addCrash(processType, crashType, id,
+                                           new Date(), metadata);
+    });
+
     AsyncShutdown.profileBeforeChange.addBlocker(
-      "CrashService waiting for content crash ping to be sent",
-      processExtraFile(id).then(metadata => {
-        return Services.crashmanager.addCrash(processType, crashType, id,
-                                              new Date(), metadata)
-      })
+      "CrashService waiting for content crash ping to be sent", blocker
     );
+
+    blocker.then(AsyncShutdown.profileBeforeChange.removeBlocker(blocker));
   },
 
   observe(subject, topic, data) {
