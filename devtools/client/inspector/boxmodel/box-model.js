@@ -75,12 +75,13 @@ BoxModel.prototype = {
   },
 
   /**
-   * Returns true if the layout panel is visible, and false otherwise.
+   * Returns true if the computed or layout panel is visible, and false otherwise.
    */
   isPanelVisible() {
     return this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar &&
-           this.inspector.sidebar.getCurrentTabID() === "layoutview";
+           (this.inspector.sidebar.getCurrentTabID() === "layoutview" ||
+            this.inspector.sidebar.getCurrentTabID() === "computedview");
   },
 
   /**
@@ -165,6 +166,11 @@ BoxModel.prototype = {
   onNewSelection: function () {
     if (!this.isPanelVisibleAndNodeValid()) {
       return;
+    }
+
+    if (this.inspector.selection.isConnected() &&
+        this.inspector.selection.isElementNode()) {
+      this.trackReflows();
     }
 
     this.updateBoxModel();
