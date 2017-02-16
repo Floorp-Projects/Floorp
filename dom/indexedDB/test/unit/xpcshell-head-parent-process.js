@@ -122,16 +122,20 @@ function expectUncaughtException(expecting)
   // This is dummy for xpcshell test.
 }
 
-function ExpectError(name)
+function ExpectError(name, preventDefault)
 {
   this._name = name;
+  this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
   handleEvent: function(event)
   {
     do_check_eq(event.type, "error");
     do_check_eq(this._name, event.target.error.name);
-    event.preventDefault();
+    if (this._preventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     grabEventAndContinueHandler(event);
   }
 };
