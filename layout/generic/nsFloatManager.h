@@ -383,6 +383,12 @@ private:
       mozilla::WritingMode aWM,
       const nsSize& aContainerSize);
 
+    static mozilla::UniquePtr<ShapeInfo> CreateInset(
+      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
       mozilla::StyleBasicShape* const aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
@@ -420,7 +426,7 @@ private:
       mozilla::WritingMode aWM);
   };
 
-  // Implements shape-outside: <shape-box>.
+  // Implements shape-outside: <shape-box> and shape-outside: inset().
   class RoundedBoxShapeInfo final : public ShapeInfo
   {
   public:
