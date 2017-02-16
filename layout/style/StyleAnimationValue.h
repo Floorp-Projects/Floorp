@@ -19,7 +19,6 @@
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
 #include "nsStyleTransformMatrix.h"
-#include "ServoBindings.h"
 
 class nsIFrame;
 class nsStyleContext;
@@ -585,37 +584,15 @@ struct AnimationValue
 
   bool IsNull() const { return mGecko.IsNull() && !mServo; }
 
-  float GetOpacity() const
-  {
-    return mServo ? Servo_AnimationValue_GetOpacity(mServo)
-                  : mGecko.GetFloatValue();
-  }
+  inline float GetOpacity() const;
 
   // Returns the scale for mGecko or mServo, which are calculated with
   // reference to aFrame.
-  gfxSize GetScaleValue(const nsIFrame* aFrame) const
-  {
-    if (mServo) {
-      RefPtr<nsCSSValueSharedList> list;
-      Servo_AnimationValue_GetTransform(mServo, &list);
-      return nsStyleTransformMatrix::GetScaleValue(list, aFrame);
-    }
-    return mGecko.GetScaleValue(aFrame);
-  }
+  inline gfxSize GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
-  void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
-                               nsAString& aString) const
-  {
-    if (mServo) {
-      Servo_AnimationValue_Serialize(mServo, aProperty, &aString);
-      return;
-    }
-
-    DebugOnly<bool> uncomputeResult =
-      StyleAnimationValue::UncomputeValue(aProperty, mGecko, aString);
-    MOZ_ASSERT(uncomputeResult, "failed to uncompute StyleAnimationValue");
-  }
+  inline void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+                                      nsAString& aString) const;
 };
 
 struct PropertyStyleAnimationValuePair
