@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include "nsScannerString.h"
+#include "mozilla/CheckedInt.h"
 
 
   /**
@@ -472,7 +473,13 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
                nsAString& aDest )
   {
     nsAString::iterator writer;
-    if (!aDest.SetLength(Distance(aSrcStart, aSrcEnd), mozilla::fallible)) {
+
+    mozilla::CheckedInt<nsAString::size_type> distance(Distance(aSrcStart, aSrcEnd));
+    if (!distance.isValid()) {
+      return false; // overflow detected
+    }
+
+    if (!aDest.SetLength(distance.value(), mozilla::fallible)) {
       aDest.Truncate();
       return false; // out of memory
     }
@@ -505,8 +512,14 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
                  nsAString& aDest )
   {
     nsAString::iterator writer;
-    uint32_t oldLength = aDest.Length();
-    if (!aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd), mozilla::fallible))
+    const nsAString::size_type oldLength = aDest.Length();
+    CheckedInt<nsAString::size_type> newLen(Distance(aSrcStart, aSrcEnd));
+    newLen += oldLength;
+    if (!newLen.isValid()) {
+      return false; // overflow detected
+    }
+
+    if (!aDest.SetLength(newLen.value(), mozilla::fallible))
       return false; // out of memory
     aDest.BeginWriting(writer).advance(oldLength);
     nsScannerIterator fromBegin(aSrcStart);
