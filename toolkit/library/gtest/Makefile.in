@@ -8,6 +8,12 @@ ifneq (,$(filter clean distclean,$(MAKECMDGOALS)))
 LINK_GTEST_DURING_COMPILE = 1
 endif
 
+# Don't link the gtest xul during MOZ_PROFILE_GENERATE, it doesn't get
+# used during profiling anyway.
+ifdef MOZ_PROFILE_GENERATE
+LINK_GTEST_DURING_COMPILE =
+endif
+
 ifndef LINK_GTEST_DURING_COMPILE
 # Force to not include backend.mk unless LINK_GTEST_DURING_COMPILE is set.
 # Not including backend.mk makes traversing this directory do nothing.
