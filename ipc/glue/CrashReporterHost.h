@@ -26,18 +26,61 @@ class CrashReporterHost
   typedef CrashReporter::AnnotationTable AnnotationTable;
 
 public:
-  CrashReporterHost(GeckoProcessType aProcessType, const Shmem& aShmem);
+  CrashReporterHost(GeckoProcessType aProcessType,
+                    const Shmem& aShmem,
+                    CrashReporter::ThreadId aThreadId);
 
 #ifdef MOZ_CRASHREPORTER
-  bool GenerateCrashReport(base::ProcessId aPid,
-                           const AnnotationTable* aExtraNotes = nullptr,
-                           nsString* aOutMinidumpID = nullptr)
+  // Helper function for generating a crash report for a process that probably
+  // crashed (i.e., had an AbnormalShutdown in ActorDestroy). Returns true if
+  // the process has a minidump attached and we were able to generate a report.
+  bool GenerateCrashReport(base::ProcessId aPid);
+
+  // Given an existing minidump for a crashed child process, take ownership of
+  // it from IPDL. After this, FinalizeCrashReport may be called.
+  RefPtr<nsIFile> TakeCrashedChildMinidump(base::ProcessId aPid, uint32_t* aOutSequence);
+
+  // Replace the stored minidump with a new one. After this,
+  // FinalizeCrashReport may be called.
+  bool AdoptMinidump(nsIFile* aFile);
+
+  // If a minidump was already captured (e.g. via the hang reporter), this
+  // finalizes the existing report by attaching metadata and notifying the
+  // crash service.
+  bool FinalizeCrashReport();
+
+  // Generate a paired minidump. This does not take the crash report, as
+  // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
+  //
+  // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
+  template <typename Toplevel>
+  bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
+                               nsIFile* aMinidumpToPair,
+                               const nsACString& aPairName)
   {
-    RefPtr<nsIFile> crashDump;
-    if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump), nullptr)) {
+    ScopedProcessHandle childHandle;
+#ifdef XP_MACOSX
+    childHandle = aToplevelProtocol->Process()->GetChildTask();
+#else
+    if (!base::OpenPrivilegedProcessHandle(aToplevelProtocol->OtherPid(),
+                                           &childHandle.rwget()))
+    {
+      NS_WARNING("Failed to open child process handle.");
       return false;
     }
-    return GenerateCrashReport(crashDump, aExtraNotes, aOutMinidumpID);
+#endif
+
+    nsCOMPtr<nsIFile> targetDump;
+    if (!CrashReporter::CreateMinidumpsAndPair(childHandle,
+                                               mThreadId,
+                                               aPairName,
+                                               aMinidumpToPair,
+                                               getter_AddRefs(targetDump)))
+    {
+      return false;
+    }
+
+    return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
   }
 
   // This is a static helper function to notify the crash service that a
@@ -49,19 +92,30 @@ public:
     GeckoProcessType aProcessType,
     const nsString& aChildDumpID,
     const AnnotationTable* aNotes);
+
+  void AddNote(const nsCString& aKey, const nsCString& aValue);
+
+  bool HasMinidump() const {
+    return !mDumpID.IsEmpty();
+  }
+  const nsString& MinidumpID() const {
+    MOZ_ASSERT(HasMinidump());
+    return mDumpID;
+  }
 #endif
 
 private:
-  bool GenerateCrashReport(RefPtr<nsIFile> aCrashDump,
-                           const AnnotationTable* aExtraNotes,
-                           nsString* aOutMinidumpID);
   static void AsyncAddCrash(int32_t aProcessType, int32_t aCrashType,
                             const nsString& aChildDumpID);
 
 private:
   GeckoProcessType mProcessType;
   Shmem mShmem;
+  CrashReporter::ThreadId mThreadId;
   time_t mStartTime;
+  AnnotationTable mExtraNotes;
+  nsString mDumpID;
+  bool mFinalized;
 };
 
 } // namespace ipc

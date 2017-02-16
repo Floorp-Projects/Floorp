@@ -62,8 +62,7 @@ typedef nsTArray<OpDestroy> OpDestroyVector;
 struct CompositableTransaction
 {
   CompositableTransaction()
-  : mSwapRequired(false)
-  , mFinished(true)
+  : mFinished(true)
   {}
   ~CompositableTransaction()
   {
@@ -81,7 +80,6 @@ struct CompositableTransaction
   void End()
   {
     mFinished = true;
-    mSwapRequired = false;
     mOperations.clear();
     mDestroyedActors.Clear();
   }
@@ -94,19 +92,9 @@ struct CompositableTransaction
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
     mOperations.push_back(op);
   }
-  void AddEdit(const CompositableOperation& op)
-  {
-    AddNoSwapEdit(op);
-    MarkSyncTransaction();
-  }
-  void MarkSyncTransaction()
-  {
-    mSwapRequired = true;
-  }
 
   OpVector mOperations;
   OpDestroyVector mDestroyedActors;
-  bool mSwapRequired;
   bool mFinished;
 };
 
@@ -555,18 +543,9 @@ ImageBridgeChild::EndTransaction()
     ShadowLayerForwarder::PlatformSyncBeforeUpdate();
   }
 
-  if (mTxn->mSwapRequired) {
-    if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
-      NS_WARNING("could not send async texture transaction");
-      return;
-    }
-  } else {
-    // If we don't require a swap we can call SendUpdateNoSwap which
-    // assumes that aReplies is empty (DEBUG assertion)
-    if (!SendUpdateNoSwap(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
-      NS_WARNING("could not send async texture transaction (no swap)");
-      return;
-    }
+  if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
+    NS_WARNING("could not send async texture transaction");
+    return;
   }
 }
 
@@ -1065,31 +1044,26 @@ ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
 }
 
 static bool
-IBCAddOpDestroy(CompositableTransaction* aTxn, const OpDestroy& op, bool synchronously)
+IBCAddOpDestroy(CompositableTransaction* aTxn, const OpDestroy& op)
 {
   if (aTxn->Finished()) {
     return false;
   }
 
   aTxn->mDestroyedActors.AppendElement(op);
-
-  if (synchronously) {
-    aTxn->MarkSyncTransaction();
-  }
-
   return true;
 }
 
 bool
-ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
+ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture)
 {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture), synchronously);
+  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture));
 }
 
 bool
 ImageBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aHandle), false);
+  return IBCAddOpDestroy(mTxn, OpDestroy(aHandle));
 }
 
 void
@@ -1104,15 +1078,9 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
     return;
   }
 
-  CompositableOperation op(
+  mTxn->AddNoSwapEdit(CompositableOperation(
     aCompositable->GetIPCHandle(),
-    OpRemoveTexture(nullptr, aTexture->GetIPDLActor()));
-
-  if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
-    mTxn->AddEdit(op);
-  } else {
-    mTxn->AddNoSwapEdit(op);
-  }
+    OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
 }
 
 bool ImageBridgeChild::IsSameProcess() const

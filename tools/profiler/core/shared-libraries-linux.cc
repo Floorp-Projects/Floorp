@@ -132,11 +132,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       LOG("Get maps line failed");
       continue;
     }
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if defined(PROFILE_JAVA)
     // Use proc/pid/maps to get the dalvik-jit section since it has
     // no associated phdrs
-    if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0)
+    if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0) {
       continue;
+    }
 #else
     if (strcmp(perm, "r-xp") != 0) {
       // Ignore entries that are writable and/or shared.
