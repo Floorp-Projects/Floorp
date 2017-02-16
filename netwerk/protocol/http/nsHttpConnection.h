@@ -128,7 +128,7 @@ public:
 
     // nsAHttpConnection compatible methods (non-virtual):
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset);
-    void     CloseTransaction(nsAHttpTransaction *, nsresult reason);
+    void     CloseTransaction(nsAHttpTransaction *, nsresult reason, bool aIsShutdown = false);
     void     GetConnectionInfo(nsHttpConnectionInfo **ci) { NS_IF_ADDREF(*ci = mConnInfo); }
     nsresult TakeTransport(nsISocketTransport **,
                            nsIAsyncInputStream **,
