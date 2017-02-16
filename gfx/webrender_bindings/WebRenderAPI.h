@@ -147,6 +147,16 @@ public:
                 Range<const WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
+  void PushBoxShadow(const WrRect& aRect,
+                     const WrRect& aClip,
+                     const WrRect& aBoxBounds,
+                     const WrPoint& aOffset,
+                     const WrColor& aColor,
+                     const float& aBlurRadius,
+                     const float& aSpreadRadius,
+                     const float& aBorderRadius,
+                     const WrBoxShadowClipMode& aClipMode);
+
   // Try to avoid using this when possible.
   WrState* Raw() { return mWrState; }
 protected:

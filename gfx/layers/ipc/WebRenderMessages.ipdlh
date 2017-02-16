@@ -14,8 +14,10 @@ using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
 using WrColor from "mozilla/webrender/webrender_ffi.h";
 using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
+using WrPoint from "mozilla/webrender/webrender_ffi.h";
 using WrGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
+using WrBoxShadowClipMode from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
@@ -98,6 +100,18 @@ struct OpDPPushText {
   uint32_t font_buffer_length;
 };
 
+struct OpDPPushBoxShadow {
+  WrRect rect;
+  WrRect clip;
+  WrRect box_bounds;
+  WrPoint offset;
+  WrColor color;
+  float blur_radius;
+  float spread_radius;
+  float border_radius;
+  WrBoxShadowClipMode clip_mode;
+};
+
 union WebRenderCommand {
   OpDPPushStackingContext;
   OpDPPopStackingContext;
@@ -109,6 +123,7 @@ union WebRenderCommand {
   OpDPPushExternalImageId;
   OpDPPushIframe;
   OpDPPushText;
+  OpDPPushBoxShadow;
   CompositableOperation;
 };
 
