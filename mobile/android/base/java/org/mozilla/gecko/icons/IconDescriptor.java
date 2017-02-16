@@ -14,7 +14,7 @@ import android.support.annotation.VisibleForTesting;
  * A class describing the location and properties of an icon that can be loaded.
  */
 public class IconDescriptor {
-    @IntDef({ TYPE_GENERIC, TYPE_FAVICON, TYPE_TOUCHICON, TYPE_LOOKUP })
+    @IntDef({ TYPE_GENERIC, TYPE_FAVICON, TYPE_TOUCHICON, TYPE_LOOKUP, TYPE_BUNDLED_TILE })
     @interface IconType {}
 
     // The type values are used for ranking icons (higher values = try to load first).
@@ -22,6 +22,7 @@ public class IconDescriptor {
     @VisibleForTesting static final int TYPE_LOOKUP = 1;
     @VisibleForTesting static final int TYPE_FAVICON = 5;
     @VisibleForTesting static final int TYPE_TOUCHICON = 10;
+    @VisibleForTesting static final int TYPE_BUNDLED_TILE = 15;
 
     private final String url;
     private final int size;
@@ -57,6 +58,16 @@ public class IconDescriptor {
     public static IconDescriptor createLookupIcon(@NonNull String url) {
         return new IconDescriptor(TYPE_LOOKUP, url, 0, null);
     }
+
+    /**
+     * Create a bundled tile icon at the given URL. MIME type or size is not known until we load
+     * the icons, but we know these icons are high fidelity. (Although the icons are png's at time
+     * of writing, they could be changed to webp or VectorDrawable in future.)
+     */
+    public static IconDescriptor createBundledTileIcon(@NonNull String url) {
+        return new IconDescriptor(TYPE_BUNDLED_TILE, url, 0, null);
+    }
+
 
     private IconDescriptor(@IconType int type, @NonNull String url, int size, String mimeType) {
         this.type = type;
