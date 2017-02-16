@@ -8,11 +8,13 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const name =
-    this.window ? window.location.pathname : "test_wasm_put_get_values.js";
+    this.window ? window.location.pathname : "test_wasm_indexes.js";
 
   const objectStoreName = "Wasm";
 
-  const wasmData = { key: 1, value: null };
+  const wasmData = { key: 1, value: { name: "foo", data: null } };
+
+  const indexData = { name: "nameIndex", keyPath: "name", options: { } };
 
   if (!isWasmSupported()) {
     finishTest();
@@ -21,7 +23,7 @@ function* testSteps()
 
   getWasmBinary('(module (func (nop)))');
   let binary = yield undefined;
-  wasmData.value = getWasmModule(binary);
+  wasmData.value.data = getWasmModule(binary);
 
   info("Opening database");
 
@@ -37,7 +39,11 @@ function* testSteps()
 
   info("Creating objectStore");
 
-  request.result.createObjectStore(objectStoreName);
+  let objectStore = request.result.createObjectStore(objectStoreName);
+
+  info("Creating index");
+
+  objectStore.createIndex(indexData.name, indexData.keyPath, indexData.options);
 
   yield undefined;
 
@@ -47,8 +53,8 @@ function* testSteps()
 
   info("Storing wasm");
 
-  let objectStore = db.transaction([objectStoreName], "readwrite")
-                      .objectStore(objectStoreName);
+  objectStore = db.transaction([objectStoreName], "readwrite")
+                  .objectStore(objectStoreName);
   request = objectStore.add(wasmData.value, wasmData.key);
   request.onsuccess = continueToNextStepSync;
   yield undefined;
@@ -57,25 +63,16 @@ function* testSteps()
 
   info("Getting wasm");
 
-  request = objectStore.get(wasmData.key);
-  request.onsuccess = continueToNextStepSync;
+  request = objectStore.index("nameIndex").get("foo");
+  request.addEventListener("error", new ExpectError("UnknownError", true));
+  request.onsuccess = unexpectedSuccessHandler;
   yield undefined;
 
-  info("Verifying wasm");
+  info("Opening cursor");
 
-  verifyWasmModule(request.result, wasmData.value);
-  yield undefined;
-
-  info("Getting wasm in new transaction");
-
-  request = db.transaction([objectStoreName])
-              .objectStore(objectStoreName).get(wasmData.key);
-  request.onsuccess = continueToNextStepSync;
-  yield undefined;
-
-  info("Verifying wasm");
-
-  verifyWasmModule(request.result, wasmData.value);
+  request = objectStore.index("nameIndex").openCursor();
+  request.addEventListener("error", new ExpectError("UnknownError", true));
+  request.onsuccess = unexpectedSuccessHandler;
   yield undefined;
 
   finishTest();
