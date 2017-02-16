@@ -170,7 +170,8 @@ private:
   nsresult MakeAnonymousElement(Element** aResult,
                                 nsTArray<ContentInfo>& aElements,
                                 nsIAtom* aTagName,
-                                CSSPseudoElementType aPseudoType);
+                                CSSPseudoElementType aPseudoType,
+                                nsStyleContext* aParentContext);
 
   class SyncDisabledStateEvent;
   friend class SyncDisabledStateEvent;

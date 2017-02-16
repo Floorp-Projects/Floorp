@@ -69,7 +69,6 @@ nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
   mColorContent = doc->CreateHTMLElement(nsGkAtoms::div);
-  mColorContent->SetPseudoElementType(CSSPseudoElementType::mozColorSwatch);
 
   // Mark the element to be native anonymous before setting any attributes.
   mColorContent->SetIsNativeAnonymousRoot();
@@ -77,7 +76,11 @@ nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsresult rv = UpdateColor();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aElements.AppendElement(mColorContent)) {
+  CSSPseudoElementType pseudoType = CSSPseudoElementType::mozColorSwatch;
+  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
+    ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
+                              StyleContext(), mColorContent->AsElement());
+  if (!aElements.AppendElement(ContentInfo(mColorContent, newStyleContext))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
