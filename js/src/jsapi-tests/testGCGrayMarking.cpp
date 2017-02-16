@@ -5,11 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * TODO: Test weakmaps with gray values.  Currently these are fixed up by the
- * cycle collector.
- */
-
 #include "gc/Heap.h"
 #include "gc/Zone.h"
 
@@ -31,6 +26,20 @@ BEGIN_TEST(testGCGrayMarking)
     CHECK(InitGlobals());
     JSAutoCompartment ac(cx, global1);
 
+    InitGrayRootTracer();
+
+    bool ok = TestMarking() && TestWeakMaps();
+
+    global1 = nullptr;
+    global2 = nullptr;
+    RemoveGrayRootTracer();
+
+    return ok;
+}
+
+bool
+TestMarking()
+{
     JSObject* sameTarget = AllocTargetObject();
     CHECK(sameTarget);
 
@@ -57,7 +66,6 @@ BEGIN_TEST(testGCGrayMarking)
 
     // Test GC with black and gray roots marks objects black.
 
-    InitGrayRootTracer();
     grayRoots.grayRoot1 = sameSource;
     grayRoots.grayRoot2 = crossSource;
 
@@ -102,11 +110,171 @@ BEGIN_TEST(testGCGrayMarking)
     CHECK(IsMarkedBlack(crossSource));
     CHECK(IsMarkedBlack(crossTarget));
 
-    // Cleanup.
+    return true;
+}
 
-    global1 = nullptr;
-    global2 = nullptr;
-    RemoveGrayRootTracer();
+bool
+TestWeakMaps()
+{
+    JSObject* weakMap = JS::NewWeakMapObject(cx);
+    CHECK(weakMap);
+
+    JSObject* key = AllocWeakmapKeyObject();
+    CHECK(key);
+
+    JSObject* value = AllocWeakmapKeyObject();
+    CHECK(value);
+
+    {
+        JS::RootedObject rootedMap(cx, weakMap);
+        JS::RootedObject rootedKey(cx, key);
+        JS::RootedValue rootedValue(cx, ObjectValue(*value));
+        CHECK(SetWeakMapEntry(cx, rootedMap, rootedKey, rootedValue));
+    }
+
+    // Test the value of a weakmap entry is marked gray by GC if both the
+    // weakmap and key are marked gray.
+
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = key;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(value));
+
+    // Test the value of a weakmap entry is marked gray by GC if one of the
+    // weakmap and the key is marked gray and the other black.
+
+    JS::RootedObject blackRoot1(cx);
+    blackRoot1 = weakMap;
+    grayRoots.grayRoot1 = key;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(value));
+
+    blackRoot1 = key;
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedGray(value));
+
+    // Test the value of a weakmap entry is marked black by GC if both the
+    // weakmap and the key are marked black.
+
+    JS::RootedObject blackRoot2(cx);
+    grayRoots.grayRoot1 = nullptr;
+    grayRoots.grayRoot2 = nullptr;
+
+    blackRoot1 = weakMap;
+    blackRoot2 = key;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedBlack(value));
+
+    blackRoot1 = key;
+    blackRoot2 = weakMap;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedBlack(value));
+
+    // Test that a weakmap key is marked gray if it has a gray delegate and the
+    // map is either gray or black.
+
+    JSObject* delegate = AllocDelegateForKey(key);
+    blackRoot1 = weakMap;
+    blackRoot2 = nullptr;
+    grayRoots.grayRoot1 = delegate;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(delegate));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedGray(value));
+
+    blackRoot1 = nullptr;
+    blackRoot2 = nullptr;
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = delegate;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(delegate));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedGray(value));
+
+    // Test that a weakmap key is marked gray if it has a black delegate but
+    // the map is gray.
+
+    blackRoot1 = delegate;
+    blackRoot2 = nullptr;
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(delegate));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedGray(value));
+
+    blackRoot1 = delegate;
+    blackRoot2 = nullptr;
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = key;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(delegate));
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedGray(value));
+
+    // Test that a weakmap key is marked black if it has a black delegate and
+    // the map is black.
+
+    blackRoot1 = delegate;
+    blackRoot2 = weakMap;
+    grayRoots.grayRoot1 = nullptr;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(delegate));
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedBlack(value));
+
+    blackRoot1 = delegate;
+    blackRoot2 = weakMap;
+    grayRoots.grayRoot1 = key;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(delegate));
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedBlack(value));
+
+    // Test what happens if there is a delegate but it is not marked for both
+    // black and gray cases.
+
+    delegate = nullptr;
+    blackRoot1 = key;
+    blackRoot2 = weakMap;
+    grayRoots.grayRoot1 = nullptr;
+    grayRoots.grayRoot2 = nullptr;
+    JS_GC(cx);
+    CHECK(IsMarkedBlack(key));
+    CHECK(IsMarkedBlack(weakMap));
+    CHECK(IsMarkedBlack(value));
+
+    CHECK(AllocDelegateForKey(key));
+    blackRoot1 = nullptr;
+    blackRoot2 = nullptr;
+    grayRoots.grayRoot1 = weakMap;
+    grayRoots.grayRoot2 = key;
+    JS_GC(cx);
+    CHECK(IsMarkedGray(key));
+    CHECK(IsMarkedGray(weakMap));
+    CHECK(IsMarkedGray(value));
 
     return true;
 }
@@ -152,15 +320,17 @@ static void
 TraceGrayRoots(JSTracer* trc, void* data)
 {
     auto grayRoots = static_cast<GrayRoots*>(data);
-    UnsafeTraceManuallyBarrieredEdge(trc, &grayRoots->grayRoot1, "gray root 1");
-    UnsafeTraceManuallyBarrieredEdge(trc, &grayRoots->grayRoot2, "gray root 2");
+    if (grayRoots->grayRoot1)
+        UnsafeTraceManuallyBarrieredEdge(trc, &grayRoots->grayRoot1, "gray root 1");
+    if (grayRoots->grayRoot2)
+        UnsafeTraceManuallyBarrieredEdge(trc, &grayRoots->grayRoot2, "gray root 2");
 }
 
 JSObject*
 AllocTargetObject()
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
-    cx->zone()->group()->evictNursery();
+    EvictNursery();
 
     MOZ_ASSERT(obj->compartment() == global1->compartment());
     return obj;
@@ -177,7 +347,7 @@ AllocSameCompartmentSourceObject(JSObject* target)
     if (!JS_DefineProperty(cx, source, "ptr", obj, 0))
         return nullptr;
 
-    cx->zone()->group()->evictNursery();
+    EvictNursery();
 
     MOZ_ASSERT(source->compartment() == global1->compartment());
     return source;
@@ -192,9 +362,49 @@ AllocCrossCompartmentSourceObject(JSObject* target)
     if (!JS_WrapObject(cx, &obj))
         return nullptr;
 
-    cx->zone()->group()->evictNursery();
+    EvictNursery();
 
     MOZ_ASSERT(obj->compartment() == global2->compartment());
+    return obj;
+}
+
+static JSObject*
+GetKeyDelegate(JSObject* obj)
+{
+    return static_cast<JSObject*>(obj->as<NativeObject>().getPrivate());
+}
+
+JSObject*
+AllocWeakmapKeyObject()
+{
+    static const js::ClassExtension KeyClassExtension = {
+        GetKeyDelegate
+    };
+
+    static const js::Class KeyClass = {
+        "keyWithDelegate",
+        JSCLASS_HAS_PRIVATE,
+        JS_NULL_CLASS_OPS,
+        JS_NULL_CLASS_SPEC,
+        &KeyClassExtension,
+        JS_NULL_OBJECT_OPS
+    };
+
+    JS::RootedObject key(cx, JS_NewObject(cx, Jsvalify(&KeyClass)));
+    if (!key)
+        return nullptr;
+
+    EvictNursery();
+    return key;
+}
+
+JSObject*
+AllocDelegateForKey(JSObject* key)
+{
+    JS::RootedObject obj(cx, JS_NewPlainObject(cx));
+    EvictNursery();
+
+    key->as<NativeObject>().setPrivate(obj);
     return obj;
 }
 
@@ -212,6 +422,12 @@ IsMarkedGray(JSObject* obj)
     bool isGray = cell->isMarked(GRAY);
     MOZ_ASSERT_IF(isGray, cell->isMarked(BLACK));
     return isGray;
+}
+
+void
+EvictNursery()
+{
+    cx->zone()->group()->evictNursery();
 }
 
 bool
