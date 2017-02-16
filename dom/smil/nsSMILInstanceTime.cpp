@@ -90,10 +90,10 @@ nsSMILInstanceTime::HandleChangedInterval(
   bool objectChanged = mCreator->DependsOnBegin() ? aBeginObjectChanged :
                                                       aEndObjectChanged;
 
+  RefPtr<nsSMILInstanceTime> deathGrip(this);
   mozilla::AutoRestore<bool> setVisited(mVisited);
   mVisited = true;
 
-  RefPtr<nsSMILInstanceTime> deathGrip(this);
   mCreator->HandleChangedInstanceTime(*GetBaseTime(), aSrcContainer, *this,
                                       objectChanged);
 }
