@@ -120,22 +120,14 @@ this.ExtensionsUI = {
         progressNotification.remove();
       }
 
-      let reply = answer => {
+      let strings = this._buildStrings(info);
+      this.showPermissionsPrompt(target, strings, info.icon).then(answer => {
         if (answer) {
           info.resolve();
         } else {
           info.reject();
         }
-      };
-
-      let perms = info.addon.userPermissions;
-      if (!perms) {
-        reply(true);
-      } else {
-        info.permissions = perms;
-        let strings = this._buildStrings(info);
-        this.showPermissionsPrompt(target, strings, info.icon).then(reply);
-      }
+      });
     } else if (topic == "webextension-update-permissions") {
       let info = subject.wrappedJSObject;
       info.type = "update";

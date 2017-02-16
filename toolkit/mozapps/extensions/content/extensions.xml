@@ -666,6 +666,7 @@
                   info: {
                     addon: info.addon,
                     icon: info.addon.iconURL,
+                    permissions: info.addon.userPermissions,
                     resolve,
                     reject,
                   },
