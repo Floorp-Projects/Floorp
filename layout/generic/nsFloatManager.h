@@ -421,12 +421,12 @@ private:
   };
 
   // Implements shape-outside: <shape-box>.
-  class BoxShapeInfo final : public ShapeInfo
+  class RoundedBoxShapeInfo final : public ShapeInfo
   {
   public:
-    BoxShapeInfo(const nsRect& aShapeBoxRect,
-                 mozilla::UniquePtr<nscoord[]> aRadii)
-      : mShapeBoxRect(aShapeBoxRect)
+    RoundedBoxShapeInfo(const nsRect& aRect,
+                        mozilla::UniquePtr<nscoord[]> aRadii)
+      : mRect(aRect)
       , mRadii(Move(aRadii))
     {}
 
@@ -436,20 +436,19 @@ private:
     nscoord LineRight(mozilla::WritingMode aWM,
                       const nscoord aBStart,
                       const nscoord aBEnd) const override;
-    nscoord BStart() const override { return mShapeBoxRect.y; }
-    nscoord BEnd() const override { return mShapeBoxRect.YMost(); }
-    bool IsEmpty() const override { return mShapeBoxRect.IsEmpty(); };
+    nscoord BStart() const override { return mRect.y; }
+    nscoord BEnd() const override { return mRect.YMost(); }
+    bool IsEmpty() const override { return mRect.IsEmpty(); };
 
     void Translate(nscoord aLineLeft, nscoord aBlockStart) override
     {
-      mShapeBoxRect.MoveBy(aLineLeft, aBlockStart);
+      mRect.MoveBy(aLineLeft, aBlockStart);
     }
 
   private:
-    // This is the reference box of css shape-outside if specified, which
-    // implements the <shape-box> value in the CSS Shapes Module Level 1.
-    // The coordinate space is the same as FloatInfo::mRect.
-    nsRect mShapeBoxRect;
+    // The rect of the rounded box shape in the float manager's coordinate
+    // space.
+    nsRect mRect;
     // The half corner radii of the reference box. It's an nscoord[8] array
     // in the float manager's coordinate space. If there are no radii, it's
     // nullptr.
