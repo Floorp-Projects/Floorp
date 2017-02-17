@@ -411,6 +411,11 @@ public:
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
+  void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
+                                         uint32_t aSheetType) override;
+  void NotifyStyleSheetServiceSheetRemoved(mozilla::StyleSheet* aSheet,
+                                           uint32_t aSheetType) override;
+
 protected:
   virtual ~PresShell();
 

@@ -1735,6 +1735,12 @@ public:
 
   virtual nsIDocument* GetPrimaryContentDocument() = 0;
 
+  // aSheetType is one of the nsIStyleSheetService *_SHEET constants.
+  virtual void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
+                                                 uint32_t aSheetType) = 0;
+  virtual void NotifyStyleSheetServiceSheetRemoved(mozilla::StyleSheet* aSheet,
+                                                   uint32_t aSheetType) = 0;
+
 protected:
   friend class nsRefreshDriver;
 
