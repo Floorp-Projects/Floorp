@@ -184,9 +184,9 @@ config = {
             },
         },
     },
-    'mozilla-esr45': {
+    'mozilla-esr52': {
         'enable_release_promotion': True,
-        'repo_path': 'releases/mozilla-esr45',
+        'repo_path': 'releases/mozilla-esr52',
         'update_channel': 'esr',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
