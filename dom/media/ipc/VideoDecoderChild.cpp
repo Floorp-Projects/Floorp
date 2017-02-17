@@ -44,7 +44,7 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
   // The Image here creates a TextureData object that takes ownership
   // of the SurfaceDescriptor, and is responsible for making sure that
   // it gets deallocated.
-  RefPtr<Image> image = new GPUVideoImage(GetManager(), aData.sd(), aData.display());
+  RefPtr<Image> image = new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
 
   RefPtr<VideoData> video = VideoData::CreateFromImage(info,
                                                        aData.base().offset(),

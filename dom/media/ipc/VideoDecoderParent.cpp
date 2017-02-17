@@ -244,6 +244,7 @@ VideoDecoderParent::Output(MediaData* aData)
                                        data->mFrames,
                                        data->mKeyframe),
                          video->mDisplay,
+                         texture ? texture->GetSize() : IntSize(),
                          texture ? self->mParent->StoreImage(video->mImage, texture) : SurfaceDescriptorGPUVideo(0),
                          video->mFrameID);
     Unused << self->SendOutput(output);
