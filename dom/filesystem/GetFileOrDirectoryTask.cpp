@@ -7,7 +7,7 @@
 #include "GetFileOrDirectoryTask.h"
 
 #include "js/Value.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
@@ -214,7 +214,7 @@ GetFileOrDirectoryTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
     return FileSystemDirectoryResponse(path);
   }
 
-  RefPtr<BlobImpl> blobImpl = new BlobImplFile(mTargetPath);
+  RefPtr<BlobImpl> blobImpl = new FileBlobImpl(mTargetPath);
   BlobParent* blobParent =
     BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
   return FileSystemFileResponse(blobParent, nullptr);

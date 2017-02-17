@@ -131,7 +131,7 @@ AddonContentPolicy::ShouldLoad(uint32_t aContentType,
         NS_SUCCEEDED(mimeParser.GetParameter("version", version))) {
       *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
 
-      LogMessage(NS_MULTILINE_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE),
+      LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE),
                  aRequestOrigin, typeString, aContext);
       return NS_OK;
     }

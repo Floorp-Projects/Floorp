@@ -1393,7 +1393,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
 
     result = Substring(mSpec, 0, mScheme.mLen + 3);
 
-    // This is left fallible as this entire function is expected to be
+    // This is left infallible as this entire function is expected to be
     // infallible.
     NS_EscapeURL(Userpass(true), esc_OnlyNonASCII | esc_AlwaysCopy, result);
 
@@ -1402,7 +1402,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
     MOZ_ALWAYS_SUCCEEDS(GetAsciiHostPort(hostport));
     result += hostport;
 
-    // This is left fallible as this entire function is expected to be
+    // This is left infallible as this entire function is expected to be
     // infallible.
     NS_EscapeURL(Path(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
     CALL_RUST_GETTER_STR(result, GetAsciiSpec, result);

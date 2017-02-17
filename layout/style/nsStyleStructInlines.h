@@ -162,16 +162,7 @@ nsStyleDisplay::HasFixedPosContainingBlockStyleInternal(
     return true;
   }
 
-  if (mozilla::ServoStyleSet::IsInServoTraversal()) {
-    // We want to avoid calling StyleEffects() during the Servo traversal,
-    // since that has side-effects which may be unsafe from concurrent
-    // worker threads.
-    const ServoComputedValues* values =
-      aStyleContext->StyleSource().AsServoComputedValues();
-    return Servo_GetStyleEffects(values)->HasFilters();
-  } else {
-    return aStyleContext->StyleEffects()->HasFilters();
-  }
+  return aStyleContext->ThreadsafeStyleEffects()->HasFilters();
 }
 
 template<class StyleContextLike>
@@ -204,7 +195,7 @@ nsStyleDisplay::HasAbsPosContainingBlockStyleInternal(
 {
   // NOTE: Any CSS properties that influence the output of this function
   // should have the CSS_PROPERTY_ABSPOS_CB set on them.
-  NS_ASSERTION(aStyleContext->StyleDisplay() == this,
+  NS_ASSERTION(aStyleContext->ThreadsafeStyleDisplay() == this,
                "unexpected aStyleContext");
   return IsAbsolutelyPositionedStyle() ||
          IsRelativelyPositionedStyle() ||

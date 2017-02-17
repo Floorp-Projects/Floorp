@@ -12,6 +12,9 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
+#include "vm/MutexIDs.h"
 #include "vm/Shape.h"
 #include "wasm/WasmCode.h"
 
@@ -20,12 +23,47 @@
 namespace js {
 namespace vtune {
 
+// VTune internals are not known to be threadsafe.
+static Mutex VTuneMutex(mutexid::VTuneLock);
+
+// Firefox must be launched from within VTune. Then the profiler
+// status never changes, and we can avoid shared library checks.
+static bool VTuneLoaded(false);
+
+// Initialization is called from a single-threaded context.
+bool
+Initialize()
+{
+    // Load the VTune shared library, if present.
+    int loaded = loadiJIT_Funcs();
+    if (loaded == 1)
+        VTuneLoaded = true;
+
+    return true;
+}
+
+bool
+IsProfilingActive()
+{
+    // Checking VTuneLoaded guards against VTune internals attempting
+    // to load the VTune library upon their invocation.
+    return VTuneLoaded && iJIT_IsProfilingActive() == iJIT_SAMPLING_ON;
+}
+
 uint32_t
 GenerateUniqueMethodID()
 {
+    // iJIT_GetNewMethodID() is explicitly not threadsafe.
+    LockGuard<Mutex> guard(VTuneMutex);
     return (uint32_t)iJIT_GetNewMethodID();
 }
 
+static int
+SafeNotifyEvent(iJIT_JVM_EVENT event_type, void* data)
+{
+    LockGuard<Mutex> guard(VTuneMutex);
+    return iJIT_NotifyEvent(event_type, data);
+}
 
 // Stubs and trampolines are created on engine initialization and are never unloaded.
 void
@@ -41,9 +79,10 @@ MarkStub(const js::jit::JitCode* code, const char* name)
     method.method_size = code->instructionsSize();
     method.module_name = const_cast<char*>("jitstubs");
 
-    iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
+    int ok = SafeNotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
+    if (ok != 1)
+        printf("[!] VTune Integration: Failed to load method.\n");
 }
-
 
 void
 MarkRegExp(const js::jit::JitCode* code, bool match_only)
@@ -63,11 +102,10 @@ MarkRegExp(const js::jit::JitCode* code, bool match_only)
 
     method.module_name = const_cast<char*>("irregexp");
 
-    int ok = iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
+    int ok = SafeNotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
     if (ok != 1)
         printf("[!] VTune Integration: Failed to load method.\n");
 }
-
 
 void
 MarkScript(const js::jit::JitCode* code, const JSScript* script, const char* module)
@@ -89,11 +127,10 @@ MarkScript(const js::jit::JitCode* code, const JSScript* script, const char* mod
 
     method.method_name = &namebuf[0];
 
-    int ok = iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
+    int ok = SafeNotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
     if (ok != 1)
         printf("[!] VTune Integration: Failed to load method.\n");
 }
-
 
 void
 MarkWasm(const js::wasm::CodeSegment& cs, const char* name, void* start, uintptr_t size)
@@ -108,18 +145,16 @@ MarkWasm(const js::wasm::CodeSegment& cs, const char* name, void* start, uintptr
     method.method_size = (unsigned)size;
     method.module_name = const_cast<char*>("wasm");
 
-    int ok = iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
+    int ok = SafeNotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V2, (void*)&method);
     if (ok != 1)
         printf("[!] VTune Integration: Failed to load method.\n");
 }
-
 
 void
 UnmarkCode(const js::jit::JitCode* code)
 {
     UnmarkBytes(code->raw(), (unsigned)code->instructionsSize());
 }
-
 
 void
 UnmarkBytes(void* bytes, unsigned size)
@@ -134,7 +169,7 @@ UnmarkBytes(void* bytes, unsigned size)
 
     // The iJVM_EVENT_TYPE_METHOD_UNLOAD_START event is undocumented.
     // VTune appears to happily accept unload events even for untracked JitCode.
-    int ok = iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_UNLOAD_START, (void*)&method);
+    int ok = SafeNotifyEvent(iJVM_EVENT_TYPE_METHOD_UNLOAD_START, (void*)&method);
 
     // Assertions aren't reported in VTune: instead, they immediately end profiling
     // with no warning that a crash occurred. This can generate misleading profiles.

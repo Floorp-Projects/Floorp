@@ -8,7 +8,7 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
@@ -281,7 +281,7 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
   nsString fullPath;
   mFile->GetFullPath(fullPath);
   RefPtr<BlobImpl> blob =
-    new BlobImplFile(fullPath, mime, mLength, mFile->mFile,
+    new FileBlobImpl(fullPath, mime, mLength, mFile->mFile,
                      mLastModificationDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());

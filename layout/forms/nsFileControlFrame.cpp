@@ -297,7 +297,9 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     } else {
       bool blinkFileSystemEnabled =
         Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false);
-      if (blinkFileSystemEnabled) {
+      bool dirPickerEnabled =
+        Preferences::GetBool("dom.input.dirpicker", false);
+      if (blinkFileSystemEnabled || dirPickerEnabled) {
         FileList* files = static_cast<FileList*>(fileList.get());
         if (files) {
           for (uint32_t i = 0; i < files->Length(); ++i) {
@@ -314,13 +316,23 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
         }
       }
 
-      // This is rather ugly. Pass the directories as Files using SetFiles,
-      // but then if blink filesystem API is enabled, it wants
-      // FileOrDirectory array.
-      inputElement->SetFiles(fileList, true);
+      // Entries API.
       if (blinkFileSystemEnabled) {
+        // This is rather ugly. Pass the directories as Files using SetFiles,
+        // but then if blink filesystem API is enabled, it wants
+        // FileOrDirectory array.
+        inputElement->SetFiles(fileList, true);
         inputElement->UpdateEntries(array);
       }
+      // Directory Upload API
+      else if (dirPickerEnabled) {
+        inputElement->SetFilesOrDirectories(array, true);
+      }
+      // Normal DnD
+      else {
+        inputElement->SetFiles(fileList, true);
+      }
+
       nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
                                            NS_LITERAL_STRING("input"), true,
                                            false);

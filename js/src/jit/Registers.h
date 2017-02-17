@@ -35,19 +35,24 @@ struct Register {
     typedef Codes::Code Code;
     typedef Codes::SetType SetType;
 
-    Codes::Encoding reg_;
+    Encoding reg_;
+    explicit constexpr Register(Encoding e)
+     : reg_(e)
+    { }
+    Register() = default;
+
     static Register FromCode(Code i) {
         MOZ_ASSERT(i < Registers::Total);
-        Register r = { Encoding(i) };
+        Register r { Encoding(i) };
         return r;
     }
     static Register FromName(const char* name) {
         Code code = Registers::FromName(name);
-        Register r = { Encoding(code) };
+        Register r { Encoding(code) };
         return r;
     }
     static Register Invalid() {
-        Register r = { Encoding(Codes::Invalid) };
+        Register r { Encoding(Codes::Invalid) };
         return r;
     }
     constexpr Code code() const {

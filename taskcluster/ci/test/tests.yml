@@ -757,28 +757,6 @@ mochitest-media:
                 extra-options:
                     - --mochitest-suite=mochitest-media
 
-mochitest-other:
-    description: "Mochitest other"
-    suite: mochitest/other
-    treeherder-symbol: tc-M(oth)
-    e10s: false
-    max-run-time: 5400
-    mozharness:
-        script: mozharness/scripts/desktop_unittest.py
-        no-read-buildbot-config: true
-        include-blob-upload-branch: true
-        chunked: true
-        config:
-          by-test-platform:
-            macosx.*:
-              - remove_executables.py
-              - unittests/mac_unittest.py
-            linux.*:
-              - unittests/linux_unittest.py
-              - remove_executables.py
-        extra-options:
-            - --mochitest-suite=chrome,a11y
-
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
     suite: mochitest/valgrind-plain

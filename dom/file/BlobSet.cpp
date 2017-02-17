@@ -7,6 +7,7 @@
 #include "mozilla/dom/BlobSet.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/File.h"
+#include "MemoryBlobImpl.h"
 #include "MultipartBlobImpl.h"
 
 namespace mozilla {
@@ -27,7 +28,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 
   memcpy((char*)data, aData, aLength);
 
-  RefPtr<BlobImpl> blobImpl = new BlobImplMemory(data, aLength, EmptyString());
+  RefPtr<BlobImpl> blobImpl = new MemoryBlobImpl(data, aLength, EmptyString());
   mBlobImpls.AppendElement(blobImpl);
 
   return NS_OK;
