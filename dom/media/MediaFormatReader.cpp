@@ -252,7 +252,7 @@ private:
   } mAudio, mVideo;
 
   void RunStage(Data& aData);
-  MediaResult DoCreateDecoder(TrackType aTrack);
+  MediaResult DoCreateDecoder(Data& aData);
   void DoInitDecoder(TrackType aTrack);
 
   // guaranteed to be valid by the owner.
@@ -351,7 +351,7 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
       MOZ_ASSERT(!aData.mDecoder);
       MOZ_ASSERT(!aData.mInitRequest.Exists());
 
-      MediaResult rv = DoCreateDecoder(aData.mTrack);
+      MediaResult rv = DoCreateDecoder(aData);
       if (NS_FAILED(rv)) {
         NS_WARNING("Error constructing decoders");
         aData.mToken = nullptr;
@@ -375,10 +375,9 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
 }
 
 MediaResult
-MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
+MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
 {
-  auto& ownerData = mOwner->GetDecoderData(aTrack);
-  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+  auto& ownerData = aData.mOwnerData;
 
   auto decoderCreatingError = "error creating audio decoder";
   MediaResult result =
@@ -392,9 +391,9 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
     }
   }
 
-  switch (aTrack) {
+  switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
-      data.mDecoder = mOwner->mPlatform->CreateDecoder({
+      aData.mDecoder = mOwner->mPlatform->CreateDecoder({
         ownerData.mInfo
         ? *ownerData.mInfo->GetAsAudioInfo()
         : *ownerData.mOriginalInfo->GetAsAudioInfo(),
@@ -402,7 +401,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
         mOwner->mCrashHelper,
         ownerData.mIsBlankDecode,
         &result,
-        aTrack,
+        TrackInfo::kAudioTrack,
         &mOwner->OnTrackWaitingForKeyProducer()
       });
       break;
@@ -411,7 +410,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
     case TrackType::kVideoTrack: {
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
-      data.mDecoder = mOwner->mPlatform->CreateDecoder({
+      aData.mDecoder = mOwner->mPlatform->CreateDecoder({
         ownerData.mInfo
         ? *ownerData.mInfo->GetAsVideoInfo()
         : *ownerData.mOriginalInfo->GetAsVideoInfo(),
@@ -421,7 +420,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
         mOwner->mCrashHelper,
         ownerData.mIsBlankDecode,
         &result,
-        aTrack,
+        TrackType::kVideoTrack,
         &mOwner->OnTrackWaitingForKeyProducer()
       });
       break;
@@ -431,7 +430,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
       break;
   }
 
-  if (data.mDecoder) {
+  if (aData.mDecoder) {
     return NS_OK;
   }
 
