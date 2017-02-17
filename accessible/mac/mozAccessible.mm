@@ -13,6 +13,7 @@
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleEditableText.h"
 #include "nsIPersistentProperties2.h"
+#include "DocAccessibleParent.h"
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"

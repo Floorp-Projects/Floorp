@@ -68,7 +68,7 @@ public:
 
   // Should we accumulate pinning telemetry for the result?
   bool accumulateResult;
-  Telemetry::ID certPinningResultHistogram;
+  Telemetry::HistogramID certPinningResultHistogram;
   int32_t certPinningResultBucket;
   // Should we accumulate telemetry for the root?
   bool accumulateForRoot;

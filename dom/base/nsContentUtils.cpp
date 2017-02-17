@@ -9788,8 +9788,9 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   TabChild* tabChild = TabChild::GetFrom(outer->AsOuter());
   NS_ENSURE_TRUE(tabChild, false);
 
-  if (tabChild->TakeAwaitingLargeAlloc())  {
+  if (tabChild->IsAwaitingLargeAlloc())  {
     NS_WARNING("In a Large-Allocation TabChild, ignoring Large-Allocation header!");
+    tabChild->StopAwaitingLargeAlloc();
     outer->SetLargeAllocStatus(LargeAllocStatus::SUCCESS);
     return false;
   }

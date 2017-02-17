@@ -2820,7 +2820,7 @@ NSMODULE_DEFN(nsTelemetryModule) = &kTelemetryModule;
 void
 XRE_TelemetryAccumulate(int aID, uint32_t aSample)
 {
-  mozilla::Telemetry::Accumulate((mozilla::Telemetry::ID) aID, aSample);
+  mozilla::Telemetry::Accumulate((mozilla::Telemetry::HistogramID) aID, aSample);
 }
 
 
@@ -3147,19 +3147,19 @@ namespace Telemetry {
 
 // The external API for controlling recording state
 void
-SetHistogramRecordingEnabled(ID aID, bool aEnabled)
+SetHistogramRecordingEnabled(HistogramID aID, bool aEnabled)
 {
   TelemetryHistogram::SetHistogramRecordingEnabled(aID, aEnabled);
 }
 
 void
-Accumulate(ID aHistogram, uint32_t aSample)
+Accumulate(HistogramID aHistogram, uint32_t aSample)
 {
   TelemetryHistogram::Accumulate(aHistogram, aSample);
 }
 
 void
-Accumulate(ID aID, const nsCString& aKey, uint32_t aSample)
+Accumulate(HistogramID aID, const nsCString& aKey, uint32_t aSample)
 {
   TelemetryHistogram::Accumulate(aID, aKey, aSample);
 }
@@ -3177,20 +3177,20 @@ Accumulate(const char *name, const nsCString& key, uint32_t sample)
 }
 
 void
-AccumulateCategorical(ID id, const nsCString& label)
+AccumulateCategorical(HistogramID id, const nsCString& label)
 {
   TelemetryHistogram::AccumulateCategorical(id, label);
 }
 
 void
-AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
+AccumulateTimeDelta(HistogramID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
              static_cast<uint32_t>((end - start).ToMilliseconds()));
 }
 
 const char*
-GetHistogramName(ID id)
+GetHistogramName(HistogramID id)
 {
   return TelemetryHistogram::GetHistogramName(id);
 }
