@@ -107,6 +107,18 @@ public:
                                    guint aModifierState);
 
     /**
+     * Utility function to compute current keyboard modifiers for
+     * WidgetInputEvent
+     */
+    static uint32_t ComputeCurrentKeyModifiers();
+
+    /**
+     * Utility function to covert platform modifier state to keyboard modifiers
+     * of WidgetInputEvent
+     */
+    static uint32_t ComputeKeyModifiers(guint aModifierState);
+
+    /**
      * InitInputEvent() initializes the aInputEvent with aModifierState.
      */
     static void InitInputEvent(WidgetInputEvent& aInputEvent,

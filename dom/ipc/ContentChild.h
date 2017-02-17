@@ -442,7 +442,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvEndDragSession(const bool& aDoneDrag,
                                                      const bool& aUserCancelled,
-                                                     const mozilla::LayoutDeviceIntPoint& aEndDragPoint) override;
+                                                     const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
+                                                     const uint32_t& aKeyModifiers) override;
 
   virtual mozilla::ipc::IPCResult
   RecvPush(const nsCString& aScope,
