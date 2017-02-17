@@ -53,7 +53,7 @@ namespace mozilla {
  * The destructor of the token will restore the decoder count so it is available
  * for next calls of Alloc().
  */
-class DecoderAllocPolicy
+class GlobalAllocPolicy
 {
   using TrackType = TrackInfo::TrackType;
 
@@ -74,13 +74,13 @@ public:
   void operator=(decltype(nullptr));
 
   // Get the singleton for the given track type. Thread-safe.
-  static DecoderAllocPolicy& Instance(TrackType aTrack);
+  static GlobalAllocPolicy& Instance(TrackType aTrack);
 
 private:
   class AutoDeallocToken;
   using PromisePrivate = Promise::Private;
-  DecoderAllocPolicy();
-  ~DecoderAllocPolicy();
+  GlobalAllocPolicy();
+  ~GlobalAllocPolicy();
   // Called by the destructor of TokenImpl to restore the decoder limit.
   void Dealloc();
   // Decrement the decoder limit and resolve a promise if available.
@@ -96,12 +96,12 @@ private:
   std::queue<RefPtr<PromisePrivate>> mPromises;
 };
 
-StaticMutex DecoderAllocPolicy::sMutex;
+StaticMutex GlobalAllocPolicy::sMutex;
 
-class DecoderAllocPolicy::AutoDeallocToken : public Token
+class GlobalAllocPolicy::AutoDeallocToken : public Token
 {
 public:
-  explicit AutoDeallocToken(DecoderAllocPolicy& aPolicy) : mPolicy(aPolicy) { }
+  explicit AutoDeallocToken(GlobalAllocPolicy& aPolicy) : mPolicy(aPolicy) { }
 
 private:
   ~AutoDeallocToken()
@@ -109,10 +109,10 @@ private:
     mPolicy.Dealloc();
   }
 
-  DecoderAllocPolicy& mPolicy; // reference to a singleton object.
+  GlobalAllocPolicy& mPolicy; // reference to a singleton object.
 };
 
-DecoderAllocPolicy::DecoderAllocPolicy()
+GlobalAllocPolicy::GlobalAllocPolicy()
   : mMonitor("DecoderAllocPolicy::mMonitor")
   , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
 {
@@ -123,7 +123,7 @@ DecoderAllocPolicy::DecoderAllocPolicy()
   }));
 }
 
-DecoderAllocPolicy::~DecoderAllocPolicy()
+GlobalAllocPolicy::~GlobalAllocPolicy()
 {
   while (!mPromises.empty()) {
     RefPtr<PromisePrivate> p = mPromises.front().forget();
@@ -132,21 +132,21 @@ DecoderAllocPolicy::~DecoderAllocPolicy()
   }
 }
 
-DecoderAllocPolicy&
-DecoderAllocPolicy::Instance(TrackType aTrack)
+GlobalAllocPolicy&
+GlobalAllocPolicy::Instance(TrackType aTrack)
 {
   StaticMutexAutoLock lock(sMutex);
   if (aTrack == TrackType::kAudioTrack) {
-    static auto sAudioPolicy = new DecoderAllocPolicy();
+    static auto sAudioPolicy = new GlobalAllocPolicy();
     return *sAudioPolicy;
   } else {
-    static auto sVideoPolicy = new DecoderAllocPolicy();
+    static auto sVideoPolicy = new GlobalAllocPolicy();
     return *sVideoPolicy;
   }
 }
 
 auto
-DecoderAllocPolicy::Alloc() -> RefPtr<Promise>
+GlobalAllocPolicy::Alloc() -> RefPtr<Promise>
 {
   // No decoder limit set.
   if (mDecoderLimit < 0) {
@@ -161,7 +161,7 @@ DecoderAllocPolicy::Alloc() -> RefPtr<Promise>
 }
 
 void
-DecoderAllocPolicy::Dealloc()
+GlobalAllocPolicy::Dealloc()
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
   ++mDecoderLimit;
@@ -169,7 +169,7 @@ DecoderAllocPolicy::Dealloc()
 }
 
 void
-DecoderAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
+GlobalAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
 {
   MOZ_ASSERT(mDecoderLimit >= 0);
 
@@ -182,7 +182,7 @@ DecoderAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
 }
 
 void
-DecoderAllocPolicy::operator=(std::nullptr_t)
+GlobalAllocPolicy::operator=(std::nullptr_t)
 {
   delete this;
 }
@@ -190,8 +190,8 @@ DecoderAllocPolicy::operator=(std::nullptr_t)
 class MediaFormatReader::DecoderFactory
 {
   using InitPromise = MediaDataDecoder::InitPromise;
-  using TokenPromise = DecoderAllocPolicy::Promise;
-  using Token = DecoderAllocPolicy::Token;
+  using TokenPromise = GlobalAllocPolicy::Promise;
+  using Token = GlobalAllocPolicy::Token;
 
 public:
   explicit DecoderFactory(MediaFormatReader* aOwner)
@@ -238,10 +238,10 @@ private:
     Data(DecoderData& aOwnerData, TrackType aTrack)
       : mOwnerData(aOwnerData)
       , mTrack(aTrack)
-      , mPolicy(DecoderAllocPolicy::Instance(aTrack)) { }
+      , mPolicy(GlobalAllocPolicy::Instance(aTrack)) { }
     DecoderData& mOwnerData;
     const TrackType mTrack;
-    DecoderAllocPolicy& mPolicy;
+    GlobalAllocPolicy& mPolicy;
     Stage mStage = Stage::None;
     RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;
@@ -269,7 +269,7 @@ MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack)
 
 class MediaFormatReader::DecoderFactory::Wrapper : public MediaDataDecoder
 {
-  using Token = DecoderAllocPolicy::Token;
+  using Token = GlobalAllocPolicy::Token;
 
 public:
   Wrapper(already_AddRefed<MediaDataDecoder> aDecoder,
