@@ -77,8 +77,9 @@ FormAutofillParent.prototype = {
 
     Services.obs.addObserver(this, "advanced-pane-loaded", false);
 
-    // Observing the pref (and storage) changes
+    // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this, false);
+    Services.obs.addObserver(this, "formautofill-storage-changed", false);
     this._enabled = this._getStatus();
     // Force to trigger the onStatusChanged function for setting listeners properly
     // while initizlization
@@ -109,6 +110,20 @@ FormAutofillParent.prototype = {
         break;
       }
 
+      case "formautofill-storage-changed": {
+        // Early exit if the action is not "add" nor "remove"
+        if (data != "add" && data != "remove") {
+          break;
+        }
+
+        let currentStatus = this._getStatus();
+        if (currentStatus !== this._enabled) {
+          this._enabled = currentStatus;
+          this._onStatusChanged();
+        }
+        break;
+      }
+
       default: {
         throw new Error(`FormAutofillParent: Unexpected topic observed: ${topic}`);
       }
@@ -131,13 +146,17 @@ FormAutofillParent.prototype = {
   },
 
   /**
-   * Query pref (and storage) status to determine the overall status for
+   * Query pref and storage status to determine the overall status for
    * form autofill feature.
    *
    * @returns {boolean} status of form autofill feature
    */
   _getStatus() {
-    return Services.prefs.getBoolPref(ENABLED_PREF);
+    if (!Services.prefs.getBoolPref(ENABLED_PREF)) {
+      return false;
+    }
+
+    return this._profileStore.getAll().length > 0;
   },
 
   /**

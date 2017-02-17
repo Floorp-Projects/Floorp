@@ -1,7 +1,7 @@
 taskgraph-tests/opt:
     description: taskcluster/taskgraph unit tests
     treeherder:
-        symbol: tg
+        symbol: py(tg)
         kind: test
         tier: 2
         platform: linux64/opt
@@ -22,10 +22,39 @@ taskgraph-tests/opt:
             - 'config/mozunit.py'
             - 'python/mach/**/*.py'
 
+mozbase/opt:
+    description: testing/mozbase unit tests
+    platforms:
+        - linux64/opt
+    treeherder:
+        symbol: py(mb)
+        kind: test
+        tier: 2
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/b2gtest
+    worker:
+        by-platform:
+            linux64.*:
+                implementation: docker-worker
+                docker-image: {in-tree: "lint"}
+                max-run-time: 3600
+    run:
+        using: mach
+        mach: python-test --subsuite mozbase
+    run-on-projects:
+        - integration
+        - release
+    when:
+        files-changed:
+            - 'testing/mozbase/**'
+            - 'config/mozunit.py'
+            - 'python/mach_commands.py'
+
 mozharness/opt:
     description: mozharness integration tests
     treeherder:
-        symbol: MH
+        symbol: py(MH)
         kind: test
         tier: 2
         platform: lint/opt
