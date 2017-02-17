@@ -15,6 +15,12 @@ ext = newExternalString("abc\0defg\0");
 assertEq(ensureFlatString(ext), "abc\0defg\0");
 assertEq(ensureFlatString(ext), "abc\0defg\0");
 
+for (var s of representativeStringArray())
+    assertEq(ensureFlatString(s), s);
+
+for (var s of representativeStringArray())
+    assertEq(newExternalString(s), s);
+
 function testQuote() {
     for (var data of [["abc", "abc"],
 		      ["abc\t", "abc\\t"],
