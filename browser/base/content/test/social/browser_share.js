@@ -1,3 +1,4 @@
+/* eslint-env mozilla/frame-script */
 
 var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
 

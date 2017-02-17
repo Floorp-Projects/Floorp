@@ -102,7 +102,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       }
 
       if (!ok || NS_FAILED(rv)) {
-        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP failed rv=%d", rv));
+        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP failed rv=%" PRIu32,
+              static_cast<uint32_t>(rv)));
         holder->Reject(rv, __func__);
         return;
       }

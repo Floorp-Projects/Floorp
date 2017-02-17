@@ -5,25 +5,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AgnosticDecoderModule.h"
-#include "mozilla/Logging.h"
 #include "OpusDecoder.h"
-#include "VorbisDecoder.h"
-#include "VPXDecoder.h"
-#include "WAVDecoder.h"
 #include "TheoraDecoder.h"
+#include "VPXDecoder.h"
+#include "VorbisDecoder.h"
+#include "WAVDecoder.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
 bool
-AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                        DecoderDoctorDiagnostics* aDiagnostics) const
+AgnosticDecoderModule::SupportsMimeType(
+  const nsACString& aMimeType,
+  DecoderDoctorDiagnostics* aDiagnostics) const
 {
   bool supports =
-    VPXDecoder::IsVPX(aMimeType) ||
-    OpusDataDecoder::IsOpus(aMimeType) ||
-    VorbisDataDecoder::IsVorbis(aMimeType) ||
-    WaveDataDecoder::IsWave(aMimeType) ||
-    TheoraDecoder::IsTheora(aMimeType);
+    VPXDecoder::IsVPX(aMimeType)
+    || OpusDataDecoder::IsOpus(aMimeType)
+    || VorbisDataDecoder::IsVorbis(aMimeType)
+    || WaveDataDecoder::IsWave(aMimeType)
+    || TheoraDecoder::IsTheora(aMimeType);
   MOZ_LOG(sPDMLog, LogLevel::Debug, ("Agnostic decoder %s requested type",
         supports ? "supports" : "rejects"));
   return supports;

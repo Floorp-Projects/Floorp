@@ -46,7 +46,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 
-#include "prprf.h"
 #include "nsNodeUtils.h"
 #include "nsJSUtils.h"
 

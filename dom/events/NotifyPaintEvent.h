@@ -30,7 +30,7 @@ public:
                    nsPresContext* aPresContext,
                    WidgetEvent* aEvent,
                    EventMessage aEventMessage,
-                   nsInvalidateRequestList* aInvalidateRequests,
+                   nsTArray<nsRect>* aInvalidateRequests,
                    uint64_t aTransactionId,
                    DOMHighResTimeStamp aTimeStamp);
 
@@ -68,7 +68,7 @@ protected:
 private:
   nsRegion GetRegion(SystemCallerGuarantee);
 
-  nsTArray<nsInvalidateRequestList::Request> mInvalidateRequests;
+  nsTArray<nsRect> mInvalidateRequests;
   uint64_t mTransactionId;
   DOMHighResTimeStamp mTimeStamp;
 };
@@ -83,8 +83,7 @@ NS_NewDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                           mozilla::WidgetEvent* aEvent,
                           mozilla::EventMessage aEventMessage =
                             mozilla::eVoidEvent,
-                          nsInvalidateRequestList* aInvalidateRequests =
-                            nullptr,
+                          nsTArray<nsRect>* aInvalidateRequests = nullptr,
                           uint64_t aTransactionId = 0,
                           DOMHighResTimeStamp aTimeStamp = 0);
 

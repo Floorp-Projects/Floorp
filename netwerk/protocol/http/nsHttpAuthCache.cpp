@@ -145,7 +145,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
 {
     nsresult rv;
 
-    LOG(("nsHttpAuthCache::SetAuthEntry [key=%s://%s:%d realm=%s path=%s metadata=%x]\n",
+    LOG(("nsHttpAuthCache::SetAuthEntry [key=%s://%s:%d realm=%s path=%s metadata=%p]\n",
         scheme, host, port, realm, path, metadata));
 
     if (!mDB) {
@@ -504,12 +504,12 @@ nsHttpAuthEntry::Set(const char *path,
 
 nsHttpAuthNode::nsHttpAuthNode()
 {
-    LOG(("Creating nsHttpAuthNode @%x\n", this));
+    LOG(("Creating nsHttpAuthNode @%p\n", this));
 }
 
 nsHttpAuthNode::~nsHttpAuthNode()
 {
-    LOG(("Destroying nsHttpAuthNode @%x\n", this));
+    LOG(("Destroying nsHttpAuthNode @%p\n", this));
 
     mList.Clear();
 }

@@ -486,7 +486,7 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
                                                     aRole,
                                                     &windowId))) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
-        PRES_DEBUG("Attempt to close window[%d]\n", windowId);
+        PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
         if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
           window->Close();

@@ -7,6 +7,8 @@
 #include <stdio.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "nsNavHistory.h"
 
@@ -210,7 +212,7 @@ void GetTagsSqlFragment(int64_t aTagsFolder,
            "JOIN moz_bookmarks t_t ON t_t.id = +b_t.parent  "
            "WHERE b_t.fk = ") + aRelation + NS_LITERAL_CSTRING(" "
            "AND t_t.parent = ") +
-           nsPrintfCString("%lld", aTagsFolder) + NS_LITERAL_CSTRING(" "
+           nsPrintfCString("%" PRId64, aTagsFolder) + NS_LITERAL_CSTRING(" "
          ")"));
   }
 
@@ -1553,7 +1555,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
           "WHERE NOT EXISTS ( "
             "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
-                nsPrintfCString("%lld", history->GetTagsFolder()) +
+                nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
           NS_LITERAL_CSTRING(") "
           "ORDER BY b2.fk DESC, b2.lastModified DESC");
       }
@@ -1574,7 +1576,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "WHERE NOT EXISTS "
               "(SELECT id FROM moz_bookmarks "
                 "WHERE id = b.parent AND parent = ") +
-                  nsPrintfCString("%lld", history->GetTagsFolder()) +
+                  nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
               NS_LITERAL_CSTRING(") "
             "{ADDITIONAL_CONDITIONS}");
       }
@@ -1634,7 +1636,7 @@ PlacesSQLQueryBuilder::SelectAsDay()
   // insert position in a result.
   mQueryString = nsPrintfCString(
      "SELECT null, "
-       "'place:type=%ld&sort=%ld&beginTime='||beginTime||'&endTime='||endTime, "
+       "'place:type=%d&sort=%d&beginTime='||beginTime||'&endTime='||endTime, "
       "dayTitle, null, null, beginTime, null, null, null, null, null, null, "
       "null, null, null "
      "FROM (", // TOUTER BEGIN
@@ -1838,7 +1840,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
   }
 
   mQueryString = nsPrintfCString(
-    "SELECT null, 'place:type=%ld&sort=%ld&domain=&domainIsHost=true'%s, "
+    "SELECT null, 'place:type=%d&sort=%d&domain=&domainIsHost=true'%s, "
            ":localhost, :localhost, null, null, null, null, null, null, null, "
            "null, null, null "
     "WHERE EXISTS ( "
@@ -1853,7 +1855,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
     ") "
     "UNION ALL "
     "SELECT null, "
-           "'place:type=%ld&sort=%ld&domain='||host||'&domainIsHost=true'%s, "
+           "'place:type=%d&sort=%d&domain='||host||'&domainIsHost=true'%s, "
            "host, host, null, null, null, null, null, null, null, "
            "null, null, null "
     "FROM ( "
@@ -1893,11 +1895,11 @@ PlacesSQLQueryBuilder::SelectAsTag()
   mHasDateColumns = true;
 
   mQueryString = nsPrintfCString(
-    "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
+    "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%d', "
            "title, null, null, null, null, null, dateAdded, "
            "lastModified, null, null, null, null, null, null "
     "FROM moz_bookmarks "
-    "WHERE parent = %lld",
+    "WHERE parent = %" PRId64,
     nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
     nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS,
     history->GetTagsFolder()
@@ -3356,7 +3358,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
     clause.Condition("b.parent IN(");
     for (nsTArray<int64_t>::size_type i = 0; i < includeFolders.Length(); ++i) {
-      clause.Str(nsPrintfCString("%lld", includeFolders[i]).get());
+      clause.Str(nsPrintfCString("%" PRId64, includeFolders[i]).get());
       if (i < includeFolders.Length() - 1) {
         clause.Str(",");
       }

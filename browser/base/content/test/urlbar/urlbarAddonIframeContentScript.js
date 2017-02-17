@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 // Forward messages from the test to the iframe as events.
 addMessageListener("TestMessage", msg => {
   content.dispatchEvent(new content.CustomEvent("TestEvent", {

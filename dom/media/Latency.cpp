@@ -190,11 +190,11 @@ void AsyncLatencyLogger::WriteLog(LatencyLogIndex aIndex, uint64_t aID, int64_t 
 {
   if (aTimeStamp.IsNull()) {
     MOZ_LOG(GetLatencyLog(), LogLevel::Debug,
-      ("Latency: %s,%llu,%lld,%lld",
+      ("Latency: %s,%" PRIu64 ",%" PRId64 ",%" PRId64,
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue));
   } else {
     MOZ_LOG(GetLatencyLog(), LogLevel::Debug,
-      ("Latency: %s,%llu,%lld,%lld,%lld",
+      ("Latency: %s,%" PRIu64 ",%" PRId64 ",%" PRId64 ",%" PRId64,
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue,
        static_cast<int64_t>((aTimeStamp - gAsyncLogger->mStart).ToMilliseconds())));
   }

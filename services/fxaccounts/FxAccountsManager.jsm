@@ -80,7 +80,7 @@ this.FxAccountsManager = {
 
   _getError(aServerResponse) {
     if (!aServerResponse || !aServerResponse.error || !aServerResponse.error.errno) {
-      return;
+      return null;
     }
     let error = SERVER_ERRNO_TO_ERROR[aServerResponse.error.errno];
     return error;

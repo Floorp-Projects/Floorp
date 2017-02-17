@@ -12,7 +12,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
-#include "GMPService.h"
 
 namespace mozilla {
 
@@ -20,9 +19,18 @@ class MediaDataDecoderProxy : public MediaDataDecoder
 {
 public:
   explicit MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread)
-   : mProxyThread(aProxyThread)
+    : mProxyThread(aProxyThread)
 #if defined(DEBUG)
-   , mIsShutdown(false)
+    , mIsShutdown(false)
+#endif
+  {
+  }
+
+  explicit MediaDataDecoderProxy(
+    already_AddRefed<MediaDataDecoder> aProxyDecoder)
+    : mProxyDecoder(aProxyDecoder)
+#if defined(DEBUG)
+    , mIsShutdown(false)
 #endif
   {
   }
@@ -33,9 +41,6 @@ public:
     mProxyDecoder = aProxyDecoder;
   }
 
-  // These are called from the decoder thread pool.
-  // Shutdown run synchronously on the proxy thread, all others are
-  // asynchronous.
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
   RefPtr<DecodePromise> Drain() override;
@@ -44,18 +49,10 @@ public:
 
   const char* GetDescriptionName() const override
   {
-    return "GMP proxy data decoder";
+    return mProxyDecoder->GetDescriptionName();
   }
 
 private:
-
-#ifdef DEBUG
-  bool IsOnProxyThread()
-  {
-    return mProxyThread && mProxyThread->IsCurrentThreadIn();
-  }
-#endif
-
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;
 

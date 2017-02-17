@@ -2,6 +2,8 @@
  * This test checks that window activation state is set properly with multiple tabs.
  */
 
+/* eslint-env mozilla/frame-script */
+
 var testPage = "data:text/html,<body><style>:-moz-window-inactive { background-color: red; }</style><div id='area'></div></body>";
 
 var colorChangeNotifications = 0;

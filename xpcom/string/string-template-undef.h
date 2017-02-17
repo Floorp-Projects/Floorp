@@ -13,6 +13,7 @@
 #undef nsTFixedString_CharT
 #undef nsTAutoString_CharT
 #undef nsTSubstring_CharT
+#undef PrintfAppend_CharT
 #undef nsTSubstringTuple_CharT
 #undef nsTStringComparator_CharT
 #undef nsTDefaultStringComparator_CharT

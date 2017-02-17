@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { defer, all } = require("promise");
-const { makeInfallible } = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
@@ -31,8 +29,6 @@ function HarCollector(options) {
   this.onResponseCookies = this.onResponseCookies.bind(this);
   this.onResponseContent = this.onResponseContent.bind(this);
   this.onEventTimings = this.onEventTimings.bind(this);
-
-  this.onPageLoadTimeout = this.onPageLoadTimeout.bind(this);
 
   this.clear();
 }
@@ -66,13 +62,12 @@ HarCollector.prototype = {
     // There should be yet another timeout e.g.:
     // 'devtools.netmonitor.har.pageLoadTimeout'
     // that should force export even if page isn't fully loaded.
-    let deferred = defer();
-    this.waitForResponses().then(() => {
-      trace.log("HarCollector.waitForHarLoad; DONE HAR loaded!");
-      deferred.resolve(this);
+    return new Promise((resolve) => {
+      this.waitForResponses().then(() => {
+        trace.log("HarCollector.waitForHarLoad; DONE HAR loaded!");
+        resolve(this);
+      });
     });
-
-    return deferred.promise;
   },
 
   waitForResponses: function () {
@@ -117,23 +112,15 @@ HarCollector.prototype = {
 
     trace.log("HarCollector.waitForTimeout; " + timeout);
 
-    this.pageLoadDeferred = defer();
-
-    if (timeout <= 0) {
-      this.pageLoadDeferred.resolve();
-      return this.pageLoadDeferred.promise;
-    }
-
-    this.pageLoadTimeout = setTimeout(this.onPageLoadTimeout, timeout);
-
-    return this.pageLoadDeferred.promise;
-  },
-
-  onPageLoadTimeout: function () {
-    trace.log("HarCollector.onPageLoadTimeout;");
-
-    // Ha, page has been loaded. Resolve the final timeout promise.
-    this.pageLoadDeferred.resolve();
+    return new Promise((resolve) => {
+      if (timeout <= 0) {
+        resolve();
+      }
+      this.pageLoadTimeout = setTimeout(() => {
+        trace.log("HarCollector.onPageLoadTimeout;");
+        resolve();
+      }, timeout);
+    });
   },
 
   resetPageLoadTimeout: function () {
@@ -273,28 +260,24 @@ HarCollector.prototype = {
   },
 
   getData: function (actor, method, callback) {
-    let deferred = defer();
+    return new Promise((resolve) => {
+      if (!this.webConsoleClient[method]) {
+        console.error("HarCollector.getData: ERROR Unknown method!");
+        resolve();
+      }
 
-    if (!this.webConsoleClient[method]) {
-      console.error("HarCollector.getData; ERROR " +
-                    "Unknown method!");
-      return deferred.resolve();
-    }
+      let file = this.getFile(actor);
 
-    let file = this.getFile(actor);
+      trace.log("HarCollector.getData; REQUEST " + method +
+        ", " + file.url, file);
 
-    trace.log("HarCollector.getData; REQUEST " + method +
-      ", " + file.url, file);
-
-    this.webConsoleClient[method](actor, response => {
-      trace.log("HarCollector.getData; RESPONSE " + method +
-        ", " + file.url, response);
-
-      callback(response);
-      deferred.resolve(response);
+      this.webConsoleClient[method](actor, response => {
+        trace.log("HarCollector.getData; RESPONSE " + method +
+          ", " + file.url, response);
+        callback(response);
+        resolve(response);
+      });
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -406,15 +389,19 @@ HarCollector.prototype = {
 
   // Helpers
 
-  getLongHeaders: makeInfallible(function (headers) {
+  getLongHeaders: function (headers) {
     for (let header of headers) {
       if (typeof header.value == "object") {
-        this.getString(header.value).then(value => {
-          header.value = value;
-        });
+        try {
+          this.getString(header.value).then(value => {
+            header.value = value;
+          });
+        } catch (error) {
+          trace.log("HarCollector.getLongHeaders; ERROR when getString", error);
+        }
       }
     }
-  }),
+  },
 
   /**
    * Fetches the full text of a string.
@@ -447,7 +434,7 @@ function waitForAll(promises) {
   let clone = promises.splice(0, promises.length);
 
   // Wait for all promises in the given array.
-  return all(clone).then(() => {
+  return Promise.all(clone).then(() => {
     // If there are new promises (in the original array)
     // to wait for - chain them!
     if (promises.length) {

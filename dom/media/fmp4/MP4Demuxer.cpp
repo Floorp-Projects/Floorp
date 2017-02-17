@@ -341,7 +341,8 @@ MP4TrackDemuxer::GetNextSample()
           bool keyframe = type == mp4_demuxer::H264::FrameType::I_FRAME;
           if (sample->mKeyframe != keyframe) {
             NS_WARNING(nsPrintfCString("Frame incorrectly marked as %skeyframe "
-                                       "@ pts:%lld dur:%u dts:%lld",
+                                       "@ pts:%" PRId64 " dur:%" PRId64
+                                       " dts:%" PRId64,
                                        keyframe ? "" : "non-", sample->mTime,
                                        sample->mDuration, sample->mTimecode)
                          .get());
@@ -351,7 +352,8 @@ MP4TrackDemuxer::GetNextSample()
         }
         case mp4_demuxer::H264::FrameType::INVALID:
           NS_WARNING(
-            nsPrintfCString("Invalid H264 frame @ pts:%lld dur:%u dts:%lld",
+            nsPrintfCString("Invalid H264 frame @ pts:%" PRId64 " dur:%" PRId64
+                            " dts:%" PRId64,
                             sample->mTime, sample->mDuration, sample->mTimecode)
               .get());
           // We could reject the sample now, however demuxer errors are fatal.

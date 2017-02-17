@@ -300,6 +300,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
         // has already been taken care of by the content server
         return fxAccounts.signOut(true);
       }
+      return null;
     });
   },
 

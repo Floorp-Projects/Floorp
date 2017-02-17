@@ -27,7 +27,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "prprf.h"
 #include "prenv.h"
 #include "nsCRT.h"
 

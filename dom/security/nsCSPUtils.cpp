@@ -793,7 +793,6 @@ nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
 {
   CSPUTILSLOG(("nsCSPKeywordSrc::allows, aKeyWord: %s, aHashOrNonce: %s, mInvalidated: %s",
               CSP_EnumToKeyword(aKeyword),
-              CSP_EnumToKeyword(mKeyword),
               NS_ConvertUTF16toUTF8(aHashOrNonce).get(),
               mInvalidated ? "yes" : "false"));
 

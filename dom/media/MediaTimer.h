@@ -7,6 +7,7 @@
 #if !defined(MediaTimer_h_)
 #define MediaTimer_h_
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/TimeStamp.h"
@@ -22,7 +23,7 @@ extern LazyLogModule gMediaTimerLog;
 
 #define TIMER_LOG(x, ...) \
   MOZ_ASSERT(gMediaTimerLog); \
-  MOZ_LOG(gMediaTimerLog, LogLevel::Debug, ("[MediaTimer=%p relative_t=%lld]" x, this, \
+  MOZ_LOG(gMediaTimerLog, LogLevel::Debug, ("[MediaTimer=%p relative_t=%" PRId64 "]" x, this, \
                                         RelativeMicroseconds(TimeStamp::Now()), ##__VA_ARGS__))
 
 // This promise type is only exclusive because so far there isn't a reason for

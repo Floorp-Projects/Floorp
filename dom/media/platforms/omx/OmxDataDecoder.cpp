@@ -12,6 +12,8 @@
 
 #include "OmxPlatformLayer.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #ifdef LOG
 #undef LOG
@@ -406,7 +408,8 @@ OmxDataDecoder::EmptyBufferFailure(OmxBufferFailureHolder aFailureHolder)
 void
 OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, const MediaResult& aError)
 {
-  LOG("NotifyError %d (%d) at %s", aOmxError, aError.Code(), aLine);
+  LOG("NotifyError %d (%" PRIu32 ") at %s", static_cast<int>(aOmxError),
+      static_cast<uint32_t>(aError.Code()), aLine);
   mDecodedData.Clear();
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
@@ -450,7 +453,7 @@ OmxDataDecoder::FillAndEmptyBuffers()
       inbuf->mBuffer->nFlags |= OMX_BUFFERFLAG_EOS;
     }
 
-    LOG("feed sample %p to omx component, len %d, flag %X", data.get(),
+    LOG("feed sample %p to omx component, len %ld, flag %lX", data.get(),
         inbuf->mBuffer->nFilledLen, inbuf->mBuffer->nFlags);
     mOmxLayer->EmptyBuffer(inbuf)->Then(mOmxTaskQueue, __func__, this,
                                         &OmxDataDecoder::EmptyBufferDone,
@@ -661,7 +664,7 @@ OmxDataDecoder::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
                     MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__));
         return true;
       }
-      LOG("WARNING: got none handle event: %d, aData1: %d, aData2: %d",
+      LOG("WARNING: got none handle event: %d, aData1: %ld, aData2: %ld",
           aEvent, aData1, aData2);
       return false;
     }
@@ -724,7 +727,7 @@ OmxDataDecoder::CollectBufferPromises(OMX_DIRTYPE aType)
     }
   }
 
-  LOG("CollectBufferPromises: type %d, total %d promiese", aType, promises.Length());
+  LOG("CollectBufferPromises: type %d, total %" PRIuSIZE " promiese", aType, promises.Length());
   if (promises.Length()) {
     return OmxBufferPromise::All(mOmxTaskQueue, promises);
   }
@@ -763,7 +766,7 @@ OmxDataDecoder::PortSettingsChanged()
   RefPtr<OmxDataDecoder> self = this;
   if (def.bEnabled) {
     // 1. disable port.
-    LOG("PortSettingsChanged: disable port %d", def.nPortIndex);
+    LOG("PortSettingsChanged: disable port %lu", def.nPortIndex);
     mOmxLayer->SendCommand(OMX_CommandPortDisable, mPortSettingsChanged, nullptr)
       ->Then(mOmxTaskQueue, __func__,
              [self, def] () -> RefPtr<OmxCommandPromise> {
@@ -998,7 +1001,7 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
                                  -1,
                                  info.ImageRect());
 
-  LOG("YUV420 VideoData: disp width %d, height %d, pic width %d, height %d, time %ld",
+  LOG("YUV420 VideoData: disp width %d, height %d, pic width %d, height %d, time %lld",
       info.mDisplay.width, info.mDisplay.height, info.mImage.width,
       info.mImage.height, aBufferData->mBuffer->nTimeStamp);
 

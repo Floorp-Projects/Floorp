@@ -53,10 +53,11 @@ var tests = [
   // Test that the space key on an anchor element focuses an active notification
   { id: "Test#3",
     *run() {
+      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notifyObj.addOptions({
-        persistent: true
+        persistent: true,
       });
       this.notification = showNotification(this.notifyObj);
     },
@@ -66,9 +67,69 @@ var tests = [
       anchor.focus();
       is(document.activeElement, anchor);
       EventUtils.synthesizeKey(" ", {});
-      is(document.activeElement, popup.childNodes[0].button);
+      is(document.activeElement, popup.childNodes[0].closebutton);
       this.notification.remove();
     },
     onHidden(popup) { }
+  },
+  // Test that you can switch between active notifications with the space key
+  // and that the notification is focused on selection.
+  { id: "Test#4",
+    *run() {
+      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+
+      let notifyObj1 = new BasicNotification(this.id);
+      notifyObj1.id += "_1";
+      notifyObj1.anchorID = "default-notification-icon";
+      notifyObj1.addOptions({
+        hideClose: true,
+        checkbox: {
+          label: "Test that elements inside the panel can be focused",
+        },
+        persistent: true,
+      });
+      let opened = waitForNotificationPanel();
+      let notification1 = showNotification(notifyObj1);
+      yield opened;
+
+      let notifyObj2 = new BasicNotification(this.id);
+      notifyObj2.id += "_2";
+      notifyObj2.anchorID = "geo-notification-icon";
+      notifyObj2.addOptions({
+        persistent: true,
+      });
+      opened = waitForNotificationPanel();
+      let notification2 = showNotification(notifyObj2);
+      let popup = yield opened;
+
+      // Make sure notification 2 is visible
+      checkPopup(popup, notifyObj2);
+
+      // Activate the anchor for notification 1 and wait until it's shown.
+      let anchor = document.getElementById(notifyObj1.anchorID);
+      anchor.focus();
+      is(document.activeElement, anchor);
+      opened = waitForNotificationPanel();
+      EventUtils.synthesizeKey(" ", {});
+      popup = yield opened;
+      checkPopup(popup, notifyObj1);
+
+      is(document.activeElement, popup.childNodes[0].checkbox);
+
+      // Activate the anchor for notification 2 and wait until it's shown.
+      anchor = document.getElementById(notifyObj2.anchorID);
+      anchor.focus();
+      is(document.activeElement, anchor);
+      opened = waitForNotificationPanel();
+      EventUtils.synthesizeKey(" ", {});
+      popup = yield opened;
+      checkPopup(popup, notifyObj2);
+
+      is(document.activeElement, popup.childNodes[0].closebutton);
+
+      notification1.remove();
+      notification2.remove();
+      goNext();
+    },
   },
 ];

@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/FormHistory.jsm");

@@ -13,12 +13,12 @@
 
 #include "mozilla/ArrayUtils.h" // ArrayLength
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Printf.h"
 
 #include "nsPluginsDir.h"
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
-#include "prprf.h"
 
 #include "windows.h"
 #include "winbase.h"
@@ -99,11 +99,11 @@ static char* GetVersion(void* verbuf)
   ::VerQueryValueW(verbuf, L"\\", (void **)&fileInfo, &fileInfoLen);
 
   if (fileInfo) {
-    return PR_smprintf("%ld.%ld.%ld.%ld",
-                       HIWORD(fileInfo->dwFileVersionMS),
-                       LOWORD(fileInfo->dwFileVersionMS),
-                       HIWORD(fileInfo->dwFileVersionLS),
-                       LOWORD(fileInfo->dwFileVersionLS));
+    return mozilla::Smprintf("%ld.%ld.%ld.%ld",
+                      HIWORD(fileInfo->dwFileVersionMS),
+                      LOWORD(fileInfo->dwFileVersionMS),
+                      HIWORD(fileInfo->dwFileVersionLS),
+                      LOWORD(fileInfo->dwFileVersionLS));
   }
 
   return nullptr;
@@ -425,7 +425,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PL_strfree(info.fFileName);
 
   if (info.fVersion)
-    PR_smprintf_free(info.fVersion);
+    mozilla::SmprintfFree(info.fVersion);
 
   ZeroMemory((void *)&info, sizeof(info));
 

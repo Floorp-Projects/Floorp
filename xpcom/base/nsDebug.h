@@ -16,7 +16,8 @@
 #include <stdarg.h>
 
 #ifdef DEBUG
-#include "prprf.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Printf.h"
 #endif
 
 /**
@@ -290,16 +291,18 @@ inline void MOZ_PretendNoReturn()
 #if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
 #define NS_ENSURE_SUCCESS_BODY(res, ret)                                  \
-    char *msg = PR_smprintf("NS_ENSURE_SUCCESS(%s, %s) failed with "      \
-                            "result 0x%X", #res, #ret, __rv);             \
+    char *msg = mozilla::Smprintf("NS_ENSURE_SUCCESS(%s, %s) failed with "       \
+                           "result 0x%" PRIX32, #res, #ret,               \
+                           static_cast<uint32_t>(__rv));                  \
     NS_WARNING(msg);                                                      \
-    PR_smprintf_free(msg);
+    mozilla::SmprintfFree(msg);
 
 #define NS_ENSURE_SUCCESS_BODY_VOID(res)                                  \
-    char *msg = PR_smprintf("NS_ENSURE_SUCCESS_VOID(%s) failed with "     \
-                            "result 0x%X", #res, __rv);                   \
+    char *msg = mozilla::Smprintf("NS_ENSURE_SUCCESS_VOID(%s) failed with "      \
+                           "result 0x%" PRIX32, #res,                     \
+                           static_cast<uint32_t>(__rv));                  \
     NS_WARNING(msg);                                                      \
-    PR_smprintf_free(msg);
+    mozilla::SmprintfFree(msg);
 
 #else
 

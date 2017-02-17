@@ -400,17 +400,17 @@ public:
     }
 
     void SynthesizeGLError(GLenum err);
-    void SynthesizeGLError(GLenum err, const char* fmt, ...);
+    void SynthesizeGLError(GLenum err, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4);
 
-    void ErrorInvalidEnum(const char* fmt = 0, ...);
-    void ErrorInvalidOperation(const char* fmt = 0, ...);
-    void ErrorInvalidValue(const char* fmt = 0, ...);
-    void ErrorInvalidFramebufferOperation(const char* fmt = 0, ...);
+    void ErrorInvalidEnum(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidOperation(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidValue(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidFramebufferOperation(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
     void ErrorInvalidEnumInfo(const char* info, GLenum enumValue);
     void ErrorInvalidEnumInfo(const char* info, const char* funcName,
                               GLenum enumValue);
-    void ErrorOutOfMemory(const char* fmt = 0, ...);
-    void ErrorImplementationBug(const char* fmt = 0, ...);
+    void ErrorOutOfMemory(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorImplementationBug(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
 
     void ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val);
 
@@ -2047,10 +2047,10 @@ protected:
 
 public:
     // console logging helpers
-    void GenerateWarning(const char* fmt, ...);
+    void GenerateWarning(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
     void GenerateWarning(const char* fmt, va_list ap);
 
-    void GeneratePerfWarning(const char* fmt, ...) const;
+    void GeneratePerfWarning(const char* fmt, ...) const MOZ_FORMAT_PRINTF(2, 3);
 
 public:
     UniquePtr<webgl::FormatUsageAuthority> mFormatUsage;

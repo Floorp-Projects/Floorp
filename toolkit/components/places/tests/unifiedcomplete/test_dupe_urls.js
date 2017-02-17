@@ -19,5 +19,21 @@ add_task(function* test_dupe_urls() {
                  title: "mozilla.org",
                  style: [ "autofill", "heuristic" ] } ]
   });
-  yield cleanup();
+});
+
+add_task(function* test_dupe_secure_urls() {
+  yield PlacesTestUtils.addVisits({
+    uri: NetUtil.newURI("https://example.org/"),
+    transition: TRANSITION_TYPED
+  }, {
+    uri: NetUtil.newURI("https://example.org/?")
+  });
+  yield check_autocomplete({
+    search: "exam",
+    autofilled: "example.org/",
+    completed: "https://example.org/",
+    matches: [ { uri: NetUtil.newURI("https://example.org/"),
+                 title: "https://example.org",
+                 style: [ "autofill", "heuristic" ] } ]
+  });
 });

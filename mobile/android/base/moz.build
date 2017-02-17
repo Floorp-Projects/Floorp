@@ -595,7 +595,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'media/GeckoMediaDrmBridgeV21.java',
     'media/GeckoMediaDrmBridgeV23.java',
     'media/JellyBeanAsyncCodec.java',
-    'media/LocalMediaDrmBridge.java',
     'media/MediaControlService.java',
     'media/MediaDrmProxy.java',
     'media/MediaManager.java',

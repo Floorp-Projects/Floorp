@@ -191,7 +191,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint32_t aAudioBitrate,
   }
   LOG(LogLevel::Debug, ("Create encoder result:a[%d] v[%d] w[%d] mimeType = %s.",
                       audioEncoder != nullptr, videoEncoder != nullptr,
-                      writer != nullptr, mimeType.get()));
+                      writer != nullptr, NS_ConvertUTF16toUTF8(mimeType).get()));
   if (videoEncoder && aVideoBitrate != 0) {
     videoEncoder->SetBitrate(aVideoBitrate);
   }

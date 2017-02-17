@@ -22,7 +22,6 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
-#include "prprf.h"
 
 // NB: Read DataStorage.h first.
 

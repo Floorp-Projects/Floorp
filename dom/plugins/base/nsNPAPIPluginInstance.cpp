@@ -651,7 +651,7 @@ nsresult nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* v
     NS_TRY_SAFE_CALL_RETURN(pluginError, (*pluginFunctions->getvalue)(&mNPP, variable, value), this,
                             NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-    ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n",
+    ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%p, return=%d\n",
     this, &mNPP, variable, value, pluginError));
 
     if (pluginError == NPERR_NO_ERROR) {

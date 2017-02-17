@@ -1614,7 +1614,7 @@ SkeletonState::DecodeIndex(ogg_packet* aPacket)
     // field is possibly malicious. Don't try decoding this index, we may run
     // out of memory.
     LOG(LogLevel::Debug, ("Possibly malicious number of key points reported "
-                       "(%lld) in index packet for stream %u.",
+                       "(%" PRId64 ") in index packet for stream %u.",
                        numKeyPoints,
                        serialno));
     return (mActive = false);
@@ -1721,7 +1721,7 @@ SkeletonState::IndexedSeekTarget(int64_t aTarget,
   if (r.IsNull()) {
     return NS_ERROR_FAILURE;
   }
-  LOG(LogLevel::Debug, ("Indexed seek target for time %lld is offset %lld",
+  LOG(LogLevel::Debug, ("Indexed seek target for time %" PRId64 " is offset %" PRId64,
                      aTarget, r.mKeyPoint.mOffset));
   aResult = r;
   return NS_OK;
@@ -1874,7 +1874,7 @@ SkeletonState::DecodeHeader(OggPacketPtr aPacket)
     mLength =
       LittleEndian::readInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
 
-    LOG(LogLevel::Debug, ("Skeleton segment length: %lld", mLength));
+    LOG(LogLevel::Debug, ("Skeleton segment length: %" PRId64, mLength));
 
     // Initialize the serialno-to-index map.
     return true;

@@ -46,11 +46,9 @@
 #define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
 #endif
 
-typedef struct SprintfStateStr SprintfState;
-
 struct SprintfStateStr
 {
-  int (*stuff)(SprintfState* aState, const char16_t* aStr, uint32_t aLen);
+  int (*stuff)(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen);
 
   char16_t* base;
   char16_t* cur;
@@ -101,7 +99,7 @@ struct NumArgState
 ** Fill into the buffer using the data in src
 */
 static int
-fill2(SprintfState* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
+fill2(SprintfStateStr* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
       int aFlags)
 {
   char16_t space = ' ';
@@ -143,7 +141,7 @@ fill2(SprintfState* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
 ** Fill a number. The order is: optional-sign zero-filling conversion-digits
 */
 static int
-fill_n(SprintfState* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
+fill_n(SprintfStateStr* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
        int aPrec, int aType, int aFlags)
 {
   int zerowidth   = 0;
@@ -239,7 +237,7 @@ fill_n(SprintfState* aState, const char16_t* aSrc, int aSrcLen, int aWidth,
 ** Convert a long into its printable form
 */
 static int
-cvt_l(SprintfState* aState, long aNum, int aWidth, int aPrec, int aRadix,
+cvt_l(SprintfStateStr* aState, long aNum, int aWidth, int aPrec, int aRadix,
       int aType, int aFlags, const char16_t* aHexStr)
 {
   char16_t cvtbuf[100];
@@ -280,7 +278,7 @@ cvt_l(SprintfState* aState, long aNum, int aWidth, int aPrec, int aRadix,
 ** Convert a 64-bit integer into its printable form
 */
 static int
-cvt_ll(SprintfState* aState, int64_t aNum, int aWidth, int aPrec, int aRadix,
+cvt_ll(SprintfStateStr* aState, int64_t aNum, int aWidth, int aPrec, int aRadix,
        int aType, int aFlags, const char16_t* aHexStr)
 {
   char16_t cvtbuf[100];
@@ -323,7 +321,7 @@ cvt_ll(SprintfState* aState, int64_t aNum, int aWidth, int aPrec, int aRadix,
 ** form.
 */
 static int
-cvt_f(SprintfState* aState, double aDouble, int aWidth, int aPrec,
+cvt_f(SprintfStateStr* aState, double aDouble, int aWidth, int aPrec,
       const char16_t aType, int aFlags)
 {
   int    mode = 2;
@@ -511,7 +509,7 @@ cvt_f(SprintfState* aState, double aDouble, int aWidth, int aPrec,
 ** where -1 means until NUL.
 */
 static int
-cvt_S(SprintfState* aState, const char16_t* aStr, int aWidth, int aPrec,
+cvt_S(SprintfStateStr* aState, const char16_t* aStr, int aWidth, int aPrec,
       int aFlags)
 {
   int slen;
@@ -538,7 +536,7 @@ cvt_S(SprintfState* aState, const char16_t* aStr, int aWidth, int aPrec,
 ** where -1 means until NUL.
 */
 static int
-cvt_s(SprintfState* aState, const char* aStr, int aWidth, int aPrec, int aFlags)
+cvt_s(SprintfStateStr* aState, const char* aStr, int aWidth, int aPrec, int aFlags)
 {
   NS_ConvertUTF8toUTF16 utf16Val(aStr);
   return cvt_S(aState, utf16Val.get(), aWidth, aPrec, aFlags);
@@ -819,7 +817,7 @@ BuildArgArray(const char16_t* aFmt, va_list aAp, int* aRv,
 ** The workhorse sprintf code.
 */
 static int
-dosprintf(SprintfState* aState, const char16_t* aFmt, va_list aAp)
+dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
 {
   char16_t c;
   int flags, width, prec, radix, type;
@@ -1198,7 +1196,7 @@ dosprintf(SprintfState* aState, const char16_t* aFmt, va_list aAp)
 /************************************************************************/
 
 static int
-StringStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
+StringStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
 {
   if (*aStr == '\0') {
     return 0;
@@ -1220,7 +1218,7 @@ StringStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
 ** before it overflows.
 */
 static int
-GrowStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
+GrowStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
 {
   ptrdiff_t off;
   char16_t* newbase;
@@ -1284,7 +1282,7 @@ nsTextFormatter::ssprintf(nsAString& aOut, const char16_t* aFmt, ...)
 uint32_t
 nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp)
 {
-  SprintfState ss;
+  SprintfStateStr ss;
   ss.stuff = StringStuff;
   ss.base = 0;
   ss.cur = 0;
@@ -1299,7 +1297,7 @@ nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp)
 char16_t*
 nsTextFormatter::vsmprintf(const char16_t* aFmt, va_list aAp)
 {
-  SprintfState ss;
+  SprintfStateStr ss;
   int rv;
 
   ss.stuff = GrowStuff;
@@ -1320,7 +1318,7 @@ nsTextFormatter::vsmprintf(const char16_t* aFmt, va_list aAp)
 ** Stuff routine that discards overflow data
 */
 static int
-LimitStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
+LimitStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
 {
   uint32_t limit = aState->maxlen - (aState->cur - aState->base);
 
@@ -1360,7 +1358,7 @@ uint32_t
 nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
                            const char16_t* aFmt, va_list aAp)
 {
-  SprintfState ss;
+  SprintfStateStr ss;
   uint32_t n;
 
   MOZ_ASSERT((int32_t)aOutLen > 0);
