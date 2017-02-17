@@ -145,4 +145,12 @@ interface mozIPlacesAutoComplete : nsISupports
    *        The title of added site.
    */
   void addPrefillSite(in AUTF8String url, in AUTF8String title);
+
+  /**
+   * Populate list of Prefill Sites from JSON.
+   *
+   * @param sites
+   *        Array of [url,title] to populate from.
+   */
+  void populatePrefillSiteStorage(in jsval sites);
 };
