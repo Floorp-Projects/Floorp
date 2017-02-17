@@ -46,11 +46,11 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-
-  const char* GetDescriptionName() const override
-  {
-    return mProxyDecoder->GetDescriptionName();
-  }
+  const char* GetDescriptionName() const override;
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
+  bool SupportDecoderRecycling() const override;
+  void ConfigurationChanged(const TrackInfo& aConfig) override;
 
 private:
   RefPtr<MediaDataDecoder> mProxyDecoder;
