@@ -108,7 +108,7 @@ public:
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
-    MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+    MOZ_ASSERT(CheckDocTree());
     if (!mShutdown)
       Destroy();
   }
