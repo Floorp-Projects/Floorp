@@ -122,6 +122,22 @@ public:
                 const WrRect& aClip,
                 const WrColor& aColor);
 
+  void PushLinearGradient(const WrRect& aBounds,
+                          const WrRect& aClip,
+                          const WrPoint& aStartPoint,
+                          const WrPoint& aEndPoint,
+                          const nsTArray<WrGradientStop>& aStops,
+                          wr::GradientExtendMode aExtendMode);
+
+  void PushRadialGradient(const WrRect& aBounds,
+                          const WrRect& aClip,
+                          const WrPoint& aStartCenter,
+                          const WrPoint& aEndCenter,
+                          float aStartRadius,
+                          float aEndRadius,
+                          const nsTArray<WrGradientStop>& aStops,
+                          wr::GradientExtendMode aExtendMode);
+
   void PushImage(const WrRect& aBounds,
                  const WrRect& aClip,
                  const WrImageMask* aMask,

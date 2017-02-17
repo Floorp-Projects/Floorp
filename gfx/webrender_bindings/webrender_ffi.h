@@ -142,6 +142,14 @@ enum class WrMixBlendMode: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
+enum class WrGradientExtendMode : uint32_t
+{
+  Clamp      = 0,
+  Repeat     = 1,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
 // -----
 // Typedefs for struct fields and function signatures below.
 // -----
@@ -203,6 +211,16 @@ struct WrGlyphArray
     }
 
     return true;
+  }
+};
+
+struct WrGradientStop {
+  float offset;
+  WrColor color;
+
+  bool operator==(const WrGradientStop& aRhs) const
+  {
+    return offset == aRhs.offset && color == aRhs.color;
   }
 };
 
@@ -487,6 +505,21 @@ WR_INLINE void
 wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
                   WrBorderSide top, WrBorderSide right, WrBorderSide bottom, WrBorderSide left,
                   WrBorderRadius radius)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+                           WrPoint startPoint, WrPoint endPoint,
+                           const WrGradientStop* stops, size_t stopsCount,
+                           WrGradientExtendMode extendMode);
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+                           WrPoint startCenter, WrPoint endCenter,
+                           float startRadius, float endRadius,
+                           const WrGradientStop* stops, size_t stopsCount,
+                           WrGradientExtendMode extendMode);
 WR_FUNC;
 
 WR_INLINE void

@@ -15,6 +15,8 @@ using WrColor from "mozilla/webrender/webrender_ffi.h";
 using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
 using WrPoint from "mozilla/webrender/webrender_ffi.h";
+using WrGradientStop from "mozilla/webrender/webrender_ffi.h";
+using WrGradientExtendMode from "mozilla/webrender/webrender_ffi.h";
 using WrGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
 using WrBoxShadowClipMode from "mozilla/webrender/webrender_ffi.h";
@@ -65,6 +67,26 @@ struct OpDPPushBorder {
   WrBorderSide bottom;
   WrBorderSide left;
   WrBorderRadius radius;
+};
+
+struct OpDPPushLinearGradient {
+  WrRect bounds;
+  WrRect clip;
+  WrPoint startPoint;
+  WrPoint endPoint;
+  WrGradientExtendMode extendMode;
+  WrGradientStop[] stops;
+};
+
+struct OpDPPushRadialGradient {
+  WrRect bounds;
+  WrRect clip;
+  WrPoint startCenter;
+  WrPoint endCenter;
+  float startRadius;
+  float endRadius;
+  WrGradientExtendMode extendMode;
+  WrGradientStop[] stops;
 };
 
 struct OpDPPushImage {
@@ -119,6 +141,8 @@ union WebRenderCommand {
   OpDPPopScrollLayer;
   OpDPPushRect;
   OpDPPushBorder;
+  OpDPPushLinearGradient;
+  OpDPPushRadialGradient;
   OpDPPushImage;
   OpDPPushExternalImageId;
   OpDPPushIframe;
