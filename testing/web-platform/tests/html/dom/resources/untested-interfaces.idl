@@ -533,6 +533,7 @@ interface Touch {
     readonly    attribute long        pageY;
 };
 
+
 // CSSOM IDLs
 interface MediaList {
   stringifier attribute DOMString mediaText;
@@ -562,7 +563,12 @@ interface CSSStyleSheet : StyleSheet {
 typedef sequence<StyleSheet> StyleSheetList;
 
 partial interface Document {
-  [SameObject] readonly attribute StyleSheetList styleSheets;
+  readonly attribute StyleSheetList styleSheets;
+           attribute DOMString? selectedStyleSheetSet;
+  readonly attribute DOMString? lastStyleSheetSet;
+  readonly attribute DOMString? preferredStyleSheetSet;
+  readonly attribute DOMStringList styleSheetSets;
+  void enableStyleSheetsForSet(DOMString? name);
 };
 
 [NoInterfaceObject] interface LinkStyle {

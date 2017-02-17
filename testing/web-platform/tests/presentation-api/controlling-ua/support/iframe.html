@@ -17,18 +17,8 @@
             return '../' + url;
           }
         });
-        var request = null;
-        if (ev.data === 'create') {
-          try {
-            request = new PresentationRequest(urls);
-            parent.window.postMessage('success', '*');
-          }
-          catch (err) {
-            parent.window.postMessage(err.name, '*');
-          }
-        }
-        else if (ev.data === 'start') {
-          request = new PresentationRequest(urls);
+        var request = new PresentationRequest(urls);
+        if (ev.data === 'start') {
           request.start()
             .then(function () {
               parent.window.postMessage('success', '*');
@@ -48,7 +38,6 @@
             });
         }
         else if (ev.data === 'reconnect') {
-          request = new PresentationRequest(urls);
           request.reconnect('someid')
             .then(function () {
               parent.window.postMessage('success', '*');
@@ -58,7 +47,6 @@
             });
         }
         else if (ev.data === 'getAvailability') {
-          request = new PresentationRequest(urls);
           request.getAvailability()
             .then(function () {
               parent.window.postMessage('success', '*');

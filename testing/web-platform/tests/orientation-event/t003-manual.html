@@ -23,7 +23,7 @@
           });
           t1.done();
           t2.step(function() {
-            assert_true(e instanceof "DeviceOrientationEvent");
+            assert_true(e.constructor.lastIndexOf("DeviceOrientationEvent") != -1);
           });
           t2.done();
         }
