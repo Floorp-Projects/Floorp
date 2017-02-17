@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function(__WEBPACK_EXTERNAL_MODULE_1__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_3__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -54,28 +54,26 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const React = __webpack_require__(1);
-	
-	const { MODE } = __webpack_require__(2);
-	const { REPS } = __webpack_require__(3);
-	const { createFactories, parseURLEncodedText, parseURLParams } = __webpack_require__(4);
+	const { MODE } = __webpack_require__(1);
+	const { REPS } = __webpack_require__(2);
+	const {
+	  createFactories,
+	  parseURLEncodedText,
+	  parseURLParams,
+	  getSelectableInInspectorGrips
+	} = __webpack_require__(4);
 	
 	module.exports = {
 	  REPS,
 	  MODE,
 	  createFactories,
 	  parseURLEncodedText,
-	  parseURLParams
+	  parseURLParams,
+	  getSelectableInInspectorGrips
 	};
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
-
-/***/ },
-/* 2 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -87,45 +85,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { isGrip } = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
+	const { MODE } = __webpack_require__(1);
 	
 	// Load all existing rep templates
-	const Undefined = __webpack_require__(5);
-	const Null = __webpack_require__(6);
-	const StringRep = __webpack_require__(7);
-	const LongStringRep = __webpack_require__(8);
-	const Number = __webpack_require__(9);
-	const ArrayRep = __webpack_require__(10);
-	const Obj = __webpack_require__(12);
-	const SymbolRep = __webpack_require__(15);
-	const InfinityRep = __webpack_require__(16);
-	const NaNRep = __webpack_require__(17);
+	const Undefined = __webpack_require__(6);
+	const Null = __webpack_require__(7);
+	const StringRep = __webpack_require__(8);
+	const LongStringRep = __webpack_require__(9);
+	const Number = __webpack_require__(10);
+	const ArrayRep = __webpack_require__(11);
+	const Obj = __webpack_require__(13);
+	const SymbolRep = __webpack_require__(16);
+	const InfinityRep = __webpack_require__(17);
+	const NaNRep = __webpack_require__(18);
 	
 	// DOM types (grips)
-	const Attribute = __webpack_require__(18);
-	const DateTime = __webpack_require__(19);
-	const Document = __webpack_require__(20);
-	const Event = __webpack_require__(21);
-	const Func = __webpack_require__(22);
-	const PromiseRep = __webpack_require__(23);
-	const RegExp = __webpack_require__(24);
-	const StyleSheet = __webpack_require__(25);
-	const CommentNode = __webpack_require__(26);
+	const Attribute = __webpack_require__(19);
+	const DateTime = __webpack_require__(20);
+	const Document = __webpack_require__(21);
+	const Event = __webpack_require__(22);
+	const Func = __webpack_require__(23);
+	const PromiseRep = __webpack_require__(24);
+	const RegExp = __webpack_require__(25);
+	const StyleSheet = __webpack_require__(26);
+	const CommentNode = __webpack_require__(27);
 	const ElementNode = __webpack_require__(28);
-	const TextNode = __webpack_require__(29);
-	const ErrorRep = __webpack_require__(30);
-	const Window = __webpack_require__(31);
-	const ObjectWithText = __webpack_require__(32);
-	const ObjectWithURL = __webpack_require__(33);
-	const GripArray = __webpack_require__(34);
-	const GripMap = __webpack_require__(35);
-	const Grip = __webpack_require__(14);
+	const TextNode = __webpack_require__(32);
+	const ErrorRep = __webpack_require__(33);
+	const Window = __webpack_require__(34);
+	const ObjectWithText = __webpack_require__(35);
+	const ObjectWithURL = __webpack_require__(36);
+	const GripArray = __webpack_require__(37);
+	const GripMap = __webpack_require__(38);
+	const Grip = __webpack_require__(15);
 	
 	// List of all registered template.
 	// XXX there should be a way for extensions to register a new
@@ -232,11 +230,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
+
+/***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
+	
+	// Utils
+	const nodeConstants = __webpack_require__(5);
 	
 	/**
 	 * Create React factories for given arguments.
@@ -391,6 +398,96 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	}
 	
+	/**
+	 * Get an array of all the items from the grip in parameter (including the grip itself)
+	 * which can be selected in the inspector.
+	 *
+	 * @param {Object} Grip
+	 * @return {Array} Flat array of the grips which can be selected in the inspector
+	 */
+	function getSelectableInInspectorGrips(grip) {
+	  let grips = new Set(getFlattenedGrips([grip]));
+	  return [...grips].filter(isGripSelectableInInspector);
+	}
+	
+	/**
+	 * Indicate if a Grip can be selected in the inspector,
+	 * i.e. if it represents a node element.
+	 *
+	 * @param {Object} Grip
+	 * @return {Boolean}
+	 */
+	function isGripSelectableInInspector(grip) {
+	  return grip && typeof grip === "object" && grip.preview && [nodeConstants.TEXT_NODE, nodeConstants.ELEMENT_NODE].includes(grip.preview.nodeType);
+	}
+	
+	/**
+	 * Get a flat array of all the grips and their preview items.
+	 *
+	 * @param {Array} Grips
+	 * @return {Array} Flat array of the grips and their preview items
+	 */
+	function getFlattenedGrips(grips) {
+	  return grips.reduce((res, grip) => {
+	    let previewItems = getGripPreviewItems(grip);
+	    let flatPreviewItems = previewItems.length > 0 ? getFlattenedGrips(previewItems) : [];
+	
+	    return [...res, grip, ...flatPreviewItems];
+	  }, []);
+	}
+	
+	/**
+	 * Get preview items from a Grip.
+	 *
+	 * @param {Object} Grip from which we want the preview items
+	 * @return {Array} Array of the preview items of the grip, or an empty array
+	 *                 if the grip does not have preview items
+	 */
+	function getGripPreviewItems(grip) {
+	  if (!grip) {
+	    return [];
+	  }
+	
+	  // Promise resolved value Grip
+	  if (grip.promiseState && grip.promiseState.value) {
+	    return [grip.promiseState.value];
+	  }
+	
+	  // Array Grip
+	  if (grip.preview && grip.preview.items) {
+	    return grip.preview.items;
+	  }
+	
+	  // Node Grip
+	  if (grip.preview && grip.preview.childNodes) {
+	    return grip.preview.childNodes;
+	  }
+	
+	  // Set or Map Grip
+	  if (grip.preview && grip.preview.entries) {
+	    return grip.preview.entries.reduce((res, entry) => res.concat(entry), []);
+	  }
+	
+	  // Event Grip
+	  if (grip.preview && grip.preview.target) {
+	    return [grip.preview.target];
+	  }
+	
+	  // Generic Grip
+	  if (grip.preview && grip.preview.ownProperties) {
+	    let propertiesValues = Object.values(grip.preview.ownProperties).map(property => property.value || property);
+	
+	    // ArrayBuffer Grip
+	    if (grip.preview.safeGetterValues) {
+	      propertiesValues = propertiesValues.concat(Object.values(grip.preview.safeGetterValues).map(property => property.getterValue || property));
+	    }
+	
+	    return propertiesValues;
+	  }
+	
+	  return [];
+	}
+	
 	module.exports = {
 	  createFactories,
 	  isGrip,
@@ -401,15 +498,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	  parseURLParams,
 	  parseURLEncodedText,
 	  getFileName,
-	  getURLDisplayString
+	  getURLDisplayString,
+	  getSelectableInInspectorGrips
 	};
 
 /***/ },
 /* 5 */
+/***/ function(module, exports) {
+
+	module.exports = {
+	  ELEMENT_NODE: 1,
+	  ATTRIBUTE_NODE: 2,
+	  TEXT_NODE: 3,
+	  CDATA_SECTION_NODE: 4,
+	  ENTITY_REFERENCE_NODE: 5,
+	  ENTITY_NODE: 6,
+	  PROCESSING_INSTRUCTION_NODE: 7,
+	  COMMENT_NODE: 8,
+	  DOCUMENT_NODE: 9,
+	  DOCUMENT_TYPE_NODE: 10,
+	  DOCUMENT_FRAGMENT_NODE: 11,
+	  NOTATION_NODE: 12,
+	
+	  // DocumentPosition
+	  DOCUMENT_POSITION_DISCONNECTED: 0x01,
+	  DOCUMENT_POSITION_PRECEDING: 0x02,
+	  DOCUMENT_POSITION_FOLLOWING: 0x04,
+	  DOCUMENT_POSITION_CONTAINS: 0x08,
+	  DOCUMENT_POSITION_CONTAINED_BY: 0x10,
+	  DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: 0x20
+	};
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -443,11 +568,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -481,11 +606,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const {
 	  cropString,
@@ -549,11 +674,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  sanitizeString,
 	  isGrip,
@@ -621,11 +746,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -667,17 +792,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  createFactories,
 	  wrapRender
 	} = __webpack_require__(4);
-	const Caption = React.createFactory(__webpack_require__(11));
-	const { MODE } = __webpack_require__(2);
+	const Caption = React.createFactory(__webpack_require__(12));
+	const { MODE } = __webpack_require__(1);
 	
 	const ModePropType = React.PropTypes.oneOf(
 	// @TODO Change this to Object.values once it's supported in Node's version of V8
@@ -834,7 +959,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  },
 	
 	  render: wrapRender(function () {
-	    const { Rep } = createFactories(__webpack_require__(3));
+	    const { Rep } = createFactories(__webpack_require__(2));
 	
 	    let object = this.props.object;
 	    let delim = this.props.delim;
@@ -854,11 +979,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const DOM = React.DOM;
 	
 	const { wrapRender } = __webpack_require__(4);
@@ -883,17 +1008,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Caption;
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  wrapRender
 	} = __webpack_require__(4);
-	const Caption = React.createFactory(__webpack_require__(11));
-	const PropRep = React.createFactory(__webpack_require__(13));
-	const { MODE } = __webpack_require__(2);
+	const Caption = React.createFactory(__webpack_require__(12));
+	const PropRep = React.createFactory(__webpack_require__(14));
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	/**
@@ -1043,16 +1168,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  createFactories,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	
@@ -1073,12 +1198,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	    delim: React.PropTypes.string,
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-	    objectLink: React.PropTypes.func
+	    objectLink: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  render: wrapRender(function () {
-	    const Grip = __webpack_require__(14);
-	    let { Rep } = createFactories(__webpack_require__(3));
+	    const Grip = __webpack_require__(15);
+	    let { Rep } = createFactories(__webpack_require__(2));
+	    let {
+	      name,
+	      mode,
+	      equal,
+	      delim
+	    } = this.props;
 	
 	    let key;
 	    // The key can be a simple string, for plain objects,
@@ -1086,19 +1221,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (typeof this.props.name === "string") {
 	      key = span({ "className": "nodeName" }, this.props.name);
 	    } else {
-	      key = Rep({
-	        object: this.props.name,
-	        mode: this.props.mode || MODE.TINY,
-	        defaultRep: Grip,
-	        objectLink: this.props.objectLink
-	      });
+	      key = Rep(Object.assign({}, this.props, {
+	        object: name,
+	        mode: mode || MODE.TINY,
+	        defaultRep: Grip
+	      }));
 	    }
 	
 	    return span({}, key, span({
 	      "className": "objectEqual"
-	    }, this.props.equal), Rep(this.props), span({
+	    }, equal), Rep(Object.assign({}, this.props)), span({
 	      "className": "objectComma"
-	    }, this.props.delim));
+	    }, delim));
 	  })
 	});
 	
@@ -1106,20 +1240,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = PropRep;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	// Dependencies
 	const {
 	  createFactories,
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const Caption = React.createFactory(__webpack_require__(11));
-	const PropRep = React.createFactory(__webpack_require__(13));
-	const { MODE } = __webpack_require__(2);
+	const Caption = React.createFactory(__webpack_require__(12));
+	const PropRep = React.createFactory(__webpack_require__(14));
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	
@@ -1137,7 +1271,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	    isInterestingProp: React.PropTypes.func,
 	    title: React.PropTypes.string,
-	    objectLink: React.PropTypes.func
+	    objectLink: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  getTitle: function (object) {
@@ -1162,7 +1300,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  propIterator: function (object, max) {
 	    if (object.preview && Object.keys(object.preview).includes("wrappedValue")) {
-	      const { Rep } = createFactories(__webpack_require__(3));
+	      const { Rep } = createFactories(__webpack_require__(2));
 	
 	      return [Rep({
 	        object: object.preview.wrappedValue,
@@ -1234,7 +1372,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        object: value,
 	        equal: ": ",
 	        delim: i !== indexes.length - 1 || truncate ? ", " : "",
-	        defaultRep: Grip
+	        defaultRep: Grip,
+	        // Do not propagate title to properties reps
+	        title: undefined
 	      })));
 	    });
 	
@@ -1335,11 +1475,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Grip;
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -1375,11 +1515,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -1412,11 +1552,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	const { wrapRender } = __webpack_require__(4);
 	
@@ -1445,11 +1585,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1457,7 +1597,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const StringRep = __webpack_require__(7);
+	const StringRep = __webpack_require__(8);
 	
 	// Shortcuts
 	const { span } = React.DOM;
@@ -1503,11 +1643,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1568,11 +1708,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1637,11 +1777,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1649,7 +1789,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { rep } = createFactories(__webpack_require__(14));
+	
+	const { rep } = createFactories(__webpack_require__(15));
+	const { MODE } = __webpack_require__(1);
 	
 	/**
 	 * Renders DOM event objects.
@@ -1658,7 +1800,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  displayName: "event",
 	
 	  propTypes: {
-	    object: React.PropTypes.object.isRequired
+	    object: React.PropTypes.object.isRequired,
+	    objectLink: React.PropTypes.func,
+	    // @TODO Change this to Object.values once it's supported in Node's version of V8
+	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  getTitle: function (props) {
@@ -1675,47 +1824,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // Use `Object.assign` to keep `this.props` without changes because:
 	    // 1. JSON.stringify/JSON.parse is slow.
 	    // 2. Immutable.js is planned for the future.
-	    let props = Object.assign({
+	    let gripProps = Object.assign({}, this.props, {
 	      title: this.getTitle(this.props)
-	    }, this.props);
-	    props.object = Object.assign({}, this.props.object);
-	    props.object.preview = Object.assign({}, this.props.object.preview);
+	    });
+	    gripProps.object = Object.assign({}, this.props.object);
+	    gripProps.object.preview = Object.assign({}, this.props.object.preview);
 	
-	    props.object.preview.ownProperties = {};
-	    if (props.object.preview.target) {
-	      Object.assign(props.object.preview.ownProperties, {
-	        target: props.object.preview.target
+	    gripProps.object.preview.ownProperties = {};
+	    if (gripProps.object.preview.target) {
+	      Object.assign(gripProps.object.preview.ownProperties, {
+	        target: gripProps.object.preview.target
 	      });
 	    }
-	    Object.assign(props.object.preview.ownProperties, props.object.preview.properties);
+	    Object.assign(gripProps.object.preview.ownProperties, gripProps.object.preview.properties);
 	
-	    delete props.object.preview.properties;
-	    props.object.ownPropertyLength = Object.keys(props.object.preview.ownProperties).length;
+	    delete gripProps.object.preview.properties;
+	    gripProps.object.ownPropertyLength = Object.keys(gripProps.object.preview.ownProperties).length;
 	
-	    switch (props.object.class) {
+	    switch (gripProps.object.class) {
 	      case "MouseEvent":
-	        props.isInterestingProp = (type, value, name) => {
+	        gripProps.isInterestingProp = (type, value, name) => {
 	          return ["target", "clientX", "clientY", "layerX", "layerY"].includes(name);
 	        };
 	        break;
 	      case "KeyboardEvent":
-	        props.isInterestingProp = (type, value, name) => {
+	        gripProps.isInterestingProp = (type, value, name) => {
 	          return ["target", "key", "charCode", "keyCode"].includes(name);
 	        };
 	        break;
 	      case "MessageEvent":
-	        props.isInterestingProp = (type, value, name) => {
+	        gripProps.isInterestingProp = (type, value, name) => {
 	          return ["target", "isTrusted", "data"].includes(name);
 	        };
 	        break;
 	      default:
-	        props.isInterestingProp = (type, value, name) => {
+	        gripProps.isInterestingProp = (type, value, name) => {
 	          // We want to show the properties in the order they are declared.
-	          return Object.keys(props.object.preview.ownProperties).includes(name);
+	          return Object.keys(gripProps.object.preview.ownProperties).includes(name);
 	        };
 	    }
 	
-	    return rep(props);
+	    return rep(gripProps);
 	  })
 	});
 	
@@ -1736,11 +1885,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1815,11 +1964,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	// Dependencies
 	const {
 	  createFactories,
@@ -1827,8 +1976,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  wrapRender
 	} = __webpack_require__(4);
 	
-	const PropRep = React.createFactory(__webpack_require__(13));
-	const { MODE } = __webpack_require__(2);
+	const PropRep = React.createFactory(__webpack_require__(14));
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	
@@ -1842,7 +1991,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    object: React.PropTypes.object.isRequired,
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-	    objectLink: React.PropTypes.func
+	    objectLink: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  getTitle: function (object) {
@@ -1862,10 +2015,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    return keys.map((key, i) => {
+	      let object = promiseState[key];
 	      return PropRep(Object.assign({}, this.props, {
 	        mode: MODE.TINY,
 	        name: `<${key}>`,
-	        object: promiseState[key],
+	        object,
 	        equal: ": ",
 	        delim: i < keys.length - 1 ? ", " : ""
 	      }));
@@ -1878,7 +2032,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    let objectLink = this.props.objectLink || span;
 	
 	    if (this.props.mode === MODE.TINY) {
-	      let { Rep } = createFactories(__webpack_require__(3));
+	      let { Rep } = createFactories(__webpack_require__(2));
 	
 	      return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
 	        className: "objectLeftBrace",
@@ -1915,11 +2069,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -1973,11 +2127,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -2041,19 +2195,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  isGrip,
 	  cropString,
 	  cropMultipleLines,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
-	const nodeConstants = __webpack_require__(27);
+	const { MODE } = __webpack_require__(1);
+	const nodeConstants = __webpack_require__(5);
 	
 	// Shortcuts
 	const { span } = React.DOM;
@@ -2102,46 +2256,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 27 */
-/***/ function(module, exports) {
-
-	module.exports = {
-	  ELEMENT_NODE: 1,
-	  ATTRIBUTE_NODE: 2,
-	  TEXT_NODE: 3,
-	  CDATA_SECTION_NODE: 4,
-	  ENTITY_REFERENCE_NODE: 5,
-	  ENTITY_NODE: 6,
-	  PROCESSING_INSTRUCTION_NODE: 7,
-	  COMMENT_NODE: 8,
-	  DOCUMENT_NODE: 9,
-	  DOCUMENT_TYPE_NODE: 10,
-	  DOCUMENT_FRAGMENT_NODE: 11,
-	  NOTATION_NODE: 12,
-	
-	  // DocumentPosition
-	  DOCUMENT_POSITION_DISCONNECTED: 0x01,
-	  DOCUMENT_POSITION_PRECEDING: 0x02,
-	  DOCUMENT_POSITION_FOLLOWING: 0x04,
-	  DOCUMENT_POSITION_CONTAINS: 0x08,
-	  DOCUMENT_POSITION_CONTAINED_BY: 0x10,
-	  DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: 0x20
-	};
-
-/***/ },
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Utils
 	const {
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
-	const nodeConstants = __webpack_require__(27);
+	const { MODE } = __webpack_require__(1);
+	const nodeConstants = __webpack_require__(5);
+	const Svg = __webpack_require__(29);
 	
 	// Shortcuts
 	const { span } = React.DOM;
@@ -2156,8 +2284,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    object: React.PropTypes.object.isRequired,
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+	    attachedActorIds: React.PropTypes.array,
 	    onDOMNodeMouseOver: React.PropTypes.func,
 	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func,
 	    objectLink: React.PropTypes.func
 	  },
 	
@@ -2202,26 +2332,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	    let {
 	      object,
 	      mode,
+	      attachedActorIds,
 	      onDOMNodeMouseOver,
-	      onDOMNodeMouseOut
+	      onDOMNodeMouseOut,
+	      onInspectIconClick
 	    } = this.props;
 	    let elements = this.getElements(object, mode);
 	    let objectLink = this.props.objectLink || span;
 	
+	    let isInTree = attachedActorIds ? attachedActorIds.includes(object.actor) : true;
+	
 	    let baseConfig = { className: "objectBox objectBox-node" };
-	    if (onDOMNodeMouseOver) {
-	      Object.assign(baseConfig, {
-	        onMouseOver: _ => onDOMNodeMouseOver(object)
-	      });
+	    let inspectIcon;
+	    if (isInTree) {
+	      if (onDOMNodeMouseOver) {
+	        Object.assign(baseConfig, {
+	          onMouseOver: _ => onDOMNodeMouseOver(object)
+	        });
+	      }
+	
+	      if (onDOMNodeMouseOut) {
+	        Object.assign(baseConfig, {
+	          onMouseOut: onDOMNodeMouseOut
+	        });
+	      }
+	
+	      if (onInspectIconClick) {
+	        inspectIcon = Svg("open-inspector", {
+	          element: "a",
+	          draggable: false,
+	          // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
+	          title: "Click to select the node in the inspector",
+	          onClick: () => onInspectIconClick(object)
+	        });
+	      }
 	    }
 	
-	    if (onDOMNodeMouseOut) {
-	      Object.assign(baseConfig, {
-	        onMouseOut: onDOMNodeMouseOut
-	      });
-	    }
-	
-	    return objectLink({ object }, span(baseConfig, ...elements));
+	    return span(baseConfig, objectLink({ object }, ...elements), inspectIcon);
 	  })
 	});
 	
@@ -2243,8 +2390,193 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
+	const React = __webpack_require__(3);
+	const InlineSVG = __webpack_require__(30);
+	
+	const svg = {
+	  "open-inspector": __webpack_require__(31)
+	};
+	
+	module.exports = function (name, props) {
+	  // eslint-disable-line
+	  if (!svg[name]) {
+	    throw new Error("Unknown SVG: " + name);
+	  }
+	  let className = name;
+	  if (props && props.className) {
+	    className = `${name} ${props.className}`;
+	  }
+	  if (name === "subSettings") {
+	    className = "";
+	  }
+	  props = Object.assign({}, props, { className, src: svg[name] });
+	  return React.createElement(InlineSVG, props);
+	};
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var DOMParser = typeof window !== 'undefined' && window.DOMParser;
+	var process = process || {};
+	process.env = process.env || {};
+	var parserAvailable = typeof DOMParser !== 'undefined' && DOMParser.prototype != null && DOMParser.prototype.parseFromString != null;
+	
+	function isParsable(src) {
+	    // kinda naive but meh, ain't gonna use full-blown parser for this
+	    return parserAvailable && typeof src === 'string' && src.trim().substr(0, 4) === '<svg';
+	}
+	
+	// parse SVG string using `DOMParser`
+	function parseFromSVGString(src) {
+	    var parser = new DOMParser();
+	    return parser.parseFromString(src, "image/svg+xml");
+	}
+	
+	// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
+	function switchSVGAttrToReactProp(propName) {
+	    switch (propName) {
+	        case 'class':
+	            return 'className';
+	        default:
+	            return propName;
+	    }
+	}
+	
+	var InlineSVG = (function (_React$Component) {
+	    _inherits(InlineSVG, _React$Component);
+	
+	    _createClass(InlineSVG, null, [{
+	        key: 'defaultProps',
+	        value: {
+	            element: 'i',
+	            raw: false,
+	            src: ''
+	        },
+	        enumerable: true
+	    }, {
+	        key: 'propTypes',
+	        value: {
+	            src: _react2['default'].PropTypes.string.isRequired,
+	            element: _react2['default'].PropTypes.string,
+	            raw: _react2['default'].PropTypes.bool
+	        },
+	        enumerable: true
+	    }]);
+	
+	    function InlineSVG(props) {
+	        _classCallCheck(this, InlineSVG);
+	
+	        _get(Object.getPrototypeOf(InlineSVG.prototype), 'constructor', this).call(this, props);
+	        this._extractSVGProps = this._extractSVGProps.bind(this);
+	    }
+	
+	    // Serialize `Attr` objects in `NamedNodeMap`
+	
+	    _createClass(InlineSVG, [{
+	        key: '_serializeAttrs',
+	        value: function _serializeAttrs(map) {
+	            var ret = {};
+	            var prop = undefined;
+	            for (var i = 0; i < map.length; i++) {
+	                prop = switchSVGAttrToReactProp(map[i].name);
+	                ret[prop] = map[i].value;
+	            }
+	            return ret;
+	        }
+	
+	        // get <svg /> element props
+	    }, {
+	        key: '_extractSVGProps',
+	        value: function _extractSVGProps(src) {
+	            var map = parseFromSVGString(src).documentElement.attributes;
+	            return map.length > 0 ? this._serializeAttrs(map) : null;
+	        }
+	
+	        // get content inside <svg> element.
+	    }, {
+	        key: '_stripSVG',
+	        value: function _stripSVG(src) {
+	            return parseFromSVGString(src).documentElement.innerHTML;
+	        }
+	    }, {
+	        key: 'componentWillReceiveProps',
+	        value: function componentWillReceiveProps(_ref) {
+	            var children = _ref.children;
+	
+	            if ("production" !== process.env.NODE_ENV && children != null) {
+	                console.info('<InlineSVG />: `children` prop will be ignored.');
+	            }
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var Element = undefined,
+	                __html = undefined,
+	                svgProps = undefined;
+	            var _props = this.props;
+	            var element = _props.element;
+	            var raw = _props.raw;
+	            var src = _props.src;
+	
+	            var otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+	
+	            if (raw === true && isParsable(src)) {
+	                Element = 'svg';
+	                svgProps = this._extractSVGProps(src);
+	                __html = this._stripSVG(src);
+	            }
+	            __html = __html || src;
+	            Element = Element || element;
+	            svgProps = svgProps || {};
+	
+	            return _react2['default'].createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+	                dangerouslySetInnerHTML: { __html: __html } }));
+	        }
+	    }]);
+	
+	    return InlineSVG;
+	})(_react2['default'].Component);
+	
+	exports['default'] = InlineSVG;
+	module.exports = exports['default'];
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg , viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -2252,7 +2584,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  cropString,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
+	const { MODE } = __webpack_require__(1);
+	const Svg = __webpack_require__(29);
 	
 	// Shortcuts
 	const DOM = React.DOM;
@@ -2268,8 +2601,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	    objectLink: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
 	    onDOMNodeMouseOver: React.PropTypes.func,
-	    onDOMNodeMouseOut: React.PropTypes.func
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  getTextContent: function (grip) {
@@ -2289,27 +2624,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	  render: wrapRender(function () {
 	    let {
 	      object: grip,
-	      mode = MODE.SHORT
+	      mode = MODE.SHORT,
+	      attachedActorIds,
+	      onDOMNodeMouseOver,
+	      onDOMNodeMouseOut,
+	      onInspectIconClick
 	    } = this.props;
 	
 	    let baseConfig = { className: "objectBox objectBox-textNode" };
-	    if (this.props.onDOMNodeMouseOver) {
-	      Object.assign(baseConfig, {
-	        onMouseOver: _ => this.props.onDOMNodeMouseOver(grip)
-	      });
-	    }
+	    let inspectIcon;
+	    let isInTree = attachedActorIds ? attachedActorIds.includes(grip.actor) : true;
 	
-	    if (this.props.onDOMNodeMouseOut) {
-	      Object.assign(baseConfig, {
-	        onMouseOut: this.props.onDOMNodeMouseOut
-	      });
+	    if (isInTree) {
+	      if (onDOMNodeMouseOver) {
+	        Object.assign(baseConfig, {
+	          onMouseOver: _ => onDOMNodeMouseOver(grip)
+	        });
+	      }
+	
+	      if (onDOMNodeMouseOut) {
+	        Object.assign(baseConfig, {
+	          onMouseOut: onDOMNodeMouseOut
+	        });
+	      }
+	
+	      if (onInspectIconClick) {
+	        inspectIcon = Svg("open-inspector", {
+	          element: "a",
+	          draggable: false,
+	          // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
+	          title: "Click to select the node in the inspector",
+	          onClick: () => onInspectIconClick(grip)
+	        });
+	      }
 	    }
 	
 	    if (mode === MODE.TINY) {
-	      return DOM.span(baseConfig, this.getTitle(grip));
+	      return DOM.span(baseConfig, this.getTitle(grip), inspectIcon);
 	    }
 	
-	    return DOM.span(baseConfig, this.getTitle(grip), DOM.span({ className: "nodeValue" }, " ", `"${this.getTextContent(grip)}"`));
+	    return DOM.span(baseConfig, this.getTitle(grip), DOM.span({ className: "nodeValue" }, " ", `"${this.getTextContent(grip)}"`), inspectIcon);
 	  })
 	});
 	
@@ -2330,17 +2684,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 30 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	// Utils
 	const {
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const { MODE } = __webpack_require__(2);
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	
@@ -2393,11 +2747,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 31 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -2405,6 +2759,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getURLDisplayString,
 	  wrapRender
 	} = __webpack_require__(4);
+	
+	const { MODE } = __webpack_require__(1);
 	
 	// Shortcuts
 	const DOM = React.DOM;
@@ -2416,27 +2772,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	  displayName: "Window",
 	
 	  propTypes: {
+	    // @TODO Change this to Object.values once it's supported in Node's version of V8
+	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	    object: React.PropTypes.object.isRequired,
 	    objectLink: React.PropTypes.func
 	  },
 	
-	  getTitle: function (grip) {
+	  getTitle: function (object) {
+	    let title = object.displayClass || object.class || "Window";
 	    if (this.props.objectLink) {
 	      return DOM.span({ className: "objectBox" }, this.props.objectLink({
-	        object: grip
-	      }, grip.class + " "));
+	        object
+	      }, title));
 	    }
-	    return "";
+	    return title;
 	  },
 	
-	  getLocation: function (grip) {
-	    return getURLDisplayString(grip.preview.url);
+	  getLocation: function (object) {
+	    return getURLDisplayString(object.preview.url);
 	  },
 	
 	  render: wrapRender(function () {
-	    let grip = this.props.object;
+	    let {
+	      mode,
+	      object
+	    } = this.props;
 	
-	    return DOM.span({ className: "objectBox objectBox-Window" }, this.getTitle(grip), DOM.span({ className: "objectPropValue" }, this.getLocation(grip)));
+	    if (mode === MODE.TINY) {
+	      return DOM.span({ className: "objectBox objectBox-Window" }, this.getTitle(object));
+	    }
+	
+	    return DOM.span({ className: "objectBox objectBox-Window" }, this.getTitle(object), " ", DOM.span({ className: "objectPropValue" }, this.getLocation(object)));
 	  })
 	});
 	
@@ -2457,11 +2823,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 32 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -2523,11 +2889,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 33 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// ReactJS
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	
 	// Reps
 	const {
@@ -2590,18 +2956,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 34 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  createFactories,
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const Caption = React.createFactory(__webpack_require__(11));
-	const { MODE } = __webpack_require__(2);
+	const Caption = React.createFactory(__webpack_require__(12));
+	const { MODE } = __webpack_require__(1);
 	
 	// Shortcuts
 	const { span } = React.DOM;
@@ -2618,7 +2984,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	    provider: React.PropTypes.object,
-	    objectLink: React.PropTypes.func
+	    objectLink: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  getLength: function (grip) {
@@ -2632,9 +3002,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getTitle: function (object, context) {
 	    let objectLink = this.props.objectLink || span;
 	    if (this.props.mode !== MODE.TINY) {
+	      let title = this.props.title || object.class || "Array";
 	      return objectLink({
 	        object: object
-	      }, object.class + " ");
+	      }, title, " ");
 	    }
 	    return "";
 	  },
@@ -2675,12 +3046,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        items.push(GripArrayItem(Object.assign({}, this.props, {
 	          object: value,
-	          delim: delim
+	          delim: delim,
+	          // Do not propagate title to array items reps
+	          title: undefined
 	        })));
 	      } catch (exc) {
 	        items.push(GripArrayItem(Object.assign({}, this.props, {
 	          object: exc,
-	          delim: delim
+	          delim: delim,
+	          // Do not propagate title to array items reps
+	          title: undefined
 	        })));
 	      }
 	    }
@@ -2744,11 +3119,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  displayName: "GripArrayItem",
 	
 	  propTypes: {
-	    delim: React.PropTypes.string
+	    delim: React.PropTypes.string,
+	    object: React.PropTypes.object.isRequired,
+	    objectLink: React.PropTypes.func,
+	    // @TODO Change this to Object.values once it's supported in Node's version of V8
+	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+	    provider: React.PropTypes.object,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func
 	  },
 	
 	  render: function () {
-	    let { Rep } = createFactories(__webpack_require__(3));
+	    let { Rep } = createFactories(__webpack_require__(2));
 	
 	    return span({}, Rep(Object.assign({}, this.props, {
 	      mode: MODE.TINY
@@ -2771,18 +3155,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 35 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Dependencies
-	const React = __webpack_require__(1);
+	const React = __webpack_require__(3);
 	const {
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(4);
-	const Caption = React.createFactory(__webpack_require__(11));
-	const PropRep = React.createFactory(__webpack_require__(13));
-	const { MODE } = __webpack_require__(2);
+	const Caption = React.createFactory(__webpack_require__(12));
+	const PropRep = React.createFactory(__webpack_require__(14));
+	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
 	/**
@@ -2797,11 +3181,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // @TODO Change this to Object.values once it's supported in Node's version of V8
 	    mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
 	    objectLink: React.PropTypes.func,
-	    isInterestingEntry: React.PropTypes.func
+	    isInterestingEntry: React.PropTypes.func,
+	    attachedActorIds: React.PropTypes.array,
+	    onDOMNodeMouseOver: React.PropTypes.func,
+	    onDOMNodeMouseOut: React.PropTypes.func,
+	    onInspectIconClick: React.PropTypes.func,
+	    title: React.PropTypes.string
 	  },
 	
 	  getTitle: function (object) {
-	    let title = object && object.class ? object.class : "Map";
+	    let title = this.props.title || (object && object.class ? object.class : "Map");
 	    if (this.props.objectLink) {
 	      return this.props.objectLink({
 	        object: object
@@ -2860,6 +3249,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @return {Array} Array of PropRep.
 	   */
 	  getEntries: function (entries, indexes) {
+	    let {
+	      objectLink,
+	      attachedActorIds,
+	      onDOMNodeMouseOver,
+	      onDOMNodeMouseOut,
+	      onInspectIconClick
+	    } = this.props;
+	
 	    // Make indexes ordered by ascending.
 	    indexes.sort(function (a, b) {
 	      return a - b;
@@ -2878,7 +3275,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // if there won't be a "more..." item.
 	        delim: i < indexes.length - 1 || indexes.length < entries.length ? ", " : "",
 	        mode: MODE.TINY,
-	        objectLink: this.props.objectLink
+	        objectLink,
+	        attachedActorIds,
+	        onDOMNodeMouseOver,
+	        onDOMNodeMouseOut,
+	        onInspectIconClick
 	      });
 	    });
 	  },

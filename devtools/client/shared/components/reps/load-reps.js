@@ -14,6 +14,7 @@ define(function (require, exports, module) {
   let createFactories;
   let parseURLEncodedText;
   let parseURLParams;
+  let getSelectableInInspectorGrips;
 
   // useRepsBundle hardcoded to true to use the bundle from github. Switch back to rely
   // on individual reps files by flipping it to false.
@@ -25,6 +26,7 @@ define(function (require, exports, module) {
     createFactories = bundle.createFactories;
     parseURLEncodedText = bundle.parseURLEncodedText;
     parseURLParams = bundle.parseURLParams;
+    getSelectableInInspectorGrips = bundle.getSelectableInInspectorGrips;
   } else {
     // Commenting out all requires, otherwise requirejs will agressively load all
     // dependencies when loading load-reps.js, which will fail because files have been
@@ -40,4 +42,5 @@ define(function (require, exports, module) {
   exports.createFactories = createFactories;
   exports.parseURLEncodedText = parseURLEncodedText;
   exports.parseURLParams = parseURLParams;
+  exports.getSelectableInInspectorGrips = getSelectableInInspectorGrips;
 });
