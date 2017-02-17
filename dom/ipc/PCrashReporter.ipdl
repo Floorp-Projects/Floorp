@@ -20,7 +20,6 @@ struct Mapping {
 };
 
 async protocol PCrashReporter {
-  manager PContent;
 parent:
   async AnnotateCrashReport(nsCString key, nsCString data);
   async AppendAppNotes(nsCString data);

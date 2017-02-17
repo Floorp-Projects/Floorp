@@ -1068,9 +1068,10 @@ class IonBuilder
     // Has an iterator other than 'for in'.
     bool nonStringIteration_;
 
-    // If this script can use a lazy arguments object, it will be pre-created
-    // here.
-    MInstruction* lazyArguments_;
+#ifdef DEBUG
+    // If this script uses the lazy arguments object.
+    bool hasLazyArguments_;
+#endif
 
     // If this is an inline builder, the call info for the builder.
     const CallInfo* inlineCallInfo_;

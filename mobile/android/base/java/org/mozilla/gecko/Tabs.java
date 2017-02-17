@@ -598,7 +598,7 @@ public class Tabs implements BundleEventListener {
             tab.setHasOpenSearch(message.getBoolean("visible"));
 
         } else if ("Link:Manifest".equals(event)) {
-            tab.setHasManifest(true);
+            tab.setManifestUrl(message.getString("href"));
 
         } else if ("DesktopMode:Changed".equals(event)) {
             tab.setDesktopMode(message.getBoolean("desktopMode"));

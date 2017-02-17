@@ -34,6 +34,7 @@
 #include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/MemoryBlobImpl.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
@@ -363,11 +364,11 @@ StructuredCloneWriteCallback(JSContext* aCx,
                       compiledSize);
 
     RefPtr<BlobImpl> blobImpl =
-      new BlobImplMemory(bytecode.release(), bytecodeSize, EmptyString());
+      new MemoryBlobImpl(bytecode.release(), bytecodeSize, EmptyString());
     RefPtr<Blob> bytecodeBlob = Blob::Create(nullptr, blobImpl);
 
     blobImpl =
-      new BlobImplMemory(compiled.release(), compiledSize, EmptyString());
+      new MemoryBlobImpl(compiled.release(), compiledSize, EmptyString());
     RefPtr<Blob> compiledBlob = Blob::Create(nullptr, blobImpl);
 
     if (cloneWriteInfo->mFiles.Length() + 1 > size_t(UINT32_MAX)) {
