@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test page for https://bugzilla.mozilla.org/show_bug.cgi?id=1336811
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test page for Bug 1336811</title>
+</head>
+<body onload="onload();">
+<p><span id="samplepage">sample page</span></p>
+<script type="application/javascript">
+  function onload() {
+   var request = new XMLHttpRequest;
+   request.open("GET", "about:blank");
+   request.onreadystatechange = function() {
+     request.foo = request;
+   }
+   request.foo = request;
+   request.send();
+   request.foo = request;
+  }
+</script>
+</body>
+</html>
