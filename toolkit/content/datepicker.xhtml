@@ -16,8 +16,8 @@
   <div id="date-picker">
     <div class="calendar-container">
       <div class="nav">
-        <button class="left"/>
-        <button class="right"/>
+        <button class="prev"/>
+        <button class="next"/>
       </div>
       <div class="week-header"></div>
       <div class="days-viewport">
@@ -51,8 +51,8 @@
   new DatePicker({
     monthYear: root.querySelector(".month-year"),
     monthYearView: root.querySelector(".month-year-view"),
-    buttonLeft: root.querySelector(".left"),
-    buttonRight: root.querySelector(".right"),
+    buttonPrev: root.querySelector(".prev"),
+    buttonNext: root.querySelector(".next"),
     weekHeader: root.querySelector(".week-header"),
     daysView: root.querySelector(".days-view")
   });
