@@ -21,5 +21,5 @@
     <color name="colorTitleBar">#FF363B40</color>
 
     <color name="colorUrlInput">#4d415d</color>
-    <color name="colorUrlInputBackground">#aa000000</color>
+    <color name="colorUrlInputBackground">#B2000000</color>
 </resources>

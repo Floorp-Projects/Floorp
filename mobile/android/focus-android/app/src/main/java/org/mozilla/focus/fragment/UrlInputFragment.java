@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.style.StyleSpan;
@@ -58,6 +57,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
 
         view.findViewById(R.id.background).setOnClickListener(this);
+        view.findViewById(R.id.dismiss).setOnClickListener(this);
 
         clearView = view.findViewById(R.id.clear);
         clearView.setOnClickListener(this);
@@ -111,6 +111,13 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
             case R.id.search_hint:
                 onUrlEntered(true);
+                break;
+
+            case R.id.dismiss:
+                getActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .remove(this)
+                        .commit();
                 break;
         }
     }
