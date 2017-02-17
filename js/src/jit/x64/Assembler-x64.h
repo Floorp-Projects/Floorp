@@ -16,22 +16,22 @@
 namespace js {
 namespace jit {
 
-static constexpr Register rax = { X86Encoding::rax };
-static constexpr Register rbx = { X86Encoding::rbx };
-static constexpr Register rcx = { X86Encoding::rcx };
-static constexpr Register rdx = { X86Encoding::rdx };
-static constexpr Register rsi = { X86Encoding::rsi };
-static constexpr Register rdi = { X86Encoding::rdi };
-static constexpr Register rbp = { X86Encoding::rbp };
-static constexpr Register r8  = { X86Encoding::r8  };
-static constexpr Register r9  = { X86Encoding::r9  };
-static constexpr Register r10 = { X86Encoding::r10 };
-static constexpr Register r11 = { X86Encoding::r11 };
-static constexpr Register r12 = { X86Encoding::r12 };
-static constexpr Register r13 = { X86Encoding::r13 };
-static constexpr Register r14 = { X86Encoding::r14 };
-static constexpr Register r15 = { X86Encoding::r15 };
-static constexpr Register rsp = { X86Encoding::rsp };
+static constexpr Register rax { X86Encoding::rax };
+static constexpr Register rbx { X86Encoding::rbx };
+static constexpr Register rcx { X86Encoding::rcx };
+static constexpr Register rdx { X86Encoding::rdx };
+static constexpr Register rsi { X86Encoding::rsi };
+static constexpr Register rdi { X86Encoding::rdi };
+static constexpr Register rbp { X86Encoding::rbp };
+static constexpr Register r8  { X86Encoding::r8  };
+static constexpr Register r9  { X86Encoding::r9  };
+static constexpr Register r10 { X86Encoding::r10 };
+static constexpr Register r11 { X86Encoding::r11 };
+static constexpr Register r12 { X86Encoding::r12 };
+static constexpr Register r13 { X86Encoding::r13 };
+static constexpr Register r14 { X86Encoding::r14 };
+static constexpr Register r15 { X86Encoding::r15 };
+static constexpr Register rsp { X86Encoding::rsp };
 
 static constexpr FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
 static constexpr FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
@@ -60,7 +60,7 @@ static constexpr Register edi = rdi;
 static constexpr Register ebp = rbp;
 static constexpr Register esp = rsp;
 
-static constexpr Register InvalidReg = { X86Encoding::invalid_reg };
+static constexpr Register InvalidReg { X86Encoding::invalid_reg };
 static constexpr FloatRegister InvalidFloatReg = FloatRegister();
 
 static constexpr Register StackPointer = rsp;
