@@ -2131,7 +2131,7 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
     return synthesizeDropAfterDragOver(result, dataTransfer, aDestElement,
                                        aDestWindow, aDragEvent);
   } finally {
-    ds.endDragSession(true);
+    ds.endDragSession(true, _parseModifiers(aDragEvent));
   }
 }
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>Test dragstart, drag, dragover, drop, dragend with keyboard modifiers</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <div id="test"></div>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.waitForFocus(() => {
+    let dragEvents = ["dragstart", "drag", "dragend"];
+    let dropEvents = ["dragover", "drop"];
+    let source = document.getElementById("source");
+    let target = document.getElementById("target");
+
+    dragEvents.forEach((ev, idx, array) => {
+      source.addEventListener(ev, (e) => {
+        ok(e.ctrlKey, e.type + ".ctrlKey should be true");
+        ok(!e.shiftKey, e.type + ".shiftKey should be false");
+        ok(e.altKey, e.type + ".altKey should be true");
+      }, {once: true});
+    });
+
+    dropEvents.forEach((ev, idx, array) => {
+      target.addEventListener(ev, (e) => {
+        ok(e.ctrlKey, e.type + ".ctrlKey should be true");
+        ok(!e.shiftKey, e.type + ".shiftKey should be false");
+        ok(e.altKey, e.type + ".altKey should be true");
+      }, {once: true});
+    });
+
+    source.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    }, {once: true});
+
+    source.addEventListener("dragend", (e) => {
+      SimpleTest.finish();
+    });
+
+    let selection = window.getSelection();
+    selection.selectAllChildren(source);
+
+    synthesizeMouse(source, 1, 1, {type: "mousedown", ctrlKey: true, altKey: true}, window);
+    synthesizeMouse(source, 10, 10, {type: "mousemove", ctrlKey: true, altKey: true}, window);
+    synthesizeMouse(source, 10, 10, {type: "mouseup", ctrlKey: true, altKey: true}, window);
+
+    let dragEvent = {
+      type: "drag",
+      ctrlKey: true,
+      altKey: true,
+    };
+    sendDragEvent(dragEvent, source, window);
+
+    let rect = target.getBoundingClientRect();
+    let dropEvent = {
+      ctrlKey: true,
+      altKey: true,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    };
+    selection.selectAllChildren(source);
+    synthesizeDrop(source, target, [], "copy", window, window, dropEvent);
+
+    let dragEndEvent = {
+      type: "dragend",
+      ctrlKey: true,
+      altKey: true,
+    };
+    sendDragEvent(dragEndEvent, source, window);
+  });
+  </script>
+<body>
+  <span id="source" style="font-size: 40px;">test</span>
+  <div id="target" contenteditable="true" width="50" height="50"></div>
+</body>
+</html>

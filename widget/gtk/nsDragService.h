@@ -69,7 +69,7 @@ public:
                                   uint32_t aActionType,
                                   nsContentPolicyType aContentPolicyType) override;
     NS_IMETHOD StartDragSession() override;
-    NS_IMETHOD EndDragSession(bool aDoneDrag) override;
+    NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
 
     // nsIDragSession
     NS_IMETHOD SetCanDrop            (bool             aCanDrop) override;
@@ -220,6 +220,7 @@ private:
     void DispatchMotionEvents();
     void ReplyToDragMotion(GdkDragContext* aDragContext);
     gboolean DispatchDropEvent();
+    static uint32_t GetCurrentModifiers();
 };
 
 #endif // nsDragService_h__

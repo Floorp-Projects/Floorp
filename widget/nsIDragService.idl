@@ -124,12 +124,14 @@ interface nsIDragService : nsISupports
     * If aDoneDrag is true, the drag has finished, otherwise the drag has
     * just left the window.
     */
-  void endDragSession ( in boolean aDoneDrag ) ;
+  void endDragSession(in boolean aDoneDrag,
+                      [optional] in unsigned long aKeyModifiers);
 
   /**
    * Fire a drag event at the source of the drag
    */
-  [noscript] void fireDragEventAtSource(in EventMessage aEventMessage);
+  [noscript] void fireDragEventAtSource(in EventMessage aEventMessage,
+                                        in unsigned long aKeyModifiers);
 
   /**
    * Increase/decrease dragging suppress level by one.
