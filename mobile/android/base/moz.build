@@ -473,6 +473,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/activitystream/stream/StreamItem.java',
     'home/activitystream/stream/TopPanel.java',
     'home/activitystream/stream/WelcomePanel.java',
+    'home/activitystream/StreamItemAnimator.java',
     'home/activitystream/StreamRecyclerAdapter.java',
     'home/activitystream/topsites/CirclePageIndicator.java',
     'home/activitystream/topsites/TopSitesCard.java',
