@@ -6,7 +6,6 @@
 #ifndef __NS_SVGCLIPPATHFRAME_H__
 #define __NS_SVGCLIPPATHFRAME_H__
 
-#include "AutoReferenceLimiter.h"
 #include "gfxMatrix.h"
 #include "mozilla/Attributes.h"
 #include "nsSVGContainerFrame.h"
@@ -27,7 +26,7 @@ class nsSVGClipPathFrame : public nsSVGContainerFrame
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
     : nsSVGContainerFrame(aContext)
-    , mReferencing(mozilla::AutoReferenceLimiter::notReferencing)
+    , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -176,9 +175,9 @@ private:
   // may not even be called soon/any more.
   gfxMatrix mMatrixForChildren;
 
-  // Flag used by AutoReferenceLimiter while we're processing an instance of
-  // this class to protect against (break) reference loops.
-  int16_t mReferencing;
+  // Flag used to indicate whether a methods that may reenter due to
+  // following a reference to another instance is currently executing.
+  bool mIsBeingProcessed;
 };
 
 #endif
