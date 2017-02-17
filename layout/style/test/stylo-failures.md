@@ -59,7 +59,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * Property parsing and computation:
     * test_inherit_computation.html `animation` [6]
     * test_initial_computation.html `animation` [12]
-    * test_property_syntax_errors.html `animation` [464]
+    * test_property_syntax_errors.html `animation` [404]
     * test_value_storage.html `animation` [1078]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
@@ -240,20 +240,20 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `contain` [4]
     * test_initial_storage.html `contain` [4]
     * test_value_storage.html `'contain'` [30]
-  * flexbox / grid position properties servo/servo#15001
-    * test_align_justify_computed_values.html [96]
-    * test_compute_data_with_start_struct.html `align-` [4]
-    * ... `justify-` [6]
-    * test_inherit_computation.html `align-` [8]
+  * flexbox / grid position properties **need investigation**
+    * test_align_justify_computed_values.html [16]
+    * test_compute_data_with_start_struct.html `align-` [2]
+    * ... `justify-` [2]
+    * test_inherit_computation.html `align-` [4]
     * ... `justify-` [8]
-    * test_inherit_storage.html `align-` [8]
+    * test_inherit_storage.html `align-` [2]
     * ... `justify-` [12]
-    * test_initial_computation.html `align-` [16]
-    * ... `justify-` [16]
-    * test_initial_storage.html `align-` [16]
-    * ... `justify-` [24]
-    * test_value_storage.html `align-` [198]
-    * ... `justify-` [229]
+    * test_initial_computation.html `align-` [8]
+    * ... `justify-` [4]
+    * test_initial_storage.html `align-` [6]
+    * ... `justify-` [10]
+    * test_value_storage.html `align-` [105]
+    * ... `justify-` [111]
   * place-{content,items,self} shorthands
     * test_align_shorthand_serialization.html [8]
     * test_inherit_computation.html `place-` [6]
@@ -495,8 +495,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `box-shadow` [44]
   * outline shorthand generates "initial" as part servo/servo#15206
     * test_value_storage.html `'outline:` [4]
-  * quotes empty value is not serialized to "none" servo/servo#15209
-    * test_value_storage.html `quotes` [3]
   * border shorthand serializes when not Serializes servo/servo#15395
     * test_shorthand_property_getters.html `should not be able to serialize border` [7]
   * color value not canonicalized servo/servo#15397
@@ -548,7 +546,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
   * test_property_syntax_errors.html `(-1)`: factor value in filter functions servo/servo#15494 [42]
-* test_property_syntax_errors.html `transition-timing-function`: invalid range for cubic-bezier and steps servo/servo#15344 [60]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
