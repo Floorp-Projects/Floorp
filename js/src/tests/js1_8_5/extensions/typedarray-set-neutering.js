@@ -35,7 +35,7 @@ Object.defineProperty(src, 4, {
   }
 });
 
-a.set(src);
+assertThrowsInstanceOf(() => a.set(src), TypeError);
 
 // Not really needed
 Array.reverse(a_2);
