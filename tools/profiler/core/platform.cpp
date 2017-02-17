@@ -782,11 +782,9 @@ DoSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
   MergeStacksIntoProfile(aInfo, aSample, nativeStack);
 
-#ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
     aInfo.addTag(ProfileEntry::NativeLeafAddr((void*)aSample->pc));
   }
-#endif
 }
 
 // This function is called for each sampling period with the current program
@@ -1869,11 +1867,10 @@ profiler_get_features()
     // Walk the C++ stack.
     "stackwalk",
 #endif
-#if defined(ENABLE_LEAF_DATA)
     // Include the C++ leaf node if not stackwalking. DevTools
     // profiler doesn't want the native addresses.
     "leaf",
-#endif
+    // Profile Java code (Android only).
     "java",
     // Tell the JS engine to emit pseudostack entries in the prologue/epilogue.
     "js",

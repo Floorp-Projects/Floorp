@@ -77,9 +77,6 @@ static inline pid_t gettid()
 bool profiler_verbose();
 
 #ifdef ANDROID
-# if defined(__arm__) || defined(__thumb__)
-#  define ENABLE_LEAF_DATA
-# endif
 # define LOG(text) \
     do { if (profiler_verbose()) \
            __android_log_write(ANDROID_LOG_ERROR, "Profiler", text); \
@@ -99,10 +96,6 @@ bool profiler_verbose();
                                          __VA_ARGS__); \
     } while (0)
 
-#endif
-
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
-#define ENABLE_LEAF_DATA
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
