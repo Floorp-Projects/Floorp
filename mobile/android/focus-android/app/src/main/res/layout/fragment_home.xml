@@ -9,14 +9,15 @@
     android:background="@drawable/gradient_background">
 
     <ImageButton
-        android:id="@+id/settings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_settings"
-        android:layout_gravity="right"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="45dp"
-        android:background="?android:attr/selectableItemBackground" />
+        android:id="@+id/menu"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:padding="4dp"
+        android:src="@drawable/ic_menu"
+        android:layout_gravity="end"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="4dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless" />
 
     <LinearLayout
         android:layout_width="match_parent"

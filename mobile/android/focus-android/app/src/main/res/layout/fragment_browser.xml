@@ -54,7 +54,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:src="@drawable/ic_menu"
-                android:background="?android:attr/selectableItemBackground" />
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
 
