@@ -129,11 +129,6 @@ all_locales
 For the ``l10n`` and ``nightly-l10n`` kinds, this attribute contains the list
 of relevant locales for the platform.
 
-all_locales_with_changesets
-===========================
-
-Contains a dict of l10n changesets, mapped by locales (same as in ``all_locales``).
-
 l10n_chunk
 ==========
 For the ``l10n`` and ``nightly-l10n`` kinds, this attribute contains the chunk
