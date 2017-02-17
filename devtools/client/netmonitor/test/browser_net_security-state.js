@@ -29,8 +29,8 @@ add_task(function* () {
   yield performRequests();
 
   for (let subitemNode of Array.from(document.querySelectorAll(
-    "requests-list-subitem.requests-list-security-and-domain"))) {
-    let domain = subitemNode.querySelector(".requests-list-domain").textContent;
+    "requests-menu-subitem.requests-menu-security-and-domain"))) {
+    let domain = subitemNode.querySelector(".requests-menu-domain").textContent;
 
     info("Found a request to " + domain);
     ok(domain in EXPECTED_SECURITY_STATES, "Domain " + domain + " was expected.");

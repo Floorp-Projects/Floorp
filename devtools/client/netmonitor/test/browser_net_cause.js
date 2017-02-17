@@ -145,7 +145,7 @@ add_task(function* () {
 
   // Sort the requests by cause and check the order
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-cause-button"));
+    document.querySelector("#requests-menu-cause-button"));
   let expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
   expectedOrder.forEach((expectedCause, i) => {
     const cause = getSortedRequests(gStore.getState()).get(i).cause.type;
