@@ -632,9 +632,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
-  border: none;
   padding: 0;
-  background: none;
 }
 
 #nav-bar .toolbarbutton-1:not([type=menu-button]),
