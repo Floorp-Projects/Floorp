@@ -3188,7 +3188,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   if ([self drawsContentsIntoWindowFrame]) {
     return aRect;
   }
-  if ([super respondsToSelector:@selector(contentRectForFrameRect:styleMask:)]) {
+  // Call the instance method on super, if it exists (it's undocumented so we
+  // shouldn't rely on it), or fall back to the (documented) class method.
+  if ([NSWindow instancesRespondToSelector:@selector(contentRectForFrameRect:styleMask:)]) {
     return [super contentRectForFrameRect:aRect styleMask:aMask];
   } else {
     return [NSWindow contentRectForFrameRect:aRect styleMask:aMask];
@@ -3208,7 +3210,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   if ([self drawsContentsIntoWindowFrame]) {
     return aRect;
   }
-  if ([super respondsToSelector:@selector(frameRectForContentRect:styleMask:)]) {
+  // Call the instance method on super, if it exists (it's undocumented so we
+  // shouldn't rely on it), or fall back to the (documented) class method.
+  if ([NSWindow instancesRespondToSelector:@selector(frameRectForContentRect:styleMask:)]) {
     return [super frameRectForContentRect:aRect styleMask:aMask];
   } else {
     return [NSWindow frameRectForContentRect:aRect styleMask:aMask];
