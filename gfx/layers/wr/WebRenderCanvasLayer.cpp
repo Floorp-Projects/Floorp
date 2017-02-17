@@ -55,22 +55,31 @@ WebRenderCanvasLayer::RenderLayer()
 
   MOZ_ASSERT(mExternalImageId);
 
-  gfx::Matrix4x4 transform;// = GetTransform();
+  gfx::Matrix4x4 transform = GetTransform();
   const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
   if (needsYFlip) {
     transform.PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1);
   }
   gfx::Rect rect(0, 0, mBounds.width, mBounds.height);
-  rect = RelativeToTransformedVisible(GetTransform().TransformBounds(rect));
+  rect = RelativeToVisible(rect);
 
   gfx::Rect clip;
   if (GetClipRect().isSome()) {
-      clip = RelativeToTransformedVisible(IntRectToRect(GetClipRect().ref().ToUnknownRect()));
+      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
   } else {
       clip = rect;
   }
 
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   Maybe<WrImageMask> mask = buildMaskLayer();
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
