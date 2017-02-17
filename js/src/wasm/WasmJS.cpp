@@ -2034,7 +2034,7 @@ static const JSFunctionSpec WebAssembly_static_methods[] =
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
 #endif
     JS_FN("compile", WebAssembly_compile, 1, 0),
-    JS_FN("instantiate", WebAssembly_instantiate, 2, 0),
+    JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
     JS_FN("validate", WebAssembly_validate, 1, 0),
     JS_FS_END
 };
