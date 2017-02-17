@@ -23,7 +23,7 @@
       },
       "experimental-hidden": {
         "visibleDefaultEngines": [
-          "yahoo-en-CA"
+          "yahoo-en-CA", "yandex-en"
         ]
       }
     },
@@ -171,6 +171,11 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo-en-GB", "bing", "amazon-en-GB", "chambers-en-GB", "ddg", "twitter", "wikipedia"
+        ]
+      },
+      "experimental-hidden": {
+        "visibleDefaultEngines": [
+          "yandex-en"
         ]
       }
     },
