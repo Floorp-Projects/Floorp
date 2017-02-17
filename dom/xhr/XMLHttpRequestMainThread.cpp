@@ -1035,6 +1035,7 @@ XMLHttpRequestMainThread::GetStatusText(nsACString& aStatusText,
 void
 XMLHttpRequestMainThread::CloseRequest()
 {
+  mWaitingForOnStopRequest = false;
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
   }
