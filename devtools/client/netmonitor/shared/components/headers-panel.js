@@ -178,7 +178,7 @@ const HeadersPanel = createClass({
             className: "tabpanel-summary-label headers-summary-label",
           }, SUMMARY_STATUS),
           div({
-            className: "requests-list-status-icon",
+            className: "requests-menu-status-icon",
             "data-code": code,
           }),
           input({

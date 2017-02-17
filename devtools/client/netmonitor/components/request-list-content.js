@@ -158,9 +158,9 @@ const RequestListContent = createClass({
       return false;
     }
 
-    if (requestItem.responseContent && target.closest(".requests-list-icon-and-file")) {
+    if (requestItem.responseContent && target.closest(".requests-menu-icon-and-file")) {
       return setTooltipImageContent(tooltip, itemEl, requestItem);
-    } else if (requestItem.cause && target.closest(".requests-list-cause-stack")) {
+    } else if (requestItem.cause && target.closest(".requests-menu-cause-stack")) {
       return setTooltipStackTraceContent(tooltip, requestItem);
     }
 
@@ -237,7 +237,7 @@ const RequestListContent = createClass({
     return (
       div({
         ref: "contentEl",
-        className: "requests-list-contents",
+        className: "requests-menu-contents",
         tabIndex: 0,
         onKeyDown: this.onKeyDown,
       },
