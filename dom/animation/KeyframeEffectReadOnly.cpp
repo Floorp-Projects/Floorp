@@ -18,7 +18,6 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleAnimationValueInlines.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
