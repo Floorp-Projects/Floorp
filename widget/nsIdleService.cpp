@@ -284,11 +284,11 @@ nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
     // Add 10 ms to ensure we don't undershoot, and never get a "0" timer.
     delayTime += 10 * PR_USEC_PER_MSEC;
 
-    MOZ_LOG(sLog, LogLevel::Debug, ("nsIdleServiceDaily: DailyCallback resetting timer to %lld msec",
+    MOZ_LOG(sLog, LogLevel::Debug, ("nsIdleServiceDaily: DailyCallback resetting timer to %" PRId64 " msec",
                         delayTime / PR_USEC_PER_MSEC));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(LOG_LEVEL, LOG_TAG,
-                        "DailyCallback resetting timer to %lld msec",
+                        "DailyCallback resetting timer to %" PRId64 " msec",
                         delayTime / PR_USEC_PER_MSEC);
 #endif
 

@@ -83,8 +83,8 @@ HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
   if (!mNextListener)
     return NS_ERROR_UNEXPECTED;
 
-  LOG(("HttpChannelParentListener::OnStopRequest: [this=%p status=%ul]\n",
-       this, aStatusCode));
+  LOG(("HttpChannelParentListener::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
+       this, static_cast<uint32_t>(aStatusCode)));
   nsresult rv = mNextListener->OnStopRequest(aRequest, aContext, aStatusCode);
 
   mNextListener = nullptr;

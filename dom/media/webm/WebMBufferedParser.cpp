@@ -205,7 +205,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
                                          mClusterOffset, mClusterEndOffset);
                 aMapping.InsertElementAt(idx, entry);
               } else {
-                WEBM_DEBUG("Out of order timecode %llu in Cluster at %lld ignored",
+                WEBM_DEBUG("Out of order timecode %" PRIu64 " in Cluster at %" PRId64 " ignored",
                            absTimecode, mClusterOffset);
               }
             }

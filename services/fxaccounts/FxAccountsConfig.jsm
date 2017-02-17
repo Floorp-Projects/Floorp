@@ -127,14 +127,16 @@ this.FxAccountsConfig = {
       request.get(error => {
         if (error) {
           log.error(`Failed to get configuration object from "${configURL}"`, error);
-          return reject(error);
+          reject(error);
+          return;
         }
         if (!request.response.success) {
           log.error(`Received HTTP response code ${request.response.status} from configuration object request`);
           if (request.response && request.response.body) {
             log.debug("Got error response", request.response.body);
           }
-          return reject(request.response.status);
+          reject(request.response.status);
+          return;
         }
         resolve(request.response.body);
       });

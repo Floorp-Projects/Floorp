@@ -40,7 +40,7 @@ FTPChannelChild::FTPChannelChild(nsIURI* uri)
 , mFlushedForDiversion(false)
 , mSuspendSent(false)
 {
-  LOG(("Creating FTPChannelChild @%x\n", this));
+  LOG(("Creating FTPChannelChild @%p\n", this));
   // grab a reference to the handler to ensure that it doesn't go away.
   NS_ADDREF(gFtpHandler);
   SetURI(uri);
@@ -53,7 +53,7 @@ FTPChannelChild::FTPChannelChild(nsIURI* uri)
 
 FTPChannelChild::~FTPChannelChild()
 {
-  LOG(("Destroying FTPChannelChild @%x\n", this));
+  LOG(("Destroying FTPChannelChild @%p\n", this));
   gFtpHandler->Release();
 }
 
@@ -508,8 +508,8 @@ FTPChannelChild::RecvOnStopRequest(const nsresult& aChannelStatus,
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
 
-  LOG(("FTPChannelChild::RecvOnStopRequest [this=%p status=%x]\n",
-       this, aChannelStatus));
+  LOG(("FTPChannelChild::RecvOnStopRequest [this=%p status=%" PRIx32"]\n",
+       this, static_cast<uint32_t>(aChannelStatus)));
 
   mEventQ->RunOrEnqueue(new FTPStopRequestEvent(this, aChannelStatus, aErrorMsg,
                                                 aUseUTF8));
@@ -572,8 +572,8 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
                                  const nsCString &aErrorMsg,
                                  bool aUseUTF8)
 {
-  LOG(("FTPChannelChild::DoOnStopRequest [this=%p status=%x]\n",
-       this, aChannelStatus));
+  LOG(("FTPChannelChild::DoOnStopRequest [this=%p status=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aChannelStatus)));
 
   if (mDivertingToParent) {
     MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
@@ -639,8 +639,8 @@ class FTPFailedAsyncOpenEvent : public ChannelEvent
 mozilla::ipc::IPCResult
 FTPChannelChild::RecvFailedAsyncOpen(const nsresult& statusCode)
 {
-  LOG(("FTPChannelChild::RecvFailedAsyncOpen [this=%p status=%x]\n",
-       this, statusCode));
+  LOG(("FTPChannelChild::RecvFailedAsyncOpen [this=%p status=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(statusCode)));
   mEventQ->RunOrEnqueue(new FTPFailedAsyncOpenEvent(this, statusCode));
   return IPC_OK();
 }
@@ -648,8 +648,8 @@ FTPChannelChild::RecvFailedAsyncOpen(const nsresult& statusCode)
 void
 FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
 {
-  LOG(("FTPChannelChild::DoFailedAsyncOpen [this=%p status=%x]\n",
-       this, statusCode));
+  LOG(("FTPChannelChild::DoFailedAsyncOpen [this=%p status=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(statusCode)));
   mStatus = statusCode;
 
   if (mLoadGroup)

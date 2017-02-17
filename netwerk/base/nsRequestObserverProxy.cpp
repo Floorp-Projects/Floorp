@@ -10,6 +10,7 @@
 #include "nsIRequest.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Logging.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 namespace mozilla {
 namespace net {
@@ -49,7 +50,7 @@ public:
 
     NS_IMETHOD Run() override
     {
-        LOG(("nsOnStartRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
+        LOG(("nsOnStartRequestEvent::HandleEvent [req=%p]\n", mRequest.get()));
 
         if (!mProxy->mObserver) {
             NS_NOTREACHED("already handled onStopRequest event (observer is null)");
@@ -59,7 +60,8 @@ public:
         LOG(("handle startevent=%p\n", this));
         nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mProxy->mContext);
         if (NS_FAILED(rv)) {
-            LOG(("OnStartRequest failed [rv=%x] canceling request!\n", rv));
+            LOG(("OnStartRequest failed [rv=%" PRIx32 "] canceling request!\n",
+                 static_cast<uint32_t>(rv)));
             rv = mRequest->Cancel(rv);
             NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed for request!");
         }
@@ -88,7 +90,7 @@ public:
 
     NS_IMETHOD Run() override
     {
-        LOG(("nsOnStopRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
+        LOG(("nsOnStopRequestEvent::HandleEvent [req=%p]\n", mRequest.get()));
 
         nsMainThreadPtrHandle<nsIRequestObserver> observer = mProxy->mObserver;
         if (!observer) {
@@ -126,7 +128,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
                                        nsISupports *context)
 {
     MOZ_ASSERT(!context || context == mContext);
-    LOG(("nsRequestObserverProxy::OnStartRequest [this=%p req=%x]\n", this, request));
+    LOG(("nsRequestObserverProxy::OnStartRequest [this=%p req=%p]\n", this, request));
 
     nsOnStartRequestEvent *ev = 
         new nsOnStartRequestEvent(this, request);
@@ -146,8 +148,8 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
                                       nsresult status)
 {
     MOZ_ASSERT(!context || context == mContext);
-    LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%x status=%x]\n",
-        this, request, status));
+    LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%p status=%" PRIx32 "]\n",
+         this, request, static_cast<uint32_t>(status)));
 
     // The status argument is ignored because, by the time the OnStopRequestEvent
     // is actually processed, the status of the request may have changed :-( 

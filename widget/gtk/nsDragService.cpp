@@ -778,7 +778,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
             currentFlavor->ToString(getter_Copies(flavorStr));
             GdkAtom gdkFlavor = gdk_atom_intern(flavorStr, FALSE);
             MOZ_LOG(sDragLm, LogLevel::Debug,
-                   ("looking for data in type %s, gdk flavor %ld\n",
+                   ("looking for data in type %s, gdk flavor %p\n",
                    static_cast<const char*>(flavorStr), gdkFlavor));
             bool dataFound = false;
             if (gdkFlavor) {
@@ -1199,7 +1199,7 @@ nsDragService::IsTargetContextList(void)
 void
 nsDragService::GetTargetDragData(GdkAtom aFlavor)
 {
-    MOZ_LOG(sDragLm, LogLevel::Debug, ("getting data flavor %d\n", aFlavor));
+    MOZ_LOG(sDragLm, LogLevel::Debug, ("getting data flavor %p\n", aFlavor));
     MOZ_LOG(sDragLm, LogLevel::Debug, ("mLastWidget is %p and mLastContext is %p\n",
                                    mTargetWidget.get(),
                                    mTargetDragContext.get()));

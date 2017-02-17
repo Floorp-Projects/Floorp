@@ -223,7 +223,7 @@ public:
             tokenizer.CheckWhite() &&
             tokenizer.Check(Tokenizer::TOKEN_INTEGER, intToken)) {
             *mFailureId = "FAILURE_ID_ANGLE_ID_";
-            mFailureId->AppendPrintf("%i", intToken.AsInteger());
+            mFailureId->AppendPrintf("%" PRIu64, intToken.AsInteger());
         } else {
             *mFailureId = "FAILURE_ID_ANGLE_UNKNOWN";
         }

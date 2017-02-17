@@ -17,6 +17,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
 
@@ -75,7 +76,7 @@ AppleVTDecoder::Init()
 RefPtr<MediaDataDecoder::DecodePromise>
 AppleVTDecoder::Decode(MediaRawData* aSample)
 {
-  LOG("mp4 input sample %p pts %lld duration %lld us%s %d bytes",
+  LOG("mp4 input sample %p pts %lld duration %lld us%s %" PRIuSIZE " bytes",
       aSample,
       aSample->mTime,
       aSample->mDuration,
@@ -290,7 +291,7 @@ PlatformCallback(void* decompressionOutputRefCon,
                  CMTime presentationTimeStamp,
                  CMTime presentationDuration)
 {
-  LOG("AppleVideoDecoder %s status %d flags %d", __func__, status, flags);
+  LOG("AppleVideoDecoder %s status %d flags %d", __func__, static_cast<int>(status), flags);
 
   AppleVTDecoder* decoder =
     static_cast<AppleVTDecoder*>(decompressionOutputRefCon);

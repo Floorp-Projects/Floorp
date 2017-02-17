@@ -47,7 +47,7 @@ CreateResetProfile(nsIToolkitProfileService* aProfileSvc, const nsACString& aOld
   } else {
     newProfileName.Assign("default-");
   }
-  newProfileName.Append(nsPrintfCString("%lld", PR_Now() / 1000));
+  newProfileName.Append(nsPrintfCString("%" PRId64, PR_Now() / 1000));
   nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
                                            newProfileName,
                                            getter_AddRefs(newProfile));

@@ -657,14 +657,21 @@ function stripHttpAndTrim(spec) {
 }
 
 /**
- * Returns the key to be used for a URL in a map for the purposes of removing
+ * Returns the key to be used for a match in a map for the purposes of removing
  * duplicate entries - any 2 URLs that should be considered the same should
  * return the same key. For some moz-action URLs this will unwrap the params
  * and return a key based on the wrapped URL.
  */
-function makeKeyForURL(actionUrl) {
+function makeKeyForURL(match) {
+  let actionUrl = match.value;
+
   // At this stage we only consider moz-action URLs.
   if (!actionUrl.startsWith("moz-action:")) {
+    // For autofill entries, we need to have a key based on the comment rather
+    // than the value field, because the latter may have been trimmed.
+    if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
+      return stripHttpAndTrim(match.comment);
+    }
     return stripHttpAndTrim(actionUrl);
   }
   let [, type, params] = actionUrl.match(/^moz-action:([^,]+),(.*)$/);
@@ -1620,7 +1627,7 @@ Search.prototype = {
       return;
 
     // Must check both id and url, cause keywords dynamically modify the url.
-    let urlMapKey = makeKeyForURL(match.value);
+    let urlMapKey = makeKeyForURL(match);
     if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
         this._usedURLs.has(urlMapKey)) {
       return;
@@ -1705,9 +1712,16 @@ Search.prototype = {
     }
 
     match.value = this._strippedPrefix + trimmedHost;
-    // Remove the trailing slash.
-    match.comment = stripHttpAndTrim(trimmedHost);
     match.finalCompleteValue = untrimmedHost;
+
+    // The comment should be the user's final destination so that the user
+    // will definitely know where he is going to end up. For example, if the
+    // user is visiting a secure page, we'll leave the https on it, so that
+    // they know it'll be secure.
+    // We fallback to match.value, as that's what autocomplete does if
+    // finalCompleteValue is null.
+    match.comment = stripHttpAndTrim(match.finalCompleteValue || match.value);
+
     if (faviconUrl) {
       match.icon = PlacesUtils.favicons
                               .getFaviconLinkForIcon(NetUtil.newURI(faviconUrl)).spec;

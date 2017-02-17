@@ -25,11 +25,10 @@
 
 namespace mozilla {
 
-class GMPDecoderModule : public PlatformDecoderModule {
+class GMPDecoderModule : public PlatformDecoderModule
+{
 public:
   GMPDecoderModule();
-
-  virtual ~GMPDecoderModule();
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
@@ -48,6 +47,9 @@ public:
 
   static bool SupportsMimeType(const nsACString& aMimeType,
                                const Maybe<nsCString>& aGMP);
+
+private:
+  virtual ~GMPDecoderModule();
 };
 
 } // namespace mozilla

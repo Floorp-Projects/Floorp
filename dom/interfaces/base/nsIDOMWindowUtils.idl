@@ -962,8 +962,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void suppressEventHandling(in boolean aSuppress);
 
-  void clearMozAfterPaintEvents();
-
   /**
    * Disable or enable non synthetic test mouse events on *all* windows.
    *

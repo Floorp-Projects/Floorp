@@ -16,6 +16,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsSocketTransportService2.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
+
 namespace mozilla {
 namespace net {
 
@@ -50,15 +53,15 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
                           AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
     mLogData.AppendPrintf("   RestrictConnections = %d\n",
                           RestrictConnections(ent));
-    mLogData.AppendPrintf("   Pending Q Length = %u\n",
+    mLogData.AppendPrintf("   Pending Q Length = %" PRIuSIZE "\n",
                           ent->mPendingQ.Length());
-    mLogData.AppendPrintf("   Active Conns Length = %u\n",
+    mLogData.AppendPrintf("   Active Conns Length = %" PRIuSIZE "\n",
                           ent->mActiveConns.Length());
-    mLogData.AppendPrintf("   Idle Conns Length = %u\n",
+    mLogData.AppendPrintf("   Idle Conns Length = %" PRIuSIZE "\n",
                           ent->mIdleConns.Length());
-    mLogData.AppendPrintf("   Half Opens Length = %u\n",
+    mLogData.AppendPrintf("   Half Opens Length = %" PRIuSIZE "\n",
                           ent->mHalfOpens.Length());
-    mLogData.AppendPrintf("   Coalescing Keys Length = %u\n",
+    mLogData.AppendPrintf("   Coalescing Keys Length = %" PRIuSIZE "\n",
                           ent->mCoalescingKeys.Length());
     mLogData.AppendPrintf("   Spdy using = %d, preferred = %d\n",
                           ent->mUsingSpdy, ent->mInPreferredHash);
@@ -141,7 +144,7 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("    time since last read = %ums\n",
                    PR_IntervalToMilliseconds(now - mLastReadTime));
 
-  log.AppendPrintf("    max-read/read/written %lld/%lld/%lld\n",
+  log.AppendPrintf("    max-read/read/written %" PRId64 "/%" PRId64 "/%" PRId64 "\n",
                    mMaxBytesRead, mTotalBytesRead, mTotalBytesWritten);
 
   log.AppendPrintf("    rtt = %ums\n", PR_IntervalToMilliseconds(mRtt));
@@ -173,7 +176,7 @@ Http2Session::PrintDiagnostics(nsCString &log)
                    mStreamTransactionHash.Count(),
                    mStreamIDHash.Count());
 
-  log.AppendPrintf("     Queued Stream Size = %d\n", mQueuedStreams.GetSize());
+  log.AppendPrintf("     Queued Stream Size = %" PRIuSIZE "\n", mQueuedStreams.GetSize());
 
   PRIntervalTime now = PR_IntervalNow();
   log.AppendPrintf("     Ping Threshold = %ums\n",

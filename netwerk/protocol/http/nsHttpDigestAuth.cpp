@@ -223,7 +223,8 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
                       &stale, &algorithm, &qop);
   if (NS_FAILED(rv)) {
-    LOG(("nsHttpDigestAuth::GenerateCredentials [ParseChallenge failed rv=%x]\n", rv));
+    LOG(("nsHttpDigestAuth::GenerateCredentials [ParseChallenge failed rv=%" PRIx32 "]\n",
+         static_cast<uint32_t>(rv)));
     return rv;
   }
 

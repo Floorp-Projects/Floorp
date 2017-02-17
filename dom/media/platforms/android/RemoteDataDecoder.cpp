@@ -2,32 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AndroidDecoderModule.h"
 #include "AndroidBridge.h"
+#include "AndroidDecoderModule.h"
 #include "AndroidSurfaceTexture.h"
+#include "DurationMap.h"
 #include "FennecJNINatives.h"
 #include "GLImages.h"
-
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "VideoUtils.h"
 #include "VPXDecoder.h"
-
+#include "VideoUtils.h"
 #include "mozilla/Mutex.h"
-#include "nsThreadUtils.h"
-#include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
-
+#include "nsPromiseFlatString.h"
+#include "nsThreadUtils.h"
 #include "prlog.h"
-
-#include "DurationMap.h"
 #include <jni.h>
 
-
 #undef LOG
-#define LOG(arg, ...) MOZ_LOG(sAndroidDecoderModuleLog, \
-    mozilla::LogLevel::Debug, ("RemoteDataDecoder(%p)::%s: " arg, \
-      this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...)                                                          \
+  MOZ_LOG(sAndroidDecoderModuleLog,                                            \
+          mozilla::LogLevel::Debug,                                            \
+          ("RemoteDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -152,8 +148,8 @@ public:
 
     void HandleOutput(Sample::Param aSample) override
     {
-      UniquePtr<VideoData::Listener>
-        releaseSample(new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
+      UniquePtr<VideoData::Listener> releaseSample(
+        new RenderOrReleaseOutput(mDecoder->mJavaDecoder, aSample));
 
       BufferInfo::LocalRef info = aSample->Info();
 
@@ -177,7 +173,8 @@ public:
 
       bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
       int64_t durationUs = 0;
-      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs) && !isEOS) {
+      if (!mDecoder->mInputDurations.Find(presentationTimeUs, durationUs)
+          && !isEOS) {
         return;
       }
 
@@ -434,33 +431,44 @@ private:
 };
 
 already_AddRefed<MediaDataDecoder>
-RemoteDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
-                                      MediaFormat::Param aFormat,
+RemoteDataDecoder::CreateAudioDecoder(const CreateDecoderParams& aParams,
                                       const nsString& aDrmStubId,
-                                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
+                                      CDMProxy* aProxy)
 {
-  RefPtr<MediaDataDecoder> decoder;
-  if (!aProxy) {
-    decoder = new RemoteAudioDecoder(aConfig, aFormat, aDrmStubId, aTaskQueue);
-  } else {
-    // TODO in bug 1334061.
+  const AudioInfo& config = aParams.AudioConfig();
+  MediaFormat::LocalRef format;
+  NS_ENSURE_SUCCESS(
+    MediaFormat::CreateAudioFormat(
+      config.mMimeType, config.mRate, config.mChannels, &format),
+    nullptr);
+
+  RefPtr<MediaDataDecoder> decoder =
+    new RemoteAudioDecoder(config, format, aDrmStubId, aParams.mTaskQueue);
+  if (aProxy) {
+    decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-RemoteDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
-                                      MediaFormat::Param aFormat,
-                                      layers::ImageContainer* aImageContainer,
+RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
                                       const nsString& aDrmStubId,
-                                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
+                                      CDMProxy* aProxy)
 {
-  RefPtr<MediaDataDecoder> decoder;
-  if (!aProxy) {
-    decoder = new RemoteVideoDecoder(aConfig, aFormat, aImageContainer,
-                                     aDrmStubId, aTaskQueue);
-  } else {
-    // TODO in bug 1334061.
+
+  const VideoInfo& config = aParams.VideoConfig();
+  MediaFormat::LocalRef format;
+  NS_ENSURE_SUCCESS(
+    MediaFormat::CreateVideoFormat(TranslateMimeType(config.mMimeType),
+                                   config.mDisplay.width,
+                                   config.mDisplay.height,
+                                   &format),
+    nullptr);
+
+  RefPtr<MediaDataDecoder> decoder = new RemoteVideoDecoder(
+    config, format, aParams.mImageContainer, aDrmStubId, aParams.mTaskQueue);
+  if (aProxy) {
+    decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }
   return decoder.forget();
 }

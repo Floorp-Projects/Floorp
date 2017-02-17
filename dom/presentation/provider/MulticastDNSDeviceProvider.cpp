@@ -7,9 +7,11 @@
 
 #include "DeviceProviderHelpers.h"
 #include "MainThreadUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
@@ -349,7 +351,8 @@ MulticastDNSDeviceProvider::RegisterMDNSService()
 nsresult
 MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason)
 {
-  LOG_I("UnregisterMDNSService: %s (0x%08x)", mServiceName.get(), aReason);
+  LOG_I("UnregisterMDNSService: %s (0x%08" PRIx32 ")", mServiceName.get(),
+        static_cast<uint32_t>(aReason));
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mRegisterRequest) {
@@ -363,7 +366,7 @@ MulticastDNSDeviceProvider::UnregisterMDNSService(nsresult aReason)
 nsresult
 MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason)
 {
-  LOG_I("StopDiscovery (0x%08x)", aReason);
+  LOG_I("StopDiscovery (0x%08" PRIx32 ")", static_cast<uint32_t>(aReason));
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDiscoveryTimer);
@@ -960,7 +963,7 @@ MulticastDNSDeviceProvider::OnServerReady(uint16_t aPort,
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::OnServerStopped(nsresult aResult)
 {
-  LOG_I("OnServerStopped: (0x%08x)", aResult);
+  LOG_I("OnServerStopped: (0x%08" PRIx32 ")", static_cast<uint32_t>(aResult));
 
   UnregisterMDNSService(aResult);
 

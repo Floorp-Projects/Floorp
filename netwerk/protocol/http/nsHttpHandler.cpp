@@ -28,7 +28,7 @@
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
-#include "prprf.h"
+#include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsSocketTransportService2.h"
@@ -626,7 +626,7 @@ nsHttpHandler::Get32BitsOfPseudoRandom()
 void
 nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
 {
-    LOG(("nsHttpHandler::NotifyObservers [chan=%x event=\"%s\"]\n", chan, event));
+    LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     if (obsService)
         obsService->NotifyObservers(chan, event, nullptr);
@@ -879,12 +879,12 @@ nsHttpHandler::InitUserAgentComponents()
           ? WNT_BASE "; WOW64"
           : WNT_BASE;
 #endif
-        char *buf = PR_smprintf(format,
-                                info.dwMajorVersion,
-                                info.dwMinorVersion);
+        char *buf = mozilla::Smprintf(format,
+                               info.dwMajorVersion,
+                               info.dwMinorVersion);
         if (buf) {
             mOscpu = buf;
-            PR_smprintf_free(buf);
+            mozilla::SmprintfFree(buf);
         }
     }
 #elif defined (XP_MACOSX)
@@ -895,7 +895,8 @@ nsHttpHandler::InitUserAgentComponents()
 #endif
     SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
     SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();
-    mOscpu += nsPrintfCString(" %d.%d", majorVersion, minorVersion);
+    mOscpu += nsPrintfCString(" %d.%d", static_cast<int>(majorVersion),
+                              static_cast<int>(minorVersion));
 #elif defined (XP_UNIX)
     struct utsname name;
 

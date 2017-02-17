@@ -235,8 +235,7 @@ void
 WebGLQuery::QueryCounter(const char* funcName, GLenum target)
 {
     if (target != LOCAL_GL_TIMESTAMP_EXT) {
-        mContext->ErrorInvalidEnum("%s: `target` must be TIMESTAMP_EXT.", funcName,
-                                   target);
+        mContext->ErrorInvalidEnum("%s: `target` must be TIMESTAMP_EXT.", funcName);
         return;
     }
 

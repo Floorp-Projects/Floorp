@@ -7,6 +7,7 @@
 #include "FlacDemuxer.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mp4_demuxer/BitReader.h"
 #include "nsAutoPtr.h"
 #include "prenv.h"
@@ -738,7 +739,7 @@ FlacTrackDemuxer::Seek(const TimeUnit& aTime)
 TimeUnit
 FlacTrackDemuxer::FastSeek(const TimeUnit& aTime)
 {
-  LOG("FastSeek(%f) avgFrameLen=%f mParsedFramesDuration=%f offset=%lld",
+  LOG("FastSeek(%f) avgFrameLen=%f mParsedFramesDuration=%f offset=%" PRId64,
       aTime.ToSeconds(), AverageFrameLength(),
       mParsedFramesDuration.ToSeconds(), GetResourceOffset());
 
@@ -785,7 +786,7 @@ FlacTrackDemuxer::FastSeek(const TimeUnit& aTime)
     }
     timeSeekedTo = frame.Time();
 
-    LOGV("FastSeek: interation:%u found:%f @ %lld",
+    LOGV("FastSeek: interation:%u found:%f @ %" PRId64,
          iterations, timeSeekedTo.ToSeconds(), frame.Offset());
 
     if (lastFoundOffset && lastFoundOffset.ref() == frame.Offset()) {
@@ -822,7 +823,7 @@ FlacTrackDemuxer::FastSeek(const TimeUnit& aTime)
 TimeUnit
 FlacTrackDemuxer::ScanUntil(const TimeUnit& aTime)
 {
-  LOG("ScanUntil(%f avgFrameLen=%f mParsedFramesDuration=%f offset=%lld",
+  LOG("ScanUntil(%f avgFrameLen=%f mParsedFramesDuration=%f offset=%" PRId64,
       aTime.ToSeconds(), AverageFrameLength(),
       mParsedFramesDuration.ToSeconds(), mParser->CurrentFrame().Offset());
 
@@ -852,8 +853,8 @@ FlacTrackDemuxer::ScanUntil(const TimeUnit& aTime)
 RefPtr<FlacTrackDemuxer::SamplesPromise>
 FlacTrackDemuxer::GetSamples(int32_t aNumSamples)
 {
-  LOGV("GetSamples(%d) Begin offset=%lld mParsedFramesDuration=%f"
-       " mTotalFrameLen=%llu",
+  LOGV("GetSamples(%d) Begin offset=%" PRId64 " mParsedFramesDuration=%f"
+       " mTotalFrameLen=%" PRIu64,
        aNumSamples, GetResourceOffset(), mParsedFramesDuration.ToSeconds(),
        mTotalFrameLen);
 
@@ -872,8 +873,8 @@ FlacTrackDemuxer::GetSamples(int32_t aNumSamples)
     frames->mSamples.AppendElement(frame);
   }
 
-  LOGV("GetSamples() End mSamples.Length=%u aNumSamples=%d offset=%lld"
-       " mParsedFramesDuration=%f mTotalFrameLen=%llu",
+  LOGV("GetSamples() End mSamples.Length=%" PRIuSIZE " aNumSamples=%d offset=%" PRId64
+       " mParsedFramesDuration=%f mTotalFrameLen=%" PRIu64,
        frames->mSamples.Length(), aNumSamples, GetResourceOffset(),
        mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
 
@@ -930,8 +931,8 @@ FlacTrackDemuxer::GetBuffered()
 const flac::Frame&
 FlacTrackDemuxer::FindNextFrame()
 {
-  LOGV("FindNext() Begin offset=%lld mParsedFramesDuration=%f"
-       " mTotalFrameLen=%llu",
+  LOGV("FindNext() Begin offset=%" PRId64 " mParsedFramesDuration=%f"
+       " mTotalFrameLen=%" PRIu64,
        GetResourceOffset(), mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
 
   if (mParser->FindNextFrame(mSource)) {
@@ -946,8 +947,8 @@ FlacTrackDemuxer::FindNextFrame()
                          - mParser->FirstFrame().Offset()
                          + mParser->CurrentFrame().Size());
 
-    LOGV("FindNext() End time=%f offset=%lld mParsedFramesDuration=%f"
-         " mTotalFrameLen=%llu",
+    LOGV("FindNext() End time=%f offset=%" PRId64 " mParsedFramesDuration=%f"
+         " mTotalFrameLen=%" PRIu64,
          mParser->CurrentFrame().Time().ToSeconds(), GetResourceOffset(),
          mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
   }
@@ -963,7 +964,7 @@ FlacTrackDemuxer::GetNextFrame(const flac::Frame& aFrame)
     return nullptr;
   }
 
-  LOG("GetNextFrame() Begin(time=%f offset=%lld size=%u)",
+  LOG("GetNextFrame() Begin(time=%f offset=%" PRId64 " size=%u)",
       aFrame.Time().ToSeconds(), aFrame.Offset(), aFrame.Size());
 
   const int64_t offset = aFrame.Offset();
@@ -980,7 +981,7 @@ FlacTrackDemuxer::GetNextFrame(const flac::Frame& aFrame)
 
   const uint32_t read = Read(frameWriter->Data(), offset, size);
   if (read != size) {
-    LOG("GetNextFrame() Exit read=%u frame->Size=%u", read, frame->Size());
+    LOG("GetNextFrame() Exit read=%u frame->Size=%" PRIuSIZE, read, frame->Size());
     return nullptr;
   }
 

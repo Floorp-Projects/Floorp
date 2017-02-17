@@ -229,7 +229,7 @@ nsHttpResponseHead::SetContentLength(int64_t len)
         mHeaders.ClearHeader(nsHttp::Content_Length);
     else
         mHeaders.SetHeader(nsHttp::Content_Length,
-                           nsPrintfCString("%lld", len),
+                           nsPrintfCString("%" PRId64, len),
                            false,
                            nsHttpHeaderArray::eVarietyResponse);
 }

@@ -21,6 +21,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Telemetry.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID,
@@ -773,7 +774,7 @@ _OldCacheLoad::Run()
     }
 
     // Opening failed, propagate the error to the consumer
-    LOG(("  Opening cache entry failed with rv=0x%08x", rv));
+    LOG(("  Opening cache entry failed with rv=0x%08" PRIx32, static_cast<uint32_t>(rv)));
     mStatus = rv;
     mNew = false;
     NS_DispatchToMainThread(this);
@@ -812,7 +813,8 @@ _OldCacheLoad::Run()
     rv = cb->OnCacheEntryAvailable(entry, mNew, mAppCache, mStatus);
 
     if (NS_FAILED(rv) && entry) {
-      LOG(("  cb->OnCacheEntryAvailable failed with rv=0x%08x", rv));
+      LOG(("  cb->OnCacheEntryAvailable failed with rv=0x%08" PRIx32,
+           static_cast<uint32_t>(rv)));
       if (mNew)
         entry->AsyncDoom(nullptr);
       else
@@ -862,8 +864,10 @@ _OldCacheLoad::Check()
 
   uint32_t result;
   nsresult rv = mCallback->OnCacheEntryCheck(mCacheEntry, mAppCache, &result);
-  LOG(("  OnCacheEntryCheck result ent=%p, cb=%p, appcache=%p, rv=0x%08x, result=%d",
-    mCacheEntry.get(), mCallback.get(), mAppCache.get(), rv, result));
+  LOG(("  OnCacheEntryCheck result ent=%p, cb=%p, appcache=%p, rv=0x%08"
+       PRIx32 ", result=%d",
+      mCacheEntry.get(), mCallback.get(), mAppCache.get(), static_cast<uint32_t>(rv),
+      result));
 
   if (NS_FAILED(rv)) {
     NS_WARNING("cache check failed");

@@ -622,8 +622,6 @@ pref("media.decoder.recycle.enabled", true);
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.android-media-codec.enabled", true);
 pref("media.android-media-codec.preferred", true);
-// Run decoder in seperate process.
-pref("media.android-remote-codec.enabled", true);
 
 // Enable MSE
 pref("media.mediasource.enabled", true);

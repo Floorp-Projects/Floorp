@@ -7,6 +7,7 @@
 
 #include "imgIRequest.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "nsCURILoader.h"
 #include "nsIAssociatedContentSecurity.h"
@@ -297,8 +298,8 @@ static uint32_t GetSecurityStateFromSecurityInfoAndRequest(nsISupports* info,
   
   res = psmInfo->GetSecurityState(&securityState);
   if (NS_FAILED(res)) {
-    MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - GetSecurityState failed: %d\n",
-                                         res));
+    MOZ_LOG(gSecureDocLog, LogLevel::Debug, ("SecureUI: GetSecurityState: - GetSecurityState failed: %" PRIu32 "\n",
+                                             static_cast<uint32_t>(res)));
     securityState = nsIWebProgressListener::STATE_IS_BROKEN;
   }
 

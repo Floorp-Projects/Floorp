@@ -10,6 +10,7 @@
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "nsPrintfCString.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
@@ -599,7 +600,7 @@ WebGLProgram::GetActiveAttrib(GLuint index) const
     const auto& attribs = mMostRecentLinkInfo->attribs;
 
     if (index >= attribs.size()) {
-        mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%i).",
+        mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%" PRIuSIZE ").",
                                     index, "ACTIVE_ATTRIBS", attribs.size());
         return nullptr;
     }
@@ -620,7 +621,7 @@ WebGLProgram::GetActiveUniform(GLuint index) const
     const auto& uniforms = mMostRecentLinkInfo->uniforms;
 
     if (index >= uniforms.size()) {
-        mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%i).",
+        mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%" PRIuSIZE ").",
                                     index, "ACTIVE_UNIFORMS", uniforms.size());
         return nullptr;
     }

@@ -225,6 +225,8 @@ public:
      mTransactionIdAllocator = aAllocator;
   }
 
+  virtual uint64_t GetLastTransactionId() override { return mLatestTransactionId; }
+
   float RequestProperty(const nsAString& aProperty) override;
 
   bool AsyncPanZoomEnabled() const override;

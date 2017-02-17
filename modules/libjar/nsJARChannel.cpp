@@ -21,6 +21,7 @@
 #include "nsIPrincipal.h"
 #include "nsIFileURL.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsITabChild.h"
@@ -325,7 +326,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
 nsresult
 nsJARChannel::LookupFile(bool aAllowAsync)
 {
-    LOG(("nsJARChannel::LookupFile [this=%x %s]\n", this, mSpec.get()));
+    LOG(("nsJARChannel::LookupFile [this=%p %s]\n", this, mSpec.get()));
 
     if (mJarFile)
         return NS_OK;
@@ -707,7 +708,7 @@ nsJARChannel::SetContentLength(int64_t aContentLength)
 NS_IMETHODIMP
 nsJARChannel::Open(nsIInputStream **stream)
 {
-    LOG(("nsJARChannel::Open [this=%x]\n", this));
+    LOG(("nsJARChannel::Open [this=%p]\n", this));
 
     NS_ENSURE_TRUE(!mOpened, NS_ERROR_IN_PROGRESS);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
@@ -756,7 +757,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
                 nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
                "security flags in loadInfo but asyncOpen2() not called");
 
-    LOG(("nsJARChannel::AsyncOpen [this=%x]\n", this));
+    LOG(("nsJARChannel::AsyncOpen [this=%p]\n", this));
 
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mOpened, NS_ERROR_IN_PROGRESS);
@@ -1016,7 +1017,7 @@ nsJARChannel::OnDownloadComplete(MemoryDownloader* aDownloader,
 NS_IMETHODIMP
 nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 {
-    LOG(("nsJARChannel::OnStartRequest [this=%x %s]\n", this, mSpec.get()));
+    LOG(("nsJARChannel::OnStartRequest [this=%p %s]\n", this, mSpec.get()));
 
     mRequest = req;
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
@@ -1028,8 +1029,8 @@ nsJARChannel::OnStartRequest(nsIRequest *req, nsISupports *ctx)
 NS_IMETHODIMP
 nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 {
-    LOG(("nsJARChannel::OnStopRequest [this=%x %s status=%x]\n",
-        this, mSpec.get(), status));
+    LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n",
+         this, mSpec.get(), static_cast<uint32_t>(status)));
 
     if (NS_SUCCEEDED(mStatus))
         mStatus = status;
@@ -1064,7 +1065,7 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                                nsIInputStream *stream,
                                uint64_t offset, uint32_t count)
 {
-    LOG(("nsJARChannel::OnDataAvailable [this=%x %s]\n", this, mSpec.get()));
+    LOG(("nsJARChannel::OnDataAvailable [this=%p %s]\n", this, mSpec.get()));
 
     nsresult rv;
 

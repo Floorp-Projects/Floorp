@@ -184,11 +184,13 @@ ServerBSO.prototype = {
     try {
       parsed = JSON.parse(input);
     } catch (ex) {
-      return sendMozSvcError(request, response, "8");
+      sendMozSvcError(request, response, "8");
+      return;
     }
 
     if (typeof(parsed) != "object") {
-      return sendMozSvcError(request, response, "8");
+      sendMozSvcError(request, response, "8");
+      return;
     }
 
     // Don't update if a conditional request fails preconditions.
@@ -216,7 +218,7 @@ ServerBSO.prototype = {
         case "payload":
           if (typeof(value) != "string") {
             sendMozSvcError(request, response, "8");
-            return true;
+            return;
           }
 
           this.payload = value;
@@ -225,7 +227,7 @@ ServerBSO.prototype = {
         case "ttl":
           if (!isInteger(value)) {
             sendMozSvcError(request, response, "8");
-            return true;
+            return;
           }
           this.ttl = parseInt(value, 10);
           break;
@@ -233,7 +235,7 @@ ServerBSO.prototype = {
         case "sortindex":
           if (!isInteger(value) || value.length > 9) {
             sendMozSvcError(request, response, "8");
-            return true;
+            return;
           }
           this.sortindex = parseInt(value, 10);
           break;
@@ -244,7 +246,7 @@ ServerBSO.prototype = {
         default:
           this._log.warn("Unexpected field in BSO record: " + key);
           sendMozSvcError(request, response, "8");
-          return true;
+          return;
       }
     }
 
@@ -750,7 +752,8 @@ StorageServerCollection.prototype = {
 
       if (!Array.isArray(input)) {
         this._log.info("Input JSON type not an array!");
-        return sendMozSvcError(request, response, "8");
+        sendMozSvcError(request, response, "8");
+        return;
       }
     } else if (inputMediaType == "application/newlines") {
       for (let line of inputBody.split("\n")) {
@@ -759,7 +762,8 @@ StorageServerCollection.prototype = {
           record = JSON.parse(line);
         } catch (ex) {
           this._log.info("JSON parse error on line!");
-          return sendMozSvcError(request, response, "8");
+          sendMozSvcError(request, response, "8");
+          return;
         }
 
         input.push(record);
@@ -805,13 +809,16 @@ StorageServerCollection.prototype = {
     return function(request, response) {
       switch (request.method) {
         case "GET":
-          return self.getHandler(request, response);
+          self.getHandler(request, response);
+          return;
 
         case "POST":
-          return self.postHandler(request, response);
+          self.postHandler(request, response);
+          return;
 
         case "DELETE":
-          return self.deleteHandler(request, response);
+          self.deleteHandler(request, response);
+          return;
 
       }
 
@@ -1388,7 +1395,8 @@ StorageServer.prototype = {
     if (first in this.toplevelHandlers) {
       let handler = this.toplevelHandlers[first];
       try {
-        return handler.call(this, handler, req, resp, version, username, rest);
+        handler.call(this, handler, req, resp, version, username, rest);
+        return;
       } catch (ex) {
         this._log.warn("Got exception during request", ex);
         throw ex;
@@ -1439,7 +1447,8 @@ StorageServer.prototype = {
 
           // No BSO URL parameter goes to collection handler.
           if (!bsoID) {
-            return coll.collectionHandler(req, resp);
+            coll.collectionHandler(req, resp);
+            return;
           }
 
           // Handle non-existent BSO.
@@ -1450,7 +1459,8 @@ StorageServer.prototype = {
           }
 
           // Proxy to BSO handler.
-          return bso.getHandler(req, resp);
+          bso.getHandler(req, resp);
+          return;
 
         case "DELETE":
           // Collection doesn't exist.
@@ -1534,17 +1544,19 @@ StorageServer.prototype = {
                 try {
                   bso = coll.insert(bsoID);
                 } catch (ex) {
-                  return sendMozSvcError(req, resp, "8");
+                  sendMozSvcError(req, resp, "8");
+                  return;
                 }
               }
 
               bso.putHandler(req, resp);
 
               coll.timestamp = req.timestamp;
-              return resp;
+              return;
             }
 
-            return coll.collectionHandler(req, resp);
+            coll.collectionHandler(req, resp);
+            return;
           } catch (ex) {
             if (ex instanceof HttpError) {
               if (!collectionExisted) {
@@ -1563,16 +1575,20 @@ StorageServer.prototype = {
     "info": function handleInfo(handler, req, resp, version, username, rest) {
       switch (rest) {
         case "collections":
-          return this.handleInfoCollections(req, resp, username);
+          this.handleInfoCollections(req, resp, username);
+          return;
 
         case "collection_counts":
-          return this.handleInfoCounts(req, resp, username);
+          this.handleInfoCounts(req, resp, username);
+          return;
 
         case "collection_usage":
-          return this.handleInfoUsage(req, resp, username);
+          this.handleInfoUsage(req, resp, username);
+          return;
 
         case "quota":
-          return this.handleInfoQuota(req, resp, username);
+          this.handleInfoQuota(req, resp, username);
+          return;
 
         default:
           this._log.warn("StorageServer: Unknown info operation " + rest);

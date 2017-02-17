@@ -358,7 +358,7 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  CMLOG("Received bytes [%lld] to [%lld] of [%lld] for decoder[%p]",
+  CMLOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64 "] for decoder[%p]",
         aRangeStart, aRangeEnd, aRangeTotal, mCallback.get());
 
   return NS_OK;
@@ -440,7 +440,7 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
   closure->mResource->mCallback->NotifyDataArrived();
 
   // Keep track of where we're up to.
-  RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
+  RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%" PRId64 "] add "
                "[%d] bytes for decoder[%p]",
                closure->mResource, closure->mResource->mOffset, aCount,
                closure->mResource->mCallback.get());
@@ -896,7 +896,7 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  CMLOG("CacheClientSeek requested for aOffset [%lld] for decoder [%p]",
+  CMLOG("CacheClientSeek requested for aOffset [%" PRId64 "] for decoder [%p]",
         aOffset, mCallback.get());
 
   CloseChannel();

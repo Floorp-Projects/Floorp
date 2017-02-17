@@ -110,22 +110,6 @@ enum nsLayoutPhase {
 };
 #endif
 
-class nsInvalidateRequestList {
-public:
-  struct Request {
-    nsRect   mRect;
-    uint32_t mFlags;
-  };
-
-  void TakeFrom(nsInvalidateRequestList* aList)
-  {
-    mRequests.AppendElements(mozilla::Move(aList->mRequests));
-  }
-  bool IsEmpty() { return mRequests.IsEmpty(); }
-
-  nsTArray<Request> mRequests;
-};
-
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
@@ -971,14 +955,16 @@ public:
   // and, if necessary, synchronously rebuilding all style data.
   void EnsureSafeToHandOutCSSRules();
 
-  void NotifyInvalidation(uint32_t aFlags);
-  void NotifyInvalidation(const nsRect& aRect, uint32_t aFlags);
+  // Mark an area as invalidated, associated with a given transaction id (allocated
+  // by nsRefreshDriver::GetTransactionId).
+  // Invalidated regions will be dispatched to MozAfterPaint events when
+  // NotifyDidPaintForSubtree is called for the transaction id (or any higher id).
+  void NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect);
   // aRect is in device pixels
-  void NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags);
-  // aFlags are nsIPresShell::PAINT_ flags
-  void NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId = 0,
+  void NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRect);
+  void NotifyDidPaintForSubtree(uint64_t aTransactionId = 0,
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
-  void FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId,
+  void FireDOMPaintEvent(nsTArray<nsRect>* aList, uint64_t aTransactionId,
                          mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   // Callback for catching invalidations in ContainerLayers
@@ -988,11 +974,6 @@ public:
   void SetNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
   static void ClearNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
   bool IsDOMPaintEventPending();
-  void ClearMozAfterPaintEvents() {
-    mInvalidateRequestsSinceLastPaint.mRequests.Clear();
-    mUndeliveredInvalidateRequestsBeforeLastPaint.mRequests.Clear();
-    mAllInvalidated = false;
-  }
 
   /**
    * Returns the RestyleManager's restyle generation counter.
@@ -1198,6 +1179,8 @@ protected:
 
   void UpdateCharSet(const nsCString& aCharSet);
 
+  static bool NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData);
+
 public:
   void DoChangeCharSet(const nsCString& aCharSet);
 
@@ -1309,8 +1292,11 @@ protected:
 
   FramePropertyTable    mPropertyTable;
 
-  nsInvalidateRequestList mInvalidateRequestsSinceLastPaint;
-  nsInvalidateRequestList mUndeliveredInvalidateRequestsBeforeLastPaint;
+  struct TransactionInvalidations {
+    uint64_t mTransactionId;
+    nsTArray<nsRect> mInvalidations;
+  };
+  AutoTArray<TransactionInvalidations, 4> mTransactions;
 
   // text performance metrics
   nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
@@ -1399,9 +1385,6 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mIsEmulatingMedia : 1;
-  // True if the requests in mInvalidateRequestsSinceLastPaint cover the
-  // entire viewport
-  unsigned              mAllInvalidated : 1;
 
   // Are we currently drawing an SVG glyph?
   unsigned              mIsGlyph : 1;
@@ -1490,15 +1473,18 @@ public:
    * Ensure that NotifyDidPaintForSubtree is eventually called on this
    * object after a timeout.
    */
-  void EnsureEventualDidPaintEvent();
+  void EnsureEventualDidPaintEvent(uint64_t aTransactionId);
 
-  void CancelDidPaintTimer()
-  {
-    if (mNotifyDidPaintTimer) {
-      mNotifyDidPaintTimer->Cancel();
-      mNotifyDidPaintTimer = nullptr;
-    }
-  }
+  /**
+   * Cancels any pending eventual did paint timer for transaction
+   * ids up to and including aTransactionId.
+   */
+  void CancelDidPaintTimers(uint64_t aTransactionId);
+
+  /**
+   * Cancel all pending eventual did paint timers.
+   */
+  void CancelAllDidPaintTimers();
 
   /**
    * Registers a plugin to receive geometry updates (position and clip
@@ -1603,7 +1589,12 @@ protected:
 
   friend class nsPresContext;
 
-  nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
+  struct NotifyDidPaintTimer {
+    uint64_t mTransactionId;
+    nsCOMPtr<nsITimer> mTimer;
+  };
+  AutoTArray<NotifyDidPaintTimer, 4> mNotifyDidPaintTimers;
+
   nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
   nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;

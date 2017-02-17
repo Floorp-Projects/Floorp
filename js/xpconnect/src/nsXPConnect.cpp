@@ -932,15 +932,15 @@ nsXPConnect::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt.get()));
+    XPC_LOG_ALWAYS(("nsXPConnect @ %p with mRefCnt = %" PRIuPTR, this, mRefCnt.get()));
     XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("gSelf @ %x", gSelf));
+        XPC_LOG_ALWAYS(("gSelf @ %p", gSelf));
         XPC_LOG_ALWAYS(("gOnceAliveNowDead is %d", (int)gOnceAliveNowDead));
         if (mContext) {
             if (depth)
                 mContext->DebugDump(depth);
             else
-                XPC_LOG_ALWAYS(("XPCJSContext @ %x", mContext));
+                XPC_LOG_ALWAYS(("XPCJSContext @ %p", mContext));
         } else
             XPC_LOG_ALWAYS(("mContext is null"));
         XPCWrappedNativeScope::DebugDumpAllScopes(depth);
@@ -982,7 +982,7 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int16_t depth)
         XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedJS..."));
         wjs->DebugDump(depth);
     } else {
-        XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %x", p));
+        XPC_LOG_ALWAYS(("*** Could not dump the nsISupports @ %p", p));
     }
 #endif
     return NS_OK;
