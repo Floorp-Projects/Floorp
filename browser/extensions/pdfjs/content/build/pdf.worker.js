@@ -88,7 +88,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__w_pdfjs_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 36);
+/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 35);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1732,8 +1732,8 @@ exports.isStream = isStream;
 
 var sharedUtil = __w_pdfjs_require__(0);
 var corePrimitives = __w_pdfjs_require__(1);
-var coreJbig2 = __w_pdfjs_require__(28);
-var coreJpg = __w_pdfjs_require__(29);
+var coreJbig2 = __w_pdfjs_require__(27);
+var coreJpg = __w_pdfjs_require__(28);
 var coreJpx = __w_pdfjs_require__(13);
 var Util = sharedUtil.Util;
 var error = sharedUtil.error;
@@ -12357,7 +12357,7 @@ exports.Parser = Parser;
 
 var sharedUtil = __w_pdfjs_require__(0);
 var corePrimitives = __w_pdfjs_require__(1);
-var corePsParser = __w_pdfjs_require__(34);
+var corePsParser = __w_pdfjs_require__(33);
 var error = sharedUtil.error;
 var info = sharedUtil.info;
 var isArray = sharedUtil.isArray;
@@ -18279,7 +18279,7 @@ exports.ArithmeticDecoder = ArithmeticDecoder;
 "use strict";
 
 var sharedUtil = __w_pdfjs_require__(0);
-var coreCharsets = __w_pdfjs_require__(22);
+var coreCharsets = __w_pdfjs_require__(21);
 var coreEncodings = __w_pdfjs_require__(4);
 var error = sharedUtil.error;
 var info = sharedUtil.info;
@@ -24768,15 +24768,15 @@ var sharedUtil = __w_pdfjs_require__(0);
 var corePrimitives = __w_pdfjs_require__(1);
 var coreStream = __w_pdfjs_require__(2);
 var coreParser = __w_pdfjs_require__(5);
-var coreImage = __w_pdfjs_require__(27);
+var coreImage = __w_pdfjs_require__(26);
 var coreColorSpace = __w_pdfjs_require__(3);
-var coreMurmurHash3 = __w_pdfjs_require__(31);
-var coreFonts = __w_pdfjs_require__(26);
+var coreMurmurHash3 = __w_pdfjs_require__(30);
+var coreFonts = __w_pdfjs_require__(25);
 var coreFunction = __w_pdfjs_require__(6);
-var corePattern = __w_pdfjs_require__(32);
-var coreCMap = __w_pdfjs_require__(23);
-var coreMetrics = __w_pdfjs_require__(30);
-var coreBidi = __w_pdfjs_require__(21);
+var corePattern = __w_pdfjs_require__(31);
+var coreCMap = __w_pdfjs_require__(22);
+var coreMetrics = __w_pdfjs_require__(29);
+var coreBidi = __w_pdfjs_require__(20);
 var coreEncodings = __w_pdfjs_require__(4);
 var coreStandardFonts = __w_pdfjs_require__(15);
 var coreUnicode = __w_pdfjs_require__(16);
@@ -33906,10 +33906,10 @@ exports.getUnicodeForGlyph = getUnicodeForGlyph;
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(module) {
+
 var sharedUtil = __w_pdfjs_require__(0);
 var corePrimitives = __w_pdfjs_require__(1);
-var corePdfManager = __w_pdfjs_require__(33);
+var corePdfManager = __w_pdfjs_require__(32);
 var UNSUPPORTED_FEATURES = sharedUtil.UNSUPPORTED_FEATURES;
 var InvalidPDFException = sharedUtil.InvalidPDFException;
 var MessageHandler = sharedUtil.MessageHandler;
@@ -34588,13 +34588,18 @@ function initializeWorker() {
  WorkerMessageHandler.setup(handler, self);
  handler.send('ready', null);
 }
-if (typeof window === 'undefined' && !(typeof module !== 'undefined' && module.require)) {
+function isNodeJS() {
+ if (typeof __pdfjsdev_webpack__ === 'undefined') {
+  return typeof process === 'object' && process + '' === '[object process]';
+ }
+ return false;
+}
+if (typeof window === 'undefined' && !isNodeJS()) {
  initializeWorker();
 }
 exports.setPDFNetworkStreamClass = setPDFNetworkStreamClass;
 exports.WorkerTask = WorkerTask;
 exports.WorkerMessageHandler = WorkerMessageHandler;
-/* WEBPACK VAR INJECTION */}.call(exports, __w_pdfjs_require__(19)(module)))
 
 /***/ }),
 /* 18 */
@@ -34614,34 +34619,6 @@ module.exports = g;
 
 /***/ }),
 /* 19 */
-/***/ (function(module, exports) {
-
-module.exports = function (module) {
- if (!module.webpackPolyfill) {
-  module.deprecate = function () {
-  };
-  module.paths = [];
-  if (!module.children)
-   module.children = [];
-  Object.defineProperty(module, "loaded", {
-   enumerable: true,
-   get: function () {
-    return module.l;
-   }
-  });
-  Object.defineProperty(module, "id", {
-   enumerable: true,
-   get: function () {
-    return module.i;
-   }
-  });
-  module.webpackPolyfill = 1;
- }
- return module;
-};
-
-/***/ }),
-/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -34667,6 +34644,7 @@ var Dict = corePrimitives.Dict;
 var isDict = corePrimitives.isDict;
 var isName = corePrimitives.isName;
 var isRef = corePrimitives.isRef;
+var isStream = corePrimitives.isStream;
 var Stream = coreStream.Stream;
 var ColorSpace = coreColorSpace.ColorSpace;
 var Catalog = coreObj.Catalog;
@@ -34760,30 +34738,13 @@ var Annotation = function AnnotationClosure() {
    rect[1] - minY * yRatio
   ];
  }
- function getDefaultAppearance(dict) {
-  var appearanceState = dict.get('AP');
-  if (!isDict(appearanceState)) {
-   return;
-  }
-  var appearance;
-  var appearances = appearanceState.get('N');
-  if (isDict(appearances)) {
-   var as = dict.get('AS');
-   if (as && appearances.has(as.name)) {
-    appearance = appearances.get(as.name);
-   }
-  } else {
-   appearance = appearances;
-  }
-  return appearance;
- }
  function Annotation(params) {
   var dict = params.dict;
   this.setFlags(dict.get('F'));
   this.setRectangle(dict.getArray('Rect'));
   this.setColor(dict.getArray('C'));
   this.setBorderStyle(dict);
-  this.appearance = getDefaultAppearance(dict);
+  this.setAppearance(dict);
   this.data = {};
   this.data.id = params.id;
   this.data.subtype = params.subtype;
@@ -34886,6 +34847,26 @@ var Annotation = function AnnotationClosure() {
    } else {
     this.borderStyle.setWidth(0);
    }
+  },
+  setAppearance: function Annotation_setAppearance(dict) {
+   this.appearance = null;
+   var appearanceStates = dict.get('AP');
+   if (!isDict(appearanceStates)) {
+    return;
+   }
+   var normalAppearanceState = appearanceStates.get('N');
+   if (isStream(normalAppearanceState)) {
+    this.appearance = normalAppearanceState;
+    return;
+   }
+   if (!isDict(normalAppearanceState)) {
+    return;
+   }
+   var as = dict.get('AS');
+   if (!isName(as) || !normalAppearanceState.has(as.name)) {
+    return;
+   }
+   this.appearance = normalAppearanceState.get(as.name);
   },
   _preparePopup: function Annotation_preparePopup(dict) {
    if (!dict.has('C')) {
@@ -35332,7 +35313,7 @@ exports.AnnotationBorderStyle = AnnotationBorderStyle;
 exports.AnnotationFactory = AnnotationFactory;
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -36085,7 +36066,7 @@ function bidi(str, startLevel, vertical) {
 exports.bidi = bidi;
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -36583,7 +36564,7 @@ exports.ExpertCharset = ExpertCharset;
 exports.ExpertSubsetCharset = ExpertSubsetCharset;
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -37488,7 +37469,7 @@ exports.CMapFactory = CMapFactory;
 exports.IdentityCMap = IdentityCMap;
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -37500,7 +37481,7 @@ var coreObj = __w_pdfjs_require__(14);
 var coreParser = __w_pdfjs_require__(5);
 var coreCrypto = __w_pdfjs_require__(11);
 var coreEvaluator = __w_pdfjs_require__(12);
-var coreAnnotation = __w_pdfjs_require__(20);
+var coreAnnotation = __w_pdfjs_require__(19);
 var MissingDataException = sharedUtil.MissingDataException;
 var Util = sharedUtil.Util;
 var assert = sharedUtil.assert;
@@ -37988,7 +37969,7 @@ exports.Page = Page;
 exports.PDFDocument = PDFDocument;
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -38774,7 +38755,7 @@ var FontRendererFactory = function FontRendererFactoryClosure() {
 exports.FontRendererFactory = FontRendererFactory;
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -38783,11 +38764,11 @@ var sharedUtil = __w_pdfjs_require__(0);
 var corePrimitives = __w_pdfjs_require__(1);
 var coreStream = __w_pdfjs_require__(2);
 var coreGlyphList = __w_pdfjs_require__(7);
-var coreFontRenderer = __w_pdfjs_require__(25);
+var coreFontRenderer = __w_pdfjs_require__(24);
 var coreEncodings = __w_pdfjs_require__(4);
 var coreStandardFonts = __w_pdfjs_require__(15);
 var coreUnicode = __w_pdfjs_require__(16);
-var coreType1Parser = __w_pdfjs_require__(35);
+var coreType1Parser = __w_pdfjs_require__(34);
 var coreCFFParser = __w_pdfjs_require__(9);
 var FONT_IDENTITY_MATRIX = sharedUtil.FONT_IDENTITY_MATRIX;
 var FontType = sharedUtil.FontType;
@@ -40003,7 +39984,7 @@ var Font = function FontClosure() {
       useTable = true;
      } else if (platformId === 1 && encodingId === 0) {
       useTable = true;
-     } else if (platformId === 3 && encodingId === 1 && (!isSymbolicFont && hasEncoding || !potentialTable)) {
+     } else if (platformId === 3 && encodingId === 1 && (hasEncoding || !potentialTable)) {
       useTable = true;
       if (!isSymbolicFont) {
        canBreak = true;
@@ -41740,7 +41721,7 @@ exports.ToUnicodeMap = ToUnicodeMap;
 exports.getFontType = getFontType;
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -42231,7 +42212,7 @@ var PDFImage = function PDFImageClosure() {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -43432,7 +43413,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
 exports.Jbig2Image = Jbig2Image;
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44349,7 +44330,7 @@ var JpegImage = function JpegImageClosure() {
 exports.JpegImage = JpegImage;
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -47297,7 +47278,7 @@ var getMetrics = getLookupTableFactory(function (t) {
 exports.getMetrics = getMetrics;
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -47418,7 +47399,7 @@ var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -48257,7 +48238,7 @@ exports.Pattern = Pattern;
 exports.getTilingPatternIR = getTilingPatternIR;
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -48265,7 +48246,7 @@ exports.getTilingPatternIR = getTilingPatternIR;
 var sharedUtil = __w_pdfjs_require__(0);
 var coreStream = __w_pdfjs_require__(2);
 var coreChunkedStream = __w_pdfjs_require__(10);
-var coreDocument = __w_pdfjs_require__(24);
+var coreDocument = __w_pdfjs_require__(23);
 var warn = sharedUtil.warn;
 var createValidAbsoluteUrl = sharedUtil.createValidAbsoluteUrl;
 var shadow = sharedUtil.shadow;
@@ -48443,7 +48424,7 @@ exports.LocalPdfManager = LocalPdfManager;
 exports.NetworkPdfManager = NetworkPdfManager;
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -48642,7 +48623,7 @@ exports.PostScriptLexer = PostScriptLexer;
 exports.PostScriptParser = PostScriptParser;
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -49188,13 +49169,13 @@ var Type1Parser = function Type1ParserClosure() {
 exports.Type1Parser = Type1Parser;
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
 
-var pdfjsVersion = '1.7.290';
-var pdfjsBuild = 'b509a3f8';
+var pdfjsVersion = '1.7.297';
+var pdfjsBuild = '425ad309';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
