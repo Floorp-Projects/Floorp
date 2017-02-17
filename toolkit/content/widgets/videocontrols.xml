@@ -160,7 +160,7 @@
                 <progress anonid="progressBar" class="progressBar" value="0" max="100" tabindex="-1"></progress>
               </div>
             </div>
-            <input type="range" anonid="scrubber" class="scrubber" tabindex="-1"/>
+            <input type="range" anonid="scrubber" class="scrubber" tabindex="-1" mozinputrangeignorepreventdefault="true" />
           </div>
           <span anonid="positionLabel" class="positionLabel" role="presentation"></span>
           <span anonid="durationLabel" class="durationLabel" role="presentation"></span>
@@ -174,7 +174,7 @@
                   unmutelabel="&muteButton.unmuteLabel;"
                   tabindex="-1"/>
           <div anonid="volumeStack" class="volumeStack progressContainer" role="none">
-            <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1"/>
+            <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1" mozinputrangeignorepreventdefault="true" />
           </div>
           <button anonid="closedCaptionButton" class="closedCaptionButton"/>
           <button anonid="fullscreenButton"
