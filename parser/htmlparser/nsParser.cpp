@@ -1358,7 +1358,7 @@ ParserWriteFunc(nsIInputStream* in,
 
   }
 
-  result = pws->mScanner->Append(fromRawSegment, theNumRead, pws->mRequest);
+  result = pws->mScanner->Append(fromRawSegment, theNumRead);
   if (NS_SUCCEEDED(result)) {
     *writeCount = count;
   }
@@ -1420,10 +1420,7 @@ nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
       return rv;
     }
 
-    // Don't bother to start parsing until we've seen some
-    // non-whitespace data
-    if (IsOkToProcessNetworkData() &&
-        theContext->mScanner->FirstNonWhitespacePosition() >= 0) {
+    if (IsOkToProcessNetworkData()) {
       nsCOMPtr<nsIParser> kungFuDeathGrip(this);
       nsCOMPtr<nsIContentSink> sinkDeathGrip(mSink);
       mProcessingNetworkData = true;
