@@ -1483,7 +1483,7 @@ nsHostResolver::ThreadFunc(void *arg)
                 uint32_t millis = static_cast<uint32_t>(elapsed.ToMilliseconds());
 
                 if (NS_SUCCEEDED(status)) {
-                    Telemetry::ID histogramID;
+                    Telemetry::HistogramID histogramID;
                     if (!rec->addr_info_gencnt) {
                         // Time for initial lookup.
                         histogramID = Telemetry::DNS_LOOKUP_TIME;

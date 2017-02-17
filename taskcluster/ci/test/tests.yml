@@ -934,8 +934,8 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: []
-            linux64-stylo/debug: []
+            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central' ]
+            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central' ]
     e10s:
         by-test-platform:
             linux64-stylo/opt:

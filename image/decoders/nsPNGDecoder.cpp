@@ -1054,7 +1054,7 @@ nsPNGDecoder::warning_callback(png_structp png_ptr, png_const_charp warning_msg)
   MOZ_LOG(sPNGLog, LogLevel::Warning, ("libpng warning: %s\n", warning_msg));
 }
 
-Maybe<Telemetry::ID>
+Maybe<Telemetry::HistogramID>
 nsPNGDecoder::SpeedHistogram() const
 {
   return Some(Telemetry::IMAGE_DECODE_SPEED_PNG);

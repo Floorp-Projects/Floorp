@@ -39,6 +39,9 @@ const NOT_REMOTE = null;
 const WEB_REMOTE_TYPE = "web";
 const FILE_REMOTE_TYPE = "file";
 const EXTENSION_REMOTE_TYPE = "extension";
+
+// This must start with the WEB_REMOTE_TYPE above.
+const LARGE_ALLOCATION_REMOTE_TYPE = "webLargeAllocation";
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
 
 function validatedWebRemoteType(aPreferredRemoteType) {
@@ -52,6 +55,7 @@ this.E10SUtils = {
   WEB_REMOTE_TYPE,
   FILE_REMOTE_TYPE,
   EXTENSION_REMOTE_TYPE,
+  LARGE_ALLOCATION_REMOTE_TYPE,
 
   canLoadURIInProcess(aURL, aProcess) {
     let remoteType = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
@@ -60,9 +64,14 @@ this.E10SUtils = {
   },
 
   getRemoteTypeForURI(aURL, aMultiProcess,
-                      aPreferredRemoteType = DEFAULT_REMOTE_TYPE) {
+                      aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
+                      aLargeAllocation = false) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
+    }
+
+    if (aLargeAllocation) {
+      return LARGE_ALLOCATION_REMOTE_TYPE;
     }
 
     // loadURI in browser.xml treats null as about:blank
@@ -179,7 +188,7 @@ this.E10SUtils = {
     // If we are in a Large-Allocation process, and it wouldn't be content visible
     // to change processes, we want to load into a new process so that we can throw
     // this one out.
-    if (aDocShell.inLargeAllocProcess &&
+    if (Services.appinfo.remoteType == LARGE_ALLOCATION_REMOTE_TYPE &&
         !aDocShell.awaitingLargeAlloc &&
         aDocShell.isOnlyToplevelInTabGroup) {
       return false;

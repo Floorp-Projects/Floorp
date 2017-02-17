@@ -108,7 +108,7 @@ public:
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
-    MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+    MOZ_ASSERT(CheckDocTree());
     if (!mShutdown)
       Destroy();
   }
@@ -172,7 +172,8 @@ public:
     { return LiveDocs().Get(mChildDocs[aIdx]); }
 
 #if defined(XP_WIN)
-  void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
+  void MaybeInitWindowEmulation();
+  void SendParentCOMProxy();
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
       const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;

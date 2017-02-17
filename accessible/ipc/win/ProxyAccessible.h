@@ -39,14 +39,13 @@ public:
 #include "mozilla/a11y/ProxyAccessibleShared.h"
 
   bool GetCOMInterface(void** aOutAccessible) const;
+  void SetCOMInterface(const RefPtr<IAccessible>& aIAccessible)
+  { mCOMProxy = aIAccessible; }
 
 protected:
   explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc)
     : ProxyAccessibleBase(aThisAsDoc)
   { MOZ_COUNT_CTOR(ProxyAccessible); }
-
-  void SetCOMInterface(const RefPtr<IAccessible>& aIAccessible)
-  { mCOMProxy = aIAccessible; }
 
 private:
   RefPtr<IAccessible> mCOMProxy;

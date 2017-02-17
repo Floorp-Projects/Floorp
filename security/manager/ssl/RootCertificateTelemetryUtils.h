@@ -22,7 +22,7 @@ int32_t
 RootCABinNumber(const SECItem* cert);
 
 void
-AccumulateTelemetryForRootCA(mozilla::Telemetry::ID probe, const CERTCertificate* cert);
+AccumulateTelemetryForRootCA(mozilla::Telemetry::HistogramID probe, const CERTCertificate* cert);
 
 } // namespace psm
 } // namespace mozilla

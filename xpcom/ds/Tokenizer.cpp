@@ -214,8 +214,9 @@ Tokenizer::ReadUntil(Token const& aToken, nsACString& aResult, ClaimInclusion aI
 bool
 Tokenizer::ReadUntil(Token const& aToken, nsDependentCSubstring& aResult, ClaimInclusion aInclude)
 {
+  nsACString::const_char_iterator record = mRecord;
   Record();
-  nsACString::const_char_iterator rollback = mCursor;
+  nsACString::const_char_iterator rollback = mRollback = mCursor;
 
   bool found = false;
   Token t;
@@ -224,10 +225,16 @@ Tokenizer::ReadUntil(Token const& aToken, nsDependentCSubstring& aResult, ClaimI
       found = true;
       break;
     }
+    if (t.Equals(Token::EndOfFile())) {
+      // We don't want to eat it.
+      Rollback();
+      break;
+    }
   }
 
   Claim(aResult, aInclude);
   mRollback = rollback;
+  mRecord = record;
   return found;
 }
 

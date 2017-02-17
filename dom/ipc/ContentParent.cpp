@@ -672,40 +672,33 @@ ContentParent::RandomSelect(const nsTArray<ContentParent*>& aContentParents,
 /*static*/ already_AddRefed<ContentParent>
 ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
                                           ProcessPriority aPriority,
-                                          ContentParent* aOpener,
-                                          bool aLargeAllocationProcess,
-                                          bool* aNew)
+                                          ContentParent* aOpener)
 {
-  if (aNew) {
-    *aNew = false;
-  }
-  // Decide which pool of content parents we are going to be pulling from based
-  // on the aRemoteType and aLargeAllocationProcess flag.
-  nsAutoString contentProcessType(aLargeAllocationProcess
-                                  ? NS_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE)
-                                  : aRemoteType);
+  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
 
-  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(contentProcessType);
-
-  uint32_t maxContentParents = GetMaxProcessCount(contentProcessType);
+  uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
 
   RefPtr<ContentParent> p;
-  if (contentParents.Length() >= uint32_t(maxContentParents) &&
-      (p = RandomSelect(contentParents, aOpener, maxContentParents))) {
-    return p.forget();
+  if (contentParents.Length() >= maxContentParents) {
+    // We never want to re-use Large-Allocation processes.
+    if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
+      return GetNewOrUsedBrowserProcess(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
+                                        aPriority,
+                                        aOpener);
+    }
+
+    if ((p = RandomSelect(contentParents, aOpener, maxContentParents))) {
+      return p.forget();
+    }
   }
 
   // Try to take the preallocated process only for the default process type.
-  if (contentProcessType.Equals(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)) &&
+  if (aRemoteType.Equals(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)) &&
       (p = PreallocatedProcessManager::Take())) {
     // For pre-allocated process we have not set the opener yet.
     p->mOpener = aOpener;
   } else {
-    p = new ContentParent(aOpener, contentProcessType);
-
-    if (aNew) {
-      *aNew = true;
-    }
+    p = new ContentParent(aOpener, aRemoteType);
 
     if (!p->LaunchSubprocess(aPriority)) {
       return nullptr;
@@ -981,8 +974,7 @@ ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
 /*static*/ TabParent*
 ContentParent::CreateBrowser(const TabContext& aContext,
                              Element* aFrameElement,
-                             ContentParent* aOpenerContentParent,
-                             bool aFreshProcess)
+                             ContentParent* aOpenerContentParent)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
@@ -1005,7 +997,12 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     openerTabId = TabParent::GetTabIdFrom(docShell);
   }
 
-  bool newProcess = false;
+  nsAutoString remoteType;
+  if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                              remoteType)) {
+    remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+
   RefPtr<nsIContentParent> constructorSender;
   if (isInContentProcess) {
     MOZ_ASSERT(aContext.IsMozBrowserElement());
@@ -1015,15 +1012,8 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     if (aOpenerContentParent) {
       constructorSender = aOpenerContentParent;
     } else {
-      nsAutoString remoteType;
-      if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
-                                  remoteType)) {
-        remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
-      }
-
       constructorSender =
-        GetNewOrUsedBrowserProcess(remoteType, initialPriority, nullptr,
-                                   aFreshProcess, &newProcess);
+        GetNewOrUsedBrowserProcess(remoteType, initialPriority, nullptr);
       if (!constructorSender) {
         return nullptr;
       }
@@ -1070,11 +1060,10 @@ ContentParent::CreateBrowser(const TabContext& aContext,
       constructorSender->ChildID(),
       constructorSender->IsForBrowser());
 
-    if (aFreshProcess) {
+    if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
       // Tell the TabChild object that it was created due to a Large-Allocation
-      // request, and whether or not that Large-Allocation request succeeded at
-      // creating a new content process.
-      Unused << browser->SendSetIsLargeAllocation(true, newProcess);
+      // request.
+      Unused << browser->SendAwaitLargeAlloc();
     }
 
     if (browser) {

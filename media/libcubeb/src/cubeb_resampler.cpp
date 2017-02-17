@@ -72,6 +72,7 @@ long passthrough_resampler<T>::fill(void * input_buffer, long * input_frames_cou
 
   if (input_buffer) {
     internal_input_buffer.pop(nullptr, frames_to_samples(output_frames));
+    *input_frames_count = output_frames;
   }
 
   return rv;
@@ -179,7 +180,7 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   /* process the input, and present exactly `output_frames_needed` in the
   * callback. */
   input_processor->input(input_buffer, *input_frames_count);
-  resampled_input = input_processor->output(resampled_frame_count);
+  resampled_input = input_processor->output(resampled_frame_count, (size_t*)input_frames_count);
 
   long got = data_callback(stream, user_ptr,
                            resampled_input, nullptr, resampled_frame_count);
@@ -226,7 +227,7 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
     * callback. */
     input_processor->input(in_buffer, *input_frames_count);
     resampled_input =
-      input_processor->output(output_frames_before_processing);
+      input_processor->output(output_frames_before_processing, (size_t*)input_frames_count);
   } else {
     resampled_input = nullptr;
   }

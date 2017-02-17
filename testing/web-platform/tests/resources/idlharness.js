@@ -49,14 +49,19 @@ policies and contribution forms [3].
 (function(){
 "use strict";
 /// Helpers ///
-function constValue (cnt) {
+function constValue (cnt)
+//@{
+{
     if (cnt.type === "null") return null;
     if (cnt.type === "NaN") return NaN;
     if (cnt.type === "Infinity") return cnt.negative ? -Infinity : Infinity;
     return cnt.value;
 }
 
-function minOverloadLength(overloads) {
+//@}
+function minOverloadLength(overloads)
+//@{
+{
     if (!overloads.length) {
         return 0;
     }
@@ -69,7 +74,10 @@ function minOverloadLength(overloads) {
     .reduce(function(m, n) { return Math.min(m, n); });
 }
 
-function throwOrReject(a_test, operation, fn, obj, args,  message, cb) {
+//@}
+function throwOrReject(a_test, operation, fn, obj, args,  message, cb)
+//@{
+{
     if (operation.idlType.generic !== "Promise") {
         assert_throws(new TypeError(), function() {
             fn.apply(obj, args);
@@ -87,7 +95,10 @@ function throwOrReject(a_test, operation, fn, obj, args,  message, cb) {
     }
 }
 
-function awaitNCallbacks(n, cb, ctx) {
+//@}
+function awaitNCallbacks(n, cb, ctx)
+//@{
+{
     var counter = 0;
     return function() {
         counter++;
@@ -97,7 +108,10 @@ function awaitNCallbacks(n, cb, ctx) {
     };
 }
 
-var fround = (function(){
+//@}
+var fround =
+//@{
+(function(){
     if (Math.fround) return Math.fround;
 
     var arr = new Float32Array(1);
@@ -106,6 +120,7 @@ var fround = (function(){
         return arr[0];
     };
 })();
+//@}
 
 /// IdlArray ///
 // Entry point
@@ -460,7 +475,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
     }
 
     if (type.generic === "Promise") {
-        assert_own_property(value, "then", "Attribute with a Promise type has a then property");
+        assert_true("then" in value, "Attribute with a Promise type has a then property");
         // TODO: Ideally, we would check on project fulfillment
         // that we get the right type
         // but that would require making the type check async
@@ -674,7 +689,9 @@ function IdlDictionary(obj)
 IdlDictionary.prototype = Object.create(IdlObject.prototype);
 
 /// IdlInterface ///
-function IdlInterface(obj, is_callback) {
+function IdlInterface(obj, is_callback)
+//@{
+{
     /**
      * obj is an object produced by the WebIDLParser.js "interface" production.
      */
@@ -711,6 +728,7 @@ function IdlInterface(obj, is_callback) {
 
     this._is_callback = is_callback;
 }
+//@}
 IdlInterface.prototype = Object.create(IdlObject.prototype);
 IdlInterface.prototype.is_callback = function()
 //@{
@@ -807,8 +825,8 @@ IdlInterface.prototype.test_self = function()
 
         if (this.is_callback()) {
             // "The internal [[Prototype]] property of an interface object for
-            // a callback interface MUST be the Object.prototype object."
-            assert_equals(Object.getPrototypeOf(self[this.name]), Object.prototype,
+            // a callback interface must be the Function.prototype object."
+            assert_equals(Object.getPrototypeOf(self[this.name]), Function.prototype,
                           "prototype of self's property " + format_value(this.name) + " is not Object.prototype");
 
             return;
@@ -981,14 +999,13 @@ IdlInterface.prototype.test_self = function()
         // following steps:
         // "If A is declared with the [Global] or [PrimaryGlobal] extended
         // attribute, and A supports named properties, then return the named
-        // properties object for A, as defined in section 4.5.5 below.
+        // properties object for A, as defined in §3.6.4 Named properties
+        // object.
         // "Otherwise, if A is declared to inherit from another interface, then
         // return the interface prototype object for the inherited interface.
-        // "Otherwise, if A is declared with the [ArrayClass] extended
-        // attribute, then return %ArrayPrototype% ([ECMA-262], section
-        // 6.1.7.4).
-        // "Otherwise, return %ObjectPrototype% ([ECMA-262], section 6.1.7.4).
-        // ([ECMA-262], section 15.2.4).
+        // "Otherwise, if A is declared with the [LegacyArrayClass] extended
+        // attribute, then return %ArrayPrototype%.
+        // "Otherwise, return %ObjectPrototype%.
         if (this.name === "Window") {
             assert_class_string(Object.getPrototypeOf(self[this.name].prototype),
                                 'WindowProperties',
@@ -1002,7 +1019,7 @@ IdlInterface.prototype.test_self = function()
                     !this.array
                          .members[inherit_interface]
                          .has_extended_attribute("NoInterfaceObject");
-            } else if (this.has_extended_attribute('ArrayClass')) {
+            } else if (this.has_extended_attribute('LegacyArrayClass')) {
                 inherit_interface = 'Array';
                 inherit_interface_has_interface_object = true;
             } else {
@@ -1362,6 +1379,51 @@ IdlInterface.prototype.do_member_operation_asserts = function(memberHolderObject
 }
 
 //@}
+IdlInterface.prototype.add_iterable_members = function(member)
+//@{
+{
+    this.members.push(new IdlInterfaceMember(
+        { type: "operation", name: "entries", idlType: "iterator", arguments: []}));
+    this.members.push(new IdlInterfaceMember(
+        { type: "operation", name: "keys", idlType: "iterator", arguments: []}));
+    this.members.push(new IdlInterfaceMember(
+        { type: "operation", name: "values", idlType: "iterator", arguments: []}));
+    this.members.push(new IdlInterfaceMember(
+        { type: "operation", name: "forEach", idlType: "void",
+          arguments:
+          [{ name: "callback", idlType: {idlType: "function"}},
+           { name: "thisValue", idlType: {idlType: "any"}, optional: true}]}));
+};
+
+//@}
+IdlInterface.prototype.test_member_iterable = function(member)
+//@{
+{
+    var interfaceName = this.name;
+    var isPairIterator = member.idlType instanceof Array;
+    test(function()
+    {
+        var descriptor = Object.getOwnPropertyDescriptor(self[interfaceName].prototype, Symbol.iterator);
+        assert_true(descriptor.writable, "property is not writable");
+        assert_true(descriptor.configurable, "property is not configurable");
+        assert_false(descriptor.enumerable, "property is enumerable");
+        assert_equals(self[interfaceName].prototype[Symbol.iterator].name, isPairIterator ? "entries" : "values", "@@iterator function does not have the right name");
+    }, "Testing Symbol.iterator property of iterable interface " + interfaceName);
+
+    if (isPairIterator) {
+        test(function() {
+            assert_equals(self[interfaceName].prototype[Symbol.iterator], self[interfaceName].prototype["entries"], "entries method is not the same as @@iterator");
+        }, "Testing pair iterable interface " + interfaceName);
+    } else {
+        test(function() {
+            ["entries", "keys", "values", "forEach", Symbol.Iterator].forEach(function(property) {
+                assert_equals(self[interfaceName].prototype[property], Array.prototype[property], property + " function is not the same as Array one");
+            });
+        }, "Testing value iterable interface " + interfaceName);
+    }
+};
+
+//@}
 IdlInterface.prototype.test_member_stringifier = function(member)
 //@{
 {
@@ -1432,6 +1494,19 @@ IdlInterface.prototype.test_members = function()
     for (var i = 0; i < this.members.length; i++)
     {
         var member = this.members[i];
+        switch (member.type) {
+        case "iterable":
+            this.add_iterable_members(member);
+            break;
+        // TODO: add setlike and maplike handling.
+        default:
+            break;
+        }
+    }
+
+    for (var i = 0; i < this.members.length; i++)
+    {
+        var member = this.members[i];
         if (member.untested) {
             continue;
         }
@@ -1481,6 +1556,9 @@ IdlInterface.prototype.test_members = function()
             }
             break;
 
+        case "iterable":
+            this.test_member_iterable(member);
+            break;
         default:
             // TODO: check more member types.
             break;

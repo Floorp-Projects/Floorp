@@ -1660,7 +1660,7 @@ nsPresContext::RecordInteractionTime(InteractionType aType,
 
   // Array of histogram IDs for the different interaction types,
   // keyed by InteractionType.
-  Telemetry::ID histogramIds[] = {
+  Telemetry::HistogramID histogramIds[] = {
     Telemetry::TIME_TO_FIRST_CLICK_MS,
     Telemetry::TIME_TO_FIRST_KEY_INPUT_MS,
     Telemetry::TIME_TO_FIRST_MOUSE_MOVE_MS,

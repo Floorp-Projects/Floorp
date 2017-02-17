@@ -289,7 +289,7 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
     MOZ_LOG(gMediaDecoderLog,
             LogLevel::Debug,
             ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
-    Telemetry::Accumulate(Telemetry::ID::MEDIA_CODEC_USED, codec);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
   });
   // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
   AbstractThread::MainThread()->Dispatch(task.forget());
@@ -640,4 +640,3 @@ WebAudioDecodeJob::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 } // namespace mozilla
-

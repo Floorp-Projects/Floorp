@@ -2646,10 +2646,10 @@ nsCacheService::Lock()
 }
 
 void
-nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
+nsCacheService::Lock(mozilla::Telemetry::HistogramID mainThreadLockerID)
 {
-    mozilla::Telemetry::ID lockerID;
-    mozilla::Telemetry::ID generalID;
+    mozilla::Telemetry::HistogramID lockerID;
+    mozilla::Telemetry::HistogramID generalID;
 
     if (NS_IsMainThread()) {
         lockerID = mainThreadLockerID;

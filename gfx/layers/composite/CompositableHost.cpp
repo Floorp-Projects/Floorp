@@ -137,9 +137,14 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     }
     break;
   case CompositableType::CONTENT_SINGLE:
-    result = new ContentHostSingleBuffered(aTextureInfo);
+    if (gfxVars::UseWebRender()) {
+      result = new WebRenderImageHost(aTextureInfo);
+    } else {
+      result = new ContentHostSingleBuffered(aTextureInfo);
+    }
     break;
   case CompositableType::CONTENT_DOUBLE:
+    MOZ_ASSERT(!gfxVars::UseWebRender());
     result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:

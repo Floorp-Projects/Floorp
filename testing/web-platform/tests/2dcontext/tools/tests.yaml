@@ -448,24 +448,6 @@
 
 
 
-- name: toBlob.png
-  desc: toBlob with image/png returns a PNG Blob
-  testing:
-    - toBlob.png
-  code: |
-    canvas.toBlob(function(data){
-      @assert data.type === "image/png";
-    }, 'image/png');
-
-- name: toBlob.jpeg
-  desc: toBlob with image/jpeg returns a JPEG Blob
-  testing:
-    - toBlob.jpeg
-  code: |
-    canvas.toBlob(function(data){
-      @assert data.type === "image/jpeg";
-    }, 'image/jpeg');
-
 - name: toDataURL.default
   desc: toDataURL with no arguments returns a PNG
   testing:
@@ -566,9 +548,13 @@
   testing:
     - toDataURL.noarguments
   code: |
-    var canvas2 = document.createElement('canvas');
-    var data = canvas2.toDataURL();
-    @assert data =~ /^data:image\/png[;,]/;
+    var no_context_data = canvas.toDataURL();
+    var ctx = canvas.getContext('2d');
+    ctx.rect(0, 0, 100, 50);
+    ctx.fillStyle = "rgba(0, 0, 0, 0)";
+    ctx.fill();
+    var data = canvas.toDataURL();
+    assert_equals(no_context_data, data);
 
 - name: toDataURL.zerosize
   desc: toDataURL on zero-size canvas returns 'data:,'

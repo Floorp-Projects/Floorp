@@ -171,11 +171,11 @@ public:
     uint64_t ByteCountSent() override { return mOutput.ByteCount(); }
     static void CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled);
     static void SendPRBlockingTelemetry(PRIntervalTime aStart,
-        Telemetry::ID aIDNormal,
-        Telemetry::ID aIDShutdown,
-        Telemetry::ID aIDConnectivityChange,
-        Telemetry::ID aIDLinkChange,
-        Telemetry::ID aIDOffline);
+        Telemetry::HistogramID aIDNormal,
+        Telemetry::HistogramID aIDShutdown,
+        Telemetry::HistogramID aIDConnectivityChange,
+        Telemetry::HistogramID aIDLinkChange,
+        Telemetry::HistogramID aIDOffline);
 protected:
 
     virtual ~nsSocketTransport();
