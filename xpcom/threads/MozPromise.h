@@ -19,6 +19,16 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#define PROMISE_DEBUG
+#endif
+
+#ifdef PROMISE_DEBUG
+#define PROMISE_ASSERT MOZ_RELEASE_ASSERT
+#else
+#define PROMISE_ASSERT(...) do { } while (0)
+#endif
+
 namespace mozilla {
 
 extern LazyLogModule gMozPromiseLog;
@@ -115,6 +125,8 @@ template<typename T> class MozPromiseHolder;
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise : public MozPromiseRefcountable
 {
+  static const uint32_t sMagic = 0xcecace11;
+
 public:
   typedef ResolveValueT ResolveValueType;
   typedef RejectValueT RejectValueType;
@@ -171,6 +183,9 @@ protected:
     , mMutex("MozPromise Mutex")
     , mHaveRequest(false)
     , mIsCompletionPromise(aIsCompletionPromise)
+#ifdef PROMISE_DEBUG
+    , mMagic4(mMutex.mLock)
+#endif
   {
     PROMISE_LOG("%s creating MozPromise (%p)", mCreationSite, this);
   }
@@ -274,10 +289,6 @@ public:
   public:
     virtual void Disconnect() = 0;
 
-    // MSVC complains when an inner class (ThenValueBase::{Resolve,Reject}Runnable)
-    // tries to access an inherited protected member.
-    bool IsDisconnected() const { return mDisconnected; }
-
     virtual MozPromise* CompletionPromise() = 0;
 
     virtual void AssertIsDead() = 0;
@@ -300,6 +311,8 @@ protected:
    */
   class ThenValueBase : public Request
   {
+    static const uint32_t sMagic = 0xfadece11;
+
   public:
     class ResolveOrRejectRunnable : public Runnable
     {
@@ -335,6 +348,14 @@ protected:
     explicit ThenValueBase(AbstractThread* aResponseTarget, const char* aCallSite)
       : mResponseTarget(aResponseTarget), mCallSite(aCallSite) {}
 
+#ifdef PROMISE_DEBUG
+    ~ThenValueBase()
+    {
+      mMagic1 = 0;
+      mMagic2 = 0;
+    }
+#endif
+
     MozPromise* CompletionPromise() override
     {
       MOZ_DIAGNOSTIC_ASSERT(mResponseTarget->IsCurrentThreadIn());
@@ -348,6 +369,7 @@ protected:
 
     void AssertIsDead() override
     {
+      PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic);
       // We want to assert that this ThenValues is dead - that is to say, that
       // there are no consumers waiting for the result. In the case of a normal
       // ThenValue, we check that it has been disconnected, which is the way
@@ -364,6 +386,7 @@ protected:
 
     void Dispatch(MozPromise *aPromise)
     {
+      PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic);
       aPromise->mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!aPromise->IsPending());
 
@@ -382,7 +405,7 @@ protected:
 
     virtual void Disconnect() override
     {
-      MOZ_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
+      MOZ_DIAGNOSTIC_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
       MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
       Request::mDisconnected = true;
 
@@ -398,6 +421,8 @@ protected:
 
     void DoResolveOrReject(const ResolveOrRejectValue& aValue)
     {
+      PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic);
+      MOZ_DIAGNOSTIC_ASSERT(mResponseTarget->IsCurrentThreadIn());
       Request::mComplete = true;
       if (Request::mDisconnected) {
         PROMISE_LOG("ThenValue::DoResolveOrReject disconnected - bailing out [this=%p]", this);
@@ -425,13 +450,17 @@ protected:
     }
 
     RefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
-
+#ifdef PROMISE_DEBUG
+    uint32_t mMagic1 = sMagic;
+#endif
     // Declaring RefPtr<MozPromise::Private> here causes build failures
     // on MSVC because MozPromise::Private is only forward-declared at this
     // point. This hack can go away when we inline-declare MozPromise::Private,
     // which is blocked on the B2G ICS compiler being too old.
     RefPtr<MozPromise> mCompletionPromise;
-
+#ifdef PROMISE_DEBUG
+    uint32_t mMagic2 = sMagic;
+#endif
     const char* mCallSite;
   };
 
@@ -586,6 +615,7 @@ public:
   void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
                     const char* aCallSite)
   {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aResponseThread->IsDispatchReliable());
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
@@ -642,6 +672,7 @@ public:
   // AssertIsDead() only.
   void AssertIsDead()
   {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MutexAutoLock lock(mMutex);
     for (auto&& then : mThenValues) {
       then->AssertIsDead();
@@ -696,15 +727,33 @@ protected:
       MOZ_ASSERT(mThenValues.IsEmpty());
       MOZ_ASSERT(mChainedPromises.IsEmpty());
     }
+#ifdef PROMISE_DEBUG
+    mMagic1 = 0;
+    mMagic2 = 0;
+    mMagic3 = 0;
+    mMagic4 = nullptr;
+#endif
   };
 
   const char* mCreationSite; // For logging
   Mutex mMutex;
   ResolveOrRejectValue mValue;
+#ifdef PROMISE_DEBUG
+  uint32_t mMagic1 = sMagic;
+#endif
   nsTArray<RefPtr<ThenValueBase>> mThenValues;
+#ifdef PROMISE_DEBUG
+  uint32_t mMagic2 = sMagic;
+#endif
   nsTArray<RefPtr<Private>> mChainedPromises;
+#ifdef PROMISE_DEBUG
+  uint32_t mMagic3 = sMagic;
+#endif
   bool mHaveRequest;
   const bool mIsCompletionPromise;
+#ifdef PROMISE_DEBUG
+  void* mMagic4;
+#endif
 };
 
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
@@ -718,6 +767,7 @@ public:
   template<typename ResolveValueT_>
   void Resolve(ResolveValueT_&& aResolveValue, const char* aResolveSite)
   {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MozPromise (%p created at %s)", aResolveSite, this, mCreationSite);
@@ -728,6 +778,7 @@ public:
   template<typename RejectValueT_>
   void Reject(RejectValueT_&& aRejectValue, const char* aRejectSite)
   {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MozPromise (%p created at %s)", aRejectSite, this, mCreationSite);
@@ -738,6 +789,7 @@ public:
   template<typename ResolveOrRejectValue_>
   void ResolveOrReject(ResolveOrRejectValue_&& aValue, const char* aSite)
   {
+    PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolveOrRejecting MozPromise (%p created at %s)", aSite, this, mCreationSite);
@@ -1007,6 +1059,8 @@ InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName
 }
 
 #undef PROMISE_LOG
+#undef PROMISE_ASSERT
+#undef PROMISE_DEBUG
 
 } // namespace mozilla
 
