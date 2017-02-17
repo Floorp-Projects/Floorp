@@ -62,15 +62,7 @@ TestOpusInit(int aChannels, int aSamplingRate)
   return encoder.TestOpusCreation(aChannels, aSamplingRate);
 }
 
-static int
-TestOpusResampler(int aChannels, int aSamplingRate)
-{
-  TestOpusTrackEncoder encoder;
-  EXPECT_TRUE(encoder.TestOpusCreation(aChannels, aSamplingRate));
-  return encoder.TestGetOutputSampleRate();
-}
-
-TEST(Media, OpusEncoder_Init)
+TEST(OpusAudioTrackEncoder, Init)
 {
   // Expect false with 0 or negative channels of input signal.
   EXPECT_FALSE(TestOpusInit(0, 16000));
@@ -101,7 +93,7 @@ TEST(Media, OpusEncoder_Init)
   EXPECT_FALSE(TestOpusInit(2, 200000));
 }
 
-TEST(Media, OpusEncoder_TryInit)
+TEST(OpusAudioTrackEncoder, TryInit)
 {
   {
     // The encoder does not normally recieve enough info from null data to
@@ -164,7 +156,15 @@ TEST(Media, OpusEncoder_TryInit)
   }
 }
 
-TEST(Media, OpusEncoder_Resample)
+static int
+TestOpusResampler(int aChannels, int aSamplingRate)
+{
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusCreation(aChannels, aSamplingRate));
+  return encoder.TestGetOutputSampleRate();
+}
+
+TEST(OpusAudioTrackEncoder, Resample)
 {
   // Sampling rates of data to be fed to Opus encoder, should remain unchanged
   // if it is one of Opus supported rates (8000, 12000, 16000, 24000 and 48000
