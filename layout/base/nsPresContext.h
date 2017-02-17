@@ -962,8 +962,7 @@ public:
   void NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect);
   // aRect is in device pixels
   void NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRect);
-  // aFlags are nsIPresShell::PAINT_ flags
-  void NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId = 0,
+  void NotifyDidPaintForSubtree(uint64_t aTransactionId = 0,
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
   void FireDOMPaintEvent(nsTArray<nsRect>* aList, uint64_t aTransactionId,
                          mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
@@ -1180,6 +1179,8 @@ protected:
 
   void UpdateCharSet(const nsCString& aCharSet);
 
+  static bool NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData);
+
 public:
   void DoChangeCharSet(const nsCString& aCharSet);
 
@@ -1291,8 +1292,11 @@ protected:
 
   FramePropertyTable    mPropertyTable;
 
-  nsTArray<nsRect> mInvalidateRequestsSinceLastPaint;
-  nsTArray<nsRect> mUndeliveredInvalidateRequestsBeforeLastPaint;
+  struct TransactionInvalidations {
+    uint64_t mTransactionId;
+    nsTArray<nsRect> mInvalidations;
+  };
+  AutoTArray<TransactionInvalidations, 4> mTransactions;
 
   // text performance metrics
   nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
@@ -1469,15 +1473,18 @@ public:
    * Ensure that NotifyDidPaintForSubtree is eventually called on this
    * object after a timeout.
    */
-  void EnsureEventualDidPaintEvent();
+  void EnsureEventualDidPaintEvent(uint64_t aTransactionId);
 
-  void CancelDidPaintTimer()
-  {
-    if (mNotifyDidPaintTimer) {
-      mNotifyDidPaintTimer->Cancel();
-      mNotifyDidPaintTimer = nullptr;
-    }
-  }
+  /**
+   * Cancels any pending eventual did paint timer for transaction
+   * ids up to and including aTransactionId.
+   */
+  void CancelDidPaintTimers(uint64_t aTransactionId);
+
+  /**
+   * Cancel all pending eventual did paint timers.
+   */
+  void CancelAllDidPaintTimers();
 
   /**
    * Registers a plugin to receive geometry updates (position and clip
@@ -1582,7 +1589,12 @@ protected:
 
   friend class nsPresContext;
 
-  nsCOMPtr<nsITimer> mNotifyDidPaintTimer;
+  struct NotifyDidPaintTimer {
+    uint64_t mTransactionId;
+    nsCOMPtr<nsITimer> mTimer;
+  };
+  AutoTArray<NotifyDidPaintTimer, 4> mNotifyDidPaintTimers;
+
   nsCOMPtr<nsITimer> mApplyPluginGeometryTimer;
   nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
