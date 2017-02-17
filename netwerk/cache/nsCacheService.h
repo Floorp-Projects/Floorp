@@ -255,7 +255,7 @@ private:
      */
 
     static void      Lock();
-    static void      Lock(::mozilla::Telemetry::ID mainThreadLockerID);
+    static void      Lock(::mozilla::Telemetry::HistogramID mainThreadLockerID);
     static void      Unlock();
     void             LockAcquired();
     void             LockReleased();
@@ -381,7 +381,7 @@ public:
     nsCacheServiceAutoLock() {
         nsCacheService::Lock();
     }
-    explicit nsCacheServiceAutoLock(mozilla::Telemetry::ID mainThreadLockerID) {
+    explicit nsCacheServiceAutoLock(mozilla::Telemetry::HistogramID mainThreadLockerID) {
         nsCacheService::Lock(mainThreadLockerID);
     }
     ~nsCacheServiceAutoLock() {

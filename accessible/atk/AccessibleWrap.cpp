@@ -13,6 +13,7 @@
 #include "mozilla/a11y/PDocAccessible.h"
 #include "OuterDocAccessible.h"
 #include "ProxyAccessible.h"
+#include "DocAccessibleParent.h"
 #include "RootAccessible.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"

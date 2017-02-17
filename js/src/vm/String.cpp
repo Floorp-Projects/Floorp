@@ -1440,3 +1440,174 @@ JSFlatString::dumpRepresentation(FILE* fp, int indent) const
     dumpRepresentationChars(fp, indent);
 }
 #endif
+
+static void
+FinalizeRepresentativeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+
+static const JSStringFinalizer RepresentativeExternalStringFinalizer =
+    { FinalizeRepresentativeExternalString };
+
+static void
+FinalizeRepresentativeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
+{
+    // Constant chars, nothing to free.
+    MOZ_ASSERT(fin == &RepresentativeExternalStringFinalizer);
+}
+
+template <typename CheckString, typename CharT>
+static bool
+FillWithRepresentatives(JSContext* cx, HandleArrayObject array, uint32_t* index,
+                        const CharT* chars, size_t len,
+                        size_t fatInlineMaxLength,
+                        const CheckString& check)
+{
+    auto AppendString =
+        [&check](JSContext* cx, HandleArrayObject array, uint32_t* index, HandleString s)
+    {
+        MOZ_ASSERT(check(s));
+        RootedValue val(cx, StringValue(s));
+        return JS_DefineElement(cx, array, (*index)++, val, 0);
+    };
+
+    MOZ_ASSERT(len > fatInlineMaxLength);
+
+    // Normal atom.
+    RootedString atom1(cx, AtomizeChars(cx, chars, len));
+    if (!atom1 || !AppendString(cx, array, index, atom1))
+        return false;
+    MOZ_ASSERT(atom1->isAtom());
+
+    // Inline atom.
+    RootedString atom2(cx, AtomizeChars(cx, chars, 2));
+    if (!atom2 || !AppendString(cx, array, index, atom2))
+        return false;
+    MOZ_ASSERT(atom2->isAtom());
+    MOZ_ASSERT(atom2->isInline());
+
+    // Fat inline atom.
+    RootedString atom3(cx, AtomizeChars(cx, chars, fatInlineMaxLength));
+    if (!atom3 || !AppendString(cx, array, index, atom3))
+        return false;
+    MOZ_ASSERT(atom3->isAtom());
+    MOZ_ASSERT(atom3->isFatInline());
+
+    // Normal flat string.
+    RootedString flat1(cx, NewStringCopyN<CanGC>(cx, chars, len));
+    if (!flat1 || !AppendString(cx, array, index, flat1))
+        return false;
+    MOZ_ASSERT(flat1->isFlat());
+
+    // Inline string.
+    RootedString flat2(cx, NewStringCopyN<CanGC>(cx, chars, 3));
+    if (!flat2 || !AppendString(cx, array, index, flat2))
+        return false;
+    MOZ_ASSERT(flat2->isFlat());
+    MOZ_ASSERT(flat2->isInline());
+
+    // Fat inline string.
+    RootedString flat3(cx, NewStringCopyN<CanGC>(cx, chars, fatInlineMaxLength));
+    if (!flat3 || !AppendString(cx, array, index, flat3))
+        return false;
+    MOZ_ASSERT(flat3->isFlat());
+    MOZ_ASSERT(flat3->isFatInline());
+
+    // Rope.
+    RootedString rope(cx, ConcatStrings<CanGC>(cx, atom1, atom3));
+    if (!rope || !AppendString(cx, array, index, rope))
+        return false;
+    MOZ_ASSERT(rope->isRope());
+
+    // Dependent.
+    RootedString dep(cx, NewDependentString(cx, atom1, 0, len - 2));
+    if (!dep || !AppendString(cx, array, index, dep))
+        return false;
+    MOZ_ASSERT(dep->isDependent());
+
+    // Undepended.
+    RootedString undep(cx, NewDependentString(cx, atom1, 0, len - 3));
+    if (!undep || !undep->ensureFlat(cx) || !AppendString(cx, array, index, undep))
+        return false;
+    MOZ_ASSERT(undep->isUndepended());
+
+    // Extensible.
+    RootedString temp1(cx, NewStringCopyN<CanGC>(cx, chars, len));
+    if (!temp1)
+        return false;
+    RootedString extensible(cx, ConcatStrings<CanGC>(cx, temp1, atom3));
+    if (!extensible || !extensible->ensureLinear(cx))
+        return false;
+    if (!AppendString(cx, array, index, extensible))
+        return false;
+    MOZ_ASSERT(extensible->isExtensible());
+
+    // External. Note that we currently only support TwoByte external strings.
+    RootedString external1(cx), external2(cx);
+    if (IsSame<CharT, char16_t>::value) {
+        external1 = JS_NewExternalString(cx, (const char16_t*)chars, len,
+                                         &RepresentativeExternalStringFinalizer);
+        if (!external1 || !AppendString(cx, array, index, external1))
+            return false;
+        MOZ_ASSERT(external1->isExternal());
+
+        external2 = JS_NewExternalString(cx, (const char16_t*)chars, 2,
+                                         &RepresentativeExternalStringFinalizer);
+        if (!external2 || !AppendString(cx, array, index, external2))
+            return false;
+        MOZ_ASSERT(external2->isExternal());
+    }
+
+    // Assert the strings still have the types we expect after creating the
+    // other strings.
+
+    MOZ_ASSERT(atom1->isAtom());
+    MOZ_ASSERT(atom2->isAtom());
+    MOZ_ASSERT(atom3->isAtom());
+    MOZ_ASSERT(atom2->isInline());
+    MOZ_ASSERT(atom3->isFatInline());
+
+    MOZ_ASSERT(flat1->isFlat());
+    MOZ_ASSERT(flat2->isFlat());
+    MOZ_ASSERT(flat3->isFlat());
+    MOZ_ASSERT(flat2->isInline());
+    MOZ_ASSERT(flat3->isFatInline());
+
+    MOZ_ASSERT(rope->isRope());
+    MOZ_ASSERT(dep->isDependent());
+    MOZ_ASSERT(undep->isUndepended());
+    MOZ_ASSERT(extensible->isExtensible());
+    MOZ_ASSERT_IF(external1, external1->isExternal());
+    MOZ_ASSERT_IF(external2, external2->isExternal());
+    return true;
+}
+
+/* static */ bool
+JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
+{
+    uint32_t index = 0;
+
+    auto CheckTwoByte = [](JSString* str) { return str->hasTwoByteChars(); };
+    auto CheckLatin1 = [](JSString* str) { return str->hasLatin1Chars(); };
+
+    // Append TwoByte strings.
+    static const char16_t twoByteChars[] = u"\u1234abc\0def\u5678ghijklmasdfa\0xyz0123456789";
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 twoByteChars, mozilla::ArrayLength(twoByteChars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_TWO_BYTE,
+                                 CheckTwoByte))
+    {
+        return false;
+    }
+
+    // Append Latin1 strings.
+    static const Latin1Char latin1Chars[] = "abc\0defghijklmasdfa\0xyz0123456789";
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 latin1Chars, mozilla::ArrayLength(latin1Chars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_LATIN1,
+                                 CheckLatin1))
+    {
+        return false;
+    }
+
+    MOZ_ASSERT(index == 22);
+    return true;
+}

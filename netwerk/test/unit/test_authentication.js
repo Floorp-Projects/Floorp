@@ -22,6 +22,7 @@ const FLAG_WRONG_PASSWORD = 1 << 1;
 const FLAG_BOGUS_USER = 1 << 2;
 const FLAG_PREVIOUS_FAILED = 1 << 3;
 const CROSS_ORIGIN = 1 << 4;
+const FLAG_NO_REALM = 1 << 5;
 
 const nsIAuthPrompt2 = Components.interfaces.nsIAuthPrompt2;
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
@@ -51,8 +52,10 @@ AuthPrompt1.prototype = {
   promptUsernameAndPassword:
     function ap1_promptUP(title, text, realm, savePW, user, pw)
   {
-    // Note that the realm here isn't actually the realm. it's a pw mgr key.
-    do_check_eq(URL + " (" + this.expectedRealm + ")", realm);
+    if (this.flags & FLAG_NO_REALM) {
+      // Note that the realm here isn't actually the realm. it's a pw mgr key.
+      do_check_eq(URL + " (" + this.expectedRealm + ")", realm);
+    }
     if (!(this.flags & CROSS_ORIGIN)) {
       if (text.indexOf(this.expectedRealm) == -1) {
         do_throw("Text must indicate the realm");
@@ -115,8 +118,9 @@ AuthPrompt2.prototype = {
     var isNTLM = channel.URI.path.indexOf("ntlm") != -1;
     var isDigest = channel.URI.path.indexOf("digest") != -1;
 
-    if (isNTLM)
+    if (isNTLM || (this.flags & FLAG_NO_REALM)) {
       this.expectedRealm = ""; // NTLM knows no realms
+    }
 
     do_check_eq(this.expectedRealm, authInfo.realm);
 
@@ -302,7 +306,8 @@ var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_prompt1CrossOrigin, test_prompt2CrossOrigin,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
              test_basicrealm, test_digest_noauth, test_digest,
-             test_digest_bogus_user, test_large_realm, test_large_domain];
+             test_digest_bogus_user, test_short_digest, test_large_realm,
+             test_large_domain];
 
 var current_test = 0;
 
@@ -315,6 +320,7 @@ function run_test() {
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
   httpserv.registerPathHandler("/auth/realm", authRealm);
   httpserv.registerPathHandler("/auth/digest", authDigest);
+  httpserv.registerPathHandler("/auth/short_digest", authShortDigest);
   httpserv.registerPathHandler("/largeRealm", largeRealm);
   httpserv.registerPathHandler("/largeDomain", largeDomain);
 
@@ -461,6 +467,16 @@ function test_digest_bogus_user() {
   do_test_pending();
 }
 
+// Test header "WWW-Authenticate: Digest" - bug 1338876.
+function test_short_digest() {
+  var chan = makeChan(URL + "/auth/short_digest", URL);
+  chan.notificationCallbacks =  new Requestor(FLAG_NO_REALM, 2);
+  listener.expectedCode = 401; // OK
+  chan.asyncOpen2(listener);
+
+  do_test_pending();
+}
+
 // PATH HANDLERS
 
 // /auth
@@ -587,6 +603,13 @@ function authDigest(metadata, response) {
  }
  
  response.bodyOutputStream.write(body, body.length);
+}
+
+function authShortDigest(metadata, response) {
+  // no header, send one
+  response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+  response.setHeader("WWW-Authenticate", 'Digest', false);
+  body = "failed, no header";
 }
 
 function largeRealm(metadata, response) {

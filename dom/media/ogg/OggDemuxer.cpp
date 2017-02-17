@@ -130,7 +130,7 @@ OggDemuxer::~OggDemuxer()
     bool isChained = mIsChained;
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() -> void {
       OGG_DEBUG("Reporting telemetry MEDIA_OGG_LOADED_IS_CHAINED=%d", isChained);
-      Telemetry::Accumulate(Telemetry::ID::MEDIA_OGG_LOADED_IS_CHAINED, isChained);
+      Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_OGG_LOADED_IS_CHAINED, isChained);
     });
     // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
     AbstractThread::MainThread()->Dispatch(task.forget());

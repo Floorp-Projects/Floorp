@@ -328,6 +328,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
+        // XXX workaround for releasing Readlock. See Bug 1339625
+        if(host->GetType() == CompositableType::CONTENT_SINGLE) {
+          host->CleanupResources();
+        }
         break;
       }
       case WebRenderCommand::TOpDPPushIframe: {

@@ -30,8 +30,8 @@ public:
   static already_AddRefed<DetailedPromise>
   Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
          const nsACString& aName,
-         Telemetry::ID aSuccessLatencyProbe,
-         Telemetry::ID aFailureLatencyProbe);
+         Telemetry::HistogramID aSuccessLatencyProbe,
+         Telemetry::HistogramID aFailureLatencyProbe);
 
   template <typename T>
   void MaybeResolve(const T& aArg)
@@ -53,8 +53,8 @@ private:
 
   explicit DetailedPromise(nsIGlobalObject* aGlobal,
                            const nsACString& aName,
-                           Telemetry::ID aSuccessLatencyProbe,
-                           Telemetry::ID aFailureLatencyProbe);
+                           Telemetry::HistogramID aSuccessLatencyProbe,
+                           Telemetry::HistogramID aFailureLatencyProbe);
   virtual ~DetailedPromise();
 
   enum Status { Succeeded, Failed };
@@ -63,8 +63,8 @@ private:
   nsCString mName;
   bool mResponded;
   TimeStamp mStartTime;
-  Optional<Telemetry::ID> mSuccessLatencyProbe;
-  Optional<Telemetry::ID> mFailureLatencyProbe;
+  Optional<Telemetry::HistogramID> mSuccessLatencyProbe;
+  Optional<Telemetry::HistogramID> mFailureLatencyProbe;
 };
 
 } // namespace dom

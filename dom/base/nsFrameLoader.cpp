@@ -174,17 +174,10 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool 
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
   , mVisible(true)
-  , mFreshProcess(false)
 {
   mRemoteFrame = ShouldUseRemoteProcess();
   MOZ_ASSERT(!mRemoteFrame || !aOpener,
              "Cannot pass aOpener for a remote frame!");
-
-  // Check if we are supposed to load into a fresh process
-  mFreshProcess = mOwnerContent->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::freshProcess,
-                                             nsGkAtoms::_true,
-                                             eCaseMatters);
 }
 
 nsFrameLoader::~nsFrameLoader()
@@ -1348,15 +1341,6 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // Remote types must match to swap loaders.
-  const nsAString& currentRemoteType =
-    mRemoteBrowser->Manager()->AsContentParent()->GetRemoteType();
-  const nsAString& newRemoteType =
-    aOther->mRemoteBrowser->Manager()->AsContentParent()->GetRemoteType();
-  if (!currentRemoteType.Equals(newRemoteType)) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (mRemoteBrowser->IsIsolatedMozBrowserElement() !=
       aOther->mRemoteBrowser->IsIsolatedMozBrowserElement()) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1505,6 +1489,20 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // Swap the remoteType property as the frameloaders are being swapped
+  nsAutoString ourRemoteType;
+  if (!ourContent->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                           ourRemoteType)) {
+    ourRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+  nsAutoString otherRemoteType;
+  if (!otherContent->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                             otherRemoteType)) {
+    otherRemoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+  }
+  ourContent->SetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, otherRemoteType, false);
+  otherContent->SetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, ourRemoteType, false);
 
   Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
     ourContext.AsIPCTabContext());
@@ -2938,8 +2936,7 @@ nsFrameLoader::TryRemoteBrowser()
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
-  mRemoteBrowser = ContentParent::CreateBrowser(context, ownerElement, openerContentParent,
-                                                mFreshProcess);
+  mRemoteBrowser = ContentParent::CreateBrowser(context, ownerElement, openerContentParent);
   if (!mRemoteBrowser) {
     return false;
   }
@@ -3673,13 +3670,6 @@ NS_IMETHODIMP
 nsFrameLoader::GetIsDead(bool* aIsDead)
 {
   *aIsDead = mDestroyCalled;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetIsFreshProcess(bool* aIsFreshProcess)
-{
-  *aIsFreshProcess = mFreshProcess;
   return NS_OK;
 }
 

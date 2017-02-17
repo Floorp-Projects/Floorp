@@ -449,9 +449,9 @@ nsAppShell::RecordLatencies()
         return;
     }
 
-    const mozilla::Telemetry::ID timeIDs[] = {
-        mozilla::Telemetry::ID::FENNEC_LOOP_UI_LATENCY,
-        mozilla::Telemetry::ID::FENNEC_LOOP_OTHER_LATENCY
+    const mozilla::Telemetry::HistogramID timeIDs[] = {
+        mozilla::Telemetry::HistogramID::FENNEC_LOOP_UI_LATENCY,
+        mozilla::Telemetry::HistogramID::FENNEC_LOOP_OTHER_LATENCY
     };
 
     static_assert(ArrayLength(Queue::sLatencyCount) == Queue::LATENCY_COUNT,
