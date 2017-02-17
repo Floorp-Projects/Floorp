@@ -97,6 +97,7 @@
         <parameter name="detail"/>
         <body><![CDATA[
           const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
+          const dir = this.mozIntl.getLocaleInfo(locale).direction;
 
           switch (this.type) {
             case "time": {
@@ -158,7 +159,8 @@
                   weekends,
                   monthStrings,
                   weekdayStrings,
-                  locale
+                  locale,
+                  dir,
                 }
               });
               break;
