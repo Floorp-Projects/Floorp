@@ -936,6 +936,17 @@ reftest-stylo:
         by-test-platform:
             linux64-stylo/opt: []
             linux64-stylo/debug: []
+    e10s:
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-inbound: false
+                    default: both
+            linux64-stylo/debug:
+                # only e10s on inbound
+                by-project:
+                    mozilla-inbound: true
+                    default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
