@@ -26,6 +26,7 @@ const {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {})
 // use to select our configuration.
 if (gTestPath.includes("test-oop-extensions")) {
   SpecialPowers.pushPrefEnv({set: [
+    ["dom.ipc.processCount.extension", 1],
     ["extensions.webextensions.remote", true],
   ]});
   // We don't want to reset this at the end of the test, so that we don't have
