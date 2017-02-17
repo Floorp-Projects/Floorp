@@ -2923,6 +2923,9 @@ pref("dom.ipc.processCount", 2);
 pref("dom.ipc.processCount", 1);
 #endif
 
+// WebExtensions only support a single extension process.
+pref("dom.ipc.processCount.extension", 1);
+
 // Disable support for SVG
 pref("svg.disabled", false);
 
