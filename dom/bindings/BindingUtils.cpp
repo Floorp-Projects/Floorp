@@ -3563,7 +3563,7 @@ GetCustomElementReactionsStack(JS::Handle<JSObject*> aObj)
 // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
 already_AddRefed<nsGenericHTMLElement>
 CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
-                  ErrorResult& aRv)
+                  JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv)
 {
   // Step 1.
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
@@ -3698,7 +3698,23 @@ CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
     return nullptr;
   }
 
-  // Step 11 is in the code output by CGClassConstructor.
+  // Step 11.
+  // Do prototype swizzling for upgrading a custom element here, for cases when
+  // we have a reflector already.  If we don't have one yet, our caller will
+  // create it with the right proto (by calling DoGetOrCreateDOMReflector with
+  // that proto).
+  JS::Rooted<JSObject*> reflector(cx, element->GetWrapper());
+  if (reflector) {
+    // reflector might be in different compartment.
+    JSAutoCompartment ac(cx, reflector);
+    JS::Rooted<JSObject*> givenProto(cx, aGivenProto);
+    if (!JS_WrapObject(cx, &givenProto) ||
+        !JS_SetPrototype(cx, reflector, givenProto)) {
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+  }
+
   // Step 12 and Step 13.
   return element.forget();
 }
