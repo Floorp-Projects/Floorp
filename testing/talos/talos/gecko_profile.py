@@ -86,7 +86,7 @@ class GeckoProfile(object):
         })
 
     def _save_gecko_profile(self, cycle, symbolicator, missing_symbols_zip,
-                          profile_path):
+                            profile_path):
         try:
             with open(profile_path, 'r') as profile_file:
                 profile = json.load(profile_file)
@@ -169,8 +169,8 @@ class GeckoProfile(object):
                     testname = testname[0:-8]
                 profile_path = os.path.join(gecko_profile_dir, profile_filename)
                 self._save_gecko_profile(cycle, symbolicator,
-                                       missing_symbols_zip,
-                                       profile_path)
+                                         missing_symbols_zip,
+                                         profile_path)
 
                 # Our zip will contain one directory per subtest,
                 # and each subtest directory will contain one or
