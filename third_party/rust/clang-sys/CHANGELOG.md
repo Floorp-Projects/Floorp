@@ -1,3 +1,15 @@
+## [0.14.0] - 2017-01-30
+
+### Changed
+- Changed all enum types from tuple structs to raw integers to avoid
+  [segmentation faults](https://github.com/rust-lang/rust/issues/39394) on some platforms
+
+## [0.13.0] - 2017-01-29
+
+### Changed
+- Changed all opaque pointers types from tuple structs to raw pointers to avoid
+  [segmentation faults](https://github.com/rust-lang/rust/issues/39394) on some platforms
+
 ## [0.12.0] - 2016-12-13
 
 ### Changed

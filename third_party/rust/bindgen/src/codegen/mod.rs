@@ -1,26 +1,30 @@
 mod helpers;
+mod struct_layout;
 
 use self::helpers::{BlobTyBuilder, attributes};
+use self::struct_layout::{align_to, bytes_from_bits};
+use self::struct_layout::{bytes_from_bits_pow2, StructLayoutTracker};
 use aster;
 
 use ir::annotations::FieldAccessorKind;
 use ir::comp::{Base, CompInfo, CompKind, Field, Method, MethodKind};
 use ir::context::{BindgenContext, ItemId};
-use ir::derive::{CanDeriveCopy, CanDeriveDebug};
+use ir::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use ir::enum_ty::{Enum, EnumVariant, EnumVariantValue};
 use ir::function::{Function, FunctionSig};
 use ir::int::IntKind;
-use ir::item::{Item, ItemAncestors, ItemCanonicalName, ItemCanonicalPath};
+use ir::item::{Item, ItemAncestors, ItemCanonicalName, ItemCanonicalPath,
+               ItemSet};
 use ir::item_kind::ItemKind;
 use ir::layout::Layout;
 use ir::module::Module;
 use ir::objc::ObjCInterface;
 use ir::ty::{Type, TypeKind};
-use ir::type_collector::ItemSet;
 use ir::var::Var;
 
 use std::borrow::Cow;
 use std::cell::Cell;
+use std::cmp;
 use std::collections::{HashSet, VecDeque};
 use std::collections::hash_map::{Entry, HashMap};
 use std::fmt::Write;
@@ -360,8 +364,7 @@ impl CodeGenerator for Module {
             }
 
             if item.id() == ctx.root_module() {
-                let saw_union = result.saw_union;
-                if saw_union && !ctx.options().unstable_rust {
+                if result.saw_union && !ctx.options().unstable_rust {
                     utils::prepend_union_types(ctx, &mut *result);
                 }
                 if result.saw_incomplete_array {
@@ -518,7 +521,7 @@ impl CodeGenerator for Type {
             TypeKind::Pointer(..) |
             TypeKind::BlockPointer |
             TypeKind::Reference(..) |
-            TypeKind::TemplateRef(..) |
+            TypeKind::TemplateInstantiation(..) |
             TypeKind::Function(..) |
             TypeKind::ResolvedTypeRef(..) |
             TypeKind::Named => {
@@ -685,10 +688,16 @@ impl<'a> CodeGenerator for Vtable<'a> {
         assert_eq!(item.id(), self.item_id);
         // For now, generate an empty struct, later we should generate function
         // pointers and whatnot.
+        let mut attributes = vec![attributes::repr("C")];
+
+        if ctx.options().derive_default {
+            attributes.push(attributes::derives(&["Default"]))
+        }
+
         let vtable = aster::AstBuilder::new()
             .item()
             .pub_()
-            .with_attr(attributes::repr("C"))
+            .with_attrs(attributes)
             .struct_(self.canonical_name(ctx))
             .build();
         result.push(vtable);
@@ -708,12 +717,12 @@ impl<'a> ItemToRustTy for Vtable<'a> {
 }
 
 struct Bitfield<'a> {
-    index: usize,
+    index: &'a mut usize,
     fields: Vec<&'a Field>,
 }
 
 impl<'a> Bitfield<'a> {
-    fn new(index: usize, fields: Vec<&'a Field>) -> Self {
+    fn new(index: &'a mut usize, fields: Vec<&'a Field>) -> Self {
         Bitfield {
             index: index,
             fields: fields,
@@ -723,88 +732,96 @@ impl<'a> Bitfield<'a> {
     fn codegen_fields(self,
                       ctx: &BindgenContext,
                       fields: &mut Vec<ast::StructField>,
-                      methods: &mut Vec<ast::ImplItem>) {
+                      _methods: &mut Vec<ast::ImplItem>)
+                      -> Layout {
         use aster::struct_field::StructFieldBuilder;
-        use std::cmp;
-        let mut total_width = self.fields
-            .iter()
-            .fold(0u32, |acc, f| acc + f.bitfield().unwrap());
 
-        if !total_width.is_power_of_two() || total_width < 8 {
-            total_width = cmp::max(8, total_width.next_power_of_two());
-        }
-        debug_assert_eq!(total_width % 8, 0);
-        let total_width_in_bytes = total_width as usize / 8;
+        // NOTE: What follows is reverse-engineered from LLVM's
+        // lib/AST/RecordLayoutBuilder.cpp
+        //
+        // FIXME(emilio): There are some differences between Microsoft and the
+        // Itanium ABI, but we'll ignore those and stick to Itanium for now.
+        //
+        // Also, we need to handle packed bitfields and stuff.
+        // TODO(emilio): Take into account C++'s wide bitfields, and
+        // packing, sigh.
+        let mut total_size_in_bits = 0;
+        let mut max_align = 0;
+        let mut unfilled_bits_in_last_unit = 0;
+        let mut field_size_in_bits = 0;
+        *self.index += 1;
+        let mut last_field_name = format!("_bitfield_{}", self.index);
+        let mut last_field_align = 0;
 
-        let bitfield_type =
-            BlobTyBuilder::new(Layout::new(total_width_in_bytes,
-                                           total_width_in_bytes))
-                .build();
-        let field_name = format!("_bitfield_{}", self.index);
-        let field_ident = ctx.ext_cx().ident_of(&field_name);
-        let field = StructFieldBuilder::named(&field_name)
-            .pub_()
-            .build_ty(bitfield_type.clone());
-        fields.push(field);
-
-
-        let mut offset = 0;
         for field in self.fields {
             let width = field.bitfield().unwrap();
-            let field_name = field.name()
-                .map(ToOwned::to_owned)
-                .unwrap_or_else(|| format!("at_offset_{}", offset));
-
             let field_item = ctx.resolve_item(field.ty());
             let field_ty_layout = field_item.kind()
                 .expect_type()
                 .layout(ctx)
                 .expect("Bitfield without layout? Gah!");
 
-            let field_type = field_item.to_rust_ty(ctx);
-            let int_type = BlobTyBuilder::new(field_ty_layout).build();
+            let field_align = field_ty_layout.align;
 
-            let getter_name = ctx.rust_ident(&field_name);
-            let setter_name = ctx.ext_cx()
-                .ident_of(&format!("set_{}", &field_name));
-            let mask = ((1usize << width) - 1) << offset;
-            let prefix = ctx.trait_prefix();
-            // The transmute is unfortunate, but it's needed for enums in
-            // bitfields.
-            let item = quote_item!(ctx.ext_cx(),
-                impl X {
-                    #[inline]
-                    pub fn $getter_name(&self) -> $field_type {
-                        unsafe {
-                            ::$prefix::mem::transmute(
-                                (
-                                    (self.$field_ident &
-                                        ($mask as $bitfield_type))
-                                     >> $offset
-                                ) as $int_type
-                            )
-                        }
-                    }
+            if field_size_in_bits != 0 &&
+                (width == 0 || width as usize > unfilled_bits_in_last_unit) {
+                field_size_in_bits = align_to(field_size_in_bits, field_align);
+                // Push the new field.
+                let ty =
+                    BlobTyBuilder::new(Layout::new(bytes_from_bits_pow2(field_size_in_bits),
+                                                   bytes_from_bits_pow2(last_field_align)))
+                        .build();
 
-                    #[inline]
-                    pub fn $setter_name(&mut self, val: $field_type) {
-                        self.$field_ident &= !($mask as $bitfield_type);
-                        self.$field_ident |=
-                            (val as $int_type as $bitfield_type << $offset) &
-                                ($mask as $bitfield_type);
-                    }
-                }
-            )
-                .unwrap();
+                let field = StructFieldBuilder::named(&last_field_name)
+                    .pub_()
+                    .build_ty(ty);
+                fields.push(field);
 
-            let items = match item.unwrap().node {
-                ast::ItemKind::Impl(_, _, _, _, _, items) => items,
-                _ => unreachable!(),
-            };
+                // TODO(emilio): dedup this.
+                *self.index += 1;
+                last_field_name = format!("_bitfield_{}", self.index);
 
-            methods.extend(items.into_iter());
-            offset += width;
+                // Now reset the size and the rest of stuff.
+                // unfilled_bits_in_last_unit = 0;
+                field_size_in_bits = 0;
+                last_field_align = 0;
+            }
+
+            // TODO(emilio): Create the accessors. Problem here is that we still
+            // don't know which one is going to be the final alignment of the
+            // bitfield, and whether we have to index in it. Thus, we don't know
+            // which integer type do we need.
+            //
+            // We could push them to a Vec or something, but given how buggy
+            // they where maybe it's not a great idea?
+            field_size_in_bits += width as usize;
+            total_size_in_bits += width as usize;
+
+
+            let data_size = align_to(field_size_in_bits, field_align * 8);
+
+            max_align = cmp::max(max_align, field_align);
+
+            // NB: The width here is completely, absolutely intentional.
+            last_field_align = cmp::max(last_field_align, width as usize);
+
+            unfilled_bits_in_last_unit = data_size - field_size_in_bits;
         }
+
+        if field_size_in_bits != 0 {
+            // Push the last field.
+            let ty =
+                BlobTyBuilder::new(Layout::new(bytes_from_bits_pow2(field_size_in_bits),
+                                               bytes_from_bits_pow2(last_field_align)))
+                    .build();
+
+            let field = StructFieldBuilder::named(&last_field_name)
+                .pub_()
+                .build_ty(ty);
+            fields.push(field);
+        }
+
+        Layout::new(bytes_from_bits(total_size_in_bits), max_align)
     }
 }
 
@@ -862,8 +879,10 @@ impl CodeGenerator for CompInfo {
                 let item = quote_item!(ctx.ext_cx(),
                                        #[test]
                                        fn $fn_name() {
-                                           assert_eq!($size_of_expr, $size);
-                                           assert_eq!($align_of_expr, $align);
+                                           assert_eq!($size_of_expr, $size,
+                                                      concat!("Size of template specialization: ", stringify!($ident)));
+                                           assert_eq!($align_of_expr, $align,
+                                                      concat!("Alignment of template specialization: ", stringify!($ident)));
                                        })
                     .unwrap();
                 result.push(item);
@@ -873,6 +892,7 @@ impl CodeGenerator for CompInfo {
 
         let mut attributes = vec![];
         let mut needs_clone_impl = false;
+        let mut needs_default_impl = false;
         if ctx.options().generate_comments {
             if let Some(comment) = item.comment() {
                 attributes.push(attributes::doc(comment));
@@ -888,6 +908,12 @@ impl CodeGenerator for CompInfo {
         let mut derives = vec![];
         if item.can_derive_debug(ctx, ()) {
             derives.push("Debug");
+        }
+
+        if item.can_derive_default(ctx, ()) {
+            derives.push("Default");
+        } else {
+            needs_default_impl = ctx.options().derive_default;
         }
 
         if item.can_derive_copy(ctx, ()) &&
@@ -940,6 +966,7 @@ impl CodeGenerator for CompInfo {
         // Also, we need to generate the vtable in such a way it "inherits" from
         // the parent too.
         let mut fields = vec![];
+        let mut struct_layout = StructLayoutTracker::new(ctx, self);
         if self.needs_explicit_vtable(ctx) {
             let vtable =
                 Vtable::new(item.id(), self.methods(), self.base_members());
@@ -950,6 +977,8 @@ impl CodeGenerator for CompInfo {
             let vtable_field = StructFieldBuilder::named("vtable_")
                 .pub_()
                 .build_ty(vtable_type);
+
+            struct_layout.saw_vtable();
 
             fields.push(vtable_field);
         }
@@ -984,6 +1013,8 @@ impl CodeGenerator for CompInfo {
             } else {
                 format!("_base_{}", i)
             };
+
+            struct_layout.saw_base(base_ty);
 
             let field = StructFieldBuilder::named(field_name)
                 .pub_()
@@ -1038,9 +1069,11 @@ impl CodeGenerator for CompInfo {
                 debug_assert!(!current_bitfield_fields.is_empty());
                 let bitfield_fields =
                     mem::replace(&mut current_bitfield_fields, vec![]);
-                bitfield_count += 1;
-                Bitfield::new(bitfield_count, bitfield_fields)
+                let bitfield_layout = Bitfield::new(&mut bitfield_count,
+                                                    bitfield_fields)
                     .codegen_fields(ctx, &mut fields, &mut methods);
+                struct_layout.saw_bitfield_batch(bitfield_layout);
+
                 current_bitfield_width = None;
                 current_bitfield_layout = None;
             }
@@ -1071,8 +1104,7 @@ impl CodeGenerator for CompInfo {
                 } else {
                     quote_ty!(ctx.ext_cx(), __BindgenUnionField<$ty>)
                 }
-            } else if let Some(item) =
-                field_ty.is_incomplete_array(ctx) {
+            } else if let Some(item) = field_ty.is_incomplete_array(ctx) {
                 result.saw_incomplete_array();
 
                 let inner = item.to_rust_ty(ctx);
@@ -1099,6 +1131,11 @@ impl CodeGenerator for CompInfo {
                     format!("__bindgen_anon_{}", anonymous_field_count)
                 }
             };
+
+            if let Some(padding_field) =
+                struct_layout.pad_field(&field_name, field_ty, field.offset()) {
+                fields.push(padding_field);
+            }
 
             let is_private = field.annotations()
                 .private_fields()
@@ -1191,9 +1228,10 @@ impl CodeGenerator for CompInfo {
             debug_assert!(!current_bitfield_fields.is_empty());
             let bitfield_fields = mem::replace(&mut current_bitfield_fields,
                                                vec![]);
-            bitfield_count += 1;
-            Bitfield::new(bitfield_count, bitfield_fields)
+            let bitfield_layout = Bitfield::new(&mut bitfield_count,
+                                                bitfield_fields)
                 .codegen_fields(ctx, &mut fields, &mut methods);
+            struct_layout.saw_bitfield_batch(bitfield_layout);
         }
         debug_assert!(current_bitfield_fields.is_empty());
 
@@ -1203,6 +1241,9 @@ impl CodeGenerator for CompInfo {
             let field = StructFieldBuilder::named("bindgen_union_field")
                 .pub_()
                 .build_ty(ty);
+
+            struct_layout.saw_union(layout);
+
             fields.push(field);
         }
 
@@ -1226,6 +1267,16 @@ impl CodeGenerator for CompInfo {
                 None => {
                     warn!("Opaque type without layout! Expect dragons!");
                 }
+            }
+        } else if !is_union && !self.is_unsized(ctx) {
+            if let Some(padding_field) =
+                layout.and_then(|layout| struct_layout.pad_struct(&canonical_name, layout)) {
+                fields.push(padding_field);
+            }
+
+            if let Some(align_field) =
+                layout.and_then(|layout| struct_layout.align_struct(layout)) {
+                fields.push(align_field);
             }
         }
 
@@ -1296,7 +1347,7 @@ impl CodeGenerator for CompInfo {
                   canonical_name);
         }
 
-        if applicable_template_args.is_empty() && !self.found_unknown_attr() {
+        if applicable_template_args.is_empty() {
             for var in self.inner_vars() {
                 ctx.resolve_item(*var)
                     .codegen(ctx, result, whitelisted_items, &());
@@ -1305,19 +1356,70 @@ impl CodeGenerator for CompInfo {
             if let Some(layout) = layout {
                 let fn_name = format!("bindgen_test_layout_{}", canonical_name);
                 let fn_name = ctx.rust_ident_raw(&fn_name);
-                let ident = ctx.rust_ident_raw(&canonical_name);
+                let type_name = ctx.rust_ident_raw(&canonical_name);
                 let prefix = ctx.trait_prefix();
                 let size_of_expr = quote_expr!(ctx.ext_cx(),
-                                ::$prefix::mem::size_of::<$ident>());
+                                ::$prefix::mem::size_of::<$type_name>());
                 let align_of_expr = quote_expr!(ctx.ext_cx(),
-                                ::$prefix::mem::align_of::<$ident>());
+                                ::$prefix::mem::align_of::<$type_name>());
                 let size = layout.size;
                 let align = layout.align;
+
+                let check_struct_align = if align > mem::size_of::<*mut ()>() {
+                    // FIXME when [RFC 1358](https://github.com/rust-lang/rust/issues/33626) ready
+                    None
+                } else {
+                    quote_item!(ctx.ext_cx(),
+                        assert_eq!($align_of_expr,
+                                   $align,
+                                   concat!("Alignment of ", stringify!($type_name)));
+                    )
+                };
+
+                // FIXME when [issue #465](https://github.com/servo/rust-bindgen/issues/465) ready
+                let too_many_base_vtables = self.base_members()
+                    .iter()
+                    .filter(|base| {
+                        ctx.resolve_type(base.ty).has_vtable(ctx)
+                    })
+                    .count() > 1;
+
+                let should_skip_field_offset_checks = item.is_opaque(ctx) ||
+                                                      too_many_base_vtables;
+
+                let check_field_offset = if should_skip_field_offset_checks {
+                    None
+                } else {
+                    let asserts = self.fields()
+                    .iter()
+                    .filter(|field| field.bitfield().is_none())
+                    .flat_map(|field| {
+                        field.name().and_then(|name| {
+                            field.offset().and_then(|offset| {
+                                let field_offset = offset / 8;
+                                let field_name = ctx.rust_ident(name);
+
+                                quote_item!(ctx.ext_cx(),
+                                    assert_eq!(unsafe { &(*(0 as *const $type_name)).$field_name as *const _ as usize },
+                                               $field_offset,
+                                               concat!("Alignment of field: ", stringify!($type_name), "::", stringify!($field_name)));
+                                )
+                            })
+                        })
+                    }).collect::<Vec<P<ast::Item>>>();
+
+                    Some(asserts)
+                };
+
                 let item = quote_item!(ctx.ext_cx(),
                     #[test]
                     fn $fn_name() {
-                        assert_eq!($size_of_expr, $size);
-                        assert_eq!($align_of_expr, $align);
+                        assert_eq!($size_of_expr,
+                                   $size,
+                                   concat!("Size of: ", stringify!($type_name)));
+
+                        $check_struct_align
+                        $check_field_offset
                     })
                     .unwrap();
                 result.push(item);
@@ -1354,8 +1456,14 @@ impl CodeGenerator for CompInfo {
 
         // NB: We can't use to_rust_ty here since for opaque types this tries to
         // use the specialization knowledge to generate a blob field.
-        let ty_for_impl =
-            aster::AstBuilder::new().ty().path().id(&canonical_name).build();
+        let ty_for_impl = aster::AstBuilder::new()
+            .ty()
+            .path()
+            .segment(&canonical_name)
+            .with_generics(generics.clone())
+            .build()
+            .build();
+
         if needs_clone_impl {
             let impl_ = quote_item!(ctx.ext_cx(),
                 impl X {
@@ -1379,6 +1487,32 @@ impl CodeGenerator for CompInfo {
                 .build_ty(ty_for_impl.clone());
 
             result.push(clone_impl);
+        }
+
+        if needs_default_impl {
+            let prefix = ctx.trait_prefix();
+            let impl_ = quote_item!(ctx.ext_cx(),
+                impl X {
+                    fn default() -> Self { unsafe { ::$prefix::mem::zeroed() } }
+                }
+            );
+
+            let impl_ = match impl_.unwrap().node {
+                ast::ItemKind::Impl(_, _, _, _, _, ref items) => items.clone(),
+                _ => unreachable!(),
+            };
+
+            let default_impl = aster::AstBuilder::new()
+                .item()
+                .impl_()
+                .trait_()
+                .id("Default")
+                .build()
+                .with_generics(generics.clone())
+                .with_items(impl_)
+                .build_ty(ty_for_impl.clone());
+
+            result.push(default_impl);
         }
 
         if !methods.is_empty() {
@@ -1513,9 +1647,10 @@ impl MethodCodegen for Method {
         // If it's a constructor, we need to insert an extra parameter with a
         // variable called `__bindgen_tmp` we're going to create.
         if self.is_constructor() {
+            let prefix = ctx.trait_prefix();
             let tmp_variable_decl =
                 quote_stmt!(ctx.ext_cx(),
-                            let mut __bindgen_tmp = ::std::mem::uninitialized())
+                            let mut __bindgen_tmp = ::$prefix::mem::uninitialized())
                 .unwrap();
             stmts.push(tmp_variable_decl);
             exprs[0] = quote_expr!(ctx.ext_cx(), &mut __bindgen_tmp);
@@ -2041,14 +2176,14 @@ impl ToRustTy for Type {
                 quote_ty!(ctx.ext_cx(), ::$prefix::option::Option<$ty>)
             }
             TypeKind::Array(item, len) => {
-                let inner = item.to_rust_ty(ctx);
-                aster::ty::TyBuilder::new().array(len).build(inner)
+                let ty = item.to_rust_ty(ctx);
+                aster::ty::TyBuilder::new().array(len).build(ty)
             }
             TypeKind::Enum(..) => {
                 let path = item.namespace_aware_canonical_path(ctx);
                 aster::AstBuilder::new().ty().path().ids(path).build()
             }
-            TypeKind::TemplateRef(inner, ref template_args) => {
+            TypeKind::TemplateInstantiation(inner, ref template_args) => {
                 // PS: Sorry for the duplication here.
                 let mut inner_ty = inner.to_rust_ty(ctx).unwrap();
 
@@ -2057,7 +2192,7 @@ impl ToRustTy for Type {
                         .map(|arg| arg.to_rust_ty(ctx))
                         .collect::<Vec<_>>();
 
-                    path.segments.last_mut().unwrap().parameters = if 
+                    path.segments.last_mut().unwrap().parameters = if
                         template_args.is_empty() {
                         None
                     } else {
@@ -2153,61 +2288,8 @@ impl ToRustTy for FunctionSig {
 
     fn to_rust_ty(&self, ctx: &BindgenContext, _item: &Item) -> P<ast::Ty> {
         // TODO: we might want to consider ignoring the reference return value.
-        let return_item = ctx.resolve_item(self.return_type());
-        let ret =
-            if let TypeKind::Void = *return_item.kind().expect_type().kind() {
-                ast::FunctionRetTy::Default(ctx.span())
-            } else {
-                ast::FunctionRetTy::Ty(return_item.to_rust_ty(ctx))
-            };
-
-        let mut unnamed_arguments = 0;
-        let arguments = self.argument_types().iter().map(|&(ref name, ty)| {
-            let arg_item = ctx.resolve_item(ty);
-            let arg_ty = arg_item.kind().expect_type();
-
-            // From the C90 standard[1]:
-            //
-            //     A declaration of a parameter as "array of type" shall be
-            //     adjusted to "qualified pointer to type", where the type
-            //     qualifiers (if any) are those specified within the [ and ] of
-            //     the array type derivation.
-            //
-            // [1]: http://c0x.coding-guidelines.com/6.7.5.3.html
-            let arg_ty = match *arg_ty.canonical_type(ctx).kind() {
-                TypeKind::Array(t, _) => {
-                    t.to_rust_ty(ctx).to_ptr(arg_ty.is_const(), ctx.span())
-                },
-                TypeKind::Pointer(inner) => {
-                    let inner = ctx.resolve_item(inner);
-                    let inner_ty = inner.expect_type();
-                    if let TypeKind::ObjCInterface(_) = *inner_ty.canonical_type(ctx).kind() {
-                        quote_ty!(ctx.ext_cx(), id)
-                    } else {
-                        arg_item.to_rust_ty(ctx)
-                    }
-                },
-                _ => {
-                    arg_item.to_rust_ty(ctx)
-                }
-            };
-
-            let arg_name = match *name {
-                Some(ref name) => ctx.rust_mangle(name).into_owned(),
-                None => {
-                    unnamed_arguments += 1;
-                    format!("arg{}", unnamed_arguments)
-                }
-            };
-
-            assert!(!arg_name.is_empty());
-
-            ast::Arg {
-                ty: arg_ty,
-                pat: aster::AstBuilder::new().pat().id(arg_name),
-                id: ast::DUMMY_NODE_ID,
-            }
-        }).collect::<Vec<_>>();
+        let ret = utils::fnsig_return_ty(ctx, &self);
+        let arguments = utils::fnsig_arguments(ctx, &self);
 
         let decl = P(ast::FnDecl {
             inputs: arguments,
@@ -2217,7 +2299,7 @@ impl ToRustTy for FunctionSig {
 
         let fnty = ast::TyKind::BareFn(P(ast::BareFnTy {
             unsafety: ast::Unsafety::Unsafe,
-            abi: self.abi(),
+            abi: self.abi().expect("Invalid abi for function!"),
             lifetimes: vec![],
             decl: decl,
         }));
@@ -2297,7 +2379,8 @@ impl CodeGenerator for Function {
             vis: ast::Visibility::Public,
         };
 
-        let item = ForeignModBuilder::new(signature.abi())
+        let item = ForeignModBuilder::new(signature.abi()
+                .expect("Invalid abi for function!"))
             .with_foreign_item(foreign_item)
             .build(ctx);
 
@@ -2316,9 +2399,34 @@ impl CodeGenerator for ObjCInterface {
         let mut trait_items = vec![];
 
         for method in self.methods() {
-            let method_name = ctx.rust_ident(method.name());
+            let signature = method.signature();
+            let fn_args = utils::fnsig_arguments(ctx, signature);
+            let fn_ret = utils::fnsig_return_ty(ctx, signature);
+            let sig = aster::AstBuilder::new()
+                .method_sig()
+                .unsafe_()
+                .fn_decl()
+                .self_()
+                .build(ast::SelfKind::Value(ast::Mutability::Immutable))
+                .with_args(fn_args.clone())
+                .build(fn_ret);
 
-            let body = quote_stmt!(ctx.ext_cx(), msg_send![self, $method_name])
+            // Collect the actual used argument names
+            let arg_names: Vec<_> = fn_args.iter()
+                .map(|ref arg| match arg.pat.node {
+                    ast::PatKind::Ident(_, ref spanning, _) => {
+                        spanning.node.name.as_str().to_string()
+                    }
+                    _ => {
+                        panic!("odd argument!");
+                    }
+                })
+                .collect();
+
+            let methods_and_args =
+                ctx.rust_ident(&method.format_method_call(&arg_names));
+            let body = quote_stmt!(ctx.ext_cx(),
+                                   msg_send![self, $methods_and_args])
                 .unwrap();
             let block = ast::Block {
                 stmts: vec![body],
@@ -2327,13 +2435,6 @@ impl CodeGenerator for ObjCInterface {
                 span: ctx.span(),
             };
 
-            let sig = aster::AstBuilder::new()
-                .method_sig()
-                .unsafe_()
-                .fn_decl()
-                .self_()
-                .build(ast::SelfKind::Value(ast::Mutability::Immutable))
-                .build(ast::FunctionRetTy::Default(ctx.span()));
             let attrs = vec![];
 
             let impl_item = ast::ImplItem {
@@ -2400,6 +2501,13 @@ pub fn codegen(context: &mut BindgenContext) -> Vec<P<ast::Item>> {
             }
         }
 
+        if let Some(path) = context.options().emit_ir_graphviz.as_ref() {
+            match context.emit_ir_graphviz(path.clone()) {
+                Ok(()) => info!("Your dot file was generated successfully into: {}", path),
+                Err(e) => error!("{}", e),
+            }
+        }
+
         context.resolve_item(context.root_module())
             .codegen(context, &mut result, &whitelisted_items, &());
 
@@ -2411,12 +2519,12 @@ mod utils {
     use super::ItemToRustTy;
     use aster;
     use ir::context::{BindgenContext, ItemId};
+    use ir::function::FunctionSig;
     use ir::item::{Item, ItemCanonicalPath};
     use ir::ty::TypeKind;
     use std::mem;
     use syntax::ast;
     use syntax::ptr::P;
-
 
     pub fn prepend_objc_header(ctx: &BindgenContext,
                                result: &mut Vec<P<ast::Item>>) {
@@ -2504,9 +2612,9 @@ mod utils {
             .unwrap();
 
         let union_field_debug_impl = quote_item!(ctx.ext_cx(),
-            impl<T> ::std::fmt::Debug for __BindgenUnionField<T> {
-                fn fmt(&self, fmt: &mut ::std::fmt::Formatter)
-                       -> ::std::fmt::Result {
+            impl<T> ::$prefix::fmt::Debug for __BindgenUnionField<T> {
+                fn fmt(&self, fmt: &mut ::$prefix::fmt::Formatter)
+                       -> ::$prefix::fmt::Result {
                     fmt.write_str("__BindgenUnionField")
                 }
             }
@@ -2530,6 +2638,7 @@ mod utils {
 
         let incomplete_array_decl = quote_item!(ctx.ext_cx(),
             #[repr(C)]
+            #[derive(Default)]
             pub struct __IncompleteArrayField<T>(
                 ::$prefix::marker::PhantomData<T>);
         )
@@ -2696,5 +2805,69 @@ mod utils {
             ast::TyKind::BareFn(bare_fn) => bare_fn.unwrap().decl,
             _ => panic!("How did this happen exactly?"),
         }
+    }
+
+    pub fn fnsig_return_ty(ctx: &BindgenContext,
+                           sig: &FunctionSig)
+                           -> ast::FunctionRetTy {
+        let return_item = ctx.resolve_item(sig.return_type());
+        if let TypeKind::Void = *return_item.kind().expect_type().kind() {
+            ast::FunctionRetTy::Default(ctx.span())
+        } else {
+            ast::FunctionRetTy::Ty(return_item.to_rust_ty(ctx))
+        }
+    }
+
+    pub fn fnsig_arguments(ctx: &BindgenContext,
+                           sig: &FunctionSig)
+                           -> Vec<ast::Arg> {
+        use super::ToPtr;
+        let mut unnamed_arguments = 0;
+        sig.argument_types().iter().map(|&(ref name, ty)| {
+            let arg_item = ctx.resolve_item(ty);
+            let arg_ty = arg_item.kind().expect_type();
+
+            // From the C90 standard[1]:
+            //
+            //     A declaration of a parameter as "array of type" shall be
+            //     adjusted to "qualified pointer to type", where the type
+            //     qualifiers (if any) are those specified within the [ and ] of
+            //     the array type derivation.
+            //
+            // [1]: http://c0x.coding-guidelines.com/6.7.5.3.html
+            let arg_ty = match *arg_ty.canonical_type(ctx).kind() {
+                TypeKind::Array(t, _) => {
+                    t.to_rust_ty(ctx).to_ptr(ctx.resolve_type(t).is_const(), ctx.span())
+                },
+                TypeKind::Pointer(inner) => {
+                    let inner = ctx.resolve_item(inner);
+                    let inner_ty = inner.expect_type();
+                    if let TypeKind::ObjCInterface(_) = *inner_ty.canonical_type(ctx).kind() {
+                        quote_ty!(ctx.ext_cx(), id)
+                    } else {
+                        arg_item.to_rust_ty(ctx)
+                    }
+                },
+                _ => {
+                    arg_item.to_rust_ty(ctx)
+                }
+            };
+
+            let arg_name = match *name {
+                Some(ref name) => ctx.rust_mangle(name).into_owned(),
+                None => {
+                    unnamed_arguments += 1;
+                    format!("arg{}", unnamed_arguments)
+                }
+            };
+
+            assert!(!arg_name.is_empty());
+
+            ast::Arg {
+                ty: arg_ty,
+                pat: aster::AstBuilder::new().pat().id(arg_name),
+                id: ast::DUMMY_NODE_ID,
+            }
+        }).collect::<Vec<_>>()
     }
 }

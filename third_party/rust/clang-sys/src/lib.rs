@@ -45,7 +45,6 @@ pub mod support;
 mod link;
 
 use std::mem;
-use std::ptr;
 
 use libc::{c_char, c_int, c_longlong, c_uint, c_ulong, c_ulonglong, c_void, time_t};
 
@@ -66,28 +65,9 @@ macro_rules! cenum {
     ($(#[$meta:meta])* enum $name:ident {
         $($(#[$vmeta:meta])* const $variant:ident = $value:expr), +,
     }) => (
-        #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-        #[repr(C)]
-        pub struct $name(c_int);
+        pub type $name = c_int;
 
-        impl $name {
-            //- Constructors ---------------------
-
-            /// Constructs an instance of this C enum from the supplied discriminant if possible.
-            pub fn from_raw(discriminant: c_int) -> Option<$name> {
-                $(if discriminant == $value { return Some($variant); })+
-                None
-            }
-
-            //- Accessors ------------------------
-
-            /// Returns the discriminant for this C enum.
-            pub fn to_raw(self) -> c_int {
-                self.0
-            }
-        }
-
-        $($(#[$vmeta])* pub const $variant: $name = $name($value);)+
+        $($(#[$vmeta])* pub const $variant: $name = $value;)+
     );
 }
 
@@ -947,27 +927,7 @@ bitflags! {
 
 // Opaque ________________________________________
 
-macro_rules! opaque {
-    ($name:ident) => (
-        #[derive(Copy, Clone, Debug)]
-        #[repr(C)]
-        pub struct $name(pub *mut c_void);
-
-        impl Default for $name {
-            fn default() -> $name {
-                $name(ptr::null_mut())
-            }
-        }
-
-        impl std::ops::Deref for $name {
-            type Target = *mut c_void;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-    );
-}
+macro_rules! opaque { ($name:ident) => (pub type $name = *mut c_void;); }
 
 opaque!(CXCompilationDatabase);
 opaque!(CXCompileCommand);

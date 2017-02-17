@@ -151,7 +151,7 @@ include!(concat!(env!("OUT_DIR"), "/example.rs"));
 $ cargo install bindgen
 ```
 
-There are a few options documented when running `./bindgen --help`.
+There are a few options documented when running `bindgen --help`. Bindgen is installed to `~/.cargo/bin`. You have to add that directory to your path to use `bindgen`.
 
 ### C++
 
