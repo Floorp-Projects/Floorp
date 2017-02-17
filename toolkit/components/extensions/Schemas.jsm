@@ -966,7 +966,7 @@ class StringType extends Type {
       format = FORMATS[schema.format];
     }
     return new this(schema,
-                    schema.id || undefined,
+                    schema.id,
                     enumeration,
                     schema.minLength || 0,
                     schema.maxLength || Infinity,
