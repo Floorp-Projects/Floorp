@@ -398,11 +398,6 @@ SimpleTest.requestCompleteLog = function() {
         SimpleTest._forceLogMessageOutput = false;
     });
 };
-// Request complete log when using failure patterns so that failure info
-// from infra can be useful.
-if (usesFailurePatterns()) {
-  SimpleTest.requestCompleteLog();
-}
 
 SimpleTest._logResult = function (test, passInfo, failInfo, stack) {
     var url = SimpleTest._getCurrentTestURL();
@@ -1710,4 +1705,10 @@ function getAndroidSdk() {
         document.documentElement.removeChild(iframe);
     }
     return gAndroidSdk;
+}
+
+// Request complete log when using failure patterns so that failure info
+// from infra can be useful.
+if (usesFailurePatterns()) {
+  SimpleTest.requestCompleteLog();
 }
