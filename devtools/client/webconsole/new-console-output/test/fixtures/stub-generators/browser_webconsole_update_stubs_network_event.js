@@ -6,54 +6,10 @@
 "use strict";
 
 Cu.import("resource://gre/modules/osfile.jsm", {});
-const TARGET = "networkEvent";
-const { [TARGET]: snippets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html";
-
-let stubs = {
-  preparedMessages: [],
-  packets: [],
-};
 
 add_task(function* () {
-  for (let {keys, code} of snippets.values()) {
-    OS.File.writeAtomic(TEMP_FILE_PATH, `function triggerPacket() {${code}}`);
-    let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
-    let {ui} = toolbox.getCurrentPanel().hud;
-
-    ok(ui.jsterm, "jsterm exists");
-    ok(ui.newConsoleOutput, "newConsoleOutput exists");
-
-    let networkEvent = new Promise(resolve => {
-      let i = 0;
-      toolbox.target.activeConsole.on(TARGET, (type, res) => {
-        stubs.packets.push(formatPacket(keys[i], res));
-        stubs.preparedMessages.push(formatNetworkEventStub(keys[i], res));
-        if (++i === keys.length) {
-          resolve();
-        }
-      });
-    });
-
-    let networkEventUpdate = new Promise(resolve => {
-      let i = 0;
-      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(event, res) {
-        ui.jsterm.hud.off("network-message-updated", onNetworkUpdated);
-        stubs.preparedMessages.push(
-          formatNetworkEventStub(`${keys[i++]} ${res.packet.updateType}`, res));
-        if (i === keys.length) {
-          resolve();
-        }
-      });
-    });
-
-    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
-      content.wrappedJSObject.triggerPacket();
-    });
-
-    yield Promise.all([networkEvent, networkEventUpdate]);
-  }
-  let filePath = OS.Path.join(`${BASE_PATH}/stubs/${TARGET}.js`);
-  OS.File.writeAtomic(filePath, formatFile(stubs, "NetworkEventMessage"));
-  OS.File.writeAtomic(TEMP_FILE_PATH, "");
+  let fileContent = yield generateNetworkEventStubs();
+  let filePath = OS.Path.join(`${BASE_PATH}/stubs/networkEvent.js`);
+  yield OS.File.writeAtomic(filePath, fileContent);
+  ok(true, "Make the test not fail");
 });
