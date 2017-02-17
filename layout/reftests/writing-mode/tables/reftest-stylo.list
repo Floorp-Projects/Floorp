@@ -12,57 +12,57 @@ asserts(1-2) == vertical-table-specified-width-2.html vertical-table-specified-w
 == vertical-border-collapse-1.html vertical-border-collapse-1.html
 == vertical-border-collapse-2.html vertical-border-collapse-2.html
 
-# == fixed-table-layout-002-vlr.html fixed-table-layout-002-vlr.html
-# == fixed-table-layout-003-vlr.html fixed-table-layout-003-vlr.html
-# == fixed-table-layout-004-vlr.html fixed-table-layout-004-vlr.html
-# == fixed-table-layout-005-vlr.html fixed-table-layout-005-vlr.html
-# == fixed-table-layout-006-vlr.html fixed-table-layout-006-vlr.html
-# == fixed-table-layout-007-vlr.html fixed-table-layout-007-vlr.html
-# == fixed-table-layout-009-vlr.html fixed-table-layout-009-vlr.html
-# == fixed-table-layout-010-vlr.html fixed-table-layout-010-vlr.html
-# == fixed-table-layout-012-vlr.html fixed-table-layout-012-vlr.html
-# == fixed-table-layout-013-vlr.html fixed-table-layout-013-vlr.html
-# == fixed-table-layout-014-vlr.html fixed-table-layout-014-vlr.html
+== fixed-table-layout-002-vlr.html fixed-table-layout-002-vlr.html
+== fixed-table-layout-003-vlr.html fixed-table-layout-003-vlr.html
+== fixed-table-layout-004-vlr.html fixed-table-layout-004-vlr.html
+== fixed-table-layout-005-vlr.html fixed-table-layout-005-vlr.html
+== fixed-table-layout-006-vlr.html fixed-table-layout-006-vlr.html
+== fixed-table-layout-007-vlr.html fixed-table-layout-007-vlr.html
+== fixed-table-layout-009-vlr.html fixed-table-layout-009-vlr.html
+== fixed-table-layout-010-vlr.html fixed-table-layout-010-vlr.html
+== fixed-table-layout-012-vlr.html fixed-table-layout-012-vlr.html
+== fixed-table-layout-013-vlr.html fixed-table-layout-013-vlr.html
+== fixed-table-layout-014-vlr.html fixed-table-layout-014-vlr.html
 == fixed-table-layout-015-vlr.html fixed-table-layout-015-vlr.html
-# == fixed-table-layout-016-vlr.html fixed-table-layout-016-vlr.html
-# == fixed-table-layout-017-vlr.html fixed-table-layout-017-vlr.html
-# == fixed-table-layout-018-vlr.html fixed-table-layout-018-vlr.html
-# == fixed-table-layout-021-vlr.html fixed-table-layout-021-vlr.html
-# == fixed-table-layout-022-vlr.html fixed-table-layout-022-vlr.html
-# == fixed-table-layout-023-vlr.html fixed-table-layout-023-vlr.html
-# == fixed-table-layout-025-vlr.html fixed-table-layout-025-vlr.html
-# == fixed-table-layout-026-vlr.html fixed-table-layout-026-vlr.html
-# == fixed-table-layout-027-vlr.html fixed-table-layout-027-vlr.html
-# == fixed-table-layout-028-vlr.html fixed-table-layout-028-vlr.html
-# == fixed-table-layout-029-vlr.html fixed-table-layout-029-vlr.html
-# == fixed-table-layout-030-vlr.html fixed-table-layout-030-vlr.html
-# == fixed-table-layout-031-vlr.html fixed-table-layout-031-vlr.html
+== fixed-table-layout-016-vlr.html fixed-table-layout-016-vlr.html
+== fixed-table-layout-017-vlr.html fixed-table-layout-017-vlr.html
+== fixed-table-layout-018-vlr.html fixed-table-layout-018-vlr.html
+== fixed-table-layout-021-vlr.html fixed-table-layout-021-vlr.html
+== fixed-table-layout-022-vlr.html fixed-table-layout-022-vlr.html
+== fixed-table-layout-023-vlr.html fixed-table-layout-023-vlr.html
+== fixed-table-layout-025-vlr.html fixed-table-layout-025-vlr.html
+== fixed-table-layout-026-vlr.html fixed-table-layout-026-vlr.html
+== fixed-table-layout-027-vlr.html fixed-table-layout-027-vlr.html
+== fixed-table-layout-028-vlr.html fixed-table-layout-028-vlr.html
+== fixed-table-layout-029-vlr.html fixed-table-layout-029-vlr.html
+== fixed-table-layout-030-vlr.html fixed-table-layout-030-vlr.html
+== fixed-table-layout-031-vlr.html fixed-table-layout-031-vlr.html
 
-# == fixed-table-layout-002-vrl.html fixed-table-layout-002-vrl.html
-# == fixed-table-layout-003-vrl.html fixed-table-layout-003-vrl.html
-# == fixed-table-layout-004-vrl.html fixed-table-layout-004-vrl.html
-# == fixed-table-layout-005-vrl.html fixed-table-layout-005-vrl.html
-# == fixed-table-layout-006-vrl.html fixed-table-layout-006-vrl.html
-# == fixed-table-layout-007-vrl.html fixed-table-layout-007-vrl.html
-# == fixed-table-layout-009-vrl.html fixed-table-layout-009-vrl.html
-# == fixed-table-layout-010-vrl.html fixed-table-layout-010-vrl.html
-# == fixed-table-layout-012-vrl.html fixed-table-layout-012-vrl.html
-# == fixed-table-layout-013-vrl.html fixed-table-layout-013-vrl.html
-# == fixed-table-layout-014-vrl.html fixed-table-layout-014-vrl.html
-# == fixed-table-layout-015-vrl.html fixed-table-layout-015-vrl.html
-# == fixed-table-layout-016-vrl.html fixed-table-layout-016-vrl.html
-# == fixed-table-layout-017-vrl.html fixed-table-layout-017-vrl.html
-# == fixed-table-layout-018-vrl.html fixed-table-layout-018-vrl.html
-# == fixed-table-layout-021-vrl.html fixed-table-layout-021-vrl.html
-# == fixed-table-layout-022-vrl.html fixed-table-layout-022-vrl.html
-# == fixed-table-layout-023-vrl.html fixed-table-layout-023-vrl.html
+== fixed-table-layout-002-vrl.html fixed-table-layout-002-vrl.html
+== fixed-table-layout-003-vrl.html fixed-table-layout-003-vrl.html
+== fixed-table-layout-004-vrl.html fixed-table-layout-004-vrl.html
+== fixed-table-layout-005-vrl.html fixed-table-layout-005-vrl.html
+== fixed-table-layout-006-vrl.html fixed-table-layout-006-vrl.html
+== fixed-table-layout-007-vrl.html fixed-table-layout-007-vrl.html
+== fixed-table-layout-009-vrl.html fixed-table-layout-009-vrl.html
+== fixed-table-layout-010-vrl.html fixed-table-layout-010-vrl.html
+== fixed-table-layout-012-vrl.html fixed-table-layout-012-vrl.html
+== fixed-table-layout-013-vrl.html fixed-table-layout-013-vrl.html
+== fixed-table-layout-014-vrl.html fixed-table-layout-014-vrl.html
+== fixed-table-layout-015-vrl.html fixed-table-layout-015-vrl.html
+== fixed-table-layout-016-vrl.html fixed-table-layout-016-vrl.html
+== fixed-table-layout-017-vrl.html fixed-table-layout-017-vrl.html
+== fixed-table-layout-018-vrl.html fixed-table-layout-018-vrl.html
+== fixed-table-layout-021-vrl.html fixed-table-layout-021-vrl.html
+== fixed-table-layout-022-vrl.html fixed-table-layout-022-vrl.html
+== fixed-table-layout-023-vrl.html fixed-table-layout-023-vrl.html
 == fixed-table-layout-025-vrl.html fixed-table-layout-025-vrl.html
-# == fixed-table-layout-026-vrl.html fixed-table-layout-026-vrl.html
-# == fixed-table-layout-027-vrl.html fixed-table-layout-027-vrl.html
-# == fixed-table-layout-028-vrl.html fixed-table-layout-028-vrl.html
-# == fixed-table-layout-029-vrl.html fixed-table-layout-029-vrl.html
-# == fixed-table-layout-030-vrl.html fixed-table-layout-030-vrl.html
-# == fixed-table-layout-031-vrl.html fixed-table-layout-031-vrl.html
+== fixed-table-layout-026-vrl.html fixed-table-layout-026-vrl.html
+== fixed-table-layout-027-vrl.html fixed-table-layout-027-vrl.html
+== fixed-table-layout-028-vrl.html fixed-table-layout-028-vrl.html
+== fixed-table-layout-029-vrl.html fixed-table-layout-029-vrl.html
+== fixed-table-layout-030-vrl.html fixed-table-layout-030-vrl.html
+== fixed-table-layout-031-vrl.html fixed-table-layout-031-vrl.html
 
 # HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002.xht
 # HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-003.xht

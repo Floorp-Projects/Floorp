@@ -43,8 +43,8 @@ fails == pre-wrap-1.html pre-wrap-1.html
 == soft-hyphens-break-word-1b.html soft-hyphens-break-word-1b.html
 == soft-hyphens-break-word-1c.html soft-hyphens-break-word-1c.html
 # Tests for soft hyphens in table cells, bug 418975
-# == soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
-# == soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
+== soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
+== soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
 == soft-hyphen-in-table-2.html soft-hyphen-in-table-2.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually),
 # D2D, and Skia have subpixel positioning.  The tests for pixel-snapping assume that
