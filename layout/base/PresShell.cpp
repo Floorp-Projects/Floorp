@@ -983,15 +983,13 @@ PresShell::Init(nsIDocument* aDocument,
       Preferences::GetInt("layout.reflow.timeslice", NS_MAX_REFLOW_TIME);
   }
 
+  if (nsStyleSheetService* ss = nsStyleSheetService::GetInstance()) {
+    ss->RegisterPresShell(this);
+  }
+
   {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-      os->AddObserver(this, "agent-sheet-added", false);
-      os->AddObserver(this, "user-sheet-added", false);
-      os->AddObserver(this, "author-sheet-added", false);
-      os->AddObserver(this, "agent-sheet-removed", false);
-      os->AddObserver(this, "user-sheet-removed", false);
-      os->AddObserver(this, "author-sheet-removed", false);
 #ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", false);
 #endif
@@ -1212,15 +1210,13 @@ PresShell::Destroy()
     mPresContext->EventStateManager()->NotifyDestroyPresContext(mPresContext);
   }
 
+  if (nsStyleSheetService* ss = nsStyleSheetService::GetInstance()) {
+    ss->UnregisterPresShell(this);
+  }
+
   {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-      os->RemoveObserver(this, "agent-sheet-added");
-      os->RemoveObserver(this, "user-sheet-added");
-      os->RemoveObserver(this, "author-sheet-added");
-      os->RemoveObserver(this, "agent-sheet-removed");
-      os->RemoveObserver(this, "user-sheet-removed");
-      os->RemoveObserver(this, "author-sheet-removed");
 #ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
 #endif
@@ -9588,48 +9584,6 @@ PresShell::Observe(nsISupports* aSubject,
   }
 #endif
 
-  if (!nsCRT::strcmp(aTopic, "agent-sheet-added")) {
-    if (mStyleSet) {
-      AddAgentSheet(aSubject);
-    }
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "user-sheet-added")) {
-    if (mStyleSet) {
-      AddUserSheet(aSubject);
-    }
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "author-sheet-added")) {
-    if (mStyleSet) {
-      AddAuthorSheet(aSubject);
-    }
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "agent-sheet-removed")) {
-    if (mStyleSet) {
-      RemoveSheet(SheetType::Agent, aSubject);
-    }
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "user-sheet-removed")) {
-    if (mStyleSet) {
-      RemoveSheet(SheetType::User, aSubject);
-    }
-    return NS_OK;
-  }
-
-  if (!nsCRT::strcmp(aTopic, "author-sheet-removed")) {
-    if (mStyleSet) {
-      RemoveSheet(SheetType::Doc, aSubject);
-    }
-    return NS_OK;
-  }
-
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
     if (!AssumeAllFramesVisible() && mPresContext->IsRootContentDocument()) {
       DoUpdateApproximateFrameVisibility(/* aRemoveOnly = */ true);
@@ -11107,30 +11061,68 @@ nsIPresShell::SyncWindowProperties(nsView* aView)
   }
 }
 
+static SheetType
+ToSheetType(uint32_t aServiceSheetType)
+{
+  switch (aServiceSheetType) {
+    case nsIStyleSheetService::AGENT_SHEET:
+      return SheetType::Agent;
+      break;
+    case nsIStyleSheetService::USER_SHEET:
+      return SheetType::User;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected aSheetType value");
+      // fall through
+    case nsIStyleSheetService::AUTHOR_SHEET:
+      return SheetType::Doc;
+  }
+}
+
 nsresult
 nsIPresShell::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                       bool* aRetVal)
 {
-  SheetType type;
-  switch (aSheetType) {
-    case nsIStyleSheetService::AGENT_SHEET:
-      type = SheetType::Agent;
-      break;
-    case nsIStyleSheetService::USER_SHEET:
-      type = SheetType::User;
-      break;
-    case nsIStyleSheetService::AUTHOR_SHEET:
-      type = SheetType::Doc;
-      break;
-    default:
-      MOZ_ASSERT(false, "unexpected aSheetType value");
-      return NS_ERROR_ILLEGAL_VALUE;
-  }
-
   *aRetVal = false;
   if (nsStyleSet* styleSet = mStyleSet->GetAsGecko()) {
     // ServoStyleSets do not have rule processors.
+    SheetType type = ToSheetType(aSheetType);
     *aRetVal = styleSet->HasRuleProcessorUsedByMultipleStyleSets(type);
   }
   return NS_OK;
+}
+
+void
+PresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
+                                             uint32_t aSheetType)
+{
+  if (!mStyleSet) {
+    return;
+  }
+
+  switch (aSheetType) {
+    case nsIStyleSheetService::AGENT_SHEET:
+      AddAgentSheet(aSheet);
+      break;
+    case nsIStyleSheetService::USER_SHEET:
+      AddUserSheet(aSheet);
+      break;
+    case nsIStyleSheetService::AUTHOR_SHEET:
+      AddAuthorSheet(aSheet);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected aSheetType value");
+      break;
+  }
+}
+
+void
+PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
+                                               uint32_t aSheetType)
+{
+  if (!mStyleSet) {
+    return;
+  }
+
+  RemoveSheet(ToSheetType(aSheetType), aSheet);
 }
