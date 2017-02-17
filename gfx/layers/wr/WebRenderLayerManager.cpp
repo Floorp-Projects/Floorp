@@ -87,6 +87,12 @@ WebRenderLayer::RelativeToParent(Rect aRect)
 }
 
 Rect
+WebRenderLayer::VisibleBoundsRelativeToParent()
+{
+  return RelativeToParent(IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect()));
+}
+
+Rect
 WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 {
   IntRect bounds = GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect();

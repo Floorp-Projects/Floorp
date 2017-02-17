@@ -126,22 +126,31 @@ WebRenderPaintedLayer::RenderLayer()
   }
 
   WrScrollFrameStackingContextGenerator scrollFrames(this);
+  Matrix4x4 transform = GetTransform();
 
   // Since we are creating a stacking context below using the visible region of
   // this layer, we need to make sure the image display item has coordinates
   // relative to the visible region.
-  Rect rect = RelativeToVisible(IntRectToRect(bounds.ToUnknownRect()));
+  Rect rect(0, 0, size.width, size.height);
   Rect clip;
   if (GetClipRect().isSome()) {
-      clip = RelativeToTransformedVisible(IntRectToRect(GetClipRect().ref().ToUnknownRect()));
+      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
   } else {
       clip = rect;
   }
 
   Maybe<WrImageMask> mask = buildMaskLayer();
-  Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  Rect relBounds = VisibleBoundsRelativeToParent();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
   Rect overflow(0, 0, relBounds.width, relBounds.height);
-  Matrix4x4 transform;// = GetTransform();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {

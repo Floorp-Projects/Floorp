@@ -55,7 +55,7 @@ fails-if(webrender) == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
-== transform-style-flat-1a.html transform-style-flat-1-ref.html
+fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
 != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
@@ -80,8 +80,8 @@ fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 fails-if(webrender) == snap-perspective-1.html snap-perspective-1-ref.html
 fails-if(webrender) == mask-layer-1.html mask-layer-ref.html
-fails-if(webrender) == mask-layer-2.html mask-layer-ref.html
-fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
+skip-if(webrender) == mask-layer-2.html mask-layer-ref.html
+skip-if(webrender) == mask-layer-3.html mask-layer-ref.html
 fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-intersect1.html split-intersect1-ref.html # Bug 1323791: implement DirectX compositor polygon support
 fuzzy(255,150) fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-intersect2.html split-intersect2-ref.html # Bug 1323791
 fuzzy(255,100) fails-if(winWidget&&layersGPUAccelerated) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html # Bug 1323791
