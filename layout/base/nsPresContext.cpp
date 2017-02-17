@@ -165,7 +165,7 @@ nsPresContext::IsDOMPaintEventPending()
     // Since we're promising that there will be a MozAfterPaint event
     // fired, we record an empty invalidation in case display list
     // invalidation doesn't invalidate anything further.
-    NotifyInvalidation(nsRect(0, 0, 0, 0));
+    NotifyInvalidation(drpc->mRefreshDriver->LastTransactionId() + 1, nsRect(0, 0, 0, 0));
     NS_ASSERTION(mFireAfterPaintEvents, "Why aren't we planning to fire the event?");
     return true;
   }
@@ -2445,7 +2445,7 @@ nsPresContext::MayHavePaintEventListenerInSubDocument()
 }
 
 void
-nsPresContext::NotifyInvalidation(const nsIntRect& aRect)
+nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRect)
 {
   // Prevent values from overflow after DevPixelsToAppUnits().
   //
@@ -2462,11 +2462,11 @@ nsPresContext::NotifyInvalidation(const nsIntRect& aRect)
               DevPixelsToAppUnits(clampedRect.y),
               DevPixelsToAppUnits(clampedRect.width),
               DevPixelsToAppUnits(clampedRect.height));
-  NotifyInvalidation(rect);
+  NotifyInvalidation(aTransactionId, rect);
 }
 
 void
-nsPresContext::NotifyInvalidation(const nsRect& aRect)
+nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect)
 {
   MOZ_ASSERT(GetContainerWeak(), "Invalidation in detached pres context");
 
@@ -2511,7 +2511,7 @@ nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
     // region. Is this really true? This feels like the wrong way to get the right
     // answer.
     rect.MoveBy(-topLeft);
-    data->mPresContext->NotifyInvalidation(rect);
+    data->mPresContext->NotifyInvalidation(aContainer->Manager()->GetLastTransactionId(), rect);
   }
 }
 

@@ -955,9 +955,13 @@ public:
   // and, if necessary, synchronously rebuilding all style data.
   void EnsureSafeToHandOutCSSRules();
 
-  void NotifyInvalidation(const nsRect& aRect);
+  // Mark an area as invalidated, associated with a given transaction id (allocated
+  // by nsRefreshDriver::GetTransactionId).
+  // Invalidated regions will be dispatched to MozAfterPaint events when
+  // NotifyDidPaintForSubtree is called for the transaction id (or any higher id).
+  void NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect);
   // aRect is in device pixels
-  void NotifyInvalidation(const nsIntRect& aRect);
+  void NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRect);
   // aFlags are nsIPresShell::PAINT_ flags
   void NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId = 0,
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
