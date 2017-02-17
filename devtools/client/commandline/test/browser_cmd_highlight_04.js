@@ -7,7 +7,7 @@
 
 // Tests the various highlight command parameters and options
 
-requestLongerTimeout(3);
+requestLongerTimeout(4);
 
 // Creating a test page with many elements to test the --showall option
 var TEST_PAGE = "data:text/html;charset=utf-8,<body><ul>";
