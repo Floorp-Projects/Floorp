@@ -23,7 +23,7 @@
 #include "mozilla/KeyframeEffectParams.h"
 // RawServoDeclarationBlock and associated RefPtrTraits
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/StyleAnimationValue.h"
+#include "mozilla/StyleAnimationValueInlines.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"

@@ -343,6 +343,16 @@ pub extern "C" fn Servo_AnimationValue_Release(anim: RawServoAnimationValueBorro
     unsafe { AnimationValue::release(anim) };
 }
 
+ #[no_mangle]
+pub extern "C" fn Servo_AnimationValue_DeepEqual(this: RawServoAnimationValueBorrowed,
+                                                 other: RawServoAnimationValueBorrowed)
+     -> bool
+{
+    let this_value = AnimationValue::as_arc(&this);
+    let other_value = AnimationValue::as_arc(&other);
+    this_value == other_value
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_StyleWorkerThreadCount() -> u32 {
     *NUM_THREADS as u32
