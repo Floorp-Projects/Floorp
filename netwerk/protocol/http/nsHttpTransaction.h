@@ -119,14 +119,11 @@ public:
     void    SetPriority(int32_t priority) { mPriority = priority; }
     int32_t    Priority()                 { return mPriority; }
 
-    enum Classifier Classification() { return mClassification; }
-
     void PrintDiagnostics(nsCString &log);
 
     // Sets mPendingTime to the current time stamp or to a null time stamp (if now is false)
     void SetPendingTime(bool now = true) { mPendingTime = now ? TimeStamp::Now() : TimeStamp(); }
     const TimeStamp GetPendingTime() { return mPendingTime; }
-    bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
     // overload of nsAHttpTransaction::RequestContext()
     nsIRequestContext *RequestContext() override { return mRequestContext.get(); }
@@ -174,7 +171,6 @@ private:
     virtual ~nsHttpTransaction();
 
     nsresult Restart();
-    nsresult RestartInProgress();
     char    *LocateHttpStart(char *buf, uint32_t len,
                              bool aAllowPartialMatch);
     nsresult ParseLine(nsACString &line);
@@ -185,9 +181,6 @@ private:
     nsresult ProcessData(char *, uint32_t, uint32_t *);
     void     DeleteSelfOnConsumerThread();
     void     ReleaseBlockingTransaction();
-
-    Classifier Classify();
-    void       CancelPipeline(uint32_t reason);
 
     static nsresult ReadRequestSegment(nsIInputStream *, void *, const char *,
                                        uint32_t, uint32_t, uint32_t *);
@@ -279,9 +272,6 @@ private:
 
     uint16_t                        mRestartCount;        // the number of times this transaction has been restarted
     uint32_t                        mCaps;
-    enum Classifier                 mClassification;
-    int32_t                         mPipelinePosition;
-    int64_t                         mMaxPipelineObjectSize;
 
     nsHttpVersion                   mHttpVersion;
     uint16_t                        mHttpResponseCode;
@@ -337,68 +327,6 @@ private:
 
     // The time when the transaction was submitted to the Connection Manager
     TimeStamp                       mPendingTime;
-
-    class RestartVerifier
-    {
-
-        // When a idemptotent transaction has received part of its response body
-        // and incurs an error it can be restarted. To do this we mark the place
-        // where we stopped feeding the body to the consumer and start the
-        // network call over again. If everything we track (headers, length, etc..)
-        // matches up to the place where we left off then the consumer starts being
-        // fed data again with the new information. This can be done N times up
-        // to the normal restart (i.e. with no response info) limit.
-
-    public:
-        RestartVerifier()
-            : mContentLength(-1)
-            , mAlreadyProcessed(0)
-            , mToReadBeforeRestart(0)
-            , mSetup(false)
-        {}
-        ~RestartVerifier() {}
-
-        void Set(int64_t contentLength, nsHttpResponseHead *head);
-        bool Verify(int64_t contentLength, nsHttpResponseHead *head);
-        bool IsDiscardingContent() { return mToReadBeforeRestart != 0; }
-        bool IsSetup() { return mSetup; }
-        int64_t AlreadyProcessed() { return mAlreadyProcessed; }
-        void SetAlreadyProcessed(int64_t val) {
-            mAlreadyProcessed = val;
-            mToReadBeforeRestart = val;
-        }
-        int64_t ToReadBeforeRestart() { return mToReadBeforeRestart; }
-        void HaveReadBeforeRestart(uint32_t amt)
-        {
-            MOZ_ASSERT(amt <= mToReadBeforeRestart,
-                       "too large of a HaveReadBeforeRestart deduction");
-            mToReadBeforeRestart -= amt;
-        }
-
-    private:
-        // This is the data from the first complete response header
-        // used to make sure that all subsequent response headers match
-
-        int64_t                         mContentLength;
-        nsCString                       mETag;
-        nsCString                       mLastModified;
-        nsCString                       mContentRange;
-        nsCString                       mContentEncoding;
-        nsCString                       mTransferEncoding;
-
-        // This is the amount of data that has been passed to the channel
-        // from previous iterations of the transaction and must therefore
-        // be skipped in the new one.
-        int64_t                         mAlreadyProcessed;
-
-        // The amount of data that must be discarded in the current iteration
-        // (where iteration > 0) to reach the mAlreadyProcessed high water
-        // mark.
-        int64_t                         mToReadBeforeRestart;
-
-        // true when ::Set has been called with a response header
-        bool                            mSetup;
-    } mRestartInProgressVerifier;
 
 // For Rate Pacing via an EventTokenBucket
 public:

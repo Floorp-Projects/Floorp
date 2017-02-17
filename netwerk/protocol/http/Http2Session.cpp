@@ -41,9 +41,7 @@
 namespace mozilla {
 namespace net {
 
-// Http2Session has multiple inheritance of things that implement
-// nsISupports, so this magic is taken from nsHttpPipeline that
-// implements some of the same abstract classes.
+// Http2Session has multiple inheritance of things that implement nsISupports
 NS_IMPL_ADDREF(Http2Session)
 NS_IMPL_RELEASE(Http2Session)
 NS_INTERFACE_MAP_BEGIN(Http2Session)
@@ -3811,21 +3809,6 @@ Http2Session::TakeHttpConnection()
   return nullptr;
 }
 
-uint32_t
-Http2Session::CancelPipeline(nsresult reason)
-{
-  // we don't pipeline inside http/2, so this isn't an issue
-  return 0;
-}
-
-nsAHttpTransaction::Classifier
-Http2Session::Classification()
-{
-  if (!mConnection)
-    return nsAHttpTransaction::CLASS_GENERAL;
-  return mConnection->Classification();
-}
-
 void
 Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
 {
@@ -3923,42 +3906,6 @@ Http2Session::TakeSubTransactions(
     iter.Remove();
   }
   return NS_OK;
-}
-
-nsresult
-Http2Session::AddTransaction(nsAHttpTransaction *)
-{
-  // This API is meant for pipelining, Http2Session's should be
-  // extended with AddStream()
-
-  MOZ_ASSERT(false,
-             "Http2Session::AddTransaction() should not be called");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-uint32_t
-Http2Session::PipelineDepth()
-{
-  return IsDone() ? 0 : 1;
-}
-
-nsresult
-Http2Session::SetPipelinePosition(int32_t position)
-{
-  // This API is meant for pipelining, Http2Session's should be
-  // extended with AddStream()
-
-  MOZ_ASSERT(false,
-             "Http2Session::SetPipelinePosition() should not be called");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-int32_t
-Http2Session::PipelinePosition()
-{
-  return 0;
 }
 
 //-----------------------------------------------------------------------------

@@ -51,7 +51,7 @@ typedef uint8_t nsHttpVersion;
 //-----------------------------------------------------------------------------
 
 #define NS_HTTP_ALLOW_KEEPALIVE      (1<<0)
-#define NS_HTTP_ALLOW_PIPELINING     (1<<1)
+// NS_HTTP_ALLOW_PIPELINING          (1<<1) removed
 
 // a transaction with this caps flag will continue to own the connection,
 // preventing it from being reclaimed, even after the transaction completes.
