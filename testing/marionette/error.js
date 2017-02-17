@@ -15,6 +15,7 @@ const ERRORS = new Set([
   "InvalidSelectorError",
   "InvalidSessionIDError",
   "JavaScriptError",
+  "MoveTargetOutOfBoundsError",
   "NoAlertOpenError",
   "NoSuchElementError",
   "NoSuchFrameError",
@@ -301,6 +302,13 @@ class JavaScriptError extends WebDriverError {
   }
 }
 
+class MoveTargetOutOfBoundsError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "move target out of bounds";
+  }
+}
+
 class NoAlertOpenError extends WebDriverError {
   constructor (message) {
     super(message);
@@ -394,6 +402,7 @@ const STATUSES = new Map([
   ["invalid selector", InvalidSelectorError],
   ["invalid session id", InvalidSessionIDError],
   ["javascript error", JavaScriptError],
+  ["move target out of bounds", MoveTargetOutOfBoundsError],
   ["no alert open", NoAlertOpenError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
