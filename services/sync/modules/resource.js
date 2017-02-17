@@ -540,7 +540,8 @@ ChannelListener.prototype = {
     }
 
     try {
-      this._onProgress();
+      let httpChannel = req.QueryInterface(Ci.nsIHttpChannel);
+      this._onProgress(httpChannel);
     } catch (ex) {
       if (Async.isShutdownException(ex)) {
         throw ex;
