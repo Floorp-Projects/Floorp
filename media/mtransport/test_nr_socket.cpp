@@ -247,6 +247,10 @@ RefPtr<NrSocketBase> TestNrSocket::create_external_socket(
 }
 
 int TestNrSocket::create(nr_transport_addr *addr) {
+  if (addr->tls_host[0] != '\0') {
+    tls_ = true;
+  }
+
   return NrSocketBase::CreateSocket(addr, &internal_socket_);
 }
 
@@ -473,10 +477,6 @@ int TestNrSocket::connect(nr_transport_addr *addr) {
   if (connect_invoked_ || !port_mappings_.empty()) {
     MOZ_CRASH("TestNrSocket::connect() called more than once!");
     return R_INTERNAL;
-  }
-
-  if (addr->tls_host[0] != '\0') {
-    tls_ = true;
   }
 
   if (!nat_->enabled_
