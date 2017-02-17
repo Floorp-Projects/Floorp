@@ -716,6 +716,8 @@ pref("gfx.hidpi.enabled", 2);
 pref("layout.scroll.root-frame-containers", false);
 #endif
 
+pref("layout.scrollbars.always-layerize-track", false);
+
 // Whether to enable LayerScope tool and default listening port
 pref("gfx.layerscope.enabled", false);
 pref("gfx.layerscope.port", 23456);
