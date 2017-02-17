@@ -152,19 +152,6 @@ public:
     return SupportsMimeType(aTrackInfo.mMimeType, aDiagnostics);
   }
 
-  enum class ConversionRequired : uint8_t
-  {
-    kNeedNone,
-    kNeedAVCC,
-    kNeedAnnexB,
-  };
-
-  // Indicates that the decoder requires a specific format.
-  // The PlatformDecoderModule will convert the demuxed data accordingly before
-  // feeding it to MediaDataDecoder::Input.
-  virtual ConversionRequired DecoderNeedsConversion(
-    const TrackInfo& aConfig) const = 0;
-
 protected:
   PlatformDecoderModule() { }
   virtual ~PlatformDecoderModule() { }
@@ -316,6 +303,20 @@ public:
                "Can only work with a decoder supporting recycling.");
   }
 
+  enum class ConversionRequired : uint8_t
+  {
+    kNeedNone = 0,
+    kNeedAVCC = 1,
+    kNeedAnnexB = 2,
+  };
+
+  // Indicates that the decoder requires a specific format.
+  // The demuxed data will be converted accordingly before feeding it to
+  // Decode().
+  virtual ConversionRequired NeedsConversion() const
+  {
+    return ConversionRequired::kNeedNone;
+  }
 };
 
 } // namespace mozilla

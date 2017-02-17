@@ -41,6 +41,11 @@ public:
     return "ffmpeg video decoder";
 #endif
   }
+  ConversionRequired NeedsConversion() const override
+  {
+    return ConversionRequired::kNeedAVCC;
+  }
+
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
