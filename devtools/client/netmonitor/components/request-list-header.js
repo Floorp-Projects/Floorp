@@ -78,8 +78,8 @@ const RequestListHeader = createClass({
     const { sort, scale, waterfallWidth, onHeaderClick } = this.props;
 
     return div(
-      { className: "devtools-toolbar requests-list-toolbar" },
-      div({ className: "toolbar-labels" },
+      { id: "requests-list-toolbar", className: "devtools-toolbar" },
+      div({ id: "toolbar-labels" },
         HEADERS.map(header => {
           const name = header.name;
           const boxName = header.boxName || name;
