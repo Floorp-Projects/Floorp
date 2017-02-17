@@ -521,7 +521,10 @@ class Process extends BaseProcess {
 
     if (ok) {
       ok = libc.AssignProcessToJobObject(this.jobHandle, procInfo.hProcess);
-      errorMessage = `Failed to attach process to job object: 0x${(ctypes.winLastError || 0).toString(16)}`;
+      if (!ok) {
+        errorMessage = `Failed to attach process to job object: 0x${(ctypes.winLastError || 0).toString(16)}`;
+        libc.TerminateProcess(procInfo.hProcess, TERMINATE_EXIT_CODE);
+      }
     }
 
     if (!ok) {
