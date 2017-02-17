@@ -21,7 +21,7 @@
 
 #include <stdarg.h>
 
-#if defined(SPS_OS_windows)
+#if defined(GP_OS_windows)
 #include <windows.h>
 #define getpid GetCurrentProcessId
 #endif
