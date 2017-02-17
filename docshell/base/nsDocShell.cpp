@@ -14911,11 +14911,3 @@ nsDocShell::GetAwaitingLargeAlloc(bool* aResult)
   *aResult = static_cast<TabChild*>(tabChild.get())->IsAwaitingLargeAlloc();
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDocShell::GetInLargeAllocProcess(bool* aResult)
-{
-  MOZ_ASSERT(aResult);
-  *aResult = TabChild::InLargeAllocProcess();
-  return NS_OK;
-}

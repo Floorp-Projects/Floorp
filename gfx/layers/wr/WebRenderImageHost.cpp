@@ -66,8 +66,18 @@ WebRenderImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 }
 
 void
+WebRenderImageHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                              TextureHost* aTextureOnWhite)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+void
 WebRenderImageHost::CleanupResources()
 {
+  nsTArray<TimedImage> newImages;
+  mImages.SwapElements(newImages);
+  newImages.Clear();
 }
 
 void

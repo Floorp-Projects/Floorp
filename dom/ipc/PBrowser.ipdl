@@ -896,10 +896,10 @@ child:
     async NotifyPartialSHistoryDeactive();
 
     /**
-     * Tell the child that it is a fresh process created for a Large-Allocation
-     * load.
+     * Tell the TabChild that it should expect a Large-Allocation load to occur.
+     * Loads which occur until this flag is cleared will not leave the process.
      */
-    async SetIsLargeAllocation(bool aIsLA, bool aNewProcess);
+    async AwaitLargeAlloc();
 
 /*
  * FIXME: write protocol!

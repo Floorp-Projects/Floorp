@@ -118,6 +118,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self._run_command_in_srcdir(args=[cargo, 'vendor', '--sync', mozpath.join(path, 'Cargo.lock'), vendor_dir])
         self.repository.add_remove_files(vendor_dir)
 
+        # 100k is a reasonable upper bound on source file size.
+        FILESIZE_LIMIT = 100 * 1024
         large_files = set()
         cumulative_added_size = 0
         for f in self.repository.get_added_files():

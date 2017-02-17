@@ -18,8 +18,8 @@ namespace mozilla {
 namespace TelemetryIPCAccumulator {
 
 // Histogram accumulation functions.
-void AccumulateChildHistogram(mozilla::Telemetry::ID aId, uint32_t aSample);
-void AccumulateChildKeyedHistogram(mozilla::Telemetry::ID aId, const nsCString& aKey,
+void AccumulateChildHistogram(mozilla::Telemetry::HistogramID aId, uint32_t aSample);
+void AccumulateChildKeyedHistogram(mozilla::Telemetry::HistogramID aId, const nsCString& aKey,
                                    uint32_t aSample);
 
 // Scalar accumulation functions.

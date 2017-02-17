@@ -319,7 +319,7 @@ namespace {
 class TelemetryAutoTimer
 {
 public:
-  explicit TelemetryAutoTimer(Telemetry::ID aId)
+  explicit TelemetryAutoTimer(Telemetry::HistogramID aId)
     : id(aId), start(TimeStamp::Now())
   {}
 
@@ -329,14 +329,14 @@ public:
   }
 
 private:
-  Telemetry::ID id;
+  Telemetry::HistogramID id;
   const TimeStamp start;
 };
 
 } // namespace
 
 void
-StorageCache::WaitForPreload(Telemetry::ID aTelemetryID)
+StorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
 {
   if (!mPersistent) {
     return;

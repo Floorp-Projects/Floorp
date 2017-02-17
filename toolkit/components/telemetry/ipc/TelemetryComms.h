@@ -14,17 +14,17 @@ namespace mozilla {
 namespace Telemetry {
 
 // Histogram accumulation types.
-enum ID : uint32_t;
+enum HistogramID : uint32_t;
 
 struct Accumulation
 {
-  mozilla::Telemetry::ID mId;
+  mozilla::Telemetry::HistogramID mId;
   uint32_t mSample;
 };
 
 struct KeyedAccumulation
 {
-  mozilla::Telemetry::ID mId;
+  mozilla::Telemetry::HistogramID mId;
   uint32_t mSample;
   nsCString mKey;
 };

@@ -172,7 +172,7 @@ private:
 
 private:
   // Synchronously blocks until the cache is fully loaded from the database
-  void WaitForPreload(mozilla::Telemetry::ID aTelemetryID);
+  void WaitForPreload(mozilla::Telemetry::HistogramID aTelemetryID);
 
   // Helper to get one of the 3 data sets (regular, private, session)
   Data& DataSet(const Storage* aStorage);

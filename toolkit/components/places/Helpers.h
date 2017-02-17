@@ -276,7 +276,7 @@ private:
 class AsyncStatementTelemetryTimer : public AsyncStatementCallback
 {
 public:
-  explicit AsyncStatementTelemetryTimer(Telemetry::ID aHistogramId,
+  explicit AsyncStatementTelemetryTimer(Telemetry::HistogramID aHistogramId,
                                         TimeStamp aStart = TimeStamp::Now())
     : mHistogramId(aHistogramId)
     , mStart(aStart)
@@ -286,7 +286,7 @@ public:
   NS_IMETHOD HandleCompletion(uint16_t aReason);
 
 private:
-  const Telemetry::ID mHistogramId;
+  const Telemetry::HistogramID mHistogramId;
   const TimeStamp mStart;
 };
 

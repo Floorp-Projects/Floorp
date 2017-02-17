@@ -69,5 +69,5 @@ async_test(function() {
   });
   reader.readAsArrayBuffer(blob_1)
   assert_equals(reader.readyState, FileReader.LOADING, "readyState Must be LOADING")
-}, 'test FileReader no InvalidStateError exception in onloadstart event for readAsArrayBuffer');
+}, 'test FileReader no InvalidStateError exception in loadend event handler for readAsArrayBuffer');
 </script>

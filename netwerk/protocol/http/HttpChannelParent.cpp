@@ -40,6 +40,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
 #include "nsStringStream.h"
+#include "nsQueryObject.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -366,13 +367,14 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo,
                              nullptr, nullptr, aLoadFlags, ios);
-
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
+  }
 
-  // This cast is safe since this is AsyncOpen specific to http.  channel
-  // is ensured to be nsHttpChannel.
-  mChannel = static_cast<nsHttpChannel *>(channel.get());
+  mChannel = do_QueryObject(channel, &rv);
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
 
   // Set the channelId allocated in child to the parent instance
   mChannel->SetChannelId(aChannelId);
@@ -601,11 +603,13 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
     return true;
   }
 
-  // It's safe to cast here since the found parent-side real channel is ensured
-  // to be http (nsHttpChannel).  ConnectChannel called from HttpChannelParent::Init
-  // can only be called for http channels.  It's bound by ipdl.
-  mChannel = static_cast<nsHttpChannel*>(channel.get());
-  LOG(("  found channel %p, rv=%08" PRIx32, mChannel.get(), static_cast<uint32_t>(rv)));
+  LOG(("  found channel %p, rv=%08" PRIx32, channel.get(), static_cast<uint32_t>(rv)));
+  mChannel = do_QueryObject(channel);
+  if (!mChannel) {
+    LOG(("  but it's not nsHttpChannel"));
+    Delete();
+    return true;
+  }
 
   nsCOMPtr<nsINetworkInterceptController> controller;
   NS_QueryNotificationCallbacks(channel, controller);
@@ -1102,14 +1106,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
     "Cannot call OnStartRequest if diverting is set!");
 
-  // We can't cast here since the new channel can be a redirect to a different
-  // schema.  We must query the channel implementation through a special method.
-  nsHttpChannel *chan = nullptr;
-  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(aRequest));
-  if (httpChannelInternal) {
-    chan = httpChannelInternal->QueryHttpChannelImpl();
-  }
-
+  RefPtr<nsHttpChannel> chan = do_QueryObject(aRequest);
   if (!chan) {
     LOG(("  aRequest is not nsHttpChannel"));
     NS_ERROR("Expecting only nsHttpChannel as aRequest in HttpChannelParent::OnStartRequest");

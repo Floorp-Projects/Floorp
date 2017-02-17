@@ -1306,6 +1306,22 @@ EnsureFlatString(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+RepresentativeStringArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject array(cx, JS_NewArrayObject(cx, 0));
+    if (!array)
+        return false;
+
+    if (!JSString::fillWithRepresentatives(cx, array.as<ArrayObject>()))
+        return false;
+
+    args.rval().setObject(*array);
+    return true;
+}
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
@@ -4336,6 +4352,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("ensureFlatString", EnsureFlatString, 1, 0,
 "ensureFlatString(str)",
 "  Ensures str is a flat (null-terminated) string and returns it."),
+
+    JS_FN_HELP("representativeStringArray", RepresentativeStringArray, 0, 0,
+"representativeStringArray()",
+"  Returns an array of strings that represent the various internal string\n"
+"  types and character encodings."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,

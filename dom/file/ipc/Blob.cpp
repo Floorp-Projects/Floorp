@@ -28,6 +28,7 @@
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PFileDescriptorSetParent.h"
@@ -50,10 +51,6 @@
 #include "StreamBlobImpl.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
-
-#ifdef DEBUG
-#include "BackgroundChild.h" // BackgroundChild::GetForCurrentThread().
-#endif
 
 #ifdef OS_POSIX
 #include "chrome/common/file_descriptor_set_posix.h"
@@ -2605,6 +2602,18 @@ CreateStreamHelper::GetStream(nsIInputStream** aInputStream)
 
   if (EventTargetIsOnCurrentThread(baseRemoteBlobImpl->GetActorEventTarget())) {
     RunInternal(baseRemoteBlobImpl, false);
+  } else if (PBackgroundChild* manager = mozilla::ipc::BackgroundChild::GetForCurrentThread()) {
+    BlobChild* blobChild = BlobChild::GetOrCreate(manager, baseRemoteBlobImpl);
+    MOZ_ASSERT(blobChild);
+
+    RefPtr<BlobImpl> blobImpl = blobChild->GetBlobImpl();
+    MOZ_ASSERT(blobImpl);
+
+    ErrorResult rv;
+    blobImpl->GetInternalStream(aInputStream, rv);
+    mRemoteBlobImpl = nullptr;
+    mDone = true;
+    return rv.StealNSResult();
   } else {
     nsresult rv = baseRemoteBlobImpl->DispatchToTarget(this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
