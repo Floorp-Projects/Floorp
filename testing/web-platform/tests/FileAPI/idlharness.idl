@@ -6,12 +6,15 @@ interface Blob {
 
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
+  readonly attribute boolean isClosed;
 
   //slice Blob into byte-ranged chunks
 
   Blob slice([Clamp] optional long long start,
             [Clamp] optional long long end,
             optional DOMString contentType);
+  void close();
+
 };
 
 dictionary BlobPropertyBag {
@@ -61,7 +64,7 @@ interface FileReader: EventTarget {
   // File or Blob data
   readonly attribute (DOMString or ArrayBuffer)? result;
 
-  readonly attribute DOMException? error;
+  readonly attribute DOMError? error;
 
   // event handler content attributes
   attribute EventHandler onloadstart;
@@ -86,5 +89,6 @@ interface FileReaderSync {
 [Exposed=(Window,DedicatedWorker,SharedWorker)]
 partial interface URL {
   static DOMString createObjectURL(Blob blob);
+  static DOMString createFor(Blob blob);
   static void revokeObjectURL(DOMString url);
 };

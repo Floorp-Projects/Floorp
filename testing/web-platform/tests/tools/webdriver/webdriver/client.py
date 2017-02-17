@@ -311,13 +311,13 @@ class Session(object):
         #body["capabilities"] = caps
         body = caps
 
-        response = self.transport.send("POST", "session", body=body)
-        self.session_id = response.body["value"]["sessionId"]
+        resp = self.transport.send("POST", "session", body=body)
+        self.session_id = resp["sessionId"]
 
         if self.extension_cls:
             self.extension = self.extension_cls(self)
 
-        return response.body["value"]
+        return resp["value"]
 
     def end(self):
         if self.session_id is None:
@@ -332,48 +332,11 @@ class Session(object):
         self.find = None
         self.extension = None
 
-    def send_raw_command(self, method, url, body=None, headers=None):
-        """Send a command to the remote end.
-
-        :param method: HTTP method to use in request
-        :param url: "command part" of the requests URL path
-        :param body: body of the HTTP request
-        :param headers: Additional headers to include in the HTTP request
-
-        :return: an instance of wdclient.Response describing the HTTP response
-            received from the remote end
-        """
-        url = urlparse.urljoin("session/%s/" % self.session_id, url)
-        return self.transport.send(method, url, body, headers)
-
     def send_command(self, method, url, body=None, key=None):
-        """Send a command to the remote end and validate its success.
-
-        :param method: HTTP method to use in request
-        :param url: "command part" of the requests URL path
-        :param body: body of the HTTP request
-        :param key: (deprecated) when specified, this string value will be used
-            to de-reference the HTTP response body following JSON parsing
-
-        :return: None if the HTTP response body was empty, otherwise the
-            result of parsing the HTTP response body as JSON
-        """
-
         if self.session_id is None:
             raise error.SessionNotCreatedException()
-
-        response = self.send_raw_command(method, url, body)
-
-        if response.status != 200:
-            cls = error.get(response.body["value"].get("error"))
-            raise cls(response.body["value"].get("message"))
-
-        if key is not None:
-            response.body = response.body[key]
-        if not response.body:
-            response.body = None
-
-        return response.body
+        url = urlparse.urljoin("session/%s/" % self.session_id, url)
+        return self.transport.send(method, url, body, key=key)
 
     @property
     @command
@@ -408,7 +371,7 @@ class Session(object):
     @property
     @command
     def window_handle(self):
-        return self.send_command("GET", "window", key="value")
+        return self.send_command("GET", "window_handle", key="value")
 
     @window_handle.setter
     @command
@@ -431,12 +394,12 @@ class Session(object):
 
     @command
     def close(self):
-        return self.send_command("DELETE", "window")
+        return self.send_command("DELETE", "window_handle")
 
     @property
     @command
     def handles(self):
-        return self.send_command("GET", "window/handles", key="value")
+        return self.send_command("GET", "window_handles", key="value")
 
     @property
     @command

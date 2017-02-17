@@ -33,17 +33,6 @@ promise_test(() => {
 }, 'desiredSize on a writer for a closed stream');
 
 test(() => {
-  const ws = new WritableStream({
-    start(c) {
-      c.error();
-    }
-  });
-
-  const writer = ws.getWriter();
-  assert_equals(writer.desiredSize, null, 'desiredSize should be null');
-}, 'desiredSize on a writer for an errored stream');
-
-test(() => {
   const ws = new WritableStream({});
 
   const writer = ws.getWriter();

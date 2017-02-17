@@ -1,4 +1,4 @@
-// META: timeout=long
+// <meta> timeout=long
 importScripts("/resources/testharness.js");
 importScripts("../util/helpers.js");
 importScripts("failures.js");
