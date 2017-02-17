@@ -2070,6 +2070,18 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return false;
 
+    UniqueChars tagStr(JS_smprintf("WebAssembly.%s", name));
+    if (!tagStr) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    RootedAtom tag(cx, Atomize(cx, tagStr.get(), strlen(tagStr.get())));
+    if (!tag)
+        return false;
+    if (!DefineToStringTag(cx, proto, tag))
+        return false;
+
     RootedId id(cx, AtomToId(className));
     RootedValue ctorValue(cx, ObjectValue(*ctor));
     return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
