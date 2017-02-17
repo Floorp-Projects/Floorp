@@ -297,36 +297,16 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
-  * fill property
-    * test_compute_data_with_start_struct.html `fill` [2]
-    * test_inherit_computation.html `fill` [4]
-    * test_inherit_storage.html `fill` [4]
-    * test_initial_computation.html `fill` [2]
-    * test_initial_storage.html `fill` [2]
-    * test_value_storage.html `on 'fill'` [25]
   * marker-{start,mid,end} properties
     * test_compute_data_with_start_struct.html `marker-` [6]
     * test_inherit_computation.html `marker` [16]
-    * test_inherit_storage.html `marker` [22]
+    * test_inherit_storage.html `marker` [10]
     * test_initial_computation.html `marker` [8]
-    * test_initial_storage.html `marker` [11]
-    * test_value_storage.html `on 'marker` [15]
-  * paint-order property
-    * test_compute_data_with_start_struct.html `paint-order` [2]
-    * test_inherit_computation.html `paint-order` [4]
-    * test_inherit_storage.html `paint-order` [4]
-    * test_initial_computation.html `paint-order` [2]
-    * test_initial_storage.html `paint-order` [2]
-    * test_value_storage.html `on 'paint-order` [10]
+    * test_initial_storage.html `marker` [5]
+    * test_value_storage.html `on 'marker` [6]
   * stroke properties
-    * test_compute_data_with_start_struct.html `stroke` [8]
-    * test_inherit_computation.html `'stroke` [16]
-    * test_inherit_storage.html `'stroke` [8]
-    * ... `"stroke` [8]
-    * test_initial_computation.html `'stroke` [8]
-    * test_initial_storage.html `'stroke` [4]
-    * ... `"stroke` [4]
-    * test_value_storage.html `on 'stroke` [71]
+    * test_value_storage.html `on 'stroke` [6]
+    * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
 * Properties implemented but not in geckolib:
   * counter-reset property:
     * test_bug829816.html [8]

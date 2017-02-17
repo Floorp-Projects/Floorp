@@ -90,5 +90,5 @@ fails == mask-invalidation-2d.html mask-invalidation-2d.html
 
 fails == clip-path-invalidation-1a.html clip-path-invalidation-1a.html
 fails == clip-path-invalidation-1b.html clip-path-invalidation-1b.html
-fails == clip-path-invalidation-1c.html clip-path-invalidation-1c.html
-fails == clip-path-invalidation-1d.html clip-path-invalidation-1d.html
+== clip-path-invalidation-1c.html clip-path-invalidation-1c.html
+== clip-path-invalidation-1d.html clip-path-invalidation-1d.html

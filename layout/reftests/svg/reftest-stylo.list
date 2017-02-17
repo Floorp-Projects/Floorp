@@ -445,8 +445,8 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.sv
 
 fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01.svg
 
-fails == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01a.html
-fails == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01b.html
+== clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01a.html
+== clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01b.html
 
 default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 fuzzy(1,32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02a.html
@@ -456,7 +456,7 @@ default-preferences
 fails == mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
 fails == mask-on-outflowElement-01b.html mask-on-outflowElement-01b.html
 
-fails == clipPath-and-mask-on-outflowElement-01a.html clipPath-and-mask-on-outflowElement-01a.html
+== clipPath-and-mask-on-outflowElement-01a.html clipPath-and-mask-on-outflowElement-01a.html
 fails == clipPath-and-mask-on-outflowElement-01b.html clipPath-and-mask-on-outflowElement-01b.html
 
 == nested-mask-mode.svg nested-mask-mode.svg
