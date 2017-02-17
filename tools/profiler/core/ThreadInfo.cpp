@@ -8,7 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#if defined(SPS_OS_darwin)
+#if defined(GP_OS_darwin)
 #include <pthread.h>
 #endif
 
@@ -23,7 +23,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mMutex(MakeUnique<mozilla::Mutex>("ThreadInfo::mMutex"))
-#if defined(SPS_OS_linux) || defined(SPS_OS_android)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   , mRssMemory(0)
   , mUssMemory(0)
 #endif
@@ -32,7 +32,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   mThread = NS_GetCurrentThread();
 
   // We don't have to guess on mac
-#if defined(SPS_OS_darwin)
+#if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
 #endif

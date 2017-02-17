@@ -26,7 +26,7 @@ read_procmaps(lul::LUL* aLUL)
 {
   MOZ_ASSERT(aLUL->CountMappings() == 0);
 
-# if defined(SPS_OS_linux) || defined(SPS_OS_android) || defined(SPS_OS_darwin)
+# if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_darwin)
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
 
   for (size_t i = 0; i < info.GetSize(); i++) {

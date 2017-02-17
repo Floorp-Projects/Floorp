@@ -50,17 +50,17 @@
 #endif
 
 #if defined(MOZ_PROFILING) && \
-    (defined(SPS_OS_windows) || defined(SPS_OS_darwin))
+    (defined(GP_OS_windows) || defined(GP_OS_darwin))
 # define USE_NS_STACKWALK
 #endif
 
 // This should also work on ARM Linux, but not tested there yet.
-#if defined(SPS_arm_android)
+#if defined(GP_arm_android)
 # define USE_EHABI_STACKWALK
 # include "EHABIStackWalk.h"
 #endif
 
-#if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
 # include "lul/platform-linux-lul.h"
@@ -72,9 +72,9 @@
 # define VALGRIND_MAKE_MEM_DEFINED(_addr,_len)   ((void)0)
 #endif
 
-#if defined(SPS_OS_windows)
+#if defined(GP_OS_windows)
 typedef CONTEXT tickcontext_t;
-#elif defined(SPS_OS_linux) || defined(SPS_OS_android)
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
 #include <ucontext.h>
 typedef ucontext_t tickcontext_t;
 #endif
@@ -200,7 +200,7 @@ CanNotifyObservers()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
   // Android ANR reporter uses the profiler off the main thread.
   return NS_IsMainThread();
 #else
@@ -546,7 +546,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 }
 
-#if defined(SPS_OS_windows)
+#if defined(GP_OS_windows)
 static uintptr_t GetThreadHandle(PlatformData* aData);
 #endif
 
@@ -581,7 +581,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 
-#if defined(SPS_OS_darwin) || (defined(SPS_PLAT_x86_windows))
+#if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
   void* stackEnd = aSample->threadInfo->StackTop();
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
@@ -682,18 +682,18 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
 
-#if defined(SPS_PLAT_amd64_linux)
+#if defined(GP_PLAT_amd64_linux)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_RIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_RSP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_RBP]);
-#elif defined(SPS_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_android)
   startRegs.r15 = lul::TaggedUWord(mc->arm_pc);
   startRegs.r14 = lul::TaggedUWord(mc->arm_lr);
   startRegs.r13 = lul::TaggedUWord(mc->arm_sp);
   startRegs.r12 = lul::TaggedUWord(mc->arm_ip);
   startRegs.r11 = lul::TaggedUWord(mc->arm_fp);
   startRegs.r7  = lul::TaggedUWord(mc->arm_r7);
-#elif defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_EIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_ESP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_EBP]);
@@ -709,13 +709,13 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
   lul::StackImage stackImg;
 
   {
-#if defined(SPS_PLAT_amd64_linux)
+#if defined(GP_PLAT_amd64_linux)
     uintptr_t rEDZONE_SIZE = 128;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
-#elif defined(SPS_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.r13.Value() - rEDZONE_SIZE;
-#elif defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
 #else
@@ -2494,10 +2494,10 @@ profiler_get_backtrace()
   sample.threadInfo = profile;
 
 #if defined(HAVE_NATIVE_UNWIND)
-#if defined(SPS_OS_windows) || defined(SPS_OS_linux) || defined(SPS_OS_android)
+#if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
   tickcontext_t context;
   sample.PopulateContext(&context);
-#elif defined(SPS_OS_darwin)
+#elif defined(GP_OS_darwin)
   sample.PopulateContext(nullptr);
 #else
 # error "unknown platform"
@@ -2653,12 +2653,12 @@ void PseudoStack::flushSamplerOnJSShutdown()
 
 // We #include these files directly because it means those files can use
 // declarations from this file trivially.
-#if defined(SPS_OS_windows)
-# include "platform-win32.cc"
-#elif defined(SPS_OS_darwin)
-# include "platform-macos.cc"
-#elif defined(SPS_OS_linux) || defined(SPS_OS_android)
-# include "platform-linux.cc"
+#if defined(GP_OS_windows)
+# include "platform-win32.cpp"
+#elif defined(GP_OS_darwin)
+# include "platform-macos.cpp"
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
+# include "platform-linux-android.cpp"
 #else
 # error "bad platform"
 #endif

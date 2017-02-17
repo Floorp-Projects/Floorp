@@ -42,7 +42,7 @@
     _(UnsharedMemory,  double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
-#if !defined(SPS_ARCH_arm)
+#if !defined(GP_ARCH_arm)
 #pragma pack(push, 1)
 #endif
 
@@ -110,7 +110,7 @@ private:
   Kind mKind;
 };
 
-#if !defined(SPS_ARCH_arm)
+#if !defined(GP_ARCH_arm)
 #pragma pack(pop)
 #endif
 
