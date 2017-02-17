@@ -1377,7 +1377,12 @@ var AddonManagerInternal = {
   },
 
   _updatePromptHandler(info) {
-    let oldPerms = info.existingAddon.userPermissions || {hosts: [], permissions: []};
+    let oldPerms = info.existingAddon.userPermissions;
+    if (!oldPerms) {
+      // Updating from a legacy add-on, just let it proceed
+      return Promise.resolve();
+    }
+
     let newPerms = info.addon.userPermissions;
 
     let difference = Extension.comparePermissions(oldPerms, newPerms);

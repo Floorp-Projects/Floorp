@@ -1938,7 +1938,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.
 == 1155828-1.html 1155828-1-ref.html
 fails-if(webrender) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
-fuzzy-if(Android,2,5) fails-if(webrender) == 1169331-1.html 1169331-1-ref.html
+fuzzy-if(Android,6,6) fails-if(webrender) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fails-if(gtkWidget) == 1174332-1.html 1174332-1-ref.html # bug 1312658
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
@@ -1979,6 +1979,7 @@ fuzzy(8,1900) == 1291528.html 1291528-ref.html
 # background color.
 fuzzy(255,1000) skip-if(!cocoaWidget) == 1294102-1.html 1294102-1-ref.html
 random-if(Android) fuzzy-if(skiaContent,15,50) == 1295466-1.xhtml 1295466-1-ref.xhtml #bug 982547
+fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.xhtml # Bug 1128229
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html

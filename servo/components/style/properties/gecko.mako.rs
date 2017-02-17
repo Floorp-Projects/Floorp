@@ -610,15 +610,11 @@ impl ${style_struct.gecko_struct_name} {
     % for longhand in stub_longhands:
     #[allow(non_snake_case)]
     pub fn set_${longhand.ident}(&mut self, _: longhands::${longhand.ident}::computed_value::T) {
-        if cfg!(debug_assertions) {
-            println!("stylo: Unimplemented property setter: ${longhand.name}");
-        }
+        warn!("stylo: Unimplemented property setter: ${longhand.name}");
     }
     #[allow(non_snake_case)]
     pub fn copy_${longhand.ident}_from(&mut self, _: &Self) {
-        if cfg!(debug_assertions) {
-            println!("stylo: Unimplemented property setter: ${longhand.name}");
-        }
+        warn!("stylo: Unimplemented property setter: ${longhand.name}");
     }
     % if longhand.need_clone:
     #[allow(non_snake_case)]
@@ -867,8 +863,8 @@ fn static_assert() {
 
 <% skip_position_longhands = " ".join(x.ident for x in SIDES + GRID_LINES) %>
 <%self:impl_trait style_struct_name="Position"
-                  skip_longhands="${skip_position_longhands} z-index box-sizing order">
-
+                  skip_longhands="${skip_position_longhands} z-index box-sizing order align-content
+                                  justify-content align-self justify-self">
     % for side in SIDES:
     <% impl_split_style_coord("%s" % side.ident,
                               "mOffset",
@@ -905,6 +901,30 @@ fn static_assert() {
             }
         }
     }
+
+    pub fn set_align_content(&mut self, v: longhands::align_content::computed_value::T) {
+        self.gecko.mAlignContent = v.bits()
+    }
+
+    ${impl_simple_copy('align_content', 'mAlignContent')}
+
+    pub fn set_justify_content(&mut self, v: longhands::justify_content::computed_value::T) {
+        self.gecko.mJustifyContent = v.bits()
+    }
+
+    ${impl_simple_copy('justify_content', 'mJustifyContent')}
+
+    pub fn set_align_self(&mut self, v: longhands::align_self::computed_value::T) {
+        self.gecko.mAlignSelf = v.0.bits()
+    }
+
+    ${impl_simple_copy('align_self', 'mAlignSelf')}
+
+    pub fn set_justify_self(&mut self, v: longhands::justify_self::computed_value::T) {
+        self.gecko.mJustifySelf = v.0.bits()
+    }
+
+    ${impl_simple_copy('justify_self', 'mJustifySelf')}
 
     pub fn set_box_sizing(&mut self, v: longhands::box_sizing::computed_value::T) {
         use computed_values::box_sizing::T;
@@ -944,7 +964,7 @@ fn static_assert() {
     pub fn copy_${value.name}_from(&mut self, other: &Self) {
         self.gecko.${value.gecko}.mHasSpan = other.gecko.${value.gecko}.mHasSpan;
         self.gecko.${value.gecko}.mInteger = other.gecko.${value.gecko}.mInteger;
-        self.gecko.${value.gecko}.mLineName.assign(&other.gecko.${value.gecko}.mLineName);
+        self.gecko.${value.gecko}.mLineName.assign(&*other.gecko.${value.gecko}.mLineName);
     }
     % endfor
 
@@ -1584,7 +1604,7 @@ fn static_assert() {
         // The length of mAnimations is often greater than mAnimationXXCount,
         // don't copy values over the count.
         for (index, animation) in self.gecko.mAnimations.iter_mut().enumerate().take(count as usize) {
-            animation.mName.assign(&other.gecko.mAnimations[index].mName);
+            animation.mName.assign(&*other.gecko.mAnimations[index].mName);
         }
     }
     ${impl_animation_count('name', 'Name')}
@@ -2451,7 +2471,7 @@ fn static_assert() {
         self.clear_text_emphasis_style_if_string();
         if other.gecko.mTextEmphasisStyle == structs::NS_STYLE_TEXT_EMPHASIS_STYLE_STRING as u8 {
             self.gecko.mTextEmphasisStyleString
-                      .assign(&other.gecko.mTextEmphasisStyleString)
+                      .assign(&*other.gecko.mTextEmphasisStyleString)
         }
         self.gecko.mTextEmphasisStyle = other.gecko.mTextEmphasisStyle;
     }
@@ -2545,7 +2565,7 @@ fn static_assert() {
         use gecko_bindings::structs::nsStyleTextOverflowSide;
         fn set(side: &mut nsStyleTextOverflowSide, other: &nsStyleTextOverflowSide) {
             if other.mType == structs::NS_STYLE_TEXT_OVERFLOW_STRING as u8 {
-                side.mString.assign(&other.mString)
+                side.mString.assign(&*other.mString)
             }
             side.mType = other.mType
         }
@@ -2616,7 +2636,7 @@ clip-path
         clip_path.mType = StyleShapeSourceType::None;
 
         match v {
-            ShapeSource::Url(..) => println!("stylo: clip-path: url() not yet implemented"),
+            ShapeSource::Url(..) => warn!("stylo: clip-path: url() not yet implemented"),
             ShapeSource::None => {} // don't change the type
             ShapeSource::Box(reference) => {
                 clip_path.mReferenceBox = reference.into();

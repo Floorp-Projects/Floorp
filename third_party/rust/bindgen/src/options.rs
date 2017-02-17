@@ -4,8 +4,9 @@ use std::fs::File;
 use std::io::{self, Error, ErrorKind};
 
 /// Construct a new [`Builder`](./struct.Builder.html) from command line flags.
-pub fn builder_from_flags<I>(args: I)
-                             -> Result<(Builder, Box<io::Write>), io::Error>
+pub fn builder_from_flags<I>
+    (args: I)
+     -> Result<(Builder, Box<io::Write>, bool), io::Error>
     where I: Iterator<Item = String>,
 {
     let matches = App::new("bindgen")
@@ -42,6 +43,13 @@ pub fn builder_from_flags<I>(args: I)
             Arg::with_name("no-derive-debug")
                 .long("no-derive-debug")
                 .help("Avoid deriving Debug on any type."),
+            Arg::with_name("no-derive-default")
+                .long("no-derive-default")
+                .hidden(true)
+                .help("Avoid deriving Default on any type."),
+            Arg::with_name("with-derive-default")
+                .long("with-derive-default")
+                .help("Deriving Default on any type."),
             Arg::with_name("no-doc-comments")
                 .long("no-doc-comments")
                 .help("Avoid including doc comments in the output, see: \
@@ -76,6 +84,11 @@ pub fn builder_from_flags<I>(args: I)
             Arg::with_name("emit-ir")
                 .long("emit-ir")
                 .help("Output our internal IR for debugging purposes."),
+            Arg::with_name("emit-ir-graphviz")
+                .long("emit-ir-graphviz")
+                .help("Dump graphviz dot file.")
+                .value_name("path")
+                .takes_value(true),
             Arg::with_name("enable-cxx-namespaces")
                 .long("enable-cxx-namespaces")
                 .help("Enable support for C++ namespaces."),
@@ -175,6 +188,9 @@ pub fn builder_from_flags<I>(args: I)
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("verbose")
+                .long("verbose")
+                .help("Print verbose error messages"),
         ]) // .args()
         .get_matches_from(args);
 
@@ -210,6 +226,14 @@ pub fn builder_from_flags<I>(args: I)
 
     if matches.is_present("no-derive-debug") {
         builder = builder.derive_debug(false);
+    }
+
+    if matches.is_present("with-derive-default") {
+        builder = builder.derive_default(true);
+    }
+
+    if matches.is_present("no-derive-default") {
+        builder = builder.derive_default(false);
     }
 
     if let Some(prefix) = matches.value_of("ctypes-prefix") {
@@ -249,6 +273,10 @@ pub fn builder_from_flags<I>(args: I)
 
     if matches.is_present("emit-ir") {
         builder = builder.emit_ir();
+    }
+
+    if let Some(path) = matches.value_of("emit-ir-graphviz") {
+        builder = builder.emit_ir_graphviz(path);
     }
 
     if matches.is_present("enable-cxx-namespaces") {
@@ -346,5 +374,7 @@ pub fn builder_from_flags<I>(args: I)
         Box::new(io::BufWriter::new(io::stdout())) as Box<io::Write>
     };
 
-    Ok((builder, output))
+    let verbose = matches.is_present("verbose");
+
+    Ok((builder, output, verbose))
 }

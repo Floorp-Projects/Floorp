@@ -248,7 +248,7 @@ OggCodecState::PacketOutAsMediaRawData()
     !IsHeader(packet.get()),
     "PacketOutAsMediaRawData can only be called on non-header packets");
   RefPtr<MediaRawData> sample = new MediaRawData(packet->packet, packet->bytes);
-  if (!sample->Data()) {
+  if (packet->bytes && !sample->Data()) {
     // OOM.
     return nullptr;
   }

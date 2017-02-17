@@ -3528,72 +3528,77 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     }
   }
 
-  builder.EnterPresShell(aFrame);
   nsRect dirtyRect = visibleRegion.GetBounds();
+
   {
-    // If a scrollable container layer is created in nsDisplayList::PaintForFrame,
-    // it will be the scroll parent for display items that are built in the
-    // BuildDisplayListForStackingContext call below. We need to set the scroll
-    // parent on the display list builder while we build those items, so that they
-    // can pick up their scroll parent's id.
-    ViewID id = FrameMetrics::NULL_SCROLL_ID;
-    if (ignoreViewportScrolling && presContext->IsRootContentDocument()) {
-      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-        if (nsIContent* content = rootScrollFrame->GetContent()) {
-          id = nsLayoutUtils::FindOrCreateIDFor(content);
-        }
-      }
-    }
-    else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()
-        && !presShell->GetRootScrollFrame()) {
-      // In cases where the root document is a XUL document, we want to take
-      // the ViewID from the root element, as that will be the ViewID of the
-      // root APZC in the tree. Skip doing this in cases where we know
-      // nsGfxScrollFrame::BuilDisplayList will do it instead.
-      if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
-        id = nsLayoutUtils::FindOrCreateIDFor(element);
-      }
-    }
-
-    nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
-
     PROFILER_LABEL("nsLayoutUtils", "PaintFrame::BuildDisplayList",
       js::ProfileEntry::Category::GRAPHICS);
-
+    GeckoProfilerTracingRAII tracer("Paint", "DisplayList");
 
     PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
-    aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+
+    builder.EnterPresShell(aFrame);
+    {
+      // If a scrollable container layer is created in nsDisplayList::PaintForFrame,
+      // it will be the scroll parent for display items that are built in the
+      // BuildDisplayListForStackingContext call below. We need to set the scroll
+      // parent on the display list builder while we build those items, so that they
+      // can pick up their scroll parent's id.
+      ViewID id = FrameMetrics::NULL_SCROLL_ID;
+      if (ignoreViewportScrolling && presContext->IsRootContentDocument()) {
+        if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+          if (nsIContent* content = rootScrollFrame->GetContent()) {
+            id = nsLayoutUtils::FindOrCreateIDFor(content);
+          }
+        }
+      }
+      else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()
+          && !presShell->GetRootScrollFrame()) {
+        // In cases where the root document is a XUL document, we want to take
+        // the ViewID from the root element, as that will be the ViewID of the
+        // root APZC in the tree. Skip doing this in cases where we know
+        // nsGfxScrollFrame::BuilDisplayList will do it instead.
+        if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
+          id = nsLayoutUtils::FindOrCreateIDFor(element);
+        }
+      }
+
+      nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
+
+      aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+    }
+
+    nsIAtom* frameType = aFrame->GetType();
+
+    // For the viewport frame in print preview/page layout we want to paint
+    // the grey background behind the page, not the canvas color.
+    if (frameType == nsGkAtoms::viewportFrame &&
+        nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
+      nsRect bounds = nsRect(builder.ToReferenceFrame(aFrame),
+                             aFrame->GetSize());
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        buildingDisplayList(&builder, aFrame, bounds, false);
+      presShell->AddPrintPreviewBackgroundItem(builder, list, aFrame, bounds);
+    } else if (frameType != nsGkAtoms::pageFrame) {
+      // For printing, this function is first called on an nsPageFrame, which
+      // creates a display list with a PageContent item. The PageContent item's
+      // paint function calls this function on the nsPageFrame's child which is
+      // an nsPageContentFrame. We only want to add the canvas background color
+      // item once, for the nsPageContentFrame.
+
+      // Add the canvas background color to the bottom of the list. This
+      // happens after we've built the list so that AddCanvasBackgroundColorItem
+      // can monkey with the contents if necessary.
+      canvasArea.IntersectRect(canvasArea, visibleRegion.GetBounds());
+      nsDisplayListBuilder::AutoBuildingDisplayList
+        buildingDisplayList(&builder, aFrame, canvasArea, false);
+      presShell->AddCanvasBackgroundColorItem(
+             builder, list, aFrame, canvasArea, aBackstop);
+    }
+
+    builder.LeavePresShell(aFrame, &list);
   }
 
-  nsIAtom* frameType = aFrame->GetType();
-
-  // For the viewport frame in print preview/page layout we want to paint
-  // the grey background behind the page, not the canvas color.
-  if (frameType == nsGkAtoms::viewportFrame &&
-      nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
-    nsRect bounds = nsRect(builder.ToReferenceFrame(aFrame),
-                           aFrame->GetSize());
-    nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingDisplayList(&builder, aFrame, bounds, false);
-    presShell->AddPrintPreviewBackgroundItem(builder, list, aFrame, bounds);
-  } else if (frameType != nsGkAtoms::pageFrame) {
-    // For printing, this function is first called on an nsPageFrame, which
-    // creates a display list with a PageContent item. The PageContent item's
-    // paint function calls this function on the nsPageFrame's child which is
-    // an nsPageContentFrame. We only want to add the canvas background color
-    // item once, for the nsPageContentFrame.
-
-    // Add the canvas background color to the bottom of the list. This
-    // happens after we've built the list so that AddCanvasBackgroundColorItem
-    // can monkey with the contents if necessary.
-    canvasArea.IntersectRect(canvasArea, visibleRegion.GetBounds());
-    nsDisplayListBuilder::AutoBuildingDisplayList
-      buildingDisplayList(&builder, aFrame, canvasArea, false);
-    presShell->AddCanvasBackgroundColorItem(
-           builder, list, aFrame, canvasArea, aBackstop);
-  }
-
-  builder.LeavePresShell(aFrame, &list);
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
                                  startBuildDisplayList);
 

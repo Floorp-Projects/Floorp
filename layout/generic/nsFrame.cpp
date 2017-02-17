@@ -9065,6 +9065,8 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
  *
  * Also skip anonymous scrolled-content parents; inherit directly from the
  * outer scroll frame.
+ *
+ * Also skip NAC parents if the child frame is NAC.
  */
 static nsIFrame*
 GetCorrectedParent(const nsIFrame* aFrame)
@@ -9090,6 +9092,31 @@ GetCorrectedParent(const nsIFrame* aFrame)
   if (pseudo == nsCSSAnonBoxes::tableWrapper) {
     pseudo = aFrame->PrincipalChildList().FirstChild()->StyleContext()->GetPseudo();
   }
+
+  // Prevent NAC from inheriting NAC. This partially duplicates the logic
+  // implemented in nsCSSFrameConstructor::AddFCItemsForAnonymousContent, and is
+  // necessary so that restyle inherits style contexts in the same way as the
+  // initial styling performed in frame construction.
+  //
+  // It would be nice to put it in CorrectStyleParentFrame and therefore share
+  // it, but that would lose the information of whether the _child_ is NAC,
+  // since CorrectStyleParentFrame only knows about the prospective _parent_.
+  // This duplication and complexity will go away when we fully switch to the
+  // Servo style system, where all this can be handled much more naturally.
+  //
+  // We need to take special care not to disrupt the style inheritance of frames
+  // whose content is NAC but who implement a pseudo (like an anonymous
+  // box, or a non-NAC-backed pseudo like ::first-line) that does not match the
+  // one that the NAC implements, if any.
+  nsIContent* content = aFrame->GetContent();
+  Element* element = content->IsElement() ? content->AsElement() : nullptr;
+  if (element && element->IsNativeAnonymous() &&
+      element->GetPseudoElementType() == aFrame->StyleContext()->GetPseudoType()) {
+    while (parent->GetContent() && parent->GetContent()->IsNativeAnonymous()) {
+      parent = parent->GetParent();
+    }
+  }
+
   return nsFrame::CorrectStyleParentFrame(parent, pseudo);
 }
 
@@ -9160,6 +9187,9 @@ nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   *aProviderFrame = nullptr;
   nsFrameManager* fm = PresContext()->FrameManager();
+
+  // Handle display:contents and the root frame, when there's no parent frame
+  // to inherit from.
   if (MOZ_LIKELY(mContent)) {
     nsIContent* parentContent = mContent->GetFlattenedTreeParent();
     if (MOZ_LIKELY(parentContent)) {

@@ -52,6 +52,7 @@ function ChannelListener(closure, ctx, flags) {
   this._closure = closure;
   this._closurectx = ctx;
   this._flags = flags;
+  this._isFromCache = false;
 }
 ChannelListener.prototype = {
   _closure: null,
@@ -76,6 +77,10 @@ ChannelListener.prototype = {
         do_throw("Got second onStartRequest event!");
       this._got_onstartrequest = true;
       this._lastEvent = Date.now();
+
+      try {
+        this._isFromCache = request.QueryInterface(Ci.nsICachingChannel).isFromCache();
+      } catch (e) {}
 
       request.QueryInterface(Components.interfaces.nsIChannel);
       try {
@@ -107,7 +112,6 @@ ChannelListener.prototype = {
         request.suspend();
         do_timeout(SUSPEND_DELAY, function() { request.resume(); });
       }
-
     } catch (ex) {
       do_throw("Error in onStartRequest: " + ex);
     }
@@ -167,7 +171,7 @@ ChannelListener.prototype = {
       do_throw("Error in onStopRequest: " + ex);
     }
     try {
-      this._closure(request, this._buffer, this._closurectx);
+      this._closure(request, this._buffer, this._closurectx, this._isFromCache);
     } catch (ex) {
       do_throw("Error in closure function: " + ex);
     }

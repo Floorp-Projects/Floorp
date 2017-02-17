@@ -23,6 +23,7 @@
 #![doc = "The script crate contains all matters DOM."]
 
 #![plugin(plugins)]
+#![plugin(script_plugins)]
 
 extern crate angle;
 extern crate app_units;
@@ -38,7 +39,11 @@ extern crate cookie as cookie_rs;
 extern crate core;
 #[macro_use]
 extern crate cssparser;
+#[macro_use]
+extern crate deny_public_fields;
 extern crate devtools_traits;
+#[macro_use]
+extern crate domobject_derive;
 extern crate encoding;
 extern crate euclid;
 extern crate fnv;
