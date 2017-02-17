@@ -253,7 +253,7 @@ private:
 
   void RunStage(Data& aData);
   MediaResult DoCreateDecoder(Data& aData);
-  void DoInitDecoder(TrackType aTrack);
+  void DoInitDecoder(Data& aData);
 
   // guaranteed to be valid by the owner.
   const NotNull<MediaFormatReader*> mOwner;
@@ -361,7 +361,7 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
       }
 
       aData.mDecoder = new Wrapper(aData.mDecoder.forget(), aData.mToken.forget());
-      DoInitDecoder(aData.mTrack);
+      DoInitDecoder(aData);
       aData.mStage = Stage::WaitForInit;
       break;
     }
@@ -439,41 +439,40 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
 }
 
 void
-MediaFormatReader::DecoderFactory::DoInitDecoder(TrackType aTrack)
+MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData)
 {
-  auto& ownerData = mOwner->GetDecoderData(aTrack);
-  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+  auto& ownerData = aData.mOwnerData;
 
-  data.mDecoder->Init()
+  aData.mDecoder->Init()
     ->Then(mOwner->OwnerThread(), __func__,
-           [this, &data, &ownerData](TrackType aTrack) {
-             data.mInitRequest.Complete();
-             data.mStage = Stage::None;
+           [this, &aData, &ownerData](TrackType aTrack) {
+             aData.mInitRequest.Complete();
+             aData.mStage = Stage::None;
              MutexAutoLock lock(ownerData.mMutex);
-             ownerData.mDecoder = data.mDecoder.forget();
+             ownerData.mDecoder = aData.mDecoder.forget();
              ownerData.mDescription = ownerData.mDecoder->GetDescriptionName();
              mOwner->SetVideoDecodeThreshold();
              mOwner->ScheduleUpdate(aTrack);
            },
-           [this, &data, &ownerData, aTrack](const MediaResult& aError) {
-             data.mInitRequest.Complete();
+           [this, &aData, &ownerData](const MediaResult& aError) {
+             aData.mInitRequest.Complete();
              MOZ_RELEASE_ASSERT(!ownerData.mDecoder,
                                 "Can't have a decoder already set");
-             data.mStage = Stage::None;
-             data.mShutdownPromise = data.mDecoder->Shutdown();
-             data.mShutdownPromise
+             aData.mStage = Stage::None;
+             aData.mShutdownPromise = aData.mDecoder->Shutdown();
+             aData.mShutdownPromise
                ->Then(
                  mOwner->OwnerThread(), __func__,
-                 [this, &data, aTrack, aError]() {
-                   data.mShutdownRequest.Complete();
-                   data.mShutdownPromise = nullptr;
-                   data.mDecoder = nullptr;
-                   mOwner->NotifyError(aTrack, aError);
+                 [this, &aData, aError]() {
+                   aData.mShutdownRequest.Complete();
+                   aData.mShutdownPromise = nullptr;
+                   aData.mDecoder = nullptr;
+                   mOwner->NotifyError(aData.mTrack, aError);
                  },
                  []() { MOZ_RELEASE_ASSERT(false, "Can't ever get here"); })
-               ->Track(data.mShutdownRequest);
+               ->Track(aData.mShutdownRequest);
            })
-    ->Track(data.mInitRequest);
+    ->Track(aData.mInitRequest);
 }
 
 // DemuxerProxy ensures that the original main demuxer is only ever accessed
