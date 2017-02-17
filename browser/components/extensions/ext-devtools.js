@@ -40,6 +40,7 @@ let initDevTools;
 global.getDevToolsTargetForContext = (context) => {
   return Task.spawn(function* asyncGetTabTarget() {
     if (context.devToolsTarget) {
+      yield context.devToolsTarget.makeRemote();
       return context.devToolsTarget;
     }
 
