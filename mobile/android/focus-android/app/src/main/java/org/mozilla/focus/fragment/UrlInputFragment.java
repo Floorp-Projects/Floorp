@@ -8,6 +8,8 @@ package org.mozilla.focus.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +23,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText;
 /**
  * Fragment for displaying he URL input controls.
  */
-public class UrlInputFragment extends Fragment implements View.OnClickListener {
+public class UrlInputFragment extends Fragment implements View.OnClickListener, TextWatcher {
     public static final String ARGUMENT_URL = "url";
 
     public static UrlInputFragment create() {
@@ -42,13 +44,16 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener {
     }
 
     private InlineAutocompleteEditText urlView;
+    private View clearView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
 
         view.findViewById(R.id.background).setOnClickListener(this);
-        view.findViewById(R.id.cancel).setOnClickListener(this);
+
+        clearView = view.findViewById(R.id.clear);
+        clearView.setOnClickListener(this);
 
         urlView = (InlineAutocompleteEditText) view.findViewById(R.id.url_edit);
         urlView.setOnFilterListener(new UrlAutoCompleteFilter(getContext()));
@@ -68,6 +73,8 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener {
             }
         });
 
+        urlView.addTextChangedListener(this);
+
         if (getArguments().containsKey(ARGUMENT_URL)) {
             urlView.setText(getArguments().getString(ARGUMENT_URL));
         }
@@ -85,12 +92,9 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.cancel:
-                getActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .remove(this)
-                        .commit();
-                break;
+            case R.id.clear:
+                urlView.setText("");
+                urlView.requestFocus();
         }
     }
 
@@ -110,5 +114,24 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener {
                 .beginTransaction()
                 .replace(R.id.container, BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
                 .commit();
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+        // TextWatcher - Unused
+    }
+
+    @Override
+    public void onTextChanged(CharSequence text, int start, int before, int count) {
+        // TextWatcher - Unused
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+        if (editable.length() == 0) {
+            clearView.setVisibility(View.GONE);
+        } else {
+            clearView.setVisibility(View.VISIBLE);
+        }
     }
 }
