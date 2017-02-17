@@ -110,6 +110,10 @@ private:
   PRLock* mLock;
 
   friend class CondVar;
+
+  // MozPromise needs to access mLock for debugging purpose.
+  template<typename, typename, bool>
+  friend class MozPromise;
 };
 
 /**
