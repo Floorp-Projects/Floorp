@@ -12,7 +12,6 @@ import json
 import logging
 import os
 import traceback
-import requests
 import yaml
 
 from . import decision, schema
@@ -24,6 +23,7 @@ from ..create import create_task
 from .. import GECKO
 from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.taskcluster import get_session
 
 # Functions to handle each `job.type` in `.cron.yml`.  These are called with
 # the contents of the `job` property from `.cron.yml` and should return a
@@ -34,14 +34,6 @@ JOB_TYPES = {
 }
 
 logger = logging.getLogger(__name__)
-_session = None
-
-
-def get_session():
-    global _session
-    if not _session:
-        _session = requests.Session()
-    return _session
 
 
 def load_jobs(params):
