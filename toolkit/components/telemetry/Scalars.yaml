@@ -1,6 +1,20 @@
 # This file contains a definition of the scalar probes that are recorded in Telemetry.
 # They are submitted with the "main" pings and can be inspected in about:telemetry.
 
+# The following section contains the aushelper system add-on scalars.
+aushelper:
+  websense_reg_version:
+    bug_numbers:
+      - 1305847
+    description: The Websense version from the Windows registry.
+    expires: "60"
+    kind: string
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement:
   max_concurrent_tab_count:
