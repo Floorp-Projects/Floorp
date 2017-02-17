@@ -26,4 +26,18 @@
     <string name="menu_about">About</string>
     <string name="menu_help">Help</string>
     <string name="menu_rights">Your Rights</string>
+
+    <string name="preference_category_privacy">Privacy</string>
+    <string name="preference_privacy_block_ads">Block ad trackers</string>
+    <string name="preference_privacy_block_analytics">Block analytic trackers</string>
+    <string name="preference_privacy_block_social">Block social trackers</string>
+    <string name="preference_privacy_block_content">Block other content trackers</string>
+    <string name="preference_privacy_block_content_summary">May break some videos and Web pages</string>
+
+    <string name="preference_category_performance">Performance</string>
+    <string name="preference_performance_block_webfonts">Block Web fonts</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry">Send anonymous usage data</string>
+    <string name="preference_mozilla_telemetry_summary">Learn more</string>
 </resources>

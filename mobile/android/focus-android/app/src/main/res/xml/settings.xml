@@ -2,44 +2,44 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:title="Privacy" />
+        android:title="@string/preference_category_privacy" />
 
     <SwitchPreference
-        android:title="Block ad trackers"
+        android:title="@string/preference_privacy_block_ads"
         android:key="@string/pref_key_privacy_block_ads"
         android:defaultValue="true" />
 
     <SwitchPreference
-        android:title="Block analytic trackers"
+        android:title="@string/preference_privacy_block_analytics"
         android:key="@string/pref_key_privacy_block_analytics"
         android:defaultValue="true" />
 
     <SwitchPreference
-        android:title="Block social trackers"
+        android:title="@string/preference_privacy_block_social"
         android:key="@string/pref_key_privacy_block_social"
         android:defaultValue="true" />
 
     <SwitchPreference
-        android:title="Block other content trackers"
+        android:title="@string/preference_privacy_block_content"
         android:key="@string/pref_key_privacy_block_other"
-        android:summary="May break some videos and Web pages"
+        android:summary="@string/preference_privacy_block_content_summary"
         android:defaultValue="false" />
 
     <PreferenceCategory
-        android:title="Performance" />
+        android:title="@string/preference_category_performance" />
 
     <SwitchPreference
-        android:title="Block Web fonts"
+        android:title="@string/preference_performance_block_webfonts"
         android:key="@string/pref_key_performance_block_webfonts"
         android:defaultValue="false" />
 
     <PreferenceCategory
-        android:title="Mozilla" />
+        android:title="@string/preference_category_mozilla" />
 
     <SwitchPreference
-        android:title="Send anonymous usage data"
+        android:title="@string/preference_mozilla_telemetry"
         android:key="@string/pref_key_telemetry"
         android:defaultValue="true"
-        android:summary="Learn more" />
+        android:summary="@string/preference_mozilla_telemetry_summary" />
 
 </PreferenceScreen>
