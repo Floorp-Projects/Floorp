@@ -26,6 +26,10 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['ACCESSIBILITY']:
+    DIRS += [
+        'oop',
+    ]
+
     EXPORTS.mozilla.mscom += [
         'ActivationContext.h',
         'DispatchForwarder.h',
