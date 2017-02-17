@@ -21,6 +21,7 @@
 #include "mozilla/PresShell.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -11072,8 +11073,7 @@ ToSheetType(uint32_t aServiceSheetType)
       return SheetType::User;
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("unexpected aSheetType value");
-      // fall through
+      MOZ_FALLTHROUGH_ASSERT("unexpected aSheetType value");
     case nsIStyleSheetService::AUTHOR_SHEET:
       return SheetType::Doc;
   }
