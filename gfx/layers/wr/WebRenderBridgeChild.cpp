@@ -61,9 +61,13 @@ WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mIsInTransaction);
-
+  bool success = false;
   UpdateFwdTransactionId();
-  this->SendDPBegin(aSize);
+  this->SendDPBegin(aSize, &success);
+  if (!success) {
+    return false;
+  }
+
   mIsInTransaction = true;
   return true;
 }
