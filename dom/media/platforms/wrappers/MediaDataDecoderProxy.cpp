@@ -66,6 +66,7 @@ RefPtr<ShutdownPromise>
 MediaDataDecoderProxy::Shutdown()
 {
   MOZ_ASSERT(!mIsShutdown);
+
 #if defined(DEBUG)
   mIsShutdown = true;
 #endif
@@ -76,6 +77,61 @@ MediaDataDecoderProxy::Shutdown()
   RefPtr<MediaDataDecoderProxy> self = this;
   return InvokeAsync(mProxyThread, __func__,
                      [self, this]() { return mProxyDecoder->Shutdown(); });
+}
+
+const char*
+MediaDataDecoderProxy::GetDescriptionName() const
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->GetDescriptionName();
+}
+
+bool
+MediaDataDecoderProxy::IsHardwareAccelerated(nsACString& aFailureReason) const
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->IsHardwareAccelerated(aFailureReason);
+}
+
+void
+MediaDataDecoderProxy::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  if (!mProxyThread) {
+    mProxyDecoder->SetSeekThreshold(aTime);
+    return;
+  }
+  RefPtr<MediaDataDecoderProxy> self = this;
+  media::TimeUnit time = aTime;
+  mProxyThread->Dispatch(NS_NewRunnableFunction(
+    [self, time] { self->mProxyDecoder->SetSeekThreshold(time); }));
+}
+
+bool
+MediaDataDecoderProxy::SupportDecoderRecycling() const
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->SupportDecoderRecycling();
+}
+
+void
+MediaDataDecoderProxy::ConfigurationChanged(const TrackInfo& aConfig)
+{
+  MOZ_ASSERT(!mIsShutdown);
+
+  if (!mProxyThread) {
+    mProxyDecoder->ConfigurationChanged(aConfig);
+  }
+  RefPtr<MediaDataDecoderProxy> self = this;
+  RefPtr<TrackInfoSharedPtr> config = new TrackInfoSharedPtr(aConfig, 0);
+  mProxyThread->Dispatch(NS_NewRunnableFunction([self, config] {
+    const TrackInfo* trackInfo = *config;
+    self->mProxyDecoder->ConfigurationChanged(*trackInfo);
+  }));
 }
 
 } // namespace mozilla
