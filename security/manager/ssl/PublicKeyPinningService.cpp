@@ -273,7 +273,7 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
       return rv;
     }
     chainHasValidPins = enforceTestModeResult;
-    Telemetry::ID histogram = staticFingerprints->mIsMoz
+    Telemetry::HistogramID histogram = staticFingerprints->mIsMoz
       ? Telemetry::CERT_PINNING_MOZ_RESULTS
       : Telemetry::CERT_PINNING_RESULTS;
     if (staticFingerprints->mTestMode) {

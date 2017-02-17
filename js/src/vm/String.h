@@ -467,6 +467,10 @@ class JSString : public js::gc::TenuredCell
         return *(JSAtom*)this;
     }
 
+    // Fills |array| with various strings that represent the different string
+    // kinds and character encodings.
+    static bool fillWithRepresentatives(JSContext* cx, js::HandleArrayObject array);
+
     /* Only called by the GC for dependent or undepended strings. */
 
     inline bool hasBase() const {

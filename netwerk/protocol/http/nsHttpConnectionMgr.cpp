@@ -2149,7 +2149,10 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
             RefPtr<nsHttpConnection> conn(ent->mActiveConns[0]);
             ent->mActiveConns.RemoveElementAt(0);
             DecrementActiveConnCount(conn);
-            conn->Close(NS_ERROR_ABORT, true);
+            // Since nsHttpConnection::Close doesn't break the bond with
+            // the connection's transaction, we must explicitely tell it
+            // to close its transaction and not just self.
+            conn->CloseTransaction(conn->Transaction(), NS_ERROR_ABORT, true);
         }
 
         // Close all idle connections.
