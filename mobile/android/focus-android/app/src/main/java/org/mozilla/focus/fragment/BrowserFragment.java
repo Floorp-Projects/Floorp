@@ -82,7 +82,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
 
                 urlView.setText(url);
 
-                urlBarView.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorTitleBar));
+                urlBarView.setBackgroundColor(
+                        ContextCompat.getColor(urlBarView.getContext(), R.color.colorTitleBar));
 
                 progressView.setVisibility(View.VISIBLE);
             }
