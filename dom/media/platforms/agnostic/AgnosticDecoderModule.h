@@ -13,12 +13,6 @@ public:
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  ConversionRequired
-  DecoderNeedsConversion(const TrackInfo& aConfig) const override
-  {
-    return ConversionRequired::kNeedNone;
-  }
-
 protected:
   virtual ~AgnosticDecoderModule() = default;
   // Decode thread.

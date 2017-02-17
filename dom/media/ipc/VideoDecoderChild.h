@@ -28,7 +28,9 @@ public:
   mozilla::ipc::IPCResult RecvInputExhausted() override;
   mozilla::ipc::IPCResult RecvDrainComplete() override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
-  mozilla::ipc::IPCResult RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason) override;
+  mozilla::ipc::IPCResult RecvInitComplete(const bool& aHardware,
+                                           const nsCString& aHardwareReason,
+                                           const uint32_t& aConversion) override;
   mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
   mozilla::ipc::IPCResult RecvFlushComplete() override;
 
@@ -41,6 +43,7 @@ public:
   void Shutdown();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const;
   void SetSeekThreshold(const media::TimeUnit& aTime);
+  MediaDataDecoder::ConversionRequired NeedsConversion() const;
 
   MOZ_IS_CLASS_INIT
   bool InitIPDL(const VideoInfo& aVideoInfo,
@@ -55,7 +58,7 @@ public:
 private:
   ~VideoDecoderChild();
 
-  void AssertOnManagerThread();
+  void AssertOnManagerThread() const;
 
   RefPtr<VideoDecoderChild> mIPDLSelfRef;
   RefPtr<nsIThread> mThread;
@@ -69,6 +72,8 @@ private:
   bool mCanSend;
   bool mInitialized;
   bool mIsHardwareAccelerated;
+  MediaDataDecoder::ConversionRequired mConversion;
+
   // Set to true if the actor got destroyed and we haven't yet notified the
   // caller.
   bool mNeedNewDecoder;
