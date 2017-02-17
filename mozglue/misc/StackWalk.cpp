@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StackWalk.h"
 
 #include <string.h>
@@ -335,6 +336,20 @@ WalkStackMain64(struct WalkStackData* aData)
   frame64.AddrStack.Mode   = AddrModeFlat;
   frame64.AddrFrame.Mode   = AddrModeFlat;
   frame64.AddrReturn.Mode  = AddrModeFlat;
+#endif
+
+#ifdef _WIN64
+  // Workaround possible deadlock where the thread we're profiling happens to
+  // be in RtlLookupFunctionEntry (see below) or in RtlAddFunctionTable or
+  // RtlDeleteFunctionTable when starting or shutting down the JS engine.
+  // On Win64 each of these Rtl* functions will take a lock, so we need to make
+  // sure we don't deadlock when a suspended thread is holding it.
+  if (!TryAcquireStackWalkWorkaroundLock()) {
+    return;
+  }
+  auto releaseLock = mozilla::MakeScopeExit([] {
+    ReleaseStackWalkWorkaroundLock();
+  });
 #endif
 
   // Skip our own stack walking frames.

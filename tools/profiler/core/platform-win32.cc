@@ -34,9 +34,6 @@
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
-#include "mozilla/StackWalk_windows.h"
-
-
 class PlatformData {
  public:
   // Get a handle to the calling thread. This is the thread that we are
@@ -236,29 +233,6 @@ class SamplerThread
     if (!GetThreadContext(profiled_thread, &context)) {
       ResumeThread(profiled_thread);
       return;
-    }
-
-    // Threads that may invoke JS require extra attention. Since, on windows,
-    // the jits also need to modify the same dynamic function table that we need
-    // to get a stack trace, we have to be wary of that to avoid deadlock.
-    //
-    // When embedded in Gecko, for threads that aren't the main thread,
-    // CanInvokeJS consults an unlocked value in the nsIThread, so we must
-    // consult this after suspending the profiled thread to avoid racing
-    // against a value change.
-    if (aThreadInfo->CanInvokeJS()) {
-      if (!TryAcquireStackWalkWorkaroundLock()) {
-        ResumeThread(profiled_thread);
-        return;
-      }
-
-      // It is safe to immediately drop the lock. We only need to contend with
-      // the case in which the profiled thread held needed system resources.
-      // If the profiled thread had held those resources, the trylock would have
-      // failed. Anyone else who grabs those resources will continue to make
-      // progress, since those threads are not suspended. Because of this,
-      // we cannot deadlock with them, and should let them run as they please.
-      ReleaseStackWalkWorkaroundLock();
     }
 
 #if V8_HOST_ARCH_X64
