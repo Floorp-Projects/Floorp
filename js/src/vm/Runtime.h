@@ -340,29 +340,21 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
 
     // Count of AutoProhibitActiveContextChange instances on the active context.
-    js::ActiveThreadData<size_t> activeContextChangeProhibited_;
+    mozilla::Atomic<size_t> activeContextChangeProhibited_;
 
   public:
     JSContext* activeContext() const { return activeContext_; }
     const void* addressOfActiveContext() { return &activeContext_; }
 
     void setActiveContext(JSContext* cx);
+    void setNewbornActiveContext(JSContext* cx);
+    void deleteActiveContext(JSContext* cx);
 
     inline JSContext* activeContextFromOwnThread();
 
     js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>& cooperatingContexts() {
         return cooperatingContexts_.ref();
     }
-
-#ifdef DEBUG
-    bool isCooperatingContext(JSContext* cx) {
-        for (const js::CooperatingContext& target : cooperatingContexts()) {
-            if (target.context() == cx)
-                return true;
-        }
-        return false;
-    }
-#endif
 
     class MOZ_RAII AutoProhibitActiveContextChange
     {
