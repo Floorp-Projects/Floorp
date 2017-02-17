@@ -85,6 +85,7 @@ public:
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(aFrame && aFrameInUse && aChainCounter);
+    MOZ_ASSERT(!(*mFrameInUse), "Undetected reference loop!");
     MOZ_ASSERT(aMaxChainLength > 0);
     MOZ_ASSERT(*aChainCounter == noChain ||
                (*aChainCounter >= 0 && *aChainCounter < aMaxChainLength));
