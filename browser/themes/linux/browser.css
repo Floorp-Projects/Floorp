@@ -363,11 +363,7 @@ menuitem.bookmark-item {
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 {
   -moz-appearance: none;
-}
-
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[open="true"],
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:hover:active {
-  padding: 3px;
+  padding: 0 3px;
 }
 
 .findbar-button > .toolbarbutton-text,
@@ -434,12 +430,6 @@ menuitem.bookmark-item {
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-color: var(--toolbarbutton-checkedhover-backgroundcolor);
   transition: background-color 150ms;
-}
-
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button[open],
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:hover:active,
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:hover:active {
-  padding: 3px;
 }
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbaritem-combined-buttons {
