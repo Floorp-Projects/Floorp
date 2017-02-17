@@ -25,15 +25,14 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
   : StyleSheet(StyleBackendType::Servo, aParsingMode)
 {
   mInner = new StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity);
+  mInner->AddSheet(this);
 }
 
 ServoStyleSheet::~ServoStyleSheet()
 {
   UnparentChildren();
 
-  DropSheet();
-
-  delete mInner;
+  DropRuleList();
 }
 
 // QueryInterface implementation for ServoStyleSheet
@@ -93,13 +92,6 @@ void
 ServoStyleSheet::LoadFailed()
 {
   mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
-}
-
-void
-ServoStyleSheet::DropSheet()
-{
-  mSheet = nullptr;
-  DropRuleList();
 }
 
 void

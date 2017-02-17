@@ -82,7 +82,6 @@ protected:
   void EnabledStateChangedInternal() {}
 
 private:
-  void DropSheet();
   void DropRuleList();
 
   RefPtr<RawServoStyleSheet> mSheet;
