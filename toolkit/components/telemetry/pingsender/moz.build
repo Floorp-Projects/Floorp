@@ -15,16 +15,15 @@ if CONFIG['OS_TARGET'] != 'Android':
         '/toolkit/crashreporter/google-breakpad/src',
     ]
 
-    if CONFIG['OS_TARGET'] == 'WINNT':
-        OS_LIBS += [
-            'wininet',
-        ]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
         'pingsender_win.cpp',
     ]
-elif CONFIG['OS_ARCH'] == 'Darwin' or CONFIG['OS_ARCH'] == 'Linux':
+
+    OS_LIBS += [
+        'wininet',
+    ]
+else:
     UNIFIED_SOURCES += [
         'pingsender_unix_common.cpp',
     ]

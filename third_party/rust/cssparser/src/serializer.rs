@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::ascii::AsciiExt;
-use std::cmp;
 use std::fmt::{self, Write};
 
 use super::{Token, NumericValue, PercentageValue};
@@ -109,28 +108,6 @@ impl<'a> ToCss for Token<'a> {
                     try!(serialize_identifier(unit, dest));
                 }
             },
-
-            Token::UnicodeRange(start, end) => {
-                try!(dest.write_str("U+"));
-                let bits = cmp::min(start.trailing_zeros(), (!end).trailing_zeros());
-                let question_marks = bits / 4;
-                let bits = question_marks * 4;
-                let truncated_start = start >> bits;
-                let truncated_end = end >> bits;
-                if truncated_start == truncated_end {
-                    if truncated_start != 0 {
-                        try!(write!(dest, "{:X}", truncated_start));
-                    }
-                    for _ in 0..question_marks {
-                        try!(dest.write_str("?"));
-                    }
-                } else {
-                    try!(write!(dest, "{:X}", start));
-                    if end != start {
-                        try!(write!(dest, "-{:X}", end));
-                    }
-                }
-            }
 
             Token::WhiteSpace(content) => try!(dest.write_str(content)),
             Token::Comment(content) => try!(write!(dest, "/*{}*/", content)),
@@ -343,17 +320,14 @@ impl TokenSerializationType {
         match self.0 {
             Ident => matches!(other.0,
                 Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension |
-                UnicodeRange | CDC | OpenParen),
+                CDC | OpenParen),
             AtKeywordOrHash | Dimension => matches!(other.0,
                 Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension |
-                UnicodeRange | CDC),
+                CDC),
             DelimHash | DelimMinus | Number => matches!(other.0,
-                Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension |
-                UnicodeRange),
+                Ident | Function | UrlOrBadUrl | DelimMinus | Number | Percentage | Dimension),
             DelimAt => matches!(other.0,
-                Ident | Function | UrlOrBadUrl | DelimMinus | UnicodeRange),
-            UnicodeRange => matches!(other.0,
-                Ident | Function | Number | Percentage | Dimension | DelimQuestion),
+                Ident | Function | UrlOrBadUrl | DelimMinus),
             DelimDotOrPlus => matches!(other.0, Number | Percentage | Dimension),
             DelimAssorted | DelimAsterisk => matches!(other.0, DelimEquals),
             DelimBar => matches!(other.0, DelimEquals | DelimBar | DashMatch),
@@ -372,7 +346,6 @@ enum TokenSerializationTypeVariants {
     Number,
     Dimension,
     Percentage,
-    UnicodeRange,
     UrlOrBadUrl,
     Function,
     Ident,
@@ -417,7 +390,6 @@ impl<'a> Token<'a> {
             Token::Number(_) => Number,
             Token::Percentage(_) => Percentage,
             Token::Dimension(..) => Dimension,
-            Token::UnicodeRange(..) => UnicodeRange,
             Token::WhiteSpace(_) => WhiteSpace,
             Token::Comment(_) => DelimSlash,
             Token::DashMatch => DashMatch,

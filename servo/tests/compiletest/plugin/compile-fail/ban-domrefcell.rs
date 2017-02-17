@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![feature(plugin)]
-#![plugin(plugins)]
+#![plugin(script_plugins)]
 
 extern crate script;
 
@@ -13,7 +13,7 @@ use script::test::Node;
 
 struct Foo {
     bar: DOMRefCell<JS<Node>>
-    //~^ ERROR Banned type DOMRefCell<JS<T>> detected. Use MutJS<JS<T>> instead,
+    //~^ ERROR Banned type DOMRefCell<JS<T>> detected. Use MutJS<JS<T>> instead
 }
 
 fn main() {}

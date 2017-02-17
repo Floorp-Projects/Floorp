@@ -51,6 +51,8 @@ public class ActivityStream extends FrameLayout {
         rv.setAdapter(adapter);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setHasFixedSize(true);
+        // Override item animations to avoid horrible topsites refreshing
+        rv.setItemAnimator(new StreamItemAnimator());
 
         RecyclerViewClickSupport.addTo(rv)
                 .setOnItemClickListener(adapter);

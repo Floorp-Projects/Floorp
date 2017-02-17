@@ -2,14 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::cmp;
+/// Abstraction for avoiding a dependency from cssparser to an encoding library
+pub trait EncodingSupport {
+    /// One character encoding
+    type Encoding;
 
-use encoding::label::encoding_from_whatwg_label;
-use encoding::all::UTF_8;
-use encoding::{EncodingRef, DecoderTrap, decode};
+    /// https://encoding.spec.whatwg.org/#concept-encoding-get
+    fn from_label(ascii_label: &[u8]) -> Option<Self::Encoding>;
+
+    /// Return the UTF-8 encoding
+    fn utf8() -> Self::Encoding;
+
+    /// Whether the given encoding is UTF-16BE or UTF-16LE
+    fn is_utf16_be_or_le(encoding: &Self::Encoding) -> bool;
+}
 
 
-/// Determine the character encoding of a CSS stylesheet and decode it.
+/// Determine the character encoding of a CSS stylesheet.
 ///
 /// This is based on the presence of a BOM (Byte Order Mark), an `@charset` rule, and
 /// encoding meta-information.
@@ -20,48 +29,36 @@ use encoding::{EncodingRef, DecoderTrap, decode};
 /// * `environment_encoding`: An optional `Encoding` object for the [environment encoding]
 ///     (https://drafts.csswg.org/css-syntax/#environment-encoding), if any.
 ///
-/// Returns a 2-tuple of a decoded Unicode string and the `Encoding` object that was used.
-pub fn decode_stylesheet_bytes(css: &[u8], protocol_encoding_label: Option<&str>,
-                               environment_encoding: Option<EncodingRef>)
-                            -> (String, EncodingRef) {
+/// Returns the encoding to use.
+pub fn stylesheet_encoding<E>(css: &[u8], protocol_encoding_label: Option<&[u8]>,
+                              environment_encoding: Option<E::Encoding>)
+                              -> E::Encoding
+                              where E: EncodingSupport {
     // https://drafts.csswg.org/css-syntax/#the-input-byte-stream
     match protocol_encoding_label {
         None => (),
-        Some(label) => match encoding_from_whatwg_label(label) {
+        Some(label) => match E::from_label(label) {
             None => (),
-            Some(fallback) => return decode_replace(css, fallback)
+            Some(protocol_encoding) => return protocol_encoding
         }
     }
-    if css.starts_with("@charset \"".as_bytes()) {
-        // 10 is "@charset \"".len()
-        // 100 is arbitrary so that no encoding label is more than 100-10 bytes.
-        match css[10..cmp::min(css.len(), 100)].iter().position(|&b| b == b'"') {
+    let prefix = b"@charset \"";
+    if css.starts_with(prefix) {
+        let rest = &css[prefix.len()..];
+        match rest.iter().position(|&b| b == b'"') {
             None => (),
-            Some(label_length)
-            => if css[10 + label_length..].starts_with("\";".as_bytes()) {
-                let label = &css[10..10 + label_length];
-                let label = label.iter().map(|&b| b as char).collect::<String>();
-                match encoding_from_whatwg_label(&*label) {
+            Some(label_length) => if rest[label_length..].starts_with(b"\";") {
+                let label = &rest[..label_length];
+                match E::from_label(label) {
                     None => (),
-                    Some(fallback) => match fallback.name() {
-                        "utf-16be" | "utf-16le"
-                        => return decode_replace(css, UTF_8 as EncodingRef),
-                        _ => return decode_replace(css, fallback),
+                    Some(charset_encoding) => if E::is_utf16_be_or_le(&charset_encoding) {
+                        return E::utf8()
+                    } else {
+                        return charset_encoding
                     }
                 }
             }
         }
     }
-    match environment_encoding {
-        None => (),
-        Some(fallback) => return decode_replace(css, fallback)
-    }
-    return decode_replace(css, UTF_8 as EncodingRef)
-}
-
-
-#[inline]
-fn decode_replace(input: &[u8], fallback_encoding: EncodingRef)-> (String, EncodingRef) {
-    let (result, used_encoding) = decode(input, DecoderTrap::Replace, fallback_encoding);
-    (result.unwrap(), used_encoding)
+    environment_encoding.unwrap_or_else(E::utf8)
 }

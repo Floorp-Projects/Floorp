@@ -8,6 +8,7 @@ extern crate rustc_serialize;
 
 use bindgen::clang_version;
 use std::env;
+use std::panic;
 
 mod options;
 use options::builder_from_flags;
@@ -24,7 +25,7 @@ pub fn main() {
     let bind_args: Vec<_> = env::args().collect();
 
     let version = clang_version();
-    let expected_version = if cfg!(feature = "llvm_stable") {
+    let expected_version = if cfg!(feature = "testing_only_llvm_stable") {
         (3, 8)
     } else {
         (3, 9)
@@ -41,9 +42,20 @@ pub fn main() {
     }
 
     match builder_from_flags(bind_args.into_iter()) {
-        Ok((builder, output)) => {
-            let mut bindings = builder.generate()
-                .expect("Unable to generate bindings");
+        Ok((builder, output, verbose)) => {
+
+            let builder_result = panic::catch_unwind(|| {
+                builder.generate().expect("Unable to generate bindings")
+            });
+
+            if builder_result.is_err() {
+                if verbose {
+                    print_verbose_err();
+                }
+                std::process::exit(1);
+            }
+
+            let mut bindings = builder_result.unwrap();
             bindings.write(output)
                 .expect("Unable to write output");
             bindings.write_dummy_uses()
@@ -54,4 +66,14 @@ pub fn main() {
             std::process::exit(1);
         }
     };
+}
+
+fn print_verbose_err() {
+    println!("Bindgen unexpectedly panicked");
+    println!("This may be caused by one of the known-unsupported \
+              things (https://github.com/servo/rust-bindgen#c), \
+              please modify the bindgen flags to work around it as \
+              described in https://github.com/servo/rust-bindgen#c");
+    println!("Otherwise, please file an issue at \
+              https://github.com/servo/rust-bindgen/issues/new");
 }

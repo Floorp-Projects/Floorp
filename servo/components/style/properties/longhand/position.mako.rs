@@ -84,14 +84,20 @@ ${helpers.single_keyword("flex-wrap", "nowrap wrap wrap-reverse",
                          spec="https://drafts.csswg.org/css-flexbox/#flex-wrap-property",
                          extra_prefixes="webkit", animatable=False)}
 
-// FIXME(stshine): The type of 'justify-content' and 'align-content' is uint16_t in gecko
-// FIXME(stshine): Its higher bytes are used to store fallback value. Disable them in geckolib for now
-${helpers.single_keyword("justify-content", "flex-start flex-end center space-between space-around",
-                         gecko_constant_prefix="NS_STYLE_JUSTIFY",
-                         products="servo",
-                         extra_prefixes="webkit",
-                         spec="https://drafts.csswg.org/css-flexbox/#justify-content-property",
-                         animatable=False)}
+% if product == "servo":
+    // FIXME: Update Servo to support the same Syntax as Gecko.
+    ${helpers.single_keyword("justify-content", "stretch flex-start flex-end center space-between space-around",
+                             extra_prefixes="webkit",
+                             spec="https://drafts.csswg.org/css-align/#propdef-justify-content",
+                             animatable=False)}
+% else:
+    ${helpers.predefined_type(name="justify-content",
+                              type="AlignJustifyContent",
+                              initial_value="specified::AlignJustifyContent::normal()",
+                              spec="https://drafts.csswg.org/css-align/#propdef-justify-content",
+                              extra_prefixes="webkit",
+                              animatable=False)}
+% endif
 
 // https://drafts.csswg.org/css-flexbox/#propdef-align-items
 // FIXME: This is a workaround for 'normal' value. We don't support the Gecko initial value 'normal' yet.
@@ -103,12 +109,20 @@ ${helpers.single_keyword("align-items", "stretch flex-start flex-end center base
                          spec="https://drafts.csswg.org/css-flexbox/#align-items-property",
                          animatable=False)}
 
-${helpers.single_keyword("align-content", "stretch flex-start flex-end center space-between space-around",
-                         gecko_constant_prefix="NS_STYLE_ALIGN",
-                         products="servo",
-                         extra_prefixes="webkit",
-                         spec="https://drafts.csswg.org/css-flexbox/#align-content-property",
-                         animatable=False)}
+% if product == "servo":
+    // FIXME: Update Servo to support the same Syntax as Gecko.
+    ${helpers.single_keyword("align-content", "stretch flex-start flex-end center space-between space-around",
+                             extra_prefixes="webkit",
+                             spec="https://drafts.csswg.org/css-align/#propdef-align-content",
+                             animatable=False)}
+% else:
+    ${helpers.predefined_type(name="align-content",
+                              type="AlignJustifyContent",
+                              initial_value="specified::AlignJustifyContent::normal()",
+                              spec="https://drafts.csswg.org/css-align/#propdef-align-content",
+                              extra_prefixes="webkit",
+                              animatable=False)}
+% endif
 
 // Flex item properties
 ${helpers.predefined_type("flex-grow", "Number",
@@ -126,14 +140,27 @@ ${helpers.predefined_type("flex-shrink", "Number",
                           animatable=True)}
 
 // https://drafts.csswg.org/css-align/#align-self-property
-// FIXME: We don't support the Gecko value 'normal' yet.
-${helpers.single_keyword("align-self", "auto stretch flex-start flex-end center baseline",
-                         need_clone=True,
-                         extra_prefixes="webkit",
-                         extra_gecko_values="normal",
-                         gecko_constant_prefix="NS_STYLE_ALIGN",
-                         spec="https://drafts.csswg.org/css-flexbox/#propdef-align-self",
-                         animatable=False)}
+% if product == "servo":
+    // FIXME: Update Servo to support the same syntax as Gecko.
+    ${helpers.single_keyword("align-self", "auto stretch flex-start flex-end center baseline",
+                             need_clone=True,
+                             extra_prefixes="webkit",
+                             spec="https://drafts.csswg.org/css-flexbox/#propdef-align-self",
+                             animatable=False)}
+% else:
+    ${helpers.predefined_type(name="align-self",
+                              type="AlignJustifySelf",
+                              initial_value="specified::AlignJustifySelf::auto()",
+                              spec="https://drafts.csswg.org/css-align/#align-self-property",
+                              extra_prefixes="webkit",
+                              animatable=False)}
+
+    ${helpers.predefined_type(name="justify-self",
+                              type="AlignJustifySelf",
+                              initial_value="specified::AlignJustifySelf::auto()",
+                              spec="https://drafts.csswg.org/css-align/#justify-self-property",
+                              animatable=False)}
+% endif
 
 // https://drafts.csswg.org/css-flexbox/#propdef-order
 <%helpers:longhand name="order" animatable="True" extra_prefixes="webkit"

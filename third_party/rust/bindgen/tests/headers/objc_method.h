@@ -3,5 +3,9 @@
 
 @interface Foo
 - (void)method;
-// TODO: argument methods
+- (void)methodWithInt:(int)foo;
+- (void)methodWithFoo:(Foo*)foo;
+- (int)methodReturningInt;
+- (Foo*)methodReturningFoo;
+- (void)methodWithArg1:(int)intvalue andArg2:(char*)ptr andArg3:(float)floatvalue;
 @end

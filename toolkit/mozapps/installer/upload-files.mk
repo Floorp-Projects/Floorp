@@ -41,9 +41,6 @@ ifndef _RESPATH
 # Resource path for the precomplete file
 _RESPATH = /$(_APPNAME)/Contents/Resources
 endif
-ifdef UNIVERSAL_BINARY
-STAGEPATH = universal/
-endif
 endif
 
 PACKAGE_BASE_DIR = $(ABS_DIST)
@@ -104,7 +101,7 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
   PKG_SUFFIX	= .tar.bz2
   ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - -C $(STAGEPATH)$(MOZ_PKG_DIR) $(_APPNAME) | bzip2 -vf > $(PACKAGE)
+    INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - -C $(MOZ_PKG_DIR) $(_APPNAME) | bzip2 -vf > $(PACKAGE)
   else
     INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | bzip2 -vf > $(PACKAGE)
   endif
@@ -218,7 +215,7 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
   PKG_SUFFIX	= .dmg
 
   _ABS_MOZSRCDIR = $(shell cd $(MOZILLA_DIR) && pwd)
-  PKG_DMG_SOURCE = $(STAGEPATH)$(MOZ_PKG_DIR)
+  PKG_DMG_SOURCE = $(MOZ_PKG_DIR)
   INNER_MAKE_PACKAGE	= $(call py_action,make_dmg,'$(PKG_DMG_SOURCE)' '$(PACKAGE)')
   INNER_UNMAKE_PACKAGE	= \
     set -ex; \
@@ -261,19 +258,19 @@ endif
 
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
   ifeq (Darwin, $(OS_ARCH))
-    MAKE_PACKAGE    = $(or $(call MAKE_SIGN_EME_VOUCHER,$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS,$(STAGEPATH)$(MOZ_PKG_DIR)$(_RESPATH)),true) \
-                      && (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) \
+    MAKE_PACKAGE    = $(or $(call MAKE_SIGN_EME_VOUCHER,$(MOZ_PKG_DIR)$(_BINPATH)/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS,$(MOZ_PKG_DIR)$(_RESPATH)),true) \
+                      && (cd $(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) \
                       && cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_MACBUNDLE_NAME) \
                       && cd $(PACKAGE_BASE_DIR) && $(INNER_MAKE_PACKAGE)
   else
     MAKE_PACKAGE    = $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_PKG_DIR) \
-                      && $(or $(call MAKE_SIGN_EME_VOUCHER,$(STAGEPATH)$(MOZ_PKG_DIR)),true) \
-                      && (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) \
+                      && $(or $(call MAKE_SIGN_EME_VOUCHER,$(MOZ_PKG_DIR)),true) \
+                      && (cd $(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) \
                       && $(INNER_MAKE_PACKAGE)
   endif #Darwin
 
 else
-  MAKE_PACKAGE    = (cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) && $(INNER_MAKE_PACKAGE)
+  MAKE_PACKAGE    = (cd $(MOZ_PKG_DIR)$(_RESPATH) && $(CREATE_PRECOMPLETE_CMD)) && $(INNER_MAKE_PACKAGE)
 endif
 
 ifdef MOZ_SIGN_PACKAGE_CMD
