@@ -2403,10 +2403,10 @@ TEST_F(LulDwarfExpr, ExpressionOverrun) {
 
 // We'll need to mention specific Dwarf registers in the EvaluatePfxExpr tests,
 // and those names are arch-specific, so a bit of macro magic is helpful.
-#if defined(SPS_ARCH_arm)
+#if defined(GP_ARCH_arm)
 # define TESTED_REG_STRUCT_NAME  r11
 # define TESTED_REG_DWARF_NAME   DW_REG_ARM_R11
-#elif defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#elif defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
 # define TESTED_REG_STRUCT_NAME  xbp
 # define TESTED_REG_DWARF_NAME   DW_REG_INTEL_XBP
 #else

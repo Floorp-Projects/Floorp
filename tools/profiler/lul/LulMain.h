@@ -141,14 +141,14 @@ private:
 // The registers, with validity tags, that will be unwound.
 
 struct UnwindRegs {
-#if defined(SPS_ARCH_arm)
+#if defined(GP_ARCH_arm)
   TaggedUWord r7;
   TaggedUWord r11;
   TaggedUWord r12;
   TaggedUWord r13;
   TaggedUWord r14;
   TaggedUWord r15;
-#elif defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#elif defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   TaggedUWord xbp;
   TaggedUWord xsp;
   TaggedUWord xip;

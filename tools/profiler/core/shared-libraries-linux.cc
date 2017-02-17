@@ -42,7 +42,7 @@ static std::string getId(const char *bin_name)
 #if !defined(MOZ_WIDGET_GONK)
 // TODO fix me with proper include
 #include "nsDebug.h"
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
 #include "ElfLoader.h" // dl_phdr_info
 #else
 #include <link.h> // dl_phdr_info
@@ -51,7 +51,7 @@ static std::string getId(const char *bin_name)
 #include <dlfcn.h>
 #include <sys/types.h>
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
 extern "C" MOZ_EXPORT __attribute__((weak))
 int dl_iterate_phdr(
           int (*callback) (struct dl_phdr_info *info,
@@ -99,7 +99,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   SharedLibraryInfo info;
 
 #if !defined(MOZ_WIDGET_GONK)
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
   if (!dl_iterate_phdr) {
     // On ARM Android, dl_iterate_phdr is provided by the custom linker.
     // So if libxul was loaded by the system linker (e.g. as part of
@@ -107,12 +107,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // not call it.
     return info;
   }
-#endif // defined(SPS_OS_android)
+#endif // defined(GP_OS_android)
 
   dl_iterate_phdr(dl_iterate_callback, &info);
 #endif // !defined(MOZ_WIDGET_GONK)
 
-#if defined(SPS_OS_android) || defined(MOZ_WIDGET_GONK)
+#if defined(GP_OS_android) || defined(MOZ_WIDGET_GONK)
   pid_t pid = getpid();
   char path[PATH_MAX];
   snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
@@ -164,7 +164,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     }
     count++;
   }
-#endif // defined(SPS_OS_android) || defined(MOZ_WIDGET_GONK)
+#endif // defined(GP_OS_android) || defined(MOZ_WIDGET_GONK)
 
   return info;
 }

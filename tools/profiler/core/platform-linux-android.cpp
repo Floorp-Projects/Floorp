@@ -109,7 +109,7 @@ Thread::GetCurrentId()
   return gettid();
 }
 
-#if !defined(SPS_OS_android)
+#if !defined(GP_OS_android)
 // Keep track of when any of our threads calls fork(), so we can
 // temporarily disable signal delivery during the fork() call.  Not
 // doing so appears to cause a kind of race, in which signals keep
@@ -144,7 +144,7 @@ static void* setup_atfork() {
   pthread_atfork(paf_prepare, paf_parent, NULL);
   return NULL;
 }
-#endif /* !defined(SPS_OS_android) */
+#endif /* !defined(GP_OS_android) */
 
 static mozilla::Atomic<ThreadInfo*> gCurrentThreadInfo;
 static sem_t gSignalHandlingDone;
@@ -154,15 +154,15 @@ static void SetSampleContext(TickSample* sample, void* context)
   // Extracting the sample from the context is extremely machine dependent.
   ucontext_t* ucontext = reinterpret_cast<ucontext_t*>(context);
   mcontext_t& mcontext = ucontext->uc_mcontext;
-#if defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_x86)
   sample->pc = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
   sample->sp = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
   sample->fp = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
-#elif defined(SPS_ARCH_amd64)
+#elif defined(GP_ARCH_amd64)
   sample->pc = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
   sample->sp = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
   sample->fp = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   sample->pc = reinterpret_cast<Address>(mcontext.arm_pc);
   sample->sp = reinterpret_cast<Address>(mcontext.arm_sp);
   sample->fp = reinterpret_cast<Address>(mcontext.arm_fp);
@@ -203,7 +203,7 @@ SigprofHandler(int signal, siginfo_t* info, void* context)
   errno = savedErrno;
 }
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
 #define SYS_tgkill __NR_tgkill
 #endif
 
@@ -411,7 +411,7 @@ PlatformStop()
   }
 }
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
 static struct sigaction gOldSigstartHandler;
 const int SIGSTART = SIGUSR2;
 
