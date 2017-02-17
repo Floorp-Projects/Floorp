@@ -14,4 +14,6 @@
     <string name="action_erase">Erase</string>
 
     <string name="feedback_erase">Your browsing history has been erased.</string>
+
+    <string name="search_hint">Search for %1$s</string>
 </resources>
