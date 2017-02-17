@@ -126,8 +126,8 @@ public:
   virtual void FrameNeedsToContinueReflow(nsIFrame *aFrame) override;
   virtual void CancelAllPendingReflows() override;
   virtual bool IsSafeToFlush() const override;
-  virtual void FlushPendingNotifications(mozilla::FlushType aType) override;
-  virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) override;
+  virtual void DoFlushPendingNotifications(mozilla::FlushType aType) override;
+  virtual void DoFlushPendingNotifications(mozilla::ChangesToFlush aType) override;
   virtual void DestroyFramesFor(nsIContent*  aContent,
                                 nsIContent** aDestroyedFramesFor) override;
   virtual void CreateFramesFor(nsIContent* aContent) override;

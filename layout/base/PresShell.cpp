@@ -4065,7 +4065,7 @@ PresShell::IsSafeToFlush() const
 
 
 void
-PresShell::FlushPendingNotifications(FlushType aType)
+PresShell::DoFlushPendingNotifications(FlushType aType)
 {
   // by default, flush animations if aType >= FlushType::Style
   mozilla::ChangesToFlush flush(aType, aType >= FlushType::Style);
@@ -4073,7 +4073,7 @@ PresShell::FlushPendingNotifications(FlushType aType)
 }
 
 void
-PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
+PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 {
   // Per our API contract, hold a strong ref to ourselves until we return.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip = this;
@@ -4084,6 +4084,8 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
    * SetNeedStyleFlush calls on the shell.
    */
   FlushType flushType = aFlush.mFlushType;
+
+  MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
 #ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,

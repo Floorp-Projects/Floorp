@@ -588,9 +588,33 @@ public:
    *
    * @param aType the type of notifications to flush
    */
-  virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
-  virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
+public:
+  void FlushPendingNotifications(mozilla::FlushType aType)
+  {
+    if (!NeedFlush(aType)) {
+      return;
+    }
 
+    DoFlushPendingNotifications(aType);
+  }
+
+  void FlushPendingNotifications(mozilla::ChangesToFlush aType)
+  {
+    if (!NeedFlush(aType.mFlushType)) {
+      return;
+    }
+
+    DoFlushPendingNotifications(aType);
+  }
+
+protected:
+  /**
+   * Implementation methods for FlushPendingNotifications.
+   */
+  virtual void DoFlushPendingNotifications(mozilla::FlushType aType) = 0;
+  virtual void DoFlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
+
+public:
   /**
    * Whether we might need a flush for the given flush type.  If this
    * function returns false, we definitely don't need to flush.
