@@ -3979,14 +3979,39 @@ struct BoxToRectAndText : public BoxToRect {
                    mozilla::dom::DOMStringList* aTextList, uint32_t aFlags)
     : BoxToRect(aRelativeTo, aCallback, aFlags), mTextList(aTextList) {}
 
-  virtual void AddBox(nsIFrame* aFrame) override {
-    BoxToRect::AddBox(aFrame);
-    if (mTextList) {
-      nsIContent* content = aFrame->GetContent();
+  static void AccumulateText(nsIFrame* aFrame, nsAString& aResult) {
+    MOZ_ASSERT(aFrame);
+
+    // Get all the text in aFrame and child frames, while respecting
+    // the content offsets in each of the nsTextFrames.
+    if (aFrame->GetType() == nsGkAtoms::textFrame) {
+      nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
+
+      nsIContent* content = textFrame->GetContent();
       nsAutoString textContent;
       mozilla::ErrorResult err; // ignored
       content->GetTextContent(textContent, err);
-      mTextList->Add(textContent);
+
+      const nsAString& textSubstring =
+        Substring(textContent,
+                  textFrame->GetContentOffset(),
+                  textFrame->GetContentLength());
+      aResult.Append(textSubstring);
+    }
+
+    for (nsIFrame* child = aFrame->PrincipalChildList().FirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      AccumulateText(child, aResult);
+    }
+  }
+
+  virtual void AddBox(nsIFrame* aFrame) override {
+    BoxToRect::AddBox(aFrame);
+    if (mTextList) {
+      nsAutoString textForFrame;
+      AccumulateText(aFrame, textForFrame);
+      mTextList->Add(textForFrame);
     }
   }
 };
