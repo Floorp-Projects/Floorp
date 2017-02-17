@@ -1596,7 +1596,3 @@ pref("browser.formautofill.loglevel", "Warn");
 pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,goog-malware-proto,goog-unwanted-proto,test-malware-simple,test-unwanted-simple");
 pref("urlclassifier.phishTable", "goog-phish-shavar,goog-phish-proto,test-phish-simple");
 #endif
-
-// Use the menulist powered popup for <select>'s by default
-pref("dom.select_popup_in_parent.enabled", true);
-
