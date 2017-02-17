@@ -236,6 +236,10 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     if pathStartsWith(testName, "intl402"):
         refTestSkipIf.append(("!this.hasOwnProperty('Intl')", "needs Intl"))
 
+    # Skip Intl.PluralRules tests when the addIntlExtras helper isn't available.
+    if pathStartsWith(testName, "intl402", "PluralRules"):
+        refTestSkipIf.append(("!this.hasOwnProperty('addIntlExtras')", "needs addIntlExtras"))
+
     # Skip built-ins/Simd tests when SIMD isn't available.
     if pathStartsWith(testName, "built-ins", "Simd"):
         refTestSkipIf.append(("!this.hasOwnProperty('SIMD')", "needs SIMD"))
@@ -305,6 +309,9 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
         "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
+
+    # Intl.PluralRules isn't yet enabled by default.
+    localIncludesMap[os.path.join("intl402", "PluralRules")] = ["test262-intl-extras.js"]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
