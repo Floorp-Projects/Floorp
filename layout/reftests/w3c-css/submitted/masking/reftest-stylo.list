@@ -111,4 +111,4 @@ fails == mask-opacity-1a.html mask-opacity-1a.html
 fails == mask-opacity-1b.html mask-opacity-1b.html
 fuzzy(1,5000) == mask-opacity-1c.html mask-opacity-1c.html
 
-fails == clip-path-mix-blend-mode-1.html clip-path-mix-blend-mode-1.html
+== clip-path-mix-blend-mode-1.html clip-path-mix-blend-mode-1.html

@@ -50,7 +50,7 @@ fails == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussian
 
 == feImage-1.svg feImage-1.svg
 == feImage-1.svg feImage-1.svg
-fails == feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
+skip == feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
 
 == feMerge-1.svg feMerge-1.svg
 == feMerge-2.svg feMerge-2.svg
