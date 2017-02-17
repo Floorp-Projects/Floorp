@@ -6274,12 +6274,6 @@ nsHttpChannel::ForceIntercepted(uint64_t aInterceptionID)
     return NS_OK;
 }
 
-mozilla::net::nsHttpChannel*
-nsHttpChannel::QueryHttpChannelImpl(void)
-{
-  return this;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------

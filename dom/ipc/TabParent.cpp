@@ -965,7 +965,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     a11y::WrapperFor(doc)->SetID(aMsaaID);
     MOZ_ASSERT(!aDocCOMProxy.IsNull());
     RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-    doc->SetCOMProxy(proxy);
+    doc->SetCOMInterface(proxy);
+    doc->MaybeInitWindowEmulation();
+    doc->SendParentCOMProxy();
 #endif
   }
 #endif

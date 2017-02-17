@@ -1704,9 +1704,8 @@
 
             // Abort if we're not going to change anything
             let currentRemoteType = aBrowser.getAttribute("remoteType");
-            if (isRemote == aShouldBeRemote && !aOptions.newFrameloader && !aOptions.freshProcess &&
-                (!isRemote || currentRemoteType == aOptions.remoteType) &&
-                !aBrowser.frameLoader.isFreshProcess) {
+            if (isRemote == aShouldBeRemote && !aOptions.newFrameloader &&
+                (!isRemote || currentRemoteType == aOptions.remoteType)) {
               return false;
             }
 
@@ -1765,17 +1764,7 @@
               aBrowser.presetOpenerWindow(aOptions.opener);
             }
 
-            // Set the freshProcess attribute so that the frameloader knows to
-            // create a new process
-            if (aOptions.freshProcess) {
-              aBrowser.setAttribute("freshProcess", "true");
-            }
-
             parent.appendChild(aBrowser);
-
-            // Remove the freshProcess attribute if we set it, as we don't
-            // want it to apply for the next time the frameloader is created
-            aBrowser.removeAttribute("freshProcess");
 
             aBrowser.userTypedValue = oldUserTypedValue;
             if (hadStartedLoad) {
@@ -1850,15 +1839,23 @@
             if (!gMultiProcessBrowser)
               return this.updateBrowserRemoteness(aBrowser, false);
 
+            // If we're in a LargeAllocation process, we prefer switching back
+            // into a normal content process, as that way we can clean up the
+            // L-A process.
+            let preferredRemoteType = aBrowser.remoteType;
+            if (aBrowser.remoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
+              preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+            }
+            aOptions.remoteType =
+              E10SUtils.getRemoteTypeForURI(aURL,
+                                            gMultiProcessBrowser,
+                                            preferredRemoteType,
+                                            aOptions.freshProcess);
+
             // If this URL can't load in the current browser then flip it to the
             // correct type.
-            let currentRemoteType = aBrowser.remoteType;
-            aOptions.remoteType =
-              E10SUtils.getRemoteTypeForURI(aURL, gMultiProcessBrowser,
-                                            currentRemoteType);
-            if (currentRemoteType != aOptions.remoteType ||
-                aOptions.freshProcess || aOptions.newFrameloader ||
-                aBrowser.frameLoader.isFreshProcess) {
+            if (aBrowser.remoteType != aOptions.remoteType ||
+                aOptions.newFrameloader) {
               let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
               return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
             }

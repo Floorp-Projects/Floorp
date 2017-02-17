@@ -19,6 +19,7 @@
 #include "nsHttpChannel.h"
 #include "LoadInfo.h"
 #include "mozilla/Unused.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
@@ -129,7 +130,9 @@ HSTSPrimingListener::CheckHSTSPrimingRequestStatus(nsIRequest* aRequest)
   }
 
   bool synthesized = false;
-  nsHttpChannel* rawHttpChannel = static_cast<nsHttpChannel*>(httpChannel.get());
+  RefPtr<nsHttpChannel> rawHttpChannel = do_QueryObject(httpChannel);
+  NS_ENSURE_STATE(rawHttpChannel);
+
   rv = rawHttpChannel->GetResponseSynthesized(&synthesized);
   NS_ENSURE_SUCCESS(rv, rv);
   if (synthesized) {

@@ -1132,3 +1132,24 @@ TEST(Tokenizer, IncrementalBuffering2)
   i.FinishInput();
   EXPECT_TRUE(test == 6);
 }
+
+TEST(Tokenizer, RecordAndReadUntil)
+{
+  Tokenizer t("aaaa,bbbb");
+  t.SkipWhites();
+  nsDependentCSubstring subject;
+
+  EXPECT_TRUE(t.ReadUntil(mozilla::Tokenizer::Token::Char(','), subject));
+  EXPECT_FALSE(t.CheckChar(','));
+  EXPECT_TRUE(subject.Length() == 4);
+  EXPECT_TRUE(subject == "aaaa");
+
+  EXPECT_FALSE(t.ReadUntil(mozilla::Tokenizer::Token::Char(','), subject));
+  EXPECT_TRUE(subject.Length() == 4);
+  EXPECT_TRUE(subject == "bbbb");
+
+  EXPECT_FALSE(t.ReadUntil(mozilla::Tokenizer::Token::Char(','), subject));
+  EXPECT_TRUE(subject.Length() == 0);
+
+  EXPECT_TRUE(t.CheckEOF());
+}

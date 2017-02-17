@@ -2723,12 +2723,6 @@ HttpBaseChannel::GetIntegrityMetadata(nsAString& aIntegrityMetadata)
   return NS_OK;
 }
 
-mozilla::net::nsHttpChannel*
-HttpBaseChannel::QueryHttpChannelImpl(void)
-{
-  return nullptr;
-}
-
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------

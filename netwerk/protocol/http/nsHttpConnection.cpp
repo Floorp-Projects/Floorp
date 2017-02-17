@@ -1597,7 +1597,8 @@ nsHttpConnection::Version()
 //-----------------------------------------------------------------------------
 
 void
-nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
+nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason,
+                                   bool aIsShutdown)
 {
     LOG(("nsHttpConnection::CloseTransaction[this=%p trans=%p reason=%" PRIx32 "]\n",
          this, trans, static_cast<uint32_t>(reason)));
@@ -1633,7 +1634,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     }
 
     if (NS_FAILED(reason) && (reason != NS_BINDING_RETARGETED)) {
-        Close(reason);
+        Close(reason, aIsShutdown);
     }
 
     // flag the connection as reused here for convenience sake.  certainly

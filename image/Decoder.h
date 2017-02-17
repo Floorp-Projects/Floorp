@@ -23,7 +23,7 @@
 namespace mozilla {
 
 namespace Telemetry {
-  enum ID : uint32_t;
+  enum HistogramID : uint32_t;
 } // namespace Telemetry
 
 namespace image {
@@ -56,7 +56,7 @@ struct DecoderFinalStatus final
 
 struct DecoderTelemetry final
 {
-  DecoderTelemetry(const Maybe<Telemetry::ID>& aSpeedHistogram,
+  DecoderTelemetry(const Maybe<Telemetry::HistogramID>& aSpeedHistogram,
                    size_t aBytesDecoded,
                    uint32_t aChunkCount,
                    TimeDuration aDecodeTime)
@@ -77,7 +77,7 @@ struct DecoderTelemetry final
 
   /// The per-image-format telemetry ID for recording our decoder's speed, or
   /// Nothing() if we don't record speed telemetry for this kind of decoder.
-  const Maybe<Telemetry::ID> mSpeedHistogram;
+  const Maybe<Telemetry::HistogramID> mSpeedHistogram;
 
   /// The number of bytes of input our decoder processed.
   const size_t mBytesDecoded;
@@ -403,7 +403,7 @@ protected:
    * speed, or Nothing() if we don't record speed telemetry for this kind of
    * decoder.
    */
-  virtual Maybe<Telemetry::ID> SpeedHistogram() const { return Nothing(); }
+  virtual Maybe<Telemetry::HistogramID> SpeedHistogram() const { return Nothing(); }
 
 
   /*
