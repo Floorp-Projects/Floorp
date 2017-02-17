@@ -358,6 +358,39 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
+                                       const WrRect& aClip,
+                                       const WrPoint& aStartPoint,
+                                       const WrPoint& aEndPoint,
+                                       const nsTArray<WrGradientStop>& aStops,
+                                       wr::GradientExtendMode aExtendMode)
+{
+  wr_dp_push_linear_gradient(mWrState,
+                             aBounds, aClip,
+                             aStartPoint, aEndPoint,
+                             aStops.Elements(), aStops.Length(),
+                             aExtendMode);
+}
+
+void
+DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
+                                       const WrRect& aClip,
+                                       const WrPoint& aStartCenter,
+                                       const WrPoint& aEndCenter,
+                                       float aStartRadius,
+                                       float aEndRadius,
+                                       const nsTArray<WrGradientStop>& aStops,
+                                       wr::GradientExtendMode aExtendMode)
+{
+  wr_dp_push_radial_gradient(mWrState,
+                             aBounds, aClip,
+                             aStartCenter, aEndCenter,
+                             aStartRadius, aEndRadius,
+                             aStops.Elements(), aStops.Length(),
+                             aExtendMode);
+}
+
+void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
                               const WrRect& aClip,
                               const WrImageMask* aMask,

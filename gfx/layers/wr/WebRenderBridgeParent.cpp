@@ -286,6 +286,21 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
                            op.radius());
         break;
       }
+      case WebRenderCommand::TOpDPPushLinearGradient: {
+        const OpDPPushLinearGradient& op = cmd.get_OpDPPushLinearGradient();
+        builder.PushLinearGradient(op.bounds(), op.clip(),
+                                   op.startPoint(), op.endPoint(),
+                                   op.stops(), op.extendMode());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushRadialGradient: {
+        const OpDPPushRadialGradient& op = cmd.get_OpDPPushRadialGradient();
+        builder.PushRadialGradient(op.bounds(), op.clip(),
+                                   op.startCenter(), op.endCenter(),
+                                   op.startRadius(), op.endRadius(),
+                                   op.stops(), op.extendMode());
+        break;
+      }
       case WebRenderCommand::TOpDPPushImage: {
         const OpDPPushImage& op = cmd.get_OpDPPushImage();
         builder.PushImage(op.bounds(), op.clip(),

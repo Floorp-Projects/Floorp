@@ -16,6 +16,7 @@ typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 namespace mozilla {
 namespace wr {
 
+typedef WrGradientExtendMode GradientExtendMode;
 typedef WrMixBlendMode MixBlendMode;
 typedef WrImageRendering ImageRendering;
 typedef WrImageFormat ImageFormat;
@@ -180,6 +181,14 @@ static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Col
   bs.color = ToWrColor(color);
   bs.style = ToWrBorderStyle(style);
   return bs;
+}
+
+static inline WrPoint ToWrPoint(const LayerPoint point)
+{
+  WrPoint lp;
+  lp.x = point.x;
+  lp.y = point.y;
+  return lp;
 }
 
 static inline WrLayoutSize ToWrLayoutSize(const LayerSize size)
