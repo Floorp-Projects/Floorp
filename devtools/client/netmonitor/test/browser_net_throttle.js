@@ -17,7 +17,7 @@ function* throttleTest(actuallyThrottle) {
   let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let {
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");

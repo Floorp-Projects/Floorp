@@ -15,8 +15,7 @@ add_task(function* test() {
 
   let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { ACTIVITY_TYPE, EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let {
     getDisplayedRequests,
     getSortedRequests,
