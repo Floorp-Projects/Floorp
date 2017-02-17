@@ -20,6 +20,7 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsFrameLoader.h"
+#include "nsIInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"

@@ -15,6 +15,7 @@
 #include "mozilla/dom/DeviceStorageFileSystem.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/PBrowserChild.h"
@@ -34,6 +35,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIDirectoryEnumerator.h"
+#include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsCycleCollectionParticipant.h"
@@ -3995,9 +3997,9 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, DeviceStorageFile* aFile,
   MOZ_ASSERT(aFile->mLength != UINT64_MAX);
   MOZ_ASSERT(aFile->mLastModifiedDate != UINT64_MAX);
 
-  RefPtr<BlobImpl> blobImpl = new BlobImplFile(fullPath, aFile->mMimeType,
-                                                 aFile->mLength, aFile->mFile,
-                                                 aFile->mLastModifiedDate);
+  RefPtr<BlobImpl> blobImpl = new FileBlobImpl(fullPath, aFile->mMimeType,
+                                               aFile->mLength, aFile->mFile,
+                                               aFile->mLastModifiedDate);
 
   /* File should start out as mutable by default but we should turn
      that off if it wasn't requested. */

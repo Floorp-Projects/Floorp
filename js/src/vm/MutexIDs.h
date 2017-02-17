@@ -42,7 +42,8 @@
   _(IcuTimeZoneStateMutex,       500) \
   _(ProcessExecutableRegion,     500) \
                                       \
-  _(TraceLoggerGraphState,       600)
+  _(TraceLoggerGraphState,       600) \
+  _(VTuneLock,                   600)
 
 namespace js {
 namespace mutexid {

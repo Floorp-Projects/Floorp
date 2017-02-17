@@ -111,7 +111,7 @@ static iJIT_IsProfilingActiveFlags executionMode = iJIT_NOTHING_RUNNING;
  *  on success: the functions loads, iJIT_DLL_is_missing=0, return value = 1
  *  on failure: the functions are NULL, iJIT_DLL_is_missing=1, return value = 0
  */
-static int loadiJIT_Funcs(void);
+int loadiJIT_Funcs(void);
 
 /* global representing whether the collector can't be loaded */
 static int iJIT_DLL_is_missing = 0;
@@ -173,7 +173,7 @@ ITT_EXTERN_C iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive()
  * on success: all functions load,     iJIT_DLL_is_missing = 0, return value = 1
  * on failure: all functions are NULL, iJIT_DLL_is_missing = 1, return value = 0
  */
-static int loadiJIT_Funcs()
+int loadiJIT_Funcs()
 {
     static int bDllWasLoaded = 0;
     char *dllName = (char*)rcsid; /* !! Just to avoid unused code elimination */

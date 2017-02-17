@@ -46,6 +46,7 @@
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
 #include "vm/Unicode.h"
+#include "vtune/VTuneWrapper.h"
 
 #include "jsboolinlines.h"
 
@@ -53,9 +54,6 @@
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Interpreter-inl.h"
-#ifdef MOZ_VTUNE
-# include "vtune/VTuneWrapper.h"
-#endif
 
 using namespace js;
 using namespace js::jit;

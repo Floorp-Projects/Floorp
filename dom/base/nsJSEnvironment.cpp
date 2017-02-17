@@ -1631,7 +1631,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
       gcMsg.AssignLiteral(", forced a GC");
     }
 
-    NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
+    NS_NAMED_LITERAL_STRING(kFmt,
       u"CC(T+%.1f)[%s-%i] max pause: %lums, total time: %lums, slices: %lu, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
       u"ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, max sync: %lu ms, removed: %lu");
     nsString msg;
@@ -1663,7 +1663,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   }
 
   if (sPostGCEventsToObserver) {
-    NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
+    NS_NAMED_LITERAL_STRING(kJSONFmt,
        u"{ \"timestamp\": %llu, "
          u"\"duration\": %lu, "
          u"\"max_slice_pause\": %lu, "

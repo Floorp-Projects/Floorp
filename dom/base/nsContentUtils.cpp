@@ -42,6 +42,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
@@ -7876,12 +7877,21 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
               continue;
             }
 
-            blobImpl = new BlobImplFile(file);
-            ErrorResult rv;
+            blobImpl = new FileBlobImpl(file);
+
+            IgnoredErrorResult rv;
+
             // Ensure that file data is cached no that the content process
             // has this data available to it when passed over:
             blobImpl->GetSize(rv);
+            if (NS_WARN_IF(rv.Failed())) {
+              continue;
+            }
+
             blobImpl->GetLastModified(rv);
+            if (NS_WARN_IF(rv.Failed())) {
+              continue;
+            }
           } else {
             if (aInSyncMessage) {
               // Can't do anything.

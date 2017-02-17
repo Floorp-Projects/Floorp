@@ -132,34 +132,6 @@ void AccumulateCategorical(ID id, const nsCString& label);
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
- * Accumulate child process data into histograms for the given process type.
- *
- * @param aAccumulations - accumulation actions to perform
- */
-void AccumulateChild(GeckoProcessType aProcessType, const nsTArray<Accumulation>& aAccumulations);
-
-/**
- * Accumulate child process data into keyed histograms for the given process type.
- *
- * @param aAccumulations - accumulation actions to perform
- */
-void AccumulateChildKeyed(GeckoProcessType aProcessType, const nsTArray<KeyedAccumulation>& aAccumulations);
-
-/**
- * Update scalars for the given process type with the data coming from child process.
- *
- * @param aScalarActions - actions to update the scalar data
- */
-void UpdateChildScalars(GeckoProcessType aProcessType, const nsTArray<ScalarAction>& aScalarActions);
-
-/**
- * Update keyed  scalars for the given process type with the data coming from child process.
- *
- * @param aScalarActions - actions to update the keyed scalar data
- */
-void UpdateChildKeyedScalars(GeckoProcessType aProcessType, const nsTArray<KeyedScalarAction>& aScalarActions);
-
-/**
  * Enable/disable recording for this histogram at runtime.
  * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
  * id must be a valid telemetry enum, otherwise an assertion is triggered.

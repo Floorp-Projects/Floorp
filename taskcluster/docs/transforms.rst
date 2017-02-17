@@ -140,6 +140,7 @@ following ``run-using`` are available
   * ``hazard``
   * ``mach``
   * ``mozharness``
+  * ``mozharness-test``
   * ``run-task``
   * ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate``
   * ``toolchain-script``

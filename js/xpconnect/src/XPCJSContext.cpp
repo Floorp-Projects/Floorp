@@ -56,6 +56,7 @@
 #include "nsAboutProtocolUtils.h"
 
 #include "GeckoProfiler.h"
+#include "nsIInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 

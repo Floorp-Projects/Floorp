@@ -158,7 +158,9 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     failedShapeGuard_(info->script()->failedShapeGuard()),
     failedLexicalCheck_(info->script()->failedLexicalCheck()),
     nonStringIteration_(false),
-    lazyArguments_(nullptr),
+#ifdef DEBUG
+    hasLazyArguments_(false),
+#endif
     inlineCallInfo_(nullptr),
     maybeFallbackFunctionGetter_(nullptr)
 {
@@ -831,11 +833,11 @@ IonBuilder::build()
         ins->setResumePoint(entryRpCopy);
     }
 
+#ifdef DEBUG
     // lazyArguments should never be accessed in |argsObjAliasesFormals| scripts.
-    if (info().hasArguments() && !info().argsObjAliasesFormals()) {
-        lazyArguments_ = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
-        current->add(lazyArguments_);
-    }
+    if (info().hasArguments() && !info().argsObjAliasesFormals())
+        hasLazyArguments_ = true;
+#endif
 
     insertRecompileCheck();
 
@@ -987,10 +989,10 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
     // +2 for the env chain and |this|, maybe another +1 for arguments object slot.
     MOZ_ASSERT(current->entryResumePoint()->stackDepth() == info().totalSlots());
 
-    if (script_->argumentsHasVarBinding()) {
-        lazyArguments_ = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
-        current->add(lazyArguments_);
-    }
+#ifdef DEBUG
+    if (script_->argumentsHasVarBinding())
+        hasLazyArguments_ = true;
+#endif
 
     insertRecompileCheck();
 
@@ -1257,10 +1259,14 @@ IonBuilder::addOsrValueTypeBarrier(uint32_t slot, MInstruction** def_,
       }
 
       case MIRType::MagicOptimizedArguments:
-        MOZ_ASSERT(lazyArguments_);
-        osrBlock->rewriteSlot(slot, lazyArguments_);
-        def = lazyArguments_;
+      {
+        MOZ_ASSERT(hasLazyArguments_);
+        MConstant* lazyArg = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
+        osrBlock->insertBefore(osrBlock->lastIns(), lazyArg);
+        osrBlock->rewriteSlot(slot, lazyArg);
+        def = lazyArg;
         break;
+      }
 
       default:
         break;
@@ -9267,8 +9273,11 @@ IonBuilder::jsop_arguments()
         current->push(current->argumentsObject());
         return Ok();
     }
-    MOZ_ASSERT(lazyArguments_);
-    current->push(lazyArguments_);
+
+    MOZ_ASSERT(hasLazyArguments_);
+    MConstant* lazyArg = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
+    current->add(lazyArg);
+    current->push(lazyArg);
     return Ok();
 }
 

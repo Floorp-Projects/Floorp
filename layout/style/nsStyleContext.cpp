@@ -1200,11 +1200,11 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // doesn't use Peek* functions to get the structs on the old
     // context.  But this isn't a big concern because these struct
     // getters should be called during frame construction anyway.
-    if (StyleDisplay()->IsAbsPosContainingBlockForAppropriateFrame(this) ==
-        aNewContext->StyleDisplay()->
+    if (ThreadsafeStyleDisplay()->IsAbsPosContainingBlockForAppropriateFrame(this) ==
+        aNewContext->ThreadsafeStyleDisplay()->
           IsAbsPosContainingBlockForAppropriateFrame(aNewContext) &&
-        StyleDisplay()->IsFixedPosContainingBlockForAppropriateFrame(this) ==
-        aNewContext->StyleDisplay()->
+        ThreadsafeStyleDisplay()->IsFixedPosContainingBlockForAppropriateFrame(this) ==
+        aNewContext->ThreadsafeStyleDisplay()->
           IsFixedPosContainingBlockForAppropriateFrame(aNewContext)) {
       // While some styles that cause the frame to be a containing block
       // has changed, the overall result hasn't.
@@ -1247,6 +1247,9 @@ public:
 
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
   const nsStyle##name_ * Style##name_() {                                     \
+    return Servo_GetStyle##name_(mComputedValues);                            \
+  }                                                                           \
+  const nsStyle##name_ * ThreadsafeStyle##name_() {                           \
     return Servo_GetStyle##name_(mComputedValues);                            \
   }
   #include "nsStyleStructList.h"
