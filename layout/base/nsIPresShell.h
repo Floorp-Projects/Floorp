@@ -580,6 +580,12 @@ public:
    * than the document itself) should probably be calling
    * nsIDocument::FlushPendingNotifications.
    *
+   * This method can execute script, which can destroy this presshell object
+   * unless someone is holding a reference to it on the stack.  The presshell
+   * itself will ensure it lives up until the method returns, but callers who
+   * plan to use the presshell after this call should hold a strong ref
+   * themselves!
+   *
    * @param aType the type of notifications to flush
    */
   virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
