@@ -7,8 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from .graph import Graph
 from .util.python_path import find_object
 
-TASKCLUSTER_QUEUE_URL = "https://queue.taskcluster.net/v1/task/"
-
 
 class TaskGraph(object):
     """
