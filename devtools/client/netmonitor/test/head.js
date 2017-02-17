@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-const { EVENTS } = require("devtools/client/netmonitor/events");
+const { EVENTS } = require("devtools/client/netmonitor/constants");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 const {
   decodeUnicodeUrl,
