@@ -161,7 +161,7 @@ const Message = createClass({
 
     let notesNodes;
     if (notes) {
-      notes.map(note => dom.span(
+      notesNodes = notes.map(note => dom.span(
         { className: "message-flex-body error-note" },
         dom.span({ className: "message-body devtools-monospace" },
           "note: " + note.messageBody

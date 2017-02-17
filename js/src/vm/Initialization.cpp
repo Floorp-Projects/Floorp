@@ -30,6 +30,7 @@
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
+#include "vtune/VTuneWrapper.h"
 #include "wasm/WasmInstance.h"
 
 using JS::detail::InitState;
@@ -112,6 +113,10 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     RETURN_IF_FAIL(js::jit::InitializeIon());
 
     RETURN_IF_FAIL(js::InitDateTimeState());
+
+#ifdef MOZ_VTUNE
+    RETURN_IF_FAIL(js::vtune::Initialize());
+#endif
 
 #if EXPOSE_INTL_API
     UErrorCode err = U_ZERO_ERROR;

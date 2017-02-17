@@ -17,7 +17,7 @@
 #include "mozilla/BufferList.h"
 #include "mozilla/mozalloc.h"
 
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
 #include "base/singleton.h"
 #include "mozilla/ipc/Faulty.h"
 #endif
@@ -134,25 +134,25 @@ class Pickle {
   // Pickle, it is important to read them in the order in which they were added
   // to the Pickle.
   bool WriteBool(bool value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzBool(&value);
 #endif
     return WriteInt(value ? 1 : 0);
   }
   bool WriteInt16(int16_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzInt16(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteUInt16(uint16_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzUInt16(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteInt(int value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzInt(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
@@ -160,7 +160,7 @@ class Pickle {
   bool WriteLong(long value) {
     // Always written as a 64-bit value since the size for this type can
     // differ between architectures.
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzLong(&value);
 #endif
     return WriteInt64(int64_t(value));
@@ -168,7 +168,7 @@ class Pickle {
   bool WriteULong(unsigned long value) {
     // Always written as a 64-bit value since the size for this type can
     // differ between architectures.
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzULong(&value);
 #endif
     return WriteUInt64(uint64_t(value));
@@ -176,37 +176,37 @@ class Pickle {
   bool WriteSize(size_t value) {
     // Always written as a 64-bit value since the size for this type can
     // differ between architectures.
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzSize(&value);
 #endif
     return WriteUInt64(uint64_t(value));
   }
   bool WriteInt32(int32_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzInt(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteUInt32(uint32_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzUInt32(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteInt64(int64_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzInt64(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteUInt64(uint64_t value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzUInt64(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
   }
   bool WriteDouble(double value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzDouble(&value);
 #endif
     return WriteBytes(&value, sizeof(value));
@@ -217,7 +217,7 @@ class Pickle {
     return WriteInt64(int64_t(value));
   }
   bool WriteUnsignedChar(unsigned char value) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->FuzzUChar(&value);
 #endif
     return WriteBytes(&value, sizeof(value));

@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleContextSource.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
@@ -350,6 +351,24 @@ public:
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
+
+  /**
+   * Equivalent to StyleFoo(), except that we skip the cache write during the
+   * servo traversal. This can cause incorrect behavior if used improperly,
+   * since we won't record that layout potentially depends on the values in
+   * this style struct. Use with care.
+   */
+
+  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
+    const nsStyle##name_ * ThreadsafeStyle##name_() {                         \
+      if (mozilla::ServoStyleSet::IsInServoTraversal()) {                     \
+        return Servo_GetStyle##name_(mSource.AsServoComputedValues());        \
+      }                                                                       \
+      return Style##name_();                                                  \
+    }
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+
 
   /**
    * PeekStyle* is like Style* but doesn't trigger style

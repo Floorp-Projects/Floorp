@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function loadHandler() {
+  var outer = document.getElementById("outer");
+  var inner = document.createElement('iframe');
+  outer.contentDocument.body.appendChild(inner);
+
+  // Set up resize handler (which ends the test, one way or another)
+  inner.contentWindow.onresize = () => {
+    outer.remove();
+    document.documentElement.removeAttribute("class");
+  };
+
+  // Trigger the resize handler:
+  inner.height = '0px';
+  inner.offsetTop;
+}
+</script>
+<body>
+  <iframe id="outer"
+          src="data:text/html,<html><body>"
+          onload="loadHandler()">
+  </iframe>
+</body>

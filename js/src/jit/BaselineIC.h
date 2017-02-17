@@ -431,15 +431,17 @@ class ICSetElem_Fallback : public ICFallbackStub
       : ICFallbackStub(ICStub::SetElem_Fallback, stubCode)
     { }
 
+    static const size_t HasDenseAddFlag = 0x1;
+    static const size_t HasTypedArrayOOBFlag = 0x2;
+
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
-    void noteArrayWriteHole() {
-        extra_ = 1;
-    }
-    bool hasArrayWriteHole() const {
-        return extra_;
-    }
+    void noteHasDenseAdd() { extra_ |= HasDenseAddFlag; }
+    bool hasDenseAdd() const { return extra_ & HasDenseAddFlag; }
+
+    void noteHasTypedArrayOOB() { extra_ |= HasTypedArrayOOBFlag; }
+    bool hasTypedArrayOOB() const { return extra_ & HasTypedArrayOOBFlag; }
 
     // Compiler for this stub kind.
     class Compiler : public ICStubCompiler {
@@ -453,67 +455,6 @@ class ICSetElem_Fallback : public ICFallbackStub
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICSetElem_Fallback>(space, getStubCode());
-        }
-    };
-};
-
-// Accesses scalar elements of a typed array or typed object.
-class ICSetElem_TypedArray : public ICStub
-{
-    friend class ICStubSpace;
-
-  protected: // Protected to silence Clang warning.
-    GCPtrShape shape_;
-
-    ICSetElem_TypedArray(JitCode* stubCode, Shape* shape, Scalar::Type type,
-                         bool expectOutOfBounds);
-
-  public:
-    Scalar::Type type() const {
-        return (Scalar::Type) (extra_ & 0xff);
-    }
-
-    bool expectOutOfBounds() const {
-        return (extra_ >> 8) & 1;
-    }
-
-    static size_t offsetOfShape() {
-        return offsetof(ICSetElem_TypedArray, shape_);
-    }
-
-    GCPtrShape& shape() {
-        return shape_;
-    }
-
-    class Compiler : public ICStubCompiler {
-        RootedShape shape_;
-        Scalar::Type type_;
-        TypedThingLayout layout_;
-        bool expectOutOfBounds_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(type_) << 17) |
-                  (static_cast<int32_t>(layout_) << 25) |
-                  (static_cast<int32_t>(expectOutOfBounds_) << 29);
-        }
-
-      public:
-        Compiler(JSContext* cx, Shape* shape, Scalar::Type type, bool expectOutOfBounds)
-          : ICStubCompiler(cx, ICStub::SetElem_TypedArray, Engine::Baseline),
-            shape_(cx, shape),
-            type_(type),
-            layout_(GetTypedThingLayout(shape->getObjectClass())),
-            expectOutOfBounds_(expectOutOfBounds)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICSetElem_TypedArray>(space, getStubCode(), shape_, type_,
-                                                 expectOutOfBounds_);
         }
     };
 };
@@ -1775,12 +1716,11 @@ void EmitUnboxedPreBarrierForBaseline(MacroAssembler &masm, const BaseIndex& add
 
 // Write an arbitrary value to a typed array or typed object address at dest.
 // If the value could not be converted to the appropriate format, jump to
-// failure or failureModifiedScratch.
-template <typename S, typename T>
-void
-BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type, const S& value,
-                          const T& dest, Register scratch, Label* failure,
-                          Label* failureModifiedScratch);
+// failure.
+template <typename T>
+void BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                               const ValueOperand& value, const T& dest, Register scratch,
+                               Label* failure);
 
 } // namespace jit
 } // namespace js

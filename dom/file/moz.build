@@ -19,27 +19,41 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'BaseBlobImpl.h',
+    'Blob.h',
+    'BlobImpl.h',
     'BlobSet.h',
     'File.h',
+    'FileBlobImpl.h',
     'FileCreatorHelper.h',
     'FileList.h',
     'FileReader.h',
+    'MemoryBlobImpl.h',
     'MultipartBlobImpl.h',
     'MutableBlobStorage.h',
     'MutableBlobStreamListener.h',
 ]
 
 UNIFIED_SOURCES += [
+    'BaseBlobImpl.cpp',
+    'Blob.cpp',
+    'BlobImpl.cpp',
     'BlobSet.cpp',
+    'EmptyBlobImpl.cpp',
     'File.cpp',
+    'FileBlobImpl.cpp',
     'FileCreatorHelper.cpp',
     'FileList.cpp',
     'FileReader.cpp',
+    'MemoryBlobImpl.cpp',
     'MultipartBlobImpl.cpp',
     'MutableBlobStorage.cpp',
     'MutableBlobStreamListener.cpp',
     'nsHostObjectProtocolHandler.cpp',
     'nsHostObjectURI.cpp',
+    'StreamBlobImpl.cpp',
+    'StringBlobImpl.cpp',
+    'TemporaryBlobImpl.cpp',
 ]
 
 LOCAL_INCLUDES += [

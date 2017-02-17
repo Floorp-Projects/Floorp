@@ -20,14 +20,12 @@
 namespace js {
 namespace vtune {
 
+bool Initialize();
+
 // VTune profiling may be attached/detached at any time, but there is no API for
 // attaching a callback to execute at attachment time. Methods compiled before
 // VTune was most recently attached therefore do not provide any information to VTune.
-inline bool
-IsProfilingActive()
-{
-    return iJIT_IsProfilingActive() == iJIT_SAMPLING_ON;
-}
+bool IsProfilingActive();
 
 // Wrapper exists in case we need locking in the future.
 uint32_t GenerateUniqueMethodID();

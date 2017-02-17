@@ -125,11 +125,10 @@ windows-vm-tests:
 #    - mochitest-webgl
 
 # these tests currently run on hardware, but may migrate above when validated
-# note: on win, mochitest-a11y and mochitest-chrome come under mochitest-other
-# windows-hw-tests:
+#    - mochitest-a11y
+#    - mochitest-chrome
 #    - mochitest-clipboard
 #    - mochitest-gpu
-#    - mochitest-other
 
 macosx64-tests-debug:
     - cppunit
@@ -138,13 +137,14 @@ macosx64-tests-debug:
     - jsreftest
     # - marionette
     # - mochitest
+    # - mochitest-a11y
     # - mochitest-browser-chrome
+    # - mochitest-chrome
     # - mochitest-clipboard
     # - mochitest-devtools-chrome
     # - mochitest-gpu
     # - mochitest-jetpack
     # - mochitest-media
-    # - mochitest-other
     - mochitest-webgl
     # - reftest
     # - web-platform-tests
