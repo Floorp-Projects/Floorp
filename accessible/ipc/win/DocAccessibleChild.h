@@ -28,9 +28,10 @@ public:
   virtual void Shutdown() override;
 
   virtual ipc::IPCResult
-  RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy,
-                     const WindowsHandle& aEmulatedWindowHandle,
-                     const IAccessibleHolder& aEmulatedWindowCOMProxy) override;
+  RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy) override;
+  virtual ipc::IPCResult
+    RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandle,
+                       const IAccessibleHolder& aEmulatedWindowCOMProxy) override;
 
   HWND GetEmulatedWindowHandle() const { return mEmulatedWindowHandle; }
   IAccessible* GetEmulatedWindowIAccessible() const { return mEmulatedWindowProxy.get(); }

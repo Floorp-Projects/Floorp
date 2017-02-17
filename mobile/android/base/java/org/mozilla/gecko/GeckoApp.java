@@ -1964,11 +1964,13 @@ public abstract class GeckoApp
     public void createShortcut(final String title, final String url) {
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        final String manifestUrl = selectedTab.getManifestUrl();
 
-        if (selectedTab.hasManifest()) {
+        if (manifestUrl != null) {
             // If a page has associated manifest, lets install it
             final GeckoBundle message = new GeckoBundle();
             message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
+            message.putString("manifestUrl", manifestUrl);
             EventDispatcher.getInstance().dispatch("Browser:LoadManifest", message);
             return;
         }

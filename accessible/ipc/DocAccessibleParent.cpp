@@ -152,7 +152,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
   if (mShutdown)
     return IPC_OK();
 
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
 
   // We shouldn't actually need this because mAccessibles shouldn't have an
   // entry for the document itself, but it doesn't hurt to be explicit.
@@ -587,8 +587,10 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
       }
     }
   }
-  Unused << SendParentCOMProxy(holder, reinterpret_cast<uintptr_t>(
-                               mEmulatedWindowHandle), hWndAccHolder);
+
+  Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
+                               hWndAccHolder);
+  Unused << SendParentCOMProxy(holder);
 }
 
 void
