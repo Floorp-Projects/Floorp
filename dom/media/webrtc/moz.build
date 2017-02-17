@@ -18,6 +18,7 @@ EXPORTS += [
     'MediaEngineCameraVideoSource.h',
     'MediaEngineDefault.h',
     'MediaTrackConstraints.h',
+    'SineWaveGenerator.h',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
