@@ -54,8 +54,7 @@ class CSSRuleList;
 
 struct CSSStyleSheetInner : public StyleSheetInfo
 {
-  CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
-                     CORSMode aCORSMode,
+  CSSStyleSheetInner(CORSMode aCORSMode,
                      ReferrerPolicy aReferrerPolicy,
                      const dom::SRIMetadata& aIntegrity);
   CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
@@ -63,8 +62,7 @@ struct CSSStyleSheetInner : public StyleSheetInfo
   ~CSSStyleSheetInner();
 
   CSSStyleSheetInner* CloneFor(CSSStyleSheet* aPrimarySheet);
-  void AddSheet(CSSStyleSheet* aSheet);
-  void RemoveSheet(CSSStyleSheet* aSheet);
+  void RemoveSheet(StyleSheet* aSheet) override;
 
   void RebuildNameSpaces();
 
@@ -73,7 +71,6 @@ struct CSSStyleSheetInner : public StyleSheetInfo
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  AutoTArray<CSSStyleSheet*, 8> mSheets;
   IncrementalClearCOMRuleArray mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
 };
