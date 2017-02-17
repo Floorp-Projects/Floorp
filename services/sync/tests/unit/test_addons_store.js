@@ -89,6 +89,7 @@ function createAndStartHTTPServer(port) {
     _("Error: " + Log.exceptionStr(ex));
     do_throw(ex);
   }
+  return null; /* not hit, but keeps eslint happy! */
 }
 
 function run_test() {

@@ -1089,7 +1089,7 @@ Sync11Service.prototype = {
       } else {
         this._log.trace("In sync: no need to login.");
       }
-      return this._lockedSync(engineNamesToSync);
+      this._lockedSync(engineNamesToSync);
     })();
   },
 

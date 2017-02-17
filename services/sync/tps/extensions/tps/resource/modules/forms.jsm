@@ -172,6 +172,7 @@ FormData.prototype = {
          we might need to add code here to update the firstUsed or
          lastUsed fields, as appropriate.
        */
+      return null;
     });
   },
 

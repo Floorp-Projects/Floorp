@@ -656,12 +656,14 @@ add_task(function* test_registerDevice() {
 
       if (body.id || !body.name || !body.type || Object.keys(body).length !== 2) {
         response.setStatusLine(request.httpVersion, 400, "Invalid request");
-        return response.bodyOutputStream.write("{}", 2);
+        response.bodyOutputStream.write("{}", 2);
+        return;
       }
 
       if (body.name === ERROR_NAME) {
         response.setStatusLine(request.httpVersion, 500, "Alas");
-        return response.bodyOutputStream.write("{}", 2);
+        response.bodyOutputStream.write("{}", 2);
+        return;
       }
 
       body.id = DEVICE_ID;
@@ -706,12 +708,14 @@ add_task(function* test_updateDevice() {
 
       if (!body.id || !body.name || body.type || Object.keys(body).length !== 2) {
         response.setStatusLine(request.httpVersion, 400, "Invalid request");
-        return response.bodyOutputStream.write("{}", 2);
+        response.bodyOutputStream.write("{}", 2);
+        return;
       }
 
       if (body.id === ERROR_ID) {
         response.setStatusLine(request.httpVersion, 500, "Alas");
-        return response.bodyOutputStream.write("{}", 2);
+        response.bodyOutputStream.write("{}", 2);
+        return;
       }
 
       const responseMessage = JSON.stringify(body);
@@ -750,12 +754,14 @@ add_task(function* test_signOutAndDestroyDevice() {
 
       if (!body.id) {
         response.setStatusLine(request.httpVersion, 400, "Invalid request");
-        return response.bodyOutputStream.write(emptyMessage, emptyMessage.length);
+        response.bodyOutputStream.write(emptyMessage, emptyMessage.length);
+        return;
       }
 
       if (body.id === ERROR_ID) {
         response.setStatusLine(request.httpVersion, 500, "Alas");
-        return response.bodyOutputStream.write("{}", 2);
+        response.bodyOutputStream.write("{}", 2);
+        return;
       }
 
       response.setStatusLine(request.httpVersion, 200, "OK");
