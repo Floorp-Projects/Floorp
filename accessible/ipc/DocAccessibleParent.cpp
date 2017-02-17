@@ -29,7 +29,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   if (mShutdown)
     return IPC_OK();
 
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
 
   if (aData.NewTree().IsEmpty()) {
     NS_ERROR("no children being added");
@@ -75,7 +75,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
   }
 #endif
 
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
 
   ProxyAccessible* target = parent->ChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
@@ -194,7 +194,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
   parent->RemoveChild(root);
   root->Shutdown();
 
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
 
   if (event) {
     nsCoreUtils::DispatchAccEvent(Move(event));
@@ -391,13 +391,13 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   if (!aID)
     return IPC_FAIL(this, "ID is 0!");
 
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
 
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
   childDoc->Unbind();
   ipc::IPCResult result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
-  MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+  MOZ_ASSERT(CheckDocTree());
   if (!result) {
     return result;
   }
