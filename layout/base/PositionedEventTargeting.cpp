@@ -127,17 +127,13 @@ GetPrefsFor(EventClassID aEventClassID)
     nsPrintfCString repositionPref("ui.%s.radius.reposition", prefBranch);
     Preferences::AddBoolVarCache(&prefs->mRepositionEventCoords, repositionPref.get(), false);
 
-    nsPrintfCString touchClusterPref("ui.zoomedview.enabled", prefBranch);
-    Preferences::AddBoolVarCache(&prefs->mTouchClusterDetectionEnabled, touchClusterPref.get(), false);
+    Preferences::AddBoolVarCache(&prefs->mTouchClusterDetectionEnabled, "ui.zoomedview.enabled", false);
 
-    nsPrintfCString simplifiedClusterDetectionPref("ui.zoomedview.simplified", prefBranch);
-    Preferences::AddBoolVarCache(&prefs->mSimplifiedClusterDetection, simplifiedClusterDetectionPref.get(), false);
+    Preferences::AddBoolVarCache(&prefs->mSimplifiedClusterDetection, "ui.zoomedview.simplified", false);
 
-    nsPrintfCString limitReadableSizePref("ui.zoomedview.limitReadableSize", prefBranch);
-    Preferences::AddUintVarCache(&prefs->mLimitReadableSize, limitReadableSizePref.get(), 8);
+    Preferences::AddUintVarCache(&prefs->mLimitReadableSize, "ui.zoomedview.limitReadableSize", 8);
 
-    nsPrintfCString keepLimitSize("ui.zoomedview.keepLimitSize", prefBranch);
-    Preferences::AddUintVarCache(&prefs->mKeepLimitSizeForCluster, keepLimitSize.get(), 16);
+    Preferences::AddUintVarCache(&prefs->mKeepLimitSizeForCluster, "ui.zoomedview.keepLimitSize", 16);
   }
 
   return prefs;

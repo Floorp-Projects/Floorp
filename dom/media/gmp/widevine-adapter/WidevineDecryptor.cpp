@@ -291,7 +291,7 @@ WidevineDecryptor::DecryptBuffer(const PendingDecrypt& aJob)
   InitInputBuffer(crypto, buffer->Id(), buffer->Data(), buffer->Size(), sample, subsamples);
   WidevineDecryptedBlock decrypted;
   Status rv = CDM()->Decrypt(sample, &decrypted);
-  Log("Decryptor::Decrypt(timestamp=%lld) rv=%d sz=%d",
+  Log("Decryptor::Decrypt(timestamp=%" PRId64 ") rv=%d sz=%d",
       sample.timestamp, rv, decrypted.DecryptedBuffer()->Size());
   if (rv == kSuccess) {
     buffer->Resize(decrypted.DecryptedBuffer()->Size());
@@ -329,11 +329,11 @@ WidevineDecryptor::DecryptingComplete()
 class WidevineBuffer : public cdm::Buffer {
 public:
   explicit WidevineBuffer(size_t aSize) {
-    Log("WidevineBuffer(size=" PRIuSIZE ") created", aSize);
+    Log("WidevineBuffer(size=%" PRIuSIZE ") created", aSize);
     mBuffer.SetLength(aSize);
   }
   ~WidevineBuffer() override {
-    Log("WidevineBuffer(size=" PRIuSIZE ") destroyed", Size());
+    Log("WidevineBuffer(size=%" PRIu32 ") destroyed", Size());
   }
   void Destroy() override { delete this; }
   uint32_t Capacity() const override { return mBuffer.Length(); };
@@ -379,7 +379,7 @@ private:
 void
 WidevineDecryptor::SetTimer(int64_t aDelayMs, void* aContext)
 {
-  Log("Decryptor::SetTimer(delay_ms=%lld, context=0x%x)", aDelayMs, aContext);
+  Log("Decryptor::SetTimer(delay_ms=%" PRId64 ", context=0x%p)", aDelayMs, aContext);
   if (mCDM) {
     GMPSetTimerOnMainThread(new TimerTask(this, mCDM, aContext), aDelayMs);
   }

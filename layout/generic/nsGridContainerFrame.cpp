@@ -224,7 +224,7 @@ struct nsGridContainerFrame::TrackSize
   static bool IsMinContent(const nsStyleCoord& aCoord)
   {
     return aCoord.GetUnit() == eStyleUnit_Enumerated &&
-      aCoord.GetIntValue() == NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT;
+      aCoord.GetEnumValue<StyleGridTrackBreadth>() == StyleGridTrackBreadth::MinContent;
   }
   static bool IsDefiniteMaxSizing(StateBits aStateBits)
   {

@@ -16,6 +16,7 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Services.h"
 
 using namespace mozilla;
@@ -156,7 +157,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
   LOG(("@@@@@ wifi monitor run called\n"));
 
   nsresult rv = DoScan();
-  LOG(("@@@@@ wifi monitor run::doscan complete %x\n", rv));
+  LOG(("@@@@@ wifi monitor run::doscan complete %" PRIx32 "\n", static_cast<uint32_t>(rv)));
 
   nsAutoPtr<WifiListenerArray> currentListeners;
   bool doError = false;

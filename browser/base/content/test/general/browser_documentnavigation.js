@@ -4,6 +4,8 @@
  * non-browser cases.
  */
 
+/* eslint-env mozilla/frame-script */
+
 var testPage1 = "data:text/html,<html id='html1'><body id='body1'><button id='button1'>Tab 1</button></body></html>";
 var testPage2 = "data:text/html,<html id='html2'><body id='body2'><button id='button2'>Tab 2</button></body></html>";
 var testPage3 = "data:text/html,<html id='html3'><body id='body3' contenteditable='true'><button id='button3'>Tab 3</button></body></html>";

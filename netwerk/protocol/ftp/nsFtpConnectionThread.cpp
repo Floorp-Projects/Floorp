@@ -97,7 +97,7 @@ nsFtpState::nsFtpState()
     , mControlStatus(NS_OK)
     , mDeferredCallbackPending(false)
 {
-    LOG_INFO(("FTP:(%x) nsFtpState created", this));
+    LOG_INFO(("FTP:(%p) nsFtpState created", this));
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -105,7 +105,7 @@ nsFtpState::nsFtpState()
 
 nsFtpState::~nsFtpState() 
 {
-    LOG_INFO(("FTP:(%x) nsFtpState destroyed", this));
+    LOG_INFO(("FTP:(%p) nsFtpState destroyed", this));
 
     if (mProxyRequest)
         mProxyRequest->Cancel(NS_ERROR_FAILURE);
@@ -235,8 +235,9 @@ nsFtpState::OnControlError(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "expecting error condition");
 
-    LOG(("FTP:(%p) CC(%p) error [%x was-cached=%u]\n",
-         this, mControlConnection.get(), status, mTryingCachedControl));
+    LOG(("FTP:(%p) CC(%p) error [%" PRIx32 " was-cached=%u]\n",
+         this, mControlConnection.get(), static_cast<uint32_t>(status),
+         mTryingCachedControl));
 
     mControlStatus = status;
     if (mReconnectAndLoginAgain && NS_SUCCEEDED(mInternalError)) {
@@ -259,7 +260,7 @@ nsFtpState::EstablishControlConnection()
             
     nsresult rv;
 
-    LOG(("FTP:(%x) trying cached control\n", this));
+    LOG(("FTP:(%p) trying cached control\n", this));
         
     // Look to see if we can use a cached control connection:
     RefPtr<nsFtpControlConnection> connection;
@@ -319,8 +320,8 @@ nsFtpState::EstablishControlConnection()
 
     rv = mControlConnection->Connect(mChannel->ProxyInfo(), this);
     if (NS_FAILED(rv)) {
-        LOG(("FTP:(%p) CC(%p) failed to connect [rv=%x]\n", this,
-            mControlConnection.get(), rv));
+        LOG(("FTP:(%p) CC(%p) failed to connect [rv=%" PRIx32 "]\n", this,
+             mControlConnection.get(), static_cast<uint32_t>(rv)));
         mControlConnection = nullptr;
         return rv;
     }
@@ -333,7 +334,7 @@ nsFtpState::MoveToNextState(FTP_STATE nextState)
 {
     if (NS_FAILED(mInternalError)) {
         mState = FTP_ERROR;
-        LOG(("FTP:(%x) FAILED (%x)\n", this, mInternalError));
+        LOG(("FTP:(%p) FAILED (%" PRIx32 ")\n", this, static_cast<uint32_t>(mInternalError)));
     } else {
         mState = FTP_READ_BUF;
         mNextState = nextState;
@@ -389,7 +390,7 @@ nsFtpState::Process()
                 mAnonymous = false;
                 mState = FTP_COMMAND_CONNECT;
             } else {
-                LOG(("FTP:(%x) FTP_ERROR - calling StopProcessing\n", this));
+                LOG(("FTP:(%p) FTP_ERROR - calling StopProcessing\n", this));
                 rv = StopProcessing();
                 NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
                 processingRead = false;
@@ -397,7 +398,7 @@ nsFtpState::Process()
             break;
           
           case FTP_COMPLETE:
-            LOG(("FTP:(%x) COMPLETE\n", this));
+            LOG(("FTP:(%p) COMPLETE\n", this));
             rv = StopProcessing();
             NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
             processingRead = false;
@@ -1311,7 +1312,7 @@ nsFtpState::R_stor() {
     }
 
     if (mResponseCode/100 == 1) {
-        LOG(("FTP:(%x) writing on DT\n", this));
+        LOG(("FTP:(%p) writing on DT\n", this));
         return FTP_READ_BUF;
     }
 
@@ -1505,7 +1506,7 @@ nsFtpState::R_pasv() {
 
         strans->SetQoSBits(gFtpHandler->GetDataQoSBits());
         
-        LOG(("FTP:(%x) created DT (%s:%x)\n", this, host.get(), port));
+        LOG(("FTP:(%p) created DT (%s:%x)\n", this, host.get(), port));
         
         // hook ourself up as a proxy for status notifications
         rv = mDataTransport->SetEventSink(this, NS_GetCurrentThread());
@@ -1734,7 +1735,7 @@ nsFtpState::Connect()
 
     // check for errors.
     if (NS_FAILED(rv)) {
-        LOG(("FTP:Process() failed: %x\n", rv));
+        LOG(("FTP:Process() failed: %" PRIx32 "\n", static_cast<uint32_t>(rv)));
         mInternalError = NS_ERROR_FAILURE;
         mState = FTP_ERROR;
         CloseWithStatus(mInternalError);
@@ -1821,7 +1822,7 @@ nsFtpState::StopProcessing()
         return NS_OK;
     mKeepRunning = false;
 
-    LOG_INFO(("FTP:(%x) nsFtpState stopping", this));
+    LOG_INFO(("FTP:(%p) nsFtpState stopping", this));
 
     if (NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) {
         // check to see if the control status is bad.
@@ -1875,7 +1876,7 @@ nsFtpState::SendFTPCommand(const nsCSubstring& command)
     if (StringBeginsWith(command, NS_LITERAL_CSTRING("PASS "))) 
         logcmd = "PASS xxxxx";
     
-    LOG(("FTP:(%x) writing \"%s\"\n", this, logcmd.get()));
+    LOG(("FTP:(%p) writing \"%s\"\n", this, logcmd.get()));
 
     nsCOMPtr<nsIFTPEventSink> ftpSink;
     mChannel->GetFTPEventSink(ftpSink);
@@ -1904,8 +1905,8 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
     if (t)
         while (nsCRT::strtok(nextToken, "/", &nextToken))
             ntok++; // count number of terms (tokens)
-    LOG(("FTP:(%x) ConvertFilespecToVMS ntok: %d\n", this, ntok));
-    LOG(("FTP:(%x) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
+    LOG(("FTP:(%p) ConvertFilespecToVMS ntok: %d\n", this, ntok));
+    LOG(("FTP:(%p) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
 
     if (fileString.First() == '/') {
         // absolute filespec
@@ -1969,7 +1970,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             fileString.Append(nsCRT::strtok(nextToken, "/", &nextToken));
         }
     }
-    LOG(("FTP:(%x) ConvertFilespecToVMS   to: \"%s\"\n", this, fileString.get()));
+    LOG(("FTP:(%p) ConvertFilespecToVMS   to: \"%s\"\n", this, fileString.get()));
 }
 
 // Convert a unix-style dirspec to VMS format
@@ -1980,7 +1981,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
 void
 nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
 {
-    LOG(("FTP:(%x) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
+    LOG(("FTP:(%p) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
     if (!dirSpec.IsEmpty()) {
         if (dirSpec.Last() != '/')
             dirSpec.Append('/');
@@ -1989,14 +1990,14 @@ nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
         ConvertFilespecToVMS(dirSpec);
         dirSpec.Truncate(dirSpec.Length()-1);
     }
-    LOG(("FTP:(%x) ConvertDirspecToVMS   to: \"%s\"\n", this, dirSpec.get()));
+    LOG(("FTP:(%p) ConvertDirspecToVMS   to: \"%s\"\n", this, dirSpec.get()));
 }
 
 // Convert an absolute VMS style dirspec to UNIX format
 void
 nsFtpState::ConvertDirspecFromVMS(nsCString& dirSpec)
 {
-    LOG(("FTP:(%x) ConvertDirspecFromVMS from: \"%s\"\n", this, dirSpec.get()));
+    LOG(("FTP:(%p) ConvertDirspecFromVMS from: \"%s\"\n", this, dirSpec.get()));
     if (dirSpec.IsEmpty()) {
         dirSpec.Insert('.', 0);
     } else {
@@ -2005,7 +2006,7 @@ nsFtpState::ConvertDirspecFromVMS(nsCString& dirSpec)
         dirSpec.ReplaceChar('.', '/');
         dirSpec.ReplaceChar(']', '/');
     }
-    LOG(("FTP:(%x) ConvertDirspecFromVMS   to: \"%s\"\n", this, dirSpec.get()));
+    LOG(("FTP:(%p) ConvertDirspecFromVMS   to: \"%s\"\n", this, dirSpec.get()));
 }
 
 //-----------------------------------------------------------------------------
@@ -2094,7 +2095,7 @@ nsFtpState::ReadSegments(nsWriteSegmentFun writer, void *closure,
 NS_IMETHODIMP
 nsFtpState::CloseWithStatus(nsresult status)
 {
-    LOG(("FTP:(%p) close [%x]\n", this, status));
+    LOG(("FTP:(%p) close [%" PRIx32 "]\n", this, static_cast<uint32_t>(status)));
 
     // Shutdown the control connection processing if we are being closed with an
     // error.  Note: This method may be called several times.

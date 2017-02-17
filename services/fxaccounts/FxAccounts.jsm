@@ -551,6 +551,7 @@ FxAccountsInternal.prototype = {
       if (signedInUser) {
         return this.deleteDeviceRegistration(signedInUser.sessionToken, signedInUser.deviceId);
       }
+      return null;
     }).then(() =>
       this.abortExistingFlow()
     ).then(() => {
@@ -785,6 +786,7 @@ FxAccountsInternal.prototype = {
             return this._signOutServer(sessionToken, deviceId);
           }
           log.warn("Missing session token; skipping remote sign out");
+          return null;
         }).catch(err => {
           log.error("Error during remote sign out of Firefox Accounts", err);
         }).then(() => {
@@ -1052,7 +1054,8 @@ FxAccountsInternal.prototype = {
       keyPair = yield new Promise((resolve, reject) => {
         jwcrypto.generateKeyPair("DS160", (err, kp) => {
           if (err) {
-            return reject(err);
+            reject(err);
+            return;
           }
           log.debug("got keyPair");
           resolve({
@@ -1540,6 +1543,7 @@ FxAccountsInternal.prototype = {
       if (signedInUser) {
         return this._registerOrUpdateDevice(signedInUser);
       }
+      return null;
     }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
   },
 
@@ -1576,7 +1580,7 @@ FxAccountsInternal.prototype = {
           // We've already been logged out (and that logout is probably what
           // caused us to get here via push!), so don't make noise here.
           log.info(`Push request to disconnect, but we've already disconnected`);
-          return;
+          return null;
         }
         if (deviceId == localDeviceId) {
           this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, deviceId);
@@ -1585,6 +1589,7 @@ FxAccountsInternal.prototype = {
         log.error(
           `The device ID to disconnect doesn't match with the local device ID. ` +
           `Local: ${localDeviceId}, ID to disconnect: ${deviceId}`);
+        return null;
     });
   },
 

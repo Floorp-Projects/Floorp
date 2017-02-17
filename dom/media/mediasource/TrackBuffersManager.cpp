@@ -9,6 +9,7 @@
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/StateMirroring.h"
 #include "SourceBufferResource.h"
 #include "SourceBuffer.h"
@@ -118,7 +119,7 @@ TrackBuffersManager::AppendData(MediaByteBuffer* aData,
                                 const SourceBufferAttributes& aAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("Appending %lld bytes", aData->Length());
+  MSE_DEBUG("Appending %" PRIuSIZE " bytes", aData->Length());
 
   mEnded = false;
 
@@ -274,8 +275,8 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
   const uint32_t canEvict =
     Evictable(HasVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack);
 
-  MSE_DEBUG("currentTime=%lld buffered=%lldkB, eviction threshold=%ukB, "
-            "evict=%lldkB canevict=%ukB",
+  MSE_DEBUG("currentTime=%" PRId64 " buffered=%" PRId64 "kB, eviction threshold=%" PRId64 "kB, "
+            "evict=%" PRId64 "kB canevict=%" PRIu32 "kB",
             aPlaybackTime.ToMicroseconds(), GetSize() / 1024,
             EvictionThreshold() / 1024, toEvict / 1024, canEvict / 1024);
 
@@ -297,7 +298,7 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
     result = EvictDataResult::NO_DATA_EVICTED;
   }
   MSE_DEBUG(
-    "Reached our size limit, schedule eviction of %lld bytes (%s)", toEvict,
+    "Reached our size limit, schedule eviction of %" PRId64 " bytes (%s)", toEvict,
     result == EvictDataResult::BUFFER_FULL ? "buffer full" : "no data evicted");
   QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
@@ -454,7 +455,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
   const int64_t finalSize = mSizeSourceBuffer - aSizeToEvict;
 
   if (lastKeyFrameIndex > 0) {
-    MSE_DEBUG("Step1. Evicting %lld bytes prior currentTime",
+    MSE_DEBUG("Step1. Evicting %" PRId64 " bytes prior currentTime",
               aSizeToEvict - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(0),
@@ -494,7 +495,7 @@ TrackBuffersManager::DoEvictData(const TimeUnit& aPlaybackTime,
     toEvict -= frame->ComputedSizeOfIncludingThis();
   }
   if (evictedFramesStartIndex < buffer.Length()) {
-    MSE_DEBUG("Step2. Evicting %lld bytes from trailing data",
+    MSE_DEBUG("Step2. Evicting %" PRId64 " bytes from trailing data",
               mSizeSourceBuffer - finalSize - toEvict);
     CodedFrameRemoval(
       TimeInterval(TimeUnit::FromMicroseconds(buffer[evictedFramesStartIndex]->mTime),
@@ -773,7 +774,7 @@ TrackBuffersManager::NeedMoreData()
 void
 TrackBuffersManager::RejectAppend(const MediaResult& aRejectValue, const char* aName)
 {
-  MSE_DEBUG("rv=%u", aRejectValue.Code());
+  MSE_DEBUG("rv=%" PRIu32, static_cast<uint32_t>(aRejectValue.Code()));
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
 
   mCurrentTask->As<AppendBufferTask>()->mPromise.Reject(aRejectValue, __func__);
@@ -1179,8 +1180,9 @@ TrackBuffersManager::OnDemuxFailed(TrackType aTrack,
                                    const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("Failed to demux %s, failure:%u",
-            aTrack == TrackType::kVideoTrack ? "video" : "audio", aError.Code());
+  MSE_DEBUG("Failed to demux %s, failure:%" PRIu32,
+            aTrack == TrackType::kVideoTrack ? "video" : "audio",
+            static_cast<uint32_t>(aError.Code()));
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
@@ -1215,7 +1217,7 @@ void
 TrackBuffersManager::OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%d video samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%" PRIuSIZE " video samples demuxed", aSamples->mSamples.Length());
   mVideoTracks.mDemuxRequest.Complete();
   mVideoTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
   DoDemuxAudio();
@@ -1240,7 +1242,7 @@ void
 TrackBuffersManager::OnAudioDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%d audio samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%" PRIuSIZE " audio samples demuxed", aSamples->mSamples.Length());
   mAudioTracks.mDemuxRequest.Complete();
   mAudioTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
   CompleteCodedFrameProcessing();
@@ -1441,7 +1443,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   }
 
   for (auto& sample : aSamples) {
-    SAMPLE_DEBUG("Processing %s frame(pts:%lld end:%lld, dts:%lld, duration:%lld, "
+    SAMPLE_DEBUG("Processing %s frame(pts:%" PRId64 " end:%" PRId64 ", dts:%" PRId64 ", duration:%" PRId64 ", "
                "kf:%d)",
                aTrackData.mInfo->mMimeType.get(),
                sample->mTime,
@@ -1669,7 +1671,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   // 5. Let track buffer equal the track buffer that the coded frame will be added to.
   auto& trackBuffer = aTrackData;
 
-  MSE_DEBUGV("Processing %d %s frames(start:%lld end:%lld)",
+  MSE_DEBUGV("Processing %" PRIuSIZE " %s frames(start:%" PRId64 " end:%" PRId64 ")",
              aSamples.Length(),
              aTrackData.mInfo->mMimeType.get(),
              aIntervals.GetStart().ToMicroseconds(),
@@ -2136,7 +2138,7 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
       break;
     }
   }
-  MSE_DEBUG("Keyframe %s found at %lld @ %u",
+  MSE_DEBUG("Keyframe %s found at %" PRId64 " @ %u",
             lastKeyFrameTime.isSome() ? "" : "not",
             lastKeyFrameTime.refOr(TimeUnit()).ToMicroseconds(),
             lastKeyFrameIndex);
@@ -2351,7 +2353,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   // Our previous index has been overwritten, attempt to find the new one.
   int32_t pos = FindCurrentPosition(aTrack, aFuzz);
   if (pos < 0) {
-    MSE_DEBUG("Couldn't find sample (pts:%lld dts:%lld)",
+    MSE_DEBUG("Couldn't find sample (pts:%" PRId64 " dts:%" PRId64 ")",
               trackData.mNextSampleTime.ToMicroseconds(),
               trackData.mNextSampleTimecode.ToMicroseconds());
     return nullptr;

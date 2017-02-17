@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Printf.h"
+#include "mozilla/UniquePtr.h"
 
 #include "ManifestParser.h"
 
 #include <string.h>
 
 #include "prio.h"
-#include "prprf.h"
 #if defined(XP_WIN)
 #include <windows.h>
 #elif defined(MOZ_WIDGET_COCOA)
@@ -136,21 +137,14 @@ IsNewline(char aChar)
 }
 
 namespace {
-struct AutoPR_smprintf_free
+struct SmprintfFreePolicy
 {
-  explicit AutoPR_smprintf_free(char* aBuf) : mBuf(aBuf) {}
-
-  ~AutoPR_smprintf_free()
-  {
-    if (mBuf) {
-      PR_smprintf_free(mBuf);
-    }
+  void operator()(char* ptr) {
+    mozilla::SmprintfFree(ptr);
   }
-
-  operator char*() const { return mBuf; }
-
-  char* mBuf;
 };
+
+typedef mozilla::UniquePtr<char, SmprintfFreePolicy> SmprintfPointer;
 
 } // namespace
 
@@ -173,11 +167,11 @@ LogMessage(const char* aMsg, ...)
 
   va_list args;
   va_start(args, aMsg);
-  AutoPR_smprintf_free formatted(PR_vsmprintf(aMsg, args));
+  SmprintfPointer formatted(mozilla::Vsmprintf(aMsg, args));
   va_end(args);
 
   nsCOMPtr<nsIConsoleMessage> error =
-    new nsConsoleMessage(NS_ConvertUTF8toUTF16(formatted).get());
+    new nsConsoleMessage(NS_ConvertUTF8toUTF16(formatted.get()).get());
   console->LogMessage(error);
 }
 
@@ -191,7 +185,7 @@ LogMessageWithContext(FileLocation& aFile,
 {
   va_list args;
   va_start(args, aMsg);
-  AutoPR_smprintf_free formatted(PR_vsmprintf(aMsg, args));
+  SmprintfPointer formatted(mozilla::Vsmprintf(aMsg, args));
   va_end(args);
   if (!formatted) {
     return;
@@ -210,7 +204,7 @@ LogMessageWithContext(FileLocation& aFile,
     // This can happen early in component registration. Fall back to a
     // generic console message.
     LogMessage("Warning: in '%s', line %i: %s", file.get(),
-               aLineNumber, (char*)formatted);
+               aLineNumber, formatted.get());
     return;
   }
 
@@ -220,7 +214,7 @@ LogMessageWithContext(FileLocation& aFile,
     return;
   }
 
-  nsresult rv = error->Init(NS_ConvertUTF8toUTF16(formatted),
+  nsresult rv = error->Init(NS_ConvertUTF8toUTF16(formatted.get()),
                             NS_ConvertUTF8toUTF16(file), EmptyString(),
                             aLineNumber, 0, nsIScriptError::warningFlag,
                             "chrome registration");

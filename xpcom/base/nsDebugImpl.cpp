@@ -8,6 +8,7 @@
 #include "base/process_util.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Printf.h"
 
 #include "nsDebugImpl.h"
 #include "nsDebug.h"
@@ -264,7 +265,7 @@ GetAssertBehavior()
   return gAssertBehavior;
 }
 
-struct FixedBuffer
+struct FixedBuffer : public mozilla::PrintfTarget
 {
   FixedBuffer() : curlen(0)
   {
@@ -273,33 +274,33 @@ struct FixedBuffer
 
   char buffer[500];
   uint32_t curlen;
+
+  bool append(const char* sp, size_t len);
 };
 
-static int
-StuffFixedBuffer(void* aClosure, const char* aBuf, uint32_t aLen)
+bool
+FixedBuffer::append(const char* aBuf, size_t aLen)
 {
   if (!aLen) {
-    return 0;
+    return true;
   }
-
-  FixedBuffer* fb = (FixedBuffer*)aClosure;
 
   // strip the trailing null, we add it again later
   if (aBuf[aLen - 1] == '\0') {
     --aLen;
   }
 
-  if (fb->curlen + aLen >= sizeof(fb->buffer)) {
-    aLen = sizeof(fb->buffer) - fb->curlen - 1;
+  if (curlen + aLen >= sizeof(buffer)) {
+    aLen = sizeof(buffer) - curlen - 1;
   }
 
   if (aLen) {
-    memcpy(fb->buffer + fb->curlen, aBuf, aLen);
-    fb->curlen += aLen;
-    fb->buffer[fb->curlen] = '\0';
+    memcpy(buffer + curlen, aBuf, aLen);
+    curlen += aLen;
+    buffer[curlen] = '\0';
   }
 
-  return aLen;
+  return true;
 }
 
 EXPORT_XPCOM_API(void)
@@ -327,30 +328,26 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
       aSeverity = NS_DEBUG_WARNING;
   }
 
-#define PRINT_TO_NONPID_BUFFER(...) PR_sxprintf(StuffFixedBuffer, &nonPIDBuf, __VA_ARGS__)
-  PRINT_TO_NONPID_BUFFER("%s: ", sevString);
+  nonPIDBuf.print("%s: ", sevString);
   if (aStr) {
-    PRINT_TO_NONPID_BUFFER("%s: ", aStr);
+    nonPIDBuf.print("%s: ", aStr);
   }
   if (aExpr) {
-    PRINT_TO_NONPID_BUFFER("'%s', ", aExpr);
+    nonPIDBuf.print("'%s', ", aExpr);
   }
   if (aFile) {
-    PRINT_TO_NONPID_BUFFER("file %s, ", aFile);
+    nonPIDBuf.print("file %s, ", aFile);
   }
   if (aLine != -1) {
-    PRINT_TO_NONPID_BUFFER("line %d", aLine);
+    nonPIDBuf.print("line %d", aLine);
   }
-#undef PRINT_TO_NONPID_BUFFER
 
   // Print "[PID]" or "[Desc PID]" at the beginning of the message.
-#define PRINT_TO_BUFFER(...) PR_sxprintf(StuffFixedBuffer, &buf, __VA_ARGS__)
-  PRINT_TO_BUFFER("[");
+  buf.print("[");
   if (sMultiprocessDescription) {
-    PRINT_TO_BUFFER("%s ", sMultiprocessDescription);
+    buf.print("%s ", sMultiprocessDescription);
   }
-  PRINT_TO_BUFFER("%d] %s", base::GetCurrentProcId(), nonPIDBuf.buffer);
-#undef PRINT_TO_BUFFER
+  buf.print("%d] %s", base::GetCurrentProcId(), nonPIDBuf.buffer);
 
 
   // errors on platforms without a debugdlg ring a bell on stderr

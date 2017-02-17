@@ -41,7 +41,7 @@ module.exports = createClass({
       },
       dom.span(
         {},
-        getStr("layout.overlayMultipleGrids")
+        getStr("layout.overlayGrid")
       ),
       dom.ul(
         {},

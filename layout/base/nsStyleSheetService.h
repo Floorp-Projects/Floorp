@@ -19,6 +19,7 @@
 
 class nsICategoryManager;
 class nsIMemoryReporter;
+class nsIPresShell;
 class nsISimpleEnumerator;
 
 #define NS_STYLESHEETSERVICE_CID \
@@ -54,6 +55,9 @@ class nsStyleSheetService final
     return &mSheets[AUTHOR_SHEET];
   }
 
+  void RegisterPresShell(nsIPresShell* aPresShell);
+  void UnregisterPresShell(nsIPresShell* aPresShell);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static nsStyleSheetService *GetInstance();
@@ -76,6 +80,10 @@ class nsStyleSheetService final
                                         uint32_t aSheetType);
 
   nsTArray<RefPtr<mozilla::StyleSheet>> mSheets[3];
+
+  // Registered PresShells that will be notified when sheets are added and
+  // removed from the style sheet service.
+  nsTArray<nsCOMPtr<nsIPresShell>> mPresShells;
 };
 
 #endif

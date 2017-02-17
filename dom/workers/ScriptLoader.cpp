@@ -2182,9 +2182,9 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       // We don't want to throw a JS exception, because for toplevel script
       // loads that would get squelched.
       aRv.ThrowDOMException(NS_ERROR_DOM_NETWORK_ERR,
-        nsPrintfCString("Failed to load worker script at %s (nsresult = 0x%x)",
+        nsPrintfCString("Failed to load worker script at %s (nsresult = 0x%" PRIx32 ")",
                         NS_ConvertUTF16toUTF8(aScriptURL).get(),
-                        aLoadResult));
+                        static_cast<uint32_t>(aLoadResult)));
       return;
   }
 

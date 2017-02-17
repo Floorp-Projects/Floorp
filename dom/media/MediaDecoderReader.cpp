@@ -225,7 +225,8 @@ MediaDecoderReader::AsyncReadMetadata()
   // We're not waiting for anything. If we didn't get the metadata, that's an
   // error.
   if (NS_FAILED(rv) || !metadata->mInfo.HasValidMedia()) {
-    DECODER_WARN("ReadMetadata failed, rv=%x HasValidMedia=%d", rv, metadata->mInfo.HasValidMedia());
+    DECODER_WARN("ReadMetadata failed, rv=%" PRIx32 " HasValidMedia=%d",
+                 static_cast<uint32_t>(rv), metadata->mInfo.HasValidMedia());
     return MetadataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
   }
 

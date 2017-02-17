@@ -306,12 +306,13 @@ this.FxAccountsStorageManager.prototype = {
   */
   _maybeReadAndUpdateSecure: Task.async(function* () {
     if (this.secureStorage == null || !this._needToReadSecure) {
-      return;
+      return null;
     }
     return this._queueStorageOperation(() => {
       if (this._needToReadSecure) { // we might have read it by now!
         return this._doReadAndUpdateSecure();
       }
+      return null;
     });
   }),
 

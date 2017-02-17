@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MemoryBlobImpl.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SHA1.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsPrintfCString.h"
@@ -166,11 +167,11 @@ public:
         aHandleReport->Callback(
           /* process */ NS_LITERAL_CSTRING(""),
           nsPrintfCString(
-            "explicit/dom/memory-file-data/large/file(length=%llu, sha1=%s)",
+            "explicit/dom/memory-file-data/large/file(length=%" PRIu64 ", sha1=%s)",
             owner->mLength, aAnonymize ? "<anonymized>" : digestString.get()),
           KIND_HEAP, UNITS_BYTES, size,
           nsPrintfCString(
-            "Memory used to back a memory file of length %llu bytes.  The file "
+            "Memory used to back a memory file of length %" PRIu64 " bytes.  The file "
             "has a sha1 of %s.\n\n"
             "Note that the allocator may round up a memory file's length -- "
             "that is, an N-byte memory file may take up more than N bytes of "

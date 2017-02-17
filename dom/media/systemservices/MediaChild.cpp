@@ -39,7 +39,7 @@ GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo, bool aPersist)
 void
 SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing)
 {
-  LOG(("SanitizeOriginKeys since %llu %s", aSinceWhen,
+  LOG(("SanitizeOriginKeys since %" PRIu64 " %s", aSinceWhen,
        (aOnlyPrivateBrowsing? "in Private Browsing." : ".")));
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {

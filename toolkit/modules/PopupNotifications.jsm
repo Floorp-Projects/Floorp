@@ -1224,17 +1224,17 @@ PopupNotifications.prototype = {
       this._dismissOrRemoveCurrentNotifications();
     }
 
-    // Ensure we move focus into the panel because it's opened through user interaction:
-    this.panel.removeAttribute("noautofocus");
-
     // Avoid reshowing notifications that are already shown and have not been dismissed.
     if (this.panel.state == "closed" || anchor != this._currentAnchorElement) {
-      this._reshowNotifications(anchor);
-    }
+      // As soon as the panel is shown, focus the first element in the selected notification.
+      this.panel.addEventListener("popupshown",
+        () => this.window.document.commandDispatcher.advanceFocusIntoSubtree(this.panel),
+        {once: true});
 
-    // If the user re-selects the current notification, focus it.
-    if (anchor == this._currentAnchorElement && this.panel.firstChild) {
-      this.panel.firstChild.button.focus();
+      this._reshowNotifications(anchor);
+    } else {
+      // Focus the first element in the selected notification.
+      this.window.document.commandDispatcher.advanceFocusIntoSubtree(this.panel);
     }
   },
 
@@ -1313,12 +1313,6 @@ PopupNotifications.prototype = {
     if (event.target != this.panel) {
       return;
     }
-
-    // We may have removed the "noautofocus" attribute before showing the panel
-    // if it was opened with user interaction. When the panel is closed, we have
-    // to restore the attribute to its default value, so we don't autofocus it
-    // if it is subsequently opened from a different code path.
-    this.panel.setAttribute("noautofocus", "true");
 
     // Handle the case where the panel was closed programmatically.
     if (this._ignoreDismissal) {

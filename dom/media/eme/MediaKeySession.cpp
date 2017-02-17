@@ -155,7 +155,8 @@ MediaKeySession::UpdateKeyStatusMap()
         MediaKeyStatusValues::strings[static_cast<IntegerType>(status.mStatus)].value));
     }
     message.Append(" }");
-    EME_LOG(message.get());
+    // Use %s so we aren't exposing random strings to printf interpolation.
+    EME_LOG("%s", message.get());
   }
 }
 

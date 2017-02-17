@@ -218,8 +218,8 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
                         generation, file);
   if (NS_FAILED(rv))
   {
-    LOG(("GetCacheDataFile [key=%s generation=%d] failed [rv=%x]!\n",
-         key, generation, rv));
+    LOG(("GetCacheDataFile [key=%s generation=%d] failed [rv=%" PRIx32 "]!\n",
+         key, generation, static_cast<uint32_t>(rv)));
     return rv;
   }
 
@@ -1506,7 +1506,7 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
   rec.lastModified   = statement->AsInt64(5);
   rec.expirationTime = statement->AsInt64(6);
 
-  LOG(("entry: [%u %d %d %d %lld %lld %lld]\n",
+  LOG(("entry: [%u %d %d %d %" PRId64 " %" PRId64 " %" PRId64 "]\n",
         rec.metaDataLen,
         rec.generation,
         rec.dataSize,
@@ -2327,7 +2327,7 @@ nsOfflineCacheDevice::CreateApplicationCache(const nsACString &group,
 
   // Include the timestamp to guarantee uniqueness across runs, and
   // the gNextTemporaryClientID for uniqueness within a second.
-  clientID.Append(nsPrintfCString("|%016lld|%d",
+  clientID.Append(nsPrintfCString("|%016" PRId64 "|%d",
                                   now / PR_USEC_PER_SEC,
                                   gNextTemporaryClientID++));
 
