@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/BaseBlobImpl.h"
 
 #include "ArchiveReader.h"
 
@@ -21,7 +21,7 @@ BEGIN_ARCHIVEREADER_NAMESPACE
 /**
  * ArchiveZipBlobImpl to BlobImpl
  */
-class ArchiveZipBlobImpl : public BlobImplBase
+class ArchiveZipBlobImpl : public BaseBlobImpl
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -31,7 +31,7 @@ public:
                      uint64_t aLength,
                      ZipCentral& aCentral,
                      BlobImpl* aBlobImpl)
-  : BlobImplBase(aName, aContentType, aLength),
+  : BaseBlobImpl(aName, aContentType, aLength),
     mCentral(aCentral),
     mBlobImpl(aBlobImpl),
     mFilename(aName)
@@ -45,7 +45,7 @@ public:
                      uint64_t aLength,
                      ZipCentral& aCentral,
                      BlobImpl* aBlobImpl)
-  : BlobImplBase(aContentType, aStart, aLength),
+  : BaseBlobImpl(aContentType, aStart, aLength),
     mCentral(aCentral),
     mBlobImpl(aBlobImpl),
     mFilename(aName)

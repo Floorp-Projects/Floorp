@@ -43,8 +43,8 @@ public:
   mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData) override;
   mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
   mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem, const NativeThreadId& aThreadId) override;
-  mozilla::ipc::IPCResult RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations) override;
-  mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildHistograms(InfallibleTArray<Accumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
   mozilla::ipc::IPCResult RecvUpdateChildScalars(InfallibleTArray<ScalarAction>&& aScalarActions) override;
   mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;

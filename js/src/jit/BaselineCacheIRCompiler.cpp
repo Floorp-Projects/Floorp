@@ -1003,9 +1003,7 @@ BaselineCacheIRCompiler::emitStoreTypedObjectScalarProperty()
     masm.addPtr(offsetAddr, scratch1);
     Address dest(scratch1, 0);
 
-    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2,
-                              failure->label(), failure->label());
-
+    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
     return true;
 }
 
@@ -1195,6 +1193,52 @@ BaselineCacheIRCompiler::emitStoreDenseElementHole()
     masm.storeValue(val, element);
 
     BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitStoreTypedElement()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type type = reader.scalarType();
+    bool handleOOB = reader.readBool();
+
+    AutoScratchRegister scratch1(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    Label done;
+    LoadTypedThingLength(masm, layout, obj, scratch1);
+    masm.branch32(Assembler::BelowOrEqual, scratch1, index, handleOOB ? &done : failure->label());
+
+    // Load the elements vector.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+
+    BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+
+    // Use ICStubReg as second scratch register. TODO: consider doing the RHS
+    // type check/conversion as a separate IR instruction so we can simplify
+    // this.
+    Register scratch2 = ICStubReg;
+    masm.push(scratch2);
+
+    Label fail;
+    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, &fail);
+    masm.pop(scratch2);
+    masm.jump(&done);
+
+    masm.bind(&fail);
+    masm.pop(scratch2);
+    masm.jump(failure->label());
+
+    masm.bind(&done);
     return true;
 }
 

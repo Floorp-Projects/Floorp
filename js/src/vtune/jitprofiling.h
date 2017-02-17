@@ -669,6 +669,8 @@ unsigned int JITAPI iJIT_GetNewMethodID(void);
  */
 iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive(void);
 
+int loadiJIT_Funcs(void);
+
 /**
  * @brief Reports infomation about JIT-compiled code to the agent.
  *

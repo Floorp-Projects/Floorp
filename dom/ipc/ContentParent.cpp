@@ -25,7 +25,6 @@
 
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AudioChannelService.h"
-#include "CrashReporterParent.h"
 #include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
@@ -95,6 +94,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryIPC.h"
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "mozilla/Unused.h"
 #include "nsAnonymousTemporaryFile.h"
@@ -247,6 +247,7 @@
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsThread.h"
+#include "mozilla/ipc/CrashReporterHost.h"
 #endif
 
 #ifdef ACCESSIBILITY
@@ -1592,17 +1593,17 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
       // There's a window in which child processes can crash
       // after IPC is established, but before a crash reporter
       // is created.
-      if (PCrashReporterParent* p = LoneManagedOrNullAsserts(ManagedPCrashReporterParent())) {
-        CrashReporterParent* crashReporter =
-          static_cast<CrashReporterParent*>(p);
-
+      if (mCrashReporter) {
         // if mCreatedPairedMinidumps is true, we've already generated
-        // parent/child dumps for dekstop crashes.
+        // parent/child dumps for desktop crashes.
         if (!mCreatedPairedMinidumps) {
-          crashReporter->GenerateCrashReport(this, nullptr);
+          mCrashReporter->GenerateCrashReport(OtherPid());
         }
 
-        nsAutoString dumpID(crashReporter->ChildDumpID());
+        nsAutoString dumpID;
+        if (mCrashReporter->HasMinidump()) {
+          dumpID = mCrashReporter->MinidumpID();
+        }
         props->SetPropertyAsAString(NS_LITERAL_STRING("dumpID"), dumpID);
       }
 #endif
@@ -2816,25 +2817,28 @@ ContentParent::KillHard(const char* aReason)
   // We're about to kill the child process associated with this content.
   // Something has gone wrong to get us here, so we generate a minidump
   // of the parent and child for submission to the crash server.
-  if (PCrashReporterParent* p = LoneManagedOrNullAsserts(ManagedPCrashReporterParent())) {
-    CrashReporterParent* crashReporter =
-      static_cast<CrashReporterParent*>(p);
+  if (mCrashReporter) {
     // GeneratePairedMinidump creates two minidumps for us - the main
     // one is for the content process we're about to kill, and the other
     // one is for the main browser process. That second one is the extra
     // minidump tagging along, so we have to tell the crash reporter that
     // it exists and is being appended.
     nsAutoCString additionalDumps("browser");
-    crashReporter->AnnotateCrashReport(
+    mCrashReporter->AddNote(
       NS_LITERAL_CSTRING("additional_minidumps"),
       additionalDumps);
     nsDependentCString reason(aReason);
-    crashReporter->AnnotateCrashReport(
+    mCrashReporter->AddNote(
       NS_LITERAL_CSTRING("ipc_channel_error"),
       reason);
 
     // Generate the report and insert into the queue for submittal.
-    mCreatedPairedMinidumps = crashReporter->GenerateCompleteMinidump(this);
+    if (mCrashReporter->GenerateMinidumpAndPair(this,
+                                                nullptr,
+                                                NS_LITERAL_CSTRING("browser")))
+    {
+      mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
+    }
 
     Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
   }
@@ -2873,31 +2877,16 @@ ContentParent::FriendlyName(nsAString& aName, bool aAnonymize)
   }
 }
 
-PCrashReporterParent*
-ContentParent::AllocPCrashReporterParent(const NativeThreadId& tid,
-                                         const uint32_t& processType)
+mozilla::ipc::IPCResult
+ContentParent::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
 #ifdef MOZ_CRASHREPORTER
-  return new CrashReporterParent();
-#else
-  return nullptr;
+  mCrashReporter = MakeUnique<CrashReporterHost>(
+    GeckoProcessType_Content,
+    aShmem,
+    aThreadId);
 #endif
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvPCrashReporterConstructor(PCrashReporterParent* actor,
-                                             const NativeThreadId& tid,
-                                             const uint32_t& processType)
-{
-  static_cast<CrashReporterParent*>(actor)->SetChildData(tid, processType);
   return IPC_OK();
-}
-
-bool
-ContentParent::DeallocPCrashReporterParent(PCrashReporterParent* crashreporter)
-{
-  delete crashreporter;
-  return true;
 }
 
 hal_sandbox::PHalParent*
@@ -4888,18 +4877,18 @@ ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvAccumulateChildHistogram(
+ContentParent::RecvAccumulateChildHistograms(
                 InfallibleTArray<Accumulation>&& aAccumulations)
 {
-  Telemetry::AccumulateChild(GeckoProcessType_Content, aAccumulations);
+  TelemetryIPC::AccumulateChildHistograms(GeckoProcessType_Content, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvAccumulateChildKeyedHistogram(
+ContentParent::RecvAccumulateChildKeyedHistograms(
                 InfallibleTArray<KeyedAccumulation>&& aAccumulations)
 {
-  Telemetry::AccumulateChildKeyed(GeckoProcessType_Content, aAccumulations);
+  TelemetryIPC::AccumulateChildKeyedHistograms(GeckoProcessType_Content, aAccumulations);
   return IPC_OK();
 }
 
@@ -4907,7 +4896,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvUpdateChildScalars(
                 InfallibleTArray<ScalarAction>&& aScalarActions)
 {
-  Telemetry::UpdateChildScalars(GeckoProcessType_Content, aScalarActions);
+  TelemetryIPC::UpdateChildScalars(GeckoProcessType_Content, aScalarActions);
   return IPC_OK();
 }
 
@@ -4915,7 +4904,7 @@ mozilla::ipc::IPCResult
 ContentParent::RecvUpdateChildKeyedScalars(
                 InfallibleTArray<KeyedScalarAction>&& aScalarActions)
 {
-  Telemetry::UpdateChildKeyedScalars(GeckoProcessType_Content, aScalarActions);
+  TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType_Content, aScalarActions);
   return IPC_OK();
 }
 

@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
@@ -20,6 +20,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsStringGlue.h"
 
@@ -232,7 +233,7 @@ CreateFileTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
 {
   AssertIsOnBackgroundThread();
 
-  RefPtr<BlobImpl> blobImpl = new BlobImplFile(mTargetPath);
+  RefPtr<BlobImpl> blobImpl = new FileBlobImpl(mTargetPath);
   BlobParent* blobParent =
     BlobParent::GetOrCreate(mRequestParent->Manager(), blobImpl);
   return FileSystemFileResponse(blobParent, nullptr);

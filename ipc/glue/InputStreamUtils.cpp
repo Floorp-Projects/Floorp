@@ -20,6 +20,7 @@
 #include "nsMultiplexInputStream.h"
 #include "nsNetCID.h"
 #include "nsStringStream.h"
+#include "nsTemporaryFileInputStream.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;

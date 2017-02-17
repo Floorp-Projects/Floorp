@@ -12,7 +12,7 @@
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
@@ -105,7 +105,7 @@ FilePickerParent::IORunnable::Run()
       continue;
     }
 
-    RefPtr<BlobImpl> blobImpl = new BlobImplFile(mFiles[i]);
+    RefPtr<BlobImpl> blobImpl = new FileBlobImpl(mFiles[i]);
 
     ErrorResult error;
     blobImpl->GetSize(error);

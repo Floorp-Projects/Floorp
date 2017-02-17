@@ -56,8 +56,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString)
   MOZ_COUNT_CTOR(nsScanner);
 
   mSlidingBuffer = nullptr;
-  mCountRemaining = 0;
-  mFirstNonWhitespacePosition = -1;
   if (AppendToBuffer(anHTMLString)) {
     mSlidingBuffer->BeginReading(mCurrentPosition);
   } else {
@@ -69,8 +67,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString)
   mIncremental = false;
   mUnicodeDecoder = nullptr;
   mCharsetSource = kCharsetUninitialized;
-  mHasInvalidCharacter = false;
-  mReplacementCharacter = char16_t(0x0);
 }
 
 /**
@@ -96,13 +92,9 @@ nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
   mEndPosition = mCurrentPosition;
 
   mIncremental = true;
-  mFirstNonWhitespacePosition = -1;
-  mCountRemaining = 0;
 
   mUnicodeDecoder = nullptr;
   mCharsetSource = kCharsetUninitialized;
-  mHasInvalidCharacter = false;
-  mReplacementCharacter = char16_t(0x0);
   // XML defaults to UTF-8 and about:blank is UTF-8, too.
   SetDocumentCharset(NS_LITERAL_CSTRING("UTF-8"), kCharsetFromDocTypeDefault);
 }
@@ -160,7 +152,6 @@ nsScanner::~nsScanner() {
  */
 void nsScanner::RewindToMark(void){
   if (mSlidingBuffer) {
-    mCountRemaining += (Distance(mMarkPosition, mCurrentPosition));
     mCurrentPosition = mMarkPosition;
   }
 }
@@ -207,8 +198,6 @@ bool nsScanner::UngetReadable(const nsAString& aBuffer) {
   mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
   mSlidingBuffer->EndReading(mEndPosition);
  
-  uint32_t length = aBuffer.Length();
-  mCountRemaining += length; // Ref. bug 117441
   return true;
 }
 
@@ -232,8 +221,7 @@ nsresult nsScanner::Append(const nsAString& aBuffer) {
  *  @param   
  *  @return  
  */
-nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
-                           nsIRequest *aRequest)
+nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen)
 {
   nsresult res = NS_OK;
   if (mUnicodeDecoder) {
@@ -250,7 +238,6 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
 
     int32_t totalChars = 0;
     int32_t unicharLength = unicharBufLen;
-    int32_t errorPos = -1;
 
     do {
       int32_t srcLength = aLen;
@@ -270,12 +257,10 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
           break;
         }
 
-        if (mReplacementCharacter == 0x0 && errorPos == -1) {
-          errorPos = totalChars;
-        }
-        unichars[unicharLength++] = mReplacementCharacter == 0x0 ?
-                                    mUnicodeDecoder->GetCharacterForUnMapped() :
-                                    mReplacementCharacter;
+        // Since about:blank is empty, this line runs only for XML. Use a
+        // character that's illegal in XML instead of U+FFFD in order to make
+        // expat flag the error.
+        unichars[unicharLength++] = 0xFFFF;
 
         unichars = unichars + unicharLength;
         unicharLength = unicharBufLen - (++totalChars);
@@ -299,7 +284,7 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen,
     // since it doesn't reflect on our success or failure
     // - Ref. bug 87110
     res = NS_OK; 
-    if (!AppendToBuffer(buffer, aRequest, errorPos))
+    if (!AppendToBuffer(buffer))
       res = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
@@ -324,7 +309,6 @@ nsresult nsScanner::GetChar(char16_t& aChar) {
   }
 
   aChar = *mCurrentPosition++;
-  --mCountRemaining;
 
   return NS_OK;
 }
@@ -344,25 +328,9 @@ void nsScanner::EndReading(nsScannerIterator& aPosition)
   aPosition = mEndPosition;
 }
  
-void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate, bool aReverse)
+void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate)
 {
   if (mSlidingBuffer) {
-#ifdef DEBUG
-    uint32_t origRemaining = mCountRemaining;
-#endif
-
-    if (aReverse) {
-      mCountRemaining += (Distance(aPosition, mCurrentPosition));
-    }
-    else {
-      mCountRemaining -= (Distance(mCurrentPosition, aPosition));
-    }
-
-    NS_ASSERTION((mCountRemaining >= origRemaining && aReverse) ||
-                 (mCountRemaining <= origRemaining && !aReverse),
-                 "Improper use of nsScanner::SetPosition. Make sure to set the"
-                 " aReverse parameter correctly");
-
     mCurrentPosition = aPosition;
     if (aTerminate && (mCurrentPosition == mEndPosition)) {
       mMarkPosition = mCurrentPosition;
@@ -371,19 +339,8 @@ void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate, bool 
   }
 }
 
-void nsScanner::ReplaceCharacter(nsScannerIterator& aPosition,
-                                 char16_t aChar)
+bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf)
 {
-  if (mSlidingBuffer) {
-    mSlidingBuffer->ReplaceCharacter(aPosition, aChar);
-  }
-}
-
-bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
-                                 nsIRequest *aRequest,
-                                 int32_t aErrorPos)
-{
-  uint32_t countRemaining = mCountRemaining;
   if (!mSlidingBuffer) {
     mSlidingBuffer = new nsScannerString(aBuf);
     if (!mSlidingBuffer)
@@ -391,7 +348,6 @@ bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
     mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
     mSlidingBuffer->EndReading(mEndPosition);
-    mCountRemaining = aBuf->DataLength();
   }
   else {
     mSlidingBuffer->AppendBuffer(aBuf);
@@ -399,29 +355,8 @@ bool nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf,
       mSlidingBuffer->BeginReading(mCurrentPosition);
     }
     mSlidingBuffer->EndReading(mEndPosition);
-    mCountRemaining += aBuf->DataLength();
   }
 
-  if (aErrorPos != -1 && !mHasInvalidCharacter) {
-    mHasInvalidCharacter = true;
-    mFirstInvalidPosition = mCurrentPosition;
-    mFirstInvalidPosition.advance(countRemaining + aErrorPos);
-  }
-
-  if (mFirstNonWhitespacePosition == -1) {
-    nsScannerIterator iter(mCurrentPosition);
-    nsScannerIterator end(mEndPosition);
-
-    while (iter != end) {
-      if (!nsCRT::IsAsciiSpace(*iter)) {
-        mFirstNonWhitespacePosition = Distance(mCurrentPosition, iter);
-
-        break;
-      }
-
-      ++iter;
-    }
-  }
   return true;
 }
 
@@ -471,13 +406,3 @@ void nsScanner::SelfTest(void) {
 #ifdef _DEBUG
 #endif
 }
-
-void nsScanner::OverrideReplacementCharacter(char16_t aReplacementCharacter)
-{
-  mReplacementCharacter = aReplacementCharacter;
-
-  if (mHasInvalidCharacter) {
-    ReplaceCharacter(mFirstInvalidPosition, mReplacementCharacter);
-  }
-}
-

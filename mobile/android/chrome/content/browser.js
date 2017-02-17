@@ -22,7 +22,7 @@ if (AppConstants.ACCESSIBILITY) {
                                     "resource://gre/modules/accessibility/AccessFu.jsm");
 }
 
-XPCOMUtils.defineLazyModuleGetter(this, "Manifest",
+XPCOMUtils.defineLazyModuleGetter(this, "Manifests",
                                   "resource://gre/modules/Manifest.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SpatialNavigation",
@@ -1639,19 +1639,7 @@ var BrowserApp = {
 
     switch (event) {
       case "Browser:LoadManifest": {
-        const manifest = new Manifest(browser);
-        manifest.install().then(() => {
-          return manifest.icon(data.iconSize);
-        }).then(icon => {
-          GlobalEventDispatcher.sendRequest({
-            type: "Website:AppInstalled",
-            icon: icon,
-            name: manifest.name(),
-            start_url: manifest.data.start_url
-          });
-        }).catch(err => {
-          Cu.reportError("Failed to install " + data.src);
-        });
+        installManifest(browser, data.manifestUrl, data.iconSize);
         break;
       }
 
@@ -2191,6 +2179,22 @@ var BrowserApp = {
     };
   },
 };
+
+async function installManifest(browser, manifestUrl, iconSize) {
+  try {
+    const manifest = await Manifests.getManifest(browser, manifestUrl);
+    await manifest.install();
+    const icon = await manifest.icon(iconSize);
+    GlobalEventDispatcher.sendRequest({
+      type: "Website:AppInstalled",
+      icon,
+      name: manifest.name,
+      start_url: manifest.start_url
+    });
+  } catch (err) {
+    Cu.reportError("Failed to install: " + err.message);
+  }
+}
 
 var NativeWindow = {
   init: function() {
@@ -3898,9 +3902,10 @@ Tab.prototype = {
     }
   },
 
-  makeManifestMessage: function() {
+  makeManifestMessage: function(target) {
     return {
       type: "Link:Manifest",
+      href: target.href,
       tabID: this.id
     };
   },

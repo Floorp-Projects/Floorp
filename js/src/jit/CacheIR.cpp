@@ -1856,6 +1856,7 @@ SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, HandleScript script, jsbyt
     rhsVal_(rhsVal),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None),
+    attachedTypedArrayOOBStub_(false),
     updateStubGroup_(cx),
     updateStubId_(cx, JSID_EMPTY),
     needUpdateStub_(false)
@@ -1916,6 +1917,8 @@ SetPropIRGenerator::tryAttachStub()
             if (tryAttachSetUnboxedArrayElement(obj, objId, index, indexId, rhsValId))
                 return true;
             if (tryAttachSetUnboxedArrayElementHole(obj, objId, index, indexId, rhsValId))
+                return true;
+            if (tryAttachSetTypedElement(obj, objId, index, indexId, rhsValId))
                 return true;
             return false;
         }
@@ -2407,6 +2410,53 @@ SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperand
     setUpdateStubInfo(obj->group(), JSID_VOID);
 
     trackAttached("SetUnboxedArrayElement");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
+                                             uint32_t index, Int32OperandId indexId,
+                                             ValOperandId rhsId)
+{
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    if (!rhsVal_.isNumber())
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint && TypedThingRequiresFloatingPoint(obj))
+        return false;
+
+    bool handleOutOfBounds = false;
+    if (obj->is<TypedArrayObject>()) {
+        handleOutOfBounds = (index >= obj->as<TypedArrayObject>().length());
+    } else {
+        // Typed objects throw on out of bounds accesses. Don't attach
+        // a stub in this case.
+        if (index >= obj->as<TypedObject>().length())
+            return false;
+
+        // Don't attach stubs if the underlying storage for typed objects
+        // in the compartment could be detached, as the stub will always
+        // bail out.
+        if (cx_->compartment()->detachedTypedObjects)
+            return false;
+    }
+
+    Scalar::Type elementType = TypedThingElementType(obj);
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
+    if (!obj->is<TypedArrayObject>())
+        writer.guardNoDetachedTypedObjects();
+
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+    writer.storeTypedElement(objId, indexId, rhsId, layout, elementType, handleOutOfBounds);
+    writer.returnFromIC();
+
+    if (handleOutOfBounds)
+        attachedTypedArrayOOBStub_ = true;
+
+    trackAttached(handleOutOfBounds ? "SetTypedElementOOB" : "SetTypedElement");
     return true;
 }
 

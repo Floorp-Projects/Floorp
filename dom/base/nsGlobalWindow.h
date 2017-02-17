@@ -292,6 +292,10 @@ public:
     return static_cast<nsGlobalWindow*>(
                         reinterpret_cast<nsPIDOMWindow<nsISupports>*>(aPIWin));
   }
+  static const nsGlobalWindow* Cast(const nsPIDOMWindowOuter* aPIWin) {
+    return static_cast<const nsGlobalWindow*>(
+                        reinterpret_cast<const nsPIDOMWindow<nsISupports>*>(aPIWin));
+  }
   static nsGlobalWindow* Cast(mozIDOMWindowProxy* aWin) {
     return Cast(nsPIDOMWindowOuter::From(aWin));
   }
