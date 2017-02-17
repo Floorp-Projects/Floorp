@@ -774,9 +774,9 @@ fails == 389074-1.html 389074-1.html
 fails == 389468-1.html 389468-1.html
 == 389623-1.html 389623-1.html
 == 389636-1.html 389636-1.html
-# == 389924-1a.html 389924-1a.html
+== 389924-1a.html 389924-1a.html
 == 389924-1b.html 389924-1b.html
-# == 389924-1a.html 389924-1a.html
+== 389924-1a.html 389924-1a.html
 == 390318-1a.html 390318-1a.html
 == 390318-1b.html 390318-1b.html
 == 390318-1c.html 390318-1c.html
@@ -878,7 +878,7 @@ fails == 403249-2b.html 403249-2b.html
 == 403426-1.html 403426-1.html
 fails == 403455-1.html 403455-1.html
 == 403505-1.xml 403505-1.xml
-#== 403519-1.html 403519-1.html
+fails == 403519-1.html 403519-1.html
 == 403519-2.html 403519-2.html
 fails == 403656-1.html 403656-1.html
 fails == 403656-2.html 403656-2.html
