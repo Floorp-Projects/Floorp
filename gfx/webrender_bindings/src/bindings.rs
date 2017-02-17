@@ -5,7 +5,7 @@ use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
-use webrender_traits::{Epoch, ColorF, GlyphInstance, ImageDescriptor};
+use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
 use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
@@ -517,6 +517,25 @@ impl WrMixBlendMode
     }
 }
 
+#[repr(C)]
+pub enum WrGradientExtendMode
+{
+    Clamp,
+    Repeat,
+}
+
+impl WrGradientExtendMode
+{
+    pub fn to_gradient_extend_mode(self) -> ExtendMode
+    {
+        match self
+        {
+            WrGradientExtendMode::Clamp => ExtendMode::Clamp,
+            WrGradientExtendMode::Repeat => ExtendMode::Repeat,
+        }
+    }
+}
+
 #[no_mangle]
 pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
 {
@@ -682,6 +701,49 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
 }
 
 #[no_mangle]
+pub extern fn wr_dp_push_linear_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                         start_point: WrPoint, end_point: WrPoint,
+                                         stops: * const WrGradientStop, stops_count: usize,
+                                         extend_mode: WrGradientExtendMode) {
+    assert!( unsafe { is_in_compositor_thread() });
+
+    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
+    state.frame_builder.dl_builder.push_gradient(
+                                    rect.to_rect(),
+                                    clip_region,
+                                    start_point.to_point(),
+                                    end_point.to_point(),
+                                    stops,
+                                    extend_mode.to_gradient_extend_mode()
+                                    );
+}
+
+#[no_mangle]
+pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                         start_center: WrPoint, end_center: WrPoint,
+                                         start_radius: f32, end_radius: f32,
+                                         stops: * const WrGradientStop, stops_count: usize,
+                                         extend_mode: WrGradientExtendMode) {
+    assert!( unsafe { is_in_compositor_thread() });
+
+    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
+    state.frame_builder.dl_builder.push_radial_gradient(
+                                    rect.to_rect(),
+                                    clip_region,
+                                    start_center.to_point(),
+                                    start_radius,
+                                    end_center.to_point(),
+                                    end_radius,
+                                    stops,
+                                    extend_mode.to_gradient_extend_mode()
+                                    );
+}
+
+#[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, pipeline_id: PipelineId) {
     assert!( unsafe { is_in_compositor_thread() });
 
@@ -742,6 +804,28 @@ impl WrBorderSide
     pub fn to_border_side(&self) -> BorderSide
     {
         BorderSide { width: self.width, color: self.color.to_color(), style: self.style }
+    }
+}
+
+#[repr(C)]
+pub struct WrGradientStop
+{
+    offset: f32,
+    color: WrColor,
+}
+
+impl WrGradientStop
+{
+    pub fn to_gradient_stop(&self) -> GradientStop
+    {
+        GradientStop {
+            offset: self.offset,
+            color: self.color.to_color(),
+        }
+    }
+    pub fn to_gradient_stops(stops: &[WrGradientStop]) -> Vec<GradientStop>
+    {
+        stops.iter().map(|x| x.to_gradient_stop()).collect()
     }
 }
 

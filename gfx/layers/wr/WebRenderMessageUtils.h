@@ -190,6 +190,24 @@ struct ParamTraits<WrGlyphArray>
 };
 
 template<>
+struct ParamTraits<WrGradientStop>
+{
+  static void
+  Write(Message* aMsg, const WrGradientStop& aParam)
+  {
+    WriteParam(aMsg, aParam.offset);
+    WriteParam(aMsg, aParam.color);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WrGradientStop* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->offset)
+        && ReadParam(aMsg, aIter, &aResult->color);
+  }
+};
+
+template<>
 struct ParamTraits<WrBorderSide>
 {
   static void
@@ -333,6 +351,15 @@ struct ParamTraits<WrBoxShadowClipMode>
         WrBoxShadowClipMode,
         WrBoxShadowClipMode::None,
         WrBoxShadowClipMode::Sentinel>
+{
+};
+
+template<>
+struct ParamTraits<WrGradientExtendMode>
+  : public ContiguousEnumSerializer<
+        WrGradientExtendMode,
+        WrGradientExtendMode::Clamp,
+        WrGradientExtendMode::Sentinel>
 {
 };
 
