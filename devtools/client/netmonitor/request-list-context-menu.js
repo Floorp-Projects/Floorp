@@ -326,16 +326,14 @@ RequestListContextMenu.prototype = {
    * Copy HAR from the network panel content to the clipboard.
    */
   copyAllAsHar() {
-    let options = this.getDefaultHarOptions();
-    return HarExporter.copy(options);
+    return HarExporter.copy(this.getDefaultHarOptions());
   },
 
   /**
    * Save HAR from the network panel content to a file.
    */
   saveAllAsHar() {
-    let options = this.getDefaultHarOptions();
-    return HarExporter.save(options);
+    return HarExporter.save(this.getDefaultHarOptions());
   },
 
   getDefaultHarOptions() {
