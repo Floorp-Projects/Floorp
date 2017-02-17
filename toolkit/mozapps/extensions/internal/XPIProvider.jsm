@@ -4065,6 +4065,8 @@ this.XPIProvider = {
         this.unloadBootstrapScope(existingAddonID);
         flushChromeCaches();
       }
+    } else {
+      addon.installDate = Date.now();
     }
 
     let file = addon._sourceBundle;

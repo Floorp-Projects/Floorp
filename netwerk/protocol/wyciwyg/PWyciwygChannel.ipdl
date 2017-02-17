@@ -36,7 +36,7 @@ parent:
   async AppData(SerializedLoadContext loadContext, PBrowserOrId browser);
 
   // methods corresponding to those of nsIWyciwygChannel
-  async WriteToCacheEntry(nsString data);
+  async WriteToCacheEntry(nsDependentSubstring data);
   async CloseCacheEntry(nsresult reason);
   async SetCharsetAndSource(int32_t source, nsCString charset);
   async SetSecurityInfo(nsCString securityInfo);

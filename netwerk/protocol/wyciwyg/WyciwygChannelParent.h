@@ -45,7 +45,7 @@ protected:
                                                 const uint32_t& loadFlags,
                                                 const IPC::SerializedLoadContext& loadContext,
                                                 const PBrowserOrId &parent) override;
-  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(const nsString& data) override;
+  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(const nsDependentSubstring& data) override;
   virtual mozilla::ipc::IPCResult RecvCloseCacheEntry(const nsresult& reason) override;
   virtual mozilla::ipc::IPCResult RecvSetCharsetAndSource(const int32_t& source,
                                                           const nsCString& charset) override;

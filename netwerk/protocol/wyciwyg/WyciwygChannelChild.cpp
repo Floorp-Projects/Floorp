@@ -693,8 +693,22 @@ WyciwygChannelChild::WriteToCacheEntry(const nsAString & aData)
     mSentAppData = true;
   }
 
-  SendWriteToCacheEntry(PromiseFlatString(aData));
   mState = WCC_ONWRITE;
+
+  // Give ourselves a megabyte of headroom for the message size. Convert bytes
+  // to wide chars.
+  static const size_t kMaxMessageSize = (IPC::Channel::kMaximumMessageSize - 1024) / 2;
+
+  size_t curIndex = 0;
+  size_t charsRemaining = aData.Length();
+  do {
+    size_t chunkSize = std::min(charsRemaining, kMaxMessageSize);
+    SendWriteToCacheEntry(Substring(aData, curIndex, chunkSize));
+
+    charsRemaining -= chunkSize;
+    curIndex += chunkSize;
+  } while (charsRemaining != 0);
+
   return NS_OK;
 }
 

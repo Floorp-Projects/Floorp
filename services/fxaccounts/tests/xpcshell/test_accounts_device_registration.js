@@ -117,6 +117,9 @@ function MockFxAccounts(device = {}) {
           });
         });
       },
+      unsubscribe() {
+        return Promise.resolve();
+      }
     },
     DEVICE_REGISTRATION_VERSION
   });
@@ -289,6 +292,38 @@ add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
 
   do_check_null(data.deviceId);
   do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+});
+
+add_task(function* test_deleteDeviceRegistration() {
+  const credentials = getTestUser("pb");
+  const fxa = new MockFxAccounts({ name: "my device" });
+  yield fxa.internal.setSignedInUser(credentials);
+
+  const state = fxa.internal.currentAccountState;
+  let data = yield state.getUserAccountData();
+  do_check_eq(data.deviceId, credentials.deviceId);
+  do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+
+  const spy = {
+    signOutAndDestroyDevice: { count: 0, args: [] }
+  };
+  const client = fxa.internal.fxAccountsClient;
+  client.signOutAndDestroyDevice = function() {
+    spy.signOutAndDestroyDevice.count += 1;
+    spy.signOutAndDestroyDevice.args.push(arguments);
+    return Promise.resolve({});
+  };
+  yield fxa.deleteDeviceRegistration(credentials.sessionToken, credentials.deviceId);
+
+  do_check_eq(spy.signOutAndDestroyDevice.count, 1);
+  do_check_eq(spy.signOutAndDestroyDevice.args[0].length, 2);
+  do_check_eq(spy.signOutAndDestroyDevice.args[0][0], credentials.sessionToken);
+  do_check_eq(spy.signOutAndDestroyDevice.args[0][1], credentials.deviceId);
+
+  data = yield state.getUserAccountData();
+
+  do_check_false(data.deviceId);
+  do_check_false(data.deviceRegistrationVersion);
 });
 
 add_task(function* test_updateDeviceRegistration_with_device_session_conflict_error() {
