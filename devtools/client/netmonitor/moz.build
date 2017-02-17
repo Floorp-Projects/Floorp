@@ -15,7 +15,6 @@ DIRS += [
 
 DevToolsModules(
     'constants.js',
-    'events.js',
     'netmonitor-controller.js',
     'panel.js',
     'request-list-context-menu.js',
