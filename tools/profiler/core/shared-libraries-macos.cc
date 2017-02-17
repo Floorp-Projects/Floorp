@@ -20,7 +20,7 @@
 #include "shared-libraries.h"
 
 // Architecture specific abstraction.
-#ifdef __i386__
+#if defined(SPS_ARCH_x86)
 typedef mach_header platform_mach_header;
 typedef segment_command mach_segment_command_type;
 #define MACHO_MAGIC_NUMBER MH_MAGIC

@@ -49,12 +49,13 @@
 # include "FennecJNIWrappers.h"
 #endif
 
-#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
+#if defined(MOZ_PROFILING) && \
+    (defined(SPS_OS_windows) || defined(SPS_OS_darwin))
 # define USE_NS_STACKWALK
 #endif
 
 // This should also work on ARM Linux, but not tested there yet.
-#if defined(__arm__) && defined(ANDROID)
+#if defined(SPS_arm_android)
 # define USE_EHABI_STACKWALK
 # include "EHABIStackWalk.h"
 #endif
@@ -71,9 +72,9 @@
 # define VALGRIND_MAKE_MEM_DEFINED(_addr,_len)   ((void)0)
 #endif
 
-#if defined(XP_WIN)
+#if defined(SPS_OS_windows)
 typedef CONTEXT tickcontext_t;
-#elif defined(LINUX)
+#elif defined(SPS_OS_linux) || defined(SPS_OS_android)
 #include <ucontext.h>
 typedef ucontext_t tickcontext_t;
 #endif
@@ -545,7 +546,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 }
 
-#ifdef XP_WIN
+#if defined(SPS_OS_windows)
 static uintptr_t GetThreadHandle(PlatformData* aData);
 #endif
 
@@ -580,7 +581,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 
-#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(V8_HOST_ARCH_X64))
+#if defined(SPS_OS_darwin) || (defined(SPS_PLAT_x86_windows))
   void* stackEnd = aSample->threadInfo->StackTop();
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
@@ -1653,24 +1654,20 @@ profiler_init(void* stackTop)
     return;
   }
 
-  const char* features[] = {"js"
-                         , "leaf"
-                         , "threads"
-#if defined(XP_WIN) || defined(XP_MACOSX) \
-    || (defined(SPS_ARCH_arm) && defined(linux)) \
-    || defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
-                         , "stackwalk"
+  const char* features[] = { "js", "leaf", "threads"
+#if defined(HAVE_NATIVE_UNWIND)
+                           , "stackwalk"
 #endif
 #if defined(PROFILE_JAVA)
-                         , "java"
+                           , "java"
 #endif
-                         };
+                           };
 
   const char* threadFilters[] = { "GeckoMain", "Compositor" };
 
   profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                         features, MOZ_ARRAY_LENGTH(features),
-                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
+                 features, MOZ_ARRAY_LENGTH(features),
+                 threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
   LOG("END   profiler_init");
 }
 
@@ -2496,12 +2493,14 @@ profiler_get_backtrace()
   TickSample sample;
   sample.threadInfo = profile;
 
-#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
-#if defined(XP_WIN) || defined(LINUX)
+#if defined(HAVE_NATIVE_UNWIND)
+#if defined(SPS_OS_windows) || defined(SPS_OS_linux) || defined(SPS_OS_android)
   tickcontext_t context;
   sample.PopulateContext(&context);
-#elif defined(XP_MACOSX)
+#elif defined(SPS_OS_darwin)
   sample.PopulateContext(nullptr);
+#else
+# error "unknown platform"
 #endif
 #endif
 

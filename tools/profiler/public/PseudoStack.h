@@ -18,23 +18,11 @@
 
 #include <algorithm>
 
-// We duplicate this code here to avoid header dependencies which make it more
-// difficult to include in other places.
-#if defined(_M_X64) || defined(__x86_64__)
-#define V8_HOST_ARCH_X64 1
-#elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
-#define V8_HOST_ARCH_IA32 1
-#elif defined(__ARMEL__)
-#define V8_HOST_ARCH_ARM 1
-#else
-#warning Please add support for your architecture in chromium_types.h
-#endif
-
 // STORE_SEQUENCER: Because signals can interrupt our profile modification
 //                  we need to make stores are not re-ordered by the compiler
 //                  or hardware to make sure the profile is consistent at
 //                  every point the signal can fire.
-#ifdef V8_HOST_ARCH_ARM
+#if defined(__arm__)
 // TODO Is there something cheaper that will prevent memory stores from being
 // reordered?
 
@@ -43,7 +31,9 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
     (LinuxKernelMemoryBarrierFunc) 0xffff0fa0;
 
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
-#elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
+
+#elif defined(__i386__) || defined(__x86_64__) || \
+      defined(_M_IX86) || defined(_M_X64)
 # if defined(_MSC_VER)
 #  include <intrin.h>
 #  define STORE_SEQUENCER() _ReadWriteBarrier();
@@ -54,6 +44,7 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # else
 #  error "Memory clobber not supported for your compiler."
 # endif
+
 #else
 # error "Memory clobber not supported for your platform."
 #endif
