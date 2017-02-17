@@ -310,6 +310,66 @@ LocalAllocPolicy::Cancel()
   mTokenRequest.DisconnectIfExists();
 }
 
+/**
+ * This class tracks shutdown promises to ensure all decoders are shut down
+ * completely before MFR continues the rest of the shutdown procedure.
+ */
+class MediaFormatReader::ShutdownPromisePool
+{
+public:
+  ShutdownPromisePool()
+    : mOnShutdownComplete(new ShutdownPromise::Private(__func__))
+  {
+  }
+
+  // Return a promise which will be resolved when all the tracking promises
+  // are resolved. Note no more promises should be added for tracking once
+  // this function is called.
+  RefPtr<ShutdownPromise> Shutdown();
+
+   // Track a shutdown promise.
+  void Track(RefPtr<ShutdownPromise> aPromise);
+
+   // Shut down a decoder and track its shutdown promise.
+  void ShutdownDecoder(already_AddRefed<MediaDataDecoder> aDecoder)
+  {
+    Track(RefPtr<MediaDataDecoder>(aDecoder)->Shutdown());
+  }
+
+private:
+  bool mShutdown = false;
+  const RefPtr<ShutdownPromise::Private> mOnShutdownComplete;
+  nsTHashtable<nsRefPtrHashKey<ShutdownPromise>> mPromises;
+};
+
+RefPtr<ShutdownPromise>
+MediaFormatReader::ShutdownPromisePool::Shutdown()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
+  mShutdown = true;
+  if (mPromises.Count() == 0) {
+    mOnShutdownComplete->Resolve(true, __func__);
+  }
+  return mOnShutdownComplete;
+}
+
+void
+MediaFormatReader::ShutdownPromisePool::Track(RefPtr<ShutdownPromise> aPromise)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
+  MOZ_DIAGNOSTIC_ASSERT(!mPromises.Contains(aPromise));
+  mPromises.PutEntry(aPromise);
+  aPromise->Then(
+    AbstractThread::GetCurrent(), __func__,
+    [aPromise, this]() {
+      MOZ_DIAGNOSTIC_ASSERT(mPromises.Contains(aPromise));
+      mPromises.RemoveEntry(aPromise);
+      if (mShutdown && mPromises.Count() == 0) {
+        mOnShutdownComplete->Resolve(true, __func__);
+      }
+    });
+}
+
 class MediaFormatReader::DecoderFactory
 {
   using InitPromise = MediaDataDecoder::InitPromise;
@@ -323,8 +383,10 @@ public:
     , mOwner(WrapNotNull(aOwner)) { }
 
   void CreateDecoder(TrackType aTrack);
-  // Shutdown any decoder pending initialization.
-  RefPtr<ShutdownPromise> ShutdownDecoder(TrackType aTrack)
+
+  // Shutdown any decoder pending initialization and reset mAudio/mVideo to its
+  // pristine state so CreateDecoder() is ready to be called again immediately.
+  void ShutdownDecoder(TrackType aTrack)
   {
     MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack
                || aTrack == TrackInfo::kVideoTrack);
@@ -332,18 +394,11 @@ public:
     data.mPolicy->Cancel();
     data.mTokenRequest.DisconnectIfExists();
     data.mInitRequest.DisconnectIfExists();
-    if (!data.mDecoder) {
-      return ShutdownPromise::CreateAndResolve(true, __func__);
+    if (data.mDecoder) {
+      mOwner->mShutdownPromisePool->ShutdownDecoder(data.mDecoder.forget());
     }
-    if (data.mShutdownRequest.Exists()) {
-      // A shutdown is already in progress due to a prior initialization error,
-      // return the existing promise.
-      data.mShutdownRequest.Disconnect();
-      RefPtr<ShutdownPromise> p = data.mShutdownPromise.forget();
-      return p;
-    }
-    RefPtr<MediaDataDecoder> decoder = data.mDecoder.forget();
-    return decoder->Shutdown();
+    data.mStage = Stage::None;
+    MOZ_ASSERT(!data.mToken);
   }
 
 private:
@@ -371,8 +426,6 @@ private:
     RefPtr<MediaDataDecoder> mDecoder;
     MozPromiseRequestHolder<TokenPromise> mTokenRequest;
     MozPromiseRequestHolder<InitPromise> mInitRequest;
-    MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
-    RefPtr<ShutdownPromise> mShutdownPromise;
   } mAudio, mVideo;
 
   void RunStage(Data& aData);
@@ -583,18 +636,8 @@ MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData)
              MOZ_RELEASE_ASSERT(!ownerData.mDecoder,
                                 "Can't have a decoder already set");
              aData.mStage = Stage::None;
-             aData.mShutdownPromise = aData.mDecoder->Shutdown();
-             aData.mShutdownPromise
-               ->Then(
-                 mOwner->OwnerThread(), __func__,
-                 [this, &aData, aError]() {
-                   aData.mShutdownRequest.Complete();
-                   aData.mShutdownPromise = nullptr;
-                   aData.mDecoder = nullptr;
-                   mOwner->NotifyError(aData.mTrack, aError);
-                 },
-                 []() { MOZ_RELEASE_ASSERT(false, "Can't ever get here"); })
-               ->Track(aData.mShutdownRequest);
+             mOwner->mShutdownPromisePool->ShutdownDecoder(aData.mDecoder.forget());
+             mOwner->NotifyError(aData.mTrack, aError);
            })
     ->Track(aData.mInitRequest);
 }
@@ -978,6 +1021,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mSeekScheduled(false)
   , mVideoFrameContainer(aVideoFrameContainer)
   , mDecoderFactory(new DecoderFactory(this))
+  , mShutdownPromisePool(new ShutdownPromisePool())
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -1015,14 +1059,12 @@ MediaFormatReader::Shutdown()
     mVideo.RejectPromise(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
-  nsTArray<RefPtr<ShutdownPromise>> promises;
-
   if (HasAudio()) {
     mAudio.ResetDemuxer();
     mAudio.mTrackDemuxer->BreakCycles();
     mAudio.mTrackDemuxer = nullptr;
     mAudio.ResetState();
-    promises.AppendElement(ShutdownDecoderWithPromise(TrackInfo::kAudioTrack));
+    mShutdownPromisePool->Track(ShutdownDecoderWithPromise(TrackInfo::kAudioTrack));
   }
 
   if (HasVideo()) {
@@ -1030,17 +1072,17 @@ MediaFormatReader::Shutdown()
     mVideo.mTrackDemuxer->BreakCycles();
     mVideo.mTrackDemuxer = nullptr;
     mVideo.ResetState();
-    promises.AppendElement(ShutdownDecoderWithPromise(TrackInfo::kVideoTrack));
+    mShutdownPromisePool->Track(ShutdownDecoderWithPromise(TrackInfo::kVideoTrack));
   }
 
-  promises.AppendElement(mDemuxer->Shutdown());
+  mShutdownPromisePool->Track(mDemuxer->Shutdown());
   mDemuxer = nullptr;
 
   mCompositorUpdatedListener.DisconnectIfExists();
   mOnTrackWaitingForKeyListener.Disconnect();
 
   RefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
-  ShutdownPromise::All(OwnerThread(), promises)
+  mShutdownPromisePool->Shutdown()
     ->Then(OwnerThread(), __func__, this,
            &MediaFormatReader::TearDownDecoders,
            &MediaFormatReader::TearDownDecoders);
@@ -1075,7 +1117,8 @@ MediaFormatReader::ShutdownDecoderWithPromise(TrackType aTrack)
     // in the Decoder Factory.
     // This will be a no-op until we're processing the final decoder shutdown
     // prior to the MediaFormatReader being shutdown.
-    return mDecoderFactory->ShutdownDecoder(aTrack);
+    mDecoderFactory->ShutdownDecoder(aTrack);
+    return ShutdownPromise::CreateAndResolve(true, __func__);
   }
 
   // Finally, let's just shut down the currently active decoder.
