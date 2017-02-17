@@ -187,6 +187,129 @@ GlobalAllocPolicy::operator=(std::nullptr_t)
   delete this;
 }
 
+/**
+ * This class addresses the concern of bug 1339310 comment 4 where the Widevine
+ * CDM doesn't support running multiple instances of a video decoder at once per
+ * CDM instance by sequencing the order of decoder creation and shutdown. Note
+ * this class addresses a different concern from that of GlobalAllocPolicy which
+ * controls a system-wide number of decoders while this class control a per-MFR
+ * number (which is one per CDM requirement).
+ */
+class LocalAllocPolicy
+{
+  using TrackType = TrackInfo::TrackType;
+  using Promise = GlobalAllocPolicy::Promise;
+  using Token = GlobalAllocPolicy::Token;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalAllocPolicy)
+
+public:
+  LocalAllocPolicy(TrackType aTrack, TaskQueue* aOwnerThread)
+    : mTrack(aTrack)
+    , mOwnerThread(aOwnerThread)
+  {
+  }
+
+  // Acquire a token for decoder creation. Note the resolved token will
+  // aggregate a GlobalAllocPolicy token to comply to its policy. Note
+  // this function shouldn't be called again until the returned promise
+  // is resolved or rejected.
+  RefPtr<Promise> Alloc();
+
+  // Cancel the request to GlobalAllocPolicy and reject the current token
+  // request. Note this must happen before mOwnerThread->BeginShutdown().
+  void Cancel();
+
+private:
+  /*
+   * An RAII class to manage LocalAllocPolicy::mDecoderLimit.
+   */
+  class AutoDeallocToken : public Token
+  {
+  public:
+    explicit AutoDeallocToken(LocalAllocPolicy* aOwner)
+      : mOwner(aOwner)
+    {
+      MOZ_DIAGNOSTIC_ASSERT(mOwner->mDecoderLimit > 0);
+      --mOwner->mDecoderLimit;
+    }
+    // Aggregate a GlobalAllocPolicy token to present a single instance of
+    // Token to the client so the client doesn't have to deal with
+    // GlobalAllocPolicy and LocalAllocPolicy separately.
+    void Append(Token* aToken)
+    {
+      mToken = aToken;
+    }
+  private:
+    // Release tokens allocated from GlobalAllocPolicy and LocalAllocPolicy
+    // and process next token request if any.
+    ~AutoDeallocToken()
+    {
+      mToken = nullptr; // Dealloc the global token.
+      ++mOwner->mDecoderLimit; // Dealloc the local token.
+      mOwner->ProcessRequest(); // Process next pending request.
+    }
+    RefPtr<LocalAllocPolicy> mOwner;
+    RefPtr<Token> mToken;
+  };
+
+  ~LocalAllocPolicy() { }
+  void ProcessRequest();
+
+  int mDecoderLimit = 1;
+  const TrackType mTrack;
+  RefPtr<TaskQueue> mOwnerThread;
+  MozPromiseHolder<Promise> mPendingPromise;
+  MozPromiseRequestHolder<Promise> mTokenRequest;
+};
+
+RefPtr<LocalAllocPolicy::Promise>
+LocalAllocPolicy::Alloc()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_DIAGNOSTIC_ASSERT(mPendingPromise.IsEmpty());
+  RefPtr<Promise> p = mPendingPromise.Ensure(__func__);
+  if (mDecoderLimit > 0) {
+    ProcessRequest();
+  }
+  return p.forget();
+}
+
+void
+LocalAllocPolicy::ProcessRequest()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_DIAGNOSTIC_ASSERT(mDecoderLimit > 0);
+
+  // No pending request.
+  if (mPendingPromise.IsEmpty()) {
+    return;
+  }
+
+  RefPtr<AutoDeallocToken> token = new AutoDeallocToken(this);
+  RefPtr<LocalAllocPolicy> self = this;
+
+  GlobalAllocPolicy::Instance(mTrack).Alloc()->Then(
+    mOwnerThread, __func__,
+    [self, token](Token* aToken) {
+      self->mTokenRequest.Complete();
+      token->Append(aToken);
+      self->mPendingPromise.Resolve(token, __func__);
+    },
+    [self, token]() {
+      self->mTokenRequest.Complete();
+      self->mPendingPromise.Reject(true, __func__);
+    })->Track(mTokenRequest);
+}
+
+void
+LocalAllocPolicy::Cancel()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  mPendingPromise.RejectIfExists(true, __func__);
+  mTokenRequest.DisconnectIfExists();
+}
+
 class MediaFormatReader::DecoderFactory
 {
   using InitPromise = MediaDataDecoder::InitPromise;
@@ -195,8 +318,8 @@ class MediaFormatReader::DecoderFactory
 
 public:
   explicit DecoderFactory(MediaFormatReader* aOwner)
-    : mAudio(aOwner->mAudio, TrackInfo::kAudioTrack)
-    , mVideo(aOwner->mVideo, TrackInfo::kVideoTrack)
+    : mAudio(aOwner->mAudio, TrackInfo::kAudioTrack, aOwner->OwnerThread())
+    , mVideo(aOwner->mVideo, TrackInfo::kVideoTrack, aOwner->OwnerThread())
     , mOwner(WrapNotNull(aOwner)) { }
 
   void CreateDecoder(TrackType aTrack);
@@ -206,6 +329,7 @@ public:
     MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack
                || aTrack == TrackInfo::kVideoTrack);
     auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+    data.mPolicy->Cancel();
     data.mTokenRequest.DisconnectIfExists();
     data.mInitRequest.DisconnectIfExists();
     if (!data.mDecoder) {
@@ -235,13 +359,13 @@ private:
 
   struct Data
   {
-    Data(DecoderData& aOwnerData, TrackType aTrack)
+    Data(DecoderData& aOwnerData, TrackType aTrack, TaskQueue* aThread)
       : mOwnerData(aOwnerData)
       , mTrack(aTrack)
-      , mPolicy(GlobalAllocPolicy::Instance(aTrack)) { }
+      , mPolicy(new LocalAllocPolicy(aTrack, aThread)) { }
     DecoderData& mOwnerData;
     const TrackType mTrack;
-    GlobalAllocPolicy& mPolicy;
+    RefPtr<LocalAllocPolicy> mPolicy;
     Stage mStage = Stage::None;
     RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;
@@ -324,7 +448,7 @@ MediaFormatReader::DecoderFactory::RunStage(Data& aData)
   switch (aData.mStage) {
     case Stage::None: {
       MOZ_ASSERT(!aData.mToken);
-      aData.mPolicy.Alloc()->Then(
+      aData.mPolicy->Alloc()->Then(
         mOwner->OwnerThread(), __func__,
         [this, &aData] (Token* aToken) {
           aData.mTokenRequest.Complete();
