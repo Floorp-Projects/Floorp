@@ -40,6 +40,6 @@ fails == patterned-svg-under-transformed-html-02.xhtml patterned-svg-under-trans
 
 fails == mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01a.xhtml
 fails == mask-clipPath-opacity-01b.xhtml mask-clipPath-opacity-01b.xhtml
-fails == mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01c.xhtml
-fails == mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01d.xhtml
+== mask-clipPath-opacity-01c.xhtml mask-clipPath-opacity-01c.xhtml
+== mask-clipPath-opacity-01d.xhtml mask-clipPath-opacity-01d.xhtml
 fails == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01e.xhtml
