@@ -221,3 +221,32 @@ TEST(OpusAudioTrackEncoder, FetchMetadata)
   EXPECT_EQ(channels, opusMeta->mChannels);
   EXPECT_EQ(sampleRate, opusMeta->mSamplingFrequency);
 }
+
+TEST(OpusAudioTrackEncoder, FrameEncode)
+{
+  const int32_t channels = 1;
+  const int32_t sampleRate = 44100;
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusCreation(channels, sampleRate));
+
+  // Generate five seconds of raw audio data.
+  AudioGenerator generator(channels, sampleRate);
+  AudioSegment segment;
+  const int32_t samples = sampleRate * 5;
+  generator.Generate(segment, samples);
+
+  encoder.AppendAudioSegment(Move(segment));
+  encoder.NotifyCurrentTime(samples);
+
+  EncodedFrameContainer container;
+  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  // Verify that encoded data is 5 seconds long.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  // 44100 as used above gets resampled to 48000 for opus.
+  const uint64_t five = 48000 * 5;
+  EXPECT_EQ(five, totalDuration);
+}
