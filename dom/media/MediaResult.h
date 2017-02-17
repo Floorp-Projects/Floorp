@@ -51,7 +51,7 @@ public:
     if (NS_SUCCEEDED(mCode)) {
       return nsCString();
     }
-    return nsPrintfCString("0x%08x: %s", mCode, mMessage.get());
+    return nsPrintfCString("0x%08" PRIx32 ": %s", static_cast<uint32_t>(mCode), mMessage.get());
   }
 
 private:

@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/CDMProxy.h"
 #include "EMEVideoDecoder.h"
 #include "GMPVideoEncodedFrameImpl.h"
-#include "MediaData.h"
 #include "MP4Decoder.h"
+#include "MediaData.h"
 #include "PlatformDecoderModule.h"
 #include "VPXDecoder.h"
+#include "mozilla/CDMProxy.h"
 
 namespace mozilla {
 
@@ -45,9 +45,11 @@ EMEVideoDecoder::GetNodeId()
 GMPUniquePtr<GMPVideoEncodedFrame>
 EMEVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
-  GMPUniquePtr<GMPVideoEncodedFrame> frame = GMPVideoDecoder::CreateFrame(aSample);
+  GMPUniquePtr<GMPVideoEncodedFrame> frame =
+    GMPVideoDecoder::CreateFrame(aSample);
   if (frame && aSample->mCrypto.mValid) {
-    static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->mCrypto);
+    static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())
+      ->InitCrypto(aSample->mCrypto);
   }
   return frame;
 }

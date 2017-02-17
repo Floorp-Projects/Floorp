@@ -475,7 +475,8 @@ nsDiskCacheDevice::FindEntry(nsCString * key, bool *collision)
         binding->mDeactivateEvent = nullptr;
         CACHE_LOG_DEBUG(("CACHE: reusing deactivated entry %p " \
                          "req-key=%s  entry-key=%s\n",
-                         binding->mCacheEntry, key, binding->mCacheEntry->Key()));
+                         binding->mCacheEntry, key->get(),
+                         binding->mCacheEntry->Key()->get()));
 
         return binding->mCacheEntry; // just return this one, observing that
                                      // FindActiveBinding() does not return
@@ -984,7 +985,8 @@ nsDiskCacheDevice::OpenDiskCache()
         nsCacheService::MarkStartingFresh();
         rv = mCacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
         CACHE_LOG_PATH(LogLevel::Info, "\ncreate cache directory: %s\n", mCacheDirectory);
-        CACHE_LOG_INFO(("mCacheDirectory->Create() = %x\n", rv));
+        CACHE_LOG_INFO(("mCacheDirectory->Create() = %" PRIx32 "\n",
+                        static_cast<uint32_t>(rv)));
         if (NS_FAILED(rv))
             return rv;
     

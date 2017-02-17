@@ -138,7 +138,7 @@ nsStorageStream::Close()
   mWriteCursor = 0;
   mSegmentEnd = 0;
 
-  LOG(("nsStorageStream [%p] Close mWriteCursor=%x mSegmentEnd=%x\n",
+  LOG(("nsStorageStream [%p] Close mWriteCursor=%p mSegmentEnd=%p\n",
        this, mWriteCursor, mSegmentEnd));
 
   return NS_OK;
@@ -165,7 +165,7 @@ nsStorageStream::Write(const char* aBuffer, uint32_t aCount,
   uint32_t count, availableInSegment, remaining;
   nsresult rv = NS_OK;
 
-  LOG(("nsStorageStream [%p] Write mWriteCursor=%x mSegmentEnd=%x aCount=%d\n",
+  LOG(("nsStorageStream [%p] Write mWriteCursor=%p mSegmentEnd=%p aCount=%d\n",
        this, mWriteCursor, mSegmentEnd, aCount));
 
   remaining = aCount;
@@ -190,7 +190,7 @@ nsStorageStream::Write(const char* aBuffer, uint32_t aCount,
       mLastSegmentNum++;
       mSegmentEnd = mWriteCursor + mSegmentSize;
       availableInSegment = mSegmentEnd - mWriteCursor;
-      LOG(("nsStorageStream [%p] Write (new seg) mWriteCursor=%x mSegmentEnd=%x\n",
+      LOG(("nsStorageStream [%p] Write (new seg) mWriteCursor=%p mSegmentEnd=%p\n",
            this, mWriteCursor, mSegmentEnd));
     }
 
@@ -199,7 +199,7 @@ nsStorageStream::Write(const char* aBuffer, uint32_t aCount,
     remaining -= count;
     readCursor += count;
     mWriteCursor += count;
-    LOG(("nsStorageStream [%p] Writing mWriteCursor=%x mSegmentEnd=%x count=%d\n",
+    LOG(("nsStorageStream [%p] Writing mWriteCursor=%p mSegmentEnd=%p count=%d\n",
          this, mWriteCursor, mSegmentEnd, count));
   }
 
@@ -207,7 +207,7 @@ out:
   *aNumWritten = aCount - remaining;
   mLogicalLength += *aNumWritten;
 
-  LOG(("nsStorageStream [%p] Wrote mWriteCursor=%x mSegmentEnd=%x numWritten=%d\n",
+  LOG(("nsStorageStream [%p] Wrote mWriteCursor=%p mSegmentEnd=%p numWritten=%d\n",
        this, mWriteCursor, mSegmentEnd, *aNumWritten));
   return rv;
 }
@@ -302,7 +302,7 @@ nsStorageStream::Seek(int32_t aPosition)
   if (aPosition == 0) {
     mWriteCursor = 0;
     mSegmentEnd = 0;
-    LOG(("nsStorageStream [%p] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+    LOG(("nsStorageStream [%p] Seek mWriteCursor=%p mSegmentEnd=%p\n",
          this, mWriteCursor, mSegmentEnd));
     return NS_OK;
   }
@@ -322,7 +322,7 @@ nsStorageStream::Seek(int32_t aPosition)
     mWriteCursor += segmentOffset;
   }
 
-  LOG(("nsStorageStream [%p] Seek mWriteCursor=%x mSegmentEnd=%x\n",
+  LOG(("nsStorageStream [%p] Seek mWriteCursor=%p mSegmentEnd=%p\n",
        this, mWriteCursor, mSegmentEnd));
   return NS_OK;
 }

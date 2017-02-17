@@ -461,7 +461,7 @@ private:
 
       aDesc.AppendPrintf("The stack size of a non-main thread named '%s' with "
                          "thread ID %d.  This corresponds to '[stack:%d]' "
-                         "in /proc/%d/smaps.", threadName.get(), tid, tid);
+                         "in /proc/%d/smaps.", threadName.get(), tid, tid, tid);
     } else if (absPath.EqualsLiteral("[vdso]")) {
       aName.AppendLiteral("vdso");
       aDesc.AppendLiteral(

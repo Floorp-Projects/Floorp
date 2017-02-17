@@ -325,7 +325,7 @@ protected:
 
   static void TickDriver(nsRefreshDriver* driver, int64_t jsnow, TimeStamp now)
   {
-    LOG(">> TickDriver: %p (jsnow: %lld)", driver, jsnow);
+    LOG(">> TickDriver: %p (jsnow: %" PRId64 ")", driver, jsnow);
     driver->Tick(jsnow, now);
   }
 
@@ -1197,10 +1197,6 @@ nsRefreshDriver::~nsRefreshDriver()
     mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
   }
-  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
-    shell->InvalidatePresShellIfHidden();
-  }
-  mPresShellsToInvalidateIfHidden.Clear();
 }
 
 // Method for testing.  See nsIDOMWindowUtils.advanceTimeAndRefresh
@@ -2026,11 +2022,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       imagesToRefresh[i]->RequestRefresh(aNowTime);
     }
   }
-
-  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
-    shell->InvalidatePresShellIfHidden();
-  }
-  mPresShellsToInvalidateIfHidden.Clear();
 
   bool notifyGC = false;
   if (mViewManagerFlushIsPending) {

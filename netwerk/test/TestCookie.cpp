@@ -12,7 +12,6 @@
 #include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
-#include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"

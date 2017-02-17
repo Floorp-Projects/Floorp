@@ -356,8 +356,8 @@ WyciwygChannelParent::OnStopRequest(nsIRequest *aRequest,
                                     nsISupports *aContext,
                                     nsresult aStatusCode)
 {
-  LOG(("WyciwygChannelParent::OnStopRequest: [this=%p status=%ul]\n",
-       this, aStatusCode));
+  LOG(("WyciwygChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n",
+       this, static_cast<uint32_t>(aStatusCode)));
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode)) {
     return NS_ERROR_UNEXPECTED;

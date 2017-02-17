@@ -26,14 +26,16 @@
 #include "SharedMemoryBasic.h"
 #include "chrome/common/mach_ipc_mac.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Printf.h"
 #include "mozilla/StaticMutex.h"
 
 #ifdef DEBUG
 #define LOG_ERROR(str, args...)                 \
   PR_BEGIN_MACRO                                \
-  char *msg = PR_smprintf(str, ## args);        \
+  char *msg = mozilla::Smprintf(str, ## args);  \
   NS_WARNING(msg);                              \
-  PR_smprintf_free(msg);                        \
+  mozilla::SmprintfFree(msg);                   \
   PR_END_MACRO
 #else
 #define LOG_ERROR(str, args...) do { /* nothing */ } while(0)
@@ -635,7 +637,7 @@ SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
   mach_port_t id = msg_data->port;
   uint64_t serial_check = msg_data->serial;
   if (serial_check != my_serial) {
-    LOG_ERROR("Serials do not match up: %d vs %d", serial_check, my_serial);
+    LOG_ERROR("Serials do not match up: %" PRIu64 " vs %" PRIu64 "", serial_check, my_serial);
     return false;
   }
   *aNewHandle = id;

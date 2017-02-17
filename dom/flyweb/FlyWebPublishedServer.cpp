@@ -181,7 +181,7 @@ FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(nsPIDOMWindowInner* aOwner,
 void
 FlyWebPublishedServerImpl::PermissionGranted(bool aGranted)
 {
-  LOG_I("FlyWebPublishedServerImpl::PermissionGranted(%b)", aGranted);
+  LOG_I("FlyWebPublishedServerImpl::PermissionGranted(%d)", aGranted);
   if (!aGranted) {
     PublishedServerStarted(NS_ERROR_FAILURE);
     return;

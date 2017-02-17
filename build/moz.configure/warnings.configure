@@ -101,6 +101,9 @@ check_and_add_gcc_warning('-Wno-error=coverage-mismatch', when='MOZ_PGO')
 # false positives during PGO
 check_and_add_gcc_warning('-Wno-error=free-nonheap-object', when='MOZ_PGO')
 
+# catches format/argument mismatches with printf
+check_and_add_gcc_warning('-Wformat')
+
 # We use mix of both POSIX and Win32 printf format across the tree, so format
 # warnings are useless on mingw.
 check_and_add_gcc_warning('-Wno-format',

@@ -158,7 +158,7 @@ add_task(async function hmac_error_during_node_reassignment() {
   function onSyncError() {
     do_throw("Should not get a sync error!");
   }
-  function onSyncFinished() {}
+  let onSyncFinished = function() {}
   let obs = {
     observe: function observe(subject, topic, data) {
       switch (topic) {

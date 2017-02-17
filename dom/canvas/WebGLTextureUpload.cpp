@@ -17,6 +17,7 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "ScopedGLHelpers.h"
 #include "TexUnpackBlob.h"
@@ -695,7 +696,7 @@ ValidateCompressedTexUnpack(WebGLContext* webgl, const char* funcName, GLsizei w
 
     if (dataSize != bytesNeeded.value()) {
         webgl->ErrorInvalidValue("%s: Provided buffer's size must match expected size."
-                                 " (needs %u, has %u)",
+                                 " (needs %u, has %" PRIuSIZE ")",
                                  funcName, bytesNeeded.value(), dataSize);
         return false;
     }
@@ -1394,7 +1395,7 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
     }
 
     if (glError) {
-        mContext->ErrorInvalidOperation("%s: Unexpected error during upload: 0x04x",
+        mContext->ErrorInvalidOperation("%s: Unexpected error during upload: 0x%04x",
                                         funcName, glError);
         MOZ_ASSERT(false, "Unexpected GL error.");
         return;

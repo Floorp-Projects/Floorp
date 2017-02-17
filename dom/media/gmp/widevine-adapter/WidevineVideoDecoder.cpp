@@ -141,7 +141,7 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   WidevineVideoFrame frame;
   Status rv = CDM()->DecryptAndDecodeFrame(sample, &frame);
-  Log("WidevineVideoDecoder::Decode(timestamp=%lld) rv=%d", sample.timestamp,
+  Log("WidevineVideoDecoder::Decode(timestamp=%" PRId64 ") rv=%d", sample.timestamp,
       rv);
 
   // Destroy frame, so that the shmem is now free to be used to return

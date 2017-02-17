@@ -43,7 +43,6 @@
 #include "nsEnumeratorUtils.h"
 
 #include "mozilla/Logging.h"
-#include "prprf.h"
 #include <stdio.h>
 mozilla::LazyLogModule nsRDFLog("RDF");
 

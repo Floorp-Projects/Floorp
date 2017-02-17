@@ -1119,7 +1119,7 @@ MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  DECODER_LOG("NotifyDownloadEnded, status=%x", aStatus);
+  DECODER_LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
