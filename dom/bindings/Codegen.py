@@ -7709,7 +7709,7 @@ class CGPerSignatureCall(CGThing):
             argsPre.append("global")
 
         if isConstructor and idlNode.isHTMLConstructor():
-            argsPre.append("args")
+            argsPre.extend(["args", "desiredProto"])
 
         # For JS-implemented interfaces we do not want to base the
         # needsCx decision on the types involved, just on our extended
