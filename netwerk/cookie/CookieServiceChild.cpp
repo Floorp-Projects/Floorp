@@ -555,7 +555,8 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     moreCookies = nsCookieService::CanSetCookie(aHostURI, key, cookieAttributes,
                                                 requireHostMatch, cookieStatus,
                                                 cookieString, serverTime, aFromHttp,
-                                                aChannel, mLeaveSecureAlone, canSetCookie);
+                                                aChannel, mLeaveSecureAlone,
+                                                canSetCookie, mThirdPartyUtil);
 
     if (canSetCookie) {
       SetCookieInternal(cookieAttributes, attrs, aChannel,
