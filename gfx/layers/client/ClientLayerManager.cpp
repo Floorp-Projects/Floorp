@@ -314,6 +314,7 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                            EndTransactionFlags)
 {
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
+  GeckoProfilerTracingRAII tracer("Paint", "Rasterize");
 
 #ifdef WIN32
   if (aCallbackData) {
@@ -330,7 +331,6 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
 #endif
-  profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_START);
 
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
   mPhase = PHASE_DRAWING;
