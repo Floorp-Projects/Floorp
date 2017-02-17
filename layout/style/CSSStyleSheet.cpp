@@ -127,14 +127,12 @@ namespace mozilla {
 //
 
 
-CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
-                                       CORSMode aCORSMode,
+CSSStyleSheetInner::CSSStyleSheetInner(CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
                                        const SRIMetadata& aIntegrity)
   : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  mSheets.AppendElement(aPrimarySheet);
 }
 
 static bool SetStyleSheetReference(css::Rule* aRule, void* aSheet)
@@ -218,7 +216,7 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // double-counting the inner.  We use last instead of first since the first
     // sheet may be held in the nsXULPrototypeCache and not used in a window at
     // all.
-    if (Inner()->mSheets.LastElement() == s) {
+    if (mInner->mSheets.LastElement() == s) {
       n += Inner()->SizeOfIncludingThis(aMallocSizeOf);
     }
 
@@ -237,10 +235,9 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
                                        CSSStyleSheet* aPrimarySheet)
-  : StyleSheetInfo(aCopy)
+  : StyleSheetInfo(aCopy, aPrimarySheet)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  AddSheet(aPrimarySheet);
   aCopy.mOrderedRules.EnumerateForwards(css::GroupRule::CloneRuleInto, &mOrderedRules);
   mOrderedRules.EnumerateForwards(SetStyleSheetReference, aPrimarySheet);
 
@@ -263,30 +260,17 @@ CSSStyleSheetInner::CloneFor(CSSStyleSheet* aPrimarySheet)
 }
 
 void
-CSSStyleSheetInner::AddSheet(CSSStyleSheet* aSheet)
+CSSStyleSheetInner::RemoveSheet(StyleSheet* aSheet)
 {
-  mSheets.AppendElement(aSheet);
-}
+  if ((aSheet == mSheets.ElementAt(0)) && (mSheets.Length() > 1)) {
+    mOrderedRules.EnumerateForwards(SetStyleSheetReference, mSheets[1]);
 
-void
-CSSStyleSheetInner::RemoveSheet(CSSStyleSheet* aSheet)
-{
-  if (1 == mSheets.Length()) {
-    NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
-    delete this;
-    return;
+    ChildSheetListBuilder::ReparentChildList(mSheets[1], mFirstChild);
   }
-  if (aSheet == mSheets.ElementAt(0)) {
-    mSheets.RemoveElementAt(0);
-    NS_ASSERTION(mSheets.Length(), "no parents");
-    mOrderedRules.EnumerateForwards(SetStyleSheetReference,
-                                    mSheets.ElementAt(0));
 
-    ChildSheetListBuilder::ReparentChildList(mSheets[0], mFirstChild);
-  }
-  else {
-    mSheets.RemoveElement(aSheet);
-  }
+  // Don't do anything after this call, because superclass implementation
+  // may delete this.
+  StyleSheetInfo::RemoveSheet(aSheet);
 }
 
 static void
@@ -373,8 +357,9 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  mInner = new CSSStyleSheetInner(this, aCORSMode, aReferrerPolicy,
+  mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
                                   SRIMetadata());
+  mInner->AddSheet(this);
 }
 
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
@@ -388,8 +373,9 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  mInner = new CSSStyleSheetInner(this, aCORSMode, aReferrerPolicy,
+  mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
                                   aIntegrity);
+  mInner->AddSheet(this);
 }
 
 CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
@@ -404,9 +390,10 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  mParent = aParentToUse;
+  MOZ_ASSERT(mInner, "We should have an mInner after copy.");
+  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
 
-  Inner()->AddSheet(this);
+  mParent = aParentToUse;
 
   if (mDirty) { // CSSOM's been there, force full copy now
     NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
@@ -420,7 +407,6 @@ CSSStyleSheet::~CSSStyleSheet()
   UnparentChildren();
 
   DropRuleCollection();
-  Inner()->RemoveSheet(this);
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
   // away.
@@ -447,7 +433,7 @@ CSSStyleSheet::UnlinkInner()
 {
   // We can only have a cycle through our inner if we have a unique inner,
   // because otherwise there are no JS wrappers for anything in the inner.
-  if (Inner()->mSheets.Length() != 1) {
+  if (mInner->mSheets.Length() != 1) {
     return;
   }
 
@@ -482,7 +468,7 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 {
   // We can only have a cycle through our inner if we have a unique inner,
   // because otherwise there are no JS wrappers for anything in the inner.
-  if (Inner()->mSheets.Length() != 1) {
+  if (mInner->mSheets.Length() != 1) {
     return;
   }
 
@@ -662,15 +648,15 @@ CSSStyleSheet::EnsureUniqueInner()
 {
   mDirty = true;
 
-  MOZ_ASSERT(Inner()->mSheets.Length() != 0,
+  MOZ_ASSERT(mInner->mSheets.Length() != 0,
              "unexpected number of outers");
-  if (Inner()->mSheets.Length() == 1) {
+  if (mInner->mSheets.Length() == 1) {
     // already unique
     return;
   }
   CSSStyleSheetInner* clone = Inner()->CloneFor(this);
   MOZ_ASSERT(clone);
-  Inner()->RemoveSheet(this);
+  mInner->RemoveSheet(this);
   mInner = clone;
 
   // otherwise the rule processor has pointers to the old rules

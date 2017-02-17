@@ -45,6 +45,9 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(aCopy.mInner) // Shallow copy, but concrete subclasses will fix up.
 {
+  MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
+  mInner->AddSheet(this);
+
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!
@@ -54,6 +57,11 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
 
 StyleSheet::~StyleSheet()
 {
+  MOZ_ASSERT(mInner, "Should have an mInner at time of destruction.");
+  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
+  mInner->RemoveSheet(this);
+  mInner = nullptr;
+
   DropMedia();
 }
 
@@ -154,6 +162,43 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
   if (!mPrincipal) {
     NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
   }
+}
+
+StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
+                               StyleSheet* aPrimarySheet)
+  : mSheetURI(aCopy.mSheetURI)
+  , mOriginalSheetURI(aCopy.mOriginalSheetURI)
+  , mBaseURI(aCopy.mBaseURI)
+  , mPrincipal(aCopy.mPrincipal)
+  , mCORSMode(aCopy.mCORSMode)
+  , mReferrerPolicy(aCopy.mReferrerPolicy)
+  , mIntegrity(aCopy.mIntegrity)
+  , mComplete(aCopy.mComplete)
+  , mFirstChild()  // We don't rebuild the child because we're making a copy
+                   // without children.
+#ifdef DEBUG
+  , mPrincipalSet(aCopy.mPrincipalSet)
+#endif
+{
+  AddSheet(aPrimarySheet);
+}
+
+void
+StyleSheetInfo::AddSheet(StyleSheet* aSheet)
+{
+  mSheets.AppendElement(aSheet);
+}
+
+void
+StyleSheetInfo::RemoveSheet(StyleSheet* aSheet)
+{
+  if (1 == mSheets.Length()) {
+    NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
+    delete this;
+    return;
+  }
+
+  mSheets.RemoveElement(aSheet);
 }
 
 // nsIDOMStyleSheet interface
