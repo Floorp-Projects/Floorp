@@ -1891,6 +1891,11 @@ HelperThread::threadLoop()
     AutoLockHelperThreadState lock;
 
     JSContext cx(nullptr, JS::ContextOptions());
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!cx.init(ContextKind::Background))
+            oomUnsafe.crash("HelperThread cx.init()");
+    }
     cx.setHelperThread(this);
 
     // Compute the thread's stack limit, for over-recursed checks.

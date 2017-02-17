@@ -474,6 +474,24 @@ JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRunt
     return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
 
+JS_PUBLIC_API(JSContext*)
+JS_NewCooperativeContext(JSContext* siblingContext)
+{
+    return NewCooperativeContext(siblingContext);
+}
+
+JS_PUBLIC_API(void)
+JS_YieldCooperativeContext(JSContext* cx)
+{
+    YieldCooperativeContext(cx);
+}
+
+JS_PUBLIC_API(void)
+JS_ResumeCooperativeContext(JSContext* cx)
+{
+    ResumeCooperativeContext(cx);
+}
+
 JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext* cx)
 {
