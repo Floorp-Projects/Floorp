@@ -16,7 +16,7 @@ wasmFullPass(`(module
         i32.const 0
         call 3
         i32.const 42
-        f32.add
+        i32.add
     )
     (func) (func) (func)
 (export "run" 0))`, 43);

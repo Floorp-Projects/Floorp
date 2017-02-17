@@ -58,8 +58,8 @@ wasmFailValidateText('(module (func) (func) (export "a" 0) (export "a" 1))', /du
 // ----------------------------------------------------------------------------
 // signatures
 
-wasmFailValidateText('(module (func (result i32)))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (result i32) (nop)))', mismatchError("void", "i32"));
+wasmFailValidateText('(module (func (result i32)))', emptyStackError);
+wasmFailValidateText('(module (func (result i32) (nop)))', emptyStackError);
 
 wasmValidateText('(module (func (nop)))');
 wasmValidateText('(module (func (result i32) (i32.const 42)))');
@@ -196,7 +196,7 @@ wasmFullPass('(module (func (result f32) (param i32) (local f32) (get_local 1)) 
 
 wasmFailValidateText('(module (func (set_local 0 (i32.const 0))))', /set_local index out of range/);
 wasmFailValidateText('(module (func (local f32) (set_local 0 (i32.const 0))))', mismatchError("i32", "f32"));
-wasmFailValidateText('(module (func (local f32) (set_local 0 (nop))))', /popping value from empty stack/);
+wasmFailValidateText('(module (func (local f32) (set_local 0 (nop))))', emptyStackError);
 wasmFailValidateText('(module (func (local i32) (local f32) (set_local 0 (get_local 1))))', mismatchError("f32", "i32"));
 wasmFailValidateText('(module (func (local i32) (local f32) (set_local 1 (get_local 0))))', mismatchError("i32", "f32"));
 
@@ -217,9 +217,9 @@ wasmValidateText('(module (func (local i32) (local $a f32) (set_local 0 (i32.con
 
 wasmFullPass('(module (func (block )) (export "run" 0))', undefined);
 
-wasmFailValidateText('(module (func (result i32) (block )))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (result i32) (block (block ))))', mismatchError("void", "i32"));
-wasmFailValidateText('(module (func (local i32) (set_local 0 (block ))))', /popping value from empty stack/);
+wasmFailValidateText('(module (func (result i32) (block )))', emptyStackError);
+wasmFailValidateText('(module (func (result i32) (block (block ))))', emptyStackError);
+wasmFailValidateText('(module (func (local i32) (set_local 0 (block ))))', emptyStackError);
 
 wasmFullPass('(module (func (block (block ))) (export "run" 0))', undefined);
 wasmFullPass('(module (func (result i32) (block i32 (i32.const 42))) (export "run" 0))', 42);
@@ -234,9 +234,9 @@ wasmFullPass('(module (func (result i32) (local i32) (set_local 0 (i32.const 42)
 // ----------------------------------------------------------------------------
 // calls
 
-wasmFailValidateText('(module (func (nop)) (func (call 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
+wasmFailValidateText('(module (func (nop)) (func (call 0 (i32.const 0))))', unusedValuesError);
 
-wasmFailValidateText('(module (func (param i32) (nop)) (func (call 0)))', /peeking at value from outside block/);
+wasmFailValidateText('(module (func (param i32) (nop)) (func (call 0)))', emptyStackError);
 wasmFailValidateText('(module (func (param f32) (nop)) (func (call 0 (i32.const 0))))', mismatchError("i32", "f32"));
 wasmFailValidateText('(module (func (nop)) (func (call 3)))', /callee index out of range/);
 
@@ -250,8 +250,8 @@ assertThrowsInstanceOf(() => wasmEvalText('(module (func (call 1)) (func (call 0
 wasmValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (f32.const nan))))');
 wasmFailValidateText('(module (func (param i32 f32)) (func (call 0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
 
-wasmFailValidateText('(module (import "a" "") (func (call 0 (i32.const 0))))', /unused values not explicitly dropped by end of block/);
-wasmFailValidateText('(module (import "a" "" (param i32)) (func (call 0)))', /peeking at value from outside block/);
+wasmFailValidateText('(module (import "a" "") (func (call 0 (i32.const 0))))', unusedValuesError);
+wasmFailValidateText('(module (import "a" "" (param i32)) (func (call 0)))', emptyStackError);
 wasmFailValidateText('(module (import "a" "" (param f32)) (func (call 0 (i32.const 0))))', mismatchError("i32", "f32"));
 
 assertErrorMessage(() => wasmEvalText('(module (import "a" "") (func (call 1)))'), TypeError, noImportObj);
@@ -462,11 +462,12 @@ wasmValidateText('(module (import $bar "" "a") (func (call $bar)) (func $foo (no
 wasmFailValidateText('(module (func (select (i32.const 0) (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
 
 wasmFailValidateText('(module (func (select (i32.const 0) (f32.const 0) (i32.const 0))) (export "" 0))', /select operand types must match/);
-wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" 0))', /popping value from empty stack/);
-assertEq(wasmEvalText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" 0))').exports[""](), undefined);
-assertEq(wasmEvalText('(module (func (i32.add (i32.const 0) (select (return) (i32.const 0) (i32.const 0)))) (export "" 0))').exports[""](), undefined);
+wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0))) (export "" 0))', emptyStackError);
+wasmFailValidateText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" 0))', unusedValuesError);
+assertEq(wasmEvalText('(module (func (drop (select (return) (i32.const 0) (i32.const 0)))) (export "" 0))').exports[""](), undefined);
+assertEq(wasmEvalText('(module (func (result i32) (i32.add (i32.const 0) (select (return (i32.const 42)) (i32.const 0) (i32.const 0)))) (export "" 0))').exports[""](), 42);
 wasmFailValidateText('(module (func (select (if i32 (i32.const 1) (i32.const 0) (f32.const 0)) (i32.const 0) (i32.const 0))) (export "" 0))', mismatchError("f32", "i32"));
-wasmFailValidateText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" 0))', /popping value from empty stack/);
+wasmFailValidateText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" 0))', emptyStackError);
 
 (function testSideEffects() {
 
