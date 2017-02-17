@@ -37,7 +37,8 @@ parent:
   sync UpdateImage(ImageKey aImageKey, IntSize aSize,
                    SurfaceFormat aFormat, ByteBuffer aBytes);
   sync DeleteImage(ImageKey aImageKey);
-  async DPBegin(IntSize aSize);
+  sync DPBegin(IntSize aSize)
+    returns (bool aOutSuccess);
   async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPGetSnapshot(PTexture texture);
