@@ -21,7 +21,7 @@
 
 #include <stdarg.h>
 
-#ifdef XP_WIN
+#if defined(SPS_OS_windows)
 #include <windows.h>
 #define getpid GetCurrentProcessId
 #endif

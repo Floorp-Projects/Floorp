@@ -225,7 +225,7 @@ class SamplerThread
 
     // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
     // RtlVirtualUnwind (see bug 1120126) so we set all the flags.
-#if V8_HOST_ARCH_X64
+#if defined(SPS_ARCH_amd64)
     context.ContextFlags = CONTEXT_FULL;
 #else
     context.ContextFlags = CONTEXT_CONTROL;
@@ -235,7 +235,7 @@ class SamplerThread
       return;
     }
 
-#if V8_HOST_ARCH_X64
+#if defined(SPS_ARCH_amd64)
     sample->pc = reinterpret_cast<Address>(context.Rip);
     sample->sp = reinterpret_cast<Address>(context.Rsp);
     sample->fp = reinterpret_cast<Address>(context.Rbp);
@@ -307,18 +307,14 @@ void TickSample::PopulateContext(void* aContext)
   context = pContext;
   RtlCaptureContext(pContext);
 
-#if defined(SPS_PLAT_amd64_windows)
-
+#if defined(SPS_ARCH_amd64)
   pc = reinterpret_cast<Address>(pContext->Rip);
   sp = reinterpret_cast<Address>(pContext->Rsp);
   fp = reinterpret_cast<Address>(pContext->Rbp);
-
-#elif defined(SPS_PLAT_x86_windows)
-
+#elif defined(SPS_ARCH_x86)
   pc = reinterpret_cast<Address>(pContext->Eip);
   sp = reinterpret_cast<Address>(pContext->Esp);
   fp = reinterpret_cast<Address>(pContext->Ebp);
-
 #endif
 }
 
