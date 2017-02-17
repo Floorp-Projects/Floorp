@@ -2045,6 +2045,17 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     layerManager = new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
   }
 
+  nsIFrame* frame = aBuilder->RootReferenceFrame();
+  nsPresContext* presContext = frame->PresContext();
+  nsIPresShell* presShell = presContext->PresShell();
+  nsIDocument* document = presShell->GetDocument();
+
+  NotifySubDocInvalidationFunc computeInvalidFunc =
+    presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
+
+  UniquePtr<LayerProperties> props;
+  RefPtr<ContainerLayer> root;
+
   // Store the existing layer builder to reinstate it on return.
   FrameLayerBuilder *oldBuilder = layerManager->GetLayerBuilder();
 
@@ -2055,146 +2066,139 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     layerBuilder->SetLayerTreeCompressionMode();
   }
 
-  if (doBeginTransaction) {
-    if (aCtx) {
-      if (!layerManager->BeginTransactionWithTarget(aCtx->ThebesContext())) {
-        return nullptr;
-      }
-    } else {
-      if (!layerManager->BeginTransaction()) {
-        return nullptr;
-      }
-    }
-  }
-
-  if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
-    FrameLayerBuilder::InvalidateAllLayers(layerManager);
-  }
-
-  if (widgetTransaction) {
-    layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
-  }
-
-  nsIFrame* frame = aBuilder->RootReferenceFrame();
-  nsPresContext* presContext = frame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
-  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
-
-  NotifySubDocInvalidationFunc computeInvalidFunc =
-    presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
-  bool computeInvalidRect = (computeInvalidFunc ||
-                             (!layerManager->IsCompositingCheap() && layerManager->NeedsWidgetInvalidation())) &&
-                            widgetTransaction;
-
-  UniquePtr<LayerProperties> props;
-  if (computeInvalidRect) {
-    props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
-  }
-
-  // Clear any ScrollMetadata that may have been set on the root layer on a
-  // previous paint. This paint will set new metrics if necessary, and if we
-  // don't clear the old one here, we may be left with extra metrics.
-  if (Layer* root = layerManager->GetRoot()) {
-    root->SetScrollMetadata(nsTArray<ScrollMetadata>());
-  }
-
-  ContainerLayerParameters containerParameters
-    (presShell->GetResolution(), presShell->GetResolution());
-
-  RefPtr<ContainerLayer> root;
   {
-    PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
-    root = layerBuilder->
-      BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
-                             containerParameters, nullptr);
-  }
+    GeckoProfilerTracingRAII tracer("Paint", "LayerBuilding");
 
-  nsIDocument* document = presShell->GetDocument();
-
-  if (!root) {
-    layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
-    return nullptr;
-  }
-  // Root is being scaled up by the X/Y resolution. Scale it back down.
-  root->SetPostScale(1.0f/containerParameters.mXScale,
-                     1.0f/containerParameters.mYScale);
-  root->SetScaleToResolution(presShell->ScaleToResolution(),
-      containerParameters.mXScale);
-  if (aBuilder->IsBuildingLayerEventRegions() &&
-      nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell)) {
-    root->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
-  } else {
-    root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
-  }
-
-  // If we're using containerless scrolling, there is still one case where we
-  // want the root container layer to have metrics. If the parent process is
-  // using XUL windows, there is no root scrollframe, and without explicitly
-  // creating metrics there will be no guaranteed top-level APZC.
-  bool addMetrics = gfxPrefs::LayoutUseContainersForRootFrames() ||
-      (XRE_IsParentProcess() && !presShell->GetRootScrollFrame());
-
-  // Add metrics if there are none in the layer tree with the id (create an id
-  // if there isn't one already) of the root scroll frame/root content.
-  bool ensureMetricsForRootId =
-    nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
-    !gfxPrefs::LayoutUseContainersForRootFrames() &&
-    aBuilder->IsPaintingToWindow() &&
-    !presContext->GetParentPresContext();
-
-  nsIContent* content = nullptr;
-  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-  if (rootScrollFrame) {
-    content = rootScrollFrame->GetContent();
-  } else {
-    // If there is no root scroll frame, pick the document element instead.
-    // The only case we don't want to do this is in non-APZ fennec, where
-    // we want the root xul document to get a null scroll id so that the root
-    // content document gets the first non-null scroll id.
-    content = document->GetDocumentElement();
-  }
-
-
-  if (ensureMetricsForRootId && content) {
-    ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
-    if (nsLayoutUtils::ContainsMetricsWithId(root, scrollId)) {
-      ensureMetricsForRootId = false;
+    if (doBeginTransaction) {
+      if (aCtx) {
+        if (!layerManager->BeginTransactionWithTarget(aCtx->ThebesContext())) {
+          return nullptr;
+        }
+      } else {
+        if (!layerManager->BeginTransaction()) {
+          return nullptr;
+        }
+      }
     }
-  }
 
-  if (addMetrics || ensureMetricsForRootId) {
-    bool isRootContent = presContext->IsRootContentDocument();
+    if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
+      FrameLayerBuilder::InvalidateAllLayers(layerManager);
+    }
 
-    nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+    if (widgetTransaction) {
+      layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
+    }
 
-    root->SetScrollMetadata(
-      nsLayoutUtils::ComputeScrollMetadata(frame,
-                         rootScrollFrame, content,
-                         aBuilder->FindReferenceFrameFor(frame),
-                         root, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
-                         isRootContent, containerParameters));
-  }
+    bool computeInvalidRect = (computeInvalidFunc ||
+                               (!layerManager->IsCompositingCheap() && layerManager->NeedsWidgetInvalidation())) &&
+                              widgetTransaction;
 
-  // NS_WARNING is debug-only, so don't even bother checking the conditions in
-  // a release build.
+    if (computeInvalidRect) {
+      props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
+    }
+
+    // Clear any ScrollMetadata that may have been set on the root layer on a
+    // previous paint. This paint will set new metrics if necessary, and if we
+    // don't clear the old one here, we may be left with extra metrics.
+    if (Layer* rootLayer = layerManager->GetRoot()) {
+      rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
+    }
+
+    ContainerLayerParameters containerParameters
+      (presShell->GetResolution(), presShell->GetResolution());
+
+    {
+      PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+      root = layerBuilder->
+        BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
+                               containerParameters, nullptr);
+    }
+
+    if (!root) {
+      layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+      return nullptr;
+    }
+    // Root is being scaled up by the X/Y resolution. Scale it back down.
+    root->SetPostScale(1.0f/containerParameters.mXScale,
+                       1.0f/containerParameters.mYScale);
+    root->SetScaleToResolution(presShell->ScaleToResolution(),
+        containerParameters.mXScale);
+    if (aBuilder->IsBuildingLayerEventRegions() &&
+        nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(presShell)) {
+      root->SetEventRegionsOverride(EventRegionsOverride::ForceDispatchToContent);
+    } else {
+      root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
+    }
+
+    // If we're using containerless scrolling, there is still one case where we
+    // want the root container layer to have metrics. If the parent process is
+    // using XUL windows, there is no root scrollframe, and without explicitly
+    // creating metrics there will be no guaranteed top-level APZC.
+    bool addMetrics = gfxPrefs::LayoutUseContainersForRootFrames() ||
+        (XRE_IsParentProcess() && !presShell->GetRootScrollFrame());
+
+    // Add metrics if there are none in the layer tree with the id (create an id
+    // if there isn't one already) of the root scroll frame/root content.
+    bool ensureMetricsForRootId =
+      nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
+      !gfxPrefs::LayoutUseContainersForRootFrames() &&
+      aBuilder->IsPaintingToWindow() &&
+      !presContext->GetParentPresContext();
+
+    nsIContent* content = nullptr;
+    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+    if (rootScrollFrame) {
+      content = rootScrollFrame->GetContent();
+    } else {
+      // If there is no root scroll frame, pick the document element instead.
+      // The only case we don't want to do this is in non-APZ fennec, where
+      // we want the root xul document to get a null scroll id so that the root
+      // content document gets the first non-null scroll id.
+      content = document->GetDocumentElement();
+    }
+
+
+    if (ensureMetricsForRootId && content) {
+      ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
+      if (nsLayoutUtils::ContainsMetricsWithId(root, scrollId)) {
+        ensureMetricsForRootId = false;
+      }
+    }
+
+    if (addMetrics || ensureMetricsForRootId) {
+      bool isRootContent = presContext->IsRootContentDocument();
+
+      nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+
+      root->SetScrollMetadata(
+        nsLayoutUtils::ComputeScrollMetadata(frame,
+                           rootScrollFrame, content,
+                           aBuilder->FindReferenceFrameFor(frame),
+                           root, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
+                           isRootContent, containerParameters));
+    }
+
+    // NS_WARNING is debug-only, so don't even bother checking the conditions in
+    // a release build.
 #ifdef DEBUG
-  bool usingDisplayport = false;
-  if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-    nsIContent* content = rootScrollFrame->GetContent();
-    if (content) {
-      usingDisplayport = nsLayoutUtils::HasDisplayPort(content);
+    bool usingDisplayport = false;
+    if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+      nsIContent* content = rootScrollFrame->GetContent();
+      if (content) {
+        usingDisplayport = nsLayoutUtils::HasDisplayPort(content);
+      }
     }
-  }
-  if (usingDisplayport &&
-      !(root->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-      SpammyLayoutWarningsEnabled()) {
-    // See bug 693938, attachment 567017
-    NS_WARNING("Transparent content with displayports can be expensive.");
-  }
+    if (usingDisplayport &&
+        !(root->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        SpammyLayoutWarningsEnabled()) {
+      // See bug 693938, attachment 567017
+      NS_WARNING("Transparent content with displayports can be expensive.");
+    }
 #endif
 
-  layerManager->SetRoot(root);
-  layerBuilder->WillEndTransaction();
+    layerManager->SetRoot(root);
+    layerBuilder->WillEndTransaction();
+  }
 
   if (widgetTransaction ||
       // SVG-as-an-image docs don't paint as part of the retained layer tree,
@@ -2220,6 +2224,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   // If this is the content process, we ship plugin geometry updates over with layer
   // updates, so calculate that now before we call EndTransaction.
+  nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
   if (rootPresContext && XRE_IsContentProcess()) {
     if (aBuilder->WillComputePluginGeometry()) {
       rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
