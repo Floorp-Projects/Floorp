@@ -179,3 +179,19 @@ TEST(OpusAudioTrackEncoder, Resample)
   EXPECT_FALSE(TestOpusResampler(1, 9600) == 9600);
   EXPECT_FALSE(TestOpusResampler(1, 44100) == 44100);
 }
+
+TEST(OpusAudioTrackEncoder, FetchMetadata)
+{
+  const int32_t channels = 1;
+  const int32_t sampleRate = 44100;
+  TestOpusTrackEncoder encoder;
+  EXPECT_TRUE(encoder.TestOpusCreation(channels, sampleRate));
+
+  RefPtr<TrackMetadataBase> metadata = encoder.GetMetadata();
+  ASSERT_EQ(TrackMetadataBase::METADATA_OPUS, metadata->GetKind());
+
+  RefPtr<OpusMetadata> opusMeta =
+    static_cast<OpusMetadata*>(metadata.get());
+  EXPECT_EQ(channels, opusMeta->mChannels);
+  EXPECT_EQ(sampleRate, opusMeta->mSamplingFrequency);
+}
