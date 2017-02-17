@@ -8,7 +8,8 @@ function test() {
   ok(PopupNotifications, "PopupNotifications object exists");
   ok(PopupNotifications.panel, "PopupNotifications panel exists");
 
-  setup();
+  // Force tabfocus for all elements on OSX.
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}).then(setup);
 }
 
 var tests = [
@@ -53,7 +54,6 @@ var tests = [
   // Test that the space key on an anchor element focuses an active notification
   { id: "Test#3",
     *run() {
-      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.anchorID = "geo-notification-icon";
       this.notifyObj.addOptions({
@@ -76,8 +76,6 @@ var tests = [
   // and that the notification is focused on selection.
   { id: "Test#4",
     *run() {
-      yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
-
       let notifyObj1 = new BasicNotification(this.id);
       notifyObj1.id += "_1";
       notifyObj1.anchorID = "default-notification-icon";
@@ -131,5 +129,47 @@ var tests = [
       notification2.remove();
       goNext();
     },
+  },
+  // Test that passing the autofocus option will focus an opened notification.
+  { id: "Test#5",
+    *run() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.anchorID = "geo-notification-icon";
+      this.notifyObj.addOptions({
+        autofocus: true,
+      });
+      this.notification = showNotification(this.notifyObj);
+    },
+    *onShown(popup) {
+      checkPopup(popup, this.notifyObj);
+
+      // Initial focus on open is null because a panel itself
+      // can not be focused, next tab focus will be inside the panel.
+      is(Services.focus.focusedElement, null);
+
+      EventUtils.synthesizeKey("VK_TAB", {});
+      is(Services.focus.focusedElement, popup.childNodes[0].closebutton);
+      dismissNotification(popup);
+    },
+    *onHidden() {
+      // Focus the urlbar to check that it stays focused.
+      gURLBar.focus();
+
+      // Show another notification and make sure it's not autofocused.
+      let notifyObj = new BasicNotification(this.id);
+      notifyObj.id += "_2";
+      notifyObj.anchorID = "default-notification-icon";
+
+      let opened = waitForNotificationPanel();
+      let notification = showNotification(notifyObj);
+      let popup = yield opened;
+      checkPopup(popup, notifyObj);
+
+      // Check that the urlbar is still focused.
+      is(Services.focus.focusedElement, gURLBar.inputField);
+
+      this.notification.remove();
+      notification.remove();
+    }
   },
 ];
