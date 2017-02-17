@@ -1,5 +1,6 @@
 {
     "work_dir": "build",
-    "locales_file": "src/mobile/android/locales/maemo-locales",
+    "locales_file": "src/mobile/locales/l10n-changesets.json",
+    "locales_platform": "android-multilocale",
     "mozilla_dir": "src"
 }
