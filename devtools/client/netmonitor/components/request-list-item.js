@@ -175,9 +175,9 @@ const StatusColumn = createFactory(createClass({
     }
 
     return (
-        div({ className: "requests-list-subitem requests-list-status", title },
-        div({ className: "requests-list-status-icon", "data-code": code }),
-        span({ className: "subitem-label requests-list-status-code" }, status)
+      div({ className: "requests-menu-subitem requests-menu-status", title },
+        div({ className: "requests-menu-status-icon", "data-code": code }),
+        span({ className: "subitem-label requests-menu-status-code" }, status),
       )
     );
   }
@@ -197,8 +197,8 @@ const MethodColumn = createFactory(createClass({
   render() {
     const { method } = this.props.item;
     return (
-      div({ className: "requests-list-subitem requests-list-method-box" },
-        span({ className: "subitem-label requests-list-method" }, method)
+      div({ className: "requests-menu-subitem requests-menu-method-box" },
+        span({ className: "subitem-label requests-menu-method" }, method)
       )
     );
   }
@@ -224,15 +224,15 @@ const FileColumn = createFactory(createClass({
     const { urlDetails, responseContentDataUri } = this.props.item;
 
     return (
-      div({ className: "requests-list-subitem requests-list-icon-and-file" },
+      div({ className: "requests-menu-subitem requests-menu-icon-and-file" },
         img({
-          className: "requests-list-icon",
+          className: "requests-menu-icon",
           src: responseContentDataUri,
           hidden: !responseContentDataUri,
           "data-type": responseContentDataUri ? "thumbnail" : undefined,
         }),
         div({
-          className: "subitem-label requests-list-file",
+          className: "subitem-label requests-menu-file",
           title: urlDetails.unicodeUrl,
         },
           urlDetails.baseNameWithQuery,
@@ -277,13 +277,13 @@ const DomainColumn = createFactory(createClass({
     let title = urlDetails.host + (remoteAddress ? ` (${remoteAddress})` : "");
 
     return (
-      div({ className: "requests-list-subitem requests-list-security-and-domain" },
+      div({ className: "requests-menu-subitem requests-menu-security-and-domain" },
         div({
           className: iconClassList.join(" "),
           title: iconTitle,
           onClick: onSecurityIconClick,
         }),
-        span({ className: "subitem-label requests-list-domain", title }, urlDetails.host),
+        span({ className: "subitem-label requests-menu-domain", title }, urlDetails.host),
       )
     );
   }
@@ -316,11 +316,11 @@ const CauseColumn = createFactory(createClass({
 
     return (
       div({
-        className: "requests-list-subitem requests-list-cause",
+        className: "requests-menu-subitem requests-menu-cause",
         title: causeUri,
       },
         span({
-          className: "requests-list-cause-stack",
+          className: "requests-menu-cause-stack",
           hidden: !causeHasStack,
         }, "JS"),
         span({ className: "subitem-label" }, causeType),
@@ -356,7 +356,7 @@ const TypeColumn = createFactory(createClass({
 
     return (
       div({
-        className: "requests-list-subitem requests-list-type",
+        className: "requests-menu-subitem requests-menu-type",
         title: mimeType,
       },
         span({ className: "subitem-label" }, abbrevType),
@@ -401,7 +401,7 @@ const TransferredSizeColumn = createFactory(createClass({
 
     return (
       div({
-        className: "requests-list-subitem requests-list-transferred",
+        className: "requests-menu-subitem requests-menu-transferred",
         title: text,
       },
         span({ className }, text),
@@ -431,7 +431,7 @@ const ContentSizeColumn = createFactory(createClass({
 
     return (
       div({
-        className: "requests-list-subitem subitem-label requests-list-size",
+        className: "requests-menu-subitem subitem-label requests-menu-size",
         title: text,
       },
         span({ className: "subitem-label" }, text),
@@ -464,9 +464,9 @@ const WaterfallColumn = createFactory(createClass({
     const { item, firstRequestStartedMillis } = this.props;
 
     return (
-      div({ className: "requests-list-subitem requests-list-waterfall" },
+      div({ className: "requests-menu-subitem requests-menu-waterfall" },
         div({
-          className: "requests-list-timings",
+          className: "requests-menu-timings",
           style: {
             paddingInlineStart: `${item.startedMillis - firstRequestStartedMillis}px`,
           },
@@ -499,7 +499,7 @@ function timingBoxes(item) {
       if (width > 0) {
         boxes.push(div({
           key,
-          className: "requests-list-timings-box " + key,
+          className: "requests-menu-timings-box " + key,
           style: { width }
         }));
       }
@@ -510,8 +510,8 @@ function timingBoxes(item) {
     let text = L10N.getFormatStr("networkMenu.totalMS", totalTime);
     boxes.push(div({
       key: "total",
-      className: "requests-list-timings-total",
-      title: text
+      className: "requests-menu-timings-total",
+      title: text,
     }, text));
   }
 
