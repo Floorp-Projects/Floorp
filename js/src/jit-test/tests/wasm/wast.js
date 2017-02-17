@@ -405,7 +405,7 @@ function exec(e) {
         return;
     }
 
-    if (exprName === "assert_invalid" || exprName === "assert_malformed" || exprName == "assert_soft_invalid") {
+    if (exprName === "assert_invalid" || exprName === "assert_malformed") {
         let moduleText = e.list[1].toString();
         let errMsg = e.list[2];
         if (errMsg) {

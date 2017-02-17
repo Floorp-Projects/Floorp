@@ -361,8 +361,40 @@
   "unknown type"
 )
 
-;; invalid table
+
+;; Unbound function in table
+
 (assert_invalid 
   (module (table anyfunc (elem 0 0)))
   "unknown function 0"
+)
+
+
+;; Invalid bounds for elements
+
+(assert_unlinkable
+  (module
+    (table 10 anyfunc)
+    (elem (i32.const 10) $f)
+    (func $f)
+  )
+  "elements segment does not fit"
+)
+
+(assert_unlinkable
+  (module
+    (table 10 anyfunc)
+    (elem (i32.const -1) $f)
+    (func $f)
+  )
+  "elements segment does not fit"
+)
+
+(assert_unlinkable
+  (module
+    (table 10 anyfunc)
+    (elem (i32.const -10) $f)
+    (func $f)
+  )
+  "elements segment does not fit"
 )
