@@ -1995,7 +1995,7 @@ profiler_start(int aProfileEntries, double aInterval,
   profiler_stop();
 
   // Deep copy aThreadNameFilters. Must happen before the MaybeSetProfile()
-  // calls below.
+  // call below.
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
 
@@ -2010,6 +2010,29 @@ profiler_start(int aProfileEntries, double aInterval,
   for (uint32_t i = 0; i < aFeatureCount; ++i) {
     gFeatures[i] = aFeatures[i];
   }
+
+  bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+  bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
+
+#if defined(PROFILE_JAVA)
+  gProfileJava = mozilla::jni::IsFennec() &&
+                      hasFeature(aFeatures, aFeatureCount, "java");
+#endif
+  gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
+  gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
+
+  gAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+  gDisplayListDump  = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
+  gLayersDump       = hasFeature(aFeatures, aFeatureCount, "layersdump");
+  gProfileGPU       = hasFeature(aFeatures, aFeatureCount, "gpu");
+  gProfileMemory    = hasFeature(aFeatures, aFeatureCount, "memory");
+  gProfileRestyle   = hasFeature(aFeatures, aFeatureCount, "restyle");
+  // Profile non-main threads if we have a filter, because users sometimes ask
+  // to filter by a list of threads but forget to explicitly request.
+  // gProfileThreads must be set before the MaybeSetProfile() call below.
+  gProfileThreads   = hasFeature(aFeatures, aFeatureCount, "threads") ||
+                      aFilterCount > 0;
+  gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
   gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
@@ -2037,28 +2060,6 @@ profiler_start(int aProfileEntries, double aInterval,
 #endif
 
   gGatherer = new mozilla::ProfileGatherer(gSampler);
-
-  bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
-  bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
-
-#if defined(PROFILE_JAVA)
-  gProfileJava = mozilla::jni::IsFennec() &&
-                      hasFeature(aFeatures, aFeatureCount, "java");
-#endif
-  gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
-  gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
-
-  gAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-  gDisplayListDump  = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
-  gLayersDump       = hasFeature(aFeatures, aFeatureCount, "layersdump");
-  gProfileGPU       = hasFeature(aFeatures, aFeatureCount, "gpu");
-  gProfileMemory    = hasFeature(aFeatures, aFeatureCount, "memory");
-  gProfileRestyle   = hasFeature(aFeatures, aFeatureCount, "restyle");
-  // Profile non-main threads if we have a filter, because users sometimes ask
-  // to filter by a list of threads but forget to explicitly request.
-  gProfileThreads   = hasFeature(aFeatures, aFeatureCount, "threads") ||
-                      aFilterCount > 0;
-  gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
   PlatformStart();
