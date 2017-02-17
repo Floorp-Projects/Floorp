@@ -34,6 +34,7 @@ if CONFIG['ACCESSIBILITY']:
         'MainThreadHandoff.h',
         'MainThreadInvoker.h',
         'Registration.h',
+        'StructStream.h',
         'WeakRef.h',
     ]
 
@@ -49,6 +50,7 @@ if CONFIG['ACCESSIBILITY']:
         'InterceptorLog.cpp',
         'MainThreadHandoff.cpp',
         'MainThreadInvoker.cpp',
+        'StructStream.cpp',
     ]
 
 LOCAL_INCLUDES += [
