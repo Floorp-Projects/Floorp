@@ -96,11 +96,12 @@ const Toolbar = createClass({
       .replace("#4", getTimeWithDecimals(millis / 1000));
 
     let buttons = requestFilterTypes.map(([type, checked]) => {
-      let classList = ["devtools-button", `requests-list-filter-${type}-button`];
+      let classList = ["devtools-button"];
       checked && classList.push("checked");
 
       return (
         button({
+          id: `requests-list-filter-${type}-button`,
           className: classList.join(" "),
           key: type,
           onClick: this.toggleRequestFilterType,
@@ -117,7 +118,8 @@ const Toolbar = createClass({
       span({ className: "devtools-toolbar devtools-toolbar-container" },
         span({ className: "devtools-toolbar-group" },
           button({
-            className: "devtools-button devtools-clear-icon requests-list-clear-button",
+            id: "requests-list-clear-button",
+            className: "devtools-button devtools-clear-icon",
             title: TOOLBAR_CLEAR,
             onClick: clearRequests,
           }),
@@ -125,7 +127,8 @@ const Toolbar = createClass({
         ),
         span({ className: "devtools-toolbar-group" },
           button({
-            className: "devtools-button requests-list-network-summary-button",
+            id: "requests-list-network-summary-button",
+            className: "devtools-button",
             title: count ? text : L10N.getStr("netmonitor.toolbar.perf"),
             onClick: openStatistics,
           },
