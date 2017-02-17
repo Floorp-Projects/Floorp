@@ -65,3 +65,24 @@ pub trait CanDeriveCopy<'a> {
                                 extra: Self::Extra)
                                 -> bool;
 }
+
+/// A trait that encapsulates the logic for whether or not we can derive `Default`
+/// for a given thing.
+///
+/// This should ideally be a no-op that just returns `true`, but instead needs
+/// to be a recursive method that checks whether all the proper members can
+/// derive default or not, because of the limit rust has on 32 items as max in the
+/// array.
+pub trait CanDeriveDefault {
+    /// Implementations can define this type to get access to any extra
+    /// information required to determine whether they can derive `Default`. If
+    /// extra information is unneeded, then this should simply be the unit type.
+    type Extra;
+
+    /// Return `true` if `Default` can be derived for this thing, `false`
+    /// otherwise.
+    fn can_derive_default(&self,
+                          ctx: &BindgenContext,
+                          extra: Self::Extra)
+                          -> bool;
+}

@@ -1,12 +1,12 @@
 //! Intermediate representation for the physical layout of some type.
 
 use super::context::BindgenContext;
-use super::derive::{CanDeriveCopy, CanDeriveDebug};
+use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
-use std::cmp;
+use std::{cmp, mem};
 
 /// A type that represents the struct layout of a type.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Layout {
     /// The size (in bytes) of this layout.
     pub size: usize,
@@ -16,6 +16,13 @@ pub struct Layout {
     pub packed: bool,
 }
 
+#[test]
+fn test_layout_for_size() {
+    let ptr_size = mem::size_of::<*mut ()>();
+    assert_eq!(Layout::for_size(ptr_size), Layout::new(ptr_size, ptr_size));
+    assert_eq!(Layout::for_size(3 * ptr_size), Layout::new(3 * ptr_size, ptr_size));
+}
+
 impl Layout {
     /// Construct a new `Layout` with the given `size` and `align`. It is not
     /// packed.
@@ -23,6 +30,20 @@ impl Layout {
         Layout {
             size: size,
             align: align,
+            packed: false,
+        }
+    }
+
+    /// Creates a non-packed layout for a given size, trying to use the maximum
+    /// alignment possible.
+    pub fn for_size(size: usize) -> Self {
+        let mut next_align = 2;
+        while size % next_align == 0 && next_align <= 2 * mem::size_of::<*mut ()>() {
+            next_align *= 2;
+        }
+        Layout {
+            size: size,
+            align: next_align / 2,
             packed: false,
         }
     }
@@ -74,6 +95,15 @@ impl CanDeriveDebug for Opaque {
     type Extra = ();
 
     fn can_derive_debug(&self, _: &BindgenContext, _: ()) -> bool {
+        self.array_size()
+            .map_or(false, |size| size <= RUST_DERIVE_IN_ARRAY_LIMIT)
+    }
+}
+
+impl CanDeriveDefault for Opaque {
+    type Extra = ();
+
+    fn can_derive_default(&self, _: &BindgenContext, _: ()) -> bool {
         self.array_size()
             .map_or(false, |size| size <= RUST_DERIVE_IN_ARRAY_LIMIT)
     }

@@ -3,7 +3,7 @@
 name = "clang-sys"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 
-version = "0.12.0"
+version = "0.14.0"
 
 readme = "README.md"
 license = "Apache-2.0"
