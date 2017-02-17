@@ -202,8 +202,8 @@ TEST(OpusAudioTrackEncoder, Resample)
   EXPECT_TRUE(TestOpusResampler(1, 48000) == 48000);
 
   // Otherwise, it should be resampled to 48kHz by resampler.
-  EXPECT_FALSE(TestOpusResampler(1, 9600) == 9600);
-  EXPECT_FALSE(TestOpusResampler(1, 44100) == 44100);
+  EXPECT_TRUE(TestOpusResampler(1, 9600) == 48000);
+  EXPECT_TRUE(TestOpusResampler(1, 44100) == 48000);
 }
 
 TEST(OpusAudioTrackEncoder, FetchMetadata)
