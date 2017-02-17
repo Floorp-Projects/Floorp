@@ -23,6 +23,7 @@ var currentMenulist = null;
 var currentZoom = 1;
 var closedWithEnter = false;
 var selectRect;
+var customStylingEnabled = Services.prefs.getBoolPref("dom.forms.select.customstyling");
 
 this.SelectParentHelper = {
   populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
@@ -35,18 +36,38 @@ this.SelectParentHelper = {
     }
 
     let doc = menulist.ownerDocument;
-    stylesheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
-    stylesheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
-    stylesheet.scoped = true;
-    stylesheet.hidden = true;
-    stylesheet = menulist.appendChild(stylesheet);
+    let sheet;
+    if (customStylingEnabled) {
+      stylesheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
+      stylesheet.setAttribute("id", "ContentSelectDropdownScopedStylesheet");
+      stylesheet.scoped = true;
+      stylesheet.hidden = true;
+      stylesheet = menulist.appendChild(stylesheet);
+      sheet = stylesheet.sheet;
+    }
 
-    let sheet = stylesheet.sheet;
-    if (selectBackgroundColor != uaSelectBackgroundColor ||
-        selectColor != uaSelectColor) {
+    let ruleBody = "";
+
+    // Some webpages set the <select> backgroundColor to transparent,
+    // but they don't intend to change the popup to transparent.
+    if (customStylingEnabled &&
+        selectBackgroundColor != uaSelectBackgroundColor &&
+        selectBackgroundColor != "transparent" &&
+        selectBackgroundColor != selectColor) {
+      ruleBody = `background-color: ${selectBackgroundColor};`;
+    }
+
+    if (customStylingEnabled &&
+        selectColor != uaSelectColor &&
+        selectColor != selectBackgroundColor &&
+        (selectBackgroundColor != "transparent" ||
+         selectColor != uaSelectBackgroundColor)) {
+      ruleBody += `color: ${selectColor};`;
+    }
+
+    if (ruleBody) {
       sheet.insertRule(`menupopup {
-        background-color: ${selectBackgroundColor};
-        color: ${selectColor};
+        ${ruleBody}
       }`, 0);
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
@@ -230,13 +251,15 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.setAttribute("tooltiptext", option.tooltip);
 
     let ruleBody = "";
-    if (option.backgroundColor &&
+    if (customStylingEnabled &&
+        option.backgroundColor &&
         option.backgroundColor != "transparent" &&
         option.backgroundColor != uaBackgroundColor) {
       ruleBody = `background-color: ${option.backgroundColor};`;
     }
 
-    if (option.color &&
+    if (customStylingEnabled &&
+        option.color &&
         option.color != uaColor) {
       ruleBody += `color: ${option.color};`;
     }

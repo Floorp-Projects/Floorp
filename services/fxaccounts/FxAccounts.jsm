@@ -69,6 +69,7 @@ var publicProperties = [
   "setSignedInUser",
   "signOut",
   "updateDeviceRegistration",
+  "deleteDeviceRegistration",
   "updateUserAccountData",
   "whenVerified",
 ];
@@ -546,7 +547,13 @@ FxAccountsInternal.prototype = {
    */
   setSignedInUser: function setSignedInUser(credentials) {
     log.debug("setSignedInUser - aborting any existing flows");
-    return this.abortExistingFlow().then(() => {
+    return this.getSignedInUser().then(signedInUser => {
+      if (signedInUser) {
+        return this.deleteDeviceRegistration(signedInUser.sessionToken, signedInUser.deviceId);
+      }
+    }).then(() =>
+      this.abortExistingFlow()
+    ).then(() => {
       let currentAccountState = this.currentAccountState = this.newAccountState(
         Cu.cloneInto(credentials, {}) // Pass a clone of the credentials object.
       );
@@ -567,7 +574,7 @@ FxAccountsInternal.prototype = {
       }).then(() => {
         return currentAccountState.resolve();
       });
-    })
+    });
   },
 
   /**
@@ -823,8 +830,8 @@ FxAccountsInternal.prototype = {
     const options = { service: "sync" };
 
     if (deviceId) {
-      log.debug("destroying device and session");
-      return this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId, options);
+      log.debug("destroying device, session and unsubscribing from FxA push");
+      return this.deleteDeviceRegistration(sessionToken, deviceId);
     }
 
     log.debug("destroying session");
@@ -1534,6 +1541,31 @@ FxAccountsInternal.prototype = {
         return this._registerOrUpdateDevice(signedInUser);
       }
     }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
+  },
+
+  // Delete the Push Subscription and the device registration on the auth server.
+  // Returns a promise that always resolves, never rejects.
+  async deleteDeviceRegistration(sessionToken, deviceId) {
+    try {
+      // Allow tests to skip device registration because it makes remote requests to the auth server.
+      if (Services.prefs.getBoolPref("identity.fxaccounts.skipDeviceRegistration")) {
+        return Promise.resolve();
+      }
+    } catch (ignore) {}
+
+    try {
+      await this.fxaPushService.unsubscribe();
+      if (sessionToken && deviceId) {
+        await this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId);
+      }
+      this.currentAccountState.updateUserAccountData({
+        deviceId: null,
+        deviceRegistrationVersion: null
+      });
+    } catch (err) {
+      log.error("Could not delete the device registration", err);
+    }
+    return Promise.resolve();
   },
 
   handleDeviceDisconnection(deviceId) {

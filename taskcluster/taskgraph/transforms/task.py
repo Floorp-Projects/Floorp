@@ -345,6 +345,7 @@ task_description_schema = Schema({
 })
 
 GROUP_NAMES = {
+    'py': 'Python unit tests',
     'tc': 'Executed by TaskCluster',
     'tc-e10s': 'Executed by TaskCluster with e10s',
     'tc-Fxfn-l': 'Firefox functional tests (local) executed by TaskCluster',

@@ -253,7 +253,7 @@ WyciwygChannelParent::RecvAsyncOpen(const URIParams& aOriginal,
 }
 
 mozilla::ipc::IPCResult
-WyciwygChannelParent::RecvWriteToCacheEntry(const nsString& data)
+WyciwygChannelParent::RecvWriteToCacheEntry(const nsDependentSubstring& data)
 {
   if (!mReceivedAppData) {
     printf_stderr("WyciwygChannelParent::RecvWriteToCacheEntry: FATAL ERROR: didn't receive app data\n");

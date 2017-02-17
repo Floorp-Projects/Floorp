@@ -19,6 +19,7 @@ add_task(function* test_suspend() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
+        "http://mochi.test/",
       ],
     },
 
@@ -91,6 +92,8 @@ add_task(function* test_error_resume() {
       permissions: [
         "webRequest",
         "webRequestBlocking",
+        "http://example.com/",
+        "http://mochi.test/",
       ],
     },
 
