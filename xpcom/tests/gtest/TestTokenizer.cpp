@@ -1135,8 +1135,6 @@ TEST(Tokenizer, IncrementalBuffering2)
 
 TEST(Tokenizer, RecordAndReadUntil)
 {
-  typedef TokenizerBase::Token Token;
-
   Tokenizer t("aaaa,bbbb");
   t.SkipWhites();
   nsDependentCSubstring subject;
