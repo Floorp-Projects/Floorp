@@ -167,8 +167,10 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
                  "How did that happen?");
       aChangeListToProcess.AppendChange(aElement->GetPrimaryFrame(), aElement,
                                         changeHint);
-      aChangeListToProcess.AppendChange(styleFrame, aElement,
-                                        NS_HintsNotHandledForDescendantsIn(changeHint));
+      nsChangeHint childHint = NS_HintsNotHandledForDescendantsIn(changeHint);
+      if (childHint) {
+        aChangeListToProcess.AppendChange(styleFrame, aElement, childHint);
+      }
     } else {
       aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
     }
