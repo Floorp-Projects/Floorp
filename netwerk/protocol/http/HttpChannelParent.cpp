@@ -591,7 +591,7 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
   nsresult rv;
 
   LOG(("HttpChannelParent::ConnectChannel: Looking for a registered channel "
-       "[this=%p, id=%lu]\n", this, registrarId));
+       "[this=%p, id=%" PRIu32 "]\n", this, registrarId));
   nsCOMPtr<nsIChannel> channel;
   rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(channel));
   if (NS_FAILED(rv)) {
@@ -603,7 +603,7 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
     return true;
   }
 
-  LOG(("  found channel %p, rv=%08x", channel.get(), rv));
+  LOG(("  found channel %p, rv=%08" PRIx32, channel.get(), static_cast<uint32_t>(rv)));
   mChannel = do_QueryObject(channel);
   if (!mChannel) {
     LOG(("  but it's not nsHttpChannel"));
@@ -721,8 +721,8 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const bool& aMixedContentWouldBlock,
                                        const bool& aChooseAppcache)
 {
-  LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
-       this, result));
+  LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(result)));
   nsresult rv;
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIHttpChannel> newHttpChannel =
@@ -798,8 +798,8 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
 
   if (mRedirectCallback) {
     LOG(("HttpChannelParent::RecvRedirect2Verify call OnRedirectVerifyCallback"
-         " [this=%p result=%x, mRedirectCallback=%p]\n",
-         this, result, mRedirectCallback.get()));
+         " [this=%p result=%" PRIx32 ", mRedirectCallback=%p]\n",
+         this, static_cast<uint32_t>(result), mRedirectCallback.get()));
     mRedirectCallback->OnRedirectVerifyCallback(result);
     mRedirectCallback = nullptr;
   }
@@ -1206,8 +1206,8 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
                                  nsISupports *aContext,
                                  nsresult aStatusCode)
 {
-  LOG(("HttpChannelParent::OnStopRequest: [this=%p aRequest=%p status=%x]\n",
-       this, aRequest, aStatusCode));
+  LOG(("HttpChannelParent::OnStopRequest: [this=%p aRequest=%p status=%" PRIx32 "]\n",
+       this, aRequest, static_cast<uint32_t>(aStatusCode)));
 
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
     "Cannot call OnStopRequest if diverting is set!");
@@ -1390,7 +1390,7 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
                                  uint32_t redirectFlags,
                                  nsIAsyncVerifyRedirectCallback* callback)
 {
-  LOG(("HttpChannelParent::StartRedirect [this=%p, registrarId=%lu "
+  LOG(("HttpChannelParent::StartRedirect [this=%p, registrarId=%" PRIu32 " "
        "newChannel=%p callback=%p]\n", this, registrarId, newChannel,
        callback));
 
@@ -1703,8 +1703,8 @@ void
 HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
                                          bool aSkipResume)
 {
-  LOG(("HttpChannelParent::NotifyDiversionFailed [this=%p aErrorCode=%x]\n",
-       this, aErrorCode));
+  LOG(("HttpChannelParent::NotifyDiversionFailed [this=%p aErrorCode=%" PRIx32 "]\n",
+       this, static_cast<uint32_t>(aErrorCode)));
   MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
   MOZ_RELEASE_ASSERT(mDivertingFromChild);
   MOZ_RELEASE_ASSERT(mParentListener);

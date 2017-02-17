@@ -26,6 +26,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "mozilla/StaticPtr.h"
@@ -583,9 +584,9 @@ ClampResultCode(nsresult aResultCode)
       return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     default:
 #ifdef DEBUG
-      nsPrintfCString message("Converting non-IndexedDB error code (0x%X) to "
+      nsPrintfCString message("Converting non-IndexedDB error code (0x%" PRIX32 ") to "
                               "NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR",
-                              aResultCode);
+                              static_cast<uint32_t>(aResultCode));
       NS_WARNING(message.get());
 #else
       ;
@@ -4557,7 +4558,7 @@ CreateStorageConnection(nsIFile* aDBFile,
       // Set the page size first.
       if (kSQLitePageSizeOverride) {
         rv = connection->ExecuteSimpleSQL(
-          nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
+          nsPrintfCString("PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)
         );
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -4793,7 +4794,7 @@ CreateStorageConnection(nsIFile* aDBFile,
           // Successfully set to rollback journal mode so changing the page size
           // is possible with a VACUUM.
           rv = connection->ExecuteSimpleSQL(
-            nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
+            nsPrintfCString("PRAGMA page_size = %" PRIu32 ";", kSQLitePageSizeOverride)
           );
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
@@ -5724,7 +5725,7 @@ public:
 
   nsCString GetThreadName() const
   {
-    return nsPrintfCString("IndexedDB #%lu", mSerialNumber);
+    return nsPrintfCString("IndexedDB #%" PRIu32, mSerialNumber);
   }
 
 private:
@@ -12621,7 +12622,7 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
   nsCOMPtr<nsIThread> thread;
   aThreadInfo.mThread.swap(thread);
 
-  IDB_DEBUG_LOG(("ConnectionPool shutting down thread %lu",
+  IDB_DEBUG_LOG(("ConnectionPool shutting down thread %" PRIu32,
                  runnable->SerialNumber()));
 
   // This should clean up the thread with the profiler.
@@ -12722,7 +12723,7 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
         if (NS_SUCCEEDED(rv)) {
           MOZ_ASSERT(newThread);
 
-          IDB_DEBUG_LOG(("ConnectionPool created thread %lu",
+          IDB_DEBUG_LOG(("ConnectionPool created thread %" PRIu32,
                          runnable->SerialNumber()));
 
           dbInfo->mThreadInfo.mThread.swap(newThread);

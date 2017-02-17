@@ -5,44 +5,47 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageContainer.h"
+#include "MP4Decoder.h"
 #include "MediaDecoderReader.h"
 #include "MediaInfo.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/mozalloc.h" // for operator new, and new (fallible)
-#include "mozilla/RefPtr.h"
-#include "mozilla/TaskQueue.h"
-#include "mp4_demuxer/AnnexB.h"
-#include "mp4_demuxer/H264.h"
-#include "MP4Decoder.h"
-#include "nsAutoPtr.h"
-#include "nsRect.h"
 #include "PlatformDecoderModule.h"
 #include "ReorderQueue.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TaskQueue.h"
+#include "mozilla/mozalloc.h" // for operator new, and new (fallible)
+#include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/H264.h"
+#include "nsAutoPtr.h"
+#include "nsRect.h"
 
 namespace mozilla {
 
 // Decoder that uses a passed in object's Create function to create blank
 // MediaData objects.
 template<class BlankMediaDataCreator>
-class BlankMediaDataDecoder : public MediaDataDecoder {
+class BlankMediaDataDecoder : public MediaDataDecoder
+{
 public:
-
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
                         const CreateDecoderParams& aParams)
     : mCreator(aCreator)
-    , mMaxRefFrames(aParams.mConfig.GetType() == TrackInfo::kVideoTrack &&
-                    MP4Decoder::IsH264(aParams.mConfig.mMimeType)
-                    ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
-                      ? mp4_demuxer::H264::ComputeMaxRefFrames(aParams.VideoConfig().mExtraData)
-                      : 16
-                    : 0)
+    , mMaxRefFrames(
+        aParams.mConfig.GetType() == TrackInfo::kVideoTrack
+        && MP4Decoder::IsH264(aParams.mConfig.mMimeType)
+           ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
+             ? mp4_demuxer::H264::ComputeMaxRefFrames(
+                 aParams.VideoConfig().mExtraData)
+             : 16
+           : 0)
     , mType(aParams.mConfig.GetType())
   {
   }
 
-  RefPtr<InitPromise> Init() override {
+  RefPtr<InitPromise> Init() override
+  {
     return InitPromise::CreateAndResolve(mType, __func__);
   }
 
@@ -99,7 +102,8 @@ private:
   TrackInfo::TrackType mType;
 };
 
-class BlankVideoDataCreator {
+class BlankVideoDataCreator
+{
 public:
   BlankVideoDataCreator(uint32_t aFrameWidth,
                         uint32_t aFrameHeight,
@@ -112,8 +116,9 @@ public:
     mPicture = gfx::IntRect(0, 0, mFrameWidth, mFrameHeight);
   }
 
-  already_AddRefed<MediaData>
-  Create(const media::TimeUnit& aDTS, const media::TimeUnit& aDuration, int64_t aOffsetInStream)
+  already_AddRefed<MediaData> Create(const media::TimeUnit& aDTS,
+                                     const media::TimeUnit& aDuration,
+                                     int64_t aOffsetInStream)
   {
     // Create a fake YUV buffer in a 420 format. That is, an 8bpp Y plane,
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
@@ -170,7 +175,8 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
-class BlankAudioDataCreator {
+class BlankAudioDataCreator
+{
 public:
   BlankAudioDataCreator(uint32_t aChannelCount, uint32_t aSampleRate)
     : mFrameSum(0), mChannelCount(aChannelCount), mSampleRate(aSampleRate)
@@ -185,10 +191,10 @@ public:
     // rounding errors, so we get a consistent tone.
     CheckedInt64 frames =
       UsecsToFrames(aDuration.ToMicroseconds()+1, mSampleRate);
-    if (!frames.isValid() ||
-        !mChannelCount ||
-        !mSampleRate ||
-        frames.value() > (UINT32_MAX / mChannelCount)) {
+    if (!frames.isValid()
+        || !mChannelCount
+        || !mSampleRate
+        || frames.value() > (UINT32_MAX / mChannelCount)) {
       return nullptr;
     }
     AlignedAudioBuffer samples(frames.value() * mChannelCount);
@@ -220,12 +226,14 @@ private:
   uint32_t mSampleRate;
 };
 
-class BlankDecoderModule : public PlatformDecoderModule {
+class BlankDecoderModule : public PlatformDecoderModule
+{
 public:
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override {
+  CreateVideoDecoder(const CreateDecoderParams& aParams) override
+  {
     const VideoInfo& config = aParams.VideoConfig();
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
       config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
@@ -236,7 +244,8 @@ public:
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override {
+  CreateAudioDecoder(const CreateDecoderParams& aParams) override
+  {
     const AudioInfo& config = aParams.AudioConfig();
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       config.mChannels, config.mRate);
@@ -246,9 +255,8 @@ public:
     return decoder.forget();
   }
 
-  bool
-  SupportsMimeType(const nsACString& aMimeType,
-                   DecoderDoctorDiagnostics* aDiagnostics) const override
+  bool SupportsMimeType(const nsACString& aMimeType,
+                        DecoderDoctorDiagnostics* aDiagnostics) const override
   {
     return true;
   }

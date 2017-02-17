@@ -36,8 +36,8 @@ public:
     NS_IMETHOD Run() override
     {
         LOG(("nsAsyncVerifyRedirectCallbackEvent::Run() "
-             "callback to %p with result %x",
-             mCallback.get(), mResult));
+             "callback to %p with result %" PRIx32,
+             mCallback.get(), static_cast<uint32_t>(mResult)));
        (void) mCallback->OnRedirectVerifyCallback(mResult);
        return NS_OK;
     }
@@ -104,8 +104,9 @@ NS_IMETHODIMP
 nsAsyncRedirectVerifyHelper::OnRedirectVerifyCallback(nsresult result)
 {
     LOG(("nsAsyncRedirectVerifyHelper::OnRedirectVerifyCallback() "
-         "result=%x expectedCBs=%u mResult=%x",
-         result, mExpectedCallbacks, mResult));
+         "result=%" PRIx32 " expectedCBs=%u mResult=%" PRIx32,
+         static_cast<uint32_t>(result), mExpectedCallbacks,
+         static_cast<uint32_t>(mResult)));
 
     MOZ_DIAGNOSTIC_ASSERT(mExpectedCallbacks > 0,
                           "OnRedirectVerifyCallback called more times than expected");
@@ -145,8 +146,8 @@ nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect(nsIChannelEventSink *sink
                                                        uint32_t flags)
 {
     LOG(("nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect() "
-         "sink=%p expectedCBs=%u mResult=%x",
-         sink, mExpectedCallbacks, mResult));
+         "sink=%p expectedCBs=%u mResult=%" PRIx32,
+         sink, mExpectedCallbacks, static_cast<uint32_t>(mResult)));
 
     ++mExpectedCallbacks;
 
@@ -160,7 +161,7 @@ nsAsyncRedirectVerifyHelper::DelegateOnChannelRedirect(nsIChannelEventSink *sink
     nsresult rv =
         sink->AsyncOnChannelRedirect(oldChannel, newChannel, flags, this);
 
-    LOG(("  result=%x expectedCBs=%u", rv, mExpectedCallbacks));
+    LOG(("  result=%" PRIx32 " expectedCBs=%u", static_cast<uint32_t>(rv), mExpectedCallbacks));
 
     // If the sink returns failure from this call the redirect is vetoed. We
     // emulate a callback from the sink in this case in order to perform all
@@ -177,8 +178,9 @@ void
 nsAsyncRedirectVerifyHelper::ExplicitCallback(nsresult result)
 {
     LOG(("nsAsyncRedirectVerifyHelper::ExplicitCallback() "
-         "result=%x expectedCBs=%u mCallbackInitiated=%u mResult=%x",
-         result, mExpectedCallbacks, mCallbackInitiated, mResult));
+         "result=%" PRIx32 " expectedCBs=%u mCallbackInitiated=%u mResult=%"  PRIx32,
+         static_cast<uint32_t>(result), mExpectedCallbacks, mCallbackInitiated,
+         static_cast<uint32_t>(mResult)));
 
     nsCOMPtr<nsIAsyncVerifyRedirectCallback>
         callback(do_QueryInterface(mOldChan));
@@ -215,7 +217,8 @@ void
 nsAsyncRedirectVerifyHelper::InitCallback()
 {
     LOG(("nsAsyncRedirectVerifyHelper::InitCallback() "
-         "expectedCBs=%d mResult=%x", mExpectedCallbacks, mResult));
+         "expectedCBs=%d mResult=%" PRIx32, mExpectedCallbacks,
+         static_cast<uint32_t>(mResult)));
 
     mCallbackInitiated = true;
 

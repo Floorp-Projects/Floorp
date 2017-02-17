@@ -10,9 +10,9 @@
 #include "GMPVideoDecoderProxy.h"
 #include "ImageContainer.h"
 #include "MediaDataDecoderProxy.h"
+#include "MediaInfo.h"
 #include "PlatformDecoderModule.h"
 #include "mozIGeckoMediaPluginService.h"
-#include "MediaInfo.h"
 
 namespace mozilla {
 

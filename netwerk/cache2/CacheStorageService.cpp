@@ -32,6 +32,8 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 namespace net {
@@ -291,7 +293,7 @@ private:
         mNotifyStorage = false;
 
       } else {
-        LOG(("  entry [left=%d, canceled=%d]", mEntryArray.Length(), (bool)mCancel));
+        LOG(("  entry [left=%" PRIuSIZE ", canceled=%d]", mEntryArray.Length(), (bool)mCancel));
 
         // Third, notify each entry until depleted or canceled
         if (!mEntryArray.Length() || mCancel) {
@@ -1302,7 +1304,7 @@ CacheStorageService::SchedulePurgeOverMemoryLimit()
   if (mPurgeTimer) {
     nsresult rv;
     rv = mPurgeTimer->InitWithCallback(this, 1000, nsITimer::TYPE_ONE_SHOT);
-    LOG(("  timer init rv=0x%08x", rv));
+    LOG(("  timer init rv=0x%08" PRIx32, static_cast<uint32_t>(rv)));
   }
 }
 
@@ -1624,7 +1626,7 @@ CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
   CacheIndex::EntryStatus status;
   rv = CacheIndex::HasEntry(fileKey, &status);
   if (NS_FAILED(rv) || status == CacheIndex::DO_NOT_KNOW) {
-    LOG(("  index doesn't know, rv=0x%08x", rv));
+    LOG(("  index doesn't know, rv=0x%08" PRIx32, static_cast<uint32_t>(rv)));
     return NS_ERROR_NOT_AVAILABLE;
   }
 

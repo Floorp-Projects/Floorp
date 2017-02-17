@@ -163,6 +163,7 @@
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',
                     '-Wmissing-prototypes',
+                    '-Wno-format',
                  ],
                  'defines' : [
                      'HAVE_LIBM=1',
@@ -210,6 +211,7 @@
                     '-Wno-parentheses',
                     '-Wno-strict-prototypes',
                     '-Wmissing-prototypes',
+                    '-Wno-format',
                  ],
                  'defines' : [
                      'LINUX',

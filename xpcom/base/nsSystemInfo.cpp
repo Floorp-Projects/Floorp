@@ -9,7 +9,6 @@
 #include "nsSystemInfo.h"
 #include "prsystem.h"
 #include "prio.h"
-#include "prprf.h"
 #include "mozilla/SSE.h"
 #include "mozilla/arm.h"
 #include "mozilla/Sprintf.h"

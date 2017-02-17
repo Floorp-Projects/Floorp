@@ -120,7 +120,7 @@ class Logging
             ptr = nullptr;
         }
 
-        out = nsPrintfCString("<%s %s:%d:%p>", side, objDesc, id.serialNumber(), ptr);
+        out = nsPrintfCString("<%s %s:%" PRIu64 ":%p>", side, objDesc, id.serialNumber(), ptr);
     }
 
     void format(const ReceiverObj& obj, nsCString& out) {

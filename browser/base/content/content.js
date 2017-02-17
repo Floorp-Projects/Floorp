@@ -6,6 +6,8 @@
 /* This content script should work in any browser or iframe and should not
  * depend on the frame being contained in tabbrowser. */
 
+/* eslint-env mozilla/frame-script */
+
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

@@ -18,7 +18,6 @@
 #include "nsIException.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsMemory.h"
-#include "prprf.h"
 #include "xpcprivate.h"
 
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -361,7 +360,7 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
   static const char format[] =
-"[Exception... \"%s\"  nsresult: \"0x%x (%s)\"  location: \"%s\"  data: %s]";
+"[Exception... \"%s\"  nsresult: \"0x%" PRIx32 " (%s)\"  location: \"%s\"  data: %s]";
 
   nsCString location;
 
@@ -389,7 +388,7 @@ Exception::ToString(JSContext* aCx, nsACString& _retval)
   const char* data = mData ? "yes" : "no";
 
   _retval.Truncate();
-  _retval.AppendPrintf(format, msg, mResult, resultName,
+  _retval.AppendPrintf(format, msg, static_cast<uint32_t>(mResult), resultName,
                        location.get(), data);
   return NS_OK;
 }
@@ -553,7 +552,7 @@ DOMException::ToString(JSContext* aCx, nsACString& aReturn)
   static const char defaultLocation[] = "<unknown>";
   static const char defaultName[] = "<unknown>";
   static const char format[] =
-    "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%x (%s)\"  location: \"%s\"]";
+    "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%" PRIx32 " (%s)\"  location: \"%s\"]";
 
   nsAutoCString location;
 
@@ -564,7 +563,7 @@ DOMException::ToString(JSContext* aCx, nsACString& aReturn)
   const char* msg = !mMessage.IsEmpty() ? mMessage.get() : defaultMsg;
   const char* resultName = !mName.IsEmpty() ? mName.get() : defaultName;
 
-  aReturn.AppendPrintf(format, msg, mCode, mResult, resultName,
+  aReturn.AppendPrintf(format, msg, mCode, static_cast<uint32_t>(mResult), resultName,
                        location.get());
 
   return NS_OK;

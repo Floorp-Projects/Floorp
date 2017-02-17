@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 function swapTabsAndCloseOther(a, b) {
   gBrowser.swapBrowsersAndCloseOther(gBrowser.tabs[b], gBrowser.tabs[a]);
 }

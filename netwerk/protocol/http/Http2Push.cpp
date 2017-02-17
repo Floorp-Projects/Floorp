@@ -109,21 +109,26 @@ Http2PushedStream::WriteSegments(nsAHttpSegmentWriter *writer,
 bool
 Http2PushedStream::DeferCleanup(nsresult status)
 {
-  LOG3(("Http2PushedStream::DeferCleanup Query %p %x\n", this, status));
+  LOG3(("Http2PushedStream::DeferCleanup Query %p %" PRIx32 "\n", this,
+        static_cast<uint32_t>(status)));
 
   if (NS_SUCCEEDED(status) && mDeferCleanupOnSuccess) {
-    LOG3(("Http2PushedStream::DeferCleanup %p %x defer on success\n", this, status));
+    LOG3(("Http2PushedStream::DeferCleanup %p %" PRIx32 " defer on success\n", this,
+          static_cast<uint32_t>(status)));
     return true;
   }
   if (mDeferCleanupOnPush) {
-    LOG3(("Http2PushedStream::DeferCleanup %p %x defer onPush ref\n", this, status));
+    LOG3(("Http2PushedStream::DeferCleanup %p %" PRIx32 " defer onPush ref\n", this,
+          static_cast<uint32_t>(status)));
     return true;
   }
   if (mConsumerStream) {
-    LOG3(("Http2PushedStream::DeferCleanup %p %x defer active consumer\n", this, status));
+    LOG3(("Http2PushedStream::DeferCleanup %p %" PRIx32 " defer active consumer\n", this,
+          static_cast<uint32_t>(status)));
     return true;
   }
-  LOG3(("Http2PushedStream::DeferCleanup Query %p %x not deferred\n", this, status));
+  LOG3(("Http2PushedStream::DeferCleanup Query %p %" PRIx32 " not deferred\n", this,
+        static_cast<uint32_t>(status)));
   return false;
 }
 
@@ -420,7 +425,7 @@ Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
 
     if (consumer) {
       LOG3(("Http2PushTransactionBuffer::WriteSegments notifying connection "
-            "consumer data available 0x%X [%u] done=%d\n",
+            "consumer data available 0x%X [%" PRIu64 "] done=%d\n",
             mPushStream->StreamID(), Available(), mIsDone));
       mPushStream->ConnectPushedStream(consumer);
     }

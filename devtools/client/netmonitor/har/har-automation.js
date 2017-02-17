@@ -8,7 +8,6 @@
 
 const { Ci } = require("chrome");
 const { Class } = require("sdk/core/heritage");
-const { resolve } = require("promise");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "HarCollector", "devtools/client/netmonitor/har/har-collector", true);
@@ -122,7 +121,7 @@ var HarAutomation = Class({
       "enableAutoExportToFile");
 
     if (!autoExport) {
-      return resolve();
+      return Promise.resolve();
     }
 
     // Auto export to file is enabled, so save collected data

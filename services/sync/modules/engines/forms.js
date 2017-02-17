@@ -68,7 +68,7 @@ var FormWrapper = {
       }
     };
     Svc.FormHistory.update(changes, callbacks);
-    return cb.wait();
+    cb.wait();
   },
 
   getEntry(guid) {

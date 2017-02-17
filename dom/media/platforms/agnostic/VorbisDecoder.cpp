@@ -78,7 +78,8 @@ VorbisDataDecoder::Init()
   }
   for (size_t i = 0; i < headers.Length(); i++) {
     if (NS_FAILED(DecodeHeader(headers[i], headerLens[i]))) {
-      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+      return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                          __func__);
     }
   }
 
@@ -115,7 +116,8 @@ nsresult
 VorbisDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
 {
   bool bos = mPacketCount == 0;
-  ogg_packet pkt = InitVorbisPacket(aData, aLength, bos, false, 0, mPacketCount++);
+  ogg_packet pkt =
+    InitVorbisPacket(aData, aLength, bos, false, 0, mPacketCount++);
   MOZ_ASSERT(mPacketCount <= 3);
 
   int r = vorbis_synthesis_headerin(&mVorbisInfo,
@@ -216,8 +218,8 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
     };
 
     if (!mAudioConverter) {
-      AudioConfig in(AudioConfig::ChannelLayout(channels, VorbisLayout(channels)),
-                     rate);
+      AudioConfig in(
+        AudioConfig::ChannelLayout(channels, VorbisLayout(channels)), rate);
       AudioConfig out(channels, rate);
       if (!in.IsValid() || !out.IsValid()) {
         return DecodePromise::CreateAndReject(

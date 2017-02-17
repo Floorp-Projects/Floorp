@@ -84,8 +84,9 @@
         matchCase.doCommand();
       }
 
-      yield toggleHighlightAndWait(true);
+      let promise = toggleHighlightAndWait(true);
       gFindBar._find();
+      yield promise;
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
         let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -138,7 +139,7 @@
 
       // For posterity, test iframes too.
 
-      let promise = BrowserTestUtils.browserLoaded(gBrowser);
+      promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
         'src="data:text/html,Text mozilla"></iframe>');
       yield promise;

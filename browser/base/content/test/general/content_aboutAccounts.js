@@ -5,6 +5,8 @@
 // This file is loaded as a "content script" for browser_aboutAccounts tests
 "use strict";
 
+/* eslint-env mozilla/frame-script */
+
 var {interfaces: Ci, utils: Cu} = Components;
 
 addEventListener("load", function load(event) {

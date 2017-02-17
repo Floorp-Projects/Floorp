@@ -741,7 +741,7 @@ ParseSSSHeaders(uint32_t aType,
         return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
       }
 
-      SSSLOG(("SSS: parsed delta-seconds: %llu", maxAge));
+      SSSLOG(("SSS: parsed delta-seconds: %" PRIu64, maxAge));
     } else if (directive->mName.Length() == include_subd_var.Length() &&
                directive->mName.EqualsIgnoreCase(include_subd_var.get(),
                                                  include_subd_var.Length())) {
@@ -939,7 +939,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   RefPtr<SiteHPKPState> dynamicEntry =
     new SiteHPKPState(host, expireTime, SecurityPropertySet,
                       foundIncludeSubdomains, sha256keys);
-  SSSLOG(("SSS: about to set pins for  %s, expires=%ld now=%ld maxAge=%lu\n",
+  SSSLOG(("SSS: about to set pins for  %s, expires=%" PRId64 " now=%" PRId64 " maxAge=%" PRIu64 "\n",
            host.get(), expireTime, PR_Now() / PR_USEC_PER_MSEC, maxAge));
 
   rv = SetHPKPState(host.get(), *dynamicEntry, aFlags, false);

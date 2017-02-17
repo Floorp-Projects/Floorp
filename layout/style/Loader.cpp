@@ -19,6 +19,7 @@
 #include "mozilla/css/Loader.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -803,7 +804,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   }
 
   if (NS_FAILED(aStatus)) {
-    LOG_WARN(("  Load failed: status 0x%x", aStatus));
+    LOG_WARN(("  Load failed: status 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
     // Handle sheet not loading error because source was a tracking URL.
     // We make a note of this sheet node by including it in a dedicated
     // array of blocked tracking nodes under its parent document.
@@ -1874,7 +1875,7 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
   NS_PRECONDITION(aLoadData->mSheet, "Must have a sheet");
   NS_ASSERTION(mSheets, "mLoadingDatas should be initialized by now.");
 
-  LOG(("Load completed, status: 0x%x", aStatus));
+  LOG(("Load completed, status: 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
 
   // Twiddle the hashtables
   if (aLoadData->mURI) {

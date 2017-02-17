@@ -14,13 +14,13 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
 #include "NSPRLogModulesParser.h"
 
 #include "prenv.h"
-#include "prprf.h"
 #ifdef XP_WIN
 #include <process.h>
 #else
@@ -47,9 +47,9 @@ void log_print(const PRLogModuleInfo* aModule,
 {
   va_list ap;
   va_start(ap, aFmt);
-  char* buff = PR_vsmprintf(aFmt, ap);
+  char* buff = mozilla::Vsmprintf(aFmt, ap);
   PR_LogPrint("%s", buff);
-  PR_smprintf_free(buff);
+  mozilla::SmprintfFree(buff);
   va_end(ap);
 }
 
@@ -365,12 +365,12 @@ public:
     // of sprintf and friends and then hand off to printf.
     va_list argsCopy;
     va_copy(argsCopy, aArgs);
-    size_t charsWritten = PR_vsnprintf(buff, kBuffSize, aFmt, argsCopy);
+    size_t charsWritten = VsprintfLiteral(buff, aFmt, argsCopy);
     va_end(argsCopy);
 
     if (charsWritten == kBuffSize - 1) {
       // We may have maxed out, allocate a buffer instead.
-      buffToWrite = PR_vsmprintf(aFmt, aArgs);
+      buffToWrite = mozilla::Vsmprintf(aFmt, aArgs);
       charsWritten = strlen(buffToWrite);
     }
 
@@ -431,7 +431,7 @@ public:
     }
 
     if (buffToWrite != buff) {
-      PR_smprintf_free(buffToWrite);
+      mozilla::SmprintfFree(buffToWrite);
     }
 
     if (mRotate > 0 && outFile) {

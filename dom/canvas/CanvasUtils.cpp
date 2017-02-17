@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "prprf.h"
-
 #include "nsIServiceManager.h"
 
 #include "nsIConsoleService.h"

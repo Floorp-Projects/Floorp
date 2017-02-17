@@ -113,7 +113,6 @@ private:
 #ifdef MOZ_WIDGET_ANDROID
   DECL_MEDIA_PREF("media.android-media-codec.enabled",        PDMAndroidMediaCodecEnabled, bool, false);
   DECL_MEDIA_PREF("media.android-media-codec.preferred",      PDMAndroidMediaCodecPreferred, bool, false);
-  DECL_MEDIA_PREF("media.android-remote-codec.enabled",       PDMAndroidRemoteCodecEnabled, bool, false);
 #endif
 #ifdef MOZ_FFMPEG
   DECL_MEDIA_PREF("media.ffmpeg.enabled",                     PDMFFmpegEnabled, bool, true);

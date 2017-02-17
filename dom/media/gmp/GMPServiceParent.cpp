@@ -17,6 +17,7 @@
 #include "GeckoChildProcessHost.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/Services.h"
@@ -447,7 +448,7 @@ GeckoMediaPluginServiceParent::UnloadPlugins()
     Swap(plugins, mPlugins);
   }
 
-  LOGD(("%s::%s plugins:%u", __CLASS__, __FUNCTION__,
+  LOGD(("%s::%s plugins:%" PRIuSIZE, __CLASS__, __FUNCTION__,
         plugins.Length()));
 #ifdef DEBUG
   for (const auto& plugin : plugins) {
@@ -831,7 +832,8 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOGD(("%s::%s: failed to create nsIFile for dir=%s rv=%x", __CLASS__, __FUNCTION__, dir.get(), rv));
+    LOGD(("%s::%s: failed to create nsIFile for dir=%s rv=%" PRIx32,
+          __CLASS__, __FUNCTION__, dir.get(), static_cast<uint32_t>(rv)));
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -1478,7 +1480,7 @@ void
 GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(PRTime aSince)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  LOGD(("%s::%s: since=%lld", __CLASS__, __FUNCTION__, (int64_t)aSince));
+  LOGD(("%s::%s: since=%" PRId64, __CLASS__, __FUNCTION__, (int64_t)aSince));
 
   struct MTimeFilter : public DirectoryFilter {
     explicit MTimeFilter(PRTime aSince)

@@ -15,6 +15,7 @@
 #include "mozilla/dom/PresentationConnectionCloseEvent.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
@@ -354,9 +355,10 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
                                           uint16_t aState,
                                           nsresult aReason)
 {
-  PRES_DEBUG("connection state change:id[%s], state[%x], reason[%x], role[%d]\n",
+  PRES_DEBUG("connection state change:id[%s], state[%" PRIx32
+             "], reason[%" PRIx32 "], role[%d]\n",
              NS_ConvertUTF16toUTF8(aSessionId).get(), aState,
-             aReason, mRole);
+             static_cast<uint32_t>(aReason), mRole);
 
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;

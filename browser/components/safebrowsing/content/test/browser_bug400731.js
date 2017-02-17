@@ -1,5 +1,7 @@
 /* Check presence of the "Ignore this warning" button */
 
+/* eslint-env mozilla/frame-script */
+
 function onDOMContentLoaded(callback) {
   function complete({ data }) {
     mm.removeMessageListener("Test:DOMContentLoaded", complete);

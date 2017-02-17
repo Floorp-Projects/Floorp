@@ -14,6 +14,7 @@
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include <algorithm>
+#include "mozilla/IntegerPrintfMacros.h"
 
 #define kMinDecompressReadBufLen 1024
 #define kMinCompressWriteBufLen  1024
@@ -818,8 +819,8 @@ nsInputStreamWrapper::Read_Locked(char *buf, uint32_t count, uint32_t *countRead
         rv = mInput->Read(buf, count, countRead);
 
     CACHE_LOG_DEBUG(("nsInputStreamWrapper::Read "
-                      "[entry=%p, wrapper=%p, mInput=%p, rv=%d]",
-                      mDescriptor, this, mInput.get(), rv));
+                      "[entry=%p, wrapper=%p, mInput=%p, rv=%" PRId32 "]",
+                     mDescriptor, this, mInput.get(), static_cast<uint32_t>(rv)));
 
     return rv;
 }

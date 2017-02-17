@@ -93,7 +93,7 @@ CacheFileOutputStream::Write(const char * aBuf, uint32_t aCount,
 
   if (mClosed) {
     LOG(("CacheFileOutputStream::Write() - Stream is closed. [this=%p, "
-         "status=0x%08x]", this, mStatus));
+         "status=0x%08" PRIx32"]", this, static_cast<uint32_t>(mStatus)));
 
     return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_CLOSED;
   }
@@ -191,8 +191,8 @@ CacheFileOutputStream::CloseWithStatus(nsresult aStatus)
 {
   CacheFileAutoLock lock(mFile);
 
-  LOG(("CacheFileOutputStream::CloseWithStatus() [this=%p, aStatus=0x%08x]",
-       this, aStatus));
+  LOG(("CacheFileOutputStream::CloseWithStatus() [this=%p, aStatus=0x%08" PRIx32 "]",
+       this, static_cast<uint32_t>(aStatus)));
 
   return CloseWithStatusLocked(aStatus);
 }
@@ -201,7 +201,7 @@ nsresult
 CacheFileOutputStream::CloseWithStatusLocked(nsresult aStatus)
 {
   LOG(("CacheFileOutputStream::CloseWithStatusLocked() [this=%p, "
-       "aStatus=0x%08x]", this, aStatus));
+       "aStatus=0x%08" PRIx32 "]", this, static_cast<uint32_t>(aStatus)));
 
   if (mClosed) {
     MOZ_ASSERT(!mCallback);
@@ -256,7 +256,7 @@ CacheFileOutputStream::Seek(int32_t whence, int64_t offset)
 {
   CacheFileAutoLock lock(mFile);
 
-  LOG(("CacheFileOutputStream::Seek() [this=%p, whence=%d, offset=%lld]",
+  LOG(("CacheFileOutputStream::Seek() [this=%p, whence=%d, offset=%" PRId64 "]",
        this, whence, offset));
 
   if (mClosed) {
@@ -288,7 +288,7 @@ CacheFileOutputStream::Seek(int32_t whence, int64_t offset)
   mPos = newPos;
   EnsureCorrectChunk(true);
 
-  LOG(("CacheFileOutputStream::Seek() [this=%p, pos=%lld]", this, mPos));
+  LOG(("CacheFileOutputStream::Seek() [this=%p, pos=%" PRId64 "]", this, mPos));
   return NS_OK;
 }
 
@@ -308,7 +308,7 @@ CacheFileOutputStream::Tell(int64_t *_retval)
     *_retval -= mFile->mAltDataOffset;
   }
 
-  LOG(("CacheFileOutputStream::Tell() [this=%p, retval=%lld]", this, *_retval));
+  LOG(("CacheFileOutputStream::Tell() [this=%p, retval=%" PRId64 "]", this, *_retval));
   return NS_OK;
 }
 
@@ -406,7 +406,8 @@ CacheFileOutputStream::EnsureCorrectChunk(bool aReleaseOnly)
                              getter_AddRefs(mChunk));
   if (NS_FAILED(rv)) {
     LOG(("CacheFileOutputStream::EnsureCorrectChunk() - GetChunkLocked failed. "
-         "[this=%p, idx=%d, rv=0x%08x]", this, chunkIdx, rv));
+         "[this=%p, idx=%d, rv=0x%08" PRIx32 "]", this, chunkIdx,
+         static_cast<uint32_t>(rv)));
     CloseWithStatusLocked(rv);
   }
 }
