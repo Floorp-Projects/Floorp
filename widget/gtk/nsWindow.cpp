@@ -3337,9 +3337,7 @@ nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefP
 {
     WidgetDragEvent event(true, aMsg, this);
 
-    if (aMsg == eDragOver) {
-        InitDragEvent(event);
-    }
+    InitDragEvent(event);
 
     event.mRefPoint = aRefPoint;
     event.AssignEventTime(GetWidgetEventTime(aTime));

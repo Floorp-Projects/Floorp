@@ -380,14 +380,14 @@ nsBaseDragService::TakeChildProcessDragAction()
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::EndDragSession(bool aDoneDrag)
+nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
 {
   if (!mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
 
   if (aDoneDrag && !mSuppressLevel) {
-    FireDragEventAtSource(eDragEnd);
+    FireDragEventAtSource(eDragEnd, aKeyModifiers);
   }
 
   if (mDragPopup) {
@@ -400,7 +400,8 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   for (uint32_t i = 0; i < mChildProcesses.Length(); ++i) {
     mozilla::Unused << mChildProcesses[i]->SendEndDragSession(aDoneDrag,
                                                               mUserCancelled,
-                                                              mEndDragPoint);
+                                                              mEndDragPoint,
+                                                              aKeyModifiers);
   }
   mChildProcesses.Clear();
 
@@ -458,7 +459,8 @@ nsBaseDragService::DiscardInternalTransferData()
 }
 
 NS_IMETHODIMP
-nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
+nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
+                                         uint32_t aKeyModifiers)
 {
   if (mSourceNode && !mSuppressLevel) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
@@ -472,7 +474,7 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
           event.mRefPoint = mEndDragPoint;
           event.mUserCancelled = mUserCancelled;
         }
-
+        event.mModifiers = aKeyModifiers;
         // Send the drag event to APZ, which needs to know about them to be
         // able to accurately detect the end of a drag gesture.
         if (nsPresContext* presContext = presShell->GetPresContext()) {
@@ -781,7 +783,7 @@ nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsBaseDragService::Suppress()
 {
-  EndDragSession(false);
+  EndDragSession(false, 0);
   ++mSuppressLevel;
   return NS_OK;
 }

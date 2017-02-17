@@ -1760,7 +1760,7 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
     if (dragService) {
       // This will dispatch 'drag' event at the source if the
       // drag transaction started in this process.
-      dragService->FireDragEventAtSource(eDrag);
+      dragService->FireDragEventAtSource(eDrag, aEvent.mModifiers);
     }
   }
 
