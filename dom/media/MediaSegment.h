@@ -115,6 +115,9 @@ inline bool PrincipalHandleMatches(PrincipalHandle& aPrincipalHandle,
  */
 class MediaSegment {
 public:
+  MediaSegment(const MediaSegment&) = delete;
+  MediaSegment& operator= (const MediaSegment&) = delete;
+
   virtual ~MediaSegment()
   {
     MOZ_COUNT_DTOR(MediaSegment);
@@ -200,6 +203,14 @@ public:
 protected:
   explicit MediaSegment(Type aType)
     : mDuration(0), mType(aType), mLastPrincipalHandle(PRINCIPAL_HANDLE_NONE)
+  {
+    MOZ_COUNT_CTOR(MediaSegment);
+  }
+
+  MediaSegment(MediaSegment&& aSegment)
+    : mDuration(Move(aSegment.mDuration))
+    , mType(Move(aSegment.mType))
+    , mLastPrincipalHandle(Move(aSegment.mLastPrincipalHandle))
   {
     MOZ_COUNT_CTOR(MediaSegment);
   }
@@ -412,6 +423,14 @@ public:
 
 protected:
   explicit MediaSegmentBase(Type aType) : MediaSegment(aType) {}
+
+  MediaSegmentBase(MediaSegmentBase&& aSegment)
+    : MediaSegment(Move(aSegment))
+    , mChunks(Move(aSegment.mChunks))
+#ifdef MOZILLA_INTERNAL_API
+    , mTimeStamp(Move(aSegment.mTimeStamp))
+#endif
+  {}
 
   /**
    * Appends the contents of aSource to this segment, clearing aSource.
