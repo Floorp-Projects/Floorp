@@ -69,7 +69,7 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 // -----
 // Enums used in C++ code with corresponding enums in Rust code
 // -----
-enum class WrBoxShadowClipMode {
+enum class WrBoxShadowClipMode: uint32_t {
   None,
   Outset,
   Inset,
