@@ -175,6 +175,13 @@ impl Builder {
         self
     }
 
+    /// Set the output graphviz file.
+    pub fn emit_ir_graphviz<T: Into<String>>(mut self, path: T) -> Builder {
+        let path = path.into();
+        self.options.emit_ir_graphviz = Some(path);
+        self
+    }
+
     /// Whether the generated bindings should contain documentation comments or
     /// not.
     ///
@@ -317,6 +324,12 @@ impl Builder {
     /// Set whether `Debug` should be derived by default.
     pub fn derive_debug(mut self, doit: bool) -> Self {
         self.options.derive_debug = doit;
+        self
+    }
+
+    /// Set whether `Default` should be derived by default.
+    pub fn derive_default(mut self, doit: bool) -> Self {
+        self.options.derive_default = doit;
         self
     }
 
@@ -485,6 +498,9 @@ pub struct BindgenOptions {
     /// True if we should dump our internal IR for debugging purposes.
     pub emit_ir: bool,
 
+    /// Output graphviz dot file.
+    pub emit_ir_graphviz: Option<String>,
+
     /// True if we should emulate C++ namespaces with Rust modules in the
     /// generated bindings.
     pub enable_cxx_namespaces: bool,
@@ -495,6 +511,10 @@ pub struct BindgenOptions {
     /// True if we shold derive Debug trait implementations for C/C++ structures
     /// and types.
     pub derive_debug: bool,
+
+    /// True if we shold derive Default trait implementations for C/C++ structures
+    /// and types.
+    pub derive_default: bool,
 
     /// True if we can use unstable Rust code in the bindings, false if we
     /// cannot.
@@ -554,6 +574,11 @@ pub struct BindgenOptions {
     pub objc_extern_crate: bool,
 }
 
+/// TODO(emilio): This is sort of a lie (see the error message that results from
+/// removing this), but since we don't share references across panic boundaries
+/// it's ok.
+impl ::std::panic::UnwindSafe for BindgenOptions {}
+
 impl BindgenOptions {
     fn build(&mut self) {
         self.whitelisted_vars.build();
@@ -580,7 +605,9 @@ impl Default for BindgenOptions {
             links: vec![],
             emit_ast: false,
             emit_ir: false,
+            emit_ir_graphviz: None,
             derive_debug: true,
+            derive_default: false,
             enable_cxx_namespaces: false,
             disable_name_namespacing: false,
             unstable_rust: true,

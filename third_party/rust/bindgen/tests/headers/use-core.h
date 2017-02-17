@@ -5,4 +5,9 @@ struct foo {
   void* bar;
 };
 
+union {
+  int bar;
+  long baz;
+} bazz;
+
 typedef void (*fooFunction)(int bar);
