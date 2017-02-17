@@ -373,19 +373,6 @@ nsScannerString::UngetReadable( const nsAString& aReadable, const nsScannerItera
     mIsDirty = true;
   }
 
-void
-nsScannerString::ReplaceCharacter(nsScannerIterator& aPosition, char16_t aChar)
-  {
-    // XXX Casting a const to non-const. Unless the base class
-    // provides support for writing iterators, this is the best
-    // that can be done.
-    char16_t* pos = const_cast<char16_t*>(aPosition.get());
-    *pos = aChar;
-
-    mIsDirty = true;
-  }
-
-
   /**
    * nsScannerSharedSubstring
    */
