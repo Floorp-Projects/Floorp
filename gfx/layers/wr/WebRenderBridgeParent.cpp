@@ -184,13 +184,16 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
+WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize,
+                                   bool* aOutSuccess)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mBuilder.isSome());
   mBuilder.ref().Begin(LayerIntSize(aSize.width, aSize.height));
+  *aOutSuccess = true;
+
   return IPC_OK();
 }
 
