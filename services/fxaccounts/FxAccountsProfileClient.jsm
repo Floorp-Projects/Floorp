@@ -146,36 +146,40 @@ this.FxAccountsProfileClient.prototype = {
 
       request.onComplete = function(error) {
         if (error) {
-          return reject(new FxAccountsProfileClientError({
+          reject(new FxAccountsProfileClientError({
             error: ERROR_NETWORK,
             errno: ERRNO_NETWORK,
             message: error.toString(),
           }));
+          return;
         }
 
         let body = null;
         try {
           if (request.response.status == 304) {
-            return resolve(null);
+            resolve(null);
+            return;
           }
           body = JSON.parse(request.response.body);
         } catch (e) {
-          return reject(new FxAccountsProfileClientError({
+          reject(new FxAccountsProfileClientError({
             error: ERROR_PARSE,
             errno: ERRNO_PARSE,
             code: request.response.status,
             message: request.response.body,
           }));
+          return;
         }
 
         // "response.success" means status code is 200
         if (request.response.success) {
-          return resolve({
+          resolve({
             body,
             etag: request.response.headers["etag"]
           });
+          return;
         }
-        return reject(new FxAccountsProfileClientError({
+        reject(new FxAccountsProfileClientError({
           error: body.error || ERROR_UNKNOWN,
           errno: body.errno || ERRNO_UNKNOWN_ERROR,
           code: request.response.status,
@@ -187,7 +191,7 @@ this.FxAccountsProfileClient.prototype = {
         request.get();
       } else {
         // method not supported
-        return reject(new FxAccountsProfileClientError({
+        reject(new FxAccountsProfileClientError({
           error: ERROR_NETWORK,
           errno: ERRNO_NETWORK,
           code: ERROR_CODE_METHOD_NOT_ALLOWED,

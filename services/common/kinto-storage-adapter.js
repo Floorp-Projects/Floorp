@@ -288,7 +288,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     };
     return this._executeStatement(statements.getRecord, params).then(result => {
       if (result.length == 0) {
-        return;
+        return null;
       }
       return JSON.parse(result[0].getResultByName("record"));
     });
