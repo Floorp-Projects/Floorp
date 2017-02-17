@@ -25,17 +25,17 @@ fails == flexbox-align-self-baseline-horiz-007.xhtml flexbox-align-self-baseline
 == flexbox-align-self-stretch-vert-001.html flexbox-align-self-stretch-vert-001.html
 == flexbox-align-self-stretch-vert-002.html flexbox-align-self-stretch-vert-002.html
 
-fails == flexbox-align-self-horiz-001-block.xhtml flexbox-align-self-horiz-001-block.xhtml
-fails == flexbox-align-self-horiz-001-table.xhtml flexbox-align-self-horiz-001-table.xhtml
+== flexbox-align-self-horiz-001-block.xhtml flexbox-align-self-horiz-001-block.xhtml
+== flexbox-align-self-horiz-001-table.xhtml flexbox-align-self-horiz-001-table.xhtml
 == flexbox-align-self-horiz-002.xhtml flexbox-align-self-horiz-002.xhtml
 == flexbox-align-self-horiz-003.xhtml flexbox-align-self-horiz-003.xhtml
 == flexbox-align-self-horiz-004.xhtml flexbox-align-self-horiz-004.xhtml
 == flexbox-align-self-horiz-005.xhtml flexbox-align-self-horiz-005.xhtml
-fails == flexbox-align-self-vert-001.xhtml flexbox-align-self-vert-001.xhtml
+== flexbox-align-self-vert-001.xhtml flexbox-align-self-vert-001.xhtml
 == flexbox-align-self-vert-002.xhtml flexbox-align-self-vert-002.xhtml
 == flexbox-align-self-vert-003.xhtml flexbox-align-self-vert-003.xhtml
 == flexbox-align-self-vert-004.xhtml flexbox-align-self-vert-004.xhtml
-fails == flexbox-align-self-vert-rtl-001.xhtml flexbox-align-self-vert-rtl-001.xhtml
+== flexbox-align-self-vert-rtl-001.xhtml flexbox-align-self-vert-rtl-001.xhtml
 == flexbox-align-self-vert-rtl-002.xhtml flexbox-align-self-vert-rtl-002.xhtml
 == flexbox-align-self-vert-rtl-003.xhtml flexbox-align-self-vert-rtl-003.xhtml
 == flexbox-align-self-vert-rtl-004.xhtml flexbox-align-self-vert-rtl-004.xhtml
@@ -49,8 +49,8 @@ fails == flexbox-baseline-empty-001b.html flexbox-baseline-empty-001b.html
 fails == flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001.html
 == flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001.html
 == flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002.html
-fails == flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003.html
-fails == flexbox-baseline-multi-line-horiz-004.html flexbox-baseline-multi-line-horiz-004.html
+== flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003.html
+== flexbox-baseline-multi-line-horiz-004.html flexbox-baseline-multi-line-horiz-004.html
 == flexbox-baseline-multi-line-vert-001.html flexbox-baseline-multi-line-vert-001.html
 == flexbox-baseline-multi-line-vert-002.html flexbox-baseline-multi-line-vert-002.html
 == flexbox-baseline-single-item-001a.html flexbox-baseline-single-item-001a.html
@@ -173,8 +173,8 @@ fails == flexbox-overflow-vert-005.html flexbox-overflow-vert-005.html
 == flexbox-paint-ordering-002.xhtml flexbox-paint-ordering-002.xhtml
 
 # Tests for "display:flex" on root node
-fails == flexbox-root-node-001a.html flexbox-root-node-001a.html
-fails == flexbox-root-node-001b.html flexbox-root-node-001b.html
+== flexbox-root-node-001a.html flexbox-root-node-001a.html
+== flexbox-root-node-001b.html flexbox-root-node-001b.html
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 fails == flexbox-sizing-horiz-001.xhtml flexbox-sizing-horiz-001.xhtml

@@ -49,7 +49,7 @@ fails == flex-abspos-staticpos-justify-content-vertWM-002.html flex-abspos-stati
 == flex-abspos-staticpos-justify-self-001.html flex-abspos-staticpos-justify-self-001.html
 
 == flex-abspos-staticpos-margin-001.html flex-abspos-staticpos-margin-001.html
-fails == flex-abspos-staticpos-margin-002.html flex-abspos-staticpos-margin-002.html
+== flex-abspos-staticpos-margin-002.html flex-abspos-staticpos-margin-002.html
 
 fails == grid-abspos-staticpos-align-self-001.html grid-abspos-staticpos-align-self-001.html
 fails == grid-abspos-staticpos-align-self-002.html grid-abspos-staticpos-align-self-002.html
