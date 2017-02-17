@@ -156,10 +156,19 @@
 
 (assert_trap (invoke $Ot "call" (i32.const 20)) "undefined")
 
-(module $Pt
+(module
   (table (import "Mt" "tab") 0 anyfunc)
   (elem (i32.const 9) $f)
   (func $f)
+)
+
+(assert_unlinkable
+  (module
+    (table (import "Mt" "tab") 0 anyfunc)
+    (elem (i32.const 10) $f)
+    (func $f)
+  )
+  "elements segment does not fit"
 )
 
 (assert_unlinkable
@@ -240,12 +249,20 @@
 (assert_return (invoke $Nm "load" (i32.const 12)) (i32.const 0xf2))
 (assert_return (invoke $Om "load" (i32.const 12)) (i32.const 0xa7))
 
-(module $Pm
+(module
   (memory (import "Mm" "mem") 0)
-  (data (i32.const 1000) "abc")
+  (data (i32.const 0xffff) "a")
 )
 
-(module $Qm
+(assert_unlinkable
+  (module
+    (memory (import "Mm" "mem") 0)
+    (data (i32.const 0x10000) "a")
+  )
+  "data segment does not fit"
+)
+
+(module $Pm
   (memory (import "Mm" "mem") 1 8)
 
   (func (export "grow") (param $a i32) (result i32)
@@ -253,14 +270,14 @@
   )
 )
 
-(assert_return (invoke $Qm "grow" (i32.const 0)) (i32.const 1))
-(assert_return (invoke $Qm "grow" (i32.const 2)) (i32.const 1))
-(assert_return (invoke $Qm "grow" (i32.const 0)) (i32.const 3))
-(assert_return (invoke $Qm "grow" (i32.const 1)) (i32.const 3))
-(assert_return (invoke $Qm "grow" (i32.const 1)) (i32.const 4))
-(assert_return (invoke $Qm "grow" (i32.const 0)) (i32.const 5))
-(assert_return (invoke $Qm "grow" (i32.const 1)) (i32.const -1))
-(assert_return (invoke $Qm "grow" (i32.const 0)) (i32.const 5))
+(assert_return (invoke $Pm "grow" (i32.const 0)) (i32.const 1))
+(assert_return (invoke $Pm "grow" (i32.const 2)) (i32.const 1))
+(assert_return (invoke $Pm "grow" (i32.const 0)) (i32.const 3))
+(assert_return (invoke $Pm "grow" (i32.const 1)) (i32.const 3))
+(assert_return (invoke $Pm "grow" (i32.const 1)) (i32.const 4))
+(assert_return (invoke $Pm "grow" (i32.const 0)) (i32.const 5))
+(assert_return (invoke $Pm "grow" (i32.const 1)) (i32.const -1))
+(assert_return (invoke $Pm "grow" (i32.const 0)) (i32.const 5))
 
 (assert_unlinkable
   (module
