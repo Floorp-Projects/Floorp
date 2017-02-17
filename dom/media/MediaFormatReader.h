@@ -595,8 +595,7 @@ private:
 
   void ShutdownDecoder(TrackType aTrack);
   RefPtr<ShutdownPromise> ShutdownDecoderWithPromise(TrackType aTrack);
-  void TearDownDecoders();
-  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+  RefPtr<ShutdownPromise> TearDownDecoders();
 };
 
 } // namespace mozilla
