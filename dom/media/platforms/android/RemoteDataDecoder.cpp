@@ -337,6 +337,11 @@ public:
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
   }
 
+  ConversionRequired NeedsConversion() const override
+  {
+    return ConversionRequired::kNeedAnnexB;
+  }
+
 private:
   class CallbacksSupport final : public JavaCallbacksSupport
   {
