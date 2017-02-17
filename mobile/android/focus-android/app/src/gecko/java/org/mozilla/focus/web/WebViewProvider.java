@@ -23,6 +23,10 @@ import org.mozilla.gecko.GeckoView;
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
 public class WebViewProvider {
+    public static void preload(final Context context) {
+        // Nothing: there's no Gecko preloading (yet?).
+    }
+
     public static View create(Context context, AttributeSet attrs) {
         final GeckoView geckoView = new GeckoWebView(context, attrs);
 

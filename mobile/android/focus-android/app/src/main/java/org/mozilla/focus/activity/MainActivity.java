@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             showHomeScreen();
         }
+
+        WebViewProvider.preload(this);
     }
 
     @Override

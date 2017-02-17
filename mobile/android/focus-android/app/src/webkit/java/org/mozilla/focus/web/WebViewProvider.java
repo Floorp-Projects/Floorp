@@ -20,6 +20,15 @@ import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
  * WebViewProvider for creating a WebKit based IWebVIew implementation.
  */
 public class WebViewProvider {
+    /**
+     * Preload webview data. This allows the webview implementation to load resources and other data
+     * it might need, in advance of intialising the view (at which time we are probably wanting to
+     * show a website immediately).
+     */
+    public static void preload(final Context context) {
+        TrackingProtectionWebViewClient.triggerPreload(context);
+    }
+
     public static View create(Context context, AttributeSet attrs) {
         final WebkitView webkitView = new WebkitView(context, attrs);
 

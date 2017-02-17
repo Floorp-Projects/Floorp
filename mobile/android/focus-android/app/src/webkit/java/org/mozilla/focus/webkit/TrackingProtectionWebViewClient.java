@@ -6,6 +6,8 @@ package org.mozilla.focus.webkit;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
+import android.support.annotation.WorkerThread;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -16,10 +18,36 @@ import org.mozilla.focus.webkit.matcher.UrlMatcher;
 public class TrackingProtectionWebViewClient extends WebViewClient {
 
     private String currentPageURL;
-    private final UrlMatcher matcher;
+
+    private static volatile UrlMatcher MATCHER;
+
+    public static void triggerPreload(final Context context) {
+        // Only trigger loading if MATCHER is null. (If it's null, MATCHER could already be loading,
+        // but we don't have any way of being certain - and there's no real harm since we're not
+        // blocking anything else.)
+        if (MATCHER == null) {
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    // We don't need the result here - we just want to trigger loading
+                    getMatcher(context);
+                    return null;
+                }
+            }.execute();
+        }
+    }
+
+    @WorkerThread private static synchronized UrlMatcher getMatcher(final Context context) {
+        if (MATCHER == null) {
+            MATCHER = new UrlMatcher(context, R.raw.blocklist, R.raw.entitylist);
+        }
+        return MATCHER;
+    }
 
     public TrackingProtectionWebViewClient(final Context context) {
-        matcher = new UrlMatcher(context, R.raw.blocklist, R.raw.entitylist);
+        // Hopefully we have loaded background data already. We call triggerPreload() to try to trigger
+        // background loading of the lists as early as possible.
+        triggerPreload(context);
     }
 
     /*
@@ -27,6 +55,10 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
      */
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+        // There's not guarantee that data has finished loading by now. shouldInterceptRequest() is
+        // called off the UI thread, so it's safe for us to block on loading if necessary.
+        final UrlMatcher matcher = getMatcher(view.getContext());
+
         if (matcher.matches(url, currentPageURL)) {
             return new WebResourceResponse(null, null, null);
         }
