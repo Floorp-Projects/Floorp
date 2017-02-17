@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         WebViewProvider.preload(this);
+
+        PreferenceManager.setDefaultValues(this, R.xml.settings, false);
     }
 
     @Override

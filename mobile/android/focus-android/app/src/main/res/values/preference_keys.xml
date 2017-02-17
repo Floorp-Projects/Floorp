@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pref_key_privacy_block_ads"><xliff:g id="preference_key">pref_privacy_block_ads</xliff:g></string>
+    <string name="pref_key_privacy_block_analytics"><xliff:g id="preference_key">pref_privacy_block_analytics</xliff:g></string>
+    <string name="pref_key_privacy_block_social"><xliff:g id="preference_key">pref_privacy_block_social</xliff:g></string>
+    <string name="pref_key_privacy_block_other"><xliff:g id="preference_key">pref_privacy_block_other</xliff:g></string>
+
+    <string name="pref_key_performance_block_webfonts"><xliff:g id="preference_key">pref_performance_block_webfonts</xliff:g></string>
+
+    <string name="pref_key_telemetry"><xliff:g id="preference_key">pref_telemetry</xliff:g></string>
+</resources>

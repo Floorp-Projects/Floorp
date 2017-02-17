@@ -6,34 +6,40 @@
 
     <SwitchPreference
         android:title="Block ad trackers"
+        android:key="@string/pref_key_privacy_block_ads"
         android:defaultValue="true" />
 
     <SwitchPreference
         android:title="Block analytic trackers"
-        android:defaultValue="true"/>
-
+        android:key="@string/pref_key_privacy_block_analytics"
+        android:defaultValue="true" />
 
     <SwitchPreference
         android:title="Block social trackers"
-        android:defaultValue="true"/>
-
+        android:key="@string/pref_key_privacy_block_social"
+        android:defaultValue="true" />
 
     <SwitchPreference
         android:title="Block other content trackers"
-        android:summary="May break some videos and Web pages"/>
+        android:key="@string/pref_key_privacy_block_other"
+        android:summary="May break some videos and Web pages"
+        android:defaultValue="false" />
 
     <PreferenceCategory
         android:title="Performance" />
 
     <SwitchPreference
-        android:title="Block Web fonts" />
+        android:title="Block Web fonts"
+        android:key="@string/pref_key_performance_block_webfonts"
+        android:defaultValue="false" />
 
     <PreferenceCategory
         android:title="Mozilla" />
 
     <SwitchPreference
         android:title="Send anonymous usage data"
+        android:key="@string/pref_key_telemetry"
         android:defaultValue="true"
-        android:summary="Learn more"/>
+        android:summary="Learn more" />
 
 </PreferenceScreen>
