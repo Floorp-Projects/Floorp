@@ -29,6 +29,7 @@
 #include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
 #include "nsIHstsPrimingCallback.h"
+#include "nsIRaceCacheWithNetwork.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -77,6 +78,8 @@ class nsHttpChannel final : public HttpBaseChannel
                           , public nsICorsPreflightCallback
                           , public nsIChannelWithDivertableParentListener
                           , public nsIHstsPrimingCallback
+                          , public nsIRaceCacheWithNetwork
+                          , public nsITimerCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -97,6 +100,8 @@ public:
     NS_DECL_NSIDNSLISTENER
     NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
+    NS_DECL_NSIRACECACHEWITHNETWORK
+    NS_DECL_NSITIMERCALLBACK
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -610,6 +615,34 @@ private:
 
     // True if the channel is reading from cache.
     Atomic<bool> mIsReadingFromCache;
+
+    // These next members are only used in unit tests to delay the call to
+    // cache->AsyncOpenURI in order to race the cache with the network.
+    nsCOMPtr<nsITimer> mCacheOpenTimer;
+    nsCOMPtr<nsIRunnable> mCacheOpenRunnable;
+    uint32_t mCacheOpenDelay = 0;
+
+    // We need to remember which is the source of the response we are using.
+    enum {
+        RESPONSE_PENDING,           // response is pending
+        RESPONSE_FROM_CACHE,        // response coming from cache. no network.
+        RESPONSE_FROM_NETWORK,      // response coming from the network
+    } mFirstResponseSource = RESPONSE_PENDING;
+
+    nsresult TriggerNetwork(int32_t aTimeout);
+    void CancelNetworkRequest(nsresult aStatus);
+    // Timer used to delay the network request, or to trigger the network
+    // request if retrieving the cache entry takes too long.
+    nsCOMPtr<nsITimer> mNetworkTriggerTimer;
+    // Is true if the network request has been triggered.
+    bool mNetworkTriggered = false;
+    bool mWaitingForProxy = false;
+    // Is true if the onCacheEntryAvailable callback has been called.
+    Atomic<bool> mOnCacheAvailableCalled;
+    // Will be true if the onCacheEntryAvailable callback is not called by the
+    // time we send the network request. This could also be true when we are
+    // bypassing the cache.
+    Atomic<bool> mRacingNetAndCache;
 
 protected:
     virtual void DoNotifyListenerCleanup() override;

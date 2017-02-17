@@ -1,0 +1,55 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This holds methods used to race the cache with the network for a specific
+ * channel. This interface is was designed with nsHttpChannel in mind, and it's
+ * expected this will be the only class implementing it.
+ */
+[scriptable, builtinclass, uuid(4d963475-8b16-4c58-b804-8a23d49436c5)]
+interface nsIRaceCacheWithNetwork : nsISupports
+{
+
+  /****************************************************************************
+   * TEST ONLY: The following methods are for testing purposes only. Do not use
+   * them to do anything important in your code.
+   ****************************************************************************
+
+  /**
+   * Triggers network activity after given timeout. If timeout is 0, network
+   * activity is triggered immediately. If the cache.asyncOpenURI callbacks
+   * have already been called, the network activity may have already been triggered
+   * or the content may have already been delivered from the cache, so this
+   * operation will have no effect.
+   *
+   * @param timeout
+   *        - the delay in milliseconds until the network will be triggered.
+   */
+  void test_triggerNetwork(in long timeout);
+
+  /**
+   * Normally a HTTP channel would immediately call AsyncOpenURI leading to the
+   * cache storage to lookup the cache entry and return it. In order to
+   * simmulate real life conditions where fetching a cache entry takes a long
+   * time, we set a timer to delay the operation.
+   * Can only be called on the main thread.
+   *
+   * @param timeout
+   *        - the delay in milliseconds until the cache open will be triggered.
+   */
+  void test_delayCacheEntryOpeningBy(in long timeout);
+
+  /**
+   * Immediatelly triggers AsyncOpenURI if the timer hasn't fired.
+   * Can only be called on the main thread.
+   * This is only called in tests to reliably trigger the opening of the cache
+   * entry.
+   * @throws NS_ERROR_NOT_AVAILABLE if opening the cache wasn't delayed.
+   */
+  void test_triggerDelayedOpenCacheEntry();
+};

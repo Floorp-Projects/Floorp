@@ -45,7 +45,7 @@ endif # WINNT
 ifndef INCLUDED_AUTOCONF_MK
 default::
 else
-TIERS := $(if $(MOZ_ARTIFACT_BUILDS),artifact )pre-export export $(if $(COMPILE_ENVIRONMENT),compile )misc libs tools
+TIERS := $(if $(MOZ_ARTIFACT_BUILDS),artifact )pre-export export $(if $(COMPILE_ENVIRONMENT),compile )misc libs tools$(if $(filter check recurse_check,$(MAKECMDGOALS)), check)
 endif
 
 # These defines are used to support the twin-topsrcdir model for comm-central.

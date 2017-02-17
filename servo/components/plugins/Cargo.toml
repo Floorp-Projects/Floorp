@@ -15,5 +15,4 @@ version = "0.0.112"
 optional = true
 
 [features]
-default = []
 clippy = ["clippy_lints"]

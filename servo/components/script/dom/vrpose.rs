@@ -3,37 +3,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use core::nonzero::NonZero;
-use dom::bindings::cell::DOMRefCell;
 use dom::bindings::codegen::Bindings::VRPoseBinding;
 use dom::bindings::codegen::Bindings::VRPoseBinding::VRPoseMethods;
 use dom::bindings::js::Root;
 use dom::bindings::reflector::{DomObject, Reflector, reflect_dom_object};
 use dom::globalscope::GlobalScope;
 use js::jsapi::{Heap, JSContext, JSObject};
-use js::typedarray::Float32Array;
+use js::typedarray::{Float32Array, CreateWith};
 use std::ptr;
 use webvr_traits::webvr;
 
 #[dom_struct]
 pub struct VRPose {
     reflector_: Reflector,
-    position: DOMRefCell<Heap<*mut JSObject>>,
-    orientation: DOMRefCell<Heap<*mut JSObject>>,
-    linear_vel: DOMRefCell<Heap<*mut JSObject>>,
-    angular_vel: DOMRefCell<Heap<*mut JSObject>>,
-    linear_acc: DOMRefCell<Heap<*mut JSObject>>,
-    angular_acc: DOMRefCell<Heap<*mut JSObject>>
+    position: Heap<*mut JSObject>,
+    orientation: Heap<*mut JSObject>,
+    linear_vel: Heap<*mut JSObject>,
+    angular_vel: Heap<*mut JSObject>,
+    linear_acc: Heap<*mut JSObject>,
+    angular_acc: Heap<*mut JSObject>,
 }
 
 #[allow(unsafe_code)]
 unsafe fn update_or_create_typed_array(cx: *mut JSContext,
                       src: Option<&[f32]>,
-                      dst: &DOMRefCell<Heap<*mut JSObject>>) {
-    let dst = dst.borrow();
+                      dst: &Heap<*mut JSObject>) {
     match src {
-        Some(ref data) => {
+        Some(data) => {
             if dst.get().is_null() {
-                let _ = Float32Array::create(cx, data.len() as u32, src, dst.handle_mut());
+                let _ = Float32Array::create(cx, CreateWith::Slice(data), dst.handle_mut());
             } else {
                 typedarray!(in(cx) let array: Float32Array = dst.get());
                 if let Ok(mut array) = array {
@@ -51,8 +49,8 @@ unsafe fn update_or_create_typed_array(cx: *mut JSContext,
 
 #[inline]
 #[allow(unsafe_code)]
-fn heap_to_option(heap: &DOMRefCell<Heap<*mut JSObject>>) -> Option<NonZero<*mut JSObject>> {
-    let js_object = heap.borrow_mut().get();
+fn heap_to_option(heap: &Heap<*mut JSObject>) -> Option<NonZero<*mut JSObject>> {
+    let js_object = heap.get();
     if js_object.is_null() {
         None
     } else {
@@ -66,12 +64,12 @@ impl VRPose {
     fn new_inherited() -> VRPose {
         VRPose {
             reflector_: Reflector::new(),
-            position: DOMRefCell::new(Heap::default()),
-            orientation: DOMRefCell::new(Heap::default()),
-            linear_vel: DOMRefCell::new(Heap::default()),
-            angular_vel: DOMRefCell::new(Heap::default()),
-            linear_acc: DOMRefCell::new(Heap::default()),
-            angular_acc: DOMRefCell::new(Heap::default())
+            position: Heap::default(),
+            orientation: Heap::default(),
+            linear_vel: Heap::default(),
+            angular_vel: Heap::default(),
+            linear_acc: Heap::default(),
+            angular_acc: Heap::default(),
         }
     }
 

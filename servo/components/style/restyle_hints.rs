@@ -32,8 +32,7 @@ bitflags! {
     ///
     /// Note that the bit values here must be kept in sync with the Gecko
     /// nsRestyleHint values.  If you add more bits with matching values,
-    /// please add assertions to assert_restyle_hints_match in
-    /// tests/unit/stylo/sanity_checks.rs.
+    /// please add assertions to assert_restyle_hints_match below.
     pub flags RestyleHint: u32 {
         /// Rerun selector matching on the element.
         const RESTYLE_SELF = 0x01,
@@ -55,6 +54,39 @@ bitflags! {
     }
 }
 
+/// Asserts that all RestyleHint flags have a matching nsRestyleHint value.
+#[cfg(feature = "gecko")]
+#[inline]
+pub fn assert_restyle_hints_match() {
+    use gecko_bindings::structs;
+
+    macro_rules! check_restyle_hints {
+        ( $( $a:ident => $b:ident ),*, ) => {
+            if cfg!(debug_assertions) {
+                let mut hints = RestyleHint::all();
+                $(
+                    assert_eq!(structs::$a.0 as usize, $b.bits() as usize, stringify!($b));
+                    hints.remove($b);
+                )*
+                assert_eq!(hints, RestyleHint::empty(), "all RestyleHint bits should have an assertion");
+            }
+        }
+    }
+
+    check_restyle_hints! {
+        nsRestyleHint_eRestyle_Self => RESTYLE_SELF,
+        // XXX This for Servo actually means something like an hypothetical
+        // Restyle_AllDescendants (but without running selector matching on the
+        // element). ServoRestyleManager interprets it like that, but in practice we
+        // should align the behavior with Gecko adding a new restyle hint, maybe?
+        //
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1291786
+        nsRestyleHint_eRestyle_SomeDescendants => RESTYLE_DESCENDANTS,
+        nsRestyleHint_eRestyle_LaterSiblings => RESTYLE_LATER_SIBLINGS,
+        nsRestyleHint_eRestyle_StyleAttribute => RESTYLE_STYLE_ATTRIBUTE,
+    }
+}
+
 impl RestyleHint {
     /// The subset hints that affect the styling of a single element during the
     /// traversal.
@@ -71,7 +103,7 @@ impl From<nsRestyleHint> for RestyleHint {
         // FIXME(bholley): Finish aligning the binary representations here and
         // then .expect() the result of the checked version.
         if Self::from_bits(raw_bits).is_none() {
-            error!("stylo: dropping unsupported restyle hint bits");
+            warn!("stylo: dropping unsupported restyle hint bits");
         }
 
         Self::from_bits_truncate(raw_bits)

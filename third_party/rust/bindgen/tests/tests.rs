@@ -84,7 +84,7 @@ fn create_bindgen_builder(header: &PathBuf) -> Result<Option<Builder>, Error> {
                 .unwrap();
             flags.extend(extra_flags.into_iter());
         } else if line.contains("bindgen-unstable") &&
-                  cfg!(feature = "llvm_stable") {
+                  cfg!(feature = "testing_only_llvm_stable") {
             return Ok(None);
         } else if line.contains("bindgen-osx-only") {
             let prepend_flags = ["--raw-line", "#![cfg(target_os=\"macos\")]"];
@@ -104,6 +104,7 @@ fn create_bindgen_builder(header: &PathBuf) -> Result<Option<Builder>, Error> {
         .ok_or(Error::new(ErrorKind::Other, "Invalid header file name")));
 
     let prepend = ["bindgen",
+                   "--with-derive-default",
                    header_str,
                    "--raw-line",
                    "",
@@ -117,7 +118,7 @@ fn create_bindgen_builder(header: &PathBuf) -> Result<Option<Builder>, Error> {
         .chain(flags.into_iter());
 
     builder_from_flags(args)
-        .map(|(builder, _)| Some(builder.no_unstable_rust()))
+        .map(|(builder, _, _)| Some(builder.no_unstable_rust()))
 }
 
 macro_rules! test_header {
