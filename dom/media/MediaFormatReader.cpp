@@ -251,7 +251,7 @@ private:
     RefPtr<ShutdownPromise> mShutdownPromise;
   } mAudio, mVideo;
 
-  void RunStage(TrackType aTrack);
+  void RunStage(Data& aData);
   MediaResult DoCreateDecoder(TrackType aTrack);
   void DoInitDecoder(TrackType aTrack);
 
@@ -264,7 +264,7 @@ MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack)
 {
   MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack
              || aTrack == TrackInfo::kVideoTrack);
-  RunStage(aTrack);
+  RunStage(aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo);
 }
 
 class MediaFormatReader::DecoderFactory::Wrapper : public MediaDataDecoder
@@ -319,58 +319,56 @@ private:
 };
 
 void
-MediaFormatReader::DecoderFactory::RunStage(TrackType aTrack)
+MediaFormatReader::DecoderFactory::RunStage(Data& aData)
 {
-  auto& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
-
-  switch (data.mStage) {
+  switch (aData.mStage) {
     case Stage::None: {
-      MOZ_ASSERT(!data.mToken);
-      DecoderAllocPolicy::Instance(aTrack).Alloc()->Then(
+      MOZ_ASSERT(!aData.mToken);
+      aData.mPolicy.Alloc()->Then(
         mOwner->OwnerThread(), __func__,
-        [this, &data, aTrack] (Token* aToken) {
-          data.mTokenRequest.Complete();
-          data.mToken = aToken;
-          data.mStage = Stage::CreateDecoder;
-          RunStage(aTrack);
+        [this, &aData] (Token* aToken) {
+          aData.mTokenRequest.Complete();
+          aData.mToken = aToken;
+          aData.mStage = Stage::CreateDecoder;
+          RunStage(aData);
         },
-        [&data] () {
-          data.mTokenRequest.Complete();
-          data.mStage = Stage::None;
-        })->Track(data.mTokenRequest);
-      data.mStage = Stage::WaitForToken;
+        [&aData] () {
+          aData.mTokenRequest.Complete();
+          aData.mStage = Stage::None;
+        })->Track(aData.mTokenRequest);
+      aData.mStage = Stage::WaitForToken;
       break;
     }
 
     case Stage::WaitForToken: {
-      MOZ_ASSERT(!data.mToken);
-      MOZ_ASSERT(data.mTokenRequest.Exists());
+      MOZ_ASSERT(!aData.mToken);
+      MOZ_ASSERT(aData.mTokenRequest.Exists());
       break;
     }
 
     case Stage::CreateDecoder: {
-      MOZ_ASSERT(data.mToken);
-      MOZ_ASSERT(!data.mDecoder);
-      MOZ_ASSERT(!data.mInitRequest.Exists());
+      MOZ_ASSERT(aData.mToken);
+      MOZ_ASSERT(!aData.mDecoder);
+      MOZ_ASSERT(!aData.mInitRequest.Exists());
 
-      MediaResult rv = DoCreateDecoder(aTrack);
+      MediaResult rv = DoCreateDecoder(aData.mTrack);
       if (NS_FAILED(rv)) {
         NS_WARNING("Error constructing decoders");
-        data.mToken = nullptr;
-        data.mStage = Stage::None;
-        mOwner->NotifyError(aTrack, rv);
+        aData.mToken = nullptr;
+        aData.mStage = Stage::None;
+        mOwner->NotifyError(aData.mTrack, rv);
         return;
       }
 
-      data.mDecoder = new Wrapper(data.mDecoder.forget(), data.mToken.forget());
-      DoInitDecoder(aTrack);
-      data.mStage = Stage::WaitForInit;
+      aData.mDecoder = new Wrapper(aData.mDecoder.forget(), aData.mToken.forget());
+      DoInitDecoder(aData.mTrack);
+      aData.mStage = Stage::WaitForInit;
       break;
     }
 
     case Stage::WaitForInit: {
-      MOZ_ASSERT(data.mDecoder);
-      MOZ_ASSERT(data.mInitRequest.Exists());
+      MOZ_ASSERT(aData.mDecoder);
+      MOZ_ASSERT(aData.mInitRequest.Exists());
       break;
     }
   }
