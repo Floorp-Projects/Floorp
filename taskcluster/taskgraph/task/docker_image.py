@@ -9,6 +9,7 @@ import os
 import urllib2
 
 from . import base
+from .. import GECKO
 from taskgraph.util.docker import (
     docker_image,
     generate_context_hash,
@@ -17,7 +18,6 @@ from taskgraph.util.docker import (
 from taskgraph.util.templates import Templates
 
 logger = logging.getLogger(__name__)
-GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 
 # if running in a task, prefer to use the taskcluster proxy (http://taskcluster/),
 # otherwise hit the services directly

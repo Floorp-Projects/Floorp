@@ -18,8 +18,8 @@ from subprocess import Popen, PIPE
 from io import BytesIO
 
 from taskgraph.util import docker
+from . import GECKO
 
-GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 INDEX_URL = 'https://index.taskcluster.net/v1/task/' + docker.INDEX_PREFIX + '.{}.{}.hash.{}'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
