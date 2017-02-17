@@ -322,7 +322,7 @@ config = {
     },
     # 'holly': {},
     'jamun': {
-        'update_channel': 'release-dev',
+        'update_channel': 'beta-dev',
         'enable_release_promotion': 1,
         'platform_overrides': {
             'linux': {
@@ -350,7 +350,7 @@ config = {
                 'update_channel': 'default',
             },
             'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/release',
+                'src_mozconfig': 'browser/config/mozconfigs/macosx64/release',
             },
             'macosx64-debug': {
                 'update_channel': 'default',
