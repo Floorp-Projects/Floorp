@@ -682,8 +682,10 @@ enum class StyleDisplay : uint8_t {
 
 // CSS Grid <track-breadth> keywords
 // Should not overlap with NS_STYLE_GRID_TEMPLATE_SUBGRID
-#define NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT 1
-#define NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT 2
+enum class StyleGridTrackBreadth : uint8_t {
+  MaxContent = 1,
+  MinContent = 2,
+};
 
 // CSS Grid keywords for <auto-repeat>
 #define NS_STYLE_GRID_REPEAT_AUTO_FILL          0
