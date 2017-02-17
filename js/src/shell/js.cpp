@@ -3362,14 +3362,96 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+struct CooperationState
+{
+    CooperationState()
+      : lock(mutexid::ShellThreadCooperation)
+      , idle(false)
+      , numThreads(0)
+      , yieldCount(0)
+    {}
+
+    Mutex lock;
+    ConditionVariable cvar;
+    bool idle;
+    size_t numThreads;
+    uint64_t yieldCount;
+};
+static CooperationState* cooperationState = nullptr;
+
+static void
+CooperativeBeginWait(JSContext* cx)
+{
+    MOZ_ASSERT(cx == TlsContext.get());
+    JS_YieldCooperativeContext(cx);
+}
+
+static void
+CooperativeEndWait(JSContext* cx)
+{
+    MOZ_ASSERT(cx == TlsContext.get());
+    LockGuard<Mutex> lock(cooperationState->lock);
+
+    cooperationState->cvar.wait(lock, [&] { return cooperationState->idle; });
+
+    JS_ResumeCooperativeContext(cx);
+    cooperationState->idle = false;
+    cooperationState->yieldCount++;
+    cooperationState->cvar.notify_all();
+}
+
+static void
+CooperativeYield()
+{
+    LockGuard<Mutex> lock(cooperationState->lock);
+    MOZ_ASSERT(!cooperationState->idle);
+    cooperationState->idle = true;
+    cooperationState->cvar.notify_all();
+
+    // Wait until another thread takes over control before returning, if there
+    // is another thread to do so.
+    if (cooperationState->numThreads) {
+        uint64_t count = cooperationState->yieldCount;
+        cooperationState->cvar.wait(lock, [&] { return cooperationState->yieldCount != count; });
+    }
+}
+
+static bool
+CooperativeYieldThread(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!cooperationState) {
+        JS_ReportErrorASCII(cx, "No cooperative threads have been created");
+        return false;
+    }
+
+    if (GetShellContext(cx)->isWorker) {
+        JS_ReportErrorASCII(cx, "Worker threads cannot yield");
+        return false;
+    }
+
+    CooperativeBeginWait(cx);
+    CooperativeYield();
+    CooperativeEndWait(cx);
+
+    args.rval().setUndefined();
+    return true;
+}
+
 struct WorkerInput
 {
     JSRuntime* parentRuntime;
+    JSContext* siblingContext;
     char16_t* chars;
     size_t length;
 
     WorkerInput(JSRuntime* parentRuntime, char16_t* chars, size_t length)
-      : parentRuntime(parentRuntime), chars(chars), length(length)
+      : parentRuntime(parentRuntime), siblingContext(nullptr), chars(chars), length(length)
+    {}
+
+    WorkerInput(JSContext* siblingContext, char16_t* chars, size_t length)
+      : parentRuntime(nullptr), siblingContext(siblingContext), chars(chars), length(length)
     {}
 
     ~WorkerInput() {
@@ -3383,48 +3465,65 @@ static void
 WorkerMain(void* arg)
 {
     WorkerInput* input = (WorkerInput*) arg;
+    MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
 
-    JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime);
-    if (!cx) {
-        js_delete(input);
+    JSContext* cx = nullptr;
+
+    auto guard = mozilla::MakeScopeExit([&] {
+            if (cx)
+                JS_DestroyContext(cx);
+            if (input->siblingContext) {
+                cooperationState->numThreads--;
+                CooperativeYield();
+            }
+            js_delete(input);
+        });
+
+    cx = input->parentRuntime
+         ? JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime)
+         : JS_NewCooperativeContext(input->siblingContext);
+    if (!cx)
         return;
-    }
 
     UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
-    if (!sc) {
-        JS_DestroyContext(cx);
-        js_delete(input);
+    if (!sc)
         return;
-    }
 
-    sc->isWorker = true;
+    if (input->parentRuntime)
+        sc->isWorker = true;
     JS_SetContextPrivate(cx, sc.get());
-    JS_SetFutexCanWait(cx);
-    JS::SetWarningReporter(cx, WarningReporter);
-    js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
-    JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
     SetWorkerContextOptions(cx);
-
-    if (!JS::InitSelfHostedCode(cx)) {
-        JS_DestroyContext(cx);
-        js_delete(input);
-        return;
-    }
-
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
-    JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
-    JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
-    JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
 
-    EnvironmentPreparer environmentPreparer(cx);
+    Maybe<EnvironmentPreparer> environmentPreparer;
+    if (input->parentRuntime) {
+        JS_SetFutexCanWait(cx);
+        JS::SetWarningReporter(cx, WarningReporter);
+        js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
+        JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
-    JS::SetLargeAllocationFailureCallback(cx, my_LargeAllocFailCallback, (void*)cx);
+        if (!JS::InitSelfHostedCode(cx))
+            return;
+
+        JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
+        JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
+        JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
+
+        environmentPreparer.emplace(cx);
+
+        JS::SetLargeAllocationFailureCallback(cx, my_LargeAllocFailCallback, (void*)cx);
+    } else {
+        JS_AddInterruptCallback(cx, ShellInterruptCallback);
+    }
 
     do {
         JSAutoRequest ar(cx);
 
         JS::CompartmentOptions compartmentOptions;
         SetStandardCompartmentOptions(compartmentOptions);
+        if (input->siblingContext)
+            compartmentOptions.creationOptions().setNewZoneInNewZoneGroup();
+
         RootedObject global(cx, NewGlobalObject(cx, compartmentOptions, nullptr));
         if (!global)
             break;
@@ -3450,10 +3549,6 @@ WorkerMain(void* arg)
     sc->jobQueue.reset();
 
     KillWatchdog(cx);
-
-    JS_DestroyContext(cx);
-
-    js_delete(input);
 }
 
 // Workers can spawn other workers, so we need a lock to access workerThreads.
@@ -3472,25 +3567,34 @@ class MOZ_RAII AutoLockWorkerThreads : public LockGuard<Mutex>
 };
 
 static bool
-EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
+EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
 {
     if (!CanUseExtraThreads()) {
-        JS_ReportErrorASCII(cx, "Can't create worker threads with --no-threads");
+        JS_ReportErrorASCII(cx, "Can't create threads with --no-threads");
         return false;
     }
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isString()) {
-        JS_ReportErrorASCII(cx, "Invalid arguments to evalInWorker");
+        JS_ReportErrorASCII(cx, "Invalid arguments");
         return false;
     }
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     if (cx->runningOOMTest) {
-        JS_ReportErrorASCII(cx, "Can't create workers while running simulated OOM test");
+        JS_ReportErrorASCII(cx, "Can't create threads while running simulated OOM test");
         return false;
     }
 #endif
+
+    if (cooperative && GetShellContext(cx)->isWorker) {
+        // Disallowing cooperative multithreading in worker runtimes allows
+        // yield state to be process wide, and some other simplifications.
+        // When we have a better idea of how cooperative multithreading will be
+        // used in the browser this restriction might be relaxed.
+        JS_ReportErrorASCII(cx, "Cooperative multithreading in worker runtimes is not supported");
+        return false;
+    }
 
     if (!args[0].toString()->ensureLinear(cx))
         return false;
@@ -3513,27 +3617,58 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 
     CopyChars(chars, *str);
 
-    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
+    WorkerInput* input =
+        cooperative
+        ? js_new<WorkerInput>(cx, chars, str->length())
+        : js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
     if (!input) {
         ReportOutOfMemory(cx);
         return false;
     }
 
+    if (cooperative) {
+        if (!cooperationState)
+            cooperationState = js_new<CooperationState>();
+        cooperationState->numThreads++;
+        CooperativeBeginWait(cx);
+    }
+
     auto thread = js_new<Thread>(Thread::Options().setStackSize(gMaxStackSize + 128 * 1024));
     if (!thread || !thread->init(WorkerMain, input)) {
         ReportOutOfMemory(cx);
+        if (cooperative) {
+            cooperationState->numThreads--;
+            CooperativeYield();
+            CooperativeEndWait(cx);
+        }
         return false;
     }
 
-    AutoLockWorkerThreads alwt;
-    if (!workerThreads.append(thread)) {
-        ReportOutOfMemory(cx);
-        thread->join();
-        return false;
+    if (cooperative) {
+        CooperativeEndWait(cx);
+    } else {
+        AutoLockWorkerThreads alwt;
+        if (!workerThreads.append(thread)) {
+            ReportOutOfMemory(cx);
+            thread->join();
+            return false;
+        }
     }
 
     args.rval().setUndefined();
     return true;
+}
+
+static bool
+EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
+{
+    return EvalInThread(cx, argc, vp, false);
+}
+
+static bool
+EvalInCooperativeThread(JSContext* cx, unsigned argc, Value* vp)
+{
+    return EvalInThread(cx, argc, vp, true);
 }
 
 static bool
@@ -3713,7 +3848,7 @@ ScheduleWatchdog(JSContext* cx, double t)
 }
 
 static void
-KillWorkerThreads()
+KillWorkerThreads(JSContext* cx)
 {
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
 
@@ -3738,6 +3873,16 @@ KillWorkerThreads()
 
     js_delete(workerThreadsLock);
     workerThreadsLock = nullptr;
+
+    // Yield until all other cooperative threads in the main runtime finish.
+    while (cooperationState && cooperationState->numThreads) {
+        CooperativeBeginWait(cx);
+        CooperativeYield();
+        CooperativeEndWait(cx);
+    }
+
+    js_delete(cooperationState);
+    cooperationState = nullptr;
 }
 
 static void
@@ -4822,6 +4967,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
     JS::CompartmentBehaviors& behaviors = options.behaviors();
 
     SetStandardCompartmentOptions(options);
+    options.creationOptions().setNewZoneInExistingZoneGroup(cx->global());
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 1 && args[0].isObject()) {
@@ -6019,6 +6165,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("evalInWorker", EvalInWorker, 1, 0,
 "evalInWorker(str)",
 "  Evaluate 'str' in a separate thread with its own runtime.\n"),
+
+    JS_FN_HELP("evalInCooperativeThread", EvalInCooperativeThread, 1, 0,
+"evalInCooperativeThread(str)",
+"  Evaluate 'str' in a separate cooperatively scheduled thread using the same runtime.\n"),
+
+    JS_FN_HELP("cooperativeYield", CooperativeYieldThread, 0, 0,
+"evalInCooperativeThread()",
+"  Yield execution to another cooperatively scheduled thread using the same runtime.\n"),
 
     JS_FN_HELP("getSharedArrayBuffer", GetSharedArrayBuffer, 0, 0,
 "getSharedArrayBuffer()",
@@ -8178,7 +8332,7 @@ main(int argc, char** argv, char** envp)
 
     KillWatchdog(cx);
 
-    KillWorkerThreads();
+    KillWorkerThreads(cx);
 
     DestructSharedArrayBufferMailbox();
 
