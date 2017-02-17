@@ -194,7 +194,11 @@ class MediaFormatReader::DecoderFactory
   using Token = DecoderAllocPolicy::Token;
 
 public:
-  explicit DecoderFactory(MediaFormatReader* aOwner) : mOwner(aOwner) { }
+  explicit DecoderFactory(MediaFormatReader* aOwner)
+    : mAudio(aOwner->mAudio, TrackInfo::kAudioTrack)
+    , mVideo(aOwner->mVideo, TrackInfo::kVideoTrack)
+    , mOwner(WrapNotNull(aOwner)) { }
+
   void CreateDecoder(TrackType aTrack);
   // Shutdown any decoder pending initialization.
   RefPtr<ShutdownPromise> ShutdownDecoder(TrackType aTrack)
@@ -231,6 +235,13 @@ private:
 
   struct Data
   {
+    Data(DecoderData& aOwnerData, TrackType aTrack)
+      : mOwnerData(aOwnerData)
+      , mTrack(aTrack)
+      , mPolicy(DecoderAllocPolicy::Instance(aTrack)) { }
+    DecoderData& mOwnerData;
+    const TrackType mTrack;
+    DecoderAllocPolicy& mPolicy;
     Stage mStage = Stage::None;
     RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;
@@ -244,7 +255,8 @@ private:
   MediaResult DoCreateDecoder(TrackType aTrack);
   void DoInitDecoder(TrackType aTrack);
 
-  MediaFormatReader* const mOwner; // guaranteed to be valid by the owner.
+  // guaranteed to be valid by the owner.
+  const NotNull<MediaFormatReader*> mOwner;
 };
 
 void
