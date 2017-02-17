@@ -53,7 +53,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_animations_playbackrate.html [1]
   * Events:
     * test_animations_event_handler_attribute.html [10]
-    * test_animations_event_order.html [11]
+    * test_animations_event_order.html [12]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * Property parsing and computation:
@@ -94,13 +94,13 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_bug511909.html: @-moz-document and @media support [4]
 * Style change from DOM API bug 1331301
   * test_bug534804.html [90]
-  * test_bug73586.html [76]
+  * test_bug73586.html [20]
 * Transition support:
   * test_bug621351.html [4]
   * test_compute_data_with_start_struct.html `transition` [8]
   * test_inherit_computation.html `transition` [30]
   * test_initial_computation.html `transition` [60]
-  * test_transitions.html [65]
+  * test_transitions.html [63]
   * test_transitions_and_reframes.html [16]
   * test_transitions_and_restyles.html [3]
   * test_transitions_computed_value_combinations.html [553]
@@ -547,10 +547,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `box-shadow'` [6]
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
-  * &lt;shape-radius&gt; servo/servo#15492
-    * test_property_syntax_errors.html `circle(-` [2]
-    * ... `ellipse(-` [4]
-    * ... `ellipse(20px -` [2]
   * test_property_syntax_errors.html `(-1)`: factor value in filter functions servo/servo#15494 [42]
 * test_property_syntax_errors.html `transition-timing-function`: invalid range for cubic-bezier and steps servo/servo#15344 [60]
 * Quirks mode support
@@ -604,6 +600,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * unitless zero as angle bug 1234357
     * test_property_syntax_errors.html `linear-gradient(0,` [10]
     * ... `hue-rotate(0)` [6]
+  * test_bug372770.html: rgba(0,0,0,0) and transparent bug 1328224 [4]
 * test_moz_device_pixel_ratio.html: probably unship -moz-device-pixel-ratio bug 1338425 [4]
 
 ## Spec Unclear
