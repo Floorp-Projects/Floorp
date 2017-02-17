@@ -161,7 +161,7 @@ this.CommonUtils = {
     // Delay an existing timer if it exists
     if (name in thisObj && thisObj[name] instanceof Ci.nsITimer) {
       thisObj[name].delay = wait;
-      return;
+      return thisObj[name];
     }
 
     // Create a special timer that we can add extra properties

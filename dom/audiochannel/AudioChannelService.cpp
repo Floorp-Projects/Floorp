@@ -90,8 +90,8 @@ public:
                                        : u"inactive");
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-           ("NotifyChannelActiveRunnable, type = %d, active = %d\n",
-            mAudioChannel, mActive));
+           ("NotifyChannelActiveRunnable, type = %" PRIu32 ", active = %d\n",
+            static_cast<uint32_t>(mAudioChannel), mActive));
 
     return NS_OK;
   }
@@ -847,8 +847,8 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %d, "
-          "volume = %f\n", aWindow, aAudioChannel, aVolume));
+         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %" PRIu32 ", "
+          "volume = %f\n", aWindow, static_cast<uint32_t>(aAudioChannel), aVolume));
 
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
@@ -908,8 +908,8 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %d, "
-          "mute = %d\n", aWindow, aAudioChannel, aMuted));
+         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %" PRIu32 ", "
+          "mute = %d\n", aWindow, static_cast<uint32_t>(aAudioChannel), aMuted));
 
   if (aAudioChannel == AudioChannel::System) {
     // Workaround for bug1183033, system channel type can always playback.

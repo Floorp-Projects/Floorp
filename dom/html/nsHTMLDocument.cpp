@@ -96,7 +96,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsHtml5Module.h"
-#include "prprf.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include "nsMimeTypes.h"

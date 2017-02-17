@@ -19,7 +19,6 @@
 #include "nsThreadUtils.h"
 #include "pkix/pkixtypes.h"
 #include "prmem.h"
-#include "prprf.h"
 #include "secerr.h"
 
 using namespace mozilla;

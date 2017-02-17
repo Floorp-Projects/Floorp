@@ -37,6 +37,8 @@
 #include "nsIProtocolHandler.h"
 #include "imgIRequest.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 using namespace mozilla;
 using namespace mozilla::image;
 
@@ -782,8 +784,8 @@ imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     }
     MOZ_LOG(gImgLog, LogLevel::Warning,
            ("[this=%p] imgRequest::OnStartRequest -- "
-            "RetargetDeliveryTo rv %d=%s\n",
-            this, rv, NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
+            "RetargetDeliveryTo rv %" PRIu32 "=%s\n",
+            this, static_cast<uint32_t>(rv), NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
   }
 
   return NS_OK;

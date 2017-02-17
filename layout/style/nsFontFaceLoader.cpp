@@ -6,6 +6,9 @@
 
 /* code for loading in @font-face defined font data */
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Logging.h"
+
 #include "nsFontFaceLoader.h"
 
 #include "mozilla/Logging.h"
@@ -222,8 +225,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       LOG(("userfonts (%p) download completed - font uri: (%s) time: %d ms\n",
            this, mFontURI->GetSpecOrDefault().get(), downloadTimeMS));
     } else {
-      LOG(("userfonts (%p) download failed - font uri: (%s) error: %8.8x\n",
-           this, mFontURI->GetSpecOrDefault().get(), aStatus));
+      LOG(("userfonts (%p) download failed - font uri: (%s) error: %8.8" PRIx32 "\n",
+           this, mFontURI->GetSpecOrDefault().get(), static_cast<uint32_t>(aStatus)));
     }
   }
 

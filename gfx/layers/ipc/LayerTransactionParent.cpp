@@ -27,6 +27,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -142,7 +143,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
   TimeStamp updateStart = TimeStamp::Now();
 #endif
 
-  MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", aInfo.cset().Length()));
+  MOZ_LAYERS_LOG(("[ParentSide] received txn with %" PRIuSIZE " edits", aInfo.cset().Length()));
 
   UpdateFwdTransactionId(aInfo.fwdTransactionId());
 

@@ -8,6 +8,8 @@
 #include "CacheFile.h"
 #include "nsThreadUtils.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 namespace mozilla {
 namespace net {
 
@@ -639,8 +641,8 @@ nsresult
 CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
                               nsresult aResult)
 {
-  LOG(("CacheFileChunk::OnDataWritten() [this=%p, handle=%p, result=0x%08x]",
-       this, aHandle, aResult));
+  LOG(("CacheFileChunk::OnDataWritten() [this=%p, handle=%p, result=0x%08" PRIx32 "]",
+       this, aHandle, static_cast<uint32_t>(aResult)));
 
   nsCOMPtr<CacheFileChunkListener> listener;
 
@@ -669,8 +671,8 @@ nsresult
 CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
                            nsresult aResult)
 {
-  LOG(("CacheFileChunk::OnDataRead() [this=%p, handle=%p, result=0x%08x]",
-       this, aHandle, aResult));
+  LOG(("CacheFileChunk::OnDataRead() [this=%p, handle=%p, result=0x%08" PRIx32 "]",
+       this, aHandle, static_cast<uint32_t>(aResult)));
 
   nsCOMPtr<CacheFileChunkListener> listener;
 
@@ -778,7 +780,8 @@ CacheFileChunk::GetStatus()
 void
 CacheFileChunk::SetError(nsresult aStatus)
 {
-  LOG(("CacheFileChunk::SetError() [this=%p, status=0x%08x]", this, aStatus));
+  LOG(("CacheFileChunk::SetError() [this=%p, status=0x%08" PRIx32 "]",
+       this, static_cast<uint32_t>(aStatus)));
 
   MOZ_ASSERT(NS_FAILED(aStatus));
 

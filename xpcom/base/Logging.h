@@ -14,6 +14,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroForEach.h"
 
@@ -203,7 +204,7 @@ inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
  */
 void log_print(const PRLogModuleInfo* aModule,
                       LogLevel aLevel,
-                      const char* aFmt, ...);
+                      const char* aFmt, ...) MOZ_FORMAT_PRINTF(3, 4);
 
 inline bool log_test(const LogModule* module, LogLevel level) {
   MOZ_ASSERT(level != LogLevel::Disabled);
@@ -212,7 +213,7 @@ inline bool log_test(const LogModule* module, LogLevel level) {
 
 void log_print(const LogModule* aModule,
                LogLevel aLevel,
-               const char* aFmt, ...);
+               const char* aFmt, ...) MOZ_FORMAT_PRINTF(3, 4);
 } // namespace detail
 
 } // namespace mozilla

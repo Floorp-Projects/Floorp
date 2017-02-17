@@ -40,6 +40,7 @@ function checkRecord(name, record, expectedCount, timeCreated,
   } else {
     do_check_true(!store.getAllIDs()[record.id]);
   }
+  return undefined;
 }
 
 

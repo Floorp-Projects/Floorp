@@ -91,7 +91,6 @@
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/Preferences.h"
-#include "prprf.h"
 #include "xpcpublic.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCSSParser.h"

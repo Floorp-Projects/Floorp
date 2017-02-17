@@ -5,6 +5,7 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
@@ -116,15 +117,15 @@ MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
   } else {
     mStreams.AppendElement(aStream);
     LOG(LogLevel::Debug,
-        ("Adding media stream %p to graph %p, count %lu",
+        ("Adding media stream %p to graph %p, count %" PRIuSIZE,
          aStream,
          this,
          mStreams.Length()));
     LOG(LogLevel::Debug,
-        ("Adding media stream %p to graph %p, count %lu",
+        ("Adding media stream %p to graph %p, count %" PRIuSIZE,
          aStream,
          this,
-         (long)mStreams.Length()));
+         mStreams.Length()));
   }
 
   SetStreamOrderDirty();
@@ -155,15 +156,15 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
   }
 
   LOG(LogLevel::Debug,
-      ("Removed media stream %p from graph %p, count %lu",
+      ("Removed media stream %p from graph %p, count %" PRIuSIZE,
        aStream,
        this,
        mStreams.Length()));
   LOG(LogLevel::Debug,
-      ("Removed media stream %p from graph %p, count %lu",
+      ("Removed media stream %p from graph %p, count %" PRIuSIZE,
        aStream,
        this,
-       (long)mStreams.Length()));
+       mStreams.Length()));
 
   NS_RELEASE(aStream); // probably destroying it
 }
@@ -269,8 +270,8 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
         LOG(LogLevel::Debug,
-            ("SourceMediaStream %p creating track %d, start %lld, initial end "
-             "%lld",
+            ("SourceMediaStream %p creating track %d, start %" PRId64
+             ", initial end %" PRId64,
              aStream,
              data->mID,
              int64_t(data->mStart),
@@ -286,7 +287,8 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       } else if (data->mData->GetDuration() > 0) {
         MediaSegment* dest = aStream->mTracks.FindTrack(data->mID)->GetSegment();
         LOG(LogLevel::Verbose,
-            ("SourceMediaStream %p track %d, advancing end from %lld to %lld",
+            ("SourceMediaStream %p track %d, advancing end from %" PRId64
+             " to %" PRId64,
              aStream,
              data->mID,
              int64_t(dest->GetDuration()),
@@ -476,7 +478,8 @@ MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
   if (bufferEnd < mProcessedTime) {
     LOG(LogLevel::Error,
         ("MediaStream %p underrun, "
-         "bufferEnd %f < mProcessedTime %f (%lld < %lld), Streamtime %lld",
+         "bufferEnd %f < mProcessedTime %f (%" PRId64 " < %" PRId64
+         "), Streamtime %" PRId64,
          aStream,
          MediaTimeToSeconds(bufferEnd),
          MediaTimeToSeconds(mProcessedTime),
@@ -901,8 +904,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
         output.InsertNullDataAtStart(toWrite);
         ticksWritten += toWrite;
         LOG(LogLevel::Verbose,
-            ("MediaStream %p writing %ld blocking-silence samples for "
-             "%f to %f (%ld to %ld)",
+            ("MediaStream %p writing %" PRId64 " blocking-silence samples for "
+             "%f to %f (%" PRId64 " to %" PRId64 ")",
              aStream,
              toWrite,
              MediaTimeToSeconds(t),
@@ -915,8 +918,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
 
         if (endTicksNeeded <= endTicksAvailable) {
           LOG(LogLevel::Verbose,
-              ("MediaStream %p writing %ld samples for %f to %f "
-               "(samples %ld to %ld)",
+              ("MediaStream %p writing %" PRId64 " samples for %f to %f "
+               "(samples %" PRId64 " to %" PRId64 ")",
                aStream,
                toWrite,
                MediaTimeToSeconds(t),
@@ -934,8 +937,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
               offset < endTicksAvailable) {
             output.AppendSlice(*audio, offset, endTicksAvailable);
             LOG(LogLevel::Verbose,
-                ("MediaStream %p writing %ld samples for %f to %f "
-                 "(samples %ld to %ld)",
+                ("MediaStream %p writing %" PRId64 " samples for %f to %f "
+                 "(samples %" PRId64 " to %" PRId64 ")",
                  aStream,
                  toWrite,
                  MediaTimeToSeconds(t),
@@ -949,8 +952,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
           }
           output.AppendNullData(toWrite);
           LOG(LogLevel::Verbose,
-              ("MediaStream %p writing %ld padding slsamples for %f to "
-               "%f (samples %ld to %ld)",
+              ("MediaStream %p writing %" PRId64 " padding slsamples for %f to "
+               "%f (samples %" PRId64 " to %" PRId64 ")",
                aStream,
                toWrite,
                MediaTimeToSeconds(t),
@@ -3854,7 +3857,7 @@ MediaStreamGraphImpl::SuspendOrResumeStreams(AudioContextOperation aAudioContext
   }
   LOG(LogLevel::Debug,
       ("Moving streams between suspended and running"
-       "state: mStreams: %d, mSuspendedStreams: %d",
+       "state: mStreams: %" PRIuSIZE ", mSuspendedStreams: %" PRIuSIZE,
        mStreams.Length(),
        mSuspendedStreams.Length()));
 #ifdef DEBUG

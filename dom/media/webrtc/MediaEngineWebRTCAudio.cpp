@@ -525,7 +525,7 @@ MediaEngineWebRTCMicrophoneSource::NotifyPull(MediaStreamGraph *aGraph,
                                               const PrincipalHandle& aPrincipalHandle)
 {
   // Ignore - we push audio data
-  LOG_FRAMES(("NotifyPull, desired = %ld", (int64_t) aDesiredTime));
+  LOG_FRAMES(("NotifyPull, desired = %" PRId64, (int64_t) aDesiredTime));
 }
 
 void

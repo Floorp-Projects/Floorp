@@ -21,6 +21,8 @@
 #include "NesteggPacketHolder.h"
 #include "XiphExtradata.h"
 #include "prprf.h"           // leaving it for PR_vsnprintf()
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -128,7 +130,7 @@ static void webmdemux_log(nestegg* aContext,
 
   SprintfLiteral(msg, "%p [Nestegg-%s] ", aContext, sevStr);
   PR_vsnprintf(msg+strlen(msg), sizeof(msg)-strlen(msg), aFormat, args);
-  MOZ_LOG(gNesteggLog, LogLevel::Debug, (msg));
+  MOZ_LOG(gNesteggLog, LogLevel::Debug, ("%s", msg));
 
   va_end(args);
 }
@@ -697,7 +699,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       }
     }
 
-    WEBM_DEBUG("push sample tstamp: %ld next_tstamp: %ld length: %ld kf: %d",
+    WEBM_DEBUG("push sample tstamp: %" PRId64 " next_tstamp: %" PRId64 " length: %" PRIuSIZE " kf: %d",
                tstamp, next_tstamp, length, isKeyframe);
     RefPtr<MediaRawData> sample;
     if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {

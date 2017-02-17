@@ -1868,7 +1868,7 @@ fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1b.html
 fails == 1120431-1.html 1120431-1.html
 fails == 1120431-2.html 1120431-2.html
 == 1121748-1.html 1121748-1.html
-fails == 1121748-2.html 1121748-2.html
+== 1121748-2.html 1121748-2.html
 == 1127107-1a-nowrap.html 1127107-1a-nowrap.html
 == 1127107-1b-pre.html 1127107-1b-pre.html
 == 1127107-2-capitalize.html 1127107-2-capitalize.html

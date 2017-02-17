@@ -4,10 +4,9 @@
 
 "use strict";
 
-const { defer, all } = require("promise");
-const { LocalizationHelper } = require("devtools/shared/l10n");
 const Services = require("Services");
 const appInfo = Services.appinfo;
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const {
   getFormDataSections,
@@ -15,10 +14,7 @@ const {
   parseQueryString,
 } = require("devtools/client/netmonitor/request-utils");
 
-loader.lazyGetter(this, "L10N", () => {
-  return new LocalizationHelper("devtools/client/locales/har.properties");
-});
-
+const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
 const HAR_VERSION = "1.1";
 
 /**
@@ -68,10 +64,7 @@ HarBuilder.prototype = {
 
     // Some data needs to be fetched from the backend during the
     // build process, so wait till all is done.
-    let { resolve, promise } = defer();
-    all(this.promises).then(results => resolve({ log: log }));
-
-    return promise;
+    return Promise.all(this.promises).then(() => ({ log }));
   },
 
   // Helpers

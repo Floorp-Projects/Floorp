@@ -5,11 +5,24 @@ Mozilla ESLint Plugin
 Environments
 ============
 
+These environments are available by specifying a comment at the top of the file,
+e.g.
+
+   /* eslint-env mozilla/chrome-worker */
+
+There are also built-in ESLint environments available as well:
+http://eslint.org/docs/user-guide/configuring#specifying-environments
+
 chrome-worker
 -------------
 
 Defines the environment for chrome workers. This differs from normal workers by
 the fact that `ctypes` can be accessed as well.
+
+frame-script
+------------
+
+Defines the environment for frame scripts.
 
 Rules
 =====

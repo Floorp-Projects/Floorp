@@ -539,8 +539,8 @@ txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode)
     return new txXPathNode(aNode.mNode->OwnerDoc());
 }
 
-const char gPrintfFmt[] = "id0x%p";
-const char gPrintfFmtAttr[] = "id0x%p-%010i";
+const char gPrintfFmt[] = "id0x%" PRIxPTR;
+const char gPrintfFmtAttr[] = "id0x%" PRIxPTR "-%010i";
 
 /* static */
 nsresult

@@ -6,6 +6,7 @@
 #include "GMPDecryptorParent.h"
 #include "GMPContentParent.h"
 #include "MediaData.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -374,7 +375,7 @@ mozilla::ipc::IPCResult
 GMPDecryptorParent::RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
                                                 InfallibleTArray<GMPKeyInformation>&& aKeyInfos)
 {
-  LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(sessionId='%s', KeyInfos len='%d')",
+  LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(sessionId='%s', KeyInfos len='%" PRIuSIZE "')",
         this, aSessionId.get(), aKeyInfos.Length()));
 
   if (mIsOpen) {

@@ -6,6 +6,7 @@
 #include "WidevineVideoFrame.h"
 
 #include "WidevineUtils.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 using namespace cdm;
 
@@ -113,7 +114,7 @@ WidevineVideoFrame::Stride(cdm::VideoFrame::VideoPlane aPlane)
 void
 WidevineVideoFrame::SetTimestamp(int64_t timestamp)
 {
-  Log("WidevineVideoFrame::SetTimestamp(%lld) this=%p", timestamp, this);
+  Log("WidevineVideoFrame::SetTimestamp(%" PRId64 ") this=%p", timestamp, this);
   mTimestamp = timestamp;
 }
 

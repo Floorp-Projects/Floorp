@@ -527,7 +527,7 @@ this.BrowserIDManager.prototype = {
       // This is called at login time and every time we need a new token - in
       // the latter case we already have kA and kB, so optimise that case.
       if (userData.kA && userData.kB) {
-        return;
+        return null;
       }
       log.info("Fetching new keys");
       return this._fxaService.getKeys().then(

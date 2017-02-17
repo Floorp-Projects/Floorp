@@ -285,13 +285,13 @@ Predictor::Action::OnCacheEntryAvailable(nsICacheEntry *entry, bool isNew,
   }
   PREDICTOR_LOG(("OnCacheEntryAvailable %p called. entry=%p mFullUri=%d mPredict=%d "
                  "mPredictReason=%d mLearnReason=%d mTargetURI=%s "
-                 "mSourceURI=%s mStackCount=%d isNew=%d result=0x%08x",
+                 "mSourceURI=%s mStackCount=%d isNew=%d result=0x%08" PRIx32,
                  this, entry, mFullUri, mPredict, mPredictReason, mLearnReason,
                  targetURI.get(), sourceURI.get(), mStackCount,
-                 isNew, result));
+                 isNew, static_cast<uint32_t>(result)));
   if (NS_FAILED(result)) {
-    PREDICTOR_LOG(("OnCacheEntryAvailable %p FAILED to get cache entry (0x%08X). "
-                   "Aborting.", this, result));
+    PREDICTOR_LOG(("OnCacheEntryAvailable %p FAILED to get cache entry (0x%08" PRIX32
+                   "). Aborting.", this, static_cast<uint32_t>(result)));
     return NS_OK;
   }
   Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_WAIT_TIME,
@@ -1347,7 +1347,7 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
                               nsIRequest::LOAD_BACKGROUND);
 
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    NS_NewChannel failed rv=0x%X", rv));
+    PREDICTOR_LOG(("    NS_NewChannel failed rv=0x%" PRIX32, static_cast<uint32_t>(rv)));
     return rv;
   }
 
@@ -1357,7 +1357,8 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
   }
 
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    Set originAttributes into loadInfo failed rv=0x%X", rv));
+    PREDICTOR_LOG(("    Set originAttributes into loadInfo failed rv=0x%" PRIX32,
+                   static_cast<uint32_t>(rv)));
     return rv;
   }
 
@@ -1377,7 +1378,7 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
                  channel.get()));
   rv = channel->AsyncOpen2(listener);
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    AsyncOpen2 failed rv=0x%X", rv));
+    PREDICTOR_LOG(("    AsyncOpen2 failed rv=0x%" PRIX32, static_cast<uint32_t>(rv)));
   }
 
   return rv;
@@ -1876,7 +1877,7 @@ Predictor::LearnForSubresource(nsICacheEntry *entry, nsIURI *targetURI)
   nsCString newValue;
   MakeMetadataEntry(hitCount, lastLoad, flags, newValue);
   rv = entry->SetMetaDataElement(key.BeginReading(), newValue.BeginReading());
-  PREDICTOR_LOG(("    SetMetaDataElement -> 0x%08X", rv));
+  PREDICTOR_LOG(("    SetMetaDataElement -> 0x%08" PRIX32, static_cast<uint32_t>(rv)));
   if (NS_FAILED(rv) && isNewResource) {
     // Roll back the increment to the resource count we made above.
     PREDICTOR_LOG(("    rolling back resource count update"));
@@ -1979,7 +1980,7 @@ Predictor::ParseMetaDataEntry(const char *key, const char *value, nsIURI **uri,
     const char *uriStart = key + (sizeof(META_DATA_PREFIX) - 1);
     nsresult rv = NS_NewURI(uri, uriStart, nullptr, mIOService);
     if (NS_FAILED(rv)) {
-      PREDICTOR_LOG(("    NS_NewURI returned 0x%X", rv));
+      PREDICTOR_LOG(("    NS_NewURI returned 0x%" PRIX32, static_cast<uint32_t>(rv)));
       return false;
     }
     PREDICTOR_LOG(("    uri -> %s", uriStart));
@@ -2460,7 +2461,8 @@ Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
                                            nsISupports *aContext,
                                            nsresult aStatusCode)
 {
-  PREDICTOR_LOG(("OnStopRequest this=%p aStatusCode=0x%X", this, aStatusCode));
+  PREDICTOR_LOG(("OnStopRequest this=%p aStatusCode=0x%" PRIX32,
+                 this, static_cast<uint32_t>(aStatusCode)));
   NS_ENSURE_ARG(aRequest);
   if (NS_FAILED(aStatusCode)) {
     return aStatusCode;
@@ -2483,11 +2485,12 @@ Predictor::PrefetchListener::OnStopRequest(nsIRequest *aRequest,
   rv = httpChannel->GetResponseStatus(&httpStatus);
   if (NS_SUCCEEDED(rv) && httpStatus == 200) {
     rv = cachingChannel->ForceCacheEntryValidFor(mPredictor->mPrefetchForceValidFor);
-    PREDICTOR_LOG(("    forcing entry valid for %d seconds rv=%X",
-                   mPredictor->mPrefetchForceValidFor, rv));
+    PREDICTOR_LOG(("    forcing entry valid for %d seconds rv=%" PRIX32,
+                   mPredictor->mPrefetchForceValidFor, static_cast<uint32_t>(rv)));
   } else {
     rv = cachingChannel->ForceCacheEntryValidFor(0);
-    PREDICTOR_LOG(("    removing any forced validity rv=%X", rv));
+    PREDICTOR_LOG(("    removing any forced validity rv=%" PRIX32,
+                   static_cast<uint32_t>(rv)));
   }
 
   nsAutoCString reqName;
@@ -2626,13 +2629,14 @@ Predictor::CacheabilityAction::OnCacheEntryAvailable(nsICacheEntry *entry,
   PREDICTOR_LOG(("CacheabilityAction::OnCacheEntryAvailable this=%p", this));
   if (NS_FAILED(result)) {
     // Nothing to do
-    PREDICTOR_LOG(("    nothing to do result=%X isNew=%d", result, isNew));
+    PREDICTOR_LOG(("    nothing to do result=%" PRIX32 " isNew=%d",
+                   static_cast<uint32_t>(result), isNew));
     return NS_OK;
   }
 
   nsresult rv = entry->VisitMetaData(this);
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    VisitMetaData returned %x", rv));
+    PREDICTOR_LOG(("    VisitMetaData returned %" PRIx32, static_cast<uint32_t>(rv)));
     return NS_OK;
   }
 

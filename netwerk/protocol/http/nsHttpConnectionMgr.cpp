@@ -344,7 +344,8 @@ nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans, int32_t pri
 nsresult
 nsHttpConnectionMgr::CancelTransaction(nsHttpTransaction *trans, nsresult reason)
 {
-    LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%p reason=%x]\n", trans, reason));
+    LOG(("nsHttpConnectionMgr::CancelTransaction [trans=%p reason=%" PRIx32 "]\n",
+         trans, static_cast<uint32_t>(reason)));
     return PostEvent(&nsHttpConnectionMgr::OnMsgCancelTransaction,
                      static_cast<int32_t>(reason), trans);
 }
@@ -844,9 +845,9 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
     if (NS_FAILED(rv) || !isJoined) {
         LOG(("nsHttpConnectionMgr::GetSpdyPreferredEnt "
              "Host %s cannot be confirmed to be joined "
-             "with %s connections. rv=%x isJoined=%d",
+             "with %s connections. rv=%" PRIx32 " isJoined=%d",
              preferred->mConnInfo->Origin(), aOriginalEntry->mConnInfo->Origin(),
-             rv, isJoined));
+             static_cast<uint32_t>(rv), isJoined));
         Telemetry::Accumulate(Telemetry::SPDY_NPN_JOIN, false);
         return nullptr;
     }
@@ -869,7 +870,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry "
-         "[ci=%s ent=%p active=%d idle=%d queued=%d]\n",
+         "[ci=%s ent=%p active=%" PRIuSIZE " idle=%" PRIuSIZE " queued=%" PRIuSIZE "]\n",
          ent->mConnInfo->HashKey().get(), ent, ent->mActiveConns.Length(),
          ent->mIdleConns.Length(), ent->mPendingQ.Length()));
 
@@ -906,7 +907,8 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
                 LOG(("  dispatching pending transaction...\n"));
             else
                 LOG(("  removing pending transaction based on "
-                     "TryDispatchTransaction returning hard error %x\n", rv));
+                     "TryDispatchTransaction returning hard error %" PRIx32 "\n",
+                     static_cast<uint32_t>(rv)));
 
             if (ent->mPendingQ.RemoveElement(trans)) {
                 // trans is now potentially destroyed
@@ -1453,7 +1455,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::TryDispatchTransaction without conn "
          "[trans=%p ci=%p ci=%s caps=%x tunnelprovider=%p onlyreused=%d "
-         "active=%d idle=%d]\n", trans,
+         "active=%" PRIuSIZE " idle=%" PRIuSIZE "]\n", trans,
          ent->mConnInfo.get(), ent->mConnInfo->HashKey().get(),
          uint32_t(trans->Caps()), trans->TunnelProvider(),
          onlyReusedConnection, ent->mActiveConns.Length(),
@@ -1623,7 +1625,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         if (rv != NS_ERROR_NOT_AVAILABLE) {
             // not available return codes should try next step as they are
             // not hard errors. Other codes should stop now
-            LOG(("   failed step 4 (%x) trans=%p\n", rv, trans));
+            LOG(("   failed step 4 (%" PRIx32 ") trans=%p\n",
+                 static_cast<uint32_t>(rv), trans));
             return rv;
         }
     } else if (trans->TunnelProvider() && trans->TunnelProvider()->MaybeReTunnel(trans)) {
@@ -1792,7 +1795,7 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
 
     rv = conn->Activate(transaction, caps, priority);
     if (NS_FAILED(rv)) {
-        LOG(("  conn->Activate failed [rv=%x]\n", rv));
+      LOG(("  conn->Activate failed [rv=%" PRIx32 "]\n", static_cast<uint32_t>(rv)));
         ent->mActiveConns.RemoveElement(conn);
         if (conn == ent->mYellowConnection)
             ent->OnYellowComplete();
@@ -1931,14 +1934,15 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
     if (rv == NS_ERROR_NOT_AVAILABLE) {
         LOG(("  adding transaction to pending queue "
-             "[trans=%p pending-count=%u]\n",
+             "[trans=%p pending-count=%" PRIuSIZE "]\n",
              trans, ent->mPendingQ.Length()+1));
         // put this transaction on the pending queue...
         InsertTransactionSorted(ent->mPendingQ, trans);
         return NS_OK;
     }
 
-    LOG(("  ProcessNewTransaction Hard Error trans=%p rv=%x\n", trans, rv));
+    LOG(("  ProcessNewTransaction Hard Error trans=%p rv=%" PRIx32 "\n",
+         trans, static_cast<uint32_t>(rv)));
     return rv;
 }
 
@@ -2767,7 +2771,8 @@ nsHttpConnectionMgr::TimeoutTick()
         nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
 
         LOG(("nsHttpConnectionMgr::TimeoutTick() this=%p host=%s "
-             "idle=%d active=%d half-len=%d pending=%d\n",
+             "idle=%" PRIuSIZE " active=%" PRIuSIZE
+             " half-len=%" PRIuSIZE " pending=%" PRIuSIZE "\n",
              this, ent->mConnInfo->Origin(), ent->mIdleConns.Length(),
              ent->mActiveConns.Length(), ent->mHalfOpens.Length(),
              ent->mPendingQ.Length()));
@@ -3142,8 +3147,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
                       getter_AddRefs(mStreamIn),
                       getter_AddRefs(mStreamOut),
                       false);
-    LOG(("nsHalfOpenSocket::SetupPrimaryStream [this=%p ent=%s rv=%x]",
-         this, mEnt->mConnInfo->Origin(), rv));
+    LOG(("nsHalfOpenSocket::SetupPrimaryStream [this=%p ent=%s rv=%" PRIx32 "]",
+         this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
     if (NS_FAILED(rv)) {
         if (mStreamOut)
             mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
@@ -3166,8 +3171,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
                                getter_AddRefs(mBackupStreamIn),
                                getter_AddRefs(mBackupStreamOut),
                                true);
-    LOG(("nsHalfOpenSocket::SetupBackupStream [this=%p ent=%s rv=%x]",
-         this, mEnt->mConnInfo->Origin(), rv));
+    LOG(("nsHalfOpenSocket::SetupBackupStream [this=%p ent=%s rv=%" PRIx32 "]",
+         this, mEnt->mConnInfo->Origin(), static_cast<uint32_t>(rv)));
     if (NS_FAILED(rv)) {
         if (mBackupStreamOut)
             mBackupStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
@@ -3358,7 +3363,8 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
     if (NS_FAILED(rv)) {
         LOG(("nsHalfOpenSocket::OnOutputStreamReady "
-             "conn->init (%p) failed %x\n", conn.get(), rv));
+             "conn->init (%p) failed %" PRIx32 "\n",
+             conn.get(), static_cast<uint32_t>(rv)));
         return rv;
     }
 
@@ -3969,13 +3975,13 @@ nsHttpConnectionMgr::MoveToWildCardConnEntry(nsHttpConnectionInfo *specificCI,
     wcEnt->mUsingSpdy = true;
 
     LOG(("nsHttpConnectionMgr::MakeConnEntryWildCard ent %p "
-         "idle=%d active=%d half=%d pending=%d\n", ent,
-         ent->mIdleConns.Length(), ent->mActiveConns.Length(),
+         "idle=%" PRIuSIZE " active=%" PRIuSIZE " half=%" PRIuSIZE " pending=%" PRIuSIZE "\n",
+         ent, ent->mIdleConns.Length(), ent->mActiveConns.Length(),
          ent->mHalfOpens.Length(), ent->mPendingQ.Length()));
 
     LOG(("nsHttpConnectionMgr::MakeConnEntryWildCard wc-ent %p "
-         "idle=%d active=%d half=%d pending=%d\n", wcEnt,
-         wcEnt->mIdleConns.Length(), wcEnt->mActiveConns.Length(),
+         "idle=%" PRIuSIZE " active=%" PRIuSIZE " half=%" PRIuSIZE " pending=%" PRIuSIZE "\n",
+         wcEnt, wcEnt->mIdleConns.Length(), wcEnt->mActiveConns.Length(),
          wcEnt->mHalfOpens.Length(), wcEnt->mPendingQ.Length()));
 
     int32_t count = ent->mActiveConns.Length();
