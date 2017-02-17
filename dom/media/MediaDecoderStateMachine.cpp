@@ -2740,6 +2740,11 @@ bool MediaDecoderStateMachine::IsPlaying() const
   return mMediaSink->IsPlaying();
 }
 
+void MediaDecoderStateMachine::SetMediaNotSeekable()
+{
+  mMediaSeekable = false;
+}
+
 nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2756,11 +2761,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
 
-  RefPtr<MediaDecoderStateMachine> self = this;
   mOnMediaNotSeekable = mReader->OnMediaNotSeekable().Connect(
-    OwnerThread(), [self] () {
-      self->mMediaSeekable = false;
-    });
+    OwnerThread(), this, &MediaDecoderStateMachine::SetMediaNotSeekable);
 
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
@@ -2773,6 +2775,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  RefPtr<MediaDecoderStateMachine> self = this;
   OwnerThread()->Dispatch(NS_NewRunnableFunction([self] () {
     MOZ_ASSERT(!self->mStateObj);
     auto s = new DecodeMetadataState(self);
