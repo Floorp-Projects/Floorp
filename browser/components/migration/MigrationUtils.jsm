@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ResponsivenessMonitor",
+                                  "resource://gre/modules/ResponsivenessMonitor.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
@@ -212,7 +214,7 @@ this.MigratorPrototype = {
     return types.reduce((a, b) => { a |= b; return a }, 0);
   },
 
-  getKey: function MP_getKey() {
+  getBrowserKey: function MP_getBrowserKey() {
     return this.contractID.match(/\=([^\=]+)$/)[1];
   },
 
@@ -237,40 +239,64 @@ this.MigratorPrototype = {
       });
     };
 
-    let getHistogramForResourceType = resourceType => {
+    let getHistogramIdForResourceType = (resourceType, template) => {
       if (resourceType == MigrationUtils.resourceTypes.HISTORY) {
-        return "FX_MIGRATION_HISTORY_IMPORT_MS";
+        return template.replace("*", "HISTORY");
       }
       if (resourceType == MigrationUtils.resourceTypes.BOOKMARKS) {
-        return "FX_MIGRATION_BOOKMARKS_IMPORT_MS";
+        return template.replace("*", "BOOKMARKS");
       }
       if (resourceType == MigrationUtils.resourceTypes.PASSWORDS) {
-        return "FX_MIGRATION_LOGINS_IMPORT_MS";
+        return template.replace("*", "LOGINS");
       }
       return null;
     };
-    let maybeStartTelemetryStopwatch = (resourceType) => {
-      let histogram = getHistogramForResourceType(resourceType);
-      if (histogram) {
-        TelemetryStopwatch.startKeyed(histogram, this.getKey());
+
+    let browserKey = this.getBrowserKey();
+
+    let maybeStartTelemetryStopwatch = resourceType => {
+      let histogramId = getHistogramIdForResourceType(resourceType, "FX_MIGRATION_*_IMPORT_MS");
+      if (histogramId) {
+        TelemetryStopwatch.startKeyed(histogramId, browserKey);
       }
+      return histogramId;
     };
-    let maybeStopTelemetryStopwatch = (resourceType) => {
-      let histogram = getHistogramForResourceType(resourceType);
-      if (histogram) {
-        TelemetryStopwatch.finishKeyed(histogram, this.getKey());
+
+    let maybeStartResponsivenessMonitor = resourceType => {
+      let responsivenessMonitor;
+      let responsivenessHistogramId =
+        getHistogramIdForResourceType(resourceType, "FX_MIGRATION_*_JANK_MS");
+      if (responsivenessHistogramId) {
+        responsivenessMonitor = new ResponsivenessMonitor();
+      }
+      return {responsivenessMonitor, responsivenessHistogramId};
+    };
+
+    let maybeFinishResponsivenessMonitor = (responsivenessMonitor, histogramId) => {
+      if (responsivenessMonitor) {
+        let accumulatedDelay = responsivenessMonitor.finish();
+        if (histogramId) {
+          try {
+            Services.telemetry.getKeyedHistogramById(histogramId)
+                    .add(browserKey, accumulatedDelay);
+          } catch (ex) {
+            Cu.reportError(histogramId + ": " + ex);
+          }
+        }
       }
     };
 
     let collectQuantityTelemetry = () => {
-      try {
-        for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
-          let histogramId =
-            "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
-          let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
-          histogram.add(this.getKey(), MigrationUtils._importQuantities[resourceType]);
+      for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
+        let histogramId =
+          "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
+        try {
+          Services.telemetry.getKeyedHistogramById(histogramId)
+                  .add(browserKey, MigrationUtils._importQuantities[resourceType]);
+        } catch (ex) {
+          Cu.reportError(histogramId + ": " + ex);
         }
-      } catch (ex) { /* Telemetry is exception-happy */ }
+      }
     };
 
     // Called either directly or through the bookmarks import callback.
@@ -297,7 +323,10 @@ this.MigratorPrototype = {
       for (let [migrationType, itemResources] of resourcesGroupedByItems) {
         notify("Migration:ItemBeforeMigrate", migrationType);
 
-        maybeStartTelemetryStopwatch(migrationType);
+        let stopwatchHistogramId = maybeStartTelemetryStopwatch(migrationType);
+
+        let {responsivenessMonitor, responsivenessHistogramId} =
+          maybeStartResponsivenessMonitor(migrationType);
 
         let itemSuccess = false;
         for (let res of itemResources) {
@@ -311,7 +340,11 @@ this.MigratorPrototype = {
                      migrationType);
               resourcesGroupedByItems.delete(migrationType);
 
-              maybeStopTelemetryStopwatch(migrationType);
+              if (stopwatchHistogramId) {
+                TelemetryStopwatch.finishKeyed(stopwatchHistogramId, browserKey);
+              }
+
+              maybeFinishResponsivenessMonitor(responsivenessMonitor, responsivenessHistogramId);
 
               if (resourcesGroupedByItems.size == 0) {
                 collectQuantityTelemetry();
