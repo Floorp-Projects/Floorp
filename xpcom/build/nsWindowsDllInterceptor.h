@@ -70,12 +70,6 @@
 
 #include <stdint.h>
 
-#define COPY_CODES(NBYTES)  do {    \
-  memcpy(&tramp[nTrampBytes], &origBytes[nOrigBytes], NBYTES);    \
-  nOrigBytes += NBYTES;             \
-  nTrampBytes += NBYTES;            \
-} while (0)
-
 namespace mozilla {
 namespace internal {
 
@@ -549,8 +543,7 @@ protected:
 
   enum JumpType {
    Je,
-   Jmp,
-   Call
+   Jmp
   };
 
   struct JumpPatch {
@@ -564,6 +557,14 @@ protected:
     {
     }
 
+    void AddJumpPatch(size_t aHookOffset, intptr_t aAbsJumpAddress,
+                     JumpType aType = JumpType::Jmp)
+    {
+      mHookOffset = aHookOffset;
+      mJumpAddress = aAbsJumpAddress;
+      mType = aType;
+    }
+
     size_t GenerateJump(uint8_t* aCode)
     {
       size_t offset = mHookOffset;
@@ -574,26 +575,20 @@ protected:
         offset += 2;
       }
 
-      // Near call/jmp, absolute indirect, address given in r/m32
-      if (mType == JumpType::Call) {
-        // CALL [RIP+0]
-        aCode[offset] = 0xff;
-        aCode[offset + 1] = 0x15;
-        // The offset to jump destination -- ie it is placed 2 bytes after the offset.
-        *reinterpret_cast<int32_t*>(aCode + offset + 2) = 2;
-        aCode[offset + 2 + 4] = 0xeb;    // JMP +8 (jump over mJumpAddress)
-        aCode[offset + 2 + 4 + 1] = 8;
-        *reinterpret_cast<int64_t*>(aCode + offset + 2 + 4 + 2) = mJumpAddress;
-        return offset + 2 + 4 + 2 + 8;
-      } else {
-        // JMP [RIP+0]
-        aCode[offset] = 0xff;
-        aCode[offset + 1] = 0x25;
-        // The offset to jump destination is 0
-        *reinterpret_cast<int32_t*>(aCode + offset + 2) = 0;
-        *reinterpret_cast<int64_t*>(aCode + offset + 2 + 4) = mJumpAddress;
-        return offset + 2 + 4 + 8;
-      }
+      // JMP [RIP+0]
+      aCode[offset] = 0xff;
+      aCode[offset + 1] = 0x25;
+      *reinterpret_cast<int32_t*>(aCode + offset + 2) = 0;
+
+      // Jump table
+      *reinterpret_cast<int64_t*>(aCode + offset + 2 + 4) = mJumpAddress;
+
+      return offset + 2 + 4 + 8;
+    }
+
+    bool HasJumpPatch() const
+    {
+      return !!mJumpAddress;
     }
 
     size_t mHookOffset;
@@ -677,359 +672,283 @@ protected:
       return;
     }
 
-    // We keep the address of the original function in the first bytes of
-    // the trampoline buffer
-    *((void**)tramp) = aOrigFunction;
-    tramp += sizeof(void*);
-
     byteptr_t origBytes = (byteptr_t)aOrigFunction;
 
-    // # of bytes of the original function that we can overwrite.
-    int nOrigBytes = 0;
+    int nBytes = 0;
 
 #if defined(_M_IX86)
     int pJmp32 = -1;
-    while (nOrigBytes < 5) {
+    while (nBytes < 5) {
       // Understand some simple instructions that might be found in a
       // prologue; we might need to extend this as necessary.
       //
       // Note!  If we ever need to understand jump instructions, we'll
       // need to rewrite the displacement argument.
       unsigned char prefixGroups;
-      int numPrefixBytes = CountPrefixBytes(origBytes, nOrigBytes, &prefixGroups);
+      int numPrefixBytes = CountPrefixBytes(origBytes, nBytes, &prefixGroups);
       if (numPrefixBytes < 0 || (prefixGroups & (ePrefixGroup3 | ePrefixGroup4))) {
         // Either the prefix sequence was bad, or there are prefixes that
         // we don't currently support (groups 3 and 4)
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
       }
-      nOrigBytes += numPrefixBytes;
-      if (origBytes[nOrigBytes] >= 0x88 &&
-          origBytes[nOrigBytes] <= 0x8B) {
+      nBytes += numPrefixBytes;
+      if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
         // various MOVs
-        ++nOrigBytes;
-        int len = CountModRmSib(origBytes + nOrigBytes);
+        ++nBytes;
+        int len = CountModRmSib(origBytes + nBytes);
         if (len < 0) {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
           return;
         }
-        nOrigBytes += len;
-      } else if (origBytes[nOrigBytes] == 0xA1) {
+        nBytes += len;
+      } else if (origBytes[nBytes] == 0xA1) {
         // MOV eax, [seg:offset]
-        nOrigBytes += 5;
-      } else if (origBytes[nOrigBytes] == 0xB8) {
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0xB8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
-        nOrigBytes += 5;
-      } else if (origBytes[nOrigBytes] == 0x33 &&
-                 (origBytes[nOrigBytes+1] & kMaskMod) == kModReg) {
-        // XOR r32, r32
-        nOrigBytes += 2;
-      } else if ((origBytes[nOrigBytes] & 0xf8) == 0x40) {
-        // INC r32
-        nOrigBytes += 1;
-      } else if (origBytes[nOrigBytes] == 0x83) {
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0x83) {
         // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r/m, imm8
-        unsigned char b = origBytes[nOrigBytes + 1];
+        unsigned char b = origBytes[nBytes + 1];
         if ((b & 0xc0) == 0xc0) {
           // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r, imm8
-          nOrigBytes += 3;
+          nBytes += 3;
         } else {
           // bail
-          MOZ_ASSERT_UNREACHABLE("Unrecognized bit opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x68) {
+      } else if (origBytes[nBytes] == 0x68) {
         // PUSH with 4-byte operand
-        nOrigBytes += 5;
-      } else if ((origBytes[nOrigBytes] & 0xf0) == 0x50) {
+        nBytes += 5;
+      } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte PUSH/POP
-        nOrigBytes++;
-      } else if (origBytes[nOrigBytes] == 0x6A) {
+        nBytes++;
+      } else if (origBytes[nBytes] == 0x6A) {
         // PUSH imm8
-        nOrigBytes += 2;
-      } else if (origBytes[nOrigBytes] == 0xe9) {
-        pJmp32 = nOrigBytes;
+        nBytes += 2;
+      } else if (origBytes[nBytes] == 0xe9) {
+        pJmp32 = nBytes;
         // jmp 32bit offset
-        nOrigBytes += 5;
-      } else if (origBytes[nOrigBytes] == 0xff &&
-                 origBytes[nOrigBytes + 1] == 0x25) {
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0xff && origBytes[nBytes + 1] == 0x25) {
         // jmp [disp32]
-        nOrigBytes += 6;
-      } else if (origBytes[nOrigBytes] == 0xc2) {
-        // ret imm16.  We can't handle this but it happens.  We don't ASSERT but we do fail to hook.
-#if defined(MOZILLA_INTERNAL_API)
-        NS_WARNING("Cannot hook method -- RET opcode found");
-#endif
-        return;
+        nBytes += 6;
       } else {
-        //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nOrigBytes]);
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
+        //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
         return;
       }
     }
-
-    // The trampoline is a copy of the instructions that we just traced,
-    // followed by a jump that we add below.
-    memcpy(tramp, aOrigFunction, nOrigBytes);
 #elif defined(_M_X64)
-    // The number of bytes used by the trampoline.
-    int nTrampBytes = 0;
-    bool foundJmp = false;
+    JumpPatch jump;
 
-    while (nOrigBytes < 13) {
-      // If we found JMP 32bit offset, we require that the next bytes must
-      // be NOP or INT3.  There is no reason to copy them.
-      // TODO: This used to trigger for Je as well.  Now that I allow
-      // instructions after CALL and JE, I don't think I need that.
-      // The only real value of this condition is that if code follows a JMP
-      // then its _probably_ the target of a JMP somewhere else and we
-      // will be overwriting it, which would be tragic.  This seems
-      // highly unlikely.
-      if (foundJmp) {
-        if (origBytes[nOrigBytes] == 0x90 || origBytes[nOrigBytes] == 0xcc) {
-          nOrigBytes++;
+    while (nBytes < 13) {
+
+      // if found JMP 32bit offset, next bytes must be NOP or INT3
+      if (jump.HasJumpPatch()) {
+        if (origBytes[nBytes] == 0x90 || origBytes[nBytes] == 0xcc) {
+          nBytes++;
           continue;
         }
-        MOZ_ASSERT_UNREACHABLE("Opcode sequence includes commands after JMP");
         return;
       }
-      if (origBytes[nOrigBytes] == 0x0f) {
-        COPY_CODES(1);
-        if (origBytes[nOrigBytes] == 0x1f) {
+      if (origBytes[nBytes] == 0x0f) {
+        nBytes++;
+        if (origBytes[nBytes] == 0x1f) {
           // nop (multibyte)
-          COPY_CODES(1);
-          if ((origBytes[nOrigBytes] & 0xc0) == 0x40 &&
-              (origBytes[nOrigBytes] & 0x7) == 0x04) {
-            COPY_CODES(3);
+          nBytes++;
+          if ((origBytes[nBytes] & 0xc0) == 0x40 &&
+              (origBytes[nBytes] & 0x7) == 0x04) {
+            nBytes += 3;
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-        } else if (origBytes[nOrigBytes] == 0x05) {
+        } else if (origBytes[nBytes] == 0x05) {
           // syscall
-          COPY_CODES(1);
-        } else if (origBytes[nOrigBytes] == 0x84) {
+          nBytes++;
+        } else if (origBytes[nBytes] == 0x84) {
           // je rel32
-          JumpPatch jump(nTrampBytes - 1,  // overwrite the 0x0f we copied above
-                          (intptr_t)(origBytes + nOrigBytes + 5 +
-                                     *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 1))),
-                          JumpType::Je);
-          nTrampBytes = jump.GenerateJump(tramp);
-          nOrigBytes += 5;
+          jump.AddJumpPatch(nBytes - 1,
+                            (intptr_t)
+                              origBytes + nBytes + 5 +
+                            *(reinterpret_cast<int32_t*>(origBytes +
+                                                         nBytes + 1)),
+                            JumpType::Je);
+          nBytes += 5;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x40 ||
-                 origBytes[nOrigBytes] == 0x41) {
+      } else if (origBytes[nBytes] == 0x40 ||
+                 origBytes[nBytes] == 0x41) {
         // Plain REX or REX.B
-        COPY_CODES(1);
-        if ((origBytes[nOrigBytes] & 0xf0) == 0x50) {
+        nBytes++;
+
+        if ((origBytes[nBytes] & 0xf0) == 0x50) {
           // push/pop with Rx register
-          COPY_CODES(1);
-        } else if (origBytes[nOrigBytes] >= 0xb8 && origBytes[nOrigBytes] <= 0xbf) {
+          nBytes++;
+        } else if (origBytes[nBytes] >= 0xb8 && origBytes[nBytes] <= 0xbf) {
           // mov r32, imm32
-          COPY_CODES(5);
+          nBytes += 5;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x45) {
+      } else if (origBytes[nBytes] == 0x45) {
         // REX.R & REX.B
-        COPY_CODES(1);
+        nBytes++;
 
-        if (origBytes[nOrigBytes] == 0x33) {
+        if (origBytes[nBytes] == 0x33) {
           // xor r32, r32
-          COPY_CODES(2);
+          nBytes += 2;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if ((origBytes[nOrigBytes] & 0xfb) == 0x48) {
+      } else if ((origBytes[nBytes] & 0xfb) == 0x48) {
         // REX.W | REX.WR
-        COPY_CODES(1);
+        nBytes++;
 
-        if (origBytes[nOrigBytes] == 0x81 &&
-            (origBytes[nOrigBytes + 1] & 0xf8) == 0xe8) {
+        if (origBytes[nBytes] == 0x81 &&
+            (origBytes[nBytes + 1] & 0xf8) == 0xe8) {
           // sub r, dword
-          COPY_CODES(6);
-        } else if (origBytes[nOrigBytes] == 0x83 &&
-                   (origBytes[nOrigBytes + 1] & 0xf8) == 0xe8) {
+          nBytes += 6;
+        } else if (origBytes[nBytes] == 0x83 &&
+                   (origBytes[nBytes + 1] & 0xf8) == 0xe8) {
           // sub r, byte
-          COPY_CODES(3);
-        } else if (origBytes[nOrigBytes] == 0x83 &&
-                   (origBytes[nOrigBytes + 1] & (kMaskMod|kMaskReg)) == kModReg) {
-          // add r, byte
-          COPY_CODES(3);
-        } else if (origBytes[nOrigBytes] == 0x83 &&
-                   (origBytes[nOrigBytes + 1] & 0xf8) == 0x60) {
+          nBytes += 3;
+        } else if (origBytes[nBytes] == 0x83 &&
+                   (origBytes[nBytes + 1] & 0xf8) == 0x60) {
           // and [r+d], imm8
-          COPY_CODES(5);
-        } else if (origBytes[nOrigBytes] == 0x2b &&
-                   (origBytes[nOrigBytes + 1] & kMaskMod) == kModReg) {
-          // sub r64, r64
-          COPY_CODES(2);
-        } else if (origBytes[nOrigBytes] == 0x85) {
+          nBytes += 5;
+        } else if (origBytes[nBytes] == 0x85) {
           // 85 /r => TEST r/m32, r32
-          if ((origBytes[nOrigBytes + 1] & 0xc0) == 0xc0) {
-            COPY_CODES(2);
+          if ((origBytes[nBytes + 1] & 0xc0) == 0xc0) {
+            nBytes += 2;
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-        } else if ((origBytes[nOrigBytes] & 0xfd) == 0x89) {
-          COPY_CODES(1);
+        } else if ((origBytes[nBytes] & 0xfd) == 0x89) {
+          ++nBytes;
           // MOV r/m64, r64 | MOV r64, r/m64
-          int len = CountModRmSib(origBytes + nOrigBytes);
+          int len = CountModRmSib(origBytes + nBytes);
           if (len < 0) {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-          COPY_CODES(len);
-        } else if (origBytes[nOrigBytes] == 0xc7) {
+          nBytes += len;
+        } else if (origBytes[nBytes] == 0xc7) {
           // MOV r/m64, imm32
-          if (origBytes[nOrigBytes + 1] == 0x44) {
+          if (origBytes[nBytes + 1] == 0x44) {
             // MOV [r64+disp8], imm32
             // ModR/W + SIB + disp8 + imm32
-            COPY_CODES(8);
+            nBytes += 8;
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-        } else if (origBytes[nOrigBytes] == 0xff) {
+        } else if (origBytes[nBytes] == 0xff) {
           // JMP /4
-          if ((origBytes[nOrigBytes + 1] & 0xc0) == 0x0 &&
-              (origBytes[nOrigBytes + 1] & 0x07) == 0x5) {
+          if ((origBytes[nBytes + 1] & 0xc0) == 0x0 &&
+              (origBytes[nBytes + 1] & 0x07) == 0x5) {
             // [rip+disp32]
             // convert JMP 32bit offset to JMP 64bit direct
-            JumpPatch jump(nTrampBytes - 1,  // overwrite the REX.W/REX.WR we copied above
-                           *reinterpret_cast<intptr_t*>(origBytes + nOrigBytes + 6 +
-                                                        *reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 2)),
-                           JumpType::Jmp);
-            nTrampBytes = jump.GenerateJump(tramp);
-            nOrigBytes += 6;
-            foundJmp = true;
+            jump.AddJumpPatch(nBytes - 1,
+                              *reinterpret_cast<intptr_t*>(
+                                origBytes + nBytes + 6 +
+                              *reinterpret_cast<int32_t*>(origBytes + nBytes +
+                                                          2)));
+            nBytes += 6;
           } else {
             // not support yet!
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
         } else {
           // not support yet!
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x66) {
+      } else if (origBytes[nBytes] == 0x66) {
         // operand override prefix
-        COPY_CODES(1);
+        nBytes += 1;
         // This is the same as the x86 version
-        if (origBytes[nOrigBytes] >= 0x88 && origBytes[nOrigBytes] <= 0x8B) {
+        if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
           // various MOVs
-          unsigned char b = origBytes[nOrigBytes + 1];
+          unsigned char b = origBytes[nBytes + 1];
           if (((b & 0xc0) == 0xc0) ||
               (((b & 0xc0) == 0x00) &&
                ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05))) {
             // REG=r, R/M=r or REG=r, R/M=[r]
-            COPY_CODES(2);
+            nBytes += 2;
           } else if ((b & 0xc0) == 0x40) {
             if ((b & 0x07) == 0x04) {
               // REG=r, R/M=[SIB + disp8]
-              COPY_CODES(4);
+              nBytes += 4;
             } else {
               // REG=r, R/M=[r + disp8]
-              COPY_CODES(3);
+              nBytes += 3;
             }
           } else {
             // complex MOV, bail
-            MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
             return;
           }
         }
-      } else if ((origBytes[nOrigBytes] & 0xf0) == 0x50) {
+      } else if ((origBytes[nBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
-        COPY_CODES(1);
-      } else if (origBytes[nOrigBytes] == 0x65) {
+        nBytes++;
+      } else if (origBytes[nBytes] == 0x65) {
         // GS prefix
         //
         // The entry of GetKeyState on Windows 10 has the following code.
         // 65 48 8b 04 25 30 00 00 00    mov   rax,qword ptr gs:[30h]
         // (GS prefix + REX + MOV (0x8b) ...)
-        if (origBytes[nOrigBytes + 1] == 0x48 &&
-            (origBytes[nOrigBytes + 2] >= 0x88 && origBytes[nOrigBytes + 2] <= 0x8b)) {
-          COPY_CODES(3);
-          int len = CountModRmSib(origBytes + nOrigBytes);
+        if (origBytes[nBytes + 1] == 0x48 &&
+            (origBytes[nBytes + 2] >= 0x88 && origBytes[nBytes + 2] <= 0x8b)) {
+          nBytes += 3;
+          int len = CountModRmSib(origBytes + nBytes);
           if (len < 0) {
             // no way to support this yet.
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-          COPY_CODES(len);
+          nBytes += len;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x90) {
+      } else if (origBytes[nBytes] == 0x90) {
         // nop
-        COPY_CODES(1);
-      } else if (origBytes[nOrigBytes] == 0xb8) {
+        nBytes++;
+      } else if (origBytes[nBytes] == 0xb8) {
         // MOV 0xB8: http://ref.x86asm.net/coder32.html#xB8
-        COPY_CODES(5);
-      } else if (origBytes[nOrigBytes] == 0x33) {
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0x33) {
         // xor r32, r/m32
-        COPY_CODES(2);
-      } else if (origBytes[nOrigBytes] == 0xf6) {
+        nBytes += 2;
+      } else if (origBytes[nBytes] == 0xf6) {
         // test r/m8, imm8 (used by ntdll on Windows 10 x64)
         // (no flags are affected by near jmp since there is no task switch,
         // so it is ok for a jmp to be written immediately after a test)
         BYTE subOpcode = 0;
-        int nModRmSibBytes = CountModRmSib(&origBytes[nOrigBytes + 1], &subOpcode);
+        int nModRmSibBytes = CountModRmSib(&origBytes[nBytes + 1], &subOpcode);
         if (nModRmSibBytes < 0 || subOpcode != 0) {
           // Unsupported
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-        COPY_CODES(2 + nModRmSibBytes);
-      } else if (origBytes[nOrigBytes] == 0xd1 &&
-                  (origBytes[nOrigBytes+1] & kMaskMod) == kModReg) {
-        // bit shifts/rotates : (SA|SH|RO|RC)(R|L) r32
-        // (e.g. 0xd1 0xe0 is SAL, 0xd1 0xc8 is ROR)
-        COPY_CODES(2);
-      } else if (origBytes[nOrigBytes] == 0xc3) {
+        nBytes += 2 + nModRmSibBytes;
+      } else if (origBytes[nBytes] == 0xc3) {
         // ret
-        COPY_CODES(1);
-      } else if (origBytes[nOrigBytes] == 0xcc) {
+        nBytes++;
+      } else if (origBytes[nBytes] == 0xcc) {
         // int 3
-        COPY_CODES(1);
-      } else if (origBytes[nOrigBytes] == 0xe8 ||
-                 origBytes[nOrigBytes] == 0xe9) {
-        // CALL (0xe8) or JMP (0xe9) 32bit offset
-        foundJmp = origBytes[nOrigBytes] == 0xe9;
-        JumpPatch jump(nTrampBytes,
-                       (intptr_t)(origBytes + nOrigBytes + 5 +
-                                  *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 1))),
-                       origBytes[nOrigBytes] == 0xe8 ? JumpType::Call : JumpType::Jmp);
-        nTrampBytes = jump.GenerateJump(tramp);
-        nOrigBytes += 5;
-      } else if (origBytes[nOrigBytes] == 0xff) {
-        COPY_CODES(1);
-        if ((origBytes[nOrigBytes] & (kMaskMod|kMaskReg)) == 0xf0) {
+        nBytes++;
+      } else if (origBytes[nBytes] == 0xe9) {
+        // jmp 32bit offset
+        jump.AddJumpPatch(nBytes,
+                          // convert JMP 32bit offset to JMP 64bit direct
+                          (intptr_t)
+                            origBytes + nBytes + 5 +
+                          *(reinterpret_cast<int32_t*>(origBytes + nBytes + 1)));
+        nBytes += 5;
+      } else if (origBytes[nBytes] == 0xff) {
+        nBytes++;
+        if ((origBytes[nBytes] & 0xf8) == 0xf0) {
           // push r64
-          COPY_CODES(1);
-        } else if (origBytes[nOrigBytes] == 0x25) {
-          // jmp absolute indirect m32
-          foundJmp = true;
-          int32_t offset = *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 1));
-          int64_t* ptrToJmpDest = reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 5 + offset);
-          intptr_t jmpDest = static_cast<intptr_t>(*ptrToJmpDest);
-          JumpPatch jump(nTrampBytes, jmpDest, JumpType::Jmp);
-          nTrampBytes = jump.GenerateJump(tramp);
-          nOrigBytes += 5;
+          nBytes++;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else {
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
       }
     }
@@ -1037,13 +956,20 @@ protected:
 #error "Unknown processor type"
 #endif
 
-    if (nOrigBytes > 100) {
+    if (nBytes > 100) {
       //printf ("Too big!");
       return;
     }
 
-    // target address of the final jmp instruction in the trampoline
-    byteptr_t trampDest = origBytes + nOrigBytes;
+    // We keep the address of the original function in the first bytes of
+    // the trampoline buffer
+    *((void**)tramp) = aOrigFunction;
+    tramp += sizeof(void*);
+
+    memcpy(tramp, aOrigFunction, nBytes);
+
+    // OrigFunction+N, the target of the trampoline
+    byteptr_t trampDest = origBytes + nBytes;
 
 #if defined(_M_IX86)
     if (pJmp32 >= 0) {
@@ -1052,16 +978,20 @@ protected:
       // Adjust jump target displacement to jump location in the trampoline.
       *((intptr_t*)(tramp + pJmp32 + 1)) += origBytes - tramp;
     } else {
-      tramp[nOrigBytes] = 0xE9; // jmp
-      *((intptr_t*)(tramp + nOrigBytes + 1)) =
-        (intptr_t)trampDest - (intptr_t)(tramp + nOrigBytes + 5); // target displacement
+      tramp[nBytes] = 0xE9; // jmp
+      *((intptr_t*)(tramp + nBytes + 1)) =
+        (intptr_t)trampDest - (intptr_t)(tramp + nBytes + 5); // target displacement
     }
 #elif defined(_M_X64)
-    // If the we found a Jmp, we don't need to add another instruction. However,
-    // if we found a _conditional_ jump or a CALL (or no control operations
-    // at all) then we still need to run the rest of aOriginalFunction.
-    if (!foundJmp) {
-      JumpPatch patch(nTrampBytes, reinterpret_cast<intptr_t>(trampDest));
+    // If JMP/JE opcode found, we don't insert to trampoline jump
+    if (jump.HasJumpPatch()) {
+      size_t offset = jump.GenerateJump(tramp);
+      if (jump.mType != JumpType::Jmp) {
+        JumpPatch patch(offset, reinterpret_cast<intptr_t>(trampDest));
+        patch.GenerateJump(tramp);
+      }
+    } else {
+      JumpPatch patch(nBytes, reinterpret_cast<intptr_t>(trampDest));
       patch.GenerateJump(tramp);
     }
 #endif
@@ -1070,7 +1000,7 @@ protected:
     *aOutTramp = tramp;
 
     // ensure we can modify the original code
-    AutoVirtualProtect protect(aOrigFunction, nOrigBytes, PAGE_EXECUTE_READWRITE);
+    AutoVirtualProtect protect(aOrigFunction, nBytes, PAGE_EXECUTE_READWRITE);
     if (!protect.Protect()) {
       //printf ("VirtualProtectEx failed! %d\n", GetLastError());
       return;
@@ -1165,16 +1095,6 @@ public:
     }
   }
 
-  /**
-   * Hook/detour the method aName from the DLL we set in Init so that it calls
-   * aHookDest instead.  Returns the original method pointer in aOrigFunc
-   * and returns true if successful.
-   *
-   * IMPORTANT: If you use this method, please add your case to the
-   * TestDllInterceptor in order to detect future failures.  Even if this
-   * succeeds now, updates to the hooked DLL could cause it to fail in
-   * the future.
-   */
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     // Use a nop space patch if possible, otherwise fall back to a detour.
@@ -1191,16 +1111,6 @@ public:
     return AddDetour(aName, aHookDest, aOrigFunc);
   }
 
-  /**
-   * Detour the method aName from the DLL we set in Init so that it calls
-   * aHookDest instead.  Returns the original method pointer in aOrigFunc
-   * and returns true if successful.
-   *
-   * IMPORTANT: If you use this method, please add your case to the
-   * TestDllInterceptor in order to detect future failures.  Even if this
-   * succeeds now, updates to the detoured DLL could cause it to fail in
-   * the future.
-   */
   bool AddDetour(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     // Generally, code should not call this method directly. Use AddHook unless
