@@ -336,6 +336,8 @@ private:
   // and aborting all pending operations on the decode task queue.
   void Reset(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                          TrackInfo::kVideoTrack));
+  // Sets mMediaSeekable to false.
+  void SetMediaNotSeekable();
 
 protected:
   virtual ~MediaDecoderStateMachine();
