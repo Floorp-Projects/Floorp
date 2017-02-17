@@ -108,8 +108,12 @@ var observer = {
 };
 
 function waitForMozAfterPaint(win, callback) {
+  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils);
+  let lastTransactionId = dwu.lastTransactionId;
+
   win.addEventListener("MozAfterPaint", function onEnd(event) {
-    if (event.target != win)
+    if (event.target != win || event.transactionId <= lastTransactionId)
       return;
     win.removeEventListener("MozAfterPaint", onEnd);
     executeSoon(callback);
