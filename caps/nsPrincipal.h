@@ -36,7 +36,6 @@ public:
                 const mozilla::OriginAttributes& aOriginAttributes);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
-  void SetURI(nsIURI* aURI);
 
   /**
    * Called at startup to setup static data, e.g. about:config pref-observers.

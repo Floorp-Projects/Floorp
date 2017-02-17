@@ -305,13 +305,6 @@ nsPrincipal::MayLoadInternal(nsIURI* aURI)
   return false;
 }
 
-void
-nsPrincipal::SetURI(nsIURI* aURI)
-{
-  mCodebase = NS_TryToMakeImmutable(aURI);
-  mCodebaseImmutable = URIIsImmutable(mCodebase);
-}
-
 NS_IMETHODIMP
 nsPrincipal::GetHashValue(uint32_t* aValue)
 {
