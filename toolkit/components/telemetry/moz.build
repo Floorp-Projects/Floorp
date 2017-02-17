@@ -30,8 +30,6 @@ if CONFIG['GNU_CXX']:
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
-TEST_DIRS += ['tests']
-
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
@@ -74,7 +72,6 @@ EXTRA_JS_MODULES += [
     'TelemetryController.jsm',
     'TelemetryEnvironment.jsm',
     'TelemetryLog.jsm',
-    'TelemetryModules.jsm',
     'TelemetryReportingPolicy.jsm',
     'TelemetrySend.jsm',
     'TelemetrySession.jsm',

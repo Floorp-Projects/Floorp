@@ -14,8 +14,6 @@
 #include <fstream>
 #include "platform.h"
 #include "shared-libraries.h"
-#include "mozilla/Unused.h"
-#include "nsNativeCharsetUtils.h"
 
 #include "common/linux/file_id.h"
 #include <algorithm>
@@ -82,11 +80,7 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
       libEnd = end;
   }
   const char *name = dl_info->dlpi_name;
-
-  nsAutoString nameStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(name), nameStr)));
-
-  SharedLibrary shlib(libStart, libEnd, 0, getId(name), nameStr, nameStr, "");
+  SharedLibrary shlib(libStart, libEnd, 0, getId(name), name);
   info.AddSharedLibrary(shlib);
 
   return 0;
@@ -152,11 +146,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       continue;
     }
 #endif
-
-    nsAutoString nameStr;
-    mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(name), nameStr)));
-
-    SharedLibrary shlib(start, end, offset, getId(name), nameStr, nameStr, "");
+    SharedLibrary shlib(start, end, offset, getId(name), name);
     info.AddSharedLibrary(shlib);
     if (count > 10000) {
       LOG("Get maps failed");

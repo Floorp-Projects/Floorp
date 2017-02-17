@@ -118,10 +118,6 @@ The following prefs are for testing purpose only.
 
   Timeout until we decide whether a user is idle or not (seconds).
 
-``toolkit.telemetry.modulesPing.interval``
-
-  Interval between "modules" ping transmissions.
-
 ``toolkit.telemetry.send.overrideOfficialCheck``
 
   If true, allows sending pings on unofficial builds. Requires a restart.
