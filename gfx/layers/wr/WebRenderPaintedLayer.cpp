@@ -68,6 +68,8 @@ WebRenderPaintedLayer::PaintThebes()
   if (didUpdate) {
     Mutated();
 
+    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
 
     // Hold(this) ensures this layer is kept alive through the current transaction
