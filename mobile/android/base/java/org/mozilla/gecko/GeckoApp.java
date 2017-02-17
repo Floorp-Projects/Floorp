@@ -1385,6 +1385,14 @@ public abstract class GeckoApp
                                     // Restoring the backup failed, too, so do a normal startup.
                                     Log.e(LOGTAG, "An error occurred during restore", ex);
                                     mShouldRestore = false;
+
+                                    if (!getSharedPreferencesForProfile().
+                                            getBoolean(PREFS_IS_FIRST_RUN, true)) {
+                                        // Except when starting with a fresh profile, we should normally
+                                        // always have a session file available, even if it might only
+                                        // contain an empty window.
+                                        Telemetry.addToHistogram("FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED", 1);
+                                    }
                                 }
                             }
                         }

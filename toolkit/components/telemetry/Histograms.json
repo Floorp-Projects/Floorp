@@ -10830,10 +10830,26 @@
   },
   "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "56",
+    "expires_in_version": "61",
     "kind": "flag",
     "bug_numbers": [1284017],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
+    "alert_emails": ["jh+bugzilla@buttercookie.de"],
+    "expires_in_version": "61",
+    "kind": "flag",
+    "bug_numbers": [1190627],
+    "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED": {
+    "alert_emails": ["jh+bugzilla@buttercookie.de"],
+    "expires_in_version": "61",
+    "kind": "flag",
+    "bug_numbers": [1337115],
+    "description": "Both the main session file and its backup could not be read and and the first run pref is false.",
     "cpp_guard": "ANDROID"
   },
   "SHARED_WORKER_COUNT": {
@@ -10842,14 +10858,6 @@
     "kind": "count",
     "bug_numbers": [1295980],
     "description": "Number of the use of SharedWorkers."
-  },
-  "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
-    "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "56",
-    "kind": "flag",
-    "bug_numbers": [1190627],
-    "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
-    "cpp_guard": "ANDROID"
   },
   "NUMBER_OF_PROFILES": {
     "alert_emails": ["amarchesini@mozilla.com"],
