@@ -45,7 +45,7 @@ fails == pre-wrap-1.html pre-wrap-1.html
 # Tests for soft hyphens in table cells, bug 418975
 # == soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
 # == soft-hyphen-in-table-1.html soft-hyphen-in-table-1.html
-asserts-if(stylo,4) == soft-hyphen-in-table-2.html soft-hyphen-in-table-2.html # bug 1324661
+== soft-hyphen-in-table-2.html soft-hyphen-in-table-2.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually),
 # D2D, and Skia have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device device

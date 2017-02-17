@@ -217,7 +217,7 @@ load 404721-1.xhtml
 load 404721-2.xhtml
 load 405049-1.xul
 load 405184-1.xhtml
-asserts-if(stylo,2) load 405186-1.xhtml # bug 1324661
+load 405186-1.xhtml
 load 406675-1.html
 load 408292.html
 load 408299.html

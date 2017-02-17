@@ -81,18 +81,18 @@
 
 
 # These all fail due bug 371180, plus a bunch of other bugs that ought to be filed.
-asserts-if(stylo,40) == collapsed-border-height-4.html collapsed-border-height-4.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-height-5.html collapsed-border-height-5.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-height-6.html collapsed-border-height-6.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-width-4.html collapsed-border-width-4.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-width-5.html collapsed-border-width-5.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-width-6.html collapsed-border-width-6.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-left-4.html collapsed-border-left-4.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-left-5.html collapsed-border-left-5.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-left-6.html collapsed-border-left-6.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-top-4.html collapsed-border-top-4.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-top-5.html collapsed-border-top-5.html # bug 1324661
-asserts-if(stylo,40) == collapsed-border-top-6.html collapsed-border-top-6.html # bug 1324661
+== collapsed-border-height-4.html collapsed-border-height-4.html
+== collapsed-border-height-5.html collapsed-border-height-5.html
+== collapsed-border-height-6.html collapsed-border-height-6.html
+== collapsed-border-width-4.html collapsed-border-width-4.html
+== collapsed-border-width-5.html collapsed-border-width-5.html
+== collapsed-border-width-6.html collapsed-border-width-6.html
+== collapsed-border-left-4.html collapsed-border-left-4.html
+== collapsed-border-left-5.html collapsed-border-left-5.html
+== collapsed-border-left-6.html collapsed-border-left-6.html
+== collapsed-border-top-4.html collapsed-border-top-4.html
+== collapsed-border-top-5.html collapsed-border-top-5.html
+== collapsed-border-top-6.html collapsed-border-top-6.html
 
 
 == image-base-ref.html image-base-ref.html

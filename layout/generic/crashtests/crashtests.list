@@ -643,7 +643,7 @@ load large-border-radius-dotted.html
 load large-border-radius-dotted2.html
 load 1278461-1.html
 load 1278461-2.html
-asserts-if(stylo,6) load 1281102.html # bug 1324661
+load 1281102.html
 load 1297427-non-equal-centers.html
 load 1304441.html
 load 1316649.html
