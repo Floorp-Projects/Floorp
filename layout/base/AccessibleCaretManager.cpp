@@ -196,9 +196,10 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
     return NS_OK;
   }
 
-  // No need to show the carets for select all action when we want to hide
-  // the carets for mouse input.
+  // When we want to hide the carets for mouse input, hide them for select
+  // all action fired by keyboard as well.
   if (sHideCaretsForMouseInput &&
+      mLastInputSource == nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD &&
       (aReason & nsISelectionListener::SELECTALL_REASON)) {
     HideCarets();
     return NS_OK;
