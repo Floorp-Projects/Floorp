@@ -888,34 +888,9 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
   aStream << "\"start\":" << aLib.GetStart();
   aStream << ",\"end\":" << aLib.GetEnd();
   aStream << ",\"offset\":" << aLib.GetOffset();
-  aStream << ",\"name\":\"" << aLib.GetName() << "\"";
+  aStream << ",\"name\":\"" << aLib.GetNativeDebugName() << "\"";
   const std::string& breakpadId = aLib.GetBreakpadId();
   aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
-
-#ifdef XP_WIN
-  // FIXME: remove this XP_WIN code when the profiler plugin has switched to
-  // using breakpadId.
-  std::string pdbSignature = breakpadId.substr(0, 32);
-  std::string pdbAgeStr = breakpadId.substr(32,  breakpadId.size() - 1);
-
-  std::stringstream stream;
-  stream << pdbAgeStr;
-
-  unsigned pdbAge;
-  stream << std::hex;
-  stream >> pdbAge;
-
-#ifdef DEBUG
-  std::ostringstream oStream;
-  oStream << pdbSignature << std::hex << std::uppercase << pdbAge;
-  MOZ_ASSERT(breakpadId == oStream.str());
-#endif
-
-  aStream << ",\"pdbSignature\":\"" << pdbSignature << "\"";
-  aStream << ",\"pdbAge\":" << pdbAge;
-  aStream << ",\"pdbName\":\"" << aLib.GetName() << "\"";
-#endif
-
   aStream << "}";
 }
 
