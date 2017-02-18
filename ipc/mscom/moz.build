@@ -29,6 +29,7 @@ if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.mscom += [
         'ActivationContext.h',
         'DispatchForwarder.h',
+        'IHandlerPayload.h',
         'Interceptor.h',
         'InterceptorLog.h',
         'MainThreadHandoff.h',
