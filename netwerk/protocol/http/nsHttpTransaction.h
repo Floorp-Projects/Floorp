@@ -168,7 +168,7 @@ public:
     int64_t GetTransferSize() { return mTransferSize; }
 
     bool Do0RTT() override;
-    nsresult Finish0RTT(bool aRestart, bool aAlpnChanged /* ignored */) override;
+    nsresult Finish0RTT(bool aRestart) override;
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
