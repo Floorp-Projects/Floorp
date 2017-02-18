@@ -36,7 +36,7 @@ public:
 
   ~RegisteredProxy();
 
-  HRESULT GetTypeInfoForInterface(REFIID aIid, ITypeInfo** aOutTypeInfo) const;
+  HRESULT GetTypeInfoForGuid(REFGUID aGuid, ITypeInfo** aOutTypeInfo) const;
 
   static bool Find(REFIID aIid, ITypeInfo** aOutTypeInfo);
 
