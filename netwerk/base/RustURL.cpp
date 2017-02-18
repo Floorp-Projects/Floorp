@@ -315,7 +315,7 @@ RustURL::SchemeIs(const char * aScheme, bool *aRetVal)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (scheme.Equals(aScheme)) {
+  if (scheme.Equals(aScheme, nsCaseInsensitiveCStringComparator())) {
     *aRetVal = true;
   }
   return NS_OK;
