@@ -271,7 +271,7 @@ module.exports = createClass({
           dom.button(
             {
               id: "import-snapshot",
-              className: "devtools-toolbarbutton import-snapshot devtools-button",
+              className: "import-snapshot devtools-button",
               onClick: onImportClick,
               title: L10N.getStr("import-snapshot"),
             }

@@ -87,7 +87,6 @@ FORCE:
 ifndef JS_STANDALONE
 check-preqs += check-jar-mn
 endif
-check-preqs += check-makefiles
 
 check:: $(check-preqs)
 
@@ -98,6 +97,3 @@ check-jar-mn::
 ifneq (,$(filter-out WINNT,$(OS_ARCH)))
 	$(MAKE) -C tests/src-simple check-symlink
 endif
-
-check-makefiles:
-	$(MAKE) -C tests/makefiles/autodeps check

@@ -660,6 +660,14 @@ FunctionScope::script() const
     return canonicalFunction()->nonLazyScript();
 }
 
+/* static */ bool
+FunctionScope::isSpecialName(JSContext* cx, JSAtom* name)
+{
+    return name == cx->names().arguments ||
+           name == cx->names().dotThis ||
+           name == cx->names().dotGenerator;
+}
+
 /* static */ Shape*
 FunctionScope::getEmptyEnvironmentShape(JSContext* cx, bool hasParameterExprs)
 {

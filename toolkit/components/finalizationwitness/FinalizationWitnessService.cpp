@@ -37,7 +37,8 @@ class FinalizationEvent final: public Runnable
 public:
   FinalizationEvent(const char* aTopic,
                   const char16_t* aValue)
-    : mTopic(aTopic)
+    : Runnable("FinalizationEvent")
+    , mTopic(aTopic)
     , mValue(aValue)
   { }
 

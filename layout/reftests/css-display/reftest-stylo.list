@@ -24,6 +24,6 @@ asserts(2) == display-contents-xbl-3.xul display-contents-xbl-3.xul
 # == display-contents-xbl-4.xul display-contents-xbl-4.xul
 # == display-contents-fieldset.html display-contents-fieldset.html
 asserts(2-10) == display-contents-xbl-5.xul display-contents-xbl-5.xul
-== display-contents-list-item-child.html display-contents-list-item-child.html
+# == display-contents-list-item-child.html display-contents-list-item-child.html
 == display-contents-writing-mode-1.html display-contents-writing-mode-1.html
 fails == display-contents-writing-mode-2.html display-contents-writing-mode-2.html

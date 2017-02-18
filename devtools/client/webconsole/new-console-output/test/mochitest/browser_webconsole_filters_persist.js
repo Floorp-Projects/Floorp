@@ -64,7 +64,7 @@ function* getFilterButtons(hud) {
   });
   ok(filterBar, "Filter bar is shown when filter icon is clicked.");
 
-  return filterBar.querySelectorAll(".menu-filter-button");
+  return filterBar.querySelectorAll(".devtools-button");
 }
 
 function filterIsEnabled(button) {

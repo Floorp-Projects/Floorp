@@ -521,7 +521,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   }
 
   // This is the case for a new session.
-  PRES_DEBUG("handle new session:url[%d], id[%s]\n",
+  PRES_DEBUG("handle new session:url[%s], id[%s]\n",
              NS_ConvertUTF16toUTF8(url).get(),
              NS_ConvertUTF16toUTF8(sessionId).get());
 
@@ -602,8 +602,8 @@ PresentationService::HandleTerminateRequest(nsIPresentationTerminateRequest* aRe
     return NS_ERROR_DOM_ABORT_ERR;
   }
 
-  PRES_DEBUG("handle termination:id[%s], receiver[%d]\n", __func__,
-             sessionId.get(), isFromReceiver);
+  PRES_DEBUG("%s:handle termination:id[%s], receiver[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(sessionId).get(), isFromReceiver);
 
   return info->OnTerminate(ctrlChannel);
 }
@@ -1007,7 +1007,7 @@ PresentationService::RegisterRespondingListener(
   uint64_t aWindowId,
   nsIPresentationRespondingListener* aListener)
 {
-  PRES_DEBUG("%s:windowId[%lld]\n", __func__, aWindowId);
+  PRES_DEBUG("%s:windowId[%" PRIu64 "]\n", __func__, aWindowId);
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
@@ -1035,7 +1035,7 @@ PresentationService::RegisterRespondingListener(
 NS_IMETHODIMP
 PresentationService::UnregisterRespondingListener(uint64_t aWindowId)
 {
-  PRES_DEBUG("%s:windowId[%lld]\n", __func__, aWindowId);
+  PRES_DEBUG("%s:windowId[%" PRIu64 "]\n", __func__, aWindowId);
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1050,7 +1050,7 @@ PresentationService::NotifyReceiverReady(
                bool aIsLoading,
                nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
 {
-  PRES_DEBUG("%s:id[%s], windowId[%lld], loading[%d]\n", __func__,
+  PRES_DEBUG("%s:id[%s], windowId[%" PRIu64 "], loading[%d]\n", __func__,
              NS_ConvertUTF16toUTF8(aSessionId).get(), aWindowId, aIsLoading);
 
   RefPtr<PresentationSessionInfo> info =
@@ -1085,8 +1085,9 @@ PresentationService::NotifyTransportClosed(const nsAString& aSessionId,
                                            uint8_t aRole,
                                            nsresult aReason)
 {
-  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
-             NS_ConvertUTF16toUTF8(aSessionId).get(), aReason, aRole);
+  PRES_DEBUG("%s:id[%s], reason[%" PRIx32 "], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(aSessionId).get(), static_cast<uint32_t>(aReason),
+             aRole);
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
@@ -1119,7 +1120,7 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
     nsresult rv = GetWindowIdBySessionIdInternal(aSessionId, aRole, &windowId);
     if (NS_SUCCEEDED(rv)) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
-        PRES_DEBUG("Attempt to close window[%d]\n", windowId);
+        PRES_DEBUG("Attempt to close window[%" PRIu64 "]\n", windowId);
 
         if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
           window->Close();

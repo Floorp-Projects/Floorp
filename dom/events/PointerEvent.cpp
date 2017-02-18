@@ -93,8 +93,10 @@ PointerEvent::Constructor(EventTarget* aOwner,
   widgetEvent->mWidth = aParam.mWidth;
   widgetEvent->mHeight = aParam.mHeight;
   widgetEvent->pressure = aParam.mPressure;
+  widgetEvent->tangentialPressure = aParam.mTangentialPressure;
   widgetEvent->tiltX = aParam.mTiltX;
   widgetEvent->tiltY = aParam.mTiltY;
+  widgetEvent->twist = aParam.mTwist;
   widgetEvent->inputSource = ConvertStringToPointerType(aParam.mPointerType);
   widgetEvent->mIsPrimary = aParam.mIsPrimary;
   widgetEvent->buttons = aParam.mButtons;
@@ -145,6 +147,12 @@ PointerEvent::Pressure()
   return mEvent->AsPointerEvent()->pressure;
 }
 
+float
+PointerEvent::TangentialPressure()
+{
+  return mEvent->AsPointerEvent()->tangentialPressure;
+}
+
 int32_t
 PointerEvent::TiltX()
 {
@@ -155,6 +163,12 @@ int32_t
 PointerEvent::TiltY()
 {
   return mEvent->AsPointerEvent()->tiltY;
+}
+
+int32_t
+PointerEvent::Twist()
+{
+  return mEvent->AsPointerEvent()->twist;
 }
 
 bool

@@ -65,8 +65,18 @@ WebRenderImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 }
 
 void
+WebRenderImageHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                              TextureHost* aTextureOnWhite)
+{
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
+void
 WebRenderImageHost::CleanupResources()
 {
+  nsTArray<TimedImage> newImages;
+  mImages.SwapElements(newImages);
+  newImages.Clear();
 }
 
 void
@@ -154,12 +164,6 @@ WebRenderImageHost::Dump(std::stringstream& aStream,
     DumpTextureHost(aStream, img.mTextureHost);
     aStream << (aDumpHtml ? " </li></ul> " : " ");
   }
-}
-
-LayerRenderState
-WebRenderImageHost::GetRenderState()
-{
-  return LayerRenderState();
 }
 
 already_AddRefed<gfx::DataSourceSurface>

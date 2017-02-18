@@ -125,7 +125,7 @@ public:
   ~TiledLayerBufferComposite();
 
   bool UseTiles(const SurfaceDescriptorTiles& aTileDescriptors,
-                Compositor* aCompositor,
+                HostLayerManager* aLayerManager,
                 ISurfaceAllocator* aAllocator);
 
   void Clear();
@@ -173,37 +173,12 @@ protected:
   ~TiledContentHost();
 
 public:
-  virtual LayerRenderState GetRenderState() override
-  {
-    // If we have exactly one high precision tile, then we can support hwc.
-    if (mTiledBuffer.GetTileCount() == 1 &&
-        mLowPrecisionTiledBuffer.GetTileCount() == 0) {
-      TextureHost* host = mTiledBuffer.GetTile(0).mTextureHost;
-      if (host) {
-        MOZ_ASSERT(!mTiledBuffer.GetTile(0).mTextureHostOnWhite, "Component alpha not supported!");
-
-        gfx::IntPoint offset = mTiledBuffer.GetTileOffset(mTiledBuffer.GetPlacement().TilePosition(0));
-
-        // Don't try to use HWC if the content doesn't start at the top-left of the tile.
-        if (offset != GetValidRegion().GetBounds().TopLeft()) {
-          return LayerRenderState();
-        }
-
-        LayerRenderState state = host->GetRenderState();
-        state.SetOffset(offset);
-        return state;
-      }
-    }
-    return LayerRenderState();
-  }
-
   // Generate effect for layerscope when using hwc.
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) override;
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack,
-                            nsIntRegion* aUpdatedRegionBack) override
+                            const nsIntRegion& aOldValidRegionBack) override
   {
     NS_ERROR("N/A for tiled layers");
     return false;

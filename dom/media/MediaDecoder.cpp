@@ -876,7 +876,7 @@ MediaDecoder::EnsureTelemetryReported()
   }
   for (const nsCString& codec : codecs) {
     DECODER_LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
-    Telemetry::Accumulate(Telemetry::ID::MEDIA_CODEC_USED, codec);
+    Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_CODEC_USED, codec);
   }
 
   mTelemetryReported = true;
@@ -1119,7 +1119,7 @@ MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  DECODER_LOG("NotifyDownloadEnded, status=%x", aStatus);
+  DECODER_LOG("NotifyDownloadEnded, status=%" PRIx32, static_cast<uint32_t>(aStatus));
 
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.

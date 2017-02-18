@@ -65,7 +65,8 @@ public:
   {
     // Threads have to be shut down from another thread, so we'll ask the
     // main thread to do it for us.
-    NS_DispatchToMainThread(NewRunnableMethod(aThisThread, &nsIThread::Shutdown));
+    NS_DispatchToMainThread(NewRunnableMethod("DecodePoolImpl::ShutdownThread",
+                                              aThisThread, &nsIThread::Shutdown));
   }
 
   /**

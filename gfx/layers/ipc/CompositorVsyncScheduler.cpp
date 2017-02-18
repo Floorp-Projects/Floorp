@@ -189,6 +189,11 @@ CompositorVsyncScheduler::SetNeedsComposite()
   mNeedsComposite++;
   if (!mIsObservingVsync && mNeedsComposite) {
     ObserveVsync();
+    // Starting to observe vsync is an async operation that goes
+    // through the main thread of the UI process. It's possible that
+    // we're blocking there waiting on a composite, so schedule an initial
+    // one now to get things started.
+    PostCompositeTask(TimeStamp::Now());
   }
 }
 

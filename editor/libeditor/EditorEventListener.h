@@ -6,6 +6,7 @@
 #ifndef EditorEventListener_h
 #define EditorEventListener_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -98,6 +99,13 @@ protected:
    * handle the event, returns true.
    */
   bool DetachedFromEditorOrDefaultPrevented(WidgetEvent* aEvent) const;
+
+  /**
+   * EnsureCommitComposition() requests to commit composition if there is.
+   * Returns false if the editor is detached from the listener, i.e.,
+   * impossible to continue to handle the event.  Otherwise, true.
+   */
+  MOZ_MUST_USE bool EnsureCommitCompoisition();
 
   EditorBase* mEditorBase; // weak
   RefPtr<nsCaret> mCaret;

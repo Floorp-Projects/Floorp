@@ -69,7 +69,7 @@ fails == ua-style-sheet-size-2.html ua-style-sheet-size-2.html
 # == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1.html
 # == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
 # == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
-fails asserts-if(stylo,6) == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html # bug 1324671
+fails == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html
 # fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1.html
 
 # HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-default-horizontal-tb-ltr.html

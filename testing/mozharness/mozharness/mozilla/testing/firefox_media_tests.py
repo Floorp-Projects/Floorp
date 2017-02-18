@@ -298,6 +298,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         env = self.query_env()
         if self.query_minidump_stackwalk():
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+        env['RUST_BACKTRACE'] = '1'
 
         if self.config['allow_software_gl_layers']:
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'

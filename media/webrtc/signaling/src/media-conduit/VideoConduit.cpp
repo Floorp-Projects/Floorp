@@ -241,10 +241,11 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
 }
 
 void
-WebrtcVideoConduit::AddLocalRTPExtensions(
+WebrtcVideoConduit::AddLocalRTPExtensions(bool aIsSend,
   const std::vector<webrtc::RtpExtension> & aExtensions)
 {
-  auto& extList = mSendStreamConfig.rtp.extensions;
+  auto& extList = aIsSend ? mSendStreamConfig.rtp.extensions :
+                  mRecvStreamConfig.rtp.extensions;
   std::remove_if(extList.begin(), extList.end(), [&](const webrtc::RtpExtension & i) {
     return std::find(aExtensions.begin(), aExtensions.end(),i) != aExtensions.end();
   });
@@ -252,9 +253,9 @@ WebrtcVideoConduit::AddLocalRTPExtensions(
 }
 
 std::vector<webrtc::RtpExtension>
-WebrtcVideoConduit::GetLocalRTPExtensions() const
+WebrtcVideoConduit::GetLocalRTPExtensions(bool aIsSend) const
 {
-  return mSendStreamConfig.rtp.extensions;
+  return aIsSend ? mSendStreamConfig.rtp.extensions : mRecvStreamConfig.rtp.extensions;
 }
 
 bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
@@ -313,12 +314,11 @@ PayloadNameToEncoderType(const std::string& name)
 {
   if ("VP8" == name) {
     return webrtc::VideoEncoder::EncoderType::kVp8;
-  } else if ("VP9" == name) {
+  } else if ("VP9" == name) { // NOLINT(readability-else-after-return)
     return webrtc::VideoEncoder::EncoderType::kVp9;
-  } else if ("H264" == name) {
+  } else if ("H264" == name) { // NOLINT(readability-else-after-return)
     return webrtc::VideoEncoder::EncoderType::kH264;
   }
-
   return webrtc::VideoEncoder::EncoderType::kUnsupportedCodec;
 }
 
@@ -382,12 +382,11 @@ PayloadNameToDecoderType(const std::string& name)
 {
   if ("VP8" == name) {
     return webrtc::VideoDecoder::DecoderType::kVp8;
-  } else if ("VP9" == name) {
+  } else if ("VP9" == name) { // NOLINT(readability-else-after-return)
     return webrtc::VideoDecoder::DecoderType::kVp9;
-  } else if ("H264" == name) {
+  } else if ("H264" == name) { // NOLINT(readability-else-after-return)
     return webrtc::VideoDecoder::DecoderType::kH264;
   }
-
   return webrtc::VideoDecoder::DecoderType::kUnsupportedCodec;
 }
 
@@ -1887,7 +1886,8 @@ WebrtcVideoConduit::SendRtcp(const uint8_t* packet, size_t length)
     // Might be a sender report, might be a receiver report, we don't know.
     CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
     return true;
-  } else if (mTransmitterTransport &&
+  }
+  if (mTransmitterTransport &&
              NS_SUCCEEDED(mTransmitterTransport->SendRtcpPacket(packet, length))) {
     CSFLogDebug(logTag, "%s Sent RTCP Packet (sender report) ", __FUNCTION__);
     return true;
@@ -2014,7 +2014,8 @@ WebrtcVideoConduit::CodecPluginID()
 {
   if (mSendCodecPlugin) {
     return mSendCodecPlugin->PluginID();
-  } else if (mRecvCodecPlugin) {
+  }
+  if (mRecvCodecPlugin) {
     return mRecvCodecPlugin->PluginID();
   }
 

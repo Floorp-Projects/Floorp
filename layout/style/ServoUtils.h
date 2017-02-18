@@ -30,7 +30,11 @@
   inline geckotype_* AsGecko();                         \
   inline servotype_* AsServo();                         \
   inline const geckotype_* AsGecko() const;             \
-  inline const servotype_* AsServo() const;
+  inline const servotype_* AsServo() const;             \
+  inline geckotype_* GetAsGecko();                      \
+  inline servotype_* GetAsServo();                      \
+  inline const geckotype_* GetAsGecko() const;          \
+  inline const servotype_* GetAsServo() const;
 
 /**
  * Macro used in inline header of class |type_| with its Gecko and Servo
@@ -53,6 +57,18 @@
   const servotype_* type_::AsServo() const {                    \
     MOZ_ASSERT(IsServo());                                      \
     return static_cast<const servotype_*>(this);                \
+  }                                                             \
+  geckotype_* type_::GetAsGecko() {                             \
+    return IsGecko() ? AsGecko() : nullptr;                     \
+  }                                                             \
+  servotype_* type_::GetAsServo() {                             \
+    return IsServo() ? AsServo() : nullptr;                     \
+  }                                                             \
+  const geckotype_* type_::GetAsGecko() const {                 \
+    return IsGecko() ? AsGecko() : nullptr;                     \
+  }                                                             \
+  const servotype_* type_::GetAsServo() const {                 \
+    return IsServo() ? AsServo() : nullptr;                     \
   }
 
 #define MOZ_STYLO_THIS_TYPE  mozilla::RemovePointer<decltype(this)>::Type

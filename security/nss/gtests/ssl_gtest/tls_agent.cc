@@ -650,6 +650,10 @@ void TlsAgent::ResetPreliminaryInfo() {
 }
 
 void TlsAgent::Connected() {
+  if (state_ == STATE_CONNECTED) {
+    return;
+  }
+
   LOG("Handshake success");
   CheckPreliminaryInfo();
   CheckCallbacks();
@@ -741,11 +745,7 @@ void TlsAgent::Handshake() {
   LOGV("Handshake");
   SECStatus rv = SSL_ForceHandshake(ssl_fd());
   if (rv == SECSuccess) {
-    if (!falsestart_enabled_) {
-      EXPECT_EQ(STATE_CONNECTED, state_)
-          << "the handshake callback should have been called already";
-    }
-
+    Connected();
     Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
                              &TlsAgent::ReadableCallback);
     return;

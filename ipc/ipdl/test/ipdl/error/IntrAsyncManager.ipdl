@@ -1,0 +1,7 @@
+include protocol IntrAsyncManagee;
+
+async protocol IntrAsyncManager {
+    manages IntrAsyncManagee;
+parent:
+    async IntrAsyncManagee();
+};

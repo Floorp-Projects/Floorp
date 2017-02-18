@@ -18,14 +18,14 @@
 namespace js {
 namespace jit {
 
-static constexpr Register eax = { X86Encoding::rax };
-static constexpr Register ecx = { X86Encoding::rcx };
-static constexpr Register edx = { X86Encoding::rdx };
-static constexpr Register ebx = { X86Encoding::rbx };
-static constexpr Register esp = { X86Encoding::rsp };
-static constexpr Register ebp = { X86Encoding::rbp };
-static constexpr Register esi = { X86Encoding::rsi };
-static constexpr Register edi = { X86Encoding::rdi };
+static constexpr Register eax { X86Encoding::rax };
+static constexpr Register ecx { X86Encoding::rcx };
+static constexpr Register edx { X86Encoding::rdx };
+static constexpr Register ebx { X86Encoding::rbx };
+static constexpr Register esp { X86Encoding::rsp };
+static constexpr Register ebp { X86Encoding::rbp };
+static constexpr Register esi { X86Encoding::rsi };
+static constexpr Register edi { X86Encoding::rdi };
 
 static constexpr FloatRegister xmm0 = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
 static constexpr FloatRegister xmm1 = FloatRegister(X86Encoding::xmm1, FloatRegisters::Double);
@@ -36,7 +36,7 @@ static constexpr FloatRegister xmm5 = FloatRegister(X86Encoding::xmm5, FloatRegi
 static constexpr FloatRegister xmm6 = FloatRegister(X86Encoding::xmm6, FloatRegisters::Double);
 static constexpr FloatRegister xmm7 = FloatRegister(X86Encoding::xmm7, FloatRegisters::Double);
 
-static constexpr Register InvalidReg = { X86Encoding::invalid_reg };
+static constexpr Register InvalidReg { X86Encoding::invalid_reg };
 static constexpr FloatRegister InvalidFloatReg = FloatRegister();
 
 static constexpr Register JSReturnReg_Type = ecx;

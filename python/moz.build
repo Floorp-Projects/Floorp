@@ -23,7 +23,11 @@ SPHINX_TREES['mach'] = 'mach/docs'
 PYTHON_UNITTEST_MANIFESTS += [
     'mach/mach/test/python.ini',
     'mozbuild/dumbmake/test/python.ini',
-    'mozbuild/mozbuild/test/python.ini',
-    'mozbuild/mozpack/test/python.ini',
     'mozlint/test/python.ini',
 ]
+
+if CONFIG['MOZ_BUILD_APP']:
+    PYTHON_UNITTEST_MANIFESTS += [
+        'mozbuild/mozbuild/test/python.ini',
+        'mozbuild/mozpack/test/python.ini',
+    ]

@@ -7,7 +7,6 @@ use bluetooth_traits::blocklist::{Blocklist, uuid_is_blocklisted};
 use dom::bindings::cell::DOMRefCell;
 use dom::bindings::codegen::Bindings::BluetoothCharacteristicPropertiesBinding::
     BluetoothCharacteristicPropertiesMethods;
-use dom::bindings::codegen::Bindings::BluetoothDeviceBinding::BluetoothDeviceMethods;
 use dom::bindings::codegen::Bindings::BluetoothRemoteGATTCharacteristicBinding;
 use dom::bindings::codegen::Bindings::BluetoothRemoteGATTCharacteristicBinding::
     BluetoothRemoteGATTCharacteristicMethods;
@@ -104,7 +103,7 @@ impl BluetoothRemoteGATTCharacteristicMethods for BluetoothRemoteGATTCharacteris
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-getdescriptor
     fn GetDescriptor(&self, descriptor: BluetoothDescriptorUUID) -> Rc<Promise> {
         get_gatt_children(self, true, BluetoothUUID::descriptor, Some(descriptor), self.get_instance_id(),
-                          self.Service().Device().Gatt().Connected(), GATTType::Descriptor)
+                          self.Service().Device().get_gatt().Connected(), GATTType::Descriptor)
     }
 
     #[allow(unrooted_must_root)]
@@ -113,7 +112,7 @@ impl BluetoothRemoteGATTCharacteristicMethods for BluetoothRemoteGATTCharacteris
                       descriptor: Option<BluetoothDescriptorUUID>)
                       -> Rc<Promise> {
         get_gatt_children(self, false, BluetoothUUID::descriptor, descriptor, self.get_instance_id(),
-                          self.Service().Device().Gatt().Connected(), GATTType::Descriptor)
+                          self.Service().Device().get_gatt().Connected(), GATTType::Descriptor)
     }
 
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-value
@@ -134,7 +133,7 @@ impl BluetoothRemoteGATTCharacteristicMethods for BluetoothRemoteGATTCharacteris
         }
 
         // Step 2.
-        if !self.Service().Device().Gatt().Connected() {
+        if !self.Service().Device().get_gatt().Connected() {
             p.reject_error(p_cx, Network);
             return p;
         }
@@ -174,7 +173,7 @@ impl BluetoothRemoteGATTCharacteristicMethods for BluetoothRemoteGATTCharacteris
         }
 
         // Step 4.
-        if !self.Service().Device().Gatt().Connected() {
+        if !self.Service().Device().get_gatt().Connected() {
             p.reject_error(p_cx, Network);
             return p;
         }
@@ -209,22 +208,22 @@ impl BluetoothRemoteGATTCharacteristicMethods for BluetoothRemoteGATTCharacteris
             return p;
         }
 
-        // Step 4.
+        // Step 2.
+        if !self.Service().Device().get_gatt().Connected() {
+            p.reject_error(p_cx, Network);
+            return p;
+        }
+
+        // Step 5.
         if !(self.Properties().Notify() ||
              self.Properties().Indicate()) {
             p.reject_error(p_cx, NotSupported);
             return p;
         }
 
-        // TODO: Step 5: Implement `active notification context set` for BluetoothRemoteGATTCharacteristic.
+        // TODO: Step 6: Implement `active notification context set` for BluetoothRemoteGATTCharacteristic.
 
-        // Step 6.
-        if !self.Service().Device().Gatt().Connected() {
-            p.reject_error(p_cx, Network);
-            return p;
-        }
-
-        // Note: Steps 2 - 3, 7 - 11 are implemented in components/bluetooth/lib.rs in enable_notification function
+        // Note: Steps 3 - 4, 7 - 11 are implemented in components/bluetooth/lib.rs in enable_notification function
         // and in handle_response function.
         let sender = response_async(&p, self);
         self.get_bluetooth_thread().send(

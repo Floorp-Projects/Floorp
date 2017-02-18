@@ -13,7 +13,7 @@ name = "bindgen"
 readme = "README.md"
 repository = "https://github.com/servo/rust-bindgen"
 documentation = "https://docs.rs/bindgen"
-version = "0.21.2"
+version = "0.22.0"
 build = "build.rs"
 
 exclude = ["tests/headers", "tests/expectations", "bindgen-integration", "ci"]
@@ -39,7 +39,7 @@ quasi_codegen = "0.29"
 [dependencies]
 cexpr = "0.2"
 cfg-if = "0.1.0"
-clang-sys = { version = "0.12", features = ["runtime", "clang_3_9"] }
+clang-sys = { version = "0.14", features = ["runtime", "clang_3_9"] }
 lazy_static = "0.2.1"
 rustc-serialize = "0.3.19"
 syntex_syntax = "0.54"
@@ -66,7 +66,7 @@ version = "0.29"
 [features]
 assert_no_dangling_items = []
 default = ["logging"]
-llvm_stable = []
+testing_only_llvm_stable = []
 logging = ["env_logger", "log"]
 static = []
 # This feature only exists for CI -- don't use it!

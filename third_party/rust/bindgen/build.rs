@@ -11,6 +11,7 @@ mod codegen {
         quasi_codegen::expand(&src, &dst).unwrap();
         println!("cargo:rerun-if-changed=src/codegen/mod.rs");
         println!("cargo:rerun-if-changed=src/codegen/helpers.rs");
+        println!("cargo:rerun-if-changed=src/codegen/struct_layout.rs");
     }
 }
 

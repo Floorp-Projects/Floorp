@@ -12,6 +12,7 @@
  */
 
 #include "APZTestCommon.h"
+#include "gfxPrefs.h"
 
 class APZCBasicTester : public APZCTesterBase {
 public:

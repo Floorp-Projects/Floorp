@@ -173,17 +173,17 @@ XPCWrappedNativeProto::DebugDump(int16_t depth)
 {
 #ifdef DEBUG
     depth-- ;
-    XPC_LOG_ALWAYS(("XPCWrappedNativeProto @ %x", this));
+    XPC_LOG_ALWAYS(("XPCWrappedNativeProto @ %p", this));
     XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("gDEBUG_LiveProtoCount is %d", gDEBUG_LiveProtoCount));
-        XPC_LOG_ALWAYS(("mScope @ %x", mScope));
-        XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject.get()));
-        XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
-        XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptable.get()));
+        XPC_LOG_ALWAYS(("mScope @ %p", mScope));
+        XPC_LOG_ALWAYS(("mJSProtoObject @ %p", mJSProtoObject.get()));
+        XPC_LOG_ALWAYS(("mSet @ %p", mSet.get()));
+        XPC_LOG_ALWAYS(("mScriptable @ %p", mScriptable.get()));
         if (depth && mScriptable) {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mFlags of %x", mScriptable->GetScriptableFlags()));
-            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptable->GetJSClass()));
+            XPC_LOG_ALWAYS(("mJSClass @ %p", mScriptable->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();

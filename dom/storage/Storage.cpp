@@ -180,7 +180,10 @@ class StorageNotifierRunnable : public Runnable
 public:
   StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType,
                           bool aPrivateBrowsing)
-    : mSubject(aSubject), mType(aType), mPrivateBrowsing(aPrivateBrowsing)
+    : Runnable("StorageNotifierRunnable")
+    , mSubject(aSubject)
+    , mType(aType)
+    , mPrivateBrowsing(aPrivateBrowsing)
   { }
 
   NS_DECL_NSIRUNNABLE

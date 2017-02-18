@@ -8,6 +8,7 @@ category webextension-scripts desktop-runtime chrome://browser/content/ext-deskt
 category webextension-scripts devtools chrome://browser/content/ext-devtools.js
 category webextension-scripts devtools-inspectedWindow chrome://browser/content/ext-devtools-inspectedWindow.js
 category webextension-scripts devtools-network chrome://browser/content/ext-devtools-network.js
+category webextension-scripts devtools-panels chrome://browser/content/ext-devtools-panels.js
 category webextension-scripts history chrome://browser/content/ext-history.js
 category webextension-scripts omnibox chrome://browser/content/ext-omnibox.js
 category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js
@@ -21,6 +22,7 @@ category webextension-scripts windows chrome://browser/content/ext-windows.js
 
 # scripts specific for devtools extension contexts.
 category webextension-scripts-devtools devtools-inspectedWindow chrome://browser/content/ext-c-devtools-inspectedWindow.js
+category webextension-scripts-devtools devtools-panels chrome://browser/content/ext-c-devtools-panels.js
 
 # scripts that must run in the same process as addon code.
 category webextension-scripts-addon contextMenus chrome://browser/content/ext-c-contextMenus.js
@@ -37,6 +39,7 @@ category webextension-schemas context_menus_internal chrome://browser/content/sc
 category webextension-schemas devtools chrome://browser/content/schemas/devtools.json
 category webextension-schemas devtools_inspected_window chrome://browser/content/schemas/devtools_inspected_window.json
 category webextension-schemas devtools_network chrome://browser/content/schemas/devtools_network.json
+category webextension-schemas devtools_panels chrome://browser/content/schemas/devtools_panels.json
 category webextension-schemas history chrome://browser/content/schemas/history.json
 category webextension-schemas omnibox chrome://browser/content/schemas/omnibox.json
 category webextension-schemas page_action chrome://browser/content/schemas/page_action.json

@@ -158,7 +158,6 @@ static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
-bool TabChild::sInLargeAllocProcess = false;
 
 TabChildBase::TabChildBase()
   : mTabChildGlobal(nullptr)
@@ -297,7 +296,8 @@ class TabChild::DelayedDeleteRunnable final
 
 public:
     explicit DelayedDeleteRunnable(TabChild* aTabChild)
-      : mTabChild(aTabChild)
+      : Runnable("TabChild::DelayedDeleteRunnable")
+      , mTabChild(aTabChild)
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(aTabChild);
@@ -505,8 +505,8 @@ TabChild::Observe(nsISupports *aSubject,
     // check it comparing the windowID.
     if (window->WindowID() != windowID) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-              ("TabChild, Observe, different windowID, owner ID = %lld, "
-               "ID from wrapper = %lld", window->WindowID(), windowID));
+              ("TabChild, Observe, different windowID, owner ID = %" PRIu64 ", "
+               "ID from wrapper = %" PRIu64, window->WindowID(), windowID));
       return NS_OK;
     }
 
@@ -3120,10 +3120,9 @@ TabChild::RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvSetIsLargeAllocation(const bool& aIsLA, const bool& aNewProcess)
+TabChild::RecvAwaitLargeAlloc()
 {
-  mAwaitingLA = aIsLA;
-  sInLargeAllocProcess = aIsLA && aNewProcess;
+  mAwaitingLA = true;
   return IPC_OK();
 }
 
@@ -3134,7 +3133,7 @@ TabChild::IsAwaitingLargeAlloc()
 }
 
 bool
-TabChild::TakeAwaitingLargeAlloc()
+TabChild::StopAwaitingLargeAlloc()
 {
   bool awaiting = mAwaitingLA;
   mAwaitingLA = false;

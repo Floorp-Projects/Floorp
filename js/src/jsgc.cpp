@@ -3031,9 +3031,9 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock)
 bool
 GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason)
 {
-    /* Zones in use by a thread with an exclusive context can't be collected. */
+    /* Zones in use by a helper thread can't be collected. */
     if (!CurrentThreadCanAccessRuntime(rt)) {
-        MOZ_ASSERT(zone->usedByExclusiveThread || zone->isAtomsZone());
+        MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
         return false;
     }
 
@@ -3050,7 +3050,7 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason)
 
     if (zone->isAtomsZone()) {
         /* We can't do a zone GC of the atoms compartment. */
-        if (TlsContext.get()->keepAtoms || rt->exclusiveThreadsPresent()) {
+        if (TlsContext.get()->keepAtoms || rt->hasHelperThreadZones()) {
             /* Skip GC and retrigger later, since atoms zone won't be collected
              * if keepAtoms is true. */
             fullGCForAtomsRequested_ = true;
@@ -3492,14 +3492,6 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
 void
 GCRuntime::sweepZones(FreeOp* fop, ZoneGroup* group, bool destroyingRuntime)
 {
-    MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
-    MOZ_ASSERT_IF(destroyingRuntime, arenasEmptyAtShutdown);
-
-    if (rt->gc.numActiveZoneIters)
-        return;
-
-    assertBackgroundSweepingFinished();
-
     JSZoneCallback callback = rt->destroyZoneCallback;
 
     Zone** read = group->zones().begin();
@@ -3547,6 +3539,14 @@ GCRuntime::sweepZones(FreeOp* fop, ZoneGroup* group, bool destroyingRuntime)
 void
 GCRuntime::sweepZoneGroups(FreeOp* fop, bool destroyingRuntime)
 {
+    MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
+    MOZ_ASSERT_IF(destroyingRuntime, arenasEmptyAtShutdown);
+
+    if (rt->gc.numActiveZoneIters)
+        return;
+
+    assertBackgroundSweepingFinished();
+
     ZoneGroup** read = groups.ref().begin();
     ZoneGroup** end = groups.ref().end();
     ZoneGroup** write = read;
@@ -3853,7 +3853,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
      * the other collected zones are using are marked, and we can update the
      * set of atoms in use by the other collected zones at the end of the GC.
      */
-    if (!TlsContext.get()->keepAtoms || rt->exclusiveThreadsPresent()) {
+    if (!TlsContext.get()->keepAtoms || rt->hasHelperThreadZones()) {
         Zone* atomsZone = rt->atomsCompartment(lock)->zone();
         if (atomsZone->isGCScheduled()) {
             MOZ_ASSERT(!atomsZone->isCollecting());
@@ -4489,7 +4489,6 @@ Zone::findOutgoingEdges(ZoneComponentFinder& finder)
         if (r.front()->isGCMarking())
             finder.addEdgeTo(r.front());
     }
-    gcZoneGroupEdges().clear();
 
     Debugger::findZoneEdges(this, finder);
 }
@@ -4507,11 +4506,6 @@ GCRuntime::findZoneEdgesForWeakMaps()
      * group.
      */
 
-#ifdef DEBUG
-    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-        MOZ_ASSERT(zone->gcZoneGroupEdges().empty());
-#endif
-
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         if (!WeakMapBase::findInterZoneEdges(zone))
             return false;
@@ -4523,6 +4517,11 @@ GCRuntime::findZoneEdgesForWeakMaps()
 void
 GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
 {
+#ifdef DEBUG
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+        MOZ_ASSERT(zone->gcZoneGroupEdges().empty());
+#endif
+
     JSContext* cx = TlsContext.get();
     ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode], lock);
     if (!isIncremental || !findZoneEdgesForWeakMaps())
@@ -4535,6 +4534,9 @@ GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
     zoneGroups = finder.getResultsList();
     currentZoneGroup = zoneGroups;
     zoneGroupIndex = 0;
+
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        zone->gcZoneGroupEdges().clear();
 
 #ifdef DEBUG
     for (Zone* head = currentZoneGroup; head; head = head->nextGroup()) {
@@ -6288,7 +6290,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 
     // We don't allow off-thread parsing to start while we're doing an
     // incremental GC.
-    MOZ_ASSERT_IF(rt->activeGCInAtomsZone(), !rt->exclusiveThreadsPresent());
+    MOZ_ASSERT_IF(rt->activeGCInAtomsZone(), !rt->hasHelperThreadZones());
 
     auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget, session.lock);
 
@@ -6681,7 +6683,7 @@ ZoneGroup::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
 
     {
         AutoLockGC lock(runtime);
-        for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next())
+        for (ZonesInGroupIter zone(this); !zone.done(); zone.next())
             runtime->gc.maybeAllocTriggerZoneGC(zone, lock);
     }
 }
@@ -6788,7 +6790,10 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
         break;
     }
 
-    if (!group) {
+    if (group) {
+        // Take over ownership of the group while we create the compartment/zone.
+        group->enter();
+    } else {
         MOZ_ASSERT(!zone);
         group = cx->new_<ZoneGroup>(rt);
         if (!group)
@@ -6796,7 +6801,11 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
 
         groupHolder.reset(group);
 
-        if (!group->init(rt->gc.tunables.gcMaxNurseryBytes())) {
+        size_t nurseryBytes =
+            options.creationOptions().disableNursery()
+            ? 0
+            : rt->gc.tunables.gcMaxNurseryBytes();
+        if (!group->init(nurseryBytes)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -6863,6 +6872,7 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
 
     zoneHolder.forget();
     groupHolder.forget();
+    group->leave();
     return compartment.forget();
 }
 
@@ -7821,16 +7831,23 @@ js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell)
     if (!cell->isTenured())
         return false;
 
-    // We ignore the gray marking state of cells and return false in two cases:
+    // We ignore the gray marking state of cells and return false in the
+    // following cases:
     //
     // 1) When OOM has caused us to clear the gcGrayBitsValid_ flag.
     //
     // 2) When we are in an incremental GC and examine a cell that is in a zone
     // that is not being collected. Gray targets of CCWs that are marked black
     // by a barrier will eventually be marked black in the next GC slice.
+    //
+    // 3) When we are not on the runtime's active thread. Helper threads might
+    // call this while parsing, and they are not allowed to inspect the
+    // runtime's incremental state. The objects being operated on are not able
+    // to be collected and will not be marked any color.
     auto tc = &cell->asTenured();
-    auto rt = tc->runtimeFromActiveCooperatingThread();
-    if (!rt->gc.areGrayBitsValid() ||
+    auto rt = tc->runtimeFromAnyThread();
+    if (!CurrentThreadCanAccessRuntime(rt) ||
+        !rt->gc.areGrayBitsValid() ||
         (rt->gc.isIncrementalGCInProgress() && !tc->zone()->wasGCStarted()))
     {
         return false;

@@ -23,11 +23,12 @@ namespace js {
 // associated with the data, consider using the ExclusiveData class instead.
 // Otherwise, ProtectedData should be used to document whatever synchronization
 // method is used.
-//
-// Note that several of the checks below are currently disabled
-// (e.g. ThreadLocalData, ZoneGroupData). These will be fixed soon (bug 1323066),
-// but for now this class is largely documenting how we would like data to be
-// protected, rather than how it actually is protected.
+
+// Protected data checks are enabled in debug builds, except on android where
+// they cause some permatimeouts in automation.
+#if defined(DEBUG) && !defined(ANDROID)
+#define JS_HAS_PROTECTED_DATA_CHECKS
+#endif
 
 #define DECLARE_ONE_BOOL_OPERATOR(OP, T)        \
     template <typename U>                       \
@@ -50,7 +51,7 @@ namespace js {
 class MOZ_RAII AutoNoteSingleThreadedRegion
 {
   public:
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
     static mozilla::Atomic<size_t> count;
     AutoNoteSingleThreadedRegion() { count++; }
     ~AutoNoteSingleThreadedRegion() { count--; }
@@ -70,7 +71,7 @@ class ProtectedData
     template <typename... Args>
     explicit ProtectedData(const Check& check, Args&&... args)
       : value(mozilla::Forward<Args>(args)...)
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
       , check(check)
 #endif
     {}
@@ -95,7 +96,7 @@ class ProtectedData
     T operator --(int) { return ref()--; }
 
     T& ref() {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
         if (!AutoNoteSingleThreadedRegion::count)
             check.check();
 #endif
@@ -103,7 +104,7 @@ class ProtectedData
     }
 
     const T& ref() const {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
         if (!AutoNoteSingleThreadedRegion::count)
             check.check();
 #endif
@@ -115,7 +116,7 @@ class ProtectedData
 
   private:
     T value;
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
     Check check;
 #endif
 };
@@ -156,7 +157,7 @@ class ProtectedDataZoneGroupArg : public ProtectedData<Check, T>
 
 class CheckUnprotected
 {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
   public:
     inline void check() const {}
 #endif
@@ -170,7 +171,7 @@ using UnprotectedData = ProtectedDataNoCheckArgs<CheckUnprotected, T>;
 
 class CheckThreadLocal
 {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
     Thread::Id id;
 
   public:
@@ -179,10 +180,7 @@ class CheckThreadLocal
     {}
 
     inline void check() const {
-        // This check is currently disabled because JSContexts used for off
-        // thread parsing are created on different threads than where they run.
-        // This will be fixed soon (bug 1323066).
-        //MOZ_ASSERT(id == ThisThread::GetId());
+        MOZ_ASSERT(id == ThisThread::GetId());
     }
 #endif
 };
@@ -226,7 +224,7 @@ using ActiveThreadOrIonCompileData =
 template <AllowedHelperThread Helper>
 class CheckZoneGroup
 {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
     ZoneGroup* group;
 
   public:
@@ -239,7 +237,8 @@ class CheckZoneGroup
 };
 
 // Data which may only be accessed by threads with exclusive access to the
-// associated zone group.
+// associated zone group, or by the runtime's cooperatively scheduled
+// active thread for zone groups which are not in use by a helper thread.
 template <typename T>
 using ZoneGroupData =
     ProtectedDataZoneGroupArg<CheckZoneGroup<AllowedHelperThread::None>, T>;
@@ -267,7 +266,7 @@ enum class GlobalLock
 template <GlobalLock Lock, AllowedHelperThread Helper>
 class CheckGlobalLock
 {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
   public:
     void check() const;
 #endif
@@ -310,7 +309,7 @@ class ProtectedDataWriteOnce
     template <typename... Args>
     explicit ProtectedDataWriteOnce(Args&&... args)
       : value(mozilla::Forward<Args>(args)...)
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
       , nwrites(0)
 #endif
     {}
@@ -330,7 +329,7 @@ class ProtectedDataWriteOnce
     const T& ref() const { return value; }
 
     T& writeRef() {
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
         if (!AutoNoteSingleThreadedRegion::count)
             check.check();
         // Despite the WriteOnce name, actually allow two writes to accommodate
@@ -342,7 +341,7 @@ class ProtectedDataWriteOnce
 
   private:
     T value;
-#ifdef DEBUG
+#ifdef JS_HAS_PROTECTED_DATA_CHECKS
     Check check;
     size_t nwrites;
 #endif

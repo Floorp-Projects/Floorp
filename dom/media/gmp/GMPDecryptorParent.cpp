@@ -6,6 +6,7 @@
 #include "GMPDecryptorParent.h"
 #include "GMPContentParent.h"
 #include "MediaData.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -172,7 +173,8 @@ GMPDecryptorParent::SetServerCertificate(uint32_t aPromiseId,
 void
 GMPDecryptorParent::Decrypt(uint32_t aId,
                             const CryptoSample& aCrypto,
-                            const nsTArray<uint8_t>& aBuffer)
+                            const nsTArray<uint8_t>& aBuffer,
+                            uint64_t aDurationUsecs)
 {
   LOGV(("GMPDecryptorParent[%p]::Decrypt(id=%d)", this, aId));
 
@@ -191,10 +193,10 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
                            aCrypto.mEncryptedSizes,
                            aCrypto.mSessionIds);
 
-    Unused << SendDecrypt(aId, aBuffer, data);
+    Unused << SendDecrypt(aId, aBuffer, data, aDurationUsecs);
   } else {
     GMPDecryptionData data;
-    Unused << SendDecrypt(aId, aBuffer, data);
+    Unused << SendDecrypt(aId, aBuffer, data, aDurationUsecs);
   }
 }
 
@@ -373,7 +375,7 @@ mozilla::ipc::IPCResult
 GMPDecryptorParent::RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
                                                 InfallibleTArray<GMPKeyInformation>&& aKeyInfos)
 {
-  LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(sessionId='%s', KeyInfos len='%d')",
+  LOGD(("GMPDecryptorParent[%p]::RecvBatchedKeyStatusChanged(sessionId='%s', KeyInfos len='%" PRIuSIZE "')",
         this, aSessionId.get(), aKeyInfos.Length()));
 
   if (mIsOpen) {

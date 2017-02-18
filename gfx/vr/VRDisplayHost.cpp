@@ -199,12 +199,6 @@ VRControllerHost::GetPose()
   return mPose;
 }
 
-void
-VRControllerHost::SetHand(dom::GamepadHand aHand)
-{
-  mControllerInfo.mHand = aHand;
-}
-
 dom::GamepadHand
 VRControllerHost::GetHand()
 {

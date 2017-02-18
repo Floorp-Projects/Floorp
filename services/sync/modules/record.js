@@ -992,14 +992,16 @@ PostQueue.prototype = {
       this.log.trace("Server error response during a batch", response);
       // not clear what we should do here - we expect the consumer of this to
       // abort by throwing in the postCallback below.
-      return this.postCallback(response, !finalBatchPost);
+      this.postCallback(response, !finalBatchPost);
+      return;
     }
 
     if (finalBatchPost) {
       this.log.trace("Committed batch", this.batchID);
       this.batchID = undefined; // we are now in "first post for the batch" state.
       this.lastModified = response.headers["x-last-modified"];
-      return this.postCallback(response, false);
+      this.postCallback(response, false);
+      return;
     }
 
     if (response.status != 202) {
@@ -1008,7 +1010,8 @@ PostQueue.prototype = {
       }
       this.batchID = null; // no batch semantics are in place.
       this.lastModified = response.headers["x-last-modified"];
-      return this.postCallback(response, false);
+      this.postCallback(response, false);
+      return;
     }
 
     // this response is saying the server has batch semantics - we should

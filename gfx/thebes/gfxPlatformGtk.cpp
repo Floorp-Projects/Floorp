@@ -411,11 +411,12 @@ gfxPlatformGtk::GetDPIScale()
     int32_t dpi = GetDPI();
     if (dpi < 132) {
         return 1.0;
-    } else if (dpi < 168) {
-        return 1.5;
-    } else {
-        return round(dpi/96.0);
     }
+    if (dpi < 168) {
+        return 1.5;
+    }
+    return round(dpi/96.0);
+
 }
 
 bool

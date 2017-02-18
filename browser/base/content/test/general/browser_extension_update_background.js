@@ -3,9 +3,11 @@ const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm
 const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
 const ID = "update@tests.mozilla.org";
 const ID_ICON = "update_icon@tests.mozilla.org";
+const ID_PERMS = "update_perms@tests.mozilla.org";
+const ID_LEGACY = "legacy_update@tests.mozilla.org";
 
 registerCleanupFunction(async function() {
-  for (let id of [ID, ID_ICON]) {
+  for (let id of [ID, ID_ICON, ID_PERMS, ID_LEGACY]) {
     let addon = await AddonManager.getAddonByID(id);
     if (addon) {
       ok(false, `Addon ${id} was still installed at the end of the test`);
@@ -232,10 +234,9 @@ function checkNonDefaultIcon(icon) {
 add_task(() => backgroundUpdateTest(`${URL_BASE}/browser_webext_update_icon1.xpi`,
                                     ID_ICON, checkNonDefaultIcon));
 
-// Test that an update that adds new non-promptable permissions is just
-// applied without showing a notification dialog.
-add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({set: [
+// Helper function to test an upgrade that should not show a prompt
+async function testNoPrompt(origUrl, id) {
+  await SpecialPowers.pushPrefEnv({set: [
     // Turn on background updates
     ["extensions.update.enabled", true],
 
@@ -244,7 +245,7 @@ add_task(function*() {
   ]});
 
   // Install version 1.0 of the test extension
-  let addon = yield promiseInstallAddon(`${URL_BASE}/browser_webext_update_perms1.xpi`);
+  let addon = await promiseInstallAddon(origUrl);
 
   ok(addon, "Addon was installed");
 
@@ -256,21 +257,32 @@ add_task(function*() {
   // Trigger an update check and wait for the update to be applied.
   let updatePromise = promiseInstallEvent(addon, "onInstallEnded");
   AddonManagerPrivate.backgroundUpdateCheck();
-  yield updatePromise;
+  await updatePromise;
 
   // There should be no notifications about the update
   is(getBadgeStatus(), "", "Should not have addon alert badge");
 
-  yield PanelUI.show();
+  await PanelUI.show();
   let addons = document.getElementById("PanelUI-footer-addons");
   is(addons.children.length, 0, "Have 0 updates in the PanelUI menu");
-  yield PanelUI.hide();
+  await PanelUI.hide();
 
   ok(!sawPopup, "Should not have seen permissions notification");
 
-  addon = yield AddonManager.getAddonByID("update_perms@tests.mozilla.org");
+  addon = await AddonManager.getAddonByID(id);
   is(addon.version, "2.0", "Update should have applied");
 
   addon.uninstall();
-  yield SpecialPowers.popPrefEnv();
-});
+  await SpecialPowers.popPrefEnv();
+}
+
+// Test that an update that adds new non-promptable permissions is just
+// applied without showing a notification dialog.
+add_task(() => testNoPrompt(`${URL_BASE}/browser_webext_update_perms1.xpi`,
+                            ID_PERMS));
+
+// Test that an update from a legacy extension to a webextension
+// doesn't show a prompt even when the webextension uses
+// promptable required permissions.
+add_task(() => testNoPrompt(`${URL_BASE}/browser_legacy.xpi`, ID_LEGACY));
+

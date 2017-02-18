@@ -7,21 +7,16 @@
 #define TheoraDecoder_h_
 
 #include "PlatformDecoderModule.h"
-
-#include <stdint.h>
 #include "ogg/ogg.h"
 #include "theora/theoradec.h"
+#include <stdint.h>
 
 namespace mozilla {
-
-  using namespace layers;
 
 class TheoraDecoder : public MediaDataDecoder
 {
 public:
   explicit TheoraDecoder(const CreateDecoderParams& aParams);
-
-  ~TheoraDecoder();
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -38,11 +33,12 @@ public:
   }
 
 private:
+  ~TheoraDecoder();
   nsresult DoDecodeHeader(const unsigned char* aData, size_t aLength);
 
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
-  RefPtr<ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<TaskQueue> mTaskQueue;
 
   // Theora header & decoder state

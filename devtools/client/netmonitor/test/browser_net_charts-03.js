@@ -34,6 +34,10 @@ add_task(function* () {
     totals: {
       label1: value => "Hello " + L10N.numberWithDecimals(value, 2),
       label2: value => "World " + L10N.numberWithDecimals(value, 2)
+    },
+    header: {
+      label1: "label1header",
+      label2: "label2header",
     }
   });
 
@@ -52,39 +56,49 @@ add_task(function* () {
   is(title.textContent, "Table title",
     "The title node displays the correct text.");
 
-  is(rows.length, 3, "There should be 3 table chart rows created.");
+  is(rows.length, 4, "There should be 3 table chart rows and a header created.");
 
-  ok(rows[0].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the firt row.");
   is(rows[0].querySelectorAll("span")[0].getAttribute("name"), "label1",
-    "The first column of the first row exists.");
+    "The first column of the header exists.");
   is(rows[0].querySelectorAll("span")[1].getAttribute("name"), "label2",
-    "The second column of the first row exists.");
-  is(rows[0].querySelectorAll("span")[0].textContent, "1",
-    "The first column of the first row displays the correct text.");
-  is(rows[0].querySelectorAll("span")[1].textContent, "11.1foo",
-    "The second column of the first row displays the correct text.");
+    "The second column of the header exists.");
+  is(rows[0].querySelectorAll("span")[0].textContent, "label1header",
+    "The first column of the header displays the correct text.");
+  is(rows[0].querySelectorAll("span")[1].textContent, "label2header",
+    "The second column of the header displays the correct text.");
+
 
   ok(rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the second row.");
+    "A colored blob exists for the firt row.");
   is(rows[1].querySelectorAll("span")[0].getAttribute("name"), "label1",
-    "The first column of the second row exists.");
+    "The first column of the first row exists.");
   is(rows[1].querySelectorAll("span")[1].getAttribute("name"), "label2",
-    "The second column of the second row exists.");
-  is(rows[1].querySelectorAll("span")[0].textContent, "2",
-    "The first column of the second row displays the correct text.");
-  is(rows[1].querySelectorAll("span")[1].textContent, "12.2bar",
+    "The second column of the first row exists.");
+  is(rows[1].querySelectorAll("span")[0].textContent, "1",
+    "The first column of the first row displays the correct text.");
+  is(rows[1].querySelectorAll("span")[1].textContent, "11.1foo",
     "The second column of the first row displays the correct text.");
 
   ok(rows[2].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the third row.");
+    "A colored blob exists for the second row.");
   is(rows[2].querySelectorAll("span")[0].getAttribute("name"), "label1",
-    "The first column of the third row exists.");
+    "The first column of the second row exists.");
   is(rows[2].querySelectorAll("span")[1].getAttribute("name"), "label2",
+    "The second column of the second row exists.");
+  is(rows[2].querySelectorAll("span")[0].textContent, "2",
+    "The first column of the second row displays the correct text.");
+  is(rows[2].querySelectorAll("span")[1].textContent, "12.2bar",
+    "The second column of the first row displays the correct text.");
+
+  ok(rows[3].querySelector(".table-chart-row-box.chart-colored-blob"),
+    "A colored blob exists for the third row.");
+  is(rows[3].querySelectorAll("span")[0].getAttribute("name"), "label1",
+    "The first column of the third row exists.");
+  is(rows[3].querySelectorAll("span")[1].getAttribute("name"), "label2",
     "The second column of the third row exists.");
-  is(rows[2].querySelectorAll("span")[0].textContent, "3",
+  is(rows[3].querySelectorAll("span")[0].textContent, "3",
     "The first column of the third row displays the correct text.");
-  is(rows[2].querySelectorAll("span")[1].textContent, "13.3baz",
+  is(rows[3].querySelectorAll("span")[1].textContent, "13.3baz",
     "The second column of the third row displays the correct text.");
 
   is(sums.length, 2, "There should be 2 total summaries created.");

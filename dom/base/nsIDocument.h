@@ -2608,7 +2608,7 @@ public:
   virtual already_AddRefed<Element>
     CreateElementNS(const nsAString& aNamespaceURI,
                     const nsAString& aQualifiedName,
-                    const mozilla::dom::ElementCreationOptions& aOptions,
+                    const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                     mozilla::ErrorResult& rv) = 0;
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
@@ -2867,7 +2867,7 @@ public:
     mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
   virtual void RemoveIntersectionObserver(
     mozilla::dom::DOMIntersectionObserver* aObserver) = 0;
-  
+
   virtual void UpdateIntersectionObservations() = 0;
   virtual void ScheduleIntersectionObserverNotification() = 0;
   virtual void NotifyIntersectionObservers() = 0;
@@ -2893,14 +2893,7 @@ public:
 
   // For more information on Flash classification, see
   // toolkit/components/url-classifier/flash-block-lists.rst
-  enum class FlashClassification {
-    Unclassified,   // Denotes a classification that has not yet been computed.
-                    // Allows for lazy classification.
-    Unknown,        // Site is not on the whitelist or blacklist
-    Allowed,        // Site is on the Flash whitelist
-    Denied          // Site is on the Flash blacklist
-  };
-  virtual FlashClassification DocumentFlashClassification() = 0;
+  virtual mozilla::dom::FlashClassification DocumentFlashClassification() = 0;
 
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
@@ -3042,13 +3035,6 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
-
-  // XXXheycam rust-bindgen currently doesn't generate correctly aligned fields
-  // to represent the following bitfields if they are preceded by something
-  // non-pointer aligned, so if adding non-pointer sized fields, please do so
-  // somewhere other than right here.
-  //
-  // https://github.com/servo/rust-bindgen/issues/111
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;

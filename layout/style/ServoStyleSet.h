@@ -191,13 +191,6 @@ public:
    */
   already_AddRefed<ServoComputedValues> ResolveServoStyle(dom::Element* aElement);
 
-  /**
-   * Restyle with added declaration, for use in animations.
-   */
-  ServoComputedValuesStrong RestyleWithAddedDeclaration(
-    RawServoDeclarationBlock* aDeclarations,
-    const ServoComputedValues* aPreviousStyle);
-
   bool FillKeyframesForName(const nsString& aName,
                             const nsTimingFunction& aTimingFunction,
                             const ServoComputedValues* aComputedValues,

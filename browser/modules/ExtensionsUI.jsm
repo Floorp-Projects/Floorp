@@ -360,10 +360,13 @@ this.ExtensionsUI = {
         callback: resolve,
       };
 
+      let icon = addon.isWebExtension ?
+                 addon.iconURL || DEFAULT_EXTENSION_ICON :
+                 "chrome://browser/skin/addons/addon-install-installed.svg";
       let options = {
         hideClose: true,
         timeout: Date.now() + 30000,
-        popupIconURL: addon.iconURL || DEFAULT_EXTENSION_ICON,
+        popupIconURL: icon,
         eventCallback(topic) {
           if (topic == "showing") {
             let doc = this.browser.ownerDocument;

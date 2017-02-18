@@ -57,7 +57,7 @@ interface InstallTriggerImpl {
    *         A callback to call as each installation succeeds or fails
    * @return true if the installations were successfully started
    */
-  boolean install(MozMap<(DOMString or InstallTriggerData)> installs,
+  boolean install(record<DOMString, (DOMString or InstallTriggerData)> installs,
                   optional InstallTriggerCallback callback);
 
   /**

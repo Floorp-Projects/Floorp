@@ -17,6 +17,26 @@
 #include "nsIScriptError.h"
 #include "nsString.h"
 
+class nsScriptErrorNote final : public nsIScriptErrorNote {
+ public:
+  nsScriptErrorNote();
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISCRIPTERRORNOTE
+
+  void Init(const nsAString& message, const nsAString& sourceName,
+            uint32_t lineNumber, uint32_t columnNumber);
+
+ private:
+  virtual ~nsScriptErrorNote();
+
+  nsString mMessage;
+  nsString mSourceName;
+  nsString mSourceLine;
+  uint32_t mLineNumber;
+  uint32_t mColumnNumber;
+};
+
 // Definition of nsScriptError..
 class nsScriptErrorBase : public nsIScriptError {
 public:
@@ -25,12 +45,15 @@ public:
   NS_DECL_NSICONSOLEMESSAGE
   NS_DECL_NSISCRIPTERROR
 
+  void AddNote(nsIScriptErrorNote* note);
+
 protected:
   virtual ~nsScriptErrorBase();
 
   void
   InitializeOnMainThread();
 
+  nsCOMArray<nsIScriptErrorNote> mNotes;
   nsString mMessage;
   nsString mMessageName;
   nsString mSourceName;

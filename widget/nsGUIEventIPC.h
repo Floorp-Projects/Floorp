@@ -228,6 +228,8 @@ struct ParamTraits<mozilla::WidgetPointerHelper>
     WriteParam(aMsg, aParam.pointerId);
     WriteParam(aMsg, aParam.tiltX);
     WriteParam(aMsg, aParam.tiltY);
+    WriteParam(aMsg, aParam.twist);
+    WriteParam(aMsg, aParam.tangentialPressure);
     // We don't serialize convertToPointer and retargetedByPointerCapture since
     // they are temporarily variable and should be reset to default.
   }
@@ -237,7 +239,9 @@ struct ParamTraits<mozilla::WidgetPointerHelper>
     bool rv;
     rv = ReadParam(aMsg, aIter, &aResult->pointerId) &&
          ReadParam(aMsg, aIter, &aResult->tiltX) &&
-         ReadParam(aMsg, aIter, &aResult->tiltY);
+         ReadParam(aMsg, aIter, &aResult->tiltY) &&
+         ReadParam(aMsg, aIter, &aResult->twist) &&
+         ReadParam(aMsg, aIter, &aResult->tangentialPressure);
     return rv;
   }
 };

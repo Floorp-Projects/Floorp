@@ -186,13 +186,10 @@ busy_beaver_PR_Read(PRFileDesc *fd, void * start, int32_t len)
                 return -1;
             break;
         }
-        else
-        {
-            remaining -= n;
-            char *cp = (char *) start;
-            cp += n;
-            start = cp;
-        }
+        remaining -= n;
+        char *cp = (char *) start;
+        cp += n;
+        start = cp;
     }
     return len - remaining;
 }
@@ -772,8 +769,8 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
   if (aURL != nullptr) aURL->GetAsciiSpec(urlSpec2);
 
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginHost::InstantiatePlugin Finished mime=%s, rv=%d, url=%s\n",
-         PromiseFlatCString(aMimeType).get(), rv, urlSpec2.get()));
+        ("nsPluginHost::InstantiatePlugin Finished mime=%s, rv=%" PRIu32 ", url=%s\n",
+         PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv), urlSpec2.get()));
 
   PR_LogFlush();
 #endif
@@ -909,8 +906,8 @@ nsPluginHost::TrySetUpPluginInstance(const nsACString &aMimeType,
 
 #ifdef PLUGIN_LOGGING
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-        ("nsPluginHost::TrySetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
-         PromiseFlatCString(aMimeType).get(), rv, aOwner,
+        ("nsPluginHost::TrySetupPluginInstance Finished mime=%s, rv=%" PRIu32 ", owner=%p, url=%s\n",
+         PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv), aOwner,
          aURL ? aURL->GetSpecOrDefault().get() : ""));
 
   PR_LogFlush();
@@ -1376,8 +1373,8 @@ nsresult nsPluginHost::GetPlugin(const nsACString &aMimeType,
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::GetPlugin End mime=%s, rv=%d, plugin=%p name=%s\n",
-   PromiseFlatCString(aMimeType).get(), rv, *aPlugin,
+  ("nsPluginHost::GetPlugin End mime=%s, rv=%" PRIu32 ", plugin=%p name=%s\n",
+   PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv), *aPlugin,
    (pluginTag ? pluginTag->FileName().get() : "(not found)")));
 
   return rv;
@@ -2848,8 +2845,8 @@ nsPluginHost::ReadPluginInfo()
                           getter_AddRefs(mPluginRegFile));
     if (!mPluginRegFile)
       return NS_ERROR_FAILURE;
-    else
-      return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   PRFileDesc* fd = nullptr;
@@ -3046,9 +3043,7 @@ nsPluginHost::ReadPluginInfo()
     }
 
     if (mtr != mimetypecount) {
-      if (heapalloced) {
-        delete [] heapalloced;
-      }
+      delete [] heapalloced;
       return rv;
     }
 
@@ -3061,8 +3056,8 @@ nsPluginHost::ReadPluginInfo()
       (const char* const*)mimedescriptions,
       (const char* const*)extensions,
       mimetypecount, lastmod, fromExtension, true);
-    if (heapalloced)
-      delete [] heapalloced;
+
+    delete [] heapalloced;
 
     // Import flags from registry into prefs for old registry versions
     MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,

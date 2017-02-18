@@ -20,6 +20,7 @@ XPIDL_SOURCES += [
     'nsIHttpEventSink.idl',
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
+    'nsIRaceCacheWithNetwork.idl',
     'nsIWellKnownOpportunisticUtils.idl',
 ]
 

@@ -90,7 +90,7 @@ fails == flexbox-inlinecontent-horiz-2.xhtml flexbox-inlinecontent-horiz-2.xhtml
 fails == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3a.xhtml
 fails == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3b.xhtml
 fails == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xhtml
-fails == flexbox-inlinecontent-horiz-4.xhtml flexbox-inlinecontent-horiz-4.xhtml
+== flexbox-inlinecontent-horiz-4.xhtml flexbox-inlinecontent-horiz-4.xhtml
 fails == flexbox-inlinecontent-horiz-5.xhtml flexbox-inlinecontent-horiz-5.xhtml
 
 # Tests for intrinsic sizing of flexboxes
@@ -100,7 +100,7 @@ fails == flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-
 fails == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2b.xhtml
 
 # Tests for invalidation after dynamic modifications
-fails == flexbox-invalidation-1.html flexbox-invalidation-1.html
+== flexbox-invalidation-1.html flexbox-invalidation-1.html
 
 # Tests for flexbox in an iframe that gets resized.
 fails == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1.xhtml

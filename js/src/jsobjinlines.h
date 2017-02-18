@@ -294,8 +294,9 @@ ClassCanHaveFixedData(const Class* clasp)
 // returned in place of the pointer passed. If a GC occurs, the returned pointer
 // may be the passed pointer, relocated by GC. If no GC could occur, it's just
 // passed through. We root nothing unless necessary.
-static MOZ_ALWAYS_INLINE MOZ_MUST_USE JSObject*
-SetNewObjectMetadata(JSContext* cx, JSObject* obj)
+template <typename T>
+static MOZ_ALWAYS_INLINE MOZ_MUST_USE T*
+SetNewObjectMetadata(JSContext* cx, T* obj)
 {
     MOZ_ASSERT(!cx->compartment()->hasObjectPendingMetadata());
 
@@ -308,7 +309,7 @@ SetNewObjectMetadata(JSContext* cx, JSObject* obj)
             // Don't collect metadata on objects that represent metadata.
             AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-            RootedObject rooted(cx, obj);
+            Rooted<T*> rooted(cx, obj);
             cx->compartment()->setNewObjectMetadata(cx, rooted);
             return rooted;
         }
@@ -318,106 +319,6 @@ SetNewObjectMetadata(JSContext* cx, JSObject* obj)
 }
 
 } // namespace js
-
-/* static */ inline JS::Result<JSObject*, JS::OOM&>
-JSObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-                 js::HandleShape shape, js::HandleObjectGroup group)
-{
-    const js::Class* clasp = group->clasp();
-
-    MOZ_ASSERT(shape && group);
-    MOZ_ASSERT(clasp == shape->getObjectClass());
-    MOZ_ASSERT(clasp != &js::ArrayObject::class_);
-    MOZ_ASSERT_IF(!js::ClassCanHaveFixedData(clasp),
-                  js::gc::GetGCKindSlots(kind, clasp) == shape->numFixedSlots());
-
-#ifdef DEBUG
-    static const uint32_t FinalizeMask = JSCLASS_FOREGROUND_FINALIZE | JSCLASS_BACKGROUND_FINALIZE;
-    uint32_t flags = clasp->flags;
-    uint32_t finalizeFlags = flags & FinalizeMask;
-
-    // Classes with a finalizer must specify whether instances will be finalized
-    // on the active thread or in the background, except proxies whose behaviour
-    // depends on the target object.
-    if (clasp->hasFinalize() && !clasp->isProxy()) {
-        MOZ_ASSERT(finalizeFlags == JSCLASS_FOREGROUND_FINALIZE ||
-                   finalizeFlags == JSCLASS_BACKGROUND_FINALIZE);
-        MOZ_ASSERT((finalizeFlags == JSCLASS_BACKGROUND_FINALIZE) == IsBackgroundFinalized(kind));
-    } else {
-        MOZ_ASSERT(finalizeFlags == 0);
-    }
-
-    MOZ_ASSERT_IF(clasp->hasFinalize(), heap == js::gc::TenuredHeap ||
-                                        CanNurseryAllocateFinalizedClass(clasp) ||
-                                        clasp->isProxy());
-    MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(), heap == js::gc::TenuredHeap);
-#endif
-
-    MOZ_ASSERT(!cx->compartment()->hasObjectPendingMetadata());
-
-    // Non-native classes cannot have reserved slots or private data, and the
-    // objects can't have any fixed slots, for compatibility with
-    // GetReservedOrProxyPrivateSlot.
-    MOZ_ASSERT_IF(!clasp->isNative(), JSCLASS_RESERVED_SLOTS(clasp) == 0);
-    MOZ_ASSERT_IF(!clasp->isNative(), !clasp->hasPrivate());
-    MOZ_ASSERT_IF(!clasp->isNative(), shape->numFixedSlots() == 0);
-    MOZ_ASSERT_IF(!clasp->isNative(), shape->slotSpan() == 0);
-
-    size_t nDynamicSlots = 0;
-    if (clasp->isNative()) {
-        nDynamicSlots = js::NativeObject::dynamicSlotsCount(shape->numFixedSlots(),
-                                                            shape->slotSpan(), clasp);
-    } else if (clasp->isProxy()) {
-        // Proxy objects overlay the |slots| field with a ProxyValueArray.
-        MOZ_ASSERT(sizeof(js::detail::ProxyValueArray) % sizeof(js::HeapSlot) == 0);
-        nDynamicSlots = sizeof(js::detail::ProxyValueArray) / sizeof(js::HeapSlot);
-    }
-
-    JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
-    if (!obj)
-        return cx->alreadyReportedOOM();
-
-    obj->group_.init(group);
-
-    // This function allocates normal objects and proxies and typed objects
-    // (all with shapes), *and* it allocates objects without shapes (various
-    // unboxed object classes).  Setting shape is naturally only valid for the
-    // former class of objects.
-    if (obj->is<js::ShapedObject>())
-        obj->as<js::ShapedObject>().initShape(shape);
-
-    // Note: slots are created and assigned internally by Allocate<JSObject>.
-    obj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
-
-    if (clasp->hasPrivate())
-        obj->as<js::NativeObject>().privateRef(shape->numFixedSlots()) = nullptr;
-
-    if (size_t span = shape->slotSpan())
-        obj->as<js::NativeObject>().initializeSlotRange(0, span);
-
-    // JSFunction's fixed slots expect POD-style initialization.
-    if (clasp->isJSFunction()) {
-        MOZ_ASSERT(kind == js::gc::AllocKind::FUNCTION ||
-                   kind == js::gc::AllocKind::FUNCTION_EXTENDED);
-        size_t size =
-            kind == js::gc::AllocKind::FUNCTION ? sizeof(JSFunction) : sizeof(js::FunctionExtended);
-        memset(obj->as<JSFunction>().fixedSlots(), 0, size - sizeof(js::NativeObject));
-        if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
-            // SetNewObjectMetadata may gc, which will be unhappy if flags &
-            // EXTENDED doesn't match the arena's AllocKind.
-            obj->as<JSFunction>().setFlags(JSFunction::EXTENDED);
-        }
-    }
-
-    if (clasp->shouldDelayMetadataBuilder())
-        cx->compartment()->setObjectPendingMetadata(cx, obj);
-    else
-        obj = SetNewObjectMetadata(cx, obj);
-
-    js::gc::TraceCreateObject(obj);
-
-    return obj;
-}
 
 inline void
 JSObject::setInitialSlotsMaybeNonNative(js::HeapSlot* slots)

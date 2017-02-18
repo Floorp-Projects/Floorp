@@ -36,6 +36,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "nsProxyRelease.h"
 #include "nsThread.h"
@@ -586,10 +587,9 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
       if (errno == EINPROGRESS) {
         // non-blocking
         return;
-      } else {
-        LOG(("usrsctp_connect failed: %d", errno));
-        mState = CLOSED;
       }
+      LOG(("usrsctp_connect failed: %d", errno));
+      mState = CLOSED;
     } else {
       // We set Even/Odd and fire ON_CONNECTION via SCTP_COMM_UP when we get that
       // This also avoids issues with calling TransportFlow stuff on Mainthread
@@ -1100,13 +1100,13 @@ DataChannelConnection::SendDeferredMessages()
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // leave queued for resend
             failed_send = true;
-            LOG(("queue full again when resending %d bytes (%d)", len, result));
+            LOG(("queue full again when resending %" PRIuSIZE " bytes (%d)", len, result));
           } else {
             LOG(("error %d re-sending string", errno));
             failed_send = true;
           }
         } else {
-          LOG(("Resent buffer of %d bytes (%d)", len, result));
+          LOG(("Resent buffer of %" PRIuSIZE " bytes (%d)", len, result));
           // In theory this could underflow if >4GB was buffered and re
           // truncated in GetBufferedAmount(), but this won't cause any problems.
           buffered_amount -= channel->mBufferedData[0]->mLength;
@@ -1156,13 +1156,13 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
   mLock.AssertCurrentThreadOwns();
 
   if (length != (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length)) {
-    LOG(("%s: Inconsistent length: %u, should be %u", __FUNCTION__, length,
+    LOG(("%s: Inconsistent length: %" PRIuSIZE ", should be %" PRIuSIZE, __FUNCTION__, length,
          (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length)));
     if (length < (sizeof(*req) - 1) + ntohs(req->label_length) + ntohs(req->protocol_length))
       return;
   }
 
-  LOG(("%s: length %u, sizeof(*req) = %u", __FUNCTION__, length, sizeof(*req)));
+  LOG(("%s: length %" PRIuSIZE ", sizeof(*req) = %" PRIuSIZE, __FUNCTION__, length, sizeof(*req)));
 
   switch (req->channel_type) {
     case DATA_CHANNEL_RELIABLE:
@@ -1178,7 +1178,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
       prPolicy = SCTP_PR_SCTP_TTL;
       break;
     default:
-      LOG(("Unknown channel type", req->channel_type));
+      LOG(("Unknown channel type %d", req->channel_type));
       /* XXX error handling */
       return;
   }
@@ -1206,7 +1206,7 @@ DataChannelConnection::HandleOpenRequestMessage(const struct rtcweb_datachannel_
     return;
   }
   if (stream >= mStreams.Length()) {
-    LOG(("%s: stream %u out of bounds (%u)", __FUNCTION__, stream, mStreams.Length()));
+    LOG(("%s: stream %u out of bounds (%" PRIuSIZE ")", __FUNCTION__, stream, mStreams.Length()));
     return;
   }
 
@@ -1292,7 +1292,7 @@ void
 DataChannelConnection::HandleUnknownMessage(uint32_t ppid, size_t length, uint16_t stream)
 {
   /* XXX: Send an error message? */
-  LOG(("unknown DataChannel message received: %u, len %ld on stream %lu", ppid, length, stream));
+  LOG(("unknown DataChannel message received: %u, len %" PRIuSIZE " on stream %d", ppid, length, stream));
   // XXX Log to JS error console if possible
 }
 
@@ -1322,7 +1322,7 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
 
     // Since this is rare and non-performance, keep a single list of queued
     // data messages to deliver once the channel opens.
-    LOG(("Queuing data for stream %u, length %u", stream, length));
+    LOG(("Queuing data for stream %u, length %" PRIuSIZE, stream, length));
     // Copies data
     mQueuedData.AppendElement(new QueuedDataMessage(stream, ppid, data, length));
     return;
@@ -1349,13 +1349,13 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
       case DATA_CHANNEL_PPID_DOMSTRING:
       case DATA_CHANNEL_PPID_BINARY:
         channel->mRecvBuffer += recvData;
-        LOG(("DataChannel: Partial %s message of length %lu (total %u) on channel id %u",
+        LOG(("DataChannel: Partial %s message of length %" PRIuSIZE " (total %u) on channel id %u",
              is_binary ? "binary" : "string", length, channel->mRecvBuffer.Length(),
              channel->mStream));
         return; // Not ready to notify application
 
       case DATA_CHANNEL_PPID_DOMSTRING_LAST:
-        LOG(("DataChannel: String message received of length %lu on channel %u",
+        LOG(("DataChannel: String message received of length %" PRIuSIZE " on channel %u",
              length, channel->mStream));
         if (!channel->mRecvBuffer.IsEmpty()) {
           channel->mRecvBuffer += recvData;
@@ -1373,7 +1373,7 @@ DataChannelConnection::HandleDataMessage(uint32_t ppid,
         break;
 
       case DATA_CHANNEL_PPID_BINARY_LAST:
-        LOG(("DataChannel: Received binary message of length %lu on channel id %u",
+        LOG(("DataChannel: Received binary message of length %" PRIuSIZE " on channel id %u",
              length, channel->mStream));
         if (!channel->mRecvBuffer.IsEmpty()) {
           channel->mRecvBuffer += recvData;
@@ -1439,7 +1439,7 @@ DataChannelConnection::HandleMessage(const void *buffer, size_t length, uint32_t
       HandleDataMessage(ppid, buffer, length, stream);
       break;
     default:
-      LOG(("Message of length %lu, PPID %u on stream %u received.",
+      LOG(("Message of length %" PRIuSIZE ", PPID %u on stream %u received.",
            length, ppid, stream));
       break;
   }
@@ -1649,7 +1649,7 @@ DataChannelConnection::ClearResets()
 {
   // Clear all pending resets
   if (!mStreamsResetting.IsEmpty()) {
-    LOG(("Clearing resets for %d streams", mStreamsResetting.Length()));
+    LOG(("Clearing resets for %" PRIuSIZE " streams", mStreamsResetting.Length()));
   }
 
   for (uint32_t i = 0; i < mStreamsResetting.Length(); ++i) {
@@ -1687,7 +1687,7 @@ DataChannelConnection::SendOutgoingStreamReset()
   uint32_t i;
   size_t len;
 
-  LOG(("Connection %p: Sending outgoing stream reset for %d streams",
+  LOG(("Connection %p: Sending outgoing stream reset for %" PRIuSIZE " streams",
        (void *) this, mStreamsResetting.Length()));
   mLock.AssertCurrentThreadOwns();
   if (mStreamsResetting.IsEmpty()) {
@@ -1765,7 +1765,7 @@ DataChannelConnection::HandleStreamResetEvent(const struct sctp_stream_reset_eve
 
   // Process any pending resets now:
   if (!mStreamsResetting.IsEmpty()) {
-    LOG(("Sending %d pending resets", mStreamsResetting.Length()));
+    LOG(("Sending %" PRIuSIZE " pending resets", mStreamsResetting.Length()));
     SendOutgoingStreamReset();
   }
 }
@@ -1777,56 +1777,55 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
   RefPtr<DataChannel> channel;
 
   if (strchg->strchange_flags == SCTP_STREAM_CHANGE_DENIED) {
-    LOG(("*** Failed increasing number of streams from %u (%u/%u)",
+    LOG(("*** Failed increasing number of streams from %" PRIuSIZE " (%u/%u)",
          mStreams.Length(),
          strchg->strchange_instrms,
          strchg->strchange_outstrms));
     // XXX FIX! notify pending opens of failure
     return;
-  } else {
-    if (strchg->strchange_instrms > mStreams.Length()) {
-      LOG(("Other side increased streams from %u to %u",
-           mStreams.Length(), strchg->strchange_instrms));
-    }
-    if (strchg->strchange_outstrms > mStreams.Length() ||
-        strchg->strchange_instrms > mStreams.Length()) {
-      uint16_t old_len = mStreams.Length();
-      uint16_t new_len = std::max(strchg->strchange_outstrms,
-                                  strchg->strchange_instrms);
-      LOG(("Increasing number of streams from %u to %u - adding %u (in: %u)",
-           old_len, new_len, new_len - old_len,
-           strchg->strchange_instrms));
-      // make sure both are the same length
-      mStreams.AppendElements(new_len - old_len);
-      LOG(("New length = %d (was %d)", mStreams.Length(), old_len));
-      for (size_t i = old_len; i < mStreams.Length(); ++i) {
-        mStreams[i] = nullptr;
-      }
-      // Re-process any channels waiting for streams.
-      // Linear search, but we don't increase channels often and
-      // the array would only get long in case of an app error normally
-
-      // Make sure we request enough streams if there's a big jump in streams
-      // Could make a more complex API for OpenXxxFinish() and avoid this loop
-      size_t num_needed = mPending.GetSize();
-      LOG(("%d of %d new streams already needed", num_needed,
-           new_len - old_len));
-      num_needed -= (new_len - old_len); // number we added
-      if (num_needed > 0) {
-        if (num_needed < 16)
-          num_needed = 16;
-        LOG(("Not enough new streams, asking for %d more", num_needed));
-        RequestMoreStreams(num_needed);
-      } else if (strchg->strchange_outstrms < strchg->strchange_instrms) {
-        LOG(("Requesting %d output streams to match partner",
-             strchg->strchange_instrms - strchg->strchange_outstrms));
-        RequestMoreStreams(strchg->strchange_instrms - strchg->strchange_outstrms);
-      }
-
-      ProcessQueuedOpens();
-    }
-    // else probably not a change in # of streams
   }
+  if (strchg->strchange_instrms > mStreams.Length()) {
+    LOG(("Other side increased streams from %" PRIuSIZE " to %u",
+         mStreams.Length(), strchg->strchange_instrms));
+  }
+  if (strchg->strchange_outstrms > mStreams.Length() ||
+      strchg->strchange_instrms > mStreams.Length()) {
+    uint16_t old_len = mStreams.Length();
+    uint16_t new_len = std::max(strchg->strchange_outstrms,
+                                strchg->strchange_instrms);
+    LOG(("Increasing number of streams from %u to %u - adding %u (in: %u)",
+         old_len, new_len, new_len - old_len,
+         strchg->strchange_instrms));
+    // make sure both are the same length
+    mStreams.AppendElements(new_len - old_len);
+    LOG(("New length = %" PRIuSIZE " (was %d)", mStreams.Length(), old_len));
+    for (size_t i = old_len; i < mStreams.Length(); ++i) {
+      mStreams[i] = nullptr;
+    }
+    // Re-process any channels waiting for streams.
+    // Linear search, but we don't increase channels often and
+    // the array would only get long in case of an app error normally
+
+    // Make sure we request enough streams if there's a big jump in streams
+    // Could make a more complex API for OpenXxxFinish() and avoid this loop
+    size_t num_needed = mPending.GetSize();
+    LOG(("%" PRIuSIZE " of %d new streams already needed", num_needed,
+         new_len - old_len));
+    num_needed -= (new_len - old_len); // number we added
+    if (num_needed > 0) {
+      if (num_needed < 16)
+        num_needed = 16;
+      LOG(("Not enough new streams, asking for %" PRIuSIZE " more", num_needed));
+      RequestMoreStreams(num_needed);
+    } else if (strchg->strchange_outstrms < strchg->strchange_instrms) {
+      LOG(("Requesting %d output streams to match partner",
+           strchg->strchange_instrms - strchg->strchange_outstrms));
+      RequestMoreStreams(strchg->strchange_instrms - strchg->strchange_outstrms);
+    }
+
+    ProcessQueuedOpens();
+  }
+  // else probably not a change in # of streams
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     channel = mStreams[i];
@@ -2117,22 +2116,21 @@ DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
         // Note: we're locked, so there's no danger of a race with the
         // buffer-threshold callback
         return channel.forget();
-      } else {
-        if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
-          // We already returned the channel to the app.
-          NS_ERROR("Failed to send open request");
-          NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
-                                    DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
-                                    channel)));
-        }
-        // If we haven't returned the channel yet, it will get destroyed when we exit
-        // this function.
-        mStreams[stream] = nullptr;
-        channel->mStream = INVALID_STREAM;
-        // we'll be destroying the channel
-        channel->mState = CLOSED;
-        return nullptr;
       }
+      if (channel->mFlags & DATA_CHANNEL_FLAGS_FINISH_OPEN) {
+        // We already returned the channel to the app.
+        NS_ERROR("Failed to send open request");
+        NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
+                                            DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED, this,
+                                            channel)));
+      }
+      // If we haven't returned the channel yet, it will get destroyed when we exit
+      // this function.
+      mStreams[stream] = nullptr;
+      channel->mStream = INVALID_STREAM;
+      // we'll be destroying the channel
+      channel->mState = CLOSED;
+      return nullptr;
       /* NOTREACHED */
     }
   }
@@ -2222,7 +2220,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
                            nullptr, 0,
                            (void *)&spa, (socklen_t)sizeof(struct sctp_sendv_spa),
                            SCTP_SENDV_SPA, 0);
-    LOG(("Sent buffer (len=%u), result=%d", length, result));
+    LOG(("Sent buffer (len=%" PRIuSIZE "), result=%d", length, result));
   } else {
     // Fake EAGAIN if we're already buffering data
     result = -1;
@@ -2235,7 +2233,8 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
       auto *buffered = new BufferedMsg(spa, data, length); // infallible malloc
       channel->mBufferedData.AppendElement(buffered); // owned by mBufferedData array
       channel->mFlags |= DATA_CHANNEL_FLAGS_SEND_DATA;
-      LOG(("Queued %u buffers (len=%u)", channel->mBufferedData.Length(), length));
+      LOG(("Queued %" PRIuSIZE " buffers (len=%" PRIuSIZE ")",
+           channel->mBufferedData.Length(), length));
       return 0;
     }
     LOG(("error %d sending string", errno));
@@ -2268,19 +2267,19 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
       !(channel->mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED)) {
     int32_t sent=0;
     uint32_t origlen = len;
-    LOG(("Sending binary message length %u in chunks", len));
+    LOG(("Sending binary message length %" PRIuSIZE " in chunks", len));
     // XXX check flags for out-of-order, or force in-order for large binary messages
     while (len > 0) {
       size_t sendlen = std::min<size_t>(len, DATA_CHANNEL_MAX_BINARY_FRAGMENT);
       uint32_t ppid;
       len -= sendlen;
       ppid = len > 0 ? ppid_partial : ppid_final;
-      LOG(("Send chunk of %u bytes, ppid %u", sendlen, ppid));
+      LOG(("Send chunk of %" PRIuSIZE " bytes, ppid %u", sendlen, ppid));
       // Note that these might end up being deferred and queued.
       sent += SendMsgInternal(channel, data, sendlen, ppid);
       data += sendlen;
     }
-    LOG(("Sent %d buffers for %u bytes, %d sent immediately, %d buffers queued",
+    LOG(("Sent %d buffers for %u bytes, %d sent immediately, %" PRIuSIZE " buffers queued",
          (origlen+DATA_CHANNEL_MAX_BINARY_FRAGMENT-1)/DATA_CHANNEL_MAX_BINARY_FRAGMENT,
          origlen, sent,
          channel->mBufferedData.Length()));

@@ -28,6 +28,8 @@ struct DtoaState;
 
 namespace js {
 
+class AutoCompartment;
+
 namespace jit {
 class JitContext;
 class DebugModeOSRVolatileJitFrameIterator;
@@ -197,10 +199,16 @@ struct JSContext : public JS::RootingContext,
     }
 #endif
 
+  private:
     // If |c| or |oldCompartment| is the atoms compartment, the
     // |exclusiveAccessLock| must be held.
     inline void enterCompartment(JSCompartment* c,
                                  const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    friend class js::AutoCompartment;
+
+  public:
+    template <typename T>
+    inline void enterCompartmentOf(const T& target);
     inline void enterNullCompartment();
     inline void leaveCompartment(JSCompartment* oldCompartment,
                                  const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
@@ -303,12 +311,12 @@ struct JSContext : public JS::RootingContext,
      * boundary between Result-using and non-Result-using code.
      */
     template <typename V, typename E>
-    bool resultToBool(JS::Result<V, E> result) {
+    bool resultToBool(const JS::Result<V, E>& result) {
         return result.isOk();
     }
 
     template <typename V, typename E>
-    V* resultToPtr(JS::Result<V*, E> result) {
+    V* resultToPtr(const JS::Result<V*, E>& result) {
         return result.isOk() ? result.unwrap() : nullptr;
     }
 
@@ -985,6 +993,13 @@ ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
                        ErrorArgumentsType argumentsType,
                        JSErrorReport* reportp, va_list ap);
 
+extern bool
+ExpandErrorArgumentsVA(JSContext* cx, JSErrorCallback callback,
+                       void* userRef, const unsigned errorNumber,
+                       const char16_t** messageArgs,
+                       ErrorArgumentsType argumentsType,
+                       JSErrorNotes::Note* notep, va_list ap);
+
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void
 ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
@@ -1041,6 +1056,9 @@ ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNumber,
 #define ReportValueError3(cx,errorNumber,spindex,v,fallback,arg1,arg2)        \
     ((void)ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,             \
                                     spindex, v, fallback, arg1, arg2))
+
+JSObject*
+CreateErrorNotesArray(JSContext* cx, JSErrorReport* report);
 
 } /* namespace js */
 
@@ -1136,7 +1154,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
 
     void init(JSRuntime* rt) {
         runtime = rt;
-        if (runtime->numExclusiveThreads) {
+        if (runtime->hasHelperThreadZones()) {
             runtime->exclusiveAccessLock.lock();
         } else {
             MOZ_ASSERT(!runtime->activeThreadHasExclusiveAccess);
@@ -1156,7 +1174,7 @@ class MOZ_RAII AutoLockForExclusiveAccess
         init(rt);
     }
     ~AutoLockForExclusiveAccess() {
-        if (runtime->numExclusiveThreads) {
+        if (runtime->hasHelperThreadZones()) {
             runtime->exclusiveAccessLock.unlock();
         } else {
             MOZ_ASSERT(runtime->activeThreadHasExclusiveAccess);

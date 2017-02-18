@@ -734,6 +734,9 @@ class UsedNameTracker
     }
 };
 
+template <typename ParseHandler>
+class AutoAwaitIsKeyword;
+
 class ParserBase : public StrictModeGetter
 {
   private:
@@ -783,7 +786,13 @@ class ParserBase : public StrictModeGetter
     /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
     bool isUnexpectedEOF_:1;
 
+    bool awaitIsKeyword_:1;
+
   public:
+    bool awaitIsKeyword() const {
+      return awaitIsKeyword_;
+    }
+
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                const char16_t* chars, size_t length, bool foldConstants,
                UsedNameTracker& usedNames, Parser<SyntaxParseHandler>* syntaxParser,
@@ -824,9 +833,12 @@ class ParserBase : public StrictModeGetter
 
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
+    void errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, ...);
 
     /* Report the given error at the given offset. */
     void errorAt(uint32_t offset, unsigned errorNumber, ...);
+    void errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
+                          unsigned errorNumber, ...);
 
     /*
      * Handle a strict mode error at the current offset.  Report an error if in
@@ -997,6 +1009,9 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
            Parser<SyntaxParseHandler>* syntaxParser, LazyScript* lazyOuterFunction);
     ~Parser();
 
+    friend class AutoAwaitIsKeyword<ParseHandler>;
+    void setAwaitIsKeyword(bool isKeyword);
+
     bool checkOptions();
 
     // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
@@ -1045,8 +1060,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     void trace(JSTracer* trc);
 
-    bool checkUnescapedName();
-
   private:
     Parser* thisForCtor() { return this; }
 
@@ -1092,7 +1105,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // Parse a function, used for the Function, GeneratorFunction, and
     // AsyncFunction constructors.
     Node standaloneFunction(HandleFunction fun, HandleScope enclosingScope,
-                            mozilla::Maybe<uint32_t> parameterListEnd,
+                            const mozilla::Maybe<uint32_t>& parameterListEnd,
                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             Directives inheritedDirectives, Directives* newDirectives);
 
@@ -1111,7 +1124,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // ParseContext is already on the stack.
     bool functionFormalParametersAndBody(InHandling inHandling, YieldHandling yieldHandling,
                                          Node pn, FunctionSyntaxKind kind,
-                                         mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing(),
+                                         const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing(),
                                          bool isStandaloneFunction = false);
 
     // Match the current token against the BindingIdentifier production with
@@ -1316,17 +1329,22 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
                          DefaultHandling defaultHandling);
 
-    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling,
-                                             bool yieldTokenizedAsName);
+    bool checkLabelOrIdentifierReference(HandlePropertyName ident,
+                                         uint32_t offset,
+                                         YieldHandling yieldHandling);
+
+    bool checkBindingIdentifier(HandlePropertyName ident,
+                                uint32_t offset,
+                                YieldHandling yieldHandling);
+
+    PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
 
     PropertyName* labelIdentifier(YieldHandling yieldHandling) {
-        return labelOrIdentifierReference(yieldHandling, false);
+        return labelOrIdentifierReference(yieldHandling);
     }
 
-    PropertyName* identifierReference(YieldHandling yieldHandling,
-                                      bool yieldTokenizedAsName = false)
-    {
-        return labelOrIdentifierReference(yieldHandling, yieldTokenizedAsName);
+    PropertyName* identifierReference(YieldHandling yieldHandling) {
+        return labelOrIdentifierReference(yieldHandling);
     }
 
     PropertyName* importedBinding() {
@@ -1386,7 +1404,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
   private:
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
-    bool checkStrictBinding(PropertyName* name, TokenPos pos);
 
     bool hasValidSimpleStrictParameterNames();
 
@@ -1435,7 +1452,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // error if not passed a name.
     bool checkDestructuringArray(Node arrayPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
     bool checkDestructuringObject(Node objectPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
-    bool checkDestructuringName(Node expr, mozilla::Maybe<DeclarationKind> maybeDecl);
+    bool checkDestructuringName(Node expr, const mozilla::Maybe<DeclarationKind>& maybeDecl);
 
     Node newNumber(const Token& tok) {
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
@@ -1446,6 +1463,25 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
     bool asmJS(Node list);
+};
+
+template <typename ParseHandler>
+class MOZ_STACK_CLASS AutoAwaitIsKeyword
+{
+  private:
+    Parser<ParseHandler>* parser_;
+    bool oldAwaitIsKeyword_;
+
+  public:
+    AutoAwaitIsKeyword(Parser<ParseHandler>* parser, bool awaitIsKeyword) {
+        parser_ = parser;
+        oldAwaitIsKeyword_ = parser_->awaitIsKeyword_;
+        parser_->setAwaitIsKeyword(awaitIsKeyword);
+    }
+
+    ~AutoAwaitIsKeyword() {
+        parser_->setAwaitIsKeyword(oldAwaitIsKeyword_);
+    }
 };
 
 } /* namespace frontend */

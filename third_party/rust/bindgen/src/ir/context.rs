@@ -1,22 +1,26 @@
 //! Common context that is passed around during parsing and codegen.
 
-use super::derive::{CanDeriveCopy, CanDeriveDebug};
+use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use super::int::IntKind;
-use super::item::{Item, ItemCanonicalPath};
+use super::item::{Item, ItemCanonicalPath, ItemSet};
 use super::item_kind::ItemKind;
 use super::module::{Module, ModuleKind};
-use super::ty::{FloatKind, Type, TypeKind};
-use super::type_collector::{ItemSet, TypeCollector};
+use super::traversal::{self, Edge, ItemTraversal, Trace};
+use super::ty::{FloatKind, TemplateDeclaration, Type, TypeKind};
 use BindgenOptions;
 use cexpr;
 use chooser::TypeChooser;
 use clang::{self, Cursor};
+use clang_sys;
 use parse::ClangItemParser;
 use std::borrow::Cow;
 use std::cell::Cell;
-use std::collections::{HashMap, VecDeque, hash_map};
+use std::collections::{HashMap, hash_map};
 use std::collections::btree_map::{self, BTreeMap};
 use std::fmt;
+use std::fs::File;
+use std::io::{self, Write};
+use std::iter::IntoIterator;
 use syntax::ast::Ident;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::ExtCtxt;
@@ -39,6 +43,14 @@ impl CanDeriveDebug for ItemId {
 
     fn can_derive_debug(&self, ctx: &BindgenContext, _: ()) -> bool {
         ctx.resolve_item(*self).can_derive_debug(ctx, ())
+    }
+}
+
+impl CanDeriveDefault for ItemId {
+    type Extra = ();
+
+    fn can_derive_default(&self, ctx: &BindgenContext, _: ()) -> bool {
+        ctx.resolve_item(*self).can_derive_default(ctx, ())
     }
 }
 
@@ -112,9 +124,7 @@ pub struct BindgenContext<'ctx> {
     /// We could also use the `types` HashMap, but my intention with it is that
     /// only valid types and declarations end up there, and this could
     /// potentially break that assumption.
-    ///
-    /// FIXME: Should not be public, though... meh.
-    pub currently_parsed_types: Vec<(Cursor, ItemId)>,
+    currently_parsed_types: Vec<PartialType>,
 
     /// A HashSet with all the already parsed macro names. This is done to avoid
     /// hard errors while parsing duplicated macros, as well to allow macro
@@ -142,6 +152,13 @@ pub struct BindgenContext<'ctx> {
     /// Whether a bindgen complex was generated
     generated_bindegen_complex: Cell<bool>,
 }
+
+/// A traversal of whitelisted items.
+pub type WhitelistedItems<'ctx, 'gen> = ItemTraversal<'ctx,
+                                                      'gen,
+                                                      ItemSet,
+                                                      Vec<ItemId>,
+                                                      fn(Edge) -> bool>;
 
 impl<'ctx> BindgenContext<'ctx> {
     /// Construct the context for the given `options`.
@@ -183,6 +200,26 @@ impl<'ctx> BindgenContext<'ctx> {
         me.add_item(root_module, None, None);
 
         me
+    }
+
+    /// Get the stack of partially parsed types that we are in the middle of
+    /// parsing.
+    pub fn currently_parsed_types(&self) -> &[PartialType] {
+        &self.currently_parsed_types[..]
+    }
+
+    /// Begin parsing the given partial type, and push it onto the
+    /// `currently_parsed_types` stack so that we won't infinite recurse if we
+    /// run into a reference to it while parsing it.
+    pub fn begin_parsing(&mut self, partial_ty: PartialType) {
+        self.currently_parsed_types.push(partial_ty);
+    }
+
+    /// Finish parsing the current partial type, pop it off the
+    /// `currently_parsed_types` stack, and return it.
+    pub fn finish_parsing(&mut self) -> PartialType {
+        self.currently_parsed_types.pop()
+            .expect("should have been parsing a type, if we finished parsing a type")
     }
 
     /// Get the user-provided type chooser by reference, if any.
@@ -510,23 +547,14 @@ impl<'ctx> BindgenContext<'ctx> {
 
     fn assert_no_dangling_item_traversal<'me>
         (&'me self)
-         -> AssertNoDanglingItemIter<'me, 'ctx> {
+         -> traversal::AssertNoDanglingItemsTraversal<'me, 'ctx> {
         assert!(self.in_codegen_phase());
         assert!(self.current_module == self.root_module);
 
-        let mut roots = self.items().map(|(&id, _)| id);
-
-        let mut seen = BTreeMap::<ItemId, ItemId>::new();
-        let next_child = roots.next().map(|id| id).unwrap();
-        seen.insert(next_child, next_child);
-
-        let to_iterate = seen.iter().map(|(&id, _)| id).rev().collect();
-
-        AssertNoDanglingItemIter {
-            ctx: self,
-            seen: seen,
-            to_iterate: to_iterate,
-        }
+        let roots = self.items().map(|(&id, _)| id);
+        traversal::AssertNoDanglingItemsTraversal::new(self,
+                                                       roots,
+                                                       traversal::all_edges)
     }
 
     // This deserves a comment. Builtin types don't get a valid declaration, so
@@ -592,117 +620,262 @@ impl<'ctx> BindgenContext<'ctx> {
         self.current_module
     }
 
-    /// This is one of the hackiest methods in all the parsing code. This method
-    /// is used to allow having templates with another argument names instead of
-    /// the canonical ones.
+    /// Given a cursor pointing to the location of a template instantiation,
+    /// return a tuple of the form `(declaration_cursor, declaration_id,
+    /// num_expected_template_args)`.
+    ///
+    /// Note that `declaration_id` is not guaranteed to be in the context's item
+    /// set! It is possible that it is a partial type that we are still in the
+    /// middle of parsign.
+    fn get_declaration_info_for_template_instantiation
+        (&self,
+         instantiation: &Cursor)
+         -> Option<(Cursor, ItemId, usize)> {
+        instantiation.cur_type()
+            .canonical_declaration(Some(instantiation))
+            .and_then(|canon_decl| {
+                self.get_resolved_type(&canon_decl)
+                    .and_then(|template_decl_id| {
+                        template_decl_id.num_template_params(self)
+                            .map(|num_params| {
+                                (*canon_decl.cursor(),
+                                 template_decl_id,
+                                 num_params)
+                            })
+                    })
+            })
+            .or_else(|| {
+                // If we haven't already parsed the declaration of
+                // the template being instantiated, then it *must*
+                // be on the stack of types we are currently
+                // parsing. If it wasn't then clang would have
+                // already errored out before we started
+                // constructing our IR because you can't instantiate
+                // a template until it is fully defined.
+                instantiation.referenced()
+                    .and_then(|referenced| {
+                        self.currently_parsed_types()
+                            .iter()
+                            .find(|partial_ty| *partial_ty.decl() == referenced)
+                            .cloned()
+                    })
+                    .and_then(|template_decl| {
+                        template_decl.num_template_params(self)
+                            .map(|num_template_params| {
+                                (*template_decl.decl(),
+                                 template_decl.id(),
+                                 num_template_params)
+                            })
+                    })
+            })
+    }
+
+    /// Parse a template instantiation, eg `Foo<int>`.
     ///
     /// This is surprisingly difficult to do with libclang, due to the fact that
-    /// partial template specializations don't provide explicit template
-    /// argument information.
+    /// it doesn't provide explicit template argument information, except for
+    /// function template declarations(!?!??!).
     ///
-    /// The only way to do this as far as I know, is inspecting manually the
-    /// AST, looking for TypeRefs inside. This, unfortunately, doesn't work for
+    /// The only way to do this is manually inspecting the AST and looking for
+    /// TypeRefs and TemplateRefs inside. This, unfortunately, doesn't work for
     /// more complex cases, see the comment on the assertion below.
     ///
-    /// To see an example of what this handles:
+    /// To add insult to injury, the AST itself has structure that doesn't make
+    /// sense. Sometimes `Foo<Bar<int>>` has an AST with nesting like you might
+    /// expect: `(Foo (Bar (int)))`. Other times, the AST we get is completely
+    /// flat: `(Foo Bar int)`.
+    ///
+    /// To see an example of what this method handles:
     ///
     /// ```c++
-    ///     template<typename T>
-    ///     class Incomplete {
-    ///       T p;
-    ///     };
+    /// template<typename T>
+    /// class Incomplete {
+    ///   T p;
+    /// };
     ///
-    ///     template<typename U>
-    ///     class Foo {
-    ///       Incomplete<U> bar;
-    ///     };
+    /// template<typename U>
+    /// class Foo {
+    ///   Incomplete<U> bar;
+    /// };
     /// ```
-    fn build_template_wrapper(&mut self,
-                              with_id: ItemId,
-                              wrapping: ItemId,
-                              parent_id: ItemId,
-                              ty: &clang::Type,
-                              location: clang::Cursor,
-                              declaration: clang::Cursor)
-                              -> ItemId {
-        use clang_sys::*;
-        let mut args = vec![];
-        location.visit(|c| {
-            if c.kind() == CXCursor_TypeRef {
-                // The `with_id` id will potentially end up unused if we give up
-                // on this type (for example, its a tricky partial template
-                // specialization), so if we pass `with_id` as the parent, it is
-                // potentially a dangling reference. Instead, use the canonical
-                // template declaration as the parent. It is already parsed and
-                // has a known-resolvable `ItemId`.
-                let new_ty = Item::from_ty_or_ref(c.cur_type(),
-                                                  Some(c),
-                                                  Some(wrapping),
-                                                  self);
-                args.push(new_ty);
+    fn instantiate_template(&mut self,
+                            with_id: ItemId,
+                            template: ItemId,
+                            parent_id: ItemId,
+                            ty: &clang::Type,
+                            location: clang::Cursor)
+                            -> Option<ItemId> {
+        use clang_sys;
+
+        let num_expected_args = match self.resolve_type(template)
+            .num_template_params(self) {
+            Some(n) => n,
+            None => {
+                warn!("Tried to instantiate a template for which we could not \
+                       determine any template parameters");
+                return None;
             }
-            CXChildVisit_Continue
-        });
-
-        let item = {
-            let wrapping_type = self.resolve_type(wrapping);
-            if let TypeKind::Comp(ref ci) = *wrapping_type.kind() {
-                let old_args = ci.template_args();
-
-                // The following assertion actually fails with partial template
-                // specialization. But as far as I know there's no way at all to
-                // grab the specialized types from neither the AST or libclang,
-                // which sucks. The same happens for specialized type alias
-                // template declarations, where we have that ugly hack up there.
-                //
-                // This flaw was already on the old parser, but I now think it
-                // has no clear solution (apart from patching libclang to
-                // somehow expose them, of course).
-                //
-                // For an easy example in which there's no way at all of getting
-                // the `int` type, except manually parsing the spelling:
-                //
-                //     template<typename T, typename U>
-                //     class Incomplete {
-                //       T d;
-                //       U p;
-                //     };
-                //
-                //     template<typename U>
-                //     class Foo {
-                //       Incomplete<U, int> bar;
-                //     };
-                //
-                // debug_assert_eq!(old_args.len(), args.len());
-                //
-                // That being said, this is not so common, so just error! and
-                // hope for the best, returning the previous type, who knows.
-                if old_args.len() != args.len() {
-                    error!("Found partial template specialization, \
-                            expect dragons!");
-                    return wrapping;
-                }
-            } else {
-                assert_eq!(declaration.kind(),
-                           ::clang_sys::CXCursor_TypeAliasTemplateDecl,
-                           "Expected wrappable type");
-            }
-
-            let type_kind = TypeKind::TemplateRef(wrapping, args);
-            let name = ty.spelling();
-            let name = if name.is_empty() { None } else { Some(name) };
-            let ty = Type::new(name,
-                               ty.fallible_layout().ok(),
-                               type_kind,
-                               ty.is_const());
-            Item::new(with_id, None, None, parent_id, ItemKind::Type(ty))
         };
 
+        let mut args = vec![];
+        let mut found_const_arg = false;
+        let mut children = location.collect_children();
+
+        if children.iter().all(|c| !c.has_children()) {
+            // This is insanity... If clang isn't giving us a properly nested
+            // AST for which template arguments belong to which template we are
+            // instantiating, we'll need to construct it ourselves. However,
+            // there is an extra `NamespaceRef, NamespaceRef, ..., TemplateRef`
+            // representing a reference to the outermost template declaration
+            // that we need to filter out of the children. We need to do this
+            // filtering because we already know which template declaration is
+            // being specialized via the `location`'s type, and if we do not
+            // filter it out, we'll add an extra layer of template instantiation
+            // on accident.
+            let idx = children.iter()
+                .position(|c| c.kind() == clang_sys::CXCursor_TemplateRef);
+            if let Some(idx) = idx {
+                if children.iter()
+                    .take(idx)
+                    .all(|c| c.kind() == clang_sys::CXCursor_NamespaceRef) {
+                    children = children.into_iter().skip(idx + 1).collect();
+                }
+            }
+        }
+
+        for child in children.iter().rev() {
+            match child.kind() {
+                clang_sys::CXCursor_TypeRef |
+                clang_sys::CXCursor_TypedefDecl |
+                clang_sys::CXCursor_TypeAliasDecl => {
+                    // The `with_id` id will potentially end up unused if we give up
+                    // on this type (for example, because it has const value
+                    // template args), so if we pass `with_id` as the parent, it is
+                    // potentially a dangling reference. Instead, use the canonical
+                    // template declaration as the parent. It is already parsed and
+                    // has a known-resolvable `ItemId`.
+                    let ty = Item::from_ty_or_ref(child.cur_type(),
+                                                  Some(*child),
+                                                  Some(template),
+                                                  self);
+                    args.push(ty);
+                }
+                clang_sys::CXCursor_TemplateRef => {
+                    let (template_decl_cursor, template_decl_id, num_expected_template_args) =
+                        match self.get_declaration_info_for_template_instantiation(child) {
+                            Some(info) => info,
+                            None => return None,
+                        };
+
+                    if num_expected_template_args == 0 ||
+                       child.has_at_least_num_children(num_expected_template_args) {
+                        // Do a happy little parse. See comment in the TypeRef
+                        // match arm about parent IDs.
+                        let ty = Item::from_ty_or_ref(child.cur_type(),
+                                                      Some(*child),
+                                                      Some(template),
+                                                      self);
+                        args.push(ty);
+                    } else {
+                        // This is the case mentioned in the doc comment where
+                        // clang gives us a flattened AST and we have to
+                        // reconstruct which template arguments go to which
+                        // instantiation :(
+                        let args_len = args.len();
+                        if args_len < num_expected_template_args {
+                            warn!("Found a template instantiation without \
+                                   enough template arguments");
+                            return None;
+                        }
+
+                        let mut sub_args: Vec<_> =
+                            args.drain(args_len - num_expected_template_args..)
+                                .collect();
+                        sub_args.reverse();
+
+                        let sub_name = Some(template_decl_cursor.spelling());
+                        let sub_kind =
+                            TypeKind::TemplateInstantiation(template_decl_id,
+                                                            sub_args);
+                        let sub_ty = Type::new(sub_name,
+                                               template_decl_cursor.cur_type()
+                                                   .fallible_layout()
+                                                   .ok(),
+                                               sub_kind,
+                                               false);
+                        let sub_id = self.next_item_id();
+                        let sub_item = Item::new(sub_id,
+                                                 None,
+                                                 None,
+                                                 template_decl_id,
+                                                 ItemKind::Type(sub_ty));
+
+                        // Bypass all the validations in add_item explicitly.
+                        debug!("instantiate_template: inserting nested \
+                                instantiation item: {:?}",
+                               sub_item);
+                        debug_assert!(sub_id == sub_item.id());
+                        self.items.insert(sub_id, sub_item);
+                        args.push(sub_id);
+                    }
+                }
+                _ => {
+                    warn!("Found template arg cursor we can't handle: {:?}",
+                          child);
+                    found_const_arg = true;
+                }
+            }
+        }
+
+        if found_const_arg {
+            // This is a dependently typed template instantiation. That is, an
+            // instantiation of a template with one or more const values as
+            // template arguments, rather than only types as template
+            // arguments. For example, `Foo<true, 5>` versus `Bar<bool, int>`.
+            // We can't handle these instantiations, so just punt in this
+            // situation...
+            warn!("Found template instantiated with a const value; \
+                   bindgen can't handle this kind of template instantiation!");
+            return None;
+        }
+
+        if args.len() != num_expected_args {
+            warn!("Found a template with an unexpected number of template \
+                   arguments");
+            return None;
+        }
+
+        args.reverse();
+        let type_kind = TypeKind::TemplateInstantiation(template, args);
+        let name = ty.spelling();
+        let name = if name.is_empty() { None } else { Some(name) };
+        let ty = Type::new(name,
+                           ty.fallible_layout().ok(),
+                           type_kind,
+                           ty.is_const());
+        let item =
+            Item::new(with_id, None, None, parent_id, ItemKind::Type(ty));
+
         // Bypass all the validations in add_item explicitly.
-        debug!("build_template_wrapper: inserting item: {:?}", item);
+        debug!("instantiate_template: inserting item: {:?}", item);
         debug_assert!(with_id == item.id());
         self.items.insert(with_id, item);
-        with_id
+        Some(with_id)
+    }
+
+    /// If we have already resolved the type for the given type declaration,
+    /// return its `ItemId`. Otherwise, return `None`.
+    fn get_resolved_type(&self,
+                         decl: &clang::CanonicalTypeDeclaration)
+                         -> Option<ItemId> {
+        self.types
+            .get(&TypeKey::Declaration(*decl.cursor()))
+            .or_else(|| {
+                decl.cursor()
+                    .usr()
+                    .and_then(|usr| self.types.get(&TypeKey::USR(usr)))
+            })
+            .cloned()
     }
 
     /// Looks up for an already resolved type, either because it's builtin, or
@@ -718,45 +891,32 @@ impl<'ctx> BindgenContext<'ctx> {
                ty,
                location,
                parent_id);
-        let mut declaration = ty.declaration();
-        if !declaration.is_valid() {
-            if let Some(location) = location {
-                if location.is_template_like() {
-                    declaration = location;
-                }
-            }
-        }
-        let canonical_declaration = declaration.canonical();
-        if canonical_declaration.is_valid() {
-            let id = self.types
-                .get(&TypeKey::Declaration(canonical_declaration))
-                .map(|id| *id)
-                .or_else(|| {
-                    canonical_declaration.usr()
-                        .and_then(|usr| self.types.get(&TypeKey::USR(usr)))
-                        .map(|id| *id)
-                });
-            if let Some(id) = id {
+
+        if let Some(decl) = ty.canonical_declaration(location.as_ref()) {
+            if let Some(id) = self.get_resolved_type(&decl) {
                 debug!("Already resolved ty {:?}, {:?}, {:?} {:?}",
                        id,
-                       declaration,
+                       decl,
                        ty,
                        location);
-
-                // If the declaration existed, we *might* be done, but it's not
-                // the case for class templates, where the template arguments
-                // may vary.
+                // If the declaration already exists, then either:
                 //
-                // In this case, we create a TemplateRef with the new template
-                // arguments, pointing to the canonical template.
+                //   * the declaration is a template declaration of some sort,
+                //     and we are looking at an instantiation or specialization
+                //     of it, or
+                //   * we have already parsed and resolved this type, and
+                //     there's nothing left to do.
                 //
-                // Note that we only do it if parent_id is some, and we have a
-                // location for building the new arguments, the template
-                // argument names don't matter in the global context.
-                if declaration.is_template_like() &&
-                   *ty != canonical_declaration.cur_type() &&
+                // Note that we only do the former if the `parent_id` exists,
+                // and we have a location for building the new arguments. The
+                // template argument names don't matter in the global context.
+                if decl.cursor().is_template_like() &&
+                   *ty != decl.cursor().cur_type() &&
                    location.is_some() &&
                    parent_id.is_some() {
+                    let location = location.unwrap();
+                    let parent_id = parent_id.unwrap();
+
                     // For specialized type aliases, there's no way to get the
                     // template parameters as of this writing (for a struct
                     // specialization we wouldn't be in this branch anyway).
@@ -767,18 +927,18 @@ impl<'ctx> BindgenContext<'ctx> {
                     // exposed.
                     //
                     // This is _tricky_, I know :(
-                    if declaration.kind() == CXCursor_TypeAliasTemplateDecl &&
-                       !location.unwrap().contains_cursor(CXCursor_TypeRef) &&
+                    if decl.cursor().kind() == CXCursor_TypeAliasTemplateDecl &&
+                       !location.contains_cursor(CXCursor_TypeRef) &&
                        ty.canonical_type().is_valid_and_exposed() {
                         return None;
                     }
 
-                    return Some(self.build_template_wrapper(with_id,
-                                                id,
-                                                parent_id.unwrap(),
-                                                ty,
-                                                location.unwrap(),
-                                                declaration));
+                    return self.instantiate_template(with_id,
+                                              id,
+                                              parent_id,
+                                              ty,
+                                              location)
+                        .or_else(|| Some(id));
                 }
 
                 return Some(self.build_ty_wrapper(with_id, id, parent_id, ty));
@@ -786,9 +946,7 @@ impl<'ctx> BindgenContext<'ctx> {
         }
 
         debug!("Not resolved, maybe builtin?");
-
-        // Else, build it.
-        self.build_builtin_ty(ty, declaration)
+        self.build_builtin_ty(ty)
     }
 
     // This is unfortunately a lot of bloat, but is needed to properly track
@@ -823,10 +981,7 @@ impl<'ctx> BindgenContext<'ctx> {
         ret
     }
 
-    fn build_builtin_ty(&mut self,
-                        ty: &clang::Type,
-                        _declaration: Cursor)
-                        -> Option<ItemId> {
+    fn build_builtin_ty(&mut self, ty: &clang::Type) -> Option<ItemId> {
         use clang_sys::*;
         let type_kind = match ty.kind() {
             CXType_NullPtr => TypeKind::NullPtr,
@@ -956,6 +1111,33 @@ impl<'ctx> BindgenContext<'ctx> {
         &self.options
     }
 
+    /// Output graphviz dot file.
+    pub fn emit_ir_graphviz(&self, path: String) -> io::Result<()> {
+        let file = try!(File::create(path));
+        let mut dot_file = io::BufWriter::new(file);
+        writeln!(&mut dot_file, "digraph {{")?;
+
+        let mut err: Option<io::Result<_>> = None;
+
+        for (id, item) in self.items() {
+            writeln!(&mut dot_file, "{} {};", id.0, item.dot_attributes(self))?;
+
+            item.trace(self, &mut |sub_id: ItemId, _edge_kind| {
+                match writeln!(&mut dot_file, "{} -> {};", id.0, sub_id.as_usize()) {
+                    Ok(_) => {},
+                    Err(e) => err = Some(Err(e)),
+                }
+            }, &());
+
+            if err.is_some() {
+                return err.unwrap();
+            }
+        }
+
+        writeln!(&mut dot_file, "}}")?;
+        Ok(())
+    }
+
     /// Tokenizes a namespace cursor in order to get the name and kind of the
     /// namespace,
     fn tokenize_namespace(&self,
@@ -1047,8 +1229,7 @@ impl<'ctx> BindgenContext<'ctx> {
     ///
     /// If no items are explicitly whitelisted, then all items are considered
     /// whitelisted.
-    pub fn whitelisted_items<'me>(&'me self)
-                                  -> WhitelistedItemsIter<'me, 'ctx> {
+    pub fn whitelisted_items<'me>(&'me self) -> WhitelistedItems<'me, 'ctx> {
         assert!(self.in_codegen_phase());
         assert!(self.current_module == self.root_module);
 
@@ -1113,18 +1294,19 @@ impl<'ctx> BindgenContext<'ctx> {
             })
             .map(|(&id, _)| id);
 
-        let seen: ItemSet = roots.collect();
-
-        // The .rev() preserves the expected ordering traversal, resulting in
-        // more stable-ish bindgen-generated names for anonymous types (like
+        // The reversal preserves the expected ordering of traversal, resulting
+        // in more stable-ish bindgen-generated names for anonymous types (like
         // unions).
-        let to_iterate = seen.iter().cloned().rev().collect();
+        let mut roots: Vec<_> = roots.collect();
+        roots.reverse();
 
-        WhitelistedItemsIter {
-            ctx: self,
-            seen: seen,
-            to_iterate: to_iterate,
-        }
+        let predicate = if self.options().whitelist_recursively {
+            traversal::all_edges
+        } else {
+            traversal::no_edges
+        };
+
+        WhitelistedItems::new(self, roots, predicate)
     }
 
     /// Convenient method for getting the prefix to use for most traits in
@@ -1148,123 +1330,64 @@ impl<'ctx> BindgenContext<'ctx> {
     }
 }
 
-/// An iterator over whitelisted items.
-///
-/// See `BindgenContext::whitelisted_items` for more information.
-pub struct WhitelistedItemsIter<'ctx, 'gen>
-    where 'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
-
-    /// The set of whitelisted items we have seen. If you think of traversing
-    /// whitelisted items like GC tracing, this is the mark bits, and contains
-    /// both black and gray items.
-    seen: ItemSet,
-
-    /// The set of whitelisted items that we have seen but have yet to iterate
-    /// over and collect transitive references from. To return to the GC analogy,
-    /// this is the mark stack, containing the set of gray items which we have
-    /// not finished tracing yet.
-    to_iterate: Vec<ItemId>,
+/// A type that we are in the middle of parsing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PartialType {
+    decl: Cursor,
+    id: ItemId,
 }
 
-impl<'ctx, 'gen> Iterator for WhitelistedItemsIter<'ctx, 'gen>
-    where 'gen: 'ctx,
-{
-    type Item = ItemId;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let id = match self.to_iterate.pop() {
-            None => return None,
-            Some(id) => id,
-        };
-
-        debug_assert!(self.seen.contains(&id));
-        debug_assert!(self.ctx.items.contains_key(&id));
-
-        if self.ctx.options().whitelist_recursively {
-            let mut sub_types = ItemSet::new();
-            id.collect_types(self.ctx, &mut sub_types, &());
-
-            for id in sub_types {
-                if self.seen.insert(id) {
-                    self.to_iterate.push(id);
-                }
-            }
+impl PartialType {
+    /// Construct a new `PartialType`.
+    pub fn new(decl: Cursor, id: ItemId) -> PartialType {
+        // assert!(decl == decl.canonical());
+        PartialType {
+            decl: decl,
+            id: id,
         }
+    }
 
-        Some(id)
+    /// The cursor pointing to this partial type's declaration location.
+    pub fn decl(&self) -> &Cursor {
+        &self.decl
+    }
+
+    /// The item ID allocated for this type. This is *NOT* a key for an entry in
+    /// the context's item set yet!
+    pub fn id(&self) -> ItemId {
+        self.id
     }
 }
 
-/// An iterator to find any dangling items.
-///
-/// See `BindgenContext::assert_no_dangling_item_traversal` for more
-/// information.
-pub struct AssertNoDanglingItemIter<'ctx, 'gen>
-    where 'gen: 'ctx,
-{
-    ctx: &'ctx BindgenContext<'gen>,
-    seen: BTreeMap<ItemId, ItemId>,
-    to_iterate: VecDeque<ItemId>,
-}
+impl TemplateDeclaration for PartialType {
+    fn template_params(&self, _ctx: &BindgenContext) -> Option<Vec<ItemId>> {
+        // Maybe at some point we will eagerly parse named types, but for now we
+        // don't and this information is unavailable.
+        None
+    }
 
-impl<'ctx, 'gen> Iterator for AssertNoDanglingItemIter<'ctx, 'gen>
-    where 'gen: 'ctx,
-{
-    type Item = ItemId;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let id = match self.to_iterate.pop_front() {
-            None => {
-                // We've traversed everything reachable from the previous
-                // root(s), see if we have any more roots.
-                match self.ctx
-                    .items()
-                    .filter(|&(id, _)| !self.seen.contains_key(id))
-                    .next()
-                    .map(|(id, _)| *id) {
-                    None => return None,
-                    Some(id) => {
-                        // This is a new root.
-                        self.seen.insert(id, id);
-                        id
-                    }
-                }
+    fn num_template_params(&self, _ctx: &BindgenContext) -> Option<usize> {
+        // Wouldn't it be nice if libclang would reliably give us this
+        // information‽
+        match self.decl().kind() {
+            clang_sys::CXCursor_ClassTemplate |
+            clang_sys::CXCursor_FunctionTemplate |
+            clang_sys::CXCursor_TypeAliasTemplateDecl => {
+                let mut num_params = 0;
+                self.decl().visit(|c| {
+                    match c.kind() {
+                        clang_sys::CXCursor_TemplateTypeParameter |
+                        clang_sys::CXCursor_TemplateTemplateParameter |
+                        clang_sys::CXCursor_NonTypeTemplateParameter => {
+                            num_params += 1;
+                        }
+                        _ => {}
+                    };
+                    clang_sys::CXChildVisit_Continue
+                });
+                Some(num_params)
             }
-            Some(id) => id,
-        };
-
-        let mut sub_types = ItemSet::new();
-        id.collect_types(self.ctx, &mut sub_types, &());
-
-        if self.ctx.resolve_item_fallible(id).is_none() {
-            let mut path = vec![];
-            let mut current = id;
-            loop {
-                let predecessor = *self.seen
-                    .get(&current)
-                    .expect("We know we found this item id, so it must have a \
-                            predecessor");
-                if predecessor == current {
-                    break;
-                }
-                path.push(predecessor);
-                current = predecessor;
-            }
-            path.reverse();
-            panic!("Found reference to dangling id = {:?}\nvia path = {:?}",
-                   id,
-                   path);
+            _ => None,
         }
-
-        for sub_id in sub_types {
-            if self.seen.insert(sub_id, id).is_none() {
-                // We've never visited this sub item before.
-                self.to_iterate.push_back(sub_id);
-            }
-        }
-
-        Some(id)
     }
 }

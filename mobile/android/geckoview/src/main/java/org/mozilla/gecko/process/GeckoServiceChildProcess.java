@@ -74,7 +74,7 @@ public class GeckoServiceChildProcess extends Service {
                 public void run() {
                     GeckoAppShell.ensureCrashHandling();
                     GeckoAppShell.setApplicationContext(getApplicationContext());
-                    if (GeckoThread.initChildProcess(null, args, crashReporterFd, ipcFd, false)) {
+                    if (GeckoThread.initChildProcess(args, crashReporterFd, ipcFd)) {
                         GeckoThread.launch();
                     }
                 }

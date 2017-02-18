@@ -28,7 +28,7 @@ class ImageContainer;
 } // namespace layers
 
 class MediaByteBuffer;
-class SharedTrackInfo;
+class TrackInfoSharedPtr;
 
 // AlignedBuffer:
 // Memory allocations are fallibles. Methods return a boolean indicating if
@@ -672,7 +672,7 @@ public:
   // trimmed.
   uint32_t mDiscardPadding = 0;
 
-  RefPtr<SharedTrackInfo> mTrackInfo;
+  RefPtr<TrackInfoSharedPtr> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
   virtual already_AddRefed<MediaRawData> Clone() const;

@@ -7562,6 +7562,10 @@ nsresult
 nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                         nsIChannel* aChannel, nsresult aStatus)
 {
+  // We can release any pressure we may have had on the throttling service and
+  // let background channels continue.
+  mThrottler.reset();
+
   if (!aChannel) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -8023,11 +8027,11 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  AutoRestore<bool> creatingDocument(mCreatingDocument);
-  mCreatingDocument = true;
-
   // mContentViewer->PermitUnload may release |this| docshell.
   nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
+
+  AutoRestore<bool> creatingDocument(mCreatingDocument);
+  mCreatingDocument = true;
 
   if (aPrincipal && !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
       mItemType != typeChrome) {
@@ -8096,7 +8100,11 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
   if (docFactory) {
     nsCOMPtr<nsIPrincipal> principal;
     if (mSandboxFlags & SANDBOXED_ORIGIN) {
-      principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
+      if (aPrincipal) {
+        principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
+      } else {
+        principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      }
     } else {
       principal = aPrincipal;
     }
@@ -10759,6 +10767,16 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                       nsINetworkPredictor::LEARN_LOAD_TOPLEVEL, attrs);
   net::PredictorPredict(aURI, nullptr,
                         nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
+
+  // Increase pressure on the throttling service so background channels will be
+  // appropriately de-prioritized. We need to explicitly check for http[s] here
+  // so that we don't throttle while loading, say, about:blank.
+  bool isHTTP, isHTTPS;
+  aURI->SchemeIs("http", &isHTTP);
+  aURI->SchemeIs("https", &isHTTPS);
+  if (isHTTP || isHTTPS) {
+    mThrottler.reset(new mozilla::net::Throttler());
+  }
 
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,
@@ -14891,13 +14909,5 @@ nsDocShell::GetAwaitingLargeAlloc(bool* aResult)
     return NS_OK;
   }
   *aResult = static_cast<TabChild*>(tabChild.get())->IsAwaitingLargeAlloc();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetInLargeAllocProcess(bool* aResult)
-{
-  MOZ_ASSERT(aResult);
-  *aResult = TabChild::InLargeAllocProcess();
   return NS_OK;
 }

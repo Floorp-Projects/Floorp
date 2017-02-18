@@ -51,9 +51,7 @@
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
-#ifdef MOZ_VTUNE
-# include "vtune/VTuneWrapper.h"
-#endif
+#include "vtune/VTuneWrapper.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
@@ -215,7 +213,7 @@ JitRuntime::~JitRuntime()
 bool
 JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 {
-    AutoCompartment ac(cx, cx->atomsCompartment(lock), &lock);
+    AutoAtomsCompartment ac(cx, lock);
 
     JitContext jctx(cx, nullptr);
 
@@ -350,7 +348,7 @@ JitRuntime::debugTrapHandler(JSContext* cx)
         // JitRuntime code stubs are shared across compartments and have to
         // be allocated in the atoms compartment.
         AutoLockForExclusiveAccess lock(cx);
-        AutoCompartment ac(cx, cx->runtime()->atomsCompartment(lock), &lock);
+        AutoAtomsCompartment ac(cx, lock);
         debugTrapHandler_ = generateDebugTrapHandler(cx);
     }
     return debugTrapHandler_;
@@ -2110,7 +2108,7 @@ AttachFinishedCompilations(JSContext* cx)
                 RootedScript script(cx, builder->script());
 
                 AutoUnlockHelperThreadState unlock(lock);
-                AutoCompartment ac(cx, script->compartment());
+                AutoCompartment ac(cx, script);
                 jit::LinkIonScript(cx, script);
             }
 
@@ -3077,9 +3075,6 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
                     it.returnAddressToFp());
             break;
           }
-          case JitFrame_IonStub:
-            JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " ion stub frame @ %p", frameno, it.fp());
-            break;
           case JitFrame_BaselineStub:
             JitSpew(JitSpew_IonInvalidate, "#%" PRIuSIZE " baseline stub frame @ %p", frameno, it.fp());
             break;

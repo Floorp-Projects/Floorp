@@ -1,4 +1,4 @@
-// bindgen-flags: --no-derive-debug --blacklist-type foo --raw-line "#[repr(C)] #[derive(Copy, Clone)] pub struct foo { bar: ::std::os::raw::c_int, }"
+// bindgen-flags: --no-derive-debug --blacklist-type foo --raw-line "#[repr(C)] #[derive(Copy, Clone, Default)] pub struct foo { bar: ::std::os::raw::c_int, }"
 
 struct foo {
   int bar;

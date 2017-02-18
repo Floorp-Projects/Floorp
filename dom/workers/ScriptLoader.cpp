@@ -113,7 +113,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      const nsAString& aScriptURL,
                      bool aIsMainScript,
                      WorkerScriptType aWorkerScriptType,
-                     nsContentPolicyType aContentPolicyType,
+                     nsContentPolicyType aMainScriptContentPolicyType,
                      nsLoadFlags aLoadFlags,
                      bool aDefaultURIEncoding,
                      nsIChannel** aChannel)
@@ -170,6 +170,10 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
   }
 
+  nsContentPolicyType contentPolicyType =
+    aIsMainScript ? aMainScriptContentPolicyType
+                  : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it. Unfortunately, for dedicated workers
   // 'parentDoc' ends up being the parent document, which is not the document
@@ -180,7 +184,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        parentDoc,
                        secFlags,
-                       aContentPolicyType,
+                       contentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
                        aLoadFlags,
@@ -195,7 +199,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        uri,
                        principal,
                        secFlags,
-                       aContentPolicyType,
+                       contentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
                        aLoadFlags,
@@ -470,6 +474,8 @@ private:
   nsCOMPtr<nsIURI> mBaseURI;
   mozilla::dom::ChannelInfo mChannelInfo;
   UniquePtr<PrincipalInfo> mPrincipalInfo;
+  nsCString mCSPHeaderValue;
+  nsCString mCSPReportOnlyHeaderValue;
 };
 
 NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
@@ -669,6 +675,7 @@ private:
     RefPtr<mozilla::dom::InternalResponse> ir =
       new mozilla::dom::InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(loadInfo.mCacheReadStream, InternalResponse::UNKNOWN_BODY_SIZE);
+
     // Drop our reference to the stream now that we've passed it along, so it
     // doesn't hang around once the cache is done with it and keep data alive.
     loadInfo.mCacheReadStream = nullptr;
@@ -697,6 +704,7 @@ private:
     }
 
     ir->SetPrincipalInfo(Move(principalInfo));
+    ir->Headers()->FillResponseHeaders(loadInfo.mChannel);
 
     RefPtr<mozilla::dom::Response> response =
       new mozilla::dom::Response(mCacheCreator->Global(), ir);
@@ -1134,48 +1142,9 @@ private:
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
       if (!mWorkerPrivate->GetCSP() && CSPService::sCSPEnabled) {
-        NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
-        NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
-
-        nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
-        MOZ_ASSERT(principal, "Should not be null");
-
-        nsCOMPtr<nsIContentSecurityPolicy> csp;
-        rv = principal->EnsureCSP(nullptr, getter_AddRefs(csp));
-
-        if (csp) {
-          // If there's a CSP header, apply it.
-          if (!cspHeaderValue.IsEmpty()) {
-            rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
-            NS_ENSURE_SUCCESS(rv, rv);
-          }
-          // If there's a report-only CSP header, apply it.
-          if (!cspROHeaderValue.IsEmpty()) {
-            rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
-            NS_ENSURE_SUCCESS(rv, rv);
-          }
-
-          // Set evalAllowed, default value is set in GetAllowsEval
-          bool evalAllowed = false;
-          bool reportEvalViolations = false;
-          rv = csp->GetAllowsEval(&reportEvalViolations, &evalAllowed);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          mWorkerPrivate->SetCSP(csp);
-          mWorkerPrivate->SetEvalAllowed(evalAllowed);
-          mWorkerPrivate->SetReportCSPViolations(reportEvalViolations);
-
-          // Set ReferrerPolicy, default value is set in GetReferrerPolicy
-          bool hasReferrerPolicy = false;
-          uint32_t rp = mozilla::net::RP_Unset;
-          rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-
-          if (hasReferrerPolicy) { //FIXME bug 1307366: move RP out of CSP code
-            mWorkerPrivate->SetReferrerPolicy(static_cast<net::ReferrerPolicy>(rp));
-          }
-        }
+        rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
+                                                    tCspROHeaderValue);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       WorkerPrivate* parent = mWorkerPrivate->GetParent();
       if (parent) {
@@ -1201,7 +1170,9 @@ private:
   DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
                         uint32_t aStringLen,
                         const mozilla::dom::ChannelInfo& aChannelInfo,
-                        UniquePtr<PrincipalInfo> aPrincipalInfo)
+                        UniquePtr<PrincipalInfo> aPrincipalInfo,
+                        const nsACString& aCSPHeaderValue,
+                        const nsACString& aCSPReportOnlyHeaderValue)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
@@ -1210,6 +1181,7 @@ private:
 
     nsCOMPtr<nsIPrincipal> responsePrincipal =
       PrincipalInfoToPrincipal(*aPrincipalInfo);
+    MOZ_DIAGNOSTIC_ASSERT(responsePrincipal);
 
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
     if (!principal) {
@@ -1237,17 +1209,34 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
-      mozilla::DebugOnly<nsIPrincipal*> principal = mWorkerPrivate->GetPrincipal();
-      MOZ_ASSERT(principal);
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
-      MOZ_ASSERT(loadGroup);
+      MOZ_DIAGNOSTIC_ASSERT(loadGroup);
 
-      mozilla::DebugOnly<bool> equal = false;
-      MOZ_ASSERT(responsePrincipal && NS_SUCCEEDED(responsePrincipal->Equals(principal, &equal)));
-      MOZ_ASSERT(equal);
+#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+      nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+      MOZ_DIAGNOSTIC_ASSERT(principal);
+
+      bool equal = false;
+      MOZ_ALWAYS_SUCCEEDS(responsePrincipal->Equals(principal, &equal));
+      MOZ_DIAGNOSTIC_ASSERT(equal);
+
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      MOZ_ALWAYS_SUCCEEDS(responsePrincipal->GetCsp(getter_AddRefs(csp)));
+      MOZ_DIAGNOSTIC_ASSERT(!csp);
+#endif
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
+
+      // Override the principal on the WorkerPrivate.  We just asserted that
+      // this is the same as our current WorkerPrivate principal, so this is
+      // almost a no-op.  We must do, it though, in order to avoid accidentally
+      // propagating the CSP object back to the ServiceWorkerRegistration
+      // principal.  If bug 965637 is fixed then this can be removed.
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
+      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+      rv = mWorkerPrivate->SetCSPFromHeaderValues(aCSPHeaderValue,
+                                                  aCSPReportOnlyHeaderValue);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     }
 
@@ -1657,6 +1646,14 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
     return;
   }
 
+  InternalHeaders* headers = response->GetInternalHeaders();
+
+  IgnoredErrorResult ignored;
+  headers->Get(NS_LITERAL_CSTRING("content-security-policy"),
+               mCSPHeaderValue, ignored);
+  headers->Get(NS_LITERAL_CSTRING("content-security-policy-report-only"),
+               mCSPReportOnlyHeaderValue, ignored);
+
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
   mChannelInfo = response->GetChannelInfo();
@@ -1668,7 +1665,8 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mRunnable->DataReceivedFromCache(mIndex, (uint8_t*)"", 0, mChannelInfo,
-                                     Move(mPrincipalInfo));
+                                     Move(mPrincipalInfo), mCSPHeaderValue,
+                                     mCSPReportOnlyHeaderValue);
     return;
   }
 
@@ -1728,7 +1726,8 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 
   MOZ_ASSERT(mPrincipalInfo);
   mRunnable->DataReceivedFromCache(mIndex, aString, aStringLen, mChannelInfo,
-                                   Move(mPrincipalInfo));
+                                   Move(mPrincipalInfo), mCSPHeaderValue,
+                                   mCSPReportOnlyHeaderValue);
   return NS_OK;
 }
 
@@ -2104,7 +2103,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
-                               nsContentPolicyType aContentPolicyType,
+                               nsContentPolicyType aMainScriptContentPolicyType,
                                bool aDefaultURIEncoding,
                                nsIChannel** aChannel)
 {
@@ -2117,8 +2116,9 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
 
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
                               ios, secMan, aScriptURL, true, WorkerScript,
-                              aContentPolicyType, nsIRequest::LOAD_NORMAL,
-                              aDefaultURIEncoding, aChannel);
+                              aMainScriptContentPolicyType,
+                              nsIRequest::LOAD_NORMAL, aDefaultURIEncoding,
+                              aChannel);
 }
 
 nsresult
@@ -2182,9 +2182,9 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       // We don't want to throw a JS exception, because for toplevel script
       // loads that would get squelched.
       aRv.ThrowDOMException(NS_ERROR_DOM_NETWORK_ERR,
-        nsPrintfCString("Failed to load worker script at %s (nsresult = 0x%x)",
+        nsPrintfCString("Failed to load worker script at %s (nsresult = 0x%" PRIx32 ")",
                         NS_ConvertUTF16toUTF8(aScriptURL).get(),
-                        aLoadResult));
+                        static_cast<uint32_t>(aLoadResult)));
       return;
   }
 

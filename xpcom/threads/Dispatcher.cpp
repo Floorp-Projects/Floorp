@@ -22,6 +22,21 @@ public:
   Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
            ValidatingDispatcher* aDispatcher);
 
+  NS_IMETHODIMP
+  GetName(nsACString& aName) override
+  {
+    mozilla::Runnable::GetName(aName);
+    if (aName.IsEmpty()) {
+      // Try to get a name from the underlying runnable.
+      nsCOMPtr<nsINamed> named = do_QueryInterface(mRunnable);
+      if (named) {
+        named->GetName(aName);
+      }
+    }
+    aName.AppendASCII("(labeled)");
+    return NS_OK;
+  }
+
   NS_DECL_NSIRUNNABLE
 
 private:

@@ -456,13 +456,12 @@ GMPParent::EnsureProcessLoaded()
 
 #ifdef MOZ_CRASHREPORTER
 void
-GMPParent::WriteExtraDataForMinidump(CrashReporter::AnnotationTable& notes)
+GMPParent::WriteExtraDataForMinidump()
 {
-  notes.Put(NS_LITERAL_CSTRING("GMPPlugin"), NS_LITERAL_CSTRING("1"));
-  notes.Put(NS_LITERAL_CSTRING("PluginFilename"),
-                               NS_ConvertUTF16toUTF8(mName));
-  notes.Put(NS_LITERAL_CSTRING("PluginName"), mDisplayName);
-  notes.Put(NS_LITERAL_CSTRING("PluginVersion"), mVersion);
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("GMPPlugin"), NS_LITERAL_CSTRING("1"));
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginFilename"), NS_ConvertUTF16toUTF8(mName));
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginName"), mDisplayName);
+  mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginVersion"), mVersion);
 }
 
 bool
@@ -472,13 +471,13 @@ GMPParent::GetCrashID(nsString& aResult)
     return false;
   }
 
-  AnnotationTable notes(4);
-  WriteExtraDataForMinidump(notes);
+  WriteExtraDataForMinidump();
+  if (!mCrashReporter->GenerateCrashReport(OtherPid())) {
+    return false;
+  }
 
-  return mCrashReporter->GenerateCrashReport(
-    OtherPid(),
-    &notes,
-    &aResult);
+  aResult = mCrashReporter->MinidumpID();
+  return true;
 }
 
 static void
@@ -541,12 +540,13 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 mozilla::ipc::IPCResult
-GMPParent::RecvInitCrashReporter(Shmem&& aShmem)
+GMPParent::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
 #ifdef MOZ_CRASHREPORTER
   mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
     GeckoProcessType_GMPlugin,
-    aShmem);
+    aShmem,
+    aThreadId);
 #endif
   return IPC_OK();
 }

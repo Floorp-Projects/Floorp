@@ -83,7 +83,6 @@ public final class GeckoProfile {
 
     private final String mName;
     private final File mMozillaDir;
-    private final Context mApplicationContext;
 
     private Object mData;
 
@@ -320,7 +319,6 @@ public final class GeckoProfile {
             throw new IllegalArgumentException("Custom profile must have a directory");
         }
 
-        mApplicationContext = context.getApplicationContext();
         mName = profileName;
         mMozillaDir = GeckoProfileDirectories.getMozillaDirectory(context);
 
@@ -452,7 +450,7 @@ public final class GeckoProfile {
      *
      * @throws IOException if the client ID could not be retrieved.
      */
-    // Mimics ClientID.jsm – _doLoadClientID.
+    // Mimics ClientID.jsm - _doLoadClientID.
     @WorkerThread
     public String getClientId() throws IOException {
         try {
@@ -467,7 +465,7 @@ public final class GeckoProfile {
             clientIdToWrite = getValidClientIdFromDisk(FHR_CLIENT_ID_FILE_PATH);
         } catch (final IOException e) {
             // Avoid log spam: don't log the full Exception w/ the stack trace.
-            Log.d(LOGTAG, "Could not migrate client ID from FHR – creating a new one: " + e.getLocalizedMessage());
+            Log.d(LOGTAG, "Could not migrate client ID from FHR - creating a new one: " + e.getLocalizedMessage());
             clientIdToWrite = generateNewClientId();
         }
 

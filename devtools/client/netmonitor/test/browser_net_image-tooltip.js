@@ -21,7 +21,7 @@ add_task(function* test() {
     getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");
-  let toolboxDoc = monitor._toolbox.doc;
+  let toolboxDoc = monitor.toolbox.doc;
 
   gStore.dispatch(Actions.batchEnable(false));
 
@@ -38,7 +38,7 @@ add_task(function* test() {
   // Hide tooltip before next test, to avoid the situation that tooltip covers
   // the icon for the request of the next test.
   info("Checking the image thumbnail gets hidden...");
-  yield hideTooltipAndVerify(monitor._toolbox.doc,
+  yield hideTooltipAndVerify(monitor.toolbox.doc,
     document.querySelectorAll(".request-list-item")[0]);
 
   // +1 extra document reload

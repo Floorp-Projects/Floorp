@@ -126,6 +126,18 @@ protected:
     EXPECT_LE(childVelocityAfterFling2,
               childVelocityAfterFling1 * kAcceleration * kAcceleration / 4);
   }
+
+  void TestCrossApzcAxisLock() {
+    SCOPED_GFX_PREF(APZAxisLockMode, int32_t, 1);
+
+    CreateScrollHandoffLayerTree1();
+
+    RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+    Pan(childApzc, ScreenIntPoint(10, 60), ScreenIntPoint(15, 90),
+        PanOptions::KeepFingerDown | PanOptions::ExactCoordinates);
+
+    childApzc->AssertAxisLocked(ScrollDirection::VERTICAL);
+  }
 };
 
 // Here we test that if the processing of a touch block is deferred while we
@@ -217,7 +229,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 10, 40, true /* keep finger down */);
+  Pan(manager, 10, 40, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -255,7 +267,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -289,7 +301,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -322,7 +334,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   TestAsyncPanZoomController* child = ApzcOf(layers[1]);
 
   // Pan, causing the parent APZC to overscroll.
-  Pan(manager, 60, 90, true /* keep finger down */);
+  Pan(manager, 60, 90, PanOptions::KeepFingerDown);
   EXPECT_FALSE(child->IsOverscrolled());
   EXPECT_TRUE(rootApzc->IsOverscrolled());
 
@@ -518,4 +530,14 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
 
   // Verify that the parent scrolled from the fling.
   EXPECT_GT(parentApzc->GetFrameMetrics().GetScrollOffset().y, 10);
+}
+
+TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+  TestCrossApzcAxisLock();
+}
+
+TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
+  TestCrossApzcAxisLock();
 }

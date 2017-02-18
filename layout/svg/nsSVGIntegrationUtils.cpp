@@ -8,6 +8,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxDrawable.h"
+#include "gfxPrefs.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSClipPathInstance.h"
 #include "nsDisplayList.h"
@@ -26,7 +27,7 @@
 #include "mozilla/gfx/Point.h"
 #include "nsCSSRendering.h"
 #include "mozilla/Unused.h"
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -54,18 +55,21 @@ public:
    */
   PreEffectsVisualOverflowCollector(nsIFrame* aFirstContinuation,
                                     nsIFrame* aCurrentFrame,
-                                    const nsRect& aCurrentFrameOverflowArea)
+                                    const nsRect& aCurrentFrameOverflowArea,
+                                    bool aCheckPreEffectsBBoxPropCache)
     : mFirstContinuation(aFirstContinuation)
     , mCurrentFrame(aCurrentFrame)
     , mCurrentFrameOverflowArea(aCurrentFrameOverflowArea)
+    , mCheckPreEffectsBBoxPropCache(aCheckPreEffectsBBoxPropCache)
   {
     NS_ASSERTION(!mFirstContinuation->GetPrevContinuation(),
                  "We want the first continuation here");
   }
 
   virtual void AddBox(nsIFrame* aFrame) override {
-    nsRect overflow = (aFrame == mCurrentFrame) ?
-      mCurrentFrameOverflowArea : GetPreEffectsVisualOverflowRect(aFrame);
+    nsRect overflow = (aFrame == mCurrentFrame)
+      ? mCurrentFrameOverflowArea
+      : GetPreEffectsVisualOverflowRect(aFrame, mCheckPreEffectsBBoxPropCache);
     mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mFirstContinuation));
   }
 
@@ -75,7 +79,8 @@ public:
 
 private:
 
-  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame) {
+  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame,
+                                                bool aCheckPropCache) {
     nsRect* r = aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty());
     if (r) {
       return *r;
@@ -111,31 +116,36 @@ private:
     // property set, that would be bad, since then our GetVisualOverflowRect()
     // call would give us the post-effects, and post-transform, overflow rect.
     //
-    // There are two more exceptions:
-    // 1. In nsStyleImageLayers::Layer::CalcDifference, we do not add
-    //    nsChangeHint_UpdateOverflow hint when image mask(not SVG mask)
-    //    property value changed, since replace image mask does not cause
-    //    layout change. So even if we apply a new mask image to this frame,
-    //    PreEffectsBBoxProperty might still left empty.
-    // 2. During restyling: before the last continuation is restyled, there
-    //    is no guarantee that every continuation carries a
-    //    PreEffectsBBoxProperty property.
+    // There is one more exceptions, in
+    // nsStyleImageLayers::Layer::CalcDifference, we do not add
+    // nsChangeHint_UpdateOverflow hint when image mask(not SVG mask) property
+    // value changed, since replace image mask does not cause layout change.
+    // So even if we apply a new mask image to this frame,
+    // PreEffectsBBoxProperty might still left empty.
 #ifdef DEBUG
-    nsIFrame* firstFrame =
-      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-    bool mightHaveNoneSVGMask =
-      nsSVGEffects::GetEffectProperties(firstFrame).MightHaveNoneSVGMask();
-    bool inRestyle =
-      aFrame->PresContext()->RestyleManager()->AsGecko()->IsInStyleRefresh();
+    if (aCheckPropCache) {
+      nsIFrame* firstFrame =
+        nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
+      bool mightHaveNoneSVGMask =
+        nsSVGEffects::GetEffectProperties(firstFrame).MightHaveNoneSVGMask();
 
-    NS_ASSERTION(mightHaveNoneSVGMask || inRestyle ||
+      MOZ_ASSERT(mightHaveNoneSVGMask ||
                  aFrame->GetParent()->StyleContext()->GetPseudo() ==
-                   nsCSSAnonBoxes::mozAnonymousBlock,
+                 nsCSSAnonBoxes::mozAnonymousBlock,
                  "How did we getting here, then?");
+    }
+
+    bool hasEffect = nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame);
+    nsOverflowAreas* preTransformOverflows =
+      aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
+    // Having PreTransformOverflowAreasProperty means GetVisualOverflowRect()
+    // will return post-effect rect, which is not what we want, this function
+    // intentional reports pre-effect rect. But it does not matter if there is
+    // no SVG effect on this frame, since no effect means post-effect rect
+    // matches pre-effect rect.
+    MOZ_ASSERT(!hasEffect || !preTransformOverflows,
+               "GetVisualOverflowRect() won't return the pre-effects rect!");
 #endif
-    NS_ASSERTION(!aFrame->Properties().Get(
-                   aFrame->PreTransformOverflowAreasProperty()),
-                 "GetVisualOverflowRect() won't return the pre-effects rect!");
     return aFrame->GetVisualOverflowRect();
   }
 
@@ -143,6 +153,7 @@ private:
   nsIFrame*     mCurrentFrame;
   const nsRect& mCurrentFrameOverflowArea;
   nsRect        mResult;
+  bool          mCheckPreEffectsBBoxPropCache;
 };
 
 /**
@@ -153,13 +164,15 @@ static nsRect
 GetPreEffectsVisualOverflowUnion(nsIFrame* aFirstContinuation,
                                  nsIFrame* aCurrentFrame,
                                  const nsRect& aCurrentFramePreEffectsOverflow,
-                                 const nsPoint& aFirstContinuationToUserSpace)
+                                 const nsPoint& aFirstContinuationToUserSpace,
+                                 bool aCheckPreEffectsBBoxPropCache)
 {
   NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
                "Need first continuation here");
   PreEffectsVisualOverflowCollector collector(aFirstContinuation,
                                               aCurrentFrame,
-                                              aCurrentFramePreEffectsOverflow);
+                                              aCurrentFramePreEffectsOverflow,
+                                              aCheckPreEffectsBBoxPropCache);
   // Compute union of all overflow areas relative to aFirstContinuation:
   nsLayoutUtils::GetAllInFlowBoxes(aFirstContinuation, &collector);
   // Return the result in user space:
@@ -237,7 +250,8 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
   nsRect r = GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
-                                              GetOffsetToBoundingBox(firstFrame));
+                                              GetOffsetToBoundingBox(firstFrame),
+                                              true);
   return nsLayoutUtils::RectToGfxRect(r,
            aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
@@ -299,7 +313,11 @@ nsRect
     nsLayoutUtils::RectToGfxRect(
       GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
                                        aPreEffectsOverflowRect,
-                                       firstFrameToBoundingBox),
+                                       firstFrameToBoundingBox,
+                                       false /* See the beginning of the
+                                                comment above this function to
+                                                know why we skip this
+                                                checking. */),
       aFrame->PresContext()->AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 

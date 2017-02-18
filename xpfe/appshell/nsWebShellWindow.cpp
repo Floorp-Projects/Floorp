@@ -52,7 +52,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
-#include "prprf.h"
 
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"

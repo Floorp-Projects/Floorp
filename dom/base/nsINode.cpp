@@ -91,7 +91,6 @@
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/Preferences.h"
-#include "prprf.h"
 #include "xpcpublic.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCSSParser.h"
@@ -1529,7 +1528,6 @@ nsINode::SetExplicitBaseURI(nsIURI* aURI)
 {
   nsresult rv = SetProperty(nsGkAtoms::baseURIProperty, aURI, ReleaseURI);
   if (NS_SUCCEEDED(rv)) {
-    SetHasExplicitBaseURI();
     NS_ADDREF(aURI);
   }
   return rv;

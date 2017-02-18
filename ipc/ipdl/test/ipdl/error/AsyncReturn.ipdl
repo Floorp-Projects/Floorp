@@ -1,0 +1,6 @@
+// Async messages are not allowed to return values.
+
+protocol AsyncReturn {
+child:
+    async Msg() returns(int32_t aNumber);
+};

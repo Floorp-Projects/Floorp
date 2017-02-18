@@ -587,7 +587,8 @@ EngineManager.prototype = {
    */
   register(engineObject) {
     if (Array.isArray(engineObject)) {
-      return engineObject.map(this.register, this);
+      engineObject.map(this.register, this);
+      return;
     }
 
     try {
@@ -604,7 +605,6 @@ EngineManager.prototype = {
       name = name.name || "";
 
       this._log.error(`Could not initialize engine ${name}`, ex);
-      return engineObject;
     }
   },
 

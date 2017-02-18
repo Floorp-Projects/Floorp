@@ -20,6 +20,7 @@ namespace test_scheduler {
 
 using namespace mozilla::gfx;
 using namespace mozilla;
+using mozilla::gfx::SyncObject;
 
 // Artificially cause threads to yield randomly in an attempt to make racy
 // things more apparent (if any).

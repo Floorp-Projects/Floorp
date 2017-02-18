@@ -431,7 +431,7 @@ private:
   void ReflowInFlowChild(nsIFrame*               aChild,
                          const GridItemInfo*     aGridItemInfo,
                          nsSize                  aContainerSize,
-                         mozilla::Maybe<nscoord> aStretchBSize,
+                         const mozilla::Maybe<nscoord>& aStretchBSize,
                          const Fragmentainer*    aFragmentainer,
                          const GridReflowInput&  aState,
                          const LogicalRect&      aContentArea,

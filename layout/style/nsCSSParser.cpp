@@ -6,6 +6,8 @@
 
 /* parsing of CSS stylesheets, based on a token stream from the CSS scanner */
 
+#include "nsCSSParser.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -16,7 +18,6 @@
 #include <algorithm> // for std::stable_sort
 #include <limits> // for std::numeric_limits
 
-#include "nsCSSParser.h"
 #include "nsAlgorithm.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -595,11 +596,6 @@ protected:
       nsAutoCSSParserInputStateRestorer mParserStateRestorer;
       nsAutoSuppressErrors mErrorSuppresser;
   };
-
-
-  bool IsSVGMode() const {
-    return mScanner->IsSVGMode();
-  }
 
   /**
    * Saves the current input state, which includes any currently pushed
@@ -1185,10 +1181,10 @@ protected:
   // Parse a <number> color component. The range of color component is [0, 255].
   // If |aSeparator| is provided, this function will also attempt to parse that
   // character after parsing the color component.
-  bool ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator);
+  bool ParseColorComponent(uint8_t& aComponent, const Maybe<char>& aSeparator);
   // Similar to the previous one, but parse a <percentage> color component.
   // The range of color component is [0.0f, 1.0f].
-  bool ParseColorComponent(float& aComponent, Maybe<char> aSeparator);
+  bool ParseColorComponent(float& aComponent, const Maybe<char>& aSeparator);
 
   // Parse a <hue> component.
   //   <hue> = <number> | <angle>
@@ -1464,6 +1460,10 @@ protected:
   // True if we are in parsing rules for the chrome.
   bool mIsChrome : 1;
 
+  // True if we're parsing SVG presentation attributes
+  // These attributes allow non-calc lengths to be unitless (mapping to px)
+  bool mIsSVGMode : 1;
+
   // True if viewport units should be allowed.
   bool mViewportUnitsEnabled : 1;
 
@@ -1586,6 +1586,7 @@ CSSParserImpl::CSSParserImpl()
     mUnitlessLengthQuirk(false),
     mParsingMode(css::eAuthorSheetFeatures),
     mIsChrome(false),
+    mIsSVGMode(false),
     mViewportUnitsEnabled(true),
     mParsingCompoundProperty(false),
     mInSupportsCondition(false),
@@ -1991,7 +1992,6 @@ CSSParserImpl::ParseProperty(const nsCSSPropertyID aPropID,
   css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURI);
   InitScanner(scanner, reporter, aSheetURI, aBaseURI, aSheetPrincipal);
   mSection = eCSSSection_General;
-  scanner.SetSVGMode(aIsSVGMode);
 
   *aChanged = false;
 
@@ -2006,6 +2006,7 @@ CSSParserImpl::ParseProperty(const nsCSSPropertyID aPropID,
     return;
   }
 
+  mIsSVGMode = aIsSVGMode;
   bool parsedOK = ParseProperty(aPropID);
   // We should now be at EOF
   if (parsedOK && GetToken(true)) {
@@ -2041,6 +2042,7 @@ CSSParserImpl::ParseProperty(const nsCSSPropertyID aPropID,
   }
 
   mTempData.AssertInitialState();
+  mIsSVGMode = false;
 
   ReleaseScanner();
 }
@@ -6859,7 +6861,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator)
+CSSParserImpl::ParseColorComponent(uint8_t& aComponent, const Maybe<char>& aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
@@ -6887,7 +6889,7 @@ CSSParserImpl::ParseColorComponent(uint8_t& aComponent, Maybe<char> aSeparator)
 }
 
 bool
-CSSParserImpl::ParseColorComponent(float& aComponent, Maybe<char> aSeparator)
+CSSParserImpl::ParseColorComponent(float& aComponent, const Maybe<char>& aSeparator)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
@@ -7791,7 +7793,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
   }
 
-  if (IsSVGMode() && !IsParsingCompoundProperty()) {
+  if (mIsSVGMode && !IsParsingCompoundProperty()) {
     // STANDARD: SVG Spec states that lengths and coordinates can be unitless
     // in which case they default to user-units (1 px = 1 user unit)
     if (((aVariantMask & VARIANT_LENGTH) != 0) &&
@@ -17773,7 +17775,6 @@ CSSParserImpl::IsValueValidForProperty(const nsCSSPropertyID aPropID,
   nsAutoSuppressErrors suppressErrors(this);
 
   mSection = eCSSSection_General;
-  scanner.SetSVGMode(false);
 
   // Check for unknown properties
   if (eCSSProperty_UNKNOWN == aPropID) {

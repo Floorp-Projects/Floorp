@@ -1313,10 +1313,10 @@ EnvironmentCache.prototype = {
       let versionInfo = getWindowsVersionInfo();
       data.servicePackMajor = versionInfo.servicePackMajor;
       data.servicePackMinor = versionInfo.servicePackMinor;
-      // We only need the build number and UBR if we're at or above Windows 10.
+      data.windowsBuildNumber = versionInfo.buildNumber;
+      // We only need the UBR if we're at or above Windows 10.
       if (typeof(data.version) === "string" &&
           Services.vc.compare(data.version, "10") >= 0) {
-        data.windowsBuildNumber = versionInfo.buildNumber;
         // Query the UBR key and only add it to the environment if it's available.
         // |readRegKey| doesn't throw, but rather returns 'undefined' on error.
         let ubr = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,

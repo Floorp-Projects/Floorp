@@ -152,7 +152,7 @@ function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
   return Task.spawn(function* () {
-    let tab = monitor.target.tab;
+    let tab = monitor.toolbox.target.tab;
     let url = newUrl || tab.linkedBrowser.currentURI.spec;
 
     let onDestroyed = monitor.once("destroyed");
@@ -167,7 +167,7 @@ function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
   return Task.spawn(function* () {
-    let tab = monitor.target.tab;
+    let tab = monitor.toolbox.target.tab;
 
     let onDestroyed = monitor.once("destroyed");
     yield removeTab(tab);
@@ -247,16 +247,6 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
 
   awaitedEventsToListeners.forEach(([e, l]) => panel.on(EVENTS[e], l));
   return deferred.promise;
-}
-
-/**
- * Convert a store record (model) to the rendered element. Tests that need to use
- * this should be rewritten - test the rendered markup at unit level, integration
- * mochitest should check only the store state.
- */
-function getItemTarget(requestList, requestItem) {
-  const items = requestList.mountPoint.querySelectorAll(".request-list-item");
-  return [...items].find(el => el.dataset.id == requestItem.id);
 }
 
 function verifyRequestItemTarget(document, requestList, requestItem, aMethod,
@@ -397,7 +387,7 @@ function testFilterButtons(monitor, filterType) {
   let doc = monitor.panelWin.document;
   let target = doc.querySelector("#requests-menu-filter-" + filterType + "-button");
   ok(target, `Filter button '${filterType}' was found`);
-  let buttons = [...doc.querySelectorAll(".menu-filter-button")];
+  let buttons = [...doc.querySelectorAll("#requests-menu-filter-buttons button")];
   ok(buttons.length > 0, "More than zero filter buttons were found");
 
   // Only target should be checked.
@@ -415,7 +405,7 @@ function testFilterButtons(monitor, filterType) {
  */
 function testFilterButtonsCustom(aMonitor, aIsChecked) {
   let doc = aMonitor.panelWin.document;
-  let buttons = doc.querySelectorAll(".menu-filter-button");
+  let buttons = doc.querySelectorAll("#requests-menu-filter-buttons button");
   for (let i = 0; i < aIsChecked.length; i++) {
     let button = buttons[i];
     if (aIsChecked[i]) {

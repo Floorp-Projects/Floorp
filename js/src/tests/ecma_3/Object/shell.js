@@ -16,7 +16,6 @@
  * Invoking Number.prototype.toString() on this just returns 7.
  * Object.prototype.toString() on this returns '[object Number]'.
  *
- * The getJSType() function below will return '[object Number]' for us.
  * The getJSClass() function returns 'Number', the [[Class]] property of obj.
  * See ECMA-262 Edition 3,  13-Oct-1999,  Section 8.6.2 
  */
@@ -27,14 +26,6 @@ var cnNoObject = 'Unexpected Error!!! Parameter to this function must be an obje
 var cnNoClass = 'Unexpected Error!!! Cannot find Class property';
 var cnObjectToString = Object.prototype.toString;
 var GLOBAL = 'global';
-
-// checks that it's safe to call findType()
-function getJSType(obj)
-{
-  if (isObject(obj))
-    return findType(obj);
-  return cnNoObject;
-}
 
 
 // checks that it's safe to call findType()

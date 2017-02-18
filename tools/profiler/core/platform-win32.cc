@@ -34,9 +34,6 @@
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
-#include "mozilla/StackWalk_windows.h"
-
-
 class PlatformData {
  public:
   // Get a handle to the calling thread. This is the thread that we are
@@ -84,18 +81,14 @@ GetThreadHandle(PlatformData* aData)
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 
-// SamplerThread objects are used for creating and running threads. When the
-// Start() method is called the new thread starts running the Run() method in
-// the new thread. The SamplerThread object should not be deallocated before
-// the thread has terminated.
+// The sampler thread controls sampling and runs whenever the profiler is
+// active. It periodically runs through all registered threads, finds those
+// that should be sampled, then pauses and samples them.
 class SamplerThread
 {
  public:
-  // Initialize a Win32 thread object. The thread has an invalid thread
-  // handle until it is started.
   explicit SamplerThread(double interval)
-    : mStackSize(0)
-    , mThread(kNoThread)
+    : mThread(kNoThread)
     , mInterval(interval)
   {
     mInterval = floor(interval + 0.5);
@@ -123,10 +116,10 @@ class SamplerThread
   void Start() {
     mThread = reinterpret_cast<HANDLE>(
         _beginthreadex(NULL,
-                       static_cast<unsigned>(mStackSize),
+                       /* stack_size */ 0,
                        ThreadEntry,
                        this,
-                       0,
+                       /* initflag */ 0,
                        (unsigned int*) &mThreadId));
   }
 
@@ -138,13 +131,10 @@ class SamplerThread
 
   static void StartSampler() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(!mInstance);
 
-    if (mInstance == NULL) {
-      mInstance = new SamplerThread(gInterval);
-      mInstance->Start();
-    } else {
-      MOZ_ASSERT(mInstance->mInterval == gInterval);
-    }
+    mInstance = new SamplerThread(gInterval);
+    mInstance->Start();
   }
 
   static void StopSampler() {
@@ -168,11 +158,11 @@ class SamplerThread
       gBuffer->deleteExpiredStoredMarkers();
 
       if (!gIsPaused) {
-        mozilla::StaticMutexAutoLock lock(sRegisteredThreadsMutex);
+        mozilla::StaticMutexAutoLock lock(gRegisteredThreadsMutex);
 
         bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*sRegisteredThreads)[i];
+        for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
+          ThreadInfo* info = (*gRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
           if (!info->hasProfile() || info->IsPendingDelete()) {
@@ -245,29 +235,6 @@ class SamplerThread
       return;
     }
 
-    // Threads that may invoke JS require extra attention. Since, on windows,
-    // the jits also need to modify the same dynamic function table that we need
-    // to get a stack trace, we have to be wary of that to avoid deadlock.
-    //
-    // When embedded in Gecko, for threads that aren't the main thread,
-    // CanInvokeJS consults an unlocked value in the nsIThread, so we must
-    // consult this after suspending the profiled thread to avoid racing
-    // against a value change.
-    if (aThreadInfo->CanInvokeJS()) {
-      if (!TryAcquireStackWalkWorkaroundLock()) {
-        ResumeThread(profiled_thread);
-        return;
-      }
-
-      // It is safe to immediately drop the lock. We only need to contend with
-      // the case in which the profiled thread held needed system resources.
-      // If the profiled thread had held those resources, the trylock would have
-      // failed. Anyone else who grabs those resources will continue to make
-      // progress, since those threads are not suspended. Because of this,
-      // we cannot deadlock with them, and should let them run as they please.
-      ReleaseStackWalkWorkaroundLock();
-    }
-
 #if V8_HOST_ARCH_X64
     sample->pc = reinterpret_cast<Address>(context.Rip);
     sample->sp = reinterpret_cast<Address>(context.Rsp);
@@ -286,7 +253,6 @@ class SamplerThread
   }
 
 private:
-  int mStackSize;
   HANDLE mThread;
   Thread::tid_t mThreadId;
 
@@ -295,7 +261,8 @@ private:
   // Protects the process wide state below.
   static SamplerThread* mInstance;
 
-  DISALLOW_COPY_AND_ASSIGN(SamplerThread);
+  SamplerThread(const SamplerThread&) = delete;
+  void operator=(const SamplerThread&) = delete;
 };
 
 SamplerThread* SamplerThread::mInstance = NULL;
@@ -303,6 +270,8 @@ SamplerThread* SamplerThread::mInstance = NULL;
 static void
 PlatformStart()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(!gIsActive);
   gIsActive = true;
   SamplerThread::StartSampler();
@@ -311,6 +280,8 @@ PlatformStart()
 static void
 PlatformStop()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   MOZ_ASSERT(gIsActive);
   gIsActive = false;
   SamplerThread::StopSampler();

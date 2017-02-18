@@ -12,6 +12,7 @@ browser.jar:
     content/browser/schemas/devtools.json
     content/browser/schemas/devtools_inspected_window.json
     content/browser/schemas/devtools_network.json
+    content/browser/schemas/devtools_panels.json
     content/browser/schemas/history.json
     content/browser/schemas/omnibox.json
     content/browser/schemas/page_action.json

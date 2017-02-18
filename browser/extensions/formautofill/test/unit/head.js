@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
@@ -44,21 +45,6 @@ Components.manager.addBootstrappedManifestLocation(extensionDir);
 // system.  Thus, start from a new base number every time, to make a collision
 // with a file that is still pending deletion highly unlikely.
 let gFileCounter = Math.floor(Math.random() * 1000000);
-
-function loadFormAutofillContent() {
-  let facGlobal = {
-    addEventListener() {},
-    addMessageListener() {},
-    sendAsyncMessage() {},
-  };
-  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-               .getService(Ci.mozIJSSubScriptLoader);
-  loader.loadSubScriptWithOptions("chrome://formautofill/content/FormAutofillContent.js", {
-    target: facGlobal,
-  });
-
-  return facGlobal;
-}
 
 /**
  * Returns a reference to a temporary file, that is guaranteed not to exist, and

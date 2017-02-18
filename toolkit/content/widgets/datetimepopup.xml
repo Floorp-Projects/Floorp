@@ -22,6 +22,13 @@
       <field name="TIME_PICKER_HEIGHT" readonly="true">"21em"</field>
       <field name="DATE_PICKER_WIDTH" readonly="true">"23.1em"</field>
       <field name="DATE_PICKER_HEIGHT" readonly="true">"20.7em"</field>
+      <constructor><![CDATA[
+        this.l10n = {};
+        const mozIntl = Components.classes["@mozilla.org/mozintl;1"]
+                          .getService(Components.interfaces.mozIMozIntl);
+        mozIntl.addGetCalendarInfo(l10n);
+        mozIntl.addGetDisplayNames(l10n);
+      ]]></constructor>
       <method name="loadPicker">
         <parameter name="type"/>
         <parameter name="detail"/>
@@ -117,6 +124,31 @@
               const { year, month, day } = detail.value;
               const { firstDayOfWeek, weekends } =
                 this.getCalendarInfo(locale);
+              const monthStrings = this.getDisplayNames(
+                locale, [
+                  "dates/gregorian/months/january",
+                  "dates/gregorian/months/february",
+                  "dates/gregorian/months/march",
+                  "dates/gregorian/months/april",
+                  "dates/gregorian/months/may",
+                  "dates/gregorian/months/june",
+                  "dates/gregorian/months/july",
+                  "dates/gregorian/months/august",
+                  "dates/gregorian/months/september",
+                  "dates/gregorian/months/october",
+                  "dates/gregorian/months/november",
+                  "dates/gregorian/months/december",
+                ], "short");
+              const weekdayStrings = this.getDisplayNames(
+                locale, [
+                  "dates/gregorian/weekdays/sunday",
+                  "dates/gregorian/weekdays/monday",
+                  "dates/gregorian/weekdays/tuesday",
+                  "dates/gregorian/weekdays/wednesday",
+                  "dates/gregorian/weekdays/thursday",
+                  "dates/gregorian/weekdays/friday",
+                  "dates/gregorian/weekdays/saturday",
+                ], "short");
 
               this.postMessageToPicker({
                 name: "PickerInit",
@@ -127,6 +159,8 @@
                   day,
                   firstDayOfWeek,
                   weekends,
+                  monthStrings,
+                  weekdayStrings,
                   locale
                 }
               });
@@ -192,11 +226,7 @@
       <method name="getCalendarInfo">
         <parameter name="locale"/>
         <body><![CDATA[
-          const l10n = {};
-          const mozIntl = Components.classes["@mozilla.org/mozintl;1"]
-                            .getService(Components.interfaces.mozIMozIntl);
-          mozIntl.addGetCalendarInfo(l10n);
-          const calendarInfo = l10n.getCalendarInfo(locale);
+          const calendarInfo = this.l10n.getCalendarInfo(locale);
 
           // Day of week from calendarInfo starts from 1 as Sunday to 7 as Saturday,
           // so they need to be mapped to JavaScript convention with 0 as Sunday
@@ -222,6 +252,15 @@
             firstDayOfWeek,
             weekends
           }
+        ]]></body>
+      </method>
+      <method name="getDisplayNames">
+        <parameter name="locale"/>
+        <parameter name="keys"/>
+        <parameter name="style"/>
+        <body><![CDATA[
+          const displayNames = this.l10n.getDisplayNames(locale, {keys, style});
+          return keys.map(key => displayNames.values[key]);
         ]]></body>
       </method>
       <method name="handleEvent">

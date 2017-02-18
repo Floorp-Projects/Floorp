@@ -48,13 +48,13 @@ WyciwygChannelChild::WyciwygChannelChild()
   , mIPCOpen(false)
   , mSentAppData(false)
 {
-  LOG(("Creating WyciwygChannelChild @%x\n", this));
+  LOG(("Creating WyciwygChannelChild @%p\n", this));
   mEventQ = new ChannelEventQueue(NS_ISUPPORTS_CAST(nsIWyciwygChannel*, this));
 }
 
 WyciwygChannelChild::~WyciwygChannelChild()
 {
-  LOG(("Destroying WyciwygChannelChild @%x\n", this));
+  LOG(("Destroying WyciwygChannelChild @%p\n", this));
   if (mLoadInfo) {
     NS_ReleaseOnMainThread(mLoadInfo.forget());
   }
@@ -275,8 +275,8 @@ WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 void
 WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
 {
-  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
-           this, statusCode));
+  LOG(("WyciwygChannelChild::RecvOnStopRequest [this=%p status=%" PRIu32 "]\n",
+       this, static_cast<uint32_t>(statusCode)));
 
   { // We need to ensure that all IPDL message dispatching occurs
     // before we delete the protocol below
@@ -693,8 +693,22 @@ WyciwygChannelChild::WriteToCacheEntry(const nsAString & aData)
     mSentAppData = true;
   }
 
-  SendWriteToCacheEntry(PromiseFlatString(aData));
   mState = WCC_ONWRITE;
+
+  // Give ourselves a megabyte of headroom for the message size. Convert bytes
+  // to wide chars.
+  static const size_t kMaxMessageSize = (IPC::Channel::kMaximumMessageSize - 1024) / 2;
+
+  size_t curIndex = 0;
+  size_t charsRemaining = aData.Length();
+  do {
+    size_t chunkSize = std::min(charsRemaining, kMaxMessageSize);
+    SendWriteToCacheEntry(Substring(aData, curIndex, chunkSize));
+
+    charsRemaining -= chunkSize;
+    curIndex += chunkSize;
+  } while (charsRemaining != 0);
+
   return NS_OK;
 }
 

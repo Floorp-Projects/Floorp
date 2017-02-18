@@ -6,6 +6,7 @@
 #include "WebRenderCanvasLayer.h"
 
 #include "AsyncCanvasRenderer.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "GLContext.h"
 #include "GLScreenBuffer.h"

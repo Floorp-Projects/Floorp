@@ -417,6 +417,7 @@ class RecursiveMakeBackend(CommonBackend):
             'libs': set(),
             'misc': set(),
             'tools': set(),
+            'check': set(),
         }
 
     def summary(self):
@@ -443,14 +444,11 @@ class RecursiveMakeBackend(CommonBackend):
 
         consumed = CommonBackend.consume_object(self, obj)
 
-        # CommonBackend handles XPIDLFile and TestManifest, but we want to do
+        # CommonBackend handles XPIDLFile, but we want to do
         # some extra things for them.
         if isinstance(obj, XPIDLFile):
             backend_file.xpt_name = '%s.xpt' % obj.module
             self._idl_dirs.add(obj.relobjdir)
-
-        elif isinstance(obj, TestManifest):
-            self._process_test_manifest(obj, backend_file)
 
         # If CommonBackend acknowledged the object, we're done with it.
         if consumed:
@@ -657,6 +655,9 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, ChromeManifestEntry):
             self._process_chrome_manifest_entry(obj, backend_file)
 
+        elif isinstance(obj, TestManifest):
+            self._process_test_manifest(obj, backend_file)
+
         else:
             return False
 
@@ -706,6 +707,7 @@ class RecursiveMakeBackend(CommonBackend):
             ('libs', libs_filter),
             ('misc', parallel_filter),
             ('tools', tools_filter),
+            ('check', parallel_filter),
         ]
 
         root_deps_mk = Makefile()
@@ -848,9 +850,9 @@ class RecursiveMakeBackend(CommonBackend):
                 self._create_makefile(obj, stub=stub)
                 with open(obj.output_path) as fh:
                     content = fh.read()
-                    # Skip every directory but those with a Makefile
-                    # containing a tools target, or XPI_PKGNAME or
-                    # INSTALL_EXTENSION_ID.
+                    # Directories with a Makefile containing a tools target, or
+                    # XPI_PKGNAME or INSTALL_EXTENSION_ID can't be skipped and
+                    # must run during the 'tools' tier.
                     for t in (b'XPI_PKGNAME', b'INSTALL_EXTENSION_ID',
                             b'tools'):
                         if t not in content:
@@ -860,6 +862,12 @@ class RecursiveMakeBackend(CommonBackend):
                         if objdir == self.environment.topobjdir:
                             continue
                         self._no_skip['tools'].add(mozpath.relpath(objdir,
+                            self.environment.topobjdir))
+
+                    # Directories with a Makefile containing a check target
+                    # can't be skipped and must run during the 'check' tier.
+                    if re.search('(?:^|\s)check.*::', content, re.M):
+                        self._no_skip['check'].add(mozpath.relpath(objdir,
                             self.environment.topobjdir))
 
                     # Detect any Makefile.ins that contain variables on the

@@ -48,7 +48,8 @@ class NotifyChannelActiveRunnable final : public Runnable
 public:
   NotifyChannelActiveRunnable(uint64_t aWindowID, AudioChannel aAudioChannel,
                               bool aActive)
-    : mWindowID(aWindowID)
+    : Runnable("NotifyChannelActiveRunnable")
+    , mWindowID(aWindowID)
     , mAudioChannel(aAudioChannel)
     , mActive(aActive)
   {}
@@ -89,8 +90,8 @@ public:
                                        : u"inactive");
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-           ("NotifyChannelActiveRunnable, type = %d, active = %d\n",
-            mAudioChannel, mActive));
+           ("NotifyChannelActiveRunnable, type = %" PRIu32 ", active = %d\n",
+            static_cast<uint32_t>(mAudioChannel), mActive));
 
     return NS_OK;
   }
@@ -828,6 +829,10 @@ AudioChannelService::GetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    *aVolume = 0.f;
+    return NS_ERROR_FAILURE;
+  }
   *aVolume = GetAudioChannelVolume(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
@@ -842,8 +847,8 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %d, "
-          "volume = %f\n", aWindow, aAudioChannel, aVolume));
+         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %" PRIu32 ", "
+          "volume = %f\n", aWindow, static_cast<uint32_t>(aAudioChannel), aVolume));
 
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
@@ -858,6 +863,9 @@ AudioChannelService::SetAudioChannelVolume(mozIDOMWindowProxy* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
   SetAudioChannelVolume(window, (AudioChannel)aAudioChannel, aVolume);
   return NS_OK;
 }
@@ -882,6 +890,10 @@ AudioChannelService::GetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    *aMuted = false;
+    return NS_ERROR_FAILURE;
+  }
   *aMuted = GetAudioChannelMuted(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
@@ -896,8 +908,8 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindowOuter* aWindow,
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %d, "
-          "mute = %d\n", aWindow, aAudioChannel, aMuted));
+         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %" PRIu32 ", "
+          "mute = %d\n", aWindow, static_cast<uint32_t>(aAudioChannel), aMuted));
 
   if (aAudioChannel == AudioChannel::System) {
     // Workaround for bug1183033, system channel type can always playback.
@@ -917,6 +929,9 @@ AudioChannelService::SetAudioChannelMuted(mozIDOMWindowProxy* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    return NS_ERROR_FAILURE;
+  }
   SetAudioChannelMuted(window, (AudioChannel)aAudioChannel, aMuted);
   return NS_OK;
 }
@@ -941,6 +956,10 @@ AudioChannelService::IsAudioChannelActive(mozIDOMWindowProxy* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    *aActive = false;
+    return NS_ERROR_FAILURE;
+  }
   *aActive = IsAudioChannelActive(window, (AudioChannel)aAudioChannel);
   return NS_OK;
 }
@@ -951,6 +970,9 @@ AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow)
   MOZ_ASSERT(NS_IsMainThread());
 
   auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  if (!window) {
+    return false;
+  }
   AudioChannelWindow* winData = GetOrCreateWindowData(window);
   return !winData->mAudibleAgents.IsEmpty();
 }

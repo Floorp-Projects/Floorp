@@ -280,8 +280,7 @@ private:
   void sendto_i(const net::NetAddr &addr, nsAutoPtr<DataBuffer> buf);
   void close_i();
 #if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
-  static void release_child_i(nsIUDPSocketChild* aChild, nsCOMPtr<nsIEventTarget> ststhread);
-  static void release_use_s();
+  static void release_child_i(nsIUDPSocketChild* aChild);
 #endif
   // STS thread executor
   void recv_callback_s(RefPtr<nr_udp_message> msg);

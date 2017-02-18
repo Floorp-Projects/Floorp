@@ -65,18 +65,18 @@ class MOZ_STACK_CLASS BytecodeCompiler
     ModuleObject* compileModule();
     bool compileStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
-                                   Maybe<uint32_t> parameterListEnd);
+                                   const Maybe<uint32_t>& parameterListEnd);
 
     ScriptSourceObject* sourceObjectPtr() const;
 
   private:
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
     bool checkLength();
-    bool createScriptSource(Maybe<uint32_t> parameterListEnd);
+    bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
     bool maybeCompressSource();
     bool canLazilyParse();
     bool createParser();
-    bool createSourceAndParser(Maybe<uint32_t> parameterListEnd = Nothing());
+    bool createSourceAndParser(const Maybe<uint32_t>& parameterListEnd = Nothing());
     bool createScript();
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives);
@@ -162,7 +162,7 @@ BytecodeCompiler::checkLength()
 }
 
 bool
-BytecodeCompiler::createScriptSource(Maybe<uint32_t> parameterListEnd)
+BytecodeCompiler::createScriptSource(const Maybe<uint32_t>& parameterListEnd)
 {
     if (!checkLength())
         return false;
@@ -233,7 +233,7 @@ BytecodeCompiler::createParser()
 }
 
 bool
-BytecodeCompiler::createSourceAndParser(Maybe<uint32_t> parameterListEnd /* = Nothing() */)
+BytecodeCompiler::createSourceAndParser(const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
 {
     return createScriptSource(parameterListEnd) &&
            maybeCompressSource() &&
@@ -431,7 +431,7 @@ bool
 BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
                                             GeneratorKind generatorKind,
                                             FunctionAsyncKind asyncKind,
-                                            Maybe<uint32_t> parameterListEnd)
+                                            const Maybe<uint32_t>& parameterListEnd)
 {
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
@@ -486,7 +486,7 @@ BytecodeCompiler::sourceObjectPtr() const
 
 ScriptSourceObject*
 frontend::CreateScriptSourceObject(JSContext* cx, const ReadOnlyCompileOptions& options,
-                                   Maybe<uint32_t> parameterListEnd /* = Nothing() */)
+                                   const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
 {
     ScriptSource* ss = cx->new_<ScriptSource>();
     if (!ss)
@@ -684,7 +684,7 @@ bool
 frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
                                     const ReadOnlyCompileOptions& options,
                                     JS::SourceBufferHolder& srcBuf,
-                                    Maybe<uint32_t> parameterListEnd,
+                                    const Maybe<uint32_t>& parameterListEnd,
                                     HandleScope enclosingScope /* = nullptr */)
 {
     RootedScope scope(cx, enclosingScope);
@@ -700,7 +700,7 @@ bool
 frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
                                      const ReadOnlyCompileOptions& options,
                                      JS::SourceBufferHolder& srcBuf,
-                                     Maybe<uint32_t> parameterListEnd)
+                                     const Maybe<uint32_t>& parameterListEnd)
 {
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 
@@ -713,7 +713,7 @@ bool
 frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fun,
                                          const ReadOnlyCompileOptions& options,
                                          JS::SourceBufferHolder& srcBuf,
-                                         Maybe<uint32_t> parameterListEnd)
+                                         const Maybe<uint32_t>& parameterListEnd)
 {
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
 

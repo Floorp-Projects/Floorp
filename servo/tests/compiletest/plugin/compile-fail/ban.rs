@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![feature(plugin)]
-#![plugin(plugins)]
+#![plugin(script_plugins)]
 
 extern crate js;
 
@@ -12,7 +12,7 @@ use std::cell::Cell;
 
 struct Foo {
     bar: Cell<JSVal>
-    //~^ ERROR Banned type Cell<JSVal> detected. Use MutJS<JSVal> instead,
+    //~^ ERROR Banned type Cell<JSVal> detected. Use MutJS<JSVal> instead
 }
 
 fn main() {}

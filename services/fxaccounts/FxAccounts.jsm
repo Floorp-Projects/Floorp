@@ -69,6 +69,7 @@ var publicProperties = [
   "setSignedInUser",
   "signOut",
   "updateDeviceRegistration",
+  "deleteDeviceRegistration",
   "updateUserAccountData",
   "whenVerified",
 ];
@@ -546,7 +547,14 @@ FxAccountsInternal.prototype = {
    */
   setSignedInUser: function setSignedInUser(credentials) {
     log.debug("setSignedInUser - aborting any existing flows");
-    return this.abortExistingFlow().then(() => {
+    return this.getSignedInUser().then(signedInUser => {
+      if (signedInUser) {
+        return this.deleteDeviceRegistration(signedInUser.sessionToken, signedInUser.deviceId);
+      }
+      return null;
+    }).then(() =>
+      this.abortExistingFlow()
+    ).then(() => {
       let currentAccountState = this.currentAccountState = this.newAccountState(
         Cu.cloneInto(credentials, {}) // Pass a clone of the credentials object.
       );
@@ -567,7 +575,7 @@ FxAccountsInternal.prototype = {
       }).then(() => {
         return currentAccountState.resolve();
       });
-    })
+    });
   },
 
   /**
@@ -778,6 +786,7 @@ FxAccountsInternal.prototype = {
             return this._signOutServer(sessionToken, deviceId);
           }
           log.warn("Missing session token; skipping remote sign out");
+          return null;
         }).catch(err => {
           log.error("Error during remote sign out of Firefox Accounts", err);
         }).then(() => {
@@ -823,8 +832,8 @@ FxAccountsInternal.prototype = {
     const options = { service: "sync" };
 
     if (deviceId) {
-      log.debug("destroying device and session");
-      return this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId, options);
+      log.debug("destroying device, session and unsubscribing from FxA push");
+      return this.deleteDeviceRegistration(sessionToken, deviceId);
     }
 
     log.debug("destroying session");
@@ -1045,7 +1054,8 @@ FxAccountsInternal.prototype = {
       keyPair = yield new Promise((resolve, reject) => {
         jwcrypto.generateKeyPair("DS160", (err, kp) => {
           if (err) {
-            return reject(err);
+            reject(err);
+            return;
           }
           log.debug("got keyPair");
           resolve({
@@ -1533,7 +1543,33 @@ FxAccountsInternal.prototype = {
       if (signedInUser) {
         return this._registerOrUpdateDevice(signedInUser);
       }
+      return null;
     }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
+  },
+
+  // Delete the Push Subscription and the device registration on the auth server.
+  // Returns a promise that always resolves, never rejects.
+  async deleteDeviceRegistration(sessionToken, deviceId) {
+    try {
+      // Allow tests to skip device registration because it makes remote requests to the auth server.
+      if (Services.prefs.getBoolPref("identity.fxaccounts.skipDeviceRegistration")) {
+        return Promise.resolve();
+      }
+    } catch (ignore) {}
+
+    try {
+      await this.fxaPushService.unsubscribe();
+      if (sessionToken && deviceId) {
+        await this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId);
+      }
+      this.currentAccountState.updateUserAccountData({
+        deviceId: null,
+        deviceRegistrationVersion: null
+      });
+    } catch (err) {
+      log.error("Could not delete the device registration", err);
+    }
+    return Promise.resolve();
   },
 
   handleDeviceDisconnection(deviceId) {
@@ -1544,7 +1580,7 @@ FxAccountsInternal.prototype = {
           // We've already been logged out (and that logout is probably what
           // caused us to get here via push!), so don't make noise here.
           log.info(`Push request to disconnect, but we've already disconnected`);
-          return;
+          return null;
         }
         if (deviceId == localDeviceId) {
           this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, deviceId);
@@ -1553,6 +1589,7 @@ FxAccountsInternal.prototype = {
         log.error(
           `The device ID to disconnect doesn't match with the local device ID. ` +
           `Local: ${localDeviceId}, ID to disconnect: ${deviceId}`);
+        return null;
     });
   },
 

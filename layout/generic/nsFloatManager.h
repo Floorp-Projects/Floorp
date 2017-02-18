@@ -361,6 +361,34 @@ private:
     // Translate the current origin by the specified offsets.
     virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
 
+    static mozilla::LogicalRect ComputeShapeBoxRect(
+      const mozilla::StyleShapeOutside& aShapeOutside,
+      nsIFrame* const aFrame,
+      const mozilla::LogicalRect& aMarginRect,
+      mozilla::WritingMode aWM);
+
+    // Convert the LogicalRect to the special logical coordinate space used
+    // in float manager.
+    static nsRect ConvertToFloatLogical(const mozilla::LogicalRect& aRect,
+                                        mozilla::WritingMode aWM,
+                                        const nsSize& aContainerSize)
+    {
+      return nsRect(aRect.LineLeft(aWM, aContainerSize), aRect.BStart(aWM),
+                    aRect.ISize(aWM), aRect.BSize(aWM));
+    }
+
+    static mozilla::UniquePtr<ShapeInfo> CreateShapeBox(
+      nsIFrame* const aFrame,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
+    static mozilla::UniquePtr<ShapeInfo> CreateInset(
+      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
     static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
       mozilla::StyleBasicShape* const aBasicShape,
       const mozilla::LogicalRect& aShapeBoxRect,
@@ -385,22 +413,28 @@ private:
     static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
                                  const nscoord aRadiusY);
 
-    // Convert the coordinate space from physical to the logical space used
-    // in nsFloatManager, which is the same as FloatInfo::mRect.
-    static nsPoint ConvertPhysicalToLogical(mozilla::WritingMode aWM,
-                                            const nsPoint& aPoint,
-                                            const nsSize& aContainerSize);
+    // Convert the physical point to the special logical coordinate space
+    // used in float manager.
+    static nsPoint ConvertToFloatLogical(const nsPoint& aPoint,
+                                         mozilla::WritingMode aWM,
+                                         const nsSize& aContainerSize);
+
+    // Convert the half corner radii (nscoord[8]) to the special logical
+    // coordinate space used in float manager.
+    static mozilla::UniquePtr<nscoord[]> ConvertToFloatLogical(
+      const nscoord aRadii[8],
+      mozilla::WritingMode aWM);
   };
 
-  // Implements shape-outside: <shape-box>.
-  class BoxShapeInfo final : public ShapeInfo
+  // Implements shape-outside: <shape-box> and shape-outside: inset().
+  class RoundedBoxShapeInfo final : public ShapeInfo
   {
   public:
-    BoxShapeInfo(const nsRect& aShapeBoxRect, nsIFrame* const aFrame)
-      : mShapeBoxRect(aShapeBoxRect)
-      , mFrame(aFrame)
-    {
-    }
+    RoundedBoxShapeInfo(const nsRect& aRect,
+                        mozilla::UniquePtr<nscoord[]> aRadii)
+      : mRect(aRect)
+      , mRadii(Move(aRadii))
+    {}
 
     nscoord LineLeft(mozilla::WritingMode aWM,
                      const nscoord aBStart,
@@ -408,22 +442,23 @@ private:
     nscoord LineRight(mozilla::WritingMode aWM,
                       const nscoord aBStart,
                       const nscoord aBEnd) const override;
-    nscoord BStart() const override { return mShapeBoxRect.y; }
-    nscoord BEnd() const override { return mShapeBoxRect.YMost(); }
-    bool IsEmpty() const override { return mShapeBoxRect.IsEmpty(); };
+    nscoord BStart() const override { return mRect.y; }
+    nscoord BEnd() const override { return mRect.YMost(); }
+    bool IsEmpty() const override { return mRect.IsEmpty(); };
 
     void Translate(nscoord aLineLeft, nscoord aBlockStart) override
     {
-      mShapeBoxRect.MoveBy(aLineLeft, aBlockStart);
+      mRect.MoveBy(aLineLeft, aBlockStart);
     }
 
   private:
-    // This is the reference box of css shape-outside if specified, which
-    // implements the <shape-box> value in the CSS Shapes Module Level 1.
-    // The coordinate space is the same as FloatInfo::mRect.
-    nsRect mShapeBoxRect;
-    // The frame of the float.
-    nsIFrame* const mFrame;
+    // The rect of the rounded box shape in the float manager's coordinate
+    // space.
+    nsRect mRect;
+    // The half corner radii of the reference box. It's an nscoord[8] array
+    // in the float manager's coordinate space. If there are no radii, it's
+    // nullptr.
+    mozilla::UniquePtr<nscoord[]> mRadii;
   };
 
   // Implements shape-outside: circle() and shape-outside: ellipse().
@@ -567,8 +602,8 @@ protected:
   ReflowInput &mReflowInput;
   mozilla::UniquePtr<nsFloatManager> mNew;
 
- // A non-owning pointer, which points to the object owned by
- // nsAutoFloatManager::mNew.
+  // A non-owning pointer, which points to the object owned by
+  // nsAutoFloatManager::mNew.
   nsFloatManager* mOld;
 };
 

@@ -41,8 +41,6 @@ protected:
 public:
   virtual void Disconnect() override;
 
-  virtual LayerRenderState GetRenderState() override;
-
   CompositableHost* GetCompositableHost() override;
 
   virtual void Destroy() override;

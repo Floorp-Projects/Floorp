@@ -193,11 +193,12 @@ SkBitmap ImageOperations::Resize(const SkBitmap& source,
                                  int dest_width, int dest_height,
                                  const SkIRect& dest_subset,
                                  void* dest_pixels /* = nullptr */) {
-  if (method == ImageOperations::RESIZE_SUBPIXEL)
+  if (method == ImageOperations::RESIZE_SUBPIXEL) {
     return ResizeSubpixel(source, dest_width, dest_height, dest_subset);
-  else
-    return ResizeBasic(source, method, dest_width, dest_height, dest_subset,
-                       dest_pixels);
+  }
+
+  return ResizeBasic(source, method, dest_width, dest_height, dest_subset,
+                     dest_pixels);
 }
 
 // static

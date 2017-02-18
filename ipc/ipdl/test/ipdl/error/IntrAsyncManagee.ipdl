@@ -1,0 +1,7 @@
+include protocol IntrAsyncManager;
+
+intr protocol IntrAsyncManagee {
+    manager IntrAsyncManager;
+child:
+    async __delete__();
+};

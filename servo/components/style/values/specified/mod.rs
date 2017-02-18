@@ -20,6 +20,8 @@ use super::{Auto, CSSFloat, HasViewportPercentage, Either, None_};
 use super::computed::{ComputedValueAsSpecified, Context, ToComputedValue};
 use super::computed::Shadow as ComputedShadow;
 
+#[cfg(feature = "gecko")]
+pub use self::align::{AlignJustifyContent, AlignJustifySelf};
 pub use self::grid::GridLine;
 pub use self::image::{AngleOrCorner, ColorStop, EndingShape as GradientEndingShape, Gradient};
 pub use self::image::{GradientKind, HorizontalDirection, Image, LengthOrKeyword, LengthOrPercentageOrKeyword};
@@ -29,6 +31,8 @@ pub use self::length::{Percentage, LengthOrNone, LengthOrNumber, LengthOrPercent
 pub use self::length::{LengthOrPercentageOrNone, LengthOrPercentageOrAutoOrContent, NoCalcLength, CalcUnit};
 pub use self::position::{HorizontalPosition, Position, VerticalPosition};
 
+#[cfg(feature = "gecko")]
+pub mod align;
 pub mod basic_shape;
 pub mod grid;
 pub mod image;
@@ -43,14 +47,14 @@ no_viewport_percentage!(i32);  // For PropertyDeclaration::Order
 #[allow(missing_docs)]
 pub struct CSSColor {
     pub parsed: cssparser::Color,
-    pub authored: Option<String>,
+    pub authored: Option<Box<str>>,
 }
 
 impl Parse for CSSColor {
     fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
         let start_position = input.position();
         let authored = match input.next() {
-            Ok(Token::Ident(s)) => Some(s.into_owned()),
+            Ok(Token::Ident(s)) => Some(s.into_owned().into_boxed_str()),
             _ => None,
         };
         input.reset(start_position);
@@ -77,7 +81,7 @@ impl ToCss for CSSColor {
 #[allow(missing_docs)]
 pub struct CSSRGBA {
     pub parsed: cssparser::RGBA,
-    pub authored: Option<String>,
+    pub authored: Option<Box<str>>,
 }
 
 no_viewport_percentage!(CSSRGBA);

@@ -45,9 +45,6 @@ let gSiteDataSettings = {
       Services.obs.notifyObservers(null, "sitedata-settings-init", null);
     });
 
-    let removeAllBtn = document.getElementById("removeAll");
-    removeAllBtn.setAttribute("accesskey", this._prefStrBundle.getString("removeAll.accesskey"));
-
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
@@ -64,9 +61,15 @@ let gSiteDataSettings = {
     let removeAllBtn = document.getElementById("removeAll");
     removeSelectedBtn.disabled = items.length == 0;
     removeAllBtn.disabled = removeSelectedBtn.disabled;
-    let removeAllBtnLabel = this._searchBox.value ?
-      this._prefStrBundle.getString("removeAllShown.label") : this._prefStrBundle.getString("removeAll.label");
-    removeAllBtn.setAttribute("label", removeAllBtnLabel);
+
+    let removeAllBtnLabelStringID = "removeAllSiteData.label";
+    let removeAllBtnAccesskeyStringID = "removeAllSiteData.accesskey";
+    if (this._searchBox.value) {
+      removeAllBtnLabelStringID = "removeAllSiteDataShown.label";
+      removeAllBtnAccesskeyStringID = "removeAllSiteDataShown.accesskey";
+    }
+    removeAllBtn.setAttribute("label", this._prefStrBundle.getString(removeAllBtnLabelStringID));
+    removeAllBtn.setAttribute("accesskey", this._prefStrBundle.getString(removeAllBtnAccesskeyStringID));
   },
 
   /**

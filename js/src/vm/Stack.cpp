@@ -1554,7 +1554,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
         // Frames are often rematerialized with the cx inside a Debugger's
         // compartment. To recover slots and to create CallObjects, we need to
         // be in the activation's compartment.
-        AutoCompartment ac(cx, compartment_);
+        AutoCompartmentUnchecked ac(cx, compartment_);
 
         if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover,
                                                             p->value()))
@@ -1781,7 +1781,10 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
 
     static_assert(sizeof(wasm::ProfilingFrameIterator) <= StorageSpace &&
                   sizeof(jit::JitProfilingFrameIterator) <= StorageSpace,
-                  "Need to increase storage");
+                  "ProfilingFrameIterator::storage_ is too small");
+    static_assert(alignof(void*) >= alignof(wasm::ProfilingFrameIterator) &&
+                  alignof(void*) >= alignof(jit::JitProfilingFrameIterator),
+                  "ProfilingFrameIterator::storage_ is too weakly aligned");
 
     iteratorConstruct(state);
     settle();
@@ -1835,14 +1838,14 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
+        new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
         // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
         savedPrevJitTop_ = activation_->cx()->jitTop;
         return;
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
-    new (storage_.addr()) jit::JitProfilingFrameIterator(cx_, state);
+    new (storage()) jit::JitProfilingFrameIterator(cx_, state);
 }
 
 void
@@ -1852,13 +1855,13 @@ JS::ProfilingFrameIterator::iteratorConstruct()
     MOZ_ASSERT(activation_->isWasm() || activation_->isJit());
 
     if (activation_->isWasm()) {
-        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asWasm());
+        new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm());
         return;
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
     MOZ_ASSERT(savedPrevJitTop_ != nullptr);
-    new (storage_.addr()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
+    new (storage()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
 }
 
 void

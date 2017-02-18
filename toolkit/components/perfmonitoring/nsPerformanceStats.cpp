@@ -565,10 +565,14 @@ PerformanceAlert::GetReason(uint32_t* result) {
  * A timer callback in charge of collecting the groups in
  * `mPendingAlerts` and triggering dispatch of performance alerts.
  */
-class PendingAlertsCollector final: public nsITimerCallback {
+class PendingAlertsCollector final :
+  public nsITimerCallback,
+  public nsINamed
+{
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   explicit PendingAlertsCollector(nsPerformanceStatsService* service)
     : mService(service)
@@ -589,13 +593,26 @@ private:
   mozilla::Vector<uint64_t> mJankLevels;
 };
 
-NS_IMPL_ISUPPORTS(PendingAlertsCollector, nsITimerCallback);
+NS_IMPL_ISUPPORTS(PendingAlertsCollector, nsITimerCallback, nsINamed);
 
 NS_IMETHODIMP
 PendingAlertsCollector::Notify(nsITimer*) {
   mPending = false;
   mService->NotifyJankObservers(mJankLevels);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PendingAlertsCollector::GetName(nsACString& aName)
+{
+  aName.AssignASCII("PendingAlertsCollector_timer");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PendingAlertsCollector::SetName(const char* aName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

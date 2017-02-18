@@ -205,7 +205,8 @@ class ThrottledEventQueue::Inner final : public nsIObserver
     // of the method in order to wait for the event to finish running.
     if (shouldShutdown) {
       MOZ_ASSERT(IsEmpty());
-      NS_DispatchToMainThread(NewRunnableMethod(this, &Inner::ShutdownComplete));
+      NS_DispatchToMainThread(NewRunnableMethod("ThrottledEventQueue::Inner::ShutdownComplete",
+                                                this, &Inner::ShutdownComplete));
     }
   }
 
@@ -283,7 +284,8 @@ public:
     }
 
     // The queue is empty, so we can complete immediately.
-    NS_DispatchToMainThread(NewRunnableMethod(this, &Inner::ShutdownComplete));
+    NS_DispatchToMainThread(NewRunnableMethod("ThrottledEventQueue::Inner::ShutdownComplete",
+                                              this, &Inner::ShutdownComplete));
   }
 
   bool

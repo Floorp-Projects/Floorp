@@ -195,7 +195,7 @@ TEST(MozPromise, CompletionPromises)
       },
       DO_FAIL)
     ->Then(queue, __func__,
-      [queue] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
+      [] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
       DO_FAIL)
     ->Then(queue, __func__,
       DO_FAIL,

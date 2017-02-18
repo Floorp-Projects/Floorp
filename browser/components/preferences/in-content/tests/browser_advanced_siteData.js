@@ -136,20 +136,34 @@ function getQuotaUsage(origin) {
   });
 }
 
-function getCacheUsage() {
-  return new Promise(resolve => {
-    let obs = {
-      onNetworkCacheDiskConsumption(usage) {
-        resolve(usage);
-      },
-      QueryInterface: XPCOMUtils.generateQI([
-        Components.interfaces.nsICacheStorageConsumptionObserver,
-        Components.interfaces.nsISupportsWeakReference
-      ]),
-    };
-    Services.cache2.asyncGetDiskConsumption(obs);
-  });
-}
+// XXX: The intermittent bug 1331851
+// The implementation of nsICacheStorageConsumptionObserver must be passed as weak referenced,
+// so we must hold this observer here well. If we didn't, there would be a chance that
+// in Linux debug test run the observer was released before the operation at gecko was completed
+// (may be because of a relatively quicker GC cycle or a relatively slower operation).
+// As a result of that, we would never get the cache usage we want so the test would fail from timeout.
+const cacheUsageGetter = {
+  _promise: null,
+  _resolve: null,
+  get() {
+    if (!this._promise) {
+      this._promise = new Promise(resolve => {
+        this._resolve = resolve;
+        Services.cache2.asyncGetDiskConsumption(this);
+      });
+    }
+    return this._promise;
+  },
+  // nsICacheStorageConsumptionObserver implementations
+  onNetworkCacheDiskConsumption(usage) {
+    cacheUsageGetter._promise = null;
+    cacheUsageGetter._resolve(usage);
+  },
+  QueryInterface: XPCOMUtils.generateQI([
+    Components.interfaces.nsICacheStorageConsumptionObserver,
+    Components.interfaces.nsISupportsWeakReference
+  ]),
+};
 
 function openSettingsDialog() {
   let doc = gBrowser.selectedBrowser.contentDocument;
@@ -222,7 +236,7 @@ add_task(function* () {
   yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
 
   // Test the initial states
-  let cacheUsage = yield getCacheUsage();
+  let cacheUsage = yield cacheUsageGetter.get();
   let quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
   let totalUsage = yield SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
@@ -241,7 +255,7 @@ add_task(function* () {
   let status = getPersistentStoragePermStatus(TEST_ORIGIN);
   is(status, Ci.nsIPermissionManager.ALLOW_ACTION, "Should not remove permission");
 
-  cacheUsage = yield getCacheUsage();
+  cacheUsage = yield cacheUsageGetter.get();
   quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
   totalUsage = yield SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
@@ -269,7 +283,7 @@ add_task(function* () {
   status = getPersistentStoragePermStatus(TEST_ORIGIN);
   is(status, Ci.nsIPermissionManager.UNKNOWN_ACTION, "Should remove permission");
 
-  cacheUsage = yield getCacheUsage();
+  cacheUsage = yield cacheUsageGetter.get();
   quotaUsage = yield getQuotaUsage(TEST_ORIGIN);
   totalUsage = yield SiteDataManager.getTotalUsage();
   is(cacheUsage, 0, "The cahce usage should be removed");

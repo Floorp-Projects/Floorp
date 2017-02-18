@@ -81,11 +81,10 @@ gfxASurface::AddRef(void)
         }
 
         return (nsrefcnt) cairo_surface_get_reference_count(mSurface);
-    } else {
-        // the surface isn't valid, but we still need to refcount
-        // the gfxASurface
-        return ++mFloatingRefs;
     }
+    // the surface isn't valid, but we still need to refcount
+    // the gfxASurface
+    return ++mFloatingRefs;
 }
 
 nsrefcnt
@@ -103,14 +102,12 @@ gfxASurface::Release(void)
         // |this| may not be valid any more, don't use it!
 
         return --refcnt;
-    } else {
-        if (--mFloatingRefs == 0) {
-            delete this;
-            return 0;
-        }
-
-        return mFloatingRefs;
     }
+    if (--mFloatingRefs == 0) {
+        delete this;
+        return 0;
+    }
+    return mFloatingRefs;
 }
 
 void

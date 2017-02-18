@@ -650,6 +650,10 @@ mochitest-gpu:
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics']
+            default: ['all']
     e10s:
         by-test-platform:
             windows.*: both
@@ -725,7 +729,7 @@ mochitest-media:
     chunks:
         by-test-platform:
             android.*: 3
-            default: 1
+            default: 3
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         by-test-platform:
@@ -752,28 +756,6 @@ mochitest-media:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=mochitest-media
-
-mochitest-other:
-    description: "Mochitest other"
-    suite: mochitest/other
-    treeherder-symbol: tc-M(oth)
-    e10s: false
-    max-run-time: 5400
-    mozharness:
-        script: mozharness/scripts/desktop_unittest.py
-        no-read-buildbot-config: true
-        include-blob-upload-branch: true
-        chunked: true
-        config:
-          by-test-platform:
-            macosx.*:
-              - remove_executables.py
-              - unittests/mac_unittest.py
-            linux.*:
-              - unittests/linux_unittest.py
-              - remove_executables.py
-        extra-options:
-            - --mochitest-suite=chrome,a11y
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
@@ -952,8 +934,19 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: []
-            linux64-stylo/debug: []
+            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central' ]
+            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central' ]
+    e10s:
+        by-test-platform:
+            linux64-stylo/opt:
+                by-project:
+                    mozilla-inbound: false
+                    default: both
+            linux64-stylo/debug:
+                # only e10s on inbound
+                by-project:
+                    mozilla-inbound: true
+                    default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

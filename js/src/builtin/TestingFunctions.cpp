@@ -1119,7 +1119,7 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
             capture = JS::StackCapture(JS::MaxFrames(max));
     }
 
-    JSCompartment* targetCompartment = cx->compartment();
+    RootedObject compartmentObject(cx);
     if (args.length() >= 2) {
         if (!args[1].isObject()) {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
@@ -1127,15 +1127,16 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
                                   "not an object", NULL);
             return false;
         }
-        RootedObject obj(cx, UncheckedUnwrap(&args[1].toObject()));
-        if (!obj)
+        compartmentObject = UncheckedUnwrap(&args[1].toObject());
+        if (!compartmentObject)
             return false;
-        targetCompartment = obj->compartment();
     }
 
     RootedObject stack(cx);
     {
-        AutoCompartment ac(cx, targetCompartment);
+        Maybe<AutoCompartment> ac;
+        if (compartmentObject)
+            ac.emplace(cx, compartmentObject);
         if (!JS::CaptureCurrentStack(cx, &stack, mozilla::Move(capture)))
             return false;
     }
@@ -1302,6 +1303,22 @@ EnsureFlatString(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setString(flat);
+    return true;
+}
+
+static bool
+RepresentativeStringArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject array(cx, JS_NewArrayObject(cx, 0));
+    if (!array)
+        return false;
+
+    if (!JSString::fillWithRepresentatives(cx, array.as<ArrayObject>()))
+        return false;
+
+    args.rval().setObject(*array);
     return true;
 }
 
@@ -4226,6 +4243,32 @@ TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+GetErrorNotes(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "getErrorNotes", 1))
+        return false;
+
+    if (!args[0].isObject() || !args[0].toObject().is<ErrorObject>()) {
+        args.rval().setNull();
+        return true;
+    }
+
+    JSErrorReport* report = args[0].toObject().as<ErrorObject>().getErrorReport();
+    if (!report) {
+        args.rval().setNull();
+        return true;
+    }
+
+    RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
+    if (!notesArray)
+        return false;
+
+    args.rval().setObject(*notesArray);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'zone' [, 'shrinking'])",
@@ -4309,6 +4352,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("ensureFlatString", EnsureFlatString, 1, 0,
 "ensureFlatString(str)",
 "  Ensures str is a flat (null-terminated) string and returns it."),
+
+    JS_FN_HELP("representativeStringArray", RepresentativeStringArray, 0, 0,
+"representativeStringArray()",
+"  Returns an array of strings that represent the various internal string\n"
+"  types and character encodings."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
@@ -4787,6 +4835,10 @@ static const JSFunctionSpecWithHelp FuzzingUnsafeTestingFunctions[] = {
 "disRegExp(regexp[, match_only[, input]])",
 "  Dumps RegExp bytecode."),
 #endif
+
+    JS_FN_HELP("getErrorNotes", GetErrorNotes, 1, 0,
+"getErrorNotes(error)",
+"  Returns an array of error notes."),
 
     JS_FS_HELP_END
 };

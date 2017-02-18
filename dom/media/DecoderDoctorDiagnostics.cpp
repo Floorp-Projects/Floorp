@@ -49,7 +49,7 @@ struct NotificationAndReportStringId
 // nothing new happened, StopWatching() will remove the document property and
 // timer (if present), so no more work will happen and the watcher will be
 // destroyed once all references are gone.
-class DecoderDoctorDocumentWatcher : public nsITimerCallback
+class DecoderDoctorDocumentWatcher : public nsITimerCallback, public nsINamed
 {
 public:
   static already_AddRefed<DecoderDoctorDocumentWatcher>
@@ -57,6 +57,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   void AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnostics,
                       const char* aCallSite);
@@ -118,7 +119,7 @@ private:
 };
 
 
-NS_IMPL_ISUPPORTS(DecoderDoctorDocumentWatcher, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DecoderDoctorDocumentWatcher, nsITimerCallback, nsINamed)
 
 // static
 already_AddRefed<DecoderDoctorDocumentWatcher>
@@ -644,6 +645,18 @@ DecoderDoctorDocumentWatcher::Notify(nsITimer* timer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DecoderDoctorDocumentWatcher::GetName(nsACString& aName)
+{
+  aName.AssignASCII("DecoderDoctorDocumentWatcher_timer");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DecoderDoctorDocumentWatcher::SetName(const char* aName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 void
 DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
@@ -821,8 +834,8 @@ DecoderDoctorDiagnostics::GetDescription() const
       }
       break;
     case eEvent:
-      s = nsPrintfCString("event domain %s result=%u",
-                          EventDomainString(mEvent.mDomain), mEvent.mResult);
+      s = nsPrintfCString("event domain %s result=%" PRIu32,
+                          EventDomainString(mEvent.mDomain), static_cast<uint32_t>(mEvent.mResult));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected DiagnosticsType");
