@@ -30,14 +30,15 @@ Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
   if (!aOutput) {
     return E_INVALIDARG;
   }
+
   *aOutput = nullptr;
+
   if (!aTarget || !aSink) {
     return E_INVALIDARG;
   }
-  Interceptor* intcpt = new Interceptor(Move(aTarget), aSink);
-  HRESULT hr = intcpt->QueryInterface(aIid, aOutput);
-  static_cast<WeakReferenceSupport*>(intcpt)->Release();
-  return hr;
+
+  RefPtr<WeakReferenceSupport> intcpt(new Interceptor(Move(aTarget), aSink));
+  return intcpt->QueryInterface(aIid, aOutput);
 }
 
 Interceptor::Interceptor(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink)
