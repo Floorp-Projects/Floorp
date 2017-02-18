@@ -87,30 +87,6 @@ impl<T, Src, Dst> TypedMatrix4D<T, Src, Dst> {
 
 impl <T, Src, Dst> TypedMatrix4D<T, Src, Dst>
 where T: Copy + Clone +
-         PartialEq +
-         One + Zero {
-    #[inline]
-    pub fn identity() -> TypedMatrix4D<T, Src, Dst> {
-        let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedMatrix4D::row_major(
-            _1, _0, _0, _0,
-            _0, _1, _0, _0,
-            _0, _0, _1, _0,
-            _0, _0, _0, _1
-        )
-    }
-
-    // Intentional not public, because it checks for exact equivalence
-    // while most consumers will probably want some sort of approximate
-    // equivalence to deal with floating-point errors.
-    #[inline]
-    fn is_identity(&self) -> bool {
-        *self == TypedMatrix4D::identity()
-    }
-}
-
-impl <T, Src, Dst> TypedMatrix4D<T, Src, Dst>
-where T: Copy + Clone +
          Add<T, Output=T> +
          Sub<T, Output=T> +
          Mul<T, Output=T> +
@@ -149,6 +125,17 @@ where T: Copy + Clone +
             _0                 , _2 / (top - bottom), _0                , _0,
             _0                 , _0                 , -_2 / (far - near), _0,
             tx                 , ty                 , tz                , _1
+        )
+    }
+
+    #[inline]
+    pub fn identity() -> TypedMatrix4D<T, Src, Dst> {
+        let (_0, _1): (T, T) = (Zero::zero(), One::one());
+        TypedMatrix4D::row_major(
+            _1, _0, _0, _0,
+            _0, _1, _0, _0,
+            _0, _0, _1, _0,
+            _0, _0, _0, _1
         )
     }
 
@@ -592,16 +579,9 @@ impl<T: Copy, Src, Dst> TypedMatrix4D<T, Src, Dst> {
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for TypedMatrix4D<T, Src, Dst>
-where T: Copy + fmt::Debug +
-         PartialEq +
-         One + Zero {
+impl<T: Copy + fmt::Debug, Src, Dst> fmt::Debug for TypedMatrix4D<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.is_identity() {
-            write!(f, "[I]")
-        } else {
-            self.to_row_major_array().fmt(f)
-        }
+        self.to_row_major_array().fmt(f)
     }
 }
 
@@ -813,13 +793,5 @@ mod tests {
         let p1 = m2.pre_mul(&m1).transform_point4d(&p);
         let p2 = m2.transform_point4d(&m1.transform_point4d(&p));
         assert!(p1.approx_eq(&p2));
-    }
-
-    #[test]
-    pub fn test_is_identity() {
-        let m1 = Matrix4D::identity();
-        assert!(m1.is_identity());
-        let m2 = m1.post_translated(0.1, 0.0, 0.0);
-        assert!(!m2.is_identity());
     }
 }

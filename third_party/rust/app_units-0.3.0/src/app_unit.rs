@@ -23,13 +23,13 @@ impl HeapSizeOf for Au {
 }
 
 impl Deserialize for Au {
-    fn deserialize<D: Deserializer>(deserializer: D) -> Result<Au, D::Error> {
+    fn deserialize<D: Deserializer>(deserializer: &mut D) -> Result<Au, D::Error> {
         Ok(Au(try!(i32::deserialize(deserializer))))
     }
 }
 
 impl Serialize for Au {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: &mut S) -> Result<(), S::Error> {
         self.0.serialize(serializer)
     }
 }
@@ -160,7 +160,7 @@ impl Au {
 
     #[inline]
     pub fn scale_by(self, factor: f32) -> Au {
-        Au(((self.0 as f32) * factor).round() as i32)
+        Au(((self.0 as f32) * factor) as i32)
     }
 
     #[inline]
@@ -202,12 +202,12 @@ impl Au {
 
     #[inline]
     pub fn from_f32_px(px: f32) -> Au {
-        Au((px * (AU_PER_PX as f32)).round() as i32)
+        Au((px * (AU_PER_PX as f32)) as i32)
     }
 
     #[inline]
     pub fn from_f64_px(px: f64) -> Au {
-        Au((px * (AU_PER_PX as f64)).round() as i32)
+        Au((px * (AU_PER_PX as f64)) as i32)
     }
 }
 
@@ -251,8 +251,6 @@ fn overflowing_rem() {
 #[test]
 fn scale() {
     assert_eq!(Au(12).scale_by(1.5), Au(18));
-    assert_eq!(Au(12).scale_by(1.7), Au(20));
-    assert_eq!(Au(12).scale_by(1.8), Au(22));
 }
 
 #[test]
@@ -289,32 +287,24 @@ fn convert() {
     assert_eq!(Au(330).to_f32_px(), 5.5);
     assert_eq!(Au(348).to_f32_px(), 5.8);
     assert_eq!(Au(360).to_f32_px(), 6.);
-    assert_eq!((Au(367).to_f32_px() * 1000.).round(), 6_117.);
-    assert_eq!((Au(368).to_f32_px() * 1000.).round(), 6_133.);
 
     assert_eq!(Au(300).to_f64_px(), 5.);
     assert_eq!(Au(312).to_f64_px(), 5.2);
     assert_eq!(Au(330).to_f64_px(), 5.5);
     assert_eq!(Au(348).to_f64_px(), 5.8);
     assert_eq!(Au(360).to_f64_px(), 6.);
-    assert_eq!((Au(367).to_f64_px() * 1000.).round(), 6_117.);
-    assert_eq!((Au(368).to_f64_px() * 1000.).round(), 6_133.);
 
     assert_eq!(Au::from_f32_px(5.), Au(300));
     assert_eq!(Au::from_f32_px(5.2), Au(312));
     assert_eq!(Au::from_f32_px(5.5), Au(330));
     assert_eq!(Au::from_f32_px(5.8), Au(348));
     assert_eq!(Au::from_f32_px(6.), Au(360));
-    assert_eq!(Au::from_f32_px(6.12), Au(367));
-    assert_eq!(Au::from_f32_px(6.13), Au(368));
 
     assert_eq!(Au::from_f64_px(5.), Au(300));
     assert_eq!(Au::from_f64_px(5.2), Au(312));
     assert_eq!(Au::from_f64_px(5.5), Au(330));
     assert_eq!(Au::from_f64_px(5.8), Au(348));
     assert_eq!(Au::from_f64_px(6.), Au(360));
-    assert_eq!(Au::from_f64_px(6.12), Au(367));
-    assert_eq!(Au::from_f64_px(6.13), Au(368));
 }
 
 #[test]
