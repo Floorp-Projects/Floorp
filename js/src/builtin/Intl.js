@@ -3337,3 +3337,22 @@ function Intl_getDisplayNames(locales, options) {
     return result;
 }
 
+function Intl_getLocaleInfo(locales) {
+  const requestedLocales = CanonicalizeLocaleList(locales);
+
+  // In the future, we may want to expose uloc_getAvailable and use it here.
+  const DateTimeFormat = dateTimeFormatInternalProperties;
+  const localeData = DateTimeFormat.localeData;
+
+  const localeOpt = new Record();
+  localeOpt.localeMatcher = "best fit";
+
+  const r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
+                          requestedLocales,
+                          localeOpt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+  return intl_GetLocaleInfo(r.locale);
+}
+

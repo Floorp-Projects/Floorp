@@ -33,6 +33,7 @@
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
 #include "unicode/uenum.h"
+#include "unicode/uloc.h"
 #include "unicode/unum.h"
 #include "unicode/unumsys.h"
 #include "unicode/upluralrules.h"
@@ -165,6 +166,12 @@ int32_t
 uloc_countAvailable()
 {
     MOZ_CRASH("uloc_countAvailable: Intl API disabled");
+}
+
+UBool
+uloc_isRightToLeft(const char* locale)
+{
+    MOZ_CRASH("uloc_isRightToLeft: Intl API disabled");
 }
 
 struct UFormattable;
@@ -4170,6 +4177,34 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
 
     // 6. Return result.
     args.rval().setObject(*result);
+    return true;
+}
+
+bool
+js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    RootedObject info(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!info)
+        return false;
+
+    if (!DefineProperty(cx, info, cx->names().locale, args[0]))
+        return false;
+
+    bool rtl = uloc_isRightToLeft(icuLocale(locale.ptr()));
+
+    RootedValue dir(cx, StringValue(rtl ? cx->names().rtl : cx->names().ltr));
+
+    if (!DefineProperty(cx, info, cx->names().direction, dir))
+        return false;
+
+    args.rval().setObject(*info);
     return true;
 }
 

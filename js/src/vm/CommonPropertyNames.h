@@ -91,6 +91,7 @@
     macro(defineSetter, defineSetter, "__defineSetter__") \
     macro(delete, delete_, "delete") \
     macro(deleteProperty, deleteProperty, "deleteProperty") \
+    macro(direction, direction, "direction") \
     macro(displayURL, displayURL, "displayURL") \
     macro(do, do_, "do") \
     macro(done, done, "done") \
@@ -210,6 +211,7 @@
     macro(locale, locale, "locale") \
     macro(lookupGetter, lookupGetter, "__lookupGetter__") \
     macro(lookupSetter, lookupSetter, "__lookupSetter__") \
+    macro(ltr, ltr, "ltr") \
     macro(MapConstructorInit, MapConstructorInit, "MapConstructorInit") \
     macro(MapIterator, MapIterator, "Map Iterator") \
     macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
@@ -298,6 +300,7 @@
     macro(resumeGenerator, resumeGenerator, "resumeGenerator") \
     macro(return, return_, "return") \
     macro(revoke, revoke, "revoke") \
+    macro(rtl, rtl, "rtl") \
     macro(script, script, "script") \
     macro(scripts, scripts, "scripts") \
     macro(second, second, "second") \
