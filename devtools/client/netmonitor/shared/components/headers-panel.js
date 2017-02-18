@@ -14,7 +14,7 @@ const { L10N } = require("../../l10n");
 const { writeHeaderText } = require("../../request-utils");
 const { getHeadersURL } = require("../../utils/mdn-utils");
 const { getFormattedSize } = require("../../utils/format-utils");
-const { REPS, MODE } = require("devtools/client/shared/components/reps/load-reps");
+const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const Rep = createFactory(REPS.Rep);
 
 // Components

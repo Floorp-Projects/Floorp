@@ -20,7 +20,7 @@ const {
 
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
 
-const { REPS, MODE, createFactories } = require("devtools/client/shared/components/reps/load-reps");
+const { REPS, MODE, createFactories } = require("devtools/client/shared/components/reps/reps");
 const Rep = createFactory(REPS.Rep);
 const Grip = REPS.Grip;
 const StringRep = createFactories(REPS.StringRep).rep;
