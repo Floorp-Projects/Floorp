@@ -1094,50 +1094,9 @@ Inspector.prototype = {
       type: "separator",
     }));
 
-    let copySubmenu = new Menu();
-    copySubmenu.append(new MenuItem({
-      id: "node-menu-copyinner",
-      label: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.label"),
-      accesskey: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.accesskey"),
-      disabled: !isSelectionElement,
-      click: () => this.copyInnerHTML(),
-    }));
-    copySubmenu.append(new MenuItem({
-      id: "node-menu-copyouter",
-      label: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.label"),
-      accesskey: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.accesskey"),
-      disabled: !isSelectionElement,
-      click: () => this.copyOuterHTML(),
-    }));
-    copySubmenu.append(new MenuItem({
-      id: "node-menu-copyuniqueselector",
-      label: INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.label"),
-      accesskey:
-        INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.accesskey"),
-      disabled: !isSelectionElement,
-      hidden: !this.canGetUniqueSelector,
-      click: () => this.copyUniqueSelector(),
-    }));
-    copySubmenu.append(new MenuItem({
-      id: "node-menu-copycsspath",
-      label: INSPECTOR_L10N.getStr("inspectorCopyCSSPath.label"),
-      accesskey:
-        INSPECTOR_L10N.getStr("inspectorCopyCSSPath.accesskey"),
-      disabled: !isSelectionElement,
-      hidden: !this.canGetCssPath,
-      click: () => this.copyCssPath(),
-    }));
-    copySubmenu.append(new MenuItem({
-      id: "node-menu-copyimagedatauri",
-      label: INSPECTOR_L10N.getStr("inspectorImageDataUri.label"),
-      disabled: !isSelectionElement || !markupContainer ||
-                !markupContainer.isPreviewable(),
-      click: () => this.copyImageDataUri(),
-    }));
-
     menu.append(new MenuItem({
       label: INSPECTOR_L10N.getStr("inspectorCopyHTMLSubmenu.label"),
-      submenu: copySubmenu,
+      submenu: this._getCopySubmenu(markupContainer, isSelectionElement),
     }));
 
     menu.append(new MenuItem({
@@ -1208,6 +1167,51 @@ Inspector.prototype = {
 
     menu.popup(screenX, screenY, this._toolbox);
     return menu;
+  },
+
+  _getCopySubmenu: function (markupContainer, isSelectionElement) {
+    let copySubmenu = new Menu();
+    copySubmenu.append(new MenuItem({
+      id: "node-menu-copyinner",
+      label: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.accesskey"),
+      disabled: !isSelectionElement,
+      click: () => this.copyInnerHTML(),
+    }));
+    copySubmenu.append(new MenuItem({
+      id: "node-menu-copyouter",
+      label: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.accesskey"),
+      disabled: !isSelectionElement,
+      click: () => this.copyOuterHTML(),
+    }));
+    copySubmenu.append(new MenuItem({
+      id: "node-menu-copyuniqueselector",
+      label: INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.label"),
+      accesskey:
+        INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.accesskey"),
+      disabled: !isSelectionElement,
+      hidden: !this.canGetUniqueSelector,
+      click: () => this.copyUniqueSelector(),
+    }));
+    copySubmenu.append(new MenuItem({
+      id: "node-menu-copycsspath",
+      label: INSPECTOR_L10N.getStr("inspectorCopyCSSPath.label"),
+      accesskey:
+        INSPECTOR_L10N.getStr("inspectorCopyCSSPath.accesskey"),
+      disabled: !isSelectionElement,
+      hidden: !this.canGetCssPath,
+      click: () => this.copyCssPath(),
+    }));
+    copySubmenu.append(new MenuItem({
+      id: "node-menu-copyimagedatauri",
+      label: INSPECTOR_L10N.getStr("inspectorImageDataUri.label"),
+      disabled: !isSelectionElement || !markupContainer ||
+                !markupContainer.isPreviewable(),
+      click: () => this.copyImageDataUri(),
+    }));
+
+    return copySubmenu;
   },
 
   _getPasteSubmenu: function (isEditableElement) {
