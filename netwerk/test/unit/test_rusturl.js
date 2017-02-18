@@ -464,3 +464,12 @@ add_test({ skip_if: () => rustIsMissing }, function test_ipv4Normalize()
 
   run_next_test();
 });
+
+add_test({ skip_if: () => rustIsMissing }, function test_schemeIsCaseInsensitive()
+{
+  var url = stringToURL("http://example.com/");
+  do_check_true(url.schemeIs("http"));
+  do_check_true(url.schemeIs("HtTp"));
+
+  run_next_test();
+});
