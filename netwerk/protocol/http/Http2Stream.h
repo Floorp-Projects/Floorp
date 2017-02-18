@@ -154,10 +154,6 @@ public:
                                 const nsACString &origin,
                                 RefPtr<nsStandardURL> &url);
 
-  // Mirrors nsAHttpTransaction
-  bool Do0RTT();
-  nsresult Finish0RTT(bool aRestart, bool aAlpnIgnored);
-
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
                                 const nsCString &hostHeader,
@@ -331,8 +327,6 @@ private:
   // Used to store stream data when the transaction channel cannot keep up
   // and flow control has not yet kicked in.
   SimpleBuffer mSimpleBuffer;
-
-  bool mAttempting0RTT;
 
 /// connect tunnels
 public:

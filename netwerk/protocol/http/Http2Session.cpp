@@ -64,7 +64,7 @@ do {                             \
   return NS_ERROR_ILLEGAL_VALUE; \
   } while (0)
 
-Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t version, bool attemptingEarlyData)
+Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t version)
   : mSocketTransport(aSocketTransport)
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
@@ -112,7 +112,6 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mWaitingForSettingsAck(false)
   , mGoAwayOnPush(false)
   , mUseH2Deps(false)
-  , mAttemptingEarlyData(attemptingEarlyData)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -502,12 +501,6 @@ Http2Session::SetWriteCallbacks()
 void
 Http2Session::RealignOutputQueue()
 {
-  if (mAttemptingEarlyData) {
-    // We can't realign right now, because we may need what's in there if early
-    // data fails.
-    return;
-  }
-
   mOutputQueueUsed -= mOutputQueueSent;
   memmove(mOutputQueueBuffer.get(),
           mOutputQueueBuffer.get() + mOutputQueueSent,
@@ -525,14 +518,6 @@ Http2Session::FlushOutputQueue()
   uint32_t countRead;
   uint32_t avail = mOutputQueueUsed - mOutputQueueSent;
 
-  if (!avail && mAttemptingEarlyData) {
-    // This is kind of a hack, but there are cases where we'll have already
-    // written the data we want whlie doing early data, but we get called again
-    // with a reader, and we need to avoid calling the reader when there's
-    // nothing for it to read.
-    return;
-  }
-
   rv = mSegmentReader->
     OnReadSegment(mOutputQueueBuffer.get() + mOutputQueueSent, avail,
                   &countRead);
@@ -543,17 +528,13 @@ Http2Session::FlushOutputQueue()
   if (NS_FAILED(rv))
     return;
 
-  mOutputQueueSent += countRead;
-
-  if (mAttemptingEarlyData) {
-    return;
-  }
-
   if (countRead == avail) {
     mOutputQueueUsed = 0;
     mOutputQueueSent = 0;
     return;
   }
+
+  mOutputQueueSent += countRead;
 
   // If the output queue is close to filling up and we have sent out a good
   // chunk of data from the beginning then realign it.
@@ -571,12 +552,6 @@ Http2Session::DontReuse()
   mShouldGoAway = true;
   if (!mStreamTransactionHash.Count())
     Close(NS_OK);
-}
-
-uint32_t
-Http2Session::SpdyVersion()
-{
-  return HTTP_VERSION_2;
 }
 
 uint32_t
@@ -2369,36 +2344,7 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
           this));
     FlushOutputQueue();
     SetWriteCallbacks();
-    if (mAttemptingEarlyData) {
-      // We can still try to send our preamble as early-data
-      *countRead = mOutputQueueUsed - mOutputQueueSent;
-    }
-    return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
-  }
-
-  uint32_t earlyDataUsed = 0;
-  if (mAttemptingEarlyData) {
-    if (!stream->Do0RTT()) {
-      LOG3(("Http2Session %p will not get early data from Http2Stream %p 0x%X",
-            this, stream, stream->StreamID()));
-      FlushOutputQueue();
-      SetWriteCallbacks();
-      // We can still send our preamble
-      *countRead = mOutputQueueUsed - mOutputQueueSent;
-      return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
-    }
-
-    if (!m0RTTStreams.Contains(stream->StreamID())) {
-      m0RTTStreams.AppendElement(stream->StreamID());
-    }
-
-    // Need to adjust this to only take as much as we can fit in with the
-    // preamble/settings/priority stuff
-    count -= (mOutputQueueUsed - mOutputQueueSent);
-
-    // Keep track of this to add it into countRead later, as
-    // stream->ReadSegments will likely change the value of mOutputQueueUsed.
-    earlyDataUsed = mOutputQueueUsed - mOutputQueueSent;
+    return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
   LOG3(("Http2Session %p will write from Http2Stream %p 0x%X "
@@ -2406,13 +2352,6 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
         stream->RequestBlockedOnRead(), stream->BlockedOnRwin()));
 
   rv = stream->ReadSegments(this, count, countRead);
-
-  if (earlyDataUsed) {
-    // Do this here because countRead could get reset somewhere down the rabbit
-    // hole of stream->ReadSegments, and we want to make sure we return the
-    // proper value to our caller.
-    *countRead += earlyDataUsed;
-  }
 
   // Not every permutation of stream->ReadSegents produces data (and therefore
   // tries to flush the output queue) - SENDING_FIN_STREAM can be an example
@@ -2965,58 +2904,6 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
 }
 
 nsresult
-Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged)
-{
-  MOZ_ASSERT(mAttemptingEarlyData);
-  LOG3(("Http2Session::Finish0RTT %p aRestart=%d aAlpnChanged=%d", this,
-        aRestart, aAlpnChanged));
-
-  for (size_t i = 0; i < m0RTTStreams.Length(); ++i) {
-    // Instead of passing (aRestart, aAlpnChanged) here, we use aAlpnChanged for
-    // both arguments because as long as the alpn token stayed the same, we can
-    // just reuse what we have in our buffer to send instead of having to have
-    // the transaction rewind and read it all over again. We only need to rewind
-    // the transaction if we're switching to a new protocol, because our buffer
-    // won't get used in that case.
-    Http2Stream *stream = mStreamIDHash.Get(m0RTTStreams[i]);
-    if (stream) {
-      stream->Finish0RTT(aAlpnChanged, aAlpnChanged);
-    }
-  }
-
-  if (aRestart) {
-    // 0RTT failed
-    if (aAlpnChanged) {
-      // This is a slightly more involved case - we need to get all our streams/
-      // transactions back in the queue so they can restart as http/1
-
-      // These must be set this way to ensure we gracefully restart all streams
-      mGoAwayID = 0;
-      mCleanShutdown = true;
-
-      // Close takes care of the rest of our work for us. The reason code here
-      // doesn't matter, as we aren't actually going to send a GOAWAY frame, but
-      // we use NS_ERROR_NET_RESET as it's closest to the truth.
-      Close(NS_ERROR_NET_RESET);
-    } else {
-      // This is the easy case - early data failed, but we're speaking h2, so
-      // we just need to rewind to the beginning of the preamble and try again.
-      mOutputQueueSent = 0;
-    }
-  } else {
-    // 0RTT succeeded
-    // Make sure we look for any incoming data in repsonse to our early data.
-    ResumeRecv();
-  }
-
-  mAttemptingEarlyData = false;
-  m0RTTStreams.Clear();
-  RealignOutputQueue();
-
-  return NS_OK;
-}
-
-nsresult
 Http2Session::ProcessConnectedPush(Http2Stream *pushConnectedStream,
                                    nsAHttpSegmentWriter * writer,
                                    uint32_t count, uint32_t *countWritten)
@@ -3224,9 +3111,7 @@ Http2Session::Close(nsresult aReason)
   } else {
     goAwayReason = INTERNAL_ERROR;
   }
-  if (!mAttemptingEarlyData) {
-    GenerateGoAway(goAwayReason);
-  }
+  GenerateGoAway(goAwayReason);
   mConnection = nullptr;
   mSegmentReader = nullptr;
   mSegmentWriter = nullptr;
@@ -3328,7 +3213,7 @@ Http2Session::OnReadSegment(const char *buf,
 nsresult
 Http2Session::CommitToSegmentSize(uint32_t count, bool forceCommitment)
 {
-  if (mOutputQueueUsed && !mAttemptingEarlyData)
+  if (mOutputQueueUsed)
     FlushOutputQueue();
 
   // would there be enough room to buffer this if needed?
@@ -3648,17 +3533,11 @@ Http2Session::ALPNCallback(nsISupports *securityInfo)
 nsresult
 Http2Session::ConfirmTLSProfile()
 {
-  if (mTLSProfileConfirmed) {
+  if (mTLSProfileConfirmed)
     return NS_OK;
-  }
 
   LOG3(("Http2Session::ConfirmTLSProfile %p mConnection=%p\n",
         this, mConnection.get()));
-
-  if (mAttemptingEarlyData) {
-    LOG3(("Http2Session::ConfirmTLSProfile %p temporarily passing due to early data\n", this));
-    return NS_OK;
-  }
 
   if (!gHttpHandler->EnforceHttp2TlsProfile()) {
     LOG3(("Http2Session::ConfirmTLSProfile %p passed due to configuration bypass\n", this));
