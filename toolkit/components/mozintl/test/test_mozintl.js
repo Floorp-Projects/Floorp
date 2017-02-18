@@ -35,6 +35,7 @@ function test_cross_global(mozIntl) {
 function test_methods_presence(mozIntl) {
   equal(mozIntl.addGetCalendarInfo instanceof Function, true);
   equal(mozIntl.addGetDisplayNames instanceof Function, true);
+  equal(mozIntl.addGetLocaleInfo instanceof Function, true);
 
   let x = {};
 
@@ -43,4 +44,7 @@ function test_methods_presence(mozIntl) {
 
   mozIntl.addGetDisplayNames(x);
   equal(x.getDisplayNames instanceof Function, true);
+
+  mozIntl.addGetLocaleInfo(x);
+  equal(x.getLocaleInfo instanceof Function, true);
 }
