@@ -142,7 +142,7 @@ function delayedStartupFinished(aWindow) {
 function someTabLoaded(aWindow) {
   return new Promise(function(resolve) {
     aWindow.gBrowser.addEventListener("load", function onLoad(aEvent) {
-      if (aWindow.location === "about:blank") {
+      if (aWindow.location.href === "about:blank") {
         return;
       }
       let tab = aWindow.gBrowser._getTabForContentWindow(
