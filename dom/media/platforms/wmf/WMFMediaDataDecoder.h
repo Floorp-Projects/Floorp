@@ -67,11 +67,6 @@ public:
     mSeekTargetThreshold = Some(aTime);
   }
 
-  virtual MediaDataDecoder::ConversionRequired NeedsConversion() const
-  {
-    return MediaDataDecoder::ConversionRequired::kNeedNone;
-  }
-
 protected:
   // IMFTransform wrapper that performs the decoding.
   RefPtr<MFTDecoder> mDecoder;
@@ -105,12 +100,6 @@ public:
   const char* GetDescriptionName() const override
   {
     return mMFTManager ? mMFTManager->GetDescriptionName() : "";
-  }
-
-  ConversionRequired NeedsConversion() const override
-  {
-    MOZ_ASSERT(mMFTManager);
-    return mMFTManager->NeedsConversion();
   }
 
   virtual void SetSeekThreshold(const media::TimeUnit& aTime) override;

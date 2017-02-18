@@ -26,6 +26,8 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mTaskQueue(aParams.mTaskQueue)
   , mDecoder(nullptr)
   , mGMPCrashHelper(aParams.mCrashHelper)
+  , mNeedAVCC(aPDM->DecoderNeedsConversion(aParams.mConfig)
+      == PlatformDecoderModule::ConversionRequired::kNeedAVCC)
   , mLastError(NS_OK)
   , mType(aParams.mType)
   , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
@@ -96,12 +98,7 @@ H264Converter::Decode(MediaRawData* aSample)
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
 
-  if (!mNeedAVCC) {
-    mNeedAVCC =
-      Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
-  }
-
-  if (!*mNeedAVCC
+  if (!mNeedAVCC
       && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
@@ -276,11 +273,7 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     return;
   }
   mNeedKeyframe = false;
-
-  mNeedAVCC =
-    Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
-
-  if (!*mNeedAVCC
+  if (!mNeedAVCC
       && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
     mDecodePromise.Reject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
@@ -362,7 +355,6 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
                       [self, this]() {
                         mShutdownRequest.Complete();
                         mShutdownPromise = nullptr;
-                        mNeedAVCC.reset();
                         RefPtr<MediaRawData> sample = mPendingSample.forget();
                         nsresult rv = CreateDecoderAndInit(sample);
                         if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {

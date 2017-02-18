@@ -29,6 +29,9 @@ public:
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
+  ConversionRequired
+  DecoderNeedsConversion(const TrackInfo& aConfig) const override;
+
   static void Init();
 
   static bool sCanUseHardwareVideoDecoder;

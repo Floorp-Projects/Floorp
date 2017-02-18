@@ -246,4 +246,13 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
   return false;
 }
 
+PlatformDecoderModule::ConversionRequired
+WMFDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
+{
+  if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
+    return ConversionRequired::kNeedAnnexB;
+  }
+  return ConversionRequired::kNeedNone;
+}
+
 } // namespace mozilla

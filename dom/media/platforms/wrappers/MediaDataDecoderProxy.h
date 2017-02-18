@@ -51,7 +51,6 @@ public:
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override;
   void ConfigurationChanged(const TrackInfo& aConfig) override;
-  ConversionRequired NeedsConversion() const override;
 
 private:
   RefPtr<MediaDataDecoder> mProxyDecoder;

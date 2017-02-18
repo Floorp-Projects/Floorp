@@ -109,10 +109,7 @@ VideoDecoderParent::RecvInit()
         nsCString hardwareReason;
         bool hardwareAccelerated =
           self->mDecoder->IsHardwareAccelerated(hardwareReason);
-        uint32_t conversion =
-          static_cast<uint32_t>(self->mDecoder->NeedsConversion());
-        Unused << self->SendInitComplete(
-          hardwareAccelerated, hardwareReason, conversion);
+        Unused << self->SendInitComplete(hardwareAccelerated, hardwareReason);
       }
     },
     [self] (MediaResult aReason) {
