@@ -47,6 +47,7 @@
 #include "nsIThrottledInputChannel.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #define HTTP_BASE_CHANNEL_IID \
 { 0x9d5cde03, 0xe6e9, 0x4612, \
@@ -251,7 +252,6 @@ public:
   NS_IMETHOD GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey) override;
   NS_IMETHOD GetIntegrityMetadata(nsAString& aIntegrityMetadata) override;
   NS_IMETHOD SetIntegrityMetadata(const nsAString& aIntegrityMetadata) override;
-  virtual mozilla::net::nsHttpChannel * QueryHttpChannelImpl(void) override;
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
@@ -641,7 +641,8 @@ template <class T>
 nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
 {
   MOZ_LOG(gHttpLog, LogLevel::Debug,
-         ("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
+         ("HttpAsyncAborter::AsyncAbort [this=%p status=%" PRIx32 "]\n",
+          mThis, static_cast<uint32_t>(status)));
 
   mThis->mStatus = status;
 

@@ -35,8 +35,6 @@ protected:
   virtual ~ImageLayerComposite();
 
 public:
-  virtual LayerRenderState GetRenderState() override;
-
   virtual void Disconnect() override;
 
   virtual bool SetCompositableHost(CompositableHost* aHost) override;

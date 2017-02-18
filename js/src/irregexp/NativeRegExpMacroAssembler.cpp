@@ -36,9 +36,7 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "vm/MatchPairs.h"
-#ifdef MOZ_VTUNE
-# include "vtune/VTuneWrapper.h"
-#endif
+#include "vtune/VTuneWrapper.h"
 
 #include "jit/MacroAssembler-inl.h"
 

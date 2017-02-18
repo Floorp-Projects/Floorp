@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" dir="">
+  <head>
+    <link rel="stylesheet" href="chrome://devtools/content/shared/widgets/widgets.css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/widgets.css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/netmonitor.css"/>
+
+    <script src="chrome://devtools/content/shared/theme-switching.js"/>
+    <script>
+      "use strict";
+
+      const { BrowserLoader } = Components.utils.import(
+        "resource://devtools/client/shared/browser-loader.js", {});
+      const { require } = BrowserLoader({
+        baseURI: "resource://devtools/client/netmonitor/",
+        window,
+      });
+      window.windowRequire = require;
+    </script>
+  </head>
+  <body class="theme-sidebar" role="application">
+    <div class="root"></div>
+    <script src="netmonitor.js" defer="true"/>
+  </body>
+</html>

@@ -1636,8 +1636,10 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
         newData += reinterpret_cast<uint8_t*>(owner) - reinterpret_cast<uint8_t*>(oldOwner);
         typedObj.setData(newData);
 
-        Nursery& nursery = typedObj.zoneFromAnyThread()->group()->nursery();
-        nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
+        if (trc->isTenuringTracer()) {
+            Nursery& nursery = typedObj.zoneFromAnyThread()->group()->nursery();
+            nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
+        }
     }
 
     if (!descr.opaque() || !typedObj.isAttached())
@@ -2378,6 +2380,35 @@ TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp)
     // Something bogus.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
     return false;
+}
+
+/* static */ JS::Result<TypedObject*, JS::OOM&>
+TypedObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+                    js::HandleShape shape, js::HandleObjectGroup group)
+{
+    debugCheckNewObject(group, shape, kind, heap);
+
+    const js::Class* clasp = group->clasp();
+    MOZ_ASSERT(::IsTypedObjectClass(clasp));
+
+    JSObject* obj = js::Allocate<JSObject>(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
+    if (!obj)
+        return cx->alreadyReportedOOM();
+
+    TypedObject* tobj = static_cast<TypedObject*>(obj);
+    tobj->group_.init(group);
+    tobj->initShape(shape);
+
+    tobj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
+
+    if (clasp->shouldDelayMetadataBuilder())
+        cx->compartment()->setObjectPendingMetadata(cx, tobj);
+    else
+        tobj = SetNewObjectMetadata(cx, tobj);
+
+    js::gc::TraceCreateObject(tobj);
+
+    return tobj;
 }
 
 /******************************************************************************

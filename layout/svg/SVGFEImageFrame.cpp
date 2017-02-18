@@ -65,7 +65,7 @@ public:
                                     int32_t  aModType) override;
 
   void OnVisibilityChange(Visibility aNewVisibility,
-                          Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
+                          const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
 
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     // We don't maintain a visual overflow rect
@@ -152,7 +152,7 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
 
 void
 SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
-                                    Maybe<OnNonvisible> aNonvisibleAction)
+                                    const Maybe<OnNonvisible>& aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
     do_QueryInterface(nsFrame::mContent);

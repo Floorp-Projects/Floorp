@@ -79,8 +79,11 @@ add_task(function* test_unsigned_no_id_temp_install() {
 
   const addonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
                                                 "the-addon-sub-dir");
+  const testDate = new Date();
   const addon = yield AddonManager.installTemporaryAddon(addonDir);
   ok(addon.id, "ID should have been auto-generated");
+  ok(Math.abs(addon.installDate - testDate) < 10000, "addon has an expected installDate");
+  ok(Math.abs(addon.updateDate - testDate) < 10000, "addon has an expected updateDate");
 
   // The sourceURI of a temporary installed addon should be equal to the
   // file url of the installed source dir.

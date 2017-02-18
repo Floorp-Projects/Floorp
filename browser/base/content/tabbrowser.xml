@@ -1511,32 +1511,32 @@
             var aPreferredRemoteType;
             var aNoReferrer;
             var aUserContextId;
-            var aRelatedBrowser;
+            var aSameProcessAsFrameLoader;
             var aOriginPrincipal;
             var aOpener;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
               let params = arguments[1];
-              aTriggeringPrincipal  = params.triggeringPrincipal
-              aReferrerURI          = params.referrerURI;
-              aReferrerPolicy       = params.referrerPolicy;
-              aCharset              = params.charset;
-              aPostData             = params.postData;
-              aLoadInBackground     = params.inBackground;
-              aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-              aFromExternal         = params.fromExternal;
-              aRelatedToCurrent     = params.relatedToCurrent;
-              aAllowMixedContent    = params.allowMixedContent;
-              aSkipAnimation        = params.skipAnimation;
-              aForceNotRemote       = params.forceNotRemote;
-              aPreferredRemoteType  = params.preferredRemoteType;
-              aNoReferrer           = params.noReferrer;
-              aUserContextId        = params.userContextId;
-              aRelatedBrowser       = params.relatedBrowser;
-              aOriginPrincipal      = params.originPrincipal;
-              aOpener               = params.opener;
-              aIsPrerendered        = params.isPrerendered;
+              aTriggeringPrincipal      = params.triggeringPrincipal
+              aReferrerURI              = params.referrerURI;
+              aReferrerPolicy           = params.referrerPolicy;
+              aCharset                  = params.charset;
+              aPostData                 = params.postData;
+              aLoadInBackground         = params.inBackground;
+              aAllowThirdPartyFixup     = params.allowThirdPartyFixup;
+              aFromExternal             = params.fromExternal;
+              aRelatedToCurrent         = params.relatedToCurrent;
+              aAllowMixedContent        = params.allowMixedContent;
+              aSkipAnimation            = params.skipAnimation;
+              aForceNotRemote           = params.forceNotRemote;
+              aPreferredRemoteType      = params.preferredRemoteType;
+              aNoReferrer               = params.noReferrer;
+              aUserContextId            = params.userContextId;
+              aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
+              aOriginPrincipal          = params.originPrincipal;
+              aOpener                   = params.opener;
+              aIsPrerendered            = params.isPrerendered;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1560,7 +1560,7 @@
                                   noReferrer: aNoReferrer,
                                   userContextId: aUserContextId,
                                   originPrincipal: aOriginPrincipal,
-                                  relatedBrowser: aRelatedBrowser,
+                                  sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                   opener: aOpener,
                                   isPrerendered: aIsPrerendered });
             if (!bgLoad)
@@ -1704,9 +1704,8 @@
 
             // Abort if we're not going to change anything
             let currentRemoteType = aBrowser.getAttribute("remoteType");
-            if (isRemote == aShouldBeRemote && !aOptions.newFrameloader && !aOptions.freshProcess &&
-                (!isRemote || currentRemoteType == aOptions.remoteType) &&
-                !aBrowser.frameLoader.isFreshProcess) {
+            if (isRemote == aShouldBeRemote && !aOptions.newFrameloader &&
+                (!isRemote || currentRemoteType == aOptions.remoteType)) {
               return false;
             }
 
@@ -1736,9 +1735,9 @@
             aBrowser.destroy();
 
             // Make sure to restore the original droppedLinkHandler and
-            // relatedBrowser.
+            // sameProcessAsFrameLoader.
             let droppedLinkHandler = aBrowser.droppedLinkHandler;
-            let relatedBrowser = aBrowser.relatedBrowser;
+            let sameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
 
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
@@ -1756,7 +1755,7 @@
             // type copying related browser would stop the switch and the
             // previously related browser will no longer be relevant.
             if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
-              aBrowser.relatedBrowser = relatedBrowser;
+              aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
             }
 
             if (aOptions.opener) {
@@ -1765,17 +1764,7 @@
               aBrowser.presetOpenerWindow(aOptions.opener);
             }
 
-            // Set the freshProcess attribute so that the frameloader knows to
-            // create a new process
-            if (aOptions.freshProcess) {
-              aBrowser.setAttribute("freshProcess", "true");
-            }
-
             parent.appendChild(aBrowser);
-
-            // Remove the freshProcess attribute if we set it, as we don't
-            // want it to apply for the next time the frameloader is created
-            aBrowser.removeAttribute("freshProcess");
 
             aBrowser.userTypedValue = oldUserTypedValue;
             if (hadStartedLoad) {
@@ -1850,15 +1839,23 @@
             if (!gMultiProcessBrowser)
               return this.updateBrowserRemoteness(aBrowser, false);
 
+            // If we're in a LargeAllocation process, we prefer switching back
+            // into a normal content process, as that way we can clean up the
+            // L-A process.
+            let preferredRemoteType = aBrowser.remoteType;
+            if (aBrowser.remoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
+              preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+            }
+            aOptions.remoteType =
+              E10SUtils.getRemoteTypeForURI(aURL,
+                                            gMultiProcessBrowser,
+                                            preferredRemoteType,
+                                            aOptions.freshProcess);
+
             // If this URL can't load in the current browser then flip it to the
             // correct type.
-            let currentRemoteType = aBrowser.remoteType;
-            aOptions.remoteType =
-              E10SUtils.getRemoteTypeForURI(aURL, gMultiProcessBrowser,
-                                            currentRemoteType);
-            if (currentRemoteType != aOptions.remoteType ||
-                aOptions.freshProcess || aOptions.newFrameloader ||
-                aBrowser.frameLoader.isFreshProcess) {
+            if (aBrowser.remoteType != aOptions.remoteType ||
+                aOptions.newFrameloader) {
               let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
               return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
             }
@@ -1996,8 +1993,8 @@
 
             b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
-            if (aParams.relatedBrowser) {
-              b.relatedBrowser = aParams.relatedBrowser;
+            if (aParams.sameProcessAsFrameLoader) {
+              b.sameProcessAsFrameLoader = aParams.sameProcessAsFrameLoader;
             }
 
             // Create the browserStack container
@@ -2078,7 +2075,7 @@
                                              remoteType,
                                              uriIsAboutBlank,
                                              userContextId: aParams.userContextId,
-                                             relatedBrowser: aParams.relatedBrowser,
+                                             sameProcessAsFrameLoader: aParams.sameProcessAsFrameLoader,
                                              opener: aParams.opener,
                                              isPrerendered: aParams.isPrerendered});
             }
@@ -2157,7 +2154,7 @@
             var aNoReferrer;
             var aUserContextId;
             var aEventDetail;
-            var aRelatedBrowser;
+            var aSameProcessAsFrameLoader;
             var aOriginPrincipal;
             var aDisallowInheritPrincipal;
             var aOpener;
@@ -2181,7 +2178,7 @@
               aNoReferrer               = params.noReferrer;
               aUserContextId            = params.userContextId;
               aEventDetail              = params.eventDetail;
-              aRelatedBrowser           = params.relatedBrowser;
+              aSameProcessAsFrameLoader = params.sameProcessAsFrameLoader;
               aOriginPrincipal          = params.originPrincipal;
               aDisallowInheritPrincipal = params.disallowInheritPrincipal;
               aOpener                   = params.opener;
@@ -2273,7 +2270,7 @@
               forceNotRemote: aForceNotRemote,
               preferredRemoteType: aPreferredRemoteType,
               userContextId:  aUserContextId,
-              relatedBrowser: aRelatedBrowser,
+              sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
               opener: aOpener,
               isPrerendered: aIsPrerendered,
             };

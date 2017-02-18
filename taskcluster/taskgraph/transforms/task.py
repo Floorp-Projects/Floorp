@@ -51,6 +51,10 @@ task_description_schema = Schema({
     # automatically
     Optional('routes'): [basestring],
 
+    # The index paths where this task may be cached. Transforms are expected to
+    # fill these automatically when wanted.
+    Optional('index-paths'): [basestring],
+
     # custom scopes for this task; any scopes required for the worker will be
     # added automatically
     Optional('scopes'): [basestring],
@@ -341,6 +345,7 @@ task_description_schema = Schema({
 })
 
 GROUP_NAMES = {
+    'py': 'Python unit tests',
     'tc': 'Executed by TaskCluster',
     'tc-e10s': 'Executed by TaskCluster with e10s',
     'tc-Fxfn-l': 'Firefox functional tests (local) executed by TaskCluster',
@@ -366,7 +371,10 @@ GROUP_NAMES = {
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
-    'Cc': 'Toolchain builds',
+    'TL': 'Toolchain builds for Linux 64-bits',
+    'TM': 'Toolchain builds for OSX',
+    'TW32': 'Toolchain builds for Windows 32-bits',
+    'TW64': 'Toolchain builds for Windows 64-bits',
     'SM-tc': 'Spidermonkey builds',
 }
 UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
@@ -852,6 +860,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
+            'index-paths': task.get('index-paths'),
             'when': task.get('when', {}),
         }
 

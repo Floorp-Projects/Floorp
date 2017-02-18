@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals document */
-
 "use strict";
 
 const {
@@ -23,6 +21,7 @@ const {
 } = require("../utils/format-utils");
 
 const { button, div } = DOM;
+const MediaQueryList = window.matchMedia("(min-width: 700px)");
 
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
 const BACK_BUTTON = L10N.getStr("netmonitor.backButton");
@@ -43,9 +42,17 @@ const StatisticsPanel = createClass({
     requests: PropTypes.object,
   },
 
+  getInitialState() {
+    return {
+      isVerticalSpliter: MediaQueryList.matches,
+    };
+  },
+
   componentDidUpdate(prevProps) {
+    MediaQueryList.addListener(this.onLayoutChange);
+
     const { requests } = this.props;
-    let ready = requests && requests.every((req) =>
+    let ready = requests && !requests.isEmpty() && requests.every((req) =>
       req.contentSize !== undefined && req.mimeType && req.responseHeaders &&
       req.status !== undefined && req.totalTime !== undefined
     );
@@ -63,15 +70,30 @@ const StatisticsPanel = createClass({
     });
   },
 
+  componentWillUnmount() {
+    MediaQueryList.removeListener(this.onLayoutChange);
+  },
+
   createChart({ id, title, data }) {
     // Create a new chart.
     let chart = Chart.PieTable(document, {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title,
+      header: {
+        cached: "",
+        count: "",
+        label: L10N.getStr("charts.type"),
+        size: L10N.getStr("charts.size"),
+        transferredSize: L10N.getStr("charts.transferred"),
+        time: L10N.getStr("charts.time"),
+      },
       data,
       strings: {
         size: (value) =>
           L10N.getFormatStr("charts.sizeKB", getSizeWithDecimals(value / 1024)),
+        transferredSize: (value) =>
+          L10N.getFormatStr("charts.transferredSizeKB",
+            getSizeWithDecimals(value / 1024)),
         time: (value) =>
           L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
       },
@@ -80,6 +102,9 @@ const StatisticsPanel = createClass({
         count: (total) => L10N.getFormatStr("charts.totalCount", total),
         size: (total) =>
           L10N.getFormatStr("charts.totalSize", getSizeWithDecimals(total / 1024)),
+        transferredSize: total =>
+          L10N.getFormatStr("charts.totalTransferredSize",
+            getSizeWithDecimals(total / 1024)),
         time: (total) => {
           let seconds = total / 1000;
           let string = getTimeWithDecimals(seconds);
@@ -107,9 +132,16 @@ const StatisticsPanel = createClass({
   },
 
   sanitizeChartDataSource(requests, emptyCache) {
-    let data = [
+    const data = [
       "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
-    ].map((type) => ({ cached: 0, count: 0, label: type, size: 0, time: 0 }));
+    ].map((type) => ({
+      cached: 0,
+      count: 0,
+      label: type,
+      size: 0,
+      transferredSize: 0,
+      time: 0,
+    }));
 
     for (let request of requests) {
       let type;
@@ -150,6 +182,7 @@ const StatisticsPanel = createClass({
       if (emptyCache || !this.responseIsFresh(request)) {
         data[type].time += request.totalTime || 0;
         data[type].size += request.contentSize || 0;
+        data[type].transferredSize += request.transferredSize || 0;
       } else {
         data[type].cached++;
       }
@@ -197,19 +230,33 @@ const StatisticsPanel = createClass({
     return false;
   },
 
+  onLayoutChange() {
+    this.setState({
+      isVerticalSpliter: MediaQueryList.matches,
+    });
+  },
+
   render() {
     const { closeStatistics } = this.props;
+    let splitterClassName = ["splitter"];
+
+    if (this.state.isVerticalSpliter) {
+      splitterClassName.push("devtools-side-splitter");
+    } else {
+      splitterClassName.push("devtools-horizontal-splitter");
+    }
+
     return (
       div({ className: "statistics-panel" },
         button({
-          className: "back-button devtools-toolbarbutton",
+          className: "back-button devtools-button",
           "data-text-only": "true",
           title: BACK_BUTTON,
           onClick: closeStatistics,
         }, BACK_BUTTON),
-        div({ className: "charts-container devtools-responsive-container" },
+        div({ className: "charts-container" },
           div({ ref: "primedCacheChart", className: "charts primed-cache-chart" }),
-          div({ className: "splitter devtools-side-splitter" }),
+          div({ className: splitterClassName.join(" ") }),
           div({ ref: "emptyCacheChart", className: "charts empty-cache-chart" }),
         ),
       )

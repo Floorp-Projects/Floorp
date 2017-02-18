@@ -1007,18 +1007,17 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     DidComposite(start, end);
   }
 
-  if (mCompositor) {
-    // We're not really taking advantage of the stored composite-again-time here.
-    // We might be able to skip the next few composites altogether. However,
-    // that's a bit complex to implement and we'll get most of the advantage
-    // by skipping compositing when we detect there's nothing invalid. This is why
-    // we do "composite until" rather than "composite again at".
-    if (!mCompositor->GetCompositeUntilTime().IsNull() ||
-        mLayerManager->DebugOverlayWantsNextFrame()) {
+  // We're not really taking advantage of the stored composite-again-time here.
+  // We might be able to skip the next few composites altogether. However,
+  // that's a bit complex to implement and we'll get most of the advantage
+  // by skipping compositing when we detect there's nothing invalid. This is why
+  // we do "composite until" rather than "composite again at".
+  //
+  // TODO(bug 1328602) Figure out what we should do here with the render thread.
+  if (!mLayerManager->GetCompositeUntilTime().IsNull() ||
+      mLayerManager->DebugOverlayWantsNextFrame())
+  {
       ScheduleComposition();
-    }
-  } else {
-    // TODO(bug 1328602) Figure out what we should do here with the render thread.
   }
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
@@ -1035,17 +1034,15 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
 #endif
 
   // 0 -> Full-tilt composite
-  if (gfxPrefs::LayersCompositionFrameRate() == 0
-    || mLayerManager->GetCompositor()->GetDiagnosticTypes() & DiagnosticTypes::FLASH_BORDERS) {
+  if (gfxPrefs::LayersCompositionFrameRate() == 0 ||
+      mLayerManager->AlwaysScheduleComposite())
+  {
     // Special full-tilt composite mode for performance testing
     ScheduleComposition();
   }
 
-  if (mCompositor) {
-    mCompositor->SetCompositionTime(TimeStamp());
-  } else {
-    // TODO(bug 1328602) Need an equivalent that works with the rende thread.
-  }
+  // TODO(bug 1328602) Need an equivalent that works with the rende thread.
+  mLayerManager->SetCompositionTime(TimeStamp());
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME, start);
 }

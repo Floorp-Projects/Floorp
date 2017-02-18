@@ -529,7 +529,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     txVariable* var = static_cast<txVariable*>(mVariables.get(varName));
     if (var) {
         var->setValue(value);
-        
+
         return NS_OK;
     }
 
@@ -589,7 +589,7 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
 {
     NS_ENSURE_TRUE(aStyle, NS_ERROR_NULL_POINTER);
-    
+
     // We don't support importing multiple stylesheets yet.
     NS_ENSURE_TRUE(!mStylesheetDocument && !mStylesheet,
                    NS_ERROR_NOT_IMPLEMENTED);
@@ -598,7 +598,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     if (!node || !nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(node->NodePrincipal())) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
-    
+
     nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyle);
     NS_ENSURE_TRUE(styleNode &&
                    (styleNode->IsElement() ||
@@ -675,12 +675,12 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument **aResult,
     if (NS_SUCCEEDED(rv)) {
         rv = txXSLTProcessor::execute(es);
     }
-    
+
     nsresult endRv = es.end(rv);
     if (NS_SUCCEEDED(rv)) {
       rv = endRv;
     }
-    
+
     if (NS_SUCCEEDED(rv)) {
         if (aResult) {
             txAOutputXMLEventHandler* handler =
@@ -934,7 +934,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
         default:
         {
             return NS_ERROR_FAILURE;
-        }        
+        }
     }
 
     int32_t nsId = kNameSpaceID_Unknown;
@@ -1126,9 +1126,12 @@ txMozillaXSLTProcessor::notifyError()
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
     IgnoredErrorResult rv;
+    ElementCreationOptionsOrString options;
+    options.SetAsString();
+
     nsCOMPtr<Element> element =
         document->CreateElementNS(ns, NS_LITERAL_STRING("parsererror"),
-                                  ElementCreationOptions(), rv);
+                                  options, rv);
     if (rv.Failed()) {
         return;
     }
@@ -1146,20 +1149,23 @@ txMozillaXSLTProcessor::notifyError()
     }
 
     if (!mSourceText.IsEmpty()) {
+        ElementCreationOptionsOrString options;
+        options.SetAsString();
+
         nsCOMPtr<Element> sourceElement =
             document->CreateElementNS(ns, NS_LITERAL_STRING("sourcetext"),
-                                      ElementCreationOptions(), rv);
+                                      options, rv);
         if (rv.Failed()) {
             return;
         }
-    
+
         element->AppendChild(*sourceElement, rv);
         if (rv.Failed()) {
             return;
         }
 
         text = document->CreateTextNode(mSourceText);
-    
+
         sourceElement->AppendChild(*text, rv);
         if (rv.Failed()) {
             return;

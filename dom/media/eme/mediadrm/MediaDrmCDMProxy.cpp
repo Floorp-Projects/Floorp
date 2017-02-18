@@ -53,7 +53,8 @@ MediaDrmCDMProxy::Init(PromiseId aPromiseId,
 
   EME_LOG("MediaDrmCDMProxy::Init (%s, %s) %s",
           NS_ConvertUTF16toUTF8(aOrigin).get(),
-          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
+          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
+          NS_ConvertUTF16toUTF8(aName).get());
 
   // Create a thread to work with cdm.
   if (!mOwnerThread) {
@@ -281,7 +282,7 @@ MediaDrmCDMProxy::OnRejectPromise(uint32_t aPromiseId,
   RejectPromise(aPromiseId, aDOMException, aMsg);
 }
 
-RefPtr<MediaDrmCDMProxy::DecryptPromise>
+RefPtr<DecryptPromise>
 MediaDrmCDMProxy::Decrypt(MediaRawData* aSample)
 {
   MOZ_ASSERT_UNREACHABLE("Fennec could not handle decrypting individually");

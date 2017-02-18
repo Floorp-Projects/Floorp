@@ -53,6 +53,32 @@ class TestResolveKeyedBy(unittest.TestCase):
             resolve_keyed_by({'x': {'a': 10}}, 'x', 'n'),
             {'x': {'a': 10}})
 
+    def test_nested(self):
+        x = {
+            'by-foo': {
+                'F1': {
+                    'by-bar': {
+                        'B1': 11,
+                        'B2': 12,
+                    },
+                },
+                'F2': 20,
+                'default': 0,
+            },
+        }
+        self.assertEqual(
+            resolve_keyed_by({'x': x}, 'x', 'x', foo='F1', bar='B1'),
+            {'x': 11})
+        self.assertEqual(
+            resolve_keyed_by({'x': x}, 'x', 'x', foo='F1', bar='B2'),
+            {'x': 12})
+        self.assertEqual(
+            resolve_keyed_by({'x': x}, 'x', 'x', foo='F2'),
+            {'x': 20})
+        self.assertEqual(
+            resolve_keyed_by({'x': x}, 'x', 'x', foo='F99', bar='B1'),
+            {'x': 0})
+
     def test_no_by_empty_dict(self):
         self.assertEqual(
             resolve_keyed_by({'x': {}}, 'x', 'n'),

@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=766694
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766694</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=766694">Mozilla Bug 766694</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script>
+  ok(self.isSecureContext, "The test should be running in a secure context");
+</script>
+<script type="text/javascript" src="test_interfaces.js"></script>
+<span id="span" style="-moz-binding: url(file_interfaces.xml)"></span>
+</pre>
+</body>
+</html>

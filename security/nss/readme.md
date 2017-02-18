@@ -15,8 +15,9 @@ NSPR and you require mercurial to get the latest NSPR source.)
     git clone https://github.com/nss-dev/nss.git
     hg clone https://hg.mozilla.org/projects/nspr
 
-NSS can also be cloned with mercurial `
-    hg clone https://hg.mozilla.org/projects/nspr`
+NSS can also be cloned with mercurial
+
+    hg clone https://hg.mozilla.org/projects/nss
 
 ## Building NSS
 

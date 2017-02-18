@@ -9,6 +9,7 @@
 #include "nsTextFrame.h"
 
 #include "gfx2DGlue.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
@@ -4770,7 +4771,7 @@ nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 class nsDisplayText : public nsCharClipDisplayItem {
 public:
   nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame,
-                Maybe<bool> aIsSelected);
+                const Maybe<bool>& aIsSelected);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayText() {
     MOZ_COUNT_DTOR(nsDisplayText);
@@ -4976,7 +4977,7 @@ GetTextCombineScaleFactor(nsTextFrame* aFrame)
 }
 
 nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame,
-                             Maybe<bool> aIsSelected)
+                             const Maybe<bool>& aIsSelected)
   : nsCharClipDisplayItem(aBuilder, aFrame)
   , mOpacity(1.0f)
   , mDisableSubpixelAA(false)

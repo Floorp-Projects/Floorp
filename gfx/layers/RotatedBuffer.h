@@ -203,6 +203,7 @@ public:
    */
   void Clear()
   {
+    UnlockBuffers();
     mDTBuffer = nullptr;
     mDTBufferOnWhite = nullptr;
     mBufferProvider = nullptr;
@@ -409,6 +410,9 @@ protected:
    * drawing the next frame.
    */
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+
+  virtual bool LockBuffers() { return true; }
+  virtual void UnlockBuffers() {}
 
   RefPtr<gfx::DrawTarget> mDTBuffer;
   RefPtr<gfx::DrawTarget> mDTBufferOnWhite;

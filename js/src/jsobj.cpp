@@ -646,8 +646,14 @@ NewObject(JSContext* cx, HandleObjectGroup group, gc::AllocKind kind,
         return nullptr;
 
     gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+
     JSObject* obj;
-    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSObject::create(cx, kind, heap, shape, group));
+    if (MOZ_LIKELY(clasp->isNative())) {
+        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::create(cx, kind, heap, shape, group));
+    } else {
+        MOZ_ASSERT(IsTypedObjectClass(clasp));
+        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, TypedObject::create(cx, kind, heap, shape, group));
+    }
 
     if (newKind == SingletonObject) {
         RootedObject nobj(cx, obj);
@@ -1506,9 +1512,10 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
                IsBackgroundFinalized(b->asTenured().getAllocKind()));
     MOZ_ASSERT(a->compartment() == b->compartment());
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
+    // You must have entered the objects' compartment before calling this.
+    MOZ_ASSERT(cx->compartment() == a->compartment());
 
-    AutoCompartment ac(cx, a);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
     if (!JSObject::getGroup(cx, a))
         oomUnsafe.crash("JSObject::swap");
@@ -3980,3 +3987,54 @@ js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp)
 
     return true;
 }
+
+#ifdef DEBUG
+/* static */ void
+JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape, js::gc::AllocKind allocKind,
+                              js::gc::InitialHeap heap)
+{
+    const js::Class* clasp = group->clasp();
+    MOZ_ASSERT(clasp != &ArrayObject::class_);
+
+    if (shape)
+        MOZ_ASSERT(clasp == shape->getObjectClass());
+    else
+        MOZ_ASSERT(clasp == &UnboxedPlainObject::class_ || clasp == &UnboxedArrayObject::class_);
+
+    if (!ClassCanHaveFixedData(clasp)) {
+        MOZ_ASSERT(shape);
+        MOZ_ASSERT(gc::GetGCKindSlots(allocKind, clasp) == shape->numFixedSlots());
+    }
+
+    // Classes with a finalizer must specify whether instances will be finalized
+    // on the active thread or in the background, except proxies whose behaviour
+    // depends on the target object.
+    static const uint32_t FinalizeMask = JSCLASS_FOREGROUND_FINALIZE | JSCLASS_BACKGROUND_FINALIZE;
+    uint32_t flags = clasp->flags;
+    uint32_t finalizeFlags = flags & FinalizeMask;
+    if (clasp->hasFinalize() && !clasp->isProxy()) {
+        MOZ_ASSERT(finalizeFlags == JSCLASS_FOREGROUND_FINALIZE ||
+                   finalizeFlags == JSCLASS_BACKGROUND_FINALIZE);
+        MOZ_ASSERT((finalizeFlags == JSCLASS_BACKGROUND_FINALIZE) == IsBackgroundFinalized(allocKind));
+    } else {
+        MOZ_ASSERT(finalizeFlags == 0);
+    }
+
+    MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap ||
+                                        CanNurseryAllocateFinalizedClass(clasp) ||
+                                        clasp->isProxy());
+    MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(), heap == gc::TenuredHeap);
+
+    MOZ_ASSERT(!group->compartment()->hasObjectPendingMetadata());
+
+    // Non-native classes cannot have reserved slots or private data, and the
+    // objects can't have any fixed slots, for compatibility with
+    // GetReservedOrProxyPrivateSlot.
+    if (!clasp->isNative()) {
+        MOZ_ASSERT(JSCLASS_RESERVED_SLOTS(clasp) == 0);
+        MOZ_ASSERT(!clasp->hasPrivate());
+        MOZ_ASSERT_IF(shape, shape->numFixedSlots() == 0);
+        MOZ_ASSERT_IF(shape, shape->slotSpan() == 0);
+    }
+}
+#endif

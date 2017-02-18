@@ -114,6 +114,7 @@ nrappkit copyright:
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsISocketFilter.h"
+#include "nsDebug.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -178,8 +179,9 @@ private:
   ~SingletonThreadHolder()
   {
     r_log(LOG_GENERIC,LOG_DEBUG,"Deleting SingletonThreadHolder");
-    MOZ_ASSERT(!mThread, "SingletonThreads should be Released and shut down before exit!");
     if (mThread) {
+      // Likely a connection is somehow being held in CC or GC
+      NS_WARNING("SingletonThreads should be Released and shut down before exit!");
       mThread->Shutdown();
       mThread = nullptr;
     }
@@ -251,7 +253,7 @@ static StaticRefPtr<SingletonThreadHolder> sThread;
 
 static void ClearSingletonOnShutdown()
 {
-  ClearOnShutdown(&sThread);
+  ClearOnShutdown(&sThread, ShutdownPhase::ShutdownThreads);
 }
 #endif
 
@@ -1135,9 +1137,11 @@ NrUdpSocketIpc::~NrUdpSocketIpc()
   // close(), but transfer the socket_child_ reference to die as well
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnableNM(&NrUdpSocketIpc::release_child_i,
-                                        socket_child_.forget().take(),
-                                        sts_thread_),
+                                        socket_child_.forget().take()),
                 NS_DISPATCH_NORMAL);
+  // This may shut down the io_thread_, but it should spin the event loop so
+  // the above runnable happens.
+  sThread->ReleaseUse();
 #endif
 }
 
@@ -1621,21 +1625,12 @@ void NrUdpSocketIpc::close_i() {
 #if defined(MOZILLA_INTERNAL_API)
 // close(), but transfer the socket_child_ reference to die as well
 // static
-void NrUdpSocketIpc::release_child_i(nsIUDPSocketChild* aChild,
-                                     nsCOMPtr<nsIEventTarget> sts_thread) {
+void NrUdpSocketIpc::release_child_i(nsIUDPSocketChild* aChild) {
   RefPtr<nsIUDPSocketChild> socket_child_ref =
     already_AddRefed<nsIUDPSocketChild>(aChild);
   if (socket_child_ref) {
     socket_child_ref->Close();
   }
-  // Tell SingletonThreadHolder we're done with it
-  RUN_ON_THREAD(sts_thread,
-                mozilla::WrapRunnableNM(&NrUdpSocketIpc::release_use_s),
-                NS_DISPATCH_NORMAL);
-}
-
-void NrUdpSocketIpc::release_use_s() {
-  sThread->ReleaseUse();
 }
 #endif
 

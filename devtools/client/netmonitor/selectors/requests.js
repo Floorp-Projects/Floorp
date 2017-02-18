@@ -77,17 +77,23 @@ const getDisplayedRequestsSummary = createSelector(
       return { count: 0, bytes: 0, millis: 0 };
     }
 
-    const totalBytes = requests.reduce((total, item) => {
+    const totalBytes = requests.reduce((totals, item) => {
       if (typeof item.contentSize == "number") {
-        total += item.contentSize;
+        totals.contentSize += item.contentSize;
       }
-      return total;
-    }, 0);
+
+      if (typeof item.transferredSize == "number") {
+        totals.transferredSize += item.transferredSize;
+      }
+
+      return totals;
+    }, { contentSize: 0, transferredSize: 0 });
 
     return {
       count: requests.size,
-      bytes: totalBytes,
+      contentSize: totalBytes.contentSize,
       millis: totalMillis,
+      transferredSize: totalBytes.transferredSize,
     };
   }
 );

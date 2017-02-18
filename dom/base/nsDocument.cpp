@@ -2293,7 +2293,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
         RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(), SheetType::Doc);
       }
     } else {
-      NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
+      NS_WARNING("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
     }
 
     mStyleSetFilled = false;
@@ -3819,7 +3819,7 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
 void
 nsDocument::MaybeRescheduleAnimationFrameNotifications()
 {
-  if (!mPresShell || !IsEventHandlingEnabled()) {
+  if (!mPresShell || !IsEventHandlingEnabled() || AnimationsPaused()) {
     // bail out for now, until one of those conditions changes
     return;
   }
@@ -5659,7 +5659,9 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             nsIDOMElement** aReturn)
 {
   *aReturn = nullptr;
-  ElementCreationOptions options;
+  ElementCreationOptionsOrString options;
+
+  options.SetAsString();
   ErrorResult rv;
   nsCOMPtr<Element> element =
     CreateElementNS(aNamespaceURI, aQualifiedName, options, rv);
@@ -5670,7 +5672,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
 already_AddRefed<Element>
 nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aQualifiedName,
-                            const ElementCreationOptions& aOptions,
+                            const ElementCreationOptionsOrString& aOptions,
                             ErrorResult& rv)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
@@ -5683,11 +5685,14 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
     return nullptr;
   }
 
-  // Throw NotFoundError if 'is' is not-null and definition is null
-  const nsString* is = CheckCustomElementName(
-    aOptions, aQualifiedName, nodeInfo->NamespaceID(), rv);
-  if (rv.Failed()) {
-    return nullptr;
+  const nsString* is = nullptr;
+  if (aOptions.IsElementCreationOptions()) {
+    // Throw NotFoundError if 'is' is not-null and definition is null
+    is = CheckCustomElementName(aOptions.GetAsElementCreationOptions(),
+                                aQualifiedName, nodeInfo->NamespaceID(), rv);
+    if (rv.Failed()) {
+      return nullptr;
+    }
   }
 
   nsCOMPtr<Element> element;
@@ -10068,7 +10073,7 @@ nsIDocument::CancelFrameRequestCallback(int32_t aHandle)
   // mFrameRequestCallbacks is stored sorted by handle
   if (mFrameRequestCallbacks.RemoveElementSorted(aHandle) &&
       mFrameRequestCallbacks.IsEmpty() &&
-      mPresShell && IsEventHandlingEnabled()) {
+      mPresShell && IsEventHandlingEnabled() && !AnimationsPaused()) {
     mPresShell->GetPresContext()->RefreshDriver()->
       RevokeFrameRequestCallbacks(this);
   }
@@ -12552,8 +12557,8 @@ nsDocument::ReportUseCounters(UseCounterReportKind aKind)
          c < eUseCounter_Count; ++c) {
       UseCounter uc = static_cast<UseCounter>(c);
 
-      Telemetry::ID id =
-        static_cast<Telemetry::ID>(Telemetry::HistogramFirstUseCounter + uc * 2);
+      Telemetry::HistogramID id =
+        static_cast<Telemetry::HistogramID>(Telemetry::HistogramFirstUseCounter + uc * 2);
       bool value = GetUseCounter(uc);
 
       if (value) {
@@ -12571,8 +12576,8 @@ nsDocument::ReportUseCounters(UseCounterReportKind aKind)
       }
 
       if (IsTopLevelContentDocument()) {
-        id = static_cast<Telemetry::ID>(Telemetry::HistogramFirstUseCounter +
-                                        uc * 2 + 1);
+        id = static_cast<Telemetry::HistogramID>(Telemetry::HistogramFirstUseCounter +
+                                                 uc * 2 + 1);
         value = GetUseCounter(uc) || GetChildDocumentUseCounter(uc);
 
         if (value) {
@@ -12610,6 +12615,10 @@ nsDocument::RemoveIntersectionObserver(DOMIntersectionObserver* aObserver)
 void
 nsDocument::UpdateIntersectionObservations()
 {
+  if (mIntersectionObservers.IsEmpty()) {
+    return;
+  }
+
   DOMHighResTimeStamp time = 0;
   if (nsPIDOMWindowInner* window = GetInnerWindow()) {
     Performance* perf = window->GetPerformance();
@@ -13048,7 +13057,7 @@ ArrayContainsTable(const nsTArray<nsCString>& aTableArray,
  * For more information, see
  * toolkit/components/url-classifier/flash-block-lists.rst
  */
-nsIDocument::FlashClassification
+FlashClassification
 nsDocument::PrincipalFlashClassification(bool aIsTopLevel)
 {
   nsresult rv;
@@ -13137,7 +13146,7 @@ nsDocument::PrincipalFlashClassification(bool aIsTopLevel)
   return FlashClassification::Unknown;
 }
 
-nsIDocument::FlashClassification
+FlashClassification
 nsDocument::ComputeFlashClassification()
 {
   nsCOMPtr<nsIDocShellTreeItem> current = this->GetDocShell();
@@ -13186,7 +13195,7 @@ nsDocument::ComputeFlashClassification()
  *
  * This function will NOT return FlashClassification::Unclassified
  */
-nsIDocument::FlashClassification
+FlashClassification
 nsDocument::DocumentFlashClassification()
 {
   if (mFlashClassification == FlashClassification::Unclassified) {

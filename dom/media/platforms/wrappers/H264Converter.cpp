@@ -19,6 +19,7 @@ namespace mozilla
 H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const CreateDecoderParams& aParams)
   : mPDM(aPDM)
+  , mOriginalConfig(aParams.VideoConfig())
   , mCurrentConfig(aParams.VideoConfig())
   , mKnowsCompositor(aParams.mKnowsCompositor)
   , mImageContainer(aParams.mImageContainer)
@@ -53,8 +54,8 @@ H264Converter::Init()
 RefPtr<MediaDataDecoder::DecodePromise>
 H264Converter::Decode(MediaRawData* aSample)
 {
-  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists() &&
-                     !mInitPromiseRequest.Exists(),
+  MOZ_RELEASE_ASSERT(!mDecodePromiseRequest.Exists()
+                     && !mInitPromiseRequest.Exists(),
                      "Can't request a new decode until previous one completed");
 
   if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
@@ -97,8 +98,8 @@ H264Converter::Decode(MediaRawData* aSample)
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
 
-  if (!mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
+  if (!mNeedAVCC
+      && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
     return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_OUT_OF_MEMORY,
                   RESULT_DETAIL("ConvertSampleToAnnexB")),
@@ -135,9 +136,17 @@ H264Converter::Drain()
 RefPtr<ShutdownPromise>
 H264Converter::Shutdown()
 {
+  mInitPromiseRequest.DisconnectIfExists();
+  mDecodePromiseRequest.DisconnectIfExists();
+  mFlushRequest.DisconnectIfExists();
+  mShutdownRequest.DisconnectIfExists();
+  mPendingSample = nullptr;
+  if (mShutdownPromise) {
+    // We have a shutdown in progress, return that promise instead as we can't
+    // shutdown a decoder twice.
+    return mShutdownPromise.forget();
+  }
   if (mDecoder) {
-    mInitPromiseRequest.DisconnectIfExists();
-    mDecodePromiseRequest.DisconnectIfExists();
     RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
     return decoder->Shutdown();
   }
@@ -176,8 +185,8 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(mCurrentConfig.mExtraData, spsdata)) {
     // Do some format check here.
     // WMF H.264 Video Decoder and Apple ATDecoder do not support YUV444 format.
-    if (spsdata.profile_idc == 244 /* Hi444PP */ ||
-        spsdata.chroma_format_idc == PDMFactory::kYUV444) {
+    if (spsdata.profile_idc == 244 /* Hi444PP */
+        || spsdata.chroma_format_idc == PDMFactory::kYUV444) {
       mLastError = NS_ERROR_FAILURE;
       if (aDiagnostics) {
         aDiagnostics->SetVideoNotSupported();
@@ -191,7 +200,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   }
 
   mDecoder = mPDM->CreateVideoDecoder({
-    mCurrentConfig,
+    mUseOriginalConfig ? mOriginalConfig : mCurrentConfig,
     mTaskQueue,
     aDiagnostics,
     mImageContainer,
@@ -206,6 +215,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     return NS_ERROR_FAILURE;
   }
 
+  mUseOriginalConfig = false;
   mNeedKeyframe = true;
 
   return NS_OK;
@@ -242,40 +252,50 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 {
   mInitPromiseRequest.Complete();
   RefPtr<MediaRawData> sample = mPendingSample.forget();
-  if (mNeedKeyframe && !sample->mKeyframe) {
-    mDecodePromise.ResolveIfExists(DecodedData(), __func__);
-  }
-  mNeedKeyframe = false;
-  if (!mNeedAVCC &&
-      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
-    mDecodePromise.RejectIfExists(
-      MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                  RESULT_DETAIL("ConvertSampleToAnnexB")),
-      __func__);
-    return;
-  }
-  RefPtr<H264Converter> self = this;
-  mDecoder->Decode(sample)
-    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
-           [self, this](const MediaDataDecoder::DecodedData& aResults) {
-             mDecodePromiseRequest.Complete();
-             mDecodePromise.ResolveIfExists(aResults, __func__);
-           },
-           [self, this](const MediaResult& aError) {
-             mDecodePromiseRequest.Complete();
-             mDecodePromise.RejectIfExists(aError, __func__);
-           })
-    ->Track(mDecodePromiseRequest);
+  DecodeFirstSample(sample);
 }
 
 void
 H264Converter::OnDecoderInitFailed(const MediaResult& aError)
 {
   mInitPromiseRequest.Complete();
-  mDecodePromise.RejectIfExists(
+  mDecodePromise.Reject(
     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                 RESULT_DETAIL("Unable to initialize H264 decoder")),
     __func__);
+}
+
+void
+H264Converter::DecodeFirstSample(MediaRawData* aSample)
+{
+  if (mNeedKeyframe && !aSample->mKeyframe) {
+    mDecodePromise.Resolve(DecodedData(), __func__);
+    return;
+  }
+  mNeedKeyframe = false;
+  if (!mNeedAVCC
+      && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
+    mDecodePromise.Reject(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("ConvertSampleToAnnexB")),
+      __func__);
+    return;
+  }
+  if (CanRecycleDecoder()) {
+    mDecoder->ConfigurationChanged(mCurrentConfig);
+  }
+  RefPtr<H264Converter> self = this;
+  mDecoder->Decode(aSample)
+    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
+           [self, this](const MediaDataDecoder::DecodedData& aResults) {
+             mDecodePromiseRequest.Complete();
+             mDecodePromise.Resolve(aResults, __func__);
+           },
+           [self, this](const MediaResult& aError) {
+             mDecodePromiseRequest.Complete();
+             mDecodePromise.Reject(aError, __func__);
+           })
+    ->Track(mDecodePromiseRequest);
 }
 
 nsresult
@@ -283,32 +303,86 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
-  if (!mp4_demuxer::AnnexB::HasSPS(extra_data) ||
-      mp4_demuxer::AnnexB::CompareExtraData(extra_data,
-                                            mCurrentConfig.mExtraData)) {
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)
+      || mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                               mCurrentConfig.mExtraData)) {
         return NS_OK;
       }
 
-  if (MediaPrefs::MediaDecoderCheckRecycling() &&
-      mDecoder->SupportDecoderRecycling()) {
+  mPendingSample = aSample;
+
+  if (CanRecycleDecoder()) {
     // Do not recreate the decoder, reuse it.
     UpdateConfigFromExtraData(extra_data);
+    // Ideally we would want to drain the decoder instead of flushing it.
+    // However the draining operation requires calling Drain and looping several
+    // times which isn't possible from within the H264Converter. So instead we
+    // flush the decoder. In practice, this is a no-op as SPS change will only
+    // be used with MSE. And with MSE, the MediaFormatReader would have drained
+    // the decoder already.
+    RefPtr<H264Converter> self = this;
+    mDecoder->Flush()
+      ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+             __func__,
+             [self, this]() {
+               mFlushRequest.Complete();
+               DecodeFirstSample(mPendingSample);
+               mPendingSample = nullptr;
+             },
+             [self, this](const MediaResult& aError) {
+               mFlushRequest.Complete();
+               mDecodePromise.Reject(aError, __func__);
+             })
+      ->Track(mFlushRequest);
     mNeedKeyframe = true;
-    return NS_OK;
+    // This is not really initializing the decoder, but it will do as it
+    // indicates an operation is pending.
+    return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
   }
+
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
-  mDecoder->Flush();
-  Shutdown();
-  return CreateDecoderAndInit(aSample);
+  RefPtr<H264Converter> self = this;
+  mDecoder->Flush()
+    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+           __func__,
+           [self, this]() {
+             mFlushRequest.Complete();
+             mShutdownPromise = Shutdown();
+             mShutdownPromise
+               ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+                      __func__,
+                      [self, this]() {
+                        mShutdownRequest.Complete();
+                        mShutdownPromise = nullptr;
+                        RefPtr<MediaRawData> sample = mPendingSample.forget();
+                        nsresult rv = CreateDecoderAndInit(sample);
+                        if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
+                          // All good so far, will continue later.
+                          return;
+                        }
+                        MOZ_ASSERT(NS_FAILED(rv));
+                        mDecodePromise.Reject(rv, __func__);
+                        return;
+                      },
+                      [] { MOZ_CRASH("Can't reach here'"); })
+               ->Track(mShutdownRequest);
+           },
+           [self, this](const MediaResult& aError) {
+             mFlushRequest.Complete();
+             mDecodePromise.Reject(aError, __func__);
+           })
+    ->Track(mFlushRequest);
+  return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
 }
 
 void
 H264Converter::UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
 {
   mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
-      spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata)
+      && spsdata.pic_width > 0
+      && spsdata.pic_height > 0) {
     mp4_demuxer::H264::EnsureSPSIsSane(spsdata);
     mCurrentConfig.mImage.width = spsdata.pic_width;
     mCurrentConfig.mImage.height = spsdata.pic_height;

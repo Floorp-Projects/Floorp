@@ -187,12 +187,10 @@ public:
     nsresult rv = ErrorCode();
     SuppressException();
     // Don't propagate out our internal error codes that have special meaning.
-    if (rv == NS_ERROR_TYPE_ERR ||
-        rv == NS_ERROR_RANGE_ERR ||
-        rv == NS_ERROR_DOM_JS_EXCEPTION ||
-        rv == NS_ERROR_DOM_DOMEXCEPTION) {
-      // What about NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT?  I guess that can be
-      // legitimately passed on through....
+    if (rv == NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR ||
+        rv == NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR ||
+        rv == NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION ||
+        rv == NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION) {
       // What to pick here?
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
@@ -253,18 +251,22 @@ public:
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowTypeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR,
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
                                        Forward<Ts>(messageArgs)...);
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowRangeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR,
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
                                        Forward<Ts>(messageArgs)...);
   }
 
-  bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
+  bool IsErrorWithMessage() const
+  {
+    return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR ||
+           ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR;
+  }
 
   // Facilities for throwing a preexisting JS exception value via this
   // TErrorResult.  The contract is that any code which might end up calling
@@ -277,7 +279,10 @@ public:
   // not have to be in the compartment of cx.  If someone later uses it, they
   // will wrap it into whatever compartment they're working in, as needed.
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
-  bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
+  bool IsJSException() const
+  {
+    return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION;
+  }
 
   // Facilities for throwing a DOMException.  If an empty message string is
   // passed to ThrowDOMException, the default message string for the given
@@ -285,7 +290,10 @@ public:
   // passed in must be one we create DOMExceptions for; otherwise you may get an
   // XPConnect Exception.
   void ThrowDOMException(nsresult rv, const nsACString& message = EmptyCString());
-  bool IsDOMException() const { return ErrorCode() == NS_ERROR_DOM_DOMEXCEPTION; }
+  bool IsDOMException() const
+  {
+    return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION;
+  }
 
   // Flag on the TErrorResult that whatever needs throwing has been
   // thrown on the JSContext already and we should not mess with it.
@@ -295,7 +303,7 @@ public:
   // Check whether the TErrorResult says to just throw whatever is on
   // the JSContext already.
   bool IsJSContextException() {
-    return ErrorCode() == NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
+    return ErrorCode() == NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT;
   }
 
   // Support for uncatchable exceptions.
@@ -396,25 +404,21 @@ private:
   }
 
   void AssignErrorCode(nsresult aRv) {
-    MOZ_ASSERT(aRv != NS_ERROR_TYPE_ERR, "Use ThrowTypeError()");
-    MOZ_ASSERT(aRv != NS_ERROR_RANGE_ERR, "Use ThrowRangeError()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR,
+               "Use ThrowTypeError()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR,
+               "Use ThrowRangeError()");
     MOZ_ASSERT(!IsErrorWithMessage(), "Don't overwrite errors with message");
-    MOZ_ASSERT(aRv != NS_ERROR_DOM_JS_EXCEPTION, "Use ThrowJSException()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION,
+               "Use ThrowJSException()");
     MOZ_ASSERT(!IsJSException(), "Don't overwrite JS exceptions");
-    MOZ_ASSERT(aRv != NS_ERROR_DOM_DOMEXCEPTION, "Use ThrowDOMException()");
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION,
+               "Use ThrowDOMException()");
     MOZ_ASSERT(!IsDOMException(), "Don't overwrite DOM exceptions");
     MOZ_ASSERT(aRv != NS_ERROR_XPC_NOT_ENOUGH_ARGS, "May need to bring back ThrowNotEnoughArgsError");
-    MOZ_ASSERT(aRv != NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT,
+    MOZ_ASSERT(aRv != NS_ERROR_INTERNAL_ERRORRESULT_EXCEPTION_ON_JSCONTEXT,
                "Use NoteJSContextException");
-    // Don't trust people anyway, though.
-    if (aRv == NS_ERROR_TYPE_ERR ||
-        aRv == NS_ERROR_RANGE_ERR ||
-        aRv == NS_ERROR_DOM_JS_EXCEPTION ||
-        aRv == NS_ERROR_DOM_DOMEXCEPTION) {
-      mResult = NS_ERROR_UNEXPECTED;
-    } else {
-      mResult = aRv;
-    }
+    mResult = aRv;
   }
 
   void ClearMessage();
@@ -446,11 +450,13 @@ private:
   }
 
   // Special values of mResult:
-  // NS_ERROR_TYPE_ERR -- ThrowTypeError() called on us.
-  // NS_ERROR_RANGE_ERR -- ThrowRangeError() called on us.
-  // NS_ERROR_DOM_JS_EXCEPTION -- ThrowJSException() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_TYPEERROR -- ThrowTypeError() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_RANGEERROR -- ThrowRangeError() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_JS_EXCEPTION -- ThrowJSException() called
+  //                                               on us.
   // NS_ERROR_UNCATCHABLE_EXCEPTION -- ThrowUncatchableException called on us.
-  // NS_ERROR_DOM_DOMEXCEPTION -- ThrowDOMException() called on us.
+  // NS_ERROR_INTERNAL_ERRORRESULT_DOMEXCEPTION -- ThrowDOMException() called
+  //                                               on us.
   nsresult mResult;
 
   struct Message;

@@ -20,6 +20,7 @@
 #include "nsNetUtil.h"
 #include "nsScriptLoader.h"
 #include "nsFrameLoader.h"
+#include "nsIInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
@@ -802,9 +803,8 @@ nsFrameMessageManager::PrivateNoteIntentionalCrash()
   if (XRE_IsContentProcess()) {
     mozilla::NoteIntentionalCrash("tab");
     return NS_OK;
-  } else {
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

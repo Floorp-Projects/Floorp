@@ -137,9 +137,14 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     }
     break;
   case CompositableType::CONTENT_SINGLE:
-    result = new ContentHostSingleBuffered(aTextureInfo);
+    if (gfxVars::UseWebRender()) {
+      result = new WebRenderImageHost(aTextureInfo);
+    } else {
+      result = new ContentHostSingleBuffered(aTextureInfo);
+    }
     break;
   case CompositableType::CONTENT_DOUBLE:
+    MOZ_ASSERT(!gfxVars::UseWebRender());
     result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:
@@ -159,6 +164,15 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
     return;
   }
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
+}
+
+HostLayerManager*
+CompositableHost::GetLayerManager() const
+{
+  if (!mLayer || !mLayer->Manager()) {
+    return nullptr;
+  }
+  return mLayer->Manager()->AsHostLayerManager();
 }
 
 } // namespace layers

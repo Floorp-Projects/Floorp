@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const NET_STRINGS_URI = "devtools/client/locales/netmonitor.properties";
 const WEBCONSOLE_STRINGS_URI = "devtools/client/locales/webconsole.properties";

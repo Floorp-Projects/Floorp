@@ -77,17 +77,19 @@ ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
     SetCurrentTextureHost(mImages[0].mTextureHost);
   }
 
+  HostLayerManager* lm = GetLayerManager();
+
   // Video producers generally send replacement images with the same frameID but
   // slightly different timestamps in order to sync with the audio clock. This
   // means that any CompositeUntil() call we made in Composite() may no longer
   // guarantee that we'll composite until the next frame is ready. Fix that here.
-  if (GetCompositor() && mLastFrameID >= 0) {
+  if (lm && mLastFrameID >= 0) {
     for (size_t i = 0; i < mImages.Length(); ++i) {
       bool frameComesAfter = mImages[i].mFrameID > mLastFrameID ||
                              mImages[i].mProducerID != mLastProducerID;
       if (frameComesAfter && !mImages[i].mTimeStamp.IsNull()) {
-        GetCompositor()->CompositeUntil(mImages[i].mTimeStamp +
-                                        TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+        lm->CompositeUntil(mImages[i].mTimeStamp +
+                           TimeDuration::FromMilliseconds(BIAS_TIME_MS));
         break;
       }
     }
@@ -155,8 +157,8 @@ TimeStamp
 ImageHost::GetCompositionTime() const
 {
   TimeStamp time;
-  if (GetCompositor()) {
-    time = GetCompositor()->GetCompositionTime();
+  if (HostLayerManager* lm = GetLayerManager()) {
+    time = lm->GetCompositionTime();
   }
   return time;
 }
@@ -197,10 +199,8 @@ ImageHost::Composite(LayerComposite* aLayer,
                      const nsIntRegion* aVisibleRegion,
                      const Maybe<gfx::Polygon>& aGeometry)
 {
-  if (!GetCompositor()) {
-    // should only happen when a tab is dragged to another window and
-    // async-video is still sending frames but we haven't attached the
-    // set the new compositor yet.
+  HostLayerManager* lm = GetLayerManager();
+  if (!lm) {
     return;
   }
 
@@ -210,7 +210,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   if (uint32_t(imageIndex) + 1 < mImages.Length()) {
-    GetCompositor()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+    lm->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
   }
 
   TimedImage* img = &mImages[imageIndex];
@@ -238,8 +238,7 @@ ImageHost::Composite(LayerComposite* aLayer,
         !(mCurrentTextureHost->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
     RefPtr<TexturedEffect> effect =
         CreateTexturedEffect(mCurrentTextureHost,
-            mCurrentTextureSource.get(), aSamplingFilter, isAlphaPremultiplied,
-            GetRenderState());
+            mCurrentTextureSource.get(), aSamplingFilter, isAlphaPremultiplied);
     if (!effect) {
       return;
     }
@@ -261,7 +260,7 @@ ImageHost::Composite(LayerComposite* aLayer,
         info.mImageBridgeProcessId = mAsyncRef.mProcessId;
         info.mNotification = ImageCompositeNotification(
           mAsyncRef.mHandle,
-          img->mTimeStamp, GetCompositor()->GetCompositionTime(),
+          img->mTimeStamp, lm->GetCompositionTime(),
           img->mFrameID, img->mProducerID);
         static_cast<LayerManagerComposite*>(aLayer->GetLayerManager())->
             AppendImageCompositeNotification(info);
@@ -338,7 +337,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   // during a given composition. This must happen after autoLock's
   // destructor!
   mBias = UpdateBias(
-      GetCompositor()->GetCompositionTime(), mImages[imageIndex].mTimeStamp,
+      lm->GetCompositionTime(), mImages[imageIndex].mTimeStamp,
       uint32_t(imageIndex + 1) < mImages.Length() ?
           mImages[imageIndex + 1].mTimeStamp : TimeStamp(),
       mBias);
@@ -382,17 +381,6 @@ ImageHost::Dump(std::stringstream& aStream,
     DumpTextureHost(aStream, img.mTextureHost);
     aStream << (aDumpHtml ? " </li></ul> " : " ");
   }
-}
-
-LayerRenderState
-ImageHost::GetRenderState()
-{
-  TimedImage* img = ChooseImage();
-  if (img) {
-    SetCurrentTextureHost(img->mTextureHost);
-    return img->mTextureHost->GetRenderState();
-  }
-  return LayerRenderState();
 }
 
 already_AddRefed<gfx::DataSourceSurface>
@@ -484,8 +472,7 @@ ImageHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
   return CreateTexturedEffect(mCurrentTextureHost,
                               mCurrentTextureSource,
                               aSamplingFilter,
-                              isAlphaPremultiplied,
-                              GetRenderState());
+                              isAlphaPremultiplied);
 }
 
 } // namespace layers

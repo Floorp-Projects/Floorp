@@ -378,8 +378,6 @@ public:
                               size_t *aPresContextSize) override;
   size_t SizeOfTextRuns(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) override;
-
   // This data is stored as a content property (nsGkAtoms::scrolling) on
   // mContentToScrollTo when we have a pending ScrollIntoView.
   struct ScrollIntoViewData {
@@ -412,6 +410,11 @@ public:
       const mozilla::WidgetGUIEvent* aEvent = nullptr) const override;
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
+
+  void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
+                                         uint32_t aSheetType) override;
+  void NotifyStyleSheetServiceSheetRemoved(mozilla::StyleSheet* aSheet,
+                                           uint32_t aSheetType) override;
 
 protected:
   virtual ~PresShell();
@@ -755,7 +758,7 @@ protected:
   void UpdateApproximateFrameVisibility();
   void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
 
-  void ClearApproximatelyVisibleFramesList(Maybe<mozilla::OnNonvisible> aNonvisibleAction
+  void ClearApproximatelyVisibleFramesList(const Maybe<mozilla::OnNonvisible>& aNonvisibleAction
                                              = Nothing());
   static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
   static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
@@ -766,7 +769,7 @@ protected:
                                                bool aRemoveOnly = false);
 
   void DecApproximateVisibleCount(VisibleFrames& aFrames,
-                                  Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+                                  const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
 
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
 

@@ -476,7 +476,7 @@ class ScriptSource
     }
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
                                       const ReadOnlyCompileOptions& options,
-                                      mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
+                                      const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
     MOZ_MUST_USE bool setSourceCopy(JSContext* cx,
                                     JS::SourceBufferHolder& srcBuf,
                                     SourceCompressionTask* tok);

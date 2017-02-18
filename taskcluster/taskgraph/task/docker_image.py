@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import json
 import os
 import urllib2
 
@@ -24,21 +23,11 @@ GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 # otherwise hit the services directly
 if os.environ.get('TASK_ID'):
     ARTIFACT_URL = 'http://taskcluster/queue/v1/task/{}/artifacts/{}'
-    INDEX_URL = 'http://taskcluster/index/v1/task/{}'
 else:
     ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
-    INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
 
 
 class DockerImageTask(base.Task):
-
-    def __init__(self, *args, **kwargs):
-        self.index_paths = kwargs.pop('index_paths')
-        super(DockerImageTask, self).__init__(*args, **kwargs)
-
-    def __eq__(self, other):
-        return super(DockerImageTask, self).__eq__(other) and \
-               self.index_paths == other.index_paths
 
     @classmethod
     def load_tasks(cls, kind, path, config, params, loaded_tasks):
@@ -99,22 +88,18 @@ class DockerImageTask(base.Task):
         return []
 
     def optimize(self, params):
-        for index_path in self.index_paths:
+        optimized, taskId = super(DockerImageTask, self).optimize(params)
+        if optimized and taskId:
             try:
-                url = INDEX_URL.format(index_path)
-                existing_task = json.load(urllib2.urlopen(url))
                 # Only return the task ID if the artifact exists for the indexed
-                # task.  Otherwise, continue on looking at each of the branches.  Method
-                # continues trying other branches in case mozilla-central has an expired
-                # artifact, but 'project' might not. Only return no task ID if all
-                # branches have been tried
+                # task.
                 request = urllib2.Request(
-                    ARTIFACT_URL.format(existing_task['taskId'], 'public/image.tar.zst'))
+                    ARTIFACT_URL.format(taskId, 'public/image.tar.zst'))
                 request.get_method = lambda: 'HEAD'
                 urllib2.urlopen(request)
 
                 # HEAD success on the artifact is enough
-                return True, existing_task['taskId']
+                return True, taskId
             except urllib2.HTTPError:
                 pass
 

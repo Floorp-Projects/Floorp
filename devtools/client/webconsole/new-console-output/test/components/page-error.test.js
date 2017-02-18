@@ -127,4 +127,100 @@ describe("PageError component:", () => {
     wrapper = render(PageError({ message, serviceContainer}));
     expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
   });
+
+  it("has empty error notes", () => {
+    const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    let wrapper = render(PageError({ message, serviceContainer }));
+
+    const notes = wrapper.find(".error-note");
+
+    expect(notes.length).toBe(0);
+  });
+
+  it("can show an error note", () => {
+    const origMessage = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const message = origMessage.set("notes", [
+      {
+        "messageBody": "test note",
+        "frame": {
+          "source": "http://example.com/test.js",
+          "line": 2,
+          "column": 6
+        }
+      }
+    ]);
+
+    let wrapper = render(PageError({ message, serviceContainer }));
+
+    const notes = wrapper.find(".error-note");
+    expect(notes.length).toBe(1);
+
+    const note = notes.eq(0);
+    expect(note.find(".message-body").text())
+      .toBe("note: test note");
+
+    // There should be the location.
+    const locationLink = note.find(`.message-location`);
+    expect(locationLink.length).toBe(1);
+    expect(locationLink.text()).toBe("test.js:2:6");
+  });
+
+  it("can show multiple error notes", () => {
+    const origMessage = stubPreparedMessages.get("ReferenceError: asdf is not defined");
+    const message = origMessage.set("notes", [
+      {
+        "messageBody": "test note 1",
+        "frame": {
+          "source": "http://example.com/test1.js",
+          "line": 2,
+          "column": 6
+        }
+      },
+      {
+        "messageBody": "test note 2",
+        "frame": {
+          "source": "http://example.com/test2.js",
+          "line": 10,
+          "column": 18
+        }
+      },
+      {
+        "messageBody": "test note 3",
+        "frame": {
+          "source": "http://example.com/test3.js",
+          "line": 9,
+          "column": 4
+        }
+      }
+    ]);
+
+    let wrapper = render(PageError({ message, serviceContainer }));
+
+    const notes = wrapper.find(".error-note");
+    expect(notes.length).toBe(3);
+
+    const note1 = notes.eq(0);
+    expect(note1.find(".message-body").text())
+      .toBe("note: test note 1");
+
+    const locationLink1 = note1.find(`.message-location`);
+    expect(locationLink1.length).toBe(1);
+    expect(locationLink1.text()).toBe("test1.js:2:6");
+
+    const note2 = notes.eq(1);
+    expect(note2.find(".message-body").text())
+      .toBe("note: test note 2");
+
+    const locationLink2 = note2.find(`.message-location`);
+    expect(locationLink2.length).toBe(1);
+    expect(locationLink2.text()).toBe("test2.js:10:18");
+
+    const note3 = notes.eq(2);
+    expect(note3.find(".message-body").text())
+      .toBe("note: test note 3");
+
+    const locationLink3 = note3.find(`.message-location`);
+    expect(locationLink3.length).toBe(1);
+    expect(locationLink3.text()).toBe("test3.js:9:4");
+  });
 });

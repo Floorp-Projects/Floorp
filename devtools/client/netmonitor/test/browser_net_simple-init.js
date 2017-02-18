@@ -22,8 +22,6 @@ function test() {
     function checkIfInitialized(tag) {
       info(`Checking if initialization is ok (${tag}).`);
 
-      ok(monitor.panelWin.NetMonitorView,
-        `The network monitor view object exists (${tag}).`);
       ok(monitor.panelWin.NetMonitorController,
         `The network monitor controller object exists (${tag}).`);
       ok(monitor.panelWin.NetMonitorController._startup,
@@ -43,8 +41,6 @@ function test() {
     function checkIfDestroyed(tag) {
       gInfo("Checking if destruction is ok.");
 
-      gOk(monitor.panelWin.NetMonitorView,
-        `The network monitor view object still exists (${tag}).`);
       gOk(monitor.panelWin.NetMonitorController,
         `The network monitor controller object still exists (${tag}).`);
       gOk(monitor.panelWin.NetMonitorController._shutdown,

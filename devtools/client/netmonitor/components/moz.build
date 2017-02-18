@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'monitor-panel.js',
+    'network-monitor.js',
     'request-list-content.js',
-    'request-list-context-menu.js',
     'request-list-empty.js',
     'request-list-header.js',
     'request-list-item.js',
-    'request-list-tooltip.js',
     'request-list.js',
     'statistics-panel.js',
     'toolbar.js',

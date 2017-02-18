@@ -115,6 +115,12 @@ parent:
 
   async PAltDataOutputStream(nsCString type, PHttpChannel channel);
 
+  /**
+   * Throttling of channels
+   */
+  async IncreaseThrottlePressure();
+  async DecreaseThrottlePressure();
+
 child:
   /*
    * Bring up the http auth prompt for a nested remote mozbrowser.

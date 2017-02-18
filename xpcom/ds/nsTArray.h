@@ -1563,6 +1563,24 @@ public:
                                                 mozilla::Forward<Item>(aItem));
   }
 
+  // Reconstruct the element at the given index, and return a pointer to the
+  // reconstructed element.  This will destroy the existing element and
+  // default-construct a new one, giving you a state much like what single-arg
+  // InsertElementAt(), or no-arg AppendElement() does, but without changing the
+  // length of the array.
+  //
+  // array[idx] = T()
+  //
+  // would accomplish the same thing as long as T has the appropriate moving
+  // operator=, but some types don't for various reasons.
+  elem_type* ReconstructElementAt(index_type aIndex)
+  {
+    elem_type* elem = &ElementAt(aIndex);
+    elem_traits::Destruct(elem);
+    elem_traits::Construct(elem);
+    return elem;
+  }
+
   // This method searches for the smallest index of an element that is strictly
   // greater than |aItem|. If |aItem| is inserted at this index, the array will
   // remain sorted and |aItem| would come after all elements that are equal to

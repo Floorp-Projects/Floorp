@@ -385,12 +385,23 @@ function getInnerWindowIDForWindow(aContentWindow) {
 }
 
 function getMessageManagerForWindow(aContentWindow) {
-  let ir = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell)
-                         .sameTypeRootTreeItem
-                         .QueryInterface(Ci.nsIInterfaceRequestor);
+  aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+
+  let docShell;
   try {
-    // If e10s is disabled, this throws NS_NOINTERFACE for closed tabs.
+    // This throws NS_NOINTERFACE for closed tabs.
+    docShell = aContentWindow.getInterface(Ci.nsIDocShell);
+  } catch (e) {
+    if (e.result == Cr.NS_NOINTERFACE) {
+      return null;
+    }
+    throw e;
+  }
+
+  let ir = docShell.sameTypeRootTreeItem
+                   .QueryInterface(Ci.nsIInterfaceRequestor);
+  try {
+    // This throws NS_NOINTERFACE for closed tabs (only with e10s enabled).
     return ir.getInterface(Ci.nsIContentFrameMessageManager);
   } catch (e) {
     if (e.result == Cr.NS_NOINTERFACE) {

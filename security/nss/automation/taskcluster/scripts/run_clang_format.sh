@@ -42,6 +42,7 @@ else
          "$top/gtests/ssl_gtest" \
          "$top/gtests/util_gtest" \
          "$top/nss-tool" \
+         "$top/cpputil" \
     )
 fi
 

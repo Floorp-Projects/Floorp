@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env commonjs */
+
 // A trivial module that depends on an equally trivial module
 var B = require("chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/moduleB-dependency.js");
 

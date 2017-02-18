@@ -632,11 +632,21 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
       nsTArray<PropertyStyleAnimationValuePair> values;
 
       if (styleBackend == StyleBackendType::Servo) {
-        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              CSSEnabledState::eForAllContent, aStyleContext,
-              *pair.mServoDeclarationBlock, values)) {
-          continue;
+        if (nsCSSProps::IsShorthand(pair.mProperty)) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, pair.mProperty,
+                                               CSSEnabledState::eForAllContent) {
+            if (nsCSSProps::kAnimTypeTable[*p] == eStyleAnimType_None) {
+              // Skip non-animatable component longhands.
+              continue;
+            }
+            PropertyStyleAnimationValuePair* valuePair = values.AppendElement();
+            valuePair->mProperty = *p;
+          }
+        } else {
+          PropertyStyleAnimationValuePair* valuePair = values.AppendElement();
+          valuePair->mProperty = pair.mProperty;
         }
+
         Servo_AnimationValues_Populate(&values,
                                        pair.mServoDeclarationBlock,
                                        currentStyle,

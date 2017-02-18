@@ -38,7 +38,8 @@
 #include "nsCSSPseudoElements.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "mozilla/RestyleManager.h"
+#include "mozilla/GeckoRestyleManager.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "imgIRequest.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSKeywords.h"
@@ -566,7 +567,7 @@ public:
   }
 
 private:
-  RestyleManager* mRestyleManager = nullptr;
+  GeckoRestyleManager* mRestyleManager = nullptr;
   bool mOldSkipAnimationRules = false;
   nsComputedDOMStyle::AnimationFlag mAnimationFlag;
 };
@@ -636,7 +637,7 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
   // a throwaway style context chain.
   if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
     if (aStyleType == eDefaultOnly) {
-      NS_ERROR("stylo: ServoStyleSets cannot supply UA-only styles yet");
+      NS_WARNING("stylo: ServoStyleSets cannot supply UA-only styles yet");
       return nullptr;
     }
     return servoSet->ResolveTransientStyle(aElement, type);

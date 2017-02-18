@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  ACTIVITY_TYPE,
   OPEN_NETWORK_DETAILS,
   OPEN_STATISTICS,
   SELECT_DETAILS_PANEL_TAB,
@@ -29,6 +30,9 @@ function openNetworkDetails(open) {
  * @param {boolean} visible - expected performance statistics panel open state
  */
 function openStatistics(open) {
+  if (open) {
+    window.NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+  }
   return {
     type: OPEN_STATISTICS,
     open,

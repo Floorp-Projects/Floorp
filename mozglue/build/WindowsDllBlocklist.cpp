@@ -222,6 +222,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // AhnLab Internet Security, bug 1311969
   { "nzbrcom.dll", ALL_VERSIONS },
 
+  // K7TotalSecurity, bug 1339083.
+  { "k7pswsen.dll", MAKE_VERSION(15, 2, 2, 95) },
+
   { nullptr, 0 }
 };
 

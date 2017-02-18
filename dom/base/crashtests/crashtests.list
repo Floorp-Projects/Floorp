@@ -79,7 +79,7 @@ load 472593-1.html
 load 473284.xul
 load 474041-1.svg
 load 476526.html
-asserts-if(stylo,1) load 483818-1.html # bug 1324683
+load 483818-1.html
 load 490760-1.xhtml
 load 493281-1.html
 load 493281-2.html
@@ -183,7 +183,7 @@ load 847127.html
 load 849601.html
 load 849727.html
 load 849732.html
-asserts-if(stylo,17) load 851353-1.html # bug 1324699
+load 851353-1.html
 load 852381.html
 load 863950.html
 load 864448.html
@@ -193,7 +193,7 @@ load 930250.html
 load 942979.html
 load 973401.html
 load 978646.html
-asserts-if(stylo,1-11) pref(dom.webcomponents.enabled,true) load 1024428-1.html # bug 1324671
+skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1024428-1.html # bug 1340009
 load 1026714.html
 pref(dom.webcomponents.enabled,true) load 1027461-1.html
 pref(dom.webcomponents.enabled,true) load 1029710.html

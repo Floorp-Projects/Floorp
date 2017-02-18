@@ -354,6 +354,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
+        // XXX workaround for releasing Readlock. See Bug 1339625
+        if(host->GetType() == CompositableType::CONTENT_SINGLE) {
+          host->CleanupResources();
+        }
         break;
       }
       case WebRenderCommand::TOpDPPushIframe: {
@@ -362,9 +366,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         break;
       }
       case WebRenderCommand::TCompositableOperation: {
-        EditReplyVector replyv;
-        if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation(),
-                                       replyv)) {
+        if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation())) {
           NS_ERROR("ReceiveCompositableUpdate failed");
         }
         break;

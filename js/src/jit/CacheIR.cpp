@@ -40,14 +40,12 @@ IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, Cac
 {}
 
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                                       CacheKind cacheKind, ICStubEngine engine,
-                                       bool* isTemporarilyUnoptimizable,
+                                       CacheKind cacheKind, bool* isTemporarilyUnoptimizable,
                                        HandleValue val, HandleValue idVal,
                                        CanAttachGetter canAttachGetter)
   : IRGenerator(cx, script, pc, cacheKind),
     val_(val),
     idVal_(idVal),
-    engine_(engine),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     canAttachGetter_(canAttachGetter),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
@@ -282,7 +280,7 @@ enum NativeGetPropCacheability {
 static NativeGetPropCacheability
 CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
                        MutableHandleNativeObject holder, MutableHandleShape shape,
-                       jsbytecode* pc, ICStubEngine engine, CanAttachGetter canAttachGetter,
+                       jsbytecode* pc, CanAttachGetter canAttachGetter,
                        bool* isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
@@ -318,11 +316,8 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
     if (canAttachGetter == CanAttachGetter::No)
         return CanAttachNone;
 
-    if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
-        // See bug 1226816.
-        if (engine != ICStubEngine::IonSharedIC)
-            return CanAttachCallGetter;
-    }
+    if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable))
+        return CanAttachCallGetter;
 
     if (IsCacheableGetPropCallNative(obj, holder, shape))
         return CanAttachCallGetter;
@@ -499,7 +494,7 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
     RootedNativeObject holder(cx_);
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
-                                                            engine_, canAttachGetter_,
+                                                            canAttachGetter_,
                                                             isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   type == CanAttachNone || (type == CanAttachReadSlot && holder));
@@ -554,7 +549,7 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_,
-                                                            engine_, canAttachGetter_,
+                                                            canAttachGetter_,
                                                             isTemporarilyUnoptimizable_);
     switch (type) {
       case CanAttachNone:
@@ -647,7 +642,7 @@ GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
     RootedNativeObject holder(cx_);
     RootedShape propShape(cx_);
     NativeGetPropCacheability canCache =
-        CanAttachNativeGetProp(cx_, expandoObj, id, &holder, &propShape, pc_, engine_,
+        CanAttachNativeGetProp(cx_, expandoObj, id, &holder, &propShape, pc_,
                                canAttachGetter_, isTemporarilyUnoptimizable_);
     if (canCache != CanAttachReadSlot && canCache != CanAttachCallGetter)
         return false;
@@ -750,7 +745,7 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     RootedNativeObject holder(cx_);
     RootedShape shape(cx_);
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
-                                                                pc_, engine_, canAttachGetter_,
+                                                                pc_, canAttachGetter_,
                                                                 isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   canCache == CanAttachNone || (canCache == CanAttachReadSlot && holder));
@@ -1071,7 +1066,7 @@ GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id)
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, proto, id, &holder, &shape, pc_,
-                                                            engine_, canAttachGetter_,
+                                                            canAttachGetter_,
                                                             isTemporarilyUnoptimizable_);
     if (type != CanAttachReadSlot)
         return false;
@@ -1861,6 +1856,7 @@ SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, HandleScript script, jsbyt
     rhsVal_(rhsVal),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None),
+    attachedTypedArrayOOBStub_(false),
     updateStubGroup_(cx),
     updateStubId_(cx, JSID_EMPTY),
     needUpdateStub_(false)
@@ -1921,6 +1917,8 @@ SetPropIRGenerator::tryAttachStub()
             if (tryAttachSetUnboxedArrayElement(obj, objId, index, indexId, rhsValId))
                 return true;
             if (tryAttachSetUnboxedArrayElementHole(obj, objId, index, indexId, rhsValId))
+                return true;
+            if (tryAttachSetTypedElement(obj, objId, index, indexId, rhsValId))
                 return true;
             return false;
         }
@@ -2412,6 +2410,53 @@ SetPropIRGenerator::tryAttachSetUnboxedArrayElement(HandleObject obj, ObjOperand
     setUpdateStubInfo(obj->group(), JSID_VOID);
 
     trackAttached("SetUnboxedArrayElement");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
+                                             uint32_t index, Int32OperandId indexId,
+                                             ValOperandId rhsId)
+{
+    if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj))
+        return false;
+
+    if (!rhsVal_.isNumber())
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint && TypedThingRequiresFloatingPoint(obj))
+        return false;
+
+    bool handleOutOfBounds = false;
+    if (obj->is<TypedArrayObject>()) {
+        handleOutOfBounds = (index >= obj->as<TypedArrayObject>().length());
+    } else {
+        // Typed objects throw on out of bounds accesses. Don't attach
+        // a stub in this case.
+        if (index >= obj->as<TypedObject>().length())
+            return false;
+
+        // Don't attach stubs if the underlying storage for typed objects
+        // in the compartment could be detached, as the stub will always
+        // bail out.
+        if (cx_->compartment()->detachedTypedObjects)
+            return false;
+    }
+
+    Scalar::Type elementType = TypedThingElementType(obj);
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
+    if (!obj->is<TypedArrayObject>())
+        writer.guardNoDetachedTypedObjects();
+
+    writer.guardShape(objId, obj->as<ShapedObject>().shape());
+    writer.storeTypedElement(objId, indexId, rhsId, layout, elementType, handleOutOfBounds);
+    writer.returnFromIC();
+
+    if (handleOutOfBounds)
+        attachedTypedArrayOOBStub_ = true;
+
+    trackAttached(handleOutOfBounds ? "SetTypedElementOOB" : "SetTypedElement");
     return true;
 }
 

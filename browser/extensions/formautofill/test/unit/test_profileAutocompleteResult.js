@@ -5,34 +5,108 @@ Cu.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
 let matchingProfiles = [{
   guid: "test-guid-1",
   organization: "Sesame Street",
-  streetAddress: "123 Sesame Street.",
+  "street-address": "123 Sesame Street.",
   tel: "1-345-345-3456.",
 }, {
   guid: "test-guid-2",
   organization: "Mozilla",
-  streetAddress: "331 E. Evelyn Avenue",
+  "street-address": "331 E. Evelyn Avenue",
   tel: "1-650-903-0800",
 }];
+
+let allFieldNames = ["street-address", "organization", "tel"];
 
 let testCases = [{
   options: {},
   matchingProfiles,
+  allFieldNames,
   searchString: "",
-  fieldName: "",
+  fieldName: "organization",
   expected: {
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
     items: [{
+      value: "Sesame Street",
       style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "Sesame Street",
+        secondary: "123 Sesame Street.",
+      }),
       image: "",
     }, {
+      value: "Mozilla",
       style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "Mozilla",
+        secondary: "331 E. Evelyn Avenue",
+      }),
+      image: "",
+    }],
+  },
+}, {
+  options: {},
+  matchingProfiles,
+  allFieldNames,
+  searchString: "",
+  fieldName: "tel",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+    defaultIndex: 0,
+    items: [{
+      value: "1-345-345-3456.",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "1-345-345-3456.",
+        secondary: "123 Sesame Street.",
+      }),
+      image: "",
+    }, {
+      value: "1-650-903-0800",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "1-650-903-0800",
+        secondary: "331 E. Evelyn Avenue",
+      }),
+      image: "",
+    }],
+  },
+}, {
+  options: {},
+  matchingProfiles,
+  allFieldNames,
+  searchString: "",
+  fieldName: "street-address",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+    defaultIndex: 0,
+    items: [{
+      value: "123 Sesame Street.",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "123 Sesame Street.",
+        secondary: "Sesame Street",
+      }),
+      image: "",
+    }, {
+      value: "331 E. Evelyn Avenue",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "331 E. Evelyn Avenue",
+        secondary: "Mozilla",
+      }),
       image: "",
     }],
   },
 }, {
   options: {},
   matchingProfiles: [],
+  allFieldNames,
   searchString: "",
   fieldName: "",
   expected: {
@@ -43,6 +117,7 @@ let testCases = [{
 }, {
   options: {resultCode: Ci.nsIAutoCompleteResult.RESULT_FAILURE},
   matchingProfiles: [],
+  allFieldNames,
   searchString: "",
   fieldName: "",
   expected: {
@@ -56,6 +131,7 @@ add_task(function* test_all_patterns() {
   testCases.forEach(pattern => {
     let actual = new ProfileAutoCompleteResult(pattern.searchString,
                                                pattern.fieldName,
+                                               pattern.allFieldNames,
                                                pattern.matchingProfiles,
                                                pattern.options);
     let expectedValue = pattern.expected;
@@ -63,7 +139,9 @@ add_task(function* test_all_patterns() {
     equal(actual.defaultIndex, expectedValue.defaultIndex);
     equal(actual.matchCount, expectedValue.items.length);
     expectedValue.items.forEach((item, index) => {
-      // TODO: getValueAt, getLabelAt, and getCommentAt should be verified here.
+      equal(actual.getValueAt(index), item.value);
+      equal(actual.getCommentAt(index), item.comment);
+      equal(actual.getLabelAt(index), item.label);
       equal(actual.getStyleAt(index), item.style);
       equal(actual.getImageAt(index), item.image);
     });

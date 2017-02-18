@@ -206,14 +206,7 @@ EventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
     return NS_OK;
   }
 
-  *aOutArray =
-    static_cast<nsIEventListenerInfo**>(
-      moz_xmalloc(sizeof(nsIEventListenerInfo*) * count));
-  NS_ENSURE_TRUE(*aOutArray, NS_ERROR_OUT_OF_MEMORY);
-
-  for (int32_t i = 0; i < count; ++i) {
-    NS_ADDREF((*aOutArray)[i] = listenerInfos[i]);
-  }
+  listenerInfos.Forget(aOutArray);
   *aCount = count;
   return NS_OK;
 }

@@ -104,12 +104,12 @@ function getReassigned() {
   try {
     return Services.prefs.getBoolPref("services.sync.lastSyncReassigned");
   } catch (ex) {
-    if (ex.result == Cr.NS_ERROR_UNEXPECTED) {
-      return false;
+    if (ex.result != Cr.NS_ERROR_UNEXPECTED) {
+      do_throw("Got exception retrieving lastSyncReassigned: " +
+               Log.exceptionStr(ex));
     }
-    do_throw("Got exception retrieving lastSyncReassigned: " +
-             Log.exceptionStr(ex));
   }
+  return false;
 }
 
 /**

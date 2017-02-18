@@ -33,7 +33,6 @@ namespace layers {
 
 class ClientLayerManager;
 class CompositorBridgeChild;
-class EditReply;
 class FixedSizeSmallShmemSectionAllocator;
 class ImageContainer;
 class Layer;
@@ -253,7 +252,7 @@ public:
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
-  bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
+  bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
@@ -420,8 +419,6 @@ protected:
 #else
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
-
-  void ProcessReplies(const nsTArray<EditReply>& aReplies);
 
   RefPtr<CompositableClient> FindCompositable(const CompositableHandle& aHandle);
 

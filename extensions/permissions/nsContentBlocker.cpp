@@ -59,6 +59,13 @@ static const char *kTypeString[] = {
                                     "", // TYPE_INTERNAL_XMLHTTPREQUEST
                                     "", // TYPE_INTERNAL_EVENTSOURCE
                                     "", // TYPE_INTERNAL_SERVICE_WORKER
+                                    "", // TYPE_INTERNAL_SCRIPT_PRELOAD
+                                    "", // TYPE_INTERNAL_IMAGE
+                                    "", // TYPE_INTERNAL_IMAGE_PRELOAD
+                                    "", // TYPE_INTERNAL_STYLESHEET
+                                    "", // TYPE_INTERNAL_STYLESHEET_PRELOAD
+                                    "", // TYPE_INTERNAL_IMAGE_FAVICON
+                                    "", // TYPE_INTERNAL_WORKERS_IMPORT_SCRIPTS
 };
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)

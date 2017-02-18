@@ -91,6 +91,10 @@ public:
   // Exposed only for testing
   bool IsTimeoutTracking(uint32_t aTimeoutId);
 
+  // The document finished loading
+  void OnDocumentLoaded();
+  void StartThrottlingTrackingTimeouts();
+
   // Run some code for each Timeout in our list.  Note that this function
   // doesn't guarantee that Timeouts are iterated in any particular order.
   template <class Callable>
@@ -208,6 +212,9 @@ private:
   uint32_t                    mIdleCallbackTimeoutCounter;
 
   int32_t                     mBackPressureDelayMS;
+
+  nsCOMPtr<nsITimer>          mThrottleTrackingTimeoutsTimer;
+  bool                        mThrottleTrackingTimeouts;
 
   static uint32_t             sNestingLevel;
 };

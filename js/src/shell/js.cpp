@@ -5305,7 +5305,7 @@ class SprintOptimizationTypeInfoOp : public JS::ForEachTrackedOptimizationTypeIn
     { }
 
     void readType(const char* keyedBy, const char* name,
-                  const char* location, Maybe<unsigned> lineno) override
+                  const char* location, const Maybe<unsigned>& lineno) override
     {
         if (hadError_)
             return;
@@ -6588,6 +6588,14 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
 
     RootedValue columnVal(cx, Int32Value(report->column));
     if (!DefineProperty(cx, warningObj, cx->names().columnNumber, columnVal))
+        return false;
+
+    RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
+    if (!notesArray)
+        return false;
+
+    RootedValue notesArrayVal(cx, ObjectValue(*notesArray));
+    if (!DefineProperty(cx, warningObj, cx->names().notes, notesArrayVal))
         return false;
 
     GetShellContext(cx)->lastWarning.setObject(*warningObj);

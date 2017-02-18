@@ -705,7 +705,12 @@ function attachUpdateHandler(install) {
   }
 
   install.promptHandler = (info) => {
-    let oldPerms = info.existingAddon.userPermissions || {hosts: [], permissions: []};
+    let oldPerms = info.existingAddon.userPermissions;
+    if (!oldPerms) {
+      // Updating from a legacy add-on, let it proceed
+      return Promise.resolve();
+    }
+
     let newPerms = info.addon.userPermissions;
 
     let difference = Extension.comparePermissions(oldPerms, newPerms);
@@ -2713,6 +2718,27 @@ var gSearchView = {
 
   onInstallCancelled(aInstall) {
     this.removeInstall(aInstall);
+  },
+
+  onInstallEnded(aInstall) {
+    // If this is a webextension that was installed from this page,
+    // display the post-install notification.
+    if (!WEBEXT_PERMISSION_PROMPTS || !aInstall.addon.isWebExtension) {
+      return;
+    }
+
+    for (let item of this._listBox.childNodes) {
+      if (item.mInstall == aInstall) {
+        let subject = {
+          wrappedJSObject: {
+            target: getBrowserElement(),
+            addon: aInstall.addon,
+          },
+        };
+        Services.obs.notifyObservers(subject, "webextension-install-notify", null);
+        return;
+      }
+    }
   },
 
   removeInstall(aInstall) {

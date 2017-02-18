@@ -76,13 +76,16 @@ extern mozilla::LazyLogModule gContentSinkLogModuleInfo;
 class nsContentSink : public nsICSSLoaderObserver,
                       public nsSupportsWeakReference,
                       public nsStubDocumentObserver,
-                      public nsITimerCallback
+                      public nsITimerCallback,
+                      public nsINamed
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsContentSink,
                                            nsICSSLoaderObserver)
     // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
+
+  NS_DECL_NSINAMED
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,

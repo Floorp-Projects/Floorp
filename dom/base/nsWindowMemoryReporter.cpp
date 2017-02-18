@@ -168,7 +168,7 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr, bool aAnonymize)
 
   if (uri) {
     if (aAnonymize && !aWindow->IsChromeWindow()) {
-      aStr.AppendPrintf("<anonymized-%llu>", aWindow->WindowID());
+      aStr.AppendPrintf("<anonymized-%" PRIu64 ">", aWindow->WindowID());
     } else {
       nsCString spec = uri->GetSpecOrDefault();
 
@@ -276,7 +276,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   if (top) {
     windowPath += NS_LITERAL_CSTRING("top(");
     AppendWindowURI(top, windowPath, aAnonymize);
-    windowPath.AppendPrintf(", id=%llu)", top->WindowID());
+    windowPath.AppendPrintf(", id=%" PRIu64 ")", top->WindowID());
 
     aTopWindowPaths->Put(aWindow->WindowID(), windowPath);
 
@@ -656,8 +656,9 @@ nsWindowMemoryReporter::AsyncCheckForGhostWindows()
   mCheckTimer = do_CreateInstance("@mozilla.org/timer;1");
 
   if (mCheckTimer) {
-    mCheckTimer->InitWithFuncCallback(CheckTimerFired, nullptr,
-                                      timerDelay, nsITimer::TYPE_ONE_SHOT);
+    mCheckTimer->InitWithNamedFuncCallback(CheckTimerFired, nullptr,
+                                           timerDelay, nsITimer::TYPE_ONE_SHOT,
+                                           "nsWindowMemoryReporter::AsyncCheckForGhostWindows_timer");
   }
 }
 

@@ -5,6 +5,7 @@
 #[cfg(feature = "bench")]
 extern crate test;
 
+use encoding_rs;
 use std::borrow::Cow::{self, Borrowed};
 use std::fs::File;
 use std::io::{self, Write};
@@ -16,16 +17,13 @@ use tempdir::TempDir;
 #[cfg(feature = "bench")]
 use self::test::Bencher;
 
-use encoding::label::encoding_from_whatwg_label;
-
 use super::{Parser, Delimiter, Token, NumericValue, PercentageValue, SourceLocation,
             DeclarationListParser, DeclarationParser, RuleListParser,
             AtRuleType, AtRuleParser, QualifiedRuleParser,
             parse_one_declaration, parse_one_rule, parse_important,
-            decode_stylesheet_bytes,
+            stylesheet_encoding, EncodingSupport,
             TokenSerializationType,
-            Color, RGBA, parse_nth, ToCss};
-
+            Color, RGBA, parse_nth, UnicodeRange, ToCss};
 
 macro_rules! JArray {
     ($($e: expr,)*) => { JArray![ $( $e ),* ] };
@@ -99,7 +97,6 @@ fn assert_json_eq(results: json::Json, mut expected: json::Json, message: String
         panic!(message)
     }
 }
-
 
 fn run_raw_json_tests<F: Fn(Json, Json) -> ()>(json_data: &str, run: F) {
     let items = match Json::from_str(json_data) {
@@ -199,6 +196,26 @@ fn one_rule() {
 
 #[test]
 fn stylesheet_from_bytes() {
+    pub struct EncodingRs;
+
+    impl EncodingSupport for EncodingRs {
+        type Encoding = &'static encoding_rs::Encoding;
+
+        fn utf8() -> Self::Encoding {
+            encoding_rs::UTF_8
+        }
+
+        fn is_utf16_be_or_le(encoding: &Self::Encoding) -> bool {
+            *encoding == encoding_rs::UTF_16LE ||
+            *encoding == encoding_rs::UTF_16BE
+        }
+
+        fn from_label(ascii_label: &[u8]) -> Option<Self::Encoding> {
+            encoding_rs::Encoding::for_label(ascii_label)
+        }
+    }
+
+
     run_raw_json_tests(include_str!("css-parsing-tests/stylesheet_bytes.json"),
                        |input, expected| {
         let map = match input {
@@ -211,17 +228,20 @@ fn stylesheet_from_bytes() {
                 assert!(c as u32 <= 0xFF);
                 c as u8
             }).collect::<Vec<u8>>();
-            let protocol_encoding_label = get_string(&map, "protocol_encoding");
+            let protocol_encoding_label = get_string(&map, "protocol_encoding")
+                .map(|s| s.as_bytes());
             let environment_encoding = get_string(&map, "environment_encoding")
-                .and_then(encoding_from_whatwg_label);
+                .map(|s| s.as_bytes())
+                .and_then(EncodingRs::from_label);
 
-            let (css_unicode, encoding) = decode_stylesheet_bytes(
+            let encoding = stylesheet_encoding::<EncodingRs>(
                 &css, protocol_encoding_label, environment_encoding);
+            let (css_unicode, used_encoding, _) = encoding.decode(&css);
             let input = &mut Parser::new(&css_unicode);
             let rules = RuleListParser::new_for_stylesheet(input, JsonParser)
                         .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                         .collect::<Vec<_>>();
-            JArray![rules, encoding.name()]
+            JArray![rules, used_encoding.name().to_lowercase()]
         };
         assert_json_eq(result, expected, Json::Object(map).to_string());
     });
@@ -319,14 +339,7 @@ fn color3_hsl() {
 /// color3_keywords.json is different: R, G and B are in 0..255 rather than 0..1
 #[test]
 fn color3_keywords() {
-    run_color_tests(include_str!("css-parsing-tests/color3_keywords.json"), |c| {
-        match c {
-            Ok(Color::RGBA(RGBA { red: r, green: g, blue: b, alpha: a }))
-            => [r * 255., g * 255., b * 255., a].to_json(),
-            Ok(Color::CurrentColor) => "currentColor".to_json(),
-            Err(()) => Json::Null,
-        }
-    });
+    run_color_tests(include_str!("css-parsing-tests/color3_keywords.json"), |c| c.ok().to_json())
 }
 
 
@@ -334,6 +347,21 @@ fn color3_keywords() {
 fn nth() {
     run_json_tests(include_str!("css-parsing-tests/An+B.json"), |input| {
         input.parse_entirely(parse_nth).ok().to_json()
+    });
+}
+
+#[test]
+fn unicode_range() {
+    run_json_tests(include_str!("css-parsing-tests/urange.json"), |input| {
+        input.parse_comma_separated(|input| {
+            let result = UnicodeRange::parse(input).ok().map(|r| (r.start, r.end));
+            if input.is_exhausted() {
+                Ok(result)
+            } else {
+                while let Ok(_) = input.next() {}
+                Ok(None)
+            }
+        }).unwrap().to_json()
     });
 }
 
@@ -387,25 +415,28 @@ fn serializer(preserve_comments: bool) {
     });
 }
 
-
 #[test]
 fn serialize_current_color() {
     let c = Color::CurrentColor;
     assert!(c.to_css_string() == "currentColor");
 }
 
-
 #[test]
 fn serialize_rgb_full_alpha() {
-    let c = Color::RGBA(RGBA { red: 1.0, green: 0.9, blue: 0.8, alpha: 1.0 });
-    assert!(c.to_css_string() == "rgb(255, 230, 204)");
+    let c = Color::RGBA(RGBA::new(255, 230, 204, 255));
+    assert_eq!(c.to_css_string(), "rgb(255, 230, 204)");
 }
-
 
 #[test]
 fn serialize_rgba() {
-    let c = Color::RGBA(RGBA { red: 0.1, green: 0.2, blue: 0.3, alpha: 0.5 });
-    assert!(c.to_css_string() == "rgba(26, 51, 77, 0.5)");
+    let c = Color::RGBA(RGBA::new(26, 51, 77, 32));
+    assert_eq!(c.to_css_string(), "rgba(26, 51, 77, 0.125)");
+}
+
+#[test]
+fn serialize_rgba_two_digit_float_if_roundtrips() {
+    let c = Color::RGBA(RGBA::from_floats(0., 0., 0., 0.5));
+    assert_eq!(c.to_css_string(), "rgba(0, 0, 0, 0.5)");
 }
 
 #[test]
@@ -574,8 +605,8 @@ fn identifier_serialization() {
 impl ToJson for Color {
     fn to_json(&self) -> json::Json {
         match *self {
-            Color::RGBA(RGBA { red, green, blue, alpha }) => {
-                [red, green, blue, alpha].to_json()
+            Color::RGBA(ref rgba) => {
+                [rgba.red, rgba.green, rgba.blue, rgba.alpha].to_json()
             },
             Color::CurrentColor => "currentColor".to_json(),
         }
@@ -744,8 +775,6 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
             v.push(unit.to_json());
             v
         }),
-
-        Token::UnicodeRange(start, end) => JArray!["unicode-range", start, end],
 
         Token::WhiteSpace(_) => " ".to_json(),
         Token::Comment(_) => "/**/".to_json(),

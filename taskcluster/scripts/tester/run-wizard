@@ -10,9 +10,24 @@ import os
 import subprocess
 import sys
 import time
+from distutils.spawn import find_executable
 from textwrap import wrap
 
 here = os.path.dirname(os.path.abspath(__file__))
+MOZHARNESS_WORKDIR = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
+
+MACH_SETUP_FINISHED = """
+Mozharness has finished downloading the build and tests to:
+{}
+
+A limited mach environment has also been set up and added to the $PATH, but
+it may be missing the command you need. To see a list of commands, run:
+    $ mach help
+""".lstrip().format(MOZHARNESS_WORKDIR)
+
+MACH_SETUP_FAILED = """
+Could not set up mach environment, no mach binary detected.
+""".lstrip()
 
 
 def call(cmd, **kwargs):
@@ -31,9 +46,24 @@ def wait_for_run_mozharness(timeout=60):
         return 1
 
 
-def resume():
+def setup_mach_environment():
+    mach_src = os.path.join(MOZHARNESS_WORKDIR, 'tests', 'mach')
+    if not os.path.isfile(mach_src):
+        return 1
+
+    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
+    if os.path.exists(mach_dest):
+        os.remove(mach_dest)
+    os.symlink(mach_src, mach_dest)
+    return 0
+
+
+def run_mozharness(*args):
     wait_for_run_mozharness()
-    call(['run-mozharness'])
+    try:
+        return call(['run-mozharness'] + list(args))
+    finally:
+        setup_mach_environment()
 
 
 def setup():
@@ -43,29 +73,14 @@ def setup():
     downloading the tests and firefox binary. But it stops before running the
     tests.
     """
-    wait_for_run_mozharness()
-    status = call(['run-mozharness', '--no-run-tests'])
+    status = run_mozharness('--no-run-tests')
 
-    if status:
-        # something went wrong
-        return status
+    if find_executable('mach'):
+        print(MACH_SETUP_FINISHED)
+    else:
+        print(MACH_SETUP_FAILED)
 
-    build_dir = os.path.expanduser(os.path.join('~', 'workspace', 'build'))
-    mach_src = os.path.join(build_dir, 'tests', 'mach')
-    mach_dest = os.path.expanduser(os.path.join('~', 'bin', 'mach'))
-
-    if os.path.exists(mach_dest):
-        os.remove(mach_dest)
-    os.symlink(mach_src, mach_dest)
-
-    print("""
-Mozharness has finished downloading the build and tests to:
-{}
-
-A limited mach environment has also been set up and added to the $PATH, but
-it may be missing the command you need. To see a list of commands, run:
-    $ mach help
-""".lstrip().format(build_dir))
+    return status
 
 
 def clone():
@@ -103,7 +118,7 @@ def exit():
 
 
 OPTIONS = [
-    ('Resume task', resume,
+    ('Resume task', run_mozharness,
      "Resume the original task without modification. This can be useful for "
      "passively monitoring it from another shell."),
     ('Setup task', setup,

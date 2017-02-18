@@ -2332,7 +2332,7 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 }
 
 void
-HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
+HTMLInputElement::SetValueAsDate(const Nullable<Date>& aDate, ErrorResult& aRv)
 {
   if (!IsDateTimeInputType(mType)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

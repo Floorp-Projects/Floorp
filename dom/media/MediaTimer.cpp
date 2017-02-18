@@ -80,7 +80,7 @@ RefPtr<MediaTimerPromise>
 MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
 {
   MonitorAutoLock mon(mMonitor);
-  TIMER_LOG("MediaTimer::WaitUntil %lld", RelativeMicroseconds(aTimeStamp));
+  TIMER_LOG("MediaTimer::WaitUntil %" PRId64, RelativeMicroseconds(aTimeStamp));
   Entry e(aTimeStamp, aCallSite);
   RefPtr<MediaTimerPromise> p = e.mPromise.get();
   mEntries.push(e);

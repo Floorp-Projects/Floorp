@@ -122,7 +122,8 @@ function decodeRequestPayload(request) {
   let payload = null;
   let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
 
-  if (request.getHeader("content-encoding") == "gzip") {
+  if (request.hasHeader("content-encoding") &&
+      request.getHeader("content-encoding") == "gzip") {
     let observer = {
       buffer: "",
       onStreamComplete(loader, context, status, length, result) {
@@ -296,6 +297,7 @@ function setEmptyPrefWatchlist() {
     Cu.import("resource://gre/modules/TelemetryEnvironment.jsm").TelemetryEnvironment;
   return TelemetryEnvironment.onInitialized().then(() => {
     TelemetryEnvironment.testWatchPreferences(new Map());
+
   });
 }
 

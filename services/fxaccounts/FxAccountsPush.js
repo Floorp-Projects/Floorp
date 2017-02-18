@@ -84,6 +84,7 @@ FxAccountsPushService.prototype = {
     Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
 
     this.log.debug("FxAccountsPush initialized");
+    return true;
   },
   /**
    * Registers a new endpoint with the Push Server
@@ -122,17 +123,17 @@ FxAccountsPushService.prototype = {
       case this.pushService.pushTopic:
         if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
           let message = subject.QueryInterface(Ci.nsIPushMessage);
-          return this._onPushMessage(message);
+          this._onPushMessage(message);
         }
         break;
       case this.pushService.subscriptionChangeTopic:
         if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
-          return this._onPushSubscriptionChange();
+          this._onPushSubscriptionChange();
         }
         break;
       case ONLOGOUT_NOTIFICATION:
         // user signed out, we need to stop polling the Push Server
-        return this.unsubscribe().catch(err => {
+        this.unsubscribe().catch(err => {
           this.log.error("Error during unsubscribe", err);
         });
       default:
@@ -158,7 +159,8 @@ FxAccountsPushService.prototype = {
     if (!message.data) {
       // Use the empty signal to check the verification state of the account right away
       this.log.debug("empty push message - checking account status");
-      return this.fxAccounts.checkVerificationStatus();
+      this.fxAccounts.checkVerificationStatus();
+      return;
     }
     let payload = message.data.json();
     this.log.debug(`push command: ${payload.command}`);
@@ -167,10 +169,12 @@ FxAccountsPushService.prototype = {
         Services.obs.notifyObservers(null, ON_DEVICE_CONNECTED_NOTIFICATION, payload.data.deviceName);
         break;
       case ON_DEVICE_DISCONNECTED_NOTIFICATION:
-        return this.fxAccounts.handleDeviceDisconnection(payload.data.id);
+        this.fxAccounts.handleDeviceDisconnection(payload.data.id);
+        return;
       case ON_PASSWORD_CHANGED_NOTIFICATION:
       case ON_PASSWORD_RESET_NOTIFICATION:
-        return this._onPasswordChanged();
+        this._onPasswordChanged();
+        return;
       case ON_COLLECTION_CHANGED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
       default:

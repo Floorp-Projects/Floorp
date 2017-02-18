@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import os
 import threading
 
 from mozlog.formatters import TbplFormatter
@@ -49,18 +48,18 @@ class ReftestFormatter(TbplFormatter):
             if extra.get('status_msg') == 'Random':
                 status_msg += "(EXPECTED RANDOM)"
 
-
         output_text = "%s | %s | %s" % (status_msg, test, data.get("message", ""))
-
         if "reftest_screenshots" in extra:
             screenshots = extra["reftest_screenshots"]
+            image_1 = screenshots[0]["screenshot"]
+            image_2 = screenshots[2]["screenshot"]
+
             if len(screenshots) == 3:
                 output_text += ("\nREFTEST   IMAGE 1 (TEST): data:image/png;base64,%s\n"
-                                "REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,%s") % (screenshots[0]["screenshot"],
-                                                                         screenshots[2]["screenshot"])
+                                "REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,%s") % (
+                                image_1, image_2)
             elif len(screenshots) == 1:
-                output_text += "\nREFTEST   IMAGE: data:image/png;base64,%(image1)s" % screenshots[0]["screenshot"]
-
+                output_text += "\nREFTEST   IMAGE: data:image/png;base64,%(image1)s" % image_1
 
         output_text += "\nREFTEST TEST-END | %s" % test
         return "%s\n" % output_text

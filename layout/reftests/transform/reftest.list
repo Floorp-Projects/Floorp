@@ -129,6 +129,7 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-1a.svg transform-box-s
 pref(svg.transform-box.enabled,true) == transform-box-svg-1b.svg transform-box-svg-1-ref.svg
 pref(svg.transform-box.enabled,true) == transform-box-svg-2a.svg transform-box-svg-2-ref.svg
 pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-svg-2-ref.svg
+pref(svg.transform-box.enabled,true) == transform-box-svg-3a.svg pass.svg
 == transform-origin-svg-1a.svg transform-origin-svg-1-ref.svg
 == transform-origin-svg-1b.svg transform-origin-svg-1-ref.svg
 == transform-origin-svg-2a.svg transform-origin-svg-2-ref.svg

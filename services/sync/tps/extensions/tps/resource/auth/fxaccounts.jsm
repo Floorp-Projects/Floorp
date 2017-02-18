@@ -111,7 +111,7 @@ var Authentication = {
       let { sessionToken, deviceId } = user;
       if (deviceId) {
         Logger.logInfo("Destroying device " + deviceId);
-        Async.promiseSpinningly(fxc.signOutAndDestroyDevice(sessionToken, deviceId, { service: "sync" }));
+        Async.promiseSpinningly(fxAccounts.deleteDeviceRegistration(sessionToken, deviceId));
       } else {
         Logger.logError("No device found.");
         Async.promiseSpinningly(fxc.signOut(sessionToken, { service: "sync" }));

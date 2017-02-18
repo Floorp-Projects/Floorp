@@ -301,7 +301,7 @@ pref("devtools.webconsole.new-frontend-enabled", false);
 #endif
 
 // Enable the experimental support for source maps in console (work in progress)
-pref("devtools.sourcemap.locations.enabled", false);
+pref("devtools.source-map.locations.enabled", false);
 
 // The number of lines that are displayed in the web console.
 pref("devtools.hud.loglimit", 1000);

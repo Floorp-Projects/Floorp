@@ -10,6 +10,7 @@
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryIPC.h"
 #include "mozilla/dom/CheckerboardReportService.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -121,10 +122,13 @@ GPUChild::RecvGraphicsError(const nsCString& aError)
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvInitCrashReporter(Shmem&& aShmem)
+GPUChild::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
 {
 #ifdef MOZ_CRASHREPORTER
-  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GPU, aShmem);
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
+    GeckoProcessType_GPU,
+    aShmem,
+    aThreadId);
 #endif
   return IPC_OK();
 }
@@ -141,30 +145,30 @@ GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations)
+GPUChild::RecvAccumulateChildHistograms(InfallibleTArray<Accumulation>&& aAccumulations)
 {
-  Telemetry::AccumulateChild(GeckoProcessType_GPU, aAccumulations);
+  TelemetryIPC::AccumulateChildHistograms(GeckoProcessType_GPU, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
+GPUChild::RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
 {
-  Telemetry::AccumulateChildKeyed(GeckoProcessType_GPU, aAccumulations);
+  TelemetryIPC::AccumulateChildKeyedHistograms(GeckoProcessType_GPU, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvUpdateChildScalars(InfallibleTArray<ScalarAction>&& aScalarActions)
 {
-  Telemetry::UpdateChildScalars(GeckoProcessType_GPU, aScalarActions);
+  TelemetryIPC::UpdateChildScalars(GeckoProcessType_GPU, aScalarActions);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aScalarActions)
 {
-  Telemetry::UpdateChildKeyedScalars(GeckoProcessType_GPU, aScalarActions);
+  TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType_GPU, aScalarActions);
   return IPC_OK();
 }
 

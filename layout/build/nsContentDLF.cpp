@@ -19,7 +19,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsString.h"
 #include "nsContentCID.h"
-#include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"

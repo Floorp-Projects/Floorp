@@ -33,24 +33,6 @@ function completesNormally(code) {
 }
 
 /*
- * raisesException(EXCEPTION)(CODE) returns true if evaluating CODE (as eval
- * code) throws an exception object whose prototype is
- * EXCEPTION.prototype, and returns false if it throws any other error
- * or evaluates successfully. For example: raises(TypeError)("0()") ==
- * true.
- */
-function raisesException(exception) {
-  return function (code) {
-    try {
-      eval(code);
-      return false;
-    } catch (actual) {
-      return exception.prototype.isPrototypeOf(actual);
-    }
-  };
-};
-
-/*
  * parsesSuccessfully(CODE) returns true if CODE parses as function
  * code without an error.
  */
@@ -77,12 +59,3 @@ function parseRaisesException(exception) {
     }
   };
 };
-
-/*
- * Return the result of applying uneval to VAL, and replacing all runs
- * of whitespace with a single horizontal space (poor man's
- * tokenization).
- */
-function clean_uneval(val) {
-  return uneval(val).replace(/\s+/g, ' ');
-}

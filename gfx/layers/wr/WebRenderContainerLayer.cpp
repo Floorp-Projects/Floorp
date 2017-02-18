@@ -6,6 +6,7 @@
 #include "WebRenderContainerLayer.h"
 
 #include <inttypes.h>
+#include "gfxPrefs.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "WebRenderLayersLogging.h"

@@ -6,6 +6,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
 #include "NetworkActivityMonitor.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsIOService.h"
 #include "nsASocketHandler.h"
@@ -443,7 +444,7 @@ nsSocketTransportService::PollTimeout()
         SOCKET_LOG(("poll timeout: none\n"));
         return NS_SOCKET_POLL_TIMEOUT;
     }
-    SOCKET_LOG(("poll timeout: %lu\n", minR));
+    SOCKET_LOG(("poll timeout: %" PRIu32 "\n", minR));
     return PR_SecondsToInterval(minR);
 }
 
@@ -1058,9 +1059,9 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
     count = mIdleCount;
     for (i=mActiveCount-1; i>=0; --i) {
         //---
-        SOCKET_LOG(("  active [%u] { handler=%p condition=%x pollflags=%hu }\n", i,
+        SOCKET_LOG(("  active [%u] { handler=%p condition=%" PRIx32 " pollflags=%hu }\n", i,
             mActiveList[i].mHandler,
-            mActiveList[i].mHandler->mCondition,
+            static_cast<uint32_t>(mActiveList[i].mHandler->mCondition),
             mActiveList[i].mHandler->mPollFlags));
         //---
         if (NS_FAILED(mActiveList[i].mHandler->mCondition))
@@ -1078,9 +1079,9 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
     }
     for (i=count-1; i>=0; --i) {
         //---
-        SOCKET_LOG(("  idle [%u] { handler=%p condition=%x pollflags=%hu }\n", i,
+        SOCKET_LOG(("  idle [%u] { handler=%p condition=%" PRIx32 " pollflags=%hu }\n", i,
             mIdleList[i].mHandler,
-            mIdleList[i].mHandler->mCondition,
+            static_cast<uint32_t>(mIdleList[i].mHandler->mCondition),
             mIdleList[i].mHandler->mPollFlags));
         //---
         if (NS_FAILED(mIdleList[i].mHandler->mCondition))

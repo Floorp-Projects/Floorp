@@ -917,6 +917,7 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
 {
 #ifdef ACCESSIBILITY
   auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
+  doc->AddToMap();
 
   // If this tab is already shutting down just mark the new actor as shutdown
   // and ignore it.  When the tab actor is destroyed it will be too.
@@ -964,7 +965,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     a11y::WrapperFor(doc)->SetID(aMsaaID);
     MOZ_ASSERT(!aDocCOMProxy.IsNull());
     RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
-    doc->SetCOMProxy(proxy);
+    doc->SetCOMInterface(proxy);
+    doc->MaybeInitWindowEmulation();
+    doc->SendParentCOMProxy();
 #endif
   }
 #endif

@@ -74,6 +74,7 @@ class OptionalURIParams;
 class PFileDescriptorSetParent;
 class URIParams;
 class TestShellParent;
+class CrashReporterHost;
 } // namespace ipc
 
 namespace jsipc {
@@ -172,9 +173,7 @@ public:
   GetNewOrUsedBrowserProcess(const nsAString& aRemoteType = NS_LITERAL_STRING(NO_REMOTE_TYPE),
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
-                             ContentParent* aOpener = nullptr,
-                             bool aLargeAllocationProcess = false,
-                             bool* anew = nullptr);
+                             ContentParent* aOpener = nullptr);
 
   /**
    * Get or create a content process for the given TabContext.  aFrameElement
@@ -184,8 +183,7 @@ public:
   static TabParent*
   CreateBrowser(const TabContext& aContext,
                 Element* aFrameElement,
-                ContentParent* aOpenerContentParent,
-                bool aFreshProcess = false);
+                ContentParent* aOpenerContentParent);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -402,14 +400,8 @@ public:
 
   virtual void OnChannelError() override;
 
-  virtual PCrashReporterParent*
-  AllocPCrashReporterParent(const NativeThreadId& tid,
-                            const uint32_t& processType) override;
-
   virtual mozilla::ipc::IPCResult
-  RecvPCrashReporterConstructor(PCrashReporterParent* actor,
-                                const NativeThreadId& tid,
-                                const uint32_t& processType) override;
+  RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId) override;
 
   virtual PNeckoParent* AllocPNeckoParent() override;
 
@@ -796,9 +788,6 @@ private:
   RecvPBlobConstructor(PBlobParent* aActor,
                        const BlobConstructorParams& params) override;
 
-  virtual bool
-  DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) override;
-
   virtual mozilla::ipc::IPCResult RecvNSSU2FTokenIsCompatibleVersion(const nsString& aVersion,
                                                                      bool* aIsCompatible) override;
 
@@ -1113,9 +1102,9 @@ private:
                           const int64_t& aLastModified,
                           const bool& aIsFromNsIFile) override;
 
-  virtual mozilla::ipc::IPCResult RecvAccumulateChildHistogram(
+  virtual mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
     InfallibleTArray<Accumulation>&& aAccumulations) override;
-  virtual mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistogram(
+  virtual mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
     InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
   virtual mozilla::ipc::IPCResult RecvUpdateChildScalars(
     InfallibleTArray<ScalarAction>&& aScalarActions) override;
@@ -1175,8 +1164,6 @@ private:
   bool mShutdownPending;
   bool mIPCOpen;
 
-  friend class CrashReporterParent;
-
   RefPtr<nsConsoleService>  mConsoleService;
   nsConsoleService* GetConsoleService();
 
@@ -1213,6 +1200,9 @@ private:
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
   nsTArray<nsCString> mBlobURLs;
+#ifdef MOZ_CRASHREPORTER
+  UniquePtr<mozilla::ipc::CrashReporterHost> mCrashReporter;
+#endif
 };
 
 } // namespace dom

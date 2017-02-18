@@ -360,8 +360,8 @@ template <typename State, size_t InlineBufferSize = 16>
 class StreamingLexer
 {
 public:
-  StreamingLexer(LexerTransition<State> aStartState,
-                 LexerTransition<State> aTruncatedState)
+  StreamingLexer(const LexerTransition<State>& aStartState,
+                 const LexerTransition<State>& aTruncatedState)
     : mTransition(TerminalState::FAILURE)
     , mTruncatedTransition(aTruncatedState)
   {

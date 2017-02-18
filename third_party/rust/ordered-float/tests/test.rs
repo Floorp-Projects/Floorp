@@ -9,6 +9,10 @@ pub use num_traits::Float;
 pub use std::cmp::Ordering::*;
 pub use std::{f32, f64, panic};
 
+pub use std::collections::HashSet;
+pub use std::collections::hash_map::RandomState;
+pub use std::hash::*;
+
 describe! ordered_float32 {
     it "should compare regular floats" {
         assert_eq!(OrderedFloat(7.0f32).cmp(&OrderedFloat(7.0)), Equal);
@@ -162,5 +166,61 @@ describe! not_nan64 {
         assert!(panic::catch_unwind(|| {let mut tmp = NotNaN::from(0.0f64); tmp *= f64::NAN;}).is_err());
         assert!(panic::catch_unwind(|| {let mut tmp = NotNaN::from(0.0f64); tmp /= f64::NAN;}).is_err());
         assert!(panic::catch_unwind(|| {let mut tmp = NotNaN::from(0.0f64); tmp %= f64::NAN;}).is_err());
+    }
+}
+
+describe! hashing {
+    it "should hash zero and neg-zero to the same hc" {
+        let state = RandomState::new();
+        let mut h1 = state.build_hasher();
+        let mut h2 = state.build_hasher();
+        OrderedFloat::from(0f64).hash(&mut h1);
+        OrderedFloat::from(-0f64).hash(&mut h2);
+        assert_eq!(h1.finish(), h2.finish());
+    }
+
+    it "should hash inf and neg-inf to different hcs" {
+        let state = RandomState::new();
+        let mut h1 = state.build_hasher();
+        let mut h2 = state.build_hasher();
+        OrderedFloat::from(f64::INFINITY).hash(&mut h1);
+        OrderedFloat::from(f64::NEG_INFINITY).hash(&mut h2);
+        assert!(h1.finish() != h2.finish());
+    }
+
+    it "should have a good hash function for whole numbers" {
+        let state = RandomState::new();
+        let limit = 10000;
+
+        let mut set = ::std::collections::HashSet::with_capacity(limit);
+        for i in 0..limit {
+            let mut h = state.build_hasher();
+            OrderedFloat::from(i as f64).hash(&mut h);
+            set.insert(h.finish());
+        }
+
+        // This allows 100 collisions, which is far too
+        // many, but should guard against transient issues
+        // that will result from using RandomState
+        let pct_unique = set.len() as f64 / limit as f64;
+        assert!(0.99f64 < pct_unique, "percent-unique={}", pct_unique);
+    }
+
+    it "should have a good hash function for fractional numbers" {
+        let state = RandomState::new();
+        let limit = 10000;
+
+        let mut set = ::std::collections::HashSet::with_capacity(limit);
+        for i in 0..limit {
+            let mut h = state.build_hasher();
+            OrderedFloat::from(i as f64 * (1f64 / limit as f64)).hash(&mut h);
+            set.insert(h.finish());
+        }
+
+        // This allows 100 collisions, which is far too
+        // many, but should guard against transient issues
+        // that will result from using RandomState
+        let pct_unique = set.len() as f64 / limit as f64;
+        assert!(0.99f64 < pct_unique, "percent-unique={}", pct_unique);
     }
 }

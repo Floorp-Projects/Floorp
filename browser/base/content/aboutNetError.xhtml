@@ -99,6 +99,7 @@
           const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles:true});
           document.dispatchEvent(event);
         });
+        addAutofocus("prefResetButton", "beforeend");
       }
 
       function setupAdvancedButton() {
@@ -198,6 +199,7 @@
           initPageCertError();
           return;
         }
+        addAutofocus("errorTryAgain");
 
         document.body.className = "neterror";
 
@@ -317,6 +319,7 @@
           document.dispatchEvent(event);
         });
 
+        addAutofocus("openPortalLoginPageButton");
         setupAdvancedButton();
 
         addDomainErrorLinks();
@@ -335,6 +338,7 @@
           host.textContent = document.location.hostname;
         }
 
+        addAutofocus("returnButton");
         setupAdvancedButton();
 
         document.getElementById("learnMoreContainer").style.display = "block";
@@ -362,6 +366,22 @@
         document.getElementById("advancedButton").dispatchEvent(event);
 
         addDomainErrorLinks();
+      }
+
+      /* Only do autofocus if we're the toplevel frame; otherwise we
+         don't want to call attention to ourselves!  The key part is
+         that autofocus happens on insertion into the tree, so we
+         can remove the button, add @autofocus, and reinsert the
+         button.
+      */
+      function addAutofocus(buttonId, position = "afterbegin") {
+        if (window.top == window) {
+            var button = document.getElementById(buttonId);
+            var parent = button.parentNode;
+            button.remove();
+            button.setAttribute("autofocus", "true");
+            parent.insertAdjacentElement(position, button);
+        }
       }
 
       /* Try to preserve the links contained in the error description, like
@@ -595,31 +615,16 @@
         </div>
 
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
-          <button id="returnButton" class="primary" autocomplete="off" autofocus="true">&returnToPreviousPage.label;</button>
-          <button id="openPortalLoginPageButton" class="primary" autocomplete="off" autofocus="true">&openPortalLoginPage.label2;</button>
+          <button id="returnButton" class="primary" autocomplete="off">&returnToPreviousPage.label;</button>
+          <button id="openPortalLoginPageButton" class="primary" autocomplete="off">&openPortalLoginPage.label2;</button>
           <div class="button-spacer"></div>
-          <button id="advancedButton" autocomplete="off" autofocus="true">&advanced.label;</button>
+          <button id="advancedButton" autocomplete="off">&advanced.label;</button>
         </div>
       </div>
 
       <div id="netErrorButtonContainer" class="button-container">
         <button id="errorTryAgain" class="primary" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
       </div>
-
-      <script>
-        // Only do autofocus if we're the toplevel frame; otherwise we
-        // don't want to call attention to ourselves!  The key part is
-        // that autofocus happens on insertion into the tree, so we
-        // can remove the button, add @autofocus, and reinsert the
-        // button.
-        if (window.top == window) {
-            var button = document.getElementById("errorTryAgain");
-            var parent = button.parentNode;
-            button.remove();
-            button.setAttribute("autofocus", "true");
-            parent.appendChild(button);
-        }
-      </script>
 
       <!-- UI for option to report certificate errors to Mozilla. Removed on
            init for other error types .-->

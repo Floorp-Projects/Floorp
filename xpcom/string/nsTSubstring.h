@@ -6,6 +6,7 @@
 // IWYU pragma: private, include "nsString.h"
 
 #include "mozilla/Casting.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -574,46 +575,54 @@ public:
   }
 
   /**
-   * Append a formatted string to the current string. Uses the format
-   * codes documented in prprf.h
+   * Append a formatted string to the current string. Uses the
+   * standard printf format codes.
    */
-  void AppendPrintf(const char* aFormat, ...);
+  void AppendPrintf(const char* aFormat, ...) MOZ_FORMAT_PRINTF(2, 3);
   void AppendPrintf(const char* aFormat, va_list aAp);
   void AppendInt(int32_t aInteger)
   {
-    AppendPrintf("%d", aInteger);
+    AppendPrintf("%" PRId32, aInteger);
   }
   void AppendInt(int32_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%d" : aRadix == 8 ? "%o" : "%x";
-    AppendPrintf(fmt, aInteger);
+    if (aRadix == 10) {
+      AppendPrintf("%" PRId32, aInteger);
+    } else {
+      AppendPrintf(aRadix == 8 ? "%" PRIo32 : "%" PRIx32,
+                   static_cast<uint32_t>(aInteger));
+    }
   }
   void AppendInt(uint32_t aInteger)
   {
-    AppendPrintf("%u", aInteger);
+    AppendPrintf("%" PRIu32, aInteger);
   }
   void AppendInt(uint32_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%u" : aRadix == 8 ? "%o" : "%x";
-    AppendPrintf(fmt, aInteger);
+    AppendPrintf(aRadix == 10 ? "%" PRIu32 : aRadix == 8 ? "%" PRIo32 : "%" PRIx32,
+                 aInteger);
   }
   void AppendInt(int64_t aInteger)
   {
-    AppendPrintf("%lld", aInteger);
+    AppendPrintf("%" PRId64, aInteger);
   }
   void AppendInt(int64_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%lld" : aRadix == 8 ? "%llo" : "%llx";
-    AppendPrintf(fmt, aInteger);
+    if (aRadix == 10) {
+      AppendPrintf("%" PRId64, aInteger);
+    } else {
+      AppendPrintf(aRadix == 8 ? "%" PRIo64 : "%" PRIx64,
+                   static_cast<uint64_t>(aInteger));
+    }
   }
   void AppendInt(uint64_t aInteger)
   {
-    AppendPrintf("%llu", aInteger);
+    AppendPrintf("%" PRIu64, aInteger);
   }
   void AppendInt(uint64_t aInteger, int aRadix)
   {
-    const char* fmt = aRadix == 10 ? "%llu" : aRadix == 8 ? "%llo" : "%llx";
-    AppendPrintf(fmt, aInteger);
+    AppendPrintf(aRadix == 10 ? "%" PRIu64 : aRadix == 8 ? "%" PRIo64 : "%" PRIx64,
+                 aInteger);
   }
 
   /**
@@ -1043,8 +1052,6 @@ protected:
 
   void NS_FASTCALL ReplaceLiteral(index_type aCutStart, size_type aCutLength,
                                   const char_type* aData, size_type aLength);
-
-  static int AppendFunc(void* aArg, const char* aStr, uint32_t aLen);
 
 public:
 

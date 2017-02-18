@@ -54,6 +54,9 @@
     result = msg.data.frameType === frameType;
     postResult(result, "Client frameType test. expected=" + frameType);
 
+    result = msg.data.type === "window";
+    postResult(result, "Client type test. expected=window");
+
     postResult(true, "DONE");
     window.close();
   };

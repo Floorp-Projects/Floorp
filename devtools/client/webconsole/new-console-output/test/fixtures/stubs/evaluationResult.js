@@ -33,11 +33,12 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
     }
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921364,\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921364,\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
-  "userProvidedStyles": null
+  "userProvidedStyles": null,
+  "notes": null
 }));
 
 stubPreparedMessages.set("asdf()", new ConsoleMessage({
@@ -52,7 +53,7 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921377,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921377,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -61,7 +62,8 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
   },
   "groupId": null,
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-  "userProvidedStyles": null
+  "userProvidedStyles": null,
+  "notes": null
 }));
 
 stubPreparedMessages.set("1 + @", new ConsoleMessage({
@@ -76,7 +78,7 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921399,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"userProvidedStyles\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921399,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -84,7 +86,8 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
     "column": 4
   },
   "groupId": null,
-  "userProvidedStyles": null
+  "userProvidedStyles": null,
+  "notes": null
 }));
 
 stubPackets.set("new Date(0)", {
@@ -105,7 +108,8 @@ stubPackets.set("new Date(0)", {
   "timestamp": 1479159921364,
   "exception": null,
   "frame": null,
-  "helperResult": null
+  "helperResult": null,
+  "notes": null
 });
 
 stubPackets.set("asdf()", {
@@ -140,7 +144,8 @@ stubPackets.set("asdf()", {
     "line": 1,
     "column": 1
   },
-  "helperResult": null
+  "helperResult": null,
+  "notes": null
 });
 
 stubPackets.set("1 + @", {
@@ -174,7 +179,8 @@ stubPackets.set("1 + @", {
     "line": 1,
     "column": 4
   },
-  "helperResult": null
+  "helperResult": null,
+  "notes": null
 });
 
 module.exports = {

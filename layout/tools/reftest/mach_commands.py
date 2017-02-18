@@ -84,8 +84,8 @@ class ReftestRunner(MozbuildObject):
 
         if args.suite == "jstestbrowser":
             args.extraProfileFiles.append(os.path.join(self.topobjdir, "dist",
-                                                            "test-stage", "jsreftest",
-                                                            "tests", "user.js"))
+                                                       "test-stage", "jsreftest",
+                                                       "tests", "user.js"))
 
         self.log_manager.enable_unstructured()
         try:

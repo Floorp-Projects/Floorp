@@ -14,7 +14,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
-#include "prprf.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 
@@ -1667,7 +1666,7 @@ nsNavBookmarks::SetItemDateAdded(int64_t aItemId, PRTime aDateAdded,
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("dateAdded"),
                                  false,
-                                 nsPrintfCString("%lld", bookmark.dateAdded),
+                                 nsPrintfCString("%" PRId64, bookmark.dateAdded),
                                  bookmark.dateAdded,
                                  bookmark.type,
                                  bookmark.parentId,
@@ -1737,7 +1736,7 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
                    OnItemChanged(bookmark.id,
                                  NS_LITERAL_CSTRING("lastModified"),
                                  false,
-                                 nsPrintfCString("%lld", bookmark.lastModified),
+                                 nsPrintfCString("%" PRId64, bookmark.lastModified),
                                  bookmark.lastModified,
                                  bookmark.type,
                                  bookmark.parentId,

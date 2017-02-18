@@ -68,7 +68,7 @@ GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.16.2
+SQLITE_VERSION=3.17.0
 
 dnl Set various checks
 dnl ========================================================
@@ -432,31 +432,6 @@ dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
 if test "$COMPILE_ENVIRONMENT"; then
-
-dnl ========================================================
-dnl = Mac OS X toolchain support
-dnl ========================================================
-
-dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
-dnl that a universal binary is being produced.
-AC_SUBST(UNIVERSAL_BINARY)
-
-MOZ_ARG_WITH_STRING(unify-dist,
-[  --with-unify-dist=dir   Location of the dist directory to unify with at packaging time (Mac OS X universal build only)],
-    UNIFY_DIST=$withval)
-if test -n "$UNIVERSAL_BINARY"; then
-    if test -z "$UNIFY_DIST"; then
-        AC_MSG_ERROR([You need to provide the --with-unify-dist=dir argument when performing a universal build])
-    fi
-    case "$UNIFY_DIST" in
-    /*)
-        ;;
-    *)
-        UNIFY_DIST="${MOZ_BUILD_ROOT}/${UNIFY_DIST}"
-        ;;
-    esac
-fi
-AC_SUBST(UNIFY_DIST)
 
 dnl ========================================================
 dnl = Mac OS X SDK support

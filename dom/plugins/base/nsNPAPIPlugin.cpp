@@ -210,8 +210,6 @@ static void CheckClassInitialized()
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
 
-NS_IMPL_ISUPPORTS0(nsNPAPIPlugin)
-
 nsNPAPIPlugin::nsNPAPIPlugin()
 {
   memset((void*)&mPluginFuncs, 0, sizeof(mPluginFuncs));
@@ -2274,9 +2272,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
         return NPERR_NO_ERROR;
       }
-      else {
-        return NPERR_GENERIC_ERROR;
-      }
+      return NPERR_GENERIC_ERROR;
     }
 #endif
 

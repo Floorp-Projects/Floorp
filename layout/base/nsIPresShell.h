@@ -1596,12 +1596,6 @@ public:
     mFontSizeInflationEnabledIsDirty = true;
   }
 
-  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
-
-  void InvalidatePresShellIfHidden();
-  void CancelInvalidatePresShellIfHidden();
-
-
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking public API.
   //////////////////////////////////////////////////////////////////////////////
@@ -1741,6 +1735,12 @@ public:
 
   virtual nsIDocument* GetPrimaryContentDocument() = 0;
 
+  // aSheetType is one of the nsIStyleSheetService *_SHEET constants.
+  virtual void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
+                                                 uint32_t aSheetType) = 0;
+  virtual void NotifyStyleSheetServiceSheetRemoved(mozilla::StyleSheet* aSheet,
+                                                   uint32_t aSheetType) = 0;
+
 protected:
   friend class nsRefreshDriver;
 
@@ -1761,10 +1761,6 @@ protected:
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
   mozilla::WeakPtr<nsDocShell>                 mForwardingContainer;
-  nsRefreshDriver* MOZ_UNSAFE_REF("These two objects hold weak references "
-                                  "to each other, and the validity of this "
-                                  "member is ensured by the logic in nsIPresShell.")
-                            mHiddenInvalidationObserverRefreshDriver;
 #ifdef ACCESSIBILITY
   mozilla::a11y::DocAccessible* mDocAccessible;
 #endif

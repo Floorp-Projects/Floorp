@@ -131,7 +131,7 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
     LOG(nsPrintfCString("Reporting telemetry VIDEO_MFT_OUTPUT_NULL_SAMPLES=%d",
                         telemetry)
         .get());
-    Telemetry::Accumulate(Telemetry::ID::VIDEO_MFT_OUTPUT_NULL_SAMPLES,
+    Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_MFT_OUTPUT_NULL_SAMPLES,
                           telemetry);
   });
   // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
@@ -399,7 +399,7 @@ public:
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
   layers::LayersBackend mBackend;
-  KnowsCompositor* mKnowsCompositor;
+  layers::KnowsCompositor* mKnowsCompositor;
   nsACString& mFailureReason;
 };
 

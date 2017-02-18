@@ -120,5 +120,6 @@ RotaryEngine.prototype = {
         return id;
       }
     }
+    return null;
   }
 };

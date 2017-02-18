@@ -46,9 +46,9 @@
 #include "nsNPAPIPluginInstance.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/GeckoRestyleManager.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerHandle.h"
-#include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/RestyleManagerInlines.h"
 #include "Layers.h"
 #include "imgIContainer.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -69,6 +69,10 @@
 #include "nsAnimationManager.h"
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
+
+#ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -252,16 +256,6 @@ public:
                             nsLayoutUtils::IdlePeriodDeadlineLimit()));
   }
 
-  void SetLastGCCCDuration(TimeDuration aDuration)
-  {
-    mLastGCCCDuration = aDuration;
-  }
-
-  TimeDuration LastGCCCDuration()
-  {
-    return mLastGCCCDuration;
-  }
-
 protected:
   virtual void StartTimer() = 0;
   virtual void StopTimer() = 0;
@@ -331,7 +325,7 @@ protected:
 
   static void TickDriver(nsRefreshDriver* driver, int64_t jsnow, TimeStamp now)
   {
-    LOG(">> TickDriver: %p (jsnow: %lld)", driver, jsnow);
+    LOG(">> TickDriver: %p (jsnow: %" PRId64 ")", driver, jsnow);
     driver->Tick(jsnow, now);
   }
 
@@ -339,8 +333,6 @@ protected:
   bool mLastFireSkipped;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
-
-  TimeDuration mLastGCCCDuration;
 
   nsTArray<RefPtr<nsRefreshDriver> > mContentRefreshDrivers;
   nsTArray<RefPtr<nsRefreshDriver> > mRootRefreshDrivers;
@@ -541,6 +533,21 @@ private:
           new ParentProcessVsyncNotifier(this, aVsyncTimestamp);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
+        mRecentVsync = aVsyncTimestamp;
+        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
+          if (mProcessedVsync) {
+            // Re-post vsync update as a normal priority runnable. This way
+            // runnables already in normal priority queue get processed.
+            mProcessedVsync = false;
+            nsCOMPtr<nsIRunnable> vsyncEvent =
+              NewRunnableMethod<>(
+                this, &RefreshDriverVsyncObserver::NormalPriorityNotify);
+            NS_DispatchToMainThread(vsyncEvent);
+          }
+
+          return true;
+        }
+
         TickRefreshDriver(aVsyncTimestamp);
       }
 
@@ -559,6 +566,19 @@ private:
         mLastChildTick = TimeStamp::Now();
       }
     }
+
+    void NormalPriorityNotify()
+    {
+      if (mLastProcessedTickInChildProcess.IsNull() ||
+          mRecentVsync > mLastProcessedTickInChildProcess) {
+        // mBlockUntil is for high priority vsync notifications only.
+        mBlockUntil = TimeStamp();
+        TickRefreshDriver(mRecentVsync);
+      }
+
+      mProcessedVsync = true;
+    }
+
   private:
     ~RefreshDriverVsyncObserver() = default;
 
@@ -615,10 +635,9 @@ private:
         aVsyncTimestamp = mRecentVsync;
         mProcessedVsync = true;
       } else {
+
         mLastChildTick = TimeStamp::Now();
-        if (!mBlockUntil.IsNull() && mBlockUntil > aVsyncTimestamp) {
-          return;
-        }
+        mLastProcessedTickInChildProcess = aVsyncTimestamp;
       }
       MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
 
@@ -626,19 +645,12 @@ private:
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
       if (mVsyncRefreshDriverTimer) {
-        // Clear the old GC/CC duration.
-        mVsyncRefreshDriverTimer->SetLastGCCCDuration(TimeDuration());
         mVsyncRefreshDriverTimer->RunRefreshDrivers(aVsyncTimestamp);
       }
 
       if (!XRE_IsParentProcess()) {
         TimeDuration tickDuration = TimeStamp::Now() - mLastChildTick;
         mBlockUntil = aVsyncTimestamp + tickDuration;
-        if (mVsyncRefreshDriverTimer) {
-          // Since GC/CC slices may run during the tick, but after the actual
-          // layout processing, they are not considered as part of the tick time.
-          mBlockUntil -= mVsyncRefreshDriverTimer->LastGCCCDuration();
-        }
       }
     }
 
@@ -649,6 +661,7 @@ private:
     Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
     TimeStamp mLastChildTick;
+    TimeStamp mLastProcessedTickInChildProcess;
     TimeStamp mBlockUntil;
     TimeDuration mVsyncRate;
     bool mProcessedVsync;
@@ -1184,10 +1197,6 @@ nsRefreshDriver::~nsRefreshDriver()
     mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
   }
-  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
-    shell->InvalidatePresShellIfHidden();
-  }
-  mPresShellsToInvalidateIfHidden.Clear();
 }
 
 // Method for testing.  See nsIDOMWindowUtils.advanceTimeAndRefresh
@@ -1873,7 +1882,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
           nsCOMPtr<nsIPresShell> shellKungFuDeathGrip(shell);
           mStyleFlushObservers.RemoveElement(shell);
-          RestyleManagerHandle restyleManager =
+          RestyleManager* restyleManager =
             shell->GetPresContext()->RestyleManager();
           restyleManager->SetObservingRefreshDriver(false);
           shell->FlushPendingNotifications(ChangesToFlush(FlushType::Style, false));
@@ -1941,6 +1950,15 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     presShell->ScheduleApproximateFrameVisibilityUpdateNow();
   }
 
+#ifdef MOZ_XUL
+  // Update any popups that may need to be moved or hidden due to their
+  // anchor changing.
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
+    pm->UpdatePopupPositions(this);
+  }
+#endif
+
   nsCOMArray<nsIDocument> documents;
   CollectDocuments(mPresContext->Document(), &documents);
   for (int32_t i = 0; i < documents.Count(); ++i) {
@@ -2005,11 +2023,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
   }
 
-  for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
-    shell->InvalidatePresShellIfHidden();
-  }
-  mPresShellsToInvalidateIfHidden.Clear();
-
   bool notifyGC = false;
   if (mViewManagerFlushIsPending) {
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
@@ -2071,12 +2084,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
 
   if (notifyGC && nsContentUtils::XPConnect()) {
-    TimeStamp startGCCC = TimeStamp::Now();
     nsContentUtils::XPConnect()->NotifyDidPaint();
     nsJSContext::NotifyDidPaint();
-    if (mActiveTimer) {
-      mActiveTimer->SetLastGCCCDuration(TimeStamp::Now() - startGCCC);
-    }
   }
 }
 

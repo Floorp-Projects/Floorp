@@ -28,7 +28,9 @@ using namespace mozilla;
 namespace {
 class ShortTermURISpecCache : public Runnable {
 public:
-  ShortTermURISpecCache() : mPending(false) {}
+  ShortTermURISpecCache()
+   : Runnable("ShortTermURISpecCache")
+   , mPending(false) {}
 
   nsString const& GetSpec(nsIURI* aURI) {
     if (mURI != aURI) {

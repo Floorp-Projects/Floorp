@@ -50,14 +50,16 @@
 #include "PluginUtilsOSX.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "mozilla/ipc/CrashReporterClient.h"
+#endif
+
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
 using namespace mozilla::plugins;
 using namespace mozilla::widget;
-using mozilla::dom::CrashReporterChild;
-using mozilla::dom::PCrashReporterChild;
 
 #if defined(XP_WIN)
 const wchar_t * kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
@@ -720,29 +722,13 @@ PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEnd
     return IPC_OK();
 }
 
-PCrashReporterChild*
-PluginModuleChild::AllocPCrashReporterChild(mozilla::dom::NativeThreadId* id,
-                                            uint32_t* processType)
-{
-    return new CrashReporterChild();
-}
-
-bool
-PluginModuleChild::DeallocPCrashReporterChild(PCrashReporterChild* actor)
-{
-    delete actor;
-    return true;
-}
 
 mozilla::ipc::IPCResult
-PluginModuleChild::AnswerPCrashReporterConstructor(
-        PCrashReporterChild* actor,
-        mozilla::dom::NativeThreadId* id,
-        uint32_t* processType)
+PluginModuleChild::AnswerInitCrashReporter(Shmem&& aShmem, mozilla::dom::NativeThreadId* aOutId)
 {
 #ifdef MOZ_CRASHREPORTER
-    *id = CrashReporter::CurrentThreadId();
-    *processType = XRE_GetProcessType();
+    CrashReporterClient::InitSingletonWithShmem(aShmem);
+    *aOutId = CrashReporter::CurrentThreadId();
 #endif
     return IPC_OK();
 }
@@ -775,6 +761,9 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
+#ifdef MOZ_CRASHREPORTER
+    CrashReporterClient::DestroySingleton();
+#endif
     XRE_ShutdownChildProcess();
 }
 
@@ -1115,10 +1104,9 @@ _getvalue(NPP aNPP,
         case NPNVxDisplay: {
             if (aNPP) {
                 return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
-            } 
-            else {
-                *(void **)aValue = xt_client_get_display();
-            }          
+            }
+            *(void
+              **)aValue = xt_client_get_display();
             return NPERR_NO_ERROR;
         }
         case NPNVxtAppContext:

@@ -69,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
     is(t.pingPongDictionary(myDict).innerDictionary.innerObject.answer, "rabbithole", "ping pong works with layered dicts");
     is(t.pingPongDictionaryOrLong({anyMember: 42}), 42, "ping pong (dict or long) works with dict");
     is(t.pingPongDictionaryOrLong(42), 42, "ping pong (dict or long) works with long");
-    ok(/canary/.test(t.pingPongMap({ someVal: 42, someOtherVal: "canary" })), "ping pong works with mozmap");
+    ok(/canary/.test(t.pingPongMap({ someVal: 42, someOtherVal: "canary" })), "ping pong works with record");
     is(t.objectSequenceLength([{}, {}, {}]), 3, "ping pong works with object sequence");
     is(t.anySequenceLength([42, 'string', {}, undefined]), 4, "ping pong works with any sequence");
 
@@ -99,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
       checkThrows(() => t.pingPongDictionary({ objectOrStringMember: xoObj }), "dictionary pingpong objectorstring");
       checkThrows(() => t.pingPongDictionaryOrLong({ objectMember: xoObj }), "unionable dictionary");
       checkThrows(() => t.pingPongDictionaryOrLong({ anyMember: xoObj }), "unionable dictionary");
-      checkThrows(() => t.pingPongMap({ someMember: 42, someOtherMember: {}, crossOriginMember: xoObj }), "mozmap");
+      checkThrows(() => t.pingPongMap({ someMember: 42, someOtherMember: {}, crossOriginMember: xoObj }), "record");
       checkThrows(() => t.objectSequenceLength([{}, {}, xoObj, {}]), "object sequence");
       checkThrows(() => t.anySequenceLength([42, 'someString', xoObj, {}]), "any sequence");
     });

@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 
 namespace mozilla {
@@ -17,10 +18,12 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderPaintedLayer::PaintThebes()
+WebRenderPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
   PROFILER_LABEL("WebRenderPaintedLayer", "PaintThebes",
     js::ProfileEntry::Category::GRAPHICS);
+
+  mContentClient->BeginPaint();
 
   uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
 
@@ -65,6 +68,9 @@ WebRenderPaintedLayer::PaintThebes()
     mContentClient->ReturnDrawTargetToBuffer(target);
     didUpdate = true;
   }
+
+  mContentClient->EndPaint(aReadbackUpdates);
+
   if (didUpdate) {
     Mutated();
 
@@ -101,10 +107,7 @@ WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
     aReadback->GetPaintedLayerUpdates(this, &readbackUpdates);
   }
 
-  IntPoint origin(mVisibleRegion.GetBounds().x, mVisibleRegion.GetBounds().y);
-  mContentClient->BeginPaint();
-  PaintThebes();
-  mContentClient->EndPaint(&readbackUpdates);
+  PaintThebes(&readbackUpdates);
 }
 
 void

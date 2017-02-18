@@ -5,19 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoDecoder.h"
+#include "GMPDecoderModule.h"
 #include "GMPVideoHost.h"
+#include "MediaData.h"
+#include "VPXDecoder.h"
 #include "mozilla/EndianUtils.h"
 #include "prsystem.h"
-#include "MediaData.h"
-#include "GMPDecoderModule.h"
-#include "VPXDecoder.h"
 
 namespace mozilla {
 
 #if defined(DEBUG)
 static bool IsOnGMPThread()
 {
-  nsCOMPtr<mozIGeckoMediaPluginService> mps = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mps);
 
   nsCOMPtr<nsIThread> gmpThread;
@@ -58,7 +59,8 @@ GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     b.mPlanes[i].mSkip = 0;
   }
 
-  gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(), decodedFrame->Height());
+  gfx::IntRect pictureRegion(
+    0, 0, decodedFrame->Width(), decodedFrame->Height());
   RefPtr<VideoData> v =
     VideoData::CreateAndCopyData(mConfig,
                                  mImageContainer,
@@ -172,7 +174,8 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
     return nullptr;
   }
 
-  GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
+  GMPUniquePtr<GMPVideoEncodedFrame> frame(
+    static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
     return nullptr;
@@ -328,7 +331,8 @@ GMPVideoDecoder::Decode(MediaRawData* aSample)
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                      RESULT_DETAIL("mGMP->Decode:%x", rv)),
+                                      RESULT_DETAIL("mGMP->Decode:%" PRIx32,
+                                                    static_cast<uint32_t>(rv))),
                           __func__);
   }
   return p;

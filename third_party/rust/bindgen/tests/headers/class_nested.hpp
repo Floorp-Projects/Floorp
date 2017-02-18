@@ -4,9 +4,21 @@ public:
     class B {
         int member_b;
     };
+
+    class C;
+
+    template<typename T>
+    class D {
+      T foo;
+    };
+};
+
+class A::C {
+  int baz;
 };
 
 A::B var;
+A::D<int> baz;
 
 class D {
     A::B member;

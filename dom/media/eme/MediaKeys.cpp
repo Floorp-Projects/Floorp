@@ -221,7 +221,8 @@ void
 MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
                          const nsCString& aReason)
 {
-  EME_LOG("MediaKeys[%p]::RejectPromise(%d, 0x%x)", this, aId, aExceptionCode);
+  EME_LOG("MediaKeys[%p]::RejectPromise(%d, 0x%" PRIx32 ")",
+          this, aId, static_cast<uint32_t>(aExceptionCode));
 
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
@@ -482,7 +483,7 @@ MediaKeys::CreateSession(JSContext* aCx,
                          ErrorResult& aRv)
 {
   if (!IsSessionTypeSupported(aSessionType, mConfig)) {
-    EME_LOG("MediaKeys[%p,'%s'] CreateSession() failed, unsupported session type", this);
+    EME_LOG("MediaKeys[%p] CreateSession() failed, unsupported session type", this);
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }

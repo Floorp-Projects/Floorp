@@ -9,7 +9,7 @@
 
 /* exported extensionIdToCollectionId */
 
-this.EXPORTED_SYMBOLS = ["ExtensionStorageSync"];
+this.EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -34,20 +34,19 @@ const FXA_OAUTH_OPTIONS = {
 const KINTO_REQUEST_TIMEOUT = 30000;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-const {
-  runSafeSyncWithoutClone,
-} = Cu.import("resource://gre/modules/ExtensionUtils.jsm", {});
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BulkKeyBundle",
+                                  "resource://services-sync/keys.js");
 XPCOMUtils.defineLazyModuleGetter(this, "CollectionKeyManager",
                                   "resource://services-sync/record.js");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
                                   "resource://services-crypto/utils.js");
-XPCOMUtils.defineLazyModuleGetter(this, "EncryptionRemoteTransformer",
-                                  "resource://services-sync/engines/extension-storage.js");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
@@ -64,15 +63,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "Observers",
                                   "resource://services-common/observers.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Svc",
+                                  "resource://services-sync/util.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "KeyRingEncryptionRemoteTransformer",
-                                  "resource://services-sync/engines/extension-storage.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+                                  "resource://services-sync/util.js");
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
                                       STORAGE_SYNC_ENABLED_PREF, true);
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
                                       STORAGE_SYNC_SERVER_URL_PREF,
                                       KINTO_DEFAULT_SERVER_URL);
+const {
+  runSafeSyncWithoutClone,
+} = ExtensionUtils;
 
 /* globals prefPermitsStorageSync, prefStorageSyncServerURL */
 
@@ -81,6 +85,251 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
 const extensionContexts = new Map();
 // Borrow logger from Sync.
 const log = Log.repository.getLogger("Sync.Engine.Extension-Storage");
+
+// A global that is fxAccounts, or null if (as on android) fxAccounts
+// isn't available.
+let _fxaService = null;
+if (AppConstants.platform != "android") {
+  _fxaService = fxAccounts;
+}
+
+/**
+ * Check for FXA and throw an exception if we don't have access.
+ *
+ * @param {Object} fxAccounts  The reference we were hoping to use to
+ *     access FxA
+ * @param {string} action  The thing we were doing when we decided to
+ *     see if we had access to FxA
+ */
+function throwIfNoFxA(fxAccounts, action) {
+  if (!fxAccounts) {
+    throw new Error(`${action} is impossible because FXAccounts is not available; are you on Android?`);
+  }
+}
+
+// Global ExtensionStorageSync instance that extensions and Fx Sync use.
+// On Android, because there's no FXAccounts instance, any syncing
+// operations will fail.
+this.extensionStorageSync = null;
+
+/**
+ * Utility function to enforce an order of fields when computing an HMAC.
+ *
+ * @param {KeyBundle} keyBundle  The key bundle to use to compute the HMAC
+ * @param {string}    id         The record ID to use when computing the HMAC
+ * @param {string}    IV         The IV to use when computing the HMAC
+ * @param {string}    ciphertext The ciphertext over which to compute the HMAC
+ * @returns {string} The computed HMAC
+ */
+function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
+  const hasher = keyBundle.sha256HMACHasher;
+  return Utils.bytesAsHex(Utils.digestUTF8(id + IV + ciphertext, hasher));
+}
+
+/**
+ * Get the current user's hashed kB.
+ *
+ * @param {FXAccounts} fxaService  The service to use to get the
+ *     current user.
+ * @returns {string} sha256 of the user's kB as a hex string
+ */
+const getKBHash = Task.async(function* (fxaService) {
+  const signedInUser = yield fxaService.getSignedInUser();
+  if (!signedInUser) {
+    throw new Error("User isn't signed in!");
+  }
+
+  if (!signedInUser.kB) {
+    throw new Error("User doesn't have kB??");
+  }
+
+  let kBbytes = CommonUtils.hexToBytes(signedInUser.kB);
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+      .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA256);
+  return CommonUtils.bytesAsHex(CryptoUtils.digestBytes(signedInUser.uid + kBbytes, hasher));
+});
+
+/**
+ * A "remote transformer" that the Kinto library will use to
+ * encrypt/decrypt records when syncing.
+ *
+ * This is an "abstract base class". Subclass this and override
+ * getKeys() to use it.
+ */
+class EncryptionRemoteTransformer {
+  encode(record) {
+    const self = this;
+    return Task.spawn(function* () {
+      const keyBundle = yield self.getKeys();
+      if (record.ciphertext) {
+        throw new Error("Attempt to reencrypt??");
+      }
+      let id = yield self.getEncodedRecordId(record);
+      if (!id) {
+        throw new Error("Record ID is missing or invalid");
+      }
+
+      let IV = Svc.Crypto.generateRandomIV();
+      let ciphertext = Svc.Crypto.encrypt(JSON.stringify(record),
+                                          keyBundle.encryptionKeyB64, IV);
+      let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
+      const encryptedResult = {ciphertext, IV, hmac, id};
+
+      // Copy over the _status field, so that we handle concurrency
+      // headers (If-Match, If-None-Match) correctly.
+      // DON'T copy over "deleted" status, because then we'd leak
+      // plaintext deletes.
+      encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
+      if (record.hasOwnProperty("last_modified")) {
+        encryptedResult.last_modified = record.last_modified;
+      }
+
+      return encryptedResult;
+    });
+  }
+
+  decode(record) {
+    const self = this;
+    return Task.spawn(function* () {
+      if (!record.ciphertext) {
+        // This can happen for tombstones if a record is deleted.
+        if (record.deleted) {
+          return record;
+        }
+        throw new Error("No ciphertext: nothing to decrypt?");
+      }
+      const keyBundle = yield self.getKeys();
+      // Authenticate the encrypted blob with the expected HMAC
+      let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
+
+      if (computedHMAC != record.hmac) {
+        Utils.throwHMACMismatch(record.hmac, computedHMAC);
+      }
+
+      // Handle invalid data here. Elsewhere we assume that cleartext is an object.
+      let cleartext = Svc.Crypto.decrypt(record.ciphertext,
+                                         keyBundle.encryptionKeyB64, record.IV);
+      let jsonResult = JSON.parse(cleartext);
+      if (!jsonResult || typeof jsonResult !== "object") {
+        throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
+      }
+
+      if (record.hasOwnProperty("last_modified")) {
+        jsonResult.last_modified = record.last_modified;
+      }
+
+      // _status: deleted records were deleted on a client, but
+      // uploaded as an encrypted blob so we don't leak deletions.
+      // If we get such a record, flag it as deleted.
+      if (jsonResult._status == "deleted") {
+        jsonResult.deleted = true;
+      }
+
+      return jsonResult;
+    });
+  }
+
+  /**
+   * Retrieve keys to use during encryption.
+   *
+   * Returns a Promise<KeyBundle>.
+   */
+  getKeys() {
+    throw new Error("override getKeys in a subclass");
+  }
+
+  /**
+   * Compute the record ID to use for the encoded version of the
+   * record.
+   *
+   * The default version just re-uses the record's ID.
+   *
+   * @param {Object} record The record being encoded.
+   * @returns {Promise<string>} The ID to use.
+   */
+  getEncodedRecordId(record) {
+    return Promise.resolve(record.id);
+  }
+}
+global.EncryptionRemoteTransformer = EncryptionRemoteTransformer;
+
+/**
+ * An EncryptionRemoteTransformer that provides a keybundle derived
+ * from the user's kB, suitable for encrypting a keyring.
+ */
+class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
+  constructor(fxaService) {
+    super();
+    this._fxaService = fxaService;
+  }
+
+  getKeys() {
+    throwIfNoFxA(this._fxaService, "encrypting chrome.storage.sync records");
+    const self = this;
+    return Task.spawn(function* () {
+      const user = yield self._fxaService.getSignedInUser();
+      // FIXME: we should permit this if the user is self-hosting
+      // their storage
+      if (!user) {
+        throw new Error("user isn't signed in to FxA; can't sync");
+      }
+
+      if (!user.kB) {
+        throw new Error("user doesn't have kB");
+      }
+
+      let kB = Utils.hexToBytes(user.kB);
+
+      let keyMaterial = CryptoUtils.hkdf(kB, undefined,
+                                       "identity.mozilla.com/picl/v1/chrome.storage.sync", 2 * 32);
+      let bundle = new BulkKeyBundle();
+      // [encryptionKey, hmacKey]
+      bundle.keyPair = [keyMaterial.slice(0, 32), keyMaterial.slice(32, 64)];
+      return bundle;
+    });
+  }
+  // Pass through the kbHash field from the unencrypted record. If
+  // encryption fails, we can use this to try to detect whether we are
+  // being compromised or if the record here was encoded with a
+  // different kB.
+  encode(record) {
+    const encodePromise = super.encode(record);
+    return Task.spawn(function* () {
+      const encoded = yield encodePromise;
+      encoded.kbHash = record.kbHash;
+      return encoded;
+    });
+  }
+
+  async decode(record) {
+    try {
+      return await super.decode(record);
+    } catch (e) {
+      if (Utils.isHMACMismatch(e)) {
+        const currentKBHash = await getKBHash(this._fxaService);
+        if (record.kbHash != currentKBHash) {
+          // Some other client encoded this with a kB that we don't
+          // have access to.
+          KeyRingEncryptionRemoteTransformer.throwOutdatedKB(currentKBHash, record.kbHash);
+        }
+      }
+      throw e;
+    }
+  }
+
+  // Generator and discriminator for KB-is-outdated exceptions.
+  static throwOutdatedKB(shouldBe, is) {
+    throw new Error(`kB hash on record is outdated: should be ${shouldBe}, is ${is}`);
+  }
+
+  static isOutdatedKB(exc) {
+    const kbMessage = "kB hash on record is outdated: ";
+    return exc && exc.message && exc.message.indexOf &&
+      (exc.message.indexOf(kbMessage) == 0);
+  }
+}
+global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
 
 /**
  * A Promise that centralizes initialization of ExtensionStorageSync.
@@ -181,236 +430,247 @@ const cryptoCollectionIdSchema = {
   },
 };
 
-let cryptoCollection, CollectionKeyEncryptionRemoteTransformer;
-if (AppConstants.platform != "android") {
+/**
+ * Wrapper around the crypto collection providing some handy utilities.
+ */
+class CryptoCollection {
+  constructor(fxaService) {
+    this._fxaService = fxaService;
+  }
+
+  async getCollection() {
+    throwIfNoFxA(this._fxaService, "tried to access cryptoCollection");
+    const {kinto} = await storageSyncInit;
+    return kinto.collection(STORAGE_SYNC_CRYPTO_COLLECTION_NAME, {
+      idSchema: cryptoCollectionIdSchema,
+      remoteTransformers: [new KeyRingEncryptionRemoteTransformer(this._fxaService)],
+    });
+  }
+
   /**
-   * Wrapper around the crypto collection providing some handy utilities.
+   * Generate a new salt for use in hashing extension and record
+   * IDs.
+   *
+   * @returns {string} A base64-encoded string of the salt
    */
-  cryptoCollection = this.cryptoCollection = {
-    getCollection: Task.async(function* () {
-      const {kinto} = yield storageSyncInit;
-      return kinto.collection(STORAGE_SYNC_CRYPTO_COLLECTION_NAME, {
-        idSchema: cryptoCollectionIdSchema,
-        remoteTransformers: [new KeyRingEncryptionRemoteTransformer()],
-      });
-    }),
+  getNewSalt() {
+    return btoa(CryptoUtils.generateRandomBytes(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
+  }
 
-    /**
-     * Generate a new salt for use in hashing extension and record
-     * IDs.
-     *
-     * @returns {string} A base64-encoded string of the salt
-     */
-    getNewSalt() {
-      return btoa(CryptoUtils.generateRandomBytes(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
-    },
+  /**
+   * Retrieve the keyring record from the crypto collection.
+   *
+   * You can use this if you want to check metadata on the keyring
+   * record rather than use the keyring itself.
+   *
+   * The keyring record, if present, should have the structure:
+   *
+   * - kbHash: a hash of the user's kB. When this changes, we will
+   *   try to sync the collection.
+   * - uuid: a record identifier. This will only change when we wipe
+   *   the collection (due to kB getting reset).
+   * - keys: a "WBO" form of a CollectionKeyManager.
+   * - salts: a normal JS Object with keys being collection IDs and
+   *   values being base64-encoded salts to use when hashing IDs
+   *   for that collection.
+   * @returns {Promise<Object>}
+   */
+  async getKeyRingRecord() {
+    const collection = await this.getCollection();
+    const cryptoKeyRecord = await collection.getAny(STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID);
 
-    /**
-     * Retrieve the keyring record from the crypto collection.
-     *
-     * You can use this if you want to check metadata on the keyring
-     * record rather than use the keyring itself.
-     *
-     * The keyring record, if present, should have the structure:
-     *
-     * - kbHash: a hash of the user's kB. When this changes, we will
-     *   try to sync the collection.
-     * - uuid: a record identifier. This will only change when we wipe
-     *   the collection (due to kB getting reset).
-     * - keys: a "WBO" form of a CollectionKeyManager.
-     * - salts: a normal JS Object with keys being collection IDs and
-     *   values being base64-encoded salts to use when hashing IDs
-     *   for that collection.
-     * @returns {Promise<Object>}
-     */
-    getKeyRingRecord: Task.async(function* () {
-      const collection = yield this.getCollection();
-      const cryptoKeyRecord = yield collection.getAny(STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID);
+    let data = cryptoKeyRecord.data;
+    if (!data) {
+      // This is a new keyring. Invent an ID for this record. If this
+      // changes, it means a client replaced the keyring, so we need to
+      // reupload everything.
+      const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      const uuid = uuidgen.generateUUID().toString();
+      data = {uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID};
+    }
+    return data;
+  }
 
-      let data = cryptoKeyRecord.data;
-      if (!data) {
-        // This is a new keyring. Invent an ID for this record. If this
-        // changes, it means a client replaced the keyring, so we need to
-        // reupload everything.
-        const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-        const uuid = uuidgen.generateUUID().toString();
-        data = {uuid, id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID};
-      }
-      return data;
-    }),
+  async getSalts() {
+    const cryptoKeyRecord = await this.getKeyRingRecord();
+    return cryptoKeyRecord && cryptoKeyRecord.salts;
+  }
 
-    getSalts: Task.async(function* () {
-      const cryptoKeyRecord = yield this.getKeyRingRecord();
-      return cryptoKeyRecord && cryptoKeyRecord.salts;
-    }),
+  /**
+   * Used for testing with a known salt.
+   *
+   * @param {string} extensionId  The extension ID for which to set a
+   *     salt.
+   * @param {string} salt  The salt to use for this extension, as a
+   *     base64-encoded salt.
+   */
+  async _setSalt(extensionId, salt) {
+    const cryptoKeyRecord = await this.getKeyRingRecord();
+    cryptoKeyRecord.salts = cryptoKeyRecord.salts || {};
+    cryptoKeyRecord.salts[extensionId] = salt;
+    await this.upsert(cryptoKeyRecord);
+  }
 
-    /**
-     * Used for testing with a known salt.
-     */
-    _setSalt: Task.async(function* (extensionId, salt) {
-      const cryptoKeyRecord = yield this.getKeyRingRecord();
-      cryptoKeyRecord.salts = cryptoKeyRecord.salts || {};
-      cryptoKeyRecord.salts[extensionId] = salt;
-      this.upsert(cryptoKeyRecord);
-    }),
+  /**
+   * Hash an extension ID for a given user so that an attacker can't
+   * identify the extensions a user has installed.
+   *
+   * The extension ID is assumed to be a string (i.e. series of
+   * code points), and its UTF8 encoding is prefixed with the salt
+   * for that collection and hashed.
+   *
+   * The returned hash must conform to the syntax for Kinto
+   * identifiers, which (as of this writing) must match
+   * [a-zA-Z0-9][a-zA-Z0-9_-]*. We thus encode the hash using
+   * "base64-url" without padding (so that we don't get any equals
+   * signs (=)). For fear that a hash could start with a hyphen
+   * (-) or an underscore (_), prefix it with "ext-".
+   *
+   * @param {string} extensionId The extension ID to obfuscate.
+   * @returns {Promise<bytestring>} A collection ID suitable for use to sync to.
+   */
+  extensionIdToCollectionId(extensionId) {
+    return this.hashWithExtensionSalt(CommonUtils.encodeUTF8(extensionId), extensionId)
+      .then(hash => `ext-${hash}`);
+  }
 
-    /**
-     * Hash an extension ID for a given user so that an attacker can't
-     * identify the extensions a user has installed.
-     *
-     * The extension ID is assumed to be a string (i.e. series of
-     * code points), and its UTF8 encoding is prefixed with the salt
-     * for that collection and hashed.
-     *
-     * The returned hash must conform to the syntax for Kinto
-     * identifiers, which (as of this writing) must match
-     * [a-zA-Z0-9][a-zA-Z0-9_-]*. We thus encode the hash using
-     * "base64-url" without padding (so that we don't get any equals
-     * signs (=)). For fear that a hash could start with a hyphen
-     * (-) or an underscore (_), prefix it with "ext-".
-     *
-     * @param {string} extensionId The extension ID to obfuscate.
-     * @returns {Promise<bytestring>} A collection ID suitable for use to sync to.
-     */
-    extensionIdToCollectionId(extensionId) {
-      return this.hashWithExtensionSalt(CommonUtils.encodeUTF8(extensionId), extensionId)
-        .then(hash => `ext-${hash}`);
-    },
+  /**
+   * Hash some value with the salt for the given extension.
+   *
+   * The value should be a "bytestring", i.e. a string whose
+   * "characters" are values, each within [0, 255]. You can produce
+   * such a bytestring using e.g. CommonUtils.encodeUTF8.
+   *
+   * The returned value is a base64url-encoded string of the hash.
+   *
+   * @param {bytestring} value The value to be hashed.
+   * @param {string} extensionId The ID of the extension whose salt
+   *                             we should use.
+   * @returns {Promise<bytestring>} The hashed value.
+   */
+  async hashWithExtensionSalt(value, extensionId) {
+    const salts = await this.getSalts();
+    const saltBase64 = salts && salts[extensionId];
+    if (!saltBase64) {
+      // This should never happen; salts should be populated before
+      // we need them by ensureCanSync.
+      throw new Error(`no salt available for ${extensionId}; how did this happen?`);
+    }
 
-    /**
-     * Hash some value with the salt for the given extension.
-     *
-     * The value should be a "bytestring", i.e. a string whose
-     * "characters" are values, each within [0, 255]. You can produce
-     * such a bytestring using e.g. CommonUtils.encodeUTF8.
-     *
-     * The returned value is a base64url-encoded string of the hash.
-     *
-     * @param {bytestring} value The value to be hashed.
-     * @param {string} extensionId The ID of the extension whose salt
-     *                             we should use.
-     * @returns {Promise<bytestring>} The hashed value.
-     */
-    hashWithExtensionSalt: Task.async(function* (value, extensionId) {
-      const salts = yield this.getSalts();
-      const saltBase64 = salts && salts[extensionId];
-      if (!saltBase64) {
-        // This should never happen; salts should be populated before
-        // we need them by ensureCanSync.
-        throw new Error(`no salt available for ${extensionId}; how did this happen?`);
-      }
-
-      const hasher = Cc["@mozilla.org/security/hash;1"]
+    const hasher = Cc["@mozilla.org/security/hash;1"]
           .createInstance(Ci.nsICryptoHash);
-      hasher.init(hasher.SHA256);
+    hasher.init(hasher.SHA256);
 
-      const salt = atob(saltBase64);
-      const message = `${salt}\x00${value}`;
-      const hash = CryptoUtils.digestBytes(message, hasher);
-      return CommonUtils.encodeBase64URL(hash, false);
-    }),
-
-    /**
-     * Retrieve the actual keyring from the crypto collection.
-     *
-     * @returns {Promise<CollectionKeyManager>}
-     */
-    getKeyRing: Task.async(function* () {
-      const cryptoKeyRecord = yield this.getKeyRingRecord();
-      const collectionKeys = new CollectionKeyManager();
-      if (cryptoKeyRecord.keys) {
-        collectionKeys.setContents(cryptoKeyRecord.keys, cryptoKeyRecord.last_modified);
-      } else {
-        // We never actually use the default key, so it's OK if we
-        // generate one multiple times.
-        collectionKeys.generateDefaultKey();
-      }
-      // Pass through uuid field so that we can save it if we need to.
-      collectionKeys.uuid = cryptoKeyRecord.uuid;
-      return collectionKeys;
-    }),
-
-    updateKBHash: Task.async(function* (kbHash) {
-      const coll = yield this.getCollection();
-      yield coll.update({id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
-                         kbHash: kbHash},
-                        {patch: true});
-    }),
-
-    upsert: Task.async(function* (record) {
-      const collection = yield this.getCollection();
-      yield collection.upsert(record);
-    }),
-
-    sync: Task.async(function* () {
-      const collection = yield this.getCollection();
-      return yield ExtensionStorageSync._syncCollection(collection, {
-        strategy: "server_wins",
-      });
-    }),
-
-    /**
-     * Reset sync status for ALL collections by directly
-     * accessing the FirefoxAdapter.
-     */
-    resetSyncStatus: Task.async(function* () {
-      const coll = yield this.getCollection();
-      yield coll.db.resetSyncStatus();
-    }),
-
-    // Used only for testing.
-    _clear: Task.async(function* () {
-      const collection = yield this.getCollection();
-      yield collection.clear();
-    }),
-  };
+    const salt = atob(saltBase64);
+    const message = `${salt}\x00${value}`;
+    const hash = CryptoUtils.digestBytes(message, hasher);
+    return CommonUtils.encodeBase64URL(hash, false);
+  }
 
   /**
-   * An EncryptionRemoteTransformer for extension records.
+   * Retrieve the actual keyring from the crypto collection.
    *
-   * It uses the special "keys" record to find a key for a given
-   * extension, thus its name
-   * CollectionKeyEncryptionRemoteTransformer.
-   *
-   * Also, during encryption, it will replace the ID of the new record
-   * with a hashed ID, using the salt for this collection.
-   *
-   * @param {string} extensionId The extension ID for which to find a key.
+   * @returns {Promise<CollectionKeyManager>}
    */
-  CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTransformer {
-    constructor(extensionId) {
-      super();
-      this.extensionId = extensionId;
+  async getKeyRing() {
+    const cryptoKeyRecord = await this.getKeyRingRecord();
+    const collectionKeys = new CollectionKeyManager();
+    if (cryptoKeyRecord.keys) {
+      collectionKeys.setContents(cryptoKeyRecord.keys, cryptoKeyRecord.last_modified);
+    } else {
+      // We never actually use the default key, so it's OK if we
+      // generate one multiple times.
+      collectionKeys.generateDefaultKey();
     }
+    // Pass through uuid field so that we can save it if we need to.
+    collectionKeys.uuid = cryptoKeyRecord.uuid;
+    return collectionKeys;
+  }
 
-    getKeys() {
-      const self = this;
-      return Task.spawn(function* () {
-        // FIXME: cache the crypto record for the duration of a sync cycle?
-        const collectionKeys = yield cryptoCollection.getKeyRing();
-        if (!collectionKeys.hasKeysFor([self.extensionId])) {
-          // This should never happen. Keys should be created (and
-          // synced) at the beginning of the sync cycle.
-          throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
-        }
-        return collectionKeys.keyForCollection(self.extensionId);
-      });
-    }
+  async updateKBHash(kbHash) {
+    const coll = await this.getCollection();
+    await coll.update({id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
+                       kbHash: kbHash},
+                      {patch: true});
+  }
 
-    getEncodedRecordId(record) {
-      // It isn't really clear whether kinto.js record IDs are
-      // bytestrings or strings that happen to only contain ASCII
-      // characters, so encode them to be sure.
-      const id = CommonUtils.encodeUTF8(record.id);
-      // Like extensionIdToCollectionId, the rules about Kinto record
-      // IDs preclude equals signs or strings starting with a
-      // non-alphanumeric, so prefix all IDs with a constant "id-".
-      return cryptoCollection.hashWithExtensionSalt(id, this.extensionId)
-        .then(hash => `id-${hash}`);
-    }
-  };
-  global.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
+  async upsert(record) {
+    const collection = await this.getCollection();
+    await collection.upsert(record);
+  }
+
+  async sync(extensionStorageSync) {
+    const collection = await this.getCollection();
+    return await extensionStorageSync._syncCollection(collection, {
+      strategy: "server_wins",
+    });
+  }
+
+  /**
+   * Reset sync status for ALL collections by directly
+   * accessing the FirefoxAdapter.
+   */
+  async resetSyncStatus() {
+    const coll = await this.getCollection();
+    await coll.db.resetSyncStatus();
+  }
+
+  // Used only for testing.
+  async _clear() {
+    const collection = await this.getCollection();
+    await collection.clear();
+  }
 }
+this.CryptoCollection = CryptoCollection;
+
+/**
+ * An EncryptionRemoteTransformer for extension records.
+ *
+ * It uses the special "keys" record to find a key for a given
+ * extension, thus its name
+ * CollectionKeyEncryptionRemoteTransformer.
+ *
+ * Also, during encryption, it will replace the ID of the new record
+ * with a hashed ID, using the salt for this collection.
+ *
+ * @param {string} extensionId The extension ID for which to find a key.
+   */
+let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTransformer {
+  constructor(cryptoCollection, extensionId) {
+    super();
+    this.cryptoCollection = cryptoCollection;
+    this.extensionId = extensionId;
+  }
+
+  getKeys() {
+    const self = this;
+    return Task.spawn(function* () {
+      // FIXME: cache the crypto record for the duration of a sync cycle?
+      const collectionKeys = yield self.cryptoCollection.getKeyRing();
+      if (!collectionKeys.hasKeysFor([self.extensionId])) {
+        // This should never happen. Keys should be created (and
+        // synced) at the beginning of the sync cycle.
+        throw new Error(`tried to encrypt records for ${this.extensionId}, but key is not present`);
+      }
+      return collectionKeys.keyForCollection(self.extensionId);
+    });
+  }
+
+  getEncodedRecordId(record) {
+    // It isn't really clear whether kinto.js record IDs are
+    // bytestrings or strings that happen to only contain ASCII
+    // characters, so encode them to be sure.
+    const id = CommonUtils.encodeUTF8(record.id);
+    // Like extensionIdToCollectionId, the rules about Kinto record
+    // IDs preclude equals signs or strings starting with a
+    // non-alphanumeric, so prefix all IDs with a constant "id-".
+    return this.cryptoCollection.hashWithExtensionSalt(id, this.extensionId)
+      .then(hash => `id-${hash}`);
+  }
+};
+
+global.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
+
 /**
  * Clean up now that one context is no longer using this extension's collection.
  *
@@ -443,13 +703,10 @@ function cleanUpForContext(extension, context) {
  *                  close.
  * @returns {Promise<Collection>}
  */
-const openCollection = Task.async(function* (extension, context) {
+const openCollection = Task.async(function* (cryptoCollection, extension, context) {
   let collectionId = extension.id;
   const {kinto} = yield storageSyncInit;
-  const remoteTransformers = [];
-  if (CollectionKeyEncryptionRemoteTransformer) {
-    remoteTransformers.push(new CollectionKeyEncryptionRemoteTransformer(extension.id));
-  }
+  const remoteTransformers = [new CollectionKeyEncryptionRemoteTransformer(cryptoCollection, extension.id)];
   const coll = kinto.collection(collectionId, {
     idSchema: storageSyncIdSchema,
     remoteTransformers,
@@ -457,29 +714,18 @@ const openCollection = Task.async(function* (extension, context) {
   return coll;
 });
 
-/**
- * Verify that we were built on not-Android. Call this as a sanity
- * check before using cryptoCollection.
- */
-function ensureCryptoCollection() {
-  if (!cryptoCollection) {
-    throw new Error("Call to ensureCanSync, but no sync code; are you on Android?");
+class ExtensionStorageSync {
+  /**
+   * @param {FXAccounts} fxaService (Optional) If not
+   *    present, trying to sync will fail.
+   */
+  constructor(fxaService) {
+    this._fxaService = fxaService;
+    this.cryptoCollection = new CryptoCollection(fxaService);
+    this.listeners = new WeakMap();
   }
-}
 
-// FIXME: This is kind of ugly. Probably we should have
-// ExtensionStorageSync not be a singleton, but a constructed object,
-// and this should be a constructor argument.
-let _fxaService = null;
-if (AppConstants.platform != "android") {
-  _fxaService = fxAccounts;
-}
-
-this.ExtensionStorageSync = {
-  _fxaService,
-  listeners: new WeakMap(),
-
-  syncAll: Task.async(function* () {
+  async syncAll() {
     const extensions = extensionContexts.keys();
     const extIds = Array.from(extensions, extension => extension.id);
     log.debug(`Syncing extension settings for ${JSON.stringify(extIds)}`);
@@ -487,27 +733,28 @@ this.ExtensionStorageSync = {
       // No extensions to sync. Get out.
       return;
     }
-    yield this.ensureCanSync(extIds);
-    yield this.checkSyncKeyRing();
+    await this.ensureCanSync(extIds);
+    await this.checkSyncKeyRing();
     const promises = Array.from(extensionContexts.keys(), extension => {
-      return openCollection(extension).then(coll => {
+      return openCollection(this.cryptoCollection, extension).then(coll => {
         return this.sync(extension, coll);
       });
     });
-    yield Promise.all(promises);
-  }),
+    await Promise.all(promises);
+  }
 
-  sync: Task.async(function* (extension, collection) {
-    const signedInUser = yield this._fxaService.getSignedInUser();
+  async sync(extension, collection) {
+    throwIfNoFxA(this._fxaService, "syncing chrome.storage.sync");
+    const signedInUser = await this._fxaService.getSignedInUser();
     if (!signedInUser) {
       // FIXME: this should support syncing to self-hosted
       log.info("User was not signed into FxA; cannot sync");
       throw new Error("Not signed in to FxA");
     }
-    const collectionId = yield cryptoCollection.extensionIdToCollectionId(extension.id);
+    const collectionId = await this.cryptoCollection.extensionIdToCollectionId(extension.id);
     let syncResults;
     try {
-      syncResults = yield this._syncCollection(collection, {
+      syncResults = await this._syncCollection(collection, {
         strategy: "client_wins",
         collection: collectionId,
       });
@@ -549,7 +796,7 @@ this.ExtensionStorageSync = {
     if (Object.keys(changes).length > 0) {
       this.notifyListeners(extension, changes);
     }
-  }),
+  }
 
   /**
    * Utility function that handles the common stuff about syncing all
@@ -561,9 +808,9 @@ this.ExtensionStorageSync = {
    *                 Additional options to be passed to sync().
    * @returns {Promise<SyncResultObject>}
    */
-  _syncCollection: Task.async(function* (collection, options) {
+  async _syncCollection(collection, options) {
     // FIXME: this should support syncing to self-hosted
-    return yield this._requestWithToken(`Syncing ${collection.name}`, function* (token) {
+    return await this._requestWithToken(`Syncing ${collection.name}`, async function(token) {
       const allOptions = Object.assign({}, {
         remote: prefStorageSyncServerURL,
         headers: {
@@ -571,59 +818,62 @@ this.ExtensionStorageSync = {
         },
       }, options);
 
-      return yield collection.sync(allOptions);
+      return await collection.sync(allOptions);
     });
-  }),
+  }
 
   // Make a Kinto request with a current FxA token.
   // If the response indicates that the token might have expired,
   // retry the request.
-  _requestWithToken: Task.async(function* (description, f) {
-    const fxaToken = yield this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
+  async _requestWithToken(description, f) {
+    throwIfNoFxA(this._fxaService, "making remote requests from chrome.storage.sync");
+    const fxaToken = await this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
     try {
-      return yield f(fxaToken);
+      return await f(fxaToken);
     } catch (e) {
       log.error(`${description}: request failed`, e);
       if (e && e.data && e.data.code == 401) {
         // Our token might have expired. Refresh and retry.
         log.info("Token might have expired");
-        yield this._fxaService.removeCachedOAuthToken({token: fxaToken});
-        const newToken = yield this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
+        await this._fxaService.removeCachedOAuthToken({token: fxaToken});
+        const newToken = await this._fxaService.getOAuthToken(FXA_OAUTH_OPTIONS);
 
         // If this fails too, let it go.
-        return yield f(newToken);
+        return await f(newToken);
       }
       // Otherwise, we don't know how to handle this error, so just reraise.
       throw e;
     }
-  }),
+  }
 
   /**
    * Helper similar to _syncCollection, but for deleting the user's bucket.
+   *
+   * @returns {Promise<void>}
    */
-  _deleteBucket: Task.async(function* () {
-    return yield this._requestWithToken("Clearing server", function* (token) {
+  async _deleteBucket() {
+    return await this._requestWithToken("Clearing server", async function(token) {
       const headers = {Authorization: "Bearer " + token};
       const kintoHttp = new KintoHttpClient(prefStorageSyncServerURL, {
         headers: headers,
         timeout: KINTO_REQUEST_TIMEOUT,
       });
-      return yield kintoHttp.deleteBucket("default");
+      return await kintoHttp.deleteBucket("default");
     });
-  }),
+  }
 
-  ensureSaltsFor: Task.async(function* (keysRecord, extIds) {
+  async ensureSaltsFor(keysRecord, extIds) {
     const newSalts = Object.assign({}, keysRecord.salts);
     for (let collectionId of extIds) {
       if (newSalts[collectionId]) {
         continue;
       }
 
-      newSalts[collectionId] = cryptoCollection.getNewSalt();
+      newSalts[collectionId] = this.cryptoCollection.getNewSalt();
     }
 
     return newSalts;
-  }),
+  }
 
   /**
    * Check whether the keys record (provided) already has salts for
@@ -646,7 +896,7 @@ this.ExtensionStorageSync = {
     }
 
     return true;
-  },
+  }
 
   /**
    * Recursive promise that terminates when our local collectionKeys,
@@ -657,18 +907,16 @@ this.ExtensionStorageSync = {
    *                        The IDs of the extensions which need keys.
    * @returns {Promise<CollectionKeyManager>}
    */
-  ensureCanSync: Task.async(function* (extIds) {
-    ensureCryptoCollection();
-
-    const keysRecord = yield cryptoCollection.getKeyRingRecord();
-    const collectionKeys = yield cryptoCollection.getKeyRing();
+  async ensureCanSync(extIds) {
+    const keysRecord = await this.cryptoCollection.getKeyRingRecord();
+    const collectionKeys = await this.cryptoCollection.getKeyRing();
     if (collectionKeys.hasKeysFor(extIds) && this.hasSaltsFor(keysRecord, extIds)) {
       return collectionKeys;
     }
 
-    const kbHash = yield this.getKBHash();
-    const newKeys = yield collectionKeys.ensureKeysFor(extIds);
-    const newSalts = yield this.ensureSaltsFor(keysRecord, extIds);
+    const kbHash = await getKBHash(this._fxaService);
+    const newKeys = await collectionKeys.ensureKeysFor(extIds);
+    const newSalts = await this.ensureSaltsFor(keysRecord, extIds);
     const newRecord = {
       id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
       keys: newKeys.asWBO().cleartext,
@@ -677,48 +925,25 @@ this.ExtensionStorageSync = {
       // Add a field for the current kB hash.
       kbHash: kbHash,
     };
-    yield cryptoCollection.upsert(newRecord);
-    const result = yield this._syncKeyRing(newRecord);
+    await this.cryptoCollection.upsert(newRecord);
+    const result = await this._syncKeyRing(newRecord);
     if (result.resolved.length != 0) {
       // We had a conflict which was automatically resolved. We now
       // have a new keyring which might have keys for the
       // collections. Recurse.
-      return yield this.ensureCanSync(extIds);
+      return await this.ensureCanSync(extIds);
     }
 
     // No conflicts. We're good.
     return newKeys;
-  }),
-
-  /**
-   * Get the current user's hashed kB.
-   *
-   * @returns sha256 of the user's kB as a hex string
-   */
-  getKBHash: Task.async(function* () {
-    const signedInUser = yield this._fxaService.getSignedInUser();
-    if (!signedInUser) {
-      throw new Error("User isn't signed in!");
-    }
-
-    if (!signedInUser.kB) {
-      throw new Error("User doesn't have kB??");
-    }
-
-    let kBbytes = CommonUtils.hexToBytes(signedInUser.kB);
-    let hasher = Cc["@mozilla.org/security/hash;1"]
-                    .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.SHA256);
-    return CommonUtils.bytesAsHex(CryptoUtils.digestBytes(signedInUser.uid + kBbytes, hasher));
-  }),
+  }
 
   /**
    * Update the kB in the crypto record.
    */
-  updateKeyRingKB: Task.async(function* () {
-    ensureCryptoCollection();
-
-    const signedInUser = yield this._fxaService.getSignedInUser();
+  async updateKeyRingKB() {
+    throwIfNoFxA(this._fxaService, "use of chrome.storage.sync \"keyring\"");
+    const signedInUser = await this._fxaService.getSignedInUser();
     if (!signedInUser) {
       // Although this function is meant to be called on login,
       // it's not unreasonable to check any time, even if we aren't
@@ -730,9 +955,9 @@ this.ExtensionStorageSync = {
       return;
     }
 
-    const thisKBHash = yield this.getKBHash();
-    yield cryptoCollection.updateKBHash(thisKBHash);
-  }),
+    const thisKBHash = await getKBHash(this._fxaService);
+    await this.cryptoCollection.updateKBHash(thisKBHash);
+  }
 
   /**
    * Make sure the keyring is up to date and synced.
@@ -741,25 +966,22 @@ this.ExtensionStorageSync = {
    * to any collection unless the key for that collection is on the
    * server.
    */
-  checkSyncKeyRing: Task.async(function* () {
-    ensureCryptoCollection();
+  async checkSyncKeyRing() {
+    await this.updateKeyRingKB();
 
-    yield this.updateKeyRingKB();
-
-    const cryptoKeyRecord = yield cryptoCollection.getKeyRingRecord();
+    const cryptoKeyRecord = await this.cryptoCollection.getKeyRingRecord();
     if (cryptoKeyRecord && cryptoKeyRecord._status !== "synced") {
       // We haven't successfully synced the keyring since the last
       // change. This could be because kB changed and we touched the
       // keyring, or it could be because we failed to sync after
       // adding a key. Either way, take this opportunity to sync the
       // keyring.
-      yield this._syncKeyRing(cryptoKeyRecord);
+      await this._syncKeyRing(cryptoKeyRecord);
     }
-  }),
+  }
 
-  _syncKeyRing: Task.async(function* (cryptoKeyRecord) {
-    ensureCryptoCollection();
-
+  async _syncKeyRing(cryptoKeyRecord) {
+    throwIfNoFxA(this._fxaService, "syncing chrome.storage.sync \"keyring\"");
     try {
       // Try to sync using server_wins.
       //
@@ -787,11 +1009,11 @@ this.ExtensionStorageSync = {
       // server_wins), we check whether the server version has a new
       // UUID. If so, reset our sync status, so that we'll reupload
       // everything.
-      const result = yield cryptoCollection.sync();
+      const result = await this.cryptoCollection.sync(this);
       if (result.resolved.length > 0) {
         if (result.resolved[0].uuid != cryptoKeyRecord.uuid) {
           log.info(`Detected a new UUID (${result.resolved[0].uuid}, was ${cryptoKeyRecord.uuid}). Reseting sync status for everything.`);
-          yield cryptoCollection.resetSyncStatus();
+          await this.cryptoCollection.resetSyncStatus();
 
           // Server version is now correct. Return that result.
           return result;
@@ -803,20 +1025,20 @@ this.ExtensionStorageSync = {
       if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e)) {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
-        const isSessionValid = yield this._fxaService.sessionStatus();
+        const isSessionValid = await this._fxaService.sessionStatus();
         if (isSessionValid) {
-          yield this._deleteBucket();
-          yield cryptoCollection.resetSyncStatus();
+          await this._deleteBucket();
+          await this.cryptoCollection.resetSyncStatus();
 
           // Reupload our keyring, which is the only new keyring.
           // We don't want client_wins here because another device
           // could have uploaded another keyring in the meantime.
-          return yield cryptoCollection.sync();
+          return await this.cryptoCollection.sync(this);
         }
       }
       throw e;
     }
-  }),
+  }
 
   /**
    * Get the collection for an extension, and register the extension
@@ -848,14 +1070,14 @@ this.ExtensionStorageSync = {
       });
     }
 
-    return openCollection(extension, context);
-  },
+    return openCollection(this.cryptoCollection, extension, context);
+  }
 
-  set: Task.async(function* (extension, items, context) {
-    const coll = yield this.getCollection(extension, context);
+  async set(extension, items, context) {
+    const coll = await this.getCollection(extension, context);
     const keys = Object.keys(items);
     const ids = keys.map(keyToId);
-    const changes = yield coll.execute(txn => {
+    const changes = await coll.execute(txn => {
       let changes = {};
       for (let [i, key] of keys.entries()) {
         const id = ids[i];
@@ -877,14 +1099,14 @@ this.ExtensionStorageSync = {
       return changes;
     }, {preloadIds: ids});
     this.notifyListeners(extension, changes);
-  }),
+  }
 
-  remove: Task.async(function* (extension, keys, context) {
-    const coll = yield this.getCollection(extension, context);
+  async remove(extension, keys, context) {
+    const coll = await this.getCollection(extension, context);
     keys = [].concat(keys);
     const ids = keys.map(keyToId);
     let changes = {};
-    yield coll.execute(txn => {
+    await coll.execute(txn => {
       for (let [i, key] of keys.entries()) {
         const id = ids[i];
         const res = txn.deleteAny(id);
@@ -899,25 +1121,25 @@ this.ExtensionStorageSync = {
     if (Object.keys(changes).length > 0) {
       this.notifyListeners(extension, changes);
     }
-  }),
+  }
 
-  clear: Task.async(function* (extension, context) {
+  async clear(extension, context) {
     // We can't call Collection#clear here, because that just clears
     // the local database. We have to explicitly delete everything so
     // that the deletions can be synced as well.
-    const coll = yield this.getCollection(extension, context);
-    const res = yield coll.list();
+    const coll = await this.getCollection(extension, context);
+    const res = await coll.list();
     const records = res.data;
     const keys = records.map(record => record.key);
-    yield this.remove(extension, keys, context);
-  }),
+    await this.remove(extension, keys, context);
+  }
 
-  get: Task.async(function* (extension, spec, context) {
-    const coll = yield this.getCollection(extension, context);
+  async get(extension, spec, context) {
+    const coll = await this.getCollection(extension, context);
     let keys, records;
     if (spec === null) {
       records = {};
-      const res = yield coll.list();
+      const res = await coll.list();
       for (let record of res.data) {
         records[record.key] = record.data;
       }
@@ -935,14 +1157,14 @@ this.ExtensionStorageSync = {
     }
 
     for (let key of keys) {
-      const res = yield coll.getAny(keyToId(key));
+      const res = await coll.getAny(keyToId(key));
       if (res.data && res.data._status != "deleted") {
         records[res.data.key] = res.data.data;
       }
     }
 
     return records;
-  }),
+  }
 
   addOnChangedListener(extension, listener, context) {
     let listeners = this.listeners.get(extension) || new Set();
@@ -951,7 +1173,7 @@ this.ExtensionStorageSync = {
 
     // Force opening the collection so that we will sync for this extension.
     return this.getCollection(extension, context);
-  },
+  }
 
   removeOnChangedListener(extension, listener) {
     let listeners = this.listeners.get(extension);
@@ -959,7 +1181,7 @@ this.ExtensionStorageSync = {
     if (listeners.size == 0) {
       this.listeners.delete(extension);
     }
-  },
+  }
 
   notifyListeners(extension, changes) {
     Observers.notify("ext.storage.sync-changed");
@@ -969,5 +1191,7 @@ this.ExtensionStorageSync = {
         runSafeSyncWithoutClone(listener, changes);
       }
     }
-  },
-};
+  }
+}
+this.ExtensionStorageSync = ExtensionStorageSync;
+this.extensionStorageSync = new ExtensionStorageSync(_fxaService);

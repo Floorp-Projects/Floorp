@@ -1,0 +1,18 @@
+
+// Basic test that Endpoint types are declared for protocols, within
+// that protocol.
+
+struct Whatever {
+  Endpoint<EndpointDeclParent> par;
+  Endpoint<EndpointDeclChild> chi;
+};
+
+namespace mozilla {
+
+protocol EndpointDecl {
+  child:
+    async Message(Endpoint<EndpointDeclParent> aEndpointParent,
+                  Endpoint<EndpointDeclChild> aEndpointChild);
+};
+
+}

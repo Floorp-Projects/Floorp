@@ -1507,43 +1507,42 @@ getCoreDumpOutputStream(ErrorResult& rv, TimeStamp& start, nsAString& outFilePat
       return nullptr;
 
     return outputStream.forget();
-  } else {
-    // Request a file descriptor from the parent process over IPDL.
-
-    auto cc = ContentChild::GetSingleton();
-    if (!cc) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    UniqueHeapSnapshotTempFileHelperChild helper(
-      cc->SendPHeapSnapshotTempFileHelperConstructor());
-    if (NS_WARN_IF(!helper)) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    OpenHeapSnapshotTempFileResponse response;
-    if (!helper->SendOpenHeapSnapshotTempFile(&response)) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    if (response.type() == OpenHeapSnapshotTempFileResponse::Tnsresult) {
-      rv.Throw(response.get_nsresult());
-      return nullptr;
-    }
-
-    auto opened = response.get_OpenedFile();
-    outFilePath = opened.path();
-    nsCOMPtr<nsIOutputStream> outputStream =
-      FileDescriptorOutputStream::Create(opened.descriptor());
-    if (NS_WARN_IF(!outputStream)) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    return outputStream.forget();
   }
+  // Request a file descriptor from the parent process over IPDL.
+
+  auto cc = ContentChild::GetSingleton();
+  if (!cc) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  UniqueHeapSnapshotTempFileHelperChild helper(
+    cc->SendPHeapSnapshotTempFileHelperConstructor());
+  if (NS_WARN_IF(!helper)) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  OpenHeapSnapshotTempFileResponse response;
+  if (!helper->SendOpenHeapSnapshotTempFile(&response)) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  if (response.type() == OpenHeapSnapshotTempFileResponse::Tnsresult) {
+    rv.Throw(response.get_nsresult());
+    return nullptr;
+  }
+
+  auto opened = response.get_OpenedFile();
+  outFilePath = opened.path();
+  nsCOMPtr<nsIOutputStream> outputStream =
+    FileDescriptorOutputStream::Create(opened.descriptor());
+  if (NS_WARN_IF(!outputStream)) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  return outputStream.forget();
 }
 
 } // namespace devtools

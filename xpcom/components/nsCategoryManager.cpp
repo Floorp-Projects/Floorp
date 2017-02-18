@@ -11,7 +11,6 @@
 
 #include "plarena.h"
 #include "prio.h"
-#include "prprf.h"
 #include "prlock.h"
 #include "nsCOMPtr.h"
 #include "nsTHashtable.h"
@@ -482,7 +481,8 @@ public:
   CategoryNotificationRunnable(nsISupports* aSubject,
                                const char* aTopic,
                                const char* aData)
-    : mSubject(aSubject)
+    : Runnable("CategoryNotificationRunnable")
+    , mSubject(aSubject)
     , mTopic(aTopic)
     , mData(aData)
   {

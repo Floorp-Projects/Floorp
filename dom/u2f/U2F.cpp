@@ -12,6 +12,7 @@
 #include "mozilla/dom/U2F.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "nsContentUtils.h"
 #include "nsINSSU2FToken.h"
 #include "nsNetCID.h"
@@ -639,7 +640,7 @@ U2FRegisterRunnable::Run()
     ->Then(mAbstractMainThread, __func__,
       [&status] (const nsTArray<Authenticator>& aTokens) {
         MOZ_LOG(gU2FLog, LogLevel::Debug,
-                ("ALL: None of the RegisteredKeys were recognized. n=%d",
+                ("ALL: None of the RegisteredKeys were recognized. n=%" PRIuSIZE,
                  aTokens.Length()));
 
         status->WaitGroupDone();

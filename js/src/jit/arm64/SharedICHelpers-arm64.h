@@ -137,12 +137,6 @@ EmitBaselineCallVM(JitCode* target, MacroAssembler& masm)
     masm.call(target);
 }
 
-inline void
-EmitIonCallVM(JitCode* target, size_t stackSlots, MacroAssembler& masm)
-{
-    MOZ_CRASH("Not implemented yet.");
-}
-
 // Size of values pushed by EmitEnterStubFrame.
 static const uint32_t STUB_FRAME_SIZE = 4 * sizeof(void*);
 static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = sizeof(void*);

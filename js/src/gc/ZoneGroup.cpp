@@ -15,8 +15,9 @@ namespace js {
 ZoneGroup::ZoneGroup(JSRuntime* runtime)
   : runtime(runtime),
     ownerContext_(TlsContext.get()),
-    enterCount(this, 1),
-    zones_(),
+    enterCount(1),
+    zones_(this),
+    usedByHelperThread(false),
     nursery_(this, this),
     storeBuffer_(this, runtime, nursery()),
     blocksToFreeAfterMinorGC((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),

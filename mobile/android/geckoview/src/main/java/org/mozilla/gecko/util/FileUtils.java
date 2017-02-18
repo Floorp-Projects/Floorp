@@ -231,6 +231,10 @@ public class FileUtils {
             mPattern = pattern;
         }
 
+        public FilenameRegexFilter(final String pattern) {
+            mPattern = Pattern.compile(pattern);
+        }
+
         @Override
         public boolean accept(final File dir, final String filename) {
             if (mCachedMatcher == null) {

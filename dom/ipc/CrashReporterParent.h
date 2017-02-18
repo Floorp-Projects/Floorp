@@ -40,34 +40,6 @@ public:
   bool
   GenerateCrashReport(Toplevel* t, const AnnotationTable* processNotes);
 
-  /*
-   * Attempt to generate a parent/child pair of minidumps from the given
-   * toplevel actor. This calls CrashReporter::CreateMinidumpsAndPair to
-   * generate the minidumps. Crash reporter annotations set prior to this
-   * call will be saved via PairedDumpCallbackExtra into an .extra file
-   * under the proper crash id. AnnotateCrashReport annotations are not
-   * set in this call and the report is not finalized.
-   *
-   * @returns true if successful, false otherwise.
-   */
-  template<class Toplevel>
-  bool
-  GeneratePairedMinidump(Toplevel* t);
-
-  /*
-   * Attempts to take a minidump of the current process and pair that with
-   * a named minidump handed in by the caller.
-   *
-   * @param aTopLevel - top level actor this reporter is associated with.
-   * @param aMinidump - the minidump to associate with.
-   * @param aPairName - the name of the additional minidump.
-   * @returns true if successful, false otherwise.
-   */
-  template<class Toplevel>
-  bool
-  GenerateMinidumpAndPair(Toplevel* aTopLevel, nsIFile* aMinidump,
-                          const nsACString& aPairName);
-
   /**
    * Apply child process annotations to an existing paired mindump generated
    * with GeneratePairedMinidump.
@@ -115,15 +87,6 @@ public:
   bool
   GenerateCrashReportForMinidump(nsIFile* minidump,
                                  const AnnotationTable* processNotes);
-
-  /*
-   * Instantiate a new crash reporter actor from a given parent that manages
-   * the protocol.
-   *
-   * @returns true if successful, false otherwise.
-   */
-  template<class Toplevel>
-  static bool CreateCrashReporter(Toplevel* actor);
 #endif // MOZ_CRASHREPORTER
 
   /*
@@ -181,59 +144,6 @@ public:
 #ifdef MOZ_CRASHREPORTER
 template<class Toplevel>
 inline bool
-CrashReporterParent::GeneratePairedMinidump(Toplevel* t)
-{
-  mozilla::ipc::ScopedProcessHandle child;
-#ifdef XP_MACOSX
-  child = t->Process()->GetChildTask();
-#else
-  if (!base::OpenPrivilegedProcessHandle(t->OtherPid(), &child.rwget())) {
-    NS_WARNING("Failed to open child process handle.");
-    return false;
-  }
-#endif
-  nsCOMPtr<nsIFile> childDump;
-  if (CrashReporter::CreateMinidumpsAndPair(child,
-                                            mMainThread,
-                                            NS_LITERAL_CSTRING("browser"),
-                                            nullptr, // pair with a dump of this process and thread
-                                            getter_AddRefs(childDump)) &&
-      CrashReporter::GetIDFromMinidump(childDump, mChildDumpID)) {
-    return true;
-  }
-  return false;
-}
-
-template<class Toplevel>
-inline bool
-CrashReporterParent::GenerateMinidumpAndPair(Toplevel* aTopLevel,
-                                             nsIFile* aMinidumpToPair,
-                                             const nsACString& aPairName)
-{
-  mozilla::ipc::ScopedProcessHandle childHandle;
-#ifdef XP_MACOSX
-  childHandle = aTopLevel->Process()->GetChildTask();
-#else
-  if (!base::OpenPrivilegedProcessHandle(aTopLevel->OtherPid(),
-                                         &childHandle.rwget())) {
-    NS_WARNING("Failed to open child process handle.");
-    return false;
-  }
-#endif
-  nsCOMPtr<nsIFile> targetDump;
-  if (CrashReporter::CreateMinidumpsAndPair(childHandle,
-                                            mMainThread, // child thread id
-                                            aPairName,
-                                            aMinidumpToPair,
-                                            getter_AddRefs(targetDump)) &&
-      CrashReporter::GetIDFromMinidump(targetDump, mChildDumpID)) {
-    return true;
-  }
-  return false;
-}
-
-template<class Toplevel>
-inline bool
 CrashReporterParent::GenerateCrashReport(Toplevel* t,
                                          const AnnotationTable* processNotes)
 {
@@ -276,25 +186,6 @@ CrashReporterParent::GenerateCompleteMinidump(Toplevel* t)
     FinalizeChildData();
     return result;
   }
-  return false;
-}
-
-template<class Toplevel>
-/* static */ bool
-CrashReporterParent::CreateCrashReporter(Toplevel* actor)
-{
-#ifdef MOZ_CRASHREPORTER
-  NativeThreadId id;
-  uint32_t processType;
-  PCrashReporterParent* p =
-      actor->CallPCrashReporterConstructor(&id, &processType);
-  if (p) {
-    static_cast<CrashReporterParent*>(p)->SetChildData(id, processType);
-  } else {
-    NS_ERROR("Error creating crash reporter actor");
-  }
-  return !!p;
-#endif
   return false;
 }
 

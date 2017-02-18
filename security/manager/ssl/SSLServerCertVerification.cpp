@@ -244,7 +244,7 @@ public:
 
   SSLServerCertVerificationResult(nsNSSSocketInfo* infoObject,
                                   PRErrorCode errorCode,
-                                  Telemetry::ID telemetryID = Telemetry::HistogramCount,
+                                  Telemetry::HistogramID telemetryID = Telemetry::HistogramCount,
                                   uint32_t telemetryValue = -1,
                                   SSLErrorMessageType errorMessageType =
                                       PlainErrorMessage);
@@ -255,7 +255,7 @@ private:
 public:
   const PRErrorCode mErrorCode;
   const SSLErrorMessageType mErrorMessageType;
-  const Telemetry::ID mTelemetryID;
+  const Telemetry::HistogramID mTelemetryID;
   const uint32_t mTelemetryValue;
 };
 
@@ -1503,9 +1503,9 @@ SSLServerCertVerificationJob::Run()
   if (mInfoObject->isAlreadyShutDown()) {
     error = SEC_ERROR_USER_CANCELLED;
   } else {
-    Telemetry::ID successTelemetry
+    Telemetry::HistogramID successTelemetry
       = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX;
-    Telemetry::ID failureTelemetry
+    Telemetry::HistogramID failureTelemetry
       = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX;
 
     // Reset the error code here so we can detect if AuthCertificate fails to
@@ -1757,7 +1757,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(
         nsNSSSocketInfo* infoObject, PRErrorCode errorCode,
-        Telemetry::ID telemetryID, uint32_t telemetryValue,
+        Telemetry::HistogramID telemetryID, uint32_t telemetryValue,
         SSLErrorMessageType errorMessageType)
   : mInfoObject(infoObject)
   , mErrorCode(errorCode)

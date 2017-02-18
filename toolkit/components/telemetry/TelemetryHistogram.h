@@ -33,17 +33,17 @@ bool CanRecordExtended();
 void SetCanRecordExtended(bool b);
 
 void InitHistogramRecordingEnabled();
-void SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled);
+void SetHistogramRecordingEnabled(mozilla::Telemetry::HistogramID aID, bool aEnabled);
 
 nsresult SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled);
 
-void Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample);
-void Accumulate(mozilla::Telemetry::ID aID, const nsCString& aKey,
+void Accumulate(mozilla::Telemetry::HistogramID aHistogram, uint32_t aSample);
+void Accumulate(mozilla::Telemetry::HistogramID aID, const nsCString& aKey,
                                             uint32_t aSample);
 void Accumulate(const char* name, uint32_t sample);
 void Accumulate(const char* name, const nsCString& key, uint32_t sample);
 
-void AccumulateCategorical(mozilla::Telemetry::ID aId, const nsCString& aLabel);
+void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsCString& aLabel);
 
 void AccumulateChild(GeckoProcessType aProcessType,
                      const nsTArray<mozilla::Telemetry::Accumulation>& aAccumulations);
@@ -59,7 +59,7 @@ GetKeyedHistogramById(const nsACString &name, JSContext *cx,
                       JS::MutableHandle<JS::Value> ret);
 
 const char*
-GetHistogramName(mozilla::Telemetry::ID id);
+GetHistogramName(mozilla::Telemetry::HistogramID id);
 
 nsresult
 CreateHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,

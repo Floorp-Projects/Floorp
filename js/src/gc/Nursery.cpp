@@ -298,6 +298,7 @@ js::Nursery::allocate(size_t size)
 {
     MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(zoneGroup()->runtime));
     MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_, position() >= currentStartPosition_);
     MOZ_ASSERT(position() % gc::CellSize == 0);
     MOZ_ASSERT(size % gc::CellSize == 0);
@@ -608,7 +609,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
             if (entry.count >= 3000) {
                 ObjectGroup* group = entry.group;
                 if (group->canPreTenure()) {
-                    AutoCompartment ac(cx, group->compartment());
+                    AutoCompartment ac(cx, group);
                     group->setShouldPreTenure(cx);
                     pretenureCount++;
                 }

@@ -62,8 +62,7 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
 
   RefPtr<TexturedEffect> effect = CreateTexturedEffect(mTextureSource.get(),
                                                        mTextureSourceOnWhite.get(),
-                                                       aSamplingFilter, true,
-                                                       GetRenderState());
+                                                       aSamplingFilter, true);
   if (!effect) {
     return;
   }
@@ -322,11 +321,8 @@ AddWrappedRegion(const nsIntRegion& aInput, nsIntRegion& aOutput,
 bool
 ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack,
-                                        nsIntRegion* aUpdatedRegionBack)
+                                        const nsIntRegion& aOldValidRegionBack)
 {
-  aUpdatedRegionBack->SetEmpty();
-
   if (!mTextureHost) {
     mInitialised = false;
     return true; // FIXME should we return false? Returning true for now
@@ -385,13 +381,10 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
 bool
 ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack,
-                                        nsIntRegion* aUpdatedRegionBack)
+                                        const nsIntRegion& aOldValidRegionBack)
 {
   if (!mTextureHost) {
     mInitialised = false;
-
-    *aUpdatedRegionBack = aUpdated;
     return true;
   }
 
@@ -406,8 +399,6 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
 
   mBufferRect = aData.rect();
   mBufferRotation = aData.rotation();
-
-  *aUpdatedRegionBack = aUpdated;
 
   // Save the current valid region of our front buffer, because if
   // we're double buffering, it's going to be the valid region for the
@@ -443,22 +434,6 @@ ContentHostTexture::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 
-LayerRenderState
-ContentHostTexture::GetRenderState()
-{
-  if (!mTextureHost) {
-    return LayerRenderState();
-  }
-
-  LayerRenderState result = mTextureHost->GetRenderState();
-
-  if (mBufferRotation != nsIntPoint()) {
-    result.mFlags |= LayerRenderStateFlags::BUFFER_ROTATION;
-  }
-  result.SetOffset(GetOriginOffset());
-  return result;
-}
-
 already_AddRefed<TexturedEffect>
 ContentHostTexture::GenEffect(const gfx::SamplingFilter aSamplingFilter)
 {
@@ -476,8 +451,7 @@ ContentHostTexture::GenEffect(const gfx::SamplingFilter aSamplingFilter)
   }
   return CreateTexturedEffect(mTextureSource.get(),
                               mTextureSourceOnWhite.get(),
-                              aSamplingFilter, true,
-                              GetRenderState());
+                              aSamplingFilter, true);
 }
 
 already_AddRefed<gfx::DataSourceSurface>

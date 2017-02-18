@@ -11,7 +11,6 @@ include protocol PCompositorBridge;
 include protocol PContentBridge;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
-include protocol PCrashReporter;
 include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
@@ -383,7 +382,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PBlob;
     manages PBrowser;
     manages PContentPermissionRequest;
-    manages PCrashReporter;
     manages PCycleCollectWithLogs;
     manages PDeviceStorageRequest;
     manages PPSMContentDownloader;
@@ -746,7 +744,7 @@ parent:
     async PRemoteSpellcheckEngine();
     async PDeviceStorageRequest(DeviceStorageParams params);
 
-    sync PCrashReporter(NativeThreadId tid, uint32_t processType);
+    async InitCrashReporter(Shmem shmem, NativeThreadId tid);
 
     /**
      * Is this token compatible with the provided version?
@@ -1181,8 +1179,8 @@ parent:
     /**
      * Messages for communicating child Telemetry to the parent process
      */
-    async AccumulateChildHistogram(Accumulation[] accumulations);
-    async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
+    async AccumulateChildHistograms(Accumulation[] accumulations);
+    async AccumulateChildKeyedHistograms(KeyedAccumulation[] accumulations);
     async UpdateChildScalars(ScalarAction[] updates);
     async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
 

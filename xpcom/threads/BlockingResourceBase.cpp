@@ -461,7 +461,7 @@ ReentrantMonitor::Wait(PRIntervalTime aInterval)
   nsresult rv;
 #if defined(MOZILLA_INTERNAL_API)
   {
-    GeckoProfilerSleepRAII profiler_sleep;
+    GeckoProfilerThreadSleepRAII sleep;
 #endif //MOZILLA_INTERNAL_API
 
     // give up the monitor until we're back from Wait()

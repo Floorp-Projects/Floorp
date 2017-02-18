@@ -9,6 +9,15 @@ if CONFIG['OS_TARGET'] != 'Android':
 
     UNIFIED_SOURCES += [
         'crashreporter.cpp',
+        'ping.cpp',
+    ]
+
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/jsoncpp/include',
+    ]
+
+    USE_LIBS += [
+        'jsoncpp',
     ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -22,6 +31,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     OS_LIBS += [
         'comctl32',
+        'ole32',
         'shell32',
         'wininet',
         'shlwapi',

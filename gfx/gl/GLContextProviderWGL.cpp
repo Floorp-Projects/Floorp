@@ -9,6 +9,7 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "gfxWindowsSurface.h"
 
 #include "gfxCrashReporterUtils.h"
@@ -428,12 +429,6 @@ IsValidSizeForFormat(HDC hDC, int format,
         return false;
 
     return true;
-}
-
-static GLContextWGL*
-GetGlobalContextWGL()
-{
-    return static_cast<GLContextWGL*>(GLContextProviderWGL::GetGlobalContext());
 }
 
 already_AddRefed<GLContext>

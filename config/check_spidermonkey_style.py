@@ -63,7 +63,7 @@ included_inclnames_to_ignore = set([
     'devtools/Instruments.h',   # we ignore devtools/ in general
     'double-conversion.h',      # strange MFBT case
     'javascript-trace.h',       # generated in $OBJDIR if HAVE_DTRACE is defined
-    'jsautokw.h',               # generated in $OBJDIR
+    'frontend/ReservedWordsGenerated.h', # generated in $OBJDIR
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
     'js-config.h',              # generated in $OBJDIR
     'fdlibm.h',                 # fdlibm
@@ -101,7 +101,7 @@ included_inclnames_to_ignore = set([
 # ignore #includes of them when checking #include ordering.
 oddly_ordered_inclnames = set([
     'ctypes/typedefs.h',        # Included multiple times in the body of ctypes/CTypes.h
-    'jsautokw.h',               # Included in the body of frontend/TokenStream.h
+    'frontend/ReservedWordsGenerated.h', # Included in the body of frontend/TokenStream.h
     'jswin.h',                  # Must be #included before <psapi.h>
     'machine/endian.h',         # Must be included after <sys/types.h> on BSD
     'winbase.h',                # Must precede other system headers(?)

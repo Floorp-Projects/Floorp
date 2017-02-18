@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable mozilla/reject-some-requires */
-/* globals window, NetMonitorView, gStore, gNetwork, dumpn */
-
 "use strict";
 
-const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
-const { Task } = require("devtools/shared/task");
 const { ACTIVITY_TYPE } = require("./constants");
 const { EVENTS } = require("./events");
 const { configureStore } = require("./store");
@@ -26,8 +21,7 @@ const {
   getDisplayedRequestById,
 } = require("./selectors/index");
 
-// Initialize the global Redux store
-window.gStore = configureStore();
+const gStore = window.gStore = configureStore();
 
 /**
  * Object defining the network monitor controller components.
@@ -39,18 +33,16 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes startup.
    */
-  startupNetMonitor: Task.async(function* () {
+  startupNetMonitor() {
     if (this._startup) {
-      return this._startup.promise;
+      return this._startup;
     }
-    this._startup = promise.defer();
-    {
-      NetMonitorView.initialize();
-      yield this.connect();
-    }
-    this._startup.resolve();
-    return undefined;
-  }),
+    this._startup = new Promise(async (resolve) => {
+      await this.connect();
+      resolve();
+    });
+    return this._startup;
+  },
 
   /**
    * Destroys the view and disconnects the monitor client from the server.
@@ -58,21 +50,20 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes shutdown.
    */
-  shutdownNetMonitor: Task.async(function* () {
+  shutdownNetMonitor() {
     if (this._shutdown) {
-      return this._shutdown.promise;
+      return this._shutdown;
     }
-    this._shutdown = promise.defer();
-    {
+    this._shutdown = new Promise(async (resolve) => {
       gStore.dispatch(Actions.batchReset());
-      NetMonitorView.destroy();
       this.TargetEventsHandler.disconnect();
       this.NetworkEventsHandler.disconnect();
-      yield this.disconnect();
-    }
-    this._shutdown.resolve();
-    return undefined;
-  }),
+      await this.disconnect();
+      resolve();
+    });
+
+    return this._shutdown;
+  },
 
   /**
    * Initiates remote or chrome network monitoring based on the current target,
@@ -83,72 +74,72 @@ var NetMonitorController = {
    * @return object
    *         A promise that is resolved when the monitor finishes connecting.
    */
-  connect: Task.async(function* () {
+  connect() {
     if (this._connection) {
-      return this._connection.promise;
+      return this._connection;
     }
-    this._connection = promise.defer();
-
-    // Some actors like AddonActor or RootActor for chrome debugging
-    // aren't actual tabs.
-    if (this._target.isTabActor) {
-      this.tabClient = this._target.activeTab;
-    }
-
-    let connectTimeline = () => {
-      // Don't start up waiting for timeline markers if the server isn't
-      // recent enough to emit the markers we're interested in.
-      if (this._target.getTrait("documentLoadingMarkers")) {
-        this.timelineFront = new TimelineFront(this._target.client,
-          this._target.form);
-        return this.timelineFront.start({ withDocLoadingEvents: true });
+    this._connection = new Promise(async (resolve) => {
+      // Some actors like AddonActor or RootActor for chrome debugging
+      // aren't actual tabs.
+      if (this._target.isTabActor) {
+        this.tabClient = this._target.activeTab;
       }
-      return undefined;
-    };
 
-    this.webConsoleClient = this._target.activeConsole;
-    yield connectTimeline();
+      let connectTimeline = () => {
+        // Don't start up waiting for timeline markers if the server isn't
+        // recent enough to emit the markers we're interested in.
+        if (this._target.getTrait("documentLoadingMarkers")) {
+          this.timelineFront = new TimelineFront(this._target.client,
+            this._target.form);
+          return this.timelineFront.start({ withDocLoadingEvents: true });
+        }
+        return undefined;
+      };
 
-    this.TargetEventsHandler.connect();
-    this.NetworkEventsHandler.connect();
+      this.webConsoleClient = this._target.activeConsole;
+      await connectTimeline();
 
-    window.emit(EVENTS.CONNECTED);
+      this.TargetEventsHandler.connect();
+      this.NetworkEventsHandler.connect();
 
-    this._connection.resolve();
-    this._connected = true;
-    return undefined;
-  }),
+      window.emit(EVENTS.CONNECTED);
+
+      resolve();
+      this._connected = true;
+    });
+    return this._connection;
+  },
 
   /**
    * Disconnects the debugger client and removes event handlers as necessary.
    */
-  disconnect: Task.async(function* () {
+  disconnect() {
     if (this._disconnection) {
-      return this._disconnection.promise;
+      return this._disconnection;
     }
-    this._disconnection = promise.defer();
+    this._disconnection = new Promise(async (resolve) => {
+      // Wait for the connection to finish first.
+      if (!this.isConnected()) {
+        await this._connection;
+      }
 
-    // Wait for the connection to finish first.
-    if (!this.isConnected()) {
-      yield this._connection.promise;
-    }
+      // When debugging local or a remote instance, the connection is closed by
+      // the RemoteTarget. The webconsole actor is stopped on disconnect.
+      this.tabClient = null;
+      this.webConsoleClient = null;
 
-    // When debugging local or a remote instance, the connection is closed by
-    // the RemoteTarget. The webconsole actor is stopped on disconnect.
-    this.tabClient = null;
-    this.webConsoleClient = null;
+      // The timeline front wasn't initialized and started if the server wasn't
+      // recent enough to emit the markers we were interested in.
+      if (this._target.getTrait("documentLoadingMarkers")) {
+        await this.timelineFront.destroy();
+        this.timelineFront = null;
+      }
 
-    // The timeline front wasn't initialized and started if the server wasn't
-    // recent enough to emit the markers we were interested in.
-    if (this._target.getTrait("documentLoadingMarkers")) {
-      yield this.timelineFront.destroy();
-      this.timelineFront = null;
-    }
-
-    this._disconnection.resolve();
-    this._connected = false;
-    return undefined;
-  }),
+      resolve();
+      this._connected = false;
+    });
+    return this._disconnection;
+  },
 
   /**
    * Checks whether the netmonitor connection is active.
@@ -184,20 +175,20 @@ var NetMonitorController = {
 
     // Waits for a series of "navigation start" and "navigation stop" events.
     let waitForNavigation = () => {
-      let deferred = promise.defer();
-      this._target.once("will-navigate", () => {
-        this._target.once("navigate", () => {
-          deferred.resolve();
+      return new Promise((resolve) => {
+        this._target.once("will-navigate", () => {
+          this._target.once("navigate", () => {
+            resolve();
+          });
         });
       });
-      return deferred.promise;
     };
 
     // Reconfigures the tab, optionally triggering a reload.
     let reconfigureTab = options => {
-      let deferred = promise.defer();
-      this._target.activeTab.reconfigure(options, deferred.resolve);
-      return deferred.promise;
+      return new Promise((resolve) => {
+        this._target.activeTab.reconfigure(options, resolve);
+      });
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
@@ -244,7 +235,7 @@ var NetMonitorController = {
       }).then(standBy);
     }
     this._currentActivity = ACTIVITY_TYPE.NONE;
-    return promise.reject(new Error("Invalid activity type"));
+    return Promise.reject(new Error("Invalid activity type"));
   },
 
   /**
@@ -258,30 +249,30 @@ var NetMonitorController = {
   inspectRequest: function (requestId) {
     // Look for the request in the existing ones or wait for it to appear, if
     // the network monitor is still loading.
-    let deferred = promise.defer();
-    let request = null;
-    let inspector = function () {
-      request = getDisplayedRequestById(gStore.getState(), requestId);
-      if (!request) {
-        // Reset filters so that the request is visible.
-        gStore.dispatch(Actions.toggleRequestFilterType("all"));
+    return new Promise((resolve) => {
+      let request = null;
+      let inspector = function () {
         request = getDisplayedRequestById(gStore.getState(), requestId);
-      }
+        if (!request) {
+          // Reset filters so that the request is visible.
+          gStore.dispatch(Actions.toggleRequestFilterType("all"));
+          request = getDisplayedRequestById(gStore.getState(), requestId);
+        }
 
-      // If the request was found, select it. Otherwise this function will be
-      // called again once new requests arrive.
-      if (request) {
-        window.off(EVENTS.REQUEST_ADDED, inspector);
-        gStore.dispatch(Actions.selectRequest(request.id));
-        deferred.resolve();
-      }
-    };
+        // If the request was found, select it. Otherwise this function will be
+        // called again once new requests arrive.
+        if (request) {
+          window.off(EVENTS.REQUEST_ADDED, inspector);
+          gStore.dispatch(Actions.selectRequest(request.id));
+          resolve();
+        }
+      };
 
-    inspector();
-    if (!request) {
-      window.on(EVENTS.REQUEST_ADDED, inspector);
-    }
-    return deferred.promise;
+      inspector();
+      if (!request) {
+        window.on(EVENTS.REQUEST_ADDED, inspector);
+      }
+    });
   },
 
   /**
@@ -386,7 +377,6 @@ TargetEventsHandler.prototype = {
    * Listen for events emitted by the current tab target.
    */
   connect: function () {
-    dumpn("TargetEventsHandler is connecting...");
     this.target.on("close", this._onTabDetached);
     this.target.on("navigate", this._onTabNavigated);
     this.target.on("will-navigate", this._onTabNavigated);
@@ -399,7 +389,6 @@ TargetEventsHandler.prototype = {
     if (!this.target) {
       return;
     }
-    dumpn("TargetEventsHandler is disconnecting...");
     this.target.off("close", this._onTabDetached);
     this.target.off("navigate", this._onTabNavigated);
     this.target.off("will-navigate", this._onTabNavigated);
@@ -449,6 +438,7 @@ TargetEventsHandler.prototype = {
 function NetworkEventsHandler() {
   this.addRequest = this.addRequest.bind(this);
   this.updateRequest = this.updateRequest.bind(this);
+  this.getString = this.getString.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onDocLoadingMarker = this._onDocLoadingMarker.bind(this);
@@ -479,7 +469,6 @@ NetworkEventsHandler.prototype = {
    * Connect to the current target client.
    */
   connect: function () {
-    dumpn("NetworkEventsHandler is connecting...");
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
@@ -497,7 +486,6 @@ NetworkEventsHandler.prototype = {
     if (!this.client) {
       return;
     }
-    dumpn("NetworkEventsHandler is disconnecting...");
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
 
@@ -579,9 +567,9 @@ NetworkEventsHandler.prototype = {
     .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
   },
 
-  updateRequest: Task.async(function* (id, data) {
+  async updateRequest(id, data) {
     const action = Actions.updateRequest(id, data, true);
-    yield gStore.dispatch(action);
+    await gStore.dispatch(action);
     let {
       responseContent,
       responseCookies,
@@ -593,10 +581,9 @@ NetworkEventsHandler.prototype = {
     let request = getRequestById(gStore.getState(), action.id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
-      let headers = yield fetchHeaders(
-        requestHeaders, gNetwork.getString.bind(gNetwork));
+      let headers = await fetchHeaders(requestHeaders, this.getString);
       if (headers) {
-        yield gStore.dispatch(Actions.updateRequest(
+        await gStore.dispatch(Actions.updateRequest(
           action.id,
           { requestHeaders: headers },
           true,
@@ -605,10 +592,9 @@ NetworkEventsHandler.prototype = {
     }
 
     if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
-      let headers = yield fetchHeaders(
-        responseHeaders, gNetwork.getString.bind(gNetwork));
+      let headers = await fetchHeaders(responseHeaders, this.getString);
       if (headers) {
-        yield gStore.dispatch(Actions.updateRequest(
+        await gStore.dispatch(Actions.updateRequest(
           action.id,
           { responseHeaders: headers },
           true,
@@ -619,7 +605,7 @@ NetworkEventsHandler.prototype = {
     if (request && responseContent && responseContent.content) {
       let { mimeType } = request;
       let { text, encoding } = responseContent.content;
-      let response = yield gNetwork.getString(text);
+      let response = await this.getString(text);
       let payload = {};
 
       if (mimeType.includes("image/")) {
@@ -629,7 +615,7 @@ NetworkEventsHandler.prototype = {
       responseContent.content.text = response;
       payload.responseContent = responseContent;
 
-      yield gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+      await gStore.dispatch(Actions.updateRequest(action.id, payload, true));
 
       if (mimeType.includes("image/")) {
         window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
@@ -640,7 +626,7 @@ NetworkEventsHandler.prototype = {
     // them as a separate property, different from the classic headers.
     if (requestPostData && requestPostData.postData) {
       let { text } = requestPostData.postData;
-      let postData = yield gNetwork.getString(text);
+      let postData = await this.getString(text);
       const headers = CurlUtils.getHeadersFromMultipartText(postData);
       const headersSize = headers.reduce((acc, { name, value }) => {
         return acc + name.length + value.length + 2;
@@ -650,7 +636,7 @@ NetworkEventsHandler.prototype = {
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
 
-      yield gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+      await gStore.dispatch(Actions.updateRequest(action.id, payload, true));
     }
 
     // Fetch request and response cookies long value.
@@ -665,11 +651,11 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           reqCookies.push(Object.assign({}, cookie, {
-            value: yield gNetwork.getString(cookie.value),
+            value: await this.getString(cookie.value),
           }));
         }
         if (reqCookies.length) {
-          yield gStore.dispatch(Actions.updateRequest(
+          await gStore.dispatch(Actions.updateRequest(
             action.id,
             { requestCookies: reqCookies },
             true));
@@ -686,18 +672,18 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           resCookies.push(Object.assign({}, cookie, {
-            value: yield gNetwork.getString(cookie.value),
+            value: await this.getString(cookie.value),
           }));
         }
         if (resCookies.length) {
-          yield gStore.dispatch(Actions.updateRequest(
+          await gStore.dispatch(Actions.updateRequest(
             action.id,
             { responseCookies: resCookies },
             true));
         }
       }
     }
-  }),
+  },
 
   /**
    * The "networkEventUpdate" message type handler.
@@ -917,17 +903,6 @@ EventEmitter.decorate(window);
  */
 NetMonitorController.TargetEventsHandler = new TargetEventsHandler();
 NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
-
-/**
- * Export some properties to the global scope for easier access.
- */
-Object.defineProperties(window, {
-  "gNetwork": {
-    get: function () {
-      return NetMonitorController.NetworkEventsHandler;
-    },
-    configurable: true
-  }
-});
+window.gNetwork = NetMonitorController.NetworkEventsHandler;
 
 exports.NetMonitorController = NetMonitorController;

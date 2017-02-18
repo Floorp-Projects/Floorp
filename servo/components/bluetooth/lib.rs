@@ -246,13 +246,19 @@ impl BluetoothManager {
                 },
                 BluetoothRequest::Test(data_set_name, sender) => {
                     let _ = sender.send(self.test(data_set_name));
-                }
+                },
                 BluetoothRequest::SetRepresentedToNull(service_ids, characteristic_ids, descriptor_ids) => {
                     self.remove_ids_from_caches(service_ids, characteristic_ids, descriptor_ids)
-                }
+                },
                 BluetoothRequest::IsRepresentedDeviceNull(id, sender) => {
                     let _ = sender.send(!self.device_is_cached(&id));
-                }
+                },
+                BluetoothRequest::GetAvailability(sender) => {
+                    let _ = sender.send(self.get_availability());
+                },
+                BluetoothRequest::MatchesFilter(id, filters, sender) => {
+                    let _ = sender.send(self.device_matches_filter(&id, &filters));
+                },
                 BluetoothRequest::Exit => {
                     break
                 },
@@ -422,6 +428,17 @@ impl BluetoothManager {
         self.cached_devices.contains_key(device_id) && self.address_to_id.values().any(|v| v == device_id)
     }
 
+    fn device_matches_filter(&mut self,
+                             device_id: &str,
+                             filters: &BluetoothScanfilterSequence)
+                             -> BluetoothResult<bool> {
+        let mut adapter = try!(self.get_adapter());
+        match self.get_device(&mut adapter, device_id) {
+            Some(ref device) => Ok(matches_filters(device, filters)),
+            None => Ok(false),
+        }
+    }
+
     // Service
 
     fn get_and_cache_gatt_services(&mut self,
@@ -558,6 +575,9 @@ impl BluetoothManager {
                       -> BluetoothResponseResult {
         // Step 6.
         let mut adapter = try!(self.get_adapter());
+
+        // Step 7.
+        // Note: There are no requiredServiceUUIDS, we scan for all devices.
         if let Ok(ref session) = adapter.create_discovery_session() {
             if session.start_discovery().is_ok() {
                 if !is_mock_adapter(&adapter) {
@@ -567,8 +587,6 @@ impl BluetoothManager {
             let _ = session.stop_discovery();
         }
 
-        // Step 7.
-        // Note: There are no requiredServiceUUIDS, we scan for all devices.
         let mut matched_devices = self.get_and_cache_devices(&mut adapter);
 
         // Step 8.
@@ -579,8 +597,6 @@ impl BluetoothManager {
         }
 
         // Step 9.
-        // TODO: After the permission API implementation
-        //       https://w3c.github.io/permissions/#prompt-the-user-to-choose
         if let Some(address) = self.select_device(matched_devices, &adapter) {
             let device_id = match self.address_to_id.get(&address) {
                 Some(id) => id.clone(),
@@ -599,7 +615,7 @@ impl BluetoothManager {
                 return Ok(BluetoothResponse::RequestDevice(message));
             }
         }
-        // TODO: Step 10 - 11: Implement the permission API.
+        // Step 10.
         return Err(BluetoothError::NotFound);
         // Step 12: Missing, because it is optional.
     }
@@ -886,7 +902,7 @@ impl BluetoothManager {
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-startnotifications
     // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattcharacteristic-stopnotifications
     fn enable_notification(&mut self, id: String, enable: bool) -> BluetoothResponseResult {
-        // (StartNotifications) Step 2 - 3.
+        // (StartNotifications) Step 3 - 4.
         // (StopNotifications) Step 1 - 2.
         if !self.characteristic_is_cached(&id) {
             return Err(BluetoothError::InvalidState);
@@ -909,11 +925,11 @@ impl BluetoothManager {
                     // (StopNotification)  Step 5.
                     Ok(_) => return Ok(BluetoothResponse::EnableNotification(())),
 
-                    // (StartNotification) Step 4.
+                    // (StartNotification) Step 5.
                     Err(_) => return Err(BluetoothError::NotSupported),
                 }
             },
-            // (StartNotification) Step 3.
+            // (StartNotification) Step 4.
             None => return Err(BluetoothError::InvalidState),
         }
     }
@@ -923,5 +939,10 @@ impl BluetoothManager {
         // Step 2.
         // TODO: Implement this when supported in lower level
         return Err(BluetoothError::NotSupported);
+    }
+
+    // https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetooth-getavailability
+    fn get_availability(&mut self) -> BluetoothResponseResult {
+        Ok(BluetoothResponse::GetAvailability(self.get_adapter().is_ok()))
     }
 }

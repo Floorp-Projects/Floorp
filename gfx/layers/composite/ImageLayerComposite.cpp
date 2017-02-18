@@ -64,15 +64,6 @@ ImageLayerComposite::Disconnect()
   Destroy();
 }
 
-LayerRenderState
-ImageLayerComposite::GetRenderState()
-{
-  if (mImageHost && mImageHost->IsAttached()) {
-    return mImageHost->GetRenderState();
-  }
-  return LayerRenderState();
-}
-
 Layer*
 ImageLayerComposite::GetLayer()
 {

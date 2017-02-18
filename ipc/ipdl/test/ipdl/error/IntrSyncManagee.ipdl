@@ -1,0 +1,7 @@
+include protocol IntrSyncManager;
+
+intr protocol IntrSyncManagee {
+    manager IntrSyncManager;
+child:
+    async __delete__();
+};
