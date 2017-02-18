@@ -10,8 +10,10 @@
 #include <guiddef.h>
 #include <unknwn.h>
 
-#include "mozilla/Mutex.h"
-#include "nsTArray.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 
 /**
  * Thread-safe weak references for COM that works pre-Windows 8 and do not
@@ -21,13 +23,44 @@
 namespace mozilla {
 namespace mscom {
 
+class WeakReferenceSupport;
+
+namespace detail {
+
+class SharedRef final
+{
+public:
+  explicit SharedRef(WeakReferenceSupport* aSupport);
+  void Lock();
+  void Unlock();
+
+  HRESULT Resolve(REFIID aIid, void** aOutStrongReference);
+  void Clear();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedRef)
+
+  SharedRef(const SharedRef&) = delete;
+  SharedRef(SharedRef&&) = delete;
+  SharedRef& operator=(const SharedRef&) = delete;
+  SharedRef& operator=(SharedRef&&) = delete;
+
+private:
+  ~SharedRef();
+
+private:
+  CRITICAL_SECTION mCS;
+  WeakReferenceSupport* mSupport;
+};
+
+} // namespace detail
+
 // {F841AEFA-064C-49A4-B73D-EBD14A90F012}
 DEFINE_GUID(IID_IWeakReference,
 0xf841aefa, 0x64c, 0x49a4, 0xb7, 0x3d, 0xeb, 0xd1, 0x4a, 0x90, 0xf0, 0x12);
 
 struct IWeakReference : public IUnknown
 {
-  virtual STDMETHODIMP Resolve(REFIID aIid, void** aOutStringReference) = 0;
+  virtual STDMETHODIMP Resolve(REFIID aIid, void** aOutStrongReference) = 0;
 };
 
 // {87611F0C-9BBB-4F78-9D43-CAC5AD432CA1}
@@ -66,14 +99,10 @@ protected:
                                            IUnknown** aOutInterface) = 0;
 
 private:
-  void ClearWeakRefs();
-
-private:
-  // Using a raw CRITICAL_SECTION here because it can be reentered
-  CRITICAL_SECTION           mCS;
-  ULONG                      mRefCnt;
-  nsTArray<RefPtr<WeakRef>>  mWeakRefs;
-  Flags                      mFlags;
+  RefPtr<detail::SharedRef> mSharedRef;
+  ULONG                     mRefCnt;
+  Flags                     mFlags;
+  CRITICAL_SECTION          mCSForQI;
 };
 
 class WeakRef : public IWeakReference
@@ -87,14 +116,11 @@ public:
   // IWeakReference
   STDMETHODIMP Resolve(REFIID aIid, void** aOutStrongReference) override;
 
-  explicit WeakRef(WeakReferenceSupport* aSupport);
-
-  void Clear();
+  explicit WeakRef(RefPtr<detail::SharedRef>& aSharedRef);
 
 private:
-  ULONG                 mRefCnt;
-  mozilla::Mutex        mMutex; // Protects mSupport
-  WeakReferenceSupport* mSupport;
+  Atomic<ULONG>             mRefCnt;
+  RefPtr<detail::SharedRef> mSharedRef;
 };
 
 } // namespace mscom
