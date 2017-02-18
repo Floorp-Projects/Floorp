@@ -315,7 +315,7 @@ protected:
 
     LOG("[%p] ticking drivers...", this);
     // RD is short for RefreshDriver
-    GeckoProfilerTracingRAII tracer("Paint", "RD");
+    GeckoProfilerTracingRAII tracer("Paint", "RefreshDriverTick");
 
     TickRefreshDrivers(jsnow, now, mContentRefreshDrivers);
     TickRefreshDrivers(jsnow, now, mRootRefreshDrivers);
@@ -2153,7 +2153,7 @@ nsRefreshDriver::FinishedWaitingForTransaction()
   if (mSkippedPaints &&
       !IsInRefresh() &&
       (ObserverCount() || ImageRequestCount())) {
-    GeckoProfilerTracingRAII tracer("Paint", "RD");
+    GeckoProfilerTracingRAII tracer("Paint", "RefreshDriverTick");
     DoRefresh();
   }
   mSkippedPaints = false;
