@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
   "resource://gre/modules/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
-  "resource:///modules/sessionstore/SessionHistory.jsm");
+  "resource://gre/modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 
