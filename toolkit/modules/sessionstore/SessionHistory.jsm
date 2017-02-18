@@ -35,7 +35,7 @@ this.SessionHistory = Object.freeze({
   },
 
   restore(docShell, tabData) {
-    SessionHistoryInternal.restore(docShell, tabData);
+    return SessionHistoryInternal.restore(docShell, tabData);
   }
 });
 
@@ -275,6 +275,7 @@ var SessionHistoryInternal = {
    *        The docShell that owns the session history.
    * @param tabData
    *        The tabdata including all history entries.
+   * @return A reference to the docShell's nsISHistoryInternal interface.
    */
   restore(docShell, tabData) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -300,6 +301,7 @@ var SessionHistoryInternal = {
     if (index < history.count && history.index != index) {
       history.getEntryAtIndex(index, true);
     }
+    return history;
   },
 
   /**
