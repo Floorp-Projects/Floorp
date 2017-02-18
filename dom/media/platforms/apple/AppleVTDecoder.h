@@ -60,11 +60,6 @@ public:
            : "apple software VT decoder";
   }
 
-  ConversionRequired NeedsConversion() const override
-  {
-    return ConversionRequired::kNeedAVCC;
-  }
-
   // Access from the taskqueue and the decoder's thread.
   // OutputFrame is thread-safe.
   void OutputFrame(CVPixelBufferRef aImage, AppleFrameRef aFrameRef);

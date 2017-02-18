@@ -36,7 +36,6 @@ public:
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }
-  ConversionRequired NeedsConversion() const override;
 
 private:
   RemoteVideoDecoder();
@@ -65,6 +64,9 @@ public:
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
   bool Supports(const TrackInfo& aTrackInfo,
                 DecoderDoctorDiagnostics* aDiagnostics) const override;
+
+  ConversionRequired DecoderNeedsConversion(
+    const TrackInfo& aConfig) const override;
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
     const CreateDecoderParams& aParams) override;

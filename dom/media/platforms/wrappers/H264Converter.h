@@ -8,7 +8,6 @@
 #define mozilla_H264Converter_h
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
@@ -54,14 +53,6 @@ public:
       mDecoder->ConfigurationChanged(aConfig);
     }
   }
-  ConversionRequired NeedsConversion() const override
-  {
-    if (mDecoder) {
-      return mDecoder->NeedsConversion();
-    }
-    // Default so no conversion is performed.
-    return ConversionRequired::kNeedAVCC;
-  }
   nsresult GetLastError() const { return mLastError; }
 
 private:
@@ -101,7 +92,7 @@ private:
   RefPtr<ShutdownPromise> mShutdownPromise;
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
-  Maybe<bool> mNeedAVCC;
+  bool mNeedAVCC;
   nsresult mLastError;
   bool mNeedKeyframe = true;
   // Set to true once a decoder has been created.

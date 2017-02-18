@@ -69,6 +69,18 @@ public:
     return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
   }
 
+  ConversionRequired
+  DecoderNeedsConversion(const TrackInfo& aConfig) const override
+  {
+    if (aConfig.IsVideo()
+        && (aConfig.mMimeType.EqualsLiteral("video/avc")
+            || aConfig.mMimeType.EqualsLiteral("video/mp4"))) {
+      return ConversionRequired::kNeedAVCC;
+    } else {
+      return ConversionRequired::kNeedNone;
+    }
+  }
+
 private:
   FFmpegLibWrapper* mLib;
 };

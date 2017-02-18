@@ -134,12 +134,4 @@ MediaDataDecoderProxy::ConfigurationChanged(const TrackInfo& aConfig)
   }));
 }
 
-MediaDataDecoder::ConversionRequired
-MediaDataDecoderProxy::NeedsConversion() const
-{
-  MOZ_ASSERT(!mIsShutdown);
-
-  return mProxyDecoder->NeedsConversion();
-}
-
 } // namespace mozilla

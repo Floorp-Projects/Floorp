@@ -74,11 +74,6 @@ public:
     return "omx decoder";
   }
 
-  ConversionRequired NeedsConversion() const override
-  {
-    return ConversionRequired::kNeedAnnexB;
-  }
-
   // Return true if event is handled.
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
