@@ -574,14 +574,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 
 ## Assertions
 
-* Table wrapper with borders and paddings bug 1324661
-  * test_animations_async_tests.html asserts [3]
-  * test_animations_effect_timing_enddelay.html asserts [2]
-  * test_animations_event_order.html asserts [1]
-  * test_animations_omta_start.html asserts [1]
-  * test_animations_playbackrate.html asserts [1]
-  * test_at_rule_parse_serialize.html asserts [1]
-  * test_unclosed_parentheses.html asserts [1]
 * Content glue not implemented
   * assertion in frame constructor bug 1324704
     * test_rule_insertion.html asserts [1]
