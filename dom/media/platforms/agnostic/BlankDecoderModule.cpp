@@ -32,14 +32,14 @@ public:
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
                         const CreateDecoderParams& aParams)
     : mCreator(aCreator)
-    , mIsH264(MP4Decoder::IsH264(aParams.mConfig.mMimeType))
     , mMaxRefFrames(
-        mIsH264
-        ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
-          ? mp4_demuxer::H264::ComputeMaxRefFrames(
-              aParams.VideoConfig().mExtraData)
-          : 16
-        : 0)
+        aParams.mConfig.GetType() == TrackInfo::kVideoTrack
+        && MP4Decoder::IsH264(aParams.mConfig.mMimeType)
+           ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
+             ? mp4_demuxer::H264::ComputeMaxRefFrames(
+                 aParams.VideoConfig().mExtraData)
+             : 16
+           : 0)
     , mType(aParams.mConfig.GetType())
   {
   }
@@ -95,16 +95,8 @@ public:
     return "blank media data decoder";
   }
 
-  ConversionRequired NeedsConversion() const override
-  {
-    return mIsH264
-           ? ConversionRequired::kNeedAVCC
-           : ConversionRequired::kNeedNone;
-  }
-
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  const bool mIsH264;
   const uint32_t mMaxRefFrames;
   ReorderQueue mReorderQueue;
   TrackInfo::TrackType mType;
@@ -268,6 +260,17 @@ public:
   {
     return true;
   }
+
+  ConversionRequired
+  DecoderNeedsConversion(const TrackInfo& aConfig) const override
+  {
+    if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
+      return ConversionRequired::kNeedAVCC;
+    } else {
+      return ConversionRequired::kNeedNone;
+    }
+  }
+
 };
 
 already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule()

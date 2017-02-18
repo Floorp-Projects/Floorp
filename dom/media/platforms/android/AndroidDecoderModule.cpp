@@ -210,4 +210,13 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   return decoder.forget();
 }
 
+PlatformDecoderModule::ConversionRequired
+AndroidDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
+{
+  if (aConfig.IsVideo()) {
+    return ConversionRequired::kNeedAnnexB;
+  }
+  return ConversionRequired::kNeedNone;
+}
+
 } // mozilla
