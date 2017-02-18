@@ -216,11 +216,8 @@ public:
     // If aRestart parameter is true we need to restart the transaction,
     // otherwise the erly-data has been accepted and we can continue the
     // transaction.
-    // If aAlpnChanged is true (and we were assuming http/2), we'll need to take
-    // the transactions out of the session, rewind them all, and start them back
-    // over as http/1 transactions
     // The function will return success or failure of the transaction restart.
-    virtual nsresult Finish0RTT(bool aRestart, bool aAlpnChanged) {
+    virtual nsresult Finish0RTT(bool aRestart) {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 };
