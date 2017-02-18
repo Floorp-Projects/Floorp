@@ -83,3 +83,17 @@ fails == shape-outside-border-box-border-radius-004.html shape-outside-border-bo
 == shape-outside-ellipse-018.html shape-outside-ellipse-018-ref.html
 == shape-outside-ellipse-019.html shape-outside-ellipse-019-ref.html
 == shape-outside-ellipse-020.html shape-outside-ellipse-020-ref.html
+
+# Basic shape: inset()
+== shape-outside-inset-001.html shape-outside-inset-001-ref.html
+== shape-outside-inset-002.html shape-outside-inset-002-ref.html
+== shape-outside-inset-003.html shape-outside-inset-003-ref.html
+== shape-outside-inset-004.html shape-outside-inset-004-ref.html
+== shape-outside-inset-005.html shape-outside-inset-005-ref.html
+== shape-outside-inset-006.html shape-outside-inset-006-ref.html
+== shape-outside-inset-007.html shape-outside-inset-007-ref.html
+== shape-outside-inset-008.html shape-outside-inset-008-ref.html
+== shape-outside-inset-009.html shape-outside-inset-009-ref.html
+== shape-outside-inset-010.html shape-outside-inset-010-ref.html
+== shape-outside-inset-011.html shape-outside-inset-011-ref.html
+== shape-outside-inset-012.html shape-outside-inset-012-ref.html

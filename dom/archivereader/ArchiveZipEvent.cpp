@@ -11,6 +11,7 @@
 #include "nsCExternalHandlerService.h"
 
 #include "mozilla/UniquePtr.h"
+#include "nsIInputStream.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

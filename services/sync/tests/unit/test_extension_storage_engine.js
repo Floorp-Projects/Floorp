@@ -9,6 +9,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
+/* globals extensionStorageSync */
 
 Service.engineManager.register(ExtensionStorageEngine);
 const engine = Service.engineManager.get("extension-storage");
@@ -46,17 +47,17 @@ add_task(function* test_calling_sync_calls__sync() {
 
 add_task(function* test_calling_sync_calls_ext_storage_sync() {
   const extension = {id: "my-extension"};
-  let oldSync = ExtensionStorageSync.syncAll;
-  let syncMock = ExtensionStorageSync.syncAll = mock({returns: Promise.resolve()});
+  let oldSync = extensionStorageSync.syncAll;
+  let syncMock = extensionStorageSync.syncAll = mock({returns: Promise.resolve()});
   try {
     yield* withSyncContext(function* (context) {
       // Set something so that everyone knows that we're using storage.sync
-      yield ExtensionStorageSync.set(extension, {"a": "b"}, context);
+      yield extensionStorageSync.set(extension, {"a": "b"}, context);
 
       yield engine._sync();
     });
   } finally {
-    ExtensionStorageSync.syncAll = oldSync;
+    extensionStorageSync.syncAll = oldSync;
   }
   do_check_true(syncMock.calls.length >= 1);
 });

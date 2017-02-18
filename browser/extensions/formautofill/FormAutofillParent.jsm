@@ -29,11 +29,15 @@
 
 "use strict";
 
+this.EXPORTED_SYMBOLS = ["FormAutofillParent"];
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
@@ -41,6 +45,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileStorage",
                                   "resource://formautofill/ProfileStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
+
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 const ENABLED_PREF = "browser.formautofill.enabled";
@@ -63,22 +70,25 @@ FormAutofillParent.prototype = {
    * Initializes ProfileStorage and registers the message handler.
    */
   init() {
+    log.debug("init");
     let storePath = OS.Path.join(OS.Constants.Path.profileDir, PROFILE_JSON_FILE_NAME);
     this._profileStore = new ProfileStorage(storePath);
     this._profileStore.initialize();
 
     Services.obs.addObserver(this, "advanced-pane-loaded", false);
 
-    // Observing the pref (and storage) changes
+    // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this, false);
+    Services.obs.addObserver(this, "formautofill-storage-changed", false);
     this._enabled = this._getStatus();
     // Force to trigger the onStatusChanged function for setting listeners properly
     // while initizlization
     this._onStatusChanged();
-    Services.mm.addMessageListener("FormAutofill:getEnabledStatus", this);
+    Services.ppmm.addMessageListener("FormAutofill:getEnabledStatus", this);
   },
 
   observe(subject, topic, data) {
+    log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "advanced-pane-loaded": {
         let formAutofillPreferences = new FormAutofillPreferences();
@@ -100,6 +110,20 @@ FormAutofillParent.prototype = {
         break;
       }
 
+      case "formautofill-storage-changed": {
+        // Early exit if the action is not "add" nor "remove"
+        if (data != "add" && data != "remove") {
+          break;
+        }
+
+        let currentStatus = this._getStatus();
+        if (currentStatus !== this._enabled) {
+          this._enabled = currentStatus;
+          this._onStatusChanged();
+        }
+        break;
+      }
+
       default: {
         throw new Error(`FormAutofillParent: Unexpected topic observed: ${topic}`);
       }
@@ -111,25 +135,28 @@ FormAutofillParent.prototype = {
    * form autofill status changed.
    */
   _onStatusChanged() {
+    log.debug("_onStatusChanged: Status changed to", this._enabled);
     if (this._enabled) {
-      Services.mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
-      Services.mm.addMessageListener("FormAutofill:GetProfiles", this);
+      Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
     } else {
-      Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
-      Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
+      Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     }
 
-    Services.mm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
   },
 
   /**
-   * Query pref (and storage) status to determine the overall status for
+   * Query pref and storage status to determine the overall status for
    * form autofill feature.
    *
    * @returns {boolean} status of form autofill feature
    */
   _getStatus() {
-    return Services.prefs.getBoolPref(ENABLED_PREF);
+    if (!Services.prefs.getBoolPref(ENABLED_PREF)) {
+      return false;
+    }
+
+    return this._profileStore.getAll().length > 0;
   },
 
   /**
@@ -141,15 +168,12 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
-      case "FormAutofill:PopulateFieldValues":
-        this._populateFieldValues(data, target);
-        break;
       case "FormAutofill:GetProfiles":
         this._getProfiles(data, target);
         break;
       case "FormAutofill:getEnabledStatus":
-        target.messageManager.sendAsyncMessage("FormAutofill:enabledStatus",
-                                               this._enabled);
+        Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus",
+                                            this._enabled);
         break;
     }
   },
@@ -176,28 +200,9 @@ FormAutofillParent.prototype = {
       this._profileStore = null;
     }
 
-    Services.mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
-    Services.mm.removeMessageListener("FormAutofill:GetProfiles", this);
+    Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
-  },
-
-  /**
-   * Populates the field values and notifies content to fill in. Exception will
-   * be thrown if there's no matching profile.
-   *
-   * @private
-   * @param  {string} data.guid
-   *         Indicates which profile to populate
-   * @param  {Fields} data.fields
-   *         The "fields" array collected from content.
-   * @param  {nsIFrameMessageManager} target
-   *         Content's message manager.
-   */
-  _populateFieldValues({guid, fields}, target) {
-    this._profileStore.notifyUsed(guid);
-    this._fillInFields(this._profileStore.get(guid), fields);
-    target.sendAsyncMessage("FormAutofill:fillForm", {fields});
   },
 
   /**
@@ -220,44 +225,6 @@ FormAutofillParent.prototype = {
       profiles = this._profileStore.getAll();
     }
 
-    target.messageManager.sendAsyncMessage("FormAutofill:Profiles", profiles);
-  },
-
-  /**
-   * Get the corresponding value from the specified profile according to a valid
-   * @autocomplete field name.
-   *
-   * Note that the field name doesn't need to match the property name defined in
-   * Profile object. This method can transform the raw data to fulfill it. (e.g.
-   * inputting "country-name" as "fieldName" will get a full name transformed
-   * from the country code that is recorded in "country" field.)
-   *
-   * @private
-   * @param   {Profile} profile   The specified profile.
-   * @param   {string}  fieldName A valid @autocomplete field name.
-   * @returns {string}  The corresponding value. Returns "undefined" if there's
-   *                    no matching field.
-   */
-  _getDataByFieldName(profile, fieldName) {
-    // TODO: Transform the raw profile data to fulfill "fieldName" here.
-    return profile[fieldName];
-  },
-
-  /**
-   * Fills in the "fields" array by the specified profile.
-   *
-   * @private
-   * @param   {Profile} profile The specified profile to fill in.
-   * @param   {Fields}  fields  The "fields" array collected from content.
-   */
-  _fillInFields(profile, fields) {
-    for (let field of fields) {
-      let value = this._getDataByFieldName(profile, field.fieldName);
-      if (value !== undefined) {
-        field.value = value;
-      }
-    }
+    target.sendAsyncMessage("FormAutofill:Profiles", profiles);
   },
 };
-
-this.EXPORTED_SYMBOLS = ["FormAutofillParent"];

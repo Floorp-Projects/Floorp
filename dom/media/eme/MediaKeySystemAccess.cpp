@@ -287,6 +287,9 @@ GetSupportedKeySystems()
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
+      if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
+        clearkey.mMP4.SetCanDecrypt(EME_CODEC_VP9);
+      }
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP8);
@@ -336,6 +339,7 @@ GetSupportedKeySystems()
 
       DataForValidation validationList[] = {
         { nsCString("video/mp4"), EME_CODEC_H264, MediaDrmProxy::AVC, &widevine.mMP4 },
+        { nsCString("video/mp4"), EME_CODEC_VP9, MediaDrmProxy::AVC, &widevine.mMP4 },
         { nsCString("audio/mp4"), EME_CODEC_AAC, MediaDrmProxy::AAC, &widevine.mMP4 },
         { nsCString("video/webm"), EME_CODEC_VP8, MediaDrmProxy::VP8, &widevine.mWebM },
         { nsCString("video/webm"), EME_CODEC_VP9, MediaDrmProxy::VP9, &widevine.mWebM},
@@ -355,6 +359,9 @@ GetSupportedKeySystems()
       }
 #else
       widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+      if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
+        widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
+      }
       widevine.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);

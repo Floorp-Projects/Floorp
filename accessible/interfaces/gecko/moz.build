@@ -11,7 +11,11 @@ SOURCES += [
 ]
 
 GENERATED_FILES += [
+    'dlldata.c',
+    'IGeckoCustom.h',
     'IGeckoCustom.tlb',
+    'IGeckoCustom_i.c',
+    'IGeckoCustom_p.c',
 ]
 
 FINAL_LIBRARY = 'xul'

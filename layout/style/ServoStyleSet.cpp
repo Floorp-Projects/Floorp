@@ -263,7 +263,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                                          Element* aPseudoElement)
 {
   if (aPseudoElement) {
-    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+    NS_WARNING("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
   }
 
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
@@ -630,15 +630,6 @@ ServoStyleSet::RebuildData()
 {
   Servo_StyleSet_RebuildData(mRawSet.get());
 }
-
-ServoComputedValuesStrong
-ServoStyleSet::RestyleWithAddedDeclaration(RawServoDeclarationBlock* aDeclarations,
-                                           const ServoComputedValues* aPreviousStyle)
-{
-  return Servo_RestyleWithAddedDeclaration(mRawSet.get(), aDeclarations,
-                                           aPreviousStyle);
-}
-
 
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)

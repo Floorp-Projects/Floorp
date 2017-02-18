@@ -12,10 +12,12 @@
 #endif
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/FormData.h"
@@ -381,6 +383,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequestMainThread)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsISizeOfEventTarget)
 NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 
@@ -3779,14 +3782,14 @@ XMLHttpRequestMainThread::BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
   ChangeStateToDone();
 }
 
-nsresult
+NS_IMETHODIMP
 XMLHttpRequestMainThread::GetName(nsACString& aName)
 {
   aName.AssignLiteral("XMLHttpRequest");
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 XMLHttpRequestMainThread::SetName(const char* aName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

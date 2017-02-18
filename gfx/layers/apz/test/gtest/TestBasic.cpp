@@ -6,6 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
+#include "gfxPrefs.h"
 #include "InputUtils.h"
 
 TEST_F(APZCBasicTester, Overzoom) {
@@ -344,7 +345,7 @@ TEST_F(APZCBasicTester, OverScrollPanningAbort) {
   // the pan does not end.
   int touchStart = 500;
   int touchEnd = 10;
-  Pan(apzc, touchStart, touchEnd, true); // keep finger down
+  Pan(apzc, touchStart, touchEnd, PanOptions::KeepFingerDown);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   // Check that calling CancelAnimation() while the user is still panning

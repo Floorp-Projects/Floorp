@@ -14,6 +14,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsCaret.h"
 #include "nsContainerFrame.h"
@@ -196,9 +197,10 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
     return NS_OK;
   }
 
-  // No need to show the carets for select all action when we want to hide
-  // the carets for mouse input.
+  // When we want to hide the carets for mouse input, hide them for select
+  // all action fired by keyboard as well.
   if (sHideCaretsForMouseInput &&
+      mLastInputSource == nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD &&
       (aReason & nsISelectionListener::SELECTALL_REASON)) {
     HideCarets();
     return NS_OK;
@@ -1472,8 +1474,9 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
-  AC_LOG("%s: reason %d, collapsed %d, caretVisible %d", __FUNCTION__,
-         init.mReason, init.mCollapsed, init.mCaretVisible);
+  AC_LOG("%s: reason %" PRIu32 ", collapsed %d, caretVisible %" PRIu32, __FUNCTION__,
+         static_cast<uint32_t>(init.mReason), init.mCollapsed,
+         static_cast<uint32_t>(init.mCaretVisible));
 
   (new AsyncEventDispatcher(doc, event))->RunDOMEventWhenSafe();
 }

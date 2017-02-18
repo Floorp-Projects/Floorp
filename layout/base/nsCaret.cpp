@@ -622,8 +622,9 @@ void nsCaret::ResetBlinking()
     LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
   if (blinkRate > 0) {
     mBlinkCount = Preferences::GetInt("ui.caretBlinkCount", -1);
-    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
-                                      nsITimer::TYPE_REPEATING_SLACK);
+    mBlinkTimer->InitWithNamedFuncCallback(CaretBlinkCallback, this, blinkRate,
+                                           nsITimer::TYPE_REPEATING_SLACK,
+                                           "nsCaret::CaretBlinkCallback_timer");
   }
 }
 

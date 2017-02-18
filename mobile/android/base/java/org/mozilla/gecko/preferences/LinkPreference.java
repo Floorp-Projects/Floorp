@@ -5,11 +5,13 @@
 
 package org.mozilla.gecko.preferences;
 
-import org.mozilla.gecko.Tabs;
-
 import android.content.Context;
+import android.content.Intent;
 import android.preference.Preference;
 import android.util.AttributeSet;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Tabs;
 
 class LinkPreference extends Preference {
     private String mUrl;
@@ -27,9 +29,17 @@ class LinkPreference extends Preference {
         mUrl = url;
     }
 
+    /**
+     * Open Default apps screen of Settings for API Levels>=24. Support URL will open for lower API levels
+     */
     @Override
     protected void onClick() {
-        Tabs.getInstance().loadUrlInTab(mUrl);
-        callChangeListener(mUrl);
+        if (AppConstants.Versions.feature24Plus) {
+            Intent changeDefaultApps = new Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS");
+            getContext().startActivity(changeDefaultApps);
+        } else {
+            Tabs.getInstance().loadUrlInTab(mUrl);
+            callChangeListener(mUrl);
+        }
     }
 }

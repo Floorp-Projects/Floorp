@@ -77,7 +77,6 @@ struct TexturedEffect : public Effect
   TextureSource* mTexture;
   bool mPremultiplied;
   gfx::SamplingFilter mSamplingFilter;
-  LayerRenderState mState;
 };
 
 // Support an alpha mask.
@@ -233,8 +232,7 @@ inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(gfx::SurfaceFormat aFormat,
                      TextureSource* aSource,
                      const gfx::SamplingFilter aSamplingFilter,
-                     bool isAlphaPremultiplied,
-                     const LayerRenderState &state = LayerRenderState())
+                     bool isAlphaPremultiplied)
 {
   MOZ_ASSERT(aSource);
   RefPtr<TexturedEffect> result;
@@ -257,8 +255,6 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
     break;
   }
 
-  result->mState = state;
-
   return result.forget();
 }
 
@@ -266,8 +262,7 @@ inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(TextureHost* aHost,
                      TextureSource* aSource,
                      const gfx::SamplingFilter aSamplingFilter,
-                     bool isAlphaPremultiplied,
-                     const LayerRenderState &state = LayerRenderState())
+                     bool isAlphaPremultiplied)
 {
   MOZ_ASSERT(aHost);
   MOZ_ASSERT(aSource);
@@ -280,8 +275,7 @@ CreateTexturedEffect(TextureHost* aHost,
     result = CreateTexturedEffect(aHost->GetReadFormat(),
                                   aSource,
                                   aSamplingFilter,
-                                  isAlphaPremultiplied,
-                                  state);
+                                  isAlphaPremultiplied);
   }
   return result.forget();
 }
@@ -296,8 +290,7 @@ inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(TextureSource* aSource,
                      TextureSource* aSourceOnWhite,
                      const gfx::SamplingFilter aSamplingFilter,
-                     bool isAlphaPremultiplied,
-                     const LayerRenderState &state = LayerRenderState())
+                     bool isAlphaPremultiplied)
 {
   MOZ_ASSERT(aSource);
   if (aSourceOnWhite) {
@@ -311,8 +304,7 @@ CreateTexturedEffect(TextureSource* aSource,
   return CreateTexturedEffect(aSource->GetFormat(),
                               aSource,
                               aSamplingFilter,
-                              isAlphaPremultiplied,
-                              state);
+                              isAlphaPremultiplied);
 }
 
 /**
@@ -322,10 +314,9 @@ CreateTexturedEffect(TextureSource* aSource,
  */
 inline already_AddRefed<TexturedEffect>
 CreateTexturedEffect(TextureSource *aTexture,
-                     const gfx::SamplingFilter aSamplingFilter,
-                     const LayerRenderState &state = LayerRenderState())
+                     const gfx::SamplingFilter aSamplingFilter)
 {
-  return CreateTexturedEffect(aTexture, nullptr, aSamplingFilter, true, state);
+  return CreateTexturedEffect(aTexture, nullptr, aSamplingFilter, true);
 }
 
 

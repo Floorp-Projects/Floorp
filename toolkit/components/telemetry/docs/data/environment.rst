@@ -117,7 +117,7 @@ Structure:
             kernelVersion: <string>, // android/b2g only or null on failure
             servicePackMajor: <number>, // windows only or null on failure
             servicePackMinor: <number>, // windows only or null on failure
-            windowsBuildNumber: <number>, // windows 10 only or null on failure
+            windowsBuildNumber: <number>, // windows only or null on failure
             windowsUBR: <number>, // windows 10 only or null on failure
             installYear: <number>, // windows only or null on failure
             locale: <string>, // "en" or null on failure
@@ -362,7 +362,7 @@ This object contains operating system information.
 - ``kernelVersion``: an Android/B2G only string representing the kernel version.
 - ``servicePackMajor``: the Windows only major version number for the installed service pack.
 - ``servicePackMinor``: the Windows only minor version number for the installed service pack.
-- ``windowsBuildNumber``: the Windows build number, only available for Windows >= 10.
+- ``windowsBuildNumber``: the Windows build number.
 - ``windowsUBR``: the Windows UBR number, only available for Windows >= 10. This value is incremented by Windows cumulative updates patches.
 - ``installYear``: the Windows only integer representing the year the OS was installed.
 - ``locale``: the string representing the OS locale.

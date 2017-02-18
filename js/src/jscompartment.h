@@ -69,6 +69,52 @@ class DtoaCache {
 #endif
 };
 
+// Cache to speed up the group/shape lookup in ProxyObject::create. A proxy's
+// group/shape is only determined by the Class + proto, so a small cache for
+// this is very effective in practice.
+class NewProxyCache
+{
+    struct Entry {
+        ObjectGroup* group;
+        Shape* shape;
+    };
+    static const size_t NumEntries = 4;
+    mozilla::UniquePtr<Entry[], JS::FreePolicy> entries_;
+
+  public:
+    MOZ_ALWAYS_INLINE bool lookup(const Class* clasp, TaggedProto proto,
+                                  ObjectGroup** group, Shape** shape) const
+    {
+        if (!entries_)
+            return false;
+        for (size_t i = 0; i < NumEntries; i++) {
+            const Entry& entry = entries_[i];
+            if (entry.group && entry.group->clasp() == clasp && entry.group->proto() == proto) {
+                *group = entry.group;
+                *shape = entry.shape;
+                return true;
+            }
+        }
+        return false;
+    }
+    void add(ObjectGroup* group, Shape* shape) {
+        MOZ_ASSERT(group && shape);
+        if (!entries_) {
+            entries_.reset(js_pod_calloc<Entry>(NumEntries));
+            if (!entries_)
+                return;
+        } else {
+            for (size_t i = NumEntries - 1; i > 0; i--)
+                entries_[i] = entries_[i - 1];
+        }
+        entries_[0].group = group;
+        entries_[0].shape = shape;
+    }
+    void purge() {
+        entries_.reset();
+    }
+};
+
 class CrossCompartmentKey
 {
   public:
@@ -695,6 +741,7 @@ struct JSCompartment
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
     js::DtoaCache dtoaCache;
+    js::NewProxyCache newProxyCache;
 
     // Random number generator for Math.random().
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
@@ -966,21 +1013,38 @@ class AutoCompartment
 {
     JSContext * const cx_;
     JSCompartment * const origin_;
-    const js::AutoLockForExclusiveAccess* maybeLock_;
+    const AutoLockForExclusiveAccess* maybeLock_;
 
   public:
-    inline AutoCompartment(JSContext* cx, JSObject* target,
-                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
-    inline AutoCompartment(JSContext* cx, JSCompartment* target,
-                           js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    template <typename T>
+    inline AutoCompartment(JSContext* cx, const T& target);
     inline ~AutoCompartment();
 
     JSContext* context() const { return cx_; }
     JSCompartment* origin() const { return origin_; }
 
+  protected:
+    inline AutoCompartment(JSContext* cx, JSCompartment* target,
+                           AutoLockForExclusiveAccess* maybeLock = nullptr);
+
   private:
     AutoCompartment(const AutoCompartment&) = delete;
     AutoCompartment & operator=(const AutoCompartment&) = delete;
+};
+
+class AutoAtomsCompartment : protected AutoCompartment
+{
+  public:
+    inline AutoAtomsCompartment(JSContext* cx, AutoLockForExclusiveAccess& lock);
+};
+
+// Enter a compartment directly. Only use this where there's no target GC thing
+// to pass to AutoCompartment or where you need to avoid the assertions in
+// JS::Compartment::enterCompartmentOf().
+class AutoCompartmentUnchecked : protected AutoCompartment
+{
+  public:
+    inline AutoCompartmentUnchecked(JSContext* cx, JSCompartment* target);
 };
 
 /*

@@ -4065,6 +4065,8 @@ this.XPIProvider = {
         this.unloadBootstrapScope(existingAddonID);
         flushChromeCaches();
       }
+    } else {
+      addon.installDate = Date.now();
     }
 
     let file = addon._sourceBundle;
@@ -5523,7 +5525,7 @@ class AddonInstall {
         if (this.addon.id != this.existingAddon.id) {
           zipreader.close();
           return Promise.reject([AddonManager.ERROR_INCORRECT_ID,
-                                 `Refusing to upgrade addon ${this.existingAddon.id} to different ID {this.addon.id}`]);
+                                 `Refusing to upgrade addon ${this.existingAddon.id} to different ID ${this.addon.id}`]);
         }
 
         if (this.existingAddon.type == "webextension" && this.addon.type != "webextension") {

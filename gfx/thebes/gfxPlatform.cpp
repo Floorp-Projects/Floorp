@@ -1428,11 +1428,9 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
     if (!surf || surf->CairoStatus()) {
       return nullptr;
     }
-
     return CreateDrawTargetForSurface(surf, aSize);
-  } else {
-    return Factory::CreateDrawTarget(aBackend, aSize, aFormat);
   }
+  return Factory::CreateDrawTarget(aBackend, aSize, aFormat);
 }
 
 already_AddRefed<DrawTarget>

@@ -437,6 +437,13 @@ public:
     mShouldAutoPosition = true;
   }
 
+  // Checks for the anchor to change and either moves or hides the popup
+  // accordingly. The original position of the anchor should be supplied as
+  // the argument. If the popup needs to be hidden, HidePopup will be called by
+  // CheckForAnchorChange. If the popup needs to be moved, aRect will be updated
+  // with the new rectangle.
+  void CheckForAnchorChange(nsRect& aRect);
+
   // nsIReflowCallback
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
@@ -502,6 +509,10 @@ protected:
                         nscoord aScreenBegin, nscoord aScreenEnd,
                         nscoord *aOffset);
 
+  // Given an anchor frame, compute the anchor rectangle relative to the screen,
+  // using the popup frame's app units, and taking into account transforms.
+  nsRect ComputeAnchorRect(nsPresContext* aRootPresContext, nsIFrame* aAnchorFrame);
+
   // Move the popup to the position specified in its |left| and |top| attributes.
   void MoveToAttributePosition();
 
@@ -522,6 +533,17 @@ protected:
   // view, and is initially hidden.
   void CreatePopupView();
 
+  // Returns true if the popup should try to remain at the same relative
+  // location as the anchor while it is open. If the anchor becomes hidden
+  // either directly or indirectly because a parent popup or other element
+  // is no longer visible, or a parent deck page is changed, the popup hides
+  // as well. The second variation also sets the anchor rectangle, relative to
+  // the popup frame.
+  bool ShouldFollowAnchor();
+public:
+  bool ShouldFollowAnchor(nsRect& aRect);
+
+protected:
   nsString     mIncrementalString;  // for incremental typing navigation
 
   // the content that the popup is anchored to, if any, which may be in a

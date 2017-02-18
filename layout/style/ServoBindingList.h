@@ -105,11 +105,6 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    const nsACString* base_url, ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
-SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
-                   ServoComputedValuesStrong,
-                   RawServoStyleSetBorrowed set,
-                   RawServoDeclarationBlockBorrowed declarations,
-                   ServoComputedValuesBorrowed previous_style)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Populate, void,

@@ -1220,8 +1220,8 @@ public abstract class GeckoApp
             final String args = intent.getStringExtra("args");
 
             sAlreadyLoaded = true;
-            GeckoThread.init(/* profile */ null, args, action,
-                             /* debugging */ ACTION_DEBUG.equals(action));
+            GeckoThread.initMainProcess(/* profile */ null, args,
+                                        /* debugging */ ACTION_DEBUG.equals(action));
 
             // Speculatively pre-fetch the profile in the background.
             ThreadUtils.postToBackgroundThread(new Runnable() {
@@ -1964,11 +1964,13 @@ public abstract class GeckoApp
     public void createShortcut(final String title, final String url) {
 
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        final String manifestUrl = selectedTab.getManifestUrl();
 
-        if (selectedTab.hasManifest()) {
+        if (manifestUrl != null) {
             // If a page has associated manifest, lets install it
             final GeckoBundle message = new GeckoBundle();
             message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
+            message.putString("manifestUrl", manifestUrl);
             EventDispatcher.getInstance().dispatch("Browser:LoadManifest", message);
             return;
         }
@@ -2393,7 +2395,8 @@ public abstract class GeckoApp
     }
 
     public void showSDKVersionError() {
-        final String message = getString(R.string.unsupported_sdk_version, Build.CPU_ABI, Integer.toString(Build.VERSION.SDK_INT));
+        final String message = getString(R.string.unsupported_sdk_version,
+                HardwareUtils.getRealAbi(), Integer.toString(Build.VERSION.SDK_INT));
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 

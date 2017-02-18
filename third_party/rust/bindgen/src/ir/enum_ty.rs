@@ -99,7 +99,7 @@ impl Enum {
                             Annotations::new(&cursor)
                                 .and_then(|anno| if anno.hide() {
                                     Some(EnumVariantCustomBehavior::Hide)
-                                } else if 
+                                } else if
                                     anno.constify_enum_variant() {
                                     Some(EnumVariantCustomBehavior::Constify)
                                 } else {

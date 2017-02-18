@@ -10,6 +10,8 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
+const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
+
 // Match type constants.
 // These indicate what type of search function we should be using.
 const MATCH_ANYWHERE = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
@@ -46,6 +48,9 @@ const PREF_SUGGEST_HISTORY_ONLYTYPED = [ "suggest.history.onlyTyped", false ];
 const PREF_SUGGEST_SEARCHES =       [ "suggest.searches",       false ];
 
 const PREF_MAX_CHARS_FOR_SUGGEST =  [ "maxCharsForSearchSuggestions", 20];
+
+const PREF_PREFILL_SITES_ENABLED =  [ "usepreloadedtopurls.enabled",   true ];
+const PREF_PREFILL_SITES_EXPIRE_DAYS = [ "usepreloadedtopurls.expire_days",  14 ];
 
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
@@ -284,6 +289,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesRemoteTabsAutocompleteProvider",
                                   "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
+                                  "resource://gre/modules/ProfileAge.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
@@ -466,6 +473,8 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
     store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
     store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
+    store.prefillSitesEnabled = prefs.get(...PREF_PREFILL_SITES_ENABLED);
+    store.prefillSitesExpireDays = prefs.get(...PREF_PREFILL_SITES_EXPIRE_DAYS);
     store.keywordEnabled = true;
     try {
       store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled");
@@ -537,6 +546,42 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   Services.prefs.addObserver("keyword.enabled", store, true);
 
   return Object.seal(store);
+});
+
+// Prefill Sites related
+
+function PrefillSite(url, title) {
+  this.uri = NetUtil.newURI(url);
+  this.title = title;
+  this._matchTitle = title.toLowerCase();
+}
+
+/**
+ * Storage object for Prefill Sites.
+ *   add(url, title): adds a site to storage
+ *   populate() : populates the  storage with data (hard-coded for now)
+ *   sites[]: resulting array of sites (PrefillSite objects)
+ */
+XPCOMUtils.defineLazyGetter(this, "PrefillSiteStorage", () => Object.seal({
+  sites: [],
+
+  add(url, title) {
+    let site = new PrefillSite(url, title);
+    this.sites.push(site);
+  },
+
+  populate() {
+    this.add("https://google.com/", "Google");
+    this.add("https://youtube.com/", "YouTube");
+    this.add("https://facebook.com/", "Facebook");
+    this.add("https://baidu.com/", "\u767E\u5EA6\u4E00\u4E0B\uFF0C\u4F60\u5C31\u77E5\u9053");
+    this.add("https://wikipedia.org/", "Wikipedia");
+    this.add("https://yahoo.com/", "Yahoo");
+  },
+}));
+
+XPCOMUtils.defineLazyGetter(this, "ProfileAgeCreatedPromise", () => {
+  return (new ProfileAge(null, null)).created;
 });
 
 // Helper functions
@@ -612,14 +657,21 @@ function stripHttpAndTrim(spec) {
 }
 
 /**
- * Returns the key to be used for a URL in a map for the purposes of removing
+ * Returns the key to be used for a match in a map for the purposes of removing
  * duplicate entries - any 2 URLs that should be considered the same should
  * return the same key. For some moz-action URLs this will unwrap the params
  * and return a key based on the wrapped URL.
  */
-function makeKeyForURL(actionUrl) {
+function makeKeyForURL(match) {
+  let actionUrl = match.value;
+
   // At this stage we only consider moz-action URLs.
   if (!actionUrl.startsWith("moz-action:")) {
+    // For autofill entries, we need to have a key based on the comment rather
+    // than the value field, because the latter may have been trimmed.
+    if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
+      return stripHttpAndTrim(match.comment);
+    }
     return stripHttpAndTrim(actionUrl);
   }
   let [, type, params] = actionUrl.match(/^moz-action:([^,]+),(.*)$/);
@@ -929,6 +981,9 @@ Search.prototype = {
     }
     queries.push(this._searchQuery);
 
+    // Check for Prefill Sites Expiry before Autofill
+    yield this._checkPrefillSitesExpiry();
+
     // Add the first heuristic result, if any.  Set _addingHeuristicFirstMatch
     // to true so that when the result is added, "heuristic" can be included in
     // its style.
@@ -992,10 +1047,61 @@ Search.prototype = {
       ExtensionSearchHandler.handleInputCancelled();
     }
 
+    this._matchPrefillSites();
+
     // Ensure to fill any remaining space. Suggestions which come from extensions are
     // inserted at the beginning, so any suggestions
     yield Promise.all(this._remoteMatchesPromises);
   }),
+
+
+  *_checkPrefillSitesExpiry() {
+    if (!Prefs.prefillSitesEnabled)
+      return;
+    let profileCreationDate = yield ProfileAgeCreatedPromise;
+    let daysSinceProfileCreation = (Date.now() - profileCreationDate) / MS_PER_DAY;
+    if (daysSinceProfileCreation > Prefs.prefillSitesExpireDays)
+      Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
+  },
+
+  // TODO: manage protocol and "www." like _matchSearchEngineUrl() does
+  _matchPrefillSites() {
+    if (!Prefs.prefillSitesEnabled)
+      return;
+    for (let site of PrefillSiteStorage.sites) {
+      if (site.uri.host.includes(this._searchString) ||
+          site._matchTitle.includes(this._searchString)) {
+        let match = {
+          value: site.uri.spec,
+          comment: site.title,
+          style: "prefill-site",
+          finalCompleteValue: site.uri.spec,
+          frecency: FRECENCY_DEFAULT - 1,
+        };
+        this._addMatch(match);
+      }
+    }
+  },
+
+  _matchPrefillSiteForAutofill() {
+    if (!Prefs.prefillSitesEnabled)
+      return false;
+    for (let site of PrefillSiteStorage.sites) {
+      if (site.uri.host.startsWith(this._searchString)) {
+        let match = {
+          value: stripPrefix(site.uri.spec),
+          comment: site.title,
+          style: "autofill",
+          finalCompleteValue: site.uri.spec,
+          frecency: FRECENCY_DEFAULT,
+        };
+        this._result.setDefaultIndex(0);
+        this._addMatch(match);
+        return true;
+      }
+    }
+    return false;
+  },
 
   *_matchFirstHeuristicResult(conn) {
     // We always try to make the first result a special "heuristic" result.  The
@@ -1039,6 +1145,13 @@ Search.prototype = {
     if (this.pending && shouldAutofill) {
       // Or it may look like a URL we know about from search engines.
       let matched = yield this._matchSearchEngineUrl();
+      if (matched) {
+        return true;
+      }
+    }
+
+    if (this.pending && shouldAutofill) {
+      let matched = this._matchPrefillSiteForAutofill();
       if (matched) {
         return true;
       }
@@ -1514,7 +1627,7 @@ Search.prototype = {
       return;
 
     // Must check both id and url, cause keywords dynamically modify the url.
-    let urlMapKey = makeKeyForURL(match.value);
+    let urlMapKey = makeKeyForURL(match);
     if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
         this._usedURLs.has(urlMapKey)) {
       return;
@@ -1599,9 +1712,16 @@ Search.prototype = {
     }
 
     match.value = this._strippedPrefix + trimmedHost;
-    // Remove the trailing slash.
-    match.comment = stripHttpAndTrim(trimmedHost);
     match.finalCompleteValue = untrimmedHost;
+
+    // The comment should be the user's final destination so that the user
+    // will definitely know where he is going to end up. For example, if the
+    // user is visiting a secure page, we'll leave the https on it, so that
+    // they know it'll be secure.
+    // We fallback to match.value, as that's what autocomplete does if
+    // finalCompleteValue is null.
+    match.comment = stripHttpAndTrim(match.finalCompleteValue || match.value);
+
     if (faviconUrl) {
       match.icon = PlacesUtils.favicons
                               .getFaviconLinkForIcon(NetUtil.newURI(faviconUrl)).spec;
@@ -1951,6 +2071,14 @@ function UnifiedComplete() {
   // then all the other suggest preferences for history, bookmarks and
   // open pages should be set to false.
   Prefs;
+
+  if (Prefs.prefillSitesEnabled) {
+    // force initializing the profile age check
+    // to ensure the off-main-thread-IO happens ASAP
+    // and we don't have to wait for it when doing an autocomplete lookup
+    ProfileAgeCreatedPromise;
+    PrefillSiteStorage.populate(); // with hard-coded data for now
+  }
 }
 
 UnifiedComplete.prototype = {
@@ -1999,9 +2127,9 @@ UnifiedComplete.prototype = {
 
         return conn;
       }).then(null, ex => {
- dump("Couldn't get database handle: " + ex + "\n");
-                                       Cu.reportError(ex);
-});
+        dump("Couldn't get database handle: " + ex + "\n");
+        Cu.reportError(ex);
+      });
     }
     return this._promiseDatabase;
   },
@@ -2014,6 +2142,10 @@ UnifiedComplete.prototype = {
 
   unregisterOpenPage(uri, userContextId) {
     SwitchToTabStorage.delete(uri, userContextId);
+  },
+
+  addPrefillSite(url, title) {
+    PrefillSiteStorage.add(url, title);
   },
 
   // nsIAutoCompleteSearch

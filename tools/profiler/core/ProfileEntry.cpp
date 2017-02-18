@@ -114,7 +114,7 @@ public:
   { }
 
   void readType(const char* keyedBy, const char* name,
-                const char* location, Maybe<unsigned> lineno) override {
+                const char* location, const Maybe<unsigned>& lineno) override {
     if (!mStartedTypeList) {
       mStartedTypeList = true;
       mWriter.StartObjectElement();
@@ -775,7 +775,7 @@ void ProfileBuffer::DuplicateLastSample(int aThreadId)
         return;
       case ProfileEntry::Kind::Time:
         // Copy with new time
-        addTag(ProfileEntry::Time((mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds()));
+        addTag(ProfileEntry::Time((mozilla::TimeStamp::Now() - gStartTime).ToMilliseconds()));
         break;
       case ProfileEntry::Kind::Marker:
         // Don't copy markers

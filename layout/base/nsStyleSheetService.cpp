@@ -159,35 +159,22 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 
   rv = LoadAndRegisterSheetInternal(aSheetURI, aSheetType);
   if (NS_SUCCEEDED(rv)) {
-    const char* message;
-    switch (aSheetType) {
-      case AGENT_SHEET:
-        message = "agent-sheet-added";
-        break;
-      case USER_SHEET:
-        message = "user-sheet-added";
-        break;
-      case AUTHOR_SHEET:
-        message = "author-sheet-added";
-        break;
-      default:
-        return NS_ERROR_INVALID_ARG;
-    }
-    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-    if (serv) {
-      // We're guaranteed that the new sheet is the last sheet in
-      // mSheets[aSheetType]
+    // We're guaranteed that the new sheet is the last sheet in
+    // mSheets[aSheetType]
 
-      // XXXheycam Once the nsStyleSheetService can hold ServoStyleSheets too,
-      // we'll need to include them in the notification.
-      StyleSheet* sheet = mSheets[aSheetType].LastElement();
-      if (sheet->IsGecko()) {
-        CSSStyleSheet* cssSheet = sheet->AsGecko();
-        serv->NotifyObservers(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, cssSheet),
-                              message, nullptr);
-      } else {
-        NS_ERROR("stylo: can't notify observers of ServoStyleSheets");
+    // XXXheycam Once the nsStyleSheetService can hold ServoStyleSheets too,
+    // we'll need to include them in the notification.
+    RefPtr<StyleSheet> sheet = mSheets[aSheetType].LastElement();
+    if (sheet->IsGecko()) {
+      // Hold on to a copy of the registered PresShells.
+      nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
+      for (nsIPresShell* presShell : toNotify) {
+        if (presShell->StyleSet() && presShell->StyleSet()->IsGecko()) {
+          presShell->NotifyStyleSheetServiceSheetAdded(sheet, aSheetType);
+        }
       }
+    } else {
+      NS_ERROR("stylo: can't notify observers of ServoStyleSheets");
     }
 
     if (XRE_IsParentProcess()) {
@@ -312,30 +299,18 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   RefPtr<StyleSheet> sheet = mSheets[aSheetType][foundIndex];
   mSheets[aSheetType].RemoveElementAt(foundIndex);
 
-  const char* message;
-  switch (aSheetType) {
-    case AGENT_SHEET:
-      message = "agent-sheet-removed";
-      break;
-    case USER_SHEET:
-      message = "user-sheet-removed";
-      break;
-    case AUTHOR_SHEET:
-      message = "author-sheet-removed";
-      break;
-  }
-
-  nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-  if (serv) {
-    // XXXheycam Once the nsStyleSheetService can hold ServoStyleSheets too,
-    // we'll need to include them in the notification.
-    if (sheet->IsGecko()) {
-      CSSStyleSheet* cssSheet = sheet->AsGecko();
-      serv->NotifyObservers(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, cssSheet),
-                            message, nullptr);
-    } else {
-      NS_ERROR("stylo: can't notify observers of ServoStyleSheets");
+  // XXXheycam Once the nsStyleSheetService can hold ServoStyleSheets too,
+  // we'll need to include them in the notification.
+  if (sheet->IsGecko()) {
+    // Hold on to a copy of the registered PresShells.
+    nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
+    for (nsIPresShell* presShell : toNotify) {
+      if (presShell->StyleSet() && presShell->StyleSet()->IsGecko()) {
+        presShell->NotifyStyleSheetServiceSheetRemoved(sheet, aSheetType);
+      }
     }
+  } else {
+    NS_ERROR("stylo: can't notify observers of ServoStyleSheets");
   }
 
   if (XRE_IsParentProcess()) {
@@ -397,4 +372,18 @@ nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
     }
   }
   return n;
+}
+
+void
+nsStyleSheetService::RegisterPresShell(nsIPresShell* aPresShell)
+{
+  MOZ_ASSERT(!mPresShells.Contains(aPresShell));
+  mPresShells.AppendElement(aPresShell);
+}
+
+void
+nsStyleSheetService::UnregisterPresShell(nsIPresShell* aPresShell)
+{
+  MOZ_ASSERT(mPresShells.Contains(aPresShell));
+  mPresShells.RemoveElement(aPresShell);
 }

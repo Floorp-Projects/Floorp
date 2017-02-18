@@ -73,8 +73,9 @@ transferSimulcastProperties: function(offer_sdp, answer_sdp) {
   o_rids.forEach((o_rid) => {
     new_answer_sdp = new_answer_sdp + o_rid.replace(/send/, "recv") + "\r\n";
   });
-  ok(offer_sdp.includes("a=extmap:1/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id"), "Offer contains RID RTP header extension");
-  new_answer_sdp = new_answer_sdp + "a=extmap:1/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n";
+  var extmap_id = offer_sdp.match("a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+  ok(extmap_id != null, "Offer contains RID RTP header extension");
+  new_answer_sdp = new_answer_sdp + "a=extmap:" + extmap_id[1] + "/recvonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n";
   return new_answer_sdp;
 },
 

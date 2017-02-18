@@ -154,7 +154,8 @@ BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
   double result = aMilliseconds * kNsPerMsd;
   if (result > INT64_MAX) {
     return INT64_MAX;
-  } else if (result < INT64_MIN) {
+  }
+  if (result < INT64_MIN) {
     return INT64_MIN;
   }
 

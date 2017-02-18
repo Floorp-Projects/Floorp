@@ -17,6 +17,7 @@ from concurrent.futures import (
 
 import mozinfo
 from manifestparser import TestManifest
+from manifestparser import filters as mpf
 
 from mozbuild.base import (
     MachCommandBase,
@@ -65,6 +66,10 @@ class MachCommands(MachCommandBase):
         default=1,
         type=int,
         help='Number of concurrent jobs to run. Default is 1.')
+    @CommandArgument('--subsuite',
+        default=None,
+        help=('Python subsuite to run. If not specified, all subsuites are run. '
+             'Use the string `default` to only run tests without a subsuite.'))
     @CommandArgument('tests', nargs='*',
         metavar='TEST',
         help=('Tests to run. Each test can be a single file or a directory. '
@@ -133,7 +138,14 @@ class MachCommands(MachCommandBase):
 
         mp = TestManifest()
         mp.tests.extend(test_objects)
-        tests = mp.active_tests(disabled=False, **mozinfo.info)
+
+        filters = []
+        if subsuite == 'default':
+            filters.append(mpf.subsuite(None))
+        elif subsuite:
+            filters.append(mpf.subsuite(subsuite))
+
+        tests = mp.active_tests(filters=filters, disabled=False, **mozinfo.info)
 
         self.jobs = jobs
         self.terminate = False

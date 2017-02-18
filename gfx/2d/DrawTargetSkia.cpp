@@ -385,12 +385,12 @@ SkImageIsMask(const sk_sp<SkImage>& aImage)
   if (aImage->peekPixels(&pixmap)) {
     return pixmap.colorType() == kAlpha_8_SkColorType;
 #ifdef USE_SKIA_GPU
-  } else if (GrTexture* tex = aImage->getTexture()) {
+  }
+  if (GrTexture* tex = aImage->getTexture()) {
     return GrPixelConfigIsAlphaOnly(tex->config());
 #endif
-  } else {
-    return false;
   }
+  return false;
 }
 
 static bool

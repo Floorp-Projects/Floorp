@@ -468,7 +468,9 @@ struct Zone : public JS::shadow::Zone,
 
     js::ZoneGroupData<bool> isSystem;
 
-    mozilla::Atomic<bool> usedByExclusiveThread;
+    bool usedByHelperThread() {
+        return !isAtomsZone() && group()->usedByHelperThread;
+    }
 
 #ifdef DEBUG
     js::ZoneGroupData<unsigned> gcLastZoneGroupIndex;
@@ -598,11 +600,8 @@ struct Zone : public JS::shadow::Zone,
 
 namespace js {
 
-// Iterate over all zone groups except those which may be in use by parse
-// threads. Pretty soon this will exclude zone groups in use by parse threads
-// (as for ZonesIter), i.e. the zone groups in use by cooperating threads,
-// except that right now parse threads use zones in the same zone group as
-// cooperating threads (bug 1323066).
+// Iterate over all zone groups except those which may be in use by helper
+// thread parse tasks.
 class ZoneGroupsIter
 {
     gc::AutoEnterIteration iterMarker;
@@ -613,13 +612,18 @@ class ZoneGroupsIter
     explicit ZoneGroupsIter(JSRuntime* rt) : iterMarker(&rt->gc) {
         it = rt->gc.groups.ref().begin();
         end = rt->gc.groups.ref().end();
+
+        if (!done() && (*it)->usedByHelperThread)
+            next();
     }
 
     bool done() const { return it == end; }
 
     void next() {
         MOZ_ASSERT(!done());
-        it++;
+        do {
+            it++;
+        } while (!done() && (*it)->usedByHelperThread);
     }
 
     ZoneGroup* get() const {
@@ -703,7 +707,7 @@ class ZonesIter
             if (zone.ref().done()) {
                 zone.reset();
                 group.next();
-            } else if (!zone.ref().get()->usedByExclusiveThread) {
+            } else {
                 break;
             }
         }

@@ -46,7 +46,7 @@
                     log("gotpointercapture", target1);
                     setTimeout(function() {
                         isDisconnected = true;
-                        target0.remove();
+                        target0.parentNode.removeChild(target0);
                     }, 250);
                 });
 

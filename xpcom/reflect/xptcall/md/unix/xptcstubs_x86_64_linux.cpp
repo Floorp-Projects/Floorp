@@ -69,30 +69,28 @@ PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         nsXPTCMiniVariant* dp = &dispatchParams[i];
-	
+
         if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
             if (nr_fpr < FPR_COUNT)
                 dp->val.d = fpregs[nr_fpr++];
             else
-                dp->val.d = *(double*) ap++;
+                dp->val.d = *(double*)ap++;
             continue;
         }
-        else if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
+        if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
             if (nr_fpr < FPR_COUNT)
                 // The value in %xmm register is already prepared to
                 // be retrieved as a float. Therefore, we pass the
                 // value verbatim, as a double without conversion.
                 dp->val.d = fpregs[nr_fpr++];
             else
-                dp->val.f = *(float*) ap++;
+                dp->val.f = *(float*)ap++;
             continue;
         }
-        else {
-            if (nr_gpr < GPR_COUNT)
-                value = gpregs[nr_gpr++];
-            else
-                value = *ap++;
-        }
+        if (nr_gpr < GPR_COUNT)
+            value = gpregs[nr_gpr++];
+        else
+            value = *ap++;
 
         if (param.IsOut() || !type.IsArithmetic()) {
             dp->val.p = (void*) value;

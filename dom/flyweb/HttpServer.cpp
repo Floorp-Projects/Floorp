@@ -153,7 +153,8 @@ HttpServer::OnStopListening(nsIServerSocket* aServ,
 {
   MOZ_ASSERT(aServ == mServerSocket || !mServerSocket);
 
-  LOG_I("HttpServer::OnStopListening(%p) - status 0x%lx", this, aStatus);
+  LOG_I("HttpServer::OnStopListening(%p) - status 0x%" PRIx32,
+        this, static_cast<uint32_t>(aStatus));
 
   Close();
 
@@ -1259,8 +1260,8 @@ HttpServer::Connection::OnOutputStreamReady(nsIAsyncOutputStream* aStream)
              [self, this] (nsresult aStatus) {
                MOZ_ASSERT(mOutputBuffers[0].mStream);
                LOG_V("HttpServer::Connection::OnOutputStreamReady(%p) - "
-                     "Sent body. Status 0x%lx",
-                     this, aStatus);
+                     "Sent body. Status 0x%" PRIx32,
+                     this, static_cast<uint32_t>(aStatus));
 
                mOutputBuffers.RemoveElementAt(0);
                mOutputCopy = nullptr;

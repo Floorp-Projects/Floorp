@@ -1,0 +1,6 @@
+// inside_cpow nested parent-to-child messages are verboten
+
+protocol InsideCpowToChild {
+child:
+    nested(inside_cpow) sync Msg();
+};

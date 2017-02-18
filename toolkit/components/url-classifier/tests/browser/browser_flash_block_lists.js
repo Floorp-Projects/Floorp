@@ -76,7 +76,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Nested unknown domains",
@@ -84,28 +85,32 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Allowed domain",
     domains: ["http://flashallow.example.com"],
     expectedActivated: true,
     expectedHasRunningPlugin: true,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "allowed"
   },
   {
     name: "Allowed nested domain",
     domains: ["http://example.com", "http://flashallow.example.com"],
     expectedActivated: true,
     expectedHasRunningPlugin: true,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "allowed"
   },
   {
     name: "Subdocument of allowed domain",
     domains: ["http://flashallow.example.com", "http://example.com"],
     expectedActivated: true,
     expectedHasRunningPlugin: true,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "allowed"
   },
   {
     name: "Exception to allowed domain",
@@ -113,7 +118,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Blocked domain",
@@ -121,7 +127,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Nested blocked domain",
@@ -129,7 +136,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Subdocument of blocked subdocument",
@@ -137,7 +145,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Blocked subdocument nested among in allowed documents",
@@ -145,7 +154,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Exception to blocked domain",
@@ -153,7 +163,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Sub-document blocked domain in top-level context",
@@ -161,7 +172,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Sub-document blocked domain",
@@ -169,7 +181,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Sub-document blocked subdocument of an allowed domain",
@@ -177,7 +190,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Subdocument of Sub-document blocked domain",
@@ -185,7 +199,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: false
+    pluginListed: false,
+    expectedFlashClassification: "denied"
   },
   {
     name: "Sub-document exception in top-level context",
@@ -193,7 +208,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   },
   {
     name: "Sub-document blocked domain exception",
@@ -201,7 +217,8 @@ var testCases = [
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
     expectedActivated: false,
     expectedHasRunningPlugin: false,
-    pluginListed: true
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
   }
 ];
 
@@ -249,7 +266,8 @@ function getPluginInfo(browser, depth) {
       pluginFallbackType: pluginObj.pluginFallbackType,
       activated: pluginObj.activated,
       hasRunningPlugin: pluginObj.hasRunningPlugin,
-      listed: ("Shockwave Flash" in win.navigator.plugins)
+      listed: ("Shockwave Flash" in win.navigator.plugins),
+      flashClassification: doc.documentFlashClassification
     };
   });
 }
@@ -288,6 +306,10 @@ add_task(function* checkFlashBlockLists() {
       is(pluginInfo.listed, testCase.pluginListed,
         "Plugin's existance in navigator.plugins should match expected")
     }
+    if ("expectedFlashClassification" in testCase) {
+      is(pluginInfo.flashClassification, testCase.expectedFlashClassification,
+        "Page's classification should match expected");
+    }
 
     yield BrowserTestUtils.removeTab(tab);
   }
@@ -316,6 +338,8 @@ add_task(function* checkFlashBlockDisabled() {
     ok(pluginInfo.activated, "Plugin should be activated");
     ok(pluginInfo.hasRunningPlugin, "Plugin should be running");
     ok(pluginInfo.listed, "Flash should be listed in navigator.plugins");
+    is(pluginInfo.flashClassification, "allowed",
+       "Page's classification should be 'allowed'");
 
     yield BrowserTestUtils.removeTab(tab);
   }

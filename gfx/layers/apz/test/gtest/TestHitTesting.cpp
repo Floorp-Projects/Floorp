@@ -6,6 +6,7 @@
 
 #include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
+#include "gfxPrefs.h"
 #include "InputUtils.h"
 
 class APZHitTestingTester : public APZCTreeManagerTester {

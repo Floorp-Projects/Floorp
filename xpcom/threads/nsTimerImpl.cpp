@@ -219,7 +219,7 @@ nsTimerImpl::InitWithFuncCallbackCommon(nsTimerCallbackFunc aFunc,
                                         void* aClosure,
                                         uint32_t aDelay,
                                         uint32_t aType,
-                                        Callback::Name aName)
+                                        const Callback::Name& aName)
 {
   if (NS_WARN_IF(!aFunc)) {
     return NS_ERROR_INVALID_ARG;
@@ -645,7 +645,7 @@ nsTimerImpl::GetName(nsACString& aName)
         aName.Assign(buf);
       } else {
         MOZ_ASSERT(cb.mName.is<Callback::NameNothing>());
-        aName.AssignLiteral("Anonymous callback timer");
+        aName.AssignLiteral("Anonymous_callback_timer");
       }
       break;
 
@@ -653,7 +653,7 @@ nsTimerImpl::GetName(nsACString& aName)
       if (nsCOMPtr<nsINamed> named = do_QueryInterface(cb.mCallback.i)) {
         named->GetName(aName);
       } else {
-        aName.AssignLiteral("Anonymous interface timer");
+        aName.AssignLiteral("Anonymous_interface_timer");
       }
       break;
 
@@ -661,12 +661,12 @@ nsTimerImpl::GetName(nsACString& aName)
       if (nsCOMPtr<nsINamed> named = do_QueryInterface(cb.mCallback.o)) {
         named->GetName(aName);
       } else {
-        aName.AssignLiteral("Anonymous observer timer");
+        aName.AssignLiteral("Anonymous_observer_timer");
       }
       break;
 
     case Callback::Type::Unknown:
-      aName.AssignLiteral("Anonymous timer");
+      aName.AssignLiteral("Canceled_timer");
       break;
   }
 }

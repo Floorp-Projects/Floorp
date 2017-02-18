@@ -2288,6 +2288,11 @@ JsepSessionImpl::SetupDefaultRtpExtensions()
 {
   AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:ssrc-audio-level",
                        SdpDirectionAttribute::Direction::kSendonly);
+  AddVideoRtpExtension(
+    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:toffset",
+                       SdpDirectionAttribute::Direction::kSendrecv);
 }
 
 void
@@ -2496,11 +2501,8 @@ JsepSessionImpl::GetParsedLocalDescription() const
 {
   if (mPendingLocalDescription) {
     return mPendingLocalDescription.get();
-  } else if (mCurrentLocalDescription) {
-    return mCurrentLocalDescription.get();
   }
-
-  return nullptr;
+  return mCurrentLocalDescription.get();
 }
 
 mozilla::Sdp*
@@ -2508,11 +2510,8 @@ JsepSessionImpl::GetParsedRemoteDescription() const
 {
   if (mPendingRemoteDescription) {
     return mPendingRemoteDescription.get();
-  } else if (mCurrentRemoteDescription) {
-    return mCurrentRemoteDescription.get();
   }
-
-  return nullptr;
+  return mCurrentRemoteDescription.get();
 }
 
 const Sdp*

@@ -898,7 +898,7 @@ nsresult MediaDevice::Deallocate() {
 void
 MediaOperationTask::ReturnCallbackError(nsresult rv, const char* errorLog)
 {
-  MM_LOG(("%s , rv=%d", errorLog, rv));
+  MM_LOG(("%s , rv=%" PRIu32, errorLog, static_cast<uint32_t>(rv)));
   NS_DispatchToMainThread(do_AddRef(new ReleaseMediaOperationResource(mStream.forget(),
     mOnTracksAvailableCallback.forget())));
   nsString log;
@@ -1472,7 +1472,7 @@ public:
       }
     }
     if (errorMsg) {
-      LOG(("%s %d", errorMsg, rv));
+      LOG(("%s %" PRIu32, errorMsg, static_cast<uint32_t>(rv)));
       if (badConstraint) {
         Fail(NS_LITERAL_STRING("OverconstrainedError"),
              NS_LITERAL_STRING(""),
@@ -2672,7 +2672,7 @@ void
 MediaManager::OnNavigation(uint64_t aWindowID)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(("OnNavigation for %llu", aWindowID));
+  LOG(("OnNavigation for %" PRIu64, aWindowID));
 
   // Stop the streams for this window. The runnables check this value before
   // making a call to content.
@@ -2740,13 +2740,13 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
   // get outer windowID
   auto* window = nsGlobalWindow::GetInnerWindowWithId(aWindowId);
   if (!window) {
-    LOG(("No inner window for %llu", aWindowId));
+    LOG(("No inner window for %" PRIu64, aWindowId));
     return;
   }
 
   nsPIDOMWindowOuter* outer = window->AsInner()->GetOuterWindow();
   if (!outer) {
-    LOG(("No outer window for inner %llu", aWindowId));
+    LOG(("No outer window for inner %" PRIu64, aWindowId));
     return;
   }
 
@@ -2759,7 +2759,7 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
-  LOG(("Sent recording-window-ended for window %llu (outer %llu)",
+  LOG(("Sent recording-window-ended for window %" PRIu64 " (outer %" PRIu64 ")",
        aWindowId, outerID));
 }
 
@@ -3126,14 +3126,14 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       uint64_t windowID = PromiseFlatString(Substring(data, strlen("screen:"))).ToInteger64(&rv);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
-        LOG(("Revoking Screen/windowCapture access for window %llu", windowID));
+        LOG(("Revoking Screen/windowCapture access for window %" PRIu64, windowID));
         StopScreensharing(windowID);
       }
     } else {
       uint64_t windowID = nsString(aData).ToInteger64(&rv);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (NS_SUCCEEDED(rv)) {
-        LOG(("Revoking MediaCapture access for window %llu", windowID));
+        LOG(("Revoking MediaCapture access for window %" PRIu64, windowID));
         OnNavigation(windowID);
       }
     }
@@ -3272,7 +3272,7 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
     IterateWindowListeners(piWin, CaptureWindowStateCallback, &data);
   }
 #ifdef DEBUG
-  LOG(("%s: window %lld capturing %s %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
+  LOG(("%s: window %" PRIu64 " capturing %s %s %s %s %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
        *aVideo ? "video" : "", *aAudio ? "audio" : "",
        *aScreenShare ? "screenshare" : "",  *aWindowShare ? "windowshare" : "",
        *aAppShare ? "appshare" : "", *aBrowserShare ? "browsershare" : ""));
@@ -3284,7 +3284,7 @@ NS_IMETHODIMP
 MediaManager::SanitizeDeviceIds(int64_t aSinceWhen)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(("%s: sinceWhen = %llu", __FUNCTION__, aSinceWhen));
+  LOG(("%s: sinceWhen = %" PRId64, __FUNCTION__, aSinceWhen));
 
   media::SanitizeOriginKeys(aSinceWhen, false); // we fire and forget
   return NS_OK;

@@ -1108,8 +1108,8 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     return false;
   }
 
-  Telemetry::ID pre;
-  Telemetry::ID post;
+  Telemetry::HistogramID pre;
+  Telemetry::HistogramID post;
   switch (range.max) {
     case SSL_LIBRARY_VERSION_TLS_1_3:
       pre = Telemetry::SSL_TLS13_INTOLERANCE_REASON_PRE;
@@ -1145,6 +1145,40 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   Telemetry::Accumulate(post, reason);
 
   return true;
+}
+
+// Ensure that we haven't added too many errors to fit.
+static_assert((SSL_ERROR_END_OF_LIST - SSL_ERROR_BASE) <= 256,
+              "too many SSL errors");
+static_assert((SEC_ERROR_END_OF_LIST - SEC_ERROR_BASE) <= 256,
+              "too many SEC errors");
+static_assert((PR_MAX_ERROR - PR_NSPR_ERROR_BASE) <= 128,
+              "too many NSPR errors");
+static_assert((mozilla::pkix::ERROR_BASE - mozilla::pkix::END_OF_LIST) < 31,
+              "too many moz::pkix errors");
+
+static void
+reportHandshakeResult(int32_t bytesTransferred, PRErrorCode err)
+{
+  uint32_t bucket;
+
+  if (bytesTransferred >= 0) {
+    bucket = 0;
+  } else if (IS_SSL_ERROR(err)) {
+    bucket = err - SSL_ERROR_BASE;
+    MOZ_ASSERT(bucket > 0);   // SSL_ERROR_EXPORT_ONLY_SERVER isn't used.
+  } else if (IS_SEC_ERROR(err)) {
+    bucket = (err - SEC_ERROR_BASE) + 256;
+  } else if ((err >= PR_NSPR_ERROR_BASE) && (err < PR_MAX_ERROR)) {
+    bucket = (err - PR_NSPR_ERROR_BASE) + 512;
+  } else if ((err >= mozilla::pkix::ERROR_BASE) &&
+             (err < mozilla::pkix::ERROR_LIMIT)) {
+    bucket = (err - mozilla::pkix::ERROR_BASE) + 640;
+  } else {
+    bucket = 671;
+  }
+
+  Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT, bucket);
 }
 
 int32_t
@@ -1224,6 +1258,10 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
   // set the HandshakePending attribute to false so that we don't try the logic
   // above again in a subsequent transfer.
   if (handleHandshakeResultNow) {
+    // Report the result once for each handshake. Note that this does not
+    // get handshakes which are cancelled before any reads or writes
+    // happen.
+    reportHandshakeResult(bytesTransfered, originalError);
     socketInfo->SetHandshakeNotPending();
   }
 

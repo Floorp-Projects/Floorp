@@ -15,6 +15,7 @@
 #ifdef DEBUG
 #include "MainThreadUtils.h"
 #endif
+#include "mozilla/SizePrintfMacros.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -108,7 +109,7 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
 
 EventTokenBucket::~EventTokenBucket()
 {
-  SOCKET_LOG(("EventTokenBucket::dtor %p events=%d\n",
+  SOCKET_LOG(("EventTokenBucket::dtor %p events=%" PRIuSIZE "\n",
               this, mEvents.GetSize()));
 
   CleanupTimers();
@@ -287,7 +288,7 @@ EventTokenBucket::DispatchEvents()
       dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     if (cancelable->mEvent) {
       SOCKET_LOG(("EventTokenBucket::DispachEvents [%p] "
-                  "Dispatching queue token bucket event cost=%lu credit=%lu\n",
+                  "Dispatching queue token bucket event cost=%" PRIu64 " credit=%" PRIu64 "\n",
                   this, mUnitCost, mCredit));
       mCredit -= mUnitCost;
       cancelable->Fire();
@@ -326,7 +327,7 @@ EventTokenBucket::UpdateTimer()
   FineGrainTimers();
 #endif
 
-  SOCKET_LOG(("EventTokenBucket::UpdateTimer %p for %dms\n",
+  SOCKET_LOG(("EventTokenBucket::UpdateTimer %p for %" PRIu64 "ms\n",
               this, msecWait));
   nsresult rv = mTimer->InitWithCallback(this, static_cast<uint32_t>(msecWait),
                                          nsITimer::TYPE_ONE_SHOT);
@@ -369,7 +370,7 @@ EventTokenBucket::UpdateCredits()
   mCredit += static_cast<uint64_t>(elapsed.ToMicroseconds());
   if (mCredit > mMaxCredit)
     mCredit = mMaxCredit;
-  SOCKET_LOG(("EventTokenBucket::UpdateCredits %p to %lu (%lu each.. %3.2f)\n",
+  SOCKET_LOG(("EventTokenBucket::UpdateCredits %p to %" PRIu64 " (%" PRIu64 " each.. %3.2f)\n",
               this, mCredit, mUnitCost, (double)mCredit / mUnitCost));
 }
 

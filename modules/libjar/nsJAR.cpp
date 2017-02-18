@@ -11,7 +11,6 @@
 #include "nsIConsoleService.h"
 #include "nsICryptoHash.h"
 #include "nsIDataSignatureVerifier.h"
-#include "prprf.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Unused.h"
 
@@ -114,7 +113,7 @@ MozExternalRefCountType nsJAR::Release(void)
     delete this;
     return 0;
   }
-  else if (1 == count && mCache) {
+  if (1 == count && mCache) {
 #ifdef DEBUG
     nsresult rv =
 #endif

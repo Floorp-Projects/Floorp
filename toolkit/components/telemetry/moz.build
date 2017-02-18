@@ -10,7 +10,12 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+DIRS = [
+    'pingsender',
+]
+
 DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
 
 LOCAL_INCLUDES += [
     '/xpcom/build',
@@ -38,18 +43,20 @@ EXPORTS.mozilla += [
     '!TelemetryEventEnums.h',
     '!TelemetryHistogramEnums.h',
     '!TelemetryScalarEnums.h',
+    'ipc/TelemetryComms.h',
+    'ipc/TelemetryIPC.h',
     'ProcessedStack.h',
     'Telemetry.h',
-    'TelemetryComms.h',
     'ThreadHangStats.h',
 ]
 
 SOURCES += [
+    'ipc/TelemetryIPC.cpp',
+    'ipc/TelemetryIPCAccumulator.cpp',
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
-    'TelemetryIPCAccumulator.cpp',
     'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
 ]

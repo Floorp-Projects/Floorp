@@ -23,7 +23,7 @@ from mach.registrar import Registrar
 import toml
 
 from servo.packages import WINDOWS_MSVC as msvc_deps
-from servo.util import host_triple
+from servo.util import host_triple, host_platform
 
 BIN_SUFFIX = ".exe" if sys.platform == "win32" else ""
 
@@ -258,15 +258,20 @@ class CommandBase(object):
         self.config["tools"].setdefault("system-cargo", False)
         self.config["tools"].setdefault("rust-root", "")
         self.config["tools"].setdefault("cargo-root", "")
-        self.set_use_stable_rust(False)
         if not self.config["tools"]["system-cargo"]:
             self.config["tools"]["cargo-root"] = path.join(
                 context.sharedir, "cargo", self.cargo_build_id())
         self.config["tools"].setdefault("rustc-with-gold", get_env_bool("SERVO_RUSTC_WITH_GOLD", True))
 
+        # https://github.com/rust-lang/rust/pull/39754
+        platforms_with_rustc_alt_builds = ["unknown-linux-gnu", "apple-darwin", "pc-windows-msvc"]
+        llvm_assertions_default = ("SERVO_RUSTC_LLVM_ASSERTIONS" in os.environ
+                                   or host_platform() not in platforms_with_rustc_alt_builds)
+
         self.config.setdefault("build", {})
         self.config["build"].setdefault("android", False)
         self.config["build"].setdefault("mode", "")
+        self.config["build"].setdefault("llvm-assertions", llvm_assertions_default)
         self.config["build"].setdefault("debug-mozjs", False)
         self.config["build"].setdefault("ccache", "")
         self.config["build"].setdefault("rustflags", "")
@@ -278,6 +283,8 @@ class CommandBase(object):
         self.config["android"].setdefault("toolchain", "")
         self.config["android"].setdefault("platform", "android-18")
         self.config["android"].setdefault("target", "arm-linux-androideabi")
+
+        self.set_use_stable_rust(False)
 
     _use_stable_rust = False
     _rust_version = None
@@ -297,13 +304,14 @@ class CommandBase(object):
         version = self.rust_version()
         if self._use_stable_rust:
             return os.path.join(version, "rustc-%s-%s" % (version, host_triple()))
-        else:
-            return os.path.join(version, "rustc-nightly-%s" % (host_triple()))
+        if not self.config["build"]["llvm-assertions"]:
+            version += "-alt"
+        return os.path.join(version, "rustc-nightly-%s" % (host_triple()))
 
     def rust_version(self):
         if self._rust_version is None or self._use_stable_rust != self._rust_version_is_stable:
             filename = path.join(self.context.topdir,
-                                 "rust-stable-version" if self._use_stable_rust else "rust-nightly-date")
+                                 "rust-stable-version" if self._use_stable_rust else "rust-commit-hash")
             with open(filename) as f:
                 self._rust_version = f.read().strip()
         return self._rust_version

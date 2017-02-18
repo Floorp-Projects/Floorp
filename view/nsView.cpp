@@ -1021,7 +1021,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
 
     return true;
   }
-  else if (IsPopupWidget(aWidget)) {
+  if (IsPopupWidget(aWidget)) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
       pm->PopupResized(mFrame, LayoutDeviceIntSize(aWidth, aHeight));
@@ -1083,8 +1083,7 @@ nsView::DidCompositeWindow(uint64_t aTransactionId,
     nsPresContext* context = presShell->GetPresContext();
     nsRootPresContext* rootContext = context->GetRootPresContext();
     MOZ_ASSERT(rootContext, "rootContext must be valid.");
-    rootContext->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE, aTransactionId,
-                                          aCompositeEnd);
+    rootContext->NotifyDidPaintForSubtree(aTransactionId, aCompositeEnd);
 
     // If the two timestamps are identical, this was likely a fake composite
     // event which wouldn't be terribly useful to display.

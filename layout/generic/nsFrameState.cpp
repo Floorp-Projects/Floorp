@@ -62,7 +62,7 @@ GetFrameState(nsIFrame* aFrame)
 #undef FRAME_STATE_BIT
 
   if (state) {
-    result.AppendPrintf(" | 0x%0llx", state);
+    result.AppendPrintf(" | 0x%0" PRIx64, static_cast<uint64_t>(state));
   }
 
   return result;

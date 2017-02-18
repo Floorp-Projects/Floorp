@@ -150,44 +150,9 @@ FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
 #undef DECLARE_CONST_CHAR_STR
 
 /* Constant strings that are not atomized. */
-extern const char js_break_str[];
-extern const char js_case_str[];
-extern const char js_catch_str[];
-extern const char js_class_str[];
-extern const char js_close_str[];
-extern const char js_const_str[];
-extern const char js_continue_str[];
-extern const char js_debugger_str[];
-extern const char js_default_str[];
-extern const char js_do_str[];
-extern const char js_else_str[];
-extern const char js_enum_str[];
-extern const char js_export_str[];
-extern const char js_extends_str[];
-extern const char js_finally_str[];
-extern const char js_for_str[];
 extern const char js_getter_str[];
-extern const char js_if_str[];
-extern const char js_implements_str[];
-extern const char js_import_str[];
-extern const char js_in_str[];
-extern const char js_instanceof_str[];
-extern const char js_interface_str[];
-extern const char js_package_str[];
-extern const char js_private_str[];
-extern const char js_protected_str[];
-extern const char js_public_str[];
 extern const char js_send_str[];
 extern const char js_setter_str[];
-extern const char js_static_str[];
-extern const char js_super_str[];
-extern const char js_switch_str[];
-extern const char js_this_str[];
-extern const char js_try_str[];
-extern const char js_typeof_str[];
-extern const char js_void_str[];
-extern const char js_while_str[];
-extern const char js_with_str[];
 
 namespace js {
 

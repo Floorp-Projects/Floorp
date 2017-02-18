@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
 * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-env mozilla/frame-script */
+
 var Cu = Components.utils;
 
 // Ideally we would use CrashTestUtils.jsm, but that's only available for

@@ -4,15 +4,22 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
+ * https://w3c.github.io/ServiceWorker/#client-interface
  *
  */
 
 [Exposed=ServiceWorker]
 interface Client {
   readonly attribute USVString url;
+
+  // Remove frameType in bug 1290936
   readonly attribute FrameType frameType;
+
+  readonly attribute ClientType type;
   readonly attribute DOMString id;
+
+  // Implement reserved in bug 1264177
+  // readonly attribute boolean reserved;
 
   [Throws]
   void postMessage(any message, optional sequence<object> transfer = []);
@@ -23,6 +30,9 @@ interface WindowClient : Client {
   readonly attribute VisibilityState visibilityState;
   readonly attribute boolean focused;
 
+  // Implement ancestorOrigins in bug 1264180
+  // [SameObject] readonly attribute FrozenArray<USVString> ancestorOrigins;
+
   [Throws, NewObject]
   Promise<WindowClient> focus();
 
@@ -30,6 +40,7 @@ interface WindowClient : Client {
   Promise<WindowClient> navigate(USVString url);
 };
 
+// Remove FrameType in bug 1290936
 enum FrameType {
   "auxiliary",
   "top-level",

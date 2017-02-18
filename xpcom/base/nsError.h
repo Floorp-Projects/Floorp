@@ -81,6 +81,9 @@
 #define NS_ERROR_MODULE_DOM_PUSH 40
 #define NS_ERROR_MODULE_DOM_MEDIA 41
 #define NS_ERROR_MODULE_URL_CLASSIFIER 42
+/* ErrorResult gets its own module to reduce the chance of someone accidentally
+   defining an error code matching one of the ErrorResult ones. */
+#define NS_ERROR_MODULE_ERRORRESULT 43
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that

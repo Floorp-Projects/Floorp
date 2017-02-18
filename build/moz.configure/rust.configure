@@ -23,18 +23,24 @@ def rustc_info(rustc):
 @checking('cargo version', lambda info: info.version)
 @imports('re')
 def cargo_info(cargo):
-    # |cargo --version| doesn't have pleasant-to-parse output like rustc
-    # does. So we have to resort to regexes.
-    out = check_cmd_output(cargo, '--version').splitlines()[0]
-    VERSION_FORMAT = r'^cargo (\d\.\d+\.\d+).*'
+    out = check_cmd_output(cargo, '--version', '--verbose').splitlines()
+    info = dict((s.strip() for s in line.split(':', 1)) for line in out[1:])
+    version = info.get('release')
+    # Older versions of cargo didn't support --verbose, in which case, they
+    # only output a not-really-pleasant-to-parse output. Fortunately, they
+    # don't error out, so we can just try some regexp matching on the output
+    # we already got.
+    if version is None:
+        VERSION_FORMAT = r'^cargo (\d\.\d+\.\d+).*'
 
-    m = re.search(VERSION_FORMAT, out)
-    # Fail fast if cargo changes its output on us.
-    if not m:
-        die('Could not determine cargo version from output: %s', out)
+        m = re.search(VERSION_FORMAT, out[0])
+        # Fail fast if cargo changes its output on us.
+        if not m:
+            die('Could not determine cargo version from output: %s', out)
+        version = m.group(1)
 
     return namespace(
-        version=Version(m.group(1)),
+        version=Version(version),
     )
 
 @depends_if(cargo)

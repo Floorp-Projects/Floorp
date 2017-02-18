@@ -47,7 +47,12 @@ public:
     }
     return false;
   }
-
+  void ConfigurationChanged(const TrackInfo& aConfig) override
+  {
+    if (mDecoder && mDecoder->SupportDecoderRecycling()) {
+      mDecoder->ConfigurationChanged(aConfig);
+    }
+  }
   nsresult GetLastError() const { return mLastError; }
 
 private:
@@ -62,7 +67,17 @@ private:
   void OnDecoderInitDone(const TrackType aTrackType);
   void OnDecoderInitFailed(const MediaResult& aError);
 
+  bool CanRecycleDecoder() const
+  {
+    MOZ_ASSERT(mDecoder);
+    return MediaPrefs::MediaDecoderCheckRecycling()
+           && mDecoder->SupportDecoderRecycling();
+  }
+
+  void DecodeFirstSample(MediaRawData* aSample);
+
   RefPtr<PlatformDecoderModule> mPDM;
+  const VideoInfo mOriginalConfig;
   VideoInfo mCurrentConfig;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
@@ -72,10 +87,16 @@ private:
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
   MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseRequestHolder<FlushPromise> mFlushRequest;
+  MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
+  RefPtr<ShutdownPromise> mShutdownPromise;
+
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   bool mNeedAVCC;
   nsresult mLastError;
   bool mNeedKeyframe = true;
+  // Set to true once a decoder has been created.
+  bool mUseOriginalConfig = true;
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };

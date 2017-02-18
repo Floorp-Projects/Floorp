@@ -1435,7 +1435,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button {
   min-width: 0;
-  margin: 0;
+  margin-left: 0;
+  margin-right: 0;
   -moz-box-orient: horizontal;
   -moz-box-align: center;
 }

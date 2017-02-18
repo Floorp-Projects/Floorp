@@ -258,7 +258,7 @@ private:
   Maybe<uint32_t> mLastSeenFrameHeight;
   // This will be populated only if a resolution change occurs, otherwise it
   // will be left as null so the original metadata is used
-  RefPtr<SharedTrackInfo> mSharedVideoTrackInfo;
+  RefPtr<TrackInfoSharedPtr> mSharedVideoTrackInfo;
 
   EncryptionInfo mCrypto;
 };

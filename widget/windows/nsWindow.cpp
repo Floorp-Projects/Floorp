@@ -80,7 +80,6 @@
 
 #include "mozilla/Logging.h"
 #include "prtime.h"
-#include "prprf.h"
 #include "prmem.h"
 #include "prenv.h"
 

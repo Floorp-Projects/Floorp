@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OpenSLESProvider.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "nsDebug.h"
 
@@ -69,14 +70,14 @@ SLresult OpenSLESProvider::GetEngine(SLObjectItf * aObjectm,
     LOG(("Returning existing engine, %d users", mSLEngineUsers));
     return SL_RESULT_SUCCESS;
   } else {
-    int res = ConstructEngine(aObjectm, aOptionCount, aOptions);
+    SLresult res = ConstructEngine(aObjectm, aOptionCount, aOptions);
     if (res == SL_RESULT_SUCCESS) {
       // Bug 1042051: Store engine options
       mSLEngine = *aObjectm;
       mSLEngineUsers++;
       LOG(("Returning new engine"));
     } else {
-      LOG(("Error getting engine: %d", res));
+      LOG(("Error getting engine: %lu", static_cast<unsigned long>(res)));
     }
     return res;
   }
@@ -156,7 +157,7 @@ SLresult OpenSLESProvider::RealizeEngine(SLObjectItf aObjectm)
   } else {
     SLresult res = (*aObjectm)->Realize(aObjectm, SL_BOOLEAN_FALSE);
     if (res != SL_RESULT_SUCCESS) {
-      LOG(("Error realizing OpenSLES engine: %d", res));
+      LOG(("Error realizing OpenSLES engine: %lu", static_cast<unsigned long>(res)));
     } else {
       LOG(("Realized OpenSLES engine"));
       mIsRealized = true;

@@ -176,7 +176,8 @@ nsresult nsReadConfig::readConfigFile()
     rv = openAndEvaluateJSFile(lockFileName.get(), obscureValue, true, true);
     if (NS_FAILED(rv))
     {
-      MOZ_LOG(MCD, LogLevel::Debug, ("error evaluating .cfg file %s %x\n", lockFileName.get(), rv));
+      MOZ_LOG(MCD, LogLevel::Debug, ("error evaluating .cfg file %s %" PRIx32 "\n",
+                                     lockFileName.get(), static_cast<uint32_t>(rv)));
       return rv;
     }
     

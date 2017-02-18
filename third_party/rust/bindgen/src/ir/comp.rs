@@ -2,11 +2,11 @@
 
 use super::annotations::Annotations;
 use super::context::{BindgenContext, ItemId};
-use super::derive::{CanDeriveCopy, CanDeriveDebug};
+use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use super::item::Item;
 use super::layout::Layout;
-use super::ty::Type;
-use super::type_collector::{ItemSet, TypeCollector};
+use super::traversal::{EdgeKind, Trace, Tracer};
+use super::ty::{TemplateDeclaration, Type};
 use clang;
 use parse::{ClangItemParser, ParseError};
 use std::cell::Cell;
@@ -102,6 +102,8 @@ pub struct Field {
     bitfield: Option<u32>,
     /// If the C++ field is marked as `mutable`
     mutable: bool,
+    /// The offset of the field (in bits)
+    offset: Option<usize>,
 }
 
 impl Field {
@@ -111,7 +113,8 @@ impl Field {
                comment: Option<String>,
                annotations: Option<Annotations>,
                bitfield: Option<u32>,
-               mutable: bool)
+               mutable: bool,
+               offset: Option<usize>)
                -> Field {
         Field {
             name: name,
@@ -120,6 +123,7 @@ impl Field {
             annotations: annotations.unwrap_or_default(),
             bitfield: bitfield,
             mutable: mutable,
+            offset: offset,
         }
     }
 
@@ -152,6 +156,11 @@ impl Field {
     pub fn annotations(&self) -> &Annotations {
         &self.annotations
     }
+
+    /// The offset of the field (in bits)
+    pub fn offset(&self) -> Option<usize> {
+        self.offset
+    }
 }
 
 impl CanDeriveDebug for Field {
@@ -159,6 +168,14 @@ impl CanDeriveDebug for Field {
 
     fn can_derive_debug(&self, ctx: &BindgenContext, _: ()) -> bool {
         self.ty.can_derive_debug(ctx, ())
+    }
+}
+
+impl CanDeriveDefault for Field {
+    type Extra = ();
+
+    fn can_derive_default(&self, ctx: &BindgenContext, _: ()) -> bool {
+        self.ty.can_derive_default(ctx, ())
     }
 }
 
@@ -272,9 +289,6 @@ pub struct CompInfo {
     /// Whether this struct layout is packed.
     packed: bool,
 
-    /// Whether this struct is anonymous.
-    is_anonymous: bool,
-
     /// Used to know if we've found an opaque attribute that could cause us to
     /// generate a type with invalid layout. This is explicitly used to avoid us
     /// generating bad alignments when parsing types like max_align_t.
@@ -286,6 +300,10 @@ pub struct CompInfo {
     /// Used to detect if we've run in a can_derive_debug cycle while cycling
     /// around the template arguments.
     detect_derive_debug_cycle: Cell<bool>,
+
+    /// Used to detect if we've run in a can_derive_default cycle while cycling
+    /// around the template arguments.
+    detect_derive_default_cycle: Cell<bool>,
 
     /// Used to detect if we've run in a has_destructor cycle while cycling
     /// around the template arguments.
@@ -314,9 +332,9 @@ impl CompInfo {
             has_nonempty_base: false,
             has_non_type_template_params: false,
             packed: false,
-            is_anonymous: false,
             found_unknown_attr: false,
             detect_derive_debug_cycle: Cell::new(false),
+            detect_derive_default_cycle: Cell::new(false),
             detect_has_destructor_cycle: Cell::new(false),
             is_forward_declaration: false,
         }
@@ -391,10 +409,9 @@ impl CompInfo {
     /// kind of unions, see test/headers/template_union.hpp
     pub fn layout(&self, ctx: &BindgenContext) -> Option<Layout> {
         use std::cmp;
-
         // We can't do better than clang here, sorry.
         if self.kind == CompKind::Struct {
-            return None;
+            return None
         }
 
         let mut max_size = 0;
@@ -493,12 +510,9 @@ impl CompInfo {
                 CXCursor_ClassDecl => !cur.is_definition(),
                 _ => false,
             });
-        ci.is_anonymous = cursor.is_anonymous();
         ci.template_args = match ty.template_args() {
-            // In forward declarations and not specializations,
-            // etc, they are in
-            // the ast, we'll meet them in
-            // CXCursor_TemplateTypeParameter
+            // In forward declarations and not specializations, etc, they are in
+            // the ast, we'll meet them in CXCursor_TemplateTypeParameter
             None => vec![],
             Some(arg_types) => {
                 let num_arg_types = arg_types.len();
@@ -529,35 +543,35 @@ impl CompInfo {
         let mut maybe_anonymous_struct_field = None;
         cursor.visit(|cur| {
             if cur.kind() != CXCursor_FieldDecl {
-                if let Some((ty, _)) = maybe_anonymous_struct_field {
-                    let field = Field::new(None, ty, None, None, None, false);
+                if let Some((ty, _, offset)) =
+                    maybe_anonymous_struct_field.take() {
+                    let field =
+                        Field::new(None, ty, None, None, None, false, offset);
                     ci.fields.push(field);
                 }
-                maybe_anonymous_struct_field = None;
             }
 
             match cur.kind() {
                 CXCursor_FieldDecl => {
-                    match maybe_anonymous_struct_field.take() {
-                        Some((ty, clang_ty)) => {
-                            let mut used = false;
-                            cur.visit(|child| {
-                                if child.cur_type() == clang_ty {
-                                    used = true;
-                                }
-                                CXChildVisit_Continue
-                            });
-                            if !used {
-                                let field = Field::new(None,
-                                                       ty,
-                                                       None,
-                                                       None,
-                                                       None,
-                                                       false);
-                                ci.fields.push(field);
+                    if let Some((ty, clang_ty, offset)) =
+                        maybe_anonymous_struct_field.take() {
+                        let mut used = false;
+                        cur.visit(|child| {
+                            if child.cur_type() == clang_ty {
+                                used = true;
                             }
+                            CXChildVisit_Continue
+                        });
+                        if !used {
+                            let field = Field::new(None,
+                                                   ty,
+                                                   None,
+                                                   None,
+                                                   None,
+                                                   false,
+                                                   offset);
+                            ci.fields.push(field);
                         }
-                        None => {}
                     }
 
                     let bit_width = cur.bit_width();
@@ -570,6 +584,7 @@ impl CompInfo {
                     let annotations = Annotations::new(&cur);
                     let name = cur.spelling();
                     let is_mutable = cursor.is_mutable_field();
+                    let offset = cur.offset_of_field().ok();
 
                     // Name can be empty if there are bitfields, for example,
                     // see tests/headers/struct_with_bitfields.h
@@ -583,7 +598,8 @@ impl CompInfo {
                                            comment,
                                            annotations,
                                            bit_width,
-                                           is_mutable);
+                                           is_mutable,
+                                           offset);
                     ci.fields.push(field);
 
                     // No we look for things like attributes and stuff.
@@ -605,17 +621,28 @@ impl CompInfo {
                 CXCursor_UnionDecl |
                 CXCursor_ClassTemplate |
                 CXCursor_ClassDecl => {
+                    // We can find non-semantic children here, clang uses a
+                    // StructDecl to note incomplete structs that hasn't been
+                    // forward-declared before, see:
+                    //
+                    // https://github.com/servo/rust-bindgen/issues/482
+                    if cur.semantic_parent() != cursor {
+                        return CXChildVisit_Continue;
+                    }
+
                     let inner = Item::parse(cur, Some(potential_id), ctx)
                         .expect("Inner ClassDecl");
-                    if !ci.inner_types.contains(&inner) {
-                        ci.inner_types.push(inner);
-                    }
+
+                    ci.inner_types.push(inner);
+
                     // A declaration of an union or a struct without name could
                     // also be an unnamed field, unfortunately.
                     if cur.spelling().is_empty() &&
                        cur.kind() != CXCursor_EnumDecl {
                         let ty = cur.cur_type();
-                        maybe_anonymous_struct_field = Some((inner, ty));
+                        let offset = cur.offset_of_field().ok();
+                        maybe_anonymous_struct_field =
+                            Some((inner, ty, offset));
                     }
                 }
                 CXCursor_PackedAttr => {
@@ -748,8 +775,8 @@ impl CompInfo {
             CXChildVisit_Continue
         });
 
-        if let Some((ty, _)) = maybe_anonymous_struct_field {
-            let field = Field::new(None, ty, None, None, None, false);
+        if let Some((ty, _, offset)) = maybe_anonymous_struct_field {
+            let field = Field::new(None, ty, None, None, None, false, offset);
             ci.fields.push(field);
         }
 
@@ -843,6 +870,16 @@ impl CompInfo {
     }
 }
 
+impl TemplateDeclaration for CompInfo {
+    fn template_params(&self, _ctx: &BindgenContext) -> Option<Vec<ItemId>> {
+        if self.template_args.is_empty() {
+            None
+        } else {
+            Some(self.template_args.clone())
+        }
+    }
+}
+
 impl CanDeriveDebug for CompInfo {
     type Extra = Option<Layout>;
 
@@ -889,6 +926,52 @@ impl CanDeriveDebug for CompInfo {
         self.detect_derive_debug_cycle.set(false);
 
         can_derive_debug
+    }
+}
+
+impl CanDeriveDefault for CompInfo {
+    type Extra = Option<Layout>;
+
+    fn can_derive_default(&self,
+                          ctx: &BindgenContext,
+                          layout: Option<Layout>)
+                          -> bool {
+        // We can reach here recursively via template parameters of a member,
+        // for example.
+        if self.detect_derive_default_cycle.get() {
+            warn!("Derive default cycle detected!");
+            return true;
+        }
+
+        if self.kind == CompKind::Union {
+            if ctx.options().unstable_rust {
+                return false;
+            }
+
+            return layout.unwrap_or_else(Layout::zero)
+                .opaque()
+                .can_derive_debug(ctx, ());
+        }
+
+        self.detect_derive_default_cycle.set(true);
+
+        let can_derive_default = !self.has_vtable(ctx) &&
+                                 !self.needs_explicit_vtable(ctx) &&
+                                 self.base_members
+            .iter()
+            .all(|base| base.ty.can_derive_default(ctx, ())) &&
+                                 self.template_args
+            .iter()
+            .all(|id| id.can_derive_default(ctx, ())) &&
+                                 self.fields
+            .iter()
+            .all(|f| f.can_derive_default(ctx, ())) &&
+                                 self.ref_template
+            .map_or(true, |id| id.can_derive_default(ctx, ()));
+
+        self.detect_derive_default_cycle.set(false);
+
+        can_derive_default
     }
 }
 
@@ -944,44 +1027,55 @@ impl<'a> CanDeriveCopy<'a> for CompInfo {
     }
 }
 
-impl TypeCollector for CompInfo {
+impl Trace for CompInfo {
     type Extra = Item;
 
-    fn collect_types(&self,
-                     context: &BindgenContext,
-                     types: &mut ItemSet,
-                     item: &Item) {
+    fn trace<T>(&self, context: &BindgenContext, tracer: &mut T, item: &Item)
+        where T: Tracer,
+    {
+        // TODO: We should properly distinguish template instantiations from
+        // template declarations at the type level. Why are some template
+        // instantiations represented here instead of as
+        // TypeKind::TemplateInstantiation?
         if let Some(template) = self.specialized_template() {
-            types.insert(template);
-        }
-
-        let applicable_template_args = item.applicable_template_args(context);
-        for arg in applicable_template_args {
-            types.insert(arg);
+            // This is an instantiation of a template declaration with concrete
+            // template type arguments.
+            tracer.visit(template);
+            let args = item.applicable_template_args(context);
+            for a in args {
+                tracer.visit(a);
+            }
+        } else {
+            let params = item.applicable_template_args(context);
+            // This is a template declaration with abstract template type
+            // parameters.
+            for p in params {
+                tracer.visit_kind(p, EdgeKind::TemplateParameterDefinition);
+            }
         }
 
         for base in self.base_members() {
-            types.insert(base.ty);
+            tracer.visit(base.ty);
         }
 
         for field in self.fields() {
-            types.insert(field.ty());
+            tracer.visit(field.ty());
         }
 
         for &ty in self.inner_types() {
-            types.insert(ty);
+            tracer.visit(ty);
         }
 
         for &var in self.inner_vars() {
-            types.insert(var);
+            tracer.visit(var);
         }
 
         for method in self.methods() {
-            types.insert(method.signature);
+            tracer.visit(method.signature);
         }
 
         for &ctor in self.constructors() {
-            types.insert(ctor);
+            tracer.visit(ctor);
         }
     }
 }

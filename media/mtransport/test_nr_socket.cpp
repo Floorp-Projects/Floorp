@@ -143,9 +143,11 @@ TestNat::NatBehavior
 TestNat::ToNatBehavior(const std::string& type) {
   if (!type.compare("ENDPOINT_INDEPENDENT")) {
     return TestNat::ENDPOINT_INDEPENDENT;
-  } else if (!type.compare("ADDRESS_DEPENDENT")) {
+  }
+  if (!type.compare("ADDRESS_DEPENDENT")) {
     return TestNat::ADDRESS_DEPENDENT;
-  } else if (!type.compare("PORT_DEPENDENT")) {
+  }
+  if (!type.compare("PORT_DEPENDENT")) {
     return TestNat::PORT_DEPENDENT;
   }
 
@@ -539,25 +541,23 @@ int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
           my_addr().as_string);
 
     return internal_socket_->write(msg, len, written);
-  } else {
-    destroy_stale_port_mappings();
-    if (port_mappings_.empty()) {
-      r_log(LOG_GENERIC, LOG_DEBUG,
-            "TestNrSocket %s dropping outgoing TCP "
-            "because the port mapping was stale",
-            my_addr().as_string);
-      return R_INTERNAL;
-    }
-    // This is TCP only
-    MOZ_ASSERT(port_mappings_.size() == 1);
-    r_log(LOG_GENERIC, LOG_DEBUG,
-          "PortMapping %s -> %s writing",
-          port_mappings_.front()->external_socket_->my_addr().as_string,
-          port_mappings_.front()->remote_address_.as_string);
-
-    port_mappings_.front()->last_used_ = PR_IntervalNow();
-    return port_mappings_.front()->external_socket_->write(msg, len, written);
   }
+  destroy_stale_port_mappings();
+  if (port_mappings_.empty()) {
+    r_log(LOG_GENERIC, LOG_DEBUG,
+          "TestNrSocket %s dropping outgoing TCP "
+          "because the port mapping was stale",
+          my_addr().as_string);
+    return R_INTERNAL;
+  }
+  // This is TCP only
+  MOZ_ASSERT(port_mappings_.size() == 1);
+  r_log(LOG_GENERIC, LOG_DEBUG,
+        "PortMapping %s -> %s writing",
+        port_mappings_.front()->external_socket_->my_addr().as_string,
+        port_mappings_.front()->remote_address_.as_string);
+  port_mappings_.front()->last_used_ = PR_IntervalNow();
+  return port_mappings_.front()->external_socket_->write(msg, len, written);
 }
 
 int TestNrSocket::read(void *buf, size_t maxlen, size_t *len) {
@@ -642,7 +642,8 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
         this,
         function,
         line);
-  } else if (how == NR_ASYNC_WAIT_READ) {
+  }
+  if (how == NR_ASYNC_WAIT_READ) {
     // For UDP port mappings, we decouple the writeable callbacks
     for (PortMapping *port_mapping : port_mappings_) {
       // Be ready to receive traffic on our port mappings
@@ -903,7 +904,8 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
     r_log(LOG_GENERIC, LOG_DEBUG, "Enqueueing UDP packet to %s", to.as_string);
     send_queue_.push_back(RefPtr<UdpPacket>(new UdpPacket(msg, len, to)));
     return 0;
-  } else if (r) {
+  }
+  if (r) {
     r_log(LOG_GENERIC,LOG_ERR, "Error: %d", r);
   }
 

@@ -80,6 +80,7 @@ class AsyncCanvasRenderer;
 class AsyncPanZoomController;
 class BasicLayerManager;
 class ClientLayerManager;
+class HostLayerManager;
 class Layer;
 class LayerMetricsWrapper;
 class PaintedLayer;
@@ -216,6 +217,8 @@ public:
   { return nullptr; }
 
   virtual BasicLayerManager* AsBasicLayerManager()
+  { return nullptr; }
+  virtual HostLayerManager* AsHostLayerManager()
   { return nullptr; }
 
   virtual WebRenderLayerManager* AsWebRenderLayerManager()
@@ -706,6 +709,8 @@ public:
   }
 
   virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) {}
+
+  virtual uint64_t GetLastTransactionId() { return 0; }
 
   virtual CompositorBridgeChild* GetCompositorBridgeChild() { return nullptr; }
 
@@ -1804,8 +1809,6 @@ public:
   void SetDebugColorIndex(uint32_t aIndex) { mDebugColorIndex = aIndex; }
   uint32_t GetDebugColorIndex() { return mDebugColorIndex; }
 #endif
-
-  virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
 
   void Mutated() {
     mManager->Mutated(this);

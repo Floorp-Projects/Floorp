@@ -19,7 +19,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
-  : RestyleManagerBase(aPresContext)
+  : RestyleManager(StyleBackendType::Servo, aPresContext)
   , mReentrantChanges(nullptr)
 {
 }
@@ -82,12 +82,6 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
   }
 
   PostRestyleEventInternal(false);
-}
-
-void
-ServoRestyleManager::PostRestyleEventForLazyConstruction()
-{
-  PostRestyleEventInternal(true);
 }
 
 void
@@ -403,12 +397,6 @@ ServoRestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
 }
 
 void
-ServoRestyleManager::ContentInserted(nsINode* aContainer, nsIContent* aChild)
-{
-  RestyleForInsertOrChange(aContainer, aChild);
-}
-
-void
 ServoRestyleManager::RestyleForAppend(nsIContent* aContainer,
                                       nsIContent* aFirstNewContent)
 {
@@ -419,13 +407,6 @@ ServoRestyleManager::RestyleForAppend(nsIContent* aContainer,
   //
   // Bug 1297899 tracks this work.
   //
-}
-
-void
-ServoRestyleManager::ContentAppended(nsIContent* aContainer,
-                                     nsIContent* aFirstNewContent)
-{
-  RestyleForAppend(aContainer, aFirstNewContent);
 }
 
 void

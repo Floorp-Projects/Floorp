@@ -6,6 +6,7 @@
 #include "GMPStorageParent.h"
 #include "GMPParent.h"
 #include "gmp-storage.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "mozIGeckoMediaPluginService.h"
 
@@ -119,8 +120,8 @@ GMPStorageParent::RecvRead(const nsCString& aRecordName)
     Unused << SendReadComplete(aRecordName, GMPClosedErr, data);
   } else {
     GMPErr rv = mStorage->Read(aRecordName, data);
-    LOGD(("GMPStorageParent[%p]::RecvRead(record='%s') read %d bytes rv=%d",
-      this, aRecordName.get(), data.Length(), rv));
+    LOGD(("GMPStorageParent[%p]::RecvRead(record='%s') read %" PRIuSIZE " bytes rv=%" PRIu32,
+          this, aRecordName.get(), data.Length(), static_cast<uint32_t>(rv)));
     Unused << SendReadComplete(aRecordName, rv, data);
   }
 
@@ -131,7 +132,7 @@ mozilla::ipc::IPCResult
 GMPStorageParent::RecvWrite(const nsCString& aRecordName,
                             InfallibleTArray<uint8_t>&& aBytes)
 {
-  LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') %d bytes",
+  LOGD(("GMPStorageParent[%p]::RecvWrite(record='%s') %" PRIuSIZE " bytes",
         this, aRecordName.get(), aBytes.Length()));
 
   if (mShutdown) {

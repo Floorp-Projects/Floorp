@@ -29,6 +29,7 @@ static int32_t gMinTimeoutValue = 0;
 static int32_t gMinBackgroundTimeoutValue = 0;
 static int32_t gMinTrackingTimeoutValue = 0;
 static int32_t gMinTrackingBackgroundTimeoutValue = 0;
+static int32_t gTrackingTimeoutThrottlingDelay = 0;
 static bool    gAnnotateTrackingChannels = false;
 int32_t
 TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
@@ -39,10 +40,11 @@ TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // The original behavior was implemented in bug 11811073.
   bool isBackground = !mWindow.AsInner()->IsPlayingAudio() &&
     mWindow.IsBackgroundInternal();
-  auto minValue = aIsTracking ? (isBackground ? gMinTrackingBackgroundTimeoutValue
-                                              : gMinTrackingTimeoutValue)
-                              : (isBackground ? gMinBackgroundTimeoutValue
-                                              : gMinTimeoutValue);
+  bool throttleTracking = aIsTracking && mThrottleTrackingTimeouts;
+  auto minValue = throttleTracking ? (isBackground ? gMinTrackingBackgroundTimeoutValue
+                                                   : gMinTrackingTimeoutValue)
+                                   : (isBackground ? gMinBackgroundTimeoutValue
+                                                   : gMinTimeoutValue);
   return std::max(minValue, value);
 }
 
@@ -52,6 +54,9 @@ TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
 #define ALTERNATE_TIMEOUT_BUCKETING_STRATEGY         2 // Put every other timeout in the list of tracking timeouts
 #define RANDOM_TIMEOUT_BUCKETING_STRATEGY            3 // Put timeouts into either the normal or tracking timeouts list randomly
 static int32_t gTimeoutBucketingStrategy = 0;
+
+#define DEFAULT_TRACKING_TIMEOUT_THROTTLING_DELAY  -1  // Only positive integers cause us to introduce a delay for tracking
+                                                       // timeout throttling.
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
 // uses 5.
@@ -121,7 +126,8 @@ TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
     mTimeoutFiringDepth(0),
     mRunningTimeout(nullptr),
     mIdleCallbackTimeoutCounter(1),
-    mBackPressureDelayMS(0)
+    mBackPressureDelayMS(0),
+    mThrottleTrackingTimeouts(gTrackingTimeoutThrottlingDelay <= 0)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWindow.IsInnerWindow());
 
@@ -132,6 +138,8 @@ TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
 
 TimeoutManager::~TimeoutManager()
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mThrottleTrackingTimeoutsTimer);
+
   MOZ_LOG(gLog, LogLevel::Debug,
           ("TimeoutManager %p destroyed\n", this));
 }
@@ -155,6 +163,9 @@ TimeoutManager::Initialize()
   Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
                               "dom.timeout_bucketing_strategy",
                               TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY);
+  Preferences::AddIntVarCache(&gTrackingTimeoutThrottlingDelay,
+                              "dom.timeout.tracking_throttling_delay",
+                              DEFAULT_TRACKING_TIMEOUT_THROTTLING_DELAY);
   Preferences::AddBoolVarCache(&gAnnotateTrackingChannels,
                                "privacy.trackingprotection.annotate_channels",
                                false);
@@ -328,12 +339,15 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   *aReturn = timeout->mTimeoutId;
 
   MOZ_LOG(gLog, LogLevel::Debug,
-          ("Set%s(TimeoutManager=%p, timeout=%p, "
-           "delay=%i, minimum=%i, background=%d, realInterval=%i) "
+          ("Set%s(TimeoutManager=%p, timeout=%p, delay=%i, "
+           "minimum=%i, throttling=%s, background=%d, realInterval=%i) "
            "returned %stracking timeout ID %u\n",
            aIsInterval ? "Interval" : "Timeout",
            this, timeout.get(), interval,
            DOMMinTimeoutValue(timeout->mIsTracking),
+           mThrottleTrackingTimeouts ? "yes"
+                                     : (mThrottleTrackingTimeoutsTimer ?
+                                          "pending" : "no"),
            int(mWindow.IsBackgroundInternal()), realInterval,
            timeout->mIsTracking ? "" : "non-",
            timeout->mTimeoutId));
@@ -1213,4 +1227,80 @@ TimeoutManager::IsTimeoutTracking(uint32_t aTimeoutId)
   return mTrackingTimeouts.ForEachAbortable([&](Timeout* aTimeout) {
       return aTimeout->mTimeoutId == aTimeoutId;
     });
+}
+
+namespace {
+
+class ThrottleTrackingTimeoutsCallback final : public nsITimerCallback
+{
+public:
+  explicit ThrottleTrackingTimeoutsCallback(nsGlobalWindow* aWindow)
+    : mWindow(aWindow)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(aWindow->IsInnerWindow());
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+private:
+  ~ThrottleTrackingTimeoutsCallback() {}
+
+private:
+  // The strong reference here keeps the Window and hence the TimeoutManager
+  // object itself alive.
+  RefPtr<nsGlobalWindow> mWindow;
+};
+
+NS_IMPL_ISUPPORTS(ThrottleTrackingTimeoutsCallback, nsITimerCallback)
+
+NS_IMETHODIMP
+ThrottleTrackingTimeoutsCallback::Notify(nsITimer* aTimer)
+{
+  mWindow->AsInner()->TimeoutManager().StartThrottlingTrackingTimeouts();
+  mWindow = nullptr;
+  return NS_OK;
+}
+
+}
+
+void
+TimeoutManager::StartThrottlingTrackingTimeouts()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mThrottleTrackingTimeoutsTimer);
+
+  MOZ_LOG(gLog, LogLevel::Debug,
+          ("TimeoutManager %p started to throttle tracking timeouts\n", this));
+
+  MOZ_DIAGNOSTIC_ASSERT(!mThrottleTrackingTimeouts);
+  mThrottleTrackingTimeouts = true;
+  mThrottleTrackingTimeoutsTimer = nullptr;
+}
+
+void
+TimeoutManager::OnDocumentLoaded()
+{
+  if (gTrackingTimeoutThrottlingDelay <= 0) {
+    return;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mThrottleTrackingTimeouts);
+
+  MOZ_LOG(gLog, LogLevel::Debug,
+          ("TimeoutManager %p delaying tracking timeout throttling by %dms\n",
+           this, gTrackingTimeoutThrottlingDelay));
+
+  mThrottleTrackingTimeoutsTimer =
+    do_CreateInstance("@mozilla.org/timer;1");
+  if (!mThrottleTrackingTimeoutsTimer) {
+    return;
+  }
+
+  nsCOMPtr<nsITimerCallback> callback =
+    new ThrottleTrackingTimeoutsCallback(&mWindow);
+
+  mThrottleTrackingTimeoutsTimer->InitWithCallback(callback,
+                                                   gTrackingTimeoutThrottlingDelay,
+                                                   nsITimer::TYPE_ONE_SHOT);
 }

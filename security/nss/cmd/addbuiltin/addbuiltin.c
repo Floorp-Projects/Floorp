@@ -31,6 +31,29 @@ dumpbytes(unsigned char *buf, int len)
     printf("\n");
 }
 
+int
+hasPositiveTrust(unsigned int trust)
+{
+    if (trust & CERTDB_TRUSTED) {
+        if (trust & CERTDB_TRUSTED_CA) {
+            return PR_TRUE;
+        } else {
+            return PR_FALSE;
+        }
+    } else {
+        if (trust & CERTDB_TRUSTED_CA) {
+            return PR_TRUE;
+        } else if (trust & CERTDB_VALID_CA) {
+            return PR_TRUE;
+        } else if (trust & CERTDB_TERMINAL_RECORD) {
+            return PR_FALSE;
+        } else {
+            return PR_FALSE;
+        }
+    }
+    return PR_FALSE;
+}
+
 char *
 getTrustString(unsigned int trust)
 {
@@ -202,6 +225,11 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust,
         printf("CKA_VALUE MULTILINE_OCTAL\n");
         dumpbytes(sdder->data, sdder->len);
         printf("END\n");
+        if (hasPositiveTrust(trust->sslFlags) ||
+            hasPositiveTrust(trust->emailFlags) ||
+            hasPositiveTrust(trust->objectSigningFlags)) {
+            printf("CKA_NSS_MOZILLA_CA_POLICY CK_BBOOL CK_TRUE\n");
+        }
     }
 
     if ((trust->sslFlags | trust->emailFlags | trust->objectSigningFlags) ==

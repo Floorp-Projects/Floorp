@@ -93,7 +93,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
-  if (Services.prefs.getBoolPref("devtools.sourcemap.locations.enabled")) {
+  if (Services.prefs.getBoolPref("devtools.source-map.locations.enabled")) {
     this._sourceMapService = new SourceMapService(this._target);
   }
 

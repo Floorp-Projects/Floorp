@@ -13,6 +13,8 @@
 #include "nsIWidget.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 
@@ -458,8 +460,8 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p CacheTextRects(), Succeeded, "
-     "mText.Length()=%u, mTextRectArray={ mStart=%u, mRects.Length()=%u }, "
-     "mSelection={ mAnchor=%u, mAnchorCharRects[eNextCharRect]=%s, "
+     "mText.Length()=%x, mTextRectArray={ mStart=%u, mRects.Length()=%"
+     PRIuSIZE " }, mSelection={ mAnchor=%u, mAnchorCharRects[eNextCharRect]=%s, "
      "mAnchorCharRects[ePrevCharRect]=%s, mFocus=%u, "
      "mFocusCharRects[eNextCharRect]=%s, mFocusCharRects[ePrevCharRect]=%s, "
      "mRect=%s }, mFirstCharRect=%s",
@@ -561,7 +563,7 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      "mAnchorCharRects[ePrevCharRect]=%s, mFocusCharRects[eNextCharRect]=%s, "
      "mFocusCharRects[ePrevCharRect]=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
-     "mStart=%u, mRects.Length()=%u }, mWidgetHasComposition=%s, "
+     "mStart=%u, mRects.Length()=%" PRIuSIZE " }, mWidgetHasComposition=%s, "
      "mPendingCompositionCount=%u, mCompositionStart=%u, mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
@@ -617,7 +619,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
         MOZ_LOG(sContentCacheLog, LogLevel::Error,
           ("0x%p HandleQueryContentEvent(), FAILED due to "
            "aEvent.mInput.MakeOffsetAbsolute(0) failure, aEvent={ mMessage=%s, "
-           "mInput={ mOffset=%d, mLength=%d } }",
+           "mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
            this, ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
            aEvent.mInput.mLength));
         return false;
@@ -628,7 +630,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
           ("0x%p HandleQueryContentEvent(), FAILED due to "
            "aEvent.mInput.MakeOffsetAbsolute(mCompositionStart) failure, "
            "mCompositionStart=%d, aEvent={ mMessage=%s, "
-           "mInput={ mOffset=%d, mLength=%d } }",
+           "mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
            this, mCompositionStart, ToChar(aEvent.mMessage),
            aEvent.mInput.mOffset, aEvent.mInput.mLength));
         return false;
@@ -644,7 +646,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
         ("0x%p HandleQueryContentEvent(), FAILED due to "
          "aEvent.mInput.MakeOffsetAbsolute(mSelection.StartOffset()) "
          "failure, mSelection={ StartOffset()=%d, Length()=%d }, "
-         "aEvent={ mMessage=%s, mInput={ mOffset=%d, mLength=%d } }",
+         "aEvent={ mMessage=%s, mInput={ mOffset=%" PRId64 ", mLength=%" PRIu32 " } }",
          this, mSelection.StartOffset(), mSelection.Length(),
          ToChar(aEvent.mMessage), aEvent.mInput.mOffset,
          aEvent.mInput.mLength));
@@ -708,8 +710,8 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
     case eQueryTextContent: {
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=eQueryTextContent, mInput={ mOffset=%u, "
-         "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
+         "aEvent={ mMessage=eQueryTextContent, mInput={ mOffset=%" PRId64
+         ", mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset,
          aEvent.mInput.mLength, aWidget, mText.Length()));
       uint32_t inputOffset = aEvent.mInput.mOffset;
@@ -734,8 +736,8 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
     case eQueryTextRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%u, "
-         "mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
+         "aEvent={ mMessage=eQueryTextRect, mInput={ mOffset=%" PRId64
+         ", mLength=%u } }, aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset, aEvent.mInput.mLength, aWidget,
          mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
@@ -795,7 +797,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
     case eQueryCaretRect:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
         ("0x%p HandleQueryContentEvent("
-         "aEvent={ mMessage=eQueryCaretRect, mInput={ mOffset=%u } }, "
+         "aEvent={ mMessage=eQueryCaretRect, mInput={ mOffset=%" PRId64 " } }, "
          "aWidget=0x%p), mText.Length()=%u",
          this, aEvent.mInput.mOffset, aWidget, mText.Length()));
       if (NS_WARN_IF(!IsSelectionValid())) {
@@ -850,7 +852,7 @@ ContentCacheInParent::GetTextRect(uint32_t aOffset,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p GetTextRect(aOffset=%u, "
      "aRoundToExistingOffset=%s), "
-     "mTextRectArray={ mStart=%u, mRects.Length()=%u }, "
+     "mTextRectArray={ mStart=%u, mRects.Length()=%" PRIuSIZE " }, "
      "mSelection={ mAnchor=%u, mFocus=%u }",
      this, aOffset, GetBoolName(aRoundToExistingOffset),
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
@@ -919,7 +921,7 @@ ContentCacheInParent::GetUnionTextRects(
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p GetUnionTextRects(aOffset=%u, "
      "aLength=%u, aRoundToExistingOffset=%s), mTextRectArray={ "
-     "mStart=%u, mRects.Length()=%u }, "
+     "mStart=%u, mRects.Length()=%" PRIuSIZE " }, "
      "mSelection={ mAnchor=%u, mFocus=%u }",
      this, aOffset, aLength, GetBoolName(aRoundToExistingOffset),
      mTextRectArray.mStart, mTextRectArray.mRects.Length(),
@@ -1024,7 +1026,7 @@ ContentCacheInParent::GetCaretRect(uint32_t aOffset,
     ("0x%p GetCaretRect(aOffset=%u, "
      "aRoundToExistingOffset=%s), "
      "mCaret={ mOffset=%u, mRect=%s, IsValid()=%s }, mTextRectArray={ "
-     "mStart=%u, mRects.Length()=%u }, mSelection={ mAnchor=%u, mFocus=%u, "
+     "mStart=%u, mRects.Length()=%" PRIuSIZE " }, mSelection={ mAnchor=%u, mFocus=%u, "
      "mWritingMode=%s, mAnchorCharRects[eNextCharRect]=%s, "
      "mAnchorCharRects[ePrevCharRect]=%s, mFocusCharRects[eNextCharRect]=%s, "
      "mFocusCharRects[ePrevCharRect]=%s }, mFirstCharRect=%s",
@@ -1078,7 +1080,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
 {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnCompositionEvent(aEvent={ "
-     "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
+     "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%" PRIuSIZE " }), "
      "mPendingEventsNeedingAck=%u, mWidgetHasComposition=%s, "
      "mPendingCompositionCount=%u, mCommitStringByRequest=0x%p",
      this, ToChar(aEvent.mMessage),
@@ -1160,8 +1162,8 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
-     "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%u",
-     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck));
+     "aMessage=%s), mPendingEventsNeedingAck=%u, mPendingCompositionCount=%" PRIu8,
+     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck, mPendingCompositionCount));
 
   if (WidgetCompositionEvent::IsFollowedByCompositionEnd(aMessage)) {
     MOZ_RELEASE_ASSERT(mPendingCompositionCount > 0);

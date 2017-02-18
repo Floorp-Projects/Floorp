@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint-env mozilla/frame-script */
+
 add_task(function* () {
   let firstLocation = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);

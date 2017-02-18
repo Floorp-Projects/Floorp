@@ -339,11 +339,7 @@ def _is_test_file(path_from_root, basename, filename, requested_paths,
                   excluded_files, excluded_dirs):
     # Any file whose basename matches something in this set is ignored.
     EXCLUDED = set(('browser.js', 'shell.js', 'template.js',
-                    'user.js', 'sta.js',
-                    'test262-browser.js', 'test262-shell.js',
-                    'test402-browser.js', 'test402-shell.js',
-                    'testBuiltInObject.js', 'testIntl.js',
-                    'js-test-driver-begin.js', 'js-test-driver-end.js'))
+                    'user.js', 'js-test-driver-begin.js', 'js-test-driver-end.js'))
 
     # Skip js files in the root test directory.
     if not path_from_root:

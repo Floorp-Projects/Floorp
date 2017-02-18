@@ -20,7 +20,7 @@ public:
     : TimelineMarker("Styles", aTracingType)
   {
     if (aRestyleHint) {
-      mRestyleHint.AssignWithConversion(RestyleManager::RestyleHintToString(aRestyleHint));
+      mRestyleHint.AssignWithConversion(GeckoRestyleManager::RestyleHintToString(aRestyleHint));
     }
   }
 

@@ -23,7 +23,7 @@
 namespace mozilla {
 
 namespace Telemetry {
-  enum ID : uint32_t;
+  enum HistogramID : uint32_t;
 } // namespace Telemetry
 
 namespace image {
@@ -56,7 +56,7 @@ struct DecoderFinalStatus final
 
 struct DecoderTelemetry final
 {
-  DecoderTelemetry(Maybe<Telemetry::ID> aSpeedHistogram,
+  DecoderTelemetry(const Maybe<Telemetry::HistogramID>& aSpeedHistogram,
                    size_t aBytesDecoded,
                    uint32_t aChunkCount,
                    TimeDuration aDecodeTime)
@@ -77,7 +77,7 @@ struct DecoderTelemetry final
 
   /// The per-image-format telemetry ID for recording our decoder's speed, or
   /// Nothing() if we don't record speed telemetry for this kind of decoder.
-  const Maybe<Telemetry::ID> mSpeedHistogram;
+  const Maybe<Telemetry::HistogramID> mSpeedHistogram;
 
   /// The number of bytes of input our decoder processed.
   const size_t mBytesDecoded;
@@ -262,6 +262,10 @@ public:
   bool HasError() const { return mError; }
   bool ShouldReportError() const { return mShouldReportError; }
 
+  // Finalize frames
+  void SetFinalizeFrames(bool aFinalize) { mFinalizeFrames = aFinalize; }
+  bool GetFinalizeFrames() const { return mFinalizeFrames; }
+
   /// Did we finish decoding enough that calling Decode() again would be useless?
   bool GetDecodeDone() const
   {
@@ -399,7 +403,7 @@ protected:
    * speed, or Nothing() if we don't record speed telemetry for this kind of
    * decoder.
    */
-  virtual Maybe<Telemetry::ID> SpeedHistogram() const { return Nothing(); }
+  virtual Maybe<Telemetry::HistogramID> SpeedHistogram() const { return Nothing(); }
 
 
   /*
@@ -546,6 +550,7 @@ private:
   bool mDecodeDone : 1;
   bool mError : 1;
   bool mShouldReportError : 1;
+  bool mFinalizeFrames : 1;
 };
 
 } // namespace image

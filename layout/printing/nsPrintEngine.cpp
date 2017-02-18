@@ -1497,7 +1497,8 @@ nsresult nsPrintEngine::DocumentReadyForPrinting()
  */
 nsresult nsPrintEngine::CleanupOnFailure(nsresult aResult, bool aIsPrinting)
 {
-  PR_PL(("****  Failed %s - rv 0x%X", aIsPrinting?"Printing":"Print Preview", aResult));
+  PR_PL(("****  Failed %s - rv 0x%" PRIX32, aIsPrinting?"Printing":"Print Preview",
+         static_cast<uint32_t>(aResult)));
 
   /* cleanup... */
   if (mPagePrintTimer) {

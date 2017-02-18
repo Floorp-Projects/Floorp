@@ -565,21 +565,30 @@ GfxInfo::Init()
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
     // with bad Intel driver installations where the DriverVersion reported
     // by the registry was not the version of the DLL.
-    bool is64bitApp = sizeof(void*) == 8;
-    const char16_t *dllFileName = is64bitApp
-                                 ? u"igd10umd64.dll"
-                                 : u"igd10umd32.dll",
-                    *dllFileName2 = is64bitApp
-                                 ? u"igd10iumd64.dll"
-                                 : u"igd10iumd32.dll";
-    nsString dllVersion, dllVersion2;
-    gfxWindowsPlatform::GetDLLVersion((char16_t*)dllFileName, dllVersion);
-    gfxWindowsPlatform::GetDLLVersion((char16_t*)dllFileName2, dllVersion2);
 
+    // Note that these start without the .dll extension but eventually gain it.
+    bool is64bitApp = sizeof(void*) == 8;
+    nsAutoString dllFileName(is64bitApp ? u"igd10umd64" : u"igd10umd32");
+    nsAutoString dllFileName2(is64bitApp ? u"igd10iumd64" : u"igd10iumd32");
+
+    nsString dllVersion, dllVersion2;
     uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0,
              driverNumericVersion = 0, knownSafeMismatchVersion = 0;
-    ParseDriverVersion(dllVersion, &dllNumericVersion);
-    ParseDriverVersion(dllVersion2, &dllNumericVersion2);
+
+    // Only parse the DLL version for those found in the driver list
+    nsAutoString elligibleDLLs;
+    if (NS_SUCCEEDED(GetAdapterDriver(elligibleDLLs))) {
+      if (FindInReadable(dllFileName, elligibleDLLs)) {
+        dllFileName += NS_LITERAL_STRING(".dll");
+        gfxWindowsPlatform::GetDLLVersion(dllFileName.get(), dllVersion);
+        ParseDriverVersion(dllVersion, &dllNumericVersion);
+      }
+      if (FindInReadable(dllFileName2, elligibleDLLs)) {
+        dllFileName2 += NS_LITERAL_STRING(".dll");
+        gfxWindowsPlatform::GetDLLVersion(dllFileName2.get(), dllVersion2);
+        ParseDriverVersion(dllVersion2, &dllNumericVersion2);
+      }
+    }
 
     ParseDriverVersion(mDriverVersion[mActiveGPUIndex], &driverNumericVersion);
     ParseDriverVersion(NS_LITERAL_STRING("9.17.10.0"), &knownSafeMismatchVersion);
@@ -593,12 +602,16 @@ GfxInfo::Init()
       if (driverNumericVersion < knownSafeMismatchVersion ||
           std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion) {
         mHasDriverVersionMismatch = true;
-        gfxCriticalNoteOnce << "Mismatched driver versions between the registry " << mDriverVersion[mActiveGPUIndex].get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
+        gfxCriticalNoteOnce << "Mismatched driver versions between the registry " << NS_ConvertUTF16toUTF8(mDriverVersion[mActiveGPUIndex]).get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
       }
     } else if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
       // Leave it as an asserting error for now, to see if we can find
       // a system that exhibits this kind of a problem internally.
-      gfxCriticalErrorOnce() << "Potential driver version mismatch ignored due to missing DLLs " << NS_ConvertUTF16toUTF8(dllVersion).get() << " and " << NS_ConvertUTF16toUTF8(dllVersion2).get();
+      gfxCriticalErrorOnce() << "Potential driver version mismatch ignored due to missing DLLs "
+                             << NS_ConvertUTF16toUTF8(dllFileName).get() << " v="
+                             << NS_ConvertUTF16toUTF8(dllVersion).get() << " and "
+                             << NS_ConvertUTF16toUTF8(dllFileName2).get() << " v="
+                             << NS_ConvertUTF16toUTF8(dllVersion2).get();
     }
   }
 

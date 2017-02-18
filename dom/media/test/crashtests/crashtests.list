@@ -4,7 +4,7 @@ load 466607-1.html
 load 466945-1.html
 load 468763-1.html
 load 474744-1.html
-asserts-if(stylo,8) HTTP load 481136-1.html # bug 1324671 # needs to be HTTP to recognize the ogg as an audio file?
+HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
 load 492286-1.xhtml
 load 493915-1.html
 load 495794-1.html
@@ -71,7 +71,7 @@ load 995289.html
 load 1012609.html
 load 1015662.html
 load 1020205.html
-asserts-if(stylo,8) skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1324671 # bug 1048863
+skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load 1041466.html
 load 1045650.html
 load 1080986.html
@@ -97,7 +97,7 @@ HTTP load media-element-source-seek-1.html
 load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html
 load oscillator-ended-2.html
-load video-replay-after-audio-end.html
+skip-if(Android) load video-replay-after-audio-end.html # bug 1339449
 # This needs to run at the end to avoid leaking busted state into other tests.
 load 691096-1.html
 load 1236639.html

@@ -9,13 +9,13 @@ load 89358-1.html
 load 90205-1.html
 skip-if(cocoaWidget&&browserIsRemote) load 99776-1.html # Bug 849747
 load 118931-1.html
-asserts-if(stylo,1) load 121533-1.html # bug 1324683
+load 121533-1.html
 load 123049-1.html
 load 123946-1.html
 load 128855-1.html
 load 133410-1.html
-asserts-if(stylo,1) load 143862-1a.html # bug 1324683
-asserts-if(stylo,1) load 143862-1b.html # bug 1324683
+load 143862-1a.html
+load 143862-1b.html
 load 143862-1c.html
 load 143862-2.html
 load 147320-1.html
@@ -277,7 +277,7 @@ skip-if(stylo) load 455623-1.html # bug 1323652
 load 457362-1.xhtml
 load 457514.html
 asserts(0-1) load 460389-1.html # bug 780985
-asserts-if(stylo,1) load 462392.html # bug 1324683
+load 462392.html
 load 466763-1.html
 load 467881-1.html
 load 468491-1.html
@@ -432,12 +432,14 @@ load 813372-1.html
 load 817219.html
 load 818454.html
 load 822865.html
+load 824300.html
 asserts-if(stylo,1) load 824862.html # bug 1324704
 load 826163.html
 load 833604-1.html
 load 835056.html
 load 836990-1.html
 load 840480.html
+load 842114.html
 load 847242.html
 pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) load 852293.html
 pref(layers.force-active,true) load 859526-1.html
@@ -485,3 +487,4 @@ load 1299736-1.html
 load 1308793.svg
 load 1308848-1.html
 load 1308848-2.html
+load 1338772-1.html

@@ -128,7 +128,7 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
   // we'd just take ownership of the shmem.
   RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(),
                                                aData.buffer().Size<uint8_t>());
-  if (!data->Data()) {
+  if (aData.buffer().Size<uint8_t>() && !data->Data()) {
     // OOM
     Error(NS_ERROR_OUT_OF_MEMORY);
     return IPC_OK();

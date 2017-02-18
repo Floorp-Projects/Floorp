@@ -61,7 +61,8 @@ public:
 
   void Decrypt(uint32_t aId,
                const CryptoSample& aCrypto,
-               const nsTArray<uint8_t>& aBuffer) override;
+               const nsTArray<uint8_t>& aBuffer,
+               uint64_t aDurationUsecs) override;
 
   void Close() override;
 

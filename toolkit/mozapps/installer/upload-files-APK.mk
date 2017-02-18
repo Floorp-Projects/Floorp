@@ -95,12 +95,12 @@ INNER_FENNEC_PACKAGE = \
     --verbose \
     --inputs \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
-    --omnijar $(STAGEPATH)$(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
+    --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
     --classes-dex $(GECKO_APP_AP_PATH)/classes.dex \
-    --lib-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/lib \
-    --assets-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/assets \
-    --features-dirs $(STAGEPATH)$(MOZ_PKG_DIR)/features \
-    --root-files $(foreach f,$(ROOT_FILES),$(STAGEPATH)$(MOZ_PKG_DIR)/$(f)) \
+    --lib-dirs $(MOZ_PKG_DIR)/lib \
+    --assets-dirs $(MOZ_PKG_DIR)/assets \
+    --features-dirs $(MOZ_PKG_DIR)/features \
+    --root-files $(foreach f,$(ROOT_FILES),$(MOZ_PKG_DIR)/$(f)) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 
@@ -119,7 +119,7 @@ repackage_fennec = \
     --inputs \
       $(UNPACKAGE) \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
-    --omnijar $(STAGEPATH)$(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
+    --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 

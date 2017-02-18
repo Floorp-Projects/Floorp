@@ -46,6 +46,8 @@ public:
   uint32_t pointerId;
   uint32_t tiltX;
   uint32_t tiltY;
+  uint32_t twist;
+  float tangentialPressure;
   bool convertToPointer;
   bool retargetedByPointerCapture;
 
@@ -53,15 +55,20 @@ public:
     : pointerId(0)
     , tiltX(0)
     , tiltY(0)
+    , twist(0)
+    , tangentialPressure(0)
     , convertToPointer(true)
     , retargetedByPointerCapture(false)
   {
   }
 
-  WidgetPointerHelper(uint32_t aPointerId, uint32_t aTiltX, uint32_t aTiltY)
+  WidgetPointerHelper(uint32_t aPointerId, uint32_t aTiltX, uint32_t aTiltY,
+                      uint32_t aTwist = 0, float aTangentialPressure = 0)
     : pointerId(aPointerId)
     , tiltX(aTiltX)
     , tiltY(aTiltY)
+    , twist(aTwist)
+    , tangentialPressure(aTangentialPressure)
     , convertToPointer(true)
     , retargetedByPointerCapture(false)
   {
@@ -72,6 +79,8 @@ public:
     pointerId = aEvent.pointerId;
     tiltX = aEvent.tiltX;
     tiltY = aEvent.tiltY;
+    twist = aEvent.twist;
+    tangentialPressure = aEvent.tangentialPressure;
     convertToPointer = aEvent.convertToPointer;
     retargetedByPointerCapture = aEvent.retargetedByPointerCapture;
   }

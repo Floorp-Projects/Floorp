@@ -244,7 +244,7 @@ ValidateUnpackBytes(WebGLContext* webgl, const char* funcName,
 
     const auto fullRows = availByteCount / rowStride;
     if (!fullRows.isValid()) {
-        webgl->ErrorOutOfMemory("%s: Unacceptable upload size calculated.");
+        webgl->ErrorOutOfMemory("%s: Unacceptable upload size calculated.", funcName);
         return false;
     }
 

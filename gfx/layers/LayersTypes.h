@@ -70,43 +70,6 @@ enum class SurfaceMode : int8_t {
   SURFACE_COMPONENT_ALPHA
 };
 
-// LayerRenderState for Composer2D
-enum class LayerRenderStateFlags : int8_t {
-  LAYER_RENDER_STATE_DEFAULT = 0,
-  ORIGIN_BOTTOM_LEFT = 1 << 0,
-  BUFFER_ROTATION = 1 << 1,
-  // Notify Composer2D to swap the RB pixels of gralloc buffer
-  FORMAT_RB_SWAP = 1 << 2,
-  // We record opaqueness here alongside the actual surface we're going to
-  // render. This avoids confusion when a layer might return different kinds
-  // of surfaces over time (e.g. video frames).
-  OPAQUE = 1 << 3
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayerRenderStateFlags)
-
-struct LayerRenderState {
-  // Constructors and destructor are defined in LayersTypes.cpp so we don't
-  // have to pull in a definition for GraphicBuffer.h here. In KK at least,
-  // that results in nasty pollution such as libui's hardware.h #defining
-  // 'version_major' and 'version_minor' which conflict with Theora's codec.c...
-  LayerRenderState();
-  LayerRenderState(const LayerRenderState& aOther);
-  ~LayerRenderState();
-
-  void SetOffset(const nsIntPoint& aOffset)
-  {
-    mOffset = aOffset;
-    mHasOwnOffset = true;
-  }
-
-  // see LayerRenderStateFlags
-  LayerRenderStateFlags mFlags;
-  // true if mOffset is applicable
-  bool mHasOwnOffset;
-  // the location of the layer's origin on mSurface
-  nsIntPoint mOffset;
-};
-
 enum class ScaleMode : int8_t {
   SCALE_NONE,
   STRETCH,

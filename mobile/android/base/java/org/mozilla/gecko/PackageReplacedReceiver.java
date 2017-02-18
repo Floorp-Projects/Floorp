@@ -8,9 +8,8 @@ package org.mozilla.gecko;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
-import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.GeckoService;
 
 /**
  * This broadcast receiver receives ACTION_MY_PACKAGE_REPLACED broadcasts and
@@ -26,13 +25,7 @@ public class PackageReplacedReceiver extends BroadcastReceiver {
             return;
         }
 
-        // Extract Gecko libs to allow them to be loaded from cache on startup.
-        extractGeckoLibs(context);
-    }
-
-    private static void extractGeckoLibs(final Context context) {
-        final String resourcePath = context.getPackageResourcePath();
-        GeckoLoader.loadMozGlue(context);
-        GeckoLoader.extractGeckoLibs(context, resourcePath);
+        // Load new Gecko libs to extract them to cache.
+        context.startService(GeckoService.getIntentToLoadLibs(context));
     }
 }

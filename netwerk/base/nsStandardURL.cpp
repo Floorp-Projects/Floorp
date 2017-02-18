@@ -770,10 +770,12 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         if (NS_FAILED(rv)) {
             return rv;
         }
-        nsAutoCString ipString;
-        rv = NormalizeIPv4(encHost, ipString);
-        if (NS_SUCCEEDED(rv)) {
-          encHost = ipString;
+        if (!SegmentIs(spec, mScheme, "resource") &&
+            !SegmentIs(spec, mScheme, "chrome")) {
+            nsAutoCString ipString;
+            if (NS_SUCCEEDED(NormalizeIPv4(encHost, ipString))) {
+                encHost = ipString;
+            }
         }
 
         // NormalizeIDN always copies, if the call was successful.
@@ -1391,7 +1393,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
 
     result = Substring(mSpec, 0, mScheme.mLen + 3);
 
-    // This is left fallible as this entire function is expected to be
+    // This is left infallible as this entire function is expected to be
     // infallible.
     NS_EscapeURL(Userpass(true), esc_OnlyNonASCII | esc_AlwaysCopy, result);
 
@@ -1400,7 +1402,7 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
     MOZ_ALWAYS_SUCCEEDS(GetAsciiHostPort(hostport));
     result += hostport;
 
-    // This is left fallible as this entire function is expected to be
+    // This is left infallible as this entire function is expected to be
     // infallible.
     NS_EscapeURL(Path(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
     CALL_RUST_GETTER_STR(result, GetAsciiSpec, result);
@@ -2010,10 +2012,11 @@ nsStandardURL::SetHost(const nsACString &input)
         return rv;
     }
 
-    nsAutoCString ipString;
-    rv = NormalizeIPv4(hostBuf, ipString);
-    if (NS_SUCCEEDED(rv)) {
-      hostBuf = ipString;
+    if (!SegmentIs(mScheme, "resource") && !SegmentIs(mScheme, "chrome")) {
+        nsAutoCString ipString;
+        if (NS_SUCCEEDED(NormalizeIPv4(hostBuf, ipString))) {
+          hostBuf = ipString;
+        }
     }
 
     // NormalizeIDN always copies if the call was successful

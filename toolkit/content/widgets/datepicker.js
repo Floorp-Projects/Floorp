@@ -20,6 +20,10 @@ function DatePicker(context) {
      *           {Number} year [optional]
      *           {Number} month [optional]
      *           {Number} date [optional]
+     *           {Number} firstDayOfWeek
+     *           {Array<Number>} weekends
+     *           {Array<String>} monthStrings
+     *           {Array<String>} weekdayStrings
      *           {String} locale [optional]: User preferred locale
      *         }
      */
@@ -40,6 +44,8 @@ function DatePicker(context) {
               day = now.getDate(),
               firstDayOfWeek,
               weekends,
+              monthStrings,
+              weekdayStrings,
               locale } = this.props;
       const dateKeeper = new DateKeeper({
         year, month, day
@@ -57,8 +63,8 @@ function DatePicker(context) {
         isMonthSet: false,
         isDateSet: false,
         getDayString: new Intl.NumberFormat(locale).format,
-        // TODO: use calendar terms when available (Bug 1287677)
-        getWeekHeaderString: weekday => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][weekday],
+        getWeekHeaderString: weekday => weekdayStrings[weekday],
+        getMonthString: month => monthStrings[month],
         setValue: ({ dateValue, selectionValue }) => {
           dateKeeper.setValue(dateValue);
           this.state.selectionValue = selectionValue;
@@ -103,6 +109,7 @@ function DatePicker(context) {
         monthYear: new MonthYear({
           setYear: this.state.setYear,
           setMonth: this.state.setMonth,
+          getMonthString: this.state.getMonthString,
           locale: this.state.locale
         }, {
           monthYear: this.context.monthYear,
@@ -279,12 +286,12 @@ function DatePicker(context) {
    *          {String} locale
    *          {Function} setYear
    *          {Function} setMonth
+   *          {Function} getMonthString
    *        }
    * @param {DOMElement} context
    */
   function MonthYear(options, context) {
     const spinnerSize = 5;
-    const monthFormat = new Intl.DateTimeFormat(options.locale, { month: "short", timeZone: "UTC" }).format;
     const yearFormat = new Intl.DateTimeFormat(options.locale, { year: "numeric" }).format;
     const dateFormat = new Intl.DateTimeFormat(options.locale, { year: "numeric", month: "long" }).format;
 
@@ -297,7 +304,7 @@ function DatePicker(context) {
           this.state.isMonthSet = true;
           options.setMonth(month);
         },
-        getDisplayString: month => monthFormat(new Date(Date.UTC(0, month))),
+        getDisplayString: options.getMonthString,
         viewportSize: spinnerSize
       }, context.monthYearView),
       year: new Spinner({

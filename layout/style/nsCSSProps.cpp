@@ -8,9 +8,10 @@
  * values they accept
  */
 
+#include "nsCSSProps.h"
+
 #include "mozilla/ArrayUtils.h"
 
-#include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
@@ -1668,8 +1669,8 @@ const KTableEntry nsCSSProps::kGridAutoFlowKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kGridTrackBreadthKTable[] = {
-  { eCSSKeyword_min_content, NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT },
-  { eCSSKeyword_max_content, NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT },
+  { eCSSKeyword_min_content, StyleGridTrackBreadth::MinContent },
+  { eCSSKeyword_max_content, StyleGridTrackBreadth::MaxContent },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

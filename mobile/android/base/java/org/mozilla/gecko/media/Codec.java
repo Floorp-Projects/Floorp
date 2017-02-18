@@ -77,10 +77,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 temp.dispose();
             }
 
-            if (mInputSamples.offer(sample)) {
-                feedSampleToBuffer();
-            } else {
+            if (!mInputSamples.offer(sample)) {
                 reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
+                return;
+            }
+
+            try {
+                feedSampleToBuffer();
+            } catch (Exception e) {
+                reportError(Error.FATAL, e);
             }
         }
 
@@ -369,10 +374,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     private void releaseCodec() {
-        // In case Codec.stop() is not called yet.
-        mInputProcessor.stop();
-        mOutputProcessor.stop();
         try {
+            // In case Codec.stop() is not called yet.
+            mInputProcessor.stop();
+            mOutputProcessor.stop();
+
             mCodec.release();
         } catch (Exception e) {
             reportError(Error.FATAL, e);
@@ -430,9 +436,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized void stop() throws RemoteException {
         if (DEBUG) { Log.d(LOGTAG, "stop " + this); }
-        mInputProcessor.stop();
-        mOutputProcessor.stop();
         try {
+            mInputProcessor.stop();
+            mOutputProcessor.stop();
+
             mCodec.stop();
         } catch (Exception e) {
             reportError(Error.FATAL, e);
@@ -442,9 +449,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized void flush() throws RemoteException {
         if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
-        mInputProcessor.stop();
-        mOutputProcessor.stop();
         try {
+            mInputProcessor.stop();
+            mOutputProcessor.stop();
+
             mCodec.flush();
             if (DEBUG) { Log.d(LOGTAG, "flushed " + this); }
             mInputProcessor.start();
@@ -467,7 +475,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void releaseOutput(Sample sample, boolean render) {
-        mOutputProcessor.onRelease(sample, render);
+        try {
+            mOutputProcessor.onRelease(sample, render);
+        } catch (Exception e) {
+            reportError(Error.FATAL, e);
+        }
     }
 
     @Override

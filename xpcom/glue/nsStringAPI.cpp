@@ -219,7 +219,8 @@ nsAString::Compare(const char_type* aOther, ComparatorFunc aComparator) const
   if (result == 0) {
     if (selflen < otherlen) {
       return -1;
-    } else if (selflen > otherlen) {
+    }
+    if (selflen > otherlen) {
       return 1;
     }
   }
@@ -239,7 +240,8 @@ nsAString::Compare(const self_type& aOther, ComparatorFunc aComparator) const
   if (result == 0) {
     if (selflen < otherlen) {
       return -1;
-    } else if (selflen > otherlen) {
+    }
+    if (selflen > otherlen) {
       return 1;
     }
   }
@@ -758,7 +760,8 @@ nsACString::Compare(const char_type* aOther, ComparatorFunc aComparator) const
   if (result == 0) {
     if (selflen < otherlen) {
       return -1;
-    } else if (selflen > otherlen) {
+    }
+    if (selflen > otherlen) {
       return 1;
     }
   }
@@ -778,7 +781,8 @@ nsACString::Compare(const self_type& aOther, ComparatorFunc aComparator) const
   if (result == 0) {
     if (selflen < otherlen) {
       return -1;
-    } else if (selflen > otherlen) {
+    }
+    if (selflen > otherlen) {
       return 1;
     }
   }

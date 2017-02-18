@@ -406,7 +406,6 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
     return; // presentation might have been torn down
   }
   if (aFlushDirtyRegion) {
-    GeckoProfilerTracingRAII tracer("Paint", "DisplayList");
     nsAutoScriptBlocker scriptBlocker;
     SetPainting(true);
     for (uint32_t i = 0; i < widgets.Length(); ++i) {
@@ -997,18 +996,18 @@ bool nsViewManager::IsViewInserted(nsView *aView)
 {
   if (mRootView == aView) {
     return true;
-  } else if (aView->GetParent() == nullptr) {
-    return false;
-  } else {
-    nsView* view = aView->GetParent()->GetFirstChild();
-    while (view != nullptr) {
-      if (view == aView) {
-        return true;
-      }
-      view = view->GetNextSibling();
-    }
+  }
+  if (aView->GetParent() == nullptr) {
     return false;
   }
+  nsView* view = aView->GetParent()->GetFirstChild();
+  while (view != nullptr) {
+    if (view == aView) {
+      return true;
+    }
+    view = view->GetNextSibling();
+  }
+  return false;
 }
 
 void

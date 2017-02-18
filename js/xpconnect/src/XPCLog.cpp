@@ -8,7 +8,7 @@
 
 #include "XPCLog.h"
 #include "mozilla/Logging.h"
-#include "prprf.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/mozalloc.h"
 #include <string.h>
 #include <stdarg.h>
@@ -57,7 +57,7 @@ XPC_Log_print(const char* fmt, ...)
     char line[LINE_LEN];
 
     va_start(ap, fmt);
-    PR_vsnprintf(line, sizeof(line)-1, fmt, ap);
+    VsprintfLiteral(line, fmt, ap);
     va_end(ap);
     if (g_Indent)
         PR_LogPrint("%s%s",g_Spaces+SPACE_COUNT-(INDENT_FACTOR*g_Indent),line);

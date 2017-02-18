@@ -35,7 +35,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/UniquePtr.h"
 
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
 #include "mozilla/ipc/Faulty.h"
 #endif
 
@@ -583,7 +583,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
   // Write out all the messages we can till the write blocks or there are no
   // more outgoing messages.
   while (!output_queue_.empty()) {
-#ifdef MOZ_FAULTY
+#ifdef FUZZING
     Singleton<mozilla::ipc::Faulty>::get()->MaybeCollectAndClosePipe(pipe_);
 #endif
     Message* msg = output_queue_.front();

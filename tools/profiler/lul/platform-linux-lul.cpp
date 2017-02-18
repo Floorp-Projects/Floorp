@@ -32,7 +32,7 @@ read_procmaps(lul::LUL* aLUL)
   for (size_t i = 0; i < info.GetSize(); i++) {
     const SharedLibrary& lib = info.GetEntry(i);
 
-#   if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#   if defined(USE_FAULTY_LIB)
     // We're using faulty.lib.  Use a special-case object mapper.
     AutoObjectMapperFaultyLib mapper(aLUL->mLog);
 #   else

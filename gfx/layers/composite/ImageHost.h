@@ -31,6 +31,7 @@ namespace layers {
 
 class Compositor;
 struct EffectChain;
+class HostLayerManager;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
@@ -66,8 +67,6 @@ public:
   virtual void SetCompositor(Compositor* aCompositor) override;
 
   gfx::IntSize GetImageSize() const override;
-
-  virtual LayerRenderState GetRenderState() override;
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 

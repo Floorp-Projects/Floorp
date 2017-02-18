@@ -62,13 +62,12 @@ nsRDFResource::EqualsNode(nsIRDFNode* aNode, bool* aResult)
         NS_RELEASE(resource);
         return NS_OK;
     }
-    else if (rv == NS_NOINTERFACE) {
+    if (rv == NS_NOINTERFACE) {
         *aResult = false;
         return NS_OK;
     }
-    else {
-        return rv;
-    }
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

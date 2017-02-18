@@ -4,6 +4,9 @@
 
 #include "MediaEngineCameraVideoSource.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
+
 #include <limits>
 
 namespace mozilla {
@@ -143,21 +146,30 @@ MediaEngineCameraVideoSource::LogConstraints(
     const NormalizedConstraintSet& aConstraints)
 {
   auto& c = aConstraints;
-  LOG(((c.mWidth.mIdeal.isSome()?
-        "Constraints: width: { min: %d, max: %d, ideal: %d }" :
-        "Constraints: width: { min: %d, max: %d }"),
-       c.mWidth.mMin, c.mWidth.mMax,
-       c.mWidth.mIdeal.valueOr(0)));
-  LOG(((c.mHeight.mIdeal.isSome()?
-        "             height: { min: %d, max: %d, ideal: %d }" :
-        "             height: { min: %d, max: %d }"),
-       c.mHeight.mMin, c.mHeight.mMax,
-       c.mHeight.mIdeal.valueOr(0)));
-  LOG(((c.mFrameRate.mIdeal.isSome()?
-        "             frameRate: { min: %f, max: %f, ideal: %f }" :
-        "             frameRate: { min: %f, max: %f }"),
-       c.mFrameRate.mMin, c.mFrameRate.mMax,
-       c.mFrameRate.mIdeal.valueOr(0)));
+  if (c.mWidth.mIdeal.isSome()) {
+    LOG(("Constraints: width: { min: %d, max: %d, ideal: %d }",
+         c.mWidth.mMin, c.mWidth.mMax,
+         c.mWidth.mIdeal.valueOr(0)));
+  } else {
+    LOG(("Constraints: width: { min: %d, max: %d }",
+         c.mWidth.mMin, c.mWidth.mMax));
+  }
+  if (c.mHeight.mIdeal.isSome()) {
+    LOG(("             height: { min: %d, max: %d, ideal: %d }",
+         c.mHeight.mMin, c.mHeight.mMax,
+         c.mHeight.mIdeal.valueOr(0)));
+  } else {
+    LOG(("             height: { min: %d, max: %d }",
+         c.mHeight.mMin, c.mHeight.mMax));
+  }
+  if (c.mFrameRate.mIdeal.isSome()) {
+    LOG(("             frameRate: { min: %f, max: %f, ideal: %f }",
+         c.mFrameRate.mMin, c.mFrameRate.mMax,
+         c.mFrameRate.mIdeal.valueOr(0)));
+  } else {
+    LOG(("             frameRate: { min: %f, max: %f }",
+         c.mFrameRate.mMin, c.mFrameRate.mMax));
+  }
 }
 
 void
@@ -194,7 +206,7 @@ MediaEngineCameraVideoSource::LogCapability(const char* aHeader,
     "Unknown codec"
   };
 
-  LOG(("%s: %4u x %4u x %2u maxFps, %s, %s. Distance = %lu",
+  LOG(("%s: %4u x %4u x %2u maxFps, %s, %s. Distance = %" PRIu32,
        aHeader, aCapability.width, aCapability.height, aCapability.maxFPS,
        types[std::min(std::max(uint32_t(0), uint32_t(aCapability.rawType)),
                       uint32_t(sizeof(types) / sizeof(*types) - 1))],
@@ -215,7 +227,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
          aPrefs.mFPS, aPrefs.mMinFPS));
     LogConstraints(aConstraints);
     if (aConstraints.mAdvanced.size()) {
-      LOG(("Advanced array[%u]:", aConstraints.mAdvanced.size()));
+      LOG(("Advanced array[%" PRIuSIZE "]:", aConstraints.mAdvanced.size()));
       for (auto& advanced : aConstraints.mAdvanced) {
         LogConstraints(advanced);
       }
@@ -245,7 +257,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
   }
 
   if (!candidateSet.Length()) {
-    LOG(("failed to find capability match from %d choices",num));
+    LOG(("failed to find capability match from %" PRIuSIZE " choices",num));
     return false;
   }
 

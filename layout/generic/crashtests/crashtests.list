@@ -1,7 +1,7 @@
 load 25888-1.html
 load 25888-2.html
 load 37757-1.html
-asserts-if(stylo,1) load 225868-1.html # bug 1324683
+load 225868-1.html
 load 255468.xhtml
 load 255982-1.html
 load 255982-2.html
@@ -365,7 +365,7 @@ load 499138.html
 asserts-if(stylo,1) load 499857-1.html # bug 1324665
 load 499862-1.html
 asserts(0-3) load 499885-1.xhtml # Bug 1220265
-asserts-if(stylo,8) load 501535-1.html # bug 1324671
+load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
 load 505912-1.html
@@ -537,7 +537,7 @@ asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) ass
 load 847211-1.html
 load 849603.html
 asserts(0-12) load 850931.html # bug 569193
-asserts-if(stylo,8) load 851396-1.html # bug 1324671
+load 851396-1.html
 load 854263-1.html
 load 862185.html
 asserts-if(stylo,1) load 862947-1.html # bug 1324704
@@ -626,11 +626,11 @@ load text-overflow-bug666751-2.html
 load text-overflow-bug670564.xhtml
 load text-overflow-bug671796.xhtml
 load text-overflow-bug713610.html
-asserts-if(stylo,5) load text-overflow-form-elements.html # bug 1324671
-asserts-if(stylo,1) load text-overflow-iframe.html # bug 1324671
+load text-overflow-form-elements.html
+load text-overflow-iframe.html
 asserts-if(Android,2-4) asserts-if(!Android,4) asserts-if(stylo,0) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
-asserts-if(stylo,1-16) load 1271765.html # bug 1324684
+asserts-if(stylo,0-15) load 1271765.html # bug 1324684
 asserts(2) load 1272983-1.html # bug 1324654 # bug 586628
 asserts(2) load 1272983-2.html # bug 1324654 # bug 586628
 load 1275059.html

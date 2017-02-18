@@ -33,8 +33,8 @@ add_task(function* () {
 
   let onTabOpen = once(gBrowser.tabContainer, "TabOpen", false);
   // Context menu is appending in XUL document, we must select it from
-  // _toolbox.doc
-  monitor._toolbox.doc
+  // toolbox.doc
+  monitor.toolbox.doc
     .querySelector("#request-menu-context-newtab").click();
   yield onTabOpen;
 

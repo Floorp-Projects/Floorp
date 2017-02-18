@@ -6,6 +6,7 @@ package org.mozilla.gecko.util;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.text.TextUtilsCompat;
@@ -71,6 +72,62 @@ public class ViewUtil {
             view.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
         }
     }
+
+    /**
+     * Set text for a TextView, while ensuring it remains centered, regardless of any compound
+     * drawables that might be set. When compound drawables exist, text might be shifted left- or
+     * right- of centre - this method hacks around that by shifting text back as necessary.
+     */
+    public static void setCenteredText(final TextView textView, final String label, final int defaultPadding) {
+        textView.setText(label);
+
+        // getCompoundDrawables always returns a valid 4 item array (individual drawables may be null,
+        // but the array is always non-null).
+        final Drawable[] drawables = textView.getCompoundDrawables();
+        final Drawable drawableLeft = drawables[0];
+        final Drawable drawableRight = drawables[2];
+
+        // The amount by which the left (positive) or right (negative) side has been shifted
+        // by drawables:
+        final int leftRightDelta = (drawableLeft != null ? drawableLeft.getIntrinsicWidth() : 0)
+                - (drawableRight != null ? drawableRight.getIntrinsicWidth() : 0);
+
+        final int leftAdjustment;
+        final int rightAdjustment;
+        if (leftRightDelta == 0) {
+            // No drawables: keep default padding (we still need to make sure we set the padding, since
+            // it could have previously been adjusted if there used to be a compound drawable).
+            leftAdjustment = 0;
+            rightAdjustment = 0;
+        } else {
+            // We need to decide whether we really want to center: if the text is longer than the available
+            // space, we want to keep the maximum available space, if it's shorter we use fake padding
+            // to center the text:
+            final Rect bounds = new Rect();
+            textView.getPaint().getTextBounds(label.toString(), 0, label.length(), bounds);
+
+            // This is the width that would be available _after_ additional padding has been set,
+            // i.e. the icon width + mirrored padding + existing paddings:
+            final int availableWidth = textView.getWidth() - 2 * Math.abs(leftRightDelta) - 2 * defaultPadding - 2 * textView.getCompoundDrawablePadding();
+            final int textWidth = bounds.width();
+
+            if (textWidth > availableWidth) {
+                leftAdjustment = 0;
+                rightAdjustment = 0;
+            } else {
+                if (leftRightDelta > 0) {
+                    leftAdjustment = 0;
+                    rightAdjustment = leftRightDelta;
+                } else {
+                    leftAdjustment = -leftRightDelta;
+                    rightAdjustment = 0;
+                }
+            }
+        }
+
+        textView.setPadding(defaultPadding + leftAdjustment, textView.getPaddingTop(), defaultPadding + rightAdjustment, textView.getPaddingBottom());
+    }
+
 
     /**
      * Android framework have a bug margin start/end for RTL between 19~22. We can only use MarginLayoutParamsCompat before 17 and after 23.

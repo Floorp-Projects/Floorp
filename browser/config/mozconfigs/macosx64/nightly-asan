@@ -1,0 +1,23 @@
+ac_add_options --enable-application=browser
+# We still need to build with debug symbols
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2"
+
+. $topsrcdir/build/unix/mozconfig.asan
+
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
+if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
+ac_add_options --with-macbundlename-prefix=Firefox
+fi
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+# Need this to prevent name conflicts with the normal nightly build packages
+# Before mozconfig.common so we can test for asan builds there
+export MOZ_PKG_SPECIAL=asan
+
+. "$topsrcdir/build/macosx/mozconfig.common"
+. "$topsrcdir/build/mozconfig.common.override"

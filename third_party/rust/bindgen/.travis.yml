@@ -15,7 +15,7 @@ rust:
   - stable
 
 env:
-  - CARGO_TARGET_DIR=/tmp/bindgen LLVM_VERSION=3.8 BINDGEN_FEATURES=llvm_stable
+  - CARGO_TARGET_DIR=/tmp/bindgen LLVM_VERSION=3.8 BINDGEN_FEATURES=testing_only_llvm_stable
   - CARGO_TARGET_DIR=/tmp/bindgen LLVM_VERSION=3.9 BINDGEN_FEATURES=
 
 cache:

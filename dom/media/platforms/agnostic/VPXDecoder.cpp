@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VPXDecoder.h"
-#include "gfx2DGlue.h"
-#include "nsError.h"
 #include "TimeUnits.h"
+#include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsError.h"
 #include "prsystem.h"
 
 #include <algorithm>
@@ -237,7 +237,7 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
 
     if (!v) {
       LOG(
-        "Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
+        "Image allocation error source %ux%u display %ux%u picture %ux%u",
         img->d_w, img->d_h, mInfo.mDisplay.width, mInfo.mDisplay.height,
         mInfo.mImage.width, mInfo.mImage.height);
       return DecodePromise::CreateAndReject(
@@ -292,12 +292,12 @@ VPXDecoder::DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample)
 bool
 VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
 {
-  return ((aCodecMask & VPXDecoder::VP8) &&
-          aMimeType.EqualsLiteral("video/webm; codecs=vp8")) ||
-         ((aCodecMask & VPXDecoder::VP9) &&
-          aMimeType.EqualsLiteral("video/webm; codecs=vp9")) ||
-         ((aCodecMask & VPXDecoder::VP9) &&
-          aMimeType.EqualsLiteral("video/vp9"));
+  return ((aCodecMask & VPXDecoder::VP8)
+          && aMimeType.EqualsLiteral("video/webm; codecs=vp8"))
+         || ((aCodecMask & VPXDecoder::VP9)
+             && aMimeType.EqualsLiteral("video/webm; codecs=vp9"))
+         || ((aCodecMask & VPXDecoder::VP9)
+             && aMimeType.EqualsLiteral("video/vp9"));
 }
 
 /* static */

@@ -66,8 +66,8 @@ parent:
     returns (IAccessibleHolder aPluginCOMProxy);
 
 child:
-  async ParentCOMProxy(IAccessibleHolder aParentCOMProxy,
-                       WindowsHandle aEmulatedWindowHandle,
+  async ParentCOMProxy(IAccessibleHolder aParentCOMProxy);
+  async EmulatedWindow(WindowsHandle aEmulatedWindowHandle,
                        IAccessibleHolder aEmulatedWindowCOMProxy);
 
   async __delete__();

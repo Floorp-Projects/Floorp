@@ -152,12 +152,24 @@ class ProcessHandlerMixin(object):
                         winprocess.GetExitCodeProcess(self._handle)
                         self._cleanup()
             else:
-                def send_sig(sig):
+                def send_sig(sig, retries=0):
                     pid = self.detached_pid or self.pid
                     if not self._ignore_children:
                         try:
                             os.killpg(pid, sig)
                         except BaseException as e:
+                            # On Mac OSX if the process group contains zombie
+                            # processes, killpg results in an EPERM.
+                            # In this case, zombie processes need to be reaped
+                            # before continuing
+                            # Note: A negative pid refers to the entire process
+                            # group
+                            if retries < 1 and getattr(e, "errno", None) == errno.EPERM:
+                                try:
+                                    os.waitpid(-pid, 0)
+                                finally:
+                                    return send_sig(sig, retries + 1)
+
                             # ESRCH is a "no such process" failure, which is fine because the
                             # application might already have been terminated itself. Any other
                             # error would indicate a problem in killing the process.

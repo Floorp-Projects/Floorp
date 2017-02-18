@@ -85,8 +85,7 @@ public:
                       nsIContent* aTargetContent,
                       const UserSpaceMetrics& aMetrics,
                       const gfxRect& aTargetBBox,
-                      const gfxSize& aUserSpaceToFilterSpaceScale,
-                      const gfxSize& aFilterSpaceToUserSpaceScale);
+                      const gfxSize& aUserSpaceToFilterSpaceScale);
 
   /**
    * Returns true if the filter instance was created successfully.
@@ -109,19 +108,6 @@ public:
   nsresult BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
                            nsTArray<RefPtr<SourceSurface>>& aInputImages,
                            bool aInputIsTainted);
-
-  /**
-   * Returns the user specified "filter region", in the filtered element's user
-   * space, after it has been adjusted out (if necessary) so that its edges
-   * coincide with pixel boundaries of the offscreen surface into which the
-   * filtered output would/will be painted.
-   */
-  gfxRect GetFilterRegion() const { return mUserSpaceBounds; }
-
-  /**
-   * Returns the size of the user specified "filter region", in filter space.
-   */
-  nsIntRect GetFilterSpaceBounds() const { return mFilterSpaceBounds; }
 
   float GetPrimitiveNumber(uint8_t aCtxType, const nsSVGNumber2 *aNumber) const
   {
@@ -174,11 +160,6 @@ private:
   float GetPrimitiveNumber(uint8_t aCtxType, float aValue) const;
 
   /**
-   * Transform a rect between user space and filter space.
-   */
-  gfxRect FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const;
-
-  /**
    * Returns the transform from frame space to the coordinate space that
    * GetCanvasTM transforms to. "Frame space" is the origin of a frame, aka the
    * top-left corner of its border box, aka the top left corner of its mRect.
@@ -207,11 +188,11 @@ private:
                             const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
                             nsTArray<int32_t>& aSourceIndices);
 
-  /**
+   /**
    * Compute the filter region in user space, filter space, and filter
    * space.
    */
-  nsresult ComputeBounds();
+  bool ComputeBounds();
 
   /**
    * The SVG reference filter originally from the style system.
@@ -246,14 +227,12 @@ private:
   /**
    * The "filter region" in various spaces.
    */
-  gfxRect mUserSpaceBounds;
   nsIntRect mFilterSpaceBounds;
 
   /**
    * The scale factors between user space and filter space.
    */
   gfxSize mUserSpaceToFilterSpaceScale;
-  gfxSize mFilterSpaceToUserSpaceScale;
 
   /**
    * The 'primitiveUnits' attribute value (objectBoundingBox or userSpaceOnUse).

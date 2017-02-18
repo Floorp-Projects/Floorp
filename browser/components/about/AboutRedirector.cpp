@@ -34,7 +34,7 @@ struct RedirEntry {
   required before adding new map entries without
   URI_SAFE_FOR_UNTRUSTED_CONTENT.
 */
-static RedirEntry kRedirMap[] = {
+static const RedirEntry kRedirMap[] = {
   { "blocked", "chrome://browser/content/blockedSite.xhtml",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::URI_CAN_LOAD_IN_CHILD |

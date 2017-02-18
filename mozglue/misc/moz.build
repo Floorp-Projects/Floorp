@@ -9,6 +9,7 @@ FINAL_LIBRARY = 'mozglue'
 EXPORTS.mozilla += [
     'PlatformConditionVariable.h',
     'PlatformMutex.h',
+    'Printf.h',
     'StackWalk.h',
     'TimeStamp.h',
 ]
@@ -20,6 +21,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 SOURCES += [
+    'Printf.cpp',
     'StackWalk.cpp',
     'TimeStamp.cpp',
 ]
