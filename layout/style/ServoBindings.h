@@ -339,9 +339,6 @@ void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
-void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
-void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
-
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
 // Style-struct management.
