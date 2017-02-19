@@ -71,13 +71,13 @@ fails asserts-if(stylo,4) == counter-ua-limits-03.html counter-ua-limits-03.html
 fails == multiple-thai-counters.html multiple-thai-counters.html
 fails == counter-suffix.html counter-suffix.html
 fails == counter-cjk-decimal.html counter-cjk-decimal.html
-fails asserts-if(stylo, 32) == counter-japanese-informal.html counter-japanese-informal.html
-fails asserts-if(stylo, 32) == counter-japanese-formal.html counter-japanese-formal.html
-fails asserts-if(stylo, 32) == counter-korean-hangul-formal.html counter-korean-hangul-formal.html
-fails asserts-if(stylo, 32) == counter-korean-hanja-informal.html counter-korean-hanja-informal.html
-fails asserts-if(stylo, 32) == counter-korean-hanja-formal.html counter-korean-hanja-formal.html
-fails asserts-if(stylo, 32) == counter-simp-chinese-informal.html counter-simp-chinese-informal.html
-fails asserts-if(stylo, 32) == counter-simp-chinese-formal.html counter-simp-chinese-formal.html
-fails asserts-if(stylo, 32) == counter-trad-chinese-informal.html counter-trad-chinese-informal.html
-fails asserts-if(stylo, 32) == counter-trad-chinese-formal.html counter-trad-chinese-formal.html
-fails asserts-if(stylo, 38) == counter-ethiopic-numeric.html counter-ethiopic-numeric.html
+fails asserts-if(stylo,32) == counter-japanese-informal.html counter-japanese-informal.html
+fails asserts-if(stylo,32) == counter-japanese-formal.html counter-japanese-formal.html
+fails asserts-if(stylo,32) == counter-korean-hangul-formal.html counter-korean-hangul-formal.html
+fails asserts-if(stylo,32) == counter-korean-hanja-informal.html counter-korean-hanja-informal.html
+fails asserts-if(stylo,32) == counter-korean-hanja-formal.html counter-korean-hanja-formal.html
+fails asserts-if(stylo,32) == counter-simp-chinese-informal.html counter-simp-chinese-informal.html
+fails asserts-if(stylo,32) == counter-simp-chinese-formal.html counter-simp-chinese-formal.html
+fails asserts-if(stylo,32) == counter-trad-chinese-informal.html counter-trad-chinese-informal.html
+fails asserts-if(stylo,32) == counter-trad-chinese-formal.html counter-trad-chinese-formal.html
+fails asserts-if(stylo,38) == counter-ethiopic-numeric.html counter-ethiopic-numeric.html
