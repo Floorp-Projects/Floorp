@@ -213,6 +213,10 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();
 
+  nsRuleData* AsRuleData() {
+    return this;
+  }
+
 private:
   inline size_t GetPoisonOffset();
 
