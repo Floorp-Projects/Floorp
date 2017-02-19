@@ -504,10 +504,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `'font'` [171]
   * test_shorthand_property_getters.html `font shorthand` [2]
   * test_system_font_serialization.html [11]
-* test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [4]
+* test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
-  * ... `98.7667px` [1]
   * ... `0.766667px` [2]
   * ... `75.5667px` [2]
   * ... `105.333px` [2]
