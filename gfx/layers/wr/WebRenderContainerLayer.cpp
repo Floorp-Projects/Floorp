@@ -7,9 +7,9 @@
 
 #include <inttypes.h>
 #include "gfxPrefs.h"
+#include "LayersLogging.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "WebRenderLayersLogging.h"
 
 namespace mozilla {
 namespace layers {

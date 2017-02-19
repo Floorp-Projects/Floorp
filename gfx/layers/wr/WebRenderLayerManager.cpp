@@ -7,7 +7,7 @@
 
 #include "apz/src/AsyncPanZoomController.h"
 #include "gfxPrefs.h"
-#include "WebRenderLayersLogging.h"
+#include "LayersLogging.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
