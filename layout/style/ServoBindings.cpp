@@ -1265,20 +1265,6 @@ Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 }
 
 void
-Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsIAtom* aAtom)
-{
-  already_AddRefed<nsIAtom> atom = already_AddRefed<nsIAtom>(aAtom);
-  aFont->mLanguage = atom;
-  aFont->mExplicitLanguage = true;
-}
-
-void
-Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
-{
-  aFont->mLanguage = aSource->mLanguage;
-}
-
-void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
                      RawServoImportRuleBorrowed aImportRule,

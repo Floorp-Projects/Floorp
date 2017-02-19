@@ -183,7 +183,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_PropertyIsSet, bool,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetIdentStringValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
-                   nsIAtom* value)
+                   const nsAString& value)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetKeywordValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,

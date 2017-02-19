@@ -45,8 +45,7 @@ void
 ServoSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId,
                                           const nsString& aValue)
 {
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(aValue);
-  Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, atom);
+  Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, aValue);
 }
 
 void
