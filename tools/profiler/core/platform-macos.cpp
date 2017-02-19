@@ -42,17 +42,6 @@ using mozilla::TimeDuration;
 static const pthread_t kNoThread = (pthread_t) 0;
 #endif
 
-void OS::Startup() {
-}
-
-void OS::Sleep(int milliseconds) {
-  usleep(1000 * milliseconds);
-}
-
-void OS::SleepMicro(int microseconds) {
-  usleep(microseconds);
-}
-
 class PlatformData {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
@@ -186,7 +175,7 @@ public:
       TimeStamp beforeSleep = TimeStamp::Now();
       TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
       double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
-      OS::SleepMicro(sleepTime);
+      usleep(sleepTime);
       sampleStart = TimeStamp::Now();
       lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
     }
@@ -265,6 +254,11 @@ private:
 };
 
 SamplerThread* SamplerThread::mInstance = NULL;
+
+static void
+PlatformInit()
+{
+}
 
 static void
 PlatformStart()

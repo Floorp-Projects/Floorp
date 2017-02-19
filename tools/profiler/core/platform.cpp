@@ -1589,6 +1589,11 @@ RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
   gRegisteredThreads->push_back(info);
 }
 
+// Platform-specific init/start/stop actions.
+static void PlatformInit();
+static void PlatformStart();
+static void PlatformStop();
+
 void
 profiler_init(void* stackTop)
 {
@@ -1635,8 +1640,8 @@ profiler_init(void* stackTop)
   // threshhold from MOZ_PROFILER_STACK_SCAN.
   read_profiler_env_vars();
 
-  // platform specific initialization
-  OS::Startup();
+  // Platform-specific initialization.
+  PlatformInit();
 
   set_stderr_callback(profiler_log);
 
@@ -1929,10 +1934,6 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   }
   return false;
 }
-
-// Platform-specific start/stop actions.
-static void PlatformStart();
-static void PlatformStop();
 
 // XXX: an empty class left behind after refactoring. Will be removed soon.
 class Sampler {};
