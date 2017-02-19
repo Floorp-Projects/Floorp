@@ -5,7 +5,7 @@
 
 #include "WebRenderPaintedLayer.h"
 
-#include "WebRenderLayersLogging.h"
+#include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"

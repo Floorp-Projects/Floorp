@@ -10,7 +10,7 @@
 #include "gfxUtils.h"
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
-#include "WebRenderLayersLogging.h"
+#include "LayersLogging.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
