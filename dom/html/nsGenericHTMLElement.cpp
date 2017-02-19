@@ -1522,12 +1522,6 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->IsServo()) {
-    // FIXME(bug 1339711)
-    NS_WARNING("stylo: cannot handle background presentation attribute");
-    return;
-  }
-
   nsPresContext* presContext = aData->PresContext();
 
   if (!aData->PropertyIsSet(eCSSProperty_background_image) &&
@@ -1551,6 +1545,9 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
           nsCSSValueList* list = backImage->SetListValue();
           list->mValue.SetImageValue(value->GetImageValue());
         }
+      } else {
+        // FIXME(bug 1330041)
+        MOZ_ASSERT_UNREACHABLE("stylo: cannot handle background");
       }
     }
   }
