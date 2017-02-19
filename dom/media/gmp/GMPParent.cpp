@@ -43,6 +43,7 @@ using CrashReporter::GetIDFromMinidump;
 
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "widevine-adapter/WidevineAdapter.h"
+#include "ChromiumCDMAdapter.h"
 
 namespace mozilla {
 
@@ -734,6 +735,22 @@ GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
     &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
 }
 
+static bool
+IsCDMAPISupported(const mozilla::dom::WidevineCDMManifest& aManifest)
+{
+  nsresult ignored; // Note: ToInteger returns 0 on failure.
+  int32_t moduleVersion = aManifest.mX_cdm_module_versions.ToInteger(&ignored);
+  int32_t interfaceVersion =
+    aManifest.mX_cdm_interface_versions.ToInteger(&ignored);
+  int32_t hostVersion = aManifest.mX_cdm_host_versions.ToInteger(&ignored);
+  if (MediaPrefs::EMEChromiumAPIEnabled()) {
+    return ChromiumCDMAdapter::Supports(
+      moduleVersion, interfaceVersion, hostVersion);
+  }
+  return WidevineAdapter::Supports(
+    moduleVersion, interfaceVersion, hostVersion);
+}
+
 RefPtr<GenericPromise>
 GMPParent::ParseChromiumManifest(const nsAString& aJSON)
 {
@@ -745,10 +762,7 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  nsresult ignored; // Note: ToInteger returns 0 on failure.
-  if (!WidevineAdapter::Supports(m.mX_cdm_module_versions.ToInteger(&ignored),
-                                 m.mX_cdm_interface_versions.ToInteger(&ignored),
-                                 m.mX_cdm_host_versions.ToInteger(&ignored))) {
+  if (!IsCDMAPISupported(m)) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
