@@ -180,7 +180,7 @@ class SamplerThread
           isFirstProfiledThread = false;
         }
       }
-      OS::Sleep(mInterval);
+      ::Sleep(mInterval);
     }
 
     // disable any timer resolution changes we've made
@@ -268,6 +268,11 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 static void
+PlatformInit()
+{
+}
+
+static void
 PlatformStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -291,13 +296,6 @@ PlatformStop()
 Thread::GetCurrentId()
 {
   return GetCurrentThreadId();
-}
-
-void OS::Startup() {
-}
-
-void OS::Sleep(int milliseconds) {
-  ::Sleep(milliseconds);
 }
 
 void TickSample::PopulateContext(void* aContext)
