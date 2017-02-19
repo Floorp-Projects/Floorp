@@ -98,25 +98,6 @@ extern mozilla::TimeStamp gStartTime;
 typedef uint8_t* Address;
 
 // ----------------------------------------------------------------------------
-// OS
-//
-// This class has static methods for the different platform specific
-// functions. Add methods here to cope with differences between the
-// supported platforms.
-
-class OS {
-public:
-  // Sleep for a number of milliseconds.
-  static void Sleep(const int milliseconds);
-
-  // Sleep for a number of microseconds.
-  static void SleepMicro(const int microseconds);
-
-  // Called on startup to initialize platform specific things
-  static void Startup();
-};
-
-// ----------------------------------------------------------------------------
 // Thread
 //
 // This class has static methods for the different platform specific

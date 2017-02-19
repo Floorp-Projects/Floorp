@@ -236,6 +236,31 @@ PlatformDataDestructor::operator()(PlatformData* aData)
   delete aData;
 }
 
+static void
+SleepMicro(int aMicroseconds)
+{
+  if (MOZ_UNLIKELY(aMicroseconds >= 1000000)) {
+    // Use usleep for larger intervals, because the nanosleep
+    // code below only supports intervals < 1 second.
+    MOZ_ALWAYS_TRUE(!::usleep(aMicroseconds));
+    return;
+  }
+
+  struct timespec ts;
+  ts.tv_sec  = 0;
+  ts.tv_nsec = aMicroseconds * 1000UL;
+
+  int rv = ::nanosleep(&ts, &ts);
+
+  while (rv != 0 && errno == EINTR) {
+    // Keep waiting in case of interrupt.
+    // nanosleep puts the remaining time back into ts.
+    rv = ::nanosleep(&ts, &ts);
+  }
+
+  MOZ_ASSERT(!rv, "nanosleep call failed");
+}
+
 static void*
 SigprofSender(void* aArg)
 {
@@ -323,7 +348,7 @@ SigprofSender(void* aArg)
     TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
-    OS::SleepMicro(sleepTime);
+    SleepMicro(sleepTime);
     sampleStart = TimeStamp::Now();
     lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
   }
@@ -512,7 +537,8 @@ static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
   NS_DispatchToMainThread(new StartTask());
 }
 
-void OS::Startup()
+static void
+PlatformInit()
 {
   LOG("Registering start signal");
   struct sigaction sa;
@@ -526,7 +552,9 @@ void OS::Startup()
 
 #else
 
-void OS::Startup() {
+static void
+PlatformInit()
+{
   // Set up the fork handlers.
   setup_atfork();
 }
@@ -543,26 +571,3 @@ void TickSample::PopulateContext(void* aContext)
   }
 }
 
-void OS::SleepMicro(int microseconds)
-{
-  if (MOZ_UNLIKELY(microseconds >= 1000000)) {
-    // Use usleep for larger intervals, because the nanosleep
-    // code below only supports intervals < 1 second.
-    MOZ_ALWAYS_TRUE(!::usleep(microseconds));
-    return;
-  }
-
-  struct timespec ts;
-  ts.tv_sec  = 0;
-  ts.tv_nsec = microseconds * 1000UL;
-
-  int rv = ::nanosleep(&ts, &ts);
-
-  while (rv != 0 && errno == EINTR) {
-    // Keep waiting in case of interrupt.
-    // nanosleep puts the remaining time back into ts.
-    rv = ::nanosleep(&ts, &ts);
-  }
-
-  MOZ_ASSERT(!rv, "nanosleep call failed");
-}
