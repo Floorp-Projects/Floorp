@@ -18,7 +18,7 @@ fails == box-sizing-2.html box-sizing-2.html
 fails == box-sizing-3.html box-sizing-3.html
 fails == box-sizing-4.html box-sizing-4.html
 # == box-sizing-minmax-height.html box-sizing-minmax-height.html
-== box-sizing-minmax-width.html box-sizing-minmax-width.html
+fails == box-sizing-minmax-width.html box-sizing-minmax-width.html
 # == box-sizing-mozbox-minmax-height.html box-sizing-mozbox-minmax-height.html
 fails == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin.html
 fails == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin.html

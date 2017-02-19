@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == bug453105.html bug453105.html
 fails == optiontext.html optiontext.html
-== bug456008.xhtml bug456008.xhtml
+fails == bug456008.xhtml bug456008.xhtml
 == bug439965.html bug439965.html
 == bug427779.xml bug427779.xml
 fails == bug559996.html bug559996.html

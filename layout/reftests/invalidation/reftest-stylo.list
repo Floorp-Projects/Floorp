@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== table-repaint-a.html table-repaint-a.html
+fails == table-repaint-a.html table-repaint-a.html
 # == table-repaint-b.html table-repaint-b.html
-== table-repaint-c.html table-repaint-c.html
+fails == table-repaint-c.html table-repaint-c.html
 == table-repaint-d.html table-repaint-d.html
 == 540247-1.xul 540247-1.xul
 fails == 543681-1.html 543681-1.html

@@ -2,7 +2,7 @@
 fails == dir-1.html dir-1.html
 fails == dir-2.html dir-2.html
 random-if(gtkWidget) == dir-3.html dir-3.html
-== dir-4.html dir-4.html
+fails == dir-4.html dir-4.html
 == dir-5.html dir-5.html
 fails == dir-6.html dir-6.html
 fails == dir-6a.html dir-6a.html
