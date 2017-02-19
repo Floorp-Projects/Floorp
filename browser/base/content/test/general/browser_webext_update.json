@@ -1,6 +1,6 @@
 {
   "addons": {
-    "update2@tests.mozilla.org": {
+    "update@tests.mozilla.org": {
       "updates": [
         {
           "version": "2.0",
@@ -14,7 +14,7 @@
         }
       ]
     },
-    "update_icon2@tests.mozilla.org": {
+    "update_icon@tests.mozilla.org": {
       "updates": [
         {
           "version": "2.0",

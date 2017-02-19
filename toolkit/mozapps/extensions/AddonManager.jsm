@@ -2852,7 +2852,6 @@ var AddonManagerInternal = {
             info: Object.assign({resolve, reject}, info),
           }
         };
-        subject.wrappedJSObject.info.permissions = info.addon.userPermissions;
         Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
       } else if (requireConfirm) {
         // The methods below all want to call the install() or cancel()
