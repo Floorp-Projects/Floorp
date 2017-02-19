@@ -233,6 +233,7 @@ class BasePopup {
     browser.setAttribute("class", "webextension-popup-browser");
     browser.setAttribute("webextension-view-type", "popup");
     browser.setAttribute("tooltip", "aHTMLTooltip");
+    browser.setAttribute("contextmenu", "contentAreaContextMenu");
 
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");
@@ -285,6 +286,9 @@ class BasePopup {
     return readyPromise.then(() => {
       setupBrowser(browser);
       let mm = browser.messageManager;
+
+      // Sets the context information for context menus.
+      mm.loadFrameScript("chrome://browser/content/content.js", true);
 
       mm.loadFrameScript(
         "chrome://extensions/content/ext-browser-content.js", false);
