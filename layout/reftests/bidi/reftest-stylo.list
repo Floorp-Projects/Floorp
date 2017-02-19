@@ -3,13 +3,13 @@ include dirAuto/reftest-stylo.list
 include numeral/reftest-stylo.list
 == bdi-element.html bdi-element.html
 == bidi-000.html bidi-000.html
-== bidi-001.html bidi-001.html
-== bidi-001-j.html bidi-001-j.html
+fails == bidi-001.html bidi-001.html
+fails == bidi-001-j.html bidi-001-j.html
 == bidi-001-v.html bidi-001-v.html
-== bidi-002.html bidi-002.html
-== bidi-003.html bidi-003.html
-== bidi-004.html bidi-004.html
-== bidi-004-j.html bidi-004-j.html
+fails == bidi-002.html bidi-002.html
+fails == bidi-003.html bidi-003.html
+fails == bidi-004.html bidi-004.html
+fails == bidi-004-j.html bidi-004-j.html
 == bidi-005.html bidi-005.html
 fails == bidi-006.html bidi-006.html
 fails == bidi-006-j.html bidi-006-j.html
@@ -95,7 +95,7 @@ fails == 413928-2.html 413928-2.html
 == 489887-1.html 489887-1.html
 # == 492231-1.html 492231-1.html
 == 496006-1.html 496006-1.html
-== 503269-1.html 503269-1.html
+fails == 503269-1.html 503269-1.html
 == 503957-1.html 503957-1.html
 == 525740-1.html 525740-1.html
 fails == 536963-1.html 536963-1.html

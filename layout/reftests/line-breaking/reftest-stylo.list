@@ -11,10 +11,10 @@ fails == between-whitespaces.html between-whitespaces.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
 # and the automatically-wrapped lines in the test file
-== ja-1.html ja-1.html
-== ja-2.html ja-2.html
-== ja-3.html ja-3.html
-== khmer-1.html khmer-1.html
+fails == ja-1.html ja-1.html
+fails == ja-2.html ja-2.html
+fails == ja-3.html ja-3.html
+fails == khmer-1.html khmer-1.html
 == leaders-1.html leaders-1.html
 == markup-src-1.html markup-src-1.html
 == non-breakable-1.html non-breakable-1.html

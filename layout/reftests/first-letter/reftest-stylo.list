@@ -37,7 +37,7 @@ fails == dynamic-1.html dynamic-1.html
 # == 229764-2.html 229764-2.html
 == 329069-1.html 329069-1.html
 == 329069-2.html 329069-2.html
-== 329069-3.html 329069-3.html
+fails == 329069-3.html 329069-3.html
 == 329069-4.html 329069-4.html
 HTTP(..) == 329069-5.html 329069-5.html
 == 342120-1.xhtml 342120-1.xhtml

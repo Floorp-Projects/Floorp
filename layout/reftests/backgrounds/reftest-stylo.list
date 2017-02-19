@@ -99,7 +99,7 @@ fails == continuous-inline-5b.html continuous-inline-5b.html
 # == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding.html
 
 == background-layers-1a.html background-layers-1a.html
-== background-layers-1b.html background-layers-1b.html
+fails == background-layers-1b.html background-layers-1b.html
 
 # box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
 # artifacts and the difficulty of covering exact lines, so just make sure
