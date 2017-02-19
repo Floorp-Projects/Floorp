@@ -111,7 +111,7 @@ fails == dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-DeleteText-RTL1.html
 fails == dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-DeleteText-RTL2.html
 fails == dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-DeleteText-RTL3.html
 fails == 839886-1.html 839886-1.html
-== 859093-1.html 859093-1.html
+fails == 859093-1.html 859093-1.html
 fails == 889742-1.html 889742-1.html
 fails == 1103348-1.html 1103348-1.html
 fails == 1169267-delete-add-1a.html 1169267-delete-add-1a.html
