@@ -8,7 +8,8 @@
  *          getBrowserActionPopup getPageActionPopup
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
- *          openContextMenu closeContextMenu openContextMenuInSidebar
+ *          openContextMenu closeContextMenu
+ *          openContextMenuInSidebar openContextMenuInPopup
  *          openExtensionContextMenu closeExtensionContextMenu
  *          openActionContextMenu openSubmenu closeActionContextMenu
  *          openTabContextMenu closeTabContextMenu
@@ -230,6 +231,16 @@ function closeBrowserAction(extension, win = window) {
   CustomizableUI.hidePanelForNode(node);
 
   return Promise.resolve();
+}
+
+async function openContextMenuInPopup(extension, selector = "body") {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let browser = await awaitExtensionPanel(extension);
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, browser);
+  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, browser);
+  await popupShownPromise;
+  return contentAreaContextMenu;
 }
 
 async function openContextMenuInSidebar(selector = "body") {
