@@ -181,7 +181,6 @@ HttpBaseChannel::HttpBaseChannel()
   , mResponseCouldBeSynthesized(false)
   , mBlockAuthPrompt(false)
   , mAllowStaleCacheContent(false)
-  , mHasListenerForTraceableChannel(false)
   , mSuspendCount(0)
   , mInitialRwin(0)
   , mProxyResolveFlags(0)
@@ -2941,7 +2940,6 @@ HttpBaseChannel::SetNewListener(nsIStreamListener *aListener, nsIStreamListener 
 
   wrapper.forget(_retval);
   mListener = aListener;
-  mHasListenerForTraceableChannel = true;
   return NS_OK;
 }
 
