@@ -15,6 +15,7 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
 #include "mozilla/Assertions.h"
+#include "mozilla/TimingParams.h"
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCycleCollectionParticipant.h"
@@ -270,6 +271,26 @@ PhaseType GetAnimationPhaseWithoutEffect(const dom::Animation& aAnimation)
          ? PhaseType::Before
          : PhaseType::After;
 };
+
+inline TimingParams
+TimingParamsFromCSSParams(float aDuration, float aDelay,
+                          float aIterationCount,
+                          dom::PlaybackDirection aDirection,
+                          dom::FillMode aFillMode)
+{
+  MOZ_ASSERT(aIterationCount >= 0.0 && !IsNaN(aIterationCount),
+             "aIterations should be nonnegative & finite, as ensured by "
+             "CSSParser");
+
+  TimingParams timing;
+  timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(aDuration));
+  timing.mDelay = TimeDuration::FromMilliseconds(aDelay);
+  timing.mIterations = aIterationCount;
+  timing.mDirection = aDirection;
+  timing.mFill = aFillMode;
+
+  return timing;
+}
 
 } // namespace mozilla
 
