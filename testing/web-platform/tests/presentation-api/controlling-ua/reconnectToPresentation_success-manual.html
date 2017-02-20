@@ -21,15 +21,7 @@
         promise_test(function (t) {
             var request = new PresentationRequest(presentationUrls);
             var presentationId = null;
-            var connection;
-
-            t.add_cleanup(function() {
-                if(connection)
-                    connection.terminate();
-            });
-
-            return request.start().then(function (c) {
-                connection = c;
+            return request.start().then(function (connection) {
                 presentationId = connection.id;
 
                 // No more user input needed, re-enable test timeout
@@ -44,8 +36,7 @@
             }).then(function () {
                 // Connection now closed, let's reconnect to it
                 return request.reconnect(presentationId);
-            }).then(function (c) {
-                connection = c;
+            }).then(function (connection) {
                 assert_equals(connection.state, "connecting", "connection should be in 'connecting' state");
                 assert_equals(connection.id, presentationId, "Ids of old and new connections must be equal");
             });
