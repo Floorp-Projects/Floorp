@@ -9,8 +9,8 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../l10n");
-const { getUrlQuery, parseQueryString } = require("../../request-utils");
+const { L10N } = require("../../utils/l10n");
+const { getUrlQuery, parseQueryString } = require("../../utils/request-utils");
 
 // Components
 const PropertiesView = createFactory(require("./properties-view"));

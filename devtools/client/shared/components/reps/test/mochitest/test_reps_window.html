@@ -21,7 +21,7 @@ window.onload = Task.async(function* () {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
 
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+    const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
     let { Rep, Window } = REPS;
 
     let gripStub = {
@@ -45,8 +45,38 @@ window.onload = Task.async(function* () {
     // Test rendering
     const renderedComponent = renderComponent(Window.rep, { object: gripStub });
     ok(renderedComponent.className.includes("objectBox-Window"), "Window rep has expected class name");
+    is(renderedComponent.textContent, "Window about:newtab", "Window rep has expected text content");
     const innerNode = renderedComponent.querySelector(".objectPropValue");
     is(innerNode.textContent, "about:newtab", "Window rep has expected inner HTML structure and text content");
+
+    const tinyRenderedComponent = renderComponent(Window.rep, {
+      object: gripStub,
+      mode: MODE.TINY,
+    });
+    is(tinyRenderedComponent.textContent, "Window",
+       "Window rep has expected text content in TINY mode");
+
+    const longRenderedComponent = renderComponent(Window.rep, {
+      object: gripStub,
+      mode: MODE.LONG,
+    });
+    is(longRenderedComponent.textContent, "Window about:newtab",
+       "Window rep has expected text content in LONG mode");
+
+    const displayClassRenderedComponent = renderComponent(Window.rep, {
+      object: Object.assign({}, gripStub, {displayClass : "Custom"}),
+      mode: MODE.TINY,
+    });
+    is(displayClassRenderedComponent.textContent, "Custom",
+       "Window rep has expected text content in TINY mode with Custom display class");
+
+    const displayClassLongRenderedComponent = renderComponent(Window.rep, {
+      object: Object.assign({}, gripStub, {displayClass : "Custom"}),
+      mode: MODE.LONG,
+      title: "Custom"
+    });
+    is(displayClassLongRenderedComponent.textContent, "Custom about:newtab",
+       "Window rep has expected text content in LONG mode with Custom display class");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

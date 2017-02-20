@@ -12,7 +12,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document, windowRequire } = monitor.panelWin;
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let button = document.querySelector("#requests-menu-reload-notice-button");
   button.click();
 

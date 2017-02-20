@@ -103,7 +103,7 @@ add_task(function* test_contentscript_about_blank() {
   let a_b = win.document.getElementById("a_b");
   style = a_b.contentWindow.getComputedStyle(a_b.contentDocument.body);
   is(style.color, "rgb(255, 0, 0)", "about:blank iframe text color is red");
-  is(style.backgroundColor, "transparent", "about:blank iframe background is transparent");
+  is(style.backgroundColor, "rgba(0, 0, 0, 0)", "about:blank iframe background is transparent");
   is(style.textAlign, "right", "about:blank text is right-aligned");
 
   is(count, 10, "exactly 7 more scripts ran");

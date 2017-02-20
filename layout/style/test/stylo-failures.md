@@ -60,7 +60,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_computation.html `animation` [6]
     * test_initial_computation.html `animation` [12]
     * test_property_syntax_errors.html `animation` [404]
-    * test_value_storage.html `animation` [1078]
+    * test_value_storage.html `animation` [1063]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
   * @namespace ##easy##
@@ -85,7 +85,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * mapped attribute not supported
   * test_bug363146.html [2]
   * test_bug389464.html: also font-size computation [1]
-  * test_html_attribute_computed_values.html: also list-style-type [9]
+  * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: getComputedStyle value not updated bug 1331294 ##important## (when that gets fixed, servo/servo#15006) [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [2]
 * console support:
@@ -130,7 +130,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_counter_style.html [1]
   * test_rule_insertion.html `@counter-style` [4]
   * test_value_storage.html `symbols(` [30]
-  * ... `list-style-type` [74]
+  * ... `list-style-type` [60]
   * ... `'list-style'` [30]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * @font-face support bug 1290237
@@ -241,19 +241,12 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_storage.html `contain` [4]
     * test_value_storage.html `'contain'` [30]
   * flexbox / grid position properties **need investigation**
-    * test_align_justify_computed_values.html [16]
-    * test_compute_data_with_start_struct.html `align-` [2]
-    * ... `justify-` [2]
-    * test_inherit_computation.html `align-` [4]
-    * ... `justify-` [2]
     * test_inherit_storage.html `align-` [3]
-    * ... `justify-` [5]
-    * test_initial_computation.html `align-` [8]
-    * ... `justify-` [4]
+    * ... `justify-` [3]
     * test_initial_storage.html `align-` [6]
-    * ... `justify-` [10]
-    * test_value_storage.html `align-` [105]
-    * ... `justify-` [111]
+    * ... `justify-` [6]
+    * test_value_storage.html `align-` [90]
+    * ... `justify-` [79]
   * place-{content,items,self} shorthands
     * test_align_shorthand_serialization.html [8]
     * test_inherit_computation.html `place-` [6]
@@ -297,36 +290,13 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
-  * fill property
-    * test_compute_data_with_start_struct.html `fill` [2]
-    * test_inherit_computation.html `fill` [4]
-    * test_inherit_storage.html `fill` [4]
-    * test_initial_computation.html `fill` [2]
-    * test_initial_storage.html `fill` [2]
-    * test_value_storage.html `on 'fill'` [25]
   * marker-{start,mid,end} properties
     * test_compute_data_with_start_struct.html `marker-` [6]
     * test_inherit_computation.html `marker` [16]
-    * test_inherit_storage.html `marker` [22]
     * test_initial_computation.html `marker` [8]
-    * test_initial_storage.html `marker` [11]
-    * test_value_storage.html `on 'marker` [15]
-  * paint-order property
-    * test_compute_data_with_start_struct.html `paint-order` [2]
-    * test_inherit_computation.html `paint-order` [4]
-    * test_inherit_storage.html `paint-order` [4]
-    * test_initial_computation.html `paint-order` [2]
-    * test_initial_storage.html `paint-order` [2]
-    * test_value_storage.html `on 'paint-order` [10]
   * stroke properties
-    * test_compute_data_with_start_struct.html `stroke` [8]
-    * test_inherit_computation.html `'stroke` [16]
-    * test_inherit_storage.html `'stroke` [8]
-    * ... `"stroke` [8]
-    * test_initial_computation.html `'stroke` [8]
-    * test_initial_storage.html `'stroke` [4]
-    * ... `"stroke` [4]
-    * test_value_storage.html `on 'stroke` [71]
+    * test_value_storage.html `on 'stroke` [6]
+    * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
 * Properties implemented but not in geckolib:
   * counter-reset property:
     * test_bug829816.html [8]
@@ -432,7 +402,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `mask-repeat` [24]
   * lack glue for function values of content property bug 1296477
     * test_rule_insertion.html `decimal counter` [3]
-    * test_value_storage.html `'content` [38]
+    * test_value_storage.html `'content` [41]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
@@ -524,10 +494,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `'font'` [171]
   * test_shorthand_property_getters.html `font shorthand` [2]
   * test_system_font_serialization.html [11]
-* test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [4]
+* test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
-  * ... `98.7667px` [1]
   * ... `0.766667px` [2]
   * ... `75.5667px` [2]
   * ... `105.333px` [2]
@@ -574,21 +543,13 @@ Any line which doesn't follow the format above would be ignored like comment.
 
 ## Assertions
 
-* Table wrapper with borders and paddings bug 1324661
-  * test_animations_async_tests.html asserts [3]
-  * test_animations_effect_timing_enddelay.html asserts [2]
-  * test_animations_event_order.html asserts [1]
-  * test_animations_omta_start.html asserts [1]
-  * test_animations_playbackrate.html asserts [1]
-  * test_at_rule_parse_serialize.html asserts [1]
-  * test_unclosed_parentheses.html asserts [1]
 * Content glue not implemented
   * assertion in frame constructor bug 1324704
     * test_rule_insertion.html asserts [1]
   * assertion in computed style bug 1337635
-    * test_value_cloning.html asserts [18]
-    * test_value_computation.html asserts [18]
-    * test_value_storage.html asserts [32]
+    * test_value_cloning.html asserts [24]
+    * test_value_computation.html asserts [24]
+    * test_value_storage.html asserts [44]
 * test_value_cloning.html asserts: negative radius bug 1337618 [6]
 
 ## Need Gecko change
@@ -597,7 +558,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * unitless zero as angle bug 1234357
     * test_property_syntax_errors.html `linear-gradient(0,` [10]
     * ... `hue-rotate(0)` [6]
-  * test_bug372770.html: rgba(0,0,0,0) and transparent bug 1328224 [4]
 * test_moz_device_pixel_ratio.html: probably unship -moz-device-pixel-ratio bug 1338425 [4]
 
 ## Spec Unclear
@@ -610,19 +570,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 * border-width/padding failure
   * test_compute_data_with_start_struct.html `-width` [4]
   * ... `padding-` [4]
-* -moz-border alias should have been fixed servo/servo#15297
-  * test_inherit_storage.html `-moz-border-` [22]
-  * ... `border-inline-` [2]
-  * test_inherit_computation.html `-moz-border-end` [12]
-  * ... `-moz-border-start` [12]
-  * test_initial_storage.html `-moz-border-` [44]
-  * ... `border-inline-` [4]
-  * test_initial_computation.html `-moz-border-end` [6]
-  * ... `-moz-border-start` [6]
-  * test_value_storage.html `-moz-border-end` [66]
-  * ... `border-inline-end` [42]
-  * ... `-moz-border-start` [66]
-  * ... `border-inline-start` [42]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_variables.html `url`: url in custom property [1]

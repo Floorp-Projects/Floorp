@@ -13,7 +13,7 @@ add_task(function* testExecuteScript() {
   async function background() {
     let tasks = [
       {
-        background: "transparent",
+        background: "rgba(0, 0, 0, 0)",
         foreground: "rgb(0, 113, 4)",
         promise: () => {
           return browser.tabs.insertCSS({

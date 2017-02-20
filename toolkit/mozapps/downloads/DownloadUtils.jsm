@@ -46,11 +46,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-this.__defineGetter__("gDecimalSymbol", function() {
-    delete this.gDecimalSymbol;
-      return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
-});
-
 var localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
   // Backward compatibility: don't use localized digits
@@ -349,12 +344,9 @@ this.DownloadUtils = {
     let today = new Date(aNow.getFullYear(), aNow.getMonth(), aNow.getDate());
 
     // Get locale to use for date/time formatting
-    // TODO: Remove Intl fallback when bug 1215247 is fixed.
-    const locale = typeof Intl === "undefined"
-                   ? undefined
-                   : Cc["@mozilla.org/chrome/chrome-registry;1"]
-                       .getService(Ci.nsIXULChromeRegistry)
-                       .getSelectedLocale("global", true);
+    const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Ci.nsIXULChromeRegistry)
+                     .getSelectedLocale("global", true);
 
     // Figure out if the time is from today, yesterday, this week, etc.
     let dateTimeCompact;
@@ -370,14 +362,10 @@ this.DownloadUtils = {
       dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
     } else if (today - aDate < (6 * 24 * 60 * 60 * 1000)) {
       // After last week started, show day of week
-      dateTimeCompact = typeof Intl === "undefined"
-                        ? aDate.toLocaleFormat("%A")
-                        : aDate.toLocaleDateString(locale, { weekday: "long" });
+      dateTimeCompact = aDate.toLocaleDateString(locale, { weekday: "long" });
     } else {
       // Show month/day
-      let month = typeof Intl === "undefined"
-                  ? aDate.toLocaleFormat("%B")
-                  : aDate.toLocaleDateString(locale, { month: "long" });
+      let month = aDate.toLocaleDateString(locale, { month: "long" });
       let date = aDate.getDate();
       dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
     }
@@ -489,15 +477,8 @@ this.DownloadUtils = {
     // Don't try to format Infinity values using NumberFormat.
     if (aBytes === Infinity) {
       aBytes = "Infinity";
-    } else if (typeof Intl != "undefined") {
-      aBytes = getLocaleNumberFormat(fractionDigits)
-                 .format(aBytes);
     } else {
-      // FIXME: Fall back to the old hack, will be fixed in bug 1200494.
-      aBytes = aBytes.toFixed(fractionDigits);
-      if (gDecimalSymbol != ".") {
-        aBytes = aBytes.replace(".", gDecimalSymbol);
-      }
+      aBytes = getLocaleNumberFormat(fractionDigits).format(aBytes);
     }
 
     return [aBytes, gBundle.GetStringFromName(gStr.units[unitIndex])];

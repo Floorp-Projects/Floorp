@@ -41,7 +41,7 @@ function checkResultsBlocked() {
   // stylesheet: default background color within FF is transparent
   var bgcolor = window.getComputedStyle(writemetacspframe.contentDocument.body)
                       .getPropertyValue("background-color");
-  is(bgcolor, "transparent", "inital background value in FF should be 'transparent'");
+  is(bgcolor, "rgba(0, 0, 0, 0)", "inital background value in FF should be 'transparent'");
 
   // image: make sure image is blocked
   var img = writemetacspframe.contentDocument.getElementById("testimage");

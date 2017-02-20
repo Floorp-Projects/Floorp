@@ -27,12 +27,6 @@ OmxDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   return decoder.forget();
 }
 
-PlatformDecoderModule::ConversionRequired
-OmxDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
-{
-  return ConversionRequired::kNeedNone;
-}
-
 bool
 OmxDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                    DecoderDoctorDiagnostics* aDiagnostics) const

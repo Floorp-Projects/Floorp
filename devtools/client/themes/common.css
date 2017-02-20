@@ -335,7 +335,7 @@ checkbox:-moz-focusring {
   background: var(--toolbarbutton-background);
 }
 
-.devtools-button:not(:empty):not(:disabled):hover,
+.devtools-button:not(:empty):not(:disabled):not(.checked):hover,
 .devtools-toolbarbutton[label]:not(:-moz-any([checked=true],[disabled])):hover,
 .devtools-button:empty:not(:disabled):-moz-any(:hover:active,.checked),
 .devtools-toolbarbutton:not([label]):-moz-any([checked],[open],:hover:active) {

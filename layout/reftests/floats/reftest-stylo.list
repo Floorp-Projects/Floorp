@@ -17,7 +17,7 @@ fails == float-outside-block-push.html float-outside-block-push.html
 == 345369-4.html 345369-4.html
 == 345369-5.html 345369-5.html
 == 429974-1.html 429974-1.html
-fails == 478834-1.html 478834-1.html
+== 478834-1.html 478834-1.html
 == 546048-1.html 546048-1.html
 == 775350-1.html 775350-1.html
 fails == 1114329.html 1114329.html

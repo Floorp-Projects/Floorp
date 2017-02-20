@@ -22,7 +22,7 @@ add_task(function* () {
   // since the tool is reopened a bunch of times during this test
   // and the instances will differ.
   let getDoc = () => monitor.panelWin.document;
-  let getPrefs = () => monitor.panelWin.windowRequire("devtools/client/netmonitor/prefs").Prefs;
+  let getPrefs = () => monitor.panelWin.windowRequire("devtools/client/netmonitor/utils/prefs").Prefs;
   let getStore = () => monitor.panelWin.gStore;
   let getState = () => getStore().getState();
 

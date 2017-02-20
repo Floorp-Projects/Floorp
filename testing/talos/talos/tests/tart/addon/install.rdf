@@ -3,7 +3,7 @@
 <!-- Required Items -->
 <em:id>bug848358@mozilla.org</em:id>
 <em:name>TART - Tab Animation regression Test</em:name>
-<em:version>1.6.1</em:version>
+<em:version>1.6.2</em:version>
 
 <em:targetApplication>
     <Description>
