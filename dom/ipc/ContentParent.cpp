@@ -51,6 +51,7 @@
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -4767,6 +4768,25 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
                                                false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
   mBlobURLs.RemoveElement(aURI);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
+                                               const nsString& aKey,
+                                               const nsString& aOldValue,
+                                               const nsString& aNewValue,
+                                               const Principal& aPrincipal,
+                                               const bool& aIsPrivate)
+{
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    if (cp != this) {
+      Unused << cp->SendDispatchLocalStorageChange(
+        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
+        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
+    }
+  }
 
   return IPC_OK();
 }

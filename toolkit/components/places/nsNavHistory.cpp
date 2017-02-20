@@ -17,6 +17,7 @@
 #include "nsAnnotationService.h"
 #include "nsFaviconService.h"
 #include "nsPlacesMacros.h"
+#include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
 
@@ -1754,12 +1755,11 @@ PlacesSQLQueryBuilder::SelectAsDay()
         PR_NormalizeTime(&tm, PR_GMTParameters);
         // If the container is for a past year, add the year to its title,
         // otherwise just show the month name.
-        // Note that tm_month starts from 0, while we need a 1-based index.
         if (tm.tm_year < currentYear) {
-          history->GetMonthYear(tm.tm_month + 1, tm.tm_year, dateName);
+          nsNavHistory::GetMonthYear(tm, dateName);
         }
         else {
-          history->GetMonthName(tm.tm_month + 1, dateName);
+          nsNavHistory::GetMonthName(tm, dateName);
         }
 
         // From start of MonthIndex + 1 months ago
@@ -4210,46 +4210,36 @@ nsNavHistory::GetStringFromName(const char16_t *aName, nsACString& aResult)
   CopyUTF16toUTF8(nsDependentString(aName), aResult);
 }
 
+// static
 void
-nsNavHistory::GetMonthName(int32_t aIndex, nsACString& aResult)
+nsNavHistory::GetMonthName(const PRExplodedTime& aTime, nsACString& aResult)
 {
-  nsIStringBundle *bundle = GetDateFormatBundle();
-  if (bundle) {
-    nsCString name = nsPrintfCString("month.%d.name", aIndex);
-    nsXPIDLString value;
-    nsresult rv = bundle->GetStringFromName(NS_ConvertUTF8toUTF16(name).get(),
-                                            getter_Copies(value));
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF16toUTF8(value, aResult);
-      return;
-    }
+  nsAutoString month;
+  nsresult rv = DateTimeFormat::FormatPRExplodedTime(kDateFormatMonthLong,
+                                                     kTimeFormatNone,
+                                                     &aTime,
+                                                     month);
+  if (NS_FAILED(rv)) {
+    aResult = nsPrintfCString("[%d]", aTime.tm_month + 1);
+    return;
   }
-  aResult = nsPrintfCString("[%d]", aIndex);
+  CopyUTF16toUTF8(month, aResult);
 }
 
+// static
 void
-nsNavHistory::GetMonthYear(int32_t aMonth, int32_t aYear, nsACString& aResult)
+nsNavHistory::GetMonthYear(const PRExplodedTime& aTime, nsACString& aResult)
 {
-  nsIStringBundle *bundle = GetBundle();
-  if (bundle) {
-    nsAutoCString monthName;
-    GetMonthName(aMonth, monthName);
-    nsAutoString yearString;
-    yearString.AppendInt(aYear);
-    const char16_t* strings[2] = {
-      NS_ConvertUTF8toUTF16(monthName).get()
-    , yearString.get()
-    };
-    nsXPIDLString value;
-    if (NS_SUCCEEDED(bundle->FormatStringFromName(
-          u"finduri-MonthYear", strings, 2,
-          getter_Copies(value)
-        ))) {
-      CopyUTF16toUTF8(value, aResult);
-      return;
-    }
+  nsAutoString monthYear;
+  nsresult rv = DateTimeFormat::FormatPRExplodedTime(kDateFormatYearMonthLong,
+                                                     kTimeFormatNone,
+                                                     &aTime,
+                                                     monthYear);
+  if (NS_FAILED(rv)) {
+    aResult = nsPrintfCString("[%d-%d]", aTime.tm_month + 1, aTime.tm_year);
+    return;
   }
-  aResult.AppendLiteral("finduri-MonthYear");
+  CopyUTF16toUTF8(monthYear, aResult);
 }
 
 
@@ -4517,19 +4507,4 @@ nsNavHistory::GetBundle()
     NS_ENSURE_SUCCESS(rv, nullptr);
   }
   return mBundle;
-}
-
-nsIStringBundle *
-nsNavHistory::GetDateFormatBundle()
-{
-  if (!mDateFormatBundle) {
-    nsCOMPtr<nsIStringBundleService> bundleService =
-      services::GetStringBundleService();
-    NS_ENSURE_TRUE(bundleService, nullptr);
-    nsresult rv = bundleService->CreateBundle(
-        "chrome://global/locale/dateFormat.properties",
-        getter_AddRefs(mDateFormatBundle));
-    NS_ENSURE_SUCCESS(rv, nullptr);
-  }
-  return mDateFormatBundle;
 }

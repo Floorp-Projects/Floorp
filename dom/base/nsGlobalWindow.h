@@ -1946,9 +1946,6 @@ protected:
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
-  typedef nsTArray<RefPtr<mozilla::dom::StorageEvent>> nsStorageEventArray;
-  nsStorageEventArray mPendingStorageEvents;
-
   uint32_t mSuspendDepth;
   uint32_t mFreezeDepth;
 

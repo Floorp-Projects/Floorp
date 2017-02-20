@@ -42,17 +42,6 @@ using mozilla::TimeDuration;
 static const pthread_t kNoThread = (pthread_t) 0;
 #endif
 
-void OS::Startup() {
-}
-
-void OS::Sleep(int milliseconds) {
-  usleep(1000 * milliseconds);
-}
-
-void OS::SleepMicro(int microseconds) {
-  usleep(microseconds);
-}
-
 class PlatformData {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
@@ -186,7 +175,7 @@ public:
       TimeStamp beforeSleep = TimeStamp::Now();
       TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
       double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
-      OS::SleepMicro(sleepTime);
+      usleep(sleepTime);
       sampleStart = TimeStamp::Now();
       lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
     }
@@ -214,7 +203,7 @@ public:
 
     if (KERN_SUCCESS != thread_suspend(profiled_thread)) return;
 
-#if V8_HOST_ARCH_X64
+#if defined(GP_ARCH_amd64)
     thread_state_flavor_t flavor = x86_THREAD_STATE64;
     x86_thread_state64_t state;
     mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
@@ -223,7 +212,7 @@ public:
 #else
 #define REGISTER_FIELD(name) r ## name
 #endif  // __DARWIN_UNIX03
-#elif V8_HOST_ARCH_IA32
+#elif defined(GP_ARCH_x86)
     thread_state_flavor_t flavor = i386_THREAD_STATE;
     i386_thread_state_t state;
     mach_msg_type_number_t count = i386_THREAD_STATE_COUNT;
@@ -234,7 +223,7 @@ public:
 #endif  // __DARWIN_UNIX03
 #else
 #error Unsupported Mac OS X host architecture.
-#endif  // V8_HOST_ARCH
+#endif  // GP_ARCH_*
 
     if (thread_get_state(profiled_thread,
                          flavor,
@@ -267,6 +256,11 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 static void
+PlatformInit()
+{
+}
+
+static void
 PlatformStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -295,7 +289,7 @@ Thread::GetCurrentId()
 void TickSample::PopulateContext(void* aContext)
 {
   // Note that this asm changes if PopulateContext's parameter list is altered
-#if defined(SPS_PLAT_amd64_darwin)
+#if defined(GP_ARCH_amd64)
   asm (
       // Compute caller's %rsp by adding to %rbp:
       // 8 bytes for previous %rbp, 8 bytes for return address
@@ -306,7 +300,7 @@ void TickSample::PopulateContext(void* aContext)
       "=r"(sp),
       "=r"(fp)
   );
-#elif defined(SPS_PLAT_x86_darwin)
+#elif defined(GP_ARCH_x86)
   asm (
       // Compute caller's %esp by adding to %ebp:
       // 4 bytes for aContext + 4 bytes for return address +
