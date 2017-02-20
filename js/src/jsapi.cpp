@@ -6562,7 +6562,7 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     if (filename) {
         if (i.isWasm()) {
             // For Wasm, copy out the filename, there is no script source.
-            UniqueChars copy = DuplicateString(i.filename());
+            UniqueChars copy = DuplicateString(i.filename() ? i.filename() : "");
             if (!copy)
                 filename->setUnowned("out of memory");
             else
