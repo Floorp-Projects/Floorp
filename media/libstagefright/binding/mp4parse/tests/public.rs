@@ -92,6 +92,9 @@ fn public_api() {
                         assert!(opus.version > 0);
                         "Opus"
                     }
+                    mp4::AudioCodecSpecific::MP3 => {
+                        "MP3"
+                    }
                 }, "ES");
                 assert!(a.samplesize > 0);
                 assert!(a.samplerate > 0);
