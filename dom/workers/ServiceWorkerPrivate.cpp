@@ -1613,7 +1613,7 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    swm->GetRegistration(mInfo->GetPrincipal(), mInfo->Scope());
+    swm->GetRegistration(mInfo->Principal(), mInfo->Scope());
 
   // Its possible the registration is removed between starting the interception
   // and actually dispatching the fetch event.  In these cases we simply
@@ -1737,7 +1737,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
 
   nsCOMPtr<nsIURI> uri;
-  rv = mInfo->GetPrincipal()->GetURI(getter_AddRefs(uri));
+  rv = mInfo->Principal()->GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
