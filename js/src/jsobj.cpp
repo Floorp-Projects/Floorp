@@ -2867,7 +2867,7 @@ js::UnwatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id)
     // need to check for nativeness or watchable-ness here.
     RootedObject obj(cx, ToWindowIfWindowProxy(origObj));
     if (WatchpointMap* wpmap = cx->compartment()->watchpointMap)
-        wpmap->unwatch(obj, id, nullptr, nullptr);
+        wpmap->unwatch(obj, id);
     return true;
 }
 
