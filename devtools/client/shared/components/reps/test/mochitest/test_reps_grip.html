@@ -17,7 +17,11 @@ Test grip rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const {
+    REPS,
+    MODE,
+    getSelectableInInspectorGrips,
+  } = browserRequire("devtools/client/shared/components/reps/load-reps");
   let { Rep, Grip } = REPS;
 
   const componentUnderTest = Grip;
@@ -44,6 +48,10 @@ window.onload = Task.async(function* () {
 
     // Test that 'more' property doesn't clobber the caption.
     yield testMoreProp();
+
+    yield testOnDomNodeMouseOver();
+    yield testOnDomNodeMouseOut();
+    yield testOnDomNodeInspectIconClick();
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -452,6 +460,13 @@ window.onload = Task.async(function* () {
       {
         mode: MODE.LONG,
         expectedOutput: defaultOutput,
+      },
+      {
+        // Check the custom title with nested objects to make sure nested objects are not
+        // displayed with their parent's title.
+        mode: MODE.LONG,
+        title: "CustomTitle",
+        expectedOutput: `CustomTitle { objProp: Object, strProp: "test string" }`,
       }
     ];
 
@@ -513,6 +528,104 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testOnDomNodeMouseOver() {
+    const stub = getGripStub("testObjectWithNodes");
+
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 2, "the stub has two node grips");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let mouseOverValue;
+    let called = 0;
+    let onDOMNodeMouseOver = (object) => {
+      mouseOverValue = object;
+      called++;
+    };
+
+    const renderedComponent = renderComponent(Grip.rep, {
+      object: stub,
+      onDOMNodeMouseOver,
+      attachedActorIds,
+    });
+
+    const nodes = renderedComponent.querySelectorAll(".objectBox-node");
+    nodes.forEach((node, index) => {
+      TestUtils.Simulate.mouseOver(node);
+      is(mouseOverValue, grips[index],
+        "onDOMNodeMouseOver is called with the expected argument " +
+        "when mouseover is fired on the Rep");
+    });
+    is(called, 2,
+      "onDOMNodeMouseOver is called when mouseOverValue is fired on each NodeRep");
+  }
+
+  function testOnDomNodeMouseOut() {
+    const stub = getGripStub("testObjectWithNodes");
+
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 2, "the stub has two node grips");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let called = 0;
+    let onDOMNodeMouseOut = (object) => {
+      called++;
+    };
+
+    const renderedComponent = renderComponent(Grip.rep, {
+      object: stub,
+      onDOMNodeMouseOut,
+      attachedActorIds,
+    });
+
+    const nodes = renderedComponent.querySelectorAll(".objectBox-node");
+    info("Simulating mouseout on each node");
+    Array.from(nodes).forEach(node => TestUtils.Simulate.mouseOut(node));
+
+    is(called, 2, "onDOMNodeMouseOut is called when mouseout is fired on each NodeRep");
+  }
+
+  function testOnDomNodeInspectIconClick() {
+    const stub = getGripStub("testObjectWithNodes");
+
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 2, "the stub has two node grips");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let inspectIconClickedValue = null;
+    let onInspectIconClick = (object) => {
+      inspectIconClickedValue = object;
+    };
+
+    let renderedComponentWithoutInspectIcon = renderComponent(Grip.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds: ["someOtherId"],
+    });
+    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
+      "There isn't an inspect icon when the actor is not in attachedActorIds");
+
+    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
+      "There isn't an inspect icon when attachedActorIds does not have keys " +
+      "matching grip properties");
+
+    const renderedComponent = renderComponent(Grip.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds,
+    });
+
+    const icons = renderedComponent.querySelectorAll(".open-inspector");
+    is(icons.length, 2,
+      "There is an icon for each grip property matching an attachedNodeFront");
+
+    icons.forEach((icon, index) => {
+      TestUtils.Simulate.click(icon);
+      is(inspectIconClickedValue, grips[index],
+        "onInspectIconClick is called with the expected argument " +
+        "when the inspect icon is clicked");
+    });
   }
 
   function getGripStub(functionName) {
@@ -1015,6 +1128,70 @@ window.onload = Task.async(function* () {
                 "writable": true
               }
             }
+          }
+        };
+      case "testObjectWithNodes":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj214",
+          "class": "Object",
+          "ownPropertyLength": 2,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {
+              "foo": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": {
+                  "type": "object",
+                  "actor": "server1.conn1.child1/obj215",
+                  "class": "HTMLButtonElement",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "DOMNode",
+                    "nodeType": 1,
+                    "nodeName": "button",
+                    "attributes": {
+                      "id": "btn-1",
+                      "class": "btn btn-log",
+                      "type": "button"
+                    },
+                    "attributesLength": 3
+                  }
+                }
+              },
+              "bar": {
+                "configurable": true,
+                "enumerable": true,
+                "writable": true,
+                "value": {
+                  "type": "object",
+                  "actor": "server1.conn1.child1/obj216",
+                  "class": "HTMLButtonElement",
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "ownPropertyLength": 0,
+                  "preview": {
+                    "kind": "DOMNode",
+                    "nodeType": 1,
+                    "nodeName": "button",
+                    "attributes": {
+                      "id": "btn-2",
+                      "class": "btn btn-err",
+                      "type": "button"
+                    },
+                    "attributesLength": 3
+                  }
+                }
+              }
+            },
+            "ownPropertiesLength": 2,
+            "safeGetterValues": {}
           }
         };
     }

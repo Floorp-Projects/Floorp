@@ -131,7 +131,7 @@ class TTest(object):
 
             # Run the test
             timeout = test_config.get('timeout', 7200)  # 2 hours default
-            if setup.sps_profile:
+            if setup.gecko_profile:
                 # When profiling, give the browser some extra time
                 # to dump the profile.
                 timeout += 5 * 60
@@ -141,8 +141,8 @@ class TTest(object):
                 browser_config["extra_args"],
                 setup.profile_dir,
                 test_config['url'],
-                profiling_info=(setup.sps_profile.profiling_info
-                                if setup.sps_profile else None)
+                profiling_info=(setup.gecko_profile.profiling_info
+                                if setup.gecko_profile else None)
             )
 
             mainthread_error_count = 0
@@ -232,8 +232,8 @@ class TTest(object):
                                  else None)
             )
 
-            if setup.sps_profile:
-                setup.sps_profile.symbolicate(i)
+            if setup.gecko_profile:
+                setup.gecko_profile.symbolicate(i)
 
             self.check_for_crashes(browser_config, minidump_dir,
                                    test_config['name'])

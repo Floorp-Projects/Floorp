@@ -17,7 +17,7 @@ from mozlog import get_proxy_logger
 
 from talos import utils
 from talos.utils import TalosError
-from talos.sps_profile import SpsProfile
+from talos.gecko_profile import GeckoProfile
 
 
 LOG = get_proxy_logger()
@@ -32,8 +32,8 @@ class FFSetup(object):
        available via the instance member *env*.
      - the profile used to run the test, available via the
        instance member *profile_dir*.
-     - sps profiling, available via the instance member *sps_profile*
-       of type :class:`SpsProfile` or None if not used.
+     - Gecko profiling, available via the instance member *gecko_profile*
+       of type :class:`GeckoProfile` or None if not used.
 
     Note that the browser will be run once with the profile, to ensure
     this is basically working and negate any performance noise with the
@@ -57,7 +57,7 @@ class FFSetup(object):
         # The profile dir must be named 'profile' because of xperf analysis
         # (in etlparser.py). TODO fix that ?
         self.profile_dir = os.path.join(self._tmp_dir, 'profile')
-        self.sps_profile = None
+        self.gecko_profile = None
 
     def _init_env(self):
         self.env = dict(os.environ)
@@ -137,21 +137,21 @@ class FFSetup(object):
             LOG.info("Raw results:%s" % results_raw)
             raise TalosError("browser failed to close after being initialized")
 
-    def _init_sps_profile(self):
+    def _init_gecko_profile(self):
         upload_dir = os.getenv('MOZ_UPLOAD_DIR')
-        if self.test_config.get('sps_profile') and not upload_dir:
+        if self.test_config.get('gecko_profile') and not upload_dir:
             LOG.critical("Profiling ignored because MOZ_UPLOAD_DIR was not"
                          " set")
-        if upload_dir and self.test_config.get('sps_profile'):
-            self.sps_profile = SpsProfile(upload_dir,
-                                          self.browser_config,
-                                          self.test_config)
-            self.sps_profile.update_env(self.env)
+        if upload_dir and self.test_config.get('gecko_profile'):
+            self.gecko_profile = GeckoProfile(upload_dir,
+                                              self.browser_config,
+                                              self.test_config)
+            self.gecko_profile.update_env(self.env)
 
     def clean(self):
         mozfile.remove(self._tmp_dir)
-        if self.sps_profile:
-            self.sps_profile.clean()
+        if self.gecko_profile:
+            self.gecko_profile.clean()
 
     def __enter__(self):
         LOG.info('Initialising browser for %s test...'
@@ -163,7 +163,7 @@ class FFSetup(object):
         except:
             self.clean()
             raise
-        self._init_sps_profile()
+        self._init_gecko_profile()
         LOG.info('Browser initialized.')
         return self
 

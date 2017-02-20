@@ -9,14 +9,14 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { L10N } = require("../../l10n");
+const { L10N } = require("../../utils/l10n");
 const Actions = require("../../actions/index");
 const { getSelectedRequest } = require("../../selectors/index");
 const {
   getUrlQuery,
   parseQueryString,
   writeHeaderText,
-} = require("../../request-utils");
+} = require("../../utils/request-utils");
 
 const {
   button,

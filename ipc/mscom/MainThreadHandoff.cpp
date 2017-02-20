@@ -53,15 +53,12 @@ namespace mscom {
 /* static */ HRESULT
 MainThreadHandoff::Create(IInterceptorSink** aOutput)
 {
-  *aOutput = nullptr;
-  MainThreadHandoff* handoff = new MainThreadHandoff();
-  HRESULT hr = handoff->QueryInterface(IID_IInterceptorSink, (void**) aOutput);
-  handoff->Release();
-  return hr;
+  RefPtr<MainThreadHandoff> handoff(new MainThreadHandoff());
+  return handoff->QueryInterface(IID_IInterceptorSink, (void**) aOutput);
 }
 
 MainThreadHandoff::MainThreadHandoff()
-  : mRefCnt(1)
+  : mRefCnt(0)
 {
 }
 

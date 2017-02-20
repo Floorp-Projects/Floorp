@@ -189,6 +189,11 @@ public:
     return mDecoder->GetDescriptionName();
   }
 
+  ConversionRequired NeedsConversion() const override
+  {
+    return mDecoder->NeedsConversion();
+  }
+
 private:
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<TaskQueue> mTaskQueue;
@@ -368,16 +373,6 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
     decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue(),
     aParams.mType, aParams.mOnWaitingForKeyEvent));
   return emeDecoder.forget();
-}
-
-PlatformDecoderModule::ConversionRequired
-EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
-{
-  if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
-    return ConversionRequired::kNeedAVCC;
-  } else {
-    return ConversionRequired::kNeedNone;
-  }
 }
 
 bool

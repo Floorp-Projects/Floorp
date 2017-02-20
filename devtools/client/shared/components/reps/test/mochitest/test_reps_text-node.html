@@ -19,7 +19,11 @@ Test text-node rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const {
+    REPS,
+    MODE,
+    getSelectableInInspectorGrips,
+  } = browserRequire("devtools/client/shared/components/reps/load-reps");
   let { Rep, TextNode } = REPS;
 
   let gripStubs = new Map();
@@ -27,6 +31,9 @@ window.onload = Task.async(function* () {
     "class": "Text",
     "actor": "server1.conn1.child1/obj50",
     "preview": {
+      "kind": "DOMNode",
+      "nodeType": 3,
+      "nodeName": "#text",
       "textContent": "hello world"
     }
   });
@@ -34,6 +41,9 @@ window.onload = Task.async(function* () {
     "class": "Text",
     "actor": "server1.conn1.child1/obj50",
     "preview": {
+      "kind": "DOMNode",
+      "nodeType": 3,
+      "nodeName": "#text",
       "textContent": "hello\nworld"
     }
   });
@@ -52,6 +62,7 @@ window.onload = Task.async(function* () {
 
     yield testOnMouseOver();
     yield testOnMouseOut();
+    yield testOnInspectIconClick();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -113,30 +124,78 @@ window.onload = Task.async(function* () {
   function testOnMouseOver() {
     const stub = gripStubs.get("testRendering");
 
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 1, "the stub has one text node grip");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
       mouseOverValue = object;
     };
-    const renderedComponent = renderComponent(
-      TextNode.rep, {object: stub, onDOMNodeMouseOver});
+    const renderedComponent = renderComponent(TextNode.rep, {
+      object: stub,
+      onDOMNodeMouseOver,
+      attachedActorIds,
+    });
 
     TestUtils.Simulate.mouseOver(renderedComponent);
-    is(mouseOverValue, stub, "onDOMNodeMouseOver is called with the expected argument " +
-      "when mouseover is fired on the Rep");
+    is(mouseOverValue, grips[0], "onDOMNodeMouseOver is called " +
+      "with the expected argument when mouseover is fired on the Rep");
   }
 
   function testOnMouseOut() {
     const stub = gripStubs.get("testRendering");
 
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 1, "the stub has one text node grip");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
     let called = false;
     let onDOMNodeMouseOut = (object) => {
       called = true;
     };
-    const renderedComponent = renderComponent(
-      TextNode.rep, {object: stub, onDOMNodeMouseOut});
+    const renderedComponent = renderComponent(TextNode.rep, {
+      object: stub,
+      onDOMNodeMouseOut,
+      attachedActorIds,
+    });
 
     TestUtils.Simulate.mouseOut(renderedComponent);
     is(called, true, "onDOMNodeMouseOut is called when mouseout is fired on the Rep");
+  }
+
+  function testOnInspectIconClick() {
+    const stub = gripStubs.get("testRendering");
+
+    const grips = getSelectableInInspectorGrips(stub);
+    is(grips.length, 1, "the stub has one text node grip");
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let inspectIconClickedValue = null;
+    let onInspectIconClick = (object) => {
+      inspectIconClickedValue = object;
+    };
+
+    const renderedComponentWithoutInspectIcon = renderComponent(TextNode.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds: ["someOtherId"]
+    });
+    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
+      "There isn't an inspect icon when the actor is not in attachedActorIds");
+
+    const renderedComponent = renderComponent(TextNode.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds,
+    });
+
+    const inspectIconNode = renderedComponent.querySelector(".open-inspector");
+    ok(inspectIconNode !== null, "There is an inspect icon as expected");
+    TestUtils.Simulate.click(inspectIconNode);
+
+    is(inspectIconClickedValue, grips[0],
+      "onInspectIconClick is called with expected value when inspect icon is clicked");
   }
 });
 </script>
