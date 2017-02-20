@@ -436,8 +436,8 @@ class InputState {
 
   /**
    * @param {?} obj
-   *     Object with property |type|, representing an action sequence or an
-   *     action item.
+   *     Object with property |type| and optionally |parameters| or |pointerType|,
+   *     representing an action sequence or an action item.
    *
    * @return {action.InputState}
    *     An |action.InputState| object for the type of the |actionSequence|.
@@ -451,7 +451,16 @@ class InputState {
       throw new InvalidArgumentError(`Unknown action type: ${type}`);
     }
     let name = type == "none" ? "Null" : capitalize(type);
-    return new action.InputState[name]();
+    if (name == "Pointer") {
+      if (!obj.pointerType && (!obj.parameters || !obj.parameters.pointerType)) {
+        throw new InvalidArgumentError(
+            error.pprint`Expected obj to have pointerType, got: ${obj}`);
+      }
+      let pointerType = obj.pointerType || obj.parameters.pointerType;
+      return new action.InputState[name](pointerType);
+    } else {
+      return new action.InputState[name]();
+    }
   }
 }
 
@@ -546,12 +555,16 @@ action.InputState.Null = class Null extends InputState {
  *
  * @param {string} subtype
  *     Kind of pointing device: mouse, pen, touch.
+ *
+ * @throws {InvalidArgumentError}
+ *     If subtype is undefined or an invalid pointer type.
  */
 action.InputState.Pointer = class Pointer extends InputState {
   constructor(subtype) {
     super();
     this.pressed = new Set();
-    this.subtype = subtype;
+    assert.defined(subtype, error.pprint`Expected subtype to be defined, got: ${subtype}`);
+    this.subtype = action.PointerType.get(subtype);
     this.x = 0;
     this.y = 0;
   }
@@ -804,14 +817,19 @@ action.PointerParameters = class {
  *
  * @throws {InvalidArgumentError}
  *     If |id| is already mapped to an |action.InputState| that is
- *     not compatible with |act.subtype|.
+ *     not compatible with |act.type| or |pointerParams.pointerType|.
  */
 action.processPointerAction = function processPointerAction(id, pointerParams, act) {
-  let subtype = act.subtype;
-  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).subtype !== subtype) {
+  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).type !== act.type) {
+    throw new InvalidArgumentError(
+        `Expected 'id' ${id} to be mapped to InputState whose type is ` +
+        `${action.inputStateMap.get(id).type}, got: ${act.type}`);
+  }
+  let pointerType = pointerParams.pointerType;
+  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).subtype !== pointerType) {
     throw new InvalidArgumentError(
         `Expected 'id' ${id} to be mapped to InputState whose subtype is ` +
-        `${action.inputStateMap.get(id).subtype}, got: ${subtype}`);
+        `${action.inputStateMap.get(id).subtype}, got: ${pointerType}`);
   }
   act.pointerType = pointerParams.pointerType;
 };
