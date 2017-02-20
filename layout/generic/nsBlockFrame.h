@@ -1019,7 +1019,9 @@ public:
 
 private:
   friend class nsBlockFrame;
+  friend class nsBidiPresUtils;
   // XXX nsBlockFrame uses this internally in one place.  Try to remove it.
+  // XXX uhm, and nsBidiPresUtils::Resolve too.
   nsBlockInFlowLineIterator(nsBlockFrame* aFrame, LineIterator aLine, bool aInOverflow);
 
   nsBlockFrame* mFrame;
