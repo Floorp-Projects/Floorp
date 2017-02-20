@@ -947,6 +947,9 @@ public:
   mozilla::dom::Worklet*
   GetPaintWorklet(mozilla::ErrorResult& aRv);
 
+  void
+  GetAppLocales(nsTArray<nsString>& aLocales);
+
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
                       nsIPrincipal& aSubjectPrincipal,
