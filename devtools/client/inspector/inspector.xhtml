@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="chrome://devtools/skin/computed.css"/>
   <link rel="stylesheet" href="chrome://devtools/skin/fonts.css"/>
   <link rel="stylesheet" href="chrome://devtools/skin/boxmodel.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/deprecated-boxmodel.css"/>
   <link rel="stylesheet" href="chrome://devtools/skin/layout.css"/>
   <link rel="stylesheet" href="chrome://devtools/skin/animationinspector.css"/>
   <link rel="stylesheet" href="resource://devtools/client/shared/components/sidebar-toggle.css"/>
@@ -131,7 +132,60 @@
 
         <div id="computedview-container">
           <div id="computedview-container-focusable" tabindex="-1">
-            <div id="boxmodel-wrapper" tabindex="0">
+            <div id="old-boxmodel-wrapper" tabindex="0"
+              data-localization-bundle="devtools/client/locales/boxmodel.properties">
+              <div id="old-boxmodel-header">
+                <div id="old-boxmodel-expander" class="expander theme-twisty expandable" open=""></div>
+                <span data-localization="content=boxmodel.title"></span>
+              </div>
+
+              <div id="old-boxmodel-container">
+                <div id="old-boxmodel-main">
+                  <span class="old-boxmodel-legend" data-box="margin" data-localization="content=boxmodel.margin;title=boxmodel.margin"></span>
+                  <div id="old-boxmodel-margins" data-box="margin" data-localization="title=boxmodel.margin">
+                    <span class="old-boxmodel-legend" data-box="border" data-localization="content=boxmodel.border;title=boxmodel.border"></span>
+                    <div id="old-boxmodel-borders" data-box="border" data-localization="title=boxmodel.border">
+                      <span class="old-boxmodel-legend" data-box="padding" data-localization="content=boxmodel.padding;title=boxmodel.padding"></span>
+                      <div id="old-boxmodel-padding" data-box="padding" data-localization="title=boxmodel.padding">
+                        <div id="old-boxmodel-content" data-box="content" data-localization="title=boxmodel.content">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="old-boxmodel-margin old-boxmodel-top"><span data-box="margin" class="old-boxmodel-editable" title="margin-top"></span></p>
+                  <p class="old-boxmodel-margin old-boxmodel-right"><span data-box="margin" class="old-boxmodel-editable" title="margin-right"></span></p>
+                  <p class="old-boxmodel-margin old-boxmodel-bottom"><span data-box="margin" class="old-boxmodel-editable" title="margin-bottom"></span></p>
+                  <p class="old-boxmodel-margin old-boxmodel-left"><span data-box="margin" class="old-boxmodel-editable" title="margin-left"></span></p>
+
+                  <p class="old-boxmodel-border old-boxmodel-top"><span data-box="border" class="old-boxmodel-editable" title="border-top"></span></p>
+                  <p class="old-boxmodel-border old-boxmodel-right"><span data-box="border" class="old-boxmodel-editable" title="border-right"></span></p>
+                  <p class="old-boxmodel-border old-boxmodel-bottom"><span data-box="border" class="old-boxmodel-editable" title="border-bottom"></span></p>
+                  <p class="old-boxmodel-border old-boxmodel-left"><span data-box="border" class="old-boxmodel-editable" title="border-left"></span></p>
+
+                  <p class="old-boxmodel-padding old-boxmodel-top"><span data-box="padding" class="old-boxmodel-editable" title="padding-top"></span></p>
+                  <p class="old-boxmodel-padding old-boxmodel-right"><span data-box="padding" class="old-boxmodel-editable" title="padding-right"></span></p>
+                  <p class="old-boxmodel-padding old-boxmodel-bottom"><span data-box="padding" class="old-boxmodel-editable" title="padding-bottom"></span></p>
+                  <p class="old-boxmodel-padding old-boxmodel-left"><span data-box="padding" class="old-boxmodel-editable" title="padding-left"></span></p>
+
+                  <p class="old-boxmodel-size">
+                    <span data-box="content" data-localization="title=boxmodel.content"></span>
+                  </p>
+                </div>
+
+                <div id="old-boxmodel-info">
+                  <span id="old-boxmodel-element-size"></span>
+                  <section id="old-boxmodel-position-group">
+                    <button class="devtools-button" id="old-layout-geometry-editor"
+                            data-localization="title=boxmodel.geometryButton.tooltip"></button>
+                    <span id="old-boxmodel-element-position"></span>
+                  </section>
+                </div>
+
+                <div style="display: none">
+                  <p id="old-boxmodel-dummy"></p>
+                </div>
+              </div>
             </div>
 
             <div id="propertyContainer" class="theme-separator" tabindex="0" dir="ltr">
