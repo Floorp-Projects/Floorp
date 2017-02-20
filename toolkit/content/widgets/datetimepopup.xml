@@ -26,8 +26,8 @@
         this.l10n = {};
         const mozIntl = Components.classes["@mozilla.org/mozintl;1"]
                           .getService(Components.interfaces.mozIMozIntl);
-        mozIntl.addGetCalendarInfo(l10n);
-        mozIntl.addGetDisplayNames(l10n);
+        mozIntl.addGetCalendarInfo(this.l10n);
+        mozIntl.addGetDisplayNames(this.l10n);
       ]]></constructor>
       <method name="loadPicker">
         <parameter name="type"/>

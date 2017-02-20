@@ -1,3 +1,5 @@
+/* import-globals-from ../widgets/popup_shared.js */
+
 var gMenuPopup = null;
 var gTrigger = null;
 var gIsMenu = false;

@@ -30,7 +30,7 @@ Services.scriptloader.loadSubScript(sharedUrl, this);
 // Define output functions so they look the same across all frameworks.  Since
 // we don't have an output function available here, we report as TEST-PASS.
 var Output = {
-  print: message => assert.ok(true, message),
+  print: message => assert.ok(false, message),
 };
 
 // Define assertion functions so they look the same across all frameworks.

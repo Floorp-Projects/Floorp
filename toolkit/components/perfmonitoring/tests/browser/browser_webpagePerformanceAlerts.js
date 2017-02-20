@@ -71,8 +71,10 @@ add_task(function* test_open_window_then_watch_it() {
   }
 
   info(`Attempting to remove a performance listener incorrectly, check that this does not hurt our real listener`);
-  Assert.throws(() => PerformanceWatcher.removePerformanceListener({addonId: addon.addonId}, () => {}));
-  Assert.throws(() => PerformanceWatcher.removePerformanceListener({addonId: addon.addonId + "-unbound-id-" + Math.random()}, realListener.listener));
+  Assert.throws(() => PerformanceWatcher.removePerformanceListener({windowId: burner.windowId}, () => {}),
+                /No listener for target/, "should throw an error for a different listener");
+  Assert.throws(() => PerformanceWatcher.removePerformanceListener({windowId: burner.windowId + "-unbound-id-" + Math.random()}, realListener.listener),
+                /No listener for target/, "should throw an error for a different window id");
 
   // Waiting a little – listeners are buffered.
   yield new Promise(resolve => setTimeout(resolve, 100));
