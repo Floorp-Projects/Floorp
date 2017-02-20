@@ -28,7 +28,8 @@ interface mozILocaleService : nsISupports
    *
    * (See LocaleService.h for a more C++-friendly version of this.)
    */
-  [implicit_jscontext] jsval getAppLocales();
+  void getAppLocales([optional] out unsigned long aCount,
+                     [retval, array, size_is(aCount)] out string aLocales);
 
   /**
    * Returns the best locale that the application should be localized to.
