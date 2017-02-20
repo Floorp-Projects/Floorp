@@ -1,5 +1,7 @@
 if (helperThreadCount() === 0)
     quit();
+if (!('deterministicgc' in this))
+    quit();
 
 gc();
 function weighted(wa) {
