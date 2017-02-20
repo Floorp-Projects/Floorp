@@ -13,6 +13,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -229,6 +231,11 @@ public:
              const ContainerLayerParameters& aContainerParameters,
              nsDisplayItem* aItem);
 
+  void
+  CreateWebRenderCommands(nsDisplayItem* aItem,
+                          nsTArray<layers::WebRenderCommand>& aCommands,
+                          layers::WebRenderDisplayItemLayer* aLayer);
+
   DrawResult
   Paint(nsRenderingContext& aRenderingContext, nsPoint aPt,
         const nsRect& aDirtyRect, uint32_t aFlags,
@@ -266,6 +273,9 @@ public:
   bool
   BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA);
 
+  bool
+  IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags);
+
 private:
   already_AddRefed<layers::Layer>
   BuildLayerForImage(layers::Layer* aOldLayer,
@@ -284,6 +294,21 @@ private:
                     nsDisplayListBuilder* aBuilder,
                     layers::LayerManager* aManager,
                     nsDisplayItem* aItem);
+
+  void
+  CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
+                                  nsTArray<layers::WebRenderCommand>& aCommands,
+                                  layers::WebRenderDisplayItemLayer* aLayer);
+
+  void
+  CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
+                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 layers::WebRenderDisplayItemLayer* aLayer);
+
+  void
+  CreateWebRenderCommandsForText(nsDisplayItem* aItem,
+                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 layers::WebRenderDisplayItemLayer* aLayer);
 
 private:
   // mImage and mDest are the properties for list-style-image.
@@ -305,6 +330,7 @@ private:
   nsPoint mPoint;
   RefPtr<ScaledFont> mFont;
   nsTArray<layers::GlyphArray> mGlyphs;
+  WebRenderGlyphHelper mGlyphHelper;
 
   // Store the type of list-style-type.
   int32_t mListStyleType;
@@ -336,6 +362,21 @@ BulletRenderer::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   return layer.forget();
+}
+
+void
+BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
+                                        nsTArray<layers::WebRenderCommand>& aCommands,
+                                        layers::WebRenderDisplayItemLayer* aLayer)
+{
+  if (IsImageType()) {
+    CreateWebRenderCommandsForImage(aItem, aCommands, aLayer);
+  } else if (IsPathType()) {
+    CreateWebRenderCommandsForPath(aItem, aCommands, aLayer);
+  } else {
+    MOZ_ASSERT(IsTextType());
+    CreateWebRenderCommandsForText(aItem, aCommands, aLayer);
+  }
 }
 
 DrawResult
@@ -411,6 +452,7 @@ BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
     if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
       presContext->SetBidiEnabled();
     }
+
     nsLayoutUtils::DrawString(aItem->Frame(), *mFontMetrics, &ctx,
                               mText.get(), mText.Length(), mPoint);
   }
@@ -429,6 +471,14 @@ BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
   g->color() = color;
 
   return true;
+}
+
+bool
+BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags)
+{
+  MOZ_ASSERT(IsImageType());
+
+  return mImage->IsImageContainerAvailable(aManager, aFlags);
 }
 
 already_AddRefed<layers::Layer>
@@ -517,6 +567,77 @@ BulletRenderer::BuildLayerForText(layers::Layer* aOldLayer,
   return layer.forget();
 }
 
+void
+BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
+                                                nsTArray<layers::WebRenderCommand>& aCommands,
+                                                layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsImageType());
+
+  if (!mImage) {
+     return;
+  }
+
+  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
+  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
+  uint32_t flags = builder->ShouldSyncDecodeImages() ?
+                   imgIContainer::FLAG_SYNC_DECODE :
+                   imgIContainer::FLAG_NONE;
+
+  RefPtr<layers::ImageContainer> container =
+    mImage->GetImageContainer(aLayer->WrManager(), flags);
+  if (!container) {
+    return;
+  }
+
+  uint64_t externalImageId = layer->SendImageContainer(container);
+
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  Rect destRect =
+    NSRectToRect(mDest, appUnitsPerDevPixel);
+  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+  IntRect dest = RoundedToInt(destRectTransformed);
+
+  aCommands.AppendElement(layers::OpDPPushExternalImageId(
+                            LayerIntRegion(),
+                            wr::ToWrRect(dest),
+                            wr::ToWrRect(dest),
+                            Nothing(),
+                            WrImageRendering::Auto,
+                            externalImageId));
+}
+
+void
+BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
+                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsPathType());
+  // Not supported yet.
+  MOZ_CRASH("unreachable");
+}
+
+void
+BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
+                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsTextType());
+  MOZ_ASSERT(mFont);
+  MOZ_ASSERT(!mGlyphs.IsEmpty());
+
+  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
+  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  bool dummy;
+  Rect destRect =
+    NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
+  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+
+  mGlyphHelper.BuildWebRenderCommands(aCommands, mGlyphs, mFont, aLayer->GetOffsetToParent(),
+                                      destRectTransformed, destRectTransformed);
+}
+
 class nsDisplayBullet final : public nsDisplayItem {
 public:
   nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame)
@@ -545,6 +666,9 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aParameters) override;
+
+  virtual void CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                       layers::WebRenderDisplayItemLayer* aLayer) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
@@ -623,6 +747,16 @@ nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  if (br->IsImageType()) {
+    uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                   ? imgIContainer::FLAG_SYNC_DECODE
+                   : imgIContainer::FLAG_NONE;
+
+    if (!br->IsImageContainerAvailable(aManager, flags)) {
+      return LAYER_NONE;
+    }
+  }
+
   if (br->IsTextType()) {
     if (!br->BuildGlyphForText(this, mDisableSubpixelAA)) {
       return LAYER_NONE;
@@ -642,7 +776,18 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  return mBulletRenderer->BuildLayer(aBuilder, aManager, aContainerParameters, this);
+  /* return mBulletRenderer->BuildLayer(aBuilder, aManager, aContainerParameters, this); */
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayBullet::CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                         layers::WebRenderDisplayItemLayer* aLayer)
+{
+  if (!mBulletRenderer)
+    return;
+
+  mBulletRenderer->CreateWebRenderCommands(this, aCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
