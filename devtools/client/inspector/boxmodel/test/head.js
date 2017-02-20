@@ -58,7 +58,7 @@ function openBoxModelView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      view: data.inspector.computedview.boxModelView,
+      view: data.inspector.computedview,
       testActor: data.testActor
     };
   });
@@ -85,3 +85,14 @@ function setStyle(testActor, selector, propertyName, value) {
                     .style.${propertyName} = "${value}";
   `);
 }
+
+/**
+ * The box model doesn't participate in the inspector's update mechanism, so simply
+ * calling the default selectNode isn't enough to guarantee that the box model view has
+ * finished updating. We also need to wait for the "boxmodel-view-updated" event.
+ */
+var _selectNode = selectNode;
+selectNode = function* (node, inspector, reason) {
+  yield _selectNode(node, inspector, reason);
+  yield waitForUpdate(inspector);
+};

@@ -180,6 +180,7 @@ function CssComputedView(inspector, document, pageStyle) {
 
   let doc = this.styleDocument;
   this.element = doc.getElementById("propertyContainer");
+  this.boxModelWrapper = doc.getElementById("boxmodel-wrapper");
   this.searchField = doc.getElementById("computedview-searchbox");
   this.searchClearButton = doc.getElementById("computedview-searchinput-clear");
   this.includeBrowserStylesCheckbox =
@@ -559,10 +560,10 @@ CssComputedView.prototype = {
     this._filterChangedTimeout = setTimeout(() => {
       if (this.searchField.value.length > 0) {
         this.searchField.setAttribute("filled", true);
-        this.inspector.emit("computed-view-filtered", true);
+        this.boxModelWrapper.hidden = true;
       } else {
         this.searchField.removeAttribute("filled");
-        this.inspector.emit("computed-view-filtered", false);
+        this.boxModelWrapper.hidden = false;
       }
 
       this.refreshPanel();
@@ -632,7 +633,7 @@ CssComputedView.prototype = {
         onShowBoxModelHighlighter,
       })
     );
-    ReactDOM.render(provider, this.styleDocument.getElementById("boxmodel-wrapper"));
+    ReactDOM.render(provider, this.boxModelWrapper);
   },
 
   /**
@@ -813,7 +814,7 @@ CssComputedView.prototype = {
 
     // Nodes used in templating
     this.element = null;
-    this.panel = null;
+    this.boxModelWrapper = null;
     this.searchField = null;
     this.searchClearButton = null;
     this.includeBrowserStylesCheckbox = null;
