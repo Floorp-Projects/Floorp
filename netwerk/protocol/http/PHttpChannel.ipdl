@@ -91,6 +91,8 @@ parent:
   // sure not to send any more messages after that.
   async DeletingChannel();
 
+  async ApplyConversion(bool applyConversion);
+
   async __delete__();
 
 child:
@@ -107,7 +109,8 @@ child:
                        NetAddr             peerAddr,
                        int16_t             redirectCount,
                        uint32_t            cacheKey,
-                       nsCString           altDataType);
+                       nsCString           altDataType,
+                       bool                contentDecodingWillBeCalledOnParent);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

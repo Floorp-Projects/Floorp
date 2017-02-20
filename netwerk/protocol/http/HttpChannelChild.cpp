@@ -180,6 +180,7 @@ HttpChannelChild::HttpChannelChild()
   , mPostRedirectChannelShouldUpgrade(false)
   , mShouldParentIntercept(false)
   , mSuspendParentAfterSynthesizeResponse(false)
+  , mContentDecodingWillBeCalledOnParent(false)
 {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
@@ -382,7 +383,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const NetAddr& peerAddr,
                                      const int16_t& redirectCount,
                                      const uint32_t& cacheKey,
-                                     const nsCString& altDataType)
+                                     const nsCString& altDataType,
+                                     const bool& contentDecodingWillBeCalledOnParent)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -394,6 +396,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
 
 
   mRedirectCount = redirectCount;
+
+  mContentDecodingWillBeCalledOnParent = contentDecodingWillBeCalledOnParent;
 
   mEventQ->RunOrEnqueue(new StartRequestEvent(this, channelStatus, responseHead,
                                               useResponseHead, requestHeaders,
@@ -553,6 +557,26 @@ HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;
+  }
+
+  if (mContentDecodingWillBeCalledOnParent) {
+    // Whether we need to do a data conversion or not is decided during
+    // OnStartRequest call. nsURILoader and nsExternalHelperAppService are
+    // making this decision on the child.
+    // If the parent channel has a listener for the TracableChannel interface,
+    // we need to convert the data before giving it to the listent, e.g. we
+    // need to convert the data on the parent.
+    //
+    // After calling OnStartRequest check if we need to do a data conversion or
+    // not and inform the parent about the decision.
+    bool doContentConversion;
+    GetApplyConversion(&doContentConversion);
+    SetApplyConversion(false);
+    SendApplyConversion(doContentConversion);
+    mContentDecodingWillBeCalledOnParent = false;
+    LOG(("HttpChannelChild::DoOnStartRequest [this=%p] doing content decoding"
+         " on the parent; doContentEncoding=%d \n",
+         this, doContentConversion));
   }
 
   if (mDivertingToParent) {
@@ -1830,6 +1854,12 @@ HttpChannelChild::Cancel(nsresult status)
   LOG(("HttpChannelChild::Cancel [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mContentDecodingWillBeCalledOnParent) {
+    LOG(("HttpChannelChild::Cancel call SendApplyConversion [this=%p]\n", this));
+    SendApplyConversion(false);
+    mContentDecodingWillBeCalledOnParent = false;
+  }
+
   if (!mCanceled) {
     // If this cancel occurs before nsHttpChannel has been set up, AsyncOpen
     // is responsible for cleaning up.
@@ -2766,6 +2796,12 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
   PChannelDiverterChild* diverter =
     gNeckoChild->SendPChannelDiverterConstructor(args);
   MOZ_RELEASE_ASSERT(diverter);
+
+  // When a request is diverted to the parent, OnStartRequest of all listeners
+  // are called on the parent (and of course the end decision whether data
+  // should be converted or not is made on the parent), therefore just clear
+  // mContentDecodingWillBeCalledOnParent and do not send SendApplyConversion.
+  mContentDecodingWillBeCalledOnParent = false;
 
   *aChild = static_cast<ChannelDiverterChild*>(diverter);
 
