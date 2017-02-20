@@ -1209,6 +1209,9 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
+      nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
+      MOZ_DIAGNOSTIC_ASSERT(loadGroup);
+
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
       nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
       MOZ_DIAGNOSTIC_ASSERT(principal);
@@ -1224,13 +1227,11 @@ private:
 
       mWorkerPrivate->InitChannelInfo(aChannelInfo);
 
-      nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
-      MOZ_DIAGNOSTIC_ASSERT(loadGroup);
-
-      // Override the principal on the WorkerPrivate.  This is only necessary
-      // in order to get a principal with exactly the correct URL.  The fetch
-      // referrer logic depends on the WorkerPrivate principal having a URL
-      // that matches the worker script URL.
+      // Override the principal on the WorkerPrivate.  We just asserted that
+      // this is the same as our current WorkerPrivate principal, so this is
+      // almost a no-op.  We must do, it though, in order to avoid accidentally
+      // propagating the CSP object back to the ServiceWorkerRegistration
+      // principal.  If bug 965637 is fixed then this can be removed.
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
