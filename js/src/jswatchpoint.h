@@ -67,8 +67,7 @@ class WatchpointMap {
     bool init();
     bool watch(JSContext* cx, HandleObject obj, HandleId id,
                JSWatchPointHandler handler, HandleObject closure);
-    void unwatch(JSObject* obj, jsid id,
-                 JSWatchPointHandler* handlerp, JSObject** closurep);
+    void unwatch(JSObject* obj, jsid id);
     void unwatchObject(JSObject* obj);
     void clear();
 
