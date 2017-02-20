@@ -511,19 +511,6 @@ ClientLayerManager::GetCompositorSideAPZTestData(APZTestData* aData) const
   }
 }
 
-void
-ClientLayerManager::SetTransactionIdAllocator(TransactionIdAllocator* aAllocator)
-{
-  // When changing the refresh driver, the previous refresh driver may never
-  // receive updates of pending transactions it's waiting for. So clear the
-  // waiting state before assigning another refresh driver.
-  if (mTransactionIdAllocator) {
-    mTransactionIdAllocator->ClearPendingTransactions();
-  }
-
-  mTransactionIdAllocator = aAllocator;
-}
-
 float
 ClientLayerManager::RequestProperty(const nsAString& aProperty)
 {
