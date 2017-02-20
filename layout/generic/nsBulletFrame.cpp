@@ -225,12 +225,6 @@ public:
     MOZ_ASSERT(IsTextType());
   }
 
-  already_AddRefed<layers::Layer>
-  BuildLayer(nsDisplayListBuilder* aBuilder,
-             layers::LayerManager* aManager,
-             const ContainerLayerParameters& aContainerParameters,
-             nsDisplayItem* aItem);
-
   void
   CreateWebRenderCommands(nsDisplayItem* aItem,
                           nsTArray<layers::WebRenderCommand>& aCommands,
@@ -277,24 +271,6 @@ public:
   IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags);
 
 private:
-  already_AddRefed<layers::Layer>
-  BuildLayerForImage(layers::Layer* aOldLayer,
-                     nsDisplayListBuilder* aBuilder,
-                     layers::LayerManager* aManager,
-                     nsDisplayItem* aItem);
-
-  already_AddRefed<layers::Layer>
-  BuildLayerForPath(layers::Layer* aOldLayer,
-                    nsDisplayListBuilder* aBuilder,
-                    layers::LayerManager* aManager,
-                    nsDisplayItem* aItem);
-
-  already_AddRefed<layers::Layer>
-  BuildLayerForText(layers::Layer* aOldLayer,
-                    nsDisplayListBuilder* aBuilder,
-                    layers::LayerManager* aManager,
-                    nsDisplayItem* aItem);
-
   void
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                   nsTArray<layers::WebRenderCommand>& aCommands,
@@ -335,34 +311,6 @@ private:
   // Store the type of list-style-type.
   int32_t mListStyleType;
 };
-
-already_AddRefed<layers::Layer>
-BulletRenderer::BuildLayer(nsDisplayListBuilder* aBuilder,
-                           layers::LayerManager* aManager,
-                           const ContainerLayerParameters& aContainerParameters,
-                           nsDisplayItem* aItem)
-{
-  RefPtr<layers::Layer> oldLayer =
-    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
-  RefPtr<layers::Layer> layer;
-  nsPoint offset(aContainerParameters.mOffset.x, aContainerParameters.mOffset.y);
-
-  if (IsImageType()) {
-    layer = BuildLayerForImage(oldLayer, aBuilder, aManager, aItem);
-    offset = offset + mDest.TopLeft();
-  } else if (IsPathType()) {
-    layer = BuildLayerForPath(oldLayer, aBuilder, aManager, aItem);
-  } else {
-    MOZ_ASSERT(IsTextType());
-    layer = BuildLayerForText(oldLayer, aBuilder, aManager, aItem);
-  }
-
-  if (layer) {
-    layer->SetBaseTransform(gfx::Matrix4x4::Translation(offset.x, offset.y, 0));
-  }
-
-  return layer.forget();
-}
 
 void
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
@@ -479,92 +427,6 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
   MOZ_ASSERT(IsImageType());
 
   return mImage->IsImageContainerAvailable(aManager, aFlags);
-}
-
-already_AddRefed<layers::Layer>
-BulletRenderer::BuildLayerForImage(layers::Layer* aOldLayer,
-                                   nsDisplayListBuilder* aBuilder,
-                                   layers::LayerManager* aManager,
-                                   nsDisplayItem* aItem)
-{
-  MOZ_ASSERT(IsImageType());
-
-  uint32_t flags = imgIContainer::FLAG_NONE;
-  if (aBuilder->ShouldSyncDecodeImages()) {
-    flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-
-  RefPtr<layers::ImageContainer> container =
-    mImage->GetImageContainer(aManager, flags);
-  if (!container) {
-    return nullptr;
-  }
-
-  RefPtr<layers::ImageLayer> layer;
-  if (aOldLayer && aOldLayer->GetType() == layers::Layer::TYPE_IMAGE) {
-    layer = static_cast<layers::ImageLayer*>(aOldLayer);
-  } else {
-    layer = aManager->CreateImageLayer();
-    if (!layer) {
-      return nullptr;
-    }
-  }
-
-  layer->SetContainer(container);
-  int32_t imageWidth;
-  int32_t imageHeight;
-  mImage->GetWidth(&imageWidth);
-  mImage->GetHeight(&imageHeight);
-  if (imageWidth > 0 && imageHeight > 0) {
-    // We're actually using the ImageContainer. Let our frame know that it
-    // should consider itself to have painted successfully.
-    nsDisplayBulletGeometry::UpdateDrawResult(aItem,
-                                              image::DrawResult::SUCCESS);
-  }
-
-  return layer.forget();
-}
-
-already_AddRefed<layers::Layer>
-BulletRenderer::BuildLayerForPath(layers::Layer* aOldLayer,
-                                  nsDisplayListBuilder* aBuilder,
-                                  layers::LayerManager* aManager,
-                                  nsDisplayItem* aItem)
-{
-  MOZ_ASSERT(IsPathType());
-
-  // Not supported yet.
-  return nullptr;
-}
-
-already_AddRefed<layers::Layer>
-BulletRenderer::BuildLayerForText(layers::Layer* aOldLayer,
-                                  nsDisplayListBuilder* aBuilder,
-                                  layers::LayerManager* aManager,
-                                  nsDisplayItem* aItem)
-{
-  MOZ_ASSERT(IsTextType());
-  MOZ_ASSERT(mFont);
-  MOZ_ASSERT(!mGlyphs.IsEmpty());
-
-  RefPtr<layers::TextLayer> layer;
-  if (aOldLayer && aOldLayer->GetType() == layers::Layer::TYPE_TEXT) {
-    layer = static_cast<layers::TextLayer*>(aOldLayer);
-  } else {
-    layer = aManager->CreateTextLayer();
-    if (!layer) {
-      return nullptr;
-    }
-  }
-
-  layer->SetGlyphs(Move(mGlyphs));
-  layer->SetScaledFont(mFont);
-  auto A2D = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-  bool dummy;
-  const LayoutDeviceIntRect destBounds =
-    LayoutDeviceIntRect::FromAppUnitsToOutside(aItem->GetBounds(aBuilder, &dummy), A2D);
-  layer->SetBounds(IntRect(destBounds.x, destBounds.y, destBounds.width, destBounds.height));
-  return layer.forget();
 }
 
 void
@@ -776,7 +638,6 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  /* return mBulletRenderer->BuildLayer(aBuilder, aManager, aContainerParameters, this); */
   return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
