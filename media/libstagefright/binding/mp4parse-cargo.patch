@@ -27,11 +27,14 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index aeeebc65..5c0836a 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,18 +18,12 @@ exclude = [
+@@ -18,21 +18,12 @@ exclude = [
    "*.mp4",
  ]
  
 -build = "build.rs"
+-
+-[badges]
+-travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 +build = false
 
  [dependencies]
