@@ -1539,7 +1539,7 @@ private:
   void ClearAllBoxObjects();
 
   // Returns true if the scheme for the url for this document is "about"
-  bool IsAboutPage();
+  bool IsAboutPage() const;
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
