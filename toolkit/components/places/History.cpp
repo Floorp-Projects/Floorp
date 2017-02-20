@@ -672,7 +672,9 @@ public:
 
     History* history = History::GetService();
     NS_ENSURE_STATE(history);
-    history->AppendToRecentlyVisitedURIs(uri);
+    if (PR_Now() - mPlace.visitTime < RECENTLY_VISITED_URIS_MAX_AGE) {
+      mHistory->AppendToRecentlyVisitedURIs(uri);
+    }
     history->NotifyVisited(uri);
 
     return NS_OK;
