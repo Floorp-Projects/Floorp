@@ -113,7 +113,7 @@ VRDisplayClient::NotifyVsync()
   // Check if we need to trigger onVRDisplayPresentChange event
   if (bLastEventWasPresenting != isPresenting) {
     bLastEventWasPresenting = isPresenting;
-    vm->FireDOMVRDisplayPresentChangeEvent();
+    vm->FireDOMVRDisplayPresentChangeEvent(mDisplayInfo.mDisplayID);
   }
 
   // Check if we need to trigger onvrdisplayactivate event

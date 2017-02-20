@@ -2,7 +2,7 @@
 fails == dir-1.html dir-1.html
 fails == dir-2.html dir-2.html
 random-if(gtkWidget) == dir-3.html dir-3.html
-fails == dir-4.html dir-4.html
+== dir-4.html dir-4.html
 == dir-5.html dir-5.html
 fails == dir-6.html dir-6.html
 fails == dir-6a.html dir-6a.html
@@ -324,7 +324,7 @@ fails == tablespacing-1.html tablespacing-1.html
 fails == tablespacing-2.html tablespacing-2.html
 fails == tablespacing-3.html tablespacing-3.html
 fails == tablespacing-4.html tablespacing-4.html
-fails asserts-if(stylo,0-2) == tablespacing-5.html tablespacing-5.html # bug 1324661
+fails == tablespacing-5.html tablespacing-5.html
 fails == tablespacing-5a.html tablespacing-5a.html
 fails == tablespacing-6.html tablespacing-6.html
 fails == tablespacing-7.html tablespacing-7.html

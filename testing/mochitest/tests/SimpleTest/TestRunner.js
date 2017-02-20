@@ -620,7 +620,7 @@ TestRunner.testUnloaded = function() {
             // Accumulate all assertion counts recorded in the failure pattern file.
             let additionalAsserts = TestRunner.expected.reduce((acc, [pat, count]) => {
                 return pat == "ASSERTION" ? acc + count : acc;
-            });
+            }, 0);
             min += additionalAsserts;
             max += additionalAsserts;
         }

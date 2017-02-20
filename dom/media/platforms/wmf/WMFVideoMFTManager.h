@@ -59,6 +59,13 @@ public:
     mDraining = true;
   }
 
+  MediaDataDecoder::ConversionRequired NeedsConversion() const override
+  {
+    return mStreamType == H264
+           ? MediaDataDecoder::ConversionRequired::kNeedAnnexB
+           : MediaDataDecoder::ConversionRequired::kNeedNone;
+  }
+
 private:
   bool ValidateVideoInfo();
 

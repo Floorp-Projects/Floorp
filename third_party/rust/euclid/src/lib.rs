@@ -24,6 +24,9 @@
 //! Client code typically creates a set of aliases for each type and doesn't need
 //! to deal with the specifics of typed units further. For example:
 //!
+//! All euclid types are marked #[repr(C)] in order to facilitate exposing them to
+//! foreign function interfaces (provided the underlying scalar type is also repr(C)).
+//!
 //! ```rust
 //! use euclid::*;
 //! pub struct ScreenSpace;
@@ -54,7 +57,7 @@
 
 extern crate heapsize;
 
-#[macro_use]
+#[cfg_attr(test, macro_use)]
 extern crate log;
 extern crate rustc_serialize;
 extern crate serde;

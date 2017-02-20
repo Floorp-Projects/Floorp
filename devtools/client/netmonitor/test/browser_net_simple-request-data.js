@@ -8,14 +8,14 @@
  */
 
 function test() {
-  let { L10N } = require("devtools/client/netmonitor/l10n");
+  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
 
   initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
     let { document, gStore, windowRequire } = monitor.panelWin;
     let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-    let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+    let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
     let {
       getDisplayedRequests,
       getSelectedRequest,

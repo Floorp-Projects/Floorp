@@ -13,8 +13,8 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
-const { L10N } = require("../l10n");
-const { Prefs } = require("../prefs");
+const { L10N } = require("../utils/l10n");
+const { Prefs } = require("../utils/prefs");
 const {
   getDisplayedRequestsSummary,
   getRequestFilterTypes,

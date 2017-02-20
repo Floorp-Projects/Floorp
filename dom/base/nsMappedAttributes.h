@@ -72,16 +72,9 @@ public:
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
   int32_t IndexOfAttr(nsIAtom* aLocalName) const;
 
-  // Apply the contained mapper to an empty nsRuleData object
-  // that is able to contain all properties. Set contained servo declaration block
-  // to result of this computation.
-  // aIndexToIdMapping is
-  // a table that maps from an index in the rule data to the corresponding
-  // property ID. aRuleDataSize is the length of the backing storage
-  // of the rule data.
-  void LazilyResolveServoDeclaration(nsRuleData* aRuleData,
-                                     nsCSSPropertyID* aIndexToIdMapping,
-                                     size_t aRuleDataSize);
+  // Apply the contained mapper to the contained set of servo rules,
+  // unless the servo rules have already been initialized.
+  void LazilyResolveServoDeclaration(nsPresContext* aPresContext);
 
   // Obtain the contained servo declaration block
   // May return null if called before the inner block

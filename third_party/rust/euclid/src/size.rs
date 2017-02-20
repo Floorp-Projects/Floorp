@@ -75,7 +75,7 @@ impl<T: Ceil, U> TypedSize2D<T, U> {
     ///
     /// This behavior is preserved for negative values (unlike the basic cast).
     pub fn ceil(&self) -> Self {
-        TypedSize2D::new(self.height.ceil(), self.width.ceil())
+        TypedSize2D::new(self.width.ceil(), self.height.ceil())
     }
 }
 

@@ -44,9 +44,9 @@
     }},
 
     testDisposesProperly: function() { with(this) {
-      assertEqual("transparent", Element.getStyle('tobeedited','background-color'));
+      assertEqual("rgba(0, 0, 0, 0)", Element.getStyle('tobeedited','background-color'));
       inPlaceEditor.dispose();
-      assertEqual("transparent", Element.getStyle('tobeedited','background-color'));
+      assertEqual("rgba(0, 0, 0, 0)", Element.getStyle('tobeedited','background-color'));
       assertVisible($('tobeedited'));
       Event.simulateMouse('tobeedited','click');
       assertVisible($('tobeedited'));
@@ -84,7 +84,7 @@
     testCantEditWhileSaving: function() { with(this) {
       inPlaceEditor.onLoading();
       Event.simulateMouse('tobeedited','mouseover');
-      assertEqual("transparent", Element.getStyle('tobeedited','background-color'));
+      assertEqual("rgba(0, 0, 0, 0)", Element.getStyle('tobeedited','background-color'));
       Event.simulateMouse('tobeedited','click');
       assertVisible($('tobeedited'));
     }},

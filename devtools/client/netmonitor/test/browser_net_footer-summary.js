@@ -17,7 +17,7 @@ add_task(function* () {
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { getDisplayedRequestsSummary } =
     windowRequire("devtools/client/netmonitor/selectors/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/l10n");
+  let { L10N } = windowRequire("devtools/client/netmonitor/utils/l10n");
   let { PluralForm } = windowRequire("devtools/shared/plural-form");
 
   gStore.dispatch(Actions.batchEnable(false));
