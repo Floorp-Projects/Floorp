@@ -322,7 +322,7 @@ async_test(function(t) {
           return service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));
-  }, 'Service Worker responds to fetch event with the referrer policy');
+  }, 'Service Worker responds to fetch event with the referrer URL');
 
 async_test(function(t) {
     var scope = 'resources/simple.html?clientId';

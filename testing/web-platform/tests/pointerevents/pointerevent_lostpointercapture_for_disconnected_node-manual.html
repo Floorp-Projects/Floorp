@@ -39,13 +39,15 @@
             window.onload = function() {
                 on_event(captureButton, 'pointerdown', function(event) {
                     detected_pointertypes[event.pointerType] = true;
-                    target0.setPointerCapture(event.pointerId);
+                    sPointerCapture(event);
                 });
 
                 on_event(target0, 'gotpointercapture', function(e) {
                     log("gotpointercapture", target1);
-                    isDisconnected = true;
-                    target0.parentNode.removeChild(target0);
+                    setTimeout(function() {
+                        isDisconnected = true;
+                        target0.parentNode.removeChild(target0);
+                    }, 250);
                 });
 
                 on_event(target0, 'lostpointercapture', function(e) {
@@ -61,6 +63,7 @@
                     test(function() {
                         // TA: 11.3
                         assert_true(isDisconnected, "lostpointercapture must be fired on the document");
+
                     }, "lostpointercapture is dispatched on the document");
                     test_lostpointercapture.done();
                 });

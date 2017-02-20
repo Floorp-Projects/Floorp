@@ -79,7 +79,8 @@ var formElements = {
     formTarget: "string",
     name: "string",
     type: {type: "enum", keywords: ["submit", "reset", "button"], defaultVal: "submit"},
-    value: "string"
+    value: "string",
+    // TODO: menu
   },
   select: {
     autofocus: "boolean",
