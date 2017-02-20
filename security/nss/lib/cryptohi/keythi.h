@@ -125,9 +125,9 @@ typedef SECItem SECKEYECParams;
 
 struct SECKEYECPublicKeyStr {
     SECKEYECParams DEREncodedParams;
-    int size;            /* size in bits */
-    SECItem publicValue; /* encoded point */
-    ECPointEncoding encoding;
+    int size;                 /* size in bits */
+    SECItem publicValue;      /* encoded point */
+    ECPointEncoding encoding; /* deprecated, ignored */
 };
 typedef struct SECKEYECPublicKeyStr SECKEYECPublicKey;
 

@@ -1871,7 +1871,6 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         pubkey->ecParams.DEREncoding.len = key->ecParams.DEREncoding.len;
         pubkey->ecParams.DEREncoding.data = key->ecParams.DEREncoding.data;
         pubkey->ecParams.name = key->ecParams.name;
-        pubkey->ecParams.pointSize = key->ecParams.pointSize;
         pubkey->publicValue.len = key->publicValue.len;
         pubkey->publicValue.data = key->publicValue.data;
         asymk->pubKey = pubkey;
