@@ -47,7 +47,7 @@ fails == ua-style-sheet-margin-4.html ua-style-sheet-margin-4.html
 fails == ua-style-sheet-margin-5.html ua-style-sheet-margin-5.html
 fails == ua-style-sheet-margin-6.html ua-style-sheet-margin-6.html
 fails == ua-style-sheet-margin-7.html ua-style-sheet-margin-7.html
-fails == ua-style-sheet-margin-8.html ua-style-sheet-margin-8.html
+== ua-style-sheet-margin-8.html ua-style-sheet-margin-8.html
 fails == ua-style-sheet-margin-9.html ua-style-sheet-margin-9.html
 fails == ua-style-sheet-margin-10.html ua-style-sheet-margin-10.html
 # == ua-style-sheet-margin-11.html ua-style-sheet-margin-11.html
@@ -110,8 +110,8 @@ fails == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html
 fails == 1134849-orthogonal-inline.html 1134849-orthogonal-inline.html
 fails == 1135361-ruby-justify-1.html 1135361-ruby-justify-1.html
 # == 1136557-1-nested-spans.html 1136557-1-nested-spans.html
-fails == 1136557-2-nested-spans.html 1136557-2-nested-spans.html
-fails == 1136557-3-nested-spans.html 1136557-3-nested-spans.html
+== 1136557-2-nested-spans.html 1136557-2-nested-spans.html
+== 1136557-3-nested-spans.html 1136557-3-nested-spans.html
 fails == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment.html
 fails == 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment.html
 

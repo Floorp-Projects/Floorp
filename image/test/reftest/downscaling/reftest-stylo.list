@@ -40,74 +40,74 @@ default-preferences pref(image.downscale-during-decode.enabled,false)
 
 == downscale-1.html downscale-1.html
 
-fails == downscale-2a.html?203,52,left downscale-2a.html?203,52,left
-fails == downscale-2b.html?203,52,left downscale-2b.html?203,52,left
-fails == downscale-2c.html?203,52,left downscale-2c.html?203,52,left
-fails == downscale-2d.html?203,52,left downscale-2d.html?203,52,left
-fails == downscale-2e.html?203,52,left downscale-2e.html?203,52,left
+== downscale-2a.html?203,52,left downscale-2a.html?203,52,left
+== downscale-2b.html?203,52,left downscale-2b.html?203,52,left
+== downscale-2c.html?203,52,left downscale-2c.html?203,52,left
+== downscale-2d.html?203,52,left downscale-2d.html?203,52,left
+== downscale-2e.html?203,52,left downscale-2e.html?203,52,left
 
-fails == downscale-2a.html?205,53,left downscale-2a.html?205,53,left
-fails == downscale-2b.html?205,53,left downscale-2b.html?205,53,left
-fails == downscale-2c.html?205,53,left downscale-2c.html?205,53,left
-fails == downscale-2d.html?205,53,left downscale-2d.html?205,53,left
-fails == downscale-2e.html?205,53,left downscale-2e.html?205,53,left
+== downscale-2a.html?205,53,left downscale-2a.html?205,53,left
+== downscale-2b.html?205,53,left downscale-2b.html?205,53,left
+== downscale-2c.html?205,53,left downscale-2c.html?205,53,left
+== downscale-2d.html?205,53,left downscale-2d.html?205,53,left
+== downscale-2e.html?205,53,left downscale-2e.html?205,53,left
 
-fails == downscale-2a.html?203,52,right downscale-2a.html?203,52,right
-fails == downscale-2b.html?203,52,right downscale-2b.html?203,52,right
-fails == downscale-2c.html?203,52,right downscale-2c.html?203,52,right
-fails == downscale-2d.html?203,52,right downscale-2d.html?203,52,right
-fails == downscale-2e.html?203,52,right downscale-2e.html?203,52,right
+== downscale-2a.html?203,52,right downscale-2a.html?203,52,right
+== downscale-2b.html?203,52,right downscale-2b.html?203,52,right
+== downscale-2c.html?203,52,right downscale-2c.html?203,52,right
+== downscale-2d.html?203,52,right downscale-2d.html?203,52,right
+== downscale-2e.html?203,52,right downscale-2e.html?203,52,right
 
-fails == downscale-2a.html?205,53,right downscale-2a.html?205,53,right
-fails == downscale-2b.html?205,53,right downscale-2b.html?205,53,right
-fails == downscale-2c.html?205,53,right downscale-2c.html?205,53,right
-fails == downscale-2d.html?205,53,right downscale-2d.html?205,53,right
-fails == downscale-2e.html?205,53,right downscale-2e.html?205,53,right
+== downscale-2a.html?205,53,right downscale-2a.html?205,53,right
+== downscale-2b.html?205,53,right downscale-2b.html?205,53,right
+== downscale-2c.html?205,53,right downscale-2c.html?205,53,right
+== downscale-2d.html?205,53,right downscale-2d.html?205,53,right
+== downscale-2e.html?205,53,right downscale-2e.html?205,53,right
 
-fails == downscale-2a.html?203,52,top downscale-2a.html?203,52,top
-fails == downscale-2b.html?203,52,top downscale-2b.html?203,52,top
-fails == downscale-2c.html?203,52,top downscale-2c.html?203,52,top
-fails == downscale-2d.html?203,52,top downscale-2d.html?203,52,top
-fails == downscale-2e.html?203,52,top downscale-2e.html?203,52,top
+== downscale-2a.html?203,52,top downscale-2a.html?203,52,top
+== downscale-2b.html?203,52,top downscale-2b.html?203,52,top
+== downscale-2c.html?203,52,top downscale-2c.html?203,52,top
+== downscale-2d.html?203,52,top downscale-2d.html?203,52,top
+== downscale-2e.html?203,52,top downscale-2e.html?203,52,top
 
-fails == downscale-2a.html?205,53,top downscale-2a.html?205,53,top
-fails == downscale-2b.html?205,53,top downscale-2b.html?205,53,top
-fails == downscale-2c.html?205,53,top downscale-2c.html?205,53,top
-fails == downscale-2d.html?205,53,top downscale-2d.html?205,53,top
-fails == downscale-2e.html?205,53,top downscale-2e.html?205,53,top
+== downscale-2a.html?205,53,top downscale-2a.html?205,53,top
+== downscale-2b.html?205,53,top downscale-2b.html?205,53,top
+== downscale-2c.html?205,53,top downscale-2c.html?205,53,top
+== downscale-2d.html?205,53,top downscale-2d.html?205,53,top
+== downscale-2e.html?205,53,top downscale-2e.html?205,53,top
 
-fails == downscale-2a.html?203,52,bottom downscale-2a.html?203,52,bottom
-fails == downscale-2b.html?203,52,bottom downscale-2b.html?203,52,bottom
-fails == downscale-2c.html?203,52,bottom downscale-2c.html?203,52,bottom
-fails == downscale-2d.html?203,52,bottom downscale-2d.html?203,52,bottom
-fails == downscale-2e.html?203,52,bottom downscale-2e.html?203,52,bottom
+== downscale-2a.html?203,52,bottom downscale-2a.html?203,52,bottom
+== downscale-2b.html?203,52,bottom downscale-2b.html?203,52,bottom
+== downscale-2c.html?203,52,bottom downscale-2c.html?203,52,bottom
+== downscale-2d.html?203,52,bottom downscale-2d.html?203,52,bottom
+== downscale-2e.html?203,52,bottom downscale-2e.html?203,52,bottom
 
-fails == downscale-2a.html?205,53,bottom downscale-2a.html?205,53,bottom
-fails == downscale-2b.html?205,53,bottom downscale-2b.html?205,53,bottom
-fails == downscale-2c.html?205,53,bottom downscale-2c.html?205,53,bottom
-fails == downscale-2d.html?205,53,bottom downscale-2d.html?205,53,bottom
-fails == downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
+== downscale-2a.html?205,53,bottom downscale-2a.html?205,53,bottom
+== downscale-2b.html?205,53,bottom downscale-2b.html?205,53,bottom
+== downscale-2c.html?205,53,bottom downscale-2c.html?205,53,bottom
+== downscale-2d.html?205,53,bottom downscale-2d.html?205,53,bottom
+== downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
 
 == downscale-moz-icon-1.html downscale-moz-icon-1.html
 
-fails == downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
-fails == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
+== downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
+== downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
 
 # Non-transparent and transparent ICO images
-fails == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
-fails == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
+== downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
+== downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
 
 # Upside-down (negative height) BMP
-fails == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
+== downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
 
 # Test downscaling from all supported formats from 256 to 32.
-fails == downscale-32px.html?.bmp downscale-32px.html?.bmp
-fails == downscale-32px.html?.gif downscale-32px.html?.gif
-fails == downscale-32px.html?.jpg downscale-32px.html?.jpg
-fails == downscale-32px.html?.png downscale-32px.html?.png
-fails == downscale-32px.html?.svg downscale-32px.html?.svg
-fails == downscale-32px.html?-bmp-in.ico downscale-32px.html?-bmp-in.ico
-fails == downscale-32px.html?-png-in.ico downscale-32px.html?-png-in.ico
+== downscale-32px.html?.bmp downscale-32px.html?.bmp
+== downscale-32px.html?.gif downscale-32px.html?.gif
+== downscale-32px.html?.jpg downscale-32px.html?.jpg
+== downscale-32px.html?.png downscale-32px.html?.png
+== downscale-32px.html?.svg downscale-32px.html?.svg
+fails fails == downscale-32px.html?-bmp-in.ico downscale-32px.html?.bmp-in.ico
+fails fails == downscale-32px.html?-png-in.ico downscale-32px.html?.png-in.ico
 
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # #
@@ -115,80 +115,80 @@ default-preferences pref(image.downscale-during-decode.enabled,true)
 
 == downscale-1.html downscale-1.html
 
-fails == downscale-2a.html?203,52,left downscale-2a.html?203,52,left
-fails == downscale-2b.html?203,52,left downscale-2b.html?203,52,left
-fails == downscale-2c.html?203,52,left downscale-2c.html?203,52,left
-fails == downscale-2d.html?203,52,left downscale-2d.html?203,52,left
-fails == downscale-2e.html?203,52,left downscale-2e.html?203,52,left
-fails == downscale-2f.html?203,52,left downscale-2f.html?203,52,left
+== downscale-2a.html?203,52,left downscale-2a.html?203,52,left
+== downscale-2b.html?203,52,left downscale-2b.html?203,52,left
+== downscale-2c.html?203,52,left downscale-2c.html?203,52,left
+== downscale-2d.html?203,52,left downscale-2d.html?203,52,left
+== downscale-2e.html?203,52,left downscale-2e.html?203,52,left
+== downscale-2f.html?203,52,left downscale-2f.html?203,52,left
 
-fails == downscale-2a.html?205,53,left downscale-2a.html?205,53,left
-fails == downscale-2b.html?205,53,left downscale-2b.html?205,53,left
-fails == downscale-2c.html?205,53,left downscale-2c.html?205,53,left
-fails == downscale-2d.html?205,53,left downscale-2d.html?205,53,left
-fails == downscale-2e.html?205,53,left downscale-2e.html?205,53,left
-fails == downscale-2f.html?205,53,left downscale-2f.html?205,53,left
+== downscale-2a.html?205,53,left downscale-2a.html?205,53,left
+== downscale-2b.html?205,53,left downscale-2b.html?205,53,left
+== downscale-2c.html?205,53,left downscale-2c.html?205,53,left
+== downscale-2d.html?205,53,left downscale-2d.html?205,53,left
+== downscale-2e.html?205,53,left downscale-2e.html?205,53,left
+== downscale-2f.html?205,53,left downscale-2f.html?205,53,left
 
-fails == downscale-2a.html?203,52,right downscale-2a.html?203,52,right
-fails == downscale-2b.html?203,52,right downscale-2b.html?203,52,right
-fails == downscale-2c.html?203,52,right downscale-2c.html?203,52,right
-fails == downscale-2d.html?203,52,right downscale-2d.html?203,52,right
-fails == downscale-2e.html?203,52,right downscale-2e.html?203,52,right
-fails == downscale-2f.html?203,52,right downscale-2f.html?203,52,right
+== downscale-2a.html?203,52,right downscale-2a.html?203,52,right
+== downscale-2b.html?203,52,right downscale-2b.html?203,52,right
+== downscale-2c.html?203,52,right downscale-2c.html?203,52,right
+== downscale-2d.html?203,52,right downscale-2d.html?203,52,right
+== downscale-2e.html?203,52,right downscale-2e.html?203,52,right
+== downscale-2f.html?203,52,right downscale-2f.html?203,52,right
 
-fails == downscale-2a.html?205,53,right downscale-2a.html?205,53,right
-fails == downscale-2b.html?205,53,right downscale-2b.html?205,53,right
-fails == downscale-2c.html?205,53,right downscale-2c.html?205,53,right
-fails == downscale-2d.html?205,53,right downscale-2d.html?205,53,right
-fails == downscale-2e.html?205,53,right downscale-2e.html?205,53,right
-fails == downscale-2f.html?205,53,right downscale-2f.html?205,53,right
+== downscale-2a.html?205,53,right downscale-2a.html?205,53,right
+== downscale-2b.html?205,53,right downscale-2b.html?205,53,right
+== downscale-2c.html?205,53,right downscale-2c.html?205,53,right
+== downscale-2d.html?205,53,right downscale-2d.html?205,53,right
+== downscale-2e.html?205,53,right downscale-2e.html?205,53,right
+== downscale-2f.html?205,53,right downscale-2f.html?205,53,right
 
-fails == downscale-2a.html?203,52,top downscale-2a.html?203,52,top
-fails == downscale-2b.html?203,52,top downscale-2b.html?203,52,top
-fails == downscale-2c.html?203,52,top downscale-2c.html?203,52,top
-fails == downscale-2d.html?203,52,top downscale-2d.html?203,52,top
-fails == downscale-2e.html?203,52,top downscale-2e.html?203,52,top
-fails == downscale-2f.html?203,52,top downscale-2f.html?203,52,top
+== downscale-2a.html?203,52,top downscale-2a.html?203,52,top
+== downscale-2b.html?203,52,top downscale-2b.html?203,52,top
+== downscale-2c.html?203,52,top downscale-2c.html?203,52,top
+== downscale-2d.html?203,52,top downscale-2d.html?203,52,top
+== downscale-2e.html?203,52,top downscale-2e.html?203,52,top
+== downscale-2f.html?203,52,top downscale-2f.html?203,52,top
 
-fails == downscale-2a.html?205,53,top downscale-2a.html?205,53,top
-fails == downscale-2b.html?205,53,top downscale-2b.html?205,53,top
-fails == downscale-2c.html?205,53,top downscale-2c.html?205,53,top
-fails == downscale-2d.html?205,53,top downscale-2d.html?205,53,top
-fails == downscale-2e.html?205,53,top downscale-2e.html?205,53,top
-fails == downscale-2f.html?205,53,top downscale-2f.html?205,53,top
+== downscale-2a.html?205,53,top downscale-2a.html?205,53,top
+== downscale-2b.html?205,53,top downscale-2b.html?205,53,top
+== downscale-2c.html?205,53,top downscale-2c.html?205,53,top
+== downscale-2d.html?205,53,top downscale-2d.html?205,53,top
+== downscale-2e.html?205,53,top downscale-2e.html?205,53,top
+== downscale-2f.html?205,53,top downscale-2f.html?205,53,top
 
-fails == downscale-2a.html?203,52,bottom downscale-2a.html?203,52,bottom
-fails == downscale-2b.html?203,52,bottom downscale-2b.html?203,52,bottom
-fails == downscale-2c.html?203,52,bottom downscale-2c.html?203,52,bottom
-fails == downscale-2d.html?203,52,bottom downscale-2d.html?203,52,bottom
-fails == downscale-2e.html?203,52,bottom downscale-2e.html?203,52,bottom
-fails == downscale-2f.html?203,52,bottom downscale-2f.html?203,52,bottom
+== downscale-2a.html?203,52,bottom downscale-2a.html?203,52,bottom
+== downscale-2b.html?203,52,bottom downscale-2b.html?203,52,bottom
+== downscale-2c.html?203,52,bottom downscale-2c.html?203,52,bottom
+== downscale-2d.html?203,52,bottom downscale-2d.html?203,52,bottom
+== downscale-2e.html?203,52,bottom downscale-2e.html?203,52,bottom
+== downscale-2f.html?203,52,bottom downscale-2f.html?203,52,bottom
 
-fails == downscale-2a.html?205,53,bottom downscale-2a.html?205,53,bottom
-fails == downscale-2b.html?205,53,bottom downscale-2b.html?205,53,bottom
-fails == downscale-2c.html?205,53,bottom downscale-2c.html?205,53,bottom
-fails == downscale-2d.html?205,53,bottom downscale-2d.html?205,53,bottom
-fails == downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
-fails == downscale-2f.html?205,53,bottom downscale-2f.html?205,53,bottom
+== downscale-2a.html?205,53,bottom downscale-2a.html?205,53,bottom
+== downscale-2b.html?205,53,bottom downscale-2b.html?205,53,bottom
+== downscale-2c.html?205,53,bottom downscale-2c.html?205,53,bottom
+== downscale-2d.html?205,53,bottom downscale-2d.html?205,53,bottom
+== downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
+== downscale-2f.html?205,53,bottom downscale-2f.html?205,53,bottom
 
 # Skip on WinXP with skia content
 == downscale-moz-icon-1.html downscale-moz-icon-1.html
 
-fails == downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
-fails == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
+== downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
+== downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
 
 # Non-transparent and transparent ICO images
-fails == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
-fails == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
+== downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.ico
+== downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.ico
 
 # Upside-down (negative height) BMP
-fails == downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
+== downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?top-to-bottom-16x16-24bpp.bmp
 
 # Test downscaling from all supported formats from 256 to 32.
-fails == downscale-32px.html?.bmp downscale-32px.html?.bmp
-fails == downscale-32px.html?.gif downscale-32px.html?.gif
-fails == downscale-32px.html?.jpg downscale-32px.html?.jpg
-fails == downscale-32px.html?.png downscale-32px.html?.png
-fails == downscale-32px.html?.svg downscale-32px.html?.svg
-fails == downscale-32px.html?-bmp-in.ico downscale-32px.html?-bmp-in.ico
-fails == downscale-32px.html?-png-in.ico downscale-32px.html?-png-in.ico
+== downscale-32px.html?.bmp downscale-32px.html?.bmp
+== downscale-32px.html?.gif downscale-32px.html?.gif
+== downscale-32px.html?.jpg downscale-32px.html?.jpg
+== downscale-32px.html?.png downscale-32px.html?.png
+== downscale-32px.html?.svg downscale-32px.html?.svg
+fails fails == downscale-32px.html?-bmp-in.ico downscale-32px.html?.bmp-in.ico
+fails fails == downscale-32px.html?-png-in.ico downscale-32px.html?.png-in.ico

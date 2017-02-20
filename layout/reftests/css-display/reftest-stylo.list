@@ -4,8 +4,8 @@
 
 fails == display-contents-acid.html display-contents-acid.html
 # fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
-fails asserts-if(stylo,5) == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html # bug 1337700
-fails asserts-if(stylo,2) == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html # bug 1324661
+fails == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html # bug 1337700
+fails == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
 # == display-contents-generated-content.html display-contents-generated-content.html
 # == display-contents-generated-content-2.html display-contents-generated-content-2.html
 fails == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
@@ -24,6 +24,6 @@ asserts(2) == display-contents-xbl-3.xul display-contents-xbl-3.xul
 # == display-contents-xbl-4.xul display-contents-xbl-4.xul
 # == display-contents-fieldset.html display-contents-fieldset.html
 asserts(2-10) == display-contents-xbl-5.xul display-contents-xbl-5.xul
-# == display-contents-list-item-child.html display-contents-list-item-child.html
+# == display-contents-list-item-child.html display-contents-list-item-child.html # disabled for bug 1340607
 == display-contents-writing-mode-1.html display-contents-writing-mode-1.html
 fails == display-contents-writing-mode-2.html display-contents-writing-mode-2.html

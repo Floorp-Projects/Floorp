@@ -17,6 +17,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoDeclarationBlock.h"
+#include "mozilla/ServoSpecifiedValues.h"
 
 using namespace mozilla;
 
@@ -289,19 +290,14 @@ nsMappedAttributes::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-nsMappedAttributes::LazilyResolveServoDeclaration(nsRuleData* aRuleData,
-                                                  nsCSSPropertyID* aIndexToIdMapping,
-                                                  size_t aRuleDataSize)
+nsMappedAttributes::LazilyResolveServoDeclaration(nsPresContext* aContext)
 {
-  MapRuleInfoInto(aRuleData);
 
   MOZ_ASSERT(!mServoStyle,
              "LazilyResolveServoDeclaration should not be called if mServoStyle is already set");
-  mServoStyle = Servo_DeclarationBlock_CreateEmpty().Consume();
-  for (size_t i = 0; i < aRuleDataSize; i++) {
-    nsCSSValue& val = aRuleData->mValueStorage[i];
-    if (val.GetUnit() != eCSSUnit_Null) {
-      Servo_DeclarationBlock_AddPresValue(mServoStyle.get(), aIndexToIdMapping[i], &val);
-    }
+  if (mRuleMapper) {
+    mServoStyle = Servo_DeclarationBlock_CreateEmpty().Consume();
+    ServoSpecifiedValues servo = ServoSpecifiedValues(aContext, mServoStyle.get());
+    (*mRuleMapper)(this, &servo);
   }
 }

@@ -5,7 +5,7 @@
 "use strict";
 
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../../l10n");
+const { L10N } = require("../../utils/l10n");
 
 const { div, span } = DOM;
 const types = ["blocked", "dns", "connect", "send", "wait", "receive"];

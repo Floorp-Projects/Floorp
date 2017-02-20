@@ -3,7 +3,7 @@
 <!-- Required Items -->
 <em:id>tresize@mozilla.org</em:id>
 <em:name>TResize - Firefox Window Resize Test</em:name>
-<em:version>1.0.1</em:version>
+<em:version>1.0.3</em:version>
 
 <em:targetApplication>
     <Description>

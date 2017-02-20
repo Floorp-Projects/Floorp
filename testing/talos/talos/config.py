@@ -28,9 +28,9 @@ DEFAULTS = dict(
         profile_path='${talos}/base_profile',
         responsiveness=False,
         e10s=False,
-        sps_profile=False,
-        sps_profile_interval=1,
-        sps_profile_entries=100000,
+        gecko_profile=False,
+        gecko_profile_interval=1,
+        gecko_profile_entries=100000,
         resolution=1,
         rss=False,
         mainthread=False,
@@ -191,9 +191,9 @@ DEFAULTS = dict(
 # keys to generated self.config that are global overrides to tests
 GLOBAL_OVERRIDES = (
     'cycles',
-    'sps_profile',
-    'sps_profile_interval',
-    'sps_profile_entries',
+    'gecko_profile',
+    'gecko_profile_interval',
+    'gecko_profile_entries',
     'rss',
     'mainthread',
     'shutdown',
@@ -320,7 +320,7 @@ def get_global_overrides(config):
         value = config[key]
         if value is not None:
             global_overrides[key] = value
-        if key != 'sps_profile':
+        if key != 'gecko_profile':
             config.pop(key)
 
     # add noChrome to global overrides (HACK)

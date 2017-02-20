@@ -99,15 +99,9 @@ impl<T: Copy, Src, Dst> TypedMatrix2D<T, Src, Dst> {
 }
 
 impl<T, Src, Dst> TypedMatrix2D<T, Src, Dst>
-where T: Copy + Clone +
-         Add<T, Output=T> +
-         Mul<T, Output=T> +
-         Div<T, Output=T> +
-         Sub<T, Output=T> +
-         Trig +
-         PartialOrd +
-         One + Zero  {
-
+where T: Copy +
+         PartialEq +
+         One + Zero {
     pub fn identity() -> TypedMatrix2D<T, Src, Dst> {
         let (_0, _1) = (Zero::zero(), One::one());
         TypedMatrix2D::row_major(
@@ -116,6 +110,24 @@ where T: Copy + Clone +
            _0, _0
         )
     }
+
+    // Intentional not public, because it checks for exact equivalence
+    // while most consumers will probably want some sort of approximate
+    // equivalence to deal with floating-point errors.
+    fn is_identity(&self) -> bool {
+        *self == TypedMatrix2D::identity()
+    }
+}
+
+impl<T, Src, Dst> TypedMatrix2D<T, Src, Dst>
+where T: Copy + Clone +
+         Add<T, Output=T> +
+         Mul<T, Output=T> +
+         Div<T, Output=T> +
+         Sub<T, Output=T> +
+         Trig +
+         PartialOrd +
+         One + Zero  {
 
     /// Returns the multiplication of the two matrices such that mat's transformation
     /// applies after self's transformation.
@@ -277,9 +289,16 @@ impl<T: ApproxEq<T>, Src, Dst> TypedMatrix2D<T, Src, Dst> {
     }
 }
 
-impl<T: Copy + fmt::Debug, Src, Dst> fmt::Debug for TypedMatrix2D<T, Src, Dst> {
+impl<T: Copy + fmt::Debug, Src, Dst> fmt::Debug for TypedMatrix2D<T, Src, Dst>
+where T: Copy + fmt::Debug +
+         PartialEq +
+         One + Zero {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.to_row_major_array().fmt(f)
+        if self.is_identity() {
+            write!(f, "[I]")
+        } else {
+            self.to_row_major_array().fmt(f)
+        }
     }
 }
 
@@ -400,5 +419,13 @@ mod test {
         use std::mem::size_of;
         assert_eq!(size_of::<Matrix2D<f32>>(), 6*size_of::<f32>());
         assert_eq!(size_of::<Matrix2D<f64>>(), 6*size_of::<f64>());
+    }
+
+    #[test]
+    pub fn test_is_identity() {
+        let m1 = Matrix2D::identity();
+        assert!(m1.is_identity());
+        let m2 = m1.post_translated(0.1, 0.0);
+        assert!(!m2.is_identity());
     }
 }

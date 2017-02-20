@@ -1,6 +1,6 @@
 [package]
 name = "euclid"
-version = "0.10.3"
+version = "0.11.0"
 authors = ["The Servo Project Developers"]
 description = "Geometry primitives"
 documentation = "http://doc.servo.org/euclid/"
@@ -15,7 +15,8 @@ heapsize = "0.3"
 rustc-serialize = "0.3.2"
 num-traits = {version = "0.1.32", default-features = false}
 log = "0.3.1"
-serde = "0.8"
+serde = "0.9"
 
 [dev-dependencies]
 rand = "0.3.7"
+serde_test = "0.9"

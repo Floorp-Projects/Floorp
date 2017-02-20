@@ -7,6 +7,8 @@
 #ifndef mozilla_mscom_Utils_h
 #define mozilla_mscom_Utils_h
 
+#include <guiddef.h>
+
 struct IUnknown;
 
 namespace mozilla {
@@ -14,6 +16,10 @@ namespace mscom {
 
 bool IsCurrentThreadMTA();
 bool IsProxy(IUnknown* aUnknown);
+bool IsVtableIndexFromParentInterface(REFIID aInterface,
+                                      unsigned long aVtableIndex);
+bool IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
+                                       unsigned long aVtableIndexHint);
 
 } // namespace mscom
 } // namespace mozilla

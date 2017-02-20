@@ -35,6 +35,9 @@ namespace mozilla {
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
   struct Keyframe;
+  namespace css {
+    struct URLValue;
+  };
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -84,6 +87,17 @@ extern "C" {
 // Object refcounting.
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
+
+class ServoBundledURI
+{
+public:
+  already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
+  const uint8_t* mURLString;
+  uint32_t mURLStringLength;
+  ThreadSafeURIHolder* mBaseURI;
+  ThreadSafeURIHolder* mReferrer;
+  ThreadSafePrincipalHolder* mPrincipal;
+};
 
 // DOM Traversal.
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
@@ -206,10 +220,7 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
 void Gecko_SetListStyleImage(nsStyleList* style_struct,
-                             const uint8_t* string_bytes, uint32_t string_length,
-                             ThreadSafeURIHolder* base_uri,
-                             ThreadSafeURIHolder* referrer,
-                             ThreadSafePrincipalHolder* principal);
+                             ServoBundledURI uri);
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
 // cursor style.
@@ -221,14 +232,6 @@ void Gecko_SetCursorImage(nsCursorImage* cursor,
                           ThreadSafePrincipalHolder* principal);
 void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
-
-// Display style.
-void Gecko_SetMozBinding(nsStyleDisplay* style_struct,
-                         const uint8_t* string_bytes, uint32_t string_length,
-                         ThreadSafeURIHolder* base_uri,
-                         ThreadSafeURIHolder* referrer,
-                         ThreadSafePrincipalHolder* principal);
-void Gecko_CopyMozBindingFrom(nsStyleDisplay* des, const nsStyleDisplay* src);
 
 // Dirtiness tracking.
 uint32_t Gecko_GetNodeFlags(RawGeckoNodeBorrowed node);
@@ -243,6 +246,7 @@ nsStyleContext* Gecko_GetStyleContext(RawGeckoNodeBorrowed node,
                                       nsIAtom* aPseudoTagOrNull);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
+nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 
 // Element snapshot.
 ServoElementSnapshotOwned Gecko_CreateElementSnapshot(RawGeckoElementBorrowed element);
@@ -285,9 +289,21 @@ void Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* dst, const mozilla::Sty
 
 void Gecko_DestroyClipPath(mozilla::StyleClipPath* clip);
 mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
+void Gecko_StyleClipPath_SetURLValue(mozilla::StyleClipPath* clip, ServoBundledURI uri);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
+void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* effects, ServoBundledURI uri);
+
+void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest, const nsStyleSVGPaint* src);
+void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* paint, ServoBundledURI uri);
+void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
+
+void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* svg, uint32_t len);
+void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* dst, const nsStyleSVG* src);
+
+mozilla::css::URLValue* Gecko_NewURLValue(ServoBundledURI uri);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);
 
 void Gecko_FillAllBackgroundLists(nsStyleImageLayers* layers, uint32_t max_len);
 void Gecko_FillAllMaskLists(nsStyleImageLayers* layers, uint32_t max_len);
@@ -322,6 +338,9 @@ void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
+
+void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
+void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 

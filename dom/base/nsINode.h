@@ -1291,14 +1291,6 @@ public:
   already_AddRefed<nsIURI> GetBaseURIObject() const;
 
   /**
-   * Facility for explicitly setting a base URI on a node.
-   */
-  nsresult SetExplicitBaseURI(nsIURI* aURI);
-  /**
-   * The explicit base URI, if set, otherwise null
-   */
-
-  /**
    * Return true if the node may be apz aware. There are two cases. One is that
    * the node is apz aware (such as HTMLInputElement with number type). The
    * other is that the node has apz aware listeners. This is a non-virtual
@@ -1329,16 +1321,6 @@ public:
   // way to ask an element whether it's an HTMLContentElement.
   virtual bool IsHTMLContentElement() const { return false; }
 
-protected:
-  nsIURI* GetExplicitBaseURI() const {
-    if (!HasProperties()) {
-      return nullptr;
-    }
-
-    return static_cast<nsIURI*>(GetProperty(nsGkAtoms::baseURIProperty));
-  }
-
-public:
   void GetTextContent(nsAString& aTextContent,
                       mozilla::OOMReporter& aError)
   {

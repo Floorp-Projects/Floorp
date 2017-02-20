@@ -8,7 +8,7 @@ const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   TOGGLE_REQUEST_FILTER_TYPE,
 } = require("../constants");
-const { Prefs } = require("../prefs");
+const { Prefs } = require("../utils/prefs");
 const { getRequestFilterTypes } = require("../selectors/index");
 
 /**

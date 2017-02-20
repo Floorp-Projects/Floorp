@@ -51,6 +51,11 @@ const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_COUNTS,
                             INFO_QUOTA];
 
+// A unique identifier for this browser session. Used for logging so
+// we can easily see whether 2 logs are in the same browser session or
+// after the browser restarted.
+XPCOMUtils.defineLazyGetter(this, "browserSessionID", Utils.makeGUID);
+
 function Sync11Service() {
   this._notify = Utils.notify("weave:service:");
 }
@@ -1077,7 +1082,7 @@ Sync11Service.prototype = {
   sync: function sync(engineNamesToSync) {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
-    this._log.info("Starting sync at " + dateStr);
+    this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
     this._catch(function() {
       // Make sure we're logged in.
       if (this._shouldLogin()) {

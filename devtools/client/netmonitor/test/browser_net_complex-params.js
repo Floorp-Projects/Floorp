@@ -14,7 +14,7 @@ add_task(function* () {
 
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { L10N } = windowRequire("devtools/client/netmonitor/l10n");
+  let { L10N } = windowRequire("devtools/client/netmonitor/utils/l10n");
 
   gStore.dispatch(Actions.batchEnable(false));
 

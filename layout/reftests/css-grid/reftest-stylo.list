@@ -28,7 +28,7 @@ fails == grid-abspos-items-007.html grid-abspos-items-007.html
 fails == grid-abspos-items-008.html grid-abspos-items-008.html
 fails == grid-abspos-items-009.html grid-abspos-items-009.html
 fails == grid-abspos-items-010.html grid-abspos-items-010.html
-fails == grid-abspos-items-011.html grid-abspos-items-011.html
+== grid-abspos-items-011.html grid-abspos-items-011.html
 == grid-abspos-items-012.html grid-abspos-items-012.html
 fails == grid-abspos-items-013.html grid-abspos-items-013.html
 fails == grid-abspos-items-014.html grid-abspos-items-014.html
@@ -137,7 +137,7 @@ fails == grid-justify-content-001.html grid-justify-content-001.html
 fails == grid-container-baselines-001.html grid-container-baselines-001.html
 fails == grid-container-baselines-002.html grid-container-baselines-002.html
 fails == grid-container-baselines-003.html grid-container-baselines-003.html
-fails == grid-container-baselines-004.html grid-container-baselines-004.html
+== grid-container-baselines-004.html grid-container-baselines-004.html
 # skip-if(Android&&isDebugBuild) == grid-column-gap-001.html grid-column-gap-001.html
 fails == grid-column-gap-002.html grid-column-gap-002.html
 fails == grid-column-gap-003.html grid-column-gap-003.html
