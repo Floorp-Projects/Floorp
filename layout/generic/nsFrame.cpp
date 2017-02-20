@@ -188,6 +188,24 @@ IsXULBoxWrapped(const nsIFrame* aFrame)
          !aFrame->IsXULBoxFrame();
 }
 
+void
+nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
+                                const ReflowOutput& aMetrics)
+{
+  const WritingMode containerWM = aMetrics.GetWritingMode();
+  if (aReflowInput.GetWritingMode().IsOrthogonalTo(containerWM)) {
+    // Orthogonal flows are always reflowed with an unconstrained dimension,
+    // so should never end up truncated (see ReflowInput::Init()).
+    mStatus &= ~NS_FRAME_TRUNCATED;
+  } else if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+             aReflowInput.AvailableBSize() < aMetrics.BSize(containerWM) &&
+             !aReflowInput.mFlags.mIsTopOfPage) {
+    mStatus |= NS_FRAME_TRUNCATED;
+  } else {
+    mStatus &= ~NS_FRAME_TRUNCATED;
+  }
+}
+
 // Formerly the nsIFrameDebug interface
 
 #ifdef DEBUG
