@@ -60,7 +60,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_computation.html `animation` [6]
     * test_initial_computation.html `animation` [12]
     * test_property_syntax_errors.html `animation` [404]
-    * test_value_storage.html `animation` [1078]
+    * test_value_storage.html `animation` [1063]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
   * @namespace ##easy##
