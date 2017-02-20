@@ -29,6 +29,8 @@ skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-
 == drop-shadow.html drop-shadow-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
+== filter-on-huge-bbox.html pass.svg
+== filter-on-outer-svg.html pass.svg
 fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
 fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
 fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
@@ -68,5 +70,3 @@ fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 == sepia-zero.html sepia-zero-ref.html
 
 fuzzy(2,125000) == scale-filtered-content-01.html scale-filtered-content-01-ref.html
-
-== filter-on-outer-svg.html pass.svg
