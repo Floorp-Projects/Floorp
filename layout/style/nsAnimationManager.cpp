@@ -584,22 +584,13 @@ private:
   nsCSSValue GetComputedValue(nsPresContext* aPresContext,
                               nsCSSPropertyID aProperty);
 
-  static TimingParams TimingParamsFrom(
-    const StyleAnimation& aStyleAnimation)
+  static TimingParams TimingParamsFrom(const StyleAnimation& aStyleAnimation)
   {
-    TimingParams timing;
-
-    timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(
-                               aStyleAnimation.GetDuration()));
-    timing.mDelay = TimeDuration::FromMilliseconds(aStyleAnimation.GetDelay());
-    timing.mIterations = aStyleAnimation.GetIterationCount();
-    MOZ_ASSERT(timing.mIterations >= 0.0 && !IsNaN(timing.mIterations),
-               "mIterations should be nonnegative & finite, as ensured by "
-               "CSSParser");
-    timing.mDirection = aStyleAnimation.GetDirection();
-    timing.mFill = aStyleAnimation.GetFillMode();
-
-    return timing;
+    return TimingParamsFromCSSParams(aStyleAnimation.GetDuration(),
+                                     aStyleAnimation.GetDelay(),
+                                     aStyleAnimation.GetIterationCount(),
+                                     aStyleAnimation.GetDirection(),
+                                     aStyleAnimation.GetFillMode());
   }
 
   RefPtr<nsStyleContext> mStyleContext;
