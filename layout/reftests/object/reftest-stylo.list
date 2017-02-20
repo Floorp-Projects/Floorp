@@ -30,14 +30,14 @@ HTTP == type-overridden-by-server.html type-overridden-by-server.html
 #
 == unknown-type.html unknown-type.html
 == malformed-xml.html malformed-xml.html
-fails == malformed-xml-with-type.html malformed-xml-with-type.html
+== malformed-xml-with-type.html malformed-xml-with-type.html
 #
 # XXX missing tests 025-28 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them
 #
 # XXX need to support <img src="foo.svg"> for these to pass
-fails == svg.html svg.html
-fails == svg-with-type.html svg-with-type.html
+== svg.html svg.html
+== svg-with-type.html svg-with-type.html
 #
 # XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
 #     first support the standby attribute on objects, then need to figure out

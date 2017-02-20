@@ -44,7 +44,7 @@ describe("PageError component:", () => {
     const locationLink = wrapper.find(`.message-location`);
     expect(locationLink.length).toBe(1);
     // @TODO Will likely change. See bug 1307952
-    expect(locationLink.text()).toBe("test-tempfile.js:3:5");
+    expect(locationLink.text()).toBe("test-console-api.html:3:5");
   });
 
   it("displays a [Learn more] link", () => {
@@ -76,9 +76,9 @@ describe("PageError component:", () => {
     // There should be a collapse button.
     expect(wrapper.find(".theme-twisty.open").length).toBe(1);
 
-    // There should be three stacktrace items.
+    // There should be five stacktrace items.
     const frameLinks = wrapper.find(`.stack-trace span.frame-link`);
-    expect(frameLinks.length).toBe(3);
+    expect(frameLinks.length).toBe(5);
   });
 
   it("toggle the stacktrace when the collapse button is clicked", () => {

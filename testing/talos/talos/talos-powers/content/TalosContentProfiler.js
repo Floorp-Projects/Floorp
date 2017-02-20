@@ -172,7 +172,7 @@ var TalosContentProfiler;
      */
     finishTest() {
       if (initted) {
-        let profileFile = profileDir + "/" + currentTest + ".sps";
+        let profileFile = profileDir + "/" + currentTest + ".profile";
         return sendEventAndWait("Profiler:Finish", { profileFile });
       } else {
         var msg = "You should not call finishTest without having first " +
@@ -193,7 +193,7 @@ var TalosContentProfiler;
      */
     finishStartupProfiling() {
       if (initted) {
-        let profileFile = profileDir + "/startup.sps";
+        let profileFile = profileDir + "/startup.profile";
         return sendEventAndWait("Profiler:Finish", { profileFile });
       }
       return Promise.resolve();

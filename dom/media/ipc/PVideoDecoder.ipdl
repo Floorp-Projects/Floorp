@@ -58,8 +58,7 @@ parent:
   async __delete__();
 
 child:
-
-  async InitComplete(bool hardware, nsCString hardwareReason);
+  async InitComplete(bool hardware, nsCString hardwareReason, uint32_t conversion);
   async InitFailed(nsresult reason);
 
   async FlushComplete();

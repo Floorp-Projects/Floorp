@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # 468496-1 will also detect bugs in video drivers.
-fails == 468496-1.html 468496-1.html
+== 468496-1.html 468496-1.html
 # == 611498-1.html 611498-1.html
 fails == 709477-1.html 709477-1.html
 skip-if(!asyncPan) == 1086723.html 1086723.html

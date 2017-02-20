@@ -100,7 +100,7 @@ var Profiler;
     },
     finishTest: function Profiler__finishTest () {
       if (_profiler && enabled) {
-        _profiler.dumpProfileToFile(profiler_dir + "/" + currentTest + ".sps");
+        _profiler.dumpProfileToFile(profiler_dir + "/" + currentTest + ".profile");
         _profiler.StopProfiler();
       }
     },
@@ -110,7 +110,7 @@ var Profiler;
       }
       return new Promise((resolve, reject) => {
         Services.profiler.getProfileDataAsync().then((profile) => {
-          let profileFile = profiler_dir + "/" + currentTest + ".sps";
+          let profileFile = profiler_dir + "/" + currentTest + ".profile";
 
           Components.utils.import("resource://gre/modules/NetUtil.jsm");
           Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -143,7 +143,7 @@ var Profiler;
     },
     finishStartupProfiling: function Profiler__finishStartupProfiling () {
       if (_profiler && enabled) {
-        _profiler.dumpProfileToFile(profiler_dir + "/startup.sps");
+        _profiler.dumpProfileToFile(profiler_dir + "/startup.profile");
         _profiler.StopProfiler();
       }
     },

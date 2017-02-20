@@ -88,31 +88,6 @@ public:
                                    CSSPseudoElementType aPseudoType,
                                    bool* aCreatedCollection);
 
-  bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == TraitsType::ElementPropertyAtom();
-  }
-
-  bool IsForBeforePseudo() const {
-    return mElementProperty == TraitsType::BeforePropertyAtom();
-  }
-
-  bool IsForAfterPseudo() const {
-    return mElementProperty == TraitsType::AfterPropertyAtom();
-  }
-
-  CSSPseudoElementType PseudoElementType() const
-  {
-    if (IsForElement()) {
-      return CSSPseudoElementType::NotPseudo;
-    }
-    if (IsForBeforePseudo()) {
-      return CSSPseudoElementType::before;
-    }
-    MOZ_ASSERT(IsForAfterPseudo(),
-               "::before & ::after should be the only pseudo-elements here");
-    return CSSPseudoElementType::after;
-  }
-
   static nsString PseudoTypeAsString(CSSPseudoElementType aPseudoType);
 
   dom::Element *mElement;

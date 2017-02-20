@@ -12,7 +12,7 @@ const {
   getFormDataSections,
   getUrlQuery,
   parseQueryString,
-} = require("devtools/client/netmonitor/request-utils");
+} = require("devtools/client/netmonitor/utils/request-utils");
 
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
 const HAR_VERSION = "1.1";

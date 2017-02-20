@@ -11,13 +11,13 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
-const { L10N } = require("./l10n");
+const { L10N } = require("./utils/l10n");
 const {
   formDataURI,
   getFormDataSections,
   getUrlQuery,
   parseQueryString,
-} = require("./request-utils");
+} = require("./utils/request-utils");
 const {
   getSelectedRequest,
   getSortedRequests,

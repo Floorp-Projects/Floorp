@@ -13,8 +13,8 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { Chart } = require("devtools/client/shared/widgets/Chart");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
-const { Filters } = require("../filter-predicates");
-const { L10N } = require("../l10n");
+const { Filters } = require("../utils/filter-predicates");
+const { L10N } = require("../utils/l10n");
 const {
   getSizeWithDecimals,
   getTimeWithDecimals

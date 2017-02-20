@@ -72,7 +72,7 @@ impl RGBA {
 
 #[cfg(feature = "serde")]
 impl Serialize for RGBA {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         (self.red, self.green, self.blue, self.alpha).serialize(serializer)
@@ -81,7 +81,7 @@ impl Serialize for RGBA {
 
 #[cfg(feature = "serde")]
 impl Deserialize for RGBA {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer
     {
         let (r, g, b, a) = try!(Deserialize::deserialize(deserializer));

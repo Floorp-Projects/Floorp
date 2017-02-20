@@ -8,14 +8,13 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
-const { ACTIVITY_TYPE } = require("./constants");
-const { EVENTS } = require("./events");
+const { ACTIVITY_TYPE, EVENTS } = require("./constants");
 const { configureStore } = require("./store");
 const Actions = require("./actions/index");
 const {
   fetchHeaders,
   formDataURI,
-} = require("./request-utils");
+} = require("./utils/request-utils");
 const {
   getRequestById,
   getDisplayedRequestById,

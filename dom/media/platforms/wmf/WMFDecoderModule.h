@@ -28,9 +28,6 @@ public:
   bool Supports(const TrackInfo& aTrackInfo,
                 DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  ConversionRequired
-  DecoderNeedsConversion(const TrackInfo& aConfig) const override;
-
   // Called on main thread.
   static void Init();
 

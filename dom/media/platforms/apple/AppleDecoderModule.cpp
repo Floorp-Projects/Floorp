@@ -23,13 +23,9 @@ bool AppleDecoderModule::sIsVTAvailable = false;
 bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sCanUseHardwareVideoDecoder = true;
 
-AppleDecoderModule::AppleDecoderModule()
-{
-}
+AppleDecoderModule::AppleDecoderModule() { }
 
-AppleDecoderModule::~AppleDecoderModule()
-{
-}
+AppleDecoderModule::~AppleDecoderModule() { }
 
 /* static */
 void
@@ -95,16 +91,6 @@ AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType,
            aMimeType.EqualsLiteral("audio/mp4a-latm"))) ||
     (sIsVTAvailable && (aMimeType.EqualsLiteral("video/mp4") ||
                         aMimeType.EqualsLiteral("video/avc")));
-}
-
-PlatformDecoderModule::ConversionRequired
-AppleDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
-{
-  if (aConfig.IsVideo()) {
-    return ConversionRequired::kNeedAVCC;
-  } else {
-    return ConversionRequired::kNeedNone;
-  }
 }
 
 } // namespace mozilla

@@ -31,9 +31,6 @@ protected:
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const CreateDecoderParams& aParams) override;
 
-  ConversionRequired
-  DecoderNeedsConversion(const TrackInfo& aConfig) const override;
-
   bool
   SupportsMimeType(const nsACString &aMimeType,
                    DecoderDoctorDiagnostics *aDiagnostics) const override;

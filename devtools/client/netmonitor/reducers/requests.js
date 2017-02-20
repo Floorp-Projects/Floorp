@@ -5,7 +5,7 @@
 "use strict";
 
 const I = require("devtools/client/shared/vendor/immutable");
-const { getUrlDetails } = require("../request-utils");
+const { getUrlDetails } = require("../utils/request-utils");
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,

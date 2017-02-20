@@ -2,7 +2,7 @@
 # basic sanity checking
 # == plugin-sanity.html plugin-sanity.html
 # == plugin-sanity.html plugin-sanity.html
-fails == plugin-alpha-zindex.html plugin-alpha-zindex.html
+== plugin-alpha-zindex.html plugin-alpha-zindex.html
 == plugin-alpha-opacity.html plugin-alpha-opacity.html
 == windowless-clipping-1.html windowless-clipping-1.html
 # fuzzy because of anti-aliasing in dashed border
@@ -12,16 +12,16 @@ fails == plugin-alpha-zindex.html plugin-alpha-zindex.html
 # The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
 #random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-1.html pluginproblemui-direction-1.html
 #random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-2.html pluginproblemui-direction-2.html
-fails == plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
+== plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
 fails == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
-fails == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
+== plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
 # == plugin-background.html plugin-background.html
-fails == plugin-background-1-step.html plugin-background-1-step.html
-fails == plugin-background-2-step.html plugin-background-2-step.html
-fails == plugin-background-5-step.html plugin-background-5-step.html
-fails == plugin-background-10-step.html plugin-background-10-step.html
+== plugin-background-1-step.html plugin-background-1-step.html
+== plugin-background-2-step.html plugin-background-2-step.html
+== plugin-background-5-step.html plugin-background-5-step.html
+== plugin-background-10-step.html plugin-background-10-step.html
 == plugin-transform-1.html plugin-transform-1.html
 fails == plugin-transform-2.html plugin-transform-2.html
 fails == shrink-1.html shrink-1.html
-fails == update-1.html update-1.html
+== update-1.html update-1.html
 skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers.html

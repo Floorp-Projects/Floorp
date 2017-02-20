@@ -10,24 +10,31 @@
 #define CINTERFACE
 
 #include "mozilla/mscom/ActivationContext.h"
-#include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Pair.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
-#include "nsTArray.h"
+#include "mozilla/Vector.h"
 #include "nsWindowsHelpers.h"
+
+#if defined(MOZILLA_INTERNAL_API)
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/mscom/EnsureMTA.h"
+#else
+#include <stdlib.h>
+#endif // defined(MOZILLA_INTERNAL_API)
 
 #include <oaidl.h>
 #include <objidl.h>
 #include <rpcproxy.h>
 #include <shlwapi.h>
+
+#include <algorithm>
 
 /* This code MUST NOT use any non-inlined internal Mozilla APIs, as it will be
    compiled into DLLs that COM may load into non-Mozilla processes! */
@@ -274,7 +281,9 @@ RegisteredProxy::RegisteredProxy(uintptr_t aModule, IUnknown* aClassObject,
   , mClassObject(aClassObject)
   , mRegCookie(aRegCookie)
   , mTypeLib(aTypeLib)
+#if defined(MOZILLA_INTERNAL_API)
   , mIsRegisteredInMTA(IsCurrentThreadMTA())
+#endif // defined(MOZILLA_INTERNAL_API)
 {
   MOZ_ASSERT(aClassObject);
   MOZ_ASSERT(aTypeLib);
@@ -287,7 +296,9 @@ RegisteredProxy::RegisteredProxy(IUnknown* aClassObject, uint32_t aRegCookie,
   , mClassObject(aClassObject)
   , mRegCookie(aRegCookie)
   , mTypeLib(aTypeLib)
+#if defined(MOZILLA_INTERNAL_API)
   , mIsRegisteredInMTA(IsCurrentThreadMTA())
+#endif // defined(MOZILLA_INTERNAL_API)
 {
   MOZ_ASSERT(aClassObject);
   MOZ_ASSERT(aTypeLib);
@@ -301,7 +312,9 @@ RegisteredProxy::RegisteredProxy(ITypeLib* aTypeLib)
   , mClassObject(nullptr)
   , mRegCookie(0)
   , mTypeLib(aTypeLib)
+#if defined(MOZILLA_INTERNAL_API)
   , mIsRegisteredInMTA(false)
+#endif // defined(MOZILLA_INTERNAL_API)
 {
   MOZ_ASSERT(aTypeLib);
   AddToRegistry(this);
@@ -320,11 +333,16 @@ RegisteredProxy::~RegisteredProxy()
       ::CoRevokeClassObject(mRegCookie);
       mClassObject->lpVtbl->Release(mClassObject);
     };
+#if defined(MOZILLA_INTERNAL_API)
+    // This code only supports MTA when built internally
     if (mIsRegisteredInMTA) {
       EnsureMTA mta(cleanupFn);
     } else {
       cleanupFn();
     }
+#else
+    cleanupFn();
+#endif // defined(MOZILLA_INTERNAL_API)
   }
   if (mModule) {
     ::FreeLibrary(reinterpret_cast<HMODULE>(mModule));
@@ -363,86 +381,135 @@ RegisteredProxy::GetTypeInfoForInterface(REFIID aIid,
   return mTypeLib->lpVtbl->GetTypeInfoOfGuid(mTypeLib, aIid, aOutTypeInfo);
 }
 
-static StaticAutoPtr<nsTArray<RegisteredProxy*>> sRegistry;
-static StaticAutoPtr<Mutex> sRegMutex;
-static StaticAutoPtr<nsTArray<Pair<const ArrayData*, size_t>>> sArrayData;
+static StaticAutoPtr<Vector<RegisteredProxy*>> sRegistry;
 
-static Mutex&
+namespace UseGetMutexForAccess {
+
+// This must not be accessed directly; use GetMutex() instead
+static CRITICAL_SECTION sMutex;
+
+} // UseGetMutexForAccess
+
+static CRITICAL_SECTION*
 GetMutex()
 {
-  static Mutex& mutex = []() -> Mutex& {
-    if (!sRegMutex) {
-      sRegMutex = new Mutex("RegisteredProxy::sRegMutex");
-      ClearOnShutdown(&sRegMutex, ShutdownPhase::ShutdownThreads);
-    }
-    return *sRegMutex;
+  static CRITICAL_SECTION& mutex = []() -> CRITICAL_SECTION& {
+#if defined(RELEASE_OR_BETA)
+    DWORD flags = CRITICAL_SECTION_NO_DEBUG_INFO;
+#else
+    DWORD flags = 0;
+#endif
+    InitializeCriticalSectionEx(&UseGetMutexForAccess::sMutex, 4000, flags);
+#if !defined(MOZILLA_INTERNAL_API)
+    atexit([]() { DeleteCriticalSection(&UseGetMutexForAccess::sMutex); });
+#endif
+    return UseGetMutexForAccess::sMutex;
   }();
-  return mutex;
+  return &mutex;
 }
 
 /* static */ bool
 RegisteredProxy::Find(REFIID aIid, ITypeInfo** aTypeInfo)
 {
-  MutexAutoLock lock(GetMutex());
-  nsTArray<RegisteredProxy*>& registry = *sRegistry;
-  for (uint32_t idx = 0, len = registry.Length(); idx < len; ++idx) {
-    if (SUCCEEDED(registry[idx]->GetTypeInfoForInterface(aIid, aTypeInfo))) {
+  AutoCriticalSection lock(GetMutex());
+
+  if (!sRegistry) {
+    return false;
+  }
+
+  for (auto&& proxy : *sRegistry) {
+    if (SUCCEEDED(proxy->GetTypeInfoForInterface(aIid, aTypeInfo))) {
       return true;
     }
   }
+
   return false;
 }
 
 /* static */ void
 RegisteredProxy::AddToRegistry(RegisteredProxy* aProxy)
 {
-  MutexAutoLock lock(GetMutex());
+  MOZ_ASSERT(aProxy);
+
+  AutoCriticalSection lock(GetMutex());
+
   if (!sRegistry) {
-    sRegistry = new nsTArray<RegisteredProxy*>();
-    ClearOnShutdown(&sRegistry);
+    sRegistry = new Vector<RegisteredProxy*>();
+
+#if !defined(MOZILLA_INTERNAL_API)
+    // sRegistry allocation is fallible outside of Mozilla processes
+    if (!sRegistry) {
+      return;
+    }
+#endif
   }
-  sRegistry->AppendElement(aProxy);
+
+  sRegistry->emplaceBack(aProxy);
 }
 
 /* static */ void
 RegisteredProxy::DeleteFromRegistry(RegisteredProxy* aProxy)
 {
-  MutexAutoLock lock(GetMutex());
-  sRegistry->RemoveElement(aProxy);
+  MOZ_ASSERT(aProxy);
+
+  AutoCriticalSection lock(GetMutex());
+
+  MOZ_ASSERT(sRegistry && !sRegistry->empty());
+
+  if (!sRegistry) {
+    return;
+  }
+
+  sRegistry->erase(std::remove(sRegistry->begin(), sRegistry->end(), aProxy),
+                   sRegistry->end());
+
+  if (sRegistry->empty()) {
+    sRegistry = nullptr;
+  }
 }
+
+#if defined(MOZILLA_INTERNAL_API)
+
+static StaticAutoPtr<Vector<Pair<const ArrayData*, size_t>>> sArrayData;
 
 void
 RegisterArrayData(const ArrayData* aArrayData, size_t aLength)
 {
-  MutexAutoLock lock(GetMutex());
+  AutoCriticalSection lock(GetMutex());
+
   if (!sArrayData) {
-    sArrayData = new nsTArray<Pair<const ArrayData*, size_t>>();
+    sArrayData = new Vector<Pair<const ArrayData*, size_t>>();
     ClearOnShutdown(&sArrayData, ShutdownPhase::ShutdownThreads);
   }
-  sArrayData->AppendElement(MakePair(aArrayData, aLength));
+
+  sArrayData->emplaceBack(MakePair(aArrayData, aLength));
 }
 
 const ArrayData*
 FindArrayData(REFIID aIid, ULONG aMethodIndex)
 {
-  MutexAutoLock lock(GetMutex());
+  AutoCriticalSection lock(GetMutex());
+
   if (!sArrayData) {
     return nullptr;
   }
-  for (uint32_t outerIdx = 0, outerLen = sArrayData->Length();
-       outerIdx < outerLen; ++outerIdx) {
-    auto& data = sArrayData->ElementAt(outerIdx);
+
+  for (auto&& data : *sArrayData) {
     for (size_t innerIdx = 0, innerLen = data.second(); innerIdx < innerLen;
          ++innerIdx) {
       const ArrayData* array = data.first();
-      if (aIid == array[innerIdx].mIid &&
-          aMethodIndex == array[innerIdx].mMethodIndex) {
+      if (aMethodIndex == array[innerIdx].mMethodIndex &&
+          IsInterfaceEqualToOrInheritedFrom(aIid, array[innerIdx].mIid,
+                                            aMethodIndex)) {
         return &array[innerIdx];
       }
     }
   }
+
   return nullptr;
 }
+
+#endif // defined(MOZILLA_INTERNAL_API)
 
 } // namespace mscom
 } // namespace mozilla
