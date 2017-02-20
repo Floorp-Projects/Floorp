@@ -76,24 +76,24 @@ add_task(function* () {
 
   info("Checking the regions tooltips");
 
-  ok(view.doc.querySelector("#old-boxmodel-margins").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-margins").hasAttribute("title"),
     "The margin region has a tooltip");
-  is(view.doc.querySelector("#old-boxmodel-margins").getAttribute("title"), "margin",
+  is(view.document.querySelector(".boxmodel-margins").getAttribute("title"), "margin",
     "The margin region has the correct tooltip content");
 
-  ok(view.doc.querySelector("#old-boxmodel-borders").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-borders").hasAttribute("title"),
     "The border region has a tooltip");
-  is(view.doc.querySelector("#old-boxmodel-borders").getAttribute("title"), "border",
+  is(view.document.querySelector(".boxmodel-borders").getAttribute("title"), "border",
     "The border region has the correct tooltip content");
 
-  ok(view.doc.querySelector("#old-boxmodel-padding").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-paddings").hasAttribute("title"),
     "The padding region has a tooltip");
-  is(view.doc.querySelector("#old-boxmodel-padding").getAttribute("title"), "padding",
+  is(view.document.querySelector(".boxmodel-paddings").getAttribute("title"), "padding",
     "The padding region has the correct tooltip content");
 
-  ok(view.doc.querySelector("#old-boxmodel-content").hasAttribute("title"),
+  ok(view.document.querySelector(".boxmodel-content").hasAttribute("title"),
     "The content region has a tooltip");
-  is(view.doc.querySelector("#old-boxmodel-content").getAttribute("title"), "content",
+  is(view.document.querySelector(".boxmodel-content").getAttribute("title"), "content",
     "The content region has the correct tooltip content");
 
   for (let {selector, values} of VALUES_TEST_DATA) {
@@ -108,7 +108,7 @@ add_task(function* () {
 
       let name = view.map[key].property;
       let expectedTooltipData = values.find(o => o.name === name);
-      let el = view.doc.querySelector(view.map[key].selector);
+      let el = view.document.querySelector(view.map[key].selector);
 
       ok(el.hasAttribute("title"), "The " + name + " value has a tooltip");
 
