@@ -575,6 +575,14 @@ public:
   RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
+                                  const nsString& aKey,
+                                  const nsString& aOldValue,
+                                  const nsString& aNewValue,
+                                  const IPC::Principal& aPrincipal,
+                                  const bool& aIsPrivate) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvGetA11yContentId(uint32_t* aContentId) override;
 
   virtual int32_t Pid() const override;
