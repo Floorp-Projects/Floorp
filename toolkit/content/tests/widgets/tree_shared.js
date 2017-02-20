@@ -1,3 +1,9 @@
+// This file expects the following globals to be defined at various times.
+/* globals getCustomTreeViewCellInfo */
+
+// This files relies on these specific Chrome/XBL globals
+/* globals TreeColumns, TreeColumn */
+
 var columns_simpletree =
 [
   { name: "name", label: "Name", key: true, properties: "one two" },

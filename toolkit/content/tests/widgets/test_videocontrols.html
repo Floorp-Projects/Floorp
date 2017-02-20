@@ -258,7 +258,7 @@ function runTest(event) {
       // it's timing depending if the <scale> things it's click-and-hold, or a
       // single click. So, just make sure we end up less that the previous
       // position.
-      lastPosition = (videoDuration / 2) - 0.1;
+      var lastPosition = (videoDuration / 2) - 0.1;
       ok(video.currentTime < lastPosition, "checking expected playback position");
 
       // Set volume to 0.1 so one down arrow hit will decrease it to 0.

@@ -68,7 +68,7 @@ add_task(function* testTimeout() {
   var [ready] = yield promiseImage(alert, 1000);
   ok(!ready, "Should cancel request if timeout fires");
 
-  [ready, request] = yield promiseImage(alert, 45000);
+  [ready] = yield promiseImage(alert, 45000);
   ok(ready, "Should load image if request finishes before timeout");
 });
 
