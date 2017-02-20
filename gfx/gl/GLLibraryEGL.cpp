@@ -51,7 +51,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_ANDROID_native_fence_sync",
     "EGL_ANDROID_image_crop",
     "EGL_ANGLE_platform_angle",
-    "EGL_ANGLE_platform_angle_d3d"
+    "EGL_ANGLE_platform_angle_d3d",
+    "EGL_ANGLE_d3d_share_handle_client_buffer"
 };
 
 #if defined(ANDROID)
@@ -414,6 +415,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         SYMBOL(BindTexImage),
         SYMBOL(ReleaseTexImage),
         SYMBOL(QuerySurface),
+        SYMBOL(CreatePbufferFromClientBuffer),
         { nullptr, { nullptr } }
     };
 

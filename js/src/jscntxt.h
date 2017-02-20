@@ -80,6 +80,12 @@ void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 /* Thread Local Storage slot for storing the context for a thread. */
 extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 
+enum class ContextKind
+{
+    Cooperative,
+    Background
+};
+
 } /* namespace js */
 
 /*
@@ -89,13 +95,14 @@ extern MOZ_THREAD_LOCAL(JSContext*) TlsContext;
 struct JSContext : public JS::RootingContext,
                    public js::MallocProvider<JSContext>
 {
-    explicit JSContext(JSRuntime* runtime, const JS::ContextOptions& options);
+    JSContext(JSRuntime* runtime, const JS::ContextOptions& options);
     ~JSContext();
 
-    bool init();
+    bool init(js::ContextKind kind);
 
   private:
     js::UnprotectedData<JSRuntime*> runtime_;
+    js::WriteOnceData<js::ContextKind> kind_;
 
     // System handle for the thread this context is associated with.
     js::WriteOnceData<size_t> threadNative_;
@@ -112,6 +119,7 @@ struct JSContext : public JS::RootingContext,
     // currently operating on.
     void setRuntime(JSRuntime* rt);
 
+    bool isCooperativelyScheduled() const { return kind_ == js::ContextKind::Cooperative; }
     size_t threadNative() const { return threadNative_; }
 
     inline js::gc::ArenaLists* arenas() const { return arenas_; }
@@ -639,7 +647,7 @@ struct JSContext : public JS::RootingContext,
     const js::AutoCycleDetector::Set& cycleDetectorSet() const { return cycleDetectorSet_.ref(); }
 
     /* Client opaque pointer. */
-    void* data;
+    js::UnprotectedData<void*> data;
 
     void initJitStackLimit();
     void resetJitStackLimit();
@@ -950,6 +958,15 @@ struct MOZ_RAII AutoResolving {
  */
 extern JSContext*
 NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime);
+
+extern JSContext*
+NewCooperativeContext(JSContext* siblingContext);
+
+extern void
+YieldCooperativeContext(JSContext* cx);
+
+extern void
+ResumeCooperativeContext(JSContext* cx);
 
 extern void
 DestroyContext(JSContext* cx);

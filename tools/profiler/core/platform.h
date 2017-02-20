@@ -29,16 +29,6 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
-#ifdef ANDROID
-#include <android/log.h>
-#else
-#define __android_log_print(a, ...)
-#endif
-
-#ifdef XP_UNIX
-#include <pthread.h>
-#endif
-
 #include <stdint.h>
 #include <math.h>
 #include "MainThreadUtils.h"
@@ -61,7 +51,7 @@ static inline pid_t gettid()
 {
   return (pid_t) syscall(SYS_gettid);
 }
-#elif defined(XP_MACOSX)
+#elif defined(GP_OS_darwin)
 #include <unistd.h>
 #include <sys/syscall.h>
 static inline pid_t gettid()
@@ -70,16 +60,14 @@ static inline pid_t gettid()
 }
 #endif
 
-#ifdef XP_WIN
+#if defined(GP_OS_windows)
 #include <windows.h>
 #endif
 
 bool profiler_verbose();
 
-#ifdef ANDROID
-# if defined(__arm__) || defined(__thumb__)
-#  define ENABLE_LEAF_DATA
-# endif
+#if defined(GP_OS_android)
+# include <android/log.h>
 # define LOG(text) \
     do { if (profiler_verbose()) \
            __android_log_write(ANDROID_LOG_ERROR, "Profiler", text); \
@@ -101,36 +89,13 @@ bool profiler_verbose();
 
 #endif
 
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
-#define ENABLE_LEAF_DATA
-#endif
-
-#if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
+#if defined(GP_OS_android) && !defined(MOZ_WIDGET_GONK)
 #define PROFILE_JAVA
 #endif
 
 extern mozilla::TimeStamp gStartTime;
 
 typedef uint8_t* Address;
-
-// ----------------------------------------------------------------------------
-// OS
-//
-// This class has static methods for the different platform specific
-// functions. Add methods here to cope with differences between the
-// supported platforms.
-
-class OS {
-public:
-  // Sleep for a number of milliseconds.
-  static void Sleep(const int milliseconds);
-
-  // Sleep for a number of microseconds.
-  static void SleepMicro(const int microseconds);
-
-  // Called on startup to initialize platform specific things
-  static void Startup();
-};
 
 // ----------------------------------------------------------------------------
 // Thread
@@ -141,7 +106,7 @@ public:
 
 class Thread {
 public:
-#ifdef XP_WIN
+#if defined(GP_OS_windows)
   typedef DWORD tid_t;
 #else
   typedef ::pid_t tid_t;
@@ -160,12 +125,11 @@ public:
 // platform.
 
 #undef HAVE_NATIVE_UNWIND
-#if defined(MOZ_PROFILING) \
-    && (defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
-        || (defined(MOZ_WIDGET_ANDROID) && defined(__arm__)) \
-        || defined(SPS_PLAT_x86_linux) \
-        || defined(SPS_OS_windows) \
-        || defined(SPS_OS_darwin))
+#if defined(MOZ_PROFILING) && \
+    (defined(GP_OS_windows) || \
+     defined(GP_OS_darwin) || \
+     defined(GP_OS_linux) || \
+     defined(GP_PLAT_arm_android))
 # define HAVE_NATIVE_UNWIND
 #endif
 

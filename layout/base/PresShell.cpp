@@ -1927,7 +1927,6 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord a
                                : aOldHeight != aHeight;
 
   RefPtr<nsViewManager> viewManager = mViewManager;
-  // Take this ref after viewManager so it'll make sure to go away first.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
   if (!GetPresContext()->SuppressingResizeReflow()) {
@@ -4030,7 +4029,7 @@ PresShell::IsSafeToFlush() const
 
 
 void
-PresShell::FlushPendingNotifications(FlushType aType)
+PresShell::DoFlushPendingNotifications(FlushType aType)
 {
   // by default, flush animations if aType >= FlushType::Style
   mozilla::ChangesToFlush flush(aType, aType >= FlushType::Style);
@@ -4038,14 +4037,19 @@ PresShell::FlushPendingNotifications(FlushType aType)
 }
 
 void
-PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
+PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 {
+  // Per our API contract, hold a strong ref to ourselves until we return.
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip = this;
+
   /**
    * VERY IMPORTANT: If you add some sort of new flushing to this
    * method, make sure to add the relevant SetNeedLayoutFlush or
    * SetNeedStyleFlush calls on the shell.
    */
   FlushType flushType = aFlush.mFlushType;
+
+  MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
 #ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,
@@ -4098,7 +4102,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   RefPtr<nsViewManager> viewManager = mViewManager;
   bool didStyleFlush = false;
   bool didLayoutFlush = false;
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip;
   if (isSafeToFlush && viewManager) {
     // Record that we are in a flush, so that our optimization in
     // nsDocument::FlushPendingNotifications doesn't skip any re-entrant
@@ -4107,10 +4110,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // the function but we might not have done the work yet.
     AutoRestore<bool> guard(mInFlush);
     mInFlush = true;
-
-    // Processing pending notifications can kill us, and some callers only
-    // hold weak refs when calling FlushPendingNotifications().  :(
-    kungFuDeathGrip = this;
 
     if (mResizeEvent.IsPending()) {
       FireResizeEvent();
