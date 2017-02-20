@@ -838,9 +838,30 @@ public:
                                           nsIFrame* aSubFrame) const;
 
   /**
-   * Bounding rect of the frame. The values are in app units, and the origin is
-   * relative to the upper-left of the geometric parent. The size includes the
-   * content area, borders, and padding.
+   * Bounding rect of the frame.
+   *
+   * For frames that are laid out according to CSS box model rules the values
+   * are in app units, and the origin is relative to the upper-left of the
+   * geometric parent.  The size includes the content area, borders, and
+   * padding.
+   *
+   * Frames that are laid out according to SVG's coordinate space based rules
+   * (frames with the NS_FRAME_SVG_LAYOUT bit set, which *excludes*
+   * nsSVGOuterSVGFrame) are different.  Many frames of this type do not set or
+   * use mRect, in which case the frame rect is undefined.  The exceptions are:
+   *
+   *   - nsSVGInnerSVGFrame
+   *   - SVGGeometryFrame (used for <path>, <circle>, etc.)
+   *   - nsSVGImageFrame
+   *   - nsSVGForeignObjectFrame
+   *
+   * For these frames the frame rect contains the frame's element's userspace
+   * bounds including fill, stroke and markers, but converted to app units
+   * rather than being in user units (CSS px).  In the SVG code "userspace" is
+   * defined to be the coordinate system for the attributes that define an
+   * element's geometry (such as the 'cx' attribute for <circle>).  For more
+   * precise details see these frames' implementations of the ReflowSVG method
+   * where mRect is set.
    *
    * Note: moving or sizing the frame does not affect the view's size or
    * position.
