@@ -575,6 +575,9 @@ private:
     // by chunking, content-length, or h2 end-stream framing
     uint32_t                          mStronglyFramed : 1;
 
+    // true if an HTTP transaction is created for the socket thread
+    uint32_t                          mUsedNetwork : 1;
+
     nsCOMPtr<nsIChannel>              mPreflightChannel;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
