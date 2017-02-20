@@ -7,6 +7,7 @@
 #include "mozilla/dom/Notification.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Move.h"
 #include "mozilla/OwningNonNull.h"
@@ -236,13 +237,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(NotificationPermissionRequest,
                                            nsIContentPermissionRequest)
 
-  NotificationPermissionRequest(nsIPrincipal* aPrincipal,
+  NotificationPermissionRequest(nsIPrincipal* aPrincipal, bool aIsHandlingUserInput,
                                 nsPIDOMWindowInner* aWindow, Promise* aPromise,
                                 NotificationPermissionCallback* aCallback)
     : mPrincipal(aPrincipal), mWindow(aWindow),
       mPermission(NotificationPermission::Default),
       mPromise(aPromise),
-      mCallback(aCallback)
+      mCallback(aCallback),
+      mIsHandlingUserInput(aIsHandlingUserInput)
   {
     MOZ_ASSERT(aPromise);
     mRequester = new nsContentPermissionRequester(mWindow);
@@ -265,6 +267,7 @@ protected:
   RefPtr<Promise> mPromise;
   RefPtr<NotificationPermissionCallback> mCallback;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
+  bool mIsHandlingUserInput;
 };
 
 namespace {
@@ -596,6 +599,13 @@ NotificationPermissionRequest::GetElement(nsIDOMElement** aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
   *aElement = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NotificationPermissionRequest::GetIsHandlingUserInput(bool* aIsHandlingUserInput)
+{
+  *aIsHandlingUserInput = mIsHandlingUserInput;
   return NS_OK;
 }
 
@@ -1811,8 +1821,9 @@ Notification::RequestPermission(const GlobalObject& aGlobal,
   if (aCallback.WasPassed()) {
     permissionCallback = &aCallback.Value();
   }
-  nsCOMPtr<nsIRunnable> request =
-    new NotificationPermissionRequest(principal, window, promise, permissionCallback);
+  bool isHandlingUserInput = EventStateManager::IsHandlingUserInput();
+  nsCOMPtr<nsIRunnable> request = new NotificationPermissionRequest(
+    principal, isHandlingUserInput, window, promise, permissionCallback);
 
   global->Dispatch(TaskCategory::Other, request.forget());
 
