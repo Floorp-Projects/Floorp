@@ -7220,7 +7220,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             ecPoint.data = mechParams->pPublicData;
             ecPoint.len = mechParams->ulPublicDataLen;
 
-            pubKeyLen = privKey->u.ec.ecParams.pointSize;
+            pubKeyLen = EC_GetPointSize(&privKey->u.ec.ecParams);
 
             /* if the len is too small, can't be a valid point */
             if (ecPoint.len < pubKeyLen) {
