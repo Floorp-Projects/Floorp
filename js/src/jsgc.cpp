@@ -6326,16 +6326,21 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 static bool
 IsDeterministicGCReason(JS::gcreason::Reason reason)
 {
-    if (reason > JS::gcreason::DEBUG_GC &&
-        reason != JS::gcreason::CC_FORCED && reason != JS::gcreason::SHUTDOWN_CC)
-    {
+    switch (reason) {
+      case JS::gcreason::API:
+      case JS::gcreason::DESTROY_RUNTIME:
+      case JS::gcreason::LAST_DITCH:
+      case JS::gcreason::TOO_MUCH_MALLOC:
+      case JS::gcreason::ALLOC_TRIGGER:
+      case JS::gcreason::DEBUG_GC:
+      case JS::gcreason::CC_FORCED:
+      case JS::gcreason::SHUTDOWN_CC:
+      case JS::gcreason::ABORT_GC:
+        return true;
+
+      default:
         return false;
     }
-
-    if (reason == JS::gcreason::EAGER_ALLOC_TRIGGER)
-        return false;
-
-    return true;
 }
 #endif
 
