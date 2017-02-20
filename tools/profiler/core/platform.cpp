@@ -140,7 +140,7 @@ bool stack_key_initialized;
 // XXX: This is set by profiler_init() and profiler_start() on the main thread.
 // It is read off the main thread, e.g. by Tick(). It might require more
 // inter-thread synchronization than it currently has.
-mozilla::TimeStamp gStartTime;
+static mozilla::TimeStamp gStartTime;
 
 // XXX: These are accessed by multiple threads and might require more
 // inter-thread synchronization than they currently have.

@@ -73,7 +73,7 @@ public:
   void BeginUnwind();
   virtual void EndUnwind();
 
-  void DuplicateLastSample();
+  void DuplicateLastSample(const mozilla::TimeStamp& aStartTime);
 
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 
