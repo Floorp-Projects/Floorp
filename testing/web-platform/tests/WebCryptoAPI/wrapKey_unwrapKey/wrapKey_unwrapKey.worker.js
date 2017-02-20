@@ -1,4 +1,4 @@
-// META: timeout=long
+// <meta> timeout=long
 importScripts("/resources/testharness.js");
 importScripts("wrapKey_unwrapKey.js");
 

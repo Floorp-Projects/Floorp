@@ -1,5 +1,4 @@
-<!doctype html>
-<meta charset="utf8">
+<!DOCTYPE html>
 <title>IndexedDB: aborting transactions reverts index metadata</title>
 <link rel="help" href="https://w3c.github.io/IndexedDB/#abort-transaction">
 <link rel="author" href="pwnall@chromium.org" title="Victor Costan">
@@ -7,7 +6,6 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="support-promises.js"></script>
 <script>
-'use strict';
 
 promise_test(testCase => {
     let store = null, index = null;
