@@ -45,6 +45,7 @@ public:
   gfx::Rect ParentStackingContextBounds(size_t aScrollMetadataIndex);
   gfx::Rect RelativeToParent(gfx::Rect aRect);
   gfx::Rect VisibleBoundsRelativeToParent();
+  gfx::Point GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
   Maybe<WrImageMask> buildMaskLayer();
