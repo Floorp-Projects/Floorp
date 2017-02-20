@@ -24,6 +24,7 @@ namespace dom {
 
 class StorageManagerBase;
 class StorageCache;
+class StorageEvent;
 
 class Storage final
   : public nsIDOMStorage
@@ -128,6 +129,20 @@ public:
     MOZ_ASSERT(aOther);
     return mCache == aOther->mCache;
   }
+
+  // aStorage can be null if this method is called by ContentChild.
+  static void
+  DispatchStorageEvent(StorageType aStorageType,
+                       const nsAString& aDocumentURI,
+                       const nsAString& aKey,
+                       const nsAString& aOldValue,
+                       const nsAString& aNewValue,
+                       nsIPrincipal* aPrincipal,
+                       bool aIsPrivate,
+                       Storage* aStorage);
+
+  void
+  ApplyEvent(StorageEvent* aStorageEvent);
 
 protected:
   // The method checks whether the caller can use a storage.
