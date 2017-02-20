@@ -3,6 +3,7 @@ import shutil
 import time
 
 from marionette_harness import MarionetteTestCase
+from marionette_driver.errors import NoAlertPresentException
 
 
 class TestFirefoxRefresh(MarionetteTestCase):
@@ -269,11 +270,17 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """)
         self.assertSequenceEqual(tabURIs, ["about:welcomeback"])
 
+        # Dismiss modal dialog if any. This is mainly to dismiss the check for
+        # default browser dialog if it shows up.
+        try:
+          alert = self.marionette.switch_to_alert()
+          alert.dismiss()
+        except NoAlertPresentException:
+          pass
+
         tabURIs = self.runAsyncCode("""
           let mm = gBrowser.selectedBrowser.messageManager;
-          let fs = function() {
-            content.document.getElementById("errorTryAgain").click();
-          };
+
           let {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
           window.addEventListener("SSWindowStateReady", function testSSPostReset() {
             window.removeEventListener("SSWindowStateReady", testSSPostReset, false);
@@ -281,6 +288,17 @@ class TestFirefoxRefresh(MarionetteTestCase):
               marionetteScriptFinished([... gBrowser.browsers].map(b => b.currentURI && b.currentURI.spec));
             });
           }, false);
+
+          let fs = function() {
+            if (content.document.readyState === "complete") {
+              content.document.getElementById("errorTryAgain").click();
+            } else {
+              content.window.addEventListener("load", function(event) {
+                content.document.getElementById("errorTryAgain").click();
+              }, { once: true });
+            }
+          };
+
           mm.loadFrameScript("data:application/javascript,(" + fs.toString() + ")()", true);
         """)
         self.assertSequenceEqual(tabURIs, self._expectedURLs)
