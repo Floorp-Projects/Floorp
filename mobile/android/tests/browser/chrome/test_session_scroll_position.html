@@ -2,10 +2,12 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=810981
+https://bugzilla.mozilla.org/show_bug.cgi?id=1282902
+https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 810981</title>
+  <title>Tests for Bug 810981, 1282902, 1301016</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
@@ -13,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript">
 
-  /** Test for Bug 810981 **/
+  /** Tests for Bug 810981, 1282902, 1301016 **/
 
   "use strict";
 
@@ -24,18 +26,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
   Cu.import("resource://gre/modules/Messaging.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
 
-  // The chrome window.
-  let chromeWin;
+  // The chrome window and friends.
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let BrowserApp = chromeWin.BrowserApp;
 
-  // Track the tabs where the tests are happening.
-  let tabScroll;
-
-  // Use something with enough content to allow for scrolling.
-  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile.html";
-  // Something to test the zoom level scaling on rotation with.
-  const URL_desktop = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
+  // Use something with ample space for scrolling and zooming.
+  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/browser_scrollPositions_sample.html";
   // Reader mode URL
   const URL_reader = "about:reader?url=http%3A%2F%2Fexample.org%2Fchrome%2Fmobile%2Fandroid%2Ftests%2Fbrowser%2Fchrome%2Fbasic_article_mobile.html";
+
+  // Randomized set of scroll positions and zoom factors we will use in this test.
+  const SCROLL_X = Math.round(100 * (1 + Math.random()));
+  const SCROLL_Y = Math.round(200 * (1 + Math.random()));
+  const SCROLL_STR = SCROLL_X + "," + SCROLL_Y;
+  const SCROLL_STR_Y_ONLY = 0 + "," + SCROLL_Y;
+  const ZOOM = 1 + 0.5 * Math.random();
 
   function dispatchUIEvent(browser, type) {
     let event = browser.contentDocument.createEvent("UIEvents");
@@ -54,70 +59,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
         Ci.nsIDOMWindowUtils).setResolutionAndScaleTo(zoom);
   }
 
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+  // Track the tabs where the tests are happening.
+  let tabScroll;
 
-  add_task(function* test_sessionStoreScrollPosition() {
-    const SCROLL_X = 0;
-    const SCROLL_Y = 38;
-
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
-
-    // Creates a tab, sets a scroll position and closes the tab.
-    function createAndRemoveTab() {
-      return Task.spawn(function* () {
-        // Create a new tab.
-        tabScroll = BrowserApp.addTab(URL);
-        let browser = tabScroll.browser;
-        yield promiseBrowserEvent(browser, "pageshow");
-
-        // Modify scroll position.
-        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
-
-        // Check that we've actually scrolled.
-        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
-        let scrollX = {}, scrollY = {};
-        utils.getScrollXY(false, scrollX, scrollY);
-        is(scrollX.value, SCROLL_X, "scrollX set correctly");
-        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
-
-        // Remove the tab.
-        BrowserApp.closeTab(tabScroll);
-        yield promiseTabEvent(browser, "SSTabCloseProcessed");
-      });
+  function cleanupTabs() {
+    if (tabScroll) {
+      BrowserApp.closeTab(tabScroll);
+      tabScroll = null;
     }
+  }
 
-    yield createAndRemoveTab();
-    let state = ss.getClosedTabs(chromeWin);
-    let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
-
-    // Restore the closed tab.
-    let closedTabData = ss.getClosedTabs(chromeWin)[0];
-    let browser = ss.undoCloseTab(chromeWin, closedTabData);
-    yield promiseBrowserEvent(browser, "pageshow");
-
-    // Check the scroll position.
-    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
-    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
-    let scrollX = {}, scrollY = {};
-    utils.getScrollXY(false, scrollX, scrollY);
-    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
-    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
-
-    // Remove the tab.
-    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+  SimpleTest.registerCleanupFunction(function() {
+    cleanupTabs();
   });
 
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+
   add_task(function* test_sessionStoreScrollPositionReaderMode() {
-    const SCROLL_X = 0;
-    const SCROLL_Y = 44;
-
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
-
     // Creates a tab, sets a scroll position and closes the tab.
     function createAndRemoveReaderTab() {
       return Task.spawn(function* () {
@@ -127,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
         yield promiseBrowserEvent(browser, "AboutReaderContentReady");
 
         // Modify scroll position.
-        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        setScrollPosition(browser, 0, SCROLL_Y);
         yield promiseTabEvent(browser, "SSTabScrollCaptured");
 
         // Check that we've actually scrolled.
@@ -135,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
         let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
         let scrollX = {}, scrollY = {};
         utils.getScrollXY(false, scrollX, scrollY);
-        is(scrollX.value, SCROLL_X, "scrollX set correctly");
+        is(scrollX.value, 0, "scrollX set correctly");
         is(scrollY.value, SCROLL_Y, "scrollY set correctly");
 
         // Remove the tab.
@@ -147,7 +105,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
     yield createAndRemoveReaderTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+    is(scrolldata.scroll, SCROLL_STR_Y_ONLY, "stored scroll position is correct");
 
     // Restore the closed tab.
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
@@ -159,21 +117,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
     let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
     let scrollX = {}, scrollY = {};
     utils.getScrollXY(false, scrollX, scrollY);
-    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
+    is(scrollX.value, 0, "scrollX restored correctly");
     is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
 
     // Remove the tab.
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
   });
 
-  add_task(function* test_sessionStoreZoomLevel() {
-    const ZOOM = 4.2;
-    const SCROLL_X = 42;
-    const SCROLL_Y = 42;
-
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
-
+  add_task(function* test_sessionStoreScrollPositionAndZoomLevel() {
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
@@ -206,7 +157,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
     yield createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+    is(scrolldata.scroll, SCROLL_STR, "stored scroll position is correct");
     ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM), "stored zoom level is correct");
 
     // Restore the closed tab.
@@ -229,18 +180,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
   });
 
   add_task(function* test_sessionStoreZoomLevelRecalc() {
-    const ZOOM = 4.2;
-    const SCROLL_X = 42;
-    const SCROLL_Y = 42;
-
-    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
-    let BrowserApp = chromeWin.BrowserApp;
-
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
         // Create a new tab.
-        tabScroll = BrowserApp.addTab(URL_desktop);
+        tabScroll = BrowserApp.addTab(URL);
         let browser = tabScroll.browser;
         yield promiseBrowserEvent(browser, "pageshow");
 
@@ -268,7 +212,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
     yield createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+    is(scrolldata.scroll, SCROLL_STR, "stored scroll position is correct");
     ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM), "stored zoom level is correct");
 
     // Pretend the zoom level was originally saved on a rotated device.
@@ -300,6 +244,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=810981">Mozilla Bug 810981</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1282902">Mozilla Bug 1282902</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1301016">Mozilla Bug 1301016</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
