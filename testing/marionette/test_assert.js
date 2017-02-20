@@ -40,11 +40,23 @@ add_test(function test_defined() {
   run_next_test();
 });
 
+add_test(function test_number() {
+  assert.number(1);
+  assert.number(0);
+  assert.number(-1);
+  assert.number(1.2);
+  for (let i of ["foo", "1", {}, [], NaN, Infinity, undefined]) {
+    Assert.throws(() => assert.number(i), InvalidArgumentError);
+  }
+  run_next_test();
+});
+
 add_test(function test_integer() {
   assert.integer(1);
   assert.integer(0);
   assert.integer(-1);
   Assert.throws(() => assert.integer("foo"), InvalidArgumentError);
+  Assert.throws(() => assert.integer(1.2), InvalidArgumentError);
 
   run_next_test();
 });
