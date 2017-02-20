@@ -162,7 +162,7 @@ fails == grid-item-margin-right-auto-002.html grid-item-margin-right-auto-002.ht
 fails == grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003.html
 fails == grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004.html
 fails == grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001.html
-fails == grid-clamping-001.html grid-clamping-001.html
+== grid-clamping-001.html grid-clamping-001.html
 fails == grid-clamping-002.html grid-clamping-002.html
 fails == grid-repeat-auto-fill-fit-001.html grid-repeat-auto-fill-fit-001.html
 fails == grid-repeat-auto-fill-fit-002.html grid-repeat-auto-fill-fit-002.html
@@ -175,7 +175,7 @@ fails == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008.html
 fails == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009.html
 fails == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010.html
 fails == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-011.html
-fails asserts-if(stylo,144) == grid-item-blockifying-001.html grid-item-blockifying-001.html # bug 1335339
+fails asserts-if(stylo,48) == grid-item-blockifying-001.html grid-item-blockifying-001.html # bug 1335339
 fails == grid-fragmentation-001.html grid-fragmentation-001.html
 fails == grid-fragmentation-002.html grid-fragmentation-002.html
 fails == grid-fragmentation-003.html grid-fragmentation-003.html
@@ -218,7 +218,7 @@ fails == grid-fragmentation-dyn3-003.html grid-fragmentation-dyn3-003.html
 fails == grid-fragmentation-dyn4-004.html grid-fragmentation-dyn4-004.html
 fails == grid-fragmentation-dyn4-005.html grid-fragmentation-dyn4-005.html
 fails == grid-fragmentation-dyn5-005.html grid-fragmentation-dyn5-005.html
-fails == grid-fragmentation-dyn1-006.html grid-fragmentation-dyn1-006.html
+skip == grid-fragmentation-dyn1-006.html grid-fragmentation-dyn1-006.html
 fails == grid-fragmentation-dyn3-007.html grid-fragmentation-dyn3-007.html
 fails == grid-fragmentation-dyn5-007.html grid-fragmentation-dyn5-007.html
 fails == grid-fragmentation-dyn5-008.html grid-fragmentation-dyn5-008.html
