@@ -68,7 +68,7 @@
 #include "LulMainInt.h"
 
 
-#if defined(SPS_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
+#if defined(GP_PLAT_arm_android) && !defined(SHT_ARM_EXIDX)
 // bionic and older glibsc don't define it
 # define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif

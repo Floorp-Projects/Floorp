@@ -984,9 +984,10 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
           if (op == JSOP_TRY) {
               TryNoteArray* trynotes = script->trynotes();
               uint32_t i;
+              size_t mainOffset = script->mainOffset();
               for(i = 0; i < trynotes->length; i++) {
                   JSTryNote note = trynotes->vector[i];
-                  if (note.kind == JSTRY_CATCH && note.start == loc + 1) {
+                  if (note.kind == JSTRY_CATCH && note.start + mainOffset == loc + 1) {
                       if (!sp->jsprintf(" %u (%+d)",
                                         unsigned(loc + note.length + 1),
                                         int(note.length + 1)))
