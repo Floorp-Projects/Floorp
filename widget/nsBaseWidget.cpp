@@ -310,13 +310,7 @@ nsBaseWidget::RevokeTransactionIdAllocator()
   if (!mLayerManager) {
     return;
   }
-
-  ClientLayerManager* clm = mLayerManager->AsClientLayerManager();
-  if (!clm) {
-    return;
-  }
-
-  clm->SetTransactionIdAllocator(nullptr);
+  mLayerManager->SetTransactionIdAllocator(nullptr);
 }
 
 void nsBaseWidget::ReleaseContentController()
