@@ -87,6 +87,13 @@ WebRenderLayer::RelativeToParent(Rect aRect)
   return aRect;
 }
 
+Point
+WebRenderLayer::GetOffsetToParent()
+{
+  Rect parentBounds = ParentStackingContextBounds(-1);
+  return parentBounds.TopLeft();
+}
+
 Rect
 WebRenderLayer::VisibleBoundsRelativeToParent()
 {
