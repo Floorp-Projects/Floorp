@@ -24,7 +24,10 @@ this.ProfileAge = function(profile, log) {
   if (!this.profilePath) {
     throw new Error("No profile directory.");
   }
-  this._log = log || {"debug": function(s) { dump(s + "\n"); }};
+  if (!log) {
+    log = Log.repository.getLogger("Toolkit.ProfileAge");
+  }
+  this._log = log;
 }
 this.ProfileAge.prototype = {
   /**
