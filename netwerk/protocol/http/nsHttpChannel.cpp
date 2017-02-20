@@ -274,6 +274,7 @@ nsHttpChannel::nsHttpChannel()
     , mPinCacheContent(0)
     , mIsCorsPreflightDone(0)
     , mStronglyFramed(false)
+    , mUsedNetwork(0)
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
     , mWarningReporter(nullptr)
@@ -776,6 +777,7 @@ nsHttpChannel::SetupTransaction()
 
     nsresult rv;
 
+    mUsedNetwork = 1;
     if (mCaps & NS_HTTP_ALLOW_PIPELINING) {
         //
         // disable pipelining if:
@@ -6789,6 +6791,42 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                                                      mUpgradeProtocolCallback);
         }
     }
+
+    // HTTP_CHANNEL_DISPOSITION TELEMETRY
+    enum ChannelDisposition
+    {
+        kHttpCanceled = 0,
+        kHttpDisk = 1,
+        kHttpNetOK = 2,
+        kHttpNetEarlyFail = 3,
+        kHttpNetLateFail = 4,
+        kHttpsCanceled = 8,
+        kHttpsDisk = 9,
+        kHttpsNetOK = 10,
+        kHttpsNetEarlyFail = 11,
+        kHttpsNetLateFail = 12
+    } chanDisposition = kHttpCanceled;
+
+    // HTTP 0.9 is more likely to be an error than really 0.9, so count it that way
+    if (mCanceled) {
+        chanDisposition  = kHttpCanceled;
+    } else if (!mUsedNetwork) {
+        chanDisposition = kHttpDisk;
+    } else if (NS_SUCCEEDED(status) &&
+               mResponseHead &&
+               mResponseHead->Version() != NS_HTTP_VERSION_0_9) {
+        chanDisposition = kHttpNetOK;
+    } else if (!mTransferSize) {
+        chanDisposition = kHttpNetEarlyFail;
+    } else {
+        chanDisposition = kHttpNetLateFail;
+    }
+    if (IsHTTPS()) {
+        // shift http to https disposition enums
+        chanDisposition = static_cast<ChannelDisposition>(chanDisposition + kHttpsCanceled);
+    }
+    LOG(("  nsHttpChannel::OnStopRequest ChannelDisposition %d\n", chanDisposition));
+    Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_DISPOSITION, chanDisposition);
 
     // if needed, check cache entry has all data we expect
     if (mCacheEntry && mCachePump &&
