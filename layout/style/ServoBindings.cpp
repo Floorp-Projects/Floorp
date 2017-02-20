@@ -310,6 +310,12 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
   return result;
 }
 
+nsChangeHint
+Gecko_HintsHandledForDescendants(nsChangeHint aHint)
+{
+  return aHint & ~NS_HintsNotHandledForDescendantsIn(aHint);
+}
+
 ServoElementSnapshotOwned
 Gecko_CreateElementSnapshot(RawGeckoElementBorrowed aElement)
 {
@@ -743,40 +749,29 @@ Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src)
 NS_IMPL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_IMPL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
 
-void
-Gecko_SetMozBinding(nsStyleDisplay* aDisplay,
-                    const uint8_t* aURLString, uint32_t aURLStringLength,
-                    ThreadSafeURIHolder* aBaseURI,
-                    ThreadSafeURIHolder* aReferrer,
-                    ThreadSafePrincipalHolder* aPrincipal)
+already_AddRefed<css::URLValue>
+ServoBundledURI::IntoCssUrl()
 {
-  if (!aURLString) {
-    aDisplay->mBinding = nullptr;
-    return;
+  if (!mURLString) {
+    return nullptr;
   }
 
-  MOZ_ASSERT(aDisplay);
-  MOZ_ASSERT(aBaseURI);
-  MOZ_ASSERT(aReferrer);
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(mBaseURI);
+  MOZ_ASSERT(mReferrer);
+  MOZ_ASSERT(mPrincipal);
 
   nsString url;
-  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURLString),
-                                  aURLStringLength);
+  nsDependentCSubstring urlString(reinterpret_cast<const char*>(mURLString),
+                                  mURLStringLength);
   AppendUTF8toUTF16(urlString, url);
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
-  aDisplay->mBinding =
-    new css::URLValue(urlBuffer, do_AddRef(aBaseURI),
-                      do_AddRef(aReferrer), do_AddRef(aPrincipal));
+  RefPtr<css::URLValue> urlValue = new css::URLValue(urlBuffer,
+                                                     do_AddRef(mBaseURI),
+                                                     do_AddRef(mReferrer),
+                                                     do_AddRef(mPrincipal));
+  return urlValue.forget();
 }
-
-void
-Gecko_CopyMozBindingFrom(nsStyleDisplay* aDest, const nsStyleDisplay* aSrc)
-{
-  aDest->mBinding = aSrc->mBinding;
-}
-
 
 void
 Gecko_SetNullImageValue(nsStyleImage* aImage)
@@ -906,15 +901,12 @@ Gecko_SetListStyleImageNone(nsStyleList* aList)
 
 void
 Gecko_SetListStyleImage(nsStyleList* aList,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
+                        ServoBundledURI aURI)
 {
   aList->mListStyleImage =
     CreateStyleImageRequest(nsStyleImageRequest::Mode(0),
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+                            aURI.mURLString, aURI.mURLStringLength,
+                            aURI.mBaseURI, aURI.mReferrer, aURI.mPrincipal);
 }
 
 void
@@ -1041,6 +1033,13 @@ Gecko_DestroyClipPath(mozilla::StyleClipPath* aClip)
   aClip->~StyleClipPath();
 }
 
+void
+Gecko_StyleClipPath_SetURLValue(mozilla::StyleClipPath* aClip, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aClip->SetURL(url.get());
+}
+
 mozilla::StyleBasicShape*
 Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
 {
@@ -1060,6 +1059,53 @@ Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest)
 {
   aDest->mFilters = aSrc->mFilters;
 }
+
+void
+Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aEffects->SetURL(url.get());
+}
+
+void
+Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest, const nsStyleSVGPaint* aSrc)
+{
+  *aDest = *aSrc;
+}
+
+void
+Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint, ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aPaint->SetPaintServer(url.get(), NS_RGB(0, 0, 0));
+}
+
+void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint)
+{
+  aPaint->SetNone();
+}
+
+void
+Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* aSvg, uint32_t aLen)
+{
+  aSvg->mStrokeDasharray.Clear();
+  aSvg->mStrokeDasharray.SetLength(aLen);
+}
+
+void
+Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* aDst, const nsStyleSVG* aSrc)
+{
+  aDst->mStrokeDasharray = aSrc->mStrokeDasharray;
+}
+
+css::URLValue*
+Gecko_NewURLValue(ServoBundledURI aURI)
+{
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  return url.forget().take();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
@@ -1216,6 +1262,20 @@ void
 Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 {
   aCSSValue->~nsCSSValue();
+}
+
+void
+Gecko_nsStyleFont_SetLang(nsStyleFont* aFont, nsIAtom* aAtom)
+{
+  already_AddRefed<nsIAtom> atom = already_AddRefed<nsIAtom>(aAtom);
+  aFont->mLanguage = atom;
+  aFont->mExplicitLanguage = true;
+}
+
+void
+Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
+{
+  aFont->mLanguage = aSource->mLanguage;
 }
 
 void

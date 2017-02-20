@@ -100,13 +100,13 @@ var Profiler;
     },
     finishTest: function Profiler__finishTest () {
       if (_profiler && enabled) {
-        _profiler.dumpProfileToFile(profiler_dir + "/" + currentTest + ".sps");
+        _profiler.dumpProfileToFile(profiler_dir + "/" + currentTest + ".profile");
         _profiler.StopProfiler();
       }
     },
     finishStartupProfiling: function Profiler__finishStartupProfiling () {
       if (_profiler && enabled) {
-        _profiler.dumpProfileToFile(profiler_dir + "/startup.sps");
+        _profiler.dumpProfileToFile(profiler_dir + "/startup.profile");
         _profiler.StopProfiler();
       }
     },

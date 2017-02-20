@@ -2241,9 +2241,9 @@ class BaseScript(ScriptMixin, LogMixin, object):
             self.log("%s doesn't exist after copy!" % dest, level=error_level)
             return None
 
-    def file_sha512sum(self, file_path):
+    def get_hash_for_file(self, file_path, hash_type="sha512"):
         bs = 65536
-        hasher = hashlib.sha512()
+        hasher = hashlib.new(hash_type)
         with open(file_path, 'rb') as fh:
             buf = fh.read(bs)
             while len(buf) > 0:

@@ -9,7 +9,7 @@
  */
 
 add_task(function* () {
-  let { L10N } = require("devtools/client/netmonitor/l10n");
+  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
 
   let { tab, monitor } = yield initNetMonitor(POST_RAW_WITH_HEADERS_URL);
   info("Starting test... ");

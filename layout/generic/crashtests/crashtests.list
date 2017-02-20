@@ -559,7 +559,7 @@ asserts(2-8) asserts-if(stylo,0) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
-asserts-if(Android,0-1) load 964078.html # bug 989718
+skip-if(stylo) asserts-if(Android,0-1) load 964078.html # bug 989718
 load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml
@@ -643,7 +643,7 @@ load large-border-radius-dotted.html
 load large-border-radius-dotted2.html
 load 1278461-1.html
 load 1278461-2.html
-asserts-if(stylo,6) load 1281102.html # bug 1324661
+load 1281102.html
 load 1297427-non-equal-centers.html
 load 1304441.html
 load 1316649.html

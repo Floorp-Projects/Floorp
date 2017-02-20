@@ -7,7 +7,7 @@ fails == bug577418-1.html bug577418-1.html
 == bug582788-1.html bug582788-1.html
 fails == bug582940-1.html bug582940-1.html
 == bug592656-1.html bug592656-1.html
-fails == bug599320-1.html bug599320-1.html
+== bug599320-1.html bug599320-1.html
 == bug608373-1.html bug608373-1.html
 fails asserts-if(stylo,25) == view-source:bug482921-1.html view-source:bug482921-1.html # bug 1324704
 fails asserts-if(stylo,26) == view-source:bug482921-2.xhtml view-source:bug482921-2.xhtml # bug 1324704

@@ -109,6 +109,12 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
   }), NS_DISPATCH_NORMAL);
 }
 
+MediaDataDecoder::ConversionRequired
+RemoteVideoDecoder::NeedsConversion() const
+{
+  return mActor->NeedsConversion();
+}
+
 nsresult
 RemoteDecoderModule::Startup()
 {
@@ -130,12 +136,6 @@ RemoteDecoderModule::Supports(const TrackInfo& aTrackInfo,
                               DecoderDoctorDiagnostics* aDiagnostics) const
 {
   return mWrapped->Supports(aTrackInfo, aDiagnostics);
-}
-
-PlatformDecoderModule::ConversionRequired
-RemoteDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
-{
-  return mWrapped->DecoderNeedsConversion(aConfig);
 }
 
 already_AddRefed<MediaDataDecoder>

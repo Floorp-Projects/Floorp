@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { L10N } = require("../l10n");
+const { L10N } = require("./l10n");
 
 // Constants for formatting bytes.
 const BYTES_IN_KB = 1024;

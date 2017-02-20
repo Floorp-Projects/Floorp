@@ -85,7 +85,7 @@ random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) 
 == ctm-1.html ctm-1.html
 
 == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient.html
-fails == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum.html
+== 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum.html
 
 fails asserts-if(stylo,1) == 693610-1.html 693610-1.html # bug 1324700
 

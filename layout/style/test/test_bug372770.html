@@ -35,18 +35,12 @@ for (i = 0; i < colors.length; ++i) {
   is(style2.color, color, "Rule style color roundtripping failed at color " + i);
 }
 
-// This code is only here because of bug 372783.  Once that's fixed, this test
-// for "rgba(0, 0, 0, 0)" will fail.
 style1.color = "rgba(0, 0, 0, 0)";
 style2.color = "rgba(0, 0, 0, 0)";
-is(style1.color, "transparent",
-   "Inline style should give transparent for rgba(0,0,0,0)");
-is(style2.color, "transparent",
-   "Rule style should give transparent for rgba(0,0,0,0)");
-todo(style1.color == "rgba(0, 0, 0, 0)",
-     "Inline style should round-trip black transparent color correctly");
-todo(style2.color == "rgba(0, 0, 0, 0)",
-     "Rule style should round-trip black transparent color correctly");
+is(style1.color, "rgba(0, 0, 0, 0)",
+   "Inline style should round-trip black transparent color correctly");
+is(style2.color, "rgba(0, 0, 0, 0)",
+   "Rule style should round-trip black transparent color correctly");
 
 for (var i = 0; i <= 100; ++i) {
   if (i == 70 || i == 90) {

@@ -90,9 +90,9 @@ const PAGECONTENT_COLORS =
   '  <option value="One" style="color: #fff; background-color: #f00;">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(255, 0, 0)"}</option>' +
   '  <option value="Two" class="blue">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 255)"}</option>' +
   '  <option value="Three" class="green">{"color": "rgb(128, 0, 128)", "backgroundColor": "rgb(0, 128, 0)"}</option>' +
-  '  <option value="Four" class="defaultColor defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
-  '  <option value="Five" class="defaultColor">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
-  '  <option value="Six" class="defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "transparent", "unstyled": "true"}</option>' +
+  '  <option value="Four" class="defaultColor defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
+  '  <option value="Five" class="defaultColor">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
+  '  <option value="Six" class="defaultBackground">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)", "unstyled": "true"}</option>' +
   '  <option value="Seven" selected="true">{"unstyled": "true"}</option>' +
   "</select></body></html>";
 
@@ -101,9 +101,9 @@ const PAGECONTENT_COLORS_ON_SELECT =
   "  #one { background-color: #7E3A3A; color: #fff }" +
   "</style>" +
   "<body><select id='one'>" +
-  '  <option value="One">{"color": "rgb(255, 255, 255)", "backgroundColor": "transparent"}</option>' +
-  '  <option value="Two">{"color": "rgb(255, 255, 255)", "backgroundColor": "transparent"}</option>' +
-  '  <option value="Three">{"color": "rgb(255, 255, 255)", "backgroundColor": "transparent"}</option>' +
+  '  <option value="One">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option value="Two">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option value="Three">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
   '  <option value="Four" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 

@@ -899,11 +899,9 @@ cargo_target_flag := --target=$(RUST_TARGET)
 # Permit users to pass flags to cargo from their mozconfigs (e.g. --color=always).
 cargo_build_flags = $(CARGOFLAGS)
 ifndef MOZ_DEBUG
-cargo_build_flags = --release
+cargo_build_flags += --release
 endif
-ifdef MOZ_CARGO_SUPPORTS_FROZEN
 cargo_build_flags += --frozen
-endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 ifdef BUILD_VERBOSE_LOG
