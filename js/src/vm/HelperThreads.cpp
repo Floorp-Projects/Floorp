@@ -352,10 +352,6 @@ ParseTask::trace(JSTracer* trc)
 {
     if (parseGlobal->runtimeFromAnyThread() != trc->runtime())
         return;
-    if (parseGlobal->zoneFromAnyThread()->usedByHelperThread()) {
-        MOZ_ASSERT(!parseGlobal->zoneFromAnyThread()->isCollecting());
-        return;
-    }
 
     TraceManuallyBarrieredEdge(trc, &parseGlobal, "ParseTask::parseGlobal");
     if (script)
@@ -1233,7 +1229,7 @@ HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& locked)
 static void
 LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
 {
-    // Mark the zone as no longer in use by a helper thread, and available
+    // Mark the zone as no longer in use by an JSContext, and available
     // to be collected by the GC.
     rt->clearUsedByHelperThread(task->parseGlobal->zone());
 }
