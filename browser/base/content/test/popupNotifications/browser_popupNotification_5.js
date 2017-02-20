@@ -195,6 +195,7 @@ var tests = [
       // Reset to false so that we can ensure these are not fired a second time.
       notifyObj.shownCallbackTriggered = false;
       notifyObj.showingCallbackTriggered = false;
+      let timeShown = this.notification.timeShown;
 
       let promiseWin = BrowserTestUtils.waitForNewWindow();
       gBrowser.replaceTabWithWindow(firstTab);
@@ -218,6 +219,8 @@ var tests = [
          "Should not have triggered a second shown event");
       ok(!notifyObj.showingCallbackTriggered,
          "Should not have triggered a second showing event");
+      ok(this.notification.timeShown > timeShown,
+         "should have updated timeShown to restart the security delay");
 
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
