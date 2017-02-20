@@ -101,7 +101,7 @@ public:
 
   /**
    * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
-   * screen dimensions. 
+   * screen dimensions.
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::IntRect *aClipRectIn,
@@ -126,6 +126,8 @@ public:
                                float aZNear, float aZFar);
 
   virtual bool SupportsPartialTextureUpdate() override { return true; }
+
+  virtual bool SupportsLayerGeometry() const override;
 
 #ifdef MOZ_DUMP_PAINTING
   virtual const char* Name() const override { return "Direct3D 11"; }
@@ -160,7 +162,10 @@ private:
   bool UpdateRenderTarget();
   bool UpdateConstantBuffers();
   void SetSamplerForSamplingFilter(gfx::SamplingFilter aSamplingFilter);
-  ID3D11PixelShader* GetPSForEffect(Effect *aEffect, MaskType aMaskType);
+
+  ID3D11PixelShader* GetPSForEffect(Effect* aEffect,
+                                    const bool aUseBlendShader,
+                                    const MaskType aMaskType);
   void PaintToTarget();
   RefPtr<ID3D11Texture2D> CreateTexture(const gfx::IntRect& aRect,
                                         const CompositingRenderTarget* aSource,
@@ -168,6 +173,46 @@ private:
   bool CopyBackdrop(const gfx::IntRect& aRect,
                     RefPtr<ID3D11Texture2D>* aOutTexture,
                     RefPtr<ID3D11ShaderResourceView>* aOutView);
+
+  virtual void DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                             const gfx::Rect& aRect,
+                             const gfx::IntRect& aClipRect,
+                             const EffectChain& aEffectChain,
+                             gfx::Float aOpacity,
+                             const gfx::Matrix4x4& aTransform,
+                             const gfx::Rect& aVisibleRect) override;
+
+  template<typename Geometry>
+  void DrawGeometry(const Geometry& aGeometry,
+                    const gfx::Rect& aRect,
+                    const gfx::IntRect& aClipRect,
+                    const EffectChain& aEffectChain,
+                    gfx::Float aOpacity,
+                    const gfx::Matrix4x4& aTransform,
+                    const gfx::Rect& aVisibleRect);
+
+  bool UpdateDynamicVertexBuffer(const nsTArray<gfx::TexturedTriangle>& aTriangles);
+
+  void PrepareDynamicVertexBuffer();
+  void PrepareStaticVertexBuffer();
+
+  // Overloads for rendering both rects and triangles with same rendering path
+  void Draw(const nsTArray<gfx::TexturedTriangle>& aGeometry,
+            const gfx::Rect* aTexCoords);
+
+  void Draw(const gfx::Rect& aGeometry,
+            const gfx::Rect* aTexCoords);
+
+  ID3D11VertexShader* GetVSForGeometry(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                                       const bool aUseBlendShader,
+                                       const MaskType aMaskType);
+
+  ID3D11VertexShader* GetVSForGeometry(const gfx::Rect& aRect,
+                                       const bool aUseBlendShader,
+                                       const MaskType aMaskType);
+
+  template<typename VertexType>
+  void SetVertexBuffer(ID3D11Buffer* aBuffer);
 
   RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<ID3D11Device> mDevice;
@@ -196,6 +241,8 @@ private:
   nsIntRegion mInvalidRegion;
 
   bool mVerifyBuffersFailed;
+
+  size_t mMaximumTriangles;
 };
 
 }
