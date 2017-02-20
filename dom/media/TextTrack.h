@@ -118,6 +118,8 @@ public:
 
   void DispatchAsyncTrustedEvent(const nsString& aEventName);
 
+  bool IsLoaded();
+
 private:
   ~TextTrack();
 

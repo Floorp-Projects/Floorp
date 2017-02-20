@@ -848,5 +848,12 @@ TextTrackManager::ReportTelemetryForCue()
   }
 }
 
+bool
+TextTrackManager::IsLoaded()
+{
+  return mTextTracks ? mTextTracks->AreTextTracksLoaded() : true;
+}
+
+
 } // namespace dom
 } // namespace mozilla
