@@ -2,6 +2,6 @@
 
 module.exports = {
   "rules": {
-    "no-undef": "off"
+    "mozilla/import-browserjs-globals": "warn",
   }
 };

@@ -1,4 +1,6 @@
 /* eslint-env mozilla/frame-script */
+// assert is available to chrome scripts loaded via SpecialPowers.loadChromeScript.
+/* global assert */
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 

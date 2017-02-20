@@ -1051,7 +1051,7 @@
         this.EVENTS.forEach((eventName) => {
           this.removeEventListener(eventName, this, { mozSystemGroup: true });
         });
-        this.removeEventListener("keypress", onKeyPress, {
+        this.removeEventListener("keypress", this, {
           capture: true,
           mozSystemGroup: true
         });
