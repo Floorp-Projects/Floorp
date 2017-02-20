@@ -547,9 +547,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * assertion in frame constructor bug 1324704
     * test_rule_insertion.html asserts [1]
   * assertion in computed style bug 1337635
-    * test_value_cloning.html asserts [18]
-    * test_value_computation.html asserts [18]
-    * test_value_storage.html asserts [32]
+    * test_value_cloning.html asserts [24]
+    * test_value_computation.html asserts [24]
+    * test_value_storage.html asserts [44]
 * test_value_cloning.html asserts: negative radius bug 1337618 [6]
 
 ## Need Gecko change
