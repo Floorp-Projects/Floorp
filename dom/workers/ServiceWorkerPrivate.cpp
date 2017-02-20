@@ -1736,23 +1736,35 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
     return rv;
   }
 
-  info.mPrincipal = mInfo->GetPrincipal();
+  nsCOMPtr<nsIURI> uri;
+  rv = mInfo->GetPrincipal()->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (NS_WARN_IF(!uri)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a pristine codebase principal to avoid any possibility of inheriting
+  // CSP values.  The principal on the registration may be polluted with CSP
+  // from the registering page or other places the principal is passed.  If
+  // bug 965637 is ever fixed this can be removed.
+  info.mPrincipal =
+    BasePrincipal::CreateCodebasePrincipal(uri, mInfo->GetOriginAttributes());
+  if (NS_WARN_IF(!info.mPrincipal)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsContentUtils::StorageAccess access =
     nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
   info.mStorageAllowed = access > nsContentUtils::StorageAccess::ePrivateBrowsing;
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
-  // The ServiceWorkerRegistration principal should never have any CSP
-  // set.  The CSP from the page that registered the SW should not be
-  // inherited.  Verify this is the case in non-release builds
+  // Verify that we don't have any CSP on pristine principal.
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = info.mPrincipal->GetCsp(getter_AddRefs(csp));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  Unused << info.mPrincipal->GetCsp(getter_AddRefs(csp));
   MOZ_DIAGNOSTIC_ASSERT(!csp);
 #endif
 
