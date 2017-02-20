@@ -78,8 +78,24 @@ class StorageCache : public StorageCacheBridge
 public:
   NS_IMETHOD_(void) Release(void);
 
-  // Note: We pass aOriginNoSuffix through the ctor here, because 
-  // StorageCacheHashKey's ctor is creating this class and 
+  enum MutationSource {
+    // The mutation is a result of an explicit JS mutation in this process.
+    // The mutation should be sent to the sDatabase. Quota will be checked and
+    // QuotaExceededError may be returned without the mutation being applied.
+    ContentMutation,
+    // The mutation initially was triggered in a different process and is being
+    // propagated to this cache via Storage::ApplyEvent.  The mutation should
+    // not be sent to the sDatabase because the originating process is already
+    // doing that.  (In addition to the redundant writes being wasteful, there
+    // is the potential for other processes to see inconsistent state from the
+    // database while preloading.)  Quota will be updated but not checked
+    // because it's assumed it was checked in another process and data-coherency
+    // is more important than slightly exceeding quota.
+    E10sPropagated
+  };
+
+  // Note: We pass aOriginNoSuffix through the ctor here, because
+  // StorageCacheHashKey's ctor is creating this class and
   // accepts reversed-origin-no-suffix as an argument - the hashing key.
   explicit StorageCache(const nsACString* aOriginNoSuffix);
 
@@ -96,10 +112,6 @@ public:
   // Starts async preload of this cache if it persistent and not loaded.
   void Preload();
 
-  // Keeps the cache alive (i.e. present in the manager's hash table) for a
-  // time.
-  void KeepAlive();
-
   // The set of methods that are invoked by DOM storage web API.
   // We are passing the Storage object just to let the cache
   // read properties like mPrivate, mPrincipal and mSessionOnly.
@@ -109,10 +121,13 @@ public:
   nsresult GetItem(const Storage* aStorage, const nsAString& aKey,
                    nsAString& aRetval);
   nsresult SetItem(const Storage* aStorage, const nsAString& aKey,
-                   const nsString& aValue, nsString& aOld);
+                   const nsString& aValue, nsString& aOld,
+                   const MutationSource aSource=ContentMutation);
   nsresult RemoveItem(const Storage* aStorage, const nsAString& aKey,
-                      nsString& aOld);
-  nsresult Clear(const Storage* aStorage);
+                      nsString& aOld,
+                      const MutationSource aSource=ContentMutation);
+  nsresult Clear(const Storage* aStorage,
+                 const MutationSource aSource=ContentMutation);
 
   void GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys);
 
@@ -182,8 +197,18 @@ private:
 
   // Changes the quota usage on the given data set if it fits the quota.
   // If not, then false is returned and no change to the set must be done.
-  bool ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta);
-  bool ProcessUsageDelta(const Storage* aStorage, const int64_t aDelta);
+  // A special case is if aSource==E10sPropagated, then we will return true even
+  // if the change would put us over quota.  This is done to ensure coherency of
+  // caches between processes in the face of races.  It does allow an attacker
+  // to potentially use N multiples of the quota storage limit if they can
+  // arrange for their origin to execute code in N processes.  However, this is
+  // not considered a particularly concerning threat model because it's already
+  // very possible for a rogue page to attempt to intentionally fill up the
+  // user's storage through the use of multiple domains.
+  bool ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
+                         const MutationSource aSource=ContentMutation);
+  bool ProcessUsageDelta(const Storage* aStorage, const int64_t aDelta,
+                         const MutationSource aSource=ContentMutation);
 
 private:
   // When a cache is reponsible for its life time (in case of localStorage data
@@ -195,9 +220,6 @@ private:
   // Reference to the usage counter object we check on for eTLD+1 quota limit.
   // Obtained from the manager during initialization (Init method).
   RefPtr<StorageUsage> mUsage;
-
-  // Timer that holds this cache alive for a while after it has been preloaded.
-  nsCOMPtr<nsITimer> mKeepAliveTimer;
 
   // Principal the cache has been initially created for, this is used only for
   // sessionStorage access checks since sessionStorage objects are strictly
@@ -211,7 +233,7 @@ private:
   // The origin attributes suffix
   nsCString mOriginSuffix;
 
-  // The eTLD+1 scope used to count quota usage.  It is in the reversed format 
+  // The eTLD+1 scope used to count quota usage.  It is in the reversed format
   // and contains the origin attributes suffix.
   nsCString mQuotaOriginScope;
 
@@ -277,7 +299,8 @@ class StorageUsage : public StorageUsageBridge
 public:
   explicit StorageUsage(const nsACString& aOriginScope);
 
-  bool CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, int64_t aUsageDelta);
+  bool CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, int64_t aUsageDelta,
+                                  const StorageCache::MutationSource aSource);
 
 private:
   virtual const nsCString& OriginScope() { return mOriginScope; }

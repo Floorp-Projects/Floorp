@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified' ]
+__all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified', 'checkSyncMessage' ]
 
 import os, sys
 from cStringIO import StringIO
@@ -11,6 +11,7 @@ from ipdl.cgen import IPDLCodeGen
 from ipdl.lower import LowerToCxx, msgenums
 from ipdl.parser import Parser, ParseError
 from ipdl.type import TypeCheck
+from ipdl.checker import checkSyncMessage
 
 from ipdl.cxx.cgen import CxxCodeGen
 

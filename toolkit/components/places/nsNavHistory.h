@@ -208,13 +208,12 @@ public:
    * objects for places components.
    */
   nsIStringBundle* GetBundle();
-  nsIStringBundle* GetDateFormatBundle();
   nsICollation* GetCollation();
   void GetStringFromName(const char16_t* aName, nsACString& aResult);
   void GetAgeInDaysString(int32_t aInt, const char16_t *aName,
                           nsACString& aResult);
-  void GetMonthName(int32_t aIndex, nsACString& aResult);
-  void GetMonthYear(int32_t aMonth, int32_t aYear, nsACString& aResult);
+  static void GetMonthName(const PRExplodedTime& aTime, nsACString& aResult);
+  static void GetMonthYear(const PRExplodedTime& aTime, nsACString& aResult);
 
   // Returns whether history is enabled or not.
   bool IsHistoryDisabled() {
@@ -565,7 +564,6 @@ protected:
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsCOMPtr<nsIStringBundle> mDateFormatBundle;
   nsCOMPtr<nsICollation> mCollation;
 
   // recent events

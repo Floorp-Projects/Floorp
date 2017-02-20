@@ -49,17 +49,18 @@
 # include "FennecJNIWrappers.h"
 #endif
 
-#if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
+#if defined(MOZ_PROFILING) && \
+    (defined(GP_OS_windows) || defined(GP_OS_darwin))
 # define USE_NS_STACKWALK
 #endif
 
 // This should also work on ARM Linux, but not tested there yet.
-#if defined(__arm__) && defined(ANDROID)
+#if defined(GP_arm_android)
 # define USE_EHABI_STACKWALK
 # include "EHABIStackWalk.h"
 #endif
 
-#if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
 # include "lul/platform-linux-lul.h"
@@ -71,9 +72,9 @@
 # define VALGRIND_MAKE_MEM_DEFINED(_addr,_len)   ((void)0)
 #endif
 
-#if defined(XP_WIN)
+#if defined(GP_OS_windows)
 typedef CONTEXT tickcontext_t;
-#elif defined(LINUX)
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
 #include <ucontext.h>
 typedef ucontext_t tickcontext_t;
 #endif
@@ -199,7 +200,7 @@ CanNotifyObservers()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
   // Android ANR reporter uses the profiler off the main thread.
   return NS_IsMainThread();
 #else
@@ -545,7 +546,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 }
 
-#ifdef XP_WIN
+#if defined(GP_OS_windows)
 static uintptr_t GetThreadHandle(PlatformData* aData);
 #endif
 
@@ -580,7 +581,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 
-#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(V8_HOST_ARCH_X64))
+#if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
   void* stackEnd = aSample->threadInfo->StackTop();
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
@@ -681,18 +682,18 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
 
-#if defined(SPS_PLAT_amd64_linux)
+#if defined(GP_PLAT_amd64_linux)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_RIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_RSP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_RBP]);
-#elif defined(SPS_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_android)
   startRegs.r15 = lul::TaggedUWord(mc->arm_pc);
   startRegs.r14 = lul::TaggedUWord(mc->arm_lr);
   startRegs.r13 = lul::TaggedUWord(mc->arm_sp);
   startRegs.r12 = lul::TaggedUWord(mc->arm_ip);
   startRegs.r11 = lul::TaggedUWord(mc->arm_fp);
   startRegs.r7  = lul::TaggedUWord(mc->arm_r7);
-#elif defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   startRegs.xip = lul::TaggedUWord(mc->gregs[REG_EIP]);
   startRegs.xsp = lul::TaggedUWord(mc->gregs[REG_ESP]);
   startRegs.xbp = lul::TaggedUWord(mc->gregs[REG_EBP]);
@@ -708,13 +709,13 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
   lul::StackImage stackImg;
 
   {
-#if defined(SPS_PLAT_amd64_linux)
+#if defined(GP_PLAT_amd64_linux)
     uintptr_t rEDZONE_SIZE = 128;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
-#elif defined(SPS_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.r13.Value() - rEDZONE_SIZE;
-#elif defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
     uintptr_t rEDZONE_SIZE = 0;
     uintptr_t start = startRegs.xsp.Value() - rEDZONE_SIZE;
 #else
@@ -782,11 +783,9 @@ DoSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
   MergeStacksIntoProfile(aInfo, aSample, nativeStack);
 
-#ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
     aInfo.addTag(ProfileEntry::NativeLeafAddr((void*)aSample->pc));
   }
-#endif
 }
 
 // This function is called for each sampling period with the current program
@@ -888,34 +887,9 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, const SharedLibrary& aLib)
   aStream << "\"start\":" << aLib.GetStart();
   aStream << ",\"end\":" << aLib.GetEnd();
   aStream << ",\"offset\":" << aLib.GetOffset();
-  aStream << ",\"name\":\"" << aLib.GetName() << "\"";
+  aStream << ",\"name\":\"" << aLib.GetNativeDebugName() << "\"";
   const std::string& breakpadId = aLib.GetBreakpadId();
   aStream << ",\"breakpadId\":\"" << breakpadId << "\"";
-
-#ifdef XP_WIN
-  // FIXME: remove this XP_WIN code when the profiler plugin has switched to
-  // using breakpadId.
-  std::string pdbSignature = breakpadId.substr(0, 32);
-  std::string pdbAgeStr = breakpadId.substr(32,  breakpadId.size() - 1);
-
-  std::stringstream stream;
-  stream << pdbAgeStr;
-
-  unsigned pdbAge;
-  stream << std::hex;
-  stream >> pdbAge;
-
-#ifdef DEBUG
-  std::ostringstream oStream;
-  oStream << pdbSignature << std::hex << std::uppercase << pdbAge;
-  MOZ_ASSERT(breakpadId == oStream.str());
-#endif
-
-  aStream << ",\"pdbSignature\":\"" << pdbSignature << "\"";
-  aStream << ",\"pdbAge\":" << pdbAge;
-  aStream << ",\"pdbName\":\"" << aLib.GetName() << "\"";
-#endif
-
   aStream << "}";
 }
 
@@ -1615,6 +1589,11 @@ RegisterCurrentThread(const char* aName, PseudoStack* aPseudoStack,
   gRegisteredThreads->push_back(info);
 }
 
+// Platform-specific init/start/stop actions.
+static void PlatformInit();
+static void PlatformStart();
+static void PlatformStop();
+
 void
 profiler_init(void* stackTop)
 {
@@ -1661,8 +1640,8 @@ profiler_init(void* stackTop)
   // threshhold from MOZ_PROFILER_STACK_SCAN.
   read_profiler_env_vars();
 
-  // platform specific initialization
-  OS::Startup();
+  // Platform-specific initialization.
+  PlatformInit();
 
   set_stderr_callback(profiler_log);
 
@@ -1680,24 +1659,20 @@ profiler_init(void* stackTop)
     return;
   }
 
-  const char* features[] = {"js"
-                         , "leaf"
-                         , "threads"
-#if defined(XP_WIN) || defined(XP_MACOSX) \
-    || (defined(SPS_ARCH_arm) && defined(linux)) \
-    || defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
-                         , "stackwalk"
+  const char* features[] = { "js", "leaf", "threads"
+#if defined(HAVE_NATIVE_UNWIND)
+                           , "stackwalk"
 #endif
 #if defined(PROFILE_JAVA)
-                         , "java"
+                           , "java"
 #endif
-                         };
+                           };
 
   const char* threadFilters[] = { "GeckoMain", "Compositor" };
 
   profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                         features, MOZ_ARRAY_LENGTH(features),
-                         threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
+                 features, MOZ_ARRAY_LENGTH(features),
+                 threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
   LOG("END   profiler_init");
 }
 
@@ -1894,11 +1869,10 @@ profiler_get_features()
     // Walk the C++ stack.
     "stackwalk",
 #endif
-#if defined(ENABLE_LEAF_DATA)
     // Include the C++ leaf node if not stackwalking. DevTools
     // profiler doesn't want the native addresses.
     "leaf",
-#endif
+    // Profile Java code (Android only).
     "java",
     // Tell the JS engine to emit pseudostack entries in the prologue/epilogue.
     "js",
@@ -1961,10 +1935,6 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-// Platform-specific start/stop actions.
-static void PlatformStart();
-static void PlatformStop();
-
 // XXX: an empty class left behind after refactoring. Will be removed soon.
 class Sampler {};
 
@@ -1995,7 +1965,7 @@ profiler_start(int aProfileEntries, double aInterval,
   profiler_stop();
 
   // Deep copy aThreadNameFilters. Must happen before the MaybeSetProfile()
-  // calls below.
+  // call below.
   {
     StaticMutexAutoLock lock(gThreadNameFiltersMutex);
 
@@ -2010,6 +1980,29 @@ profiler_start(int aProfileEntries, double aInterval,
   for (uint32_t i = 0; i < aFeatureCount; ++i) {
     gFeatures[i] = aFeatures[i];
   }
+
+  bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+  bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
+
+#if defined(PROFILE_JAVA)
+  gProfileJava = mozilla::jni::IsFennec() &&
+                      hasFeature(aFeatures, aFeatureCount, "java");
+#endif
+  gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
+  gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
+
+  gAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
+  gDisplayListDump  = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
+  gLayersDump       = hasFeature(aFeatures, aFeatureCount, "layersdump");
+  gProfileGPU       = hasFeature(aFeatures, aFeatureCount, "gpu");
+  gProfileMemory    = hasFeature(aFeatures, aFeatureCount, "memory");
+  gProfileRestyle   = hasFeature(aFeatures, aFeatureCount, "restyle");
+  // Profile non-main threads if we have a filter, because users sometimes ask
+  // to filter by a list of threads but forget to explicitly request.
+  // gProfileThreads must be set before the MaybeSetProfile() call below.
+  gProfileThreads   = hasFeature(aFeatures, aFeatureCount, "threads") ||
+                      aFilterCount > 0;
+  gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   gEntrySize = aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY;
   gInterval = aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL;
@@ -2037,28 +2030,6 @@ profiler_start(int aProfileEntries, double aInterval,
 #endif
 
   gGatherer = new mozilla::ProfileGatherer(gSampler);
-
-  bool mainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
-  bool privacyMode  = hasFeature(aFeatures, aFeatureCount, "privacy");
-
-#if defined(PROFILE_JAVA)
-  gProfileJava = mozilla::jni::IsFennec() &&
-                      hasFeature(aFeatures, aFeatureCount, "java");
-#endif
-  gProfileJS   = hasFeature(aFeatures, aFeatureCount, "js");
-  gTaskTracer  = hasFeature(aFeatures, aFeatureCount, "tasktracer");
-
-  gAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
-  gDisplayListDump  = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
-  gLayersDump       = hasFeature(aFeatures, aFeatureCount, "layersdump");
-  gProfileGPU       = hasFeature(aFeatures, aFeatureCount, "gpu");
-  gProfileMemory    = hasFeature(aFeatures, aFeatureCount, "memory");
-  gProfileRestyle   = hasFeature(aFeatures, aFeatureCount, "restyle");
-  // Profile non-main threads if we have a filter, because users sometimes ask
-  // to filter by a list of threads but forget to explicitly request.
-  gProfileThreads   = hasFeature(aFeatures, aFeatureCount, "threads") ||
-                      aFilterCount > 0;
-  gUseStackWalk     = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   MOZ_ASSERT(!gIsActive && !gIsPaused);
   PlatformStart();
@@ -2523,12 +2494,14 @@ profiler_get_backtrace()
   TickSample sample;
   sample.threadInfo = profile;
 
-#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
-#if defined(XP_WIN) || defined(LINUX)
+#if defined(HAVE_NATIVE_UNWIND)
+#if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
   tickcontext_t context;
   sample.PopulateContext(&context);
-#elif defined(XP_MACOSX)
+#elif defined(GP_OS_darwin)
   sample.PopulateContext(nullptr);
+#else
+# error "unknown platform"
 #endif
 #endif
 
@@ -2681,12 +2654,12 @@ void PseudoStack::flushSamplerOnJSShutdown()
 
 // We #include these files directly because it means those files can use
 // declarations from this file trivially.
-#if defined(SPS_OS_windows)
-# include "platform-win32.cc"
-#elif defined(SPS_OS_darwin)
-# include "platform-macos.cc"
-#elif defined(SPS_OS_linux) || defined(SPS_OS_android)
-# include "platform-linux.cc"
+#if defined(GP_OS_windows)
+# include "platform-win32.cpp"
+#elif defined(GP_OS_darwin)
+# include "platform-macos.cpp"
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
+# include "platform-linux-android.cpp"
 #else
 # error "bad platform"
 #endif

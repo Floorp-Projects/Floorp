@@ -5398,14 +5398,12 @@ BaseCompiler::emitEnd()
     LabelKind kind;
     ExprType type;
     Nothing unused_value;
-
     if (!iter_.readEnd(&kind, &type, &unused_value))
         return false;
 
     switch (kind) {
       case LabelKind::Block: endBlock(type); break;
       case LabelKind::Loop:  endLoop(type); break;
-      case LabelKind::UnreachableThen:
       case LabelKind::Then:  endIfThen(); break;
       case LabelKind::Else:  endIfThenElse(type); break;
     }
@@ -5475,46 +5473,28 @@ BaseCompiler::emitBrIf()
 bool
 BaseCompiler::emitBrTable()
 {
-    uint32_t tableLength;
-    ExprType type;
-    Nothing unused_value, unused_index;
-    if (!iter_.readBrTable(&tableLength, &type, &unused_value, &unused_index))
-        return false;
-
-    LabelVector stubs;
-    if (!stubs.reserve(tableLength+1))
-        return false;
-
     Uint32Vector depths;
-    if (!depths.reserve(tableLength))
-        return false;
-
-    for (size_t i = 0; i < tableLength; ++i) {
-        uint32_t depth;
-        if (!iter_.readBrTableEntry(&type, &unused_value, &depth))
-            return false;
-        depths.infallibleAppend(depth);
-    }
-
     uint32_t defaultDepth;
-    if (!iter_.readBrTableDefault(&type, &unused_value, &defaultDepth))
+    ExprType branchValueType;
+    Nothing unused_value, unused_index;
+    if (!iter_.readBrTable(&depths, &defaultDepth, &branchValueType, &unused_value, &unused_index))
         return false;
 
     if (deadCode_)
         return true;
 
     // Don't use joinReg for rc
-    maybeReserveJoinRegI(type);
+    maybeReserveJoinRegI(branchValueType);
 
     // Table switch value always on top.
     RegI32 rc = popI32();
 
-    maybeUnreserveJoinRegI(type);
+    maybeUnreserveJoinRegI(branchValueType);
 
-    AnyReg r = popJoinRegUnlessVoid(type);
+    AnyReg r = popJoinRegUnlessVoid(branchValueType);
 
     Label dispatchCode;
-    masm.branch32(Assembler::Below, rc, Imm32(tableLength), &dispatchCode);
+    masm.branch32(Assembler::Below, rc, Imm32(depths.length()), &dispatchCode);
 
     // This is the out-of-range stub.  rc is dead here but we don't need it.
 
@@ -5530,13 +5510,16 @@ BaseCompiler::emitBrTable()
     // TODO / OPTIMIZE (Bug 1316804): Branch directly to the case code if we
     // can, don't emit an intermediate stub.
 
-    for (uint32_t i = 0; i < tableLength; i++) {
+    LabelVector stubs;
+    if (!stubs.reserve(depths.length()))
+        return false;
+
+    for (uint32_t depth : depths) {
         stubs.infallibleEmplaceBack(NonAssertingLabel());
         masm.bind(&stubs.back());
-        uint32_t k = depths[i];
-        popStackBeforeBranch(controlItem(k).framePushed);
-        controlItem(k).bceSafeOnExit &= bceSafe_;
-        masm.jump(&controlItem(k).label);
+        popStackBeforeBranch(controlItem(depth).framePushed);
+        controlItem(depth).bceSafeOnExit &= bceSafe_;
+        masm.jump(&controlItem(depth).label);
     }
 
     // Emit table.
@@ -5627,30 +5610,21 @@ BaseCompiler::emitReturn()
 }
 
 bool
-BaseCompiler::emitCallArgs(const ValTypeVector& args, FunctionCall& baselineCall)
+BaseCompiler::emitCallArgs(const ValTypeVector& argTypes, FunctionCall& baselineCall)
 {
     MOZ_ASSERT(!deadCode_);
 
-    startCallArgs(baselineCall, stackArgAreaSize(args));
+    startCallArgs(baselineCall, stackArgAreaSize(argTypes));
 
-    uint32_t numArgs = args.length();
-    for (size_t i = 0; i < numArgs; ++i) {
-        ValType argType = args[i];
-        Nothing arg_;
-        if (!iter_.readCallArg(argType, numArgs, i, &arg_))
-            return false;
-        Stk& arg = peek(numArgs - 1 - i);
-        passArg(baselineCall, argType, arg);
-    }
+    uint32_t numArgs = argTypes.length();
+    for (size_t i = 0; i < numArgs; ++i)
+        passArg(baselineCall, argTypes[i], peek(numArgs - 1 - i));
 
     // Pass the TLS pointer as a hidden argument in WasmTlsReg.  Load
     // it directly out if its stack slot so we don't interfere with
     // the stk_.
     if (baselineCall.loadTlsBefore)
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
-
-    if (!iter_.readCallArgsEnd(numArgs))
-        return false;
 
     return true;
 }
@@ -5706,7 +5680,8 @@ BaseCompiler::emitCall()
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     uint32_t funcIndex;
-    if (!iter_.readCall(&funcIndex))
+    BaseOpIter::ValueVector args_;
+    if (!iter_.readCall(&funcIndex, &args_))
         return false;
 
     if (deadCode_)
@@ -5724,9 +5699,6 @@ BaseCompiler::emitCall()
     beginCall(baselineCall, UseABI::Wasm, import ? InterModule::True : InterModule::False);
 
     if (!emitCallArgs(sig.args(), baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(sig.ret()))
         return false;
 
     if (import)
@@ -5751,7 +5723,8 @@ BaseCompiler::emitCallIndirect()
 
     uint32_t sigIndex;
     Nothing callee_;
-    if (!iter_.readCallIndirect(&sigIndex, &callee_))
+    BaseOpIter::ValueVector args_;
+    if (!iter_.readCallIndirect(&sigIndex, &callee_, &args_))
         return false;
 
     if (deadCode_)
@@ -5778,9 +5751,6 @@ BaseCompiler::emitCallIndirect()
     if (!emitCallArgs(sig.args(), baselineCall))
         return false;
 
-    if (!iter_.readCallReturn(sig.ret()))
-        return false;
-
     callIndirect(sigIndex, callee, baselineCall);
 
     endCall(baselineCall, stackSpace);
@@ -5798,6 +5768,10 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
+    Nothing operand_;
+    if (!iter_.readUnary(operandType, &operand_))
+        return false;
+
     if (deadCode_)
         return true;
 
@@ -5813,9 +5787,6 @@ BaseCompiler::emitUnaryMathBuiltinCall(SymbolicAddress callee, ValType operandTy
 
     if (!emitCallArgs(signature, baselineCall))
         return false;
-
-    if (!iter_.readCallReturn(retType))
-      return false;
 
     builtinCall(callee, baselineCall);
 
@@ -6077,7 +6048,7 @@ bool
 BaseCompiler::emitGetGlobal()
 {
     uint32_t id;
-    if (!iter_.readGetGlobal(env_.globals, &id))
+    if (!iter_.readGetGlobal(&id))
         return false;
 
     if (deadCode_)
@@ -6143,7 +6114,7 @@ BaseCompiler::emitSetGlobal()
 {
     uint32_t id;
     Nothing unused_value;
-    if (!iter_.readSetGlobal(env_.globals, &id, &unused_value))
+    if (!iter_.readSetGlobal(&id, &unused_value))
         return false;
 
     if (deadCode_)
@@ -6427,7 +6398,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
 bool
 BaseCompiler::emitSelect()
 {
-    ValType type;
+    StackType type;
     Nothing unused_trueValue;
     Nothing unused_falseValue;
     Nothing unused_condition;
@@ -6445,7 +6416,7 @@ BaseCompiler::emitSelect()
     BranchState b(&done);
     emitBranchSetup(&b);
 
-    switch (type) {
+    switch (NonAnyToValType(type)) {
       case ValType::I32: {
         RegI32 r0, r1;
         pop2xI32(&r0, &r1);
@@ -7355,7 +7326,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
-      iter_(decoder, func.lineOrBytecode()),
+      iter_(env, decoder, func.lineOrBytecode()),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),

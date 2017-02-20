@@ -75,6 +75,9 @@
   (func (export "as-br_table-value-index") (result i32)
     (block i32 (br_table 0 0 (i32.const 6) (unreachable)) (i32.const 7))
   )
+  (func (export "as-br_table-value-and-index") (result i32)
+    (block i32 (br_table 0 0 (unreachable)) (i32.const 8))
+  )
 
   (func (export "as-return-value") (result i64)
     (return (unreachable))

@@ -52,8 +52,8 @@ def tryParseTestFile(test262parser, source, testName):
     try:
         return test262parser.parseTestRecord(source, testName)
     except Exception as err:
-        # TODO: Report erroneous files to test262 Github repository.
-        # print("Error '%s' in file: %s" % (err, testName), file=sys.stderr)
+        print("Error '%s' in file: %s" % (err, testName), file=sys.stderr)
+        print("Please report this error to the test262 GitHub repository!")
         return None
 
 def makeRefTestLine(refTest):
@@ -109,7 +109,7 @@ def addSuffixToFileName(fileName, suffix):
     (filePath, ext) = os.path.splitext(fileName)
     return filePath + suffix + ext
 
-def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, relPath, helperFiles=[]):
+def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, relPath):
     """
     Generate the shell.js and browser.js files for the test harness.
     """
@@ -137,13 +137,15 @@ def writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, relPath, h
         with io.open(filePath, "rb") as includeFile:
             return "// file: %s\n%s" % (os.path.basename(filePath), includeFile.read())
 
+    localIncludes = localIncludesMap[relPath] if relPath in localIncludesMap else []
+
     # Concatenate all includes files.
     includeSource = "\n".join(imap(readIncludeFile, chain(
         # The requested include files.
         imap(partial(os.path.join, harnessDir), findIncludes(includesMap, relPath)),
 
-        # And additional local helper files.
-        imap(partial(os.path.join, os.getcwd()), helperFiles)
+        # And additional local include files.
+        imap(partial(os.path.join, os.getcwd()), localIncludes)
     )))
 
     # Write the concatenated include sources to shell.js.
@@ -192,19 +194,17 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     raw = "raw" in testRec
     assert not (raw and (onlyStrict or noStrict))
 
-    # Most async tests are marked with the "async" attribute. But fallback to
-    # detect async tests when $DONE is present in the test source code.
-    async = "async" in testRec or "$DONE" in testSource
+    # Async tests are marked with the "async" attribute. It is an error for a
+    # test to use the $DONE function without specifying the "async" attribute.
+    async = "async" in testRec
+    assert "$DONE" not in testSource or async
 
-    # Most negative tests use {type=<error name>, phase=early|runtime}, except
-    # those which weren't update. These are still using negative=<error name>.
-    if "negative" in testRec:
-        negative = testRec["negative"]
-        # errorType is currently ignored. :-(
-        errorType = negative["type"] if type(negative) == dict else negative
-        isNegative = True
-    else:
-        isNegative = False
+    # Negative tests have additional meta-data to specify the error type and
+    # when the error is issued (runtime error or early parse error). We're
+    # currently ignoring this additional meta-data.
+    # testRec["negative"] == {type=<error name>, phase=early|runtime}
+    isNegative = "negative" in testRec
+    assert not isNegative or type(testRec["negative"]) == dict
 
     # Skip non-test files.
     isSupportFile = fileNameEndsWith(testName, "FIXTURE")
@@ -235,6 +235,10 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # Skip intl402 tests when Intl isn't available.
     if pathStartsWith(testName, "intl402"):
         refTestSkipIf.append(("!this.hasOwnProperty('Intl')", "needs Intl"))
+
+    # Skip Intl.PluralRules tests when the addIntlExtras helper isn't available.
+    if pathStartsWith(testName, "intl402", "PluralRules"):
+        refTestSkipIf.append(("!this.hasOwnProperty('addIntlExtras')", "needs addIntlExtras"))
 
     # Skip built-ins/Simd tests when SIMD isn't available.
     if pathStartsWith(testName, "built-ins", "Simd"):
@@ -275,17 +279,26 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     testDir = os.path.join(test262Dir, "test")
     test262parser = loadTest262Parser(test262Dir)
 
+    # Map of test262 subdirectories to the set of include files required for
+    # tests in that subdirectory. The includes for all tests in a subdirectory
+    # are merged into a single shell.js.
     # map<dirname, set<includeFiles>>
     includesMap = {}
 
-    # Root directory contains required harness files.
+    # Additional local includes keyed by test262 directory names. The include
+    # files in this map must be located in the js/src/tests directory.
+    # map<dirname, list<includeFiles>>
+    localIncludesMap = {}
+
+    # The root directory contains required harness files and test262-host.js.
     includesMap[""] = set(["sta.js", "assert.js"])
+    localIncludesMap[""] = ["test262-host.js"]
 
     # Also add files known to be used by many tests to the root shell.js file.
     includesMap[""].update(["propertyHelper.js", "compareArray.js"])
 
-    # Add "test262-host.js" to the root shell.js file.
-    writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, "", ["test262-host.js"])
+    # Write the root shell.js file.
+    writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, "")
 
     # Additional explicit includes inserted at well-chosen locations to reduce
     # code duplication in shell.js files.
@@ -296,6 +309,9 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
         "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
+
+    # Intl.PluralRules isn't yet enabled by default.
+    localIncludesMap[os.path.join("intl402", "PluralRules")] = ["test262-intl-extras.js"]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
@@ -323,7 +339,7 @@ def process_test262(test262Dir, test262OutDir, strictTests):
                 writeTestFile(test262OutDir, newFileName, newSource)
 
         # Add shell.js and browers.js files for the current directory.
-        writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, relPath)
+        writeShellAndBrowserFiles(test262OutDir, harnessDir, includesMap, localIncludesMap, relPath)
 
 def update_test262(args):
     import subprocess

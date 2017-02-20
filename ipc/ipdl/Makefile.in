@@ -19,6 +19,7 @@ ipdl: $(ALL_IPDLSRCS)
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
+	  --sync-msg-list=$(srcdir)/sync-messages.ini \
 	  --outheaders-dir=_ipdlheaders \
 	  --outcpp-dir=. \
 	  $(IPDLDIRS:%=-I%) \

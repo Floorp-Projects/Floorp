@@ -107,6 +107,8 @@ DateTimeFormat::FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
       dateStyle = UDAT_SHORT;
       break;
     case kDateFormatYearMonth:
+    case kDateFormatYearMonthLong:
+    case kDateFormatMonthLong:
     case kDateFormatWeekday:
       dateStyle = UDAT_PATTERN;
       break;
@@ -169,7 +171,23 @@ DateTimeFormat::FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
         }
       }
 
-      nsAutoString skeleton(aDateFormatSelector == kDateFormatYearMonth ? u"yyyyMM " : u"EEE ");
+      nsAutoString skeleton;
+      switch (aDateFormatSelector) {
+      case kDateFormatYearMonth:
+        skeleton.AssignLiteral("yyyyMM ");
+        break;
+      case kDateFormatYearMonthLong:
+        skeleton.AssignLiteral("yyyyMMMM ");
+        break;
+      case kDateFormatMonthLong:
+        skeleton.AssignLiteral("MMMM ");
+        break;
+      case kDateFormatWeekday:
+        skeleton.AssignLiteral("EEE ");
+        break;
+      default:
+        break;
+      }
       int32_t dateSkeletonLen = skeleton.Length();
 
       if (timeStyle != UDAT_NONE) {

@@ -34,6 +34,21 @@ OnHelperThread()
     return false;
 }
 
+void
+CheckThreadLocal::check() const
+{
+    JSContext* cx = TlsContext.get();
+    MOZ_ASSERT(cx);
+
+    // As for CheckZoneGroup, in a cooperatively scheduled runtime the active
+    // thread is permitted access to thread local state for other suspended
+    // threads in the same runtime.
+    if (cx->isCooperativelyScheduled())
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+    else
+        MOZ_ASSERT(id == ThisThread::GetId());
+}
+
 template <AllowedHelperThread Helper>
 void
 CheckActiveThread<Helper>::check() const
@@ -62,6 +77,7 @@ CheckZoneGroup<Helper>::check() const
     if (OnHelperThread<Helper>())
         return;
 
+    JSContext* cx = TlsContext.get();
     if (group) {
         if (group->usedByHelperThread) {
             MOZ_ASSERT(group->ownedByCurrentThread());
@@ -73,16 +89,18 @@ CheckZoneGroup<Helper>::check() const
             // permitted access to all zone groups --- even those it has not
             // entered --- for GC and similar purposes. Since all other
             // cooperative threads are suspended, these accesses are threadsafe
-            // if the zone group is not in use by a helper thread which is not
-            // cooperatively scheduled.
-            JSContext* cx = TlsContext.get();
+            // if the zone group is not in use by a helper thread.
+            //
+            // A corollary to this is that suspended cooperative threads may
+            // not access anything in a zone group, even zone groups they own,
+            // because they're not allowed to interact with the JS API.
             MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 #endif
         }
     } else {
         // |group| will be null for data in the atoms zone. This is protected
         // by the exclusive access lock.
-        MOZ_ASSERT(TlsContext.get()->runtime()->currentThreadHasExclusiveAccess());
+        MOZ_ASSERT(cx->runtime()->currentThreadHasExclusiveAccess());
     }
 }
 

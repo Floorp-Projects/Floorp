@@ -134,7 +134,7 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
 
   // FIXME: factor out common parts of the arch-dependent summarisers.
 
-#if defined(SPS_ARCH_arm)
+#if defined(GP_ARCH_arm)
 
   // ----------------- arm ----------------- //
 
@@ -237,7 +237,7 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
     mCurrRules.mR15expr = LExpr(NODEREF, DW_REG_ARM_R14, 0);
   }
 
-#elif defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#elif defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
 
   // ---------------- x64/x86 ---------------- //
 
