@@ -159,7 +159,7 @@ class FilteringMessageManager {
    * passes the result to our message callback.
    */
   receiveMessage({data, target}) {
-    let handlers = Array.from(this.getHandlers(data.messageName, data.sender, data.recipient));
+    let handlers = Array.from(this.getHandlers(data.messageName, data.sender || null, data.recipient));
 
     data.target = target;
     this.callback(handlers, data);

@@ -107,7 +107,7 @@ private:
   mozilla::UniquePtr<mozilla::Mutex> mMutex;
   ThreadResponsiveness mRespInfo;
 
-#ifdef XP_LINUX
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   // Only Linux is using a signal sender, instead of stopping the thread, so we
   // need some space to store the data which cannot be collected in the signal
   // handler code.

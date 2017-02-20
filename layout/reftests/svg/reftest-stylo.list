@@ -43,6 +43,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == clipPath-basic-07.svg clipPath-basic-07.svg
 == clipPath-winding-01.svg clipPath-winding-01.svg
 == clip-surface-clone-01.svg clip-surface-clone-01.svg
+fails == comments-in-pres-attrs.svg pass.svg
 == conditions-01.svg conditions-01.svg
 == conditions-02.svg conditions-02.svg
 == conditions-03.svg conditions-03.svg

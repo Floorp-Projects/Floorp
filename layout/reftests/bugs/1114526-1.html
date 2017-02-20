@@ -5,12 +5,14 @@
 var startPaintCount = 0;
 function doTest() {
   startPaintCount = window.mozPaintCount;
+  document.querySelector('#src').style.visibility='visible';
+  document.querySelector('#dest').style.visibility='visible';
   setTimeout(check, 200);
 }
 var calls = 0;
 function check() {
   calls++;
-  if ((window.mozPaintCount - startPaintCount) > 2) {
+  if ((window.mozPaintCount - startPaintCount) > 3) {
     finishSuccess();
     return;
   }
@@ -46,11 +48,13 @@ div {
 #src {
   background-image: url('1114526-1.gif');
   top: -500px;
+  visibility: hidden;
 }
 
 #dest {
   background-image: -moz-element(#src);
   top: 100px;
+  visibility: hidden;
 }
 </style>
 </head>

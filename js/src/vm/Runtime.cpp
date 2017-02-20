@@ -334,11 +334,36 @@ JSRuntime::destroyRuntime()
 void
 JSRuntime::setActiveContext(JSContext* cx)
 {
-    MOZ_ASSERT_IF(cx, isCooperatingContext(cx));
+    MOZ_ASSERT_IF(cx, cx->isCooperativelyScheduled());
+    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+    MOZ_RELEASE_ASSERT(!activeContext() || gc.canChangeActiveContext(activeContext()));
+
+    activeContext_ = cx;
+}
+
+void
+JSRuntime::setNewbornActiveContext(JSContext* cx)
+{
+    MOZ_ASSERT_IF(cx, cx->isCooperativelyScheduled());
+    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
+    MOZ_RELEASE_ASSERT(!activeContext());
+
+    activeContext_ = cx;
+
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    if (!cooperatingContexts().append(cx))
+        oomUnsafe.crash("Add cooperating context");
+}
+
+void
+JSRuntime::deleteActiveContext(JSContext* cx)
+{
+    MOZ_ASSERT(cx == activeContext());
     MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
     MOZ_RELEASE_ASSERT(gc.canChangeActiveContext(cx));
 
-    activeContext_ = cx;
+    js_delete_poison(cx);
+    activeContext_ = nullptr;
 }
 
 void

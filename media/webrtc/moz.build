@@ -103,7 +103,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
             CXXFLAGS += ['-validate-charset-']
 
     TEST_DIRS += ['signaling/gtest']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
     GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'
@@ -111,18 +110,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     # We allow warnings for third-party code that can be updated from upstream.
     GYP_DIRS['trunk/testing'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
     GYP_DIRS['trunk/testing'].non_unified_sources += webrtc_non_unified_sources
-
-    if CONFIG['MOZ_WEBRTC_SIGNALING']:
-        GYP_DIRS += ['signalingtest']
-        GYP_DIRS['signalingtest'].input = 'signaling/signaling.gyp'
-        GYP_DIRS['signalingtest'].variables = gyp_vars.copy()
-        GYP_DIRS['signalingtest'].variables.update(
-            build_for_test=1,
-            moz_webrtc_mediacodec=0,
-            build_for_standalone=0
-        )
-
-        GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['signaling/fuzztest']

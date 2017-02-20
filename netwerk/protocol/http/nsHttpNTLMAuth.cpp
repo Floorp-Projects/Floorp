@@ -27,8 +27,12 @@
 #include "nsISSLStatusProvider.h"
 #endif
 #include "mozilla/Attributes.h"
+#include "mozilla/Tokenizer.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsUnicharUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -47,56 +51,92 @@ static bool
 MatchesBaseURI(const nsCSubstring &matchScheme,
                const nsCSubstring &matchHost,
                int32_t             matchPort,
-               const char         *baseStart,
-               const char         *baseEnd)
+               nsDependentCSubstring const& url)
 {
-    // check if scheme://host:port matches baseURI
+  // check if scheme://host:port matches baseURI
 
-    // parse the base URI
-    const char *hostStart, *schemeEnd = strstr(baseStart, "://");
-    if (schemeEnd) {
-        // the given scheme must match the parsed scheme exactly
-        if (!matchScheme.Equals(Substring(baseStart, schemeEnd)))
-            return false;
-        hostStart = schemeEnd + 3;
-    }
-    else
-        hostStart = baseStart;
+  // parse the base URI
+  mozilla::Tokenizer t(url);
+  mozilla::Tokenizer::Token token;
 
-    // XXX this does not work for IPv6-literals
-    const char *hostEnd = strchr(hostStart, ':');
-    if (hostEnd && hostEnd < baseEnd) {
-        // the given port must match the parsed port exactly
-        int port = atoi(hostEnd + 1);
-        if (matchPort != (int32_t) port)
-            return false;
-    }
-    else
-        hostEnd = baseEnd;
+  t.SkipWhites();
 
+  // We don't know if the url to check against starts with scheme
+  // or a host name.  Start recording here.
+  t.Record();
 
-    // if we didn't parse out a host, then assume we got a match.
-    if (hostStart == hostEnd)
-        return true;
+  mozilla::Unused << t.Next(token);
 
-    uint32_t hostLen = hostEnd - hostStart;
-
-    // matchHost must either equal host or be a subdomain of host
-    if (matchHost.Length() < hostLen)
-        return false;
-
-    const char *end = matchHost.EndReading();
-    if (PL_strncasecmp(end - hostLen, hostStart, hostLen) == 0) {
-        // if matchHost ends with host from the base URI, then make sure it is
-        // either an exact match, or prefixed with a dot.  we don't want
-        // "foobar.com" to match "bar.com"
-        if (matchHost.Length() == hostLen ||
-            *(end - hostLen) == '.' ||
-            *(end - hostLen - 1) == '.')
-            return true;
+  // The ipv6 literals MUST be enclosed with [] in the preference.
+  bool ipv6 = false;
+  if (token.Equals(mozilla::Tokenizer::Token::Char('['))) {
+    nsDependentCSubstring ipv6BareLiteral;
+    if (!t.ReadUntil(mozilla::Tokenizer::Token::Char(']'), ipv6BareLiteral)) {
+      // Broken ipv6 literal
+      return false;
     }
 
-    return false;
+    nsDependentCSubstring ipv6Literal;
+    t.Claim(ipv6Literal, mozilla::Tokenizer::INCLUDE_LAST);
+    if (!matchHost.Equals(ipv6Literal, nsCaseInsensitiveUTF8StringComparator()) &&
+        !matchHost.Equals(ipv6BareLiteral, nsCaseInsensitiveUTF8StringComparator())) {
+      return false;
+    }
+
+    ipv6 = true;
+  } else if (t.CheckChar(':') && t.CheckChar('/') && t.CheckChar('/')) {
+    if (!matchScheme.Equals(token.Fragment())) {
+      return false;
+    }
+    // Re-start recording the hostname from the point after scheme://.
+    t.Record();
+  }
+
+  while (t.Next(token)) {
+    bool eof = token.Equals(mozilla::Tokenizer::Token::EndOfFile());
+    bool port = token.Equals(mozilla::Tokenizer::Token::Char(':'));
+
+    if (eof || port) {
+      if (!ipv6) { // Match already performed above.
+        nsDependentCSubstring hostName;
+        t.Claim(hostName);
+
+        // An empty hostname means to accept everything for the schema
+        if (!hostName.IsEmpty()) {
+          if (hostName.First() == '.') {
+            if (!StringEndsWith(matchHost, hostName, nsCaseInsensitiveUTF8StringComparator())) {
+              return false;
+            }
+          } else { // host to match doesn't begin with '.', do a full compare
+            if (!matchHost.Equals(hostName, nsCaseInsensitiveUTF8StringComparator())) {
+              return false;
+            }
+          }
+        }
+      }
+
+      if (port) {
+        uint16_t portNumber;
+        if (!t.ReadInteger(&portNumber)) {
+          // Missing port number
+          return false;
+        }
+        if (matchPort != portNumber) {
+          return false;
+        }
+        if (!t.CheckEOF()) {
+          return false;
+        }
+      }
+    } else if (ipv6) {
+      // After an ipv6 literal there can only be EOF or :port.  Everything else
+      // must be treated as non-match/broken input.
+      return false;
+    }
+  }
+
+  // All negative checks has passed positively.
+  return true;
 }
 
 static bool
@@ -134,6 +174,10 @@ TestPref(nsIURI *uri, const char *pref)
     if (NS_FAILED(prefs->GetCharPref(pref, &hostList)) || !hostList)
         return false;
 
+    struct FreePolicy { void operator()(void* p) { free(p); } };
+    mozilla::UniquePtr<char[], FreePolicy> hostListScope;
+    hostListScope.reset(hostList);
+
     // pseudo-BNF
     // ----------
     //
@@ -146,24 +190,19 @@ TestPref(nsIURI *uri, const char *pref)
     //   "https://, http://office.foo.com"
     //
 
-    char *start = hostList, *end;
-    for (;;) {
-        // skip past any whitespace
-        while (*start == ' ' || *start == '\t')
-            ++start;
-        end = strchr(start, ',');
-        if (!end)
-            end = start + strlen(start);
-        if (start == end)
-            break;
-        if (MatchesBaseURI(scheme, host, port, start, end))
-            return true;
-        if (*end == '\0')
-            break;
-        start = end + 1;
+    mozilla::Tokenizer t(hostList);
+    while (!t.CheckEOF()) {
+      t.SkipWhites();
+      nsDependentCSubstring url;
+      mozilla::Unused << t.ReadUntil(mozilla::Tokenizer::Token::Char(','), url);
+      if (url.IsEmpty()) {
+        continue;
+      }
+      if (MatchesBaseURI(scheme, host, port, url)) {
+        return true;
+      }
     }
 
-    free(hostList);
     return false;
 }
 

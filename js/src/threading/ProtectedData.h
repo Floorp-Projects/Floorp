@@ -179,9 +179,7 @@ class CheckThreadLocal
       : id(ThisThread::GetId())
     {}
 
-    inline void check() const {
-        MOZ_ASSERT(id == ThisThread::GetId());
-    }
+    void check() const;
 #endif
 };
 
