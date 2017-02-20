@@ -402,6 +402,8 @@ class ObjectWeakMap
     explicit ObjectWeakMap(JSContext* cx);
     bool init();
 
+    JS::Zone* zone() const { return map.zone(); }
+
     JSObject* lookup(const JSObject* obj);
     bool add(JSContext* cx, JSObject* obj, JSObject* target);
     void clear();
