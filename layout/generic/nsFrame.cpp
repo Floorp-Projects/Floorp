@@ -9105,7 +9105,8 @@ GetCorrectedParent(const nsIFrame* aFrame)
   // box, or a non-NAC-backed pseudo like ::first-line) that does not match the
   // one that the NAC implements, if any.
   nsIContent* content = aFrame->GetContent();
-  Element* element = content->IsElement() ? content->AsElement() : nullptr;
+  Element* element =
+    content && content->IsElement() ? content->AsElement() : nullptr;
   if (element && element->IsNativeAnonymous() &&
       element->GetPseudoElementType() == aFrame->StyleContext()->GetPseudoType()) {
     while (parent->GetContent() && parent->GetContent()->IsNativeAnonymous()) {
