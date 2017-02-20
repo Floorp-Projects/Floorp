@@ -102,6 +102,20 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
+static TimeStamp
+GetEventTimeStamp(int64_t aEventTime)
+{
+    // Android's event time is SystemClock.uptimeMillis that is counted in ms
+    // since OS was booted.
+    // (https://developer.android.com/reference/android/os/SystemClock.html)
+    // and this SystemClock.uptimeMillis uses SYSTEM_TIME_MONOTONIC.
+    // Our posix implemententaion of TimeStamp::Now uses SYSTEM_TIME_MONOTONIC
+    //  too. Due to same implementation, we can use this via FromSystemTime.
+    int64_t tick =
+        BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime);
+    return TimeStamp::FromSystemTime(tick);
+}
+
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
 // one.
