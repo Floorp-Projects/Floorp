@@ -286,7 +286,6 @@ nsHttpChannel::nsHttpChannel()
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
     , mWarningReporter(nullptr)
-    , mDelayedInstallCacheListenerForTraceableChannel(false)
     , mIsReadingFromCache(false)
     , mOnCacheAvailableCalled(false)
     , mRacingNetAndCache(false)
@@ -1259,28 +1258,6 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
     return NS_OK;
 }
 
-void
-nsHttpChannel::ApplyContentConversions()
-{
-    nsCOMPtr<nsIStreamListener> listener;
-    nsISupports *ctxt = mListenerContext;
-    nsresult rv = DoApplyContentConversions(mListener, getter_AddRefs(listener), ctxt);
-    if (NS_FAILED(rv)) {
-        AsyncAbort(rv);
-    }
-    if (listener) {
-        mListener = listener;
-        mCompressListener = listener;
-    }
-
-    if (mDelayedInstallCacheListenerForTraceableChannel &&
-        mCacheEntry && !mCacheEntryIsReadOnly) {
-        nsresult rv = InstallCacheListener();
-        if (NS_FAILED(rv)) {
-            AsyncAbort(rv);
-        }
-    }
-}
 
 nsresult
 nsHttpChannel::CallOnStartRequest()
@@ -2488,10 +2465,6 @@ nsHttpChannel::ContinueProcessNormal(nsresult rv)
 
     // install cache listener if we still have a cache entry open
     if (mCacheEntry && !mCacheEntryIsReadOnly) {
-        if (mHasListenerForTraceableChannel) {
-            mDelayedInstallCacheListenerForTraceableChannel = true;
-            return NS_OK;
-        }
         rv = InstallCacheListener();
         if (NS_FAILED(rv)) return rv;
     }

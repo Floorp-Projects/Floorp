@@ -66,7 +66,6 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mSuspendedForDiversion(false)
   , mSuspendAfterSynthesizeResponse(false)
   , mWillSynthesizeResponse(false)
-  , mWaitingForApplyConversionResponse(false)
   , mNestedFrameId(0)
 {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
@@ -828,22 +827,6 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-HttpChannelParent::RecvApplyConversion(const bool& aApply)
-{
-  LOG(("HttpChannelParent::RecvApplyConversion [this=%p, aApply=%d, "
-       "mWaitingForApplyConversionResponse=%d]",
-       this, aApply, mWaitingForApplyConversionResponse));
-  MOZ_ASSERT(mChannel->HasListenerForTraceableChannel());
-  if (mWaitingForApplyConversionResponse) {
-    mWaitingForApplyConversionResponse = false;
-    mChannel->SetApplyConversion(aApply);
-    mChannel->ApplyContentConversions();
-    mChannel->Resume();
-  }
-  return IPC_OK();
-}
-
 class DivertDataAvailableEvent : public ChannelEvent
 {
 public:
@@ -1159,6 +1142,10 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
   }
 
+  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
+  if (encodedChannel)
+    encodedChannel->SetApplyConversion(false);
+
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.
   nsCOMPtr<nsISupports> cacheEntry;
@@ -1192,23 +1179,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsAutoCString altDataType;
   chan->GetAlternativeDataType(altDataType);
 
-  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
-  if (encodedChannel) {
-    encodedChannel->SetApplyConversion(false);
-    if (mChannel->HasListenerForTraceableChannel()) {
-      LOG(("HttpChannelParent::OnStartRequest - suspend channel until we know "
-           "whether we need to apply conversions [this=%p]\n", this));
-      // We have a traceableChannel listener so we need to do a data conversion
-      // on the parent.
-      // The correct decision whether we need to convert the data is made on
-      // the child process during OnStartRequest call, therefore we will
-      // suspend the channel here and wait for the decision result from the
-      // child (we are waiting for RecvApplyConversion).
-      mWaitingForApplyConversionResponse = NS_SUCCEEDED(mChannel->Suspend()) ?
-                                           true : false;
-    }
-  }
-
   // !!! We need to lock headers and please don't forget to unlock them !!!
   requestHead->Enter();
   nsresult rv = NS_OK;
@@ -1223,13 +1193,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           chan->GetSelfAddr(), chan->GetPeerAddr(),
                           redirectCount,
                           cacheKeyValue,
-                          altDataType,
-                          mWaitingForApplyConversionResponse))
+                          altDataType))
   {
-    if (mWaitingForApplyConversionResponse) {
-      mChannel->Resume();
-      mWaitingForApplyConversionResponse = false;
-    }
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
@@ -1669,25 +1634,14 @@ HttpChannelParent::StartDiversion()
   mDivertedOnStartRequest = true;
 
   // After OnStartRequest has been called, setup content decoders if needed.
-  if (mWaitingForApplyConversionResponse) {
-    // If we are mWaitingForApplyConversionResponse, means that mChannel is
-    // suspended right after OnStartRequest, therefore we can apply content
-    // conversion directly on the top of mChannel and Tracable Listeners will
-    // get decoded data.
-    if (NS_SUCCEEDED(mStatus)) {
-      mChannel->ApplyContentConversions();
-    }
-    mWaitingForApplyConversionResponse = false;
-    mChannel->Resume();
-  } else {
-    // Create a content conversion chain based on mDivertListener and update
-    // mDivertListener.
-    nsCOMPtr<nsIStreamListener> converterListener;
-    mChannel->DoApplyContentConversions(mDivertListener,
-                                        getter_AddRefs(converterListener));
-    if (converterListener) {
-      mDivertListener = converterListener.forget();
-    }
+  //
+  // Create a content conversion chain based on mDivertListener and update
+  // mDivertListener.
+  nsCOMPtr<nsIStreamListener> converterListener;
+  mChannel->DoApplyContentConversions(mDivertListener,
+                                      getter_AddRefs(converterListener));
+  if (converterListener) {
+    mDivertListener = converterListener.forget();
   }
 
   // Now mParentListener can be diverted to mDivertListener.
@@ -1757,11 +1711,6 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   MOZ_RELEASE_ASSERT(mChannel);
 
   mChannel->Cancel(aErrorCode);
-
-  if (mWaitingForApplyConversionResponse) {
-    mWaitingForApplyConversionResponse = false;
-    mChannel->Resume();
-  }
 
   mChannel->ForcePending(false);
 
