@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1337234
+-->
+<head>
+  <title>Test for Bug 1337234</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1337234">Mozilla Bug 1337234</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script>
+
+let appLocales = window.getAppLocales();
+ok(appLocales.length > 0, "getAppLocales returns at least one locale.");
+is(appLocales[0], "en-US", "The first app locale should be en-US.");
+
+</script>
+</body>
+</html>
