@@ -232,5 +232,17 @@ TextTrackList::SetCuesInactive()
   }
 }
 
+
+bool TextTrackList::AreTextTracksLoaded()
+{
+  // Return false if any texttrack is not loaded.
+  for (uint32_t i = 0; i < Length(); i++) {
+    if (!mTextTracks[i]->IsLoaded()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla

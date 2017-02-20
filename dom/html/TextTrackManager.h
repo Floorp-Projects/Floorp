@@ -103,6 +103,8 @@ public:
 
   void NotifyReset();
 
+  bool IsLoaded();
+
 private:
   /**
    * Converts the TextTrackCue's cuetext into a tree of DOM objects
