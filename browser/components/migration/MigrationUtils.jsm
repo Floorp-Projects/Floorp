@@ -1054,8 +1054,14 @@ this.MigrationUtils = Object.freeze({
     let visitMap = new Map(visits.map(v => [v.url, v]));
     for (let place of places) {
       let visitCount = place.visits.length;
-      let first = Math.min.apply(Math, place.visits.map(v => v.visitDate));
-      let last = Math.max.apply(Math, place.visits.map(v => v.visitDate));
+      let first, last;
+      if (visitCount > 1) {
+        let visitDates = place.visits.map(v => v.visitDate);
+        first = Math.min.apply(Math, visitDates);
+        last = Math.max.apply(Math, visitDates);
+      } else {
+        first = last = place.visits[0].visitDate;
+      }
       let url = place.uri.spec;
       try {
         new URL(url);
