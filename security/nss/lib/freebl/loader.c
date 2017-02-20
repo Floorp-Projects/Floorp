@@ -2116,3 +2116,11 @@ ChaCha20Poly1305_Open(const ChaCha20Poly1305Context *ctx,
         ctx, output, outputLen, maxOutputLen, input, inputLen,
         nonce, nonceLen, ad, adLen);
 }
+
+int
+EC_GetPointSize(const ECParams *params)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_EC_GetPointSize)(params);
+}

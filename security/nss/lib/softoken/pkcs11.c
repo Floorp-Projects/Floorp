@@ -1795,7 +1795,7 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
             crv = sftk_Attribute2SSecItem(arena, &pubKey->u.ec.publicValue,
                                           object, CKA_EC_POINT);
             if (crv == CKR_OK) {
-                unsigned int keyLen = pubKey->u.ec.ecParams.pointSize;
+                unsigned int keyLen = EC_GetPointSize(&pubKey->u.ec.ecParams);
 
                 /* special note: We can't just use the first byte to distinguish
                  * between EC_POINT_FORM_UNCOMPRESSED and SEC_ASN1_OCTET_STRING.
