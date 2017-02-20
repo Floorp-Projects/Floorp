@@ -18,13 +18,13 @@
 // Self
 #include "ProfileEntry.h"
 
-using mozilla::MakeUnique;
-using mozilla::UniquePtr;
-using mozilla::Maybe;
-using mozilla::Some;
-using mozilla::Nothing;
 using mozilla::JSONWriter;
-
+using mozilla::MakeUnique;
+using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
+using mozilla::TimeStamp;
+using mozilla::UniquePtr;
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileEntry
@@ -754,7 +754,8 @@ int ProfileBuffer::FindLastSampleOfThread(int aThreadId)
   return -1;
 }
 
-void ProfileBuffer::DuplicateLastSample(int aThreadId)
+void
+ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime)
 {
   int lastSampleStartPos = FindLastSampleOfThread(aThreadId);
   if (lastSampleStartPos == -1) {
@@ -775,7 +776,7 @@ void ProfileBuffer::DuplicateLastSample(int aThreadId)
         return;
       case ProfileEntry::Kind::Time:
         // Copy with new time
-        addTag(ProfileEntry::Time((mozilla::TimeStamp::Now() - gStartTime).ToMilliseconds()));
+        addTag(ProfileEntry::Time((TimeStamp::Now() - aStartTime).ToMilliseconds()));
         break;
       case ProfileEntry::Kind::Marker:
         // Don't copy markers

@@ -174,7 +174,7 @@ class SamplerThread
           }
 
           if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-            info->DuplicateLastSample();
+            info->DuplicateLastSample(gStartTime);
             continue;
           }
 
