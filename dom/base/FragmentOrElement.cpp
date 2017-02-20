@@ -385,20 +385,23 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
     elem = elem->GetParent();
   } while(elem);
 
-  // Now resolve against all xml:base attrs
-  for (uint32_t i = baseAttrs.Length() - 1; i != uint32_t(-1); --i) {
-    nsCOMPtr<nsIURI> newBase;
-    nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
-                            doc->GetDocumentCharacterSet().get(), base);
-    // Do a security check, almost the same as nsDocument::SetBaseURL()
-    // Only need to do this on the final uri
-    if (NS_SUCCEEDED(rv) && i == 0) {
-      rv = nsContentUtils::GetSecurityManager()->
-        CheckLoadURIWithPrincipal(NodePrincipal(), newBase,
-                                  nsIScriptSecurityManager::STANDARD);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      base.swap(newBase);
+  if (!baseAttrs.IsEmpty()) {
+    doc->WarnOnceAbout(nsIDocument::eXMLBaseAttribute);
+    // Now resolve against all xml:base attrs
+    for (uint32_t i = baseAttrs.Length() - 1; i != uint32_t(-1); --i) {
+      nsCOMPtr<nsIURI> newBase;
+      nsresult rv = NS_NewURI(getter_AddRefs(newBase), baseAttrs[i],
+                              doc->GetDocumentCharacterSet().get(), base);
+      // Do a security check, almost the same as nsDocument::SetBaseURL()
+      // Only need to do this on the final uri
+      if (NS_SUCCEEDED(rv) && i == 0) {
+        rv = nsContentUtils::GetSecurityManager()->
+          CheckLoadURIWithPrincipal(NodePrincipal(), newBase,
+                                    nsIScriptSecurityManager::STANDARD);
+      }
+      if (NS_SUCCEEDED(rv)) {
+        base.swap(newBase);
+      }
     }
   }
 
