@@ -29,5 +29,40 @@ WebRenderDisplayItemLayer::RenderLayer()
   WrBridge()->AddWebRenderCommands(mCommands);
 }
 
+uint64_t
+WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer)
+{
+  if (mImageContainer != aContainer) {
+    AutoLockImage autoLock(aContainer);
+    Image* image = autoLock.GetImage();
+    if (!image) {
+      return 0;
+    }
+
+    if (!mImageClient) {
+      mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                    WrBridge(),
+                                                    TextureFlags::DEFAULT);
+      if (!mImageClient) {
+        return 0;
+      }
+      mImageClient->Connect();
+    }
+
+    if (!mExternalImageId) {
+      MOZ_ASSERT(mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    }
+    MOZ_ASSERT(mExternalImageId);
+
+    if (mImageClient && !mImageClient->UpdateImage(aContainer, /* unused */0)) {
+      return 0;
+    }
+    mImageContainer = aContainer;
+  }
+
+  return mExternalImageId;
+}
+
 } // namespace layers
 } // namespace mozilla
