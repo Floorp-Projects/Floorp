@@ -16,7 +16,7 @@ def main(request, response):
             headers.append((header, request.GET[query]))
 
     if "ACEHeaders" in request.GET:
-        headers.append(("Access-Control-Expose-Headers", request.GET["ACEHeaders"]))
+        headers.append(("Access-Control-Expose-Headers", request.GET[query]))
 
     if ("Auth" in request.GET and not request.auth.username) or "AuthFail" in request.GET:
         status = 401
