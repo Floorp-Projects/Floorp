@@ -64,7 +64,7 @@ add_task(function* test_frecency_decay() {
   yield promiseMany;
 
   // Now check the new frecency is correct.
-  let newFrecency = yield PlacesTestUtils.frecencyInDB(url);
+  let newFrecency = yield PlacesTestUtils.fieldInDB(url, "frecency");
 
   Assert.equal(newFrecency, Math.round(unvisitedBookmarkFrecency * PREF_FREC_DECAY_RATE_DEF),
                "Frecencies should match");
