@@ -874,15 +874,8 @@ nsXPConnect::CreateSandbox(JSContext* cx, nsIPrincipal* principal,
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
                                  JSContext* cx, JSObject* sandboxArg,
-                                 int32_t jsVersion,
                                  MutableHandleValue rval)
 {
-#ifdef DEBUG
-    {
-        const char *version = JS_VersionToString(JSVersion(jsVersion));
-        MOZ_ASSERT(version && strcmp(version, "unknown") != 0, "Illegal JS version passed");
-    }
-#endif
     if (!sandboxArg)
         return NS_ERROR_INVALID_ARG;
 
@@ -894,7 +887,7 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char* filename,
         filenameStr = NS_LITERAL_CSTRING("x-bogus://XPConnect/Sandbox");
     }
     return EvalInSandbox(cx, sandbox, source, filenameStr, 1,
-                         JSVersion(jsVersion), rval);
+                         JSVERSION_DEFAULT, rval);
 }
 
 NS_IMETHODIMP

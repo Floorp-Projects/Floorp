@@ -181,6 +181,25 @@ interface nsITelemetry : nsISupports
   jsval snapshotCapturedStacks([optional] in boolean clear);
 
   /*
+   * Returns an array of the modules loaded in the process. The data has the following structure:
+   *
+   * [
+   *   {
+   *     "name": <string>, // Name of the module file (e.g. xul.dll)
+   *     "version": <string>, // Version of the module
+   *     "debugName": <string>, // ID of the debug information file
+   *     "debugID": <string>, // Name of the debug information file
+   *   },
+   *   ...
+   * ]
+   *
+   * @return An array of modules.
+   * @throws NS_ERROR_FAILURE on failure.
+   */
+  [implicit_jscontext]
+  nsISupports getLoadedModules();
+
+  /*
    * An array of thread hang stats,
    *   [<thread>, <thread>, ...]
    * <thread> represents a single thread,

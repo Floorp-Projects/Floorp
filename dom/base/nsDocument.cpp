@@ -7967,13 +7967,8 @@ nsDocument::FlushPendingNotifications(FlushType aType)
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  // Call nsIPresShell::NeedFlush (inline, non-virtual) to check whether we
-  // really need to flush the shell (virtual, and needs a strong reference).
   if (nsIPresShell* shell = GetShell()) {
-    if (shell->NeedFlush(aType)) {
-      nsCOMPtr<nsIPresShell> presShell = shell;
-      presShell->FlushPendingNotifications(aType);
-    }
+    shell->FlushPendingNotifications(aType);
   }
 }
 

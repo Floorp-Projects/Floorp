@@ -180,7 +180,7 @@ class SamplerThread
           isFirstProfiledThread = false;
         }
       }
-      OS::Sleep(mInterval);
+      ::Sleep(mInterval);
     }
 
     // disable any timer resolution changes we've made
@@ -225,7 +225,7 @@ class SamplerThread
 
     // Using only CONTEXT_CONTROL is faster but on 64-bit it causes crashes in
     // RtlVirtualUnwind (see bug 1120126) so we set all the flags.
-#if V8_HOST_ARCH_X64
+#if defined(GP_ARCH_amd64)
     context.ContextFlags = CONTEXT_FULL;
 #else
     context.ContextFlags = CONTEXT_CONTROL;
@@ -235,7 +235,7 @@ class SamplerThread
       return;
     }
 
-#if V8_HOST_ARCH_X64
+#if defined(GP_ARCH_amd64)
     sample->pc = reinterpret_cast<Address>(context.Rip);
     sample->sp = reinterpret_cast<Address>(context.Rsp);
     sample->fp = reinterpret_cast<Address>(context.Rbp);
@@ -268,6 +268,11 @@ private:
 SamplerThread* SamplerThread::mInstance = NULL;
 
 static void
+PlatformInit()
+{
+}
+
+static void
 PlatformStart()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -293,13 +298,6 @@ Thread::GetCurrentId()
   return GetCurrentThreadId();
 }
 
-void OS::Startup() {
-}
-
-void OS::Sleep(int milliseconds) {
-  ::Sleep(milliseconds);
-}
-
 void TickSample::PopulateContext(void* aContext)
 {
   MOZ_ASSERT(aContext);
@@ -307,18 +305,14 @@ void TickSample::PopulateContext(void* aContext)
   context = pContext;
   RtlCaptureContext(pContext);
 
-#if defined(SPS_PLAT_amd64_windows)
-
+#if defined(GP_ARCH_amd64)
   pc = reinterpret_cast<Address>(pContext->Rip);
   sp = reinterpret_cast<Address>(pContext->Rsp);
   fp = reinterpret_cast<Address>(pContext->Rbp);
-
-#elif defined(SPS_PLAT_x86_windows)
-
+#elif defined(GP_ARCH_x86)
   pc = reinterpret_cast<Address>(pContext->Eip);
   sp = reinterpret_cast<Address>(pContext->Esp);
   fp = reinterpret_cast<Address>(pContext->Ebp);
-
 #endif
 }
 
