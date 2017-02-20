@@ -182,6 +182,8 @@ public:
     void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter)
       { mWarningReporter = aReporter; }
 
+    void ApplyContentConversions();
+
 public: /* internal necko use only */
 
     void InternalSetUploadStream(nsIInputStream *uploadStream)
@@ -611,6 +613,13 @@ private:
     HttpChannelSecurityWarningReporter* mWarningReporter;
 
     RefPtr<ADivertableParentChannel> mParentChannel;
+
+    // If a cache listener needs to be installed, it needs to be install after
+    // DoApplyContentConversions is called (this is because the cache needs to
+    // receive not converted data). If a channel has a nsITracableListener call
+    // to DoApplyContentConversions will be delayed so we need to delay the
+    // InstallCacheListener call as well.
+    uint32_t mDelayedInstallCacheListenerForTraceableChannel : 1;
 
     // True if the channel is reading from cache.
     Atomic<bool> mIsReadingFromCache;
