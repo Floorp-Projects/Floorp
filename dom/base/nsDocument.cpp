@@ -1474,9 +1474,9 @@ nsIDocument::~nsIDocument()
 }
 
 bool
-nsDocument::IsAboutPage()
+nsDocument::IsAboutPage() const
 {
-  nsCOMPtr<nsIPrincipal> principal = GetPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIURI> uri;
   principal->GetURI(getter_AddRefs(uri));
   bool isAboutScheme = true;
