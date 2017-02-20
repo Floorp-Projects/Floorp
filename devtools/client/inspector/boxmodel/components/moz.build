@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'BoxModel.js',
+    'BoxModelApp.js',
     'BoxModelEditable.js',
     'BoxModelInfo.js',
     'BoxModelMain.js',
