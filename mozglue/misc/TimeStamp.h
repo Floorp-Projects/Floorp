@@ -423,9 +423,12 @@ public:
    * on platforms that support vsync aligned refresh drivers / compositors
    * Verified true as of Jan 31, 2015: B2G and OS X
    * False on Windows 7
+   * Android's event time uses CLOCK_MONOTONIC via SystemClock.uptimeMilles.
+   * So it is same value of TimeStamp posix implementation.
    * UNTESTED ON OTHER PLATFORMS
    */
-#if defined(MOZ_WIDGET_GONK) || defined(XP_DARWIN)
+#if defined(MOZ_WIDGET_GONK) || defined(XP_DARWIN) || \
+    defined(MOZ_WIDGET_ANDROID)
   static TimeStamp FromSystemTime(int64_t aSystemTime)
   {
     static_assert(sizeof(aSystemTime) == sizeof(TimeStampValue),
