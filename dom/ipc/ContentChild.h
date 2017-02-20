@@ -391,6 +391,14 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistations) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
+                                 const nsString& aKey,
+                                 const nsString& aOldValue,
+                                 const nsString& aNewValue,
+                                 const IPC::Principal& aPrincipal,
+                                 const bool& aIsPrivate) override;
+
   virtual mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed() override;
 
   virtual mozilla::ipc::IPCResult RecvFilePathUpdate(const nsString& aStorageType,

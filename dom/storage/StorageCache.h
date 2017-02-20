@@ -96,10 +96,6 @@ public:
   // Starts async preload of this cache if it persistent and not loaded.
   void Preload();
 
-  // Keeps the cache alive (i.e. present in the manager's hash table) for a
-  // time.
-  void KeepAlive();
-
   // The set of methods that are invoked by DOM storage web API.
   // We are passing the Storage object just to let the cache
   // read properties like mPrivate, mPrincipal and mSessionOnly.
@@ -195,9 +191,6 @@ private:
   // Reference to the usage counter object we check on for eTLD+1 quota limit.
   // Obtained from the manager during initialization (Init method).
   RefPtr<StorageUsage> mUsage;
-
-  // Timer that holds this cache alive for a while after it has been preloaded.
-  nsCOMPtr<nsITimer> mKeepAliveTimer;
 
   // Principal the cache has been initially created for, this is used only for
   // sessionStorage access checks since sessionStorage objects are strictly
