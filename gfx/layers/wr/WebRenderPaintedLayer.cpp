@@ -74,7 +74,8 @@ WebRenderPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbac
   if (didUpdate) {
     Mutated();
 
-    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+    // XXX It will cause reftests failures. See Bug 1340798.
+    //mValidRegion.Or(mValidRegion, state.mRegionToDraw);
 
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
 
