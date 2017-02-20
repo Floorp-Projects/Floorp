@@ -21,11 +21,6 @@ class ElementNotVisibleException(WebDriverException):
     status_code = "element not visible"
 
 
-class InsecureCertificateException(WebDriverException):
-    http_status = 400
-    status_code = "insecure certificate"
-
-
 class InvalidArgumentException(WebDriverException):
     http_status = 400
     status_code = "invalid argument"
