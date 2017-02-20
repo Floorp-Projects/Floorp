@@ -58,6 +58,14 @@ TEST(DateTimeFormat, DateFormatSelectors) {
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("01/1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
+  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(kDateFormatYearMonthLong, kTimeFormatNone, &prExplodedTime, formattedTime);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_STREQ("January 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
+
+  rv = mozilla::DateTimeFormat::FormatPRExplodedTime(kDateFormatMonthLong, kTimeFormatNone, &prExplodedTime, formattedTime);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_STREQ("January", NS_ConvertUTF16toUTF8(formattedTime).get());
+
   rv = mozilla::DateTimeFormat::FormatPRExplodedTime(kDateFormatYearMonth, kTimeFormatNoSeconds, &prExplodedTime, formattedTime);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("01/1970, 12:00 AM", NS_ConvertUTF16toUTF8(formattedTime).get());
