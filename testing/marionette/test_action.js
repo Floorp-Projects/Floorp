@@ -381,14 +381,23 @@ add_test(function test_processPointerActionInputStateMap() {
   let id = "1";
   let parameters = {pointerType: "mouse"};
   let a = new action.Action(id, "pointer", actionItem.type);
-  let wrongInputState = new action.InputState.Pointer("pause", true);
+  let wrongInputState = new action.InputState.Key();
+  action.inputStateMap.set(id, wrongInputState);
+  checkErrors(
+      /to be mapped to InputState whose type is/, action.processPointerAction,
+      [id, parameters, a],
+      `type "pointer" with ${wrongInputState.type} in inputState`);
+  action.inputStateMap.clear();
+
+  wrongInputState = new action.InputState.Pointer("pen");
   action.inputStateMap.set(id, wrongInputState);
   checkErrors(
       /to be mapped to InputState whose subtype is/, action.processPointerAction,
       [id, parameters, a],
-      `$subtype ${actionItem.type} with ${wrongInputState.subtype} in inputState`);
+      `subtype ${parameters.pointerType} with ${wrongInputState.subtype} in inputState`);
   action.inputStateMap.clear();
-  let rightInputState = new action.InputState.Pointer("pointerDown", false);
+
+  let rightInputState = new action.InputState.Pointer("mouse");
   action.inputStateMap.set(id, rightInputState);
   action.processPointerAction(id, parameters, a);
   action.inputStateMap.clear();
@@ -397,7 +406,12 @@ add_test(function test_processPointerActionInputStateMap() {
 
 add_test(function test_createInputState() {
   for (let kind in action.InputState) {
-    let state = new action.InputState[kind]();
+    let state;
+    if (kind == "Pointer") {
+      state = new action.InputState[kind]("mouse");
+    } else {
+      state = new action.InputState[kind]();
+    }
     ok(state);
     if (kind === "Null") {
       equal(state.type, "none");
@@ -405,6 +419,10 @@ add_test(function test_createInputState() {
       equal(state.type, kind.toLowerCase());
     }
   }
+  Assert.throws(() => new action.InputState.Pointer(), InvalidArgumentError,
+      "Missing InputState.Pointer constructor arg");
+  Assert.throws(() => new action.InputState.Pointer("foo"), InvalidArgumentError,
+      "Invalid InputState.Pointer constructor arg");
   run_next_test();
 });
 
