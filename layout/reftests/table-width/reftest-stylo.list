@@ -40,7 +40,7 @@ fails == balancing-1.html balancing-1.html
 == balancing-2.html balancing-2.html
 # == cellpadding.html cellpadding.html
 fails == cellspacing.html cellspacing.html
-== percent-basis.html percent-basis.html
+fails == percent-basis.html percent-basis.html
 == default-box-sizing-separate-standards.html default-box-sizing-separate-standards.html
 == default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks.html
 == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards.html

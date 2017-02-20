@@ -294,7 +294,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_compute_data_with_start_struct.html `marker-` [6]
     * test_inherit_computation.html `marker` [16]
     * test_initial_computation.html `marker` [8]
-    * test_initial_storage.html `marker` [5]
   * stroke properties
     * test_value_storage.html `on 'stroke` [6]
     * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
