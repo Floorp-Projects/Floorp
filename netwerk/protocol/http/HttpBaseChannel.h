@@ -348,6 +348,8 @@ public: /* Necko internal use only... */
     // the new mUploadStream.
     void EnsureUploadStreamIsCloneableComplete(nsresult aStatus);
 
+    bool HasListenerForTraceableChannel() { return mHasListenerForTraceableChannel; }
+
     void SetIsTrackingResource()
     {
       mIsTrackingResource = true;
@@ -514,6 +516,8 @@ protected:
   // If true, we behave as if the LOAD_FROM_CACHE flag has been set.
   // Used to enforce that flag's behavior but not expose it externally.
   uint32_t                          mAllowStaleCacheContent : 1;
+
+  uint32_t                          mHasListenerForTraceableChannel : 1;
 
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;
