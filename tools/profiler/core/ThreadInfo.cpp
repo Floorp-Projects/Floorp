@@ -256,9 +256,9 @@ ThreadInfo::GetMutex()
 }
 
 void
-ThreadInfo::DuplicateLastSample()
+ThreadInfo::DuplicateLastSample(const TimeStamp& aStartTime)
 {
-  mBuffer->DuplicateLastSample(mThreadId);
+  mBuffer->DuplicateLastSample(mThreadId, aStartTime);
 }
 
 size_t
