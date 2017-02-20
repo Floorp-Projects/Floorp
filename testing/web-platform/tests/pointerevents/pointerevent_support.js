@@ -213,10 +213,6 @@ function MultiPointerTypeTest(testName, types) {
     this.createNextTest();
 }
 
-MultiPointerTypeTest.prototype.step = function(op) {
-    this.currentTest.step(op);
-}
-
 MultiPointerTypeTest.prototype.skip = function() {
     var prevTest = this.currentTest;
     this.createNextTest();
@@ -224,12 +220,10 @@ MultiPointerTypeTest.prototype.skip = function() {
 }
 
 MultiPointerTypeTest.prototype.done = function() {
-    if (this.currentTest.status != 1) {
-        var prevTest = this.currentTest;
-        this.createNextTest();
-        if (prevTest != null)
-            prevTest.done();
-    }
+    var prevTest = this.currentTest;
+    this.createNextTest();
+    if (prevTest != null)
+        prevTest.done();
 }
 
 MultiPointerTypeTest.prototype.step = function(stepFunction) {
@@ -248,6 +242,7 @@ MultiPointerTypeTest.prototype.createNextTest = function() {
     }
     resetTestState();
 }
+
 
 function setup_pointerevent_test(testName, supportedPointerTypes) {
     return globalPointerEventTest = new MultiPointerTypeTest(testName, supportedPointerTypes);

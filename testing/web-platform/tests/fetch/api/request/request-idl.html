@@ -18,7 +18,6 @@
       [NoInterfaceObject,
       Exposed=(Window,Worker)]
       interface Body {
-        readonly attribute ReadableStream? body;
         readonly attribute boolean bodyUsed;
         [NewObject] Promise<ArrayBuffer> arrayBuffer();
         [NewObject] Promise<Blob> blob();
