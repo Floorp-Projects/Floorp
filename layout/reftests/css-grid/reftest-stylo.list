@@ -230,11 +230,11 @@ fails == grid-fragmentation-dyn1-016.html grid-fragmentation-dyn1-016.html
 fails == grid-fragmentation-dyn5-016.html grid-fragmentation-dyn5-016.html
 fails == grid-fragmentation-dyn3-017.html grid-fragmentation-dyn3-017.html
 fails == grid-fragmentation-dyn2-018.html grid-fragmentation-dyn2-018.html
-fails == grid-fragmentation-dyn1-019.html grid-fragmentation-dyn1-019.html
-fails == grid-fragmentation-dyn2-019.html grid-fragmentation-dyn2-019.html
-fails == grid-fragmentation-dyn3-019.html grid-fragmentation-dyn3-019.html
-fails == grid-fragmentation-dyn4-019.html grid-fragmentation-dyn4-019.html
-fails == grid-fragmentation-dyn5-019.html grid-fragmentation-dyn5-019.html
+# fails == grid-fragmentation-dyn1-019.html grid-fragmentation-dyn1-019.html # bug 1341104
+# fails == grid-fragmentation-dyn2-019.html grid-fragmentation-dyn2-019.html # bug 1341104
+# fails == grid-fragmentation-dyn3-019.html grid-fragmentation-dyn3-019.html # bug 1341104
+# fails == grid-fragmentation-dyn4-019.html grid-fragmentation-dyn4-019.html # bug 1341104
+# fails == grid-fragmentation-dyn5-019.html grid-fragmentation-dyn5-019.html # bug 1341104
 fails == grid-fragmentation-dyn1-020.html grid-fragmentation-dyn1-020.html
 fails == grid-fragmentation-dyn2-020.html grid-fragmentation-dyn2-020.html
 skip == grid-fragmentation-dyn1-021.html grid-fragmentation-dyn1-021.html
