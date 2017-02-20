@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
+#include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -18,9 +19,12 @@ class WebRenderDisplayItemLayer : public WebRenderLayer,
 public:
   explicit WebRenderDisplayItemLayer(WebRenderLayerManager* aLayerManager)
     : DisplayItemLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
+    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderDisplayItemLayer);
   }
+
+  uint64_t SendImageContainer(ImageContainer* aContainer);
 
 protected:
   virtual ~WebRenderDisplayItemLayer()
@@ -35,6 +39,10 @@ public:
 
 private:
   nsTArray<WebRenderCommand> mCommands;
+  RefPtr<ImageClient> mImageClient;
+  RefPtr<ImageContainer> mImageContainer;
+  uint64_t mExternalImageId;
+
 };
 
 } // namespace layers
