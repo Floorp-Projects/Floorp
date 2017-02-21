@@ -342,3 +342,7 @@ HTTP(..) == space-font-1.html space-font-1-ref.html
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
 == segment-break-transformation-1.html segment-break-transformation-1-ref.html
+
+# color glyphs, opacity, and RTL runs - bug 1318539
+fails == color-opacity-rtl-1.html color-opacity-rtl-1-ref.html
+fails == color-opacity-rtl-2.html color-opacity-rtl-2-ref.html
