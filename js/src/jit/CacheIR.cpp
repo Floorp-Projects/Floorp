@@ -2539,6 +2539,25 @@ SetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, 
 }
 
 bool
+SetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id,
+                                              ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    maybeEmitIdGuard(id);
+    writer.guardShape(objId, obj->maybeShape());
+
+    // No need for more guards: we know this is a DOM proxy, since the shape
+    // guard enforces a given JSClass, so just go ahead and emit the call to
+    // ProxySet.
+    writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+    writer.returnFromIC();
+
+    trackAttached("DOMProxyShadowed");
+    return true;
+}
+
+bool
 SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
                                    ValOperandId rhsId)
 {
@@ -2547,6 +2566,7 @@ SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleI
         return false;
       case ProxyStubType::DOMExpando:
       case ProxyStubType::DOMShadowed:
+        return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
       case ProxyStubType::DOMUnshadowed:
       case ProxyStubType::Generic:
         return tryAttachGenericProxy(obj, objId, id, rhsId);

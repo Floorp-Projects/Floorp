@@ -1093,6 +1093,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
 
     bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
                                ValOperandId rhsId);
+    bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id,
+                                   ValOperandId rhsId);
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId);
     bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId);
 
