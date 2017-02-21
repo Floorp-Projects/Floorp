@@ -11,11 +11,33 @@ import android.util.JsonToken;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class BlocklistProcessor {
 
-    public BlocklistProcessor(final JsonReader reader, final UrlMatcher matcher) throws IOException {
+    final static String SOCIAL = "Social";
+    final static String DISCONNECT = "Disconnect";
+
+    private static final Set<String> IGNORED_CATEGORIES;
+
+    static {
+        final Set<String> ignored = new HashSet<>();
+
+        ignored.add("Legacy Disconnect");
+        ignored.add("Legacy Content");
+
+        IGNORED_CATEGORIES = Collections.unmodifiableSet(ignored);
+    }
+
+    public static Map<String, Trie> loadCategoryMap(final JsonReader reader) throws IOException {
+        final Map<String, Trie> categoryMap = new HashMap<>(5);
+
         reader.beginObject();
 
         while (reader.hasNext()) {
@@ -24,7 +46,7 @@ public class BlocklistProcessor {
             final String name = reader.nextName();
 
             if (name.equals("categories")) {
-                extractCategories(reader, matcher);
+                extractCategories(reader, categoryMap);
             } else {
                 reader.skipValue();
             }
@@ -32,39 +54,87 @@ public class BlocklistProcessor {
         }
 
         reader.endObject();
+
+        return categoryMap;
     }
 
-    private static void extractCategories(final JsonReader reader, final UrlMatcher matcher) throws IOException {
+    private interface UrlListCallback {
+        void put(final String url);
+    }
+
+    private static class ListCallback implements UrlListCallback {
+        final List<String> list;
+
+        ListCallback(final List<String> list) {
+            this.list = list;
+        }
+
+        @Override
+        public void put(final String url) {
+            list.add(url);
+        }
+    }
+
+    private static class TrieCallback implements UrlListCallback {
+        final Trie trie;
+
+        TrieCallback(final Trie trie) {
+            this.trie = trie;
+        }
+
+        @Override
+        public void put(String url) {
+            trie.put(FocusString.create(url).reverse());
+        }
+    }
+
+    private static void extractCategories(final JsonReader reader, final Map<String, Trie> categoryMap) throws IOException {
         reader.beginObject();
 
-        // We ship 5 categories by default - so 5 is a good initial size
-        final Map<String, Trie> categoryMap = new ArrayMap<>(5);
+        final List<String> socialOverrides = new LinkedList<String>();
 
         while (reader.hasNext()) {
             final String categoryName = reader.nextName();
 
-            final Trie categoryTrie = Trie.createRootNode();
-            extractCategory(reader, categoryTrie);
+            if (IGNORED_CATEGORIES.contains(categoryName)) {
+                reader.skipValue();
+            } else if (categoryName.equals(DISCONNECT)) {
+                // We move these items into a different list, see below
+                ListCallback callback = new ListCallback(socialOverrides);
+                extractCategory(reader, callback);
+            } else {
+                final Trie categoryTrie = Trie.createRootNode();
+                final TrieCallback callback = new TrieCallback(categoryTrie);
 
-            categoryMap.put(categoryName, categoryTrie);
+                extractCategory(reader, callback);
+
+                categoryMap.put(categoryName, categoryTrie);
+            }
         }
 
-        matcher.putCategories(categoryMap);
+        final Trie socialTrie = categoryMap.get(SOCIAL);
+        if (socialTrie == null) {
+            throw new IllegalStateException("Expected social list to exist. Can't copy FB/Twitter into non-existing list");
+        }
+
+        for (final String url : socialOverrides) {
+            socialTrie.put(FocusString.create(url).reverse());
+        }
 
         reader.endObject();
     }
 
-    private static void extractCategory(final JsonReader reader, final Trie trie) throws IOException {
+    private static void extractCategory(final JsonReader reader, final UrlListCallback callback) throws IOException {
         reader.beginArray();
 
         while (reader.hasNext()) {
-            extractSite(reader, trie);
+            extractSite(reader, callback);
         }
 
         reader.endArray();
     }
 
-    private static void extractSite(final JsonReader reader, final Trie trie) throws IOException {
+    private static void extractSite(final JsonReader reader, final UrlListCallback callback) throws IOException {
         reader.beginObject();
 
         final String siteName = reader.nextName();
@@ -83,7 +153,7 @@ public class BlocklistProcessor {
 
                     while (reader.hasNext()) {
                         final String blockURL = reader.nextString();
-                        trie.put(FocusString.create(blockURL).reverse());
+                        callback.put(blockURL);
                     }
 
                     reader.endArray();
