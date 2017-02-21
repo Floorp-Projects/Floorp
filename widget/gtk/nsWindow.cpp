@@ -727,6 +727,12 @@ nsWindow::Destroy()
     // destroys the the gl context attached to it).
     DestroyCompositor();
 
+#ifdef MOZ_X11
+    // Ensure any resources assigned to the window get cleaned up first
+    // to avoid double-freeing.
+    mSurfaceProvider.CleanupResources();
+#endif
+
     ClearCachedResources();
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
