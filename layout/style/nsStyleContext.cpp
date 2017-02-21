@@ -179,11 +179,51 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
   #undef eStyleStruct_LastItem
 }
 
+void
+nsStyleContext::EnsureStructsForServo(const nsStyleContext* aOldContext)
+{
+  MOZ_ASSERT(aOldContext);
+  MOZ_ASSERT(mSource.IsServoComputedValues() &&
+             aOldContext->mSource.IsServoComputedValues());
+
+  // NOTE(emilio): We could do better here. We only call Style##name_() because
+  // we need to run FinishStyle, but otherwise this is only a bitwise or.
+  //
+  // We could reduce the FFI traffic we do only doing it for structs that have
+  // non-trivial FinishStyle.
+#define STYLE_STRUCT(name_, checkdata_cb)                                      \
+  if (aOldContext->mBits & NS_STYLE_INHERIT_BIT(name_)) {                      \
+    mozilla::Unused << Style##name_();                                         \
+  }
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT
+
+#ifdef DEBUG
+  auto oldMask = aOldContext->mBits & NS_STYLE_INHERIT_MASK;
+  auto newMask = mBits & NS_STYLE_INHERIT_MASK;
+  MOZ_ASSERT((oldMask & newMask) == oldMask,
+             "Should have at least as many structs computed as the "
+             "old context!");
+#endif
+}
+
 nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
+  MOZ_ASSERT_IF(mSource.IsServoComputedValues(), !mCachedResetData);
 
 #ifdef DEBUG
+  if (mSource.IsServoComputedValues()) {
+    MOZ_ASSERT(!mCachedResetData,
+               "Servo shouldn't cache reset structs in nsStyleContext");
+    for (const auto* data : mCachedInheritedData.mStyleStructs) {
+      MOZ_ASSERT(!data,
+                 "Servo shouldn't cache inherit structs in nsStyleContext");
+    }
+  }
+
   if (sExpensiveStyleStructAssertionsEnabled) {
     // Assert that the style structs we are about to destroy are not referenced
     // anywhere else in the style context tree.  These checks are expensive,
@@ -586,6 +626,8 @@ nsStyleContext::CreateEmptyStyleData(const nsStyleStructID& aSID)
 void
 nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 {
+  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+             "Servo shouldn't cache style structs in the style context!");
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
 
