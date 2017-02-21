@@ -803,8 +803,10 @@ private:
 class NotifyCompletion : public Runnable
 {
 public:
-  explicit NotifyCompletion(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback)
+  explicit NotifyCompletion(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
+                            uint32_t aUpdatedCount = 0)
   : mCallback(aCallback)
+  , mUpdatedCount(aUpdatedCount)
   {
     MOZ_ASSERT(aCallback, "Must pass a non-null callback!");
   }
@@ -812,7 +814,7 @@ public:
   NS_IMETHOD Run() override
   {
     if (NS_IsMainThread()) {
-      (void)mCallback->HandleCompletion();
+      (void)mCallback->HandleCompletion(mUpdatedCount);
     }
     else {
       (void)NS_DispatchToMainThread(this);
@@ -822,6 +824,7 @@ public:
 
 private:
   nsMainThreadPtrHandle<mozIVisitInfoCallback> mCallback;
+  uint32_t mUpdatedCount;
 };
 
 /**
@@ -917,8 +920,17 @@ public:
 
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
       callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
+    bool ignoreErrors = false, ignoreResults = false;
+    if (aCallback) {
+      // We ignore errors from either of these methods in case old JS consumers
+      // don't implement them (in which case they will get error/result
+      // notifications as normal).
+      Unused << aCallback->GetIgnoreErrors(&ignoreErrors);
+      Unused << aCallback->GetIgnoreResults(&ignoreResults);
+    }
     RefPtr<InsertVisitedURIs> event =
-      new InsertVisitedURIs(aConnection, aPlaces, callback, aGroupNotifications);
+      new InsertVisitedURIs(aConnection, aPlaces, callback, aGroupNotifications,
+                            ignoreErrors, ignoreResults);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -933,6 +945,20 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread(), "This should not be called on the main thread");
 
+    // The inner run method may bail out at any point, so we ensure we do
+    // whatever we can and then notify the main thread we're done.
+    nsresult rv = InnerRun();
+
+    if (mSuccessfulUpdatedCount > 0 && mGroupNotifications) {
+      NS_DispatchToMainThread(new NotifyManyFrecenciesChanged());
+    }
+    if (!!mCallback) {
+      NS_DispatchToMainThread(new NotifyCompletion(mCallback, mSuccessfulUpdatedCount));
+    }
+    return rv;
+  }
+
+  nsresult InnerRun() {
     // Prevent the main thread from shutting down while this is running.
     MutexAutoLock lockedScope(mHistory->GetShutdownMutex());
     if (mHistory->IsShuttingDown()) {
@@ -958,7 +984,7 @@ public:
       if (!known) {
         nsresult rv = mHistory->FetchPageInfo(place, &known);
         if (NS_FAILED(rv)) {
-          if (!!mCallback) {
+          if (!!mCallback && !mIgnoreErrors) {
             nsCOMPtr<nsIRunnable> event =
               new NotifyPlaceInfoCallback(mCallback, place, true, rv);
             return NS_DispatchToMainThread(event);
@@ -998,12 +1024,21 @@ public:
 
       nsresult rv = DoDatabaseInserts(known, place);
       if (!!mCallback) {
-        nsCOMPtr<nsIRunnable> event =
-          new NotifyPlaceInfoCallback(mCallback, place, true, rv);
-        nsresult rv2 = NS_DispatchToMainThread(event);
-        NS_ENSURE_SUCCESS(rv2, rv2);
+        // Check if consumers wanted to be notified about success/failure,
+        // depending on whether this action succeeded or not.
+        if ((NS_SUCCEEDED(rv) && !mIgnoreResults) ||
+            (NS_FAILED(rv) && !mIgnoreErrors)) {
+          nsCOMPtr<nsIRunnable> event =
+            new NotifyPlaceInfoCallback(mCallback, place, true, rv);
+          nsresult rv2 = NS_DispatchToMainThread(event);
+          NS_ENSURE_SUCCESS(rv2, rv2);
+        }
       }
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // If we get here, we must have been successful adding/updating this
+      // visit/place, so update the count:
+      mSuccessfulUpdatedCount++;
 
       nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(place);
       rv = NS_DispatchToMainThread(event);
@@ -1020,23 +1055,21 @@ public:
     nsresult rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mGroupNotifications) {
-      nsCOMPtr<nsIRunnable> event =
-        new NotifyManyFrecenciesChanged();
-      rv = NS_DispatchToMainThread(event);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     return NS_OK;
   }
 private:
   InsertVisitedURIs(mozIStorageConnection* aConnection,
                     nsTArray<VisitData>& aPlaces,
                     const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
-                    bool aGroupNotifications)
+                    bool aGroupNotifications,
+                    bool aIgnoreErrors,
+                    bool aIgnoreResults)
   : mDBConn(aConnection)
   , mCallback(aCallback)
   , mGroupNotifications(aGroupNotifications)
+  , mIgnoreErrors(aIgnoreErrors)
+  , mIgnoreResults(aIgnoreResults)
+  , mSuccessfulUpdatedCount(0)
   , mHistory(History::GetService())
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
@@ -1256,6 +1289,12 @@ private:
 
   bool mGroupNotifications;
 
+  bool mIgnoreErrors;
+
+  bool mIgnoreResults;
+
+  uint32_t mSuccessfulUpdatedCount;
+
   /**
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
@@ -1445,6 +1484,18 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
+  NS_IMETHOD GetIgnoreResults(bool *aIgnoreResults) override
+  {
+    *aIgnoreResults = false;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetIgnoreErrors(bool *aIgnoreErrors) override
+  {
+    *aIgnoreErrors = false;
+    return NS_OK;
+  }
+
   NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo) override
   {
     // Just don't add the annotations in case the visit isn't added.
@@ -1513,7 +1564,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion() override
+  NS_IMETHOD HandleCompletion(uint32_t aUpdatedCount) override
   {
     return NS_OK;
   }
@@ -2954,13 +3005,15 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
     nsresult rv = InsertVisitedURIs::Start(dbConn, visitData,
                                            callback, aGroupNotifications);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
+  } else if (aCallback) {
+    // Be sure to notify that all of our operations are complete.  This
+    // is dispatched to the background thread first and redirected to the
+    // main thread from there to make sure that all database notifications
+    // and all embed or canAddURI notifications have finished.
 
-  // Be sure to notify that all of our operations are complete.  This
-  // is dispatched to the background thread first and redirected to the
-  // main thread from there to make sure that all database notifications
-  // and all embed or canAddURI notifications have finished.
-  if (aCallback) {
+    // Note: if we're inserting anything, it's the responsibility of
+    // InsertVisitedURIs to call the completion callback, as here we won't
+    // know how yet many items we will successfully insert/update.
     nsCOMPtr<nsIEventTarget> backgroundThread = do_GetInterface(dbConn);
     NS_ENSURE_TRUE(backgroundThread, NS_ERROR_UNEXPECTED);
     nsCOMPtr<nsIRunnable> event = new NotifyCompletion(callback);

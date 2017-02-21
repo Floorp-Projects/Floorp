@@ -97,9 +97,18 @@ interface mozIVisitInfoCallback : nsISupports
 
   /**
    * Called when all records were processed.
+   * @param aUpdatedItems
+   *        How many items were successfully updated.
    */
-  void handleCompletion();
+  void handleCompletion(in unsigned long aUpdatedItems);
 
+  /**
+   * These two attributes govern whether we attempt to call
+   * handleResult and handleError, respectively, if/once
+   * results/errors occur.
+   */
+  readonly attribute bool ignoreResults;
+  readonly attribute bool ignoreErrors;
 };
 
 [scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]

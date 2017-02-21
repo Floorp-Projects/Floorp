@@ -362,14 +362,10 @@ function GetHistoryResource(aProfileFolder) {
         if (places.length > 0) {
           yield new Promise((resolve, reject) => {
             MigrationUtils.insertVisitsWrapper(places, {
-              _success: false,
-              handleResult() {
-                // Importing any entry is considered a successful import.
-                this._success = true;
-              },
-              handleError() {},
-              handleCompletion() {
-                if (this._success) {
+              ignoreErrors: true,
+              ignoreResults: true,
+              handleCompletion(updatedCount) {
+                if (updatedCount > 0) {
                   resolve();
                 } else {
                   reject(new Error("Couldn't add visits"));
