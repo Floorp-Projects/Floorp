@@ -2123,6 +2123,30 @@ class ICCompare_String : public ICStub
     };
 };
 
+class ICCompare_Symbol : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICCompare_Symbol(JitCode* stubCode)
+      : ICStub(ICStub::Compare_Symbol, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, JSOp op, Engine engine)
+          : ICMultiStubCompiler(cx, ICStub::Compare_Symbol, op, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICCompare_Symbol>(space, getStubCode());
+        }
+    };
+};
+
 class ICCompare_Boolean : public ICStub
 {
     friend class ICStubSpace;
