@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIClassifiedChannel
+ *
+ * A channel may optionally implement this interface if it carries classified
+ * result information of channel classifier. The information contains, for
+ * example, the name of matched table and the name of matched provider.
+ */
+[scriptable, uuid(70cf6091-a1de-4aa8-8224-058f8964be31)]
+interface nsIClassifiedChannel : nsISupports
+{
+  /**
+   * Sets matched info of the classified channel.
+   *
+   * @param aList
+   *        Name of the Safe Browsing list that matched (e.g. goog-phish-shavar).
+   * @param aProvider
+   *        Name of the Safe Browsing provider that matched (e.g. google)
+   * @param aPrefix
+   *        Hash prefix of URL that matched Safe Browsing list.
+   */
+  void setMatchedInfo(in ACString aList,
+                      in ACString aProvider,
+                      in ACString aPrefix);
+
+  /**
+   * Name of the list that matched
+   */
+  readonly attribute ACString matchedList;
+
+  /**
+   * Name of provider that matched
+   */
+  readonly attribute ACString matchedProvider;
+
+  /**
+   * Hash prefix of URL that matched
+   */
+  readonly attribute ACString matchedPrefix;
+
+};
